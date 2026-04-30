@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.1.0",
+    date: "2026-04-30",
+    title: "Meet Warrent — your AI portfolio companion",
+    titleTranslations: {
+      es: "Conoce a Warrent — tu compa\u00F1ero de portafolio con IA",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Introducing Warrent, a chat-first AI assistant for your portfolio. Ask anything, see live charts and cards inline, and let Warrent prepare actions like adding holdings, creating alerts, or watching tickers. Every action shows a confirmation card before anything is saved \u2014 no surprises.",
+        translations: {
+          es: "Te presentamos a Warrent, un asistente de IA conversacional para tu portafolio. Preg\u00FAntale lo que quieras, m\u00EDralo responder con tarjetas y gr\u00E1ficos integrados, y deja que prepare acciones como a\u00F1adir posiciones, crear alertas o vigilar tickers. Cada acci\u00F3n muestra una tarjeta de confirmaci\u00F3n antes de guardarse \u2014 sin sorpresas.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Warrent grounds every answer in your real holdings via dedicated read tools (portfolio summary, holdings, alerts, watchlist, cash) and live Yahoo Finance quotes \u2014 so it never invents numbers about your portfolio.",
+        translations: {
+          es: "Warrent fundamenta cada respuesta en tus tenencias reales mediante herramientas de lectura dedicadas (resumen de portafolio, posiciones, alertas, watchlist, efectivo) y cotizaciones en vivo de Yahoo Finance \u2014 nunca inventa cifras sobre tu portafolio.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Refactored chat portfolio cards (holding, allocation, summary, stock pick) into a shared `chat-cards` library so both private chat and Warrent reuse the same visual language.",
+        translations: {
+          es: "Hemos extra\u00EDdo las tarjetas de chat de portafolio (holding, allocation, summary, stock pick) a una librer\u00EDa compartida `chat-cards` para que el chat privado y Warrent usen el mismo lenguaje visual.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.0.0",
     date: "2026-04-29",
     title: "All features for everyone — Pro now means more headroom",

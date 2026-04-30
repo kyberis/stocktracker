@@ -2579,6 +2579,24 @@ const de: TranslationStrings = {
   aiQEarnings: "Welche Positionen haben anstehende Quartalszahlen?",
   aiQSP500: "Wie schneidet mein Portfolio im Vergleich zum S&P 500 ab?",
   aiQRisk: "Was ist gerade mein größtes Risiko?",
+
+  // ── Warrent ───────────────────────────────────────────────
+  warrentName: "Warrent",
+  warrentSubtitle: "Dein Value-Investing-Begleiter",
+  warrentTriggerSub: "Frage, lerne und handle in deinem Portfolio",
+  warrentClose: "Warrent schließen",
+  warrentSend: "Senden",
+  warrentConnected: "Mit deinem Portfolio verbunden",
+  warrentHoldingsLabel: "Positionen",
+  warrentPlaceholder: "Sag Warrent, was du tun möchtest…",
+  warrentDisclaimer:
+    "KI-generierte Hilfe. Keine Anlageberatung. Bestätige jede Aktion.",
+  warrentGreeting:
+    "Schön, dich zu sehen. Ich habe Zugriff auf dein Portfolio. Frag mich alles oder sag mir, was ich hinzufügen, entfernen oder beobachten soll. Ich frage immer nach, bevor ich Daten ändere.",
+  warrentChipSummary: "Fasse mein Portfolio zusammen",
+  warrentChipConcentration: "Bin ich zu konzentriert?",
+  warrentChipDividends: "Erwartete Dividendenerträge?",
+  warrentChipAlertExample: "Warne mich, wenn AAPL 5% fällt",
 };
 
 export default de;

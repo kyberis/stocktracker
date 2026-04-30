@@ -1,0 +1,44 @@
+"use client";
+
+import WarrentAvatar from "./WarrentAvatar";
+import { useI18n } from "@/lib/i18n";
+
+interface Props {
+  onOpen: () => void;
+}
+
+export default function WarrentTrigger({ onOpen }: Props) {
+  const { t } = useI18n();
+  return (
+    <button
+      onClick={onOpen}
+      className="w-full card p-3 bg-gradient-to-br from-amber-500/[0.08] to-[#5e3a20]/[0.04] border-amber-500/30 hover:border-amber-400/50 hover:-translate-y-px transition-all cursor-pointer text-left"
+    >
+      <div className="flex items-center gap-3">
+        <WarrentAvatar size={36} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+              {t("warrentName")}
+            </span>
+            <span className="text-[9px] font-semibold bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+              AI
+            </span>
+          </div>
+          <p className="text-[11px] text-gray-500 dark:text-slate-500 mt-0.5">
+            {t("warrentTriggerSub")}
+          </p>
+        </div>
+        <svg
+          className="w-4 h-4 text-gray-400 dark:text-slate-500 shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+      </div>
+    </button>
+  );
+}

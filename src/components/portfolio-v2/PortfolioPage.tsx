@@ -9,7 +9,7 @@ import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import BackfillCTA from "./BackfillCTA";
 import MarketAwareBreakdown from "./MarketAwareBreakdown";
-import PortfolioAiDrawer from "@/components/dashboard-v2/PortfolioAiDrawer";
+import WarrentDrawer from "@/components/warrent/WarrentDrawer";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 const PortfolioValueChart = dynamic(() => import("./PortfolioValueChart"), {
@@ -198,10 +198,9 @@ export default function PortfolioPage() {
         />
       </ErrorBoundary>
 
-      <PortfolioAiDrawer
+      <WarrentDrawer
         isOpen={aiDrawerOpen}
         onClose={() => setAiDrawerOpen(false)}
-        autoAnalyze
       />
     </div>
   );

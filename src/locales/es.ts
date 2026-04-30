@@ -2675,6 +2675,24 @@ const es: TranslationStrings = {
   aiQEarnings: "¿Qué posiciones tienen próximos informes de resultados?",
   aiQSP500: "¿Cómo se compara mi portafolio con el S&P 500?",
   aiQRisk: "¿Cuál es mi mayor riesgo ahora mismo?",
+
+  // ── Warrent (agente de IA del portafolio) ─────────────────
+  warrentName: "Warrent",
+  warrentSubtitle: "Tu acompañante de inversión paciente",
+  warrentTriggerSub: "Pregunta, aprende y actúa sobre tu portafolio",
+  warrentClose: "Cerrar Warrent",
+  warrentSend: "Enviar",
+  warrentConnected: "Conectado a tu portafolio",
+  warrentHoldingsLabel: "posiciones",
+  warrentPlaceholder: "Dile a Warrent qué quieres hacer…",
+  warrentDisclaimer:
+    "Asistencia generada por IA. No es asesoría financiera. Confirma cada acción.",
+  warrentGreeting:
+    "Hola, qué bueno verte. Tengo acceso a tu portafolio. Pregúntame lo que quieras — o pídeme que añada, quite o vigile algo. Siempre te pediré confirmación antes de cambiar tus datos.",
+  warrentChipSummary: "Resume mi portafolio",
+  warrentChipConcentration: "¿Estoy demasiado concentrado?",
+  warrentChipDividends: "¿Cuántos dividendos espero?",
+  warrentChipAlertExample: "Avísame si AAPL cae 5%",
 };
 
 export default es;

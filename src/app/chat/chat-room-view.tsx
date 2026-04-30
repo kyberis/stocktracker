@@ -11,6 +11,7 @@ import {
 import dynamic from "next/dynamic";
 
 import { VoiceMessagePlayer } from "./voice-message-player";
+import { ChatCardRenderer } from "@/components/chat-cards";
 
 const SharePortfolioModal = dynamic(() => import("./share-portfolio-modal"), { ssr: false });
 const TickerPreviewPanel = dynamic(() => import("./ticker-preview-panel"), { ssr: false });
@@ -232,211 +233,8 @@ function renderTextWithTickers(text: string, isOwn: boolean, onTickerClick?: (sy
 }
 
 // ---------------------------------------------------------------------------
-// Portfolio share card types & renderers
+// Portfolio share card renderer (extracted to shared `@/components/chat-cards`)
 // ---------------------------------------------------------------------------
-
-interface HoldingCardData {
-  ticker: string;
-  name?: string;
-  shares?: number;
-  avgPrice?: number;
-  currentPrice?: number;
-  currency?: string;
-  change?: number;
-  changePct?: number;
-  privacy: "full" | "anonymous" | "ticker_only";
-}
-
-interface AllocationCardData {
-  items: { label: string; pct: number; color: string }[];
-  totalValue?: number;
-  currency?: string;
-  privacy: "full" | "percentages" | "categories";
-}
-
-interface SummaryCardData {
-  totalValue?: number;
-  dayChange?: number;
-  dayChangePct?: number;
-  holdingsCount: number;
-  topHoldings?: { ticker: string; pct: number }[];
-  currency?: string;
-  privacy: "full" | "percentages" | "count_only";
-}
-
-interface StockPickCardData {
-  ticker: string;
-  name?: string;
-  currentPrice?: number;
-  currency?: string;
-  note?: string;
-}
-
-function tryParseCardJson<T>(content: string): T | null {
-  try { return JSON.parse(content) as T; } catch { return null; }
-}
-
-function formatCardNumber(n: number, currency?: string): string {
-  const formatted = n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  if (!currency) return formatted;
-  const sym: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", CHF: "CHF ", JPY: "¥" };
-  return `${sym[currency] || currency + " "}${formatted}`;
-}
-
-function HoldingCard({ data }: { data: HoldingCardData }) {
-  const isAnon = data.privacy === "anonymous";
-  const isTickerOnly = data.privacy === "ticker_only";
-  return (
-    <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 min-w-[200px] max-w-[260px]">
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-xs font-bold text-indigo-700 dark:text-indigo-300">
-          {data.ticker.slice(0, 2)}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm truncate">{data.ticker}</div>
-          {data.name && !isAnon && <div className="text-[11px] text-gray-500 dark:text-slate-400 truncate">{data.name}</div>}
-        </div>
-      </div>
-      {!isTickerOnly && (
-        <div className="space-y-1 text-xs">
-          {data.currentPrice != null && (
-            <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-slate-400">Price</span>
-              <span className="font-medium">{formatCardNumber(data.currentPrice, data.currency)}</span>
-            </div>
-          )}
-          {data.shares != null && !isAnon && (
-            <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-slate-400">Shares</span>
-              <span className="font-medium">{data.shares}</span>
-            </div>
-          )}
-          {data.avgPrice != null && !isAnon && (
-            <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-slate-400">Avg price</span>
-              <span className="font-medium">{formatCardNumber(data.avgPrice, data.currency)}</span>
-            </div>
-          )}
-          {data.changePct != null && (
-            <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-slate-400">Change</span>
-              <span className={`font-medium ${data.changePct >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                {data.changePct >= 0 ? "+" : ""}{data.changePct.toFixed(2)}%
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-      <div className="mt-2 text-[10px] text-gray-400 dark:text-slate-500 uppercase tracking-wider">Shared Holding</div>
-    </div>
-  );
-}
-
-function AllocationCard({ data }: { data: AllocationCardData }) {
-  const showValues = data.privacy === "full";
-  return (
-    <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 min-w-[200px] max-w-[260px]">
-      <div className="text-xs font-semibold mb-2">Portfolio Allocation</div>
-      {showValues && data.totalValue != null && (
-        <div className="text-lg font-bold mb-2">{formatCardNumber(data.totalValue, data.currency)}</div>
-      )}
-      <div className="flex h-3 rounded-full overflow-hidden mb-2">
-        {data.items.map((item, i) => (
-          <div key={i} style={{ width: `${item.pct}%`, backgroundColor: item.color }} className="min-w-[2px]" />
-        ))}
-      </div>
-      <div className="space-y-1">
-        {data.items.slice(0, 6).map((item, i) => (
-          <div key={i} className="flex items-center gap-1.5 text-xs">
-            <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-            <span className="flex-1 truncate text-gray-600 dark:text-slate-300">{data.privacy === "categories" ? "••••" : item.label}</span>
-            <span className="font-medium">{item.pct.toFixed(1)}%</span>
-          </div>
-        ))}
-      </div>
-      <div className="mt-2 text-[10px] text-gray-400 dark:text-slate-500 uppercase tracking-wider">Shared Allocation</div>
-    </div>
-  );
-}
-
-function SummaryCard({ data }: { data: SummaryCardData }) {
-  const showValues = data.privacy === "full";
-  const showPcts = data.privacy !== "count_only";
-  return (
-    <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 min-w-[200px] max-w-[260px]">
-      <div className="text-xs font-semibold mb-1">Portfolio Summary</div>
-      {showValues && data.totalValue != null && (
-        <div className="text-lg font-bold">{formatCardNumber(data.totalValue, data.currency)}</div>
-      )}
-      {showPcts && data.dayChangePct != null && (
-        <div className={`text-sm font-medium ${(data.dayChangePct ?? 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-          {data.dayChangePct >= 0 ? "+" : ""}{data.dayChangePct.toFixed(2)}%
-          {showValues && data.dayChange != null && (
-            <span className="text-gray-500 dark:text-slate-400 ml-1 text-xs">({data.dayChange >= 0 ? "+" : ""}{formatCardNumber(data.dayChange, data.currency)})</span>
-          )}
-        </div>
-      )}
-      <div className="text-xs text-gray-500 dark:text-slate-400 mt-1">{data.holdingsCount} holdings</div>
-      {showPcts && data.topHoldings && data.topHoldings.length > 0 && (
-        <div className="mt-2 space-y-0.5">
-          {data.topHoldings.slice(0, 5).map((h, i) => (
-            <div key={i} className="flex justify-between text-xs">
-              <span className="text-gray-600 dark:text-slate-300">{h.ticker}</span>
-              <span className="font-medium">{h.pct.toFixed(1)}%</span>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="mt-2 text-[10px] text-gray-400 dark:text-slate-500 uppercase tracking-wider">Shared Summary</div>
-    </div>
-  );
-}
-
-function StockPickCard({ data }: { data: StockPickCardData }) {
-  return (
-    <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 min-w-[200px] max-w-[260px]">
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-xs font-bold text-amber-700 dark:text-amber-300">
-          {data.ticker.slice(0, 2)}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm">{data.ticker}</div>
-          {data.name && <div className="text-[11px] text-gray-500 dark:text-slate-400 truncate">{data.name}</div>}
-        </div>
-      </div>
-      {data.currentPrice != null && (
-        <div className="text-sm font-bold">{formatCardNumber(data.currentPrice, data.currency)}</div>
-      )}
-      {data.note && <div className="mt-1 text-xs text-gray-600 dark:text-slate-300 italic">&ldquo;{data.note}&rdquo;</div>}
-      <div className="mt-2 text-[10px] text-gray-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1">
-        <span>⭐</span> Stock Pick
-      </div>
-    </div>
-  );
-}
-
-function PortfolioCardRenderer({ type, content }: { type: ChatMessageType; content: string }) {
-  switch (type) {
-    case "holding": {
-      const d = tryParseCardJson<HoldingCardData>(content);
-      return d ? <HoldingCard data={d} /> : <span className="text-red-500 text-xs">Invalid holding data</span>;
-    }
-    case "allocation": {
-      const d = tryParseCardJson<AllocationCardData>(content);
-      return d ? <AllocationCard data={d} /> : <span className="text-red-500 text-xs">Invalid allocation data</span>;
-    }
-    case "summary": {
-      const d = tryParseCardJson<SummaryCardData>(content);
-      return d ? <SummaryCard data={d} /> : <span className="text-red-500 text-xs">Invalid summary data</span>;
-    }
-    case "stock_pick": {
-      const d = tryParseCardJson<StockPickCardData>(content);
-      return d ? <StockPickCard data={d} /> : <span className="text-red-500 text-xs">Invalid stock pick data</span>;
-    }
-    default:
-      return null;
-  }
-}
 
 const CARD_TYPES = new Set<ChatMessageType>(["holding", "allocation", "summary", "stock_pick"]);
 
@@ -527,7 +325,7 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
       <div className="group relative" ref={actionsRef}>
         {isCardMsg ? (
           <div onClick={() => setShowActions((v) => !v)}>
-            <PortfolioCardRenderer type={msg.type} content={msg.content} />
+            <ChatCardRenderer kind={msg.type as "holding" | "allocation" | "summary" | "stock_pick"} content={msg.content} />
           </div>
         ) : (
           <div

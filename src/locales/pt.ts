@@ -2579,6 +2579,24 @@ const pt: TranslationStrings = {
   aiQEarnings: "Que posições têm resultados a chegar?",
   aiQSP500: "Como é que a minha carteira se compara ao S&P 500?",
   aiQRisk: "Qual é o meu maior risco neste momento?",
+
+  // ── Warrent ───────────────────────────────────────────────
+  warrentName: "Warrent",
+  warrentSubtitle: "O teu companheiro de investimento em valor",
+  warrentTriggerSub: "Pergunta, aprende e age na tua carteira",
+  warrentClose: "Fechar Warrent",
+  warrentSend: "Enviar",
+  warrentConnected: "Ligado à tua carteira",
+  warrentHoldingsLabel: "posições",
+  warrentPlaceholder: "Diz ao Warrent o que queres fazer…",
+  warrentDisclaimer:
+    "Assistência gerada por IA. Não é aconselhamento financeiro. Confirma cada ação.",
+  warrentGreeting:
+    "Que bom ver-te. Tenho acesso à tua carteira. Pergunta-me o que quiseres ou diz-me o que adicionar, remover ou vigiar. Vou sempre pedir confirmação antes de alterar dados.",
+  warrentChipSummary: "Resume a minha carteira",
+  warrentChipConcentration: "Estou demasiado concentrado?",
+  warrentChipDividends: "Rendimento de dividendos estimado?",
+  warrentChipAlertExample: "Avisa-me se a AAPL cair 5%",
 };
 
 export default pt;

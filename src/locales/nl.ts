@@ -2578,6 +2578,24 @@ const nl: TranslationStrings = {
   aiQEarnings: "Welke posities hebben binnenkort kwartaalcijfers?",
   aiQSP500: "Hoe verhoudt mijn portefeuille zich tot de S&P 500?",
   aiQRisk: "Wat is nu mijn grootste risico?",
+
+  // ── Warrent ───────────────────────────────────────────────
+  warrentName: "Warrent",
+  warrentSubtitle: "Jouw waardebeleggings-metgezel",
+  warrentTriggerSub: "Vraag, leer en handel in je portefeuille",
+  warrentClose: "Warrent sluiten",
+  warrentSend: "Verzenden",
+  warrentConnected: "Verbonden met je portefeuille",
+  warrentHoldingsLabel: "posities",
+  warrentPlaceholder: "Vertel Warrent wat je wilt doen…",
+  warrentDisclaimer:
+    "AI-gegenereerde hulp. Geen financieel advies. Bevestig elke actie.",
+  warrentGreeting:
+    "Fijn je te zien. Ik heb toegang tot je portefeuille. Vraag me alles of vertel me wat ik moet toevoegen, verwijderen of in de gaten houden. Ik vraag altijd om bevestiging voordat ik gegevens wijzig.",
+  warrentChipSummary: "Vat mijn portefeuille samen",
+  warrentChipConcentration: "Ben ik te geconcentreerd?",
+  warrentChipDividends: "Verwachte dividendinkomsten?",
+  warrentChipAlertExample: "Waarschuw me als AAPL 5% daalt",
 };
 
 export default nl;

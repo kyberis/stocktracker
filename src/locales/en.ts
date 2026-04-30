@@ -2675,6 +2675,24 @@ const en: TranslationStrings = {
   aiQEarnings: "Which holdings have upcoming earnings?",
   aiQSP500: "How does my portfolio compare to the S&P 500?",
   aiQRisk: "What's my biggest risk right now?",
+
+  // ── Warrent (AI portfolio agent) ──────────────────────────
+  warrentName: "Warrent",
+  warrentSubtitle: "Your value-investing companion",
+  warrentTriggerSub: "Ask, learn, and act on your portfolio",
+  warrentClose: "Close Warrent",
+  warrentSend: "Send",
+  warrentConnected: "Connected to your portfolio",
+  warrentHoldingsLabel: "holdings",
+  warrentPlaceholder: "Tell Warrent what you want to do…",
+  warrentDisclaimer:
+    "AI-generated assistance. Not financial advice. Confirm any action you take.",
+  warrentGreeting:
+    "Good to see you. I have access to your portfolio. Ask me anything — or tell me what to add, remove, or watch. I'll always confirm before changing your data.",
+  warrentChipSummary: "Summarise my portfolio",
+  warrentChipConcentration: "Am I too concentrated?",
+  warrentChipDividends: "Estimated dividend income?",
+  warrentChipAlertExample: "Alert me if AAPL drops 5%",
 };
 
 export default en;

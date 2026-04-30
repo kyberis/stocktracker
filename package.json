@@ -36,6 +36,7 @@
     "dev:all": "concurrently -n trefolio,clara -c blue,magenta \"npm:dev\" \"npm:dev:clara\""
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.54",
     "@capacitor/android": "^8.3.0",
     "@capacitor/app": "^8.1.0",
     "@capacitor/core": "^8.2.0",
@@ -54,6 +55,7 @@
     "@vercel/blob": "^1.1.1",
     "@vercel/functions": "^2.2.13",
     "@vercel/speed-insights": "^1.3.1",
+    "ai": "^6.0.170",
     "bcryptjs": "^3.0.3",
     "geist": "^1.7.0",
     "jose": "^6.1.3",
