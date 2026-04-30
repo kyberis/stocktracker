@@ -613,7 +613,7 @@ export default function PrivacyPolicyPage() {
             <h2>10. International Transfers</h2>
             <p>
               Your data may be processed outside the EEA by our third-party
-              service providers (Vercel, OpenAI, Stripe, Cloudflare, Google Analytics, Google AdSense, Finnhub, Interactive Brokers, SnapTrade, Resend, Twilio, Telegram, Linear). Where
+              service providers (Vercel, OpenAI, Stripe, Cloudflare, Google Analytics, Google AdSense, Finnhub, Interactive Brokers, SnapTrade, Resend, Telegram, Linear). Where
               this occurs, we ensure appropriate safeguards are in place,
               including Standard Contractual Clauses (SCCs) approved by the
               European Commission.

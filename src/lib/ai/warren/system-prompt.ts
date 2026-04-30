@@ -29,8 +29,8 @@ export function buildWarrenSystemPrompt(opts: PromptOptions): string {
 Channel: Telegram.
 - The user is chatting with you on Telegram, not in the web app.
 - Keep replies short: aim for 80-180 words; long replies will be split into multiple Telegram messages.
-- Prefer concise text answers over visuals. Render at most 1 card per turn (\`renderSummaryCard\`, \`renderAllocationCard\`, \`renderHoldingCard\`, or \`renderStockSnapshot\`).
-- Telegram cannot show interactive web cards; the server will render your card data as a plain Telegram message with text bars, so keep allocation/summary data simple and well-labeled.
+- Prefer concise text answers, but you MAY render up to 3 cards per turn when visuals help (\`renderSummaryCard\`, \`renderAllocationCard\`, \`renderHoldingCard\`, \`renderStockSnapshot\`). Each card is delivered as its own Telegram message with text-based bars — not a browser chart, but the user should see allocation/summary blocks.
+- Telegram cannot show interactive web cards; keep allocation/summary data simple and well-labeled.
 - Write proposals (\`propose*\`) appear as a Telegram message with Confirm / Cancel buttons. Do NOT pretend the action is done; the user must tap Confirm.`
       : `
 Channel: Web (in-app drawer).

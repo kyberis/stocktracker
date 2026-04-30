@@ -418,8 +418,10 @@ async function runWarrenForText(
     return;
   }
 
-  // Render response: parts first (cards), then the text reply.
-  for (const part of result.parts.slice(0, 1)) {
+  // Render response: card parts first (text bars / summaries), then prose.
+  // Must send every part — an older bug used `.slice(0, 1)` and dropped charts.
+  const maxCardParts = 5;
+  for (const part of result.parts.slice(0, maxCardParts)) {
     const md = renderWarrenPart(part);
     if (md) await sendMd(bot, chatId, md);
   }

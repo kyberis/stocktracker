@@ -352,6 +352,82 @@ describe("telegram/handler · free-form Warren turn", () => {
     setTestTelegramClient(null);
   });
 
+  it("sends every Warren card part, not only the first", async () => {
+    dbMocks.getChatLinkByChatId.mockResolvedValueOnce({
+      chatId: "42",
+      userId: "user-1",
+      languageCode: "en",
+      linkedAt: "",
+      lastSeenAt: "",
+      lastActivePortfolioId: "",
+    });
+    dbMocks.listPortfolios.mockResolvedValueOnce([
+      { id: "pf-1", name: "Default", currency: "EUR", isDefault: true },
+    ]);
+    snapMock.buildPortfolioSnapshot.mockResolvedValueOnce({
+      baseCurrency: "EUR",
+      totals: { value: 1, cost: 1, gainLoss: 0, gainLossPct: 0, dayChange: 0 },
+      holdingsCount: 0,
+      topHoldings: [],
+      allocation: [],
+      cashSummary: {},
+    });
+    runTurnMock.runWarrenTurn.mockResolvedValueOnce({
+      text: "Here is your breakdown.",
+      parts: [
+        {
+          kind: "summary",
+          data: {
+            holdingsCount: 3,
+            currency: "EUR",
+            totalValue: 1000,
+            dayChange: 10,
+            dayChangePct: 1,
+            topHoldings: [{ ticker: "AAPL", pct: 40 }],
+          },
+        },
+        {
+          kind: "allocation",
+          data: {
+            items: [
+              { label: "Stocks", pct: 80 },
+              { label: "Cash", pct: 20 },
+            ],
+            currency: "EUR",
+            totalValue: 1000,
+          },
+        },
+      ],
+      proposals: [],
+      totalTokens: 100,
+      durationMs: 5,
+    });
+
+    const { handler, setTestTelegramClient } = await loadHandler();
+    const { stub, sent } = makeBotStub();
+    setTestTelegramClient(stub);
+
+    await handler.handleTelegramUpdate({
+      message: {
+        message_id: 1,
+        chat: { id: 42, type: "private" },
+        date: 0,
+        text: "Show allocation",
+        from: { id: 7 },
+      },
+    });
+
+    const cardTexts = sent.filter(
+      (m) => m.method === "sendMessage" && m.text?.includes("Portfolio summary"),
+    );
+    const allocTexts = sent.filter(
+      (m) => m.method === "sendMessage" && m.text?.includes("Allocation"),
+    );
+    expect(cardTexts.length).toBeGreaterThanOrEqual(1);
+    expect(allocTexts.length).toBeGreaterThanOrEqual(1);
+    setTestTelegramClient(null);
+  });
+
   it("blocks free-form for an unlinked chat", async () => {
     dbMocks.getChatLinkByChatId.mockResolvedValueOnce(null);
     const { handler, setTestTelegramClient } = await loadHandler();
