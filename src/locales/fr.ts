@@ -2580,23 +2580,23 @@ const fr: TranslationStrings = {
   aiQSP500: "Comment mon portefeuille se compare-t-il au S&P 500 ?",
   aiQRisk: "Quel est mon plus grand risque actuellement ?",
 
-  // ── Warrent ───────────────────────────────────────────────
-  warrentName: "Warrent",
-  warrentSubtitle: "Votre compagnon d'investissement value",
-  warrentTriggerSub: "Demandez, apprenez et agissez sur votre portefeuille",
-  warrentClose: "Fermer Warrent",
-  warrentSend: "Envoyer",
-  warrentConnected: "Connecté à votre portefeuille",
-  warrentHoldingsLabel: "positions",
-  warrentPlaceholder: "Dites à Warrent ce que vous voulez faire…",
-  warrentDisclaimer:
+  // ── Warren ───────────────────────────────────────────────
+  warrenName: "Warren",
+  warrenSubtitle: "Votre compagnon d'investissement value",
+  warrenTriggerSub: "Demandez, apprenez et agissez sur votre portefeuille",
+  warrenClose: "Fermer Warren",
+  warrenSend: "Envoyer",
+  warrenConnected: "Connecté à votre portefeuille",
+  warrenHoldingsLabel: "positions",
+  warrenPlaceholder: "Dites à Warren ce que vous voulez faire…",
+  warrenDisclaimer:
     "Aide générée par IA. Pas un conseil financier. Confirmez chaque action.",
-  warrentGreeting:
+  warrenGreeting:
     "Heureux de vous voir. J'ai accès à votre portefeuille. Demandez-moi ce que vous voulez ou dites-moi ce que je dois ajouter, retirer ou surveiller. Je vous demanderai toujours confirmation avant de modifier vos données.",
-  warrentChipSummary: "Résume mon portefeuille",
-  warrentChipConcentration: "Suis-je trop concentré ?",
-  warrentChipDividends: "Revenu de dividendes estimé ?",
-  warrentChipAlertExample: "Alerte-moi si AAPL baisse de 5%",
+  warrenChipSummary: "Résume mon portefeuille",
+  warrenChipConcentration: "Suis-je trop concentré ?",
+  warrenChipDividends: "Revenu de dividendes estimé ?",
+  warrenChipAlertExample: "Alerte-moi si AAPL baisse de 5%",
 };
 
 export default fr;

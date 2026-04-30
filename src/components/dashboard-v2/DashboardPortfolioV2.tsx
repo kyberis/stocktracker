@@ -37,10 +37,10 @@ const GoalPromptCard = dynamic(() => import("./GoalPromptCard"), { ssr: false })
 const CompactDividendCard = dynamic(() => import("./CompactDividendCard"), { ssr: false, loading: () => <CardSkeleton /> });
 const CompactEarningsCard = dynamic(() => import("./CompactEarningsCard"), { ssr: false, loading: () => <CardSkeleton /> });
 const PortfolioScoreCard = dynamic(() => import("./PortfolioScoreCard"), { ssr: false, loading: () => <CardSkeleton /> });
-const WarrentTrigger = dynamic(() => import("@/components/warrent/WarrentTrigger"), { ssr: false });
+const WarrenTrigger = dynamic(() => import("@/components/warren/WarrenTrigger"), { ssr: false });
 const WeeklyDigestCard = dynamic(() => import("./WeeklyDigestCard"), { ssr: false });
 const DailyDigestsTeaserCard = dynamic(() => import("./DailyDigestsTeaserCard"), { ssr: false });
-const WarrentDrawer = dynamic(() => import("@/components/warrent/WarrentDrawer"), { ssr: false });
+const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
 const PortfolioTable = dynamic(() => import("../PortfolioTable"), { ssr: false, loading: () => <TableSkeleton /> });
 const PortfolioGrowthPeriods = dynamic(() => import("../PortfolioGrowthPeriods"), { ssr: false, loading: () => <CardSkeleton /> });
 const PerformanceMetrics = dynamic(() => import("../PerformanceMetrics"), { ssr: false, loading: () => <CardSkeleton /> });
@@ -100,12 +100,12 @@ function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onA
             <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />
             <PortfolioGrowthPeriods holdings={holdings} />
             <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
-            <WarrentTrigger onOpen={() => setAiDrawerOpen(true)} />
+            <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
             <WeeklyDigestCard position="default" />
           </div>
         </div>
       </div>
-      <WarrentDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
+      <WarrenDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
     </>
   );
 }
@@ -149,11 +149,11 @@ function CollapsedLayout({ chartBlock, holdings, cashEntries, allCashEntries, on
           <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />
           <PortfolioGrowthPeriods holdings={holdings} />
           <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
-          <WarrentTrigger onOpen={() => setAiDrawerOpen(true)} />
+          <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
           <WeeklyDigestCard position="default" />
         </div>
       </div>
-      <WarrentDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
+      <WarrenDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
     </>
   );
 }

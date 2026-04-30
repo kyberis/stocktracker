@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSession } from "@/lib/auth/guards";
-import { dispatchProposal } from "@/lib/ai/warrent/dispatch";
+import { dispatchProposal } from "@/lib/ai/warren/dispatch";
 import { withMetrics } from "@/lib/with-metrics";
 
 const confirmSchema = z.object({
@@ -12,7 +12,7 @@ const confirmSchema = z.object({
   data: z.record(z.string(), z.unknown()),
 });
 
-export const POST = withMetrics("/api/warrent/confirm", async (req: NextRequest) => {
+export const POST = withMetrics("/api/warren/confirm", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 

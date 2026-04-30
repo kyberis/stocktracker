@@ -2676,23 +2676,23 @@ const en: TranslationStrings = {
   aiQSP500: "How does my portfolio compare to the S&P 500?",
   aiQRisk: "What's my biggest risk right now?",
 
-  // ── Warrent (AI portfolio agent) ──────────────────────────
-  warrentName: "Warrent",
-  warrentSubtitle: "Your value-investing companion",
-  warrentTriggerSub: "Ask, learn, and act on your portfolio",
-  warrentClose: "Close Warrent",
-  warrentSend: "Send",
-  warrentConnected: "Connected to your portfolio",
-  warrentHoldingsLabel: "holdings",
-  warrentPlaceholder: "Tell Warrent what you want to do…",
-  warrentDisclaimer:
+  // ── Warren (AI portfolio agent) ──────────────────────────
+  warrenName: "Warren",
+  warrenSubtitle: "Your value-investing companion",
+  warrenTriggerSub: "Ask, learn, and act on your portfolio",
+  warrenClose: "Close Warren",
+  warrenSend: "Send",
+  warrenConnected: "Connected to your portfolio",
+  warrenHoldingsLabel: "holdings",
+  warrenPlaceholder: "Tell Warren what you want to do…",
+  warrenDisclaimer:
     "AI-generated assistance. Not financial advice. Confirm any action you take.",
-  warrentGreeting:
+  warrenGreeting:
     "Good to see you. I have access to your portfolio. Ask me anything — or tell me what to add, remove, or watch. I'll always confirm before changing your data.",
-  warrentChipSummary: "Summarise my portfolio",
-  warrentChipConcentration: "Am I too concentrated?",
-  warrentChipDividends: "Estimated dividend income?",
-  warrentChipAlertExample: "Alert me if AAPL drops 5%",
+  warrenChipSummary: "Summarise my portfolio",
+  warrenChipConcentration: "Am I too concentrated?",
+  warrenChipDividends: "Estimated dividend income?",
+  warrenChipAlertExample: "Alert me if AAPL drops 5%",
 };
 
 export default en;

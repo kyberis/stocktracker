@@ -15,17 +15,17 @@ import {
 import { AI_FLOW_META } from "@/lib/ai-models";
 import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
 import { withMetrics } from "@/lib/with-metrics";
-import { buildWarrentSystemPrompt } from "@/lib/ai/warrent/system-prompt";
+import { buildWarrenSystemPrompt } from "@/lib/ai/warren/system-prompt";
 import {
-  buildWarrentTools,
+  buildWarrenTools,
   type PortfolioSnapshot,
-  type WarrentToolContext,
-} from "@/lib/ai/warrent/tools";
+  type WarrenToolContext,
+} from "@/lib/ai/warren/tools";
 import type {
-  WarrentPart,
-  WarrentProposal,
-  WarrentStreamFrame,
-} from "@/lib/ai/warrent/types";
+  WarrenPart,
+  WarrenProposal,
+  WarrenStreamFrame,
+} from "@/lib/ai/warren/types";
 
 const portfolioSnapshotSchema: z.ZodType<PortfolioSnapshot | undefined> = z
   .object({
@@ -64,9 +64,9 @@ const requestSchema = z.object({
   portfolioContext: portfolioSnapshotSchema,
 });
 
-export const POST = withMetrics("/api/warrent/chat", async (req: NextRequest) => {
+export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => {
   // Free tier currently maps to ai_consult quota; we plan to add a dedicated
-  // "warrent_chat" quota in a follow-up. Reuse ai_consult so we don't ship a
+  // "warren_chat" quota in a follow-up. Reuse ai_consult so we don't ship a
   // schema-less limit on day one.
   const { session, error } = await requireFeatureQuota(req, "ai_consult");
   if (error) return error;
@@ -93,7 +93,7 @@ export const POST = withMetrics("/api/warrent/chat", async (req: NextRequest) =>
   const flowMeta = AI_FLOW_META.portfolio_chat;
   const provider = createOpenAI({ apiKey });
 
-  const systemPrompt = buildWarrentSystemPrompt({
+  const systemPrompt = buildWarrenSystemPrompt({
     language: body.language,
     baseCurrency: body.baseCurrency,
     activePortfolioId,
@@ -104,23 +104,23 @@ export const POST = withMetrics("/api/warrent/chat", async (req: NextRequest) =>
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
-      const send = (frame: WarrentStreamFrame) => {
+      const send = (frame: WarrenStreamFrame) => {
         controller.enqueue(encoder.encode(JSON.stringify(frame) + "\n"));
       };
 
-      const ctx: WarrentToolContext = {
+      const ctx: WarrenToolContext = {
         userId: session.userId,
         isDemo: !!body.isDemo,
         activePortfolioId: activePortfolioId,
         baseCurrency: body.baseCurrency,
         snapshot: body.portfolioContext,
-        emitPart: (part: WarrentPart) => send({ kind: "part", part }),
-        emitProposal: (proposal: WarrentProposal) => send({ kind: "proposal", proposal }),
+        emitPart: (part: WarrenPart) => send({ kind: "part", part }),
+        emitProposal: (proposal: WarrenProposal) => send({ kind: "proposal", proposal }),
         emitStep: (label: string) => send({ kind: "tool_step", label }),
       };
 
-      const tools = buildWarrentTools(ctx);
-      const endTimer = aiRequestDuration.startTimer({ analysis_type: "warrent" });
+      const tools = buildWarrenTools(ctx);
+      const endTimer = aiRequestDuration.startTimer({ analysis_type: "warren" });
       const aiLogStart = Date.now();
       const lastUserMsg = body.messages[body.messages.length - 1]?.content || "";
 
@@ -139,7 +139,7 @@ export const POST = withMetrics("/api/warrent/chat", async (req: NextRequest) =>
           if (chunk.type === "text-delta") {
             send({ kind: "text", delta: chunk.text });
           } else if (chunk.type === "error") {
-            console.error("[warrent/chat] stream error", chunk.error);
+            console.error("[warren/chat] stream error", chunk.error);
             send({
               kind: "error",
               message: chunk.error instanceof Error ? chunk.error.message : "AI stream error",
@@ -156,11 +156,11 @@ export const POST = withMetrics("/api/warrent/chat", async (req: NextRequest) =>
         }
 
         endTimer();
-        aiCallsTotal.inc({ status: "success", analysis_type: "warrent" });
+        aiCallsTotal.inc({ status: "success", analysis_type: "warren" });
 
         insertAiLog({
           userId: session.userId,
-          source: "warrent_chat",
+          source: "warren_chat",
           model,
           promptSystem: systemPrompt,
           promptUser: lastUserMsg,
@@ -171,13 +171,13 @@ export const POST = withMetrics("/api/warrent/chat", async (req: NextRequest) =>
         send({ kind: "done" });
       } catch (err) {
         endTimer();
-        aiCallsTotal.inc({ status: "error", analysis_type: "warrent" });
-        console.error("[warrent/chat] failed", err);
+        aiCallsTotal.inc({ status: "error", analysis_type: "warren" });
+        console.error("[warren/chat] failed", err);
         const message = err instanceof Error ? err.message : "Failed to contact AI service";
         send({ kind: "error", message });
         insertAiLog({
           userId: session.userId,
-          source: "warrent_chat",
+          source: "warren_chat",
           model,
           promptSystem: systemPrompt,
           promptUser: lastUserMsg,

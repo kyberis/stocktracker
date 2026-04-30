@@ -6,7 +6,7 @@ interface Props {
   thinking?: boolean;
 }
 
-export default function WarrentAvatar({ size = 44, className = "", thinking = false }: Props) {
+export default function WarrenAvatar({ size = 44, className = "", thinking = false }: Props) {
   return (
     <span
       className={`inline-block rounded-full overflow-hidden ${className}`}
@@ -15,18 +15,18 @@ export default function WarrentAvatar({ size = 44, className = "", thinking = fa
     >
       <svg viewBox="0 0 64 64" width={size} height={size} xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <radialGradient id="warrent-bg" cx="35%" cy="30%" r="80%">
+          <radialGradient id="warren-bg" cx="35%" cy="30%" r="80%">
             <stop offset="0%" stopColor="#f1d2a3" />
             <stop offset="55%" stopColor="#b58457" />
             <stop offset="100%" stopColor="#5e3a20" />
           </radialGradient>
-          <linearGradient id="warrent-suit" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="warren-suit" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#3a2718" />
             <stop offset="100%" stopColor="#1a0f08" />
           </linearGradient>
         </defs>
-        <circle cx="32" cy="32" r="32" fill="url(#warrent-bg)" />
-        <path d="M6 64 C 10 48, 20 44, 32 44 C 44 44, 54 48, 58 64 Z" fill="url(#warrent-suit)" />
+        <circle cx="32" cy="32" r="32" fill="url(#warren-bg)" />
+        <path d="M6 64 C 10 48, 20 44, 32 44 C 44 44, 54 48, 58 64 Z" fill="url(#warren-suit)" />
         <path d="M27 46 L32 54 L37 46 Z" fill="#e9dcc4" opacity="0.85" />
         <rect x="28" y="38" width="8" height="8" fill="#d4a574" opacity="0.6" />
         <ellipse cx="32" cy="28" rx="13" ry="14" fill="#e6c39a" />

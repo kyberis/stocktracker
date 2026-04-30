@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import AiMarkdown from "@/components/AiMarkdown";
-import WarrentAvatar from "./WarrentAvatar";
+import WarrenAvatar from "./WarrenAvatar";
 import RenderPart from "./RenderPart";
 import ActionCard from "./ActionCard";
 import { useI18n } from "@/lib/i18n";
@@ -14,17 +14,17 @@ import {
 } from "@/lib/portfolio-summary";
 import { convertToEUR, resolveQuoteCurrency, formatCurrency } from "@/lib/utils";
 import type {
-  WarrentPart,
-  WarrentProposal,
-  WarrentStreamFrame,
-} from "@/lib/ai/warrent/types";
+  WarrenPart,
+  WarrenProposal,
+  WarrenStreamFrame,
+} from "@/lib/ai/warren/types";
 
 type Bubble =
   | { id: string; kind: "text-user"; content: string }
   | { id: string; kind: "text-assistant"; content: string }
   | { id: string; kind: "tool-step"; label: string }
-  | { id: string; kind: "part"; part: WarrentPart }
-  | { id: string; kind: "proposal"; proposal: WarrentProposal };
+  | { id: string; kind: "part"; part: WarrenPart }
+  | { id: string; kind: "proposal"; proposal: WarrenProposal };
 
 interface Props {
   isOpen: boolean;
@@ -107,7 +107,7 @@ function buildSnapshot(args: {
   };
 }
 
-export default function WarrentDrawer({ isOpen, onClose }: Props) {
+export default function WarrenDrawer({ isOpen, onClose }: Props) {
   const { t, language } = useI18n();
   const {
     holdings,
@@ -182,7 +182,7 @@ export default function WarrentDrawer({ isOpen, onClose }: Props) {
       abortRef.current = ac;
 
       try {
-        const res = await fetch("/api/warrent/chat", {
+        const res = await fetch("/api/warren/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           signal: ac.signal,
@@ -221,7 +221,7 @@ export default function WarrentDrawer({ isOpen, onClose }: Props) {
             buffer = buffer.slice(idx + 1);
             if (!line) continue;
             try {
-              const frame = JSON.parse(line) as WarrentStreamFrame;
+              const frame = JSON.parse(line) as WarrenStreamFrame;
               applyFrame(setBubbles, assistantId, frame);
             } catch {
               // ignore malformed line
@@ -260,15 +260,15 @@ export default function WarrentDrawer({ isOpen, onClose }: Props) {
   }, [refreshHoldings, refreshAlertedTickers]);
 
   const quickPrompts = [
-    t("warrentChipSummary"),
-    t("warrentChipConcentration"),
-    t("warrentChipDividends"),
-    t("warrentChipAlertExample"),
+    t("warrenChipSummary"),
+    t("warrenChipConcentration"),
+    t("warrenChipDividends"),
+    t("warrenChipAlertExample"),
   ];
 
   const contextLine = stealthMode
-    ? t("warrentConnected")
-    : `${t("warrentConnected")} — ${holdings.length} ${t("warrentHoldingsLabel")}, ${formatCurrency(
+    ? t("warrenConnected")
+    : `${t("warrenConnected")} — ${holdings.length} ${t("warrenHoldingsLabel")}, ${formatCurrency(
         totals.totalCurrentEUR,
         activePortfolioCurrency,
       )}`;
@@ -288,23 +288,23 @@ export default function WarrentDrawer({ isOpen, onClose }: Props) {
           isOpen ? "translate-x-0" : "translate-x-full"
         } bg-gradient-to-b from-[#15110e] to-[#0e0b09] text-amber-50 border-l border-amber-500/15`}
         role="dialog"
-        aria-label="Warrent"
+        aria-label="Warren"
         aria-hidden={!isOpen}
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-amber-500/10 bg-gradient-to-r from-amber-500/[0.05] to-transparent shrink-0">
-          <WarrentAvatar size={42} thinking={streaming} />
+          <WarrenAvatar size={42} thinking={streaming} />
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-[16px] leading-tight tracking-tight">{t("warrentName")}</div>
+            <div className="font-bold text-[16px] leading-tight tracking-tight">{t("warrenName")}</div>
             <div className="text-[11px] text-amber-300/60 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              {t("warrentSubtitle")}
+              {t("warrenSubtitle")}
             </div>
           </div>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-lg border border-amber-500/15 bg-white/[0.04] flex items-center justify-center text-amber-200/60 hover:text-amber-200 hover:border-amber-400/40 transition-colors"
-            aria-label={t("warrentClose")}
+            aria-label={t("warrenClose")}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -320,9 +320,9 @@ export default function WarrentDrawer({ isOpen, onClose }: Props) {
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
           {bubbles.length === 0 && (
             <div className="flex gap-2 items-start">
-              <WarrentAvatar size={28} />
+              <WarrenAvatar size={28} />
               <div className="text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-white/[0.04] border border-amber-500/10 text-amber-50 max-w-[82%]">
-                {t("warrentGreeting")}
+                {t("warrenGreeting")}
               </div>
             </div>
           )}
@@ -357,7 +357,7 @@ export default function WarrentDrawer({ isOpen, onClose }: Props) {
             }
             return (
               <div key={b.id} className="flex gap-2 items-start">
-                <WarrentAvatar size={28} />
+                <WarrenAvatar size={28} />
                 <div className="text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-white/[0.04] border border-amber-500/10 text-amber-50 max-w-[82%]">
                   {b.content ? (
                     <AiMarkdown text={b.content} compact />
@@ -408,7 +408,7 @@ export default function WarrentDrawer({ isOpen, onClose }: Props) {
                   sendMessage(input);
                 }
               }}
-              placeholder={t("warrentPlaceholder")}
+              placeholder={t("warrenPlaceholder")}
               className="flex-1 text-[13.5px] bg-transparent border-0 outline-none text-amber-50 placeholder:text-amber-200/30 resize-none max-h-[110px]"
             />
             <button
@@ -416,14 +416,14 @@ export default function WarrentDrawer({ isOpen, onClose }: Props) {
               onClick={() => sendMessage(input)}
               disabled={!input.trim() || streaming}
               className="w-9 h-9 rounded-lg bg-amber-500 text-amber-950 flex items-center justify-center disabled:opacity-30 hover:bg-amber-400 transition-colors"
-              aria-label={t("warrentSend")}
+              aria-label={t("warrenSend")}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
               </svg>
             </button>
           </div>
-          <p className="text-[10.5px] text-center text-amber-200/50 mt-2 px-2">{t("warrentDisclaimer")}</p>
+          <p className="text-[10.5px] text-center text-amber-200/50 mt-2 px-2">{t("warrenDisclaimer")}</p>
         </div>
       </aside>
     </>
@@ -433,7 +433,7 @@ export default function WarrentDrawer({ isOpen, onClose }: Props) {
 function applyFrame(
   setBubbles: React.Dispatch<React.SetStateAction<Bubble[]>>,
   assistantId: string,
-  frame: WarrentStreamFrame,
+  frame: WarrenStreamFrame,
 ) {
   if (frame.kind === "text") {
     setBubbles((prev) => {

@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type { WarrentProposal } from "@/lib/ai/warrent/types";
+import type { WarrenProposal } from "@/lib/ai/warren/types";
 
 interface Props {
-  proposal: WarrentProposal;
+  proposal: WarrenProposal;
   onConfirmed?: (entityId?: string, message?: string) => void;
 }
 
-const KIND_LABEL: Record<WarrentProposal["kind"], string> = {
+const KIND_LABEL: Record<WarrenProposal["kind"], string> = {
   addHolding: "Add holding",
   removeHolding: "Remove holding",
   addCash: "Add cash",
@@ -26,7 +26,7 @@ export default function ActionCard({ proposal, onConfirmed }: Props) {
   const confirm = async () => {
     setStatus("submitting");
     try {
-      const res = await fetch("/api/warrent/confirm", {
+      const res = await fetch("/api/warren/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -13,7 +13,7 @@ import {
   insertAiLog,
 } from "@/lib/db";
 import { getAlertLimit, getHoldingsLimit } from "@/lib/subscription";
-import type { WarrentProposalKind } from "./types";
+import type { WarrenProposalKind } from "./types";
 
 export const addHoldingDataSchema = z.object({
   ticker: z.string().min(1).max(20),
@@ -61,7 +61,7 @@ export type DispatchResult =
 
 export async function dispatchProposal(
   userId: string,
-  kind: WarrentProposalKind,
+  kind: WarrenProposalKind,
   rawData: unknown,
 ): Promise<DispatchResult> {
   try {
@@ -80,7 +80,7 @@ export async function dispatchProposal(
         return { ok: false, status: 400, error: "Unknown proposal kind" };
     }
   } catch (err) {
-    console.error("[warrent/dispatch] failed", kind, err);
+    console.error("[warren/dispatch] failed", kind, err);
     return {
       ok: false,
       status: 500,
@@ -89,7 +89,7 @@ export async function dispatchProposal(
   } finally {
     insertAiLog({
       userId,
-      source: "warrent_action",
+      source: "warren_action",
       model: "n/a",
       promptSystem: kind,
       promptUser: JSON.stringify(rawData).slice(0, 2000),
@@ -137,7 +137,7 @@ async function runAddHolding(userId: string, raw: unknown): Promise<DispatchResu
       taxes: 0,
       currency: data.displayCurrency,
       displayCurrency: data.displayCurrency,
-      notes: "Added by Warrent",
+      notes: "Added by Warren",
     },
     data.portfolioId,
   );
@@ -145,7 +145,7 @@ async function runAddHolding(userId: string, raw: unknown): Promise<DispatchResu
     return { ok: false, status: 409, error: "Duplicate transaction." };
   }
 
-  trackEvent(userId, "warrent_action", { action: "addHolding", ticker: data.ticker });
+  trackEvent(userId, "warren_action", { action: "addHolding", ticker: data.ticker });
   return {
     ok: true,
     entityId: tx.id,
@@ -158,7 +158,7 @@ async function runRemoveHolding(userId: string, raw: unknown): Promise<DispatchR
   if (!parsed.success) return { ok: false, status: 400, error: "Invalid removeHolding payload" };
   const ok = await removeHolding(userId, parsed.data.holdingId);
   if (!ok) return { ok: false, status: 404, error: "Holding not found." };
-  trackEvent(userId, "warrent_action", { action: "removeHolding", holdingId: parsed.data.holdingId });
+  trackEvent(userId, "warren_action", { action: "removeHolding", holdingId: parsed.data.holdingId });
   return { ok: true, message: "Holding removed." };
 }
 
@@ -178,7 +178,7 @@ async function runAddCash(userId: string, raw: unknown): Promise<DispatchResult>
     },
     data.portfolioId,
   );
-  trackEvent(userId, "warrent_action", { action: "addCash", name: data.name });
+  trackEvent(userId, "warren_action", { action: "addCash", name: data.name });
   return { ok: true, entityId: entry.id, message: `Added "${data.name}".` };
 }
 
@@ -219,7 +219,7 @@ async function runCreateAlert(userId: string, raw: unknown): Promise<DispatchRes
     isPortfolioWide: !!data.isPortfolioWide,
     portfolioId: data.portfolioId || "",
   });
-  trackEvent(userId, "warrent_action", { action: "createAlert", ticker });
+  trackEvent(userId, "warren_action", { action: "createAlert", ticker });
   return { ok: true, entityId: alert.id, message: "Alert created." };
 }
 
@@ -232,6 +232,6 @@ async function runAddWatchlist(userId: string, raw: unknown): Promise<DispatchRe
     name: data.name || "",
     exchange: data.exchange || "",
   });
-  trackEvent(userId, "warrent_action", { action: "addWatchlist", ticker: item.ticker });
+  trackEvent(userId, "warren_action", { action: "addWatchlist", ticker: item.ticker });
   return { ok: true, entityId: item.id, message: `${item.ticker} added to watchlist.` };
 }

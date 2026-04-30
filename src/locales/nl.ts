@@ -2579,23 +2579,23 @@ const nl: TranslationStrings = {
   aiQSP500: "Hoe verhoudt mijn portefeuille zich tot de S&P 500?",
   aiQRisk: "Wat is nu mijn grootste risico?",
 
-  // ── Warrent ───────────────────────────────────────────────
-  warrentName: "Warrent",
-  warrentSubtitle: "Jouw waardebeleggings-metgezel",
-  warrentTriggerSub: "Vraag, leer en handel in je portefeuille",
-  warrentClose: "Warrent sluiten",
-  warrentSend: "Verzenden",
-  warrentConnected: "Verbonden met je portefeuille",
-  warrentHoldingsLabel: "posities",
-  warrentPlaceholder: "Vertel Warrent wat je wilt doen…",
-  warrentDisclaimer:
+  // ── Warren ───────────────────────────────────────────────
+  warrenName: "Warren",
+  warrenSubtitle: "Jouw waardebeleggings-metgezel",
+  warrenTriggerSub: "Vraag, leer en handel in je portefeuille",
+  warrenClose: "Warren sluiten",
+  warrenSend: "Verzenden",
+  warrenConnected: "Verbonden met je portefeuille",
+  warrenHoldingsLabel: "posities",
+  warrenPlaceholder: "Vertel Warren wat je wilt doen…",
+  warrenDisclaimer:
     "AI-gegenereerde hulp. Geen financieel advies. Bevestig elke actie.",
-  warrentGreeting:
+  warrenGreeting:
     "Fijn je te zien. Ik heb toegang tot je portefeuille. Vraag me alles of vertel me wat ik moet toevoegen, verwijderen of in de gaten houden. Ik vraag altijd om bevestiging voordat ik gegevens wijzig.",
-  warrentChipSummary: "Vat mijn portefeuille samen",
-  warrentChipConcentration: "Ben ik te geconcentreerd?",
-  warrentChipDividends: "Verwachte dividendinkomsten?",
-  warrentChipAlertExample: "Waarschuw me als AAPL 5% daalt",
+  warrenChipSummary: "Vat mijn portefeuille samen",
+  warrenChipConcentration: "Ben ik te geconcentreerd?",
+  warrenChipDividends: "Verwachte dividendinkomsten?",
+  warrenChipAlertExample: "Waarschuw me als AAPL 5% daalt",
 };
 
 export default nl;

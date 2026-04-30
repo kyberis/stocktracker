@@ -7,9 +7,9 @@ import {
   StockPickCard,
 } from "@/components/chat-cards";
 import { formatChatCardNumber } from "@/components/chat-cards/types";
-import type { WarrentPart } from "@/lib/ai/warrent/types";
+import type { WarrenPart } from "@/lib/ai/warren/types";
 
-export default function RenderPart({ part }: { part: WarrentPart }) {
+export default function RenderPart({ part }: { part: WarrenPart }) {
   switch (part.kind) {
     case "holding":
       return <HoldingCard data={part.data} />;
@@ -29,7 +29,7 @@ export default function RenderPart({ part }: { part: WarrentPart }) {
 function StockSnapshot({
   data,
 }: {
-  data: import("@/lib/ai/warrent/types").StockSnapshotData;
+  data: import("@/lib/ai/warren/types").StockSnapshotData;
 }) {
   const positive = (data.changePct ?? 0) >= 0;
   return (

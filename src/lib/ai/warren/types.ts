@@ -5,7 +5,7 @@ import type {
   StockPickCardData,
 } from "@/components/chat-cards/types";
 
-export type WarrentPart =
+export type WarrenPart =
   | { kind: "holding"; data: HoldingCardData }
   | { kind: "allocation"; data: AllocationCardData }
   | { kind: "summary"; data: SummaryCardData }
@@ -22,16 +22,16 @@ export interface StockSnapshotData {
   fiftyTwoWeekLow?: number;
 }
 
-export type WarrentProposalKind =
+export type WarrenProposalKind =
   | "addHolding"
   | "removeHolding"
   | "addCash"
   | "createAlert"
   | "addWatchlist";
 
-export interface WarrentProposalBase {
+export interface WarrenProposalBase {
   id: string;
-  kind: WarrentProposalKind;
+  kind: WarrenProposalKind;
   title: string;
   summary: string;
   destructive?: boolean;
@@ -78,17 +78,17 @@ export interface AddWatchlistProposalData {
   exchange?: string;
 }
 
-export type WarrentProposal =
-  | (WarrentProposalBase & { kind: "addHolding"; data: AddHoldingProposalData })
-  | (WarrentProposalBase & { kind: "removeHolding"; data: RemoveHoldingProposalData })
-  | (WarrentProposalBase & { kind: "addCash"; data: AddCashProposalData })
-  | (WarrentProposalBase & { kind: "createAlert"; data: CreateAlertProposalData })
-  | (WarrentProposalBase & { kind: "addWatchlist"; data: AddWatchlistProposalData });
+export type WarrenProposal =
+  | (WarrenProposalBase & { kind: "addHolding"; data: AddHoldingProposalData })
+  | (WarrenProposalBase & { kind: "removeHolding"; data: RemoveHoldingProposalData })
+  | (WarrenProposalBase & { kind: "addCash"; data: AddCashProposalData })
+  | (WarrenProposalBase & { kind: "createAlert"; data: CreateAlertProposalData })
+  | (WarrenProposalBase & { kind: "addWatchlist"; data: AddWatchlistProposalData });
 
-export type WarrentStreamFrame =
+export type WarrenStreamFrame =
   | { kind: "text"; delta: string }
-  | { kind: "part"; part: WarrentPart }
-  | { kind: "proposal"; proposal: WarrentProposal }
+  | { kind: "part"; part: WarrenPart }
+  | { kind: "proposal"; proposal: WarrenProposal }
   | { kind: "tool_step"; label: string }
   | { kind: "error"; message: string }
   | { kind: "done" };

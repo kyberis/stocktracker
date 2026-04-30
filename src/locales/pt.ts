@@ -2580,23 +2580,23 @@ const pt: TranslationStrings = {
   aiQSP500: "Como é que a minha carteira se compara ao S&P 500?",
   aiQRisk: "Qual é o meu maior risco neste momento?",
 
-  // ── Warrent ───────────────────────────────────────────────
-  warrentName: "Warrent",
-  warrentSubtitle: "O teu companheiro de investimento em valor",
-  warrentTriggerSub: "Pergunta, aprende e age na tua carteira",
-  warrentClose: "Fechar Warrent",
-  warrentSend: "Enviar",
-  warrentConnected: "Ligado à tua carteira",
-  warrentHoldingsLabel: "posições",
-  warrentPlaceholder: "Diz ao Warrent o que queres fazer…",
-  warrentDisclaimer:
+  // ── Warren ───────────────────────────────────────────────
+  warrenName: "Warren",
+  warrenSubtitle: "O teu companheiro de investimento em valor",
+  warrenTriggerSub: "Pergunta, aprende e age na tua carteira",
+  warrenClose: "Fechar Warren",
+  warrenSend: "Enviar",
+  warrenConnected: "Ligado à tua carteira",
+  warrenHoldingsLabel: "posições",
+  warrenPlaceholder: "Diz ao Warren o que queres fazer…",
+  warrenDisclaimer:
     "Assistência gerada por IA. Não é aconselhamento financeiro. Confirma cada ação.",
-  warrentGreeting:
+  warrenGreeting:
     "Que bom ver-te. Tenho acesso à tua carteira. Pergunta-me o que quiseres ou diz-me o que adicionar, remover ou vigiar. Vou sempre pedir confirmação antes de alterar dados.",
-  warrentChipSummary: "Resume a minha carteira",
-  warrentChipConcentration: "Estou demasiado concentrado?",
-  warrentChipDividends: "Rendimento de dividendos estimado?",
-  warrentChipAlertExample: "Avisa-me se a AAPL cair 5%",
+  warrenChipSummary: "Resume a minha carteira",
+  warrenChipConcentration: "Estou demasiado concentrado?",
+  warrenChipDividends: "Rendimento de dividendos estimado?",
+  warrenChipAlertExample: "Avisa-me se a AAPL cair 5%",
 };
 
 export default pt;

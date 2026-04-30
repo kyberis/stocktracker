@@ -2580,23 +2580,23 @@ const de: TranslationStrings = {
   aiQSP500: "Wie schneidet mein Portfolio im Vergleich zum S&P 500 ab?",
   aiQRisk: "Was ist gerade mein größtes Risiko?",
 
-  // ── Warrent ───────────────────────────────────────────────
-  warrentName: "Warrent",
-  warrentSubtitle: "Dein Value-Investing-Begleiter",
-  warrentTriggerSub: "Frage, lerne und handle in deinem Portfolio",
-  warrentClose: "Warrent schließen",
-  warrentSend: "Senden",
-  warrentConnected: "Mit deinem Portfolio verbunden",
-  warrentHoldingsLabel: "Positionen",
-  warrentPlaceholder: "Sag Warrent, was du tun möchtest…",
-  warrentDisclaimer:
+  // ── Warren ───────────────────────────────────────────────
+  warrenName: "Warren",
+  warrenSubtitle: "Dein Value-Investing-Begleiter",
+  warrenTriggerSub: "Frage, lerne und handle in deinem Portfolio",
+  warrenClose: "Warren schließen",
+  warrenSend: "Senden",
+  warrenConnected: "Mit deinem Portfolio verbunden",
+  warrenHoldingsLabel: "Positionen",
+  warrenPlaceholder: "Sag Warren, was du tun möchtest…",
+  warrenDisclaimer:
     "KI-generierte Hilfe. Keine Anlageberatung. Bestätige jede Aktion.",
-  warrentGreeting:
+  warrenGreeting:
     "Schön, dich zu sehen. Ich habe Zugriff auf dein Portfolio. Frag mich alles oder sag mir, was ich hinzufügen, entfernen oder beobachten soll. Ich frage immer nach, bevor ich Daten ändere.",
-  warrentChipSummary: "Fasse mein Portfolio zusammen",
-  warrentChipConcentration: "Bin ich zu konzentriert?",
-  warrentChipDividends: "Erwartete Dividendenerträge?",
-  warrentChipAlertExample: "Warne mich, wenn AAPL 5% fällt",
+  warrenChipSummary: "Fasse mein Portfolio zusammen",
+  warrenChipConcentration: "Bin ich zu konzentriert?",
+  warrenChipDividends: "Erwartete Dividendenerträge?",
+  warrenChipAlertExample: "Warne mich, wenn AAPL 5% fällt",
 };
 
 export default de;

@@ -9,7 +9,7 @@ import {
   listWatchlist as dbListWatchlist,
 } from "@/lib/db";
 import { createProvider } from "@/lib/api-providers";
-import type { WarrentPart, WarrentProposal, StockSnapshotData } from "./types";
+import type { WarrenPart, WarrenProposal, StockSnapshotData } from "./types";
 import type {
   HoldingCardData,
   AllocationCardData,
@@ -47,14 +47,14 @@ export interface PortfolioSnapshot {
   cashSummary: Record<string, number>;
 }
 
-export interface WarrentToolContext {
+export interface WarrenToolContext {
   userId: string;
   isDemo: boolean;
   activePortfolioId?: string;
   baseCurrency: string;
   snapshot?: PortfolioSnapshot;
-  emitPart: (part: WarrentPart) => void;
-  emitProposal: (proposal: WarrentProposal) => void;
+  emitPart: (part: WarrenPart) => void;
+  emitProposal: (proposal: WarrenProposal) => void;
   emitStep: (label: string) => void;
 }
 
@@ -68,7 +68,7 @@ const ALLOC_COLORS: Record<string, string> = {
   Pension: "#8b5cf6",
 };
 
-export function buildWarrentTools(ctx: WarrentToolContext) {
+export function buildWarrenTools(ctx: WarrenToolContext) {
   return {
     // ──────────────── READ TOOLS ────────────────
     getPortfolioSummary: tool({
