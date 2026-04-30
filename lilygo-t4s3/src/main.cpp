@@ -15,6 +15,10 @@
 
 LilyGo_Class amoled;
 
+/** RM690B0 / QSPI: same LVGL path as LilyGo `LVGL_Rotation` / `text-demo` (`beginLvglHelper`).
+ *  `beginLvglHelperDMA` matches other batches but leaves a black panel on some T4-S3 units. */
+static void start_lvgl() { beginLvglHelper(amoled); }
+
 static PortfolioData portfolio;
 static DeviceConfig device_cfg;
 static SparklineData sparkline_buf;
@@ -246,7 +250,7 @@ static void headless_timer_wake() {
 static void touch_wake_setup() {
     Serial.println("[WAKE] Touch wake — full boot.");
 
-    beginLvglHelper(amoled);
+    start_lvgl();
     config_init();
 
     char fw_ver[24];
@@ -263,8 +267,9 @@ static void touch_wake_setup() {
     ui_set_settings_callbacks(on_brightness_change, on_timeout_change,
                               on_theme_change, on_unlink);
 
-    // Restore saved settings
+    // Restore saved settings (NVS 0 brightness = unusable panel)
     uint8_t saved_bright = config_load_brightness();
+    if (saved_bright < 8) saved_bright = 255;
     amoled.setBrightness(saved_bright);
     ui_settings_set_brightness(saved_bright);
 
@@ -364,10 +369,18 @@ void setup() {
     Serial.begin(115200);
     Serial.println("trefolio Leaf booting...");
 
-    if (!amoled.begin()) {
+    // Leaf is always T4-S3 (2.41" RM690B0). Do not use generic begin() here: if SY6970
+    // I2C probing fails, LilyGo can fall back to beginAMOLED_191() — wrong controller → black screen.
+    if (!amoled.beginAMOLED_241(true /* disable_sd */, false)) {
         Serial.println("AMOLED init failed!");
         while (1) delay(1000);
     }
+
+    Serial.printf("[DISP] psram_total=%u psram_free=%u\n",
+                  (unsigned)ESP.getPsramSize(), (unsigned)ESP.getFreePsram());
+    amoled.disp_wakeup();
+    delay(120);
+    amoled.setBrightness(255);
 
     Serial.printf("Display: %dx%d  Board: %s\n",
                   amoled.width(), amoled.height(), amoled.getName());
@@ -402,7 +415,7 @@ void setup() {
     rtc_invalidate();
     rtc_cache.boot_count = 0;
 
-    beginLvglHelper(amoled);
+    start_lvgl();
     config_init();
 
     char fw_ver[24];
@@ -419,8 +432,9 @@ void setup() {
     ui_set_settings_callbacks(on_brightness_change, on_timeout_change,
                               on_theme_change, on_unlink);
 
-    // Restore saved settings
+    // Restore saved settings (NVS 0 brightness = unusable panel)
     uint8_t saved_bright = config_load_brightness();
+    if (saved_bright < 8) saved_bright = 255;
     amoled.setBrightness(saved_bright);
     ui_settings_set_brightness(saved_bright);
 

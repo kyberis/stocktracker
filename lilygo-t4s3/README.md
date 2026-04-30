@@ -13,17 +13,12 @@ PlatformIO project for the trefolio Leaf device (LILYGO T4-S3 board).
 ## Quick Start
 
 ```bash
-# Build firmware
-pio run
+# Optional: STA Wi‑Fi bootstrap when NVS has no SSID yet (locals only; gitignored):
+# cp src/wifi_preset_secret.example.h src/wifi_preset_secret.h  # edit TRE_WIFI_PRESET_* macros
 
-# Flash to board (connect via USB-C)
-pio run --target upload
+pio run -e lilygo-t4-s3 --target upload
 
-# Serial monitor
-pio device monitor
-
-# Build + flash + monitor
-pio run --target upload && pio device monitor
+pio device monitor   # 115200 baud
 ```
 
 ## Debugging

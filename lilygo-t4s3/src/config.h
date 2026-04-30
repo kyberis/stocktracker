@@ -16,7 +16,7 @@ constexpr const char *API_BASE_URL  = "https://trefolio.com";
 
 constexpr size_t TOKEN_MAX_LEN = 20; // "XXXX-XXXX-XXXX" + null
 
-constexpr const char *FW_VERSION = "1.0.0";
+constexpr const char *FW_VERSION = "1.0.2";
 
 void config_init();
 

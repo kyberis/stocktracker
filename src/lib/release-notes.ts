@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.1.2",
+    date: "2026-04-30",
+    title: "Leaf firmware tooling and display diagnostics",
+    titleTranslations: {
+      es: "Herramientas Leaf y diagn\u00F3stico de pantalla",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "trefolio Leaf (LILYGO T4-S3): extra PlatformIO environments for hardware isolation (`hello` alongside display solid-fill tests, RGB cycle without LVGL, LVGL text demo, USB-only bare-serial), host scripts for SPIFFS builds and factory reflash, Wi-Fi preset example header, and README/platformio updates merged with the upstream hello diagnostic build.",
+        translations: {
+          es: "trefolio Leaf (LILYGO T4-S3): entornos PlatformIO adicionales para aislar hardware (`hello` junto a tests de pantalla en color plano, ciclo RGB sin LVGL, demo de texto LVGL, bare-serial solo USB), scripts de host para SPIFFS y reflashing de f\u00E1brica, cabecera ejemplo de Wi-Fi preset, y README/platformio alineados con el build de diagn\u00F3stico hello del upstream.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.1.1",
     date: "2026-04-30",
     title: "Warren \u2014 corrected name",

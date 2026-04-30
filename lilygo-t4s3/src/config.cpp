@@ -82,8 +82,20 @@ uint16_t config_load_auto_sleep_sec() { return sim_auto_sleep_sec; }
 
 #else // ── Device (ESP32) ────────────────────────────────────────────
 
+#include <Arduino.h>
 #include <Preferences.h>
 #include <esp_mac.h>
+
+#if defined(__GNUC__) || defined(__clang__)
+#if __has_include("wifi_preset_secret.h")
+#include "wifi_preset_secret.h"
+#define TRE_WIFI_PRESET_HEADERS_OK 1
+#endif
+#endif
+#ifndef TRE_WIFI_PRESET_HEADERS_OK
+#define TRE_WIFI_PRESET_HEADERS_OK 0
+#endif
+
 #include <mbedtls/aes.h>
 #include <mbedtls/sha256.h>
 
@@ -139,6 +151,16 @@ static void aes_decrypt_token(const uint8_t *enc, char *out, size_t out_len) {
 
 void config_init() {
     prefs.begin("trefolio", false);
+#if TRE_WIFI_PRESET_HEADERS_OK && defined(TRE_WIFI_PRESET_SSID) && defined(TRE_WIFI_PRESET_PASS)
+    {
+        String have = prefs.getString("wifi_ssid", "");
+        if (have.length() == 0) {
+            prefs.putString("wifi_ssid", TRE_WIFI_PRESET_SSID);
+            prefs.putString("wifi_pass", TRE_WIFI_PRESET_PASS);
+            Serial.println("[cfg] Stored STA Wi‑Fi from wifi_preset_secret.h (NV was empty)");
+        }
+    }
+#endif
     derive_key();
 }
 

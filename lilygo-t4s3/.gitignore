@@ -1,5 +1,11 @@
 .pio/
-.vscode/.browse.c_cpp.db*
+.vscode/.browse.c_cpp_db*
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+
+# Optional Wi-Fi bootstrap secrets (never commit)
+src/wifi_preset_secret.h
+
+# Native Apple Silicon mkspiffs (built with scripts/build-host-mkspiffs.sh)
+tools/host-mkspiffs/mkspiffs
