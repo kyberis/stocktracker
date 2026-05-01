@@ -77,6 +77,8 @@ const PortfolioGrowthPeriods = dynamic(() => import("@/components/PortfolioGrowt
 const PerformanceMetrics = dynamic(() => import("@/components/PerformanceMetrics"), { ssr: false, loading: () => <CardSkeleton /> });
 const PortfolioProjection = dynamic(() => import("@/components/PortfolioProjection"), { ssr: false, loading: () => <CardSkeleton h="h-32" /> });
 const GoalCelebration = dynamic(() => import("@/components/GoalCelebration"), { ssr: false });
+const WarrenTrigger = dynamic(() => import("@/components/warren/WarrenTrigger"), { ssr: false });
+const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
 
 export default function MobileDashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -89,6 +91,7 @@ export default function MobileDashboard() {
   const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
   const { t } = useI18n();
   const { holdings, cashEntries, quotes, isLoading, refreshQuotes, activePortfolioId, portfolios, setActivePortfolio, demoMode } =
     usePortfolio();
@@ -333,6 +336,7 @@ export default function MobileDashboard() {
                   </div>
                 )}
 
+                <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
                 <DailyDigestsTeaserCard />
                 <WeeklyDigestCard position="promoted" />
                 <CompactReferralCard onShare={() => setShowReferralModal(true)} />
@@ -345,6 +349,7 @@ export default function MobileDashboard() {
                     refreshKey={refreshKey}
                     onRecalculate={handleRecalculate}
                     recalculating={recalculating}
+                    onOpenAi={() => setAiDrawerOpen(true)}
                     totalValue={totals.totalCurrentEUR}
                     investedValue={investedValueBase}
                     cashValue={cashValueBase}
@@ -587,6 +592,8 @@ export default function MobileDashboard() {
           onClose={() => setShowFeedback(false)}
         />
       )}
+
+      <WarrenDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
 
       {/* Portfolio picker bottom sheet */}
       {showPortfolioPicker && (

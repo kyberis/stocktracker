@@ -38,6 +38,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Se recuperaron cadenas faltantes de Telegram y del perfil en espa\u00f1ol, portugu\u00e9s y neerland\u00e9s para que todos los idiomas vuelvan a alinearse con las claves en ingl\u00e9s.",
         },
       },
+      {
+        type: "improvement",
+        text: "Warren AI is now available on the mobile dashboard: a prominent card at the top of the Portfolio tab and an Ask AI button in the chart footer both open the same Warren drawer used on desktop.",
+        translations: {
+          es: "Warren AI ya est\u00e1 disponible en el panel m\u00f3vil: una tarjeta destacada en la parte superior de la pesta\u00f1a Portfolio y un bot\u00f3n Ask AI en el pie del gr\u00e1fico abren el mismo cajón de Warren que en escritorio.",
+        },
+      },
     ],
   },
   {
