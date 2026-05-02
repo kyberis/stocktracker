@@ -23,27 +23,6 @@
 
 ---
 
-## 📸 Screenshots
-
-<table>
-<tr>
-<td width="33%" align="center">
-<img src="public/screenshots/dashboard-overview.png" alt="Portfolio dashboard" width="280" />
-<br/><strong>Dashboard</strong> — full portfolio at a glance, 4 themes
-</td>
-<td width="33%" align="center">
-<img src="public/screenshots/holdings-table.png" alt="Holdings table" width="280" />
-<br/><strong>Holdings</strong> — 21 currencies, live quotes, P&L
-</td>
-<td width="33%" align="center">
-<img src="public/screenshots/tools-page.png" alt="Tools — tax, projections, dividends" width="280" />
-<br/><strong>Tools</strong> — EU tax reports, projections, dividends
-</td>
-</tr>
-</table>
-
----
-
 ## ✨ Features
 
 | | |
