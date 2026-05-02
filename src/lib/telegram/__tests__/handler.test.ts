@@ -5,6 +5,7 @@ import type { TelegramClient } from "../client";
 
 const dbMocks = vi.hoisted(() => ({
   consumeLinkToken: vi.fn(),
+  completeTelegramLink: vi.fn(),
   linkChat: vi.fn(),
   unlinkChat: vi.fn(),
   unlinkChatByUser: vi.fn(),
@@ -155,6 +156,7 @@ describe("telegram/handler · /start <token>", () => {
 
   it("rejects an invalid/expired token without linking", async () => {
     dbMocks.consumeLinkToken.mockResolvedValueOnce(null);
+    dbMocks.completeTelegramLink.mockResolvedValueOnce(null);
     const { handler, setTestTelegramClient } = await loadHandler();
     const { stub, sent } = makeBotStub();
     setTestTelegramClient(stub);
@@ -171,6 +173,44 @@ describe("telegram/handler · /start <token>", () => {
 
     expect(dbMocks.linkChat).not.toHaveBeenCalled();
     expect(sent.some((m) => /invalid|expired/i.test(m.text || ""))).toBe(true);
+    setTestTelegramClient(null);
+  });
+
+  it("falls back to the legacy notifications token when the new table misses", async () => {
+    dbMocks.consumeLinkToken.mockResolvedValueOnce(null);
+    dbMocks.completeTelegramLink.mockResolvedValueOnce({
+      userId: "user-legacy",
+      language: "es",
+    });
+    dbMocks.findUserById.mockResolvedValueOnce({
+      id: "user-legacy",
+      username: "carlos",
+      display_name: "Carlos",
+    });
+    dbMocks.linkChat.mockResolvedValueOnce(undefined);
+
+    const { handler, setTestTelegramClient } = await loadHandler();
+    const { stub, sent } = makeBotStub();
+    setTestTelegramClient(stub);
+
+    await handler.handleTelegramUpdate({
+      message: {
+        message_id: 1,
+        chat: { id: 99, type: "private" },
+        date: 0,
+        text: "/start ab12cd34ef56ab12cd34ef56ab12cd34ef56",
+        from: { id: 7, language_code: "es" },
+      },
+    });
+
+    expect(dbMocks.completeTelegramLink).toHaveBeenCalledWith(
+      "ab12cd34ef56ab12cd34ef56ab12cd34ef56",
+      "99",
+    );
+    expect(dbMocks.linkChat).toHaveBeenCalledWith(
+      expect.objectContaining({ chatId: "99", userId: "user-legacy", languageCode: "es" }),
+    );
+    expect(sent.some((m) => /Vinculado/i.test(m.text || ""))).toBe(true);
     setTestTelegramClient(null);
   });
 });

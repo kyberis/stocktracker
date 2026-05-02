@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.2.3",
+    date: "2026-05-02",
+    title: "Telegram link no longer rejects valid tokens",
+    titleTranslations: {
+      es: "El enlace de Telegram ya no rechaza tokens v\u00e1lidos",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Connecting Telegram from Profile → Notifications no longer fails with \"link invalid or expired\": the bot now accepts both the Warren-bot deep link and the legacy notifications deep link, and a single connection enables both Warren chat and price-alert delivery.",
+        translations: {
+          es: "Conectar Telegram desde Perfil \u2192 Notificaciones ya no falla con \u201cenlace inv\u00e1lido o caducado\u201d: el bot acepta tanto el enlace del bot de Warren como el enlace antiguo de notificaciones, y una sola conexi\u00f3n activa el chat con Warren y la entrega de alertas de precio.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.2.2",
     date: "2026-05-02",
     title: "Profile page width matches the rest of the app",

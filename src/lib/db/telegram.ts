@@ -116,6 +116,18 @@ export async function linkChat(input: {
             last_seen_at = datetime('now')`,
     args: [input.chatId, input.userId, input.languageCode || ""],
   });
+  // Mirror the chat id into user_settings so the alert dispatcher (which
+  // reads telegram_chat_id from user_settings) also knows about the chat.
+  // Without this, users connecting from "Profile → Connect Telegram" can chat
+  // with Warren but never receive price alerts on Telegram.
+  await client.execute({
+    sql: "UPDATE user_settings SET telegram_chat_id = '', telegram_link_token = '', telegram_link_expires_at = '' WHERE telegram_chat_id = ? AND user_id != ?",
+    args: [input.chatId, input.userId],
+  });
+  await client.execute({
+    sql: "UPDATE user_settings SET telegram_chat_id = ?, telegram_link_token = '', telegram_link_expires_at = '' WHERE user_id = ?",
+    args: [input.chatId, input.userId],
+  });
 }
 
 export async function unlinkChat(chatId: string): Promise<void> {
@@ -130,6 +142,11 @@ export async function unlinkChat(chatId: string): Promise<void> {
   });
   await client.execute({
     sql: "DELETE FROM telegram_proposals WHERE chat_id = ?",
+    args: [chatId],
+  });
+  // Clear the alert-dispatcher mirror so price alerts stop targeting this chat.
+  await client.execute({
+    sql: "UPDATE user_settings SET telegram_chat_id = '', telegram_link_token = '', telegram_link_expires_at = '' WHERE telegram_chat_id = ?",
     args: [chatId],
   });
 }

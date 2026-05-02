@@ -12,6 +12,7 @@
 
 import {
   appendChatMessage,
+  completeTelegramLink,
   consumeLinkToken,
   findUserById,
   getChatLinkByChatId,
@@ -290,7 +291,21 @@ async function handleStartCommand(
     return;
   }
 
-  const userId = await consumeLinkToken(arg);
+  // Tokens come from two places that both produce the same /start <token>
+  // deep link: the new Warren-bot endpoint (telegram_link_tokens table) and
+  // the older Notifications endpoint (user_settings.telegram_link_token).
+  // Telegram only knows about one webhook URL, so we must accept both here —
+  // otherwise users who connect from Profile → Notifications get a misleading
+  // "link invalid or expired" message even on a fresh, valid token.
+  let userId = await consumeLinkToken(arg);
+  let legacyLanguage: string | null = null;
+  if (!userId) {
+    const legacy = await completeTelegramLink(arg, chatId);
+    if (legacy) {
+      userId = legacy.userId;
+      legacyLanguage = legacy.language;
+    }
+  }
   if (!userId) {
     const i = localizeTelegram(inferLocale(langCode));
     await sendMd(bot, chatId, escapeMarkdown(i.linkTokenInvalid));
@@ -305,7 +320,7 @@ async function handleStartCommand(
 
   // Resolve the user's preferred language from settings.
   const settings = await getUserSettings(userId).catch(() => null);
-  const finalLang = settings?.language || inferLocale(langCode);
+  const finalLang = legacyLanguage || settings?.language || inferLocale(langCode);
 
   await linkChat({
     chatId,
