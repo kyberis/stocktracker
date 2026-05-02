@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.3.1",
+    date: "2026-05-02",
+    title: "Warren now reports the same invested values as the web",
+    titleTranslations: {
+      es: "Warren ahora reporta los mismos valores de inversi\u00f3n que la web",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Fixed Warren AI returning different invested totals and average price per share than the web for non-EUR holdings. The chat snapshot was building FX rate keys in the wrong direction (e.g. GBPEUR instead of EURGBP), so non-EUR positions were silently kept in their local currency. Totals, gain/loss, and per-holding numbers now match the web exactly.",
+        translations: {
+          es: "Se corrigi\u00f3 que Warren AI devolviera totales invertidos y precio promedio por acci\u00f3n distintos a los de la web para posiciones que no estaban en EUR. El snapshot del chat constru\u00eda las claves del tipo de cambio en la direcci\u00f3n incorrecta (por ejemplo GBPEUR en lugar de EURGBP), por lo que las posiciones no-EUR se manten\u00edan silenciosamente en su moneda local. Los totales, ganancias/p\u00e9rdidas y los n\u00fameros por posici\u00f3n ahora coinciden exactamente con la web.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Fixed Warren reporting wrong gain percentages and currency labels for LSE / GBp-quoted holdings. The per-holding row mixed pence-quoted current prices with pound-stored cost basis when computing gain percent, producing ~100x errors, and tagged the average purchase price with the quote currency instead of the holding's display currency.",
+        translations: {
+          es: "Se corrigi\u00f3 que Warren reportara porcentajes de ganancia y etiquetas de moneda incorrectos para posiciones del LSE cotizadas en GBp. La fila por posici\u00f3n mezclaba precios actuales en peniques con la base de coste en libras al calcular el porcentaje de ganancia, lo que produc\u00eda errores de ~100x, y etiquetaba el precio promedio de compra con la moneda de la cotizaci\u00f3n en lugar de la moneda de visualizaci\u00f3n de la posici\u00f3n.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.3.0",
     date: "2026-05-02",
     title: "Warren on Telegram now renders styled replies and portfolio charts",
