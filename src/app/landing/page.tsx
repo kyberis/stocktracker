@@ -103,12 +103,14 @@ function getHeroFeatures(t: T) {
     },
     {
       tag: "Telegram",
-      title: "Warren on Telegram",
+      title: "Warren on Telegram (now with voice)",
       description:
-        "Connect once from your profile and chat with Warren on Telegram — same AI portfolio companion, same write-with-confirmation safety, on any phone or desktop. Ask in plain language, get charts, news, dividends, allocation, performance, and propose adds, removes, cash entries or alerts with a single Confirm tap.",
+        "Connect once from your profile and chat with Warren on Telegram — same AI portfolio companion, same write-with-confirmation safety, on any phone or desktop. Type or send a voice note: Warren transcribes, answers, and even speaks the reply back. Ask for charts, news, dividends, allocation, performance, or propose adds, removes, cash entries or alerts with a single Confirm tap. Warren also explains the concepts behind the numbers — margin of safety, drawdown, payout ratio — in plain language from a curated value-investing knowledge base.",
       screenshot: "/screenshots/warren-telegram.svg",
       points: [
         "One-time deep-link from /profile — no password sharing",
+        "Talk to Warren: send a voice note, get a spoken reply (text always sent first)",
+        "Educational concept lookup — \"what is P/E?\", \"explain drawdown\" — paraphrased in plain language",
         "Read holdings, growth, dividends, news, alerts and watchlist",
         "Add holdings, cash or alerts — every write requires Confirm",
         "Replies in your language (35 supported); commands /help, /portfolios, /news, /alerts",

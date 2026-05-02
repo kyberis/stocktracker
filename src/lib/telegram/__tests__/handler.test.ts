@@ -44,6 +44,12 @@ vi.mock("@/lib/ai/warren/build-snapshot", () => snapMock);
 const dispatchMock = vi.hoisted(() => ({ dispatchProposal: vi.fn() }));
 vi.mock("@/lib/ai/warren/dispatch", () => dispatchMock);
 
+const transcribeMock = vi.hoisted(() => ({ transcribeVoice: vi.fn() }));
+vi.mock("@/lib/ai/transcribe", () => transcribeMock);
+
+const ttsMock = vi.hoisted(() => ({ synthesizeSpeech: vi.fn() }));
+vi.mock("@/lib/ai/tts", () => ttsMock);
+
 // Stub the Bot API so we can capture sends.
 function makeBotStub() {
   const sent: Array<{ method: string; chatId: string; text?: string; messageId?: number }> = [];
@@ -60,6 +66,10 @@ function makeBotStub() {
       });
       return { message_id: sent.length, chat: { id: Number(chatId) || 0 } };
     }),
+    sendVoice: vi.fn(async (chatId) => {
+      sent.push({ method: "sendVoice", chatId: String(chatId) });
+      return { message_id: sent.length, chat: { id: Number(chatId) || 0 } };
+    }),
     sendChatAction: vi.fn(async () => {}),
     editMessageText: vi.fn(async (chatId, messageId, text) => {
       sent.push({
@@ -74,6 +84,15 @@ function makeBotStub() {
     deleteWebhook: vi.fn(async () => ({ ok: true })),
     setMyCommands: vi.fn(async () => ({ ok: true })),
     getMe: vi.fn(async () => ({ ok: true, result: { id: 1, username: "WarrenBot", first_name: "Warren" } })),
+    getFile: vi.fn(async () => ({
+      file_id: "fid",
+      file_unique_id: "u",
+      file_path: "voice/file_1.ogg",
+    })),
+    downloadFile: vi.fn(async () => ({
+      buffer: Buffer.from("voice-bytes"),
+      contentType: "audio/ogg",
+    })),
   };
   return { stub, sent };
 }
@@ -97,6 +116,19 @@ beforeEach(() => {
     proposals: [],
     totalTokens: 0,
     durationMs: 1,
+  });
+  transcribeMock.transcribeVoice.mockResolvedValue({
+    ok: true,
+    text: "How is my portfolio?",
+    durationMs: 5,
+    model: "whisper-1",
+  });
+  ttsMock.synthesizeSpeech.mockResolvedValue({
+    ok: true,
+    buffer: Buffer.from("ogg-bytes"),
+    mime: "audio/ogg",
+    durationMs: 10,
+    model: "gpt-4o-mini-tts",
   });
   snapMock.buildPortfolioSnapshot.mockResolvedValue({
     baseCurrency: "EUR",
@@ -716,6 +748,174 @@ describe("telegram/handler · free-form Warren turn quota", () => {
 
     expect(runTurnMock.runWarrenTurn).not.toHaveBeenCalled();
     expect(sent.some((m) => /limit|monthly|reach/i.test(m.text || ""))).toBe(true);
+    setTestTelegramClient(null);
+  });
+});
+
+describe("telegram/handler · voice messages", () => {
+  function linkedChat() {
+    return {
+      chatId: "42",
+      userId: "user-1",
+      languageCode: "en",
+      linkedAt: "",
+      lastSeenAt: "",
+      lastActivePortfolioId: "",
+    };
+  }
+
+  it("transcribes the voice note, runs Warren, echoes the transcript and sends a TTS reply", async () => {
+    dbMocks.getChatLinkByChatId.mockResolvedValueOnce(linkedChat());
+    dbMocks.listPortfolios.mockResolvedValueOnce([
+      { id: "pf-1", name: "Default", currency: "EUR", isDefault: true },
+    ]);
+    runTurnMock.runWarrenTurn.mockResolvedValueOnce({
+      text: "Looks healthy. Your portfolio is up 3% today.",
+      parts: [],
+      proposals: [],
+      totalTokens: 100,
+      durationMs: 5,
+    });
+
+    const { handler, setTestTelegramClient } = await loadHandler();
+    const { stub, sent } = makeBotStub();
+    setTestTelegramClient(stub);
+
+    await handler.handleTelegramUpdate({
+      message: {
+        message_id: 1,
+        chat: { id: 42, type: "private" },
+        date: 0,
+        from: { id: 7 },
+        voice: {
+          file_id: "fid",
+          duration: 8,
+          mime_type: "audio/ogg",
+          file_size: 12_345,
+        },
+      },
+    });
+
+    expect(stub.getFile).toHaveBeenCalledWith("fid");
+    expect(stub.downloadFile).toHaveBeenCalledWith("voice/file_1.ogg");
+    expect(transcribeMock.transcribeVoice).toHaveBeenCalled();
+    expect(runTurnMock.runWarrenTurn).toHaveBeenCalled();
+    // Echoes the transcript back so the user can spot misrecognitions
+    const echo = sent.find((m) => m.method === "sendMessage" && /How is my portfolio/i.test(m.text || ""));
+    expect(echo).toBeDefined();
+    // Synthesizes and sends a voice reply too
+    expect(ttsMock.synthesizeSpeech).toHaveBeenCalled();
+    expect(sent.some((m) => m.method === "sendVoice")).toBe(true);
+    setTestTelegramClient(null);
+  });
+
+  it("rejects voice notes longer than the duration cap without calling Whisper", async () => {
+    dbMocks.getChatLinkByChatId.mockResolvedValueOnce(linkedChat());
+    const { handler, setTestTelegramClient } = await loadHandler();
+    const { stub, sent } = makeBotStub();
+    setTestTelegramClient(stub);
+
+    await handler.handleTelegramUpdate({
+      message: {
+        message_id: 1,
+        chat: { id: 42, type: "private" },
+        date: 0,
+        from: { id: 7 },
+        voice: {
+          file_id: "fid",
+          duration: 120,
+          mime_type: "audio/ogg",
+          file_size: 100_000,
+        },
+      },
+    });
+
+    expect(transcribeMock.transcribeVoice).not.toHaveBeenCalled();
+    expect(runTurnMock.runWarrenTurn).not.toHaveBeenCalled();
+    expect(sent.some((m) => /60 seconds|seconds/i.test(m.text || ""))).toBe(true);
+    setTestTelegramClient(null);
+  });
+
+  it("rejects oversize voice notes without calling Whisper", async () => {
+    dbMocks.getChatLinkByChatId.mockResolvedValueOnce(linkedChat());
+    const { handler, setTestTelegramClient } = await loadHandler();
+    const { stub, sent } = makeBotStub();
+    setTestTelegramClient(stub);
+
+    await handler.handleTelegramUpdate({
+      message: {
+        message_id: 1,
+        chat: { id: 42, type: "private" },
+        date: 0,
+        from: { id: 7 },
+        voice: {
+          file_id: "fid",
+          duration: 30,
+          mime_type: "audio/ogg",
+          file_size: 50 * 1024 * 1024,
+        },
+      },
+    });
+
+    expect(transcribeMock.transcribeVoice).not.toHaveBeenCalled();
+    expect(runTurnMock.runWarrenTurn).not.toHaveBeenCalled();
+    expect(sent.some((m) => /too large|MB/i.test(m.text || ""))).toBe(true);
+    setTestTelegramClient(null);
+  });
+
+  it("surfaces a localized error when Whisper fails", async () => {
+    dbMocks.getChatLinkByChatId.mockResolvedValueOnce(linkedChat());
+    transcribeMock.transcribeVoice.mockResolvedValueOnce({
+      ok: false,
+      reason: "request_failed",
+      durationMs: 1,
+    });
+    const { handler, setTestTelegramClient } = await loadHandler();
+    const { stub, sent } = makeBotStub();
+    setTestTelegramClient(stub);
+
+    await handler.handleTelegramUpdate({
+      message: {
+        message_id: 1,
+        chat: { id: 42, type: "private" },
+        date: 0,
+        from: { id: 7 },
+        voice: {
+          file_id: "fid",
+          duration: 8,
+          mime_type: "audio/ogg",
+          file_size: 12_345,
+        },
+      },
+    });
+
+    expect(runTurnMock.runWarrenTurn).not.toHaveBeenCalled();
+    expect(sent.some((m) => /understand|audio/i.test(m.text || ""))).toBe(true);
+    setTestTelegramClient(null);
+  });
+
+  it("ignores voice notes from unlinked chats with the not-linked copy", async () => {
+    dbMocks.getChatLinkByChatId.mockResolvedValueOnce(null);
+    const { handler, setTestTelegramClient } = await loadHandler();
+    const { stub, sent } = makeBotStub();
+    setTestTelegramClient(stub);
+
+    await handler.handleTelegramUpdate({
+      message: {
+        message_id: 1,
+        chat: { id: 99, type: "private" },
+        date: 0,
+        from: { id: 7 },
+        voice: {
+          file_id: "fid",
+          duration: 8,
+        },
+      },
+    });
+
+    expect(transcribeMock.transcribeVoice).not.toHaveBeenCalled();
+    expect(runTurnMock.runWarrenTurn).not.toHaveBeenCalled();
+    expect(sent.some((m) => /not linked|trefolio/i.test(m.text || ""))).toBe(true);
     setTestTelegramClient(null);
   });
 });

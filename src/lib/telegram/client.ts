@@ -40,6 +40,23 @@ export interface SendPhotoOptions {
   messageThreadId?: number;
 }
 
+export interface SendVoiceOptions {
+  /** Optional caption rendered below the voice note (max 1024 chars). */
+  caption?: string;
+  parseMode?: TelegramParseMode;
+  replyMarkup?: TelegramInlineKeyboard;
+  /** Duration in seconds (Telegram clients may use it for the waveform). */
+  duration?: number;
+  messageThreadId?: number;
+}
+
+export interface TelegramFileMeta {
+  file_id: string;
+  file_unique_id: string;
+  file_size?: number;
+  file_path?: string;
+}
+
 export interface EditMessageOptions {
   parseMode?: TelegramParseMode;
   replyMarkup?: TelegramInlineKeyboard;
@@ -72,7 +89,30 @@ export interface TelegramClient {
    * smaller than 5 MB.
    */
   sendPhoto(chatId: string | number, photoUrl: string, opts?: SendPhotoOptions): Promise<SentMessage | null>;
-  sendChatAction(chatId: string | number, action: "typing" | "upload_photo"): Promise<void>;
+  /**
+   * Send a voice note (OGG/Opus). Telegram displays this as a playable
+   * voice bubble with a waveform — distinct from `sendAudio` (music files).
+   */
+  sendVoice(
+    chatId: string | number,
+    audio: Buffer,
+    opts?: SendVoiceOptions,
+  ): Promise<SentMessage | null>;
+  sendChatAction(
+    chatId: string | number,
+    action: "typing" | "upload_photo" | "record_voice" | "upload_voice",
+  ): Promise<void>;
+  /**
+   * Resolve a `file_id` to a downloadable `file_path` and metadata. Files
+   * over 20 MB cannot be retrieved through the Bot API.
+   */
+  getFile(fileId: string): Promise<TelegramFileMeta | null>;
+  /**
+   * Download the bytes for a previously resolved `file_path`. Returns the
+   * raw buffer plus the response `Content-Type` so the caller can guess
+   * the right extension for OpenAI Whisper.
+   */
+  downloadFile(filePath: string): Promise<{ buffer: Buffer; contentType: string } | null>;
   editMessageText(
     chatId: string | number,
     messageId: number,
@@ -147,8 +187,78 @@ class HttpTelegramClient implements TelegramClient {
     return result.ok && result.result ? result.result : null;
   }
 
-  async sendChatAction(chatId: string | number, action: "typing" | "upload_photo"): Promise<void> {
+  async sendVoice(
+    chatId: string | number,
+    audio: Buffer,
+    opts: SendVoiceOptions = {},
+  ): Promise<SentMessage | null> {
+    try {
+      const form = new FormData();
+      form.append("chat_id", String(chatId));
+      form.append(
+        "voice",
+        new Blob([new Uint8Array(audio)], { type: "audio/ogg" }),
+        "voice.ogg",
+      );
+      if (opts.caption) form.append("caption", opts.caption);
+      if (opts.parseMode) form.append("parse_mode", opts.parseMode);
+      if (opts.duration !== undefined) form.append("duration", String(opts.duration));
+      if (opts.replyMarkup) form.append("reply_markup", JSON.stringify(opts.replyMarkup));
+      if (opts.messageThreadId !== undefined) {
+        form.append("message_thread_id", String(opts.messageThreadId));
+      }
+      const res = await fetch(`${this.baseUrl}/sendVoice`, {
+        method: "POST",
+        body: form,
+      });
+      const json = (await res.json()) as TelegramApiResult<SentMessage>;
+      if (!json.ok) {
+        console.warn("[telegram] sendVoice failed", json.error_code, json.description);
+        return null;
+      }
+      return json.result || null;
+    } catch (err) {
+      console.warn(
+        "[telegram] sendVoice threw",
+        err instanceof Error ? err.message : err,
+      );
+      return null;
+    }
+  }
+
+  async sendChatAction(
+    chatId: string | number,
+    action: "typing" | "upload_photo" | "record_voice" | "upload_voice",
+  ): Promise<void> {
     await this.call("sendChatAction", { chat_id: chatId, action });
+  }
+
+  async getFile(fileId: string): Promise<TelegramFileMeta | null> {
+    const result = await this.call<TelegramFileMeta>("getFile", { file_id: fileId });
+    return result.ok && result.result ? result.result : null;
+  }
+
+  async downloadFile(
+    filePath: string,
+  ): Promise<{ buffer: Buffer; contentType: string } | null> {
+    try {
+      const url = `${TG_API_BASE}/file/bot${this.token}/${filePath}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.warn("[telegram] downloadFile failed", res.status, res.statusText);
+        return null;
+      }
+      const buffer = Buffer.from(await res.arrayBuffer());
+      const contentType =
+        res.headers.get("content-type") || "application/octet-stream";
+      return { buffer, contentType };
+    } catch (err) {
+      console.warn(
+        "[telegram] downloadFile threw",
+        err instanceof Error ? err.message : err,
+      );
+      return null;
+    }
   }
 
   async editMessageText(

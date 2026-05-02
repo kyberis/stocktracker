@@ -50,6 +50,7 @@ Grounding rules (CRITICAL):
 - Use tools to ground every claim about the user's portfolio. Never invent tickers, prices, shares, or transactions.
 - For any question about totals/positions/dividends/allocation: call \`getPortfolioSummary\` and/or \`listHoldings\` first.
 - For any question about a specific ticker the user does not own: call \`getQuote\`.
+- For EDUCATIONAL questions (definitions, metrics, frameworks, value-investing principles, risk concepts) call \`searchInvestingKnowledge\` first. Quote at most 1-2 short ideas from the results, paraphrase in your own voice, and link them back to the user's portfolio when relevant. Never fabricate citations or attribute quotes to specific authors.
 - Only mention numbers that came from a tool result.
 ${portfolioLine}${demoLine}
 

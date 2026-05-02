@@ -47,6 +47,7 @@ import {
   renderWarrenPart,
   renderWarrenProposal,
   splitForTelegram,
+  stripMarkdownForPlain,
   type HelpStrings,
 } from "./format";
 import {
@@ -56,6 +57,8 @@ import {
 } from "./client";
 import { localizeTelegram, type TelegramLocale } from "./i18n";
 import { buildPortfolioAllocationChart, sendChartPart } from "./chart-render";
+import { transcribeVoice } from "@/lib/ai/transcribe";
+import { synthesizeSpeech } from "@/lib/ai/tts";
 
 export interface TelegramUpdate {
   update_id?: number;
@@ -73,12 +76,21 @@ export interface TelegramUser {
   language_code?: string;
 }
 
+export interface TelegramVoice {
+  file_id: string;
+  /** Duration in seconds. */
+  duration: number;
+  mime_type?: string;
+  file_size?: number;
+}
+
 export interface TelegramMessage {
   message_id: number;
   from?: TelegramUser;
   chat: { id: number; type: string };
   date: number;
   text?: string;
+  voice?: TelegramVoice;
   entities?: Array<{ type: string; offset: number; length: number }>;
 }
 
@@ -90,6 +102,11 @@ export interface TelegramCallbackQuery {
 }
 
 const TELEGRAM_FLAG = "telegram_bot_enabled";
+
+/** Voice notes longer than this (seconds) are rejected before transcription. */
+const VOICE_MAX_DURATION_S = 60;
+/** Voice notes larger than this (bytes) are rejected before download. */
+const VOICE_MAX_BYTES = 4 * 1024 * 1024;
 
 /**
  * Top-level entrypoint called from the webhook route.
@@ -122,11 +139,24 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
 async function handleMessage(message: TelegramMessage): Promise<void> {
   const chatId = String(message.chat.id);
   const text = (message.text || "").trim();
-  if (!text) return;
 
   const bot = getTelegramClient();
   const link = await getChatLinkByChatId(chatId);
   if (link) await touchChatLastSeen(chatId);
+
+  // Voice notes: transcribe and run a Warren turn that replies via TTS too.
+  if (message.voice) {
+    if (!link) {
+      const langGuess = inferLocale(message.from?.language_code);
+      const i = localizeTelegram(langGuess);
+      await sendMd(bot, chatId, escapeMarkdown(i.notLinked(getTelegramBotUsername())));
+      return;
+    }
+    await handleVoiceMessage(bot, message, link);
+    return;
+  }
+
+  if (!text) return;
 
   // Bot commands take precedence regardless of link state.
   if (text.startsWith("/")) {
@@ -143,6 +173,59 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
   }
 
   await runWarrenForMessage(bot, message, link);
+}
+
+async function handleVoiceMessage(
+  bot: TelegramClient,
+  message: TelegramMessage,
+  link: TelegramChatLink,
+): Promise<void> {
+  const chatId = String(message.chat.id);
+  const voice = message.voice!;
+  const i = await localeForLink(link, message.from?.language_code);
+
+  if (voice.duration > VOICE_MAX_DURATION_S) {
+    await sendMd(bot, chatId, escapeMarkdown(i.voiceTooLong(VOICE_MAX_DURATION_S)));
+    return;
+  }
+  if (voice.file_size && voice.file_size > VOICE_MAX_BYTES) {
+    await sendMd(bot, chatId, escapeMarkdown(i.voiceTooLarge));
+    return;
+  }
+
+  await bot.sendChatAction(chatId, "typing");
+
+  const fileMeta = await bot.getFile(voice.file_id);
+  if (!fileMeta?.file_path) {
+    await sendMd(bot, chatId, escapeMarkdown(i.voiceTranscribeFailed));
+    return;
+  }
+
+  const file = await bot.downloadFile(fileMeta.file_path);
+  if (!file) {
+    await sendMd(bot, chatId, escapeMarkdown(i.voiceTranscribeFailed));
+    return;
+  }
+
+  const language = link.languageCode || inferLocale(message.from?.language_code);
+  const transcript = await transcribeVoice({
+    buffer: file.buffer,
+    mimeType: voice.mime_type || file.contentType || "audio/ogg",
+    language,
+  });
+
+  if (!transcript.ok || !transcript.text) {
+    await sendMd(bot, chatId, escapeMarkdown(i.voiceTranscribeFailed));
+    return;
+  }
+
+  // Echo what we heard so the user can spot misrecognized tickers.
+  const echo = i.voiceTranscribed(transcript.text);
+  await sendMd(bot, chatId, commonMarkToTelegram(echo));
+
+  await runWarrenForText(bot, link, transcript.text, message.from?.language_code, {
+    replyAsVoice: true,
+  });
 }
 
 async function handleCommand(
@@ -371,11 +454,18 @@ async function runWarrenForMessage(
   void chatId;
 }
 
+interface RunWarrenForTextOptions {
+  /** When true, after the text reply is sent we also synthesize speech and
+   *  send it as a Telegram voice note. Used for incoming voice notes. */
+  replyAsVoice?: boolean;
+}
+
 async function runWarrenForText(
   bot: TelegramClient,
   link: TelegramChatLink,
   userText: string,
   fallbackLanguage?: string,
+  options: RunWarrenForTextOptions = {},
 ): Promise<void> {
   const chatId = link.chatId;
   const userId = link.userId;
@@ -482,6 +572,12 @@ async function runWarrenForText(
       await sendMd(bot, chatId, chunk);
     }
     await appendChatMessage({ chatId, role: "assistant", content: result.text });
+
+    // If the user spoke to Warren, speak the answer back. Best-effort:
+    // any TTS failure is silent — the text reply already went out.
+    if (options.replyAsVoice) {
+      await maybeSendVoiceReply(bot, chatId, result.text, language, i.voiceDisclaimerSpoken);
+    }
   }
 
   // Render proposals last so the inline keyboard is at the bottom.
@@ -504,6 +600,24 @@ async function runWarrenForText(
       replyMarkup: keyboard,
     });
   }
+}
+
+async function maybeSendVoiceReply(
+  bot: TelegramClient,
+  chatId: string,
+  markdownText: string,
+  language: string,
+  spokenDisclaimer: string,
+): Promise<void> {
+  const plain = stripMarkdownForPlain(markdownText);
+  if (!plain) return;
+  // Prepend a one-sentence audio disclaimer so the spoken reply still
+  // carries the "AI assistance, not advice" reminder.
+  const speakable = `${spokenDisclaimer} ${plain}`;
+  await bot.sendChatAction(chatId, "upload_voice");
+  const speech = await synthesizeSpeech({ text: speakable, language });
+  if (!speech.ok) return;
+  await bot.sendVoice(chatId, speech.buffer);
 }
 
 // ────────────────────────────── Callbacks ──────────────────────────────

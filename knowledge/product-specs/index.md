@@ -103,7 +103,8 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [moat-screener](moat-screener.md) — filter screener by moat.
 - [portfolio-review](portfolio-review.md) — AI portfolio review.
 - [stock-evaluation](stock-evaluation.md) — rules + AI valuation.
-- [warren-telegram-bot](warren-telegram-bot.md) — Warren accessible via Telegram.
+- [warren-investing-knowledge](warren-investing-knowledge.md) — curated investing-concepts library exposed to Warren as a tool.
+- [warren-telegram-bot](warren-telegram-bot.md) — Warren accessible via Telegram (text + voice).
 
 ## Tools
 

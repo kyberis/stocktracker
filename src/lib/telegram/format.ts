@@ -188,6 +188,38 @@ export function commonMarkToTelegram(input: string): string {
 }
 
 /**
+ * Strip CommonMark-ish formatting from text so it can be passed to a TTS
+ * engine (or any plain-text consumer). Removes headings, bold/italic markers,
+ * inline/fenced code fences, link syntax (keeps the label), and
+ * blockquote markers. Leaves bullet markers as a leading dash so the
+ * spoken cadence stays natural.
+ */
+export function stripMarkdownForPlain(input: string): string {
+  if (!input) return "";
+  let text = input.replace(/\r\n/g, "\n");
+  // Fenced code blocks
+  text = text.replace(/```[a-zA-Z0-9_-]*\n?([\s\S]*?)```/g, "$1");
+  // Inline code
+  text = text.replace(/`([^`\n]+)`/g, "$1");
+  // Links: keep the label, drop the URL
+  text = text.replace(/\[([^\]\n]+)\]\(([^()\s]+)\)/g, "$1");
+  // ATX headings → plain
+  text = text.replace(/^#{1,6}[ \t]+/gm, "");
+  // Bold / italic markers
+  text = text.replace(/\*\*([^\n*]+?)\*\*/g, "$1");
+  text = text.replace(/__([^\n_]+?)__/g, "$1");
+  text = text.replace(/\*(?=\S)([^\n*]+?)(?<=\S)\*/g, "$1");
+  text = text.replace(/_(?=\S)([^\n_]+?)(?<=\S)_/g, "$1");
+  // Bullet markers → dash for natural speech
+  text = text.replace(/^[ \t]*[-*•][ \t]+/gm, "- ");
+  // Blockquote markers
+  text = text.replace(/^>[ \t]?/gm, "");
+  // Collapse 3+ blank lines
+  text = text.replace(/\n{3,}/g, "\n\n");
+  return text.trim();
+}
+
+/**
  * Split a long MarkdownV2 message into Telegram-sized chunks (≤4096 chars,
  * targeting ≤3500 to leave headroom). Splits on paragraph boundaries first,
  * then on lines, then on hard chars.

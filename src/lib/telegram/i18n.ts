@@ -55,6 +55,16 @@ export interface TelegramStrings {
   allocationChartTitle: string;
   /** Sent when /chart can't be rendered (no holdings or images disabled). */
   chartUnavailable: string;
+  /** Voice message exceeds the duration cap. */
+  voiceTooLong: (maxSeconds: number) => string;
+  /** Voice message exceeds the size cap. */
+  voiceTooLarge: string;
+  /** Whisper failed or returned no usable text. */
+  voiceTranscribeFailed: string;
+  /** Echo prefix shown above the transcript so the user can spot misrecognitions. */
+  voiceTranscribed: (transcript: string) => string;
+  /** Voice + TTS audio disclaimer prepended to the spoken reply. */
+  voiceDisclaimerSpoken: string;
   // Help menu strings
   helpTitle: string;
   helpIntro: string;
@@ -115,6 +125,15 @@ const EN: TelegramStrings = {
   allocationChartTitle: "Portfolio allocation",
   chartUnavailable:
     "I can't render a chart right now — make sure you have holdings in this portfolio.",
+  voiceTooLong: (max: number) =>
+    `Voice notes longer than ${max} seconds aren't supported yet. Try a shorter clip or send text.`,
+  voiceTooLarge:
+    "That voice note is too large. Send a shorter clip (under 4 MB) or type your question.",
+  voiceTranscribeFailed:
+    "I couldn't understand the audio. Try recording again in a quiet spot, or send text.",
+  voiceTranscribed: (t: string) => `🎤 _"${t}"_`,
+  voiceDisclaimerSpoken:
+    "Heads up: this is AI-generated assistance, not financial advice.",
   helpTitle: "Warren — what I can do",
   helpIntro:
     "I'm your portfolio companion on Telegram. Ask me in plain language or use these shortcuts.",
@@ -177,6 +196,15 @@ const ES: TelegramStrings = {
   allocationChartTitle: "Asignación de la cartera",
   chartUnavailable:
     "No puedo generar el gráfico ahora — comprueba que tengas posiciones en esta cartera.",
+  voiceTooLong: (max: number) =>
+    `Aún no admito audios de más de ${max} segundos. Prueba con uno más corto o escríbeme.`,
+  voiceTooLarge:
+    "Ese audio es demasiado pesado. Mándame uno más corto (menos de 4 MB) o escríbeme.",
+  voiceTranscribeFailed:
+    "No pude entender el audio. Pruébalo de nuevo en un sitio tranquilo o escríbeme.",
+  voiceTranscribed: (t: string) => `🎤 _"${t}"_`,
+  voiceDisclaimerSpoken:
+    "Aviso: esto es asistencia generada por IA, no asesoramiento financiero.",
   helpTitle: "Warren — qué puedo hacer",
   helpIntro:
     "Soy tu compañero de cartera en Telegram. Pregúntame con lenguaje natural o usa estos atajos.",

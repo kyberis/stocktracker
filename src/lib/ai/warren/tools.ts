@@ -16,6 +16,7 @@ import type {
   AllocationCardData,
   SummaryCardData,
 } from "@/components/chat-cards/types";
+import { searchKnowledge } from "./knowledge";
 
 export interface PortfolioSnapshot {
   baseCurrency: string;
@@ -53,6 +54,8 @@ export interface WarrenToolContext {
   isDemo: boolean;
   activePortfolioId?: string;
   baseCurrency: string;
+  /** ISO 639-1 language hint — used to prefer ES titles in knowledge hits. */
+  language?: string;
   snapshot?: PortfolioSnapshot;
   emitPart: (part: WarrenPart) => void;
   emitProposal: (proposal: WarrenProposal) => void;
@@ -277,6 +280,42 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
         const data: StockSnapshotData = input;
         ctx.emitPart({ kind: "stockSnapshot", data });
         return { rendered: "stock-snapshot", ticker: input.ticker };
+      },
+    }),
+
+    // ──────────────── KNOWLEDGE ────────────────
+    searchInvestingKnowledge: tool({
+      description:
+        "Search Warren's curated library of value-investing concepts, metrics, asset types, risks, and behavioral pitfalls. Use this when the user asks an EDUCATIONAL question (\"what is P/E?\", \"how does diversification work?\", \"what is margin of safety?\", \"explain drawdown\") rather than a portfolio-specific one. Returns up to 3 short entries with title, summary, and an excerpt — paraphrase them in your own voice; never quote authors by name.",
+      inputSchema: z.object({
+        query: z
+          .string()
+          .min(2)
+          .max(120)
+          .describe("Natural-language query, e.g. \"what is margin of safety\""),
+        k: z
+          .number()
+          .int()
+          .min(1)
+          .max(5)
+          .optional()
+          .describe("Max number of entries to return (default 3)."),
+      }),
+      execute: async ({ query, k }) => {
+        ctx.emitStep(`Looking up "${query}"…`);
+        const hits = searchKnowledge(query, k ?? 3, ctx.language);
+        if (hits.length === 0) {
+          return { hits: [], note: "No matching entry — answer from general knowledge but stay cautious." };
+        }
+        return {
+          hits: hits.map((h) => ({
+            slug: h.slug,
+            title: h.title,
+            summary: h.summary,
+            excerpt: h.excerpt,
+            tags: h.tags,
+          })),
+        };
       },
     }),
 

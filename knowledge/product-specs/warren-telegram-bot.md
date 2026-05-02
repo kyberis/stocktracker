@@ -6,11 +6,13 @@
 
 The Warren AI portfolio assistant is also reachable as a Telegram bot. After the
 user links their trefolio account from `/profile`, they can chat with Warren in
-plain language from their phone or desktop Telegram client. The bot has the
-same capabilities as the in-app Warren drawer: read holdings, allocation,
-performance, dividends, news, alerts, watchlist, plus write actions
-(`addHolding`, `removeHolding`, `addCash`, `createAlert`, `addWatchlist`) gated
-behind a Telegram inline-keyboard Confirm/Cancel.
+plain language — by typing OR by sending a voice note — from their phone or
+desktop Telegram client. The bot has the same capabilities as the in-app
+Warren drawer: read holdings, allocation, performance, dividends, news,
+alerts, watchlist, plus write actions (`addHolding`, `removeHolding`,
+`addCash`, `createAlert`, `addWatchlist`) gated behind a Telegram inline-
+keyboard Confirm/Cancel. Voice notes are transcribed by OpenAI Whisper and
+the reply is also spoken back via OpenAI TTS (text always sent first).
 
 ## 2. Status
 
@@ -26,10 +28,12 @@ behind a Telegram inline-keyboard Confirm/Cancel.
 | Webhook | [`src/app/api/webhooks/telegram/[secret]/route.ts`](../../src/app/api/webhooks/telegram/[secret]/route.ts) | Receives Bot API updates. Path + header secret verified. |
 | API | [`src/app/api/integrations/telegram/link/route.ts`](../../src/app/api/integrations/telegram/link/route.ts) | `POST` generates token, `GET` returns status, `DELETE` unlinks. |
 | Component | [`src/components/profile/TelegramConnectCard.tsx`](../../src/components/profile/TelegramConnectCard.tsx) | Connect / disconnect card on `/profile`. |
-| Server module | [`src/lib/telegram/handler.ts`](../../src/lib/telegram/handler.ts) | Update routing: commands, free-form text, callback queries. |
-| Server module | [`src/lib/telegram/client.ts`](../../src/lib/telegram/client.ts) | HTTPS wrapper around the Bot API. |
-| Server module | [`src/lib/telegram/format.ts`](../../src/lib/telegram/format.ts) | MarkdownV2 escaping, Warren-card rendering, message splitting. |
-| Server module | [`src/lib/telegram/i18n.ts`](../../src/lib/telegram/i18n.ts) | EN + ES copy bundles for handler scaffolding. |
+| Server module | [`src/lib/telegram/handler.ts`](../../src/lib/telegram/handler.ts) | Update routing: commands, free-form text, voice notes, callback queries. |
+| Server module | [`src/lib/telegram/client.ts`](../../src/lib/telegram/client.ts) | HTTPS wrapper around the Bot API (sendMessage, sendPhoto, sendVoice, getFile, downloadFile). |
+| Server module | [`src/lib/telegram/format.ts`](../../src/lib/telegram/format.ts) | MarkdownV2 escaping, Warren-card rendering, message splitting, plain-text stripping for TTS. |
+| Server module | [`src/lib/telegram/i18n.ts`](../../src/lib/telegram/i18n.ts) | EN + ES copy bundles for handler scaffolding (incl. voice errors and disclaimers). |
+| Server module | [`src/lib/ai/transcribe.ts`](../../src/lib/ai/transcribe.ts) | OpenAI Whisper wrapper for voice-note speech-to-text. |
+| Server module | [`src/lib/ai/tts.ts`](../../src/lib/ai/tts.ts) | OpenAI TTS wrapper that returns OGG/Opus for `sendVoice`. |
 | Script | [`scripts/telegram-set-webhook.ts`](../../scripts/telegram-set-webhook.ts) | One-shot `setWebhook` + `setMyCommands`. |
 | Script | [`scripts/export-warren-avatar.ts`](../../scripts/export-warren-avatar.ts) | Render `warren.svg` to a 512×512 PNG for BotFather `/setuserpic`. |
 
@@ -56,8 +60,12 @@ Types and helpers in [`src/lib/db/telegram.ts`](../../src/lib/db/telegram.ts).
 ## 6. UI surface
 
 - `/profile` → **Warren on Telegram** card with Connect / Disconnect button and deep link.
-- Telegram bot itself: `/help`, `/menu`, `/portfolios`, `/holdings`, `/news`, `/growth`, `/dividends`, `/alerts`, `/watchlist`, `/lang <code>`, `/unlink`.
+- Telegram bot itself: `/help`, `/menu`, `/portfolios`, `/holdings`, `/chart`, `/news`, `/growth`, `/dividends`, `/alerts`, `/watchlist`, `/lang <code>`, `/unlink`.
 - Free-form text → Warren AI turn.
+- Voice notes → transcribed by Whisper, fed into the same Warren turn, reply
+  is sent as text first and then spoken back via TTS as a Telegram voice
+  bubble. Caps: 60 seconds and 4 MB. Echoes the transcript so the user
+  can spot misrecognitions.
 
 ## 7. Business logic
 
@@ -75,6 +83,8 @@ Web `/api/warren/chat` is unchanged in behavior; it now delegates to the same
 
 - Telegram Bot API (HTTPS — no SDK).
 - OpenAI (via the Vercel AI SDK), same `portfolio_chat` flow as web Warren.
+- OpenAI `audio/transcriptions` (Whisper) for voice → text.
+- OpenAI `audio/speech` (TTS, OGG/Opus) for text → voice replies.
 
 Env vars (server-only):
 
@@ -82,6 +92,9 @@ Env vars (server-only):
 - `TELEGRAM_BOT_USERNAME` — username without the `@`.
 - `TELEGRAM_WEBHOOK_SECRET` — random hex; appears in the URL path AND in the `X-Telegram-Bot-Api-Secret-Token` header.
 - `PUBLIC_BASE_URL` (script-only) — used by `scripts/telegram-set-webhook.ts`.
+- `OPENAI_TRANSCRIPTION_MODEL` (optional) — default `whisper-1`.
+- `OPENAI_TTS_MODEL` (optional) — default `gpt-4o-mini-tts`.
+- `OPENAI_TTS_VOICE` (optional) — default `alloy`.
 
 Quota:
 
@@ -119,19 +132,29 @@ helpers as the web drawer.
 - Snapshot build can fail (e.g. provider outage). The handler tolerates it and falls back to letting Warren use DB tools instead.
 - Multi-chunk replies (Telegram 4096-char limit) are split on paragraph boundaries by `splitForTelegram`.
 - Demo mode is web-only; Telegram only works for signed-in real users.
+- Voice notes longer than 60s or larger than 4 MB are rejected before
+  Whisper is called, with a localized message. The bot does NOT persist
+  raw audio — the buffer is scoped to the request and only the transcript
+  goes into `telegram_messages` (same as a typed user turn).
+- TTS replies are best-effort: text always goes out first, so a TTS
+  failure is silent. The spoken reply prepends a short "AI assistance,
+  not advice" disclaimer because Telegram clients may auto-play voice
+  bubbles before the user reads the text.
 
 ## 14. Tests
 
-- Unit: `src/lib/telegram/__tests__/format.test.ts` (escaping, allocation bars, splitting, proposal keyboard).
-- Unit: `src/lib/telegram/__tests__/handler.test.ts` (token consumption, /help, callback_query confirm flow with mocked bot client).
+- Unit: `src/lib/telegram/__tests__/format.test.ts` (escaping, allocation bars, splitting, proposal keyboard, plain-text stripping for TTS).
+- Unit: `src/lib/telegram/__tests__/handler.test.ts` (token consumption, /help, callback_query confirm flow, voice transcribe + TTS reply, voice rejection caps, Whisper failure with mocked clients).
 - Unit: `src/lib/db/__tests__/telegram.test.ts` (link token TTL, link/unlink idempotence, history trimming).
 - Unit: `src/lib/ai/warren/__tests__/build-snapshot.test.ts` (totals/allocation match the existing helpers).
+- Unit: `src/lib/ai/transcribe.test.ts` (200/4xx/empty paths, missing key).
+- Unit: `src/lib/ai/tts.test.ts` (200/4xx, empty input short-circuit, missing key).
 
 ## 15. Related skills and rules
 
 - Skill: [`.cursor/skills/engineer-integrations/SKILL.md`](../../.cursor/skills/engineer-integrations/SKILL.md).
-- Rule: [`.cursor/rules/legal-compliance.mdc`](../../.cursor/rules/legal-compliance.mdc) — Telegram is a new processor (Privacy Policy updated).
-- Related specs: [`portfolio-review`](portfolio-review.md), [`portfolio-context-demo-mode`](portfolio-context-demo-mode.md).
+- Rule: [`.cursor/rules/legal-compliance.mdc`](../../.cursor/rules/legal-compliance.mdc) — Telegram is a new processor (Privacy Policy updated). Voice IN/OUT also processes audio via OpenAI; covered by the same processor disclosure.
+- Related specs: [`warren-investing-knowledge`](warren-investing-knowledge.md), [`portfolio-review`](portfolio-review.md), [`portfolio-context-demo-mode`](portfolio-context-demo-mode.md).
 
 ## 16. Open questions / planned work
 
@@ -139,3 +162,5 @@ helpers as the web drawer.
 - Stream token-by-token by editing the message every N tokens (today: send the final reply once).
 - Render allocation/summary cards as PNG charts via `sharp` for richer Telegram messages.
 - Inline mode and bot-in-group support (out of scope for v1).
+- Per-user voice preference (opt out of TTS replies when typed input is preferred).
+- Locale-specific TTS instructions (e.g. rioplatense Spanish accent for ES users).

@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.4.0",
+    date: "2026-05-02",
+    title: "Warren talks: voice notes on Telegram + a value-investing knowledge base",
+    titleTranslations: {
+      es: "Warren habla: audios en Telegram + base de inversi\u00f3n en valor",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Send voice notes to Warren on Telegram. Warren transcribes the audio (OpenAI Whisper), runs the same portfolio-aware turn as a typed message, and sends the answer back as text AND as a spoken voice note (OpenAI text-to-speech). The transcript is echoed first so you can spot anything that was misheard. Caps: 60 seconds and 4 MB per voice note. No raw audio is stored on our servers.",
+        translations: {
+          es: "Mand\u00e1 audios a Warren por Telegram. Warren transcribe el audio (OpenAI Whisper), ejecuta el mismo turno de cartera que un mensaje de texto, y te responde con texto Y con un audio hablado (OpenAI text-to-speech). Primero te muestra la transcripci\u00f3n para que puedas detectar errores. L\u00edmites: 60 segundos y 4 MB por audio. No guardamos el audio crudo en nuestros servidores.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Warren now answers concept questions from a curated value-investing knowledge base — \"what is margin of safety?\", \"explain P/E ratio\", \"how does diversification work?\", \"what is drawdown?\". The library covers ~35 entries across philosophy, metrics, asset types, risk, behavioural pitfalls and frameworks; Warren paraphrases the relevant ones in your language and ties them back to your portfolio when it makes sense.",
+        translations: {
+          es: "Warren ahora responde preguntas de conceptos desde una base curada de inversi\u00f3n en valor: \u00abqu\u00e9 es el margen de seguridad\u00bb, \u00abexplica el PER\u00bb, \u00abc\u00f3mo funciona la diversificaci\u00f3n\u00bb, \u00abqu\u00e9 es el drawdown\u00bb. La biblioteca cubre unas 35 entradas entre filosof\u00eda, m\u00e9tricas, tipos de activo, riesgos, sesgos y frameworks; Warren las parafrasea en tu idioma y las conecta con tu cartera cuando tiene sentido.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.3.2",
     date: "2026-05-02",
     title: "Warren on the web now matches Telegram and the dashboard",

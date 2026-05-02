@@ -85,6 +85,7 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
     isDemo: !!opts.isDemo,
     activePortfolioId: opts.activePortfolioId,
     baseCurrency: opts.baseCurrency,
+    language: opts.language,
     snapshot: opts.snapshot,
     emitPart: (part) => {
       collectedParts.push(part);
