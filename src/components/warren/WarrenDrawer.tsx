@@ -12,12 +12,13 @@ import {
   calculatePortfolioTotals,
   computeAllocationByType,
 } from "@/lib/portfolio-summary";
-import { convertToEUR, resolveQuoteCurrency, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import type {
   WarrenPart,
   WarrenProposal,
   WarrenStreamFrame,
 } from "@/lib/ai/warren/types";
+import { buildTopHoldingRow } from "@/lib/ai/warren/snapshot-shared";
 
 type Bubble =
   | { id: string; kind: "text-user"; content: string }
@@ -51,36 +52,11 @@ function buildSnapshot(args: {
     exchangeRates,
     baseCurrency,
   );
+  // Per-holding rows must use the SAME shape and unit normalisation as the
+  // server-side snapshot; otherwise Warren's web replies disagree with its
+  // Telegram replies (and with the dashboard).
   const topHoldings = holdings
-    .map((h) => {
-      const q = quotes[h.ticker];
-      const price = q?.regularMarketPrice ?? h.purchasePrice;
-      const localValue = price * h.shares;
-      const quoteCur = q ? resolveQuoteCurrency(h.displayCurrency, q.currency) : h.displayCurrency;
-      const valueEUR = convertToEUR(localValue, quoteCur, exchangeRates);
-      const cost = h.purchasePrice * h.shares;
-      const totalGainPct = cost > 0 ? ((localValue - cost) / cost) * 100 : 0;
-      return {
-        ticker: h.ticker,
-        name: h.name || h.ticker,
-        shares: h.shares,
-        currentPrice: q?.regularMarketPrice,
-        purchasePrice: h.purchasePrice,
-        currency: q?.currency || h.displayCurrency,
-        value: Math.round(valueEUR * 100) / 100,
-        weight:
-          totals.totalCurrentEUR > 0
-            ? Math.round((valueEUR / totals.totalCurrentEUR) * 10000) / 100
-            : 0,
-        sector: h.sector || undefined,
-        region: h.region || undefined,
-        assetType: h.assetType || "stock",
-        dayChangePct: q?.regularMarketChangePercent,
-        totalGainPct: Math.round(totalGainPct * 100) / 100,
-        fiftyTwoWeekHigh: q?.fiftyTwoWeekHigh,
-        fiftyTwoWeekLow: q?.fiftyTwoWeekLow,
-      };
-    })
+    .map((h) => buildTopHoldingRow(h, quotes, exchangeRates, totals.totalCurrentEUR))
     .sort((a, b) => b.value - a.value)
     .slice(0, 20);
   const cashSummary = cashEntries.reduce(

@@ -5,9 +5,10 @@ import {
 } from "@/lib/db";
 import { createProvider } from "@/lib/api-providers";
 import { calculatePortfolioTotals, computeAllocationByType } from "@/lib/portfolio-summary";
-import { convertCurrency, convertToEUR, normalizeCurrency, resolveQuoteCurrency } from "@/lib/utils";
-import type { ExchangeRates, Holding, QuoteData } from "@/lib/types";
+import { normalizeCurrency } from "@/lib/utils";
+import type { ExchangeRates, QuoteData } from "@/lib/types";
 import type { PortfolioSnapshot } from "./tools";
+import { buildTopHoldingRow } from "./snapshot-shared";
 
 // Rate keys MUST be in the `EUR<CURRENCY>` shape because that's what
 // `convertToEUR` / `convertCurrency` look up. The previous prefetch list used
@@ -103,68 +104,6 @@ export async function buildPortfolioSnapshot(opts: {
     topHoldings,
     allocation: allocation.map((a) => ({ type: a.label, pct: round(a.percent, 1) })),
     cashSummary,
-  };
-}
-
-function buildTopHoldingRow(
-  h: Holding,
-  quotes: Record<string, QuoteData>,
-  exchangeRates: ExchangeRates,
-  totalCurrentEUR: number,
-) {
-  // Currency contract for the snapshot the AI consumes:
-  //   - `purchasePrice`, `currentPrice`, `currency` are ALL expressed in the
-  //     holding's *display* currency (e.g. GBP, USD, EUR).
-  //   - `value` and `totalGainPct` are computed against EUR so that holdings
-  //     in different currencies can be aggregated.
-  //
-  // Why this matters: Yahoo returns LSE prices in GBp (pence) while the user
-  // typically stores the holding as GBP. Mixing those units in `totalGainPct`
-  // produced ~100x wrong gain percentages, and tagging `purchasePrice` with
-  // the quote currency made Warren say things like "avg cost 45 GBp" when
-  // the web showed "£45 GBP". `resolveQuoteCurrency` + `convertCurrency`
-  // already know how to normalise GBX/GBP — we just have to use them.
-  const q = quotes[h.ticker];
-  const displayCur = h.displayCurrency;
-  const quoteCur = q ? resolveQuoteCurrency(displayCur, q.currency) : displayCur;
-  const quotePrice = q?.regularMarketPrice ?? 0;
-
-  const localValue = quotePrice * h.shares;
-  const valueEUR = q
-    ? convertToEUR(localValue, quoteCur, exchangeRates)
-    : convertToEUR(h.purchasePrice * h.shares, displayCur, exchangeRates);
-
-  const currentPriceDisplay = q
-    ? convertCurrency(quotePrice, quoteCur, displayCur, exchangeRates)
-    : undefined;
-
-  const fiftyTwoWeekHighDisplay = q?.fiftyTwoWeekHigh
-    ? convertCurrency(q.fiftyTwoWeekHigh, quoteCur, displayCur, exchangeRates)
-    : undefined;
-  const fiftyTwoWeekLowDisplay = q?.fiftyTwoWeekLow
-    ? convertCurrency(q.fiftyTwoWeekLow, quoteCur, displayCur, exchangeRates)
-    : undefined;
-
-  // Both sides converted to EUR; the resulting percentage is currency-neutral.
-  const costEUR = convertToEUR(h.purchasePrice * h.shares, displayCur, exchangeRates);
-  const totalGainPct = costEUR > 0 ? ((valueEUR - costEUR) / costEUR) * 100 : 0;
-
-  return {
-    ticker: h.ticker,
-    name: h.name || h.ticker,
-    shares: h.shares,
-    currentPrice: currentPriceDisplay,
-    purchasePrice: h.purchasePrice,
-    currency: displayCur,
-    value: round(valueEUR),
-    weight: totalCurrentEUR > 0 ? round((valueEUR / totalCurrentEUR) * 100, 2) : 0,
-    sector: h.sector || undefined,
-    region: h.region || undefined,
-    assetType: h.assetType || "stock",
-    dayChangePct: q?.regularMarketChangePercent,
-    totalGainPct: round(totalGainPct, 2),
-    fiftyTwoWeekHigh: fiftyTwoWeekHighDisplay,
-    fiftyTwoWeekLow: fiftyTwoWeekLowDisplay,
   };
 }
 

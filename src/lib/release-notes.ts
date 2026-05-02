@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.3.2",
+    date: "2026-05-02",
+    title: "Warren on the web now matches Telegram and the dashboard",
+    titleTranslations: {
+      es: "Warren en la web ahora coincide con Telegram y el dashboard",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Fixed the web Warren chat showing different invested values, gain percentages, and currency labels than Telegram and the dashboard. The web client was building its own copy of the AI snapshot with the same FX/unit bugs that were already fixed on the server. Both surfaces now share a single helper, so per-holding numbers cannot drift again.",
+        translations: {
+          es: "Se corrigi\u00f3 que el chat de Warren en la web mostrara valores invertidos, porcentajes de ganancia y etiquetas de moneda distintos a los de Telegram y el dashboard. El cliente web constru\u00eda su propia copia del snapshot de la IA con los mismos errores de FX/unidades que ya se hab\u00edan corregido en el servidor. Ambas superficies ahora comparten un \u00fanico helper, por lo que los n\u00fameros por posici\u00f3n no pueden volver a divergir.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.3.1",
     date: "2026-05-02",
     title: "Warren now reports the same invested values as the web",
