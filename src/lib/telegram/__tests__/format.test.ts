@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   bold,
+  commonMarkToTelegram,
   escapeMarkdown,
   fmtMoney,
   fmtNumber,
@@ -35,6 +36,72 @@ describe("telegram/format · escapeMarkdown", () => {
     // to guarantee no special char survives unescaped.
     const out = escapeMarkdown(escapeMarkdown("a.b"));
     expect(/(?<!\\)\./.test(out)).toBe(false);
+  });
+});
+
+describe("telegram/format · commonMarkToTelegram", () => {
+  it("converts ATX headings to MarkdownV2 bold", () => {
+    const out = commonMarkToTelegram("### Adobe Inc. (ADBE)");
+    // Heading content is bolded and special chars (`.`, `(`, `)`) are escaped.
+    expect(out).toBe("*Adobe Inc\\. \\(ADBE\\)*");
+    expect(out).not.toContain("###");
+  });
+
+  it("converts **bold** to *bold* and escapes special chars inside", () => {
+    const out = commonMarkToTelegram("Price is **$250.71** today");
+    // Bold delimiter is single asterisk in MarkdownV2.
+    expect(out).toContain("*$250\\.71*");
+    expect(out).not.toContain("**");
+  });
+
+  it("converts bullet lists with bold labels (the /news case)", () => {
+    const input =
+      "### Adobe Inc. (ADBE)\n" +
+      "- **Current Price:** $250.71\n" +
+      "- **Day Change:** +1.87%\n" +
+      "- **52-Week Range:** $224.13 - $422.95";
+    const out = commonMarkToTelegram(input);
+    // Heading rendered as bold
+    expect(out).toContain("*Adobe Inc\\. \\(ADBE\\)*");
+    // Bullets converted, bold labels preserved
+    expect(out).toContain("• *Current Price:*");
+    expect(out).toContain("• *Day Change:*");
+    // Special chars escaped (`$` is NOT a MarkdownV2 special char, but `.` is)
+    expect(out).toContain("$250\\.71");
+    expect(out).toContain("\\+1\\.87%");
+    // No leftover CommonMark syntax
+    expect(out).not.toContain("###");
+    expect(out).not.toContain("**");
+    // Should not be prefixed with a literal "- "
+    expect(out).not.toMatch(/^- /m);
+  });
+
+  it("preserves links in MarkdownV2 form", () => {
+    const out = commonMarkToTelegram("See [Apple](https://apple.com) for info.");
+    expect(out).toContain("[Apple](https://apple.com)");
+    expect(out).toContain("\\.");
+  });
+
+  it("converts inline code", () => {
+    const out = commonMarkToTelegram("Run `npm test` to verify.");
+    expect(out).toContain("`npm test`");
+    expect(out).toContain("\\.");
+  });
+
+  it("converts fenced code blocks", () => {
+    const out = commonMarkToTelegram("```js\nconst x = 1;\n```");
+    expect(out).toContain("```js");
+    // Content is NOT escaped MarkdownV2-style inside code.
+    expect(out).toContain("const x = 1;");
+  });
+
+  it("escapes raw special chars outside formatted spans", () => {
+    const out = commonMarkToTelegram("Plain text with . and ! and (parens)");
+    expect(out).toBe("Plain text with \\. and \\! and \\(parens\\)");
+  });
+
+  it("returns empty string for empty input", () => {
+    expect(commonMarkToTelegram("")).toBe("");
   });
 });
 

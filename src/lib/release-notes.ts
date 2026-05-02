@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.3.0",
+    date: "2026-05-02",
+    title: "Warren on Telegram now renders styled replies and portfolio charts",
+    titleTranslations: {
+      es: "Warren en Telegram ahora muestra respuestas con estilo y gr\u00e1ficos",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren replies on Telegram are now properly styled: headings, bold, bullets, and links from the AI's Markdown are translated into Telegram MarkdownV2 instead of being shown as literal `###` and `**` characters.",
+        translations: {
+          es: "Las respuestas de Warren en Telegram ahora se muestran con estilo: t\u00edtulos, negritas, vi\u00f1etas y enlaces del Markdown de la IA se traducen a MarkdownV2 de Telegram en lugar de aparecer como caracteres `###` y `**` literales.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Telegram bot now supports charts: use /chart to get a portfolio allocation pie chart, and Warren can attach charts inline (rendered as PNG images) for any answer that benefits from a visual.",
+        translations: {
+          es: "El bot de Telegram ahora soporta gr\u00e1ficos: usa /chart para obtener un gr\u00e1fico circular con la asignaci\u00f3n de tu cartera, y Warren puede adjuntar gr\u00e1ficos en l\u00ednea (renderizados como im\u00e1genes PNG) para cualquier respuesta que se beneficie de una visualizaci\u00f3n.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.2.3",
     date: "2026-05-02",
     title: "Telegram link no longer rejects valid tokens",

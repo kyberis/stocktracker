@@ -52,6 +52,14 @@ function makeBotStub() {
       sent.push({ method: "sendMessage", chatId: String(chatId), text });
       return { message_id: sent.length, chat: { id: Number(chatId) || 0 } };
     }),
+    sendPhoto: vi.fn(async (chatId, _photoUrl, opts) => {
+      sent.push({
+        method: "sendPhoto",
+        chatId: String(chatId),
+        text: opts?.caption,
+      });
+      return { message_id: sent.length, chat: { id: Number(chatId) || 0 } };
+    }),
     sendChatAction: vi.fn(async () => {}),
     editMessageText: vi.fn(async (chatId, messageId, text) => {
       sent.push({
@@ -89,6 +97,17 @@ beforeEach(() => {
     proposals: [],
     totalTokens: 0,
     durationMs: 1,
+  });
+  snapMock.buildPortfolioSnapshot.mockResolvedValue({
+    baseCurrency: "EUR",
+    totals: { value: 1, cost: 1, gainLoss: 0, gainLossPct: 0, dayChange: 0 },
+    holdingsCount: 1,
+    topHoldings: [],
+    allocation: [
+      { type: "Stocks", pct: 80 },
+      { type: "Cash", pct: 20 },
+    ],
+    cashSummary: {},
   });
 });
 
@@ -489,6 +508,184 @@ describe("telegram/handler · free-form Warren turn", () => {
     setTestTelegramClient(null);
   });
 
+  it("converts AI Markdown (### headings, **bold**, bullets) instead of escaping it as literal text", async () => {
+    dbMocks.getChatLinkByChatId.mockResolvedValueOnce({
+      chatId: "42",
+      userId: "user-1",
+      languageCode: "en",
+      linkedAt: "",
+      lastSeenAt: "",
+      lastActivePortfolioId: "",
+    });
+    dbMocks.listPortfolios.mockResolvedValueOnce([
+      { id: "pf-1", name: "Default", currency: "EUR", isDefault: true },
+    ]);
+    runTurnMock.runWarrenTurn.mockResolvedValueOnce({
+      text: "### Adobe Inc. (ADBE)\n- **Current Price:** $250.71",
+      parts: [],
+      proposals: [],
+      totalTokens: 0,
+      durationMs: 1,
+    });
+
+    const { handler, setTestTelegramClient } = await loadHandler();
+    const { stub, sent } = makeBotStub();
+    setTestTelegramClient(stub);
+
+    await handler.handleTelegramUpdate({
+      message: {
+        message_id: 1,
+        chat: { id: 42, type: "private" },
+        date: 0,
+        text: "/news",
+        from: { id: 7 },
+      },
+    });
+
+    const aiReply = sent.find(
+      (m) => m.method === "sendMessage" && m.text?.includes("Adobe"),
+    );
+    expect(aiReply).toBeDefined();
+    // Heading converted to bold, no leftover ###
+    expect(aiReply!.text).not.toContain("###");
+    expect(aiReply!.text).toMatch(/\*Adobe Inc\\\. \\\(ADBE\\\)\*/);
+    // Bold inline marker is single asterisk (MarkdownV2)
+    expect(aiReply!.text).not.toMatch(/\*\*Current Price/);
+    expect(aiReply!.text).toContain("• ");
+    setTestTelegramClient(null);
+  });
+
+  it("renders chart parts via sendPhoto and falls back to text when the URL can't be built", async () => {
+    dbMocks.getChatLinkByChatId.mockResolvedValueOnce({
+      chatId: "42",
+      userId: "user-1",
+      languageCode: "en",
+      linkedAt: "",
+      lastSeenAt: "",
+      lastActivePortfolioId: "",
+    });
+    dbMocks.listPortfolios.mockResolvedValueOnce([
+      { id: "pf-1", name: "Default", currency: "EUR", isDefault: true },
+    ]);
+    runTurnMock.runWarrenTurn.mockResolvedValueOnce({
+      text: "",
+      parts: [
+        {
+          kind: "chart",
+          data: {
+            kind: "pie",
+            title: "Allocation",
+            currency: "EUR",
+            slices: [
+              { label: "Stocks", value: 80 },
+              { label: "Cash", value: 20 },
+            ],
+          },
+        },
+      ],
+      proposals: [],
+      totalTokens: 0,
+      durationMs: 1,
+    });
+
+    const { handler, setTestTelegramClient } = await loadHandler();
+    const { stub, sent } = makeBotStub();
+    setTestTelegramClient(stub);
+
+    await handler.handleTelegramUpdate({
+      message: {
+        message_id: 1,
+        chat: { id: 42, type: "private" },
+        date: 0,
+        text: "Show my allocation chart",
+        from: { id: 7 },
+      },
+    });
+
+    const photo = sent.find((m) => m.method === "sendPhoto");
+    expect(photo).toBeDefined();
+    setTestTelegramClient(null);
+  });
+});
+
+describe("telegram/handler · /chart command", () => {
+  it("sends a portfolio allocation pie chart photo", async () => {
+    dbMocks.getChatLinkByChatId.mockResolvedValueOnce({
+      chatId: "42",
+      userId: "user-1",
+      languageCode: "en",
+      linkedAt: "",
+      lastSeenAt: "",
+      lastActivePortfolioId: "pf-1",
+    });
+    dbMocks.listPortfolios.mockResolvedValueOnce([
+      { id: "pf-1", name: "Default", currency: "EUR", isDefault: true },
+    ]);
+
+    const { handler, setTestTelegramClient } = await loadHandler();
+    const { stub, sent } = makeBotStub();
+    setTestTelegramClient(stub);
+
+    await handler.handleTelegramUpdate({
+      message: {
+        message_id: 1,
+        chat: { id: 42, type: "private" },
+        date: 0,
+        text: "/chart",
+        from: { id: 7 },
+      },
+    });
+
+    const photo = sent.find((m) => m.method === "sendPhoto");
+    expect(photo).toBeDefined();
+    expect(runTurnMock.runWarrenTurn).not.toHaveBeenCalled();
+    setTestTelegramClient(null);
+  });
+
+  it("sends a fallback text when the snapshot has no allocation", async () => {
+    dbMocks.getChatLinkByChatId.mockResolvedValueOnce({
+      chatId: "42",
+      userId: "user-1",
+      languageCode: "en",
+      linkedAt: "",
+      lastSeenAt: "",
+      lastActivePortfolioId: "pf-1",
+    });
+    dbMocks.listPortfolios.mockResolvedValueOnce([
+      { id: "pf-1", name: "Default", currency: "EUR", isDefault: true },
+    ]);
+    snapMock.buildPortfolioSnapshot.mockResolvedValueOnce({
+      baseCurrency: "EUR",
+      totals: { value: 0, cost: 0, gainLoss: 0, gainLossPct: 0, dayChange: 0 },
+      holdingsCount: 0,
+      topHoldings: [],
+      allocation: [],
+      cashSummary: {},
+    });
+
+    const { handler, setTestTelegramClient } = await loadHandler();
+    const { stub, sent } = makeBotStub();
+    setTestTelegramClient(stub);
+
+    await handler.handleTelegramUpdate({
+      message: {
+        message_id: 1,
+        chat: { id: 42, type: "private" },
+        date: 0,
+        text: "/chart",
+        from: { id: 7 },
+      },
+    });
+
+    expect(sent.some((m) => m.method === "sendPhoto")).toBe(false);
+    expect(
+      sent.some((m) => m.method === "sendMessage" && /chart|gráfico/i.test(m.text || "")),
+    ).toBe(true);
+    setTestTelegramClient(null);
+  });
+});
+
+describe("telegram/handler · free-form Warren turn quota", () => {
   it("returns the quota message when the user is over quota", async () => {
     dbMocks.getChatLinkByChatId.mockResolvedValueOnce({
       chatId: "42",

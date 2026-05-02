@@ -31,6 +31,15 @@ export interface SendMessageOptions {
   messageThreadId?: number;
 }
 
+export interface SendPhotoOptions {
+  /** Optional caption rendered below the image. */
+  caption?: string;
+  parseMode?: TelegramParseMode;
+  replyMarkup?: TelegramInlineKeyboard;
+  /** When set, replies in a thread (for forum supergroups). */
+  messageThreadId?: number;
+}
+
 export interface EditMessageOptions {
   parseMode?: TelegramParseMode;
   replyMarkup?: TelegramInlineKeyboard;
@@ -57,6 +66,12 @@ export interface SentMessage {
 
 export interface TelegramClient {
   sendMessage(chatId: string | number, text: string, opts?: SendMessageOptions): Promise<SentMessage | null>;
+  /**
+   * Send a photo by HTTPS URL. Telegram fetches the image server-side, so
+   * the URL must be reachable from Telegram's servers (no localhost) and
+   * smaller than 5 MB.
+   */
+  sendPhoto(chatId: string | number, photoUrl: string, opts?: SendPhotoOptions): Promise<SentMessage | null>;
   sendChatAction(chatId: string | number, action: "typing" | "upload_photo"): Promise<void>;
   editMessageText(
     chatId: string | number,
@@ -112,6 +127,23 @@ class HttpTelegramClient implements TelegramClient {
     }
     if (opts.messageThreadId !== undefined) body.message_thread_id = opts.messageThreadId;
     const result = await this.call<SentMessage>("sendMessage", body);
+    return result.ok && result.result ? result.result : null;
+  }
+
+  async sendPhoto(
+    chatId: string | number,
+    photoUrl: string,
+    opts: SendPhotoOptions = {},
+  ): Promise<SentMessage | null> {
+    const body: Record<string, unknown> = {
+      chat_id: chatId,
+      photo: photoUrl,
+    };
+    if (opts.caption) body.caption = opts.caption;
+    if (opts.parseMode) body.parse_mode = opts.parseMode;
+    if (opts.replyMarkup) body.reply_markup = opts.replyMarkup;
+    if (opts.messageThreadId !== undefined) body.message_thread_id = opts.messageThreadId;
+    const result = await this.call<SentMessage>("sendPhoto", body);
     return result.ok && result.result ? result.result : null;
   }
 

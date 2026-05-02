@@ -51,6 +51,10 @@ export interface TelegramStrings {
   aiError: string;
   quotaExceeded: string;
   userNotFound: string;
+  /** Caption for the /chart allocation pie chart. */
+  allocationChartTitle: string;
+  /** Sent when /chart can't be rendered (no holdings or images disabled). */
+  chartUnavailable: string;
   // Help menu strings
   helpTitle: string;
   helpIntro: string;
@@ -108,6 +112,9 @@ const EN: TelegramStrings = {
   quotaExceeded:
     "You've reached your monthly Warren limit. Upgrade or come back next month — see /billing in the app.",
   userNotFound: "I couldn't find your account. Try /unlink and link again from your profile.",
+  allocationChartTitle: "Portfolio allocation",
+  chartUnavailable:
+    "I can't render a chart right now — make sure you have holdings in this portfolio.",
   helpTitle: "Warren — what I can do",
   helpIntro:
     "I'm your portfolio companion on Telegram. Ask me in plain language or use these shortcuts.",
@@ -167,6 +174,9 @@ const ES: TelegramStrings = {
     "Has alcanzado tu límite mensual de Warren. Mejora tu plan o espera al próximo mes — usa /billing en la app.",
   userNotFound:
     "No encuentro tu cuenta. Prueba /unlink y vuelve a vincular desde tu perfil.",
+  allocationChartTitle: "Asignación de la cartera",
+  chartUnavailable:
+    "No puedo generar el gráfico ahora — comprueba que tengas posiciones en esta cartera.",
   helpTitle: "Warren — qué puedo hacer",
   helpIntro:
     "Soy tu compañero de cartera en Telegram. Pregúntame con lenguaje natural o usa estos atajos.",

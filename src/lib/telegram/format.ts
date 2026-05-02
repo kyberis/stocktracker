@@ -83,6 +83,111 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 };
 
 /**
+ * Convert CommonMark-style Markdown produced by the AI (the same syntax
+ * ChatGPT/Claude emit by default — `### Heading`, `**bold**`, `_italic_`,
+ * `` `code` ``, ```` ```fenced``` ````, `[label](url)`, `- bullets`) into
+ * Telegram MarkdownV2.
+ *
+ * Why this exists: Warren produces standard Markdown in `result.text`, but
+ * Telegram's MarkdownV2 has a different syntax (`*` for bold instead of `**`)
+ * and a long list of mandatory escape characters. Naively running
+ * `escapeMarkdown(text)` makes Telegram render `### Adobe` and `**Price**`
+ * as literal text. This function recognises and translates the common
+ * structures, then escapes everything else.
+ *
+ * Strategy: replace each formatted span with a sentinel containing the
+ * already-rendered MarkdownV2, escape what's left, and finally restore the
+ * sentinels. We use control chars (\u0001 / \u0002) as sentinel boundaries
+ * because they aren't escaped by MarkdownV2 and don't appear in normal text.
+ */
+export function commonMarkToTelegram(input: string): string {
+  if (!input) return "";
+
+  let text = input.replace(/\r\n/g, "\n");
+  const tokens: string[] = [];
+  const SEN_OPEN = "\u0001";
+  const SEN_CLOSE = "\u0002";
+  const push = (replacement: string): string => {
+    const i = tokens.length;
+    tokens.push(replacement);
+    return `${SEN_OPEN}${i}${SEN_CLOSE}`;
+  };
+
+  // Inside fenced/inline code, only ``` ` ``` and `\` need escaping.
+  const escapeCode = (s: string): string => s.replace(/([`\\])/g, "\\$1");
+
+  // Inside formatted spans (bold / italic / link label) every special char
+  // still needs MarkdownV2 escaping.
+  const escapeInner = (s: string): string =>
+    s.replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, "\\$1");
+
+  // 1) Fenced code blocks: ```lang\n...\n``` (handle before everything else
+  //    so `**bold**` inside code isn't interpreted).
+  text = text.replace(/```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```/g, (_, lang, body) => {
+    const safe = escapeCode(body.replace(/\n+$/, ""));
+    const fence = lang ? `\`\`\`${lang}\n${safe}\n\`\`\`` : `\`\`\`\n${safe}\n\`\`\``;
+    return push(fence);
+  });
+
+  // 2) Inline code: `foo`
+  text = text.replace(/`([^`\n]+)`/g, (_, body) => push(`\`${escapeCode(body)}\``));
+
+  // 3) Links: [label](url) — MarkdownV2 link, label is escaped.
+  text = text.replace(/\[([^\]\n]+)\]\(([^()\s]+)\)/g, (_, label, url) => {
+    const safeUrl = url.replace(/([\\)])/g, "\\$1");
+    return push(`[${escapeInner(label)}](${safeUrl})`);
+  });
+
+  // 4) ATX headings: `# Heading` … `###### Heading` → bold. Process before
+  //    bold/italic so the heading text is treated as plain content (avoids
+  //    nested `**` issues).
+  text = text.replace(/^(#{1,6})[ \t]+(.+?)[ \t]*$/gm, (_, _h, body) => {
+    // The AI sometimes wraps the heading in **double asterisks** even though
+    // headings already imply bold; strip them so we don't end up with
+    // visible `**` after restore.
+    const stripped = body
+      .replace(/^\*\*([\s\S]+)\*\*$/, "$1")
+      .replace(/^__([\s\S]+)__$/, "$1");
+    return push(`*${escapeInner(stripped)}*`);
+  });
+
+  // 5) Bold: **text** or __text__ → *text*
+  text = text.replace(/\*\*([^\n*]+?)\*\*/g, (_, body) => push(`*${escapeInner(body)}*`));
+  text = text.replace(/__([^\n_]+?)__/g, (_, body) => push(`*${escapeInner(body)}*`));
+
+  // 6) Italic: *text* or _text_ → _text_  (single delimiter, no whitespace
+  //    immediately inside, not surrounded by another of the same delimiter).
+  text = text.replace(
+    /(^|[^*\w\u0001])\*(?=\S)([^\n*]+?)(?<=\S)\*(?!\w)/g,
+    (_match, pre: string, body: string) => `${pre}${push(`_${escapeInner(body)}_`)}`,
+  );
+  text = text.replace(
+    /(^|[^_\w\u0001])_(?=\S)([^\n_]+?)(?<=\S)_(?!\w)/g,
+    (_match, pre: string, body: string) => `${pre}${push(`_${escapeInner(body)}_`)}`,
+  );
+
+  // 7) Bullet lists: lines starting with `- `, `* `, or `• ` → use `•`
+  text = text.replace(/^([ \t]*)[-*•][ \t]+/gm, (_match, indent: string) => `${indent}${push("• ")}`);
+
+  // 8) Block quotes (`> text`) — MarkdownV2 supports `>` natively.
+  text = text.replace(/^>[ \t]?/gm, () => push(">"));
+
+  // 9) Now escape every remaining MarkdownV2 special char in the leftover
+  //    text. Sentinels (\u0001…\u0002) survive untouched.
+  text = text.replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, "\\$1");
+
+  // 10) Restore sentinels. A token's replacement may itself contain another
+  //     sentinel (e.g. a link inside a heading), so loop until stable.
+  const sentinelRe = new RegExp(`${SEN_OPEN}(\\d+)${SEN_CLOSE}`, "g");
+  let prev = "";
+  while (prev !== text) {
+    prev = text;
+    text = text.replace(sentinelRe, (_match, i: string) => tokens[Number(i)] ?? "");
+  }
+  return text;
+}
+
+/**
  * Split a long MarkdownV2 message into Telegram-sized chunks (≤4096 chars,
  * targeting ≤3500 to leave headroom). Splits on paragraph boundaries first,
  * then on lines, then on hard chars.

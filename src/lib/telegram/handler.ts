@@ -40,6 +40,7 @@ import { dispatchProposal } from "@/lib/ai/warren/dispatch";
 import type { WarrenProposal, WarrenProposalKind } from "@/lib/ai/warren/types";
 import {
   bold,
+  commonMarkToTelegram,
   escapeMarkdown,
   italic,
   renderHelpMenu,
@@ -54,6 +55,7 @@ import {
   type TelegramClient,
 } from "./client";
 import { localizeTelegram, type TelegramLocale } from "./i18n";
+import { buildPortfolioAllocationChart, sendChartPart } from "./chart-render";
 
 export interface TelegramUpdate {
   update_id?: number;
@@ -249,6 +251,27 @@ async function handleCommand(
       return;
     }
 
+    case "/chart": {
+      const portfolioId = await resolvePortfolio(link);
+      const portfolios = await listPortfolios(link.userId).catch(() => []);
+      const active = portfolios.find((p) => p.id === portfolioId);
+      const data = await buildPortfolioAllocationChart({
+        userId: link.userId,
+        portfolioId,
+        baseCurrency: active?.currency || "EUR",
+        title: i.allocationChartTitle,
+      });
+      if (!data) {
+        await sendMd(bot, chatId, escapeMarkdown(i.chartUnavailable));
+        return;
+      }
+      const sent = await sendChartPart(bot, chatId, data);
+      if (!sent) {
+        await sendMd(bot, chatId, escapeMarkdown(i.chartUnavailable));
+      }
+      return;
+    }
+
     case "/news":
     case "/growth":
     case "/watchlist":
@@ -437,13 +460,24 @@ async function runWarrenForText(
   // Must send every part — an older bug used `.slice(0, 1)` and dropped charts.
   const maxCardParts = 5;
   for (const part of result.parts.slice(0, maxCardParts)) {
+    if (part.kind === "chart") {
+      const sent = await sendChartPart(bot, chatId, part.data);
+      if (!sent) {
+        // Fall back to a text label so the user knows a chart was attempted.
+        await sendMd(bot, chatId, bold(part.data.title));
+      }
+      continue;
+    }
     const md = renderWarrenPart(part);
     if (md) await sendMd(bot, chatId, md);
   }
 
   if (result.text.trim()) {
-    const escaped = escapeMarkdown(result.text);
-    const chunks = splitForTelegram(escaped);
+    // The model writes standard Markdown (`### Heading`, `**bold**`,
+    // bullets, links). Convert to Telegram MarkdownV2 so it renders with
+    // styling instead of showing literal `###` and `**`.
+    const md = commonMarkToTelegram(result.text);
+    const chunks = splitForTelegram(md);
     for (const chunk of chunks) {
       await sendMd(bot, chatId, chunk);
     }
@@ -618,6 +652,7 @@ function buildHelp(i: ReturnType<typeof localizeTelegram>): HelpStrings {
         items: [
           "/holdings",
           "/portfolios",
+          "/chart",
           i.helpEx1,
           i.helpEx2,
         ],

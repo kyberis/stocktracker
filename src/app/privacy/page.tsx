@@ -380,6 +380,11 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3">If you choose to connect your Telegram account, we exchange your Telegram chat ID and the contents of messages you send to our bot with Telegram&apos;s servers; the same messages are then sent to OpenAI to generate Warren&apos;s reply. You can disconnect at any time from your profile.</td>
                   </tr>
                   <tr>
+                    <td className="py-3 pr-6">QuickChart (Chart.js renderer)</td>
+                    <td className="py-3 pr-6">Optional rendering of charts sent in Telegram replies</td>
+                    <td className="py-3">When you ask Warren on Telegram for a chart (e.g. /chart) we send aggregated, non-identifying values — chart title, asset-type labels (Stocks, Cash, ETFs…) and percentages — to QuickChart to render a PNG. No tickers, account ids, names, or email addresses are sent. Operators can self-host QuickChart or disable image charts entirely with environment flags.</td>
+                  </tr>
+                  <tr>
                     <td className="py-3 pr-6">Google Analytics / Google Ads tags (Google LLC)</td>
                     <td className="py-3 pr-6">Consent-based analytics and conversion attribution</td>
                     <td className="py-3">Pseudonymous cookie identifiers, page events, and conversion events (signup/checkout milestones) only after consent</td>

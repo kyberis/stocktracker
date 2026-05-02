@@ -10,7 +10,28 @@ export type WarrenPart =
   | { kind: "allocation"; data: AllocationCardData }
   | { kind: "summary"; data: SummaryCardData }
   | { kind: "stockPick"; data: StockPickCardData }
-  | { kind: "stockSnapshot"; data: StockSnapshotData };
+  | { kind: "stockSnapshot"; data: StockSnapshotData }
+  | { kind: "chart"; data: ChartPartData };
+
+/**
+ * Channel-agnostic chart payload. The web client renders this with Recharts;
+ * Telegram converts it into a QuickChart PNG and sends via `sendPhoto`. Keep
+ * the shape small so the same data can flow over both transports.
+ */
+export interface ChartPartData {
+  /** Pie = composition, line = time series, bar = comparison. */
+  kind: "pie" | "line" | "bar";
+  title: string;
+  /** Optional currency suffix appended to the title (e.g. "EUR"). */
+  currency?: string;
+  /** For line/bar charts. */
+  labels?: string[];
+  values?: number[];
+  /** For pie charts. */
+  slices?: { label: string; value: number }[];
+  /** Render bars horizontally — useful for long ticker labels. */
+  horizontal?: boolean;
+}
 
 export interface StockSnapshotData {
   ticker: string;
