@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.2.2",
+    date: "2026-05-02",
+    title: "Profile page width matches the rest of the app",
+    titleTranslations: {
+      es: "El ancho del perfil ahora coincide con el resto de la app",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "The Profile page now uses the same max width and horizontal padding as Portfolio and other content pages, instead of being noticeably narrower than the rest of the app.",
+        translations: {
+          es: "La p\u00e1gina de Perfil ahora usa el mismo ancho m\u00e1ximo y los mismos m\u00e1rgenes horizontales que Portfolio y el resto de p\u00e1ginas, en lugar de aparecer m\u00e1s estrecha que el resto de la app.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.2.1",
     date: "2026-04-30",
     title: "Telegram replaces WhatsApp for alert delivery",

@@ -1532,12 +1532,12 @@ export default function ProfilePage() {
   const portfolioPlanLimit = isPro ? 3 : 1;
 
   return (
-    <main className="px-4 py-8">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+      <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("profile")}</h1>
 
         {/* Tab navigation */}
-        <div className="sticky top-0 z-10 -mx-4 px-4 py-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+        <div className="sticky top-0 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
           <div className="overflow-x-auto no-scrollbar">
           <div role="tablist" aria-label={t("profile")} className="flex flex-nowrap gap-1 min-w-max bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm">
             {visibleTabs.map((tab) => {
