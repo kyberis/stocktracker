@@ -100,7 +100,7 @@ external/
 
 ## Git discipline
 
-- Bypass corporate hooks: `git -c commit.gpgsign=false commit --no-verify -m "..."`
+- Bypass pre-commit/pre-push hooks and GPG signing: `git -c commit.gpgsign=false commit --no-verify -m "..."`
   and `git push --no-verify origin <branch>`. See [`.cursor/rules/git-push.mdc`](.cursor/rules/git-push.mdc).
 - Do not push to `main` without a successful `npm run build && npm test`.
 

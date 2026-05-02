@@ -820,7 +820,6 @@ export interface DigestSenderDomain {
 const DIGEST_SENDERS_KEY = "digest_sender_domains";
 
 const DEFAULT_DIGEST_SENDERS: DigestSenderDomain[] = [
-  { value: "suarez84@gmail.com", label: "Gmail", color: "red" },
   { value: "diariobitcoin.com", label: "DiarioBitcoin", color: "orange" },
 ];
 

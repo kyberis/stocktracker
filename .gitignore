@@ -16,7 +16,29 @@
 /playwright-report/
 /blob-report/
 e2e-*.log
-e2e-full-output.txt
+e2e-*.txt
+e2e-*.png
+import-error.png
+
+# private business docs (not for public repo)
+docs/private/
+docs/COMMERCIALIZATION_PLAN.md
+docs/AD_CAMPAIGN_LAUNCH_PLAN.md
+docs/AD_CREATIVES.md
+docs/ad-creatives-gallery.html
+docs/CONVERSION_EVENTS.md
+docs/SUPPLIER_OUTREACH_EMAILS.md
+docs/SECURITY_AUDIT.md
+docs/competitive-analysis.html
+docs/competitor-value-comparison-report.html
+docs/cost-vs-revenue.html
+docs/X_ACCOUNT_PLAYBOOK.md
+docs/SOCIAL_MEDIA_POSTS.md
+docs/LAUNCH_COPY.md
+docs/linkedin-series-trefolio.md
+
+# cursor debug logs
+.cursor/debug*.log
 
 # next.js
 /.next/
