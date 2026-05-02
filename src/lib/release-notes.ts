@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.4.1",
+    date: "2026-05-02",
+    title: "Warren replies are tighter and end with a useful next step",
+    titleTranslations: {
+      es: "Warren responde de forma m\u00e1s directa y termina con una sugerencia \u00fatil",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Warren now replies in a more direct, conversational style: length follows the question (1\u20132 sentences for concrete asks; short paragraphs or bullets for open ones), no boilerplate greetings or sign-offs, and substantive answers end with one short follow-up question or next step instead of generic closers. The \"AI-generated, not financial advice\" line still appears on Telegram and on advisory web turns; on the web drawer it relies on the persistent footer rather than repeating it after every message.",
+        translations: {
+          es: "Warren ahora responde en un estilo m\u00e1s directo y conversacional: la extensi\u00f3n se ajusta a la pregunta (1\u20132 frases para consultas concretas; p\u00e1rrafos cortos o vi\u00f1etas para las abiertas), sin saludos ni cierres gen\u00e9ricos, y las respuestas sustanciales terminan con una pregunta de seguimiento o un pr\u00f3ximo paso \u00fatil en vez de muletillas. La l\u00ednea \u00abAsistencia generada por IA, no es asesoramiento financiero\u00bb sigue apareciendo en Telegram y en los turnos de web con contenido asesor; en el cajón web se apoya en el pie de p\u00e1gina permanente en lugar de repetirla en cada mensaje.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.4.0",
     date: "2026-05-02",
     title: "Warren talks: voice notes on Telegram + a value-investing knowledge base",
