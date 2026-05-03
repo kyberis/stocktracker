@@ -1,3 +1,6 @@
 [submodule "external/etracker"]
 	path = external/etracker
 	url = https://github.com/kyberis/etracker.git
+[submodule "external/notetaker"]
+	path = external/notetaker
+	url = https://github.com/kyberis/notetaker.git

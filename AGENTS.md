@@ -30,6 +30,10 @@ Capacitor for iOS/Android, plus a physical "trefolio Leaf" ESP32-S3 device.
  — how trefolio links to Clara (the financial-agents sister codebase at
  `external/etracker`). Read before touching anything related to financial
  agents or `external/`.
+7. [`knowledge/design-docs/notetaker-will-integration.md`](knowledge/design-docs/notetaker-will-integration.md)
+ — how trefolio links to Will (the note-taking sister codebase at
+ `external/notetaker`, hosted at `will.trefolio.com`). Read before touching
+ anything in `external/notetaker/`.
 
 ## Repository layout (high level)
 
@@ -62,6 +66,12 @@ external/
                       deploy via CLARA_BASE_URL. Excluded from tsconfig, eslint,
                       vitest, .vercelignore. See
                       knowledge/design-docs/etracker-clara-integration.md
+  notetaker/          Will — note-taking sister repo (kyberis/notetaker),
+                      pinned git submodule, READ-ONLY context for the agent.
+                      Trefolio never builds it; ships independently to
+                      will.trefolio.com. No runtime coupling in v1. Excluded
+                      from tsconfig, eslint, vitest, .vercelignore. See
+                      knowledge/design-docs/notetaker-will-integration.md
 .cursor/
   rules/              Cursor rules (always-applied)
   skills/             Expert skills by domain
