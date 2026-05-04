@@ -485,6 +485,16 @@ async function runWarrenForText(
 
   await bot.sendChatAction(chatId, "typing");
 
+  // Send a single "status" message we can edit in place as Warren calls
+  // each tool ("Looking up your holdings…", "Fetching live quote…"). The
+  // labels come from `emitStep(label)` inside each tool, surfaced via the
+  // `tool_step` frame on Warren's stream — same source of truth as the
+  // web drawer. If the send fails (network), we degrade silently to the
+  // typing dot only.
+  const status = await bot.sendMessage(chatId, i.thinking);
+  const statusMessageId = status?.message_id ?? null;
+  let lastStatusText = i.thinking;
+
   // Resolve active portfolio (last used wins, default otherwise).
   let activePortfolioId = link.lastActivePortfolioId || "";
   let activePortfolioName = "";
@@ -540,10 +550,34 @@ async function runWarrenForText(
       activePortfolioName: activePortfolioName || undefined,
       snapshot,
       messages,
+      onFrame: statusMessageId
+        ? (frame) => {
+            // Only the per-tool labels drive the visible status. We ignore
+            // text deltas here on purpose — the agent's prose is sent as
+            // its own message(s) below, after the status is removed.
+            if (frame.kind !== "tool_step") return;
+            const next = frame.label?.trim();
+            if (!next || next === lastStatusText) return;
+            lastStatusText = next;
+            // Fire-and-forget: progress UX must never block the agent loop
+            // and "message is not modified" / network errors are harmless.
+            void bot.editMessageText(chatId, statusMessageId, next).catch(() => {});
+          }
+        : undefined,
     });
   } catch {
+    if (statusMessageId) {
+      await bot.deleteMessage(chatId, statusMessageId).catch(() => {});
+    }
     await sendMd(bot, chatId, escapeMarkdown(i.aiError));
     return;
+  }
+
+  // Replace the status message with the actual reply. Delete-then-send
+  // (vs editing in place) keeps charts, MarkdownV2 prose and inline
+  // proposal keyboards working uniformly through the existing pipeline.
+  if (statusMessageId) {
+    await bot.deleteMessage(chatId, statusMessageId).catch(() => {});
   }
 
   // Render response: card parts first (text bars / summaries), then prose.

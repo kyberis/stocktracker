@@ -79,6 +79,13 @@ function makeBotStub() {
         messageId,
       });
     }),
+    deleteMessage: vi.fn(async (chatId, messageId) => {
+      sent.push({
+        method: "deleteMessage",
+        chatId: String(chatId),
+        messageId,
+      });
+    }),
     answerCallbackQuery: vi.fn(async () => {}),
     setWebhook: vi.fn(async () => ({ ok: true })),
     deleteWebhook: vi.fn(async () => ({ ok: true })),

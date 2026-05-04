@@ -119,6 +119,8 @@ export interface TelegramClient {
     text: string,
     opts?: EditMessageOptions,
   ): Promise<void>;
+  /** Best-effort delete; failures (already deleted, too old) are swallowed. */
+  deleteMessage(chatId: string | number, messageId: number): Promise<void>;
   answerCallbackQuery(callbackQueryId: string, text?: string, showAlert?: boolean): Promise<void>;
   setWebhook(url: string, secretToken: string): Promise<TelegramApiResult<unknown>>;
   deleteWebhook(): Promise<TelegramApiResult<unknown>>;
@@ -278,6 +280,10 @@ class HttpTelegramClient implements TelegramClient {
       body.disable_web_page_preview = opts.disableWebPagePreview;
     }
     await this.call("editMessageText", body);
+  }
+
+  async deleteMessage(chatId: string | number, messageId: number): Promise<void> {
+    await this.call("deleteMessage", { chat_id: chatId, message_id: messageId });
   }
 
   async answerCallbackQuery(

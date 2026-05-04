@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.4.2",
+    date: "2026-05-04",
+    title: "Warren tells you what he's doing on Telegram",
+    titleTranslations: {
+      es: "Warren te cuenta qu\u00e9 est\u00e1 haciendo en Telegram",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "While Warren works in Telegram you now see a small status line that updates with each step \u2014 \"Looking up your holdings\u2026\", \"Fetching live quote\u2026\", \"Searching the investing knowledge base\u2026\". The line is edited in place and disappears the moment the final answer arrives, so the chat stays tidy. Same idea you already had in the web Warren drawer.",
+        translations: {
+          es: "Mientras Warren trabaja en Telegram ahora ves una l\u00ednea corta de estado que se actualiza con cada paso: \u00abMirando tus posiciones\u2026\u00bb, \u00abPidiendo la cotizaci\u00f3n\u2026\u00bb, \u00abBuscando en la base de inversi\u00f3n\u2026\u00bb. La l\u00ednea se edita en el sitio y desaparece al llegar la respuesta final, as\u00ed que el chat queda limpio. Misma idea que ya ten\u00edas en el cajón web de Warren.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.4.1",
     date: "2026-05-02",
     title: "Warren replies are tighter and end with a useful next step",

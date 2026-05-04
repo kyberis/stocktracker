@@ -47,6 +47,8 @@ export interface TelegramStrings {
   yourAlerts: string;
   /** "(and N more)" footer for truncated lists. */
   andMore: (n: number) => string;
+  /** Initial status line shown while Warren works (before any tool runs). */
+  thinking: string;
   /** AI errors */
   aiError: string;
   quotaExceeded: string;
@@ -118,6 +120,7 @@ const EN: TelegramStrings = {
   yourHoldings: "Your holdings",
   yourAlerts: "Active alerts",
   andMore: (n: number) => `(and ${n} more)`,
+  thinking: "💭 Thinking…",
   aiError: "I couldn't reach the AI just now. Please try again in a moment.",
   quotaExceeded:
     "You've reached your monthly Warren limit. Upgrade or come back next month — see /billing in the app.",
@@ -188,6 +191,7 @@ const ES: TelegramStrings = {
   yourHoldings: "Tus posiciones",
   yourAlerts: "Alertas activas",
   andMore: (n: number) => `(y ${n} más)`,
+  thinking: "💭 Pensando…",
   aiError: "No pude contactar con la IA. Inténtalo de nuevo en un momento.",
   quotaExceeded:
     "Has alcanzado tu límite mensual de Warren. Mejora tu plan o espera al próximo mes — usa /billing en la app.",
