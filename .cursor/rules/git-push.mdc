@@ -10,3 +10,14 @@ When pushing or committing to this repository, bypass pre-push/pre-commit hooks 
 
 - **Commit:** `git -c commit.gpgsign=false commit --no-verify -m "..."`
 - **Push:** `git push --no-verify origin <branch>`
+
+## Author identity
+
+Use **`suarez84@gmail.com`** as `user.email` for every commit in this monorepo and in nested git repos (`external/accounts`, `external/etracker`, `external/notetaker`, etc.). Set once per clone:
+
+```bash
+git config user.email "suarez84@gmail.com"
+git config user.name "Marcos Suarez"
+```
+
+Repeat inside each submodule root if commits are made there.
