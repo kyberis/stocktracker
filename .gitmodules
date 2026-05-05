@@ -4,3 +4,6 @@
 [submodule "external/notetaker"]
 	path = external/notetaker
 	url = https://github.com/kyberis/notetaker.git
+[submodule "external/accounts"]
+	path = external/accounts
+	url = https://github.com/kyberis/trefolio-accounts.git
