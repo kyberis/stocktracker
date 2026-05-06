@@ -40,6 +40,13 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "improvement",
+        text: "The identity service (user.trefolio.com) rejects disposable and known fake email domains on password signup and on new Google sign-ups, using the same domain list as trefolio.",
+        translations: {
+          es: "El servicio de identidad (user.trefolio.com) rechaza dominios de correo desechables y falsos conocidos en el registro con contraseña y en nuevos accesos con Google, con la misma lista que trefolio.",
+        },
+      },
+      {
+        type: "improvement",
         text: "When unified OIDC is active, /login immediately continues into the IdP (middleware → /api/auth/oidc/start → user.* /oauth2/authorize), so you reach user.trefolio.com or user.trefolio-dev.com without rendering an extra stop on the product login screen.",
         translations: {
           es: "Con OIDC unificado activo, /login continúa enseguida hacia el IdP (middleware → /api/auth/oidc/start → user.* /oauth2/authorize), así llegas a user.trefolio.com o user.trefolio-dev.com sin una parada extra en la pantalla de login del producto.",
@@ -50,6 +57,20 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Local HTTPS dev (Caddy): IdP login no longer sends the browser to localhost when apps use loopback IDP_BASE_URL — set IDP_ISSUER (and optional IDP_SERVER_ORIGIN on accounts) per dev/README.md; trefolio honors IDP_ISSUER for /oauth2/authorize, IdP logout links, and ID-token verification.",
         translations: {
           es: "En dev HTTPS con Caddy: el login IdP ya no manda el navegador a localhost si las apps usan IDP_BASE_URL en loopback — configura IDP_ISSUER (y opcional IDP_SERVER_ORIGIN en accounts) según dev/README.md; trefolio respeta IDP_ISSUER para /oauth2/authorize, logout del IdP y verificación del id_token.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Clara: settings data-export control uses Base UI `Button` with `nativeButton={false}` when rendering as a download link so the GDPR export button no longer triggers a runtime accessibility warning.",
+        translations: {
+          es: "Clara: el control de exportación de datos en ajustes usa el `Button` de Base UI con `nativeButton={false}` al renderizar como enlace de descarga, así el botón de exportación RGPD ya no dispara el aviso de accesibilidad en runtime.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Clara: signing out from the app header now uses the site root as the post-logout return URL (like Will), instead of /login, so user.trefolio.com end_session no longer sends you into a login ↔ IdP redirect loop.",
+        translations: {
+          es: "Clara: cerrar sesión desde el menú del header usa la raíz del sitio como URL de vuelta tras el logout del IdP (como Will), en lugar de /login, para que user.trefolio.com end_session no te meta en un bucle login ↔ IdP.",
         },
       },
     ],
