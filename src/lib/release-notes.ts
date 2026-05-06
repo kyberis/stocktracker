@@ -17,6 +17,124 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.1",
+    date: "2026-05-05",
+    title: "Unified signup via accounts",
+    titleTranslations: {
+      es: "Alta unificada vía accounts",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The identity service (user.trefolio.com) supports English, German, Spanish, French, and Italian for the sign-in UI, check-email flow, and verification emails; trefolio passes your browser language to the IdP via OIDC ui_locales when starting login or signup.",
+        translations: {
+          es: "El servicio de identidad (user.trefolio.com) admite inglés, alemán, español, francés e italiano en la UI de acceso, la pantalla de revisión de correo y los correos de verificación; trefolio envía el idioma del navegador al IdP con ui_locales (OIDC) al iniciar sesión o registro.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "When the IdP is enabled and legacy auth is off, /signup and app registration links send you to user.trefolio.com with branding for the app you came from (trefolio, Clara or Will). New accounts still finish onboarding or accept-terms inside each product afterward.",
+        translations: {
+          es: "Con el IdP activo y la auth legada desactivada, /signup y los enlaces de registro te llevan a user.trefolio.com con la marca de la app de origen (trefolio, Clara o Will). Las cuentas nuevas siguen completando onboarding o aceptación de términos dentro de cada producto.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "When unified OIDC is active, /login immediately continues into the IdP (middleware → /api/auth/oidc/start → user.* /oauth2/authorize), so you reach user.trefolio.com or user.trefolio-dev.com without rendering an extra stop on the product login screen.",
+        translations: {
+          es: "Con OIDC unificado activo, /login continúa enseguida hacia el IdP (middleware → /api/auth/oidc/start → user.* /oauth2/authorize), así llegas a user.trefolio.com o user.trefolio-dev.com sin una parada extra en la pantalla de login del producto.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Local HTTPS dev (Caddy): IdP login no longer sends the browser to localhost when apps use loopback IDP_BASE_URL — set IDP_ISSUER (and optional IDP_SERVER_ORIGIN on accounts) per dev/README.md; trefolio honors IDP_ISSUER for /oauth2/authorize, IdP logout links, and ID-token verification.",
+        translations: {
+          es: "En dev HTTPS con Caddy: el login IdP ya no manda el navegador a localhost si las apps usan IDP_BASE_URL en loopback — configura IDP_ISSUER (y opcional IDP_SERVER_ORIGIN en accounts) según dev/README.md; trefolio respeta IDP_ISSUER para /oauth2/authorize, logout del IdP y verificación del id_token.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.0",
+    date: "2026-05-05",
+    title: "One account, three agents — Warren, Clara and Will under Trefolio Pro",
+    titleTranslations: {
+      es: "Una cuenta, tres agentes: Warren, Clara y Will bajo Trefolio Pro",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Trefolio, Clara (clara.trefolio.com) and Will (will.trefolio.com) now share a single account and a single Pro subscription. Sign in once at user.trefolio.com and your identity, plan and Telegram links work across all three apps. €7.99/mo (or €59.99/yr) unlocks the full team — Warren on your portfolio, Clara on your day-to-day money and Will on your notes.",
+        translations: {
+          es: "Trefolio, Clara (clara.trefolio.com) y Will (will.trefolio.com) ahora comparten una sola cuenta y una sola suscripción Pro. Inicia sesión una vez en user.trefolio.com y tu identidad, plan y enlaces de Telegram funcionan en las tres apps. €7,99/mes (o €59,99/año) desbloquea el equipo completo: Warren para tu cartera, Clara para tu día a día y Will para tus notas.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Sign in to all three apps with Google or with a passkey (Face ID, Touch ID, Windows Hello, or your device PIN). \"Continue with Google\" is now an option on the unified sign-in page, and you can enroll passkeys at user.trefolio.com/account/passkeys to skip passwords on every device you trust.",
+        translations: {
+          es: "Inicia sesión en las tres apps con Google o con una passkey (Face ID, Touch ID, Windows Hello o el PIN de tu dispositivo). «Continuar con Google» ya es una opción en la pantalla de inicio de sesión unificada, y puedes registrar passkeys en user.trefolio.com/account/passkeys para saltar la contraseña en cada dispositivo de confianza.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Unified daily query limits for the agent products: 30 messages/day per app on the Free tier, lifted to 200 messages/day per app on Pro. Same caps in web chat and Telegram. When you hit the limit you see a clear upsell that takes you to a single upgrade page covering all three agents.",
+        translations: {
+          es: "Cuotas diarias unificadas para los agentes: 30 mensajes/día por app en el plan gratuito, ampliado a 200 mensajes/día por app en Pro. Los mismos límites en el chat web y en Telegram. Al llegar al tope ves un mensaje claro que te lleva a una única página de upgrade que cubre los tres agentes.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Landing page redesigned around the three-agent ecosystem: a new \"Your agents team\" section introduces Warren, Clara and Will side by side, and the pricing copy now spells out the daily quotas you get on each agent at every tier.",
+        translations: {
+          es: "Landing rediseñada alrededor del ecosistema de tres agentes: una nueva sección «Tu equipo de agentes» presenta a Warren, Clara y Will juntos, y el copy de precios ahora indica las cuotas diarias que tienes en cada agente en cada plan.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Behind the scenes, authentication and billing moved to a dedicated identity service (user.trefolio.com) using OIDC + PKCE. Existing accounts and Stripe subscriptions were migrated automatically — no action required. The session cookie shape is unchanged so the Capacitor mobile apps keep working without a new build.",
+        translations: {
+          es: "Por dentro, la autenticación y la facturación se mudaron a un servicio de identidad dedicado (user.trefolio.com) usando OIDC + PKCE. Las cuentas y suscripciones existentes de Stripe se migraron automáticamente: no necesitas hacer nada. La forma de la cookie de sesión no cambia, así que las apps móviles Capacitor siguen funcionando sin una nueva build.",
+        },
+      },
+      {
+        type: "fix",
+        text: "User migration now de-duplicates identities by normalized email across trefolio, Clara and Will before assigning IdP subjects. This prevents split accounts and login mismatches when the same person existed in multiple apps.",
+        translations: {
+          es: "La migración de usuarios ahora deduplica identidades por email normalizado entre trefolio, Clara y Will antes de asignar `sub` del IdP. Esto evita cuentas partidas y conflictos de login cuando la misma persona existía en varias apps.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "/login now sends you straight to the unified sign-in at user.trefolio.com when the IdP is enabled, instead of showing two competing forms. The legacy email/password screen still loads when USE_LEGACY_AUTH=true so the cutover stays reversible.",
+        translations: {
+          es: "/login ahora te lleva directo al inicio de sesión unificado en user.trefolio.com cuando el IdP está activo, en vez de mostrar dos formularios distintos. La pantalla clásica de email y contraseña sigue cargando con USE_LEGACY_AUTH=true para que la migración siga siendo reversible.",
+        },
+      },
+      {
+        type: "fix",
+        text: "OIDC callback and error redirects now use the browser-facing host from reverse-proxy headers (X-Forwarded-Host / X-Forwarded-Proto) when present, so local HTTPS stacks like trefolio-dev.com behind Caddy keep the same redirect_uri for authorize and token exchange and no longer bounce you to localhost after IdP login.",
+        translations: {
+          es: "El callback OIDC y las redirecciones de error ahora usan el host visible para el navegador según los headers del proxy inverso (X-Forwarded-Host / X-Forwarded-Proto) cuando existen, así que entornos HTTPS locales como trefolio-dev.com detrás de Caddy mantienen el mismo redirect_uri en authorize y en el intercambio de tokens y ya no te devuelven a localhost tras iniciar sesión en el IdP.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Unified sign-in countdown (user.trefolio.com) no longer freezes mid-way: the IdP SSO redirect timer uses a single interval so React Strict Mode cannot cancel the next tick, and the no-JavaScript meta refresh URL escapes ampersands so the browser parses the redirect target correctly.",
+        translations: {
+          es: "La cuenta atrás del inicio de sesión unificado (user.trefolio.com) ya no se queda a medias: el temporizador de redirección SSO del IdP usa un solo intervalo para que el modo estricto de React no cancele el siguiente tick, y la URL del meta refresh sin JavaScript escapa los ampersands para que el navegador interprete bien el destino.",
+        },
+      },
+      {
+        type: "fix",
+        text: "IdP-only login no longer loops with ERR_TOO_MANY_REDIRECTS after a failed OIDC callback: /login now renders the error instead of immediately redirecting back to the IdP. Local HTTPS dev: prefer IDP_BASE_URL=http://localhost:3300 for Node token/JWKS calls (see dev/README.md).",
+        translations: {
+          es: "El inicio solo-IdP ya no entra en bucle (ERR_TOO_MANY_REDIRECTS) tras un callback OIDC fallido: /login muestra el error en lugar de redirigir al instante al IdP. En dev con HTTPS local: conviene IDP_BASE_URL=http://localhost:3300 para las llamadas token/JWKS desde Node (ver dev/README.md).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.4.2",
     date: "2026-05-04",
     title: "Warren tells you what he's doing on Telegram",
