@@ -22,6 +22,7 @@ import { isBlockedEmailDomain } from "@/lib/schemas";
 import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
 import { FIRST_TOUCH_ATTRIBUTION_COOKIE, normalizeAttribution, parseFirstTouchAttributionCookie } from "@/lib/attribution";
+import { freezeLocalUserWrites, useLegacyAuth } from "@/lib/idp/config";
 
 const APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
 const APPLE_JWKS_URL = new URL("https://appleid.apple.com/auth/keys");
@@ -64,6 +65,11 @@ interface AppleIdTokenClaims {
 
 export async function POST(req: NextRequest) {
   ensureSessionSecret();
+
+  if (!useLegacyAuth()) {
+    return errorRedirect(req, "Apple sign-in moved to user.trefolio.com.");
+  }
+
   const attribution = normalizeAttribution(
     parseFirstTouchAttributionCookie(req.cookies.get(FIRST_TOUCH_ATTRIBUTION_COOKIE)?.value) ?? undefined
   );
@@ -164,6 +170,12 @@ export async function POST(req: NextRequest) {
 
     let isNewSignup = false;
     if (!dbUser) {
+      if (freezeLocalUserWrites()) {
+        return errorRedirect(
+          req,
+          "Account creation is temporarily paused while we migrate to the unified trefolio account. Please sign up at user.trefolio.com.",
+        );
+      }
       isNewSignup = true;
       const emailBase = appleEmail ? appleEmail.split("@")[0] : "user";
       const username = emailBase.replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 30) || "user";
@@ -214,6 +226,7 @@ export async function POST(req: NextRequest) {
         auth_provider: "apple",
         google_id: "",
         apple_id: appleSub,
+        idp_sub: "",
         portfolio_review_count: 0,
         portfolio_review_reset_at: "",
         widget_token_hash: "",

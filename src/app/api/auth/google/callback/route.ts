@@ -23,6 +23,7 @@ import { isBlockedEmailDomain } from "@/lib/schemas";
 import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
 import { FIRST_TOUCH_ATTRIBUTION_COOKIE, normalizeAttribution, parseFirstTouchAttributionCookie } from "@/lib/attribution";
+import { freezeLocalUserWrites, useLegacyAuth } from "@/lib/idp/config";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -101,6 +102,10 @@ async function exchangeCodeForGoogleUser(
 
 export async function GET(req: NextRequest) {
   ensureSessionSecret();
+
+  if (!useLegacyAuth()) {
+    return errorRedirect(req, "Google sign-in moved to user.trefolio.com.");
+  }
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -234,6 +239,12 @@ async function handleLoginFlow(
 
     let isNewSignup = false;
     if (!dbUser) {
+      if (freezeLocalUserWrites()) {
+        return errorRedirect(
+          req,
+          "Account creation is temporarily paused while we migrate to the unified trefolio account. Please sign up at user.trefolio.com.",
+        );
+      }
       isNewSignup = true;
       const username = googleUser.email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 30) || "user";
       const publicUser = await createUser({
@@ -283,6 +294,7 @@ async function handleLoginFlow(
         auth_provider: "google",
         google_id: googleUser.sub,
         apple_id: "",
+        idp_sub: "",
         portfolio_review_count: 0,
         portfolio_review_reset_at: "",
         widget_token_hash: "",
