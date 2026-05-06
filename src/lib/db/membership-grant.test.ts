@@ -27,6 +27,7 @@ function mockUser(partial: Partial<DbUser>): DbUser {
     auth_provider: "credentials",
     google_id: "",
     apple_id: "",
+    idp_sub: "",
     portfolio_review_count: 0,
     portfolio_review_reset_at: "",
     widget_token_hash: "",

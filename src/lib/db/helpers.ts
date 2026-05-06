@@ -41,6 +41,8 @@ export interface DbUser {
   auth_provider: AuthProvider;
   google_id: string;
   apple_id: string;
+  /** OIDC subject claim from user.trefolio.com when the user has been linked to the IdP. */
+  idp_sub: string;
   portfolio_review_count: number;
   portfolio_review_reset_at: string;
   widget_token_hash: string;
@@ -364,6 +366,7 @@ export function rowToDbUser(row: Row): DbUser {
       : "credentials",
     google_id: str(row.google_id),
     apple_id: str(row.apple_id),
+    idp_sub: str(row.idp_sub),
     portfolio_review_count: num(row.portfolio_review_count),
     portfolio_review_reset_at: str(row.portfolio_review_reset_at),
     widget_token_hash: str(row.widget_token_hash),

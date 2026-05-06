@@ -3294,6 +3294,23 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 111,
+    description:
+      "Unified accounts: add idp_sub column to users (link to user.trefolio.com IdP)",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("idp_sub")) {
+        await client.execute(
+          "ALTER TABLE users ADD COLUMN idp_sub TEXT NOT NULL DEFAULT ''",
+        );
+      }
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_users_idp_sub ON users(idp_sub) WHERE idp_sub != ''",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
