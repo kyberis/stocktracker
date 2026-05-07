@@ -17,6 +17,7 @@ import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
 import { normalizeAttribution, parseFirstTouchAttributionCookie, FIRST_TOUCH_ATTRIBUTION_COOKIE } from "@/lib/attribution";
 import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
+import { freezeLocalUserWrites, useLegacyAuth } from "@/lib/idp/config";
 
 function deriveUsername(email: string): string {
   const prefix = email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "");
@@ -25,6 +26,25 @@ function deriveUsername(email: string): string {
 
 export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => {
   ensureSessionSecret();
+
+  if (!useLegacyAuth()) {
+    return NextResponse.json(
+      {
+        error: "Sign up has moved to user.trefolio.com. Please create your account there and you can use the same credentials in trefolio, Clara, and Will.",
+        upgradeUrl: "https://user.trefolio.com/signup?from=trefolio",
+      },
+      { status: 410 },
+    );
+  }
+  if (freezeLocalUserWrites()) {
+    return NextResponse.json(
+      {
+        error: "Account creation is temporarily paused while we migrate to the unified trefolio account. Please try again in a few minutes or sign up at user.trefolio.com.",
+        upgradeUrl: "https://user.trefolio.com/signup?from=trefolio",
+      },
+      { status: 503, headers: { "Retry-After": "300" } },
+    );
+  }
 
   const ip = getClientIp(req);
   const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";

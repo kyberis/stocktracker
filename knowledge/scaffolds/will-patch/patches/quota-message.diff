@@ -1,0 +1,23 @@
+--- a/src/lib/i18n/dictionaries/en.ts
++++ b/src/lib/i18n/dictionaries/en.ts
+@@ -10,12 +10,21 @@ export const en = {
+   bot: {
+-    quotaExceeded: (limit: number) =>
+-      `You've reached today's limit (${limit} messages). Try again after 00:00 UTC.`,
++    quotaExceeded: (limit: number, upsell?: { url: string }) =>
++      [
++        `You've reached today's limit (${limit} messages, resets at 00:00 UTC).`,
++        "",
++        "Upgrade to Trefolio Pro for €7.99/mo:",
++        "- 200 messages/day on Will",
++        "- 200 messages/day on Clara",
++        "- Full access to the trefolio portfolio dashboard",
++        "",
++        upsell ? `👉 ${upsell.url}` : "",
++      ].filter(Boolean).join("\n"),
+   },
+ };
+
+// Mirror the same change in es.ts, fr.ts, de.ts, and every other supported locale.
+// Use the `ux-writer` skill (in trefolio repo, .cursor/skills/ux-writer/SKILL.md)
+// to keep tone parity across translations.

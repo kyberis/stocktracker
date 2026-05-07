@@ -87,5 +87,15 @@ When reviewing a PR that touches anything Will-adjacent in trefolio:
 
 ## Open questions
 
-- **Shared identity?** Today trefolio and Will have independent user tables. If a single sign-in across `trefolio.com` + `will.trefolio.com` is wanted, that's a future design — most likely OAuth from one product to the other, not a shared DB.
-- **Cross-promotion in dashboards?** Linkable from settings is fine, but cross-product widgets are out of scope for v1.
+- **Shared identity?** Resolved — Will, trefolio, and Clara will share an IdP at `user.trefolio.com`. See [unified-accounts-and-billing](unified-accounts-and-billing.md). Will becomes an OIDC client; user identity is the IdP `sub` claim.
+- **Cross-promotion in dashboards?** Still out of scope for runtime. The trefolio landing page now markets Will as part of the three-agent ecosystem (Warren / Clara / Will), but there is no runtime API call between trefolio and Will.
+
+## Phase 2: IdP integration
+
+After the unified accounts rollout (see [unified-accounts-and-billing](unified-accounts-and-billing.md) and the [exec plan](../exec-plans/active/unified-accounts.md)), Will becomes an OIDC client of the IdP at `user.trefolio.com`. Concrete change list lives at [will-idp-integration](will-idp-integration.md). Highlights:
+
+- NextAuth providers reduce to a single `oidc` provider pointing at the IdP.
+- `User.dailyAgentMessageLimit` is sourced from the JWT claim `entitlements.will_daily_limit` (free=30, pro=200).
+- Will gains a structured 429 upsell payload from `consumeAgentQuota` so the upcoming web chat ships with paywall UX day one.
+- Telegram `bot.quotaExceeded` strings include the IdP upgrade URL `https://user.trefolio.com/upgrade?from=will`.
+- Marketing FAQ "Is there a paid tier?" is updated to reflect Trefolio Pro (€7.99/mo) unlocking 200/day on Will.

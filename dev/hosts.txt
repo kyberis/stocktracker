@@ -1,0 +1,19 @@
+# Append these lines to /etc/hosts so the dev hostnames resolve to localhost.
+# Run once:
+#   sudo sh -c 'cat dev/hosts.txt >> /etc/hosts'
+# Verify:
+#   grep trefolio-dev /etc/hosts
+# Remove later:
+#   sudo sed -i '' '/# >>> trefolio-dev >>>/,/# <<< trefolio-dev <<</d' /etc/hosts
+
+# >>> trefolio-dev >>>
+127.0.0.1	trefolio-dev.com
+127.0.0.1	clara.trefolio-dev.com
+127.0.0.1	will.trefolio-dev.com
+127.0.0.1	user.trefolio-dev.com
+# IPv6 loopback — avoids slow dual-stack fallback when the browser prefers ::1.
+::1	trefolio-dev.com
+::1	clara.trefolio-dev.com
+::1	will.trefolio-dev.com
+::1	user.trefolio-dev.com
+# <<< trefolio-dev <<<

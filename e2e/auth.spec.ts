@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ensureLoggedOut, createTestUser } from "./helpers";
+import { ensureLoggedOut, createTestUser, skipIfLegacyPasswordLoginUnavailable } from "./helpers";
 
 test.describe("Authentication", () => {
   test.beforeEach(async ({ request }) => {
@@ -14,11 +14,11 @@ test.describe("Authentication", () => {
   });
 
   test("rejects invalid credentials", async ({ page }) => {
-    await page.goto("/login");
+    await skipIfLegacyPasswordLoginUnavailable(page);
     await page.locator('input[autocomplete="username"]').fill("nonexistent@example.com");
     await page.locator('input[autocomplete="current-password"]').fill("badpassword");
-    await page.click('button[type="submit"]');
-    await page.waitForTimeout(2000);
+    await page.getByRole("button", { name: /^Sign in$/ }).click();
+    await expect(page.getByText(/Invalid credentials/i)).toBeVisible({ timeout: 15_000 });
     await expect(page).toHaveURL(/\/login/);
   });
 

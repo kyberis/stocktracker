@@ -30,6 +30,8 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [referral](referral.md) — referral codes + reward tracking.
 - [trial-invitations](trial-invitations.md) — eligibility cron + email invite.
 - [trial-system](trial-system.md) — Pro trial invitations + expiration.
+- [unified-accounts-admin](unified-accounts-admin.md) — single-pane admin UI for IdP users + linked products.
+- [unified-accounts-idp](unified-accounts-idp.md) — single sign-on + Pro across trefolio, Clara, Will via `user.trefolio.com`.
 
 ## Portfolio Core
 

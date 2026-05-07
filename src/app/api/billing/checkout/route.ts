@@ -8,6 +8,7 @@ import { getBillingBaseUrl, getStripeClient } from "@/lib/stripe";
 import { parseBody } from "@/lib/api-response";
 import { checkoutSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
+import { billingRedirectToIdp, getIdpIssuer } from "@/lib/idp/config";
 
 async function getPriceId(interval: "monthly" | "annual"): Promise<string> {
   return interval === "annual"
@@ -23,6 +24,20 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
   if (!result.success) return result.error;
   const { deviceGrant } = result.data;
   const interval = deviceGrant ? "annual" : result.data.interval;
+
+  // After IdP cutover the IdP is the only place that runs Stripe checkout.
+  // Local route returns a JSON redirect target that the client follows.
+  // Device-grant flows still run locally because they require trefolio-side
+  // device-link state that the IdP doesn't (yet) own.
+  if (billingRedirectToIdp() && !deviceGrant) {
+    const idpPublic = getIdpIssuer();
+    if (idpPublic) {
+      const target = new URL(`${idpPublic}/upgrade`);
+      target.searchParams.set("from", "trefolio");
+      target.searchParams.set("interval", interval);
+      return NextResponse.json({ url: target.toString() }, { status: 200 });
+    }
+  }
 
   const priceId = await getPriceId(interval);
   if (!priceId) {

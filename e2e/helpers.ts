@@ -1,4 +1,20 @@
-import { type Page, type APIRequestContext, expect } from "@playwright/test";
+import { type Page, type APIRequestContext, expect, test } from "@playwright/test";
+
+/**
+ * When the IdP is enabled and `USE_LEGACY_AUTH=false`, `/login` redirects to OIDC
+ * and the email/password form is not shown. Call from specs that need that form.
+ */
+export async function skipIfLegacyPasswordLoginUnavailable(page: Page) {
+  await page.goto("/login", { waitUntil: "domcontentloaded", timeout: 20_000 });
+  const userField = page.locator('input[autocomplete="username"]');
+  const ok = await userField.isVisible({ timeout: 12_000 }).catch(() => false);
+  if (!ok) {
+    test.skip(
+      true,
+      "Email/password login UI is not shown (IdP-only). Set USE_LEGACY_AUTH=true for local E2E or use the default Playwright webServer (E2E=1 npm start).",
+    );
+  }
+}
 
 export async function apiLogin(
   request: APIRequestContext,
@@ -22,15 +38,22 @@ export async function apiSignup(
 }
 
 export async function loginViaUI(page: Page, identifier: string, password: string) {
-  await page.goto("/login");
-  await page.locator('input[autocomplete="username"]').fill(identifier);
+  await page.goto("/login", { waitUntil: "domcontentloaded", timeout: 20_000 });
+  const userField = page.locator('input[autocomplete="username"]');
+  if (!(await userField.isVisible({ timeout: 12_000 }).catch(() => false))) {
+    test.skip(
+      true,
+      "Email/password login UI is not shown (IdP-only). Set USE_LEGACY_AUTH=true for local E2E or use the default Playwright webServer (E2E=1 npm start).",
+    );
+  }
+  await userField.fill(identifier);
   await page.locator('input[autocomplete="current-password"]').fill(password);
-  await page.click('button[type="submit"]');
-  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15000 });
+  await page.getByRole("button", { name: /^Sign in$/ }).click();
+  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
   await dismissOverlays(page);
   await expect(
     page.getByText(/Welcome to trefolio|Portfolio Value|Total Net Worth|Portfolio Performance|Import Portfolio/i).first()
-  ).toBeVisible({ timeout: 20000 });
+  ).toBeVisible({ timeout: 20_000 });
 }
 
 export async function dismissOverlays(page: Page) {
@@ -83,8 +106,13 @@ export async function createTestUser(request: APIRequestContext, seed = false) {
   const email = `test+${slug}@trefolio.com`;
   const password = "TestPass123!";
   const res = await apiSignup(request, email, password, seed);
-  expect(res.status()).toBe(201);
-  const body = await res.json();
+  const raw = await res.text();
+  if (res.status() !== 201) {
+    throw new Error(
+      `POST /api/auth/signup expected 201, got ${res.status()}. Run the app with E2E=1 (Playwright webServer does this). Body: ${raw.slice(0, 600)}`,
+    );
+  }
+  const body = JSON.parse(raw) as { user?: { id?: string } };
   const userId = body.user?.id || "";
 
   // Auto-verify email via static test token (session resolves the user)

@@ -13,9 +13,20 @@ import { loginSchema } from "@/lib/schemas";
 import { checkLoginRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
+import { useLegacyAuth } from "@/lib/idp/config";
 
 export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
   ensureSessionSecret();
+
+  if (!useLegacyAuth()) {
+    return NextResponse.json(
+      {
+        error: "Sign in moved to user.trefolio.com. You can sign in there once and the session works across trefolio, Clara and Will.",
+        loginUrl: "https://user.trefolio.com/login?from=trefolio",
+      },
+      { status: 410 },
+    );
+  }
 
   const ip = getClientIp(req);
   const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";

@@ -1,0 +1,55 @@
+--- a/src/app/api/webhooks/telegram/route.ts
++++ b/src/app/api/webhooks/telegram/route.ts
+@@ -1,8 +1,9 @@
+ import { NextRequest, NextResponse } from "next/server";
+ import { db } from "@/lib/db";
+ // ... existing imports
++import { fetchUserByTelegramId, linkTelegramUser, IdpClientError } from "@/lib/idp-client";
+
+ // ── /start <code> handler ──────────────────────────────────────────────
+
+@@ -50,18 +51,29 @@ async function handleStartCommand(message: TelegramMessage) {
+-  const linked = await completeTelegramLink({
+-    code,
+-    telegramUserId: BigInt(from.id),
+-    telegramUsername: from.username,
+-  });
++  // After IdP cutover: link via the IdP so the same telegramUserId is recognized
++  // across Clara, Will, and trefolio bots.
++  let linked: { sub: string };
++  try {
++    linked = await linkTelegramUser({
++      telegramUserId: from.id,
++      telegramUsername: from.username,
++      code,
++    });
++  } catch (err) {
++    const status = err instanceof IdpClientError ? err.status : 0;
++    if (status === 400) {
++      return replyToTelegram(chatId, "That link has expired. Generate a new one in your account settings.");
++    }
++    throw err;
++  }
++  // Cache the IdP sub locally so subsequent lookups don't round-trip.
++  await db.user.update({ where: { idpSub: linked.sub }, data: { telegramUserId: BigInt(from.id) } });
+   return replyToTelegram(chatId, "✅ Linked! You can now chat with Clara from Telegram.");
+ }
+
+ // ── inbound message resolution ────────────────────────────────────────
+
+-async function findUserByTelegramId(tgUserId: number) {
+-  return db.user.findUnique({ where: { telegramUserId: BigInt(tgUserId) } });
+-}
++async function findUserByTelegramId(tgUserId: number) {
++  // Try local cache first (avoids IdP round-trip on every message).
++  const local = await db.user.findUnique({ where: { telegramUserId: BigInt(tgUserId) } });
++  if (local) return local;
++  // Cache miss: ask the IdP, then upsert locally.
++  try {
++    const lookup = await fetchUserByTelegramId(tgUserId);
++    return db.user.findUnique({ where: { idpSub: lookup.sub } });
++  } catch (err) {
++    if (err instanceof IdpClientError && err.status === 404) return null;
++    throw err;
++  }
++}

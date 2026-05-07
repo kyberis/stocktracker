@@ -17,7 +17,7 @@ Thank you for your interest in contributing! trefolio is a European multi-curren
 
 ### Prerequisites
 
-- **Node.js ≥ 22** (check with `node -v`)
+- **Node.js ≥ 22** (check with `node -v`; pin is `22` in [`.nvmrc`](.nvmrc) / [`.node-version`](.node-version) — use `nvm use`, `fnm use`, or put `node@22` first on your `PATH`)
 - **npm ≥ 10**
 - A [Turso](https://turso.tech) database (free tier works) or a local `libsql` file
 

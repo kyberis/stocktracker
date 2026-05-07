@@ -1,0 +1,35 @@
+--- a/src/lib/telegram/embedded-markdown.ts
++++ b/src/lib/telegram/embedded-markdown.ts
+@@ -120,15 +120,30 @@ export function quotaLimitMessage(opts: { limit: number; locale: string }): string {
+   const { limit, locale } = opts;
++  // After IdP cutover the upgrade URL points at user.trefolio.com.
++  const idpBase = process.env.IDP_BASE_URL || "https://user.trefolio.com";
++  const upgradeUrl = `${idpBase}/upgrade?from=clara`;
++
+   if (locale === "es") {
+     return [
+       `Has alcanzado tu límite de hoy (${limit} mensajes).`,
+       "",
+       "Pasa a Trefolio Pro por €7.99/mes y obtén:",
+       "- 200 mensajes/día en Clara",
+       "- 200 notas/día en Will",
+       "- Acceso completo al dashboard de trefolio (Warren, AI análisis, todo)",
+       "",
+-      "👉 Ver opciones: /upgrade",
++      `👉 ${upgradeUrl}`,
+     ].join("\n");
+   }
+-  return `You've reached today's limit (${limit} messages). Upgrade with /upgrade.`;
++  return [
++    `You've reached today's limit (${limit} messages). Resets at 00:00 UTC.`,
++    "",
++    "Upgrade to Trefolio Pro for €7.99/mo:",
++    "- 200 messages/day on Clara",
++    "- 200 messages/day on Will",
++    "- Full access to the trefolio portfolio dashboard",
++    "",
++    `👉 ${upgradeUrl}`,
++  ].join("\n");
+ }
+
+// Mirror the change in every other supported locale.

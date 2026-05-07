@@ -1,0 +1,31 @@
+--- a/src/app/api/chat/route.ts
++++ b/src/app/api/chat/route.ts
+@@ -1,6 +1,7 @@
+ import { NextRequest, NextResponse } from "next/server";
+ import { getAuthSession } from "@/lib/auth";
+ import { consumeAgentQuota } from "@/lib/agent-quota";
++import { isUpsellActive } from "@/lib/billing/stripe"; // existing helper, keep
+ // ... other imports
+
+ export async function POST(req: NextRequest) {
+@@ -50,11 +51,16 @@ export async function POST(req: NextRequest) {
+   if (!quota.ok) {
++    // After IdP cutover the upsell URL points at user.trefolio.com.
++    // The IdP /upgrade page renders one consistent "one subscription, three
++    // agents" benefits sheet for trefolio + Clara + Will.
++    const idpBase = process.env.IDP_BASE_URL ?? "";
++    const upsellUrl = idpBase
++      ? `${idpBase}/upgrade?from=clara&sub=${encodeURIComponent(session.user.id)}`
++      : "/upgrade"; // fallback to local if IdP not configured (dev)
+     return NextResponse.json(
+       {
+         kind: "quota_limit",
+         limit: quota.limit,
+         used: quota.used,
+         resetAtUtc: quota.resetAtUtc,
+-        upsell: await isUpsellActive(session.user.id) ? buildUpsell() : null,
++        upsell: { url: upsellUrl, headline: "Upgrade to Trefolio Pro", body: "200 messages/day on Clara, Will, and trefolio for €7.99/mo." },
+       },
+       { status: 429 },
+     );
+   }

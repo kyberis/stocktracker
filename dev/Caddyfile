@@ -1,0 +1,44 @@
+# Local HTTPS reverse proxy for the unified-accounts dev stack.
+#
+# Canonical ports: dev/ports.md (keep reverse_proxy targets in sync).
+# Usage:
+#   sudo caddy run --config dev/Caddyfile
+#   (or `sudo npm run dev:proxy`)
+#
+# Caddy generates a local CA on first run and prompts for sudo to install it
+# in the macOS system trust store. Once trusted, every URL below works with
+# a real, browser-trusted certificate.
+#
+# Hostnames must resolve to 127.0.0.1; see `dev/hosts.txt`.
+#
+# Port mapping — see dev/ports.md (must match each app's next dev -p).
+{
+	# Caddy auto-uses its local CA for any non-public host.
+	# This makes the intent explicit and avoids accidental ACME requests.
+	auto_https disable_redirects
+	local_certs
+}
+
+trefolio-dev.com {
+	tls internal
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3010
+}
+
+clara.trefolio-dev.com {
+	tls internal
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3001
+}
+
+will.trefolio-dev.com {
+	tls internal
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3200
+}
+
+user.trefolio-dev.com {
+	tls internal
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3300
+}

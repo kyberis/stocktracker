@@ -29,7 +29,7 @@ Submodule + service-call gives us: real source as context, deterministic pin, ze
 
 ### Local dev — running trefolio + Clara together
 
-Trefolio runs on **3000**, Clara on **3100**. Scripts are in `[package.json](../../package.json)`:
+Trefolio **dev** listens on **3010**, Clara on **3001** (see [`dev/ports.md`](../../dev/ports.md)). Scripts are in [`package.json`](../../package.json):
 
 ```bash
 git submodule update --init external/etracker
@@ -38,7 +38,7 @@ cp external/etracker/.env.example external/etracker/.env  # then fill in values 
 npm run dev:all                       # runs both apps concurrently
 ```
 
-Once running, trefolio code that needs Clara reads `process.env.CLARA_BASE_URL` (default `http://localhost:3100` — see `.env.local.example`).
+Once running, trefolio code that needs Clara reads `process.env.CLARA_BASE_URL` (default `http://localhost:3001` — see `.env.local.example`).
 
 ### Updating the pin
 
@@ -103,5 +103,14 @@ When reviewing a PR that touches anything Clara-adjacent:
 ## Open questions
 
 - **MCP vs raw HTTP**: leaning HTTP for now because trefolio is a Next.js server, not an agent host. We can add MCP transport later without breaking callers.
-- **Auth between trefolio and Clara**: TBD. Likely a shared service token in env, rotated like other internal secrets.
-- **Multi-tenant data**: how Clara handles trefolio user IDs (and whether it stores anything about them) is the first decision to make before any production fetch.
+- **Auth between trefolio and Clara**: resolved — both apps will share an IdP at `user.trefolio.com`. See [unified-accounts-and-billing](unified-accounts-and-billing.md). Per-request user identity flows through the OIDC `sub` claim; service-to-service calls authenticate with a shared service token.
+- **Multi-tenant data**: now scoped by IdP `sub`. Clara stores `User.idpSub` (unique) and uses it as the join key for all per-user data; trefolio passes the same `sub` when calling Clara's APIs.
+
+## Phase 2: IdP integration
+
+After the unified accounts rollout (see [unified-accounts-and-billing](unified-accounts-and-billing.md) and the [exec plan](../exec-plans/active/unified-accounts.md)), Clara becomes an OIDC client of the IdP at `user.trefolio.com`. Concrete change list lives at [clara-idp-integration](clara-idp-integration.md). Highlights:
+
+- NextAuth providers reduce to a single `oidc` provider pointing at the IdP.
+- `User.dailyAgentMessageLimit` is sourced from the JWT claim `entitlements.clara_daily_limit` (free=30, pro=200) instead of a per-user DB column override.
+- Local `src/lib/billing/*` is deprecated; the Supporter Stripe price is retired in favour of the IdP's single Pro price.
+- Telegram link table moves to the IdP. Clara's webhook calls `POST {IDP}/v1/telegram/link` and `GET {IDP}/v1/telegram/by-id/:tgUserId`.

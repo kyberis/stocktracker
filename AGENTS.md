@@ -14,6 +14,10 @@ Bifolio (€2.99) / Trefolio (€7.99) tiers. Next.js 14 App Router on Vercel, T
 (libSQL), Stripe, Resend, SnapTrade, OpenAI, Yahoo/Alpha Vantage/FMP market data,
 Capacitor for iOS/Android, plus a physical "trefolio Leaf" ESP32-S3 device.
 
+## Node.js
+
+Use **Node.js 22** on your machine for trefolio, `external/accounts`, Clara (`external/etracker`), and Will (`external/notetaker`). Each repo root has `.nvmrc` and `.node-version` set to `22` — run `nvm install` / `nvm use` or `fnm use` after `cd` into that tree. Match the same major for `npm install` and `npm run dev` so native addons (for example `better-sqlite3` in accounts) stay aligned.
+
 ## Where to look first
 
 1. [`ARCHITECTURE.md`](ARCHITECTURE.md) — domain map, layering, permitted edges.
@@ -26,14 +30,16 @@ Capacitor for iOS/Android, plus a physical "trefolio Leaf" ESP32-S3 device.
  and known gaps. Read before making large changes.
 5. [`knowledge/exec-plans/active/`](knowledge/exec-plans/active) — in-flight
  multi-step plans.
-6. [`knowledge/design-docs/etracker-clara-integration.md`](knowledge/design-docs/etracker-clara-integration.md)
+6. [`dev/ports.md`](dev/ports.md) — **fixed local dev ports** (3010 / 3001 / 3200 / 3300) for `*.trefolio-dev.com` + Caddy; see [`dev/README.md`](dev/README.md).
+7. [`knowledge/design-docs/etracker-clara-integration.md`](knowledge/design-docs/etracker-clara-integration.md)
  — how trefolio links to Clara (the financial-agents sister codebase at
  `external/etracker`). Read before touching anything related to financial
  agents or `external/`.
-7. [`knowledge/design-docs/notetaker-will-integration.md`](knowledge/design-docs/notetaker-will-integration.md)
+8. [`knowledge/design-docs/notetaker-will-integration.md`](knowledge/design-docs/notetaker-will-integration.md)
  — how trefolio links to Will (the note-taking sister codebase at
  `external/notetaker`, hosted at `will.trefolio.com`). Read before touching
  anything in `external/notetaker/`.
+9. **Unified accounts (IdP)** — [`.cursor/skills/integration-trefolio-accounts/SKILL.md`](.cursor/skills/integration-trefolio-accounts/SKILL.md) maps OIDC wiring in this app; canonical specs are [`knowledge/design-docs/unified-accounts-and-billing.md`](knowledge/design-docs/unified-accounts-and-billing.md), [`knowledge/runbooks/unified-accounts-cutover.md`](knowledge/runbooks/unified-accounts-cutover.md), plus [`knowledge/design-docs/clara-idp-integration.md`](knowledge/design-docs/clara-idp-integration.md) / [`knowledge/design-docs/will-idp-integration.md`](knowledge/design-docs/will-idp-integration.md). Submodule [`external/accounts/`](external/accounts/) has its own copy of the same skill name under `.cursor/skills/`.
 
 ## Repository layout (high level)
 
@@ -72,6 +78,9 @@ external/
                       will.trefolio.com. No runtime coupling in v1. Excluded
                       from tsconfig, eslint, vitest, .vercelignore. See
                       knowledge/design-docs/notetaker-will-integration.md
+  accounts/           trefolio-accounts IdP (user.trefolio.com), pinned submodule.
+                      Next dev port 3300. See knowledge/design-docs/unified-accounts-and-billing.md
+                      and .cursor/skills/integration-trefolio-accounts/SKILL.md inside this subtree.
 .cursor/
   rules/              Cursor rules (always-applied)
   skills/             Expert skills by domain
@@ -116,7 +125,7 @@ external/
 
 ## Cross-references
 
-- Skills (domain experts the agent can consult): [`.cursor/skills/`](.cursor/skills)
+- Skills (domain experts the agent can consult): [`.cursor/skills/`](.cursor/skills) — includes [`integration-trefolio-accounts`](.cursor/skills/integration-trefolio-accounts/SKILL.md) for OIDC ↔ `user.trefolio.com`
 - Rules (always-applied guardrails): [`.cursor/rules/`](.cursor/rules)
 - Release notes source of truth: [`src/lib/release-notes.ts`](src/lib/release-notes.ts)
 - Seed data for onboarding / demo: [`data/`](data)

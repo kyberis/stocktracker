@@ -1,0 +1,59 @@
+--- a/src/app/api/webhooks/telegram/route.ts
++++ b/src/app/api/webhooks/telegram/route.ts
+@@ -1,9 +1,10 @@
+ import { NextRequest, NextResponse } from "next/server";
+ import { db } from "@/lib/db";
+ // ... existing imports
++import { fetchUserByTelegramId, linkTelegramUser, IdpClientError } from "@/lib/idp-client";
+ import { consumeAgentQuota } from "@/lib/agent-quota";
+
+@@ -50,18 +51,29 @@ async function handleStartCommand(message: TelegramMessage) {
+-  const linked = await completeTelegramLink({
+-    code,
+-    telegramUserId: BigInt(from.id),
+-    telegramUsername: from.username,
+-  });
++  // After IdP cutover: link via the IdP so the same telegramUserId is recognized
++  // across Will, Clara, and trefolio bots.
++  let linked: { sub: string };
++  try {
++    linked = await linkTelegramUser({
++      telegramUserId: from.id,
++      telegramUsername: from.username,
++      code,
++    });
++  } catch (err) {
++    const status = err instanceof IdpClientError ? err.status : 0;
++    if (status === 400) {
++      return replyToTelegram(chatId, "That link has expired. Generate a new one in your account settings.");
++    }
++    throw err;
++  }
++  await db.user.update({ where: { idpSub: linked.sub }, data: { telegramUserId: BigInt(from.id) } });
+   return replyToTelegram(chatId, "✅ Linked! You can now chat with Will from Telegram.");
+ }
+
+ // ── inbound message resolution + quota ────────────────────────────────
+
+-async function findUserByTelegramId(tgUserId: number) {
+-  return db.user.findUnique({ where: { telegramUserId: BigInt(tgUserId) } });
+-}
++async function findUserByTelegramId(tgUserId: number) {
++  const local = await db.user.findUnique({ where: { telegramUserId: BigInt(tgUserId) } });
++  if (local) return local;
++  try {
++    const lookup = await fetchUserByTelegramId(tgUserId);
++    return db.user.findUnique({ where: { idpSub: lookup.sub } });
++  } catch (err) {
++    if (err instanceof IdpClientError && err.status === 404) return null;
++    throw err;
++  }
++}
+
+@@ -120,9 +132,10 @@ // After resolving the user and before processing the message:
+   const quota = await consumeAgentQuota(user.id);
+   if (!quota.ok) {
+-    return replyToTelegram(chatId, t.bot.quotaExceeded(quota.limit));
++    // The quotaExceeded helper now appends quota.upsell.url to its body.
++    return replyToTelegram(chatId, t.bot.quotaExceeded(quota.limit, quota.upsell));
+   }

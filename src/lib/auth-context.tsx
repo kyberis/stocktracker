@@ -88,10 +88,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    let next = "/";
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) {
+        const data = (await res.json().catch(() => null)) as { next?: string } | null;
+        if (data?.next) next = data.next;
+      }
+    } catch {
+      // network error: still navigate so the user is not stuck
+    }
     setUser(null);
     if (typeof window !== "undefined") {
-      window.location.href = "/";
+      window.location.href = next;
     }
   }, []);
 

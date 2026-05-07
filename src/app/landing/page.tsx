@@ -160,8 +160,8 @@ interface PricingTier {
 
 const LAUNCH_DISCOUNT_PCT = 25;
 
-/** Trefolio tier bullets: 1–22 and 24 (23 unused). */
-const TREFOLIO_PRICING_FEATURE_NUMS = [...Array.from({ length: 22 }, (_, i) => i + 1), 24] as const;
+/** Trefolio tier bullets: 1–22, 24, 25, 26 (23 unused). */
+const TREFOLIO_PRICING_FEATURE_NUMS = [...Array.from({ length: 22 }, (_, i) => i + 1), 24, 25, 26] as const;
 
 function getPricing(t: T): PricingTier[] {
   return [
@@ -173,7 +173,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€0", annualPrice: "€0",
       annualSavePct: 0, launchDiscountPct: 0, isFree: true,
       description: t("landingPricingFolioDesc"),
-      features: Array.from({ length: 15 }, (_, i) => t(`landingPricingFolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 16 }, (_, i) => t(`landingPricingFolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingFolioCta"),
     },
     {
@@ -205,6 +205,44 @@ function getTestimonials(t: T) {
     { quote: t("landingTestimonial1Quote"), name: t("landingTestimonial1Name"), role: t("landingTestimonial1Role"), detail: t("landingTestimonial1Detail") },
     { quote: t("landingTestimonial2Quote"), name: t("landingTestimonial2Name"), role: t("landingTestimonial2Role"), detail: t("landingTestimonial2Detail") },
     { quote: t("landingTestimonial3Quote"), name: t("landingTestimonial3Name"), role: t("landingTestimonial3Role"), detail: t("landingTestimonial3Detail") },
+  ];
+}
+
+/**
+ * Three-agent ecosystem (Warren / Clara / Will) — one Pro subscription unlocks all three.
+ * See knowledge/design-docs/unified-accounts-and-billing.md.
+ */
+function getAgentsTeam(t: T) {
+  return [
+    {
+      name: t("landingAgentsWarrenName"),
+      role: t("landingAgentsWarrenRole"),
+      description: t("landingAgentsWarrenDesc"),
+      cta: t("landingAgentsWarrenCta"),
+      href: "/signup",
+      accent: "emerald" as const,
+      letter: "W",
+    },
+    {
+      name: t("landingAgentsClaraName"),
+      role: t("landingAgentsClaraRole"),
+      description: t("landingAgentsClaraDesc"),
+      cta: t("landingAgentsClaraCta"),
+      href: "https://clara.trefolio.com",
+      external: true,
+      accent: "amber" as const,
+      letter: "C",
+    },
+    {
+      name: t("landingAgentsWillName"),
+      role: t("landingAgentsWillRole"),
+      description: t("landingAgentsWillDesc"),
+      cta: t("landingAgentsWillCta"),
+      href: "https://will.trefolio.com",
+      external: true,
+      accent: "violet" as const,
+      letter: "W",
+    },
   ];
 }
 
@@ -655,6 +693,98 @@ function StatsBar() {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── three-agent ecosystem section ─── */
+
+function AgentsTeamSection() {
+  const { t } = useI18n();
+  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "agents_team" }), []);
+  const sectionRef = useInViewOnce(sectionCb);
+  const agents = useMemo(() => getAgentsTeam(t), [t]);
+
+  const accentClasses: Record<"emerald" | "amber" | "violet", { bg: string; ring: string; text: string; hoverBg: string }> = {
+    emerald: { bg: "bg-emerald-500", ring: "ring-emerald-500/30", text: "text-emerald-600", hoverBg: "hover:bg-emerald-600" },
+    amber: { bg: "bg-amber-500", ring: "ring-amber-500/30", text: "text-amber-600", hoverBg: "hover:bg-amber-600" },
+    violet: { bg: "bg-violet-500", ring: "ring-violet-500/30", text: "text-violet-600", hoverBg: "hover:bg-violet-600" },
+  };
+
+  return (
+    <section
+      id="agents-team"
+      className="py-20 sm:py-24 bg-gradient-to-b from-white to-slate-50/60 border-t border-slate-100"
+      ref={sectionRef as React.RefObject<HTMLElement>}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 sm:mb-16">
+          <span className="inline-block text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 mb-4">
+            {t("landingAgentsEyebrow")}
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+            {t("landingAgentsHeading")}{" "}
+            <span className="text-emerald-500">{t("landingAgentsHeadingAccent")}</span>
+          </h2>
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+            {t("landingAgentsSubtitle")}
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+          {agents.map((agent) => {
+            const c = accentClasses[agent.accent];
+            return (
+              <div
+                key={agent.name}
+                className="relative bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+              >
+                <div className={`w-12 h-12 rounded-xl ${c.bg} ring-4 ${c.ring} flex items-center justify-center text-white text-xl font-bold mb-5`}>
+                  {agent.letter}
+                </div>
+                <div className="mb-3">
+                  <h3 className="text-2xl font-bold text-slate-900">{agent.name}</h3>
+                  <p className={`text-sm font-semibold ${c.text} uppercase tracking-wider mt-0.5`}>
+                    {agent.role}
+                  </p>
+                </div>
+                <p className="text-slate-600 leading-relaxed mb-6">
+                  {agent.description}
+                </p>
+                {agent.external ? (
+                  <a
+                    href={agent.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackLanding("landing_cta_click", { cta: `agents_team_${agent.name.toLowerCase()}` })}
+                    className={`inline-flex items-center gap-2 ${c.bg} ${c.hoverBg} text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors`}
+                  >
+                    {agent.cta}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </a>
+                ) : (
+                  <Link
+                    href={agent.href}
+                    onClick={() => trackLanding("landing_cta_click", { cta: `agents_team_${agent.name.toLowerCase()}` })}
+                    className={`inline-flex items-center gap-2 ${c.bg} ${c.hoverBg} text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors`}
+                  >
+                    {agent.cta}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Link>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="text-center text-sm text-slate-500 mt-10 max-w-2xl mx-auto">
+          {t("landingAgentsFreeNote")}
+        </p>
       </div>
     </section>
   );
@@ -2140,6 +2270,7 @@ export default function LandingPage() {
       <main id="main-content">
       <HeroSection />
       <StatsBar />
+      <AgentsTeamSection />
       <FeaturesSection />
       <BrokerSyncCTA />
       <VideoTutorialSection />

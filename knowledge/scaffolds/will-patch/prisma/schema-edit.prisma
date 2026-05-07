@@ -1,0 +1,16 @@
+// Apply this change inline to the existing User model in
+// external/notetaker/prisma/schema.prisma:
+
+model User {
+  // ... existing fields ...
+
+  /// OIDC subject claim from user.trefolio.com.
+  /// Source-of-truth identity once IdP cutover lands. Unique across all Will users.
+  idpSub                       String?                @unique
+
+  // ... rest of existing fields ...
+}
+
+// After editing, run:
+//   npx prisma migrate dev --name add_idp_sub_to_user
+//   npx prisma generate

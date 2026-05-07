@@ -1,0 +1,47 @@
+--- a/src/lib/agent-quota.ts
++++ b/src/lib/agent-quota.ts
+@@ -1,6 +1,28 @@
+ import { db } from "@/lib/db";
+ import { startOfTodayUtc } from "@/lib/date";
+
++/**
++ * Structured upsell payload returned by `consumeAgentQuota` when over budget.
++ * Future web `/api/chat` route can return this verbatim as a 429 JSON body;
++ * the existing Telegram webhook reads `upsell.url` and embeds it in the
++ * localized "limit reached" message.
++ */
++export interface QuotaUpsell {
++  url: string;
++  headline: string;
++  body: string;
++}
++
++function buildUpsell(userId: string): QuotaUpsell {
++  const idpBase = process.env.IDP_BASE_URL || "https://user.trefolio.com";
++  return {
++    url: `${idpBase}/upgrade?from=will&sub=${encodeURIComponent(userId)}`,
++    headline: "Upgrade to Trefolio Pro",
++    body: "200 messages/day on Will, 200 messages/day on Clara, and full access to the trefolio portfolio dashboard for €7.99/mo.",
++  };
++}
++
+ export type QuotaResult =
+   | { ok: true; used: number; limit: number }
+-  | { ok: false; reason: "limit"; used: number; limit: number; resetAtUtc: string };
++  | { ok: false; reason: "limit"; used: number; limit: number; resetAtUtc: string; upsell: QuotaUpsell };
+
+ export async function consumeAgentQuota(userId: string): Promise<QuotaResult> {
+@@ -50,7 +72,14 @@ export async function consumeAgentQuota(userId: string): Promise<QuotaResult> {
+   if (used >= user.dailyAgentMessageLimit) {
+-    return { ok: false, reason: "limit", used, limit: user.dailyAgentMessageLimit, resetAtUtc: midnightUtc };
++    return {
++      ok: false,
++      reason: "limit",
++      used,
++      limit: user.dailyAgentMessageLimit,
++      resetAtUtc: midnightUtc,
++      upsell: buildUpsell(userId),
++    };
+   }
+   // ... existing increment + return ...
+ }

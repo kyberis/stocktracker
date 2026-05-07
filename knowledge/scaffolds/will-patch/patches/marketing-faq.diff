@@ -1,0 +1,13 @@
+--- a/src/lib/marketing-content.ts
++++ b/src/lib/marketing-content.ts
+@@ -120,12 +120,12 @@ export const FAQ = [
+   {
+     q: "Is there a paid tier?",
+-    a: "Not in v1. Will is free and MIT-licensed. A small Pro tier may come later for higher daily quotas or longer voice notes.",
++    a: "Yes. Trefolio Pro (€7.99/mo or €59.99/yr) raises Will's daily message limit from 30 to 200, and unlocks the same on Clara plus the full trefolio portfolio dashboard. Free Will users keep the 30 messages/day quota forever.",
+   },
+   // ... other FAQ items ...
+ ];
+
+// Apply the same translation update to every locale variant of marketing-content.
+// Use the ux-writer skill for tone parity.

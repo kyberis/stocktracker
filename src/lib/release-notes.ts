@@ -47,9 +47,23 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "improvement",
+        text: "The IdP OAuth client for trefolio now allows https://www.trefolio.com and 127.0.0.1 callback/logout URLs alongside apex and localhost; run `npm run idp:cutover-checklist` for the Phase 6 cutover steps and optional env validation.",
+        translations: {
+          es: "El cliente OAuth del IdP para trefolio admite ahora https://www.trefolio.com y callbacks/logout en 127.0.0.1 además del apex y localhost; ejecuta `npm run idp:cutover-checklist` para los pasos del cutover (fase 6) y validación opcional de variables.",
+        },
+      },
+      {
+        type: "improvement",
         text: "When unified OIDC is active, /login immediately continues into the IdP (middleware → /api/auth/oidc/start → user.* /oauth2/authorize), so you reach user.trefolio.com or user.trefolio-dev.com without rendering an extra stop on the product login screen.",
         translations: {
           es: "Con OIDC unificado activo, /login continúa enseguida hacia el IdP (middleware → /api/auth/oidc/start → user.* /oauth2/authorize), así llegas a user.trefolio.com o user.trefolio-dev.com sin una parada extra en la pantalla de login del producto.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Signing out on trefolio.com returns you to trefolio after the IdP finishes single sign-out: the IdP end_session page no longer falls back to a relative “/” (which kept you on user.trefolio.com) when the post-logout URL is missing or rejected — it now picks a safe absolute product URL from the OAuth client. Trefolio’s /api/auth/logout also uses the public request origin (X-Forwarded-Host / APP_BASE_URL) so post_logout_redirect_uri matches the site you actually used.",
+        translations: {
+          es: "Al cerrar sesión en trefolio.com vuelves a trefolio tras el cierre unificado en el IdP: la página end_session ya no usa “/” relativo (que te dejaba en user.trefolio.com) si falta o rechaza post_logout_redirect_uri — ahora elige una URL absoluta segura según el cliente OAuth. El /api/auth/logout de trefolio también usa el origen público de la petición (X-Forwarded-Host / APP_BASE_URL) para que post_logout coincida con el host real.",
         },
       },
       {

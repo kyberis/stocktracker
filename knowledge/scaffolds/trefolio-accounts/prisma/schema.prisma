@@ -1,0 +1,166 @@
+// trefolio-accounts canonical schema.
+// One database, one user table, one entitlement table.
+// Each product app stores its own User row keyed by `idpSub` and points
+// here for entitlements + Telegram identity.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  free
+  pro
+}
+
+enum EntitlementSource {
+  stripe
+  grant
+  trial
+}
+
+enum AuthProvider {
+  credentials
+  google
+  apple
+}
+
+model User {
+  id              String       @id @default(cuid())
+  email           String       @unique
+  /// Display name. Optional.
+  name            String?
+  /// User's preferred language for UI + email.
+  locale          String       @default("en")
+  /// bcrypt; null for OAuth-only users.
+  passwordHash    String?
+  authProvider    AuthProvider @default(credentials)
+  googleId        String?      @unique
+  appleId         String?      @unique
+  emailVerifiedAt DateTime?
+  createdAt       DateTime     @default(now())
+  /// Soft-delete marker. When set, the account is no longer usable.
+  deletedAt       DateTime?
+
+  entitlement    Entitlement?
+  stripeCustomer StripeCustomer?
+  passkeys       Passkey[]
+  telegramLinks  TelegramLink[]
+  refreshTokens  RefreshToken[]
+  authCodes      AuthorizationCode[]
+
+  @@index([emailVerifiedAt])
+  @@index([deletedAt])
+}
+
+/// Per-user entitlement state. One row per user.
+/// Source-of-truth for what the user has paid for. Apps mirror to local
+/// columns (e.g. `users.plan` in trefolio, `User.dailyAgentMessageLimit`
+/// in Clara/Will) for fast checks but always defer to this row at refresh.
+model Entitlement {
+  userId    String            @id
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      Plan              @default(free)
+  /// When the current pro period ends. Null if free or non-expiring grant.
+  proUntil  DateTime?
+  source    EntitlementSource @default(stripe)
+  updatedAt DateTime          @updatedAt
+
+  @@index([plan, proUntil])
+}
+
+/// Stripe state mirror. We never query Stripe live for plan; the webhook
+/// updates this and the Entitlement row in the same transaction.
+model StripeCustomer {
+  userId               String   @id
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String   @unique
+  stripeSubscriptionId String?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean  @default(false)
+  updatedAt            DateTime @updatedAt
+}
+
+/// Telegram identity linked to an IdP user. Source-of-truth for "this
+/// telegramUserId belongs to this trefolio account" across the three bots.
+model TelegramLink {
+  telegramUserId   BigInt   @id
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  telegramUsername String?
+  /// Last bot that issued a /start to this telegram user. Diagnostic only.
+  appHint          String?
+  verifiedAt       DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Passkey {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialId    String   @unique
+  publicKey       Bytes
+  counter         BigInt
+  deviceType      String
+  backedUp        Boolean
+  transports      String?
+  createdAt       DateTime @default(now())
+  lastUsedAt      DateTime?
+}
+
+/// Static OAuth client registry. Seed via migration, not user-editable.
+/// One row per product app: trefolio, clara, will.
+model OAuthClient {
+  clientId         String   @id
+  name             String
+  /// bcrypt of the client secret.
+  clientSecretHash String
+  redirectUris     String[] // exact-match, no wildcards
+  /// Scopes the client is allowed to request.
+  allowedScopes    String[] @default(["openid", "email", "profile", "entitlements"])
+  createdAt        DateTime @default(now())
+}
+
+/// Short-lived OAuth Authorization Code. PKCE required.
+model AuthorizationCode {
+  code                  String   @id
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId              String
+  redirectUri           String
+  scope                 String
+  codeChallenge         String
+  codeChallengeMethod   String   // S256 only
+  nonce                 String?
+  expiresAt             DateTime
+  consumedAt            DateTime?
+  createdAt             DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Refresh tokens. Rotated on every use (RFC 6749 family detection).
+model RefreshToken {
+  tokenHash String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId  String
+  scope     String
+  /// Family identifier; on reuse-detection we revoke the entire family.
+  familyId  String
+  expiresAt DateTime
+  revokedAt DateTime?
+  /// On rotation we set this to the new token's hash so we can detect
+  /// stolen-token replay.
+  rotatedTo String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+}

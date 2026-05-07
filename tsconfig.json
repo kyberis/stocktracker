@@ -41,6 +41,7 @@
     "ios",
     "android",
     "scripts",
-    "external"
+    "external",
+    "knowledge"
   ]
 }

@@ -15,6 +15,8 @@ import { effectivePlan, canAccessTheme, getAiTokenLimit } from "@/lib/subscripti
 import { getAllFeatureQuotas } from "@/lib/feature-quotas";
 import { planExpiredNotification } from "@/lib/notification-templates";
 import { withMetrics } from "@/lib/with-metrics";
+import { syncEntitlementsForUser } from "@/lib/idp/entitlements";
+import { isIdpEnabled } from "@/lib/idp/config";
 
 /**
  * Fire-and-forget: when a plan's grace period has expired, persist the
@@ -36,6 +38,19 @@ function lazyDowngrade(userId: string): void {
   );
 }
 
+/**
+ * Fire-and-forget: pull the latest entitlements from the IdP and write them to
+ * the local users.plan / plan_expires_at columns. This is what makes a Pro
+ * upgrade purchased on Clara or Will visible in trefolio without waiting for
+ * the user's next OIDC sign-in. No-op when the IdP is not configured.
+ */
+function lazyIdpEntitlementSync(userId: string): void {
+  if (!isIdpEnabled()) return;
+  syncEntitlementsForUser(userId).catch((err) =>
+    console.error("[auth/me] IdP entitlement sync failed:", err instanceof Error ? err.message : err),
+  );
+}
+
 export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
@@ -54,6 +69,11 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
 
   if (resolvedPlan !== storedPlan && user) {
     lazyDowngrade(user.id);
+  }
+
+  // Pull fresh entitlements from the IdP (no-op if not configured / user not linked).
+  if (user) {
+    lazyIdpEntitlementSync(user.id);
   }
 
   // Expose all per-feature quota usage so the UI can render "X / Y" badges

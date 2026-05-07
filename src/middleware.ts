@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
+import { isIdpEnabled, useLegacyAuth } from "@/lib/idp/config";
 
 const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email", "/blog", "/contact", "/demo", "/releasenotes", "/leaf", "/unsubscribe", "/about"]);
 const PUBLIC_API_ROUTES = new Set([
   "/api/auth/login",
   "/api/auth/signup",
   "/api/auth/logout",
+  "/api/auth/idp-logout",
   "/api/auth/google",
   "/api/auth/google/callback",
   "/api/auth/apple",
   "/api/auth/apple/callback",
+  "/api/auth/oidc/start",
+  "/api/auth/oidc/signup-start",
+  "/api/auth/oidc/callback",
   "/api/auth/verify-email",
   "/api/auth/passkey/login-options",
   "/api/auth/passkey/login-verify",
@@ -74,6 +79,34 @@ function isPublicPath(pathname: string): boolean {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Recover mistaken navigations to `/l` (often a truncated display of `/landing`
+  // or a bad relative link). No legitimate route uses this path.
+  if (pathname === "/l") {
+    return NextResponse.redirect(new URL("/landing", req.url));
+  }
+
+  /**
+   * Unified IdP only (`USE_LEGACY_AUTH=false`): `/login` must hop to
+   * `/api/auth/oidc/start` (PKCE cookies) → browser redirect to
+   * `{IDP_ISSUER}/oauth2/authorize` (e.g. https://user.trefolio-dev.com/...).
+   * Run before `isPublicPath` — `/login` is public and would otherwise bypass.
+   */
+  if (pathname === "/login") {
+    const oauthErr = req.nextUrl.searchParams.get("error");
+    if (!oauthErr && isIdpEnabled() && !useLegacyAuth()) {
+      const qs = new URLSearchParams();
+      const rp = req.nextUrl.searchParams.get("redirect");
+      if (rp && rp.startsWith("/") && !rp.startsWith("//")) {
+        qs.set("redirect", rp);
+      }
+      const email = req.nextUrl.searchParams.get("email");
+      if (email) qs.set("email", email);
+      const q = qs.toString();
+      const dest = q ? `/api/auth/oidc/start?${q}` : "/api/auth/oidc/start";
+      return NextResponse.redirect(new URL(dest, req.url));
+    }
+  }
+
   if (isPublicPath(pathname) || PUBLIC_API_ROUTES.has(pathname)) {
     return NextResponse.next();
   }
@@ -91,6 +124,10 @@ export async function middleware(req: NextRequest) {
   }
   // Telegram webhook (dynamic secret segment) — auth is enforced inside the route.
   if (pathname.startsWith("/api/webhooks/telegram/")) {
+    return NextResponse.next();
+  }
+  // IdP service-plane endpoints — Bearer-token auth is enforced inside each route.
+  if (pathname.startsWith("/api/v1/users/by-sub/")) {
     return NextResponse.next();
   }
 
@@ -146,6 +183,9 @@ export async function middleware(req: NextRequest) {
     "/api/auth/passkey/list",
     "/api/auth/google",
     "/api/auth/google/callback",
+    "/api/auth/oidc/start",
+    "/api/auth/oidc/signup-start",
+    "/api/auth/oidc/callback",
   ]);
   if (
     !session.onboardingCompleted &&

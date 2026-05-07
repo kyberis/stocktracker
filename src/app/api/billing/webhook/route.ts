@@ -21,6 +21,7 @@ import {
   downgradeNotification,
   planExpiredNotification,
 } from "@/lib/notification-templates";
+import { useLegacyAuth } from "@/lib/idp/config";
 
 function stripeCustomerId(value: string | Stripe.Customer | Stripe.DeletedCustomer | null): string {
   if (!value) return "";
@@ -52,6 +53,13 @@ async function planFromSubscription(_subscription: Stripe.Subscription, _metadat
 }
 
 export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest) => {
+  // After IdP cutover the IdP is the source of truth for entitlements; the
+  // local webhook becomes a no-op. We keep the endpoint live for backward
+  // compatibility (Stripe may still have it configured during the transition).
+  if (!useLegacyAuth()) {
+    return NextResponse.json({ received: true, mode: "idp_owned" }, { status: 200 });
+  }
+
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "Webhook secret not configured" }, { status: 501 });

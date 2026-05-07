@@ -90,7 +90,7 @@ Data access is purely through `src/lib/db/` — no ORM, parameterized libSQL que
 
 ### Prerequisites
 
-- **Node.js ≥ 22** (`node -v` to check)
+- **Node.js ≥ 22** (`node -v` to check; pin **`22`** in [`.nvmrc`](.nvmrc) / [`.node-version`](.node-version))
 - **npm ≥ 10**
 - A [Turso](https://turso.tech) database (free tier is enough)
 
