@@ -1,22 +1,17 @@
 /**
- * One-shot migration: provision every existing trefolio user in the
- * trefolio-accounts IdP and write the returned `sub` back to `users.idp_sub`.
+ * Copies Stripe billing linkage from trefolio (Warren) into the IdP for users
+ * who already have idp_sub. Only trefolio holds subscriptions today.
  *
- * Idempotent. Safe to re-run; users that already have an `idp_sub` are skipped.
+ * Calls POST /v1/admin/users/import with stripeCustomerId / stripeSubscriptionId
+ * so the IdP persists stripe_customers + entitlements.source = stripe.
+ *
+ * Requires IdP deploy that persists Stripe fields on import (see external/accounts
+ * src/app/api/v1/admin/users/import/route.ts).
  *
  * Usage:
  *   IDP_BASE_URL=https://user.trefolio.com \
  *   IDP_SERVICE_TOKEN=... \
- *   npm run idp:migrate-users -- [--limit=100] [--dry-run]
- *
- * Notes:
- *  - Sends bcrypt password hashes verbatim (the IdP stores them in its own
- *    User table; users keep their existing passwords).
- *  - Sends current Stripe customer + subscription IDs so the IdP can attach
- *    them to its stripe_customers table (requires IdP import route that calls
- *    upsertStripeCustomerRow — unified billing cutover).
- *  - Sends the current effective plan + plan_expires_at so paid users keep
- *    Pro through the migration without a billing event.
+ *   npm run idp:migrate-subscriptions -- [--limit=500] [--dry-run]
  */
 import { ensureInitialized } from "../src/lib/db/client";
 import { rowToDbUser } from "../src/lib/db/helpers";
@@ -46,17 +41,24 @@ async function main() {
   }
 
   const client = await ensureInitialized();
-  const where = ["(idp_sub = '' OR idp_sub IS NULL)"];
   const args: (string | number)[] = [];
-  let sql = `SELECT * FROM users WHERE ${where.join(" AND ")} ORDER BY created_at ASC`;
+  let sql = `
+    SELECT * FROM users
+    WHERE idp_sub IS NOT NULL AND idp_sub != ''
+      AND stripe_customer_id IS NOT NULL AND stripe_customer_id != ''
+    ORDER BY created_at ASC
+  `;
   if (opts.limit) {
     sql += " LIMIT ?";
     args.push(opts.limit);
   }
+
   const result = await client.execute({ sql, args });
   const users = result.rows.map(rowToDbUser);
 
-  console.log(`Found ${users.length} users to migrate to IdP${opts.dryRun ? " (DRY RUN)" : ""}.`);
+  console.log(
+    `Found ${users.length} trefolio users with idp_sub + Stripe customer id${opts.dryRun ? " (DRY RUN)" : ""}.`,
+  );
 
   let ok = 0;
   let skipped = 0;
@@ -64,8 +66,7 @@ async function main() {
 
   for (const u of users) {
     if (!u.email) {
-      // Users without an email cannot be IdP-provisioned (email is the unique key).
-      console.warn(`SKIP user ${u.id} (${u.username}): no email`);
+      console.warn(`SKIP user ${u.id}: no email`);
       skipped++;
       continue;
     }
@@ -73,17 +74,19 @@ async function main() {
     const eff = effectivePlan(u.plan, u.plan_expires_at);
 
     if (opts.dryRun) {
-      console.log(`DRY ${u.email} | plan=${eff} expires=${u.plan_expires_at || "-"} provider=${u.auth_provider}`);
+      console.log(
+        `DRY ${u.email} | sub=${u.idp_sub} customer=${u.stripe_customer_id} sub=${u.stripe_subscription_id || "-"} plan=${eff}`,
+      );
       ok++;
       continue;
     }
 
     try {
-      const res = await importUser({
+      await importUser({
         email: u.email,
         passwordHash: u.password_hash || undefined,
         name: u.display_name || u.username,
-        locale: undefined, // pulled from user_settings if needed in a follow-up pass
+        locale: undefined,
         googleId: u.google_id || undefined,
         appleId: u.apple_id || undefined,
         emailVerified: u.email_verified === 1,
@@ -93,12 +96,7 @@ async function main() {
         stripeSubscriptionId: u.stripe_subscription_id || undefined,
       });
 
-      await client.execute({
-        sql: "UPDATE users SET idp_sub = ? WHERE id = ?",
-        args: [res.sub, u.id],
-      });
-
-      console.log(`OK  ${u.email} -> sub=${res.sub} (${res.created ? "created" : "linked"})`);
+      console.log(`OK  ${u.email} (idp_sub=${u.idp_sub})`);
       ok++;
     } catch (err) {
       const status = err instanceof IdpClientError ? err.status : "n/a";
@@ -107,7 +105,7 @@ async function main() {
     }
   }
 
-  console.log(`\nDone: ${ok} migrated, ${skipped} skipped, ${failed} failed.`);
+  console.log(`\nDone: ${ok} synced, ${skipped} skipped, ${failed} failed.`);
   if (failed > 0) process.exit(1);
 }
 

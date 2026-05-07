@@ -17,6 +17,82 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.3",
+    date: "2026-05-07",
+    title: "AI prompt hardening",
+    titleTranslations: {
+      es: "Endurecimiento de prompts de IA",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Restored the info@trefolio.com “new customer” admin email when the first trefolio account is provisioned after sign-in via user.trefolio.com (OIDC); it was only firing for legacy email/password and Google/Apple callbacks.",
+        translations: {
+          es: "Se recupera el correo interno a info@trefolio.com por nuevo cliente cuando se crea la cuenta local tras iniciar sesión vía user.trefolio.com (OIDC); antes solo se enviaba con registro clásico por email/contraseña o callbacks de Google/Apple.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Local development (`next dev`) and Vitest no longer use Turso when `STOCKTRACKER_TURSO_DATABASE_URL` / `TREFOLIO_TURSO_DATABASE_URL` are set unless you opt in with `STOCKTRACKER_USE_REMOTE_DB_IN_DEV=true` (or `TREFOLIO_*`), preventing accidental reads/writes against a production database copied into `.env.local`. Default local DB file remains `data/trefolio.db`.",
+        translations: {
+          es: "El desarrollo local (`next dev`) y Vitest ya no usan Turso si están definidas las URLs/con tokens salvo que actives `STOCKTRACKER_USE_REMOTE_DB_IN_DEV=true` (o `TREFOLIO_*`), para evitar lecturas/escrituras accidentales contra producción al copiar `.env.local`. La base local por defecto sigue siendo `data/trefolio.db`.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Portfolio AI chat and Warren web chat reduce prompt-injection risk: portfolio telemetry for Portfolio AI is built only on the server; Warren validates the active portfolio against your account, uses the database portfolio name, applies a strict snapshot schema, and tightens system-prompt label sanitisation.",
+        translations: {
+          es: "El chat de IA de cartera y Warren en la web reducen el riesgo de inyección de prompts: los datos de cartera para Portfolio AI se generan solo en el servidor; Warren valida la cartera activa frente a tu cuenta, usa el nombre en base de datos, aplica un esquema estricto del snapshot y sanea las etiquetas en el system prompt.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Added Vitest route tests for `/api/warren/chat` and `/api/portfolio/ai-chat` plus a Playwright spec for extra strict-body rejection cases (message limits, roles, oversized content, nested snapshot keys).",
+        translations: {
+          es: "Añadimos pruebas Vitest de rutas para `/api/warren/chat` y `/api/portfolio/ai-chat` y un spec de Playwright con más casos de rechazo por cuerpo estricto (límites de mensajes, roles, contenido largo, claves anidadas en el snapshot).",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Clara (`external/etracker`) and Will (`external/notetaker`) now ship Vitest coverage for import-preference framing and multilingual Will prompt safety; optional IdP browser smoke is `e2e/idp-browser-smoke.spec.ts` when `E2E_IDP_BROWSER=1` (see `playwright.config.ts`).",
+        translations: {
+          es: "Clara (`external/etracker`) y Will (`external/notetaker`) incluyen cobertura Vitest para el mensaje de preferencias de importación y la regla anti-inyección en prompts multilingües; el humo de navegador IdP opcional es `e2e/idp-browser-smoke.spec.ts` con `E2E_IDP_BROWSER=1` (ver `playwright.config.ts`).",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.2",
+    date: "2026-05-06",
+    title: "Unified billing portal links",
+    titleTranslations: {
+      es: "Enlaces al portal de facturación unificado",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "When unified IdP billing is enabled (BILLING_REDIRECT_TO_IDP), “Manage subscription” in Profile and upgrade flows opens the Stripe Customer Portal on user.trefolio.com instead of the local portal route, matching where subscriptions are billed.",
+        translations: {
+          es: "Con la facturación unificada en el IdP activada (BILLING_REDIRECT_TO_IDP), «Gestionar suscripción» en el perfil y en los flujos de mejora abre el portal de cliente de Stripe en user.trefolio.com en lugar de la ruta local, alineado con donde se cobra la suscripción.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Optional env GRANTS_AND_TRIALS_REDIRECT_TO_IDP sends 7-day trial and admin complimentary-grant emails to activation pages on user.trefolio.com (with cron/admin IdP sync); legacy product-hosted claim URLs remain when unset.",
+        translations: {
+          es: "Variable opcional GRANTS_AND_TRIALS_REDIRECT_TO_IDP: las invitaciones de prueba de 7 días y los grants administrativos enlazan a las páginas de activación en user.trefolio.com (con sincronización del cron/admin al IdP); si no está activa, se siguen usando las URLs en el producto.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "The landing page “three agents” section shows Warren, Clara, and Will brand icons instead of letter placeholders.",
+        translations: {
+          es: "En la landing, la sección de los tres agentes muestra los iconos de marca de Warren, Clara y Will en lugar de iniciales.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.1",
     date: "2026-05-05",
     title: "Unified signup via accounts",

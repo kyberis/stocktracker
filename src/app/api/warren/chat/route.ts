@@ -7,50 +7,32 @@ import { z } from "zod";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
-import type { PortfolioSnapshot } from "@/lib/ai/warren/tools";
 import type { WarrenStreamFrame } from "@/lib/ai/warren/types";
+import { listPortfolios } from "@/lib/db";
+import { warrenPortfolioSnapshotSchema } from "@/lib/ai/warren/portfolio-snapshot-zod";
+import { sanitizeWarrenPortfolioLabel } from "@/lib/ai/prompt-safety";
 
-const portfolioSnapshotSchema: z.ZodType<PortfolioSnapshot | undefined> = z
+const requestSchema = z
   .object({
-    baseCurrency: z.string(),
-    totals: z.object({
-      value: z.number(),
-      cost: z.number(),
-      gainLoss: z.number(),
-      gainLossPct: z.number(),
-      dayChange: z.number(),
-    }),
-    holdingsCount: z.number(),
-    topHoldings: z.array(z.unknown()),
-    allocation: z.array(z.unknown()),
-    cashSummary: z.record(z.string(), z.number()),
+    messages: z
+      .array(
+        z.object({
+          role: z.enum(["user", "assistant"]),
+          content: z.string().max(4000),
+        }),
+      )
+      .min(1)
+      .max(40),
+    language: z.string().optional(),
+    activePortfolioId: z.string().optional(),
+    activePortfolioName: z.string().optional(),
+    baseCurrency: z.string().default("EUR"),
+    isDemo: z.boolean().optional(),
+    portfolioContext: warrenPortfolioSnapshotSchema,
   })
-  .partial({ allocation: true, cashSummary: true })
-  .passthrough()
-  .optional() as unknown as z.ZodType<PortfolioSnapshot | undefined>;
-
-const requestSchema = z.object({
-  messages: z
-    .array(
-      z.object({
-        role: z.enum(["user", "assistant"]),
-        content: z.string().max(4000),
-      }),
-    )
-    .min(1)
-    .max(40),
-  language: z.string().optional(),
-  activePortfolioId: z.string().optional(),
-  activePortfolioName: z.string().optional(),
-  baseCurrency: z.string().default("EUR"),
-  isDemo: z.boolean().optional(),
-  portfolioContext: portfolioSnapshotSchema,
-});
+  .strict();
 
 export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => {
-  // Free tier currently maps to ai_consult quota; we plan to add a dedicated
-  // "warren_chat" quota in a follow-up. Reuse ai_consult so we don't ship a
-  // schema-less limit on day one.
   const { session, error } = await requireFeatureQuota(req, "ai_consult");
   if (error) return error;
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -61,6 +43,18 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
   } catch {
     return Response.json({ error: "Invalid request body" }, { status: 400 });
   }
+
+  const portfolios = await listPortfolios(session.userId);
+  let resolvedPortfolioId = body.activePortfolioId;
+  if (resolvedPortfolioId && !portfolios.some((p) => p.id === resolvedPortfolioId)) {
+    resolvedPortfolioId = undefined;
+  }
+  const active =
+    portfolios.find((p) => p.id === resolvedPortfolioId) ||
+    portfolios.find((p) => p.isDefault) ||
+    portfolios[0];
+  const serverPortfolioId = active?.id;
+  const serverPortfolioName = sanitizeWarrenPortfolioLabel(active?.name ?? "");
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -76,8 +70,8 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
           channel: "web",
           language: body.language,
           baseCurrency: body.baseCurrency,
-          activePortfolioId: body.activePortfolioId,
-          activePortfolioName: body.activePortfolioName,
+          activePortfolioId: serverPortfolioId,
+          activePortfolioName: serverPortfolioName,
           snapshot: body.portfolioContext,
           messages: body.messages,
           onFrame: send,

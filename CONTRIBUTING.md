@@ -24,8 +24,8 @@ Thank you for your interest in contributing! trefolio is a European multi-curren
 ### Setup
 
 ```bash
-git clone https://github.com/trefolio/trefolio.git
-cd trefolio
+git clone https://github.com/kyberis/stocktracker.git
+cd stocktracker
 npm install
 cp .env.local.example .env.local
 # Fill in the required env vars — see .env.local.example for guidance

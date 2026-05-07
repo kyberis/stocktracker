@@ -1,4 +1,5 @@
 import { languageCodeToName } from "@/lib/languages";
+import { sanitizeWarrenPortfolioLabel } from "@/lib/ai/prompt-safety";
 
 export type WarrenChannel = "web" | "telegram";
 
@@ -16,8 +17,11 @@ export interface PromptOptions {
 export function buildWarrenSystemPrompt(opts: PromptOptions): string {
   const lang = languageCodeToName(opts.language || "en");
   const channel: WarrenChannel = opts.channel || "web";
-  const portfolioLine = opts.activePortfolioName
-    ? `The user's active portfolio is "${opts.activePortfolioName}" (id: ${opts.activePortfolioId ?? "n/a"}, base currency ${opts.baseCurrency}).`
+  const displayName = opts.activePortfolioName
+    ? sanitizeWarrenPortfolioLabel(opts.activePortfolioName)
+    : undefined;
+  const portfolioLine = displayName
+    ? `The user's active portfolio is "${displayName}" (id: ${opts.activePortfolioId ?? "n/a"}, base currency ${opts.baseCurrency}).`
     : `Base currency is ${opts.baseCurrency}.`;
   const demoLine = opts.isDemoMode
     ? "\nThe user is browsing the public DEMO. NEVER call write tools (`propose*`). When asked to mutate, politely explain that demo mode is read-only and they can sign up to act."

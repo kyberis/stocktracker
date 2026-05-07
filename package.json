@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "tsx scripts/run-migrations.ts",
     "idp:migrate-users": "tsx scripts/migrate-users-to-idp.ts",
+    "idp:migrate-subscriptions": "tsx scripts/migrate-trefolio-subscriptions-to-idp.ts",
     "idp:cutover-checklist": "node scripts/idp-cutover-checklist.mjs",
     "idp:migrate-all-users": "node scripts/migrate-unified-users-to-idp.mjs",
     "idp:send-unified-email": "tsx scripts/send-unified-accounts-email.ts",

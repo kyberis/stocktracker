@@ -15,6 +15,7 @@ import { Smartphone, Monitor, Copy, Check, Trash2, User, Users, CreditCard, Bell
 import NotificationChannels from "@/components/NotificationChannels";
 import TelegramConnectCard from "@/components/profile/TelegramConnectCard";
 import { COUNTRIES } from "@/lib/countries";
+import { resolveBillingPortalHref } from "@/lib/idp/config";
 
 const PROFILE_TABS = ["account", "subscription", "notifications", "portfolios", "referrals", "social", "devices"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
@@ -2012,7 +2013,7 @@ export default function ProfilePage() {
           })()}
           {isPaid ? (
             <a
-              href="/api/billing/portal"
+              href={resolveBillingPortalHref()}
               className="btn-secondary text-sm inline-flex items-center gap-2 w-full justify-center"
             >
               {t("manageSubscription")}

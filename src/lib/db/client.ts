@@ -6,18 +6,11 @@ import bcrypt from "bcryptjs";
 import { runMigrations } from "./migrations";
 import { ADMIN_DEFAULT_USERNAME, ADMIN_DEFAULT_PASSWORD, BCRYPT_ROUNDS } from "./helpers";
 import { seedTransactionsForUser } from "./seed";
+import { getEffectiveTursoDatabaseUrl } from "./turso-env";
 
 let _client: Client | null = null;
 let _initPromise: Promise<Client> | null = null;
 let _isLocal = false;
-
-function tursoDatabaseUrl(): string | undefined {
-  return (
-    process.env.TREFOLIO_TURSO_DATABASE_URL ||
-    process.env.STOCKTRACKER_TURSO_DATABASE_URL ||
-    process.env.stocktracker_TURSO_DATABASE_URL
-  );
-}
 
 function tursoAuthToken(): string | undefined {
   return (
@@ -30,7 +23,7 @@ function tursoAuthToken(): string | undefined {
 function getClient(): Client {
   if (_client) return _client;
 
-  const tursoUrl = tursoDatabaseUrl();
+  const tursoUrl = getEffectiveTursoDatabaseUrl();
   const tursoToken = tursoAuthToken();
 
   if (process.env.VERCEL && !tursoUrl) {

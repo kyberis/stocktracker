@@ -6,6 +6,7 @@
  * Usage: npm run db:migrate
  *   With Turso: set STOCKTRACKER_TURSO_DATABASE_URL + STOCKTRACKER_TURSO_AUTH_TOKEN (or TREFOLIO_*).
  *   Local file: no Turso env — uses data/trefolio.db
+ *   Note: `next dev` ignores remote Turso URLs unless STOCKTRACKER_USE_REMOTE_DB_IN_DEV=true (see src/lib/db/turso-env.ts).
  */
 import { ensureInitialized } from "../src/lib/db/client";
 

@@ -65,6 +65,20 @@ Behavior:
 - Duplicates across Clara and Will are unified automatically when emails match.
 - Pro entitlements are never downgraded by a later Free import from another app.
 
+**Stripe (trefolio only):** Subscriptions are billed in trefolio. After users have
+`idp_sub`, copy `stripe_customer_id` / `stripe_subscription_id` into the IdP
+`stripe_customers` table (and set entitlements `source = stripe`) by running:
+
+```bash
+IDP_BASE_URL=https://user.trefolio.com \
+IDP_SERVICE_TOKEN=$IDP_SERVICE_TOKEN \
+npm run idp:migrate-subscriptions
+```
+
+Optional `--limit` / `--dry-run`. Configure `STRIPE_SECRET_KEY` on the IdP so the
+import handler can refresh `current_period_end` from the Stripe API when
+possible.
+
 Verify on the IdP DB:
 
 ```sql

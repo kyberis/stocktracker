@@ -12,6 +12,10 @@ so cookie / SameSite / passkey behaviour matches production locally.
 | `will.trefolio-dev.com`   | `127.0.0.1:3200`  | Will (`external/notetaker`) |
 | `user.trefolio-dev.com`   | `127.0.0.1:3300`  | accounts / IdP (`external/accounts`) |
 
+## Vercel project names (dashboard only)
+
+In **Vercel → Project → Settings → General → Project Name**, you can use short labels (for example `trefolio` for this app and `user` for the IdP) so the team dashboard matches how you talk about the products. That name is **only** cosmetic on Vercel: it does **not** rename anything on GitHub, change `git clone` URLs, or require edits to `.gitmodules`. The Git integration under **Settings → Git** keeps using the same linked repository.
+
 ## One-time setup
 
 ### 1. Add hostnames to `/etc/hosts`
@@ -66,6 +70,14 @@ npm run dev:proxy   # = sudo caddy run --config dev/Caddyfile
 
 Open https://trefolio-dev.com — full OIDC flow, cross-subdomain cookies, and
 WebAuthn all behave the way they do on `*.trefolio.com`.
+
+**Optional — Playwright IdP redirect smoke** (from the **stocktracker** repo root): asserts `/login` reaches `/oauth2/authorize` on the IdP. The spec is excluded from the default E2E run unless you set `E2E_IDP_BROWSER=1` (see `playwright.config.ts`).
+
+```bash
+E2E_IDP_BROWSER=1 E2E_BASE_URL=https://trefolio-dev.com npx playwright test e2e/idp-browser-smoke.spec.ts
+```
+
+Use the same origin you open in the browser (`trefolio-dev.com` or your `app.*` host); trefolio must run with **IdP-first auth** (`USE_LEGACY_AUTH=false`) for that host so `/login` redirects into OIDC instead of showing the password form.
 
 ### If HTTPS dev feels slow
 
@@ -123,6 +135,8 @@ Match the IdP’s issuer for authorize redirects and ID-token verification:
 IDP_BASE_URL=http://localhost:3300
 IDP_ISSUER=https://user.trefolio-dev.com
 ```
+
+**Database:** `next dev` ignores remote Turso URLs (`libsql://…` / `https://…`) unless you set `STOCKTRACKER_USE_REMOTE_DB_IN_DEV=true` (see `.env.local.example`), so the default is local `data/trefolio.db` instead of accidentally using production credentials.
 
 ### On **Clara** and **Will**
 

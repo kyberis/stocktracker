@@ -18,6 +18,8 @@ import { hashPassword } from "@/lib/auth/password";
 import { parseBody } from "@/lib/api-response";
 import { adminUserActionSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
+import { grantsAndTrialsRedirectToIdp } from "@/lib/idp/config";
+import { inviteMembershipGrantViaIdp } from "@/lib/idp/client";
 
 export const GET = withMetrics("/api/admin/users", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);
@@ -82,6 +84,22 @@ export const POST = withMetrics("/api/admin/users", async (req: NextRequest) => 
         },
         { status: 409 },
       );
+    }
+    if (grantsAndTrialsRedirectToIdp()) {
+      try {
+        await inviteMembershipGrantViaIdp({
+          email: user.email,
+          days: data.days,
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return NextResponse.json({ error: message }, { status: 502 });
+      }
+      await trackEvent(user.id, "admin_membership_grant_sent", {
+        plan: data.plan,
+        days: String(data.days),
+      });
+      return NextResponse.json({ ok: true });
     }
     const { token } = await setPendingMembershipGrant(user.id, data.plan, data.days);
     const settings = await getUserSettings(user.id);

@@ -405,6 +405,7 @@ import {
   percentAlertStrings,
 } from "./email-i18n/alert-strings";
 import { getMembershipGrantStrings } from "./email-i18n/membership-grant-copy";
+import { resolveIdpMembershipGrantActivateUrl, resolveIdpTrialActivateUrl } from "./idp/config";
 export type { EmailLocale } from "./email-i18n";
 export { getEmailLocale } from "./email-i18n";
 
@@ -801,7 +802,9 @@ export async function sendTrialInvitationEmail(
 ): Promise<SendEmailResult> {
   if (isTestEmail(email)) return { success: true };
 
-  const activateUrl = utm(`/trial/activate?token=${encodeURIComponent(token)}`, "trial_invitation");
+  const activateUrl =
+    resolveIdpTrialActivateUrl(token) ??
+    utm(`/trial/activate?token=${encodeURIComponent(token)}`, "trial_invitation");
   const html = trialInvitationHtml(displayName, activateUrl, locale);
   const subject = "Your 7-day Trefolio Pro trial is ready";
 
@@ -912,7 +915,9 @@ export async function sendMembershipGrantInvitationEmail(opts: {
 }): Promise<SendEmailResult> {
   if (isTestEmail(opts.to)) return { success: true };
   const base = (opts.baseUrl || getBaseUrl()).replace(/\/$/, "");
-  const activateUrl = `${base}/membership-grant/activate?token=${encodeURIComponent(opts.token)}&utm_source=email&utm_medium=transactional&utm_campaign=membership_grant_invitation`;
+  const activateUrl =
+    resolveIdpMembershipGrantActivateUrl(opts.token) ??
+    `${base}/membership-grant/activate?token=${encodeURIComponent(opts.token)}&utm_source=email&utm_medium=transactional&utm_campaign=membership_grant_invitation`;
   const c = getMembershipGrantStrings(opts.locale);
   const name = opts.displayName || c.fallbackName;
   const planName = c.planNamePro;

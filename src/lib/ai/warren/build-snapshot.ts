@@ -1,8 +1,10 @@
 import {
   listHoldings as dbListHoldings,
   listCashEntries as dbListCashEntries,
+  listGoalsForPortfolio,
   resolvePortfolioId,
 } from "@/lib/db";
+import { computeEstimatedDividends, computeTotalEstimatedEUR } from "@/lib/services/dividend-calculator";
 import { createProvider } from "@/lib/api-providers";
 import { calculatePortfolioTotals, computeAllocationByType } from "@/lib/portfolio-summary";
 import { normalizeCurrency } from "@/lib/utils";
@@ -29,6 +31,11 @@ export async function buildPortfolioSnapshot(opts: {
   userId: string;
   portfolioId?: string;
   baseCurrency?: string;
+  /**
+   * When true, attach dividend estimates per top holding and savings goals
+   * (same shape as the legacy client-built Portfolio AI snapshot).
+   */
+  enrichForPortfolioAi?: boolean;
 }): Promise<PortfolioSnapshot> {
   const baseCurrency = (opts.baseCurrency || "EUR").toUpperCase();
   const portfolioId = opts.portfolioId
@@ -77,7 +84,7 @@ export async function buildPortfolioSnapshot(opts: {
   const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
   const allocation = computeAllocationByType(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
 
-  const topHoldings = holdings
+  let topHoldings: PortfolioSnapshot["topHoldings"] = holdings
     .map((h) => buildTopHoldingRow(h, quotes, exchangeRates, totals.totalCurrentEUR))
     .sort((a, b) => b.value - a.value)
     .slice(0, 20);
@@ -91,7 +98,7 @@ export async function buildPortfolioSnapshot(opts: {
     {} as Record<string, number>,
   );
 
-  return {
+  const base: PortfolioSnapshot = {
     baseCurrency,
     totals: {
       value: round(totals.totalCurrentEUR),
@@ -104,6 +111,48 @@ export async function buildPortfolioSnapshot(opts: {
     topHoldings,
     allocation: allocation.map((a) => ({ type: a.label, pct: round(a.percent, 1) })),
     cashSummary,
+  };
+
+  if (!opts.enrichForPortfolioAi) {
+    return base;
+  }
+
+  const effectivePortfolioId = await resolvePortfolioId(opts.userId, opts.portfolioId);
+  const estimated = computeEstimatedDividends(holdings, quotes, exchangeRates);
+  const totalEstimatedDividendsEUR = computeTotalEstimatedEUR(estimated);
+  const divByTicker = new Map(estimated.map((d) => [d.ticker, d]));
+
+  topHoldings = base.topHoldings.map((row) => {
+    const div = divByTicker.get(row.ticker);
+    if (!div) return row;
+    return {
+      ...row,
+      trailingAnnualDividendPerShare: round(div.annualDividendPerShare, 4),
+      dividendYield: round(div.dividendYield, 2),
+      estimatedAnnualDividend: round(div.annualIncomeEUR, 2),
+      dividendCurrency: div.currency,
+    };
+  });
+
+  const goalsRaw = await listGoalsForPortfolio(opts.userId, effectivePortfolioId);
+  const portfolioValue = base.totals.value;
+  const goals = goalsRaw.map((g) => ({
+    name: g.name,
+    target: g.targetAmount,
+    progress:
+      portfolioValue > 0 && g.targetAmount > 0 ? round((portfolioValue / g.targetAmount) * 1000, 0) / 10 : 0,
+  }));
+
+  return {
+    ...base,
+    topHoldings,
+    dividends: {
+      totalEstimatedAnnualEUR: round(totalEstimatedDividendsEUR, 2),
+      portfolioYield:
+        portfolioValue > 0 ? round((totalEstimatedDividendsEUR / portfolioValue) * 10000, 0) / 100 : 0,
+      payingHoldings: estimated.length,
+    },
+    goals,
   };
 }
 

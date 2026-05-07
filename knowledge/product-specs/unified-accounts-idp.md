@@ -26,6 +26,7 @@ OIDC client that reads entitlements via JWT claims and a small REST API.
 | API | [`src/app/api/auth/me/route.ts`](../../src/app/api/auth/me/route.ts) | Fires `syncEntitlementsForUser` on every refresh. |
 | Lib | [`src/lib/idp/`](../../src/lib/idp) | OIDC helpers, REST client, entitlements bridge. |
 | Script | [`scripts/migrate-users-to-idp.ts`](../../scripts/migrate-users-to-idp.ts) | One-shot user migration. |
+| Script | [`scripts/migrate-trefolio-subscriptions-to-idp.ts`](../../scripts/migrate-trefolio-subscriptions-to-idp.ts) | Copy trefolio Stripe `customer` / `subscription` ids into the IdP after `idp_sub` exists. |
 | Script | [`scripts/send-unified-accounts-email.ts`](../../scripts/send-unified-accounts-email.ts) | Cutover transactional email. |
 | Runbook | [`knowledge/runbooks/unified-accounts-cutover.md`](../runbooks/unified-accounts-cutover.md) | Operator playbook for Phase 6. |
 | Design doc | [`knowledge/design-docs/unified-accounts-and-billing.md`](../design-docs/unified-accounts-and-billing.md) | Architecture, security review, observability. |

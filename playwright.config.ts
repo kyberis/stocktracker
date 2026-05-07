@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  /** Opt-in IdP browser flow (`e2e/idp-browser-smoke.spec.ts`); set `E2E_IDP_BROWSER=1` to collect it. */
+  testIgnore: process.env.E2E_IDP_BROWSER === "1" ? [] : ["**/idp-browser-smoke.spec.ts"],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -24,6 +26,6 @@ export default defineConfig({
         port: 3000,
         timeout: 120_000,
         reuseExistingServer: !process.env.CI,
-        env: { E2E: "1" },
+        env: { E2E: "1", USE_LEGACY_AUTH: "true" },
       },
 });

@@ -22,7 +22,7 @@ import {
   syncEntitlementsForUser,
 } from "@/lib/idp/entitlements";
 import { isIdpEnabled } from "@/lib/idp/config";
-import { sendWelcomeEmail, getEmailLocale } from "@/lib/email";
+import { sendWelcomeEmail, sendAdminNewCustomerNotification, getEmailLocale } from "@/lib/email";
 import {
   getRequestPublicOrigin,
   isRequestPublicHttps,
@@ -166,12 +166,16 @@ export async function GET(req: NextRequest) {
     if (!dbUser) {
       return errorRedirect(req, "Could not provision local account.");
     }
+    const normalizedEmail = (claims.email || "").toLowerCase();
     sendWelcomeEmail(
-      (claims.email || "").toLowerCase(),
+      normalizedEmail,
       claims.name || "",
       getEmailLocale(claims.locale || "en"),
       publicUser.id,
     ).catch((err) => console.error("[oidc] welcome email failed", err));
+    sendAdminNewCustomerNotification(normalizedEmail, claims.name || "", "oidc").catch((err) =>
+      console.error("[oidc] admin new customer notification failed", err),
+    );
   }
 
   // Sync entitlements in the background — never block the redirect on IdP

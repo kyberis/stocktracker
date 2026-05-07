@@ -10,6 +10,7 @@ import type { UpsellReason, UpsellSurface } from "@/lib/upsell";
 import type { TranslationKey } from "@/lib/i18n";
 import TierIcon from "@/components/TierIcon";
 import QuotaCompareTable from "@/components/QuotaCompareTable";
+import { resolveBillingPortalHref } from "@/lib/idp/config";
 
 interface CapacityInfo {
   available: boolean;
@@ -169,7 +170,7 @@ export default function ProCompareCard({
     setBillingError("");
     setBillingLoading("portal");
     track("billing_portal_opened", { source: "compare_card" });
-    window.location.href = "/api/billing/portal";
+    window.location.href = resolveBillingPortalHref();
   };
 
   const atCapacity = capacity !== null && !capacity.available;

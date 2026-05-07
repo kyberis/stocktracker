@@ -81,6 +81,21 @@ The service-token import endpoint `POST /api/v1/admin/users/import` returns **40
 with `{ "error": "stripe_managed_pro", … }` when the JSON body explicitly sets
 `"plan": "free"` for a user who is **Pro** with **`source`** from Stripe (same rule as the admin UI).
 
+### Upgrade funnel (`/upgrade`)
+- Pre-checkout landing lists ecosystem value (trefolio, Clara, Will), optional **5-second** countdown, then redirects into Stripe Checkout.
+- **`POST /api/billing/log-intent`** records subscription checkout intent (`subscription_checkout_intents`).
+- Success/cancel return URLs render onboarding copy and links to each product.
+
+### Billing portal
+- End users: **`GET /api/billing/portal`** (session required) creates a Stripe Billing Portal session for the signed-in user’s Stripe customer.
+- Admins: **`GET /api/admin/billing-portal?sub=…`** opens the portal for **another** user’s customer record (manage subscription / cancel).
+
+### Grant membership (email + activate)
+- Same operational pattern as trefolio admin: pending token columns on `users`, **Resend** invitation email, **`/membership-grant/activate`**, **`POST /api/membership-grant/activate`**.
+- Blocked when Stripe reports an active managed subscription (`hasActiveManagedStripeSubscriptionIdp`), mirroring Warren.
+
+
+
 ## Trade-offs
 - **No write actions on remote products.** The IdP admin shows links into
   each product's admin instead of mutating remote state directly. Reasoning:

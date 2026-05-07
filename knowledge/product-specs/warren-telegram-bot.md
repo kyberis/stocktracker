@@ -79,6 +79,11 @@ the web Warren drawer is maintained:
 Web `/api/warren/chat` is unchanged in behavior; it now delegates to the same
 `runWarrenTurn` core.
 
+### Prompt-injection mitigations (web Warren + legacy Portfolio AI)
+
+- [`/api/warren/chat`](../../src/app/api/warren/chat/route.ts) validates `activePortfolioId` against `listPortfolios(session.userId)`, ignores client-supplied portfolio display names (uses the database name through [`sanitizeWarrenPortfolioLabel`](../../src/lib/ai/prompt-safety.ts)), and parses `portfolioContext` with [`warrenPortfolioSnapshotSchema`](../../src/lib/ai/warren/portfolio-snapshot-zod.ts) (strict — unknown keys rejected).
+- [`/api/portfolio/ai-chat`](../../src/app/api/portfolio/ai-chat/route.ts) builds the portfolio JSON snapshot **only on the server** via [`buildPortfolioSnapshot`](../../src/lib/ai/warren/build-snapshot.ts) with `enrichForPortfolioAi: true`. The POST body accepts `includePortfolioData`, `activePortfolioId`, and `baseCurrency` instead of raw `portfolioContext`. Stealth mode sends `includePortfolioData: false`.
+
 ## 8. External dependencies
 
 - Telegram Bot API (HTTPS — no SDK).

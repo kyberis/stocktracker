@@ -2,22 +2,40 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 import { NextRequest } from "next/server";
+import { z } from "zod";
+
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
-import { findUserById, getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, getAiModelForFlow } from "@/lib/db";
+import {
+  findUserById,
+  getGlobalOpenAIApiKey,
+  incrementAiUsage,
+  incrementDailyAiUsage,
+  incrementAiTokenUsage,
+  incrementDailyAiTokenUsage,
+  insertAiLog,
+  getAiModelForFlow,
+  listPortfolios,
+} from "@/lib/db";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { createAiStream } from "@/lib/ai-stream";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 import type { SubscriptionPlan } from "@/lib/types";
-import { z } from "zod";
+import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
+import { portfolioTelemetryInjectionGuard } from "@/lib/ai/prompt-safety";
 
-const portfolioAiSchema = z.object({
-  messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() })).min(1).max(30),
-  language: z.string().optional(),
-  portfolioContext: z.any().optional(),
-});
+const portfolioAiSchema = z
+  .object({
+    messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() })).min(1).max(30),
+    language: z.string().optional(),
+    /** When false (e.g. stealth mode), no portfolio JSON is sent to the model. */
+    includePortfolioData: z.boolean().optional().default(true),
+    activePortfolioId: z.string().optional(),
+    baseCurrency: z.string().optional().default("EUR"),
+  })
+  .strict();
 
 export const POST = withMetrics("/api/portfolio/ai-chat", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "ai_consult");
@@ -63,16 +81,40 @@ export const POST = withMetrics("/api/portfolio/ai-chat", async (request: NextRe
     return Response.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { messages, language, portfolioContext } = body;
+  const { messages, language, includePortfolioData, activePortfolioId, baseCurrency } = body;
   const lang = languageCodeToName(language || "en");
 
-  const contextBlock = portfolioContext ? JSON.stringify(portfolioContext, null, 2) : "No portfolio data shared.";
+  let contextBlock = "No portfolio data shared.";
+  if (includePortfolioData) {
+    const portfolios = await listPortfolios(session.userId);
+    let pid = activePortfolioId;
+    if (pid && !portfolios.some((p) => p.id === pid)) {
+      pid = undefined;
+    }
+    const active = portfolios.find((p) => p.id === pid) || portfolios.find((p) => p.isDefault) || portfolios[0];
+    try {
+      const snap = await buildPortfolioSnapshot({
+        userId: session.userId,
+        portfolioId: active?.id,
+        baseCurrency: baseCurrency || "EUR",
+        enrichForPortfolioAi: true,
+      });
+      contextBlock = JSON.stringify(snap, null, 2);
+    } catch (err) {
+      console.error("[portfolio/ai-chat] snapshot build failed", err);
+      contextBlock = "No portfolio data shared (snapshot could not be loaded).";
+    }
+  }
+
+  const guard = portfolioTelemetryInjectionGuard(`respond in ${lang}`);
 
   const systemPrompt = `You are **Portfolio AI**, an intelligent portfolio analysis assistant embedded in the trefolio investment tracking app.
 
 The user has shared their portfolio snapshot below (JSON). Use it to answer questions about their holdings, performance, risk, diversification, dividends, and goals.
 
-The snapshot includes per-holding data: currentPrice, purchasePrice, totalGainPct (since purchase), dayChangePct (today), fiftyTwoWeekHigh/Low, dividend rates, sector, region, and portfolio-level totals and allocation.
+The snapshot includes per-holding data: currentPrice, purchasePrice, totalGainPct (since purchase), dayChangePct (today), fiftyTwoWeekHigh/Low, dividend fields when available, sector, region, and portfolio-level totals and allocation.
+
+${guard}
 
 Rules:
 - Write in ${lang}.
@@ -80,7 +122,7 @@ Rules:
 - Be specific: reference actual ticker symbols, values, and percentages from the data.
 - Use bullet points or short paragraphs for readability.
 - When discussing risk or concentration, reference actual sector/region weights.
-- For dividend estimates, use trailing annual dividend rates and estimated annual dividends from the data.
+- For dividend estimates, use trailing annual dividend data from the snapshot when present.
 - When the user asks about a time period not directly available (e.g. "this month"), use the best available metric (e.g. totalGainPct since purchase, dayChangePct for today, proximity to 52-week high/low) and clearly state which metric you are using as a proxy.
 - Keep responses under 400 words unless the user asks for detail.
 - End every response with a brief reminder that this is AI-generated analysis and **not financial advice**.

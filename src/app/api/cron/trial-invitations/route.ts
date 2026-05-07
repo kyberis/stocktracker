@@ -5,6 +5,8 @@ import { str } from "@/lib/db/helpers";
 import { isFeatureEnabled } from "@/lib/db";
 import { sendTrialInvitationEmail, getEmailLocale } from "@/lib/email";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
+import { grantsAndTrialsRedirectToIdp } from "@/lib/idp/config";
+import { syncTrialTokenToIdp } from "@/lib/idp/client";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -39,6 +41,18 @@ LIMIT 100`,
     const userId = str(row.id);
     try {
       const token = randomBytes(32).toString("hex");
+      if (grantsAndTrialsRedirectToIdp()) {
+        try {
+          await syncTrialTokenToIdp({
+            email: str(row.email),
+            trialToken: token,
+          });
+        } catch (err) {
+          console.error(`[cron:trial-invitations] idp sync failed user ${userId}:`, err);
+          errors++;
+          continue;
+        }
+      }
       await client.execute({
         sql: "UPDATE users SET trial_token = ?, trial_invited_at = datetime('now') WHERE id = ?",
         args: [token, userId],

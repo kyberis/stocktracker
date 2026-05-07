@@ -124,4 +124,29 @@ export function importUser(payload: ImportUserPayload): Promise<ImportUserRespon
   });
 }
 
+/** Copies Warren `trial_token` to the IdP so invitation links on user.* validate. */
+export function syncTrialTokenToIdp(payload: {
+  email: string;
+  trialToken: string;
+}): Promise<{ ok: boolean }> {
+  return call(`/v1/admin/users/sync-trial-token`, {
+    method: "POST",
+    body: JSON.stringify({
+      email: payload.email,
+      trialToken: payload.trialToken,
+    }),
+  });
+}
+
+/** Creates pending grant + sends invitation email from the IdP (unified claim URL). */
+export function inviteMembershipGrantViaIdp(payload: {
+  email: string;
+  days: number;
+}): Promise<{ ok: boolean; sub: string }> {
+  return call(`/v1/admin/users/membership-grant-invite`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export { IdpClientError };

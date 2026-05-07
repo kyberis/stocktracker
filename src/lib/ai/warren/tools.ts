@@ -44,9 +44,20 @@ export interface PortfolioSnapshot {
     totalGainPct?: number;
     fiftyTwoWeekHigh?: number;
     fiftyTwoWeekLow?: number;
+    trailingAnnualDividendPerShare?: number;
+    dividendYield?: number;
+    estimatedAnnualDividend?: number;
+    dividendCurrency?: string;
   }>;
   allocation: Array<{ type: string; pct: number }>;
   cashSummary: Record<string, number>;
+  /** Optional: included when the snapshot is built for Portfolio AI chat. */
+  dividends?: {
+    totalEstimatedAnnualEUR: number;
+    portfolioYield: number;
+    payingHoldings: number;
+  };
+  goals?: Array<{ name: string; target: number; progress: number }>;
 }
 
 export interface WarrenToolContext {

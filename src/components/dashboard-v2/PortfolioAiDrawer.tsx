@@ -5,9 +5,8 @@ import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { useStealthMode } from "@/lib/stealth-context";
-import { calculatePortfolioTotals, computeAllocationByType } from "@/lib/portfolio-summary";
-import { computeEstimatedDividends, computeTotalEstimatedEUR } from "@/lib/services/dividend-calculator";
-import { convertToEUR, formatCurrency, resolveQuoteCurrency } from "@/lib/utils";
+import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { formatCurrency } from "@/lib/utils";
 import AiMarkdown from "@/components/AiMarkdown";
 
 interface Message {
@@ -21,101 +20,9 @@ interface Props {
   autoAnalyze?: boolean;
 }
 
-function buildPortfolioSnapshot(
-  holdings: ReturnType<typeof usePortfolio>["holdings"],
-  cashEntries: ReturnType<typeof usePortfolio>["cashEntries"],
-  quotes: ReturnType<typeof usePortfolio>["quotes"],
-  exchangeRates: ReturnType<typeof usePortfolio>["exchangeRates"],
-  baseCurrency: string,
-  goals: ReturnType<typeof usePortfolio>["goals"],
-) {
-  const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
-  const allocation = computeAllocationByType(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
-
-  const estimatedDividends = computeEstimatedDividends(holdings, quotes, exchangeRates);
-  const totalEstimatedDividendsEUR = computeTotalEstimatedEUR(estimatedDividends);
-  const divByTicker = new Map(estimatedDividends.map((d) => [d.ticker, d]));
-
-  const topHoldings = holdings
-    .map((h) => {
-      const q = quotes[h.ticker];
-      const price = q?.regularMarketPrice ?? h.purchasePrice;
-      const localValue = price * h.shares;
-      const quoteCur = q ? resolveQuoteCurrency(h.displayCurrency, q.currency) : h.displayCurrency;
-      const valueEUR = convertToEUR(localValue, quoteCur, exchangeRates);
-      const dayChangePct = q?.regularMarketChangePercent ?? 0;
-      const costBasis = h.purchasePrice * h.shares;
-      const gainPct = costBasis > 0 ? ((localValue - costBasis) / costBasis) * 100 : 0;
-      const div = divByTicker.get(h.ticker);
-      return {
-        ticker: h.ticker,
-        name: h.name || h.ticker,
-        shares: h.shares,
-        currentPrice: q ? Math.round(q.regularMarketPrice * 100) / 100 : undefined,
-        purchasePrice: Math.round(h.purchasePrice * 100) / 100,
-        currency: q?.currency || h.displayCurrency,
-        value: Math.round(valueEUR * 100) / 100,
-        weight: totals.totalCurrentEUR > 0 ? Math.round((valueEUR / totals.totalCurrentEUR) * 10000) / 100 : 0,
-        sector: h.sector || undefined,
-        region: h.region || undefined,
-        assetType: h.assetType || "stock",
-        dayChangePct: Math.round(dayChangePct * 100) / 100,
-        totalGainPct: Math.round(gainPct * 100) / 100,
-        fiftyTwoWeekHigh: q?.fiftyTwoWeekHigh || undefined,
-        fiftyTwoWeekLow: q?.fiftyTwoWeekLow || undefined,
-        ...(div && {
-          trailingAnnualDividendPerShare: div.annualDividendPerShare,
-          dividendYield: Math.round(div.dividendYield * 100) / 100,
-          estimatedAnnualDividend: Math.round(div.annualIncome * 100) / 100,
-          dividendCurrency: div.currency,
-        }),
-      };
-    })
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 20);
-
-  const cashSummary = cashEntries.reduce(
-    (acc, c) => {
-      const key = c.displayCurrency || "EUR";
-      acc[key] = (acc[key] || 0) + c.amountEUR;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
-
-  return {
-    baseCurrency,
-    totals: {
-      value: Math.round(totals.totalCurrentEUR * 100) / 100,
-      cost: Math.round(totals.totalCostEUR * 100) / 100,
-      gainLoss: Math.round(totals.totalGainLoss * 100) / 100,
-      gainLossPct: Math.round(totals.totalGainLossPercent * 100) / 100,
-      dayChange: Math.round(totals.dayGainLossEUR * 100) / 100,
-    },
-    holdingsCount: holdings.length,
-    topHoldings,
-    allocation: allocation.map((a) => ({ type: a.label, pct: Math.round(a.percent * 10) / 10 })),
-    cashSummary,
-    dividends: {
-      totalEstimatedAnnualEUR: Math.round(totalEstimatedDividendsEUR * 100) / 100,
-      portfolioYield: totals.totalCurrentEUR > 0
-        ? Math.round((totalEstimatedDividendsEUR / totals.totalCurrentEUR) * 10000) / 100
-        : 0,
-      payingHoldings: estimatedDividends.length,
-    },
-    goals: goals.map((g) => ({
-      name: g.name,
-      target: g.targetAmount,
-      progress: totals.totalCurrentEUR > 0 && g.targetAmount > 0
-        ? Math.round((totals.totalCurrentEUR / g.targetAmount) * 1000) / 10
-        : 0,
-    })),
-  };
-}
-
 export default function PortfolioAiDrawer({ isOpen, onClose, autoAnalyze }: Props) {
   const { t, language } = useI18n();
-  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, goals, demoMode } =
+  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode } =
     usePortfolio();
   const { user, refreshUser } = useAuth();
   const { stealthMode } = useStealthMode();
@@ -155,17 +62,15 @@ export default function PortfolioAiDrawer({ isOpen, onClose, autoAnalyze }: Prop
       setStreaming(true);
 
       try {
-        const snapshot = stealthMode
-          ? undefined
-          : buildPortfolioSnapshot(holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, goals);
-
         const res = await fetch("/api/portfolio/ai-chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
             language,
-            portfolioContext: snapshot,
+            includePortfolioData: !stealthMode,
+            activePortfolioId: activePortfolioId ?? undefined,
+            baseCurrency: activePortfolioCurrency,
           }),
         });
 
@@ -205,7 +110,7 @@ export default function PortfolioAiDrawer({ isOpen, onClose, autoAnalyze }: Prop
         setStreaming(false);
       }
     },
-    [messages, streaming, demoMode, stealthMode, holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, goals, language, t, refreshUser],
+    [messages, streaming, demoMode, stealthMode, activePortfolioId, activePortfolioCurrency, language, t, refreshUser],
   );
 
   useEffect(() => {

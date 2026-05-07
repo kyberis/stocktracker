@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import TierIcon from "@/components/TierIcon";
@@ -221,7 +222,7 @@ function getAgentsTeam(t: T) {
       cta: t("landingAgentsWarrenCta"),
       href: "/signup",
       accent: "emerald" as const,
-      letter: "W",
+      iconSrc: "/avatars/warren-512.png",
     },
     {
       name: t("landingAgentsClaraName"),
@@ -231,7 +232,7 @@ function getAgentsTeam(t: T) {
       href: "https://clara.trefolio.com",
       external: true,
       accent: "amber" as const,
-      letter: "C",
+      iconSrc: "/avatars/clara-512.png",
     },
     {
       name: t("landingAgentsWillName"),
@@ -241,7 +242,7 @@ function getAgentsTeam(t: T) {
       href: "https://will.trefolio.com",
       external: true,
       accent: "violet" as const,
-      letter: "W",
+      iconSrc: "/avatars/will-512.png",
     },
   ];
 }
@@ -740,8 +741,18 @@ function AgentsTeamSection() {
                 key={agent.name}
                 className="relative bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
               >
-                <div className={`w-12 h-12 rounded-xl ${c.bg} ring-4 ${c.ring} flex items-center justify-center text-white text-xl font-bold mb-5`}>
-                  {agent.letter}
+                <div
+                  className={`w-14 h-14 rounded-xl bg-white ring-4 ${c.ring} flex items-center justify-center p-1.5 mb-5 overflow-hidden shrink-0`}
+                  aria-hidden
+                >
+                  <Image
+                    src={agent.iconSrc}
+                    alt=""
+                    width={48}
+                    height={48}
+                    className="object-contain w-full h-full"
+                    sizes="56px"
+                  />
                 </div>
                 <div className="mb-3">
                   <h3 className="text-2xl font-bold text-slate-900">{agent.name}</h3>

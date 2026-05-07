@@ -79,6 +79,53 @@ export function billingRedirectToIdp(): boolean {
   return process.env.BILLING_REDIRECT_TO_IDP === "true";
 }
 
+/** Stripe Billing Portal on the IdP (requires IdP session cookie on that origin). */
+export function getIdpBillingPortalUrl(): string | null {
+  const issuer = getIdpIssuer();
+  if (!issuer) return null;
+  return `${issuer.replace(/\/+$/, "")}/api/billing/portal`;
+}
+
+/**
+ * Customer portal URL: IdP when unified billing is enabled, otherwise the local API route.
+ */
+export function resolveBillingPortalHref(): string {
+  if (billingRedirectToIdp()) {
+    const idp = getIdpBillingPortalUrl();
+    if (idp) return `${idp}?from=trefolio`;
+  }
+  return "/api/billing/portal";
+}
+
+/**
+ * When `true`, trial invitation and admin membership-grant emails use
+ * `user.trefolio.com` for claim/activate links, and trefolio re-exports those
+ * URLs from cron/admin instead of hosting `/trial/activate` locally.
+ *
+ * Requires IdP session on claim pages. Cron syncs `trial_token` to the IdP via
+ * service token (`syncTrialTokenToIdp`).
+ */
+export function grantsAndTrialsRedirectToIdp(): boolean {
+  return process.env.GRANTS_AND_TRIALS_REDIRECT_TO_IDP === "true";
+}
+
+/** Absolute activate URL on the IdP issuer, or null to keep product-hosted pages. */
+export function resolveIdpTrialActivateUrl(token: string): string | null {
+  if (!grantsAndTrialsRedirectToIdp()) return null;
+  const issuer = getIdpIssuer();
+  if (!issuer) return null;
+  const base = issuer.replace(/\/+$/, "");
+  return `${base}/trial/activate?token=${encodeURIComponent(token)}&utm_source=email&utm_medium=transactional&utm_campaign=trial_invitation`;
+}
+
+export function resolveIdpMembershipGrantActivateUrl(token: string): string | null {
+  if (!grantsAndTrialsRedirectToIdp()) return null;
+  const issuer = getIdpIssuer();
+  if (!issuer) return null;
+  const base = issuer.replace(/\/+$/, "");
+  return `${base}/membership-grant/activate?token=${encodeURIComponent(token)}&utm_source=email&utm_medium=transactional&utm_campaign=membership_grant_invitation`;
+}
+
 /** Returns true when the IdP is configured well enough to call. */
 export function isIdpEnabled(): boolean {
   return Boolean(getIdpBaseUrl() && getIdpClientId() && getIdpClientSecret());
