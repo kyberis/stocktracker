@@ -136,6 +136,9 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
     if (msg.includes("STRIPE_SECRET_KEY")) {
       return NextResponse.json({ error: "Stripe is not configured on this server." }, { status: 501 });
     }
-    return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create checkout session", message: msg },
+      { status: 500 }
+    );
   }
 });

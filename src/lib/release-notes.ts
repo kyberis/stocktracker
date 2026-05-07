@@ -40,6 +40,13 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "improvement",
+        text: "Stripe checkout failures from `/api/billing/checkout` now include the provider error in JSON (`message`) and the upgrade card surfaces it when present, making misconfigured Price IDs easier to diagnose.",
+        translations: {
+          es: "Los fallos de Stripe en `/api/billing/checkout` incluyen ahora el error del proveedor en JSON (`message`) y la tarjeta de mejora lo muestra si viene informado, facilitando diagnosticar Price IDs mal configurados.",
+        },
+      },
+      {
+        type: "improvement",
         text: "Portfolio AI chat and Warren web chat reduce prompt-injection risk: portfolio telemetry for Portfolio AI is built only on the server; Warren validates the active portfolio against your account, uses the database portfolio name, applies a strict snapshot schema, and tightens system-prompt label sanitisation.",
         translations: {
           es: "El chat de IA de cartera y Warren en la web reducen el riesgo de inyección de prompts: los datos de cartera para Portfolio AI se generan solo en el servidor; Warren valida la cartera activa frente a tu cuenta, usa el nombre en base de datos, aplica un esquema estricto del snapshot y sanea las etiquetas en el system prompt.",

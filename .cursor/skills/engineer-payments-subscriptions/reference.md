@@ -23,6 +23,17 @@
 - `STRIPE_PRICE_PRO_ANNUAL`
 - `APP_BASE_URL`
 
+### Troubleshooting: `No such price: price_…`
+
+Stripe returns this when the configured Price ID does not exist for the **same Stripe account and mode** (test vs live) as `STRIPE_SECRET_KEY`. Typical causes: the price was archived or recreated under a new ID, the ID was copied from another Stripe account, or test prices are paired with a live secret key (or the reverse).
+
+**Where prices are read**
+
+- **trefolio** (`/api/billing/checkout`): `getStripePriceConfig` — Admin → Settings “Stripe prices” (platform settings DB) **override** env; otherwise `STRIPE_PRICE_PRO_MONTHLY` / `STRIPE_PRICE_PRO_ANNUAL` on the **trefolio** Vercel project.
+- **IdP** (`user.trefolio.com`, when `BILLING_REDIRECT_TO_IDP=true`): checkout runs on **trefolio-accounts**; prices come **only** from that project’s `STRIPE_PRICE_PRO_*` env vars (no DB override there).
+
+Fix: In the Stripe Dashboard for the account your secret key belongs to, open **Products**, select the Pro subscription product, copy the active **Price** IDs for monthly and annual, then set them in Vercel (and `.env.local` for dev). If trefolio Admin prices were set, update or clear those rows so they match the same account/mode.
+
 ## Webhook Event Mapping
 
 - `checkout.session.completed`
