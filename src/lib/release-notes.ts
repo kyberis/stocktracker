@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "fix",
+        text: "Admin Settings no longer crashes when `/api/admin/*` returns 403 (for example while impersonating a user): AdSense config falls back to empty slot defaults, and a banner explains that impersonation blocks platform admin API access.",
+        translations: {
+          es: "Ajustes de admin ya no se caen si `/api/admin/*` responde 403 (p. ej. con suplantación de usuario): la config de AdSense usa valores por defecto y un aviso explica que la suplantación bloquea las APIs de administración de plataforma.",
+        },
+      },
+      {
+        type: "fix",
         text: "Restored the info@trefolio.com “new customer” admin email when the first trefolio account is provisioned after sign-in via user.trefolio.com (OIDC); it was only firing for legacy email/password and Google/Apple callbacks.",
         translations: {
           es: "Se recupera el correo interno a info@trefolio.com por nuevo cliente cuando se crea la cuenta local tras iniciar sesión vía user.trefolio.com (OIDC); antes solo se enviaba con registro clásico por email/contraseña o callbacks de Google/Apple.",

@@ -1924,6 +1924,29 @@ function MockContentBlock({ label }: { label: string }) {
   );
 }
 
+/** Matches server defaults when GET /api/admin/ad-config fails (403, network, malformed JSON). */
+function fallbackAdConfigShape(): {
+  clientId: string;
+  globalEnabled: boolean;
+  slots: Record<string, { enabled: boolean; slotId: string }>;
+} {
+  const slots: Record<string, { enabled: boolean; slotId: string }> = {};
+  for (const key of Object.keys(AD_SLOT_META)) {
+    slots[key] = { enabled: true, slotId: "" };
+  }
+  return { clientId: "", globalEnabled: false, slots };
+}
+
+function isAdConfigPayload(d: unknown): d is {
+  clientId: string;
+  globalEnabled: boolean;
+  slots: Record<string, { enabled: boolean; slotId: string }>;
+} {
+  if (!d || typeof d !== "object") return false;
+  const o = d as Record<string, unknown>;
+  return typeof o.slots === "object" && o.slots !== null && !Array.isArray(o.slots);
+}
+
 function MockAdBlock({ slotKey, slots }: { slotKey: string; slots: Record<string, { enabled: boolean; slotId: string }> }) {
   const meta = AD_SLOT_META[slotKey];
   const slot = slots[slotKey];
@@ -1973,19 +1996,39 @@ function AdConfigCard() {
   useEffect(() => {
     if (loadedRef.current || batch === undefined) return;
     loadedRef.current = true;
-    if (batch?.adConfig) {
+    if (batch?.adConfig && isAdConfigPayload(batch.adConfig)) {
       setConfig(batch.adConfig);
       setDraft(JSON.parse(JSON.stringify(batch.adConfig)));
       setLoading(false);
       return;
     }
     fetch("/api/admin/ad-config", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => {
+      .then(async (r) => {
+        const d = await r.json().catch(() => null);
+        if (!r.ok || !isAdConfigPayload(d)) {
+          console.warn("[SettingsTab] ad-config unavailable", r.status, d);
+          const fb = fallbackAdConfigShape();
+          setConfig(fb);
+          setDraft(fb);
+          if (!r.ok) {
+            setError(
+              r.status === 403
+                ? "Not authorized to load ad settings (stop impersonation or sign in as admin)."
+                : "Could not load AdSense settings."
+            );
+          }
+          return;
+        }
         setConfig(d);
         setDraft(JSON.parse(JSON.stringify(d)));
       })
-      .catch((err) => console.error("[SettingsTab] request failed:", err))
+      .catch((err) => {
+        console.error("[SettingsTab] request failed:", err);
+        const fb = fallbackAdConfigShape();
+        setConfig(fb);
+        setDraft(fb);
+        setError("Could not load AdSense settings.");
+      })
       .finally(() => setLoading(false));
   }, [batch]);
 
@@ -2020,11 +2063,12 @@ function AdConfigCard() {
 
   const updateSlot = (key: string, field: "enabled" | "slotId", value: boolean | string) => {
     if (!draft) return;
+    const prev = draft.slots?.[key] ?? { enabled: false, slotId: "" };
     setDraft({
       ...draft,
       slots: {
-        ...draft.slots,
-        [key]: { ...draft.slots[key], [field]: value },
+        ...(draft.slots ?? {}),
+        [key]: { ...prev, [field]: value },
       },
     });
     setError("");
@@ -2060,7 +2104,7 @@ function AdConfigCard() {
     rose: "bg-rose-50 dark:bg-rose-500/5",
   };
 
-  const enabledCount = Object.values(draft.slots).filter((s) => s.enabled && s.slotId).length;
+  const enabledCount = Object.values(draft.slots ?? {}).filter((s) => s.enabled && s.slotId).length;
 
   return (
     <div className="card p-6">
@@ -2863,6 +2907,21 @@ export default function SettingsTab() {
   return (
     <BatchSettingsContext.Provider value={batch}>
       <div className="space-y-6">
+        {batch != null &&
+          typeof batch === "object" &&
+          !("flags" in batch) &&
+          "error" in batch && (
+            <div
+              role="alert"
+              className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200"
+            >
+              <p className="font-medium">Admin settings API returned forbidden.</p>
+              <p className="text-xs mt-1 text-amber-800/90 dark:text-amber-300/90">
+                If you are <strong>impersonating</strong> a user, stop impersonation to load secrets and platform config.
+                Otherwise confirm your account has the admin role.
+              </p>
+            </div>
+          )}
         <AiModelConfigCard />
         <ExternalServicesCard />
         <PromoBannerCard />
