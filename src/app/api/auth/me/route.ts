@@ -17,6 +17,8 @@ import { planExpiredNotification } from "@/lib/notification-templates";
 import { withMetrics } from "@/lib/with-metrics";
 import { syncEntitlementsForUser } from "@/lib/idp/entitlements";
 import { isIdpEnabled } from "@/lib/idp/config";
+import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
+import { ensureTrefolioAdminRoleForUser } from "@/lib/auth/admin-allowlist";
 
 /**
  * Fire-and-forget: when a plan's grace period has expired, persist the
@@ -56,8 +58,13 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
   if (error || !session) return error;
 
   const impersonatorId = session.impersonatorUserId;
-  const [user, passkeyCount, deviceOn, impersonator] = await Promise.all([
-    findUserById(session.userId),
+  let user = await findUserById(session.userId);
+  if (user) {
+    await ensureTrefolioAdminRoleForUser(user.id, user.email);
+    user = await findUserById(session.userId);
+  }
+
+  const [passkeyCount, deviceOn, impersonator] = await Promise.all([
     countPasskeysByUserId(session.userId),
     isFeatureEnabledForUser("device_enabled", session.userId),
     impersonatorId ? findUserById(impersonatorId) : Promise.resolve(null),
@@ -86,11 +93,13 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
     ]),
   );
 
-  return NextResponse.json({
+  const effectiveRole = user ? (user.role === "admin" ? "admin" : "user") : session.role;
+
+  const response = NextResponse.json({
     user: {
       id: session.userId,
       username: session.username,
-      role: session.role,
+      role: effectiveRole,
       mustChangePassword: session.mustChangePassword,
       email: user?.email || "",
       displayName: user?.display_name || "",
@@ -123,4 +132,21 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
           : null,
     },
   });
+
+  if (user && user.role === "admin" && session.role !== "admin") {
+    const token = await createSessionToken({
+      userId: session.userId,
+      username: user.username,
+      email: user.email || "",
+      role: "admin",
+      mustChangePassword: user.must_change_password === 1,
+      plan: user.plan === "pro" ? "pro" : "free",
+      emailVerified: user.email_verified === 1,
+      onboardingCompleted: user.onboarding_completed === 1,
+      impersonatorUserId: session.impersonatorUserId,
+    });
+    response.cookies.set(getSessionCookieConfig(token));
+  }
+
+  return response;
 });

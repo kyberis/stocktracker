@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "fix",
+        text: "OIDC sign-in and `/api/auth/me` now promote the local trefolio user to `admin` when their email is listed in `TREFOLIO_ADMIN_EMAILS` (or, if unset, the same `IDP_ADMIN_EMAILS` used for user.trefolio.com), and refresh the session cookie so `/api/admin/*` works without a separate database role update.",
+        translations: {
+          es: "El inicio vía OIDC y `/api/auth/me` ahora promueven el usuario local de trefolio a `admin` si su email figura en `TREFOLIO_ADMIN_EMAILS` (o, si no está definida, en el mismo `IDP_ADMIN_EMAILS` que user.trefolio.com) y renuevan la cookie de sesión para que `/api/admin/*` funcione sin tocar el rol a mano en la base de datos.",
+        },
+      },
+      {
+        type: "fix",
         text: "Admin Settings no longer crashes when `/api/admin/*` returns 403 (for example while impersonating a user): AdSense config falls back to empty slot defaults, and a banner explains that impersonation blocks platform admin API access.",
         translations: {
           es: "Ajustes de admin ya no se caen si `/api/admin/*` responde 403 (p. ej. con suplantación de usuario): la config de AdSense usa valores por defecto y un aviso explica que la suplantación bloquea las APIs de administración de plataforma.",

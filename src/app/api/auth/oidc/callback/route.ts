@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ensureDefaultPortfolio,
   findUserByEmail,
+  findUserById,
   createUser,
   trackEvent,
   type DbUser,
@@ -27,6 +28,7 @@ import {
   getRequestPublicOrigin,
   isRequestPublicHttps,
 } from "@/lib/http/request-public-origin";
+import { ensureTrefolioAdminRoleForUser } from "@/lib/auth/admin-allowlist";
 
 /**
  * GET /api/auth/oidc/callback
@@ -184,7 +186,8 @@ export async function GET(req: NextRequest) {
     console.error("[oidc] sync entitlements failed", err),
   );
 
-  const finalUser = dbUser;
+  await ensureTrefolioAdminRoleForUser(dbUser.id, claims.email || dbUser.email);
+  const finalUser = (await findUserById(dbUser.id)) ?? dbUser;
 
   const sessionToken = await createSessionToken({
     userId: finalUser.id,
