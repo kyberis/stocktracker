@@ -25,10 +25,17 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "feature",
-        text: "The identity service (user.trefolio.com) supports English, German, Spanish, French, and Italian for the sign-in UI, check-email flow, and verification emails; trefolio passes your browser language to the IdP via OIDC ui_locales when starting login or signup.",
+        type: "improvement",
+        text: "Your chosen app language is mirrored to a shared cookie so the identity UI (user.trefolio.com) matches trefolio, Clara, and Will instead of only following the browser Accept-Language header.",
         translations: {
-          es: "El servicio de identidad (user.trefolio.com) admite inglés, alemán, español, francés e italiano en la UI de acceso, la pantalla de revisión de correo y los correos de verificación; trefolio envía el idioma del navegador al IdP con ui_locales (OIDC) al iniciar sesión o registro.",
+          es: "El idioma que eliges en la app se refleja en una cookie compartida para que la UI del IdP (user.trefolio.com) coincida con trefolio, Clara y Will, y no dependa solo del encabezado Accept-Language del navegador.",
+        },
+      },
+      {
+        type: "feature",
+        text: "The identity service (user.trefolio.com) supports English, German, Spanish, French, and Italian for the sign-in UI, check-email flow, and verification emails; trefolio sends your active UI locale to the IdP (OIDC ui_locales plus a shared cookie) when starting login or signup.",
+        translations: {
+          es: "El servicio de identidad (user.trefolio.com) admite inglés, alemán, español, francés e italiano en la UI de acceso, la pantalla de revisión de correo y los correos de verificación; trefolio envía tu idioma de interfaz activo al IdP (ui_locales OIDC y una cookie compartida) al iniciar sesión o registro.",
         },
       },
       {

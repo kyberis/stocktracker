@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { getUserSettings, updateUserSettings, findUserById, hasPremiumMarketDataConfigured, getGlobalOpenAIApiKey, resolveAllFlagsForUser } from "@/lib/db";
 import { parseBody } from "@/lib/api-response";
+import { setTrefolioUiLocaleCookieOnNextResponse } from "@/lib/idp/append-trefolio-ui-locale-response";
 import { userSettingsSchema } from "@/lib/schemas";
 import { canAccessTheme } from "@/lib/subscription";
 import { withMetrics } from "@/lib/with-metrics";
@@ -54,10 +55,14 @@ export const PUT = withMetrics("/api/user-settings", async (req: NextRequest) =>
   const updates = result.data;
 
   const next = await updateUserSettings(session.userId, updates);
-  return NextResponse.json({
+  const res = NextResponse.json({
     language: next.language,
     refreshInterval: next.refreshInterval,
     dashboardTheme: next.dashboardTheme,
     defaultCurrency: next.defaultCurrency,
   });
+  if (updates.language !== undefined && typeof updates.language === "string") {
+    setTrefolioUiLocaleCookieOnNextResponse(req, res, updates.language);
+  }
+  return res;
 });

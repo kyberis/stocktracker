@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
-import { buildAuthorizationUrl, deriveCodeChallenge, generateCodeVerifier, uiLocalesFromRequestAcceptLanguage } from "@/lib/idp/oidc";
+import { buildAuthorizationUrl, deriveCodeChallenge, generateCodeVerifier } from "@/lib/idp/oidc";
+import { resolveUiLocalesForIdpRequest } from "@/lib/idp/resolve-ui-locales-for-idp";
 import { isIdpEnabled } from "@/lib/idp/config";
 import {
   getRequestPublicOrigin,
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
     codeChallenge: challenge,
     appHint: "trefolio",
     loginHint,
-    uiLocales: uiLocalesFromRequestAcceptLanguage(req.headers.get("accept-language")),
+    uiLocales: resolveUiLocalesForIdpRequest(req),
   });
 
   const response = NextResponse.redirect(authorizationUrl);

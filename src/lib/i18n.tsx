@@ -5,6 +5,7 @@ import type { Language } from "./types";
 import { isValidLanguage } from "./languages";
 import type { TranslationStrings } from "@/locales/types";
 import en from "@/locales/en";
+import { setTrefolioUiLocaleCookieClient } from "@/lib/idp/trefolio-ui-locale-cookie.client";
 
 export type TranslationKey = keyof typeof en;
 
@@ -85,11 +86,12 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
         if (!res.ok) return;
         const data = await res.json();
         const next = data.language as string | undefined;
-        if (next && isValidLanguage(next)) {
-          setLanguageState(next);
-          const strs = await loadLocale(next);
-          setStrings(strs);
-        }
+        const resolved: Language =
+          next && isValidLanguage(next) ? next : "en";
+        setLanguageState(resolved);
+        const strs = await loadLocale(resolved);
+        setStrings(strs);
+        setTrefolioUiLocaleCookieClient(resolved);
       } catch {
         // Keep default language if request fails.
       }
@@ -101,6 +103,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     if (loadingRef.current) return;
     loadingRef.current = true;
     setLanguageState(lang);
+    setTrefolioUiLocaleCookieClient(lang);
     try {
       const strs = await loadLocale(lang);
       setStrings(strs);
@@ -146,11 +149,12 @@ export function LandingI18nProvider({ children }: { children: React.ReactNode })
   useEffect(() => {
     const stored = localStorage.getItem("trefolio_lang");
     const browserLang = navigator.language.split("-")[0];
-    const detected = stored || browserLang;
-    if (detected && isValidLanguage(detected) && detected !== "en") {
-      setLanguageState(detected);
-      loadLocale(detected).then(setStrings);
-    }
+    let initial: Language = "en";
+    if (stored && isValidLanguage(stored)) initial = stored;
+    else if (isValidLanguage(browserLang)) initial = browserLang;
+    setLanguageState(initial);
+    loadLocale(initial).then(setStrings);
+    setTrefolioUiLocaleCookieClient(initial);
   }, []);
 
   const setLanguage = useCallback(async (lang: Language) => {
@@ -158,6 +162,7 @@ export function LandingI18nProvider({ children }: { children: React.ReactNode })
     loadingRef.current = true;
     setLanguageState(lang);
     localStorage.setItem("trefolio_lang", lang);
+    setTrefolioUiLocaleCookieClient(lang);
     try {
       const strs = await loadLocale(lang);
       setStrings(strs);
