@@ -12,14 +12,20 @@ class IdpClientError extends Error {
   }
 }
 
+/** Bound IdP S2S calls so a slow or hung IdP never blocks the caller indefinitely. */
+const IDP_FETCH_TIMEOUT_MS = 12_000;
+
 async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   const base = getIdpBaseUrl();
   const token = getIdpServiceToken();
   if (!base) throw new Error("IDP_BASE_URL is not configured");
   if (!token) throw new Error("IDP_SERVICE_TOKEN is not configured");
 
+  const { signal: _callerSignal, ...rest } = init;
+
   const res = await fetch(`${base}${path}`, {
-    ...init,
+    ...rest,
+    signal: AbortSignal.timeout(IDP_FETCH_TIMEOUT_MS),
     headers: {
       ...(init.headers ?? {}),
       Authorization: `Bearer ${token}`,

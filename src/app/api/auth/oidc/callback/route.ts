@@ -43,7 +43,8 @@ import {
  *       a. By `idp_sub` if already linked.
  *       b. By email otherwise (links the existing account).
  *       c. Creates a brand-new local user if neither match.
- *  5. Syncs entitlements (pro/free, plan_expires_at) from the ID token.
+ *  5. Schedules an entitlement sync from the IdP (background; does not delay
+ *     the redirect — `/api/auth/me` also reconciles plan lazily).
  *  6. Issues a `trefolio_session` cookie with the local user identity.
  */
 export const dynamic = "force-dynamic";
@@ -173,15 +174,13 @@ export async function GET(req: NextRequest) {
     ).catch((err) => console.error("[oidc] welcome email failed", err));
   }
 
-  // Sync entitlements from the IdP into local users.plan / plan_expires_at.
-  await syncEntitlementsForUser(dbUser.id).catch((err) =>
+  // Sync entitlements in the background — never block the redirect on IdP
+  // latency or outages; /api/auth/me also runs lazyIdpEntitlementSync.
+  void syncEntitlementsForUser(dbUser.id).catch((err) =>
     console.error("[oidc] sync entitlements failed", err),
   );
 
-  // Re-read the user after entitlement sync so the session payload reflects
-  // current plan (the writes above bumped it).
-  const refreshed = await findLocalUserByIdpSub(claims.sub);
-  const finalUser = refreshed ?? dbUser;
+  const finalUser = dbUser;
 
   const sessionToken = await createSessionToken({
     userId: finalUser.id,

@@ -40,6 +40,20 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "improvement",
+        text: "The identity admin user page shows IdP sign-in attempt/failure counts and, for linked Will accounts, Telegram outbound send attempts/failures (requires deploying the matching accounts + Will schema updates).",
+        translations: {
+          es: "La página de detalle de usuario del admin del IdP muestra intentos y fallos de acceso al IdP y, si hay cuenta en Will vinculada, intentos y fallos de envío por Telegram (requiere desplegar los cambios de esquema en accounts y Will).",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Cross-service resilience: trefolio OIDC login no longer waits on IdP entitlement sync before redirecting (sync runs in the background; /api/auth/me still reconciles). IdP S2S HTTP calls from trefolio use a bounded timeout. Clara’s Telegram webhook registers Telegram↔IdP links in the background with short fetch timeouts so IdP slowness does not block bot replies.",
+        translations: {
+          es: "Resiliencia entre servicios: el login OIDC de trefolio ya no espera la sincronización de derechos con el IdP antes de redirigir (se hace en segundo plano; /api/auth/me sigue reconciliando). Las llamadas HTTP S2S al IdP desde trefolio llevan tiempo máximo. El webhook de Telegram de Clara registra el enlace Telegram↔IdP en segundo plano con timeouts cortos para que un IdP lento no bloquee las respuestas del bot.",
+        },
+      },
+      {
+        type: "improvement",
         text: "The identity service (user.trefolio.com) rejects disposable and known fake email domains on password signup and on new Google sign-ups, using the same domain list as trefolio.",
         translations: {
           es: "El servicio de identidad (user.trefolio.com) rechaza dominios de correo desechables y falsos conocidos en el registro con contraseña y en nuevos accesos con Google, con la misma lista que trefolio.",
