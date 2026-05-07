@@ -72,7 +72,7 @@ In `trefolio-accounts`:
 6. **Branded UI**:
    - `/login`, `/signup` — same look and feel as trefolio.
    - `/account` — profile, change password, manage 2FA / passkeys.
-   - `/upgrade?from={trefolio|clara|will}` — single benefits sheet ("One subscription unlocks Warren on trefolio, Clara, and Will. €7.99/mo or €59.99/yr.").
+   - `/upgrade?from={trefolio|clara|will}` — shared Trefolio Pro pricing; copy and benefit order emphasize the app the user arrived from (see `external/accounts/src/lib/upgrade-from-copy.ts`).
    - `/billing` — Stripe portal redirect.
 
 ### Phase 2 — Trefolio integrates IdP (~3–5 days, this repo)
@@ -93,8 +93,8 @@ Most of Phase 2 ships in this repo, gated by `IDP_BASE_URL` and `USE_LEGACY_AUTH
    - Calls IdP admin API (`POST /v1/admin/users/import` with `{ email, passwordHash, googleId?, appleId?, plan, proUntil }`) to create or claim each user.
    - Writes returned `sub` back to `users.idp_sub`.
    - Idempotent; safe to re-run.
-6. Stripe redirect: when `BILLING_REDIRECT_TO_IDP=true`, the upgrade button on `/profile?section=subscription` links to `https://user.trefolio.com/upgrade?from=trefolio` instead of opening local Stripe checkout.
-7. Local [`billing/webhook/route.ts`](../../../src/app/api/billing/webhook/route.ts) becomes a no-op behind the same flag (returns 200, logs).
+6. Stripe redirect: when `BILLING_REDIRECT_TO_IDP=true` (deploy **together** with `USE_LEGACY_AUTH=false` per [`unified-accounts-cutover.md`](../../runbooks/unified-accounts-cutover.md) Step 3), the upgrade button on `/profile?section=subscription` links to `https://user.trefolio.com/upgrade?from=trefolio` instead of opening local Stripe checkout.
+7. Local [`billing/webhook/route.ts`](../../../src/app/api/billing/webhook/route.ts) becomes a no-op when `USE_LEGACY_AUTH=false` (returns 200, logs); the IdP webhook is the single Stripe consumer.
 
 ### Phase 3 — Clara integrates IdP (~3 days, in `kyberis/etracker`)
 

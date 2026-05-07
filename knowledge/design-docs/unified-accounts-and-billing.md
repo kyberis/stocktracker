@@ -145,7 +145,7 @@ The plan ships incrementally. Each app gets a feature flag `USE_LEGACY_AUTH` (de
 ### Cross-product
 
 - Telegram linking from Clara or Will MUST call `POST /v1/telegram/link` on the IdP. Local `User.telegramUserId` columns are deprecated; an unlinked Telegram account in any app cannot bypass the unified linkage.
-- All upgrade CTAs across the three apps MUST point to `https://user.trefolio.com/upgrade?from={trefolio|clara|will}`. The IdP page renders one consistent benefits sheet.
+- All upgrade CTAs across the three apps MUST point to `https://user.trefolio.com/upgrade?from={trefolio|clara|will}`. The IdP `/upgrade` page tailors headings and benefit order to the originating app while keeping one price and one Stripe checkout.
 
 ### Legal / GDPR
 

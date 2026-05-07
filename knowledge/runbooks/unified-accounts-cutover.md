@@ -96,6 +96,15 @@ vercel env add BILLING_REDIRECT_TO_IDP true production
 vercel deploy --prod
 ```
 
+**Always set `BILLING_REDIRECT_TO_IDP=true` in the same deploy as
+`USE_LEGACY_AUTH=false` on trefolio.** Rationale: the local billing webhook
+([`src/app/api/billing/webhook/route.ts`](../../src/app/api/billing/webhook/route.ts))
+is disabled when `USE_LEGACY_AUTH=false`, but if `BILLING_REDIRECT_TO_IDP`
+stayed `false`, users would still hit local Stripe checkout while the IdP
+also owns subscriptions — a mismatch. With both flags flipped, upgrade and
+“Manage subscription” use `user.trefolio.com` and Stripe events are consumed
+by the IdP webhook only.
+
 After deploy:
 
 - `/api/auth/login`, `/api/auth/signup`, `/api/auth/google`, `/api/auth/apple`

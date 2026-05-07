@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.4",
+    date: "2026-05-08",
+    title: "Unified billing cutover docs & IdP upgrade UX",
+    titleTranslations: {
+      es: "Docs de cutover de facturación y UX de upgrade en el IdP",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Unified accounts cutover runbook and `scripts/idp-cutover-checklist.mjs` now require flipping `BILLING_REDIRECT_TO_IDP=true` together with `USE_LEGACY_AUTH=false` on trefolio, and warn if billing redirect is on while legacy auth is still enabled (avoids mismatched Stripe webhooks). `.env.local.example` documents the pairing.",
+        translations: {
+          es: "El runbook de cutover de cuentas unificadas y `scripts/idp-cutover-checklist.mjs` exigen activar `BILLING_REDIRECT_TO_IDP=true` junto con `USE_LEGACY_AUTH=false` en trefolio y avisan si el redirect de facturación está on con auth legacy (evita webhooks de Stripe desalineados). `.env.local.example` documenta el emparejamiento.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "IdP (`external/accounts`): `/upgrade` benefits landing varies by `from=trefolio|clara|will` (headings, bullet order, accents, footnotes) via `src/lib/upgrade-from-copy.ts`; portal-return links prefer the originating product.",
+        translations: {
+          es: "IdP (`external/accounts`): la landing de beneficios en `/upgrade` depende de `from=trefolio|clara|will` (títulos, orden de bullets, acentos, notas) vía `src/lib/upgrade-from-copy.ts`; al volver del portal de Stripe el enlace vuelve al producto de origen.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Clara (`external/etracker`): Settings shows Trefolio Pro upgrade and billing-portal links on user.trefolio.com when unified IdP auth is active; quota modal CTA label now says user.trefolio.com. Will (`external/notetaker`): IdP upgrade URLs prefer `IDP_ISSUER` for browser links.",
+        translations: {
+          es: "Clara (`external/etracker`): Ajustes muestra enlaces de mejora a Trefolio Pro y portal de facturación en user.trefolio.com con IdP unificado; el modal de cuota dice user.trefolio.com en el CTA. Will (`external/notetaker`): las URLs de upgrade al IdP usan `IDP_ISSUER` para el navegador.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.3",
     date: "2026-05-07",
     title: "AI prompt hardening",
