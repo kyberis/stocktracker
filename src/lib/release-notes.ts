@@ -108,6 +108,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "IdP (`external/accounts`): recuperación envía correo si `RESEND_API_KEY` está definida fuera de producción; el idioma lee también `trefolio_ui_locale` como en authorize; `<html lang>` sigue la cookie; checkout valida price IDs antes de Stripe (aliases `STRIPE_PRICE_ID_PRO_*`); página `/upgrade` bilingüe con copy del paquete Pro Warren+Clara+Will.",
         },
       },
+      {
+        type: "improvement",
+        text: "IdP (`external/accounts`): normalize `DATABASE_URL` `sslmode=require|prefer|verify-ca` to `verify-full` before creating the Postgres pool to silence the pg-connection-string v2 SSL deprecation warning on cold start.",
+        translations: {
+          es: "IdP (`external/accounts`): normalizar en `DATABASE_URL` `sslmode=require|prefer|verify-ca` a `verify-full` antes del pool Postgres para evitar el aviso SSL de deprecación de pg-connection-string al arrancar.",
+        },
+      },
     ],
   },
   {
