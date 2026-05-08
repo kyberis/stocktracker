@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.5",
+    date: "2026-05-08",
+    title: "IdP self-service password recovery",
+    titleTranslations: {
+      es: "Recuperación de contraseña en autoservicio en el IdP",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "IdP (`external/accounts`): self-service password recovery — `/account/forgot-password`, email reset link (Resend, 1h JWT), `/account/reset-password`, `POST /api/auth/forgot-password` and `POST /api/auth/reset-password`, plus a Forgot password link on `/oauth2/authorize`.",
+        translations: {
+          es: "IdP (`external/accounts`): recuperación de contraseña en autoservicio — `/account/forgot-password`, enlace por correo (Resend, JWT 1h), `/account/reset-password`, `POST /api/auth/forgot-password` y `POST /api/auth/reset-password`, y enlace «Olvidé mi contraseña» en `/oauth2/authorize`.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.4",
     date: "2026-05-08",
     title: "Unified billing cutover docs & IdP upgrade UX",
