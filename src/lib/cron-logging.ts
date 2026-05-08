@@ -123,8 +123,9 @@ export function cronBearerAuthorizedFromHeaders(authHeader: string | null | unde
 /**
  * Authenticate Vercel Cron (and manual curl with the same Bearer).
  *
- * Set `CRON_SECRET` (trimmed before compare). During rotation set `CRON_SECRET_FALLBACK`
- * to the previous value — either secret is accepted via `Bearer <secret>`.
+ * Set `CRON_SECRET` (trimmed before compare). Vercel injects Bearer **only** from project
+ * env `CRON_SECRET`; `CRON_SECRET_FALLBACK` is app-only — accept the previous value during
+ * rotation while schedulers still send either secret.
  *
  * Cron routes must not run without secrets in production/preview.
  * Local dev: omit both to allow unauthenticated cron (manual curl).
@@ -145,7 +146,7 @@ export function verifyCronAuth(jobName: string, req: NextRequest): NextResponse 
 
   if (!bearerMatchesCronSecrets(token, secrets)) {
     console.warn(
-      `[cron:${jobName}] 401 — ${!token ? "missing or malformed Bearer token" : "secret mismatch (check CRON_SECRET / stray newlines)"}`,
+      `[cron:${jobName}] 401 — ${!token ? "missing or malformed Bearer token" : "Bearer does not match CRON_SECRET or CRON_SECRET_FALLBACK (Vercel sends the project CRON_SECRET; trim newlines in dashboard)"}`,
     );
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

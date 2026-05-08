@@ -1,3 +1,4 @@
+import { NextRequest } from "next/server";
 import {
   getSnapTradeConnectionsPendingDeletion,
   getConnectionsAllDisabledOver24h,
@@ -7,7 +8,7 @@ import {
   pruneOldSnapTradeLogs,
 } from "@/lib/db";
 import { deleteUser } from "@/lib/snaptrade-client";
-import { withCronLogging } from "@/lib/cron-logging";
+import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -22,7 +23,7 @@ export const maxDuration = 30;
  *         disabled for >24 h — the credentials are stale and will keep
  *         incurring the $2/connected-user/month SnapTrade charge.
  */
-export const GET = withCronLogging("snaptrade-cleanup", async () => {
+const runJob = withCronLogging("snaptrade-cleanup", async () => {
   let deletedDowngrade = 0;
   let deletedStale = 0;
 
@@ -70,3 +71,19 @@ export const GET = withCronLogging("snaptrade-cleanup", async () => {
     prunedLogs,
   };
 });
+
+function authorize(req: NextRequest) {
+  return verifyCronAuth("snaptrade-cleanup", req);
+}
+
+export async function GET(req: NextRequest) {
+  const denied = authorize(req);
+  if (denied) return denied;
+  return runJob();
+}
+
+export async function POST(req: NextRequest) {
+  const denied = authorize(req);
+  if (denied) return denied;
+  return runJob();
+}

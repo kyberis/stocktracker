@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "fix",
+        text: "`/api/cron/snaptrade-cleanup` now uses `verifyCronAuth` like other crons. Documented that Vercel’s `Authorization: Bearer` value comes only from project `CRON_SECRET`; `CRON_SECRET_FALLBACK` is app-only for accepting a second token during rotation.",
+        translations: {
+          es: "`/api/cron/snaptrade-cleanup` usa `verifyCronAuth` como el resto de crons. Aclaración: el `Authorization: Bearer` de Vercel usa solo la variable de proyecto `CRON_SECRET`; `CRON_SECRET_FALLBACK` existe solo en la app para aceptar un segundo valor durante rotación.",
+        },
+      },
+      {
         type: "improvement",
         text: "Auth/checkout probe logs now include Vercel deploy context (env, region, short commit), safe inbound headers (x-vercel-id, x-request-id, forwarded host/proto), and richer flow fields (token timing, IdP host, OAuth code lengths, redirect hosts).",
         translations: {

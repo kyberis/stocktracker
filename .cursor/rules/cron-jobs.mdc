@@ -16,6 +16,12 @@ When adding a **new cron job**, it must be registered in three places:
 - Export both `GET` and `POST` handlers for flexibility
 - Set `export const dynamic = "force-dynamic"` and `export const maxDuration = 120`
 
+## `CRON_SECRET` vs `CRON_SECRET_FALLBACK` (Vercel)
+
+- **Vercel** injects `Authorization: Bearer <value>` using **only** the project env var named **`CRON_SECRET`**. It does **not** read `CRON_SECRET_FALLBACK` — that variable exists only in this codebase.
+- In **Settings → Environment Variables**, for **Production** (and **Preview** if crons run there), set **`CRON_SECRET`** to the same random string the app expects. The app compares the Bearer token against **`CRON_SECRET`** (trimmed) and optionally **`CRON_SECRET_FALLBACK`** (trimmed) for rotation: keep the *current* Vercel value in `CRON_SECRET` and put the *previous* value in `CRON_SECRET_FALLBACK` until schedulers and scripts are updated.
+- If you only add **`CRON_SECRET_FALLBACK`** in Vercel, scheduled invocations still send Bearer from **`CRON_SECRET`** — align the primary var with what Vercel sends.
+
 ## Admin Visibility
 
 The admin panel at `/admin` → Settings → Cron Jobs reads from `CRON_REGISTRY` to display all configured crons with their schedules, descriptions, and execution stats. If a cron is not in the registry, it won't appear in the admin panel.
