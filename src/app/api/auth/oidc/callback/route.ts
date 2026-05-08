@@ -98,8 +98,9 @@ function safeRedirect(input: string | undefined): string {
 }
 
 export async function GET(req: NextRequest) {
+  const inbound = req.headers;
   if (!isIdpEnabled()) {
-    authProbeWarn("callback.abort", { reason: "idp_disabled" });
+    authProbeWarn("callback.abort", { reason: "idp_disabled" }, inbound);
     return errorRedirect(req, "OIDC is not enabled in this environment.");
   }
   ensureSessionSecret();
@@ -110,14 +111,22 @@ export async function GET(req: NextRequest) {
   const idpError = url.searchParams.get("error");
 
   if (idpError) {
-    authProbeWarn("callback.idp_error_param", {
-      error: idpError,
-      errorDescription: url.searchParams.get("error_description")?.slice(0, 300),
-    });
+    authProbeWarn(
+      "callback.idp_error_param",
+      {
+        error: idpError,
+        errorDescription: url.searchParams.get("error_description")?.slice(0, 300),
+      },
+      inbound,
+    );
     return errorRedirect(req, `IdP returned ${idpError}`);
   }
   if (!code || !state) {
-    authProbeWarn("callback.missing_params", { hasCode: Boolean(code), hasState: Boolean(state) });
+    authProbeWarn(
+      "callback.missing_params",
+      { hasCode: Boolean(code), hasState: Boolean(state) },
+      inbound,
+    );
     return errorRedirect(req, "Missing code or state from IdP.");
   }
 
@@ -127,18 +136,34 @@ export async function GET(req: NextRequest) {
   const redirectTarget = safeRedirect(req.cookies.get(REDIRECT_COOKIE)?.value);
 
   if (!cookieState || !codeVerifier || cookieState !== state) {
-    authProbeWarn("callback.state_mismatch", {
-      cookieStatePresent: Boolean(cookieState),
-      verifierPresent: Boolean(codeVerifier),
-      stateMatches: cookieState === state && Boolean(cookieState),
-    });
+    authProbeWarn(
+      "callback.state_mismatch",
+      {
+        cookieStatePresent: Boolean(cookieState),
+        verifierPresent: Boolean(codeVerifier),
+        stateMatches: cookieState === state && Boolean(cookieState),
+      },
+      inbound,
+    );
     return errorRedirect(req, "OIDC state mismatch. Please try again.");
   }
 
-  authProbeLog("callback.pkc_ok_begin_exchange", {
-    redirectTo: redirectTarget,
-    fwdHost: req.headers.get("x-forwarded-host") ?? undefined,
-  });
+  authProbeLog(
+    "callback.pkc_ok_begin_exchange",
+    {
+      redirectTo: redirectTarget,
+      codeLen: code.length,
+      stateLen: state.length,
+      callbackHost: (() => {
+        try {
+          return new URL(getCallbackUrl(req)).host;
+        } catch {
+          return undefined;
+        }
+      })(),
+    },
+    inbound,
+  );
 
   let tokens;
   try {
@@ -148,9 +173,13 @@ export async function GET(req: NextRequest) {
       codeVerifier,
     });
   } catch (err) {
-    authProbeWarn("callback.token_exchange_threw", {
-      message: err instanceof Error ? err.message.slice(0, 400) : String(err).slice(0, 400),
-    });
+    authProbeWarn(
+      "callback.token_exchange_threw",
+      {
+        message: err instanceof Error ? err.message.slice(0, 400) : String(err).slice(0, 400),
+      },
+      inbound,
+    );
     console.error("[oidc] token exchange failed", err);
     return errorRedirect(req, "Could not exchange authorization code.");
   }
@@ -159,19 +188,27 @@ export async function GET(req: NextRequest) {
   try {
     claims = await verifyIdToken(tokens.id_token, expectedNonce);
   } catch (err) {
-    authProbeWarn("callback.id_token_verify_threw", {
-      message: err instanceof Error ? err.message.slice(0, 400) : String(err).slice(0, 400),
-    });
+    authProbeWarn(
+      "callback.id_token_verify_threw",
+      {
+        message: err instanceof Error ? err.message.slice(0, 400) : String(err).slice(0, 400),
+      },
+      inbound,
+    );
     console.error("[oidc] id token verification failed", err);
     return errorRedirect(req, "Could not verify identity from IdP.");
   }
 
-  authProbeLog("callback.id_token_ok", {
-    subTail: subTail(claims.sub),
-    emailHint: emailProbeHint(claims.email),
-    emailVerified: claims.email_verified,
-    trefolioPro: claims.entitlements.trefolio_pro,
-  });
+  authProbeLog(
+    "callback.id_token_ok",
+    {
+      subTail: subTail(claims.sub),
+      emailHint: emailProbeHint(claims.email),
+      emailVerified: claims.email_verified,
+      trefolioPro: claims.entitlements.trefolio_pro,
+    },
+    inbound,
+  );
 
   // Resolve local user.
   let resolvePath: "by_sub" | "linked_email" | "created" = "by_sub";
@@ -204,7 +241,11 @@ export async function GET(req: NextRequest) {
     await linkLocalUserToIdpSub({ localUserId: publicUser.id, idpSub: claims.sub });
     dbUser = (await findLocalUserByIdpSub(claims.sub)) as DbUser;
     if (!dbUser) {
-      authProbeWarn("callback.provision_failed_after_create", { subTail: subTail(claims.sub) });
+      authProbeWarn(
+        "callback.provision_failed_after_create",
+        { subTail: subTail(claims.sub), resolvePathAttempted: resolvePath },
+        inbound,
+      );
       return errorRedirect(req, "Could not provision local account.");
     }
     const normalizedEmail = (claims.email || "").toLowerCase();
@@ -242,13 +283,17 @@ export async function GET(req: NextRequest) {
   trackEvent(finalUser.id, isNewSignup ? "signup" : "login", { method: "oidc" });
   authEventsTotal.inc({ event: isNewSignup ? "signup" : "login_success" });
 
-  authProbeLog("callback.done_redirect", {
-    resolvePath,
-    isNewSignup,
-    localUserId: finalUser.id,
-    subTail: subTail(claims.sub),
-    redirectTo: redirectTarget,
-  });
+  authProbeLog(
+    "callback.done_redirect",
+    {
+      resolvePath,
+      isNewSignup,
+      localUserId: finalUser.id,
+      subTail: subTail(claims.sub),
+      redirectTo: redirectTarget,
+    },
+    inbound,
+  );
 
   const response = NextResponse.redirect(
     new URL(redirectTarget, getRequestPublicOrigin(req)),

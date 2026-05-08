@@ -42,8 +42,9 @@ function safeRedirect(input: string | null): string {
 }
 
 export async function GET(req: NextRequest) {
+  const inbound = req.headers;
   if (!isIdpEnabled()) {
-    authProbeWarn("start.abort", { reason: "idp_not_configured" });
+    authProbeWarn("start.abort", { reason: "idp_not_configured" }, inbound);
     return NextResponse.json(
       { error: "idp_not_configured", message: "OIDC is not enabled in this environment." },
       { status: 503 },
@@ -71,12 +72,22 @@ export async function GET(req: NextRequest) {
     uiLocales,
   });
 
-  authProbeLog("start.redirect_idp", {
-    redirectTo: redirectTarget,
-    hasLoginHint: Boolean(loginHint),
-    uiLocales,
-    fwdHost: req.headers.get("x-forwarded-host") ?? undefined,
-  });
+  authProbeLog(
+    "start.redirect_idp",
+    {
+      redirectTo: redirectTarget,
+      hasLoginHint: Boolean(loginHint),
+      uiLocales,
+      idpAuthorizeHost: (() => {
+        try {
+          return new URL(authorizationUrl).host;
+        } catch {
+          return undefined;
+        }
+      })(),
+    },
+    inbound,
+  );
 
   const response = NextResponse.redirect(authorizationUrl);
   const cookieBase = {

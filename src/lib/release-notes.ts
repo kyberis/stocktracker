@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "Auth/checkout probe logs now include Vercel deploy context (env, region, short commit), safe inbound headers (x-vercel-id, x-request-id, forwarded host/proto), and richer flow fields (token timing, IdP host, OAuth code lengths, redirect hosts).",
+        translations: {
+          es: "Las migas de auth/checkout incluyen contexto de deploy en Vercel (entorno, región, commit corto), cabeceras entrantes seguras (x-vercel-id, x-request-id, host/proto reenviados) y más detalle de flujo (tiempo de token, host del IdP, longitudes de código OAuth, hosts de redirect).",
+        },
+      },
+      {
+        type: "improvement",
         text: "More verbose structured logs for production debugging: trefolio OIDC start/callback and billing checkout breadcrumbs (`[trefolio.auth.probe]`); IdP token + authorize + checkout (`[accounts.auth.probe]`); Clara (etracker) credentials/Google sign-in; Will (notetaker) credentials, Google, and IdP OAuth — no passwords or secrets in logs.",
         translations: {
           es: "Logs estructurados más verbosos para depurar en producción: migas OIDC/checkout en trefolio (`[trefolio.auth.probe]`); token + authorize + checkout en IdP (`[accounts.auth.probe]`); credenciales/Google en Clara (etracker); credenciales, Google e OAuth IdP en Will (notetaker) — sin contraseñas ni secretos en los logs.",

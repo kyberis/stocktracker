@@ -141,6 +141,16 @@ export async function exchangeAuthorizationCode(args: {
     code_verifier: args.codeVerifier,
   });
 
+  const tokenUrlHost = (() => {
+    try {
+      return new URL(`${base}/oauth2/token`).host;
+    } catch {
+      return "unknown";
+    }
+  })();
+
+  const t0 = Date.now();
+
   const res = await fetch(`${base}/oauth2/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -148,16 +158,24 @@ export async function exchangeAuthorizationCode(args: {
     signal: AbortSignal.timeout(15_000),
   });
 
+  const durationMs = Date.now() - t0;
+
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     const clipped = text.length > 500 ? `${text.slice(0, 500)}…` : text;
     authProbeWarn("idp.token_exchange_http_error", {
       status: res.status,
+      durationMs,
+      tokenHost: tokenUrlHost,
       bodyPreview: clipped,
     });
     throw new Error(`IdP token exchange failed (${res.status}): ${text}`);
   }
-  authProbeLog("idp.token_exchange_ok", { httpStatus: res.status });
+  authProbeLog("idp.token_exchange_ok", {
+    httpStatus: res.status,
+    durationMs,
+    tokenHost: tokenUrlHost,
+  });
   return (await res.json()) as TokenResponse;
 }
 

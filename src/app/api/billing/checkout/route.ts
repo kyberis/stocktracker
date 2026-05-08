@@ -29,12 +29,16 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
   const { deviceGrant } = result.data;
   const interval = deviceGrant ? "annual" : result.data.interval;
 
-  authProbeLog("checkout.accepted", {
-    userId: session.userId,
-    interval,
-    deviceGrant: Boolean(deviceGrant),
-    redirectToIdpEnv: billingRedirectToIdp(),
-  });
+  authProbeLog(
+    "checkout.accepted",
+    {
+      userId: session.userId,
+      interval,
+      deviceGrant: Boolean(deviceGrant),
+      redirectToIdpEnv: billingRedirectToIdp(),
+    },
+    req.headers,
+  );
 
   // After IdP cutover the IdP is the only place that runs Stripe checkout.
   // Local route returns a JSON redirect target that the client follows.
@@ -46,18 +50,26 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
       const target = new URL(`${idpPublic}/upgrade`);
       target.searchParams.set("from", "trefolio");
       target.searchParams.set("interval", interval);
-      authProbeLog("checkout.redirect_idp", {
-        userId: session.userId,
-        interval,
-        upgradeOrigin: target.origin,
-      });
+      authProbeLog(
+        "checkout.redirect_idp",
+        {
+          userId: session.userId,
+          interval,
+          upgradeOrigin: target.origin,
+        },
+        req.headers,
+      );
       return NextResponse.json({ url: target.toString() }, { status: 200 });
     }
-    authProbeWarn("checkout.redirect_idp_missing", {
-      userId: session.userId,
-      interval,
-      reason: "idp_issuer_empty",
-    });
+    authProbeWarn(
+      "checkout.redirect_idp_missing",
+      {
+        userId: session.userId,
+        interval,
+        reason: "idp_issuer_empty",
+      },
+      req.headers,
+    );
   }
 
   const priceId = await getPriceId(interval);
@@ -134,18 +146,26 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
       checkoutParams.discounts = [{ coupon }];
     }
 
-    authProbeLog("checkout.stripe_create_begin", {
-      userId: user.id,
-      interval,
-      deviceGrant: Boolean(deviceGrant),
-      hasStripeCustomerId: Boolean(customerId),
-    });
+    authProbeLog(
+      "checkout.stripe_create_begin",
+      {
+        userId: user.id,
+        interval,
+        deviceGrant: Boolean(deviceGrant),
+        hasStripeCustomerId: Boolean(customerId),
+      },
+      req.headers,
+    );
     const checkout = await stripe.checkout.sessions.create(checkoutParams);
-    authProbeLog("checkout.stripe_create_ok", {
-      userId: user.id,
-      interval,
-      sessionIdSuffix: checkout.id.slice(-12),
-    });
+    authProbeLog(
+      "checkout.stripe_create_ok",
+      {
+        userId: user.id,
+        interval,
+        sessionIdSuffix: checkout.id.slice(-12),
+      },
+      req.headers,
+    );
 
     trackEvent(user.id, "billing_checkout_started", {
       plan: "pro",
@@ -164,11 +184,15 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("Failed to create checkout session:", msg);
-    authProbeWarn("checkout.stripe_error", {
-      userId: session.userId,
-      interval,
-      msgPreview: msg.slice(0, 280),
-    });
+    authProbeWarn(
+      "checkout.stripe_error",
+      {
+        userId: session.userId,
+        interval,
+        msgPreview: msg.slice(0, 280),
+      },
+      req.headers,
+    );
 
     if (msg.includes("STRIPE_SECRET_KEY")) {
       return NextResponse.json({ error: "Stripe is not configured on this server." }, { status: 501 });
