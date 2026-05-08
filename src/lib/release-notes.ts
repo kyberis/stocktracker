@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "More verbose structured logs for production debugging: trefolio OIDC start/callback and billing checkout breadcrumbs (`[trefolio.auth.probe]`); IdP token + authorize + checkout (`[accounts.auth.probe]`); Clara (etracker) credentials/Google sign-in; Will (notetaker) credentials, Google, and IdP OAuth — no passwords or secrets in logs.",
+        translations: {
+          es: "Logs estructurados más verbosos para depurar en producción: migas OIDC/checkout en trefolio (`[trefolio.auth.probe]`); token + authorize + checkout en IdP (`[accounts.auth.probe]`); credenciales/Google en Clara (etracker); credenciales, Google e OAuth IdP en Will (notetaker) — sin contraseñas ni secretos en los logs.",
+        },
+      },
+      {
+        type: "improvement",
         text: "IdP (`external/accounts`): clearer handling when Stripe returns “No such price” (likely live/test or account mismatch vs `STRIPE_SECRET_KEY`); sanitize `STRIPE_PRICE_PRO_*` values; README troubleshooting for `/api/billing/checkout`.",
         translations: {
           es: "IdP (`external/accounts`): manejo más claro cuando Stripe devuelve «No such price» (suele ser desajuste test/live o cuenta distinta de `STRIPE_SECRET_KEY`); saneo de valores `STRIPE_PRICE_PRO_*`; troubleshooting en README para `/api/billing/checkout`.",

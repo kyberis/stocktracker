@@ -1,5 +1,11 @@
 import { createHash, randomBytes } from "crypto";
 import { jwtVerify, createRemoteJWKSet } from "jose";
+
+import {
+  authProbeLog,
+  authProbeWarn,
+} from "@/lib/auth/login-probe-log";
+
 import { getIdpBaseUrl, getIdpClientId, getIdpClientSecret, getIdpIssuer } from "./config";
 
 /**
@@ -144,8 +150,14 @@ export async function exchangeAuthorizationCode(args: {
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
+    const clipped = text.length > 500 ? `${text.slice(0, 500)}…` : text;
+    authProbeWarn("idp.token_exchange_http_error", {
+      status: res.status,
+      bodyPreview: clipped,
+    });
     throw new Error(`IdP token exchange failed (${res.status}): ${text}`);
   }
+  authProbeLog("idp.token_exchange_ok", { httpStatus: res.status });
   return (await res.json()) as TokenResponse;
 }
 

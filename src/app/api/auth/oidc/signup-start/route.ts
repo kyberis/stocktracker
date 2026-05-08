@@ -4,6 +4,10 @@ import { buildAuthorizationUrl, deriveCodeChallenge, generateCodeVerifier } from
 import { resolveUiLocalesForIdpRequest } from "@/lib/idp/resolve-ui-locales-for-idp";
 import { isIdpEnabled } from "@/lib/idp/config";
 import {
+  authProbeLog,
+  authProbeWarn,
+} from "@/lib/auth/login-probe-log";
+import {
   getRequestPublicOrigin,
   isRequestPublicHttps,
 } from "@/lib/http/request-public-origin";
@@ -35,6 +39,7 @@ function safeRedirect(input: string | null): string {
 
 export async function GET(req: NextRequest) {
   if (!isIdpEnabled()) {
+    authProbeWarn("signup_start.abort", { reason: "idp_not_configured" });
     return NextResponse.json(
       { error: "idp_not_configured", message: "OIDC is not enabled in this environment." },
       { status: 503 },
@@ -49,6 +54,7 @@ export async function GET(req: NextRequest) {
   const nonce = randomBytes(16).toString("hex");
   const verifier = generateCodeVerifier();
   const challenge = deriveCodeChallenge(verifier);
+  const uiLocales = resolveUiLocalesForIdpRequest(req);
 
   const authorizationUrl = buildAuthorizationUrl({
     redirectUri: getCallbackUrl(req),
@@ -58,7 +64,14 @@ export async function GET(req: NextRequest) {
     appHint: "trefolio",
     loginHint,
     screenHint: "signup",
-    uiLocales: resolveUiLocalesForIdpRequest(req),
+    uiLocales,
+  });
+
+  authProbeLog("signup_start.redirect_idp", {
+    redirectTo: redirectTarget,
+    hasLoginHint: Boolean(loginHint),
+    uiLocales,
+    fwdHost: req.headers.get("x-forwarded-host") ?? undefined,
   });
 
   const response = NextResponse.redirect(authorizationUrl);

@@ -12,6 +12,12 @@ import {
   getSessionCookieConfig,
 } from "@/lib/auth/session";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
+import {
+  authProbeLog,
+  authProbeWarn,
+  emailProbeHint,
+  subTail,
+} from "@/lib/auth/login-probe-log";
 import { authEventsTotal } from "@/lib/metrics";
 import {
   exchangeAuthorizationCode,
@@ -93,6 +99,7 @@ function safeRedirect(input: string | undefined): string {
 
 export async function GET(req: NextRequest) {
   if (!isIdpEnabled()) {
+    authProbeWarn("callback.abort", { reason: "idp_disabled" });
     return errorRedirect(req, "OIDC is not enabled in this environment.");
   }
   ensureSessionSecret();
@@ -103,9 +110,14 @@ export async function GET(req: NextRequest) {
   const idpError = url.searchParams.get("error");
 
   if (idpError) {
+    authProbeWarn("callback.idp_error_param", {
+      error: idpError,
+      errorDescription: url.searchParams.get("error_description")?.slice(0, 300),
+    });
     return errorRedirect(req, `IdP returned ${idpError}`);
   }
   if (!code || !state) {
+    authProbeWarn("callback.missing_params", { hasCode: Boolean(code), hasState: Boolean(state) });
     return errorRedirect(req, "Missing code or state from IdP.");
   }
 
@@ -115,8 +127,18 @@ export async function GET(req: NextRequest) {
   const redirectTarget = safeRedirect(req.cookies.get(REDIRECT_COOKIE)?.value);
 
   if (!cookieState || !codeVerifier || cookieState !== state) {
+    authProbeWarn("callback.state_mismatch", {
+      cookieStatePresent: Boolean(cookieState),
+      verifierPresent: Boolean(codeVerifier),
+      stateMatches: cookieState === state && Boolean(cookieState),
+    });
     return errorRedirect(req, "OIDC state mismatch. Please try again.");
   }
+
+  authProbeLog("callback.pkc_ok_begin_exchange", {
+    redirectTo: redirectTarget,
+    fwdHost: req.headers.get("x-forwarded-host") ?? undefined,
+  });
 
   let tokens;
   try {
@@ -126,6 +148,9 @@ export async function GET(req: NextRequest) {
       codeVerifier,
     });
   } catch (err) {
+    authProbeWarn("callback.token_exchange_threw", {
+      message: err instanceof Error ? err.message.slice(0, 400) : String(err).slice(0, 400),
+    });
     console.error("[oidc] token exchange failed", err);
     return errorRedirect(req, "Could not exchange authorization code.");
   }
@@ -134,14 +159,26 @@ export async function GET(req: NextRequest) {
   try {
     claims = await verifyIdToken(tokens.id_token, expectedNonce);
   } catch (err) {
+    authProbeWarn("callback.id_token_verify_threw", {
+      message: err instanceof Error ? err.message.slice(0, 400) : String(err).slice(0, 400),
+    });
     console.error("[oidc] id token verification failed", err);
     return errorRedirect(req, "Could not verify identity from IdP.");
   }
 
+  authProbeLog("callback.id_token_ok", {
+    subTail: subTail(claims.sub),
+    emailHint: emailProbeHint(claims.email),
+    emailVerified: claims.email_verified,
+    trefolioPro: claims.entitlements.trefolio_pro,
+  });
+
   // Resolve local user.
+  let resolvePath: "by_sub" | "linked_email" | "created" = "by_sub";
   let dbUser: DbUser | null = await findLocalUserByIdpSub(claims.sub);
   let isNewSignup = false;
   if (!dbUser && claims.email) {
+    resolvePath = "linked_email";
     dbUser = await findUserByEmail(claims.email);
     if (dbUser) {
       await linkLocalUserToIdpSub({ localUserId: dbUser.id, idpSub: claims.sub });
@@ -149,6 +186,7 @@ export async function GET(req: NextRequest) {
   }
   if (!dbUser) {
     isNewSignup = true;
+    resolvePath = "created";
     const username = (claims.email || `user-${claims.sub}`)
       .split("@")[0]
       .replace(/[^a-zA-Z0-9._-]/g, "")
@@ -166,6 +204,7 @@ export async function GET(req: NextRequest) {
     await linkLocalUserToIdpSub({ localUserId: publicUser.id, idpSub: claims.sub });
     dbUser = (await findLocalUserByIdpSub(claims.sub)) as DbUser;
     if (!dbUser) {
+      authProbeWarn("callback.provision_failed_after_create", { subTail: subTail(claims.sub) });
       return errorRedirect(req, "Could not provision local account.");
     }
     const normalizedEmail = (claims.email || "").toLowerCase();
@@ -202,6 +241,14 @@ export async function GET(req: NextRequest) {
 
   trackEvent(finalUser.id, isNewSignup ? "signup" : "login", { method: "oidc" });
   authEventsTotal.inc({ event: isNewSignup ? "signup" : "login_success" });
+
+  authProbeLog("callback.done_redirect", {
+    resolvePath,
+    isNewSignup,
+    localUserId: finalUser.id,
+    subTail: subTail(claims.sub),
+    redirectTo: redirectTarget,
+  });
 
   const response = NextResponse.redirect(
     new URL(redirectTarget, getRequestPublicOrigin(req)),
