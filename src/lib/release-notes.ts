@@ -110,9 +110,9 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "improvement",
-        text: "IdP (`external/accounts`): normalize `DATABASE_URL` `sslmode=require|prefer|verify-ca` to `verify-full` before creating the Postgres pool to silence the pg-connection-string v2 SSL deprecation warning on cold start.",
+        text: "IdP (`external/accounts`): strip `sslmode` and redundant SSL query params from `DATABASE_URL` before creating the `pg` Pool (TLS unchanged via Pool `ssl`); removes duplicate `postgresConnectionStringForPool` and silences the pg v8 `sslmode` deprecation warning on cold start.",
         translations: {
-          es: "IdP (`external/accounts`): normalizar en `DATABASE_URL` `sslmode=require|prefer|verify-ca` a `verify-full` antes del pool Postgres para evitar el aviso SSL de deprecación de pg-connection-string al arrancar.",
+          es: "IdP (`external/accounts`): quitar `sslmode` y parámetros SSL redundantes de `DATABASE_URL` antes del pool `pg` (la TLS sigue con `ssl` del Pool); elimina `postgresConnectionStringForPool` duplicado y silencia el aviso de deprecación `sslmode` de pg v8 al arrancar.",
         },
       },
     ],
