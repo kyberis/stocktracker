@@ -42,6 +42,7 @@ export const authOptions: NextAuthOptions = {
       id: "trefolio-id",
       name: "Trefolio Account",
       type: "oauth",
+      allowDangerousEmailAccountLinking: true,
       wellKnown: `${process.env.IDP_BASE_URL}/.well-known/openid-configuration`,
       authorization: { params: { scope: "openid email profile entitlements" } },
       clientId: process.env.IDP_CLIENT_ID,
