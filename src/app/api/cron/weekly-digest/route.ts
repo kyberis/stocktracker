@@ -341,7 +341,7 @@ Week: ${weekStart} to ${weekEnd}`;
 });
 
 export async function GET(req: NextRequest) {
-  const authError = verifyCronAuth("weekly-digest", req.headers.get("authorization"));
+  const authError = verifyCronAuth("weekly-digest", req);
   if (authError) return authError;
   const result = await runWeeklyDigest();
   return Response.json(result);

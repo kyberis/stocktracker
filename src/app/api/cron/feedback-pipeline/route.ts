@@ -108,7 +108,7 @@ const runFeedbackPipeline = withCronLogging("feedback-pipeline", async () => {
 });
 
 function authorize(req: NextRequest) {
-  return verifyCronAuth("feedback-pipeline", req.headers.get("authorization"));
+  return verifyCronAuth("feedback-pipeline", req);
 }
 
 export async function GET(req: NextRequest) {

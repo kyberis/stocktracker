@@ -9,7 +9,7 @@ export const maxDuration = 300;
 const runJob = withCronLogging("portfolio-snapshots", runPortfolioSnapshotsJob);
 
 function authorize(req: NextRequest) {
-  return verifyCronAuth("portfolio-snapshots", req.headers.get("authorization"));
+  return verifyCronAuth("portfolio-snapshots", req);
 }
 
 /** Vercel Cron (scheduled). */

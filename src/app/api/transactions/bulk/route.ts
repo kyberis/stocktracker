@@ -13,6 +13,7 @@ import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
 import { deferTask } from "@/lib/task-runner";
 import { runBackfillForUser } from "@/lib/backfill-snapshots";
 import { materializeCurrentSnapshotsForUser } from "@/lib/cron-portfolio-snapshots";
+import { cronBearerAuthorizedFromHeaders } from "@/lib/cron-logging";
 
 const bulkTransactionSchema = z.object({
   transactions: z.array(
@@ -47,8 +48,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   // Support cron auth: x-cron-user-id + Bearer CRON_SECRET
   const cronUserId = req.headers.get("x-cron-user-id");
   const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  const isCronAuth = cronUserId && cronSecret && authHeader === `Bearer ${cronSecret}`;
+  const isCronAuth = cronUserId && cronBearerAuthorizedFromHeaders(authHeader);
 
   let userId: string;
 

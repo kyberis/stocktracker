@@ -207,7 +207,7 @@ const runCheckAlerts = withCronLogging("check-alerts", async () => {
 });
 
 export async function GET(req: NextRequest) {
-  const denied = verifyCronAuth("check-alerts", req.headers.get("authorization"));
+  const denied = verifyCronAuth("check-alerts", req);
   if (denied) return denied;
   return runCheckAlerts();
 }

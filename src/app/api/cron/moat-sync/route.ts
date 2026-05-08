@@ -85,7 +85,7 @@ const runMoatSync = withCronLogging("moat-sync", async () => {
 });
 
 export async function GET(request: NextRequest) {
-  const denied = verifyCronAuth("moat-sync", request.headers.get("authorization"));
+  const denied = verifyCronAuth("moat-sync", request);
   if (denied) return denied;
   return runMoatSync();
 }

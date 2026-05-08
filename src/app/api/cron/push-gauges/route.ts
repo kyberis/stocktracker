@@ -101,7 +101,7 @@ const runPushGauges = withCronLogging("push-gauges", async () => {
 });
 
 export async function GET(req: NextRequest) {
-  const denied = verifyCronAuth("push-gauges", req.headers.get("authorization"));
+  const denied = verifyCronAuth("push-gauges", req);
   if (denied) return denied;
   return runPushGauges();
 }

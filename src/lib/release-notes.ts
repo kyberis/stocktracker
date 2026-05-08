@@ -32,6 +32,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "fix",
+        text: "`/api/cron/*` authentication: trim `CRON_SECRET` before compare (avoids Vercel 401 when the env value ends with newline), flexible `Bearer` parsing, timing-safe equality, optional `CRON_SECRET_FALLBACK` during rotation; `verifyCronAuth` takes the full request. Same Bearer rules for cron-style `POST /api/transactions/bulk` with `x-cron-user-id`.",
+        translations: {
+          es: "Auth de `/api/cron/*`: se recorta `CRON_SECRET` antes de comparar (evita 401 si el valor en Vercel lleva salto de línea), parsing flexible de `Bearer`, igualdad en tiempo constante y `CRON_SECRET_FALLBACK` opcional en rotaciones; `verifyCronAuth` recibe la petición completa. Mismas reglas Bearer para `POST /api/transactions/bulk` con `x-cron-user-id`.",
+        },
+      },
+      {
         type: "improvement",
         text: "More verbose structured logs for production debugging: trefolio OIDC start/callback and billing checkout breadcrumbs (`[trefolio.auth.probe]`); IdP token + authorize + checkout (`[accounts.auth.probe]`); Clara (etracker) credentials/Google sign-in; Will (notetaker) credentials, Google, and IdP OAuth — no passwords or secrets in logs.",
         translations: {

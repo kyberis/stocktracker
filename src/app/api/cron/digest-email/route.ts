@@ -224,7 +224,7 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
 const handler = withCronLogging("digest-email", processDigestEmail);
 
 export async function GET(req: NextRequest) {
-  const denied = verifyCronAuth("digest-email", req.headers.get("authorization"));
+  const denied = verifyCronAuth("digest-email", req);
   if (denied) return denied;
   return handler();
 }

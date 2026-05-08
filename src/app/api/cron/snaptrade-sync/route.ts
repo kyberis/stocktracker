@@ -289,7 +289,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
  * and flags connections that need attention (expired credentials).
  */
 export async function GET(req: NextRequest) {
-  const denied = verifyCronAuth("snaptrade-sync", req.headers.get("authorization"));
+  const denied = verifyCronAuth("snaptrade-sync", req);
   if (denied) return denied;
   return runSync();
 }

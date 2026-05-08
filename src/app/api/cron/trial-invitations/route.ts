@@ -86,7 +86,7 @@ LIMIT 100`,
 });
 
 function authorize(req: NextRequest) {
-  return verifyCronAuth("trial-invitations", req.headers.get("authorization"));
+  return verifyCronAuth("trial-invitations", req);
 }
 
 export async function GET(req: NextRequest) {

@@ -417,7 +417,7 @@ const runCheck = withCronLogging("tax-rules-review", async () => {
 });
 
 export async function GET(req: NextRequest) {
-  const denied = verifyCronAuth("tax-rules-review", req.headers.get("authorization"));
+  const denied = verifyCronAuth("tax-rules-review", req);
   if (denied) return denied;
   return runCheck();
 }

@@ -85,7 +85,7 @@ function createSync(offset = 0, limit = 0) {
 }
 
 export async function GET(request: NextRequest) {
-  const denied = verifyCronAuth("screener-sync", request.headers.get("authorization"));
+  const denied = verifyCronAuth("screener-sync", request);
   if (denied) return denied;
 
   const url = new URL(request.url);

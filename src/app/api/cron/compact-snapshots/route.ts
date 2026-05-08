@@ -8,7 +8,7 @@ export const maxDuration = 300;
 const runJob = withCronLogging("compact-snapshots", runSnapshotCompaction);
 
 function authorize(req: NextRequest) {
-  return verifyCronAuth("compact-snapshots", req.headers.get("authorization"));
+  return verifyCronAuth("compact-snapshots", req);
 }
 
 export async function GET(req: NextRequest) {

@@ -174,7 +174,7 @@ const runRefreshHoldings = withCronLogging("refresh-holdings", async () => {
 });
 
 export async function GET(req: NextRequest) {
-  const denied = verifyCronAuth("refresh-holdings", req.headers.get("authorization"));
+  const denied = verifyCronAuth("refresh-holdings", req);
   if (denied) return denied;
   return runRefreshHoldings();
 }

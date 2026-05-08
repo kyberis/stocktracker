@@ -12,7 +12,7 @@ When adding a **new cron job**, it must be registered in three places:
 
 - Cron route files live under `src/app/api/cron/<name>/route.ts`
 - Always wrap the handler with `withCronLogging("<name>", handler)` for automatic stats tracking
-- Always use `verifyCronAuth("<name>", req.headers.get("authorization"))` to validate the Vercel cron secret
+- Always use `verifyCronAuth("<name>", req)` so Bearer parsing trims secrets and respects `CRON_SECRET_FALLBACK`
 - Export both `GET` and `POST` handlers for flexibility
 - Set `export const dynamic = "force-dynamic"` and `export const maxDuration = 120`
 

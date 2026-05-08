@@ -171,7 +171,7 @@ const runEventSync = withCronLogging("event-sync", async () => {
  * Requires FMP_API_KEY for economic, IPO, and stock splits.
  */
 export async function GET(req: NextRequest) {
-  const denied = verifyCronAuth("event-sync", req.headers.get("authorization"));
+  const denied = verifyCronAuth("event-sync", req);
   if (denied) return denied;
   return runEventSync();
 }

@@ -1,4 +1,5 @@
-import { randomUUID } from "crypto";
+import { randomUUID, timingSafeEqual } from "crypto";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { ensureInitialized } from "@/lib/db/client";
 import { str, num } from "@/lib/db/helpers";
@@ -76,21 +77,75 @@ function isProductionDeployment(): boolean {
   );
 }
 
-/**
- * Cron routes must not run without authentication in production/preview.
- * Local dev: omit CRON_SECRET to allow unauthenticated cron (e.g. manual curl).
- */
-export function verifyCronAuth(jobName: string, authHeader: string | null): NextResponse | null {
-  const cronSecret = process.env.CRON_SECRET;
+/** Primary + optional rotation fallback (dashboard values sometimes include stray whitespace/newlines). */
+function collectCronSecrets(): string[] {
+  const primary = process.env.CRON_SECRET?.trim();
+  const fallback = process.env.CRON_SECRET_FALLBACK?.trim();
+  const out: string[] = [];
+  if (primary) out.push(primary);
+  if (fallback && !out.includes(fallback)) out.push(fallback);
+  return out;
+}
 
-  if (isProductionDeployment() && !cronSecret) {
+function extractBearerToken(authHeader: string | null | undefined): string | null {
+  if (authHeader == null) return null;
+  const t = authHeader.trim();
+  if (!t) return null;
+  const m = /^Bearer\s+(\S+)/i.exec(t);
+  const raw = m?.[1]?.trim();
+  return raw && raw.length > 0 ? raw : null;
+}
+
+function timingSafeStringEqual(a: string, b: string): boolean {
+  try {
+    const ba = Buffer.from(a, "utf8");
+    const bb = Buffer.from(b, "utf8");
+    if (ba.length !== bb.length) return false;
+    return timingSafeEqual(ba, bb);
+  } catch {
+    return false;
+  }
+}
+
+function bearerMatchesCronSecrets(token: string | null, secrets: string[]): boolean {
+  if (!token) return false;
+  return secrets.some((s) => timingSafeStringEqual(token, s));
+}
+
+/** For non-cron routes that reuse the same Vercel cron secret (trim + optional fallback). */
+export function cronBearerAuthorizedFromHeaders(authHeader: string | null | undefined): boolean {
+  const secrets = collectCronSecrets();
+  if (!secrets.length) return false;
+  const token = extractBearerToken(authHeader);
+  return bearerMatchesCronSecrets(token, secrets);
+}
+
+/**
+ * Authenticate Vercel Cron (and manual curl with the same Bearer).
+ *
+ * Set `CRON_SECRET` (trimmed before compare). During rotation set `CRON_SECRET_FALLBACK`
+ * to the previous value — either secret is accepted via `Bearer <secret>`.
+ *
+ * Cron routes must not run without secrets in production/preview.
+ * Local dev: omit both to allow unauthenticated cron (manual curl).
+ */
+export function verifyCronAuth(jobName: string, req: NextRequest): NextResponse | null {
+  const secrets = collectCronSecrets();
+
+  if (isProductionDeployment() && secrets.length === 0) {
     console.error(`[cron:${jobName}] 500 — CRON_SECRET is required but not set`);
     return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
   }
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (secrets.length === 0) {
+    return null;
+  }
+
+  const token = extractBearerToken(req.headers.get("authorization"));
+
+  if (!bearerMatchesCronSecrets(token, secrets)) {
     console.warn(
-      `[cron:${jobName}] 401 — ${!authHeader ? "missing Authorization header" : "secret mismatch"}`,
+      `[cron:${jobName}] 401 — ${!token ? "missing or malformed Bearer token" : "secret mismatch (check CRON_SECRET / stray newlines)"}`,
     );
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

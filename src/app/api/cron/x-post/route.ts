@@ -35,7 +35,7 @@ async function runPostDueTweets(): Promise<Record<string, unknown>> {
 const handler = withCronLogging("x-post", runPostDueTweets);
 
 export async function GET(req: NextRequest) {
-  const denied = verifyCronAuth("x-post", req.headers.get("authorization"));
+  const denied = verifyCronAuth("x-post", req);
   if (denied) return denied;
   return handler();
 }

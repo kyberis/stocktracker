@@ -73,7 +73,7 @@ LIMIT 50`,
 });
 
 function authorize(req: NextRequest) {
-  return verifyCronAuth("trial-expiration", req.headers.get("authorization"));
+  return verifyCronAuth("trial-expiration", req);
 }
 
 export async function GET(req: NextRequest) {
