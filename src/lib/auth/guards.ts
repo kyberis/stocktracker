@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getSessionFromRequest } from "./session";
+import { logUnauthorizedApi } from "@/lib/log-unauthorized";
+import { getSessionFromRequest, TREEFOLIO_SESSION_COOKIE } from "./session";
 import { findUserById, trackEvent, updateLastActive } from "@/lib/db";
 import { effectivePlan } from "@/lib/subscription";
 import type { SubscriptionFeature } from "@/lib/types";
@@ -16,6 +17,11 @@ const LAST_ACTIVE_THROTTLE_MS = 5 * 60_000;
 export async function requireSession(req: NextRequest) {
   const session = await getSessionFromRequest(req);
   if (!session) {
+    const hadCookie = Boolean(req.cookies?.get(TREEFOLIO_SESSION_COOKIE)?.value);
+    logUnauthorizedApi(req, {
+      source: "requireSession",
+      reason: hadCookie ? "invalid_or_expired_session_jwt" : "missing_session_cookie",
+    });
     return {
       session: null,
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
@@ -103,6 +109,10 @@ export async function requireFeatureQuota(
 
   const user = await findUserById(session.userId);
   if (!user) {
+    logUnauthorizedApi(req, {
+      source: "requireFeatureQuota",
+      reason: "session_user_not_found",
+    });
     return {
       session: null,
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),

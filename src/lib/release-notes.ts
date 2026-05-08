@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "improvement",
+        text: "401 responses log structured `[http:401]` context: source, reason (e.g. missing cookie vs invalid JWT), path, method, request ids, client IP (from forwarded headers), and user-agent prefix — no cookies or Bearer secrets.",
+        translations: {
+          es: "Los 401 registran contexto estructurado `[http:401]`: origen, motivo (p. ej. cookie ausente vs JWT inválido), ruta, método, ids de petición, IP cliente (cabeceras forward) y prefijo de user-agent — sin cookies ni secretos Bearer.",
+        },
+      },
+      {
         type: "fix",
         text: "`/api/cron/snaptrade-cleanup` now uses `verifyCronAuth` like other crons. Documented that Vercel’s `Authorization: Bearer` value comes only from project `CRON_SECRET`; `CRON_SECRET_FALLBACK` is app-only for accepting a second token during rotation.",
         translations: {

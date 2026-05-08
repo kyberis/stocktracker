@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
 import { isIdpEnabled, useLegacyAuth } from "@/lib/idp/config";
+import { logUnauthorizedApi } from "@/lib/log-unauthorized";
 
 const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email", "/blog", "/contact", "/demo", "/releasenotes", "/leaf", "/unsubscribe", "/about"]);
 const PUBLIC_API_ROUTES = new Set([
@@ -136,6 +137,10 @@ export async function middleware(req: NextRequest) {
 
   if (!session) {
     if (pathname.startsWith("/api/")) {
+      logUnauthorizedApi(req, {
+        source: "middleware",
+        reason: token ? "invalid_or_expired_session_jwt" : "missing_session_cookie",
+      });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     if (pathname === "/") {

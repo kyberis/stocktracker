@@ -1,6 +1,7 @@
 import { randomUUID, timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { logUnauthorizedApi } from "@/lib/log-unauthorized";
 import { ensureInitialized } from "@/lib/db/client";
 import { str, num } from "@/lib/db/helpers";
 
@@ -145,9 +146,14 @@ export function verifyCronAuth(jobName: string, req: NextRequest): NextResponse 
   const token = extractBearerToken(req.headers.get("authorization"));
 
   if (!bearerMatchesCronSecrets(token, secrets)) {
-    console.warn(
-      `[cron:${jobName}] 401 — ${!token ? "missing or malformed Bearer token" : "Bearer does not match CRON_SECRET or CRON_SECRET_FALLBACK (Vercel sends the project CRON_SECRET; trim newlines in dashboard)"}`,
-    );
+    logUnauthorizedApi(req, {
+      source: "verifyCronAuth",
+      reason: token ? "cron_bearer_mismatch" : "missing_or_malformed_bearer",
+      tags: {
+        jobName,
+        hasAuthorizationHeader: Boolean(req.headers.get("authorization")),
+      },
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return null;
