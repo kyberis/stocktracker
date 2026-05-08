@@ -31,6 +31,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "IdP (`external/accounts`): manejo más claro cuando Stripe devuelve «No such price» (suele ser desajuste test/live o cuenta distinta de `STRIPE_SECRET_KEY`); saneo de valores `STRIPE_PRICE_PRO_*`; troubleshooting en README para `/api/billing/checkout`.",
         },
       },
+      {
+        type: "fix",
+        text: "IdP (`external/accounts`): password reset now returns `mail_suppressed` when email is skipped (non-prod) and HTTP 500 with guidance when Resend fails in production; README states `RESEND_API_KEY` must be set on trefolio-accounts for reset mail.",
+        translations: {
+          es: "IdP (`external/accounts`): la recuperación de contraseña devuelve `mail_suppressed` si el correo se omite (no prod) y HTTP 500 con orientación si Resend falla en producción; el README indica que `RESEND_API_KEY` debe estar en trefolio-accounts para el correo de reset.",
+        },
+      },
     ],
   },
   {
