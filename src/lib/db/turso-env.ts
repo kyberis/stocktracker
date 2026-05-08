@@ -25,7 +25,7 @@ export function getRawTursoDatabaseUrl(): string | undefined {
   return t || undefined;
 }
 
-export function useRemoteDbInDevExplicitOptIn(): boolean {
+export function remoteDbInDevExplicitOptIn(): boolean {
   return (
     isTruthyEnv(process.env.TREFOLIO_USE_REMOTE_DB_IN_DEV) ||
     isTruthyEnv(process.env.STOCKTRACKER_USE_REMOTE_DB_IN_DEV)
@@ -58,7 +58,7 @@ export function getEffectiveTursoDatabaseUrl(): string | undefined {
     rawDatabaseUrl: raw,
     isVercel: Boolean(process.env.VERCEL),
     nodeEnv: process.env.NODE_ENV,
-    useRemoteDbInDev: useRemoteDbInDevExplicitOptIn(),
+    useRemoteDbInDev: remoteDbInDevExplicitOptIn(),
   });
 
   const rawLooksRemote = raw ? isRemoteTursoLibsqlUrl(raw) : false;

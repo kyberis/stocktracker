@@ -224,7 +224,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
           const cashEntries: { name: string; amountEUR: number; displayCurrency: string; displayAmount: number }[] = [];
           for (const entry of aggregated.values()) {
             const { broker, currency } = entry;
-            let displayAmount = entry.amount;
+            const displayAmount = entry.amount;
             let amountEUR = displayAmount;
             if (currency !== "EUR") {
               try {

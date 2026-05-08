@@ -66,7 +66,7 @@ export function getIdpServiceToken(): string | null {
  * accepted alongside the IdP. Default `true` until the cutover plan completes.
  * After cutover, set to `false` and the legacy routes return 410 Gone.
  */
-export function useLegacyAuth(): boolean {
+export function legacyAuthEnabled(): boolean {
   return process.env.USE_LEGACY_AUTH !== "false";
 }
 

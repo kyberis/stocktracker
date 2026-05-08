@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import SignupPageClient from "./signup-page-client";
-import { isIdpEnabled, useLegacyAuth } from "@/lib/idp/config";
+import { isIdpEnabled, legacyAuthEnabled } from "@/lib/idp/config";
 import {
   mapAppLanguageToIdpUiLocalesTag,
   TREFOLIO_UI_LOCALE_COOKIE,
@@ -13,7 +13,7 @@ export default async function SignupPage({
   searchParams: Promise<{ email?: string | string[] }>;
 }) {
   const sp = await searchParams;
-  if (isIdpEnabled() && !useLegacyAuth()) {
+  if (isIdpEnabled() && !legacyAuthEnabled()) {
     const qs = new URLSearchParams();
     qs.set("redirect", "/onboarding");
     const raw = sp.email;

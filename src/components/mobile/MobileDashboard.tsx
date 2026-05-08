@@ -124,7 +124,7 @@ export default function MobileDashboard() {
     initNudgeTracking();
     if (userPlan === "free" && shouldShowPaywallNudge()) {
       recordPaywallNudgeShown();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setPaywallSurface("periodic_nudge");
       setShowPaywall(true);
     }
@@ -213,7 +213,7 @@ export default function MobileDashboard() {
       // Synchronize with the native splash (external system) and latch the
       // one-shot flag so we don't flash back to the loading spinner.
       hideNativeSplash();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setHasLoadedOnce(true);
     }
   }, [hasLoadedOnce, isDashboardReady, isEmptyLoaded]);

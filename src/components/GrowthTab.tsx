@@ -81,7 +81,7 @@ export default function GrowthTab() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [range, isPaid, activePortfolioId]);
 
   function handleRangeChange(r: Range) {

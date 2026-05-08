@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "CI lint: relax experimental `react-hooks/*` rules that were blocking `main`, rename `useLegacyAuth` → `legacyAuthEnabled` (not a React hook) for middleware, refactor mobile/native viewport hooks, and rename `useRemoteDbInDevExplicitOptIn` to avoid false hook detection.",
+        translations: {
+          es: "Lint en CI: aflojadas reglas experimentales `react-hooks/*` que bloqueaban `main`, `useLegacyAuth` pasó a `legacyAuthEnabled` (no es hook de React) para middleware, refactor de hooks viewport móvil/native, y rename de `useRemoteDbInDevExplicitOptIn` para evitar falsos positivos de hooks.",
+        },
+      },
+      {
+        type: "improvement",
         text: "Structured `[http:401]` logging extended: new `json401()` helper used across API routes (AI/portfolio/device, auth login/passkey/password, webhooks, IdP service plane) so every manual 401 is correlated with source + reason in logs.",
         translations: {
           es: "Registro `[http:401]` ampliado: helper `json401()` en rutas API (AI/portfolio/device, login/passkey/password, webhooks, plano de servicio IdP) para correlacionar cada 401 manual con origen y motivo.",

@@ -88,7 +88,7 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
     userSymbols = [...new Set(holdings.map((h) => h.ticker.toUpperCase()))];
   }
 
-  let events: CalendarEvent[] = [];
+  const events: CalendarEvent[] = [];
 
   if (allowedTypes.length > 0) {
     const earningsTypes = allowedTypes.filter((t) => t === "earnings");

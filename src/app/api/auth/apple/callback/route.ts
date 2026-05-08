@@ -22,7 +22,7 @@ import { isBlockedEmailDomain } from "@/lib/schemas";
 import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
 import { FIRST_TOUCH_ATTRIBUTION_COOKIE, normalizeAttribution, parseFirstTouchAttributionCookie } from "@/lib/attribution";
-import { freezeLocalUserWrites, useLegacyAuth } from "@/lib/idp/config";
+import { freezeLocalUserWrites, legacyAuthEnabled } from "@/lib/idp/config";
 
 const APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
 const APPLE_JWKS_URL = new URL("https://appleid.apple.com/auth/keys");
@@ -66,7 +66,7 @@ interface AppleIdTokenClaims {
 export async function POST(req: NextRequest) {
   ensureSessionSecret();
 
-  if (!useLegacyAuth()) {
+  if (!legacyAuthEnabled()) {
     return errorRedirect(req, "Apple sign-in moved to user.trefolio.com.");
   }
 

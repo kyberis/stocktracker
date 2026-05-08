@@ -13,13 +13,13 @@ import { loginSchema } from "@/lib/schemas";
 import { checkLoginRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
-import { useLegacyAuth } from "@/lib/idp/config";
+import { legacyAuthEnabled } from "@/lib/idp/config";
 import { json401 } from "@/lib/log-unauthorized";
 
 export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
   ensureSessionSecret();
 
-  if (!useLegacyAuth()) {
+  if (!legacyAuthEnabled()) {
     return NextResponse.json(
       {
         error: "Sign in moved to user.trefolio.com. You can sign in there once and the session works across trefolio, Clara and Will.",

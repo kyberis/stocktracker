@@ -23,7 +23,7 @@ import { isBlockedEmailDomain } from "@/lib/schemas";
 import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
 import { FIRST_TOUCH_ATTRIBUTION_COOKIE, normalizeAttribution, parseFirstTouchAttributionCookie } from "@/lib/attribution";
-import { freezeLocalUserWrites, useLegacyAuth } from "@/lib/idp/config";
+import { freezeLocalUserWrites, legacyAuthEnabled } from "@/lib/idp/config";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -103,7 +103,7 @@ async function exchangeCodeForGoogleUser(
 export async function GET(req: NextRequest) {
   ensureSessionSecret();
 
-  if (!useLegacyAuth()) {
+  if (!legacyAuthEnabled()) {
     return errorRedirect(req, "Google sign-in moved to user.trefolio.com.");
   }
 

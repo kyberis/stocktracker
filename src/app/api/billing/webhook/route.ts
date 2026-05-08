@@ -21,7 +21,7 @@ import {
   downgradeNotification,
   planExpiredNotification,
 } from "@/lib/notification-templates";
-import { useLegacyAuth } from "@/lib/idp/config";
+import { legacyAuthEnabled } from "@/lib/idp/config";
 
 function stripeCustomerId(value: string | Stripe.Customer | Stripe.DeletedCustomer | null): string {
   if (!value) return "";
@@ -56,7 +56,7 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
   // After IdP cutover the IdP is the source of truth for entitlements; the
   // local webhook becomes a no-op. We keep the endpoint live for backward
   // compatibility (Stripe may still have it configured during the transition).
-  if (!useLegacyAuth()) {
+  if (!legacyAuthEnabled()) {
     return NextResponse.json({ received: true, mode: "idp_owned" }, { status: 200 });
   }
 

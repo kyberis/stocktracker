@@ -46,7 +46,7 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
       }),
     }).catch(() => {});
     // activePortfolioId omitted from deps — portfolioIdRef avoids race when id updates before holdings.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [holdings, quotes, exchangeRates, demoMode]);
 
   useEffect(() => {

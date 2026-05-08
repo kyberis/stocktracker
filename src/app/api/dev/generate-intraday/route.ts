@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
       const stk = startStk + (endStk - startStk) * stkRatio + stkNoise;
 
       // --- ETFs: same market hours as stocks ---
-      let etfRatio = stkRatio;
+      const etfRatio = stkRatio;
       const etfNoise = rand() * 0.001 * startEtf * (etfRatio > 0 ? 1 : 0);
       const etf = startEtf + (endEtf - startEtf) * etfRatio + etfNoise;
 

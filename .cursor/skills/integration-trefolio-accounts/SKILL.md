@@ -31,7 +31,7 @@ Clara / Will specifics (for behaviour you mirror or debug):
 
 | Area | Role |
 |------|------|
-| [`src/lib/idp/config.ts`](../../../src/lib/idp/config.ts) | `getIdpBaseUrl`, `getIdpIssuer`, `isIdpEnabled`, `useLegacyAuth`, `freezeLocalUserWrites` |
+| [`src/lib/idp/config.ts`](../../../src/lib/idp/config.ts) | `getIdpBaseUrl`, `getIdpIssuer`, `isIdpEnabled`, `legacyAuthEnabled`, `freezeLocalUserWrites` |
 | [`src/lib/idp/oidc.ts`](../../../src/lib/idp/oidc.ts) | PKCE, `buildAuthorizationUrl`, token exchange, JWT verify |
 | [`src/lib/idp/entitlements.ts`](../../../src/lib/idp/entitlements.ts) | Link `idp_sub`, sync plan from IdP |
 | [`src/app/api/auth/oidc/start/route.ts`](../../../src/app/api/auth/oidc/start/route.ts) | Begin login flow |

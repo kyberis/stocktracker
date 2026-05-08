@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isIdpEnabled, useLegacyAuth } from "@/lib/idp/config";
+import { isIdpEnabled, legacyAuthEnabled } from "@/lib/idp/config";
 import LoginPageClient from "./login-page-client";
 
 interface LoginPageProps {
@@ -22,7 +22,7 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
   const errRaw = searchParams?.error;
   const oauthError = Array.isArray(errRaw) ? errRaw[0] : errRaw;
 
-  if (isIdpEnabled() && !useLegacyAuth()) {
+  if (isIdpEnabled() && !legacyAuthEnabled()) {
     // After a failed OIDC callback we redirect here with ?error=… — do not bounce
     // straight back to /api/auth/oidc/start or the browser hits ERR_TOO_MANY_REDIRECTS.
     if (!oauthError) {

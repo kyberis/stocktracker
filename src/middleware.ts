@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
-import { isIdpEnabled, useLegacyAuth } from "@/lib/idp/config";
+import { isIdpEnabled, legacyAuthEnabled } from "@/lib/idp/config";
 import { logUnauthorizedApi } from "@/lib/log-unauthorized";
 
 const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email", "/blog", "/contact", "/demo", "/releasenotes", "/leaf", "/unsubscribe", "/about"]);
@@ -94,7 +94,7 @@ export async function middleware(req: NextRequest) {
    */
   if (pathname === "/login") {
     const oauthErr = req.nextUrl.searchParams.get("error");
-    if (!oauthErr && isIdpEnabled() && !useLegacyAuth()) {
+    if (!oauthErr && isIdpEnabled() && !legacyAuthEnabled()) {
       const qs = new URLSearchParams();
       const rp = req.nextUrl.searchParams.get("redirect");
       if (rp && rp.startsWith("/") && !rp.startsWith("//")) {
