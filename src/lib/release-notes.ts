@@ -45,6 +45,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "IdP (`external/accounts`): `/favicon.ico` y `/favicon.png` (misma marca que trefolio) y `metadataBase` / `icons` en el layout raíz para URLs base correctas en navegador y OG.",
         },
       },
+      {
+        type: "fix",
+        text: "IdP (`external/accounts`): `findUserByEmail` matches `lower(email)` so password reset finds accounts with legacy mixed-case emails; log Resend message id on successful reset sends; success copy mentions spam folder.",
+        translations: {
+          es: "IdP (`external/accounts`): `findUserByEmail` usa `lower(email)` para que el reset encuentre cuentas con email en mayúsculas/minúsculas heredadas; se registra el id de Resend al enviar; el texto de éxito menciona la carpeta de spam.",
+        },
+      },
     ],
   },
   {
