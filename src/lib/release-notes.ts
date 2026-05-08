@@ -38,6 +38,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "IdP (`external/accounts`): la recuperación de contraseña devuelve `mail_suppressed` si el correo se omite (no prod) y HTTP 500 con orientación si Resend falla en producción; el README indica que `RESEND_API_KEY` debe estar en trefolio-accounts para el correo de reset.",
         },
       },
+      {
+        type: "improvement",
+        text: "IdP (`external/accounts`): `/favicon.ico` and `/favicon.png` (same mark as trefolio) plus `metadataBase` / `icons` in the root layout for correct browser and OG base URLs.",
+        translations: {
+          es: "IdP (`external/accounts`): `/favicon.ico` y `/favicon.png` (misma marca que trefolio) y `metadataBase` / `icons` en el layout raíz para URLs base correctas en navegador y OG.",
+        },
+      },
     ],
   },
   {
