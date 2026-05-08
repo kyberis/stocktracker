@@ -52,6 +52,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "IdP (`external/accounts`): `findUserByEmail` usa `lower(email)` para que el reset encuentre cuentas con email en mayúsculas/minúsculas heredadas; se registra el id de Resend al enviar; el texto de éxito menciona la carpeta de spam.",
         },
       },
+      {
+        type: "improvement",
+        text: "IdP (`external/accounts`): password reset sends when `RESEND_API_KEY` is set even outside production; locale resolution reads `trefolio_ui_locale` everywhere (matches `/oauth2/authorize`); `<html lang>` follows cookie; Stripe checkout validates price IDs (+ env aliases `STRIPE_PRICE_ID_PRO_*`) before redirect; `/upgrade` bilingual copy explaining Warren+Clara+Will Pro bundle.",
+        translations: {
+          es: "IdP (`external/accounts`): recuperación envía correo si `RESEND_API_KEY` está definida fuera de producción; el idioma lee también `trefolio_ui_locale` como en authorize; `<html lang>` sigue la cookie; checkout valida price IDs antes de Stripe (aliases `STRIPE_PRICE_ID_PRO_*`); página `/upgrade` bilingüe con copy del paquete Pro Warren+Clara+Will.",
+        },
+      },
     ],
   },
   {
