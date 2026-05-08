@@ -7,6 +7,7 @@ import { timingSafeEqual } from "crypto";
 import { withMetrics } from "@/lib/with-metrics";
 import { handleTelegramUpdate, type TelegramUpdate } from "@/lib/telegram/handler";
 import { getTelegramWebhookSecret } from "@/lib/telegram/client";
+import { json401 } from "@/lib/log-unauthorized";
 
 /**
  * Receive Telegram bot updates.
@@ -35,7 +36,9 @@ export const POST = withMetrics(
     const headerSecret = req.headers.get("x-telegram-bot-api-secret-token") || "";
 
     if (!constantTimeEqual(pathSecret, expected) || !constantTimeEqual(headerSecret, expected)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 401 });
+      return json401(req, { source: "api/webhooks/telegram/[secret]", reason: "path_or_header_secret_mismatch" }, {
+        error: "Forbidden",
+      });
     }
 
     let update: TelegramUpdate;

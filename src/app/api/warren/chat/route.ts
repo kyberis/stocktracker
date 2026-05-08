@@ -11,6 +11,7 @@ import type { WarrenStreamFrame } from "@/lib/ai/warren/types";
 import { listPortfolios } from "@/lib/db";
 import { warrenPortfolioSnapshotSchema } from "@/lib/ai/warren/portfolio-snapshot-zod";
 import { sanitizeWarrenPortfolioLabel } from "@/lib/ai/prompt-safety";
+import { json401 } from "@/lib/log-unauthorized";
 
 const requestSchema = z
   .object({
@@ -35,7 +36,7 @@ const requestSchema = z
 export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => {
   const { session, error } = await requireFeatureQuota(req, "ai_consult");
   if (error) return error;
-  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return json401(req, { source: "api/warren/chat", reason: "no_session" });
 
   let body: z.infer<typeof requestSchema>;
   try {

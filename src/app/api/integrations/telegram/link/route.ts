@@ -10,6 +10,7 @@ import {
 } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { getTelegramBotUsername } from "@/lib/telegram/client";
+import { json401 } from "@/lib/log-unauthorized";
 
 /**
  * POST /api/integrations/telegram/link
@@ -23,7 +24,8 @@ import { getTelegramBotUsername } from "@/lib/telegram/client";
  */
 export const POST = withMetrics("/api/integrations/telegram/link", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
-  if (error || !session) return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (error) return error;
+  if (!session) return json401(req, { source: "api/integrations/telegram/link", reason: "no_session" }, { error: "Unauthorized" });
 
   if (!(await isFeatureEnabled("telegram_bot_enabled"))) {
     return NextResponse.json({ error: "Telegram integration is disabled" }, { status: 503 });
@@ -56,7 +58,8 @@ export const POST = withMetrics("/api/integrations/telegram/link", async (req: N
  */
 export const GET = withMetrics("/api/integrations/telegram/link", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
-  if (error || !session) return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (error) return error;
+  if (!session) return json401(req, { source: "api/integrations/telegram/link", reason: "no_session" }, { error: "Unauthorized" });
 
   const link = await getChatLinkByUserId(session.userId);
   return NextResponse.json({
@@ -76,7 +79,8 @@ export const GET = withMetrics("/api/integrations/telegram/link", async (req: Ne
  */
 export const DELETE = withMetrics("/api/integrations/telegram/link", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
-  if (error || !session) return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (error) return error;
+  if (!session) return json401(req, { source: "api/integrations/telegram/link", reason: "no_session" }, { error: "Unauthorized" });
 
   await unlinkChatByUser(session.userId);
   return NextResponse.json({ ok: true });

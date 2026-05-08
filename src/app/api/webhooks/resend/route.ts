@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "svix";
 import { updateEmailSendStatus } from "@/lib/db";
+import { json401 } from "@/lib/log-unauthorized";
 
 const WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET || "";
 
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
         "svix-signature": svixSignature,
       });
     } catch {
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      return json401(req, { source: "api/webhooks/resend", reason: "svix_verify_failed" }, { error: "Invalid signature" });
     }
   }
 

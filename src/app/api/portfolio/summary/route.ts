@@ -6,6 +6,7 @@ import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
 import { checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
 import { deviceApiCalls } from "@/lib/metrics";
+import { json401 } from "@/lib/log-unauthorized";
 import type { ExchangeRates, QuoteData } from "@/lib/types";
 
 const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
@@ -48,7 +49,11 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
   const authContext = await resolveAuthContext(req);
   if (!authContext.userId) {
     if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/portfolio/summary", status: "auth_failed" });
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return json401(req, {
+      source: "api/portfolio/summary",
+      reason: "auth_failed",
+      tags: { hasBearer: Boolean(req.headers.get("authorization")?.startsWith("Bearer ")) },
+    });
   }
 
   const userId = authContext.userId;

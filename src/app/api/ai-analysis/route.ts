@@ -9,12 +9,13 @@ import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGl
 import { createAiStream } from "@/lib/ai-stream";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
+import { json401 } from "@/lib/log-unauthorized";
 import type { SubscriptionPlan } from "@/lib/types";
 
 export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "ai_consult");
   if (error) return error;
-  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return json401(request, { source: "api/ai-analysis", reason: "no_session" });
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session?.plan || "free") as SubscriptionPlan;

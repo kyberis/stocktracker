@@ -7,6 +7,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { changePasswordSchema } from "@/lib/schemas";
+import { json401 } from "@/lib/log-unauthorized";
 
 export const POST = withMetrics("/api/auth/change-password", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -24,7 +25,9 @@ export const POST = withMetrics("/api/auth/change-password", async (req: NextReq
 
     const valid = await verifyPassword(currentPassword, user.password_hash);
     if (!valid) {
-      return NextResponse.json({ error: "Current password is incorrect." }, { status: 401 });
+      return json401(req, { source: "api/auth/change-password", reason: "wrong_current_password" }, {
+        error: "Current password is incorrect.",
+      });
     }
 
     const newHash = await hashPassword(newPassword);

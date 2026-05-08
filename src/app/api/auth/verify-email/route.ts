@@ -15,6 +15,7 @@ import {
   verifySessionToken,
 } from "@/lib/auth/session";
 import { withMetrics } from "@/lib/with-metrics";
+import { json401 } from "@/lib/log-unauthorized";
 
 export const POST = withMetrics("/api/auth/verify-email", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -60,7 +61,9 @@ export const GET = withMetrics("/api/auth/verify-email", async (req: NextRequest
     const existingToken = req.cookies.get("trefolio_session")?.value;
     const existingSession = existingToken ? await verifySessionToken(existingToken) : null;
     if (!existingSession) {
-      return NextResponse.json({ error: "Session required for test verification" }, { status: 401 });
+      return json401(req, { source: "api/auth/verify-email", reason: "session_required_for_test_token" }, {
+        error: "Session required for test verification",
+      });
     }
     const sessionUser = await findUserById(existingSession.userId);
     if (!sessionUser || !isTreefolioTestEmail(sessionUser.email)) {

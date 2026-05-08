@@ -10,6 +10,7 @@ import { checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
 import { deviceApiCalls } from "@/lib/metrics";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
+import { json401 } from "@/lib/log-unauthorized";
 
 async function resolveUser(req: NextRequest) {
   const auth = req.headers.get("authorization");
@@ -37,7 +38,11 @@ export const GET = withMetrics("/api/device/sparkline", async (req: NextRequest)
   const user = await resolveUser(req);
   if (!user) {
     if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/sparkline", status: "auth_failed" });
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return json401(req, {
+      source: "api/device/sparkline",
+      reason: "device_bearer_auth_failed",
+      tags: { hasBearer: Boolean(req.headers.get("authorization")?.startsWith("Bearer ")) },
+    });
   }
 
   const ticker = req.nextUrl.searchParams.get("ticker");

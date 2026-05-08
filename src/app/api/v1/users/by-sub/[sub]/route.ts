@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ensureInitialized } from "@/lib/db/client";
 import { rowToDbUser } from "@/lib/db/helpers";
 import { effectivePlan } from "@/lib/subscription";
+import { json401 } from "@/lib/log-unauthorized";
 
 /**
  * Service-to-service endpoint consumed by the trefolio-accounts admin UI.
@@ -19,7 +20,11 @@ function unauthorized(req: NextRequest): NextResponse | null {
   const [scheme, token] = auth.split(" ");
   const expected = process.env.IDP_SERVICE_TOKEN;
   if (!expected || scheme !== "Bearer" || token !== expected) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    return json401(req, {
+      source: "api/v1/users/by-sub",
+      reason: !expected ? "idp_service_token_unset" : "idp_service_bearer_mismatch",
+      tags: { hasBearer: scheme === "Bearer" && Boolean(token) },
+    }, { error: "unauthorized" });
   }
   return null;
 }

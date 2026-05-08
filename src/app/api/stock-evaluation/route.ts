@@ -10,6 +10,7 @@ import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provi
 import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import { withMetrics } from "@/lib/with-metrics";
 import { deferTask } from "@/lib/task-runner";
+import { json401 } from "@/lib/log-unauthorized";
 
 export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -41,7 +42,7 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
   // Generating a fresh evaluation hits paid market-data — gate behind quota.
   const { session, error } = await requireFeatureQuota(request, "stock_evaluation");
   if (error) return error;
-  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return json401(request, { source: "api/stock-evaluation", reason: "no_session" });
 
   const resolved = await resolvePremiumStockDataProvider(session.userId, "fundamentals");
   if (!resolved) {

@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import { findUserByWidgetToken, findUserByDevicePasskey, isFeatureEnabled } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { deviceHeartbeats, deviceErrors } from "@/lib/metrics";
+import { json401 } from "@/lib/log-unauthorized";
 
 async function resolveUser(req: NextRequest) {
   const auth = req.headers.get("authorization");
@@ -19,7 +20,11 @@ export const POST = withMetrics("/api/device/heartbeat", async (req: NextRequest
 
   const user = await resolveUser(req);
   if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return json401(req, {
+      source: "api/device/heartbeat",
+      reason: "device_bearer_auth_failed",
+      tags: { hasBearer: Boolean(req.headers.get("authorization")?.startsWith("Bearer ")) },
+    });
   }
 
   const fwVersion = req.headers.get("x-firmware-version") ?? "unknown";

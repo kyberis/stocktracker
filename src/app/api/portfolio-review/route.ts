@@ -19,11 +19,12 @@ import { createAiStream } from "@/lib/ai-stream";
 import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
+import { json401 } from "@/lib/log-unauthorized";
 
 export const POST = withMetrics("/api/portfolio-review", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "ai_portfolio_review");
   if (error) return error;
-  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return json401(request, { source: "api/portfolio-review", reason: "no_session" });
 
   if (!await isFeatureEnabledForUser("ai_report_enabled", session.userId)) {
     await refundFeatureQuota(session.userId, "ai_portfolio_review");

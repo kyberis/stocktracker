@@ -5,6 +5,7 @@ import { canAccessFeature } from "@/lib/subscription";
 import { withMetrics } from "@/lib/with-metrics";
 import type { CalendarEvent } from "@/lib/db";
 import { syncFmpCalendarEventTypes, type FmpCalendarSyncType } from "@/lib/market-data/fmp-calendar-sync";
+import { json401 } from "@/lib/log-unauthorized";
 
 /** Avoid calling FMP on every request when a range truly has no IPO/split rows (empty API result). */
 const FMP_HYDRATE_COOLDOWN_MS = 60 * 60 * 1000;
@@ -31,7 +32,7 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
 
   const user = await findUserById(session.userId);
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return json401(req, { source: "api/events", reason: "user_row_missing" });
   }
 
   const url = new URL(req.url);

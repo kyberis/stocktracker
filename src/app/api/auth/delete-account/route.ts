@@ -7,6 +7,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { deleteAccountSchema } from "@/lib/schemas";
+import { json401 } from "@/lib/log-unauthorized";
 
 export const POST = withMetrics("/api/auth/delete-account", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -31,7 +32,7 @@ export const POST = withMetrics("/api/auth/delete-account", async (req: NextRequ
 
     const valid = await verifyPassword(password, user.password_hash);
     if (!valid) {
-      return NextResponse.json({ error: "Incorrect password." }, { status: 401 });
+      return json401(req, { source: "api/auth/delete-account", reason: "wrong_password" }, { error: "Incorrect password." });
     }
 
     await deleteUser(user.id);

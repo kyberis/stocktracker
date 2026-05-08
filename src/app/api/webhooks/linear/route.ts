@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { getFeedbackById, parseFeedbackIdFromLinearContent, upsertFeedbackCompletionDraft } from "@/lib/db/feedback";
+import { json401 } from "@/lib/log-unauthorized";
 
 export const dynamic = "force-dynamic";
 
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
     req.headers.get("LINEAR-SIGNATURE");
 
   if (!verifyLinearSignature(rawBody, sig, secret)) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    return json401(req, { source: "api/webhooks/linear", reason: "invalid_linear_signature" }, { error: "Invalid signature" });
   }
 
   let payload: LinearIssuePayload;
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
 
   const ts = payload.webhookTimestamp;
   if (typeof ts === "number" && Math.abs(Date.now() - ts) > 5 * 60 * 1000) {
-    return NextResponse.json({ error: "Stale webhook" }, { status: 401 });
+    return json401(req, { source: "api/webhooks/linear", reason: "stale_webhook_timestamp" }, { error: "Stale webhook" });
   }
 
   if (payload.type !== "Issue" || payload.action !== "update") {

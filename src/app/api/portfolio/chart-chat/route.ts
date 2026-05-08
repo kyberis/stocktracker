@@ -12,12 +12,13 @@ import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
 import { chartChatRequestSchema } from "@/lib/schemas";
+import { json401 } from "@/lib/log-unauthorized";
 import type { SubscriptionPlan } from "@/lib/types";
 
 export const POST = withMetrics("/api/portfolio/chart-chat", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "ai_consult");
   if (error) return error;
-  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return json401(request, { source: "api/portfolio/chart-chat", reason: "no_session" });
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session?.plan || "free") as SubscriptionPlan;

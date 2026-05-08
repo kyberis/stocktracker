@@ -14,6 +14,7 @@ import { checkLoginRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
 import { useLegacyAuth } from "@/lib/idp/config";
+import { json401 } from "@/lib/log-unauthorized";
 
 export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
   ensureSessionSecret();
@@ -59,7 +60,7 @@ export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
 
     if (!user) {
       authEventsTotal.inc({ event: "login_failure" });
-      return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+      return json401(req, { source: "api/auth/login", reason: "invalid_credentials", tags: { phase: "user_lookup" } }, { error: "Invalid credentials." });
     }
 
     if (user.auth_provider === "google") {
@@ -79,7 +80,7 @@ export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
     const isValid = await verifyPassword(password, user.password_hash);
     if (!isValid) {
       authEventsTotal.inc({ event: "login_failure" });
-      return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+      return json401(req, { source: "api/auth/login", reason: "invalid_credentials", tags: { phase: "password" } }, { error: "Invalid credentials." });
     }
 
     const token = await createSessionToken({

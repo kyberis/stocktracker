@@ -25,6 +25,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import type { SubscriptionPlan } from "@/lib/types";
 import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
 import { portfolioTelemetryInjectionGuard } from "@/lib/ai/prompt-safety";
+import { json401 } from "@/lib/log-unauthorized";
 
 const portfolioAiSchema = z
   .object({
@@ -40,7 +41,7 @@ const portfolioAiSchema = z
 export const POST = withMetrics("/api/portfolio/ai-chat", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "ai_consult");
   if (error) return error;
-  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return json401(request, { source: "api/portfolio/ai-chat", reason: "no_session" });
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session?.plan || "free") as SubscriptionPlan;

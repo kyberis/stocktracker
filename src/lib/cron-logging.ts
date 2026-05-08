@@ -1,7 +1,7 @@
 import { randomUUID, timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { logUnauthorizedApi } from "@/lib/log-unauthorized";
+import { json401 } from "@/lib/log-unauthorized";
 import { ensureInitialized } from "@/lib/db/client";
 import { str, num } from "@/lib/db/helpers";
 
@@ -146,15 +146,18 @@ export function verifyCronAuth(jobName: string, req: NextRequest): NextResponse 
   const token = extractBearerToken(req.headers.get("authorization"));
 
   if (!bearerMatchesCronSecrets(token, secrets)) {
-    logUnauthorizedApi(req, {
-      source: "verifyCronAuth",
-      reason: token ? "cron_bearer_mismatch" : "missing_or_malformed_bearer",
-      tags: {
-        jobName,
-        hasAuthorizationHeader: Boolean(req.headers.get("authorization")),
+    return json401(
+      req,
+      {
+        source: "verifyCronAuth",
+        reason: token ? "cron_bearer_mismatch" : "missing_or_malformed_bearer",
+        tags: {
+          jobName,
+          hasAuthorizationHeader: Boolean(req.headers.get("authorization")),
+        },
       },
-    });
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      { error: "Unauthorized" },
+    );
   }
   return null;
 }

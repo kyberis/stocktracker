@@ -17,6 +17,7 @@ import { checkAndIncrementFeatureQuota, refundFeatureQuota } from "@/lib/feature
 import { checkGlobalAiCap, incrementGlobalAiCalls, checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
 import { aiCallsTotal, aiRequestDuration, deviceApiCalls } from "@/lib/metrics";
 import { withMetrics } from "@/lib/with-metrics";
+import { json401 } from "@/lib/log-unauthorized";
 
 async function resolveAuthedUser(req: NextRequest) {
   const auth = req.headers.get("authorization");
@@ -42,10 +43,11 @@ export const POST = withMetrics("/api/device/ai-summary", async (request: NextRe
   const user = await resolveAuthedUser(request);
   if (!user) {
     if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/ai-summary", status: "auth_failed" });
-    return Response.json(
-      { error: "Unauthorized" },
-      { status: 401 },
-    );
+    return json401(request, {
+      source: "api/device/ai-summary",
+      reason: "device_bearer_auth_failed",
+      tags: { hasBearer: Boolean(request.headers.get("authorization")?.startsWith("Bearer ")) },
+    });
   }
 
   const plan = effectivePlan(user.plan, user.plan_expires_at);

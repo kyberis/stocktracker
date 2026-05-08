@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { completeTelegramLink } from "@/lib/db";
 import { sendTelegramWelcome } from "@/lib/telegram";
+import { json401 } from "@/lib/log-unauthorized";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ function verifySecret(req: NextRequest): boolean {
 
 export async function POST(req: NextRequest) {
   if (!verifySecret(req)) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    return json401(req, { source: "api/webhooks/telegram", reason: "telegram_secret_mismatch" }, { error: "unauthorized" });
   }
 
   let body: unknown;

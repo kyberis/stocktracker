@@ -9,6 +9,7 @@ import {
   markDeviceNotificationsRead,
 } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
+import { json401 } from "@/lib/log-unauthorized";
 
 async function resolveUser(req: NextRequest) {
   const auth = req.headers.get("authorization");
@@ -23,7 +24,13 @@ export const GET = withMetrics("/api/device/notifications", async (req: NextRequ
   }
 
   const user = await resolveUser(req);
-  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) {
+    return json401(req, {
+      source: "api/device/notifications",
+      reason: "device_bearer_auth_failed",
+      tags: { httpMethod: "GET", hasBearer: Boolean(req.headers.get("authorization")?.startsWith("Bearer ")) },
+    });
+  }
 
   const notifications = await listUnreadDeviceNotifications(user.id);
   return Response.json({ notifications }, {
@@ -37,7 +44,13 @@ export const POST = withMetrics("/api/device/notifications", async (req: NextReq
   }
 
   const user = await resolveUser(req);
-  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) {
+    return json401(req, {
+      source: "api/device/notifications",
+      reason: "device_bearer_auth_failed",
+      tags: { httpMethod: "POST", hasBearer: Boolean(req.headers.get("authorization")?.startsWith("Bearer ")) },
+    });
+  }
 
   let ids: string[] | undefined;
   try {

@@ -11,6 +11,7 @@ import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
 import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
+import { json401 } from "@/lib/log-unauthorized";
 
 export const POST = withMetrics("/api/auth/passkey/login-verify", async (req: NextRequest) => {
   ensureSessionSecret();
@@ -29,7 +30,7 @@ export const POST = withMetrics("/api/auth/passkey/login-verify", async (req: Ne
   const passkey = await getPasskeyById(credential.id);
   if (!passkey) {
     authEventsTotal.inc({ event: "login_failure" });
-    return NextResponse.json({ error: "Passkey not recognized" }, { status: 401 });
+    return json401(req, { source: "api/auth/passkey/login-verify", reason: "passkey_not_found" }, { error: "Passkey not recognized" });
   }
 
   const { rpID, origin } = getWebAuthnConfig(req);
@@ -51,12 +52,12 @@ export const POST = withMetrics("/api/auth/passkey/login-verify", async (req: Ne
   } catch (e) {
     console.error("Passkey login verification failed:", e);
     authEventsTotal.inc({ event: "login_failure" });
-    return NextResponse.json({ error: "Verification failed" }, { status: 401 });
+    return json401(req, { source: "api/auth/passkey/login-verify", reason: "passkey_verify_exception" }, { error: "Verification failed" });
   }
 
   if (!verification.verified) {
     authEventsTotal.inc({ event: "login_failure" });
-    return NextResponse.json({ error: "Verification failed" }, { status: 401 });
+    return json401(req, { source: "api/auth/passkey/login-verify", reason: "passkey_not_verified" }, { error: "Verification failed" });
   }
 
   await updatePasskeyCounter(passkey.id, verification.authenticationInfo.newCounter);

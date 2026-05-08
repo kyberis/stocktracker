@@ -25,6 +25,7 @@ import {
   type PortfolioScoreResponse,
   type StoredScore,
 } from "@/lib/portfolio-score";
+import { json401 } from "@/lib/log-unauthorized";
 
 export const GET = withMetrics("/api/portfolio/score", async (request: NextRequest) => {
   const { session, error } = await requireSession(request);
@@ -69,7 +70,7 @@ export const GET = withMetrics("/api/portfolio/score", async (request: NextReque
 export const POST = withMetrics("/api/portfolio/score", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "portfolio_score");
   if (error) return error;
-  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return json401(request, { source: "api/portfolio/score", reason: "no_session" });
 
   if (!await isFeatureEnabledForUser("ai_report_enabled", session.userId)) {
     await refundFeatureQuota(session.userId, "portfolio_score");

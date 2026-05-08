@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "Structured `[http:401]` logging extended: new `json401()` helper used across API routes (AI/portfolio/device, auth login/passkey/password, webhooks, IdP service plane) so every manual 401 is correlated with source + reason in logs.",
+        translations: {
+          es: "Registro `[http:401]` ampliado: helper `json401()` en rutas API (AI/portfolio/device, login/passkey/password, webhooks, plano de servicio IdP) para correlacionar cada 401 manual con origen y motivo.",
+        },
+      },
+      {
+        type: "improvement",
         text: "401 responses log structured `[http:401]` context: source, reason (e.g. missing cookie vs invalid JWT), path, method, request ids, client IP (from forwarded headers), and user-agent prefix — no cookies or Bearer secrets.",
         translations: {
           es: "Los 401 registran contexto estructurado `[http:401]`: origen, motivo (p. ej. cookie ausente vs JWT inválido), ruta, método, ids de petición, IP cliente (cabeceras forward) y prefijo de user-agent — sin cookies ni secretos Bearer.",

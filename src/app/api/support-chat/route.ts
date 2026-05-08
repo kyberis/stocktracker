@@ -22,12 +22,13 @@ import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
 import { supportChatMessageSchema } from "@/lib/schemas";
 import { buildSupportSystemPrompt } from "@/lib/support-knowledge";
+import { json401 } from "@/lib/log-unauthorized";
 import type { ChatMessage } from "@/lib/db";
 
 export const POST = withMetrics("/api/support-chat", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "support_chat");
   if (error) return error;
-  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return json401(request, { source: "api/support-chat", reason: "no_session" });
 
   const enabled = await isFeatureEnabledForUser("support_chat_enabled", session.userId);
   if (!enabled) {

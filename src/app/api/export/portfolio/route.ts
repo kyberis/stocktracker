@@ -3,6 +3,7 @@ import { requireFeatureQuota } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { listHoldings, listTransactions, listCashEntries, trackEvent, isFeatureEnabled } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
+import { json401 } from "@/lib/log-unauthorized";
 
 function escapeCsv(val: string): string {
   if (val.includes(",") || val.includes('"') || val.includes("\n")) {
@@ -14,7 +15,7 @@ function escapeCsv(val: string): string {
 export const GET = withMetrics("/api/export/portfolio", async (req: NextRequest) => {
   const { session, error } = await requireFeatureQuota(req, "csv_export");
   if (error) return error;
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return json401(req, { source: "api/export/portfolio", reason: "no_session" });
 
   if (!(await isFeatureEnabled("csv_export_enabled"))) {
     await refundFeatureQuota(session.userId, "csv_export");

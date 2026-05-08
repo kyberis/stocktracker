@@ -13,6 +13,7 @@ import {
 import { withMetrics } from "@/lib/with-metrics";
 import { deviceApiCalls } from "@/lib/metrics";
 import { SOFT_CAPS } from "@/lib/platform-config";
+import { json401 } from "@/lib/log-unauthorized";
 
 const AVAILABLE_TEMPLATES = [
   { id: "classic-dark", name: "Classic Dark" },
@@ -39,7 +40,11 @@ export const GET = withMetrics("/api/device/config", async (req: NextRequest) =>
 
   const user = await resolveUser(req);
   if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return json401(req, {
+      source: "api/device/config",
+      reason: "device_bearer_auth_failed",
+      tags: { hasBearer: Boolean(req.headers.get("authorization")?.startsWith("Bearer ")) },
+    });
   }
 
   if (!(await isFeatureEnabledForUser("device_enabled", user.id))) {

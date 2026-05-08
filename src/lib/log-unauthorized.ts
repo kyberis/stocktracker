@@ -1,5 +1,24 @@
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { TREEFOLIO_SESSION_COOKIE } from "@/lib/auth/session";
+
+export type Json401Meta = {
+  source: string;
+  reason: string;
+  tags?: Record<string, string | boolean | number | undefined>;
+};
+
+/**
+ * Log + JSON 401. Prefer this over ad-hoc returns so every 401 is searchable as `[http:401]`.
+ */
+export function json401(
+  req: NextRequest,
+  meta: Json401Meta,
+  body: Record<string, unknown> = { error: "Unauthorized" },
+): NextResponse {
+  logUnauthorizedApi(req, meta);
+  return NextResponse.json(body, { status: 401 });
+}
 
 /**
  * Structured warning log for 401 responses. Does not log cookie values, Bearer tokens, or passwords.
