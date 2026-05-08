@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-229 routes.
+234 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -86,9 +86,13 @@
 | `/api/auth/google` | GET | [`src/app/api/auth/google/route.ts`](../../src/app/api/auth/google/route.ts) |
 | `/api/auth/google/callback` | GET | [`src/app/api/auth/google/callback/route.ts`](../../src/app/api/auth/google/callback/route.ts) |
 | `/api/auth/google/unlink` | POST | [`src/app/api/auth/google/unlink/route.ts`](../../src/app/api/auth/google/unlink/route.ts) |
+| `/api/auth/idp-logout` | GET, POST | [`src/app/api/auth/idp-logout/route.ts`](../../src/app/api/auth/idp-logout/route.ts) |
 | `/api/auth/login` | POST | [`src/app/api/auth/login/route.ts`](../../src/app/api/auth/login/route.ts) |
 | `/api/auth/logout` | POST | [`src/app/api/auth/logout/route.ts`](../../src/app/api/auth/logout/route.ts) |
 | `/api/auth/me` | GET | [`src/app/api/auth/me/route.ts`](../../src/app/api/auth/me/route.ts) |
+| `/api/auth/oidc/callback` | GET | [`src/app/api/auth/oidc/callback/route.ts`](../../src/app/api/auth/oidc/callback/route.ts) |
+| `/api/auth/oidc/signup-start` | GET | [`src/app/api/auth/oidc/signup-start/route.ts`](../../src/app/api/auth/oidc/signup-start/route.ts) |
+| `/api/auth/oidc/start` | GET | [`src/app/api/auth/oidc/start/route.ts`](../../src/app/api/auth/oidc/start/route.ts) |
 | `/api/auth/onboarding` | POST | [`src/app/api/auth/onboarding/route.ts`](../../src/app/api/auth/onboarding/route.ts) |
 | `/api/auth/passkey/[id]` | PATCH, DELETE | [`src/app/api/auth/passkey/[id]/route.ts`](../../src/app/api/auth/passkey/[id]/route.ts) |
 | `/api/auth/passkey/list` | GET | [`src/app/api/auth/passkey/list/route.ts`](../../src/app/api/auth/passkey/list/route.ts) |
@@ -126,7 +130,7 @@
 | `/api/cron/push-gauges` | GET | [`src/app/api/cron/push-gauges/route.ts`](../../src/app/api/cron/push-gauges/route.ts) |
 | `/api/cron/refresh-holdings` | GET | [`src/app/api/cron/refresh-holdings/route.ts`](../../src/app/api/cron/refresh-holdings/route.ts) |
 | `/api/cron/screener-sync` | GET | [`src/app/api/cron/screener-sync/route.ts`](../../src/app/api/cron/screener-sync/route.ts) |
-| `/api/cron/snaptrade-cleanup` | GET | [`src/app/api/cron/snaptrade-cleanup/route.ts`](../../src/app/api/cron/snaptrade-cleanup/route.ts) |
+| `/api/cron/snaptrade-cleanup` | GET, POST | [`src/app/api/cron/snaptrade-cleanup/route.ts`](../../src/app/api/cron/snaptrade-cleanup/route.ts) |
 | `/api/cron/snaptrade-sync` | GET | [`src/app/api/cron/snaptrade-sync/route.ts`](../../src/app/api/cron/snaptrade-sync/route.ts) |
 | `/api/cron/tax-rules-review` | GET | [`src/app/api/cron/tax-rules-review/route.ts`](../../src/app/api/cron/tax-rules-review/route.ts) |
 | `/api/cron/trial-expiration` | GET, POST | [`src/app/api/cron/trial-expiration/route.ts`](../../src/app/api/cron/trial-expiration/route.ts) |
@@ -228,6 +232,7 @@
 | `/api/transactions/import-broker` | POST | [`src/app/api/transactions/import-broker/route.ts`](../../src/app/api/transactions/import-broker/route.ts) |
 | `/api/trial/activate` | POST | [`src/app/api/trial/activate/route.ts`](../../src/app/api/trial/activate/route.ts) |
 | `/api/user-settings` | GET, PUT | [`src/app/api/user-settings/route.ts`](../../src/app/api/user-settings/route.ts) |
+| `/api/v1/users/by-sub/[sub]` | GET | [`src/app/api/v1/users/by-sub/[sub]/route.ts`](../../src/app/api/v1/users/by-sub/[sub]/route.ts) |
 | `/api/warren/chat` | POST | [`src/app/api/warren/chat/route.ts`](../../src/app/api/warren/chat/route.ts) |
 | `/api/warren/confirm` | POST | [`src/app/api/warren/confirm/route.ts`](../../src/app/api/warren/confirm/route.ts) |
 | `/api/watchlist` | GET, POST, DELETE | [`src/app/api/watchlist/route.ts`](../../src/app/api/watchlist/route.ts) |

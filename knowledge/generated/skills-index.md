@@ -26,6 +26,7 @@
 | [`engineer-user-auth`](../../.cursor/skills/engineer-user-auth/SKILL.md) | --- |
 | [`financial-calculations`](../../.cursor/skills/financial-calculations/SKILL.md) | --- |
 | [`firmware-release`](../../.cursor/skills/firmware-release/SKILL.md) | --- |
+| [`integration-trefolio-accounts`](../../.cursor/skills/integration-trefolio-accounts/SKILL.md) | --- |
 | [`legal-advisor`](../../.cursor/skills/legal-advisor/SKILL.md) | --- |
 | [`marketing-device`](../../.cursor/skills/marketing-device/SKILL.md) | --- |
 | [`mobile-usability-reviewer`](../../.cursor/skills/mobile-usability-reviewer/SKILL.md) | --- |
