@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.6",
+    date: "2026-05-08",
+    title: "IdP billing checkout Stripe diagnostics",
+    titleTranslations: {
+      es: "Diagnóstico Stripe en checkout del IdP",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "IdP (`external/accounts`): clearer handling when Stripe returns “No such price” (likely live/test or account mismatch vs `STRIPE_SECRET_KEY`); sanitize `STRIPE_PRICE_PRO_*` values; README troubleshooting for `/api/billing/checkout`.",
+        translations: {
+          es: "IdP (`external/accounts`): manejo más claro cuando Stripe devuelve «No such price» (suele ser desajuste test/live o cuenta distinta de `STRIPE_SECRET_KEY`); saneo de valores `STRIPE_PRICE_PRO_*`; troubleshooting en README para `/api/billing/checkout`.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.5",
     date: "2026-05-08",
     title: "IdP self-service password recovery",
