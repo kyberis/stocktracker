@@ -44,6 +44,16 @@ git submodule update --init
 cd external/etracker && npm install
 ```
 
+### Optional: cursor-plugins (Marketplace bundle submodule)
+
+The [cursor-plugins](https://github.com/kyberis/cursor-plugins) repo (Cursor rules/skills/agents for open publication) is a **submodule** at `cursor-plugins/`. It is not used by the Next.js build. To fetch it:
+
+```bash
+git submodule update --init cursor-plugins
+```
+
+A full clone with all submodules: `git clone --recurse-submodules https://github.com/kyberis/stocktracker.git` (then `git submodule update --init --recursive` if you add more later).
+
 ---
 
 ## Development workflow

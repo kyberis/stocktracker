@@ -47,9 +47,9 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "improvement",
-        text: "Developer tooling: added `cursor-plugins/trefolio-open-toolkit` — a Cursor-plugin-shaped bundle (manifest, rules, skills, agents, MIT license) ready to publish as its own open-source repo for the Cursor Marketplace.",
+        text: "Developer tooling: the Cursor Marketplace plugin bundle now lives in its own public repository ([github.com/kyberis/cursor-plugins](https://github.com/kyberis/cursor-plugins)) and is linked into this monorepo as a Git submodule at `cursor-plugins/`.",
         translations: {
-          es: "Herramientas para desarrolladores: añadido `cursor-plugins/trefolio-open-toolkit` — paquete en formato plugin de Cursor (manifiesto, reglas, skills, agentes, licencia MIT) listo para publicarse como repositorio abierto en el Marketplace de Cursor.",
+          es: "Herramientas para desarrolladores: el paquete de plugin de Cursor para el Marketplace vive ahora en un repositorio público propio ([github.com/kyberis/cursor-plugins](https://github.com/kyberis/cursor-plugins)) y está enlazado en este monorepo como submódulo Git en `cursor-plugins/`.",
         },
       },
     ],

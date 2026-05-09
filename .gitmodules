@@ -7,3 +7,6 @@
 [submodule "external/accounts"]
 	path = external/accounts
 	url = https://github.com/kyberis/trefolio-accounts.git
+[submodule "cursor-plugins"]
+	path = cursor-plugins
+	url = https://github.com/kyberis/cursor-plugins.git

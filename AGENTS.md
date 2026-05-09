@@ -81,6 +81,8 @@ external/
   accounts/           trefolio-accounts IdP (user.trefolio.com), pinned submodule.
                       Next dev port 3300. See knowledge/design-docs/unified-accounts-and-billing.md
                       and .cursor/skills/integration-trefolio-accounts/SKILL.md inside this subtree.
+cursor-plugins/       kyberis/cursor-plugins submodule — Cursor Marketplace plugin bundle (rules/skills/agents).
+                      See cursor-plugins/README.md. Not imported by the Next.js build.
 .cursor/
   rules/              Cursor rules (always-applied)
   skills/             Expert skills by domain
