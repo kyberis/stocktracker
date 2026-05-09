@@ -17,6 +17,44 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.8",
+    date: "2026-05-09",
+    title: "Warren multimodal chat & reply language",
+    titleTranslations: {
+      es: "Warren: chat multimodal e idioma de respuesta",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Warren accepts images, PDFs, CSV exports, and audio in the web drawer and on Telegram (photos & documents); attachments are normalized to safe limits before reaching the model.",
+        translations: {
+          es: "Warren acepta imágenes, PDF, CSV y audio en el cajón web y en Telegram (fotos y documentos); los adjuntos se normalizan con límites seguros antes del modelo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Warren replies in the language of your latest message when it can be inferred, using your UI/Telegram language only as a fallback.",
+        translations: {
+          es: "Warren responde en el idioma de tu último mensaje cuando puede inferirlo; solo usa el idioma de la interfaz o Telegram como respaldo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "SEO / AI discovery: robots.txt now lets AI crawlers (GPTBot, ClaudeBot, Perplexity, OAI-SearchBot, etc.) fetch the same public routes as normal bots — landing, blog, demo, llms — not only `/` plus llms files.",
+        translations: {
+          es: "SEO / descubribilidad IA: robots.txt permite a crawlers de IA las mismas rutas públicas que a bots normales — landing, blog, demo, llms — no solo `/` más los llms.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "llms.txt / llms-full.txt include a “Trefolio ecosystem” blurb linking Will and Clara for cross-product context in answer engines.",
+        translations: {
+          es: "llms.txt / llms-full.txt incluyen un apartado «ecosistema Trefolio» con enlaces a Will y Clara para contexto cruzado en motores de respuesta.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.7",
     date: "2026-05-09",
     title: "IdP upgrade checkout explicit subscribe",

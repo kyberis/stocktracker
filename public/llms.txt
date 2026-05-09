@@ -23,6 +23,11 @@ trefolio is a web-based portfolio tracker built for European retail investors. I
 - Privacy Policy: https://trefolio.com/privacy
 - Terms of Service: https://trefolio.com/terms
 
+## Trefolio ecosystem
+
+- Will (AI notes): https://will.trefolio.com — Telegram-first open-source AI note-taking assistant (MIT).
+- Clara (personal finance): https://clara.trefolio.com — Chat-first open-source AI expense assistant with public and per-user MCP servers (MIT).
+
 ## Blog Articles
 
 - Best Portfolio Trackers for European Investors in 2026: https://trefolio.com/blog/best-portfolio-trackers-europe-2026

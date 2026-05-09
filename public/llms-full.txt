@@ -221,6 +221,13 @@ When you import a broker CSV or connect via SnapTrade, dividends, withholding ta
 - Privacy Policy: https://trefolio.com/privacy
 - Terms of Service: https://trefolio.com/terms
 
+## Trefolio ecosystem
+
+Sister open-source products from the same maintainer (Trefolio):
+
+- **Will** — https://will.trefolio.com — AI note-taking assistant: capture via Telegram (text, voice, photo, PDF), reminders, tagging. Repo: https://github.com/kyberis/notetaker
+- **Clara** — https://clara.trefolio.com — AI personal finance assistant: chat and Telegram, bank PDFs, categories, monthly balance, MCP for Claude/Cursor. Repo: https://github.com/kyberis/etracker
+
 ## Blog Articles
 
 - Best Portfolio Trackers for European Investors in 2026: https://trefolio.com/blog/best-portfolio-trackers-europe-2026
