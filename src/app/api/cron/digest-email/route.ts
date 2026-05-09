@@ -9,7 +9,8 @@ import {
   parseForwardedSender,
   extractLinksFromHtml,
 } from "@/lib/gmail";
-import { getGlobalOpenAIApiKey, getAiModelForFlow } from "@/lib/db/settings";
+import { resolveGatewayApiKey } from "@/lib/ai/gateway";
+import { getAiModelForFlow } from "@/lib/db/settings";
 import {
   digestSourceExistsByGmailId,
   getDigestByDate,
@@ -42,10 +43,10 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
     return { skipped: true, reason: "Gmail credentials not configured" };
   }
 
-  const apiKey = getGlobalOpenAIApiKey();
   const digestEmailModel = await getAiModelForFlow("digest_email");
-  if (!apiKey) {
-    return { skipped: true, reason: "OpenAI API key not configured" };
+  const gatewayKey = await resolveGatewayApiKey();
+  if (!gatewayKey) {
+    return { skipped: true, reason: "AI Gateway not configured" };
   }
 
   const senderDomains = await getDigestSenderDomains();
@@ -135,7 +136,7 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
         extractedLinks: s.extractedLinks,
       }));
 
-      const result = await generateDigestFromSources(apiKey, digestEmailModel, sourcesForAI);
+      const result = await generateDigestFromSources(digestEmailModel, sourcesForAI);
       if (result) {
         await updateDigestContent(existingDigest.id, {
           mentionedTickers: result.rewrite.mentioned_tickers || [],
@@ -189,7 +190,7 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
         extractedLinks: s.extractedLinks,
       }));
 
-      const result = await generateDigestFromSources(apiKey, digestEmailModel, sourcesForAI);
+      const result = await generateDigestFromSources(digestEmailModel, sourcesForAI);
       if (result) {
         await updateDigestContent(digestId, {
           mentionedTickers: result.rewrite.mentioned_tickers || [],

@@ -3,7 +3,8 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { parseBody } from "@/lib/api-response";
 import { aiCompareSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
-import { getGlobalOpenAIApiKey, insertAiLog } from "@/lib/db";
+import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
+import { insertAiLog } from "@/lib/db";
 import { AI_FLOW_META, type AiFlowKey } from "@/lib/ai-models";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,6 @@ interface CompareResult {
 }
 
 async function callModel(
-  apiKey: string,
   model: string,
   flowKey: AiFlowKey,
   promptSystem: string,
@@ -45,14 +45,9 @@ async function callModel(
       body.response_format = { type: "json_object" };
     }
 
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(body),
-    });
+    const res = await fetchGatewayChatCompletions(
+      body as Parameters<typeof fetchGatewayChatCompletions>[0],
+    );
 
     const durationMs = Date.now() - start;
 
@@ -77,7 +72,7 @@ async function callModel(
         tokensTotal: 0,
         costUsd: 0,
         durationMs,
-        error: `OpenAI ${res.status}: ${errText.slice(0, 500)}`,
+        error: `AI Gateway ${res.status}: ${errText.slice(0, 500)}`,
       };
     }
 
@@ -133,17 +128,16 @@ export const POST = withMetrics("/api/admin/ai-compare", async (req: NextRequest
 
   const { promptSystem, promptUser, flowKey, models } = result.data;
 
-  const apiKey = getGlobalOpenAIApiKey();
-  if (!apiKey) {
+  if (!(await resolveGatewayApiKey())) {
     return NextResponse.json(
-      { error: "OpenAI API key not configured" },
+      { error: "AI Gateway not configured" },
       { status: 501 },
     );
   }
 
   const results = await Promise.all(
     models.map((model) =>
-      callModel(apiKey, model, flowKey as AiFlowKey, promptSystem, promptUser, session!.userId),
+      callModel(model, flowKey as AiFlowKey, promptSystem, promptUser, session!.userId),
     ),
   );
 

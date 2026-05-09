@@ -368,8 +368,17 @@ export function hasPremiumMarketDataKeysInEnv(): boolean {
   return getGlobalAlphaVantageApiKey().length > 0 || getGlobalFmpApiKey().length > 0;
 }
 
+/**
+ * Sync env-only chain for legacy callers and tests. Omits admin platform_settings key.
+ * Prefer {@link resolveGatewayApiKey} from `@/lib/ai/gateway` for runtime LLM calls.
+ */
 export function getGlobalOpenAIApiKey(): string {
-  return process.env.STOCKTRACKER_OPENAI_API_KEY || "";
+  return (
+    process.env.AI_GATEWAY_API_KEY?.trim() ||
+    process.env.VERCEL_OIDC_TOKEN?.trim() ||
+    process.env.STOCKTRACKER_OPENAI_API_KEY?.trim() ||
+    ""
+  );
 }
 
 export async function getPlatformSetting(key: string): Promise<string> {

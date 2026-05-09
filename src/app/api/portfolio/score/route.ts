@@ -4,7 +4,6 @@ import { NextRequest } from "next/server";
 import { requireFeatureQuota, requireSession } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import {
-  getGlobalOpenAIApiKey,
   incrementAiTokenUsage,
   incrementDailyAiTokenUsage,
   getCachedPortfolioScore,
@@ -25,6 +24,7 @@ import {
   type PortfolioScoreResponse,
   type StoredScore,
 } from "@/lib/portfolio-score";
+import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import { json401 } from "@/lib/log-unauthorized";
 
 export const GET = withMetrics("/api/portfolio/score", async (request: NextRequest) => {
@@ -86,11 +86,11 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
     );
   }
 
-  const apiKey = getGlobalOpenAIApiKey();
-  if (!apiKey) {
+  const gatewayConfigured = await resolveGatewayApiKey();
+  if (!gatewayConfigured) {
     await refundFeatureQuota(session.userId, "portfolio_score");
     return Response.json(
-      { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },
+      { error: "AI Gateway not configured. Ask your admin to set AI_GATEWAY_API_KEY or the Admin panel key." },
       { status: 501 },
     );
   }
@@ -119,25 +119,18 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
 
   try {
     const model = await getAiModelForFlow("portfolio_score");
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+    const openaiRes = await fetchGatewayChatCompletions({
+      model,
+      max_tokens: 3000,
+      temperature: 0.2,
+      response_format: {
+        type: "json_schema",
+        json_schema: PORTFOLIO_SCORE_JSON_SCHEMA,
       },
-      body: JSON.stringify({
-        model,
-        max_tokens: 3000,
-        temperature: 0.2,
-        response_format: {
-          type: "json_schema",
-          json_schema: PORTFOLIO_SCORE_JSON_SCHEMA,
-        },
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-      }),
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
     });
 
     endTimer();

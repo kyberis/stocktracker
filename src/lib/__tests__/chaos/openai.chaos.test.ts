@@ -13,30 +13,28 @@ afterEach(() => {
 });
 
 /**
- * Simulates the OpenAI call pattern used by all 4 routes:
- *   ai-analysis, import-portfolio, portfolio-review, device/ai-summary
+ * Simulates the Vercel AI Gateway chat completions call pattern used by LLM routes.
  *
- * All routes call `fetch("https://api.openai.com/v1/chat/completions", ...)`
- * and handle the response the same way.
+ * Routes use `fetchGatewayChatCompletions` → `https://ai-gateway.vercel.sh/v1/chat/completions`.
  */
-async function simulateOpenAICall(): Promise<{
+async function simulateGatewayChatCall(): Promise<{
   status: number;
   body: Record<string, unknown>;
 }> {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: "Bearer test-key",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "openai/gpt-4o-mini",
       messages: [{ role: "user", content: "test" }],
     }),
   });
 
   if (!res.ok) {
-    return { status: res.status, body: { error: `OpenAI error: ${res.status}` } };
+    return { status: res.status, body: { error: `Gateway error: ${res.status}` } };
   }
 
   const result = await res.json();
@@ -54,7 +52,7 @@ describe("OpenAI chaos", () => {
     it("handles 500 internal server error", async () => {
       mockFetchResponse(500, { error: { message: "Internal server error" } });
 
-      const result = await simulateOpenAICall();
+      const result = await simulateGatewayChatCall();
       expect(result.status).toBe(500);
     });
 
@@ -63,7 +61,7 @@ describe("OpenAI chaos", () => {
         error: { message: "Rate limit exceeded", type: "rate_limit_error" },
       });
 
-      const result = await simulateOpenAICall();
+      const result = await simulateGatewayChatCall();
       expect(result.status).toBe(429);
     });
 
@@ -75,7 +73,7 @@ describe("OpenAI chaos", () => {
         },
       });
 
-      const result = await simulateOpenAICall();
+      const result = await simulateGatewayChatCall();
       expect(result.status).toBe(401);
     });
 
@@ -84,7 +82,7 @@ describe("OpenAI chaos", () => {
         error: { message: "The server is overloaded" },
       });
 
-      const result = await simulateOpenAICall();
+      const result = await simulateGatewayChatCall();
       expect(result.status).toBe(503);
     });
   });
@@ -93,14 +91,14 @@ describe("OpenAI chaos", () => {
     it("throws on network error", async () => {
       mockFetchNetworkError("Failed to fetch");
 
-      await expect(simulateOpenAICall()).rejects.toThrow("Failed to fetch");
+      await expect(simulateGatewayChatCall()).rejects.toThrow("Failed to fetch");
     });
 
     it("never resolves on timeout", async () => {
       mockFetchTimeout();
 
       const race = Promise.race([
-        simulateOpenAICall(),
+        simulateGatewayChatCall(),
         new Promise((resolve) => setTimeout(() => resolve("timed-out"), 50)),
       ]);
 
@@ -112,14 +110,14 @@ describe("OpenAI chaos", () => {
     it("handles empty choices array", async () => {
       mockFetchResponse(200, { choices: [] });
 
-      const result = await simulateOpenAICall();
+      const result = await simulateGatewayChatCall();
       expect(result.body.error).toBe("No content in response");
     });
 
     it("handles missing choices field", async () => {
       mockFetchResponse(200, { id: "chatcmpl-xxx" });
 
-      const result = await simulateOpenAICall();
+      const result = await simulateGatewayChatCall();
       expect(result.body.error).toBe("No content in response");
     });
 
@@ -128,7 +126,7 @@ describe("OpenAI chaos", () => {
         choices: [{ message: { content: null } }],
       });
 
-      const result = await simulateOpenAICall();
+      const result = await simulateGatewayChatCall();
       expect(result.body.error).toBe("No content in response");
     });
 
@@ -137,7 +135,7 @@ describe("OpenAI chaos", () => {
         choices: [{ message: { content: "This is not JSON at all" } }],
       });
 
-      const result = await simulateOpenAICall();
+      const result = await simulateGatewayChatCall();
       expect(result.status).toBe(200);
       expect(result.body.content).toBe("This is not JSON at all");
 
@@ -147,7 +145,7 @@ describe("OpenAI chaos", () => {
     it("handles completely empty body", async () => {
       mockFetchResponse(200, {});
 
-      const result = await simulateOpenAICall();
+      const result = await simulateGatewayChatCall();
       expect(result.body.error).toBe("No content in response");
     });
   });
@@ -164,7 +162,7 @@ describe("OpenAI chaos", () => {
         ],
       });
 
-      const result = await simulateOpenAICall();
+      const result = await simulateGatewayChatCall();
       expect(result.status).toBe(200);
       const parsed = JSON.parse(result.body.content as string);
       expect(parsed.summary).toBe("Portfolio is healthy");

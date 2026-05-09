@@ -499,6 +499,8 @@ describe("settings", () => {
     });
 
     it("returns env value when STOCKTRACKER_OPENAI_API_KEY is set", () => {
+      delete process.env.AI_GATEWAY_API_KEY;
+      delete process.env.VERCEL_OIDC_TOKEN;
       process.env.STOCKTRACKER_OPENAI_API_KEY = "openai-key-123";
 
       const result = settings.getGlobalOpenAIApiKey();
@@ -506,8 +508,17 @@ describe("settings", () => {
       expect(result).toBe("openai-key-123");
     });
 
+    it("prefers AI_GATEWAY_API_KEY over STOCKTRACKER_OPENAI_API_KEY", () => {
+      process.env.AI_GATEWAY_API_KEY = "gw-key";
+      process.env.STOCKTRACKER_OPENAI_API_KEY = "legacy";
+
+      expect(settings.getGlobalOpenAIApiKey()).toBe("gw-key");
+    });
+
     it("returns empty string when env not set", () => {
       delete process.env.STOCKTRACKER_OPENAI_API_KEY;
+      delete process.env.AI_GATEWAY_API_KEY;
+      delete process.env.VERCEL_OIDC_TOKEN;
 
       const result = settings.getGlobalOpenAIApiKey();
 

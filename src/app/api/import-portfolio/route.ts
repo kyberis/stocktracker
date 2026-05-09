@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { trackEvent, getGlobalOpenAIApiKey, listHoldings, findUserById, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, getAiModelForFlow } from "@/lib/db";
+import { trackEvent, listHoldings, findUserById, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, getAiModelForFlow } from "@/lib/db";
+import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import { checkAiImportRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal, rateLimitHitsTotal } from "@/lib/metrics";
@@ -82,10 +83,10 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     );
   }
 
-  const apiKey = getGlobalOpenAIApiKey();
-  if (!apiKey) {
+  const gatewayConfigured = await resolveGatewayApiKey();
+  if (!gatewayConfigured) {
     return NextResponse.json(
-      { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },
+      { error: "AI Gateway not configured. Ask your admin to set AI_GATEWAY_API_KEY or the Admin panel key." },
       { status: 501 }
     );
   }
@@ -169,18 +170,11 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
   const model = await getAiModelForFlow("import_portfolio");
 
   try {
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 8000,
-        temperature: 0,
-        messages,
-      }),
+    const openaiRes = await fetchGatewayChatCompletions({
+      model,
+      max_tokens: 8000,
+      temperature: 0,
+      messages,
     });
 
     const durationMs = Date.now() - aiLogStart;

@@ -8,7 +8,6 @@ import { requireFeatureQuota } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import {
   findUserById,
-  getGlobalOpenAIApiKey,
   incrementAiUsage,
   incrementDailyAiUsage,
   incrementAiTokenUsage,
@@ -24,6 +23,7 @@ import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 import type { SubscriptionPlan } from "@/lib/types";
 import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
+import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import { portfolioTelemetryInjectionGuard } from "@/lib/ai/prompt-safety";
 import { json401 } from "@/lib/log-unauthorized";
 
@@ -65,11 +65,11 @@ export const POST = withMetrics("/api/portfolio/ai-chat", async (request: NextRe
     );
   }
 
-  const apiKey = getGlobalOpenAIApiKey();
-  if (!apiKey) {
+  const gatewayConfigured = await resolveGatewayApiKey();
+  if (!gatewayConfigured) {
     await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json(
-      { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },
+      { error: "AI Gateway not configured. Ask your admin to set AI_GATEWAY_API_KEY or the Admin panel key." },
       { status: 501 },
     );
   }
@@ -145,20 +145,13 @@ ${contextBlock}
   const lastUserMsg = messages[messages.length - 1]?.content || "";
 
   try {
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        stream: true,
-        stream_options: { include_usage: true },
-        max_tokens: 1000,
-        temperature: 0.3,
-        messages: openaiMessages,
-      }),
+    const openaiRes = await fetchGatewayChatCompletions({
+      model,
+      stream: true,
+      stream_options: { include_usage: true },
+      max_tokens: 1000,
+      temperature: 0.3,
+      messages: openaiMessages,
     });
 
     endTimer();

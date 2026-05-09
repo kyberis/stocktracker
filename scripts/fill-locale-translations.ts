@@ -1,6 +1,6 @@
 /**
  * Fills UI strings that still match English for de, fr, pt (European Portuguese), nl.
- * Requires STOCKTRACKER_OPENAI_API_KEY (loads .env.local if present).
+ * Requires AI_GATEWAY_API_KEY or STOCKTRACKER_OPENAI_API_KEY (loads .env.local if present).
  *
  * Usage from repo root: npx tsx scripts/fill-locale-translations.ts
  */
@@ -12,6 +12,7 @@ import de from "../src/locales/de";
 import fr from "../src/locales/fr";
 import pt from "../src/locales/pt";
 import nl from "../src/locales/nl";
+import { toGatewayModelId, VERCEL_AI_GATEWAY_BASE } from "../src/lib/ai/gateway";
 
 function loadEnvLocal(): void {
   const p = resolve(process.cwd(), ".env.local");
@@ -50,14 +51,14 @@ async function callOpenAI(
   system: string,
   user: string,
 ): Promise<{ content: string; tokensUsed: number }> {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetch(`${VERCEL_AI_GATEWAY_BASE}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: MODEL,
+      model: toGatewayModelId(MODEL),
       max_tokens: 16000,
       temperature: 0.2,
       response_format: { type: "json_object" },
@@ -70,7 +71,7 @@ async function callOpenAI(
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`OpenAI API error (${res.status}): ${text.slice(0, 800)}`);
+    throw new Error(`AI Gateway error (${res.status}): ${text.slice(0, 800)}`);
   }
 
   const data = (await res.json()) as {
@@ -206,9 +207,13 @@ Rules:
 
 async function main(): Promise<void> {
   loadEnvLocal();
-  const apiKey = process.env.STOCKTRACKER_OPENAI_API_KEY ?? "";
+  const apiKey =
+    process.env.AI_GATEWAY_API_KEY?.trim() ||
+    process.env.VERCEL_OIDC_TOKEN?.trim() ||
+    process.env.STOCKTRACKER_OPENAI_API_KEY?.trim() ||
+    "";
   if (!apiKey) {
-    console.error("Set STOCKTRACKER_OPENAI_API_KEY or add it to .env.local");
+    console.error("Set AI_GATEWAY_API_KEY or STOCKTRACKER_OPENAI_API_KEY (or add to .env.local)");
     process.exit(1);
   }
 

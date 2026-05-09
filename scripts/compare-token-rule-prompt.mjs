@@ -1,6 +1,6 @@
 /**
- * Compares OpenAI chat usage with vs without the token-efficiency rule text injected
- * into the system message. Loads STOCKTRACKER_OPENAI_API_KEY from .env.local if unset.
+ * Compares chat usage with vs without the token-efficiency rule text injected
+ * into the system message. Loads AI_GATEWAY_API_KEY or STOCKTRACKER_OPENAI_API_KEY from .env.local if unset.
  *
  * Usage: node scripts/compare-token-rule-prompt.mjs
  */
@@ -41,14 +41,21 @@ Explain how PortfolioProvider "demo mode" works in this app: what API calls or s
 
 Answer in plain prose. Do not include code blocks. Aim to be accurate and complete.`;
 
-const MODEL = "gpt-4o-mini";
+const GATEWAY_BASE = "https://ai-gateway.vercel.sh/v1";
+const MODEL = "openai/gpt-4o-mini";
 
 async function chat(system, user) {
-  const apiKey = process.env.STOCKTRACKER_OPENAI_API_KEY ?? "";
+  const apiKey =
+    process.env.AI_GATEWAY_API_KEY?.trim() ||
+    process.env.VERCEL_OIDC_TOKEN?.trim() ||
+    process.env.STOCKTRACKER_OPENAI_API_KEY?.trim() ||
+    "";
   if (!apiKey) {
-    throw new Error("Missing STOCKTRACKER_OPENAI_API_KEY (set in env or .env.local)");
+    throw new Error(
+      "Missing AI_GATEWAY_API_KEY or STOCKTRACKER_OPENAI_API_KEY (set in env or .env.local)",
+    );
   }
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetch(`${GATEWAY_BASE}/chat/completions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -66,7 +73,7 @@ async function chat(system, user) {
   });
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`OpenAI HTTP ${res.status}: ${err.slice(0, 500)}`);
+    throw new Error(`AI Gateway HTTP ${res.status}: ${err.slice(0, 500)}`);
   }
   const data = await res.json();
   const text = data.choices?.[0]?.message?.content ?? "";

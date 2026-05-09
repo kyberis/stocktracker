@@ -1,11 +1,8 @@
 import { streamText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 
-import {
-  getGlobalOpenAIApiKey,
-  getAiModelForFlow,
-  insertAiLog,
-} from "@/lib/db";
+import { resolveGatewayApiKey, toGatewayModelId, VERCEL_AI_GATEWAY_BASE } from "@/lib/ai/gateway";
+import { getAiModelForFlow, insertAiLog } from "@/lib/db";
 import { AI_FLOW_META } from "@/lib/ai-models";
 import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
 import { buildWarrenSystemPrompt, type WarrenChannel } from "./system-prompt";
@@ -48,20 +45,23 @@ export interface RunWarrenTurnResult {
  * handler. Callers are expected to have already enforced their own quota /
  * auth (e.g. `requireFeatureQuota` or `requireFeatureQuotaByUserId`).
  *
- * Throws when no OpenAI API key is configured.
+ * Throws when Vercel AI Gateway is not configured.
  */
 export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarrenTurnResult> {
-  const apiKey = getGlobalOpenAIApiKey();
+  const apiKey = await resolveGatewayApiKey();
   if (!apiKey) {
     throw new Error(
-      "OpenAI API key is not configured. Ask your admin to set it in the Admin panel.",
+      "AI Gateway is not configured. Set AI_GATEWAY_API_KEY or add a key in the Admin panel.",
     );
   }
 
   const channel = opts.channel || "web";
   const model = await getAiModelForFlow("portfolio_chat");
   const flowMeta = AI_FLOW_META.portfolio_chat;
-  const provider = createOpenAI({ apiKey });
+  const provider = createOpenAI({
+    baseURL: VERCEL_AI_GATEWAY_BASE,
+    apiKey,
+  });
 
   const systemPrompt = buildWarrenSystemPrompt({
     language: opts.language,
@@ -105,7 +105,7 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
 
   try {
     const result = streamText({
-      model: provider(model),
+      model: provider(toGatewayModelId(model)),
       system: systemPrompt,
       messages: opts.messages.map((m) => ({ role: m.role, content: m.content })),
       tools,

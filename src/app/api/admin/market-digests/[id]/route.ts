@@ -12,7 +12,8 @@ import {
   updateDigestContent,
 } from "@/lib/db";
 import type { MarketDigestSource } from "@/lib/db";
-import { getGlobalOpenAIApiKey, getAiModelForFlow } from "@/lib/db/settings";
+import { resolveGatewayApiKey } from "@/lib/ai/gateway";
+import { getAiModelForFlow } from "@/lib/db/settings";
 import { getAppRouteParam } from "@/lib/api-route-params";
 import { withMetrics } from "@/lib/with-metrics";
 import { generateDigestFromSources } from "@/lib/digest-generation";
@@ -60,9 +61,8 @@ export const PUT = withMetrics("/api/admin/market-digests/[id]", async (
   }
 
   if (body.action === "regenerate") {
-    const apiKey = getGlobalOpenAIApiKey();
-    if (!apiKey) {
-      return NextResponse.json({ error: "No OpenAI API key configured" }, { status: 500 });
+    if (!(await resolveGatewayApiKey())) {
+      return NextResponse.json({ error: "AI Gateway not configured" }, { status: 500 });
     }
 
     const sources = await getDigestSources(id);
@@ -78,7 +78,7 @@ export const PUT = withMetrics("/api/admin/market-digests/[id]", async (
       extractedLinks: s.extractedLinks,
     }));
 
-    const result = await generateDigestFromSources(apiKey, model, sourcesForAI);
+    const result = await generateDigestFromSources(model, sourcesForAI);
     if (!result) {
       return NextResponse.json({ error: "AI generation failed — check logs" }, { status: 502 });
     }

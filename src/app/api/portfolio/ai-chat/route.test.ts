@@ -9,7 +9,6 @@ vi.mock("@/lib/with-metrics", () => ({
 }));
 vi.mock("@/lib/db", () => ({
   findUserById: vi.fn(),
-  getGlobalOpenAIApiKey: vi.fn(),
   listPortfolios: vi.fn(),
   getAiModelForFlow: vi.fn(),
   insertAiLog: vi.fn(),
@@ -19,6 +18,10 @@ vi.mock("@/lib/db", () => ({
   incrementDailyAiTokenUsage: vi.fn(),
   incrementGlobalAiCalls: vi.fn(),
   incrementGlobalAiTokens: vi.fn(),
+}));
+vi.mock("@/lib/ai/gateway", () => ({
+  resolveGatewayApiKey: vi.fn(),
+  fetchGatewayChatCompletions: vi.fn(),
 }));
 vi.mock("@/lib/rate-limit", () => ({
   checkAiRateLimit: vi.fn(),
@@ -39,15 +42,15 @@ vi.mock("@/lib/ai/warren/build-snapshot", () => ({
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import {
   findUserById,
-  getGlobalOpenAIApiKey,
   listPortfolios,
 } from "@/lib/db";
+import { resolveGatewayApiKey } from "@/lib/ai/gateway";
 import { checkGlobalAiCap } from "@/lib/rate-limit";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 
 const mockedQuota = vi.mocked(requireFeatureQuota);
 const mockedFindUser = vi.mocked(findUserById);
-const mockedGetKey = vi.mocked(getGlobalOpenAIApiKey);
+const mockedResolveGateway = vi.mocked(resolveGatewayApiKey);
 const mockedGlobalCap = vi.mocked(checkGlobalAiCap);
 const mockedRefund = vi.mocked(refundFeatureQuota);
 const mockedListPortfolios = vi.mocked(listPortfolios);
@@ -80,7 +83,7 @@ beforeEach(() => {
     plan: "free",
   } as never);
   mockedGlobalCap.mockResolvedValue({ allowed: true, used: 0, cap: 1_000_000 } as never);
-  mockedGetKey.mockReturnValue("sk-test-portfolio-ai");
+  mockedResolveGateway.mockResolvedValue("ag-test");
   mockedListPortfolios.mockResolvedValue([{ id: "p1", name: "Main", isDefault: true }] as never);
 });
 
@@ -159,8 +162,8 @@ describe("POST /api/portfolio/ai-chat", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 501 and refunds when OpenAI key is missing (before body parse would not run)", async () => {
-    mockedGetKey.mockReturnValueOnce("");
+  it("returns 501 and refunds when AI Gateway is not configured (before body parse would not run)", async () => {
+    mockedResolveGateway.mockResolvedValueOnce(null);
     const { POST } = await import("./route");
     const res = await (POST as (req: NextRequest) => Promise<Response>)(
       makeRequest({ messages: [{ role: "user", content: "Hi" }] }),

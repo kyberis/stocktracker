@@ -1,4 +1,5 @@
-import { getGlobalOpenAIApiKey, getAiModelForFlow } from "@/lib/db/settings";
+import { fetchGatewayChatCompletions } from "@/lib/ai/gateway";
+import { getAiModelForFlow } from "@/lib/db/settings";
 import { getActiveUserLanguages } from "@/lib/db";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 
@@ -68,34 +69,26 @@ export interface DigestGenerationResult {
 }
 
 async function callOpenAI(
-  apiKey: string,
   system: string,
   user: string,
   maxTokens = 3000,
   modelOverride?: string,
 ): Promise<{ content: string; tokensUsed: number }> {
-  const aiModel = modelOverride || await getAiModelForFlow("digest_email");
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: aiModel,
-      max_tokens: maxTokens,
-      temperature: 0.4,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-    }),
+  const aiModel = modelOverride || (await getAiModelForFlow("digest_email"));
+  const res = await fetchGatewayChatCompletions({
+    model: aiModel,
+    max_tokens: maxTokens,
+    temperature: 0.4,
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
   });
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`OpenAI API error (${res.status}): ${text.slice(0, 500)}`);
+    throw new Error(`AI Gateway error (${res.status}): ${text.slice(0, 500)}`);
   }
 
   const data = await res.json();
@@ -194,7 +187,6 @@ export function stripHtml(html: string): string {
 }
 
 export async function generateDigestFromSources(
-  apiKey: string,
   model: string,
   sources: DigestSourceInput[],
 ): Promise<DigestGenerationResult | null> {
@@ -202,7 +194,6 @@ export async function generateDigestFromSources(
   const sourceText = buildSourcePrompt(sources);
 
   const { content: rewriteJson, tokensUsed: rewriteTokens } = await callOpenAI(
-    apiKey,
     REWRITE_SYSTEM_PROMPT,
     `Live market data (last 7 days):\n${marketContext}\n\n${sourceText}`,
     4000,
@@ -263,7 +254,6 @@ NOTE: Keep ticker symbols (e.g. AAPL, MSFT), numbers, percentages, the ▲/▼ a
 
       try {
         const { content: translateJson, tokensUsed } = await callOpenAI(
-          apiKey,
           TRANSLATE_SYSTEM_PROMPT,
           translatePrompt,
           4000,

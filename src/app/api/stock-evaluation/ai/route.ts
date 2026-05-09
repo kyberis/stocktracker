@@ -4,7 +4,6 @@ import { NextRequest } from "next/server";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import {
-  getGlobalOpenAIApiKey,
   incrementAiUsage,
   incrementDailyAiUsage,
   incrementAiTokenUsage,
@@ -19,6 +18,7 @@ import { createAiStream } from "@/lib/ai-stream";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
+import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import type { SubscriptionPlan } from "@/lib/types";
 
 export const POST = withMetrics("/api/stock-evaluation/ai", async (request: NextRequest) => {
@@ -48,11 +48,11 @@ export const POST = withMetrics("/api/stock-evaluation/ai", async (request: Next
     );
   }
 
-  const apiKey = getGlobalOpenAIApiKey();
-  if (!apiKey) {
+  const gatewayConfigured = await resolveGatewayApiKey();
+  if (!gatewayConfigured) {
     await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json(
-      { error: "OpenAI API key not configured." },
+      { error: "AI Gateway not configured." },
       { status: 501 },
     );
   }
@@ -108,23 +108,16 @@ Please provide your narrative assessment based on this data.`;
   const aiLogStart = Date.now();
 
   try {
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        stream: true,
-        stream_options: { include_usage: true },
-        max_tokens: 1500,
-        temperature: 0.3,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
+    const openaiRes = await fetchGatewayChatCompletions({
+      model,
+      stream: true,
+      stream_options: { include_usage: true },
+      max_tokens: 1500,
+      temperature: 0.3,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
     });
 
     endTimer();

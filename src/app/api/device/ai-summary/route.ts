@@ -4,7 +4,6 @@ import { NextRequest } from "next/server";
 import {
   findUserByWidgetToken,
   findUserByDevicePasskey,
-  getGlobalOpenAIApiKey,
   listHoldings,
   listCashEntries,
   trackEvent,
@@ -18,6 +17,7 @@ import { checkGlobalAiCap, incrementGlobalAiCalls, checkDeviceAuthRateLimit, get
 import { aiCallsTotal, aiRequestDuration, deviceApiCalls } from "@/lib/metrics";
 import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
+import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 
 async function resolveAuthedUser(req: NextRequest) {
   const auth = req.headers.get("authorization");
@@ -81,8 +81,8 @@ export const POST = withMetrics("/api/device/ai-summary", async (request: NextRe
     );
   }
 
-  const apiKey = getGlobalOpenAIApiKey();
-  if (!apiKey) {
+  const gatewayConfigured = await resolveGatewayApiKey();
+  if (!gatewayConfigured) {
     await refundFeatureQuota(user.id, "ai_portfolio_review");
     return Response.json(
       { error: "AI service not configured" },
@@ -134,22 +134,15 @@ Rules:
   const aiLogStart = Date.now();
 
   try {
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        stream: false,
-        max_tokens: 300,
-        temperature: 0.3,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
+    const openaiRes = await fetchGatewayChatCompletions({
+      model,
+      stream: false,
+      max_tokens: 300,
+      temperature: 0.3,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
     });
 
     endTimer();

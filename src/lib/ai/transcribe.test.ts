@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-vi.mock("@/lib/db", () => ({
-  getGlobalOpenAIApiKey: vi.fn(() => "sk-test"),
-}));
+vi.mock("@/lib/ai/gateway", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/ai/gateway")>();
+  return {
+    ...actual,
+    resolveGatewayApiKey: vi.fn(() => Promise.resolve("ag-test")),
+  };
+});
 
 vi.mock("@/lib/metrics", () => ({
   aiCallsTotal: { inc: vi.fn() },
@@ -80,9 +84,9 @@ describe("transcribe · transcribeVoice", () => {
     if (!result.ok) expect(result.reason).toBe("empty");
   });
 
-  it("returns missing_key when no OpenAI key is configured", async () => {
-    const dbModule = await import("@/lib/db");
-    (dbModule.getGlobalOpenAIApiKey as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce("");
+  it("returns missing_key when no gateway key is configured", async () => {
+    const gw = await import("@/lib/ai/gateway");
+    vi.mocked(gw.resolveGatewayApiKey).mockResolvedValueOnce(null);
 
     const result = await transcribeVoice({
       buffer: Buffer.from("fake-bytes"),

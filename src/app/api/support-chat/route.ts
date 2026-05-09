@@ -4,7 +4,6 @@ import { NextRequest } from "next/server";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import {
-  getGlobalOpenAIApiKey,
   isFeatureEnabledForUser,
   getPlatformSetting,
   createSupportChatConversation,
@@ -23,6 +22,7 @@ import { parseBody } from "@/lib/api-response";
 import { supportChatMessageSchema } from "@/lib/schemas";
 import { buildSupportSystemPrompt } from "@/lib/support-knowledge";
 import { json401 } from "@/lib/log-unauthorized";
+import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import type { ChatMessage } from "@/lib/db";
 
 export const POST = withMetrics("/api/support-chat", async (request: NextRequest) => {
@@ -52,8 +52,8 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
     );
   }
 
-  const apiKey = getGlobalOpenAIApiKey();
-  if (!apiKey) {
+  const gatewayConfigured = await resolveGatewayApiKey();
+  if (!gatewayConfigured) {
     await refundFeatureQuota(session.userId, "support_chat");
     return Response.json(
       { error: "AI service not configured." },
@@ -91,20 +91,13 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
   const lastUserContent = lastUserMsg?.content || "";
 
   try {
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        stream: true,
-        stream_options: { include_usage: true },
-        max_tokens: 800,
-        temperature: 0.4,
-        messages: openaiMessages,
-      }),
+    const openaiRes = await fetchGatewayChatCompletions({
+      model,
+      stream: true,
+      stream_options: { include_usage: true },
+      max_tokens: 800,
+      temperature: 0.4,
+      messages: openaiMessages,
     });
 
     endTimer();

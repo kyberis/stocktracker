@@ -5,7 +5,7 @@ import { parseBody } from "@/lib/api-response";
 import { apiKeySchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
 
-const SETTING_KEY = "openai_api_key";
+const SETTING_KEY = "openai_api_key"; /** Stores Vercel AI Gateway API key (legacy setting id `openai_api_key`). */
 
 export const GET = withMetrics("/api/admin/openai-key", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);

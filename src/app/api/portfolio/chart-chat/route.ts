@@ -4,7 +4,8 @@ export const maxDuration = 60;
 import { NextRequest } from "next/server";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
-import { findUserById, getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, getAiModelForFlow } from "@/lib/db";
+import { findUserById, incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, getAiModelForFlow } from "@/lib/db";
+import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { createAiStream } from "@/lib/ai-stream";
@@ -53,11 +54,11 @@ export const POST = withMetrics("/api/portfolio/chart-chat", async (request: Nex
     );
   }
 
-  const apiKey = getGlobalOpenAIApiKey();
-  if (!apiKey) {
+  const gatewayConfigured = await resolveGatewayApiKey();
+  if (!gatewayConfigured) {
     await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json(
-      { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },
+      { error: "AI Gateway not configured. Ask your admin to set AI_GATEWAY_API_KEY or the Admin panel key." },
       { status: 501 },
     );
   }
@@ -115,20 +116,13 @@ Rules:
   const lastUserMsg = messages[messages.length - 1]?.content || "";
 
   try {
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        stream: true,
-        stream_options: { include_usage: true },
-        max_tokens: 900,
-        temperature: 0.25,
-        messages: openaiMessages,
-      }),
+    const openaiRes = await fetchGatewayChatCompletions({
+      model,
+      stream: true,
+      stream_options: { include_usage: true },
+      max_tokens: 900,
+      temperature: 0.25,
+      messages: openaiMessages,
     });
 
     endTimer();

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { getUserSettings, updateUserSettings, findUserById, hasPremiumMarketDataConfigured, getGlobalOpenAIApiKey, resolveAllFlagsForUser } from "@/lib/db";
+import { resolveGatewayApiKey } from "@/lib/ai/gateway";
+import { getUserSettings, updateUserSettings, findUserById, hasPremiumMarketDataConfigured, resolveAllFlagsForUser } from "@/lib/db";
 import { parseBody } from "@/lib/api-response";
 import { setTrefolioUiLocaleCookieOnNextResponse } from "@/lib/idp/append-trefolio-ui-locale-response";
 import { userSettingsSchema } from "@/lib/schemas";
@@ -31,7 +32,7 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
     dashboardTheme,
     defaultCurrency: settings.defaultCurrency,
     hasPremiumMarketData: await hasPremiumMarketDataConfigured(),
-    hasOpenAIKey: getGlobalOpenAIApiKey().length > 0,
+    hasOpenAIKey: Boolean(await resolveGatewayApiKey()),
     alertsEnabled: flags.alerts_enabled,
     csvExportEnabled: flags.csv_export_enabled,
     deviceEnabled: flags.device_enabled,

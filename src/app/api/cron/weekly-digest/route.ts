@@ -12,7 +12,8 @@ import {
   insertAiLog,
   logEmailSend,
 } from "@/lib/db";
-import { getGlobalOpenAIApiKey, getAiModelForFlow } from "@/lib/db/settings";
+import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
+import { getAiModelForFlow } from "@/lib/db/settings";
 import { sendEmail } from "@/lib/email";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 import { incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
@@ -57,9 +58,9 @@ interface UserContext {
 const DIGEST_CONCURRENCY = 3;
 
 const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
-  const apiKey = getGlobalOpenAIApiKey();
-  if (!apiKey) {
-    return { skipped: true, reason: "No OpenAI API key configured" };
+  const gatewayConfigured = await resolveGatewayApiKey();
+  if (!gatewayConfigured) {
+    return { skipped: true, reason: "AI Gateway not configured" };
   }
 
   const { weekStart, weekEnd } = getWeekRange();
@@ -229,26 +230,19 @@ Worst performer (session %): ${worstStr}
 Dividends received: ${divStr}
 Week: ${weekStart} to ${weekEnd}`;
 
-      const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: digestModel,
-          max_tokens: 300,
-          temperature: 0.4,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-        }),
+      const openaiRes = await fetchGatewayChatCompletions({
+        model: digestModel,
+        max_tokens: 300,
+        temperature: 0.4,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
       });
 
       if (!openaiRes.ok) {
         const errText = await openaiRes.text();
-        console.error(`Weekly digest OpenAI error for user ${user.id}:`, errText);
+        console.error(`Weekly digest AI Gateway error for user ${user.id}:`, errText);
         errors++;
         return;
       }

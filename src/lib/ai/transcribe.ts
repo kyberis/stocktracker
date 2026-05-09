@@ -1,7 +1,7 @@
 /**
  * OpenAI speech-to-text wrapper used by the Telegram voice-note pipeline.
  *
- * Uses the same `STOCKTRACKER_OPENAI_API_KEY` as Warren chat. Honors
+ * Uses the same gateway credentials as Warren chat (`resolveGatewayApiKey`). Honors
  * `OPENAI_TRANSCRIPTION_MODEL` (default `whisper-1`). Accepts an optional
  * ISO language hint to improve accuracy for non-English inputs.
  *
@@ -9,10 +9,10 @@
  * leaking provider details to end users.
  */
 
-import { getGlobalOpenAIApiKey } from "@/lib/db";
+import { resolveGatewayApiKey, VERCEL_AI_GATEWAY_BASE } from "@/lib/ai/gateway";
 import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
 
-const TRANSCRIPTION_ENDPOINT = "https://api.openai.com/v1/audio/transcriptions";
+const TRANSCRIPTION_ENDPOINT = `${VERCEL_AI_GATEWAY_BASE}/audio/transcriptions`;
 
 export type TranscribeResult =
   | { ok: true; text: string; durationMs: number; model: string }
@@ -49,7 +49,7 @@ export function guessAudioFilename(mimeType: string): string {
 export async function transcribeVoice(opts: TranscribeOptions): Promise<TranscribeResult> {
   const startedAt = Date.now();
   const endTimer = aiRequestDuration.startTimer({ analysis_type: ANALYSIS_TYPE });
-  const apiKey = getGlobalOpenAIApiKey();
+  const apiKey = await resolveGatewayApiKey();
   if (!apiKey) {
     endTimer();
     aiCallsTotal.inc({ status: "error", analysis_type: ANALYSIS_TYPE });

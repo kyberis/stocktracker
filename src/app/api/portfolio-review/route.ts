@@ -4,7 +4,6 @@ import { NextRequest } from "next/server";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import {
-  getGlobalOpenAIApiKey,
   listHoldings,
   listCashEntries,
   incrementAiTokenUsage,
@@ -20,6 +19,7 @@ import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
+import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 
 export const POST = withMetrics("/api/portfolio-review", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "ai_portfolio_review");
@@ -40,11 +40,11 @@ export const POST = withMetrics("/api/portfolio-review", async (request: NextReq
     );
   }
 
-  const apiKey = getGlobalOpenAIApiKey();
-  if (!apiKey) {
+  const gatewayConfigured = await resolveGatewayApiKey();
+  if (!gatewayConfigured) {
     await refundFeatureQuota(session.userId, "ai_portfolio_review");
     return Response.json(
-      { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },
+      { error: "AI Gateway not configured. Ask your admin to set AI_GATEWAY_API_KEY or the Admin panel key." },
       { status: 501 }
     );
   }
@@ -132,23 +132,16 @@ ${portfolioData}`;
   const aiLogStart = Date.now();
 
   try {
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        stream: true,
-        stream_options: { include_usage: true },
-        max_tokens: 1500,
-        temperature: 0.3,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
+    const openaiRes = await fetchGatewayChatCompletions({
+      model,
+      stream: true,
+      stream_options: { include_usage: true },
+      max_tokens: 1500,
+      temperature: 0.3,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
     });
 
     endTimer();

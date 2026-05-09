@@ -11,10 +11,10 @@
  * lose the answer.
  */
 
-import { getGlobalOpenAIApiKey } from "@/lib/db";
+import { resolveGatewayApiKey, VERCEL_AI_GATEWAY_BASE } from "@/lib/ai/gateway";
 import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
 
-const SPEECH_ENDPOINT = "https://api.openai.com/v1/audio/speech";
+const SPEECH_ENDPOINT = `${VERCEL_AI_GATEWAY_BASE}/audio/speech`;
 const ANALYSIS_TYPE = "warren_tts";
 
 /** Hard cap on TTS input — protects cost and Telegram's voice duration cap. */
@@ -72,7 +72,7 @@ export async function synthesizeSpeech(opts: SynthesizeOptions): Promise<Synthes
     return { ok: false, reason: "empty_input", durationMs: Date.now() - startedAt };
   }
 
-  const apiKey = getGlobalOpenAIApiKey();
+  const apiKey = await resolveGatewayApiKey();
   if (!apiKey) {
     endTimer();
     aiCallsTotal.inc({ status: "error", analysis_type: ANALYSIS_TYPE });

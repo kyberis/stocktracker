@@ -1,4 +1,5 @@
-import { getGlobalOpenAIApiKey, getAiModelForFlow } from "@/lib/db/settings";
+import { fetchGatewayChatCompletions } from "@/lib/ai/gateway";
+import { getAiModelForFlow } from "@/lib/db/settings";
 import { AI_FLOW_META } from "@/lib/ai-models";
 import type { DigestTranslation } from "@/lib/db/market-digests";
 
@@ -18,9 +19,6 @@ export async function generateDigestTweet(
   translation: DigestTranslation,
   mentionedTickers: string[],
 ): Promise<string> {
-  const apiKey = getGlobalOpenAIApiKey();
-  if (!apiKey) throw new Error("OpenAI API key not configured");
-
   const { maxTokens, temperature } = AI_FLOW_META.digest_x_post;
   const model = await getAiModelForFlow("digest_x_post");
 
@@ -36,31 +34,24 @@ Summary: ${translation.summary}
 Key points:
 ${keyPointsList}${tickerHint}`;
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      temperature,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
-      ],
-    }),
+  const res = await fetchGatewayChatCompletions({
+    model,
+    max_tokens: maxTokens,
+    temperature,
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: userPrompt },
+    ],
   });
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`OpenAI API error (${res.status}): ${text.slice(0, 500)}`);
+    throw new Error(`AI Gateway error (${res.status}): ${text.slice(0, 500)}`);
   }
 
   const data = await res.json();
   const tweet = (data.choices?.[0]?.message?.content ?? "").trim();
-  if (!tweet) throw new Error("OpenAI returned empty tweet content");
+  if (!tweet) throw new Error("AI Gateway returned empty tweet content");
 
   return tweet;
 }
