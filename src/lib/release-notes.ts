@@ -32,6 +32,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "improvement",
+        text: "Unified IdP login language: visits to user.trefolio.com from Will and Clara now forward OIDC `ui_locales` using the shared `trefolio_ui_locale` cookie when present (same bridge as trefolio); trefolio `/login` preserves an explicit `?ui_locales=` query through to `/api/auth/oidc/start`.",
+        translations: {
+          es: "Idioma unificado en el login del IdP: las visitas a user.trefolio.com desde Will y Clara envían `ui_locales` con la cookie compartida `trefolio_ui_locale` cuando existe (el mismo puente que trefolio); en trefolio `/login` se conserva `?ui_locales=` hasta `/api/auth/oidc/start`.",
+        },
+      },
+      {
         type: "fix",
         text: "Warren AI: (1) normalize chat history so missing assistant prose cannot yield consecutive user messages; (2) route model calls through **Chat Completions** (`provider.chat` → `/chat/completions`) instead of the default OpenAI **Responses** integration (`/v1/responses`), which was triggering sporadic gateway errors (`input.*.output: Invalid input`) on long threads.",
         translations: {

@@ -104,6 +104,8 @@ export async function middleware(req: NextRequest) {
       }
       const email = req.nextUrl.searchParams.get("email");
       if (email) qs.set("email", email);
+      const uiLocales = req.nextUrl.searchParams.get("ui_locales");
+      if (uiLocales?.trim()) qs.set("ui_locales", uiLocales.trim());
       const q = qs.toString();
       const dest = q ? `/api/auth/oidc/start?${q}` : "/api/auth/oidc/start";
       return NextResponse.redirect(new URL(dest, req.url));
