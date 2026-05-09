@@ -476,8 +476,13 @@ const es: TranslationStrings = {
   quotaTableUnitDay: "{n} / día",
   quotaTableUnitYear: "{n} / año",
   quotaTableUnlimited: "Ilimitado",
-  landingPricingQuotasHeading: "Mismas funciones, más margen",
-  landingPricingQuotasSubtitle: "Ambos planes incluyen todas las funciones. Trefolio multiplica la frecuencia con la que puedes usar las de coste variable.",
+  tierDifferentiatorsSummary:
+    "Folio y Trefolio incluyen las mismas funciones y pantallas. Lo que cambia en Trefolio es, sobre todo: un modelo de IA más capaz para Warren, el chat de cartera y el análisis general (en Folio el chat cotidiano usa un modelo compacto por defecto); cuotas mensuales y diarias mucho más altas en IA y en herramientas que consumen datos; y más margen para consultas de mercado «premium» respaldadas por APIs de proveedores de pago cuando las necesitas a menudo.",
+  tierDifferentiatorsSummaryShort:
+    "Trefolio sube de modelo de IA, multiplica los límites de uso y desbloquea muchas más consultas de datos de mercado premium — la misma app en ambos planes.",
+  landingPricingQuotasHeading: "Folio frente a Trefolio",
+  landingPricingQuotasSubtitle:
+    "Cada fila muestra el tope de esa función en Folio vs Trefolio (periodo según la columna). Los límites publicados pueden cambiar; en la suscripción dentro de la app verás lo que aplica a tu cuenta.",
   upgradeToPro: "Pasar a Trefolio",
   upgradePromptShort: "Más consultas de IA, más datos premium y sin anuncios — mismas funciones que Folio con cuotas mensuales mucho mayores.",
   upgradeToStarter: "Pasar a Bifolio",
@@ -524,7 +529,7 @@ const es: TranslationStrings = {
   proSpotsLow: "¡Solo quedan {remaining} plaza(s) Trefolio!",
   rateLimitReached: "Límite alcanzado. Reintentando en breve...",
   aiDailyUsage: "{used}/{limit} análisis de IA usados hoy",
-  upsellCompareTitle: "Mismas funciones. Más margen.",
+  upsellCompareTitle: "La misma app: IA más potente, límites más altos y más datos premium.",
   upsellCompareSubtitleAI: "Has agotado tu cuota mensual de IA en Folio. Trefolio incluye ~33× más consultas de IA.",
   upsellCompareSubtitleLocked: "Trefolio multiplica tu cuota mensual para esta función. Misma pantalla, más margen.",
   upsellCompareSubtitleAlways: "Compara las cuotas mensuales de cada plan y mejora cuando tenga sentido para tu flujo.",
@@ -1804,7 +1809,8 @@ const es: TranslationStrings = {
   landingWhyEyebrow: "Función por función",
   landingWhyTableFootnote: "Las filas en negrita son exclusivas de trefolio o áreas donde trefolio lidera significativamente el mercado.",
   landingMobileAppFreeNote: "Descarga gratuita. La misma cuenta funciona en web, iOS y Android.",
-  landingPricingTierExplainer: "Dos pasos: Folio para explorar, Trefolio cuando quieras el producto completo.",
+  landingPricingTierExplainer:
+    "Folio sirve para empezar; Trefolio es cuando necesitas un modelo de IA más fuerte, cuotas mucho más altas y más uso de datos de mercado vía APIs de pago.",
   landingBrandTagline: "Toda cartera merece un poco de suerte",
 
   landingHeroProof1Value: "35",
@@ -2725,6 +2731,20 @@ const es: TranslationStrings = {
   warrenChipAlertExample: "Avísame si AAPL cae 5%",
   warrenAttachAria:
     "Adjunta imágenes, PDF, CSV o audio (máx. 5 archivos; hay límites por tipo)",
+  idpUnifiedBridgeHeadingLogin: "Inicio de sesión unificado",
+  idpUnifiedBridgeHeadingSignup: "Registro unificado",
+  idpUnifiedBridgeBodyLogin:
+    "Te estamos redirigiendo a la cuenta compartida de trefolio en user.trefolio.com. El mismo acceso sirve para trefolio, Clara y Will.",
+  idpUnifiedBridgeBodySignup:
+    "Te estamos redirigiendo para crear tu cuenta en user.trefolio.com. Una sola cuenta desbloquea trefolio, Clara y Will.",
+  idpUnifiedBridgeCountdown: "Continuando en {seconds}s…",
+  idpUnifiedBridgeContinue: "Continuar ahora",
+  idpUnifiedBridgeRetry: "Intentar de nuevo",
+  idpUnifiedBridgeErrorTitle: "No pudimos completar el inicio de sesión",
+  idpUnifiedBridgeIdpDisabledTitle: "El inicio de sesión no está configurado",
+  idpUnifiedBridgeIdpDisabledBody:
+    "Este entorno no está conectado al servicio de cuentas de trefolio. Configura IDP_BASE_URL y las credenciales OAuth del cliente, o usa la app alojada en trefolio.com.",
+
 };
 
 export default es;

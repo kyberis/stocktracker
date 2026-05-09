@@ -20,7 +20,7 @@ test.describe.serial("AI routes — strict body validation and injection guards"
       if (String(e).includes("410")) {
         test.skip(
           true,
-          "API signup returned 410 (USE_LEGACY_AUTH=false). Use Playwright webServer or enable legacy signup.",
+          "API signup returned 410 (IdP configured). Use Playwright webServer (E2E=1) without IdP client secret, or point E2E at an env without IdP.",
         );
       }
       throw e;

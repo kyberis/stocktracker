@@ -29,7 +29,7 @@ test.describe.serial("Cross-site journey — auth, billing, prompt-injection gua
       if (String(e).includes("410")) {
         test.skip(
           true,
-          "API signup returned 410 (USE_LEGACY_AUTH=false on this origin). Run without E2E_BASE_URL to use Playwright webServer (E2E=1 + USE_LEGACY_AUTH=true), or enable legacy signup on your dev URL.",
+          "API signup returned 410 (IdP configured on this origin). Run without E2E_BASE_URL to use Playwright webServer (E2E=1) without IDP_CLIENT_SECRET so local signup works.",
         );
       }
       throw e;

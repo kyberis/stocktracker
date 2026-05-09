@@ -31,7 +31,7 @@ Clara / Will specifics (for behaviour you mirror or debug):
 
 | Area | Role |
 |------|------|
-| [`src/lib/idp/config.ts`](../../../src/lib/idp/config.ts) | `getIdpBaseUrl`, `getIdpIssuer`, `isIdpEnabled`, `legacyAuthEnabled`, `freezeLocalUserWrites` |
+| [`src/lib/idp/config.ts`](../../../src/lib/idp/config.ts) | `getIdpBaseUrl`, `getIdpIssuer`, `isIdpEnabled`, `freezeLocalUserWrites` |
 | [`src/lib/idp/entitlements.ts`](../../../src/lib/idp/entitlements.ts) | Link `idp_sub`, sync plan from IdP |
 | [`src/lib/idp/oidc.ts`](../../../src/lib/idp/oidc.ts) | PKCE, `buildAuthorizationUrl`, token exchange, JWT verify |
 | [`src/lib/idp/ai-model-config-fetch.ts`](../../../src/lib/idp/ai-model-config-fetch.ts) | Fetch/PUT ecosystem AI model map from IdP (`ACCOUNTS_AI_CONFIG_SECRET` or `IDP_SERVICE_TOKEN`) |
@@ -39,7 +39,8 @@ Clara / Will specifics (for behaviour you mirror or debug):
 | [`src/app/api/auth/oidc/start/route.ts`](../../../src/app/api/auth/oidc/start/route.ts) | Begin login flow |
 | [`src/app/api/auth/oidc/signup-start/route.ts`](../../../src/app/api/auth/oidc/signup-start/route.ts) | Begin signup-first (`screen_hint=signup`) |
 | [`src/app/api/auth/oidc/callback/route.ts`](../../../src/app/api/auth/oidc/callback/route.ts) | Exchange code, create/link local user, session cookie |
-| [`src/app/signup/page.tsx`](../../../src/app/signup/page.tsx) | Server redirect to signup-start when IdP-only |
+| [`src/app/login/page.tsx`](../../../src/app/login/page.tsx), [`src/app/signup/page.tsx`](../../../src/app/signup/page.tsx) | `IdpRedirectBridge` (countdown + CTA) → OIDC start / signup-start when `isIdpEnabled()`; IdP-not-configured dev hint when not |
+| [`src/components/auth/IdpRedirectBridge.tsx`](../../../src/components/auth/IdpRedirectBridge.tsx), [`src/lib/idp/bridge-copy.ts`](../../../src/lib/idp/bridge-copy.ts) | Shared bridge UI + i18n |
 | [`src/middleware.ts`](../../../src/middleware.ts) | Allow public OIDC routes; onboarding gates |
 
 ## Environment (typical)
@@ -50,7 +51,7 @@ Clara / Will specifics (for behaviour you mirror or debug):
 - `IDP_CLIENT_SECRET` — Server-only.
 - `IDP_SERVICE_TOKEN` — Shared secret for `/v1/*` REST calls, PAT introspection, and (when `ACCOUNTS_AI_CONFIG_SECRET` is unset) the internal AI model config endpoint.
 - `ACCOUNTS_AI_CONFIG_SECRET` — Optional; dedicated bearer for `GET/PUT …/api/v1/internal/ai-model-config` (ecosystem AI model map). If omitted, trefolio may fall back to `IDP_SERVICE_TOKEN` for the same header.
-- `USE_LEGACY_AUTH=false` — IdP-only login/signup paths active.
+- **Login gating** — When `IDP_BASE_URL`, `IDP_CLIENT_ID`, and `IDP_CLIENT_SECRET` are all set, legacy password/Google/Apple/passkey **signup and login APIs** return `410` and `/login` / `/signup` use the bridge into OIDC.
 - `FREEZE_LOCAL_USER_WRITES` — Blocks **new** local users on legacy OAuth/signup; OIDC callback exempt.
 
 On the **IdP** (`external/accounts`), matching Caddy dev uses `IDP_ISSUER` and optional `IDP_SERVER_ORIGIN` so discovery lists HTTPS authorize + loopback token/jwks.

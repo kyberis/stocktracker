@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
-import { isIdpEnabled, legacyAuthEnabled } from "@/lib/idp/config";
 import { logUnauthorizedApi } from "@/lib/log-unauthorized";
 
 const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email", "/blog", "/contact", "/demo", "/releasenotes", "/leaf", "/unsubscribe", "/about"]);
@@ -86,30 +85,6 @@ export async function middleware(req: NextRequest) {
   // or a bad relative link). No legitimate route uses this path.
   if (pathname === "/l") {
     return NextResponse.redirect(new URL("/landing", req.url));
-  }
-
-  /**
-   * Unified IdP only (`USE_LEGACY_AUTH=false`): `/login` must hop to
-   * `/api/auth/oidc/start` (PKCE cookies) → browser redirect to
-   * `{IDP_ISSUER}/oauth2/authorize` (e.g. https://user.trefolio-dev.com/...).
-   * Run before `isPublicPath` — `/login` is public and would otherwise bypass.
-   */
-  if (pathname === "/login") {
-    const oauthErr = req.nextUrl.searchParams.get("error");
-    if (!oauthErr && isIdpEnabled() && !legacyAuthEnabled()) {
-      const qs = new URLSearchParams();
-      const rp = req.nextUrl.searchParams.get("redirect");
-      if (rp && rp.startsWith("/") && !rp.startsWith("//")) {
-        qs.set("redirect", rp);
-      }
-      const email = req.nextUrl.searchParams.get("email");
-      if (email) qs.set("email", email);
-      const uiLocales = req.nextUrl.searchParams.get("ui_locales");
-      if (uiLocales?.trim()) qs.set("ui_locales", uiLocales.trim());
-      const q = qs.toString();
-      const dest = q ? `/api/auth/oidc/start?${q}` : "/api/auth/oidc/start";
-      return NextResponse.redirect(new URL(dest, req.url));
-    }
   }
 
   if (isPublicPath(pathname) || PUBLIC_API_ROUTES.has(pathname)) {

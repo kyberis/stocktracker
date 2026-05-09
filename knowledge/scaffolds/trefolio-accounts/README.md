@@ -105,7 +105,7 @@ Generate a client secret per client with `openssl rand -hex 32`, store hashed in
 
 ### 5. Stripe webhook
 
-Point Stripe → IdP webhook URL at `https://user.trefolio.com/api/billing/webhook`. Trefolio's existing webhook URL stays for backward compat until cutover; both will fire on every event. The trefolio webhook becomes a no-op when `USE_LEGACY_AUTH=false`.
+Point Stripe → IdP webhook URL at `https://user.trefolio.com/api/billing/webhook`. Trefolio's existing webhook URL stays for backward compat until cutover; both may fire during migration. The trefolio webhook stops mirroring subscription events when the product IdP OAuth client is fully configured (`isIdpEnabled()` in trefolio).
 
 ### 6. SEO / safety
 

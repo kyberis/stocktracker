@@ -5,6 +5,7 @@ import {
   findUserById,
   createUser,
   trackEvent,
+  updateUserProfile,
   type DbUser,
 } from "@/lib/db";
 import {
@@ -29,7 +30,7 @@ import {
   syncEntitlementsForUser,
 } from "@/lib/idp/entitlements";
 import { isIdpEnabled } from "@/lib/idp/config";
-import { sendWelcomeEmail, sendAdminNewCustomerNotification, getEmailLocale } from "@/lib/email";
+import { sendWelcomeEmail, getEmailLocale } from "@/lib/email";
 import {
   getRequestPublicOrigin,
   isRequestPublicHttps,
@@ -255,9 +256,7 @@ export async function GET(req: NextRequest) {
       getEmailLocale(claims.locale || "en"),
       publicUser.id,
     ).catch((err) => console.error("[oidc] welcome email failed", err));
-    sendAdminNewCustomerNotification(normalizedEmail, claims.name || "", "oidc").catch((err) =>
-      console.error("[oidc] admin new customer notification failed", err),
-    );
+    // Admin "new user" email is sent once from user.trefolio.com (IdP) on createUser — not here.
   }
 
   // Sync entitlements in the background — never block the redirect on IdP
@@ -265,6 +264,21 @@ export async function GET(req: NextRequest) {
   void syncEntitlementsForUser(dbUser.id).catch((err) =>
     console.error("[oidc] sync entitlements failed", err),
   );
+
+  try {
+    const patch: Parameters<typeof updateUserProfile>[1] = {};
+    if (claims.name !== undefined) patch.displayName = claims.name;
+    if (claims.picture !== undefined && claims.picture !== null) patch.avatarUrl = claims.picture;
+    if (claims.picture === "") patch.avatarUrl = "";
+    if (claims.tax_residency !== undefined && claims.tax_residency !== null)
+      patch.taxResidency = claims.tax_residency;
+    if (claims.tax_residency === "") patch.taxResidency = "";
+    if (Object.keys(patch).length > 0) {
+      await updateUserProfile(dbUser.id, patch);
+    }
+  } catch (err) {
+    console.error("[oidc] profile fields sync failed", err);
+  }
 
   await ensureTrefolioAdminRoleForUser(dbUser.id, claims.email || dbUser.email);
   const finalUser = (await findUserById(dbUser.id)) ?? dbUser;

@@ -53,6 +53,12 @@ export interface IdpEntitlementResponse {
   plan: "free" | "pro";
   proUntil: string | null;
   source: "stripe" | "grant" | "trial" | null;
+  profile?: {
+    email: string;
+    name: string;
+    picture: string | null;
+    taxResidency: string | null;
+  };
   entitlements: {
     trefolio_pro: boolean;
     clara_daily_limit: number;

@@ -474,6 +474,10 @@ const nl: TranslationStrings = {
   quotaTableUnitDay: "{n} / dag",
   quotaTableUnitYear: "{n} / jaar",
   quotaTableUnlimited: "Onbeperkt",
+  tierDifferentiatorsSummary:
+    "Both Folio and Trefolio include the same features and screens. The main differences on Trefolio are a more capable AI model for Warren, portfolio chat, and general analysis (Folio uses a compact default for everyday conversational AI); much higher monthly and daily quotas on AI and data-heavy tools; and more headroom for premium market-data lookups backed by paid provider APIs when you need them often.",
+  tierDifferentiatorsSummaryShort:
+    "Trefolio upgrades the AI model, multiplies usage limits, and unlocks far more premium market-data lookups — same app on both plans.",
   landingPricingQuotasHeading: "Zelfde functies, meer ruimte",
   landingPricingQuotasSubtitle: "Beide plannen krijgen alle functies. Trefolio vermenigvuldigt hoe vaak je de kostenposten kunt gebruiken.",
   upgradeToPro: "Upgraden naar Trefolio",
@@ -2626,6 +2630,20 @@ const nl: TranslationStrings = {
   landingAgentsWillDesc: "Captures voice notes and meeting transcripts, summarises them, and links related notes automatically. Ideal for investing journals and decision logs. Telegram bot today, web chat soon.",
   landingAgentsWillCta: "Try Will",
   landingAgentsFreeNote: "Free tier: 30 messages/day on each of Clara and Will, forever. Pro raises every limit to 200/day.",
+  idpUnifiedBridgeHeadingLogin: "Unified sign-in",
+  idpUnifiedBridgeHeadingSignup: "Unified registration",
+  idpUnifiedBridgeBodyLogin:
+    "You are being redirected to the shared trefolio account at user.trefolio.com. The same sign-in works across trefolio, Clara, and Will.",
+  idpUnifiedBridgeBodySignup:
+    "You are being redirected to create your account at user.trefolio.com. One account unlocks trefolio, Clara, and Will.",
+  idpUnifiedBridgeCountdown: "Continuing in {seconds}s…",
+  idpUnifiedBridgeContinue: "Continue now",
+  idpUnifiedBridgeRetry: "Try again",
+  idpUnifiedBridgeErrorTitle: "We could not finish signing you in",
+  idpUnifiedBridgeIdpDisabledTitle: "Sign-in is not configured",
+  idpUnifiedBridgeIdpDisabledBody:
+    "This environment is not connected to the trefolio account service. Set IDP_BASE_URL and OAuth client credentials, or use the hosted app at trefolio.com.",
+
 };
 
 export default nl;

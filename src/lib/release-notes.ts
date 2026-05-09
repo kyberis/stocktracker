@@ -17,6 +17,44 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.11",
+    date: "2026-05-09",
+    title: "Unified IdP login bridge & legacy auth removal",
+    titleTranslations: {
+      es: "Puente de login unificado y eliminación de auth legada",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "/login and /signup show a short countdown and explanation before sending you to user.trefolio.com (one account for trefolio, Clara, and Will). Legacy email/password, Google, Apple, and passkey sign-in APIs are disabled whenever the IdP is configured; USE_LEGACY_AUTH is removed.",
+        translations: {
+          es: "/login y /signup muestran una cuenta atrás y un texto explicativo antes de llevarte a user.trefolio.com (una cuenta para trefolio, Clara y Will). Las APIs legadas de email/contraseña, Google, Apple y passkey quedan desactivadas cuando el IdP está configurado; se elimina USE_LEGACY_AUTH.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Unified account hub at user.trefolio.com/account (profile, avatar URL, tax residency, connected accounts, passkeys, password). Trefolio syncs those fields from the IdP on session refresh; Clara and Will settings link there when the unified IdP is configured. Operators can backfill profiles with POST /v1/admin/users/profile-import on the IdP.",
+        translations: {
+          es: "Portal de cuenta unificado en user.trefolio.com/account (perfil, URL de avatar, residencia fiscal, cuentas conectadas, passkeys, contraseña). Trefolio sincroniza esos datos desde el IdP al refrescar la sesión; Clara y Will enlazan desde Ajustes cuando el IdP unificado está activo. Los operadores pueden volcar perfiles con POST /v1/admin/users/profile-import en el IdP.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Creating a unified account on user.trefolio.com sends the same style of production-only admin notification email as trefolio (Resend; optional SIGNUP_NOTIFY_EMAIL), so operators see new IdP signups even before the user opens Warren.",
+        translations: {
+          es: "Al crear una cuenta unificada en user.trefolio.com se envía el mismo tipo de correo de aviso al equipo (solo en producción, vía Resend; SIGNUP_NOTIFY_EMAIL opcional) que en trefolio, para ver altas en el IdP aunque el usuario aún no abra Warren.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Operators get one admin email per new unified identity: Warren and Clara no longer send duplicate “new customer” mail when the IdP is configured (the notification is sent once from user.trefolio.com when the account row is created). Legacy-only deployments without the IdP still use Warren/Clara local signup notifications.",
+        translations: {
+          es: "El equipo recibe un solo correo por nueva identidad unificada: Warren y Clara ya no envían el duplicado de «nuevo cliente» cuando el IdP está configurado (el aviso sale una vez desde user.trefolio.com al crear la cuenta). En despliegues solo legados sin IdP siguen los avisos locales de alta en Warren/Clara.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.10",
     date: "2026-05-09",
     title: "AI models by plan & IdP config",
@@ -24,6 +62,13 @@ export const releaseNotes: ReleaseEntry[] = [
       es: "Modelos IA por plan y configuración en el IdP",
     },
     changes: [
+      {
+        type: "improvement",
+        text: "Plan comparison copy (ProCompareCard, landing pricing, mobile paywall) now states the three main Folio vs Trefolio differences in one place: AI model tier, usage quotas, and premium paid–API market-data headroom, with a short legal-safe note that published limits may change.",
+        translations: {
+          es: "El copy de comparación de planes (ProCompareCard, precios en la landing, paywall móvil) resume en un solo sitio las tres diferencias principales Folio vs Trefolio: nivel del modelo de IA, cuotas de uso y margen para datos de mercado «premium» vía APIs de pago, con una nota breve de que los límites publicados pueden cambiar.",
+        },
+      },
       {
         type: "feature",
         text: "Folio (free) conversational AI uses a compact default model; Trefolio uses the ecosystem model map from user.trefolio.com when configured (`ACCOUNTS_AI_CONFIG_SECRET` or `IDP_SERVICE_TOKEN`), with Turso `platform_settings` as fallback. Quality-critical flows (portfolio score, AI import) always use the IdP-configured model. Warren web shows a short Folio notice with upgrade CTA; Telegram sends a separate hint after replies for free users.",

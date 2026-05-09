@@ -17,10 +17,10 @@ Full steps: ${RUNBOOK}
 1) Vercel (trefolio): FREEZE_LOCAL_USER_WRITES=true → deploy
 2) From repo root (with IDP_BASE_URL + IDP_SERVICE_TOKEN):
      npm run idp:migrate-all-users
-3) Vercel (trefolio): USE_LEGACY_AUTH=false (with IDP_BASE_URL / IDP_ISSUER set:
-     upgrade + portal already target user.trefolio.com; local webhook keeps only
-     device-grant Leaf flow when legacy auth is off)
-   → deploy
+3) Vercel (trefolio): confirm IDP_BASE_URL / IDP_ISSUER / IDP_CLIENT_ID /
+     IDP_CLIENT_SECRET / IDP_SERVICE_TOKEN are set → deploy
+     (/login + /signup bridge into OIDC; legacy auth APIs return 410 when IdP
+     is fully configured; local billing webhook keeps only device-grant Leaf flow)
 
 IdP (user.trefolio.com) must register client_id trefolio with redirect_uri
 matching this deployment (see external/accounts/src/lib/oidc.ts STATIC_CLIENTS).
@@ -38,13 +38,17 @@ matching this deployment (see external/accounts/src/lib/oidc.ts STATIC_CLIENTS).
     console.warn(`Env check: missing — ${missing.join(", ")}\n`);
   }
 
-  const legacy = process.env.USE_LEGACY_AUTH;
-  if (legacy === "false") {
+  const idpCore = ["IDP_BASE_URL", "IDP_CLIENT_ID", "IDP_CLIENT_SECRET"].every(
+    (k) => Boolean(process.env[k]?.trim()),
+  );
+  if (idpCore) {
     console.log(
-      "USE_LEGACY_AUTH=false → OIDC-only login; trefolio billing webhook handles only device-grant (Leaf); Pro entitlements + checkout live on IdP.\n",
+      "IdP OAuth client configured → OIDC-only product login; trefolio billing webhook handles only device-grant (Leaf); Pro entitlements + checkout live on IdP.\n",
     );
   } else {
-    console.log(`USE_LEGACY_AUTH=${legacy ?? "(unset, defaults to legacy on)"} → local login still allowed if routes exist.\n`);
+    console.log(
+      "IdP client not fully configured (need IDP_BASE_URL, IDP_CLIENT_ID, IDP_CLIENT_SECRET) → product /login shows IdP-not-configured bridge; local E2E can omit secret for password signup.\n",
+    );
   }
 
   const billingIdp = process.env.BILLING_REDIRECT_TO_IDP;

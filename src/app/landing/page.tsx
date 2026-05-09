@@ -2191,7 +2191,10 @@ function PricingSection() {
           <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">
             {t("landingPricingQuotasHeading")}
           </h3>
-          <p className="text-sm text-slate-500 mb-4">
+          <p className="text-sm text-slate-600 mb-2 leading-relaxed">
+            {t("tierDifferentiatorsSummary")}
+          </p>
+          <p className="text-xs text-slate-500 mb-4">
             {t("landingPricingQuotasSubtitle")}
           </p>
           <QuotaCompareTable compact />

@@ -26,6 +26,6 @@ export default defineConfig({
         port: 3000,
         timeout: 120_000,
         reuseExistingServer: !process.env.CI,
-        env: { E2E: "1", USE_LEGACY_AUTH: "true" },
+        env: { E2E: "1" },
       },
 });

@@ -1,8 +1,8 @@
 import { type Page, type APIRequestContext, expect, test } from "@playwright/test";
 
 /**
- * When the IdP is enabled and `USE_LEGACY_AUTH=false`, `/login` redirects to OIDC
- * and the email/password form is not shown. Call from specs that need that form.
+ * When the IdP is configured, `/login` shows the unified-account bridge (no local
+ * password form). Call from specs that need the legacy email/password UI.
  */
 export async function skipIfLegacyPasswordLoginUnavailable(page: Page) {
   await page.goto("/login", { waitUntil: "domcontentloaded", timeout: 20_000 });
@@ -11,7 +11,7 @@ export async function skipIfLegacyPasswordLoginUnavailable(page: Page) {
   if (!ok) {
     test.skip(
       true,
-      "Email/password login UI is not shown (IdP-only). Set USE_LEGACY_AUTH=true for local E2E or use the default Playwright webServer (E2E=1 npm start).",
+      "Local email/password login is unavailable when the unified IdP is enabled. Use the default Playwright webServer (E2E=1) without IDP_* set, or point E2E at an environment without IdP client credentials.",
     );
   }
 }
@@ -43,7 +43,7 @@ export async function loginViaUI(page: Page, identifier: string, password: strin
   if (!(await userField.isVisible({ timeout: 12_000 }).catch(() => false))) {
     test.skip(
       true,
-      "Email/password login UI is not shown (IdP-only). Set USE_LEGACY_AUTH=true for local E2E or use the default Playwright webServer (E2E=1 npm start).",
+      "Local email/password login is unavailable when the unified IdP is enabled. Use the default Playwright webServer (E2E=1) without IDP_* set.",
     );
   }
   await userField.fill(identifier);

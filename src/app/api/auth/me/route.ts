@@ -16,7 +16,8 @@ import { getAllFeatureQuotas } from "@/lib/feature-quotas";
 import { planExpiredNotification } from "@/lib/notification-templates";
 import { withMetrics } from "@/lib/with-metrics";
 import { syncEntitlementsForUser } from "@/lib/idp/entitlements";
-import { isIdpEnabled } from "@/lib/idp/config";
+import { syncProfileFieldsFromIdp } from "@/lib/idp/profile-sync";
+import { isIdpEnabled, legacyAuthEnabled, resolveIdpAccountHref } from "@/lib/idp/config";
 import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { ensureTrefolioAdminRoleForUser } from "@/lib/auth/admin-allowlist";
 
@@ -53,6 +54,13 @@ function lazyIdpEntitlementSync(userId: string): void {
   );
 }
 
+function lazyIdpProfileSync(userId: string): void {
+  if (!isIdpEnabled()) return;
+  syncProfileFieldsFromIdp(userId).catch((err) =>
+    console.error("[auth/me] IdP profile sync failed:", err instanceof Error ? err.message : err),
+  );
+}
+
 export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
@@ -78,9 +86,10 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
     lazyDowngrade(user.id);
   }
 
-  // Pull fresh entitlements from the IdP (no-op if not configured / user not linked).
+  // Pull fresh entitlements + profile from the IdP (no-op if not configured / user not linked).
   if (user) {
     lazyIdpEntitlementSync(user.id);
+    lazyIdpProfileSync(user.id);
   }
 
   // Expose all per-feature quota usage so the UI can render "X / Y" badges
@@ -130,6 +139,11 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
         impersonatorId && impersonator
           ? { impersonatorId, impersonatorUsername: impersonator.username }
           : null,
+      unifiedAccountUrl:
+        user?.idp_sub && !legacyAuthEnabled() && isIdpEnabled()
+          ? resolveIdpAccountHref({ from: "trefolio" })
+          : null,
+      accountEditingOnIdp: Boolean(user?.idp_sub) && !legacyAuthEnabled() && isIdpEnabled(),
     },
   });
 

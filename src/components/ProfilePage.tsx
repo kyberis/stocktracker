@@ -1572,6 +1572,26 @@ export default function ProfilePage() {
           aria-labelledby="profile-tab-account"
           className="space-y-6"
         >
+        {user?.accountEditingOnIdp && user?.unifiedAccountUrl ? (
+          <div className="card p-6 space-y-4 border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-500/5">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("profileSettings")}</h2>
+            <p className="text-sm text-gray-600 dark:text-slate-400">
+              {language === "es"
+                ? "Tu nombre, foto de perfil, residencia fiscal, Google, passkeys y contraseña se gestionan en la cuenta unificada (user.trefolio.com)."
+                : "Your display name, avatar URL, tax residency, Google sign-in, passkeys, and password are managed on the unified account site."}
+            </p>
+            <a
+              href={user.unifiedAccountUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2.5 transition-colors"
+            >
+              <Globe className="w-4 h-4" aria-hidden />
+              {language === "es" ? "Abrir cuenta unificada" : "Open unified account"}
+            </a>
+          </div>
+        ) : (
+          <>
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">{t("profileSectionIdentity")}</h2>
         </div>
@@ -1826,6 +1846,8 @@ export default function ProfilePage() {
               </div>
             </form>
           </div>
+        )}
+        </>
         )}
 
         <div>

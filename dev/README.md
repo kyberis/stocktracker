@@ -77,7 +77,7 @@ WebAuthn all behave the way they do on `*.trefolio.com`.
 E2E_IDP_BROWSER=1 E2E_BASE_URL=https://trefolio-dev.com npx playwright test e2e/idp-browser-smoke.spec.ts
 ```
 
-Use the same origin you open in the browser (`trefolio-dev.com` or your `app.*` host); trefolio must run with **IdP-first auth** (`USE_LEGACY_AUTH=false`) for that host so `/login` redirects into OIDC instead of showing the password form.
+Use the same origin you open in the browser (`trefolio-dev.com` or your `app.*` host); for full-stack OIDC against the local IdP, trefolio needs **`IDP_CLIENT_SECRET`** (and related IdP env) set for that host so `/login` bridges into OIDC instead of showing the “IdP not configured” dev state.
 
 ### If HTTPS dev feels slow
 

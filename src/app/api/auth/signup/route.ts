@@ -17,7 +17,7 @@ import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
 import { normalizeAttribution, parseFirstTouchAttributionCookie, FIRST_TOUCH_ATTRIBUTION_COOKIE } from "@/lib/attribution";
 import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
-import { freezeLocalUserWrites, legacyAuthEnabled } from "@/lib/idp/config";
+import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
 
 function deriveUsername(email: string): string {
   const prefix = email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "");
@@ -27,11 +27,11 @@ function deriveUsername(email: string): string {
 export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => {
   ensureSessionSecret();
 
-  if (!legacyAuthEnabled()) {
+  if (isIdpEnabled()) {
     return NextResponse.json(
       {
-        error: "Sign up has moved to user.trefolio.com. Please create your account there and you can use the same credentials in trefolio, Clara, and Will.",
-        upgradeUrl: "https://user.trefolio.com/signup?from=trefolio",
+        error: "Sign up has moved to user.trefolio.com. Open /signup in the app to create your unified trefolio account (trefolio, Clara, and Will).",
+        upgradeUrl: "https://user.trefolio.com",
       },
       { status: 410 },
     );
@@ -149,9 +149,12 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
     createNotification(user.id, welcomeNotification()).catch((err) =>
       console.error("Welcome notification failed:", err),
     );
-    sendAdminNewCustomerNotification(normalizedEmail, displayName || "", "credentials").catch((err) =>
-      console.error("Admin new customer notification failed:", err),
-    );
+    // Legacy signup only (IdP disabled). Unified signups are notified from the IdP, not Warren.
+    if (!isIdpEnabled()) {
+      sendAdminNewCustomerNotification(normalizedEmail, displayName || "", "credentials").catch((err) =>
+        console.error("Admin new customer notification failed:", err),
+      );
+    }
 
     const response = NextResponse.json({ user }, { status: 201 });
     response.cookies.set(getSessionCookieConfig(token));

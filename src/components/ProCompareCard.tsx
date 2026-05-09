@@ -308,6 +308,9 @@ export default function ProCompareCard({
         <p className="text-sm text-gray-500 dark:text-slate-400">
           {t(config.subtitleKey)}
         </p>
+        <p className="text-xs text-gray-600 dark:text-slate-300 max-w-2xl mx-auto mt-3 leading-relaxed">
+          {t("tierDifferentiatorsSummary")}
+        </p>
 
         {/* Context: what was attempted */}
         <p className="text-xs text-gray-500 dark:text-slate-400 mt-2">

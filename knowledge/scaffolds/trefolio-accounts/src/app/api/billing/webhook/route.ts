@@ -20,7 +20,8 @@ function getStripe(): Stripe {
  *
  * Configure in Stripe Dashboard with the SAME secret as trefolio's webhook
  * (because it's the same Stripe account). Both endpoints will fire on every
- * event during the cutover; trefolio's becomes a no-op when USE_LEGACY_AUTH=false.
+ * event during the cutover; trefolio's stops mirroring subscription events when
+ * the product IdP OAuth client is fully configured (`isIdpEnabled()` in trefolio).
  */
 export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature");

@@ -476,8 +476,13 @@ const en: TranslationStrings = {
   quotaTableUnitDay: "{n} / day",
   quotaTableUnitYear: "{n} / year",
   quotaTableUnlimited: "Unlimited",
-  landingPricingQuotasHeading: "Same features, more headroom",
-  landingPricingQuotasSubtitle: "Both plans get every feature in the app. Trefolio just multiplies how often you can use the cost-bearing ones.",
+  tierDifferentiatorsSummary:
+    "Both Folio and Trefolio include the same features and screens. The main differences on Trefolio are a more capable AI model for Warren, portfolio chat, and general analysis (Folio uses a compact default for everyday conversational AI); much higher monthly and daily quotas on AI and data-heavy tools; and more headroom for premium market-data lookups backed by paid provider APIs when you need them often.",
+  tierDifferentiatorsSummaryShort:
+    "Trefolio upgrades the AI model, multiplies usage limits, and unlocks far more premium market-data lookups — same app on both plans.",
+  landingPricingQuotasHeading: "Folio vs Trefolio",
+  landingPricingQuotasSubtitle:
+    "Each row shows the cap for that feature on Folio vs Trefolio (period as labeled). Published limits may change; the in-app subscription view is what applies to your account.",
   upgradeToPro: "Upgrade to Trefolio",
   upgradeToStarter: "Upgrade to Bifolio",
   upgradePromptShort: "More AI consultations, more premium-data lookups, and ad-free — same features as Folio with much higher monthly quotas.",
@@ -524,7 +529,7 @@ const en: TranslationStrings = {
   proSpotsLow: "Only {remaining} Trefolio spot(s) left!",
   rateLimitReached: "Rate limit reached. Retrying shortly...",
   aiDailyUsage: "{used}/{limit} AI analyses used today",
-  upsellCompareTitle: "Same features. More headroom.",
+  upsellCompareTitle: "Same app — stronger AI, higher limits, more premium data.",
   upsellCompareSubtitleAI: "You've used your monthly AI quota on Folio. Trefolio gets ~33× more AI consultations.",
   upsellCompareSubtitleLocked: "Trefolio multiplies your monthly quota for this feature. Same screen, more headroom.",
   upsellCompareSubtitleAlways: "Compare the monthly quotas on each plan and upgrade when it makes sense for your workflow.",
@@ -1802,7 +1807,8 @@ const en: TranslationStrings = {
   landingWhyEyebrow: "Feature by feature",
   landingWhyTableFootnote: "Bold rows = trefolio exclusives or areas where trefolio significantly leads the market.",
   landingMobileAppFreeNote: "Free to download. Same account works on web, iOS, and Android.",
-  landingPricingTierExplainer: "Two steps: Folio to explore, Trefolio when you want the full product.",
+  landingPricingTierExplainer:
+    "Folio is for getting started; Trefolio is when you need a stronger AI model, much higher quotas, and more paid API–backed market data.",
   landingBrandTagline: "Every portfolio deserves a bit of luck",
 
   landingHeroProof1Value: "35",
@@ -2724,6 +2730,21 @@ const en: TranslationStrings = {
   warrenChipAlertExample: "Alert me if AAPL drops 5%",
   warrenAttachAria:
     "Attach images, PDF, CSV, or audio (max 5 files; limits apply per type)",
+
+  // Unified IdP redirect bridge (/login, /signup → user.trefolio.com)
+  idpUnifiedBridgeHeadingLogin: "Unified sign-in",
+  idpUnifiedBridgeHeadingSignup: "Unified registration",
+  idpUnifiedBridgeBodyLogin:
+    "You are being redirected to the shared trefolio account at user.trefolio.com. The same sign-in works across trefolio, Clara, and Will.",
+  idpUnifiedBridgeBodySignup:
+    "You are being redirected to create your account at user.trefolio.com. One account unlocks trefolio, Clara, and Will.",
+  idpUnifiedBridgeCountdown: "Continuing in {seconds}s…",
+  idpUnifiedBridgeContinue: "Continue now",
+  idpUnifiedBridgeRetry: "Try again",
+  idpUnifiedBridgeErrorTitle: "We could not finish signing you in",
+  idpUnifiedBridgeIdpDisabledTitle: "Sign-in is not configured",
+  idpUnifiedBridgeIdpDisabledBody:
+    "This environment is not connected to the trefolio account service. Set IDP_BASE_URL and OAuth client credentials, or use the hosted app at trefolio.com.",
 };
 
 export default en;

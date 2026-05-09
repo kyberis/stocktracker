@@ -25,7 +25,7 @@ Copy-ready files for the Clara repo (`kyberis/etracker`) to integrate with the I
 ## Cutover sequence
 
 1. Deploy schema migration (Prisma) — `idpSub` is nullable, safe to ship before code changes.
-2. Deploy auth + endpoint changes with `USE_LEGACY_AUTH=true` (Clara still accepts old credentials).
+2. Deploy auth + endpoint changes (Clara can still accept old credentials until IdP OAuth env is complete on that host).
 3. Run `npm run idp:migrate-users` to backfill `idpSub` on every existing User.
-4. Set `USE_LEGACY_AUTH=false`, redeploy.
+4. Set production **`IDP_CLIENT_SECRET`** (and related IdP env), redeploy — `/login` bridges into the unified IdP.
 5. Remove deprecated local Stripe code in a follow-up PR.

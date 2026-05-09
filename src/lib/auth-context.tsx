@@ -49,6 +49,10 @@ interface AuthUser {
   trialActivatedAt: string;
   impersonation: { impersonatorId: string; impersonatorUsername: string } | null;
   quotas?: AuthQuotas;
+  /** Absolute URL to unified IdP account hub when legacy auth is off and user linked to IdP. */
+  unifiedAccountUrl?: string | null;
+  /** When true, profile/passkeys/password edits happen on the IdP account site. */
+  accountEditingOnIdp?: boolean;
 }
 
 interface AuthContextType {

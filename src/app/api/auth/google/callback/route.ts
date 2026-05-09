@@ -23,7 +23,7 @@ import { isBlockedEmailDomain } from "@/lib/schemas";
 import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
 import { FIRST_TOUCH_ATTRIBUTION_COOKIE, normalizeAttribution, parseFirstTouchAttributionCookie } from "@/lib/attribution";
-import { freezeLocalUserWrites, legacyAuthEnabled } from "@/lib/idp/config";
+import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -103,7 +103,7 @@ async function exchangeCodeForGoogleUser(
 export async function GET(req: NextRequest) {
   ensureSessionSecret();
 
-  if (!legacyAuthEnabled()) {
+  if (isIdpEnabled()) {
     return errorRedirect(req, "Google sign-in moved to user.trefolio.com.");
   }
 
@@ -348,9 +348,12 @@ async function handleLoginFlow(
       createNotification(publicUser.id, welcomeNotification()).catch((err) =>
         console.error("Welcome notification failed:", err),
       );
-      sendAdminNewCustomerNotification(googleUser.email.toLowerCase(), googleUser.name || "", "google").catch((err) =>
-        console.error("Admin new customer notification failed:", err),
-      );
+      // Legacy Google signup only. With unified IdP, new-account email goes from user.trefolio.com once.
+      if (!isIdpEnabled()) {
+        sendAdminNewCustomerNotification(googleUser.email.toLowerCase(), googleUser.name || "", "google").catch((err) =>
+          console.error("Admin new customer notification failed:", err),
+        );
+      }
     }
 
     if (!dbUser) {

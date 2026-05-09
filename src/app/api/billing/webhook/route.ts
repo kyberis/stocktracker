@@ -20,7 +20,7 @@ import {
   downgradeNotification,
   planExpiredNotification,
 } from "@/lib/notification-templates";
-import { legacyAuthEnabled } from "@/lib/idp/config";
+import { isIdpEnabled } from "@/lib/idp/config";
 
 function stripeCustomerId(value: string | Stripe.Customer | Stripe.DeletedCustomer | null): string {
   if (!value) return "";
@@ -131,7 +131,7 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
   billingEventsTotal.inc({ event: "webhook_received" });
 
   // IdP owns normal Pro subscriptions; this deployment only applies Turso side-effects for device grant.
-  if (!legacyAuthEnabled()) {
+  if (isIdpEnabled()) {
     try {
       if (event.type === "checkout.session.completed") {
         await handleDeviceGrantCheckoutCompleted(event.data.object as Stripe.Checkout.Session);

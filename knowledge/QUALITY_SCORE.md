@@ -8,7 +8,7 @@ Scale: **A** = solid, tested, clean. **B** = works, a few known gaps.
 
 | Domain | Grade | Why | Top debt |
 |--------|------:|-----|----------|
-| Auth & Identity | B | Sessions, passkeys, guards all covered; OAuth limited to admin paths. Unified IdP at user.trefolio.com lives behind `USE_LEGACY_AUTH` flag, with PKCE round-trip tested. | Cutover legacy code removal scheduled (7-day soak). Document the admin password reset path end-to-end. |
+| Auth & Identity | B | Sessions, passkeys, guards all covered; OAuth limited to admin paths. Unified IdP at user.trefolio.com is wired with PKCE; login/signup use a bridge into OIDC when the OAuth client is configured (`isIdpEnabled()`). | Document the admin password reset path end-to-end. |
 | Unified Accounts (IdP) | B | Trefolio / Clara / Will share one identity + Pro subscription via `user.trefolio.com`. Phase 0–6 shipped, Phase 7 hardening in progress. See [unified-accounts-and-billing](design-docs/unified-accounts-and-billing.md). | Cross-app log search + Playwright happy-path that talks to a real IdP test instance. |
 | Portfolio Core | B | Holdings / transactions / cash well-tested; multi-portfolio is newer. | `derive-holdings` edge cases on partial sells and splits. |
 | Market Data | B | Providers abstracted, Yahoo is the free backbone. | Yahoo rate-limit mitigation; FMP fallback matrix. |

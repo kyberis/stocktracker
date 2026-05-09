@@ -77,7 +77,7 @@ In `trefolio-accounts`:
 
 ### Phase 2 — Trefolio integrates IdP (~3–5 days, this repo)
 
-Most of Phase 2 ships in this repo, gated by `IDP_BASE_URL` and `USE_LEGACY_AUTH` env vars.
+Most of Phase 2 ships in this repo, gated by **`IDP_BASE_URL`** (plus `IDP_CLIENT_ID` / `IDP_CLIENT_SECRET` for OIDC) and optional **`FREEZE_LOCAL_USER_WRITES`** during migration.
 
 1. Migrations: add `idp_sub TEXT NOT NULL DEFAULT ''` to `users` table (migration 111).
 2. New module `src/lib/idp/`:
@@ -93,8 +93,8 @@ Most of Phase 2 ships in this repo, gated by `IDP_BASE_URL` and `USE_LEGACY_AUTH
    - Calls IdP admin API (`POST /v1/admin/users/import` with `{ email, passwordHash, googleId?, appleId?, plan, proUntil }`) to create or claim each user.
    - Writes returned `sub` back to `users.idp_sub`.
    - Idempotent; safe to re-run.
-6. Stripe redirect: when `BILLING_REDIRECT_TO_IDP=true` (deploy **together** with `USE_LEGACY_AUTH=false` per [`unified-accounts-cutover.md`](../../runbooks/unified-accounts-cutover.md) Step 3), the upgrade button on `/profile?section=subscription` links to `https://user.trefolio.com/upgrade?from=trefolio` instead of opening local Stripe checkout.
-7. Local [`billing/webhook/route.ts`](../../../src/app/api/billing/webhook/route.ts) becomes a no-op when `USE_LEGACY_AUTH=false` (returns 200, logs); the IdP webhook is the single Stripe consumer.
+6. Stripe redirect: when `IDP_ISSUER` / `IDP_BASE_URL` resolve, the upgrade button on `/profile?section=subscription` links to `https://user.trefolio.com/upgrade?from=trefolio` instead of opening local Stripe checkout. (`BILLING_REDIRECT_TO_IDP` is deprecated.)
+7. Local [`billing/webhook/route.ts`](../../../src/app/api/billing/webhook/route.ts) stops mirroring subscription events when the IdP OAuth client is fully configured (`isIdpEnabled()`); the IdP webhook is the Stripe consumer for Pro. Device-grant (Leaf) checkouts may still hit the product webhook.
 
 ### Phase 3 — Clara integrates IdP (~3 days, in `kyberis/etracker`)
 
@@ -133,7 +133,7 @@ In [`src/app/landing/page.tsx`](../../../src/app/landing/page.tsx):
 1. Freeze writes to local `users` tables on each app (read-only DB role).
 2. Run `migrate-users-to-idp.ts` on each app.
 3. Reconcile Stripe: ensure all paid trefolio users have a matching `Entitlement` in the IdP.
-4. Flip `USE_LEGACY_AUTH=false` in trefolio, then Clara, then Will.
+4. Confirm **production** IdP OAuth env (`IDP_BASE_URL`, `IDP_ISSUER`, `IDP_CLIENT_*`, `IDP_SERVICE_TOKEN`) on trefolio, then Clara, then Will — `/login` bridges into OIDC and legacy auth APIs return **410** when the client is configured.
 5. Send transactional email per [`automated-user-comms skill`](../../../.cursor/skills/automated-user-comms/SKILL.md): "Your trefolio account now also signs you in to Clara and Will."
 6. Schedule legacy auth route deletion for the next major release.
 
@@ -154,7 +154,7 @@ In [`src/app/landing/page.tsx`](../../../src/app/landing/page.tsx):
 ## Risks
 
 - **Stack disparity (Turso vs Postgres x2)** — mitigated by mapping `local_id ↔ idp_sub` in each app; no cross-DB joins.
-- **Auth migration regression** — mitigated by `USE_LEGACY_AUTH` flag and incremental cutover per app.
+- **Auth migration regression** — mitigated by incremental cutover, `FREEZE_LOCAL_USER_WRITES`, and release rollback if needed.
 - **Capacitor (iOS/Android) auth** — OIDC redirect inside Capacitor's WebView needs custom URL-scheme handling; allocate engineering buffer in Phase 2.
 - **Apple Sign In on web** — historically painful; lean on existing trefolio implementation patterns when porting.
 - **Search engines / sitemap drift** — `user.trefolio.com` should NOT be indexed (private auth surface); add `robots.txt` Disallow + noindex meta on every page.

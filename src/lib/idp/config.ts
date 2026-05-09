@@ -5,7 +5,7 @@
  * authentication, Stripe, and entitlements across trefolio, Clara, and Will.
  *
  * Trefolio integrates as an OIDC client. All IdP behaviour is gated by env
- * vars so the local auth path keeps working until cutover.
+ * vars so local development can run without an IdP until you opt in.
  *
  * See knowledge/design-docs/unified-accounts-and-billing.md.
  */
@@ -59,15 +59,6 @@ export function getIdpClientSecret(): string | null {
 /** Service token used for /v1/* REST calls (entitlements, telegram). */
 export function getIdpServiceToken(): string | null {
   return process.env.IDP_SERVICE_TOKEN || null;
-}
-
-/**
- * When `true`, the local password / Google / Apple / Passkey routes are still
- * accepted alongside the IdP. Default `true` until the cutover plan completes.
- * After cutover, set to `false` and the legacy routes return 410 Gone.
- */
-export function legacyAuthEnabled(): boolean {
-  return process.env.USE_LEGACY_AUTH !== "false";
 }
 
 /** Stripe Billing Portal on the IdP (requires IdP session cookie on that origin). */
@@ -134,6 +125,17 @@ export function isIdpEnabled(): boolean {
 }
 
 /**
+ * When `true`, treat local product-hosted signup/password/passkey flows as the
+ * primary identity surface (no unified `/account` hub). Defaults to the inverse
+ * of {@link isIdpEnabled}: once the OIDC client is configured, legacy flows are
+ * off unless an operator sets `LEGACY_AUTH_FORCE=true` for rollback drills.
+ */
+export function legacyAuthEnabled(): boolean {
+  if (process.env.LEGACY_AUTH_FORCE === "true") return true;
+  return !isIdpEnabled();
+}
+
+/**
  * Cutover safety switch. When `true`, the legacy auth routes (signup with
  * password, Google/Apple OAuth, passkey enrol) refuse to create a new local
  * `users` row and return HTTP 503 with a localized "maintenance" message.
@@ -147,4 +149,16 @@ export function isIdpEnabled(): boolean {
  */
 export function freezeLocalUserWrites(): boolean {
   return process.env.FREEZE_LOCAL_USER_WRITES === "true";
+}
+
+/**
+ * Unified account hub on the IdP (`/account`). Requires IdP session cookie on
+ * `user.*` to edit profile; opens in same browser after OIDC sign-in elsewhere.
+ */
+export function resolveIdpAccountHref(opts?: { from?: "trefolio" | "clara" | "will" }): string | null {
+  const issuer = getIdpIssuer();
+  if (!issuer) return null;
+  const u = new URL(`${issuer.replace(/\/+$/, "")}/account`);
+  u.searchParams.set("from", opts?.from ?? "trefolio");
+  return u.toString();
 }

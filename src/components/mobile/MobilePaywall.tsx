@@ -82,6 +82,9 @@ export default function MobilePaywall({ onDismiss, surface }: MobilePaywallProps
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Unlock Full Power</h1>
           <p className="text-sm text-emerald-200/70">One subscription — everything included</p>
+          <p className="text-xs text-emerald-100/80 mt-3 leading-relaxed max-w-sm mx-auto">
+            {t("tierDifferentiatorsSummaryShort")}
+          </p>
         </div>
 
         {/* Benefits */}

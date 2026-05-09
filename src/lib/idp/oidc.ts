@@ -187,6 +187,10 @@ export interface VerifiedIdToken {
   email_verified: boolean;
   name?: string;
   locale?: string;
+  /** OIDC standard — avatar URL from IdP profile. */
+  picture?: string | null;
+  /** IdP extension — ISO country code for tax residency. */
+  tax_residency?: string | null;
   pro_until?: string;
   entitlements: {
     trefolio_pro: boolean;
@@ -215,13 +219,17 @@ export async function verifyIdToken(token: string, expectedNonce?: string): Prom
     throw new Error("ID token missing entitlements claim");
   }
 
+  const raw = payload as Record<string, unknown>;
+
   return {
     sub: String(payload.sub),
-    email: String((payload as Record<string, unknown>).email ?? ""),
-    email_verified: Boolean((payload as Record<string, unknown>).email_verified),
-    name: (payload as Record<string, unknown>).name as string | undefined,
-    locale: (payload as Record<string, unknown>).locale as string | undefined,
-    pro_until: (payload as Record<string, unknown>).pro_until as string | undefined,
+    email: String(raw.email ?? ""),
+    email_verified: Boolean(raw.email_verified),
+    name: raw.name as string | undefined,
+    locale: raw.locale as string | undefined,
+    picture: (raw.picture as string | null | undefined) ?? null,
+    tax_residency: (raw.tax_residency as string | null | undefined) ?? null,
+    pro_until: raw.pro_until as string | undefined,
     entitlements: {
       trefolio_pro: Boolean(ents.trefolio_pro),
       clara_daily_limit: Number(ents.clara_daily_limit) || 30,

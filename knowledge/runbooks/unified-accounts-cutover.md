@@ -86,25 +86,24 @@ SELECT count(*) FROM "User";        -- should equal sum of users across apps
 SELECT count(*) FROM "Entitlement"; -- should equal current Pro subscriber count
 ```
 
-## Step 3 — Flip USE_LEGACY_AUTH to false
+## Step 3 — Production IdP OAuth client (OIDC-only product login)
 
-Per app:
+Per app, ensure **`IDP_BASE_URL`**, **`IDP_ISSUER`** (browser HTTPS where needed), **`IDP_CLIENT_ID`**, **`IDP_CLIENT_SECRET`**, and **`IDP_SERVICE_TOKEN`** are set, then deploy. There is no separate “legacy auth” toggle: when the OAuth client is fully configured, `/login` and `/signup` show a short bridge (countdown + “Continue now”) and legacy auth APIs return **`410 Gone`** with a pointer to the IdP.
 
 ```bash
-vercel env add USE_LEGACY_AUTH false production
 vercel deploy --prod
 ```
 
-On **trefolio**, ensure `IDP_BASE_URL` (and usually `IDP_ISSUER` for browser-facing HTTPS) are already set **before** this deploy. Upgrade CTAs and “Manage subscription” then resolve to `user.trefolio.com` via `resolveIdpUpgradeHref()` / `resolveBillingPortalHref()` — no separate billing redirect flag.
+On **trefolio**, `IDP_BASE_URL` (and usually `IDP_ISSUER` for browser-facing HTTPS) must be set **before** expecting OIDC to work. Upgrade CTAs and “Manage subscription” resolve to `user.trefolio.com` via `resolveIdpUpgradeHref()` / `resolveBillingPortalHref()` — no separate billing redirect flag.
 
 After deploy:
 
 - `/api/auth/login`, `/api/auth/signup`, `/api/auth/google`, `/api/auth/apple`
-  return `410 Gone` with a redirect URL to `user.trefolio.com`.
-- `/api/auth/oidc/start` and `/callback` are the only auth path.
+  return `410 Gone` with a redirect URL to `user.trefolio.com` when the IdP client is configured.
+- `/api/auth/oidc/start` and `/callback` are the supported browser auth path.
 - The "Upgrade" button in `/profile?section=subscription` redirects to
   `https://user.trefolio.com/upgrade?from=trefolio` (mirror for Clara/Will).
-- Stripe **subscription** webhooks: primary endpoint is the **IdP** (`user.trefolio.com`). Trefolio's webhook ([`src/app/api/billing/webhook/route.ts`](../../src/app/api/billing/webhook/route.ts)) handles **only** Leaf **device-grant** checkouts when legacy auth is off; configure that URL in Stripe if you use hardware promotions.
+- Stripe **subscription** webhooks: primary endpoint is the **IdP** (`user.trefolio.com`). Trefolio's webhook ([`src/app/api/billing/webhook/route.ts`](../../src/app/api/billing/webhook/route.ts)) handles **only** Leaf **device-grant** checkouts once legacy Stripe subscription mirroring is off; configure that URL in Stripe if you use hardware promotions.
 
 ## Step 4 — Send the unified-accounts email
 
@@ -123,19 +122,9 @@ The script:
 Send equivalent emails from Clara and Will using each app's existing email
 helper. Same copy, same locale picking.
 
-## Step 5 — Schedule legacy auth code removal
+## Step 5 — Post-cutover cleanup (optional)
 
-After a **7-day soak** with no auth incidents and no rollback, open a PR per
-app that:
-
-1. Deletes `/api/auth/login`, `/api/auth/signup`, `/api/auth/google`,
-   `/api/auth/apple` and the passkey routes.
-2. Deletes `useLegacyAuth()` and `freezeLocalUserWrites()` flags from
-   `src/lib/idp/config.ts`.
-3. Removes the local Stripe webhook code and any local checkout helpers.
-4. Drops unused columns from local users table (keep `idp_sub`,
-   `email`, `display_name`, `username`, `plan`, `last_active_at`, etc.).
-5. Bumps the trefolio CURRENT_VERSION and adds a release note.
+Legacy password/Google/Apple routes may still exist as **410 stubs** for old clients. After a stable soak, remove dead clients, unused env documentation, and tighten monitoring only as needed.
 
 ## Step 6 — Operate via the unified admin
 
@@ -159,9 +148,9 @@ for the full spec.
 
 | Issue                                       | Action                                                         |
 | ------------------------------------------- | -------------------------------------------------------------- |
-| IdP unreachable / OIDC callback failures    | `USE_LEGACY_AUTH=true` + redeploy on each app.                  |
+| IdP unreachable / OIDC callback failures    | Redeploy prior release or temporarily unset `IDP_CLIENT_SECRET` / `IDP_BASE_URL` on a **non-production** test only — production should stay on a known-good IdP config. |
 | Migration script wrote bad `idp_sub` values | Truncate `idp_sub` for affected rows; re-run script.           |
 | Email delivery problems                     | Stop the script, investigate Resend logs, resume (idempotent). |
 | Stripe webhook double-billing               | Disable the local webhook URL in Stripe dashboard.             |
 
-The cutover is reversible at any time before step 5.
+Rollback is **redeploy a prior release** (or fix IdP availability). The codebase no longer ships a `USE_LEGACY_AUTH` product toggle.

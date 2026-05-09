@@ -28,6 +28,6 @@ Copy-ready files for the Will repo (`kyberis/notetaker`) to integrate with the I
 Same shape as Clara:
 
 1. Deploy schema migration (`idpSub` nullable).
-2. Deploy auth + endpoint changes with `USE_LEGACY_AUTH=true`.
+2. Deploy auth + endpoint changes (legacy credentials remain available until IdP OAuth env is complete).
 3. Run `npm run idp:migrate-users` to backfill.
-4. Set `USE_LEGACY_AUTH=false`, redeploy.
+4. Set production **`IDP_CLIENT_SECRET`** (and related IdP env), redeploy — `/login` and `/register` bridge into the unified IdP.

@@ -80,6 +80,8 @@ flowchart TB
   "email": "user@example.com",
   "email_verified": true,
   "name": "Mateo S.",
+  "picture": "https://example.com/avatar.png",
+  "tax_residency": "ES",
   "locale": "es",
   "pro_until": "2027-05-04T00:00:00Z",
   "entitlements": {
@@ -96,6 +98,13 @@ Free vs Pro mapping:
 |---|---|---|---|
 | Free | `false` | `30` | `30` |
 | Pro | `true` | `200` | `200` |
+
+### Account hub (`/account`)
+
+- **Browser UI** on the IdP at `https://user.trefolio.com/account` (optional `?from=trefolio|clara|will` for “back” copy). Users edit display name, **avatar URL**, **tax residency** (ISO country), connected Google/Apple accounts, passkeys, and password there — not in product apps when unified OIDC is enabled.
+- **OIDC**: ID token and userinfo include standard claim **`picture`** (maps to stored `avatar_url`) and custom **`tax_residency`** (two-letter country) alongside `name`, `email`.
+- **Service API**: `GET /api/v1/entitlements/:sub` returns entitlements plus a **`profile`** object (`name`, `picture`, `taxResidency`) so product servers can lazy-sync local `User` rows with `Authorization: Bearer IDP_SERVICE_TOKEN`.
+- **Migration**: `POST /api/v1/admin/users/profile-import` (same service token) merges legacy profile fields into IdP users by `sub` using `mode: fill_empty` or `overwrite`. Wrap operational batching in your own scripts (see `scripts/idp-profile-import-one.mjs` in trefolio for a single-user example).
 
 ## Why this and not X
 
@@ -156,7 +165,7 @@ Canonical **per-flow OpenAI (gateway) model IDs** are stored on the IdP and read
 
 ### Cutover strategy
 
-The plan ships incrementally. Each app gets a feature flag `USE_LEGACY_AUTH` (default `true`); we wire OIDC under the flag, migrate users, then flip to `false`. At any point either path works.
+The plan shipped incrementally. **Gating** is derived from env: when `IDP_BASE_URL`, `IDP_CLIENT_ID`, and `IDP_CLIENT_SECRET` are set (`isIdpEnabled()`), product login uses OIDC and legacy password/OAuth APIs return **410**. `FREEZE_LOCAL_USER_WRITES` still blocks **new** local users during migration windows.
 
 ## How to enforce it
 
@@ -164,7 +173,7 @@ The plan ships incrementally. Each app gets a feature flag `USE_LEGACY_AUTH` (de
 
 - Any new auth code in trefolio after the cutover MUST go through `src/lib/idp/`. Direct password / Google / Apple routes are deprecated.
 - **Pro subscription billing** (checkout, portal, Stripe Customer Portal, subscription webhooks) lives **only** on the IdP. When `IDP_BASE_URL` / `IDP_ISSUER` are set, `resolveIdpUpgradeHref()` and `resolveBillingPortalHref()` already send users to `user.trefolio.com`; no separate feature flag is required.
-- Trefolio's [billing webhook route](../../src/app/api/billing/webhook/route.ts): with **legacy auth on**, it may still mirror legacy Stripe subscription events into Turso. With **`USE_LEGACY_AUTH=false`**, it handles **only** `checkout.session.completed` where `metadata.deviceGrant === "true"` (Leaf hardware free-year); all Pro entitlement updates come from the IdP webhook + lazy `syncEntitlementsForUser` on `/api/auth/me`.
+- Trefolio's [billing webhook route](../../src/app/api/billing/webhook/route.ts): when the IdP OAuth client is **not** fully configured, legacy Stripe subscription mirroring may still apply for older deployments. When **`isIdpEnabled()`** is true in production, it handles **only** `checkout.session.completed` where `metadata.deviceGrant === "true"` (Leaf hardware free-year); Pro entitlement updates come from the IdP webhook + lazy `syncEntitlementsForUser` on `/api/auth/me`.
 - The local `users.plan` column stays as a **read-through cache** of `entitlements.trefolio_pro`. The source of truth lives in the IdP.
 
 ### Cross-product
@@ -190,11 +199,11 @@ This change creates a new processor for personally-identifying data shared acros
 
 1. **Phase 0** — design doc, exec plan, cross-team review, Vercel + Neon provisioning. _This file_.
 2. **Phase 1** — IdP service (`trefolio-accounts` repo). Schema, OIDC, Stripe, REST API, branded UI.
-3. **Phase 2** — Trefolio integrates IdP behind `USE_LEGACY_AUTH` flag.
+3. **Phase 2** — Trefolio integrates IdP (`isIdpEnabled()` / bridge pages + OIDC).
 4. **Phase 3** — Clara integrates IdP. Spec at [clara-idp-integration.md](clara-idp-integration.md).
 5. **Phase 4** — Will integrates IdP. Spec at [will-idp-integration.md](will-idp-integration.md).
 6. **Phase 5** — Landing page rework on trefolio (three-agent ecosystem).
-7. **Phase 6** — Cutover (flip flag on each app, send transactional email, drop legacy code).
+7. **Phase 6** — Cutover (confirm IdP env on each app, send transactional email, legacy APIs 410 when IdP client configured).
 8. **Phase 7** — Hardening (E2E tests, security review, observability).
 
 The execution plan with per-phase task lists lives at [`../exec-plans/active/unified-accounts.md`](../exec-plans/active/unified-accounts.md).

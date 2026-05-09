@@ -49,7 +49,7 @@ test.describe("OIDC start route (Phase 7)", () => {
     expect(redirectCookie!.value).toMatch(/trefolio_oidc_redirect=(?:\/|%2F);/);
   });
 
-  test("when USE_LEGACY_AUTH=false, /api/auth/login returns 410 Gone with IdP login URL", async ({ request }) => {
+  test("when IdP is configured, /api/auth/login returns 410 Gone with IdP hint", async ({ request }) => {
     const res = await request.post("/api/auth/login", {
       data: { identifier: "noone@trefolio.com", password: "x" },
     });
@@ -58,7 +58,7 @@ test.describe("OIDC start route (Phase 7)", () => {
       return;
     }
     const body = await res.json();
-    expect(body.loginUrl).toContain("user.trefolio.com");
+    expect(body.loginUrl).toMatch(/user\.trefolio\.com/);
   });
 
   test("when FREEZE_LOCAL_USER_WRITES=true, signup returns 503 with retry hint", async ({ request }) => {

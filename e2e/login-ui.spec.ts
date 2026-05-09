@@ -2,8 +2,8 @@ import { test, expect } from "@playwright/test";
 import { createTestUser, ensureLoggedOut, loginViaUI, skipIfLegacyPasswordLoginUnavailable } from "./helpers";
 
 /**
- * Legacy email/password login. Skips when `USE_LEGACY_AUTH=false` with IdP enabled
- * (`/login` redirects away). CI uses `E2E=1 npm start` with legacy auth available.
+ * Email/password login when the IdP is not configured on the test server.
+ * CI uses `E2E=1 npm start` without `IDP_CLIENT_SECRET` so local signup/login works.
  */
 
 test.describe("Login UI", () => {
