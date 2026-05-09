@@ -42,14 +42,7 @@ test.describe.serial("Cross-site journey — auth, billing, prompt-injection gua
     const checkout = await page.request.post("/api/billing/checkout", {
       data: { interval: "monthly" },
     });
-    if (checkout.status() === 200) {
-      const checkoutBody = await checkout.json();
-      expect(checkoutBody.url).toBeTruthy();
-      const checkoutUrl = String(checkoutBody.url);
-      expect(checkoutUrl).toMatch(/checkout\.stripe\.com|\/upgrade\?|user\.trefolio/);
-    } else {
-      expect([500, 501]).toContain(checkout.status());
-    }
+    expect(checkout.status()).toBe(404);
 
     const minimalSnapshot = {
       baseCurrency: "EUR",

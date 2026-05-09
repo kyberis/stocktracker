@@ -17,9 +17,9 @@ Full steps: ${RUNBOOK}
 1) Vercel (trefolio): FREEZE_LOCAL_USER_WRITES=true → deploy
 2) From repo root (with IDP_BASE_URL + IDP_SERVICE_TOKEN):
      npm run idp:migrate-all-users
-3) Vercel (trefolio): USE_LEGACY_AUTH=false AND BILLING_REDIRECT_TO_IDP=true
-     (set both in one deploy: local Stripe webhook no-ops only when
-     USE_LEGACY_AUTH=false; upgrade/portal must hit user.trefolio.com)
+3) Vercel (trefolio): USE_LEGACY_AUTH=false (with IDP_BASE_URL / IDP_ISSUER set:
+     upgrade + portal already target user.trefolio.com; local webhook keeps only
+     device-grant Leaf flow when legacy auth is off)
    → deploy
 
 IdP (user.trefolio.com) must register client_id trefolio with redirect_uri
@@ -40,22 +40,17 @@ matching this deployment (see external/accounts/src/lib/oidc.ts STATIC_CLIENTS).
 
   const legacy = process.env.USE_LEGACY_AUTH;
   if (legacy === "false") {
-    console.log("USE_LEGACY_AUTH=false → login/signup use OIDC only; local billing webhook is a no-op.\n");
+    console.log(
+      "USE_LEGACY_AUTH=false → OIDC-only login; trefolio billing webhook handles only device-grant (Leaf); Pro entitlements + checkout live on IdP.\n",
+    );
   } else {
     console.log(`USE_LEGACY_AUTH=${legacy ?? "(unset, defaults to legacy on)"} → local login still allowed if routes exist.\n`);
   }
 
   const billingIdp = process.env.BILLING_REDIRECT_TO_IDP;
-  if (billingIdp === "true") {
-    console.log("BILLING_REDIRECT_TO_IDP=true → checkout/portal links go to user.trefolio.com.\n");
-  } else {
+  if (billingIdp === "true" || billingIdp === "false") {
     console.log(
-      `BILLING_REDIRECT_TO_IDP=${billingIdp ?? "(unset)"} → trefolio uses local /api/billing/checkout and /api/billing/portal unless true.\n`,
-    );
-  }
-  if (legacy !== "false" && billingIdp === "true") {
-    console.warn(
-      "Warning: BILLING_REDIRECT_TO_IDP=true with USE_LEGACY_AUTH still on → Stripe may update entitlements on BOTH IdP and trefolio webhooks. Prefer flipping both together (see runbook Step 3).\n",
+      `Note: BILLING_REDIRECT_TO_IDP is deprecated/unused in app code — IdP upgrade/portal URLs come from IDP_ISSUER/IDP_BASE_URL. Current value: ${billingIdp}.\n`,
     );
   }
 

@@ -4,11 +4,12 @@ import { findUserById, updateUserSubscription } from "@/lib/db";
 import { effectivePlan } from "@/lib/subscription";
 import { getStripeClient } from "@/lib/stripe";
 import { withMetrics } from "@/lib/with-metrics";
+import { syncEntitlementsForUser } from "@/lib/idp/entitlements";
+import { isIdpEnabled } from "@/lib/idp/config";
 
 /**
- * Polls the user's Stripe customer for an active subscription and syncs the
- * local plan accordingly. Called from the client after returning from Stripe
- * checkout to close the race between the redirect and webhook delivery.
+ * Polls subscription state after checkout. With IdP, pulls entitlements from
+ * user.trefolio.com instead of listing Stripe directly.
  */
 export const POST = withMetrics("/api/billing/sync", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -17,6 +18,15 @@ export const POST = withMetrics("/api/billing/sync", async (req: NextRequest) =>
   const user = await findUserById(session.userId);
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  if (isIdpEnabled()) {
+    const plan = await syncEntitlementsForUser(user.id);
+    const resolved = plan ?? effectivePlan(user.plan, user.plan_expires_at);
+    return NextResponse.json({
+      plan: resolved,
+      synced: plan !== null,
+    });
   }
 
   if (!user.stripe_customer_id) {

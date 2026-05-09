@@ -493,8 +493,8 @@ export const apiKeySchema = z.object({
 
 /* ── Billing ───────────────────────────────────────────────── */
 
+/** @deprecated Legacy checkout body — Pro checkout moved to user.trefolio.com */
 export const checkoutSchema = z.object({
-  /** Only Trefolio (pro) is sold; field kept for API compatibility. */
   plan: z.literal("pro").optional().default("pro"),
   interval: z.enum(["monthly", "annual"]).optional().default("monthly"),
   deviceGrant: z.boolean().optional(),

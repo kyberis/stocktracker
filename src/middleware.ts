@@ -21,6 +21,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/auth/passkey/login-verify",
   "/api/feature-flags",
   "/api/billing/webhook",
+  "/api/billing/portal",
   "/api/analytics/landing",
   "/api/contact",
   "/api/metrics",
@@ -168,7 +169,7 @@ export async function middleware(req: NextRequest) {
   }
 
   const EMAIL_GATED_API_ROUTES = new Set([
-    "/api/billing/checkout",
+    "/api/billing/device-checkout",
     "/api/billing/portal",
     "/api/auth/delete-account",
   ]);

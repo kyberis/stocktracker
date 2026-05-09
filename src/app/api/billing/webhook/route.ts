@@ -7,7 +7,6 @@ import {
   markDeviceProRedeemed,
   trackEvent,
   updateUserSubscription,
-  getStripePriceConfig,
 } from "@/lib/db";
 import { reconcileSnapTrade, reconcileTheme } from "@/lib/billing-reconcile";
 import { sendTrefolioUpgradeEmail, sendAdminSubscriptionNotification } from "@/lib/email";
@@ -30,7 +29,7 @@ function stripeCustomerId(value: string | Stripe.Customer | Stripe.DeletedCustom
 }
 
 async function resolveUserFromSubscription(
-  subscription: Stripe.Subscription
+  subscription: Stripe.Subscription,
 ): Promise<{ id: string } | null> {
   const bySub = await findUserByStripeSubscriptionId(subscription.id);
   if (bySub) return { id: bySub.id };
@@ -52,14 +51,62 @@ async function planFromSubscription(_subscription: Stripe.Subscription, _metadat
   return "pro";
 }
 
-export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest) => {
-  // After IdP cutover the IdP is the source of truth for entitlements; the
-  // local webhook becomes a no-op. We keep the endpoint live for backward
-  // compatibility (Stripe may still have it configured during the transition).
-  if (!legacyAuthEnabled()) {
-    return NextResponse.json({ received: true, mode: "idp_owned" }, { status: 200 });
-  }
+/**
+ * Leaf hardware free-year checkout completed — update Turso + redeem flag.
+ * IdP webhook (`user.trefolio.com`) also receives this event and owns entitlements.
+ */
+async function handleDeviceGrantCheckoutCompleted(session: Stripe.Checkout.Session): Promise<boolean> {
+  if (session.metadata?.deviceGrant !== "true") return false;
 
+  const userId = session.client_reference_id || session.metadata?.userId;
+  const customerId = stripeCustomerId(session.customer as string | Stripe.Customer | null);
+  const subscriptionId =
+    typeof session.subscription === "string" ? session.subscription : session.subscription?.id || "";
+  const checkoutPlan = "pro" as const;
+  if (!userId) return true;
+
+  const user = await findUserById(userId);
+  if (!user) return true;
+
+  await updateUserSubscription(user.id, {
+    plan: checkoutPlan,
+    stripeCustomerId: customerId || user.stripe_customer_id,
+    stripeSubscriptionId: subscriptionId || user.stripe_subscription_id,
+    planExpiresAt: "",
+  });
+  if (user.trial_activated_at) {
+    const client = await ensureInitialized();
+    await client.execute({
+      sql: "UPDATE users SET trial_expired_notified = 1 WHERE id = ? AND trial_activated_at != ''",
+      args: [user.id],
+    });
+  }
+  await markDeviceProRedeemed(user.id);
+
+  trackEvent(user.id, "billing_checkout_completed", {
+    source: "stripe_webhook",
+    plan: checkoutPlan,
+    mode: "device_grant",
+  });
+  trackEvent(user.id, "checkout_completed", {
+    source: "stripe_webhook",
+    plan: checkoutPlan,
+    mode: "device_grant",
+  });
+  sendTrefolioUpgradeEmail(user.email, user.display_name || "", "en", user.id).catch((err) =>
+    console.error("Upgrade email failed:", err),
+  );
+  const upgradeNotif = trefolioUpgradeNotification();
+  createNotification(user.id, upgradeNotif).catch((err) =>
+    console.error("Upgrade notification failed:", err),
+  );
+  sendAdminSubscriptionNotification(user.id, user.email, user.display_name || "", checkoutPlan, "new_subscription").catch(
+    (err) => console.error("Admin subscription notification failed:", err),
+  );
+  return true;
+}
+
+export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest) => {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "Webhook secret not configured" }, { status: 501 });
@@ -78,18 +125,31 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
     event = stripe.webhooks.constructEvent(body, signature, secret);
   } catch (err) {
     console.error("[billing/webhook] Signature validation failed:", err instanceof Error ? err.message : err);
-    return NextResponse.json(
-      { error: "Invalid webhook signature" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
   }
 
   billingEventsTotal.inc({ event: "webhook_received" });
+
+  // IdP owns normal Pro subscriptions; this deployment only applies Turso side-effects for device grant.
+  if (!legacyAuthEnabled()) {
+    try {
+      if (event.type === "checkout.session.completed") {
+        await handleDeviceGrantCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+      }
+    } catch (err) {
+      console.error("[billing/webhook] Device grant handler failed:", err instanceof Error ? err.message : err);
+      return NextResponse.json({ error: "Webhook handling failed" }, { status: 500 });
+    }
+    return NextResponse.json({ received: true, mode: "idp_owned_device_mirror" }, { status: 200 });
+  }
 
   try {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+        if (await handleDeviceGrantCheckoutCompleted(session)) {
+          break;
+        }
         const userId = session.client_reference_id || session.metadata?.userId;
         const customerId = stripeCustomerId(session.customer as string | Stripe.Customer | null);
         const subscriptionId =
@@ -132,7 +192,11 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
               console.error("Upgrade notification failed:", err),
             );
             sendAdminSubscriptionNotification(
-              user.id, user.email, user.display_name || "", checkoutPlan, "new_subscription",
+              user.id,
+              user.email,
+              user.display_name || "",
+              checkoutPlan,
+              "new_subscription",
             ).catch((err) => console.error("Admin subscription notification failed:", err));
           }
         }
@@ -162,7 +226,11 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
         const fullUser = await findUserById(user.id);
         if (fullUser) {
           sendAdminSubscriptionNotification(
-            fullUser.id, fullUser.email, fullUser.display_name || "", nextPlan, "plan_change",
+            fullUser.id,
+            fullUser.email,
+            fullUser.display_name || "",
+            nextPlan,
+            "plan_change",
           ).catch((err) => console.error("Admin subscription notification failed:", err));
         }
         await reconcileSnapTrade(user.id, nextPlan);
@@ -198,7 +266,11 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
         const fullUser = await findUserById(user.id);
         if (fullUser) {
           sendAdminSubscriptionNotification(
-            fullUser.id, fullUser.email, fullUser.display_name || "", "free", "cancellation",
+            fullUser.id,
+            fullUser.email,
+            fullUser.display_name || "",
+            "free",
+            "cancellation",
           ).catch((err) => console.error("Admin cancellation notification failed:", err));
         }
         break;

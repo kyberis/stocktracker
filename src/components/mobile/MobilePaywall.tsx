@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import TierIcon from "@/components/TierIcon";
+import { resolveIdpUpgradeHref } from "@/lib/idp/config";
 
 interface MobilePaywallProps {
   onDismiss: () => void;
@@ -36,19 +37,7 @@ export default function MobilePaywall({ onDismiss, surface }: MobilePaywallProps
   const startCheckout = useCallback(async () => {
     setCheckingOut(true);
     track("mobile_paywall_checkout", { plan: "pro", surface: surface ?? "unknown" });
-    try {
-      const res = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "pro", interval: "monthly" }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch {
-      setCheckingOut(false);
-    }
+    window.location.href = resolveIdpUpgradeHref({ interval: "monthly" });
   }, [track, surface]);
 
   const getBenefitText = (key: string) => {

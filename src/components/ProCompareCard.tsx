@@ -10,7 +10,7 @@ import type { UpsellReason, UpsellSurface } from "@/lib/upsell";
 import type { TranslationKey } from "@/lib/i18n";
 import TierIcon from "@/components/TierIcon";
 import QuotaCompareTable from "@/components/QuotaCompareTable";
-import { resolveBillingPortalHref } from "@/lib/idp/config";
+import { resolveBillingPortalHref, resolveIdpUpgradeHref } from "@/lib/idp/config";
 
 interface CapacityInfo {
   available: boolean;
@@ -147,25 +147,8 @@ export default function ProCompareCard({
       interval,
       source: "compare_card",
     });
-    try {
-      const res = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "pro", interval }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !data?.url) {
-        setBillingError(
-          (typeof data?.message === "string" && data.message) || data?.error || t("billingCheckoutError")
-        );
-        setBillingLoading("");
-        return;
-      }
-      window.location.href = data.url as string;
-    } catch {
-      setBillingError(t("billingCheckoutError"));
-      setBillingLoading("");
-    }
+    window.location.href = resolveIdpUpgradeHref({ interval });
+    setBillingLoading("");
   };
 
   const openPortal = () => {

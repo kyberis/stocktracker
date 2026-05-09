@@ -92,18 +92,10 @@ Per app:
 
 ```bash
 vercel env add USE_LEGACY_AUTH false production
-vercel env add BILLING_REDIRECT_TO_IDP true production
 vercel deploy --prod
 ```
 
-**Always set `BILLING_REDIRECT_TO_IDP=true` in the same deploy as
-`USE_LEGACY_AUTH=false` on trefolio.** Rationale: the local billing webhook
-([`src/app/api/billing/webhook/route.ts`](../../src/app/api/billing/webhook/route.ts))
-is disabled when `USE_LEGACY_AUTH=false`, but if `BILLING_REDIRECT_TO_IDP`
-stayed `false`, users would still hit local Stripe checkout while the IdP
-also owns subscriptions — a mismatch. With both flags flipped, upgrade and
-“Manage subscription” use `user.trefolio.com` and Stripe events are consumed
-by the IdP webhook only.
+On **trefolio**, ensure `IDP_BASE_URL` (and usually `IDP_ISSUER` for browser-facing HTTPS) are already set **before** this deploy. Upgrade CTAs and “Manage subscription” then resolve to `user.trefolio.com` via `resolveIdpUpgradeHref()` / `resolveBillingPortalHref()` — no separate billing redirect flag.
 
 After deploy:
 
@@ -112,8 +104,7 @@ After deploy:
 - `/api/auth/oidc/start` and `/callback` are the only auth path.
 - The "Upgrade" button in `/profile?section=subscription` redirects to
   `https://user.trefolio.com/upgrade?from=trefolio` (mirror for Clara/Will).
-- Stripe webhook ([src/app/api/billing/webhook/route.ts](../../src/app/api/billing/webhook/route.ts))
-  becomes a no-op; the IdP is the single Stripe consumer.
+- Stripe **subscription** webhooks: primary endpoint is the **IdP** (`user.trefolio.com`). Trefolio's webhook ([`src/app/api/billing/webhook/route.ts`](../../src/app/api/billing/webhook/route.ts)) handles **only** Leaf **device-grant** checkouts when legacy auth is off; configure that URL in Stripe if you use hardware promotions.
 
 ## Step 4 — Send the unified-accounts email
 

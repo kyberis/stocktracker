@@ -57,7 +57,8 @@ export interface RunWarrenTurnResult {
 /**
  * Run a single Warren turn end-to-end:
  *   1. Build the system prompt (channel-aware).
- *   2. Run `streamText` with all Warren tools.
+ *   2. Run `streamText` with all Warren tools (via **chat completions**, not the
+ *      Responses API — see `provider.chat` below).
  *   3. Collect parts/proposals/text/usage.
  *
  * Used by both the web NDJSON streaming route and the Telegram webhook
@@ -123,8 +124,12 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
   const lastUserMsg = serializeWarrenPromptUserLog(opts.messages);
 
   try {
+    const gatewayModelId = toGatewayModelId(model);
     const result = streamText({
-      model: provider(toGatewayModelId(model)),
+      // Use Chat Completions (`/chat/completions`), not the default callable which
+      // targets the Responses API (`/responses`). The gateway rejects some valid
+      // chat histories when translated to Responses `input.*.output` items.
+      model: provider.chat(gatewayModelId as Parameters<typeof provider.chat>[0]),
       system: systemPrompt,
       messages: opts.messages,
       tools,

@@ -188,8 +188,8 @@ export const featureDomains: FeatureDomain[] = [
       { path: "src/components/ProCompareCard.tsx", description: "Free vs Pro comparison upsell card" },
     ],
     apiRoutes: [
-      { method: "POST", path: "/api/billing/checkout", auth: "session", description: "Create Stripe Checkout session" },
-      { method: "POST", path: "/api/billing/portal", auth: "session", description: "Create Stripe Billing Portal session" },
+      { method: "POST", path: "/api/billing/device-checkout", auth: "session", description: "Leaf device free-year Stripe Checkout only" },
+      { method: "GET", path: "/api/billing/portal", auth: "session", description: "Redirect to Stripe Customer Portal (IdP or local)" },
       { method: "POST", path: "/api/billing/webhook", auth: "public", description: "Stripe webhook handler" },
     ],
     libs: [

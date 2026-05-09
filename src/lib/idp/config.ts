@@ -70,15 +70,6 @@ export function legacyAuthEnabled(): boolean {
   return process.env.USE_LEGACY_AUTH !== "false";
 }
 
-/**
- * When `true`, the in-app upgrade buttons redirect to
- * `user.trefolio.com/upgrade?from=trefolio` instead of opening local Stripe
- * checkout. Default `false` until the IdP is live and accepting traffic.
- */
-export function billingRedirectToIdp(): boolean {
-  return process.env.BILLING_REDIRECT_TO_IDP === "true";
-}
-
 /** Stripe Billing Portal on the IdP (requires IdP session cookie on that origin). */
 export function getIdpBillingPortalUrl(): string | null {
   const issuer = getIdpIssuer();
@@ -87,13 +78,24 @@ export function getIdpBillingPortalUrl(): string | null {
 }
 
 /**
- * Customer portal URL: IdP when unified billing is enabled, otherwise the local API route.
+ * Hosted Pro upgrade page on the IdP (`/upgrade` → Stripe Checkout there).
+ */
+export function resolveIdpUpgradeHref(opts?: { interval?: "monthly" | "annual" }): string {
+  const issuer = getIdpIssuer();
+  if (!issuer) return "/upgrade";
+  const u = new URL(`${issuer.replace(/\/+$/, "")}/upgrade`);
+  u.searchParams.set("from", "trefolio");
+  if (opts?.interval) u.searchParams.set("interval", opts.interval);
+  return u.toString();
+}
+
+/**
+ * Customer portal URL on the IdP. Falls back to legacy local handler only when
+ * no issuer is configured (dev without IdP).
  */
 export function resolveBillingPortalHref(): string {
-  if (billingRedirectToIdp()) {
-    const idp = getIdpBillingPortalUrl();
-    if (idp) return `${idp}?from=trefolio`;
-  }
+  const idp = getIdpBillingPortalUrl();
+  if (idp) return `${idp}?from=trefolio`;
   return "/api/billing/portal";
 }
 

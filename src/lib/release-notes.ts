@@ -33,9 +33,16 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "fix",
-        text: "Warren chat: normalize message history so turns without assistant prose (cards/tools only) no longer produce consecutive user messages — fixing sporadic Vercel AI Gateway `input.*.output: Invalid input` errors on long threads.",
+        text: "Warren AI: (1) normalize chat history so missing assistant prose cannot yield consecutive user messages; (2) route model calls through **Chat Completions** (`provider.chat` → `/chat/completions`) instead of the default OpenAI **Responses** integration (`/v1/responses`), which was triggering sporadic gateway errors (`input.*.output: Invalid input`) on long threads.",
         translations: {
-          es: "Chat Warren: normalizamos el historial para que los turnos sin texto del asistente (solo tarjetas/herramientas) no dejen dos mensajes de usuario seguidos — corrige errores esporádicos del gateway Vercel AI (`input.*.output: Invalid input`) en conversaciones largas.",
+          es: "Warren IA: (1) normalizamos el historial para que no falte el turno del asistente y no queden dos usuarios seguidos; (2) las llamadas al modelo van por **Chat Completions** (`provider.chat` → `/chat/completions`) en lugar de la integración **Responses** (`/v1/responses`), que provocaba errores esporádicos del gateway (`input.*.output: Invalid input`) en hilos largos.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Documentation: unified accounts design doc, cutover runbook, `scripts/idp-cutover-checklist.mjs`, and `.env.local.example` now describe IdP-only Pro billing (device-grant webhook exception on trefolio) and deprecate unused `BILLING_REDIRECT_TO_IDP`.",
+        translations: {
+          es: "Documentación: el design doc de cuentas unificadas, el runbook de cutover, `scripts/idp-cutover-checklist.mjs` y `.env.local.example` describen facturación Pro solo en el IdP (excepción del webhook device-grant en trefolio) y deprecan `BILLING_REDIRECT_TO_IDP` sin uso.",
         },
       },
     ],

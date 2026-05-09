@@ -13,7 +13,7 @@ OIDC client that reads entitlements via JWT claims and a small REST API.
 ## 2. Status
 
 - **Tier:** Free / Pro
-- **Feature flag:** `USE_LEGACY_AUTH` (default `true` until cutover), `BILLING_REDIRECT_TO_IDP`, `FREEZE_LOCAL_USER_WRITES`
+- **Feature flag:** `USE_LEGACY_AUTH` (default `true` until cutover), `FREEZE_LOCAL_USER_WRITES`. (`BILLING_REDIRECT_TO_IDP` is deprecated and unused — upgrade/portal URLs come from `IDP_ISSUER` / `IDP_BASE_URL`.)
 - **Health:** green (Phase 0–6 shipped; Phase 7 hardening in progress)
 - **Owning skill:** [`.cursor/skills/engineer-user-auth/SKILL.md`](../../.cursor/skills/engineer-user-auth/SKILL.md), [`.cursor/skills/engineer-payments-subscriptions/SKILL.md`](../../.cursor/skills/engineer-payments-subscriptions/SKILL.md)
 
@@ -63,9 +63,9 @@ IdP side (called server-to-server from trefolio with `Authorization: Bearer $IDP
 ## 6. UI surface
 
 - Pages on the IdP: `/login`, `/signup`, `/account`, `/upgrade?from=...`.
-- Trefolio's `/profile?section=subscription` "Upgrade" button redirects to
-  `https://user.trefolio.com/upgrade?from=trefolio` when
-  `BILLING_REDIRECT_TO_IDP=true`.
+- Trefolio's `/profile?section=subscription` "Upgrade" button uses
+  `resolveIdpUpgradeHref()` → `https://user.trefolio.com/upgrade?from=trefolio`
+  when `IDP_ISSUER` / `IDP_BASE_URL` resolve (production defaults include the IdP).
 
 ## 7. Business logic
 
@@ -76,8 +76,8 @@ IdP side (called server-to-server from trefolio with `Authorization: Bearer $IDP
 - [`src/lib/idp/client.ts`](../../src/lib/idp/client.ts) — REST client for the
   IdP `/v1/*` API.
 - [`src/lib/idp/config.ts`](../../src/lib/idp/config.ts) — env-var gates for
-  every code path: `useLegacyAuth()`, `billingRedirectToIdp()`,
-  `freezeLocalUserWrites()`, `isIdpEnabled()`.
+  OIDC and helpers: `legacyAuthEnabled()`, `freezeLocalUserWrites()`,
+  `resolveIdpUpgradeHref()`, `resolveBillingPortalHref()`, `isIdpEnabled()`.
 
 ## 8. External dependencies
 
@@ -85,7 +85,7 @@ IdP side (called server-to-server from trefolio with `Authorization: Bearer $IDP
 - Stripe (single account, lives behind the IdP).
 - Env vars on trefolio:
   - `IDP_BASE_URL`, `IDP_CLIENT_ID`, `IDP_CLIENT_SECRET`, `IDP_SERVICE_TOKEN`.
-  - `USE_LEGACY_AUTH` (default `true`), `BILLING_REDIRECT_TO_IDP`, `FREEZE_LOCAL_USER_WRITES`.
+  - `USE_LEGACY_AUTH` (default `true`), `FREEZE_LOCAL_USER_WRITES`.
 
 ## 9. Currency / FX / tax implications
 

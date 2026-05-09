@@ -1479,10 +1479,9 @@ export default function ProfilePage() {
   const handleActivateDeviceGrant = useCallback(async () => {
     setDeviceGrantLoading(true);
     try {
-      const res = await fetch("/api/billing/checkout", {
+      const res = await fetch("/api/billing/device-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interval: "annual", deviceGrant: true }),
       });
       const data = await res.json();
       if (data.url) {

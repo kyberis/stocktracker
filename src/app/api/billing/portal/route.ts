@@ -4,8 +4,19 @@ import { findUserById, trackEvent } from "@/lib/db";
 import { billingEventsTotal } from "@/lib/metrics";
 import { getBillingBaseUrl, getStripeClient } from "@/lib/stripe";
 import { withMetrics } from "@/lib/with-metrics";
+import { getIdpBillingPortalUrl } from "@/lib/idp/config";
 
+/**
+ * GET /api/billing/portal
+ * Redirects to Stripe Customer Portal on the IdP when configured; otherwise
+ * creates a portal session via local Stripe (legacy dev / no issuer).
+ */
 export const GET = withMetrics("/api/billing/portal", async (req: NextRequest) => {
+  const idpPortal = getIdpBillingPortalUrl();
+  if (idpPortal) {
+    return NextResponse.redirect(`${idpPortal}?from=trefolio`, { status: 302 });
+  }
+
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -26,7 +37,7 @@ export const GET = withMetrics("/api/billing/portal", async (req: NextRequest) =
     });
     trackEvent(user.id, "billing_portal_opened", { source: "billing_api" });
     billingEventsTotal.inc({ event: "portal_opened" });
-    return NextResponse.redirect(portal.url, { status: 302 });
+    return NextResponse.redirect(portal.url!, { status: 302 });
   } catch (err) {
     console.error("Failed to create billing portal session:", err instanceof Error ? err.message : err);
     return NextResponse.json({ error: "Failed to open billing portal" }, { status: 500 });

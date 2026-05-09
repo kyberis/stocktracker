@@ -362,10 +362,10 @@ function ArchitectureTab() {
           <div className="card p-4">
             <h3 className="text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-3">Billing Flow</h3>
             <ol className="list-decimal list-inside space-y-1 text-xs text-gray-600 dark:text-slate-400">
-              <li>User clicks upgrade, client calls <code className="font-mono">/api/billing/checkout</code></li>
+              <li>User clicks upgrade → opens <code className="font-mono">user.trefolio.com/upgrade</code> (unified account)</li>
               <li>Server creates Stripe Checkout session, returns URL</li>
               <li>User completes payment on Stripe-hosted page</li>
-              <li>Stripe sends webhook to <code className="font-mono">/api/billing/webhook</code></li>
+              <li>Stripe webhooks are configured on <code className="font-mono">user.trefolio.com</code>; trefolio may receive device-grant events only</li>
               <li>Webhook handler updates user plan in DB</li>
             </ol>
           </div>
