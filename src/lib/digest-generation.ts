@@ -73,18 +73,22 @@ async function callOpenAI(
   user: string,
   maxTokens = 3000,
   modelOverride?: string,
+  gatewayHeaders?: Headers,
 ): Promise<{ content: string; tokensUsed: number }> {
   const aiModel = modelOverride || (await getAiModelForFlow("digest_email"));
-  const res = await fetchGatewayChatCompletions({
-    model: aiModel,
-    max_tokens: maxTokens,
-    temperature: 0.4,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-  });
+  const res = await fetchGatewayChatCompletions(
+    {
+      model: aiModel,
+      max_tokens: maxTokens,
+      temperature: 0.4,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    },
+    gatewayHeaders ? { headers: gatewayHeaders } : undefined,
+  );
 
   if (!res.ok) {
     const text = await res.text();
@@ -189,6 +193,7 @@ export function stripHtml(html: string): string {
 export async function generateDigestFromSources(
   model: string,
   sources: DigestSourceInput[],
+  gatewayHeaders?: Headers,
 ): Promise<DigestGenerationResult | null> {
   const marketContext = await fetchMarketContext();
   const sourceText = buildSourcePrompt(sources);
@@ -198,6 +203,7 @@ export async function generateDigestFromSources(
     `Live market data (last 7 days):\n${marketContext}\n\n${sourceText}`,
     4000,
     model,
+    gatewayHeaders,
   );
 
   let rewrite: DigestGenerationResult["rewrite"];
@@ -258,6 +264,7 @@ NOTE: Keep ticker symbols (e.g. AAPL, MSFT), numbers, percentages, the ▲/▼ a
           translatePrompt,
           4000,
           model,
+          gatewayHeaders,
         );
         translateTokens += tokensUsed;
 

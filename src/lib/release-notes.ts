@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "AI Gateway auth now reads Vercel’s `x-vercel-oidc-token` request header (OIDC for Functions) before falling back to env keys — production routes no longer rely only on `VERCEL_OIDC_TOKEN` from builds.",
+        translations: {
+          es: "La autenticación con AI Gateway usa primero la cabecera `x-vercel-oidc-token` (OIDC en Functions) antes de las variables de entorno — las rutas en producción ya no dependen solo de `VERCEL_OIDC_TOKEN` del build.",
+        },
+      },
+      {
+        type: "improvement",
         text: "IdP (`external/accounts`): `/upgrade` no longer auto-redirects after a countdown — users click “Continue to secure checkout” to open Stripe; cancelled checkout CTA is “Subscribe again”; copy clarifies one Pro subscription covers trefolio, Clara, and Will with materially higher per-day AI caps than Free (no “unlimited” claim).",
         translations: {
           es: "IdP (`external/accounts`): `/upgrade` ya no redirige automáticamente tras una cuenta atrás — el usuario pulsa «Continue to secure checkout» para abrir Stripe; si cancela, el CTA es «Subscribe again»; el copy aclara que una suscripción Pro cubre trefolio, Clara y Will con cupos diarios de IA notablemente mayores que en Free (sin prometer ilimitado).",

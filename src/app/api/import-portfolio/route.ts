@@ -83,7 +83,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     );
   }
 
-  const gatewayConfigured = await resolveGatewayApiKey();
+  const gatewayConfigured = await resolveGatewayApiKey(req.headers);
   if (!gatewayConfigured) {
     return NextResponse.json(
       { error: "AI Gateway not configured. Ask your admin to set AI_GATEWAY_API_KEY or the Admin panel key." },
@@ -170,12 +170,15 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
   const model = await getAiModelForFlow("import_portfolio");
 
   try {
-    const openaiRes = await fetchGatewayChatCompletions({
-      model,
-      max_tokens: 8000,
-      temperature: 0,
-      messages,
-    });
+    const openaiRes = await fetchGatewayChatCompletions(
+      {
+        model,
+        max_tokens: 8000,
+        temperature: 0,
+        messages,
+      },
+      { headers: req.headers },
+    );
 
     const durationMs = Date.now() - aiLogStart;
 

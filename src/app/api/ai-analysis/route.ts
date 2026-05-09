@@ -47,7 +47,7 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
     );
   }
 
-  const gatewayConfigured = await resolveGatewayApiKey();
+  const gatewayConfigured = await resolveGatewayApiKey(request.headers);
   if (!gatewayConfigured) {
     await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json(
@@ -361,17 +361,20 @@ ${dataSections.join("\n\n")}`;
   const aiLogStart = Date.now();
 
   try {
-    const openaiRes = await fetchGatewayChatCompletions({
-      model,
-      stream: true,
-      stream_options: { include_usage: true },
-      max_tokens: 1200,
-      temperature: 0.3,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    });
+    const openaiRes = await fetchGatewayChatCompletions(
+      {
+        model,
+        stream: true,
+        stream_options: { include_usage: true },
+        max_tokens: 1200,
+        temperature: 0.3,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      },
+      { headers: request.headers },
+    );
 
     endTimer();
     const durationMs = Date.now() - aiLogStart;

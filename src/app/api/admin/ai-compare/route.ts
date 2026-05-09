@@ -25,6 +25,7 @@ async function callModel(
   flowKey: AiFlowKey,
   promptSystem: string,
   promptUser: string,
+  gatewayHeaders: Headers,
   adminUserId: string,
 ): Promise<CompareResult> {
   const meta = AI_FLOW_META[flowKey];
@@ -47,6 +48,7 @@ async function callModel(
 
     const res = await fetchGatewayChatCompletions(
       body as Parameters<typeof fetchGatewayChatCompletions>[0],
+      { headers: gatewayHeaders },
     );
 
     const durationMs = Date.now() - start;
@@ -128,7 +130,7 @@ export const POST = withMetrics("/api/admin/ai-compare", async (req: NextRequest
 
   const { promptSystem, promptUser, flowKey, models } = result.data;
 
-  if (!(await resolveGatewayApiKey())) {
+  if (!(await resolveGatewayApiKey(req.headers))) {
     return NextResponse.json(
       { error: "AI Gateway not configured" },
       { status: 501 },
@@ -137,7 +139,7 @@ export const POST = withMetrics("/api/admin/ai-compare", async (req: NextRequest
 
   const results = await Promise.all(
     models.map((model) =>
-      callModel(model, flowKey as AiFlowKey, promptSystem, promptUser, session!.userId),
+      callModel(model, flowKey as AiFlowKey, promptSystem, promptUser, req.headers, session!.userId),
     ),
   );
 

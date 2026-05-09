@@ -67,7 +67,7 @@ export const POST = withMetrics("/api/admin/weekly-digest", async (req: NextRequ
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const gatewayConfigured = await resolveGatewayApiKey();
+  const gatewayConfigured = await resolveGatewayApiKey(req.headers);
   if (!gatewayConfigured) {
     return NextResponse.json({ error: "AI Gateway not configured" }, { status: 500 });
   }
@@ -223,15 +223,18 @@ Dividends received: ${divStr}
 Week: ${weekStart} to ${weekEnd}`;
 
   const digestModel = await getAiModelForFlow("weekly_digest_admin");
-  const openaiRes = await fetchGatewayChatCompletions({
-    model: digestModel,
-    max_tokens: 300,
-    temperature: 0.4,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-  });
+  const openaiRes = await fetchGatewayChatCompletions(
+    {
+      model: digestModel,
+      max_tokens: 300,
+      temperature: 0.4,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+    },
+    { headers: req.headers },
+  );
 
   if (!openaiRes.ok) {
     const errText = await openaiRes.text();

@@ -18,6 +18,7 @@ Rules:
 export async function generateDigestTweet(
   translation: DigestTranslation,
   mentionedTickers: string[],
+  gatewayHeaders?: Headers,
 ): Promise<string> {
   const { maxTokens, temperature } = AI_FLOW_META.digest_x_post;
   const model = await getAiModelForFlow("digest_x_post");
@@ -34,15 +35,18 @@ Summary: ${translation.summary}
 Key points:
 ${keyPointsList}${tickerHint}`;
 
-  const res = await fetchGatewayChatCompletions({
-    model,
-    max_tokens: maxTokens,
-    temperature,
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: userPrompt },
-    ],
-  });
+  const res = await fetchGatewayChatCompletions(
+    {
+      model,
+      max_tokens: maxTokens,
+      temperature,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
+      ],
+    },
+    gatewayHeaders ? { headers: gatewayHeaders } : undefined,
+  );
 
   if (!res.ok) {
     const text = await res.text();

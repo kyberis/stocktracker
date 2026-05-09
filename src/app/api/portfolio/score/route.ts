@@ -86,7 +86,7 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
     );
   }
 
-  const gatewayConfigured = await resolveGatewayApiKey();
+  const gatewayConfigured = await resolveGatewayApiKey(request.headers);
   if (!gatewayConfigured) {
     await refundFeatureQuota(session.userId, "portfolio_score");
     return Response.json(
@@ -119,19 +119,22 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
 
   try {
     const model = await getAiModelForFlow("portfolio_score");
-    const openaiRes = await fetchGatewayChatCompletions({
-      model,
-      max_tokens: 3000,
-      temperature: 0.2,
-      response_format: {
-        type: "json_schema",
-        json_schema: PORTFOLIO_SCORE_JSON_SCHEMA,
+    const openaiRes = await fetchGatewayChatCompletions(
+      {
+        model,
+        max_tokens: 3000,
+        temperature: 0.2,
+        response_format: {
+          type: "json_schema",
+          json_schema: PORTFOLIO_SCORE_JSON_SCHEMA,
+        },
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
       },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-    });
+      { headers: request.headers },
+    );
 
     endTimer();
     const durationMs = Date.now() - aiLogStart;

@@ -48,7 +48,7 @@ export const POST = withMetrics("/api/stock-evaluation/ai", async (request: Next
     );
   }
 
-  const gatewayConfigured = await resolveGatewayApiKey();
+  const gatewayConfigured = await resolveGatewayApiKey(request.headers);
   if (!gatewayConfigured) {
     await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json(
@@ -108,17 +108,20 @@ Please provide your narrative assessment based on this data.`;
   const aiLogStart = Date.now();
 
   try {
-    const openaiRes = await fetchGatewayChatCompletions({
-      model,
-      stream: true,
-      stream_options: { include_usage: true },
-      max_tokens: 1500,
-      temperature: 0.3,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    });
+    const openaiRes = await fetchGatewayChatCompletions(
+      {
+        model,
+        stream: true,
+        stream_options: { include_usage: true },
+        max_tokens: 1500,
+        temperature: 0.3,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      },
+      { headers: request.headers },
+    );
 
     endTimer();
     const durationMs = Date.now() - aiLogStart;

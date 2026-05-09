@@ -75,6 +75,7 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
           activePortfolioName: serverPortfolioName,
           snapshot: body.portfolioContext,
           messages: body.messages,
+          gatewayHeaders: req.headers,
           onFrame: send,
         });
       } catch {

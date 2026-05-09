@@ -61,7 +61,7 @@ export const PUT = withMetrics("/api/admin/market-digests/[id]", async (
   }
 
   if (body.action === "regenerate") {
-    if (!(await resolveGatewayApiKey())) {
+    if (!(await resolveGatewayApiKey(req.headers))) {
       return NextResponse.json({ error: "AI Gateway not configured" }, { status: 500 });
     }
 
@@ -78,7 +78,7 @@ export const PUT = withMetrics("/api/admin/market-digests/[id]", async (
       extractedLinks: s.extractedLinks,
     }));
 
-    const result = await generateDigestFromSources(model, sourcesForAI);
+    const result = await generateDigestFromSources(model, sourcesForAI, req.headers);
     if (!result) {
       return NextResponse.json({ error: "AI generation failed — check logs" }, { status: 502 });
     }
@@ -105,7 +105,7 @@ export const PUT = withMetrics("/api/admin/market-digests/[id]", async (
       if (digest && !digest.xScheduledPostId && hasX) {
         const enTranslation = await getDigestTranslation(id, "en");
         if (enTranslation) {
-          const tweetContent = await generateDigestTweet(enTranslation, digest.mentionedTickers);
+          const tweetContent = await generateDigestTweet(enTranslation, digest.mentionedTickers, req.headers);
           const hashtags = buildDigestHashtags(digest.mentionedTickers);
           const scheduledAt = computeEveningSchedule();
           const post = await createXPost({ content: tweetContent, hashtags, scheduledAt });

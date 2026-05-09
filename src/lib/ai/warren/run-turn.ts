@@ -1,4 +1,5 @@
 import { streamText } from "ai";
+import type { ModelMessage } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 
 import { resolveGatewayApiKey, toGatewayModelId, VERCEL_AI_GATEWAY_BASE } from "@/lib/ai/gateway";
@@ -22,9 +23,27 @@ export interface RunWarrenTurnOptions {
   activePortfolioId?: string;
   activePortfolioName?: string;
   snapshot?: PortfolioSnapshot;
-  messages: Array<{ role: "user" | "assistant"; content: string }>;
+  /** Full conversation for the model (text or multimodal user messages). */
+  messages: ModelMessage[];
+  /** Vercel OIDC / Gateway auth: pass `request.headers` from API routes when available. */
+  gatewayHeaders?: Headers;
   /** Called for every NDJSON-style frame: text deltas, parts, proposals, errors. */
   onFrame?: (frame: WarrenStreamFrame) => void;
+}
+
+/** Plain-text summary of the last user turn for AI logs (no binary). */
+export function serializeWarrenPromptUserLog(messages: ModelMessage[]): string {
+  const last = messages[messages.length - 1];
+  if (!last || last.role !== "user") return "";
+  const c = last.content;
+  if (typeof c === "string") return c.slice(0, 8000);
+  const parts: string[] = [];
+  for (const p of c) {
+    if (p.type === "text") parts.push(p.text);
+    else if (p.type === "image") parts.push("[image]");
+    else if (p.type === "file") parts.push(`[file:${p.filename ?? "attachment"}]`);
+  }
+  return parts.join("\n").slice(0, 8000);
 }
 
 export interface RunWarrenTurnResult {
@@ -48,7 +67,7 @@ export interface RunWarrenTurnResult {
  * Throws when Vercel AI Gateway is not configured.
  */
 export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarrenTurnResult> {
-  const apiKey = await resolveGatewayApiKey();
+  const apiKey = await resolveGatewayApiKey(opts.gatewayHeaders);
   if (!apiKey) {
     throw new Error(
       "AI Gateway is not configured. Set AI_GATEWAY_API_KEY or add a key in the Admin panel.",
@@ -101,13 +120,13 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
   const tools = buildWarrenTools(ctx);
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "warren" });
   const startedAt = Date.now();
-  const lastUserMsg = opts.messages[opts.messages.length - 1]?.content || "";
+  const lastUserMsg = serializeWarrenPromptUserLog(opts.messages);
 
   try {
     const result = streamText({
       model: provider(toGatewayModelId(model)),
       system: systemPrompt,
-      messages: opts.messages.map((m) => ({ role: m.role, content: m.content })),
+      messages: opts.messages,
       tools,
       temperature: flowMeta.temperature,
       stopWhen: ({ steps }) => steps.length >= 6,

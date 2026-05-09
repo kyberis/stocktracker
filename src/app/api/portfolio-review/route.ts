@@ -40,7 +40,7 @@ export const POST = withMetrics("/api/portfolio-review", async (request: NextReq
     );
   }
 
-  const gatewayConfigured = await resolveGatewayApiKey();
+  const gatewayConfigured = await resolveGatewayApiKey(request.headers);
   if (!gatewayConfigured) {
     await refundFeatureQuota(session.userId, "ai_portfolio_review");
     return Response.json(
@@ -132,17 +132,20 @@ ${portfolioData}`;
   const aiLogStart = Date.now();
 
   try {
-    const openaiRes = await fetchGatewayChatCompletions({
-      model,
-      stream: true,
-      stream_options: { include_usage: true },
-      max_tokens: 1500,
-      temperature: 0.3,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    });
+    const openaiRes = await fetchGatewayChatCompletions(
+      {
+        model,
+        stream: true,
+        stream_options: { include_usage: true },
+        max_tokens: 1500,
+        temperature: 0.3,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      },
+      { headers: request.headers },
+    );
 
     endTimer();
     const durationMs = Date.now() - aiLogStart;

@@ -65,7 +65,7 @@ export const POST = withMetrics("/api/portfolio/ai-chat", async (request: NextRe
     );
   }
 
-  const gatewayConfigured = await resolveGatewayApiKey();
+  const gatewayConfigured = await resolveGatewayApiKey(request.headers);
   if (!gatewayConfigured) {
     await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json(
@@ -145,14 +145,17 @@ ${contextBlock}
   const lastUserMsg = messages[messages.length - 1]?.content || "";
 
   try {
-    const openaiRes = await fetchGatewayChatCompletions({
-      model,
-      stream: true,
-      stream_options: { include_usage: true },
-      max_tokens: 1000,
-      temperature: 0.3,
-      messages: openaiMessages,
-    });
+    const openaiRes = await fetchGatewayChatCompletions(
+      {
+        model,
+        stream: true,
+        stream_options: { include_usage: true },
+        max_tokens: 1000,
+        temperature: 0.3,
+        messages: openaiMessages,
+      },
+      { headers: request.headers },
+    );
 
     endTimer();
     const durationMs = Date.now() - aiLogStart;

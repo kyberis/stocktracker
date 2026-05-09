@@ -32,7 +32,7 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
     dashboardTheme,
     defaultCurrency: settings.defaultCurrency,
     hasPremiumMarketData: await hasPremiumMarketDataConfigured(),
-    hasOpenAIKey: Boolean(await resolveGatewayApiKey()),
+    hasOpenAIKey: Boolean(await resolveGatewayApiKey(req.headers)),
     alertsEnabled: flags.alerts_enabled,
     csvExportEnabled: flags.csv_export_enabled,
     deviceEnabled: flags.device_enabled,

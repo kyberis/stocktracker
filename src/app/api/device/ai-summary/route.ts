@@ -81,7 +81,7 @@ export const POST = withMetrics("/api/device/ai-summary", async (request: NextRe
     );
   }
 
-  const gatewayConfigured = await resolveGatewayApiKey();
+  const gatewayConfigured = await resolveGatewayApiKey(request.headers);
   if (!gatewayConfigured) {
     await refundFeatureQuota(user.id, "ai_portfolio_review");
     return Response.json(
@@ -134,16 +134,19 @@ Rules:
   const aiLogStart = Date.now();
 
   try {
-    const openaiRes = await fetchGatewayChatCompletions({
-      model,
-      stream: false,
-      max_tokens: 300,
-      temperature: 0.3,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    });
+    const openaiRes = await fetchGatewayChatCompletions(
+      {
+        model,
+        stream: false,
+        max_tokens: 300,
+        temperature: 0.3,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      },
+      { headers: request.headers },
+    );
 
     endTimer();
     const durationMs = Date.now() - aiLogStart;
