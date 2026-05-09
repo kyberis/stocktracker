@@ -32,6 +32,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [trial-system](trial-system.md) — Pro trial invitations + expiration.
 - [unified-accounts-admin](unified-accounts-admin.md) — single-pane admin UI for IdP users + linked products.
 - [unified-accounts-idp](unified-accounts-idp.md) — single sign-on + Pro across trefolio, Clara, Will via `user.trefolio.com`.
+- [idp-personal-access-tokens](idp-personal-access-tokens.md) — PAT minting, introspection, and MCP bearer contract on the IdP.
 
 ## Portfolio Core
 
@@ -107,6 +108,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [stock-evaluation](stock-evaluation.md) — rules + AI valuation.
 - [warren-investing-knowledge](warren-investing-knowledge.md) — curated investing-concepts library exposed to Warren as a tool.
 - [warren-telegram-bot](warren-telegram-bot.md) — Warren accessible via Telegram (text + voice).
+- [trefolio-mcp-user](trefolio-mcp-user.md) — HTTP MCP read API for portfolio data (`tfp_pat_` via IdP).
 
 ## Tools
 

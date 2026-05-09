@@ -24,6 +24,7 @@ export {
   findUserByGoogleId,
   findUserByAppleId,
   findUserById,
+  findUserIdByIdpSub,
   listUsers,
   createUser,
   updateUserPassword,

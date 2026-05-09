@@ -36,7 +36,7 @@ export default function TermsOfServicePage() {
             Terms of Service
           </h1>
           <p className="text-slate-500">
-            Last updated: April 5, 2026
+            Last updated: May 9, 2026
           </p>
         </header>
 
@@ -363,8 +363,8 @@ export default function TermsOfServicePage() {
               </li>
               <li>
                 We do not guarantee uninterrupted or error-free service. Market
-                data feeds, AI analysis, and third-party integrations (including
-                SnapTrade brokerage connections) may experience downtime.
+                data feeds, AI analysis, third-party integrations (including
+                SnapTrade brokerage connections), and optional MCP access may experience downtime.
               </li>
             </ul>
           </section>

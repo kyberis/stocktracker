@@ -35,7 +35,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="text-slate-500">
-            Last updated: May 2, 2026
+            Last updated: May 9, 2026
           </p>
         </header>
 
@@ -91,6 +91,15 @@ export default function PrivacyPolicyPage() {
                 private key and any biometric data remain on your device and are
                 never transmitted to or stored by us. You can remove passkeys at
                 any time from your profile.
+              </li>
+              <li>
+                <strong className="text-slate-800">Developer integrations (personal access token)</strong> —{" "}
+                if you use unified sign-in, you may create a personal access token
+                on <strong className="text-slate-800">user.trefolio.com</strong> to connect
+                external MCP clients to trefolio, Clara, or Will. The token is stored
+                only on the identity service (hashed); trefolio receives it only when
+                you configure a client and uses it solely to authenticate MCP requests
+                against your account.
               </li>
             </ul>
 
@@ -241,6 +250,13 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>Provide AI-powered support chat (your messages and optional portfolio summary are sent to OpenAI; see Section 5). Support chat conversations are stored for up to 90 days to enable admin review and improve support quality.</li>
               <li>
+                When you connect an MCP client to trefolio using a personal access token,
+                we validate that token with our identity service over TLS, map it to your
+                local account, and return read-only portfolio data you request via MCP
+                tools (no third-party AI provider is invoked for that path unless you use
+                a separate AI product feature).
+              </li>
+              <li>
                 Enable private chat rooms for direct communication between you and trefolio support, and between connected users. Messages (text, links, images, and voice) are stored in our database; voice audio files are stored in our Vercel Blob storage and are removed when the message expires. Non-persistent messages are automatically deleted 24 hours after being sent.
               </li>
               <li>Process subscription payments through Stripe (see Section 5).</li>
@@ -307,6 +323,17 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3 pr-6">Turso (libSQL)</td>
                     <td className="py-3 pr-6">Database</td>
                     <td className="py-3">All account and portfolio data (encrypted at rest)</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">trefolio Identity (user.trefolio.com)</td>
+                    <td className="py-3 pr-6">Unified login, billing, and personal access tokens</td>
+                    <td className="py-3 pr-6">
+                      When you use OIDC sign-in, we store your IdP subject identifier and
+                      sync subscription state from the IdP. When you use MCP with a personal
+                      access token, trefolio sends that token to the IdP over TLS for
+                      validation (and the IdP may update last-used metadata); portfolio rows
+                      are read only from trefolio&apos;s database after successful validation.
+                    </td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Stripe</td>

@@ -68,6 +68,19 @@ export async function findUserById(userId: string): Promise<DbUser | null> {
   return rowToDbUser(result.rows[0]);
 }
 
+/** Resolve local trefolio user id from IdP subject (`idp_sub`). */
+export async function findUserIdByIdpSub(idpSub: string): Promise<string | null> {
+  const sub = idpSub.trim();
+  if (!sub) return null;
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT id FROM users WHERE idp_sub = ? LIMIT 1",
+    args: [sub],
+  });
+  if (result.rows.length === 0) return null;
+  return str(result.rows[0].id);
+}
+
 export async function listUsers(): Promise<PublicUser[]> {
   const client = await ensureInitialized();
   const result = await client.execute("SELECT * FROM users ORDER BY created_at ASC");

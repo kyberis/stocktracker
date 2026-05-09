@@ -23,6 +23,10 @@ import {
   WARREN_MAX_COMBINED_ATTACHMENT_BYTES,
   WARREN_MAX_FILES_PER_MESSAGE,
 } from "@/lib/ai/warren/upload-limits";
+import {
+  normalizeWarrenTextMessages,
+  type WarrenTextRow,
+} from "@/lib/ai/warren/normalize-chat-messages";
 import { Paperclip } from "lucide-react";
 
 type Bubble =
@@ -156,16 +160,23 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
             baseCurrency: activePortfolioCurrency,
           });
 
-      const priorMessages = bubbles
+      const textRows = bubbles
         .filter(
           (b): b is Bubble & { kind: "text-user" | "text-assistant" } =>
             b.kind === "text-user" || b.kind === "text-assistant",
         )
-        .map((b) => ({
-          role: b.kind === "text-user" ? "user" : ("assistant" as const),
-          content: b.content,
-        }))
-        .filter((m) => m.content.length > 0);
+        .map(
+          (b): WarrenTextRow => ({
+            role: b.kind === "text-user" ? "user" : "assistant",
+            content: b.content,
+          }),
+        );
+
+      const priorForMultipart = normalizeWarrenTextMessages(textRows);
+      const messagesForJson = normalizeWarrenTextMessages([
+        ...textRows,
+        { role: "user" as const, content: trimmed },
+      ]);
 
       abortRef.current?.abort();
       const ac = new AbortController();
@@ -178,7 +189,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
           fd.append(
             "payload",
             JSON.stringify({
-              messages: priorMessages,
+              messages: priorForMultipart,
               language,
               activePortfolioId: activePortfolioId ?? undefined,
               baseCurrency: activePortfolioCurrency,
@@ -199,7 +210,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
             headers: { "Content-Type": "application/json" },
             signal: ac.signal,
             body: JSON.stringify({
-              messages: [...priorMessages, { role: "user" as const, content: trimmed }],
+              messages: messagesForJson,
               language,
               activePortfolioId: activePortfolioId ?? undefined,
               baseCurrency: activePortfolioCurrency,

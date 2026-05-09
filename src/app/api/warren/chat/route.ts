@@ -17,6 +17,11 @@ import type { WarrenStreamFrame } from "@/lib/ai/warren/types";
 import { listPortfolios } from "@/lib/db";
 import { warrenPortfolioSnapshotSchema } from "@/lib/ai/warren/portfolio-snapshot-zod";
 import { sanitizeWarrenPortfolioLabel } from "@/lib/ai/prompt-safety";
+import {
+  normalizeWarrenTextMessages,
+  normalizeWarrenTextMessagesWithFinalUser,
+  type WarrenTextRow,
+} from "@/lib/ai/warren/normalize-chat-messages";
 import { json401 } from "@/lib/log-unauthorized";
 
 const textMessageSchema = z
@@ -49,9 +54,7 @@ const multipartMetaSchema = z
   })
   .strict();
 
-function toModelMessages(
-  rows: z.infer<typeof textMessageSchema>[],
-): ModelMessage[] {
+function toModelMessages(rows: WarrenTextRow[]): ModelMessage[] {
   return rows.map((m) =>
     m.role === "assistant"
       ? { role: "assistant" as const, content: m.content }
@@ -94,7 +97,8 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
         return Response.json({ error: "No message or attachments" }, { status: 400 });
       }
 
-      let lastUser: ModelMessage;
+      const priorNorm = normalizeWarrenTextMessages(body.messages);
+
       if (raw.length > 0) {
         try {
           const built = await buildWarrenMultimodalUserContent({
@@ -102,7 +106,20 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
             files: raw,
             transcribeLanguageHint: body.language?.slice(0, 5),
           });
-          lastUser = { role: "user", content: built.content };
+          if (typeof built.content === "string") {
+            const merged = normalizeWarrenTextMessagesWithFinalUser(priorNorm, built.content);
+            if (merged.length === 0) {
+              return Response.json({ error: "No message content" }, { status: 400 });
+            }
+            modelMessages = toModelMessages(merged);
+          } else {
+            const lastUser: ModelMessage = { role: "user", content: built.content };
+            if (priorNorm.length === 0) {
+              modelMessages = [lastUser];
+            } else {
+              modelMessages = [...toModelMessages(priorNorm), lastUser];
+            }
+          }
         } catch (e) {
           if (e instanceof WarrenAttachmentError) {
             return Response.json({ error: e.message, reason: e.reason }, { status: 400 });
@@ -110,13 +127,19 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
           throw e;
         }
       } else {
-        lastUser = { role: "user", content: userText.trim() };
+        const merged = normalizeWarrenTextMessagesWithFinalUser(priorNorm, userText.trim());
+        if (merged.length === 0) {
+          return Response.json({ error: "No message content" }, { status: 400 });
+        }
+        modelMessages = toModelMessages(merged);
       }
-
-      modelMessages = [...toModelMessages(body.messages), lastUser];
     } else {
       body = requestSchema.parse(await req.json());
-      modelMessages = toModelMessages(body.messages);
+      const normalized = normalizeWarrenTextMessages(body.messages);
+      if (normalized.length === 0) {
+        return Response.json({ error: "No message content" }, { status: 400 });
+      }
+      modelMessages = toModelMessages(normalized);
     }
   } catch {
     return Response.json({ error: "Invalid request body" }, { status: 400 });

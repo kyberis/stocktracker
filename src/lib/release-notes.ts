@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.9",
+    date: "2026-05-09",
+    title: "MCP portfolio read API",
+    titleTranslations: {
+      es: "API MCP de lectura de cartera",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Per-user MCP at `/api/mcp/user` (HTTP transport): authenticate with the same `tfp_pat_…` token you create on user.trefolio.com → Developer; tools list portfolios, holdings, and cash (stored values only). Rate limits align with other ecosystem MCP endpoints.",
+        translations: {
+          es: "MCP por usuario en `/api/mcp/user` (transporte HTTP): autenticación con el mismo token `tfp_pat_…` que creas en user.trefolio.com → Developer; herramientas para listar carteras, posiciones y efectivo (solo valores almacenados). Límites de peticiones alineados con el resto del ecosistema MCP.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Warren chat: normalize message history so turns without assistant prose (cards/tools only) no longer produce consecutive user messages — fixing sporadic Vercel AI Gateway `input.*.output: Invalid input` errors on long threads.",
+        translations: {
+          es: "Chat Warren: normalizamos el historial para que los turnos sin texto del asistente (solo tarjetas/herramientas) no dejen dos mensajes de usuario seguidos — corrige errores esporádicos del gateway Vercel AI (`input.*.output: Invalid input`) en conversaciones largas.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.8",
     date: "2026-05-09",
     title: "Warren multimodal chat & reply language",

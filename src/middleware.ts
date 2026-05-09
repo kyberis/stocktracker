@@ -67,6 +67,7 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/llms.txt") return true;
   if (pathname === "/llms-full.txt") return true;
   if (pathname === "/manifest.json") return true;
+  if (pathname === "/.well-known/mcp.json") return true;
   // Public portfolio share pages
   if (pathname.startsWith("/p/")) return true;
   // Public social profile pages
@@ -129,6 +130,10 @@ export async function middleware(req: NextRequest) {
   }
   // IdP service-plane endpoints — Bearer-token auth is enforced inside each route.
   if (pathname.startsWith("/api/v1/users/by-sub/")) {
+    return NextResponse.next();
+  }
+  // Per-user MCP: Bearer `tfp_pat_…` validated via IdP introspection inside the route.
+  if (pathname.startsWith("/api/mcp/user")) {
     return NextResponse.next();
   }
 

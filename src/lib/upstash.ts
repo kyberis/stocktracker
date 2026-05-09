@@ -112,3 +112,37 @@ export function deviceAuthRateLimiter(): Ratelimit | null {
   });
   return _deviceAuthLimiter;
 }
+
+let _mcpUserLimiter: Ratelimit | null | undefined;
+/** MCP authenticated user: 240 req/min (aligned with Clara). */
+export function mcpUserRateLimiter(): Ratelimit | null {
+  if (_mcpUserLimiter !== undefined) return _mcpUserLimiter;
+  const redis = getRedis();
+  if (!redis) {
+    _mcpUserLimiter = null;
+    return null;
+  }
+  _mcpUserLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(240, "1 m"),
+    prefix: "rl:mcp-user",
+  });
+  return _mcpUserLimiter;
+}
+
+let _mcpUserUnauthLimiter: Ratelimit | null | undefined;
+/** MCP wrong/missing token: 60 req/min per IP. */
+export function mcpUserUnauthRateLimiter(): Ratelimit | null {
+  if (_mcpUserUnauthLimiter !== undefined) return _mcpUserUnauthLimiter;
+  const redis = getRedis();
+  if (!redis) {
+    _mcpUserUnauthLimiter = null;
+    return null;
+  }
+  _mcpUserUnauthLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(60, "1 m"),
+    prefix: "rl:mcp-user-unauth",
+  });
+  return _mcpUserUnauthLimiter;
+}

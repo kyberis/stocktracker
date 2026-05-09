@@ -147,6 +147,10 @@ The plan ships incrementally. Each app gets a feature flag `USE_LEGACY_AUTH` (de
 - Telegram linking from Clara or Will MUST call `POST /v1/telegram/link` on the IdP. Local `User.telegramUserId` columns are deprecated; an unlinked Telegram account in any app cannot bypass the unified linkage.
 - All upgrade CTAs across the three apps MUST point to `https://user.trefolio.com/upgrade?from={trefolio|clara|will}`. The IdP `/upgrade` page tailors headings and benefit order to the originating app while keeping one price and one Stripe checkout.
 
+### MCP (personal access tokens)
+
+One **personal access token** for AI/MCP is minted and revoked only on **user.trefolio.com** (Developer). The same `tfp_pat_…` bearer works for HTTP MCP on trefolio, Clara, and Will; each app calls the IdP introspection endpoint with a shared server secret. Operator and client examples: [`external/accounts/docs/mcp-ecosystem.md`](../../external/accounts/docs/mcp-ecosystem.md). Product spec: [trefolio-mcp-user](../product-specs/trefolio-mcp-user.md).
+
 ### Legal / GDPR
 
 This change creates a new processor for personally-identifying data shared across three sister products. Triggers the [legal-advisor skill](../../.cursor/skills/legal-advisor/SKILL.md):
