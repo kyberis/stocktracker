@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.7",
+    date: "2026-05-09",
+    title: "IdP upgrade checkout explicit subscribe",
+    titleTranslations: {
+      es: "Checkout /upgrade del IdP con suscripción explícita",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "IdP (`external/accounts`): `/upgrade` no longer auto-redirects after a countdown — users click “Continue to secure checkout” to open Stripe; cancelled checkout CTA is “Subscribe again”; copy clarifies one Pro subscription covers trefolio, Clara, and Will with materially higher per-day AI caps than Free (no “unlimited” claim).",
+        translations: {
+          es: "IdP (`external/accounts`): `/upgrade` ya no redirige automáticamente tras una cuenta atrás — el usuario pulsa «Continue to secure checkout» para abrir Stripe; si cancela, el CTA es «Subscribe again»; el copy aclara que una suscripción Pro cubre trefolio, Clara y Will con cupos diarios de IA notablemente mayores que en Free (sin prometer ilimitado).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.6",
     date: "2026-05-08",
     title: "IdP billing checkout Stripe diagnostics",
@@ -24,6 +41,13 @@ export const releaseNotes: ReleaseEntry[] = [
       es: "Diagnóstico Stripe en checkout del IdP",
     },
     changes: [
+      {
+        type: "improvement",
+        text: "All Warren and portfolio AI traffic now uses Vercel AI Gateway (`AI_GATEWAY_API_KEY` / `VERCEL_OIDC_TOKEN`) instead of calling OpenAI’s API host directly; Whisper/TTS use the same Gateway-compatible endpoints.",
+        translations: {
+          es: "Warren y el portfolio AI usan Vercel AI Gateway (`AI_GATEWAY_API_KEY` / `VERCEL_OIDC_TOKEN`) en lugar del host directo de OpenAI; Whisper/TTS pasan por los mismos endpoints compatibles con Gateway.",
+        },
+      },
       {
         type: "improvement",
         text: "CI lint: relax experimental `react-hooks/*` rules that were blocking `main`, rename `useLegacyAuth` → `legacyAuthEnabled` (not a React hook) for middleware, refactor mobile/native viewport hooks, and rename `useRemoteDbInDevExplicitOptIn` to avoid false hook detection.",
