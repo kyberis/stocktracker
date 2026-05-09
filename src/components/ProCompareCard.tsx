@@ -155,7 +155,11 @@ export default function ProCompareCard({
     setBillingError("");
     setBillingLoading("portal");
     track("billing_portal_opened", { source: "compare_card" });
-    window.location.href = resolveBillingPortalHref();
+    const url = resolveBillingPortalHref();
+    const win = window.open(url, "_blank");
+    if (win) win.opener = null;
+    setBillingLoading("");
+    if (!win) setBillingError(t("billingPortalError"));
   };
 
   const atCapacity = capacity !== null && !capacity.available;

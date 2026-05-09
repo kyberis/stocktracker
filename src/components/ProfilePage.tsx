@@ -2013,6 +2013,8 @@ export default function ProfilePage() {
           {isPaid ? (
             <a
               href={resolveBillingPortalHref()}
+              target="_blank"
+              rel="noopener noreferrer"
               className="btn-secondary text-sm inline-flex items-center gap-2 w-full justify-center"
             >
               {t("manageSubscription")}

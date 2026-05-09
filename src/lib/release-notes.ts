@@ -52,6 +52,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Herramientas para desarrolladores: el paquete de plugin de Cursor para el Marketplace vive ahora en un repositorio público propio ([github.com/kyberis/cursor-plugins](https://github.com/kyberis/cursor-plugins)) y está enlazado en este monorepo como submódulo Git en `cursor-plugins/`.",
         },
       },
+      {
+        type: "improvement",
+        text: "“Manage subscription” opens the billing portal in a new browser tab so your trefolio session stays on the profile page.",
+        translations: {
+          es: "«Gestionar suscripción» abre el portal de facturación en una pestaña nueva para no abandonar la sesión en el perfil de trefolio.",
+        },
+      },
     ],
   },
   {
