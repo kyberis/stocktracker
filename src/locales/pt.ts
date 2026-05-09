@@ -2600,6 +2600,8 @@ const pt: TranslationStrings = {
   warrenChipConcentration: "Estou demasiado concentrado?",
   warrenChipDividends: "Rendimento de dividendos estimado?",
   warrenChipAlertExample: "Avisa-me se a AAPL cair 5%",
+  warrenAttachAria:
+    "Anexar imagens, PDF, CSV ou áudio (máx. 5 ficheiros; aplicam-se limites por tipo)",
   landingPricingFolioFeature16: "30 messages/day on Clara (personal finance) and Will (smart notes)",
   landingPricingTrefolioFeature25: "Full Clara access — 200 messages/day for budgeting & personal finance",
   landingPricingTrefolioFeature26: "Full Will access — 200 messages/day for smart note-taking & summaries",

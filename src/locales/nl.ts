@@ -2599,6 +2599,8 @@ const nl: TranslationStrings = {
   warrenChipConcentration: "Ben ik te geconcentreerd?",
   warrenChipDividends: "Verwachte dividendinkomsten?",
   warrenChipAlertExample: "Waarschuw me als AAPL 5% daalt",
+  warrenAttachAria:
+    "Afbeeldingen, PDF, CSV of audio bijvoegen (max. 5 bestanden; limieten gelden per type)",
   landingPricingFolioFeature16: "30 messages/day on Clara (personal finance) and Will (smart notes)",
   landingPricingTrefolioFeature25: "Full Clara access — 200 messages/day for budgeting & personal finance",
   landingPricingTrefolioFeature26: "Full Will access — 200 messages/day for smart note-taking & summaries",

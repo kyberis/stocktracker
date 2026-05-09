@@ -34,7 +34,13 @@ import {
   type TelegramChatLink,
 } from "@/lib/db";
 import { requireFeatureQuotaByUserId } from "@/lib/auth/guards";
+import type { ModelMessage, UserContent } from "ai";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
+import {
+  buildWarrenMultimodalUserContent,
+  WarrenAttachmentError,
+  type RawAttachment,
+} from "@/lib/ai/warren/preprocess-attachments";
 import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
 import { dispatchProposal } from "@/lib/ai/warren/dispatch";
 import type { WarrenProposal, WarrenProposalKind } from "@/lib/ai/warren/types";
@@ -84,13 +90,30 @@ export interface TelegramVoice {
   file_size?: number;
 }
 
+export interface TelegramPhotoSize {
+  file_id: string;
+  width: number;
+  height: number;
+  file_size?: number;
+}
+
+export interface TelegramDocument {
+  file_id: string;
+  file_name?: string;
+  mime_type?: string;
+  file_size?: number;
+}
+
 export interface TelegramMessage {
   message_id: number;
   from?: TelegramUser;
   chat: { id: number; type: string };
   date: number;
   text?: string;
+  caption?: string;
   voice?: TelegramVoice;
+  photo?: TelegramPhotoSize[];
+  document?: TelegramDocument;
   entities?: Array<{ type: string; offset: number; length: number }>;
 }
 
@@ -153,6 +176,28 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
       return;
     }
     await handleVoiceMessage(bot, message, link);
+    return;
+  }
+
+  if (message.photo && message.photo.length > 0) {
+    if (!link) {
+      const langGuess = inferLocale(message.from?.language_code);
+      const i = localizeTelegram(langGuess);
+      await sendMd(bot, chatId, escapeMarkdown(i.notLinked(getTelegramBotUsername())));
+      return;
+    }
+    await handlePhotoOrDocumentWarren(bot, message, link);
+    return;
+  }
+
+  if (message.document) {
+    if (!link) {
+      const langGuess = inferLocale(message.from?.language_code);
+      const i = localizeTelegram(langGuess);
+      await sendMd(bot, chatId, escapeMarkdown(i.notLinked(getTelegramBotUsername())));
+      return;
+    }
+    await handlePhotoOrDocumentWarren(bot, message, link);
     return;
   }
 
@@ -226,6 +271,78 @@ async function handleVoiceMessage(
   await runWarrenForText(bot, link, transcript.text, message.from?.language_code, {
     replyAsVoice: true,
   });
+}
+
+async function handlePhotoOrDocumentWarren(
+  bot: TelegramClient,
+  message: TelegramMessage,
+  link: TelegramChatLink,
+): Promise<void> {
+  const chatId = String(message.chat.id);
+  const i = await localeForLink(link, message.from?.language_code);
+  const caption = (message.caption || "").trim();
+
+  const isPhoto = !!(message.photo && message.photo.length > 0);
+  await bot.sendChatAction(chatId, isPhoto ? "upload_photo" : "typing");
+
+  const raw: RawAttachment[] = [];
+
+  try {
+    if (message.photo && message.photo.length > 0) {
+      const largest = message.photo[message.photo.length - 1];
+      const fileMeta = await bot.getFile(largest.file_id);
+      if (!fileMeta?.file_path) {
+        await sendMd(bot, chatId, escapeMarkdown(i.voiceTranscribeFailed));
+        return;
+      }
+      const file = await bot.downloadFile(fileMeta.file_path);
+      if (!file) {
+        await sendMd(bot, chatId, escapeMarkdown(i.voiceTranscribeFailed));
+        return;
+      }
+      raw.push({
+        buffer: file.buffer,
+        mimeType: file.contentType?.startsWith("image/") ? file.contentType : "image/jpeg",
+        filename: "photo.jpg",
+      });
+    } else if (message.document) {
+      const doc = message.document;
+      const fileMeta = await bot.getFile(doc.file_id);
+      if (!fileMeta?.file_path) {
+        await sendMd(bot, chatId, escapeMarkdown(i.voiceTranscribeFailed));
+        return;
+      }
+      const file = await bot.downloadFile(fileMeta.file_path);
+      if (!file) {
+        await sendMd(bot, chatId, escapeMarkdown(i.voiceTranscribeFailed));
+        return;
+      }
+      raw.push({
+        buffer: file.buffer,
+        mimeType: doc.mime_type || file.contentType || "application/octet-stream",
+        filename: doc.file_name || "document",
+      });
+    }
+
+    if (raw.length === 0) return;
+
+    const built = await buildWarrenMultimodalUserContent({
+      caption,
+      files: raw,
+      transcribeLanguageHint: link.languageCode || undefined,
+    });
+
+    await runWarrenForText(bot, link, built.persistSummary, message.from?.language_code, {
+      lastUserModelContent: built.content,
+    });
+  } catch (e) {
+    if (e instanceof WarrenAttachmentError) {
+      await sendMd(bot, chatId, escapeMarkdown(e.message));
+      return;
+    }
+    console.error("[telegram] handlePhotoOrDocumentWarren", e);
+    await sendMd(bot, chatId, escapeMarkdown(i.aiError));
+  }
 }
 
 async function handleCommand(
@@ -458,6 +575,8 @@ interface RunWarrenForTextOptions {
   /** When true, after the text reply is sent we also synthesize speech and
    *  send it as a Telegram voice note. Used for incoming voice notes. */
   replyAsVoice?: boolean;
+  /** Multimodal replacement for the latest user turn (DB row stays plain text). */
+  lastUserModelContent?: UserContent;
 }
 
 async function runWarrenForText(
@@ -532,10 +651,16 @@ async function runWarrenForText(
 
   // Load rolling history so multi-turn context survives.
   const history = await loadChatMessages(chatId, 20);
-  const messages = history.map((m) => ({
-    role: m.role,
+  const messages: ModelMessage[] = history.map((m) => ({
+    role: m.role as "user" | "assistant",
     content: m.content,
   }));
+  if (options.lastUserModelContent !== undefined) {
+    const last = messages[messages.length - 1];
+    if (last?.role === "user") {
+      last.content = options.lastUserModelContent;
+    }
+  }
   // The latest user message is already at the end via appendChatMessage above.
 
   let result;

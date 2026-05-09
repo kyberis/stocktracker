@@ -19,6 +19,11 @@ import type {
   WarrenStreamFrame,
 } from "@/lib/ai/warren/types";
 import { buildTopHoldingRow } from "@/lib/ai/warren/snapshot-shared";
+import {
+  WARREN_MAX_COMBINED_ATTACHMENT_BYTES,
+  WARREN_MAX_FILES_PER_MESSAGE,
+} from "@/lib/ai/warren/upload-limits";
+import { Paperclip } from "lucide-react";
 
 type Bubble =
   | { id: string; kind: "text-user"; content: string }
@@ -100,8 +105,10 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
 
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const [input, setInput] = useState("");
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [streaming, setStreaming] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const streamEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -120,8 +127,14 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
 
   const sendMessage = useCallback(
     async (text: string) => {
-      if (!text.trim() || streaming) return;
-      const userBubble: Bubble = { id: makeId(), kind: "text-user", content: text.trim() };
+      const trimmed = text.trim();
+      const files = pendingFiles;
+      if ((!trimmed && files.length === 0) || streaming) return;
+
+      const userDisplay =
+        trimmed + (files.length > 0 ? `${trimmed ? "\n\n" : ""}📎 ${files.map((f) => f.name).join(", ")}` : "");
+
+      const userBubble: Bubble = { id: makeId(), kind: "text-user", content: userDisplay || "📎" };
       const assistantId = makeId();
       const assistantBubble: Bubble = {
         id: assistantId,
@@ -130,6 +143,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
       };
       setBubbles((prev) => [...prev, userBubble, assistantBubble]);
       setInput("");
+      setPendingFiles([]);
       setStreaming(true);
 
       const snapshot = stealthMode
@@ -142,7 +156,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
             baseCurrency: activePortfolioCurrency,
           });
 
-      const messages = [...bubbles, userBubble]
+      const priorMessages = bubbles
         .filter(
           (b): b is Bubble & { kind: "text-user" | "text-assistant" } =>
             b.kind === "text-user" || b.kind === "text-assistant",
@@ -158,19 +172,42 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
       abortRef.current = ac;
 
       try {
-        const res = await fetch("/api/warren/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: ac.signal,
-          body: JSON.stringify({
-            messages,
-            language,
-            activePortfolioId: activePortfolioId ?? undefined,
-            baseCurrency: activePortfolioCurrency,
-            isDemo: !!demoMode,
-            portfolioContext: snapshot,
-          }),
-        });
+        let res: Response;
+        if (files.length > 0) {
+          const fd = new FormData();
+          fd.append(
+            "payload",
+            JSON.stringify({
+              messages: priorMessages,
+              language,
+              activePortfolioId: activePortfolioId ?? undefined,
+              baseCurrency: activePortfolioCurrency,
+              isDemo: !!demoMode,
+              portfolioContext: snapshot,
+            }),
+          );
+          fd.append("userText", trimmed);
+          for (const f of files) fd.append("files", f);
+          res = await fetch("/api/warren/chat", {
+            method: "POST",
+            signal: ac.signal,
+            body: fd,
+          });
+        } else {
+          res = await fetch("/api/warren/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: ac.signal,
+            body: JSON.stringify({
+              messages: [...priorMessages, { role: "user" as const, content: trimmed }],
+              language,
+              activePortfolioId: activePortfolioId ?? undefined,
+              baseCurrency: activePortfolioCurrency,
+              isDemo: !!demoMode,
+              portfolioContext: snapshot,
+            }),
+          });
+        }
 
         if (!res.ok || !res.body) {
           let err = "AI request failed";
@@ -218,6 +255,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
     [
       streaming,
       bubbles,
+      pendingFiles,
       stealthMode,
       holdings,
       cashEntries,
@@ -367,7 +405,10 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
             {quickPrompts.map((q) => (
               <button
                 key={q}
-                onClick={() => sendMessage(q)}
+                onClick={() => {
+                  setPendingFiles([]);
+                  void sendMessage(q);
+                }}
                 className="text-xs font-medium text-amber-700 dark:text-amber-200 bg-amber-500/[0.08] border border-amber-500/25 rounded-full px-3 py-1.5 hover:bg-amber-500/[0.16] hover:border-amber-500/45 transition-colors"
               >
                 {q}
@@ -376,8 +417,61 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
           </div>
         )}
 
-        <div className="px-4 pt-3 pb-4 border-t border-gray-200 dark:border-amber-500/10 bg-amber-500/[0.02] shrink-0">
+        <div className="px-4 pt-3 pb-4 border-t border-gray-200 dark:border-amber-500/10 bg-amber-500/[0.02] shrink-0 space-y-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            multiple
+            accept="image/*,application/pdf,text/csv,.csv,audio/*"
+            onChange={(e) => {
+              const list = e.target.files;
+              if (!list?.length) return;
+              setPendingFiles((prev) => {
+                let combined = prev.reduce((s, f) => s + f.size, 0);
+                const next = [...prev];
+                for (let i = 0; i < list.length; i++) {
+                  const f = list.item(i)!;
+                  if (next.length >= WARREN_MAX_FILES_PER_MESSAGE) break;
+                  combined += f.size;
+                  if (combined > WARREN_MAX_COMBINED_ATTACHMENT_BYTES) break;
+                  next.push(f);
+                }
+                return next.slice(0, WARREN_MAX_FILES_PER_MESSAGE);
+              });
+              e.target.value = "";
+            }}
+          />
+          {pendingFiles.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 text-[11px]">
+              {pendingFiles.map((f, idx) => (
+                <span
+                  key={`${f.name}-${f.size}-${f.lastModified}-${idx}`}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 border border-amber-500/25 text-amber-900 dark:text-amber-100 max-w-full truncate"
+                >
+                  <span className="truncate">{f.name}</span>
+                  <button
+                    type="button"
+                    className="shrink-0 opacity-70 hover:opacity-100"
+                    onClick={() => setPendingFiles((prev) => prev.filter((_, i) => i !== idx))}
+                    aria-label="Remove file"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
           <div className="flex gap-2 items-end bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-amber-500/15 rounded-2xl px-3 py-2 focus-within:border-amber-400/50">
+            <button
+              type="button"
+              className="mb-0.5 p-2 rounded-lg text-gray-500 dark:text-amber-200/60 hover:bg-black/5 dark:hover:bg-white/[0.06] shrink-0"
+              aria-label={t("warrenAttachAria")}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={streaming}
+            >
+              <Paperclip className="w-4 h-4" />
+            </button>
             <textarea
               ref={inputRef}
               value={input}
@@ -386,7 +480,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  sendMessage(input);
+                  void sendMessage(input);
                 }
               }}
               placeholder={t("warrenPlaceholder")}
@@ -394,8 +488,8 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
             />
             <button
               type="button"
-              onClick={() => sendMessage(input)}
-              disabled={!input.trim() || streaming}
+              onClick={() => void sendMessage(input)}
+              disabled={(!input.trim() && pendingFiles.length === 0) || streaming}
               className="w-9 h-9 rounded-lg bg-amber-500 text-amber-950 flex items-center justify-center disabled:opacity-30 hover:bg-amber-400 transition-colors"
               aria-label={t("warrenSend")}
             >

@@ -152,7 +152,7 @@ describe("POST /api/warren/chat", () => {
     const { POST } = await import("./route");
     const res = await (POST as (req: NextRequest) => Promise<Response>)(
       makeRequest({
-        messages: [{ role: "user", content: "x".repeat(4001) }],
+        messages: [{ role: "user", content: "x".repeat(12001) }],
         portfolioContext: minimalSnapshot,
       }),
     );

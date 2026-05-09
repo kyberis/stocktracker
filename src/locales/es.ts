@@ -2717,6 +2717,8 @@ const es: TranslationStrings = {
   warrenChipConcentration: "¿Estoy demasiado concentrado?",
   warrenChipDividends: "¿Cuántos dividendos espero?",
   warrenChipAlertExample: "Avísame si AAPL cae 5%",
+  warrenAttachAria:
+    "Adjunta imágenes, PDF, CSV o audio (máx. 5 archivos; hay límites por tipo)",
 };
 
 export default es;
