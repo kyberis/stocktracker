@@ -1,0 +1,23 @@
+{
+  "name": "trefolio-open-toolkit",
+  "version": "1.0.0",
+  "description": "Financial accuracy patterns, WCAG-oriented UI review, mobile usability, QA guidance, Next.js SEO, and fintech UX writing — for portfolio and dashboard apps.",
+  "license": "MIT",
+  "keywords": [
+    "portfolio",
+    "fintech",
+    "finance",
+    "accessibility",
+    "wcag",
+    "nextjs",
+    "vitest",
+    "playwright",
+    "seo",
+    "i18n"
+  ],
+  "author": {
+    "name": "Marcos Suarez",
+    "email": "suarez84@gmail.com"
+  },
+  "repository": "https://github.com/kyberis/trefolio-open-toolkit"
+}

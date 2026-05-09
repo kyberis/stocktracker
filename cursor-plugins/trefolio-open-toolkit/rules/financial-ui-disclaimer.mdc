@@ -1,0 +1,18 @@
+---
+description: When editing UI that shows investment or market data, preserve disclaimers and avoid implying regulated advice
+globs:
+  - "**/*.tsx"
+  - "**/locales/**/*.ts"
+alwaysApply: false
+---
+
+# Financial UI copy guardrails
+
+When adding or changing surfaces that show portfolio values, returns, projections, or market data:
+
+1. **Do not promise outcomes** — avoid "guaranteed", "will earn", "best returns".
+2. **Past performance** — if mentioned, note it does not predict future results (wording depends on your jurisdiction and legal review).
+3. **Not advice** — product copy should clarify the app is a tool, not personalized investment advice, unless you are licensed and the product is scoped accordingly (follow your legal team's guidance).
+4. **Estimates** — label projections and yields as estimates where applicable.
+
+If your repository has a dedicated legal or compliance rule, follow that rule in addition to this one.

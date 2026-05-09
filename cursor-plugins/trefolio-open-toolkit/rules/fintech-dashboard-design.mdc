@@ -1,0 +1,27 @@
+---
+description: Fintech dashboard UI — light/dark theme with emerald accent (adapt paths and tokens to your project)
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Fintech dashboard design (reference)
+
+Use as a **pattern** for portfolio and finance UIs. Map `useTheme()` and class names to your own design system.
+
+## Color palette (light / dark)
+
+- **Background**: `bg-gray-50 dark:bg-slate-900`
+- **Cards**: light surface / `dark:bg-slate-800` with consistent border tokens
+- **Header/Nav**: dark navy base — often stays dark in both modes
+- **Accent (primary)**: emerald-500 — buttons, active states, links, positive values
+- **Positive/Gain**: `text-emerald-600 dark:text-emerald-400`, soft `bg-emerald-50 dark:bg-emerald-500/10`
+- **Negative/Loss**: `text-red-500 dark:text-red-400`, soft red backgrounds
+- **Primary text**: `text-gray-900 dark:text-white`
+- **Secondary text**: `text-gray-500 dark:text-slate-400`
+- **Borders**: `border-gray-100 dark:border-slate-700` (cards); stronger dividers as needed
+
+## Principles
+
+- Pair every light utility with a `dark:` variant where contrast matters.
+- Prefer rounded corners consistent across cards (`rounded-2xl`), modals, inputs.
+- Gain/loss must not rely on color alone — pair with sign, arrows, or labels for accessibility.

@@ -45,6 +45,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Documentación: el design doc de cuentas unificadas, el runbook de cutover, `scripts/idp-cutover-checklist.mjs` y `.env.local.example` describen facturación Pro solo en el IdP (excepción del webhook device-grant en trefolio) y deprecan `BILLING_REDIRECT_TO_IDP` sin uso.",
         },
       },
+      {
+        type: "improvement",
+        text: "Developer tooling: added `cursor-plugins/trefolio-open-toolkit` — a Cursor-plugin-shaped bundle (manifest, rules, skills, agents, MIT license) ready to publish as its own open-source repo for the Cursor Marketplace.",
+        translations: {
+          es: "Herramientas para desarrolladores: añadido `cursor-plugins/trefolio-open-toolkit` — paquete en formato plugin de Cursor (manifiesto, reglas, skills, agentes, licencia MIT) listo para publicarse como repositorio abierto en el Marketplace de Cursor.",
+        },
+      },
     ],
   },
   {

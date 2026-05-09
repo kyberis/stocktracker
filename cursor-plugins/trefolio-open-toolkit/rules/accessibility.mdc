@@ -1,0 +1,34 @@
+---
+description: Trigger accessibility review on UI/UX changes
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Accessibility Review Trigger
+
+Before completing any UI or UX change, check if it requires an accessibility review. If **any** condition below matches, read and follow the **accessibility-reviewer** skill bundled with this plugin.
+
+## Trigger Conditions
+
+Involve **accessibility-reviewer** when the change:
+
+1. **Adds or modifies a component, page, modal, or dialog** — any new user-facing surface.
+2. **Changes interactive elements** — buttons, links, inputs, selects, toggles, tabs, or custom controls.
+3. **Modifies navigation or routing** — menu structure, breadcrumbs, skip links, or focus management.
+4. **Adds or changes data visualizations** — charts, graphs, tables, or data grids.
+5. **Alters colors, contrast, or theme** — changes to light/dark tokens, text colors, or background colors.
+6. **Introduces animations or transitions** — new motion, loading spinners, or auto-updating content.
+7. **Changes form behavior** — validation, error display, field grouping, or required indicators.
+8. **Adds toasts, alerts, or status messages** — any dynamic feedback to the user.
+9. **Modifies mobile/responsive layout** — touch targets, viewport behavior, or breakpoint changes.
+10. **Adds images, icons, or media** — any visual content that may need alt text or labels.
+
+## Quick Checks (No Full Review Needed)
+
+Skip the full review if the change is:
+
+- A backend-only change with no UI impact.
+- A pure refactor that does not alter rendered output or interaction behavior.
+- A dependency update with no visual changes.
+
+Even for skipped reviews, verify that existing accessibility attributes (aria-labels, roles, alt text) were not accidentally removed.
