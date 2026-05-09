@@ -543,7 +543,8 @@ const en: TranslationStrings = {
   upsellProTitle: "Trefolio",
   upsellFreeItemYahoo: "Every feature in trefolio with monthly quotas",
   upsellFreeItemBasicCharts: "Up to 100 holdings across 3 portfolios",
-  upsellFreeItemAiLimited: "15 AI consultations + 1 portfolio review / month",
+  upsellFreeItemAiLimited:
+    "15 AI consultations + 1 portfolio review / month; Warren & chat use a compact model on Folio",
   upsellFreeItemHoldingsLimit: "20 fundamentals & 30 intelligence lookups / month",
   upsellStarterItemMoreHoldings: "Up to 50 stocks & ETFs",
   upsellStarterItemSharing: "Portfolio sharing & CSV export",
@@ -552,6 +553,7 @@ const en: TranslationStrings = {
   upsellStarterItemCsvExport: "CSV export of holdings & transactions",
   upsellProItemAlphaVantage: "Alpha Vantage premium data + 500 fundamentals / month",
   upsellProItemPremiumScreens: "1,000 intelligence + 500 economic-indicator lookups / month",
+  upsellProItemBetterAiModel: "Full GPT-4.x model for Warren, portfolio chat, and analysis (Folio uses a compact model)",
   upsellProItemAiUnlimited: "500 AI consultations + 15 portfolio reviews / month",
   upsellProItemUnlimitedHoldings: "5,000 holdings, 20 portfolios, 50 share links",
   upsellAiLimitReached: "AI monthly quota reached",
@@ -2711,6 +2713,9 @@ const en: TranslationStrings = {
   warrenPlaceholder: "Tell Warren what you want to do…",
   warrenDisclaimer:
     "AI-generated assistance. Not financial advice. Confirm any action you take.",
+  warrenFolioModelBanner:
+    "You're on Folio: Warren uses a compact AI model to keep the free tier sustainable. Trefolio unlocks a larger GPT model, much higher monthly AI limits, and premium market-data APIs.",
+  warrenUpgradeCta: "Compare plans & upgrade",
   warrenGreeting:
     "Good to see you. I have access to your portfolio. Ask me anything — or tell me what to add, remove, or watch. I'll always confirm before changing your data.",
   warrenChipSummary: "Summarise my portfolio",

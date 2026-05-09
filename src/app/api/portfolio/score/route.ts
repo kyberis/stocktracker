@@ -12,7 +12,8 @@ import {
   trackEvent,
   insertAiLog,
   isFeatureEnabledForUser,
-  getAiModelForFlow,
+  findUserById,
+  resolveAiModelForUserPlan,
 } from "@/lib/db";
 import { checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
@@ -26,6 +27,7 @@ import {
 } from "@/lib/portfolio-score";
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import { json401 } from "@/lib/log-unauthorized";
+import type { SubscriptionPlan } from "@/lib/types";
 
 export const GET = withMetrics("/api/portfolio/score", async (request: NextRequest) => {
   const { session, error } = await requireSession(request);
@@ -114,11 +116,14 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
 
   trackEvent(session.userId, "portfolio_score_requested", { portfolioId });
 
+  const scoreUser = await findUserById(session.userId);
+  const scorePlan = (scoreUser?.plan || session.plan || "free") as SubscriptionPlan;
+
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "portfolio_score" });
   const aiLogStart = Date.now();
 
   try {
-    const model = await getAiModelForFlow("portfolio_score");
+    const model = await resolveAiModelForUserPlan("portfolio_score", scorePlan);
     const openaiRes = await fetchGatewayChatCompletions(
       {
         model,

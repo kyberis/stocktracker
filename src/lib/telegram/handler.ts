@@ -44,6 +44,7 @@ import {
 import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
 import { dispatchProposal } from "@/lib/ai/warren/dispatch";
 import type { WarrenProposal, WarrenProposalKind } from "@/lib/ai/warren/types";
+import type { SubscriptionPlan } from "@/lib/types";
 import {
   bold,
   commonMarkToTelegram,
@@ -649,6 +650,9 @@ async function runWarrenForText(
     snapshot = undefined;
   }
 
+  const linkedUser = await Promise.resolve(findUserById(userId)).catch(() => null);
+  const subscriptionPlan = (linkedUser?.plan ?? "free") as SubscriptionPlan;
+
   // Load rolling history so multi-turn context survives.
   const history = await loadChatMessages(chatId, 20);
   const messages: ModelMessage[] = history.map((m) => ({
@@ -675,6 +679,7 @@ async function runWarrenForText(
       activePortfolioName: activePortfolioName || undefined,
       snapshot,
       messages,
+      subscriptionPlan,
       onFrame: statusMessageId
         ? (frame) => {
             // Only the per-tool labels drive the visible status. We ignore
@@ -736,6 +741,10 @@ async function runWarrenForText(
     // any TTS failure is silent — the text reply already went out.
     if (options.replyAsVoice) {
       await maybeSendVoiceReply(bot, chatId, result.text, language, i.voiceDisclaimerSpoken);
+    }
+
+    if (subscriptionPlan === "free") {
+      await sendMd(bot, chatId, escapeMarkdown(i.warrenUpgradeModelHint));
     }
   }
 

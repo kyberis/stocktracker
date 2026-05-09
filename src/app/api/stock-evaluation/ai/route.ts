@@ -10,7 +10,7 @@ import {
   incrementDailyAiTokenUsage,
   findUserById,
   insertAiLog,
-  getAiModelForFlow,
+  resolveAiModelForUserPlan,
 } from "@/lib/db";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
@@ -103,7 +103,7 @@ ${JSON.stringify(eval_, null, 2)}
 
 Please provide your narrative assessment based on this data.`;
 
-  const model = await getAiModelForFlow("ai_analysis");
+  const model = await resolveAiModelForUserPlan("ai_analysis", plan);
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "moat_evaluation" });
   const aiLogStart = Date.now();
 

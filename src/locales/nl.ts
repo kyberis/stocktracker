@@ -550,6 +550,8 @@ const nl: TranslationStrings = {
   upsellStarterItemCsvExport: "CSV-export van bezittingen & transacties",
   upsellProItemAlphaVantage: "Alpha Vantage-datasets en premium-metrics",
   upsellProItemPremiumScreens: "Fundamenten, Intelligence en Economische indicatoren",
+  upsellProItemBetterAiModel:
+    "Volledig GPT-4.x-model voor Warren, portfoliochat en analyse (Folio gebruikt een compact model)",
   upsellProItemAiUnlimited: "Onbeperkte AI-analyse",
   upsellProItemUnlimitedHoldings: "Onbeperkte aandelen & ETF's",
   upsellAiLimitReached: "Maandelijkse AI-limiet bereikt",
@@ -2593,6 +2595,9 @@ const nl: TranslationStrings = {
   warrenPlaceholder: "Vertel Warren wat je wilt doen…",
   warrenDisclaimer:
     "AI-gegenereerde hulp. Geen financieel advies. Bevestig elke actie.",
+  warrenFolioModelBanner:
+    "Je zit op Folio: Warren gebruikt een compact AI-model om de gratis laag haalbaar te houden. Trefolio ontgrendelt een groter GPT-model, veel hogere maandelijkse AI-limieten en premium marktdata-API’s.",
+  warrenUpgradeCta: "Plannen vergelijken & upgraden",
   warrenGreeting:
     "Fijn je te zien. Ik heb toegang tot je portefeuille. Vraag me alles of vertel me wat ik moet toevoegen, verwijderen of in de gaten houden. Ik vraag altijd om bevestiging voordat ik gegevens wijzig.",
   warrenChipSummary: "Vat mijn portefeuille samen",

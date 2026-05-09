@@ -551,6 +551,8 @@ const de: TranslationStrings = {
   upsellStarterItemCsvExport: "CSV-Export von Beständen & Transaktionen",
   upsellProItemAlphaVantage: "Alpha Vantage-Datensätze und Premium-Metriken",
   upsellProItemPremiumScreens: "Fundamentals, Intelligence und Wirtschaftsindikatoren",
+  upsellProItemBetterAiModel:
+    "Vollständiges GPT-4.x-Modell für Warren, Portfolio-Chat und Analyse (Folio nutzt ein kompaktes Modell)",
   upsellProItemAiUnlimited: "Unbegrenzte KI-Analyse",
   upsellProItemUnlimitedHoldings: "Unbegrenzte Aktien & ETFs",
   upsellAiLimitReached: "KI-Monatslimit erreicht",
@@ -2594,6 +2596,9 @@ const de: TranslationStrings = {
   warrenPlaceholder: "Sag Warren, was du tun möchtest…",
   warrenDisclaimer:
     "KI-generierte Hilfe. Keine Anlageberatung. Bestätige jede Aktion.",
+  warrenFolioModelBanner:
+    "Du nutzt Folio: Warren verwendet ein kompaktes KI-Modell, um den kostenlosen Tarif tragfähig zu halten. Trefolio schaltet ein größeres GPT-Modell, deutlich höhere monatliche KI-Limits und Premium-Marktdaten-APIs frei.",
+  warrenUpgradeCta: "Pläne vergleichen & upgraden",
   warrenGreeting:
     "Schön, dich zu sehen. Ich habe Zugriff auf dein Portfolio. Frag mich alles oder sag mir, was ich hinzufügen, entfernen oder beobachten soll. Ich frage immer nach, bevor ich Daten ändere.",
   warrenChipSummary: "Fasse mein Portfolio zusammen",

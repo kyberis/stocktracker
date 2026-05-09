@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { trackEvent, listHoldings, findUserById, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, getAiModelForFlow } from "@/lib/db";
+import { trackEvent, listHoldings, findUserById, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, resolveAiModelForUserPlan } from "@/lib/db";
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import { checkAiImportRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal, rateLimitHitsTotal } from "@/lib/metrics";
 import { getHoldingsLimit } from "@/lib/subscription";
+import type { SubscriptionPlan } from "@/lib/types";
 
 const EXTRACTION_PROMPT = `You are a portfolio data extractor. Analyze the provided data and extract two things:
 1. Current stock/ETF **holdings** (net positions).
@@ -55,6 +56,9 @@ Rules:
 export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
+
+  const importUser = await findUserById(session.userId);
+  const importPlan = (importUser?.plan || session.plan || "free") as SubscriptionPlan;
 
   const isAdmin = session.role === "admin";
   if (!isAdmin) {
@@ -167,7 +171,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
 
   const aiLogStart = Date.now();
   const promptUser = typeof messages[1]?.content === "string" ? messages[1].content : "[multimodal content]";
-  const model = await getAiModelForFlow("import_portfolio");
+  const model = await resolveAiModelForUserPlan("import_portfolio", importPlan);
 
   try {
     const openaiRes = await fetchGatewayChatCompletions(
@@ -281,8 +285,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     if (droppedHoldings > 0) warnings.push(`${droppedHoldings} holding(s) removed due to invalid ticker format.`);
     if (droppedTxs > 0) warnings.push(`${droppedTxs} transaction(s) removed due to invalid ticker or date format.`);
 
-    const user = await findUserById(session.userId);
-    const plan = (user?.plan || session.plan) ?? "free";
+    const plan = (importUser?.plan || session.plan) ?? "free";
     const holdingsLimit = getHoldingsLimit(plan);
     let cappedHoldings = holdings;
     if (holdingsLimit < Infinity) {

@@ -770,6 +770,10 @@ function AiModelConfigCard() {
         setConfig(data.config);
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        console.error("[SettingsTab] AI model save failed", res.status, err);
+        alert(typeof err?.error === "string" ? err.error : "Could not save AI models (check IdP sync and logs).");
       }
     } finally {
       setSaving(false);
@@ -791,7 +795,11 @@ function AiModelConfigCard() {
         <div>
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">AI Model Configuration</h3>
           <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
-            Select which OpenAI model to use for each AI flow. Changes take effect within 5 minutes.
+            Select which OpenAI model to use for each AI flow. Changes take effect within about five minutes (cache).
+            When <code className="text-[10px]">IDP_BASE_URL</code> and{" "}
+            <code className="text-[10px]">ACCOUNTS_AI_CONFIG_SECRET</code> (or <code className="text-[10px]">IDP_SERVICE_TOKEN</code>)
+            are set, saves sync to the IdP at <span className="font-mono">user.trefolio.com</span> for all ecosystem apps.
+            Folio (free) still uses a compact model for conversational Warren/chat; Trefolio uses the models below for paid-tier and quality-critical flows (e.g. score, import).
           </p>
         </div>
         <div className="flex gap-2">

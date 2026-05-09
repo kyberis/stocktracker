@@ -14,9 +14,10 @@ import {
   type RawAttachment,
 } from "@/lib/ai/warren/preprocess-attachments";
 import type { WarrenStreamFrame } from "@/lib/ai/warren/types";
-import { listPortfolios } from "@/lib/db";
+import { listPortfolios, findUserById } from "@/lib/db";
 import { warrenPortfolioSnapshotSchema } from "@/lib/ai/warren/portfolio-snapshot-zod";
 import { sanitizeWarrenPortfolioLabel } from "@/lib/ai/prompt-safety";
+import type { SubscriptionPlan } from "@/lib/types";
 import {
   normalizeWarrenTextMessages,
   normalizeWarrenTextMessagesWithFinalUser,
@@ -157,6 +158,9 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
   const serverPortfolioId = active?.id;
   const serverPortfolioName = sanitizeWarrenPortfolioLabel(active?.name ?? "");
 
+  const dbUser = await findUserById(session.userId);
+  const subscriptionPlan = (dbUser?.plan || session.plan || "free") as SubscriptionPlan;
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
@@ -177,6 +181,7 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
           messages: modelMessages,
           gatewayHeaders: req.headers,
           onFrame: send,
+          subscriptionPlan,
         });
       } catch {
         // runWarrenTurn already emitted an "error" frame and logged.

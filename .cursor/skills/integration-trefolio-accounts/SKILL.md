@@ -32,8 +32,10 @@ Clara / Will specifics (for behaviour you mirror or debug):
 | Area | Role |
 |------|------|
 | [`src/lib/idp/config.ts`](../../../src/lib/idp/config.ts) | `getIdpBaseUrl`, `getIdpIssuer`, `isIdpEnabled`, `legacyAuthEnabled`, `freezeLocalUserWrites` |
-| [`src/lib/idp/oidc.ts`](../../../src/lib/idp/oidc.ts) | PKCE, `buildAuthorizationUrl`, token exchange, JWT verify |
 | [`src/lib/idp/entitlements.ts`](../../../src/lib/idp/entitlements.ts) | Link `idp_sub`, sync plan from IdP |
+| [`src/lib/idp/oidc.ts`](../../../src/lib/idp/oidc.ts) | PKCE, `buildAuthorizationUrl`, token exchange, JWT verify |
+| [`src/lib/idp/ai-model-config-fetch.ts`](../../../src/lib/idp/ai-model-config-fetch.ts) | Fetch/PUT ecosystem AI model map from IdP (`ACCOUNTS_AI_CONFIG_SECRET` or `IDP_SERVICE_TOKEN`) |
+| [`src/lib/db/settings.ts`](../../../src/lib/db/settings.ts) | `getAiModelConfig` merges IdP → Turso → defaults; `resolveAiModelForUserPlan` for Folio vs Trefolio |
 | [`src/app/api/auth/oidc/start/route.ts`](../../../src/app/api/auth/oidc/start/route.ts) | Begin login flow |
 | [`src/app/api/auth/oidc/signup-start/route.ts`](../../../src/app/api/auth/oidc/signup-start/route.ts) | Begin signup-first (`screen_hint=signup`) |
 | [`src/app/api/auth/oidc/callback/route.ts`](../../../src/app/api/auth/oidc/callback/route.ts) | Exchange code, create/link local user, session cookie |
@@ -46,6 +48,8 @@ Clara / Will specifics (for behaviour you mirror or debug):
 - `IDP_ISSUER` — OIDC issuer + browser-facing authorize/logout/upgrade URLs; set to `https://user.trefolio-dev.com` when `IDP_BASE_URL` stays loopback behind Caddy.
 - `IDP_CLIENT_ID` — Default client id `trefolio` unless overridden.
 - `IDP_CLIENT_SECRET` — Server-only.
+- `IDP_SERVICE_TOKEN` — Shared secret for `/v1/*` REST calls, PAT introspection, and (when `ACCOUNTS_AI_CONFIG_SECRET` is unset) the internal AI model config endpoint.
+- `ACCOUNTS_AI_CONFIG_SECRET` — Optional; dedicated bearer for `GET/PUT …/api/v1/internal/ai-model-config` (ecosystem AI model map). If omitted, trefolio may fall back to `IDP_SERVICE_TOKEN` for the same header.
 - `USE_LEGACY_AUTH=false` — IdP-only login/signup paths active.
 - `FREEZE_LOCAL_USER_WRITES` — Blocks **new** local users on legacy OAuth/signup; OIDC callback exempt.
 

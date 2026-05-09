@@ -4,7 +4,7 @@ export const maxDuration = 60;
 import { NextRequest } from "next/server";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
-import { findUserById, incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, getAiModelForFlow } from "@/lib/db";
+import { findUserById, incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, resolveAiModelForUserPlan } from "@/lib/db";
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
@@ -110,7 +110,7 @@ Rules:
     ...messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
   ];
 
-  const model = await getAiModelForFlow("chart_chat");
+  const model = await resolveAiModelForUserPlan("chart_chat", plan);
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "chart_chat" });
   const aiLogStart = Date.now();
   const lastUserMsg = messages[messages.length - 1]?.content || "";

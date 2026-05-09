@@ -1,5 +1,6 @@
 import { languageCodeToName } from "@/lib/languages";
 import { sanitizeWarrenPortfolioLabel } from "@/lib/ai/prompt-safety";
+import type { SubscriptionPlan } from "@/lib/types";
 
 export type WarrenChannel = "web" | "telegram";
 
@@ -12,6 +13,8 @@ export interface PromptOptions {
   isDemoMode?: boolean;
   /** Where this Warren turn is being delivered. Defaults to "web". */
   channel?: WarrenChannel;
+  /** When Folio (free), the model is a smaller/cheaper one; user may ask about quality vs paid tier. */
+  subscriptionPlan?: SubscriptionPlan;
 }
 
 export function buildWarrenSystemPrompt(opts: PromptOptions): string {
@@ -26,6 +29,13 @@ export function buildWarrenSystemPrompt(opts: PromptOptions): string {
   const demoLine = opts.isDemoMode
     ? "\nThe user is browsing the public DEMO. NEVER call write tools (`propose*`). When asked to mutate, politely explain that demo mode is read-only and they can sign up to act."
     : "";
+
+  const folioModelLine =
+    opts.subscriptionPlan === "free"
+      ? `
+Folio tier note:
+- This session uses trefolio's **compact AI model** for cost reasons. If the user asks why answers feel brief, shallow, or uncertain compared to before, explain honestly: paid **Trefolio** uses a larger model, higher monthly AI limits, and premium market-data APIs — without pressuring them to upgrade; the app UI already surfaces upgrade paths.`
+      : "";
 
   const channelGuidance =
     channel === "telegram"
@@ -75,7 +85,7 @@ Grounding rules (CRITICAL):
 - For any question about a specific ticker the user does not own: call \`getQuote\`.
 - For EDUCATIONAL questions (definitions, metrics, frameworks, value-investing principles, risk concepts) call \`searchInvestingKnowledge\` first. Quote at most 1-2 short ideas from the results, paraphrase in your own voice, and link them back to the user's portfolio when relevant. Never fabricate citations or attribute quotes to specific authors.
 - Only mention numbers that came from a tool result.
-${portfolioLine}${demoLine}
+${portfolioLine}${demoLine}${folioModelLine}
 
 Visual responses:
 - When a chart, gauge, or card communicates better than prose, call a render tool (\`renderHoldingCard\`, \`renderAllocationCard\`, \`renderSummaryCard\`, \`renderStockSnapshot\`).

@@ -14,6 +14,8 @@ import type { SubscriptionPlan } from "@/lib/types";
 interface PlatformContextValue {
   platform: ClientPlatform;
   isNative: boolean;
+  /** Current subscription tier for upsell / tiered features (from layout). */
+  userPlan: SubscriptionPlan;
   /** Whether the feature exists on the current platform (ignores tier). */
   hasFeature: (key: FeatureKey) => boolean;
   /** Whether the feature exists on this platform AND the user's plan allows it. */
@@ -25,6 +27,7 @@ interface PlatformContextValue {
 const PlatformContext = createContext<PlatformContextValue>({
   platform: "desktop",
   isNative: false,
+  userPlan: "free",
   hasFeature: () => true,
   canAccess: () => true,
   requiredPlan: () => "free",
@@ -47,6 +50,7 @@ export function PlatformProvider({ children, userPlan = "free" }: Props) {
     return {
       platform,
       isNative: native,
+      userPlan,
       hasFeature: (key: FeatureKey) => isFeatureOnPlatform(key, platform),
       canAccess: (key: FeatureKey) => canAccessFeatureOnPlatform(key, platform, userPlan),
       requiredPlan: (key: FeatureKey) => getRequiredPlan(key),

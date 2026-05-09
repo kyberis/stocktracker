@@ -164,3 +164,10 @@ model RefreshToken {
   @@index([userId])
   @@index([familyId])
 }
+
+/// Single-row store for ecosystem-wide OpenAI model IDs per flow (trefolio, Clara, Will).
+model PlatformAiModelConfig {
+  id         String   @id @default("singleton")
+  configJson String
+  updatedAt  DateTime @updatedAt
+}

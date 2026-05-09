@@ -13,7 +13,7 @@ import {
   incrementAiTokenUsage,
   incrementDailyAiTokenUsage,
   insertAiLog,
-  getAiModelForFlow,
+  resolveAiModelForUserPlan,
   listPortfolios,
 } from "@/lib/db";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
@@ -139,7 +139,7 @@ ${contextBlock}
     ...messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
   ];
 
-  const model = await getAiModelForFlow("portfolio_chat");
+  const model = await resolveAiModelForUserPlan("portfolio_chat", plan);
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "portfolio_ai" });
   const aiLogStart = Date.now();
   const lastUserMsg = messages[messages.length - 1]?.content || "";

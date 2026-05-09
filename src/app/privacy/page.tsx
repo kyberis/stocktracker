@@ -326,7 +326,7 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">trefolio Identity (user.trefolio.com)</td>
-                    <td className="py-3 pr-6">Unified login, billing, and personal access tokens</td>
+                    <td className="py-3 pr-6">Unified login, billing, personal access tokens, and ecosystem-wide AI model routing configuration (no portfolio content)</td>
                     <td className="py-3 pr-6">
                       When you use OIDC sign-in, we store your IdP subject identifier and
                       sync subscription state from the IdP. When you use MCP with a personal

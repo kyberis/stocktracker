@@ -32,6 +32,7 @@ src/app/api/v1/users/me/route.ts
 src/app/api/v1/entitlements/[sub]/route.ts
 src/app/api/v1/telegram/link/route.ts
 src/app/api/v1/telegram/by-id/[tgUserId]/route.ts
+src/app/api/v1/internal/ai-model-config/route.ts  # GET/PUT ecosystem AI model map (service bearer)
 src/app/api/v1/admin/users/import/route.ts
 src/app/api/billing/checkout/route.ts
 src/app/api/billing/portal/route.ts

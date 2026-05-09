@@ -11,7 +11,8 @@ import {
   trackEvent,
   insertAiLog,
   isFeatureEnabledForUser,
-  getAiModelForFlow,
+  findUserById,
+  resolveAiModelForUserPlan,
 } from "@/lib/db";
 import { checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { createAiStream } from "@/lib/ai-stream";
@@ -20,6 +21,7 @@ import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
+import type { SubscriptionPlan } from "@/lib/types";
 
 export const POST = withMetrics("/api/portfolio-review", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "ai_portfolio_review");
@@ -127,7 +129,9 @@ ${portfolioData}`;
     cashCount: String(cashEntries.length),
   });
 
-  const model = await getAiModelForFlow("portfolio_review");
+  const reviewUser = await findUserById(session.userId);
+  const reviewPlan = (reviewUser?.plan || session.plan || "free") as SubscriptionPlan;
+  const model = await resolveAiModelForUserPlan("portfolio_review", reviewPlan);
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "portfolio_review" });
   const aiLogStart = Date.now();
 

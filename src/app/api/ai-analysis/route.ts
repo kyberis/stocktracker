@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest } from "next/server";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
-import { incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, findUserById, insertAiLog, updateAiLogError, getAiModelForFlow } from "@/lib/db";
+import { incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, findUserById, insertAiLog, updateAiLogError, resolveAiModelForUserPlan } from "@/lib/db";
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
@@ -356,7 +356,7 @@ Please analyze it and explain what these numbers mean in simple terms.
 ${dataSections.join("\n\n")}`;
   }
 
-  const model = await getAiModelForFlow("ai_analysis");
+  const model = await resolveAiModelForUserPlan("ai_analysis", plan);
   const endTimer = aiRequestDuration.startTimer({ analysis_type: analysisTypeLabel });
   const aiLogStart = Date.now();
 

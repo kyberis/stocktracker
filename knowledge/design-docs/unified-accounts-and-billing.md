@@ -130,6 +130,30 @@ const res = await fetch(`${base}/v1/entitlements/${sub}`, {
 const ents = await res.json();
 ```
 
+### Accounts-first (user + global config)
+
+**Rule:** Anything that must stay **identical** across trefolio, Clara, and Will — identity, subscription state, global preferences (e.g. UI locale for the whole ecosystem), and **operator-tunable platform knobs** — belongs in the IdP Postgres + REST/OIDC. Product apps keep only **read-through caches**, **latency-sensitive counters**, and **product-local data** (e.g. holdings in Turso).
+
+**Anti-pattern:** New admin screens in a product app that mutate cross-app identity or global AI/platform settings as the sole source of truth.
+
+| Data / concern | Source of truth | Product app (e.g. trefolio) |
+|---|---|---|
+| Identity (`sub`, email, verified flags), passkeys, OIDC sessions | IdP | Local `users` row + `idp_sub` cache |
+| Subscription / Stripe customer / Pro until | IdP | `users.plan` + `pro_until` read-through cache |
+| Global operator knobs (per-flow LLM IDs for the ecosystem) | IdP | HTTP fetch + in-memory TTL cache; optional Turso fallback while migrating |
+| Telegram linkage (`telegramUserId` → `sub`) | IdP | Bot handlers resolve user via IdP |
+| Portfolio holdings, cash, snapshots, market logs | Product DB (Turso for trefolio) | Not replicated to IdP |
+| Per-request AI logs, rate-limit counters | Product DB / edge | Latency-sensitive; not IdP |
+
+### Platform AI model map (ecosystem-wide)
+
+Canonical **per-flow OpenAI (gateway) model IDs** are stored on the IdP and read by each app with a short TTL cache:
+
+- **HTTP:** `GET` / `PUT` `https://user.trefolio.com/api/v1/internal/ai-model-config` (exact path in scaffold: [`knowledge/scaffolds/trefolio-accounts/src/app/api/v1/internal/ai-model-config/route.ts`](../scaffolds/trefolio-accounts/src/app/api/v1/internal/ai-model-config/route.ts)).
+- **Auth:** `Authorization: Bearer` — `ACCOUNTS_AI_CONFIG_SECRET` preferred; falls back to `IDP_SERVICE_TOKEN` where operators run a single shared secret.
+- **Trefolio client:** [`src/lib/idp/ai-model-config-fetch.ts`](../../src/lib/idp/ai-model-config-fetch.ts) + merge in [`getAiModelConfig`](../../src/lib/db/settings.ts). If the IdP is unreachable, trefolio falls back to `platform_settings` / code defaults.
+- **Tiering:** Folio (free) still uses a **fixed compact model** for conversational flows in each app; Trefolio uses the IdP map for paid-tier and **quality-critical** flows (portfolio score, import parsing). See [`src/lib/ai-models.ts`](../../src/lib/ai-models.ts).
+
 ### Cutover strategy
 
 The plan ships incrementally. Each app gets a feature flag `USE_LEGACY_AUTH` (default `true`); we wire OIDC under the flag, migrate users, then flip to `false`. At any point either path works.

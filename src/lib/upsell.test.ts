@@ -65,7 +65,7 @@ describe("upsell mapping", () => {
       "metrics_locked", "portfolio_history_locked", "crypto_pro_locked",
       "crypto_portfolio", "ai_import", "net_worth_locked",
       "screener_locked", "simulator_locked", "planning_locked",
-      "portfolio_score_locked", "tax_report_locked",
+      "portfolio_score_locked", "tax_report_locked", "ai_model_tier",
     ];
     for (const surface of surfaces) {
       const config = getUpsellConfig(surface);

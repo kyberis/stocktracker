@@ -880,9 +880,13 @@ import {
   ALLOWED_AI_MODELS,
   DEFAULT_AI_MODEL,
   getDefaultAiModelConfig,
+  normalizeAiModelConfigRecord,
+  resolveAiModelForPlan,
   type AiFlowKey,
   type AllowedAiModel,
 } from "@/lib/ai-models";
+import type { SubscriptionPlan } from "@/lib/types";
+import { fetchAiModelConfigFromIdp, isIdpAiModelConfigFetchEnabled, putAiModelConfigToIdp } from "@/lib/idp/ai-model-config-fetch";
 
 let _aiModelCache: { config: Record<AiFlowKey, AllowedAiModel>; ts: number } | null = null;
 const AI_MODEL_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -894,8 +898,17 @@ export async function getAiModelConfig(): Promise<Record<AiFlowKey, AllowedAiMod
     return _aiModelCache.config;
   }
 
-  const raw = await getPlatformSetting(AI_MODEL_CONFIG_KEY);
   const defaults = getDefaultAiModelConfig();
+
+  if (isIdpAiModelConfigFetchEnabled()) {
+    const fromIdp = await fetchAiModelConfigFromIdp();
+    if (fromIdp) {
+      _aiModelCache = { config: fromIdp, ts: Date.now() };
+      return fromIdp;
+    }
+  }
+
+  const raw = await getPlatformSetting(AI_MODEL_CONFIG_KEY);
 
   if (!raw) {
     _aiModelCache = { config: defaults, ts: Date.now() };
@@ -904,13 +917,7 @@ export async function getAiModelConfig(): Promise<Record<AiFlowKey, AllowedAiMod
 
   try {
     const parsed = JSON.parse(raw) as Record<string, string>;
-    const config = { ...defaults };
-    const allowedSet = new Set<string>(ALLOWED_AI_MODELS);
-    for (const key of AI_FLOW_KEYS) {
-      if (parsed[key] && allowedSet.has(parsed[key])) {
-        config[key] = parsed[key] as AllowedAiModel;
-      }
-    }
+    const config = normalizeAiModelConfigRecord(parsed);
     _aiModelCache = { config, ts: Date.now() };
     return config;
   } catch {
@@ -919,7 +926,9 @@ export async function getAiModelConfig(): Promise<Record<AiFlowKey, AllowedAiMod
   }
 }
 
-export async function setAiModelConfig(config: Record<string, string>): Promise<void> {
+export async function setAiModelConfig(config: Record<string, string>): Promise<
+  { ok: true } | { ok: false; status: number; message: string }
+> {
   const defaults = getDefaultAiModelConfig();
   const allowedSet = new Set<string>(ALLOWED_AI_MODELS);
   const flowSet = new Set<string>(AI_FLOW_KEYS);
@@ -932,13 +941,31 @@ export async function setAiModelConfig(config: Record<string, string>): Promise<
   for (const key of AI_FLOW_KEYS) {
     if (!next[key]) next[key] = defaults[key];
   }
+
+  if (isIdpAiModelConfigFetchEnabled()) {
+    const idp = await putAiModelConfigToIdp(next);
+    if (!idp.ok) {
+      return idp;
+    }
+  }
+
   await setPlatformSetting(AI_MODEL_CONFIG_KEY, JSON.stringify(next));
   _aiModelCache = null;
+  return { ok: true };
 }
 
 export async function getAiModelForFlow(flow: AiFlowKey): Promise<string> {
   const config = await getAiModelConfig();
   return config[flow] || DEFAULT_AI_MODEL;
+}
+
+/** Model for a user tier: Folio uses a cheap conversational model; Pro uses IdP config; quality-critical flows always use platform config. */
+export async function resolveAiModelForUserPlan(
+  flow: AiFlowKey,
+  plan: SubscriptionPlan,
+): Promise<string> {
+  const cfg = await getAiModelConfig();
+  return resolveAiModelForPlan(flow, plan, cfg);
 }
 
 export async function getAllPlatformSettings(): Promise<Record<string, string>> {

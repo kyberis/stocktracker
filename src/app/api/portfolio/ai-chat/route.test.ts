@@ -10,7 +10,7 @@ vi.mock("@/lib/with-metrics", () => ({
 vi.mock("@/lib/db", () => ({
   findUserById: vi.fn(),
   listPortfolios: vi.fn(),
-  getAiModelForFlow: vi.fn(),
+  resolveAiModelForUserPlan: vi.fn(),
   insertAiLog: vi.fn(),
   incrementAiUsage: vi.fn(),
   incrementDailyAiUsage: vi.fn(),

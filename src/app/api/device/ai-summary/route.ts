@@ -9,7 +9,7 @@ import {
   trackEvent,
   isFeatureEnabled,
   insertAiLog,
-  getAiModelForFlow,
+  resolveAiModelForUserPlan,
 } from "@/lib/db";
 import { effectivePlan } from "@/lib/subscription";
 import { checkAndIncrementFeatureQuota, refundFeatureQuota } from "@/lib/feature-quotas";
@@ -18,6 +18,7 @@ import { aiCallsTotal, aiRequestDuration, deviceApiCalls } from "@/lib/metrics";
 import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
+import type { SubscriptionPlan } from "@/lib/types";
 
 async function resolveAuthedUser(req: NextRequest) {
   const auth = req.headers.get("authorization");
@@ -129,7 +130,7 @@ Rules:
     holdingsCount: String(holdings.length),
   });
 
-  const model = await getAiModelForFlow("device_summary");
+  const model = await resolveAiModelForUserPlan("device_summary", plan as SubscriptionPlan);
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "device_ai_summary" });
   const aiLogStart = Date.now();
 

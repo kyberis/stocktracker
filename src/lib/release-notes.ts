@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.10",
+    date: "2026-05-09",
+    title: "AI models by plan & IdP config",
+    titleTranslations: {
+      es: "Modelos IA por plan y configuración en el IdP",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Folio (free) conversational AI uses a compact default model; Trefolio uses the ecosystem model map from user.trefolio.com when configured (`ACCOUNTS_AI_CONFIG_SECRET` or `IDP_SERVICE_TOKEN`), with Turso `platform_settings` as fallback. Quality-critical flows (portfolio score, AI import) always use the IdP-configured model. Warren web shows a short Folio notice with upgrade CTA; Telegram sends a separate hint after replies for free users.",
+        translations: {
+          es: "En Folio (gratis) la IA conversacional usa un modelo compacto por defecto; en Trefolio se usa el mapa de modelos del ecosistema en user.trefolio.com si está configurado (`ACCOUNTS_AI_CONFIG_SECRET` o `IDP_SERVICE_TOKEN`), con `platform_settings` en Turso como respaldo. Los flujos críticos (puntuación de cartera, importación por IA) usan siempre el modelo configurado en el IdP. Warren en web muestra un aviso breve con CTA de mejora; en Telegram se envía un segundo mensaje con la pista para usuarios gratuitos.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Admin AI model edits in trefolio sync to the IdP when reachable; the unified accounts design doc, IdP scaffold (`PlatformAiModelConfig` + internal route), integration skill, and privacy policy describe the IdP as holding ecosystem-wide AI routing configuration.",
+        translations: {
+          es: "La edición de modelos IA en el admin de trefolio se sincroniza con el IdP cuando hay conexión; el design doc de cuentas unificadas, el scaffold del IdP (`PlatformAiModelConfig` + ruta interna), la skill de integración y la política de privacidad describen que el IdP guarda la configuración de enrutamiento de IA del ecosistema.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.9",
     date: "2026-05-09",
     title: "MCP portfolio read API",

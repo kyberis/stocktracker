@@ -543,7 +543,8 @@ const es: TranslationStrings = {
   upsellProTitle: "Trefolio",
   upsellFreeItemYahoo: "Todas las funciones de trefolio con cuotas mensuales",
   upsellFreeItemBasicCharts: "Hasta 100 posiciones en 3 portafolios",
-  upsellFreeItemAiLimited: "15 consultas de IA + 1 revisión de cartera / mes",
+  upsellFreeItemAiLimited:
+    "15 consultas de IA + 1 revisión de cartera / mes; Warren y el chat usan un modelo compacto en Folio",
   upsellFreeItemHoldingsLimit: "20 fundamentales y 30 consultas de inteligencia / mes",
   upsellStarterItemMoreHoldings: "Hasta 50 acciones y ETFs",
   upsellStarterItemSharing: "Compartir cartera y exportar CSV",
@@ -552,6 +553,8 @@ const es: TranslationStrings = {
   upsellStarterItemCsvExport: "Exportar CSV de posiciones y transacciones",
   upsellProItemAlphaVantage: "Datos premium de Alpha Vantage + 500 fundamentales / mes",
   upsellProItemPremiumScreens: "1.000 inteligencia + 500 indicadores económicos / mes",
+  upsellProItemBetterAiModel:
+    "Modelo GPT-4.x completo para Warren, chat de cartera y análisis (Folio usa un modelo compacto)",
   upsellProItemAiUnlimited: "500 consultas de IA + 15 revisiones de cartera / mes",
   upsellProItemUnlimitedHoldings: "5.000 posiciones, 20 portafolios, 50 enlaces de compartir",
   upsellAiLimitReached: "Cuota mensual de IA alcanzada",
@@ -2711,6 +2714,9 @@ const es: TranslationStrings = {
   warrenPlaceholder: "Dile a Warren qué quieres hacer…",
   warrenDisclaimer:
     "Asistencia generada por IA. No es asesoría financiera. Confirma cada acción.",
+  warrenFolioModelBanner:
+    "Estás en Folio: Warren usa un modelo de IA compacto para mantener el plan gratuito. Trefolio desbloquea un GPT mayor, muchas más consultas al mes y APIs de datos de mercado premium.",
+  warrenUpgradeCta: "Comparar planes y mejorar",
   warrenGreeting:
     "Hola, qué bueno verte. Tengo acceso a tu portafolio. Pregúntame lo que quieras — o pídeme que añada, quite o vigile algo. Siempre te pediré confirmación antes de cambiar tus datos.",
   warrenChipSummary: "Resume mi portafolio",

@@ -3,10 +3,11 @@ import type { ModelMessage } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 
 import { resolveGatewayApiKey, toGatewayModelId, VERCEL_AI_GATEWAY_BASE } from "@/lib/ai/gateway";
-import { getAiModelForFlow, insertAiLog } from "@/lib/db";
+import { insertAiLog, resolveAiModelForUserPlan } from "@/lib/db";
 import { AI_FLOW_META } from "@/lib/ai-models";
 import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
 import { buildWarrenSystemPrompt, type WarrenChannel } from "./system-prompt";
+import type { SubscriptionPlan } from "@/lib/types";
 import {
   buildWarrenTools,
   type PortfolioSnapshot,
@@ -27,6 +28,8 @@ export interface RunWarrenTurnOptions {
   messages: ModelMessage[];
   /** Vercel OIDC / Gateway auth: pass `request.headers` from API routes when available. */
   gatewayHeaders?: Headers;
+  /** Billing tier for model selection (Folio vs Trefolio). */
+  subscriptionPlan: SubscriptionPlan;
   /** Called for every NDJSON-style frame: text deltas, parts, proposals, errors. */
   onFrame?: (frame: WarrenStreamFrame) => void;
 }
@@ -76,7 +79,7 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
   }
 
   const channel = opts.channel || "web";
-  const model = await getAiModelForFlow("portfolio_chat");
+  const model = await resolveAiModelForUserPlan("portfolio_chat", opts.subscriptionPlan);
   const flowMeta = AI_FLOW_META.portfolio_chat;
   const provider = createOpenAI({
     baseURL: VERCEL_AI_GATEWAY_BASE,
@@ -90,6 +93,7 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
     activePortfolioName: opts.activePortfolioName,
     isDemoMode: !!opts.isDemo,
     channel,
+    subscriptionPlan: opts.subscriptionPlan,
   });
 
   const collectedParts: WarrenPart[] = [];

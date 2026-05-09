@@ -26,7 +26,8 @@ export type UpsellSurface =
   | "simulator_locked"
   | "planning_locked"
   | "portfolio_score_locked"
-  | "tax_report_locked";
+  | "tax_report_locked"
+  | "ai_model_tier";
 
 export interface UpsellConfig {
   subtitleKey: TranslationKey;
@@ -47,6 +48,7 @@ const DEFAULT_PAID_ITEMS: TranslationKey[] = [
   "upsellStarterItemMoreHoldings",
   "upsellStarterItemSharing",
   "upsellStarterItemMoreAi",
+  "upsellProItemBetterAiModel",
   "upsellProItemAlphaVantage",
   "upsellProItemPremiumScreens",
   "upsellProItemAiUnlimited",
@@ -321,6 +323,13 @@ const UPSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
       "upsellProItemAlphaVantage",
       "upsellProItemAiUnlimited",
     ],
+  },
+  ai_model_tier: {
+    subtitleKey: "upsellCompareSubtitleAI",
+    attemptedActionKey: "upsellAttemptAiAnalysis",
+    feature: "ai",
+    freeItems: DEFAULT_FREE_ITEMS,
+    paidItems: DEFAULT_PAID_ITEMS,
   },
 };
 

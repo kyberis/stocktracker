@@ -3,6 +3,8 @@
  * Used by admin API, admin UI, and every AI route at runtime.
  */
 
+import type { SubscriptionPlan } from "@/lib/types";
+
 export const ALLOWED_AI_MODELS = [
   "gpt-4o-mini",
   "gpt-4o",
@@ -118,12 +120,53 @@ export const AI_FLOW_META: Record<AiFlowKey, AiFlowMeta> = {
 
 export const DEFAULT_AI_MODEL: AllowedAiModel = "gpt-4o-mini";
 
+/** Flows where a weak model hurts trust or corrupts user data — always use platform config (IdP / admin). */
+export const AI_FLOWS_ALWAYS_PREMIUM_MODEL = new Set<AiFlowKey>(["portfolio_score", "import_portfolio"]);
+
+/** Folio-tier conversational model (cheap); quality-critical flows ignore this. */
+export const FREE_TIER_CONVERSATIONAL_MODEL: AllowedAiModel = "gpt-4.1-nano";
+
 export function getDefaultAiModelConfig(): Record<AiFlowKey, AllowedAiModel> {
   const config = {} as Record<AiFlowKey, AllowedAiModel>;
   for (const key of AI_FLOW_KEYS) {
     config[key] = DEFAULT_AI_MODEL;
   }
   return config;
+}
+
+/**
+ * Merge a partial JSON map from admin/IdP with code defaults and allowed-model validation.
+ */
+export function normalizeAiModelConfigRecord(
+  parsed: Record<string, string | undefined>,
+): Record<AiFlowKey, AllowedAiModel> {
+  const defaults = getDefaultAiModelConfig();
+  const config = { ...defaults };
+  const allowedSet = new Set<string>(ALLOWED_AI_MODELS);
+  for (const key of AI_FLOW_KEYS) {
+    const v = parsed[key];
+    if (v && allowedSet.has(v)) {
+      config[key] = v as AllowedAiModel;
+    }
+  }
+  return config;
+}
+
+/**
+ * Resolve gateway model id for a user plan. `platformConfig` is the merged admin map (IdP + defaults).
+ */
+export function resolveAiModelForPlan(
+  flow: AiFlowKey,
+  plan: SubscriptionPlan,
+  platformConfig: Record<AiFlowKey, AllowedAiModel>,
+): string {
+  if (AI_FLOWS_ALWAYS_PREMIUM_MODEL.has(flow)) {
+    return platformConfig[flow] || DEFAULT_AI_MODEL;
+  }
+  if (plan === "pro") {
+    return platformConfig[flow] || DEFAULT_AI_MODEL;
+  }
+  return FREE_TIER_CONVERSATIONAL_MODEL;
 }
 
 export const AI_MODEL_LABELS: Record<AllowedAiModel, { label: string; costTier: "low" | "medium" | "high" }> = {

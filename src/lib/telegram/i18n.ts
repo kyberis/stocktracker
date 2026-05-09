@@ -88,6 +88,8 @@ export interface TelegramStrings {
   helpEx9: string;
   helpEx10: string;
   helpDisclaimer: string;
+  /** After a Folio-tier Warren reply, nudge upgrade for a higher-quality model (second message). */
+  warrenUpgradeModelHint: string;
 }
 
 const EN: TelegramStrings = {
@@ -159,6 +161,8 @@ const EN: TelegramStrings = {
   helpEx10: "Add €5,000 in cash",
   helpDisclaimer:
     "Warren is AI-generated assistance, not financial advice.",
+  warrenUpgradeModelHint:
+    "Tip: you're on Folio (free) — Warren uses a compact model here. Trefolio unlocks a larger GPT model, higher AI limits, and premium market data. Upgrade in trefolio → Profile → Subscription.",
 };
 
 const ES: TelegramStrings = {
@@ -230,6 +234,8 @@ const ES: TelegramStrings = {
   helpEx9: "Vende toda mi posición en MSFT",
   helpEx10: "Añade 5.000 € en efectivo",
   helpDisclaimer: "Warren es asistencia generada por IA, no asesoramiento financiero.",
+  warrenUpgradeModelHint:
+    "Consejo: estás en Folio (gratis) — aquí Warren usa un modelo compacto. Trefolio desbloquea un GPT mayor, más consultas IA y datos de mercado premium. Mejora en trefolio → Perfil → Suscripción.",
 };
 
 const BUNDLES: Record<TelegramLocale, TelegramStrings> = { en: EN, es: ES };

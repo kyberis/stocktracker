@@ -11,7 +11,8 @@ import {
   incrementAiTokenUsage,
   incrementDailyAiTokenUsage,
   insertAiLog,
-  getAiModelForFlow,
+  resolveAiModelForUserPlan,
+  findUserById,
 } from "@/lib/db";
 import { supportChatTotal, supportChatDuration } from "@/lib/metrics";
 import { checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
@@ -24,6 +25,7 @@ import { buildSupportSystemPrompt } from "@/lib/support-knowledge";
 import { json401 } from "@/lib/log-unauthorized";
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import type { ChatMessage } from "@/lib/db";
+import type { SubscriptionPlan } from "@/lib/types";
 
 export const POST = withMetrics("/api/support-chat", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "support_chat");
@@ -85,7 +87,9 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
     ...messages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
   ];
 
-  const model = await getAiModelForFlow("support_chat");
+  const supportUser = await findUserById(session.userId);
+  const supportPlan = (supportUser?.plan || session.plan || "free") as SubscriptionPlan;
+  const model = await resolveAiModelForUserPlan("support_chat", supportPlan);
   const endTimer = supportChatDuration.startTimer();
   const aiLogStart = Date.now();
   const lastUserContent = lastUserMsg?.content || "";

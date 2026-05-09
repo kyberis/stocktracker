@@ -111,6 +111,7 @@ beforeEach(() => {
   dbMocks.touchChatLastSeen.mockResolvedValue(undefined);
   dbMocks.appendChatMessage.mockResolvedValue(undefined);
   dbMocks.loadChatMessages.mockResolvedValue([]);
+  dbMocks.findUserById.mockResolvedValue({ id: "user-1", plan: "pro" } as never);
   dbMocks.listPortfolios.mockResolvedValue([]);
   dbMocks.listHoldings.mockResolvedValue([]);
   dbMocks.listAlerts.mockResolvedValue([]);

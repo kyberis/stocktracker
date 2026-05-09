@@ -178,6 +178,7 @@ export {
   getAiModelConfig,
   setAiModelConfig,
   getAiModelForFlow,
+  resolveAiModelForUserPlan,
   getDigestSenderDomains,
   setDigestSenderDomains,
   buildDigestGmailQuery,

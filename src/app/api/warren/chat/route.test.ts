@@ -9,17 +9,19 @@ vi.mock("@/lib/with-metrics", () => ({
 }));
 vi.mock("@/lib/db", () => ({
   listPortfolios: vi.fn(),
+  findUserById: vi.fn(),
 }));
 vi.mock("@/lib/ai/warren/run-turn", () => ({
   runWarrenTurn: vi.fn(),
 }));
 
 import { requireFeatureQuota } from "@/lib/auth/guards";
-import { listPortfolios } from "@/lib/db";
+import { listPortfolios, findUserById } from "@/lib/db";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
 
 const mockedQuota = vi.mocked(requireFeatureQuota);
 const mockedListPortfolios = vi.mocked(listPortfolios);
+const mockedFindUserById = vi.mocked(findUserById);
 const mockedRunWarrenTurn = vi.mocked(runWarrenTurn);
 
 const minimalSnapshot = {
@@ -57,6 +59,7 @@ beforeEach(() => {
   mockedListPortfolios.mockResolvedValue([
     { id: "p-default", name: "Main", isDefault: true },
   ] as never);
+  mockedFindUserById.mockResolvedValue({ plan: "free" } as never);
   mockedRunWarrenTurn.mockResolvedValue({
     text: "",
     parts: [],
@@ -184,7 +187,9 @@ describe("POST /api/warren/chat", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toContain("application/x-ndjson");
     expect(mockedListPortfolios).toHaveBeenCalledWith("u-warren-test");
-    expect(mockedRunWarrenTurn).toHaveBeenCalled();
+    expect(mockedRunWarrenTurn).toHaveBeenCalledWith(
+      expect.objectContaining({ subscriptionPlan: "free" }),
+    );
     const snapArg = mockedRunWarrenTurn.mock.calls[0]?.[0]?.snapshot;
     expect(snapArg).toBeUndefined();
   });
@@ -201,6 +206,7 @@ describe("POST /api/warren/chat", () => {
       expect.objectContaining({
         snapshot: minimalSnapshot,
         activePortfolioName: "Main",
+        subscriptionPlan: "free",
       }),
     );
   });

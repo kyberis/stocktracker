@@ -29,7 +29,10 @@ export const PUT = withMetrics("/api/admin/ai-models", async (req: NextRequest) 
   const result = await parseBody(req, aiModelConfigSchema);
   if (!result.success) return result.error;
 
-  await setAiModelConfig(result.data as Record<string, string>);
+  const saved = await setAiModelConfig(result.data as Record<string, string>);
+  if (!saved.ok) {
+    return NextResponse.json({ error: saved.message }, { status: saved.status });
+  }
   const config = await getAiModelConfig();
   return NextResponse.json({ ok: true, config });
 });
