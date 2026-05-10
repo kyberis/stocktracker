@@ -168,6 +168,23 @@ IDP_ISSUER=https://user.trefolio-dev.com
 
 **Database:** `next dev` ignores remote Turso URLs (`libsql://…` / `https://…`) unless you set `STOCKTRACKER_USE_REMOTE_DB_IN_DEV=true` (see `.env.local.example`), so the default is local `data/trefolio.db` instead of accidentally using production credentials.
 
+### “Could not exchange authorization code” (after IdP login)
+
+Trefolio’s callback calls `POST {IDP_BASE_URL}/oauth2/token`. That step fails if the IdP returns **401** (wrong client secret) or **400** (`invalid_grant`: `redirect_uri` mismatch, PKCE error, or code already used).
+
+1. **Sync the trefolio OAuth secret** — it must be identical in both places:
+
+   - **trefolio** (this repo) `.env.local`: `IDP_CLIENT_SECRET=…`
+   - **accounts** `external/accounts/.env.local`: `IDP_CLIENT_SECRET_TREFOLIO=…` (same value)
+
+   `ensure-unified-dev-env.mjs` only **appends** missing keys; if you changed one file by hand, align them manually or delete those lines and re-run `npm run dev:ensure-env`.
+
+   Defaults in code paths are `dev-trefolio-secret` **only** when the env var is unset — mixed “custom in one app, default in the other” breaks token exchange.
+
+2. **Read the real error** — in the **trefolio** dev terminal, find `[oidc] token exchange failed` (message includes HTTP status and IdP body). In **accounts**, watch for `oauth2.token.invalid_client` / `redirect_uri_mismatch` in logs.
+
+3. **Retry with a fresh login** — don’t reuse an old authorization `code` (double submit or back button can yield `invalid_grant`).
+
 ### On **Clara** and **Will**
 
 Keep **`IDP_BASE_URL=http://localhost:3300`** (NextAuth loads discovery from
