@@ -45,7 +45,7 @@
     "dev:all": "concurrently -n trefolio,clara -c blue,magenta \"npm run dev\" \"npm run dev:clara\"",
     "dev:ensure-env": "node scripts/ensure-unified-dev-env.mjs",
     "dev:unified": "concurrently -n trefolio,clara,will,accounts -c blue,magenta,green,yellow \"npm run dev\" \"npm run dev:clara\" \"npm run dev:will\" \"npm run dev:accounts\"",
-    "dev:proxy": "sudo caddy run --config dev/Caddyfile"
+    "dev:proxy": "bash dev/run-caddy-proxy.sh"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.54",

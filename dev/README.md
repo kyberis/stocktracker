@@ -65,7 +65,7 @@ npm run dev:unified
 Then in another terminal:
 
 ```bash
-npm run dev:proxy   # = sudo caddy run --config dev/Caddyfile
+npm run dev:proxy   # sudo + absolute caddy path (see dev/run-caddy-proxy.sh)
 ```
 
 Open https://trefolio-dev.com — full OIDC flow, cross-subdomain cookies, and
