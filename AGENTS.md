@@ -134,3 +134,42 @@ cursor-plugins/       kyberis/cursor-plugins submodule — Cursor Marketplace pl
 - Commercial + legal strategy: [`docs/COMMERCIALIZATION_PLAN.md`](docs/COMMERCIALIZATION_PLAN.md)
 
 If this map is ever wrong, fix it. The map is part of the code.
+
+## Cursor Cloud specific instructions
+
+### Environment overview
+
+The VM ships with Node.js 22 (via nvm). The update script runs `npm install` to
+refresh dependencies. No external services (Turso, Stripe, Redis, etc.) are needed
+for the dev server or tests — everything falls back to local SQLite at `data/trefolio.db`
+and dev-only defaults.
+
+### `.env.local` and IdP
+
+After copying `.env.local.example` → `.env.local`, **comment out `IDP_BASE_URL`**
+(line near the bottom) so legacy local auth is active. With it set, the `/signup`
+and `/login` UI pages show "Sign-in is not configured" because the IdP at
+`user.trefolio.com` is not reachable. The backend auth APIs still work regardless:
+- `POST /api/auth/signup` — `{ email, password, name }`
+- `POST /api/auth/login` — `{ identifier, password }`
+
+### Running services
+
+| Command | What it does | Port |
+|---------|-------------|------|
+| `npm run dev` | Next.js dev server | 3010 |
+| `npm run dev:turbo` | Same, with Turbopack (faster HMR) | 3010 |
+| `npm test` | Vitest unit/integration tests | — |
+| `npm run lint` | ESLint on `src/` | — |
+| `npm run typecheck` | `tsc --noEmit` | — |
+| `npm run build` | Migrations + `next build` | — |
+
+### Gotchas
+
+- The build command (`npm run build`) runs `npm run db:migrate` first, which auto-creates
+  `data/trefolio.db` if it doesn't exist. No manual migration step needed.
+- CAPTCHA (Cloudflare Turnstile) is auto-skipped on localhost and in `next dev`.
+- `external/` submodules (etracker, notetaker, accounts) are READ-ONLY context.
+  Trefolio never builds them. Don't run `npm install` inside them.
+- The `data/` directory contains the local SQLite DB file and seed/demo JSON — it
+  is gitignored for `*.db` but the JSON files are committed.
