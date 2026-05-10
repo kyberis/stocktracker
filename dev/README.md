@@ -27,15 +27,37 @@ grep trefolio-dev /etc/hosts   # verify
 
 ### 2. Trust Caddy's local CA (first run only)
 
-The first time `caddy` runs it generates a local CA and asks for sudo to
-install the root cert into the macOS system trust store. After that, every
-`*.trefolio-dev.com` URL gets a browser-trusted certificate.
+`caddy trust` talks to a **running** Caddy admin API (default `localhost:2019`) to
+fetch the root certificate — it will **fail with connection refused** if no server
+is up yet, or if you need to force IPv4 (see below).
 
-You can also pre-install it without starting the proxy:
+**Recommended (matches the cert your proxy uses when `npm run dev:proxy` runs as root):**
 
 ```bash
-sudo caddy trust
+# Terminal A — start the proxy (sudo Caddy); leave it running.
+npm run dev:proxy
+
+# Terminal B — while A is running:
+sudo caddy trust --address 127.0.0.1:2019
 ```
+
+If `sudo caddy trust` still dials `[::1]:2019` and fails, the `--address` flag above
+pins IPv4 loopback.
+
+**Fallback — trust the CA file yourself** (only after Caddy has created it; path
+is `$HOME` of the user that generated the CA — for `sudo` proxy runs that is often
+`/var/root`):
+
+```bash
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain \
+  "/var/root/Library/Application Support/Caddy/pki/authorities/local/root.crt"
+```
+
+If you only ever ran `caddy validate` as your normal user, the same file may be
+under `~/Library/Application Support/Caddy/pki/authorities/local/root.crt`, but
+trusting **that** copy does not help if `sudo caddy` issued certs from **root’s**
+PKI — use the admin API method while the proxy is running, or root’s path above
+after one proxy start.
 
 ## Daily workflow
 
