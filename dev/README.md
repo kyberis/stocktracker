@@ -90,8 +90,16 @@ Then in another terminal:
 npm run dev:proxy   # sudo + absolute caddy path (see dev/run-caddy-proxy.sh)
 ```
 
-Open https://trefolio-dev.com — full OIDC flow, cross-subdomain cookies, and
-WebAuthn all behave the way they do on `*.trefolio.com`.
+Open in the browser (with Caddy + `/etc/hosts` per above):
+
+| App | URL |
+| --- | --- |
+| trefolio | `https://trefolio-dev.com` |
+| Clara | `https://clara.trefolio-dev.com` |
+| Will | `https://will.trefolio-dev.com` |
+| accounts / IdP | `https://user.trefolio-dev.com` |
+
+Full OIDC flow, cross-subdomain cookies, and WebAuthn should match `*.trefolio.com` in production.
 
 **Optional — Playwright IdP redirect smoke** (from the **stocktracker** repo root): asserts `/login` reaches `/oauth2/authorize` on the IdP. The spec is excluded from the default E2E run unless you set `E2E_IDP_BROWSER=1` (see `playwright.config.ts`).
 

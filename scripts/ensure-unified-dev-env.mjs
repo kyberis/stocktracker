@@ -178,7 +178,13 @@ function main() {
 
   if (!any) console.log("(No missing IdP keys — nothing appended.)");
   if (notes.length) console.log("\n" + [...new Set(notes)].join("\n"));
-  console.log("\nNext: export PATH=\"/opt/homebrew/opt/node@22/bin:$PATH\" && npm run dev:unified");
+  console.log(
+    '\nNext: export PATH="/opt/homebrew/opt/node@22/bin:$PATH" && npm run dev:unified',
+  );
+  console.log("Then: npm run dev:proxy");
+  console.log(
+    "HTTPS: https://trefolio-dev.com | https://clara.trefolio-dev.com | https://will.trefolio-dev.com | https://user.trefolio-dev.com",
+  );
 }
 
 main();
