@@ -185,6 +185,8 @@ Trefolio’s callback calls `POST {IDP_BASE_URL}/oauth2/token`. That step fails 
 
 3. **Retry with a fresh login** — don’t reuse an old authorization `code` (double submit or back button can yield `invalid_grant`).
 
+4. **`redirect_uri` http vs https** — If Caddy forwards `Host: *.trefolio-dev.com` but not `X-Forwarded-Proto`, trefolio now still builds `https://…` for `/api/auth/oidc/start` and `/callback`. Alternatively set **`APP_BASE_URL=https://trefolio-dev.com`** in `.env.local`.
+
 ### On **Clara** and **Will**
 
 Keep **`IDP_BASE_URL=http://localhost:3300`** (NextAuth loads discovery from

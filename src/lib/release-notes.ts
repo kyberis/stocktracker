@@ -45,6 +45,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Dependencias de ejecución faltantes (mcp-handler, pdf-parse) en el lockfile e IDs de artículos al ingerir noticias ampliados para que pase el chequeo de tipos de `next build`.",
         },
       },
+      {
+        type: "fix",
+        text: "Unified IdP login behind local Caddy: derive public origin as HTTPS for `*.trefolio-dev.com` when `Host` is forwarded but `X-Forwarded-Proto` is missing so OIDC `redirect_uri` matches on token exchange.",
+        translations: {
+          es: "Login IdP unificado detrás de Caddy local: el origen público se trata como HTTPS para `*.trefolio-dev.com` cuando se reenvía `Host` pero falta `X-Forwarded-Proto`, para que el `redirect_uri` de OIDC coincida en el intercambio de token.",
+        },
+      },
     ],
   },
   {
