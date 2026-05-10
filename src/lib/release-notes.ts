@@ -38,6 +38,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "El Planificador de metas (proyección) pasa a Herramientas → Planificador de metas en /tools/projection para todos los planes; los accesos rápidos de progreso abren esa página.",
         },
       },
+      {
+        type: "fix",
+        text: "Restore missing runtime deps (mcp-handler, pdf-parse) in the lockfile and widen portfolio news ingest article IDs so `next build` type-check passes.",
+        translations: {
+          es: "Dependencias de ejecución faltantes (mcp-handler, pdf-parse) en el lockfile e IDs de artículos al ingerir noticias ampliados para que pase el chequeo de tipos de `next build`.",
+        },
+      },
     ],
   },
   {

@@ -68,7 +68,7 @@ export async function ingestNewsArticles(articles: NewsArticle[]): Promise<void>
       overallSentimentScore: article.overallSentimentScore,
     });
 
-    const newId = randomUUID();
+    const newId = randomUUID() as string;
     const ins = await client.execute({
       sql: `INSERT OR IGNORE INTO portfolio_news_articles
             (id, url, title, summary, source, published_at, ingested_at, extra_json)
@@ -84,7 +84,7 @@ export async function ingestNewsArticles(articles: NewsArticle[]): Promise<void>
       ],
     });
 
-    let articleId = newId;
+    let articleId: string = newId;
     if ((ins.rowsAffected ?? 0) === 0) {
       const found = await client.execute({
         sql: `SELECT id FROM portfolio_news_articles WHERE url = ? LIMIT 1`,
