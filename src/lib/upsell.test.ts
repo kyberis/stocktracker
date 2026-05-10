@@ -61,7 +61,7 @@ describe("upsell mapping", () => {
       "ai_limit", "stock_detail_locked", "intelligence_locked",
       "economic_locked", "dashboard_projection_locked", "profile_always_on",
       "settings_always_on", "alerts_limit", "holdings_limit",
-      "portfolio_news_locked", "broker_sync_import", "import_holdings_capped",
+      "broker_sync_import", "import_holdings_capped",
       "metrics_locked", "portfolio_history_locked", "crypto_pro_locked",
       "crypto_portfolio", "ai_import", "net_worth_locked",
       "screener_locked", "simulator_locked", "planning_locked",

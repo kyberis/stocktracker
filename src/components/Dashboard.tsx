@@ -197,6 +197,7 @@ function DesktopDashboard() {
     if (tab === "metrics") track("metrics_tab_viewed");
     if (tab === "growth") track("growth_tab_viewed");
     if (tab === "events") track("events_tab_viewed");
+    if (tab === "news") track("news_tab_viewed");
   }
 
   const hasLoadedOnce = useRef(false);
@@ -267,6 +268,7 @@ function DesktopDashboard() {
                   onNavigateToEvents={() => handleTabChange("events")}
                   onNavigateToDividends={() => handleTabChange("dividends")}
                   onNavigateToDiversification={() => handleTabChange("diversification")}
+                  onNavigateToNews={() => handleTabChange("news")}
                   onShareReferral={() => setShowReferralModal(true)}
                 />
 

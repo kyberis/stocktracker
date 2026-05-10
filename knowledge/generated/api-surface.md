@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-234 routes.
+235 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -104,7 +104,7 @@
 | `/api/auth/signup` | POST | [`src/app/api/auth/signup/route.ts`](../../src/app/api/auth/signup/route.ts) |
 | `/api/auth/verify-email` | GET, POST | [`src/app/api/auth/verify-email/route.ts`](../../src/app/api/auth/verify-email/route.ts) |
 | `/api/billing/capacity` | GET | [`src/app/api/billing/capacity/route.ts`](../../src/app/api/billing/capacity/route.ts) |
-| `/api/billing/checkout` | POST | [`src/app/api/billing/checkout/route.ts`](../../src/app/api/billing/checkout/route.ts) |
+| `/api/billing/device-checkout` | POST | [`src/app/api/billing/device-checkout/route.ts`](../../src/app/api/billing/device-checkout/route.ts) |
 | `/api/billing/portal` | GET | [`src/app/api/billing/portal/route.ts`](../../src/app/api/billing/portal/route.ts) |
 | `/api/billing/sync` | POST | [`src/app/api/billing/sync/route.ts`](../../src/app/api/billing/sync/route.ts) |
 | `/api/billing/webhook` | POST | [`src/app/api/billing/webhook/route.ts`](../../src/app/api/billing/webhook/route.ts) |
@@ -169,6 +169,7 @@
 | `/api/integrations/telegram/link` | GET, POST, DELETE | [`src/app/api/integrations/telegram/link/route.ts`](../../src/app/api/integrations/telegram/link/route.ts) |
 | `/api/intelligence` | GET | [`src/app/api/intelligence/route.ts`](../../src/app/api/intelligence/route.ts) |
 | `/api/market-insights` | GET | [`src/app/api/market-insights/route.ts`](../../src/app/api/market-insights/route.ts) |
+| `/api/mcp/user/[transport]` | GET, POST, DELETE | [`src/app/api/mcp/user/[transport]/route.ts`](../../src/app/api/mcp/user/[transport]/route.ts) |
 | `/api/membership-grant/activate` | POST | [`src/app/api/membership-grant/activate/route.ts`](../../src/app/api/membership-grant/activate/route.ts) |
 | `/api/metrics` | GET | [`src/app/api/metrics/route.ts`](../../src/app/api/metrics/route.ts) |
 | `/api/moat-reports` | GET, POST | [`src/app/api/moat-reports/route.ts`](../../src/app/api/moat-reports/route.ts) |

@@ -45,7 +45,7 @@ const PortfolioTable = dynamic(() => import("../PortfolioTable"), { ssr: false, 
 const PortfolioGrowthPeriods = dynamic(() => import("../PortfolioGrowthPeriods"), { ssr: false, loading: () => <CardSkeleton /> });
 const PerformanceMetrics = dynamic(() => import("../PerformanceMetrics"), { ssr: false, loading: () => <CardSkeleton /> });
 const MarketAndCash = dynamic(() => import("../MarketAndCash"), { ssr: false, loading: () => <TableSkeleton /> });
-const PortfolioProjection = dynamic(() => import("../PortfolioProjection"), { ssr: false, loading: () => <CardSkeleton h="h-32" /> });
+const PortfolioNewsFeed = dynamic(() => import("../PortfolioNewsFeed"), { ssr: false });
 const GoalCelebration = dynamic(() => import("../GoalCelebration"), { ssr: false });
 
 interface Props {
@@ -56,12 +56,13 @@ interface Props {
   onNavigateToEvents: () => void;
   onNavigateToDividends: () => void;
   onNavigateToDiversification: () => void;
+  onNavigateToNews: () => void;
   onShareReferral: () => void;
 }
 
 // ── Shared sidebar + table sections ──
 
-function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onShareReferral, aiDrawerOpen, setAiDrawerOpen }: {
+function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onNavigateToNews, onShareReferral, aiDrawerOpen, setAiDrawerOpen }: {
   chartBlock: React.ReactNode;
   holdings: Holding[];
   cashEntries: CashEntry[];
@@ -70,6 +71,7 @@ function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onA
   onNavigateToEvents: () => void;
   onNavigateToDividends: () => void;
   onNavigateToDiversification: () => void;
+  onNavigateToNews: () => void;
   onShareReferral: () => void;
   aiDrawerOpen: boolean;
   setAiDrawerOpen: (v: boolean) => void;
@@ -84,7 +86,7 @@ function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onA
           <div className="flex flex-col gap-4 min-w-0">
             <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
             <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
-            <PortfolioProjection holdings={holdings} cashEntries={cashEntries} />
+            <PortfolioNewsFeed variant="compact" maxItems={5} onViewAll={onNavigateToNews} />
             <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
           </div>
           <div className="flex flex-col gap-3">
@@ -110,7 +112,7 @@ function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onA
   );
 }
 
-function CollapsedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onShareReferral, aiDrawerOpen, setAiDrawerOpen, sidebarExtra }: {
+function CollapsedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onNavigateToNews, onShareReferral, aiDrawerOpen, setAiDrawerOpen, sidebarExtra }: {
   chartBlock: React.ReactNode;
   holdings: Holding[];
   cashEntries: CashEntry[];
@@ -119,6 +121,7 @@ function CollapsedLayout({ chartBlock, holdings, cashEntries, allCashEntries, on
   onNavigateToEvents: () => void;
   onNavigateToDividends: () => void;
   onNavigateToDiversification: () => void;
+  onNavigateToNews: () => void;
   onShareReferral: () => void;
   aiDrawerOpen: boolean;
   setAiDrawerOpen: (v: boolean) => void;
@@ -132,7 +135,7 @@ function CollapsedLayout({ chartBlock, holdings, cashEntries, allCashEntries, on
           <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
           <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
           <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
-          <PortfolioProjection holdings={holdings} cashEntries={cashEntries} />
+          <PortfolioNewsFeed variant="compact" maxItems={5} onViewAll={onNavigateToNews} />
           <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
         </div>
         <div className="flex flex-col gap-3">
@@ -161,7 +164,7 @@ function CollapsedLayout({ chartBlock, holdings, cashEntries, allCashEntries, on
 // ── Dashboard with V2 chart ──
 
 function V2Dashboard(props: Props) {
-  const { holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onShareReferral } = props;
+  const { holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onNavigateToNews, onShareReferral } = props;
 
   const home = usePortfolioHomeData({ holdings, cashEntries });
   const {
@@ -238,6 +241,7 @@ function V2Dashboard(props: Props) {
         holdings={holdings} cashEntries={cashEntries} allCashEntries={allCashEntries}
         onAddStock={onAddStock} onNavigateToEvents={onNavigateToEvents}
         onNavigateToDividends={onNavigateToDividends} onNavigateToDiversification={onNavigateToDiversification}
+        onNavigateToNews={onNavigateToNews}
         onShareReferral={onShareReferral} aiDrawerOpen={aiDrawerOpen} setAiDrawerOpen={setAiDrawerOpen}
       />
     );
@@ -249,6 +253,7 @@ function V2Dashboard(props: Props) {
       holdings={holdings} cashEntries={cashEntries} allCashEntries={allCashEntries}
       onAddStock={onAddStock} onNavigateToEvents={onNavigateToEvents}
       onNavigateToDividends={onNavigateToDividends} onNavigateToDiversification={onNavigateToDiversification}
+      onNavigateToNews={onNavigateToNews}
       onShareReferral={onShareReferral} aiDrawerOpen={aiDrawerOpen} setAiDrawerOpen={setAiDrawerOpen}
       sidebarExtra={<StatsGrid holdings={holdings} cashEntries={cashEntries} />}
     />

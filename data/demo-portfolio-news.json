@@ -1,0 +1,24 @@
+[
+  {
+    "title": "Demo Corp reports strong quarterly earnings",
+    "url": "https://example.com/news/demo-earnings",
+    "source": "Demo Wire",
+    "publishedAt": "2026-05-08T14:00:00.000Z",
+    "summary": "Illustration article for the interactive demo — not live market data.",
+    "overallSentiment": "",
+    "overallSentimentScore": 0,
+    "tickerSentiment": [{ "ticker": "ADBE", "relevance": 1, "sentimentScore": 0, "sentimentLabel": "" }],
+    "topics": ["demo"]
+  },
+  {
+    "title": "Global markets mixed as investors weigh rates",
+    "url": "https://example.com/news/demo-macro",
+    "source": "Demo Wire",
+    "publishedAt": "2026-05-07T10:30:00.000Z",
+    "summary": "Second demo headline for portfolio news in /demo.",
+    "overallSentiment": "",
+    "overallSentimentScore": 0,
+    "tickerSentiment": [{ "ticker": "AMZN", "relevance": 1, "sentimentScore": 0, "sentimentLabel": "" }],
+    "topics": ["demo"]
+  }
+]

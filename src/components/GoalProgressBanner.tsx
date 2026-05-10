@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
@@ -16,6 +17,7 @@ interface Props {
 export default function GoalProgressBanner({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
   const { t } = useI18n();
   const track = useTrack();
+  const router = useRouter();
   const {
     holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates,
     activePortfolioCurrency, goal, goals,
@@ -60,7 +62,11 @@ export default function GoalProgressBanner({ holdings: holdingsProp, cashEntries
 
   return (
     <button
-      onClick={() => { track("goal_banner_clicked", { progress: progress.toFixed(0) }); document.getElementById("goal-planner")?.scrollIntoView({ behavior: "smooth" }); }}
+      type="button"
+      onClick={() => {
+        track("goal_banner_clicked", { progress: progress.toFixed(0) });
+        router.push("/tools/projection");
+      }}
       className="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-gradient-to-r from-emerald-50/50 to-amber-50/30 dark:from-emerald-500/5 dark:to-amber-500/5 p-3.5 flex items-center gap-3.5 text-left hover:border-emerald-300 dark:hover:border-emerald-500/40 transition-colors group"
     >
       <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center text-base shrink-0">

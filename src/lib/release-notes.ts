@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.12",
+    date: "2026-05-10",
+    title: "Home portfolio news & goal planner tools tab",
+    titleTranslations: {
+      es: "Noticias de cartera en inicio y planificador en herramientas",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Dashboard home replaces the inline Goal Planner with a compact portfolio news preview (full feed still under News). News is available on the Free plan; headline matches your holdings are highlighted. Stories are stored in the database and merged over time so routine views read from Turso—external news APIs run only on a timed refresh per symbol (configurable via PORTFOLIO_NEWS_SYMBOL_STALE_MS). Intelligence quota is consumed only when a provider fetch runs, not on cache reads.",
+        translations: {
+          es: "La portada sustituye el Planificador de metas por un avance de noticias de cartera (el listado completo sigue en Noticias). Las noticias están en el plan gratuito; se destacan las que coinciden con tus posiciones. Los artículos se guardan en base de datos y se van acumulando; las vistas habituales leen desde Turso y las APIs externas solo se usan al refrescar cada símbolo (PORTFOLIO_NEWS_SYMBOL_STALE_MS). La cuota de intelligence solo se gasta cuando hay llamada al proveedor, no al leer caché.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Goal Planner (growth projection) moved to Tools → Goal Planner at /tools/projection for all plans; goal progress shortcuts open that page.",
+        translations: {
+          es: "El Planificador de metas (proyección) pasa a Herramientas → Planificador de metas en /tools/projection para todos los planes; los accesos rápidos de progreso abren esa página.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.11",
     date: "2026-05-09",
     title: "Unified IdP login bridge & legacy auth removal",

@@ -39,6 +39,9 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `onboarding_checklist` | [`src/lib/db/checklist.ts`](../../src/lib/db/checklist.ts) |
 | `passkeys` | [`src/lib/db/index.ts`](../../src/lib/db/index.ts) |
 | `platform_settings` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `portfolio_news_article_symbols` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `portfolio_news_articles` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `portfolio_news_symbol_fetch_meta` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_scores` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_shares` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_snapshots` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |

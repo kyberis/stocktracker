@@ -37,6 +37,7 @@ const StockScreener = dynamic(() => import("./StockScreener"), { ssr: false });
 const TaxReport = dynamic(() => import("./TaxReport"), { ssr: false });
 const PortfolioSimulator = dynamic(() => import("./PortfolioSimulator"), { ssr: false });
 const FinancialPlanner = dynamic(() => import("./planning/FinancialPlanner"), { ssr: false });
+const PortfolioProjection = dynamic(() => import("./PortfolioProjection"), { ssr: false });
 const PortfolioScorePage = dynamic(() => import("./PortfolioScorePage"), { ssr: false });
 const MoatEvaluationPicker = dynamic(() => import("./MoatEvaluationPicker"), { ssr: false });
 const StrategiesTool = dynamic(() => import("./StrategiesTool"), { ssr: false });
@@ -352,6 +353,7 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
               {activeTab === "screener" && <StockScreener />}
               {activeTab === "tax" && <TaxReport />}
               {activeTab === "simulator" && <PortfolioSimulator />}
+              {activeTab === "projection" && <PortfolioProjection />}
               {activeTab === "planning" && <FinancialPlanner />}
               {activeTab === "score" && <PortfolioScorePage />}
               {activeTab === "evaluation" && <MoatEvaluationPicker />}

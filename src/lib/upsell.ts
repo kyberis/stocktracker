@@ -13,7 +13,6 @@ export type UpsellSurface =
   | "settings_always_on"
   | "alerts_limit"
   | "holdings_limit"
-  | "portfolio_news_locked"
   | "broker_sync_import"
   | "import_holdings_capped"
   | "metrics_locked"
@@ -135,13 +134,6 @@ const UPSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
       "upsellProItemAlphaVantage",
       "upsellProItemAiUnlimited",
     ],
-  },
-  portfolio_news_locked: {
-    subtitleKey: "upsellCompareSubtitleLocked",
-    attemptedActionKey: "upsellAttemptPortfolioNews",
-    feature: "intelligence",
-    freeItems: DEFAULT_FREE_ITEMS,
-    paidItems: DEFAULT_PAID_ITEMS,
   },
   broker_sync_import: {
     subtitleKey: "upsellCompareSubtitleLocked",

@@ -3311,6 +3311,44 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 112,
+    description:
+      "Global portfolio news cache: articles, symbol links, per-symbol fetch metadata",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS portfolio_news_articles (
+          id TEXT PRIMARY KEY,
+          url TEXT NOT NULL UNIQUE,
+          title TEXT NOT NULL DEFAULT '',
+          summary TEXT NOT NULL DEFAULT '',
+          source TEXT NOT NULL DEFAULT '',
+          published_at TEXT NOT NULL DEFAULT '',
+          ingested_at TEXT NOT NULL DEFAULT (datetime('now')),
+          extra_json TEXT NOT NULL DEFAULT '{}'
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_portfolio_news_articles_published ON portfolio_news_articles(published_at DESC)",
+      );
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS portfolio_news_article_symbols (
+          article_id TEXT NOT NULL REFERENCES portfolio_news_articles(id) ON DELETE CASCADE,
+          symbol TEXT NOT NULL,
+          PRIMARY KEY (article_id, symbol)
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_portfolio_news_article_symbols_symbol ON portfolio_news_article_symbols(symbol)",
+      );
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS portfolio_news_symbol_fetch_meta (
+          symbol TEXT PRIMARY KEY,
+          last_fetched_at TEXT NOT NULL DEFAULT ''
+        )
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

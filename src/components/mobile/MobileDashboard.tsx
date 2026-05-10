@@ -75,7 +75,6 @@ const CompactEarningsCard = dynamic(() => import("@/components/dashboard-v2/Comp
 const CompactReferralCard = dynamic(() => import("@/components/dashboard-v2/CompactReferralCard"), { ssr: false });
 const PortfolioGrowthPeriods = dynamic(() => import("@/components/PortfolioGrowthPeriods"), { ssr: false, loading: () => <CardSkeleton /> });
 const PerformanceMetrics = dynamic(() => import("@/components/PerformanceMetrics"), { ssr: false, loading: () => <CardSkeleton /> });
-const PortfolioProjection = dynamic(() => import("@/components/PortfolioProjection"), { ssr: false, loading: () => <CardSkeleton h="h-32" /> });
 const GoalCelebration = dynamic(() => import("@/components/GoalCelebration"), { ssr: false });
 const WarrenTrigger = dynamic(() => import("@/components/warren/WarrenTrigger"), { ssr: false });
 const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
@@ -391,7 +390,7 @@ export default function MobileDashboard() {
 
                 <PortfolioCards holdings={filteredHoldings} />
                 <MarketAndCash holdings={filteredHoldings} cashEntries={cashEntries} />
-                <PortfolioProjection holdings={filteredHoldings} cashEntries={filteredCash} />
+                <PortfolioNewsFeed variant="compact" maxItems={5} onViewAll={() => handleTabChange("news")} />
                 <GoalCelebration holdings={filteredHoldings} cashEntries={filteredCash} />
 
                 <PortfolioScoreCard holdings={filteredHoldings} cashEntries={filteredCash} />

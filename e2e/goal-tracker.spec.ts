@@ -37,6 +37,7 @@ async function getDefaultPortfolioId(request: APIRequestContext): Promise<string
 }
 
 async function scrollToGoalPlanner(page: Page) {
+  await page.goto("/tools/projection");
   const planner = page.locator("#goal-planner");
   await planner.scrollIntoViewIfNeeded();
   await expect(planner).toBeVisible({ timeout: 10_000 });
@@ -370,16 +371,17 @@ test.describe("Goal Tracker", () => {
       await expect(banner).toBeVisible({ timeout: 15_000 });
     });
 
-    test("demo page Goal Planner is pre-filled with demo goal", async ({ page }) => {
+    test("demo page shows compact portfolio news with link to full feed", async ({ page }) => {
       test.setTimeout(45_000);
       await page.goto("/demo");
       await page.waitForLoadState("networkidle");
 
-      const planner = page.locator("#goal-planner");
-      await planner.scrollIntoViewIfNeeded();
-      await expect(planner).toBeVisible({ timeout: 10_000 });
-
-      await expect(page.getByText(/Goal Planner|Planificador de Metas/i).first()).toBeVisible();
+      await expect(page.getByText(/Portfolio News|Noticias del Portafolio/i).first()).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(page.getByRole("button", { name: /View all|Ver todo/i })).toBeVisible({
+        timeout: 10_000,
+      });
     });
   });
 });

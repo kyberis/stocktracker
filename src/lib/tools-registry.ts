@@ -14,6 +14,7 @@ export type ToolTabId =
   | "tax"
   | "simulator"
   | "planning"
+  | "projection"
   | "score"
   | "evaluation"
   | "strategies";
@@ -192,6 +193,17 @@ export const TOOLS_CATALOG: ToolCatalogEntry[] = [
     icon: "M3 3v18h18M19 9l-5 5-4-4-3 3",
     gradient: "from-teal-500 to-emerald-600",
     tierBadge: "pro",
+    hubVisibility: "always",
+    nativeInteractive: false,
+    hubCategory: "planningTax",
+  },
+  {
+    id: "projection",
+    route: { kind: "dynamic" },
+    labelKey: "projectionToolNav",
+    descKey: "toolDescProjection",
+    icon: "M3 3v1.5M3 21v-6m0 0l2.722-.917A4.502 4.502 0 016.382 15H10M3 21l2.722-.917A4.5 4.5 0 016.382 15m6 0a4.5 4.5 0 004.5-4.5V9m0 0a4.5 4.5 0 00-4.5-4.5h-3.75",
+    gradient: "from-emerald-500 to-teal-600",
     hubVisibility: "always",
     nativeInteractive: false,
     hubCategory: "planningTax",

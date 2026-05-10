@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
@@ -13,6 +14,7 @@ interface Props {
 
 export default function GoalPromptCard({ holdings }: Props) {
   const { t } = useI18n();
+  const router = useRouter();
   const { goal, demoMode } = usePortfolio();
   const [dismissed, setDismissed] = useState(true);
 
@@ -26,13 +28,6 @@ export default function GoalPromptCard({ holdings }: Props) {
   const handleDismiss = () => {
     localStorage.setItem(DISMISS_KEY, "1");
     setDismissed(true);
-  };
-
-  const scrollToGoalPlanner = () => {
-    const el = document.getElementById("goal-planner");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
   };
 
   return (
@@ -58,7 +53,8 @@ export default function GoalPromptCard({ holdings }: Props) {
           <div className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-2">{t("goalPromptSubtitle")}</div>
         </div>
         <button
-          onClick={scrollToGoalPlanner}
+          type="button"
+          onClick={() => router.push("/tools/projection")}
           className="shrink-0 px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 transition-colors"
         >
           {t("goalPromptCta")}

@@ -353,17 +353,33 @@ export class FmpMarketDataProvider implements StockDataProvider {
 
   private mapStockNews(raw: Array<Record<string, unknown>>): NewsArticle[] {
     if (!raw || !Array.isArray(raw)) return [];
-    return raw.slice(0, 50).map((item) => ({
-      title: String(item.title ?? ""),
-      url: String(item.url ?? ""),
-      source: String(item.site ?? item.source ?? ""),
-      publishedAt: String(item.publishedDate ?? item.date ?? ""),
-      summary: String(item.text ?? item.description ?? ""),
-      overallSentiment: "",
-      overallSentimentScore: 0,
-      tickerSentiment: [],
-      topics: [],
-    }));
+    return raw.slice(0, 50).map((item) => {
+      const sym = String(item.symbol ?? item.tickers ?? "").trim();
+      const base = sym.includes(",") ? sym.split(",")[0]?.trim() ?? "" : sym;
+      const ticker = base.includes(".") ? base.split(".")[0] ?? base : base;
+      const tickerSentiment =
+        ticker.length > 0 && ticker.length <= 10
+          ? [
+              {
+                ticker: ticker.toUpperCase(),
+                relevance: 1,
+                sentimentScore: 0,
+                sentimentLabel: "",
+              },
+            ]
+          : [];
+      return {
+        title: String(item.title ?? ""),
+        url: String(item.url ?? ""),
+        source: String(item.site ?? item.source ?? ""),
+        publishedAt: String(item.publishedDate ?? item.date ?? ""),
+        summary: String(item.text ?? item.description ?? ""),
+        overallSentiment: "",
+        overallSentimentScore: 0,
+        tickerSentiment,
+        topics: [],
+      };
+    });
   }
 
   async getInsiderTransactions(symbol: string): Promise<InsiderTransaction[]> {

@@ -482,6 +482,14 @@ export {
   removeMoatAutoTicker,
 } from "./moat-auto-tickers";
 
+export {
+  normalizePortfolioNewsSymbol,
+  ingestNewsArticles,
+  listPortfolioNewsForTickers,
+  listSymbolsNeedingProviderFetch,
+  touchSymbolFetchMeta,
+} from "./portfolio-news";
+
 export type { AiLogEntry, AiLogWithUser, InsertAiLogParams, GetAiLogsOptions } from "./ai-logs";
 export {
   insertAiLog,
