@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.25",
+    date: "2026-05-12",
+    title: "IdP session cache hygiene",
+    titleTranslations: {
+      es: "Higiene de caché de sesión del IdP",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Identity service sends Cache-Control: no-store on /agents, /account, /admin, /sign-in, /oauth2, and /api/account to reduce stale UI versus cookies; restores RSC on bfcache via pageshow; ops Telegram panel explains when the browser omits idp_session.",
+        translations: {
+          es: "El servicio de identidad envía Cache-Control: no-store en /agents, /account, /admin, /sign-in, /oauth2 y /api/account para reducir UI obsoleta respecto a las cookies; revalida RSC al salir del bfcache vía pageshow; el panel ops Telegram explica si el navegador no envía idp_session.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.24",
     date: "2026-05-11",
     title: "IdP ops Telegram Cookie header",
