@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.24",
+    date: "2026-05-11",
+    title: "IdP ops Telegram Cookie header",
+    titleTranslations: {
+      es: "Cabecera Cookie ops Telegram en el IdP",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Ops Telegram session resolution also parses the raw `Cookie` header (and `headers().get('cookie')`) so `idp_session` is found when Next.js cookie helpers drop it on POST.",
+        translations: {
+          es: "La resolución de sesión ops Telegram también analiza la cabecera Cookie en bruto (y headers().get('cookie')) para encontrar idp_session cuando los helpers de cookies de Next.js lo omiten en POST.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.23",
     date: "2026-05-11",
     title: "IdP ops Telegram cookie merge",
