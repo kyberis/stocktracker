@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.22",
+    date: "2026-05-11",
+    title: "IdP ops Telegram API session",
+    titleTranslations: {
+      es: "Sesión en la API ops Telegram del IdP",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "POST /api/account/ops-telegram/* on the identity service now reads IdP session cookies from the incoming request (fixes 401 when generating the ops bot link). Bare GET returns 405 with a short hint instead of looking like an auth failure.",
+        translations: {
+          es: "POST /api/account/ops-telegram/* en el servicio de identidad lee ahora las cookies de sesión del IdP desde la petición entrante (corrige el 401 al generar el enlace del bot ops). Un GET directo devuelve 405 con una pista breve.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.21",
     date: "2026-05-11",
     title: "IdP Google callback redirect",
