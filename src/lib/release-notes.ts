@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.20",
+    date: "2026-05-11",
+    title: "IdP Google on host",
+    titleTranslations: {
+      es: "Google en el host del IdP",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The identity service highlights “Continue with Google” on user.trefolio.com /agents and /sign-in so Google-only accounts can set idp_session via /api/auth/google/start without relying on a product redirect first.",
+        translations: {
+          es: "El servicio de identidad destaca «Continuar con Google» en /agents y /sign-in de user.trefolio.com para que cuentas solo Google puedan establecer idp_session con /api/auth/google/start sin depender antes de un redirect del producto.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.19",
     date: "2026-05-11",
     title: "IdP first-party sign-in",
