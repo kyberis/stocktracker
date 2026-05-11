@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.26",
+    date: "2026-05-12",
+    title: "IdP impersonation session pairing",
+    titleTranslations: {
+      es: "Emparejamiento de sesión con suplantación en el IdP",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "The identity service no longer treats `idp_impersonator` alone as a logged-in operator: `/agents` and ops-Telegram APIs now require a valid `idp_session` (victim) whenever impersonation is stamped, matching the impersonation banner and preventing operator UI without a session cookie.",
+        translations: {
+          es: "El servicio de identidad ya no trata solo idp_impersonator como operador con sesión: /agents y las APIs ops-Telegram exigen un idp_session (víctima) válido si hay suplantación, alineado con el banner y evitando la UI de operador sin cookie de sesión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.25",
     date: "2026-05-12",
     title: "IdP session cache hygiene",
