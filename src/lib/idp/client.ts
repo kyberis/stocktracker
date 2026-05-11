@@ -13,7 +13,13 @@ class IdpClientError extends Error {
 }
 
 /** Bound IdP S2S calls so a slow or hung IdP never blocks the caller indefinitely. */
-const IDP_FETCH_TIMEOUT_MS = 12_000;
+const IDP_FETCH_TIMEOUT_MS = 20_000;
+
+function isLikelyFetchTimeout(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const name = (err as { name?: string }).name;
+  return name === "TimeoutError" || name === "AbortError";
+}
 
 async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   const base = getIdpBaseUrl();
@@ -22,28 +28,44 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!token) throw new Error("IDP_SERVICE_TOKEN is not configured");
 
   const { signal: _callerSignal, ...rest } = init;
+  const method = (init.method ?? "GET").toUpperCase();
+  /** POST timeouts may still have reached the IdP — avoid duplicate side effects. */
+  const retryOnTimeout = method === "GET";
 
-  const res = await fetch(`${base}${path}`, {
-    ...rest,
-    signal: AbortSignal.timeout(IDP_FETCH_TIMEOUT_MS),
-    headers: {
-      ...(init.headers ?? {}),
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    let body: unknown = null;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      body = await res.json();
-    } catch {
-      // ignore
+      const res = await fetch(`${base}${path}`, {
+        ...rest,
+        signal: AbortSignal.timeout(IDP_FETCH_TIMEOUT_MS),
+        headers: {
+          ...(init.headers ?? {}),
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        let body: unknown = null;
+        try {
+          body = await res.json();
+        } catch {
+          // ignore
+        }
+        throw new IdpClientError(`IdP ${init.method ?? "GET"} ${path} failed (${res.status})`, res.status, body);
+      }
+      return (await res.json()) as T;
+    } catch (err) {
+      lastErr = err;
+      if (attempt === 0 && retryOnTimeout && isLikelyFetchTimeout(err)) {
+        await new Promise((r) => setTimeout(r, 400));
+        continue;
+      }
+      throw err;
     }
-    throw new IdpClientError(`IdP ${init.method ?? "GET"} ${path} failed (${res.status})`, res.status, body);
   }
-  return (await res.json()) as T;
+  throw lastErr;
 }
 
 /* ── Entitlements ────────────────────────────────────────────────────── */

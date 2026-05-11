@@ -16,7 +16,6 @@ import { getAllFeatureQuotas } from "@/lib/feature-quotas";
 import { planExpiredNotification } from "@/lib/notification-templates";
 import { withMetrics } from "@/lib/with-metrics";
 import { syncEntitlementsForUser } from "@/lib/idp/entitlements";
-import { syncProfileFieldsFromIdp } from "@/lib/idp/profile-sync";
 import { isIdpEnabled, legacyAuthEnabled, resolveIdpAccountHref } from "@/lib/idp/config";
 import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { ensureTrefolioAdminRoleForUser } from "@/lib/auth/admin-allowlist";
@@ -42,22 +41,16 @@ function lazyDowngrade(userId: string): void {
 }
 
 /**
- * Fire-and-forget: pull the latest entitlements from the IdP and write them to
- * the local users.plan / plan_expires_at columns. This is what makes a Pro
- * upgrade purchased on Clara or Will visible in trefolio without waiting for
- * the user's next OIDC sign-in. No-op when the IdP is not configured.
+ * Fire-and-forget: pull the latest IdP entitlement payload once and mirror
+ * plan (`users.plan` / `plan_expires_at`) plus canonical profile fields locally.
+ * This is what makes a Pro upgrade purchased on Clara or Will visible in
+ * trefolio without waiting for the user's next OIDC sign-in. No-op when the
+ * IdP is not configured.
  */
 function lazyIdpEntitlementSync(userId: string): void {
   if (!isIdpEnabled()) return;
   syncEntitlementsForUser(userId).catch((err) =>
     console.error("[auth/me] IdP entitlement sync failed:", err instanceof Error ? err.message : err),
-  );
-}
-
-function lazyIdpProfileSync(userId: string): void {
-  if (!isIdpEnabled()) return;
-  syncProfileFieldsFromIdp(userId).catch((err) =>
-    console.error("[auth/me] IdP profile sync failed:", err instanceof Error ? err.message : err),
   );
 }
 
@@ -86,10 +79,9 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
     lazyDowngrade(user.id);
   }
 
-  // Pull fresh entitlements + profile from the IdP (no-op if not configured / user not linked).
+  // Pull fresh entitlements + profile from the IdP in one REST round-trip (no-op if not configured / user not linked).
   if (user) {
     lazyIdpEntitlementSync(user.id);
-    lazyIdpProfileSync(user.id);
   }
 
   // Expose all per-feature quota usage so the UI can render "X / Y" badges

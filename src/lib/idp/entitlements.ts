@@ -1,5 +1,5 @@
 import { ensureInitialized } from "@/lib/db/client";
-import { findUserById } from "@/lib/db/users";
+import { findUserById, updateUserProfile } from "@/lib/db/users";
 import type { UserPlan } from "@/lib/db/helpers";
 import { fetchEntitlementsBySub, type IdpEntitlementResponse } from "./client";
 import { isIdpEnabled } from "./config";
@@ -17,8 +17,8 @@ import { isIdpEnabled } from "./config";
 
 /**
  * Pull the latest entitlements from the IdP and write them to the local
- * `users` row. Idempotent. Safe to call on every session refresh; Postgres
- * round-trip is cheap.
+ * `users` row (plan cache plus canonical profile fields from the IdP payload).
+ * Uses one REST round-trip. Idempotent. Safe to call on every session refresh.
  *
  * Returns the resolved plan or null if the IdP is not configured / the user
  * has no idp_sub yet.
@@ -40,28 +40,44 @@ export async function syncEntitlementsForUser(userId: string): Promise<UserPlan 
   const nextPlan: UserPlan = payload.entitlements.trefolio_pro ? "pro" : "free";
   const nextExpiresAt = payload.proUntil ?? "";
 
-  if (user.plan === nextPlan && user.plan_expires_at === nextExpiresAt) {
-    return nextPlan; // no change
+  if (user.plan !== nextPlan || user.plan_expires_at !== nextExpiresAt) {
+    const client = await ensureInitialized();
+    await client.execute({
+      sql: "UPDATE users SET plan = ?, plan_expires_at = ? WHERE id = ?",
+      args: [nextPlan, nextExpiresAt, userId],
+    });
+    console.log(
+      JSON.stringify({
+        kind: "trefolio.entitlements.synced",
+        app: "trefolio",
+        userId,
+        idpSub: user.idp_sub,
+        from: { plan: user.plan, expiresAt: user.plan_expires_at },
+        to: { plan: nextPlan, expiresAt: nextExpiresAt },
+        ts: new Date().toISOString(),
+      }),
+    );
   }
 
-  const client = await ensureInitialized();
-  await client.execute({
-    sql: "UPDATE users SET plan = ?, plan_expires_at = ? WHERE id = ?",
-    args: [nextPlan, nextExpiresAt, userId],
-  });
-  // Cross-app observability: a single line per plan change keyed by idp_sub
-  // so trefolio / Clara / Will can be correlated in log search.
-  console.log(
-    JSON.stringify({
-      kind: "trefolio.entitlements.synced",
-      app: "trefolio",
-      userId,
-      idpSub: user.idp_sub,
-      from: { plan: user.plan, expiresAt: user.plan_expires_at },
-      to: { plan: nextPlan, expiresAt: nextExpiresAt },
-      ts: new Date().toISOString(),
-    }),
-  );
+  const p = payload.profile;
+  if (p) {
+    const patch: Partial<{ displayName: string; avatarUrl: string; taxResidency: string }> = {};
+    if (p.name !== undefined && p.name !== user.display_name) {
+      patch.displayName = p.name;
+    }
+    const pic = p.picture ?? "";
+    if (pic !== (user.avatar_url ?? "")) {
+      patch.avatarUrl = pic;
+    }
+    const tax = p.taxResidency ?? "";
+    if (tax !== (user.tax_residency ?? "")) {
+      patch.taxResidency = tax;
+    }
+    if (Object.keys(patch).length > 0) {
+      await updateUserProfile(userId, patch);
+    }
+  }
+
   return nextPlan;
 }
 

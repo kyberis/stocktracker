@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.17",
+    date: "2026-05-11",
+    title: "IdP sync reliability",
+    titleTranslations: {
+      es: "Fiabilidad de sincronización con el IdP",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Unified IdP entitlement and profile mirror into a single `/v1/entitlements` fetch on session refresh (was two parallel calls). Increased IdP S2S timeout to 20s and retry once on transient timeouts.",
+        translations: {
+          es: "La sincronización de derechos y perfil con el IdP usa una sola petición a `/v1/entitlements` al refrescar la sesión (antes eran dos en paralelo). Tiempo máximo de espera del cliente S2S al IdP aumentado a 20s y un reintento ante timeouts transitorios.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.16",
     date: "2026-05-11",
     title: "Warren Screener",
