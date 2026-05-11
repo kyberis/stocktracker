@@ -153,6 +153,22 @@ list token / userinfo / jwks on loopback so clients keep using HTTP to
 IDP_SERVER_ORIGIN=http://127.0.0.1:3300
 ```
 
+**RS256 keypair (required for `/oauth2/token`):** Local ID tokens are signed with RSA keys. Without them, `POST /oauth2/token` returns **500** after a successful authorize (trefolio shows “Could not exchange authorization code”). Either:
+
+- Add **`external/accounts/idp-private.pem`** and **`idp-public.pem`** (gitignored), or  
+- Set **`IDP_PRIVATE_KEY_PEM`** and **`IDP_PUBLIC_KEY_PEM`** in `.env.local` (full PEM text).
+
+Generate the default files once:
+
+```bash
+cd external/accounts
+openssl genrsa -out idp-private.pem 2048
+openssl rsa -in idp-private.pem -pubout -out idp-public.pem
+chmod 600 idp-private.pem
+```
+
+Then restart **`npm run dev:accounts`** (or `dev:unified`).
+
 When something requests `/.well-known/openid-configuration` **through** Caddy,
 forwarded headers are present and metadata uses HTTPS for every endpoint (same
 origin as `IDP_ISSUER`).
