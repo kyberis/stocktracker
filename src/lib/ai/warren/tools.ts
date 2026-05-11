@@ -17,6 +17,12 @@ import type {
   SummaryCardData,
 } from "@/components/chat-cards/types";
 import { searchKnowledge } from "./knowledge";
+import { rankPortfolioNewsForTickers } from "@/lib/portfolio-news-rank";
+import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
+import {
+  listPortfolioNewsForTickers,
+  normalizePortfolioNewsSymbol,
+} from "@/lib/db/portfolio-news";
 
 export interface PortfolioSnapshot {
   baseCurrency: string;
@@ -145,6 +151,66 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
       execute: async () => {
         ctx.emitStep("Reading watchlist…");
         return dbListWatchlist(ctx.userId);
+      },
+    }),
+
+    getHoldingsNews: tool({
+      description:
+        "Load recent news headlines linked to the user's portfolio holdings (same stored feed as Portfolio News in the app). Use when the user asks about news, headlines, what's happening with their stocks, sector stories, or press coverage tied to their positions. Returns titles, sources, dates, short excerpts, and related tickers. After calling, reply with 2-4 short bullet points summarizing themes (not individual article dumps unless asked). Neutral tone; no buy/sell recommendations.",
+      inputSchema: z.object({
+        maxArticles: z
+          .number()
+          .int()
+          .min(5)
+          .max(25)
+          .optional()
+          .describe("Maximum headlines to return (default 15)."),
+      }),
+      execute: async ({ maxArticles }) => {
+        ctx.emitStep("Loading portfolio news…");
+        if (ctx.isDemo) {
+          return {
+            articles: [] as const,
+            note: "Demo mode has no live portfolio news cache.",
+          };
+        }
+        const holdings = await dbListHoldings(ctx.userId, ctx.activePortfolioId);
+        const tickers = derivePortfolioNewsTickersFromHoldings(holdings);
+        if (tickers.length === 0) {
+          return {
+            articles: [] as const,
+            note:
+              holdings.length === 0
+                ? "No holdings in this portfolio — add positions to see related news."
+                : "No suitable equity tickers for news matching (e.g. unsupported symbols).",
+          };
+        }
+        const norm = tickers.map(normalizePortfolioNewsSymbol);
+        const fromDb = await listPortfolioNewsForTickers(norm, 500);
+        const ranked = rankPortfolioNewsForTickers(fromDb, tickers);
+        const limit = maxArticles ?? 15;
+        const slice = ranked.slice(0, limit);
+        if (slice.length === 0) {
+          return {
+            articles: [] as const,
+            coverageTickers: tickers,
+            note:
+              "No cached headlines yet for these symbols. Opening Portfolio News in the app once refreshes the feed when data providers are configured.",
+          };
+        }
+        return {
+          articles: slice.map((a) => ({
+            title: a.title,
+            source: a.source,
+            publishedAt: a.publishedAt,
+            excerpt: (a.summary || "").slice(0, 400),
+            tickers: [...new Set(a.tickerSentiment.map((t) => t.ticker))].slice(0, 10),
+            sentiment: a.overallSentiment || undefined,
+          })),
+          coverageTickers: tickers,
+          replyHint:
+            "Summarize in 2-4 bullet points in the user's language: main themes tied to their holdings; mention tickers only when helpful; not investment advice.",
+        };
       },
     }),
 

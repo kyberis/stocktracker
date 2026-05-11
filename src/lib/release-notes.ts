@@ -33,6 +33,13 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "feature",
+        text: "Warren (web + Telegram) can call `getHoldingsNews` to read the same cached portfolio-linked headlines as the app, then answers with a short 2-4 bullet digest (system prompt updated).",
+        translations: {
+          es: "Warren (web y Telegram) puede usar `getHoldingsNews` para leer los mismos titulares de cartera en caché que la app y responde con un breve resumen de 2-4 viñetas (instrucciones del sistema actualizadas).",
+        },
+      },
+      {
+        type: "feature",
         text: "Dashboard home replaces the inline Goal Planner with a compact portfolio news preview (full feed still under News). News is available on the Free plan; headline matches your holdings are highlighted. Stories are stored in the database and merged over time so routine views read from Turso—external news APIs run only on a timed refresh per symbol (configurable via PORTFOLIO_NEWS_SYMBOL_STALE_MS). Intelligence quota is consumed only when a provider fetch runs, not on cache reads.",
         translations: {
           es: "La portada sustituye el Planificador de metas por un avance de noticias de cartera (el listado completo sigue en Noticias). Las noticias están en el plan gratuito; se destacan las que coinciden con tus posiciones. Los artículos se guardan en base de datos y se van acumulando; las vistas habituales leen desde Turso y las APIs externas solo se usan al refrescar cada símbolo (PORTFOLIO_NEWS_SYMBOL_STALE_MS). La cuota de intelligence solo se gasta cuando hay llamada al proveedor, no al leer caché.",

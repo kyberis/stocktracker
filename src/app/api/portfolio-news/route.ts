@@ -13,6 +13,7 @@ import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { getPremiumMarketDataFromRequest } from "@/lib/market-data/resolve-provider";
 import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import { rankPortfolioNewsForTickers } from "@/lib/portfolio-news-rank";
+import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { withMetrics } from "@/lib/with-metrics";
 import { deferTask } from "@/lib/task-runner";
 import type { NewsArticle } from "@/lib/types";
@@ -21,18 +22,6 @@ export const dynamic = "force-dynamic";
 
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY ?? "";
 const DEFAULT_STALE_MS = 6 * 3600 * 1000;
-
-function deriveTickers(holdings: { ticker: string; valueInEUR?: number | null }[]): string[] {
-  const ISIN_RE = /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/;
-  const VALID_TICKER = /^[A-Za-z0-9:_-]+$/;
-
-  return holdings
-    .sort((a, b) => (b.valueInEUR ?? 0) - (a.valueInEUR ?? 0))
-    .map((h) => (h.ticker.includes(".") ? h.ticker.split(".")[0]! : h.ticker))
-    .filter((t) => t.length > 0 && t.length <= 10 && !ISIN_RE.test(t) && VALID_TICKER.test(t))
-    .filter((t, i, arr) => arr.indexOf(t) === i)
-    .slice(0, 10);
-}
 
 export const GET = withMetrics("/api/portfolio-news", async (request: NextRequest) => {
   const { session, error } = await requireSession(request);
@@ -46,7 +35,7 @@ export const GET = withMetrics("/api/portfolio-news", async (request: NextReques
     return Response.json([]);
   }
 
-  const tickers = deriveTickers(holdings);
+  const tickers = derivePortfolioNewsTickersFromHoldings(holdings);
   if (tickers.length === 0) {
     return Response.json([]);
   }
