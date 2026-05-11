@@ -1388,6 +1388,14 @@ const de: TranslationStrings = {
   portfolioNewsViewAll: "Alle anzeigen",
   portfolioNewsQuotaExceeded:
     "Monatliches Intelligence-Kontingent erreicht. Upgraden Sie oder versuchen Sie es nach dem Zurücksetzen erneut.",
+  newsAiSummarizeCta: "KI-Zusammenfassung",
+  newsAiSummaryModalTitle: "KI-Zusammenfassung",
+  newsAiSummaryLoading: "Zusammenfassung wird erstellt…",
+  newsAiSummaryError: "Zusammenfassung konnte nicht erstellt werden. Bitte später erneut versuchen.",
+  newsAiSummaryQuotaHint:
+    "Monatliches Limit für KI-Zusammenfassungen erreicht. Nach Zurücksetzen erneut versuchen oder upgraden.",
+  newsAiSummaryDisclaimer:
+    "KI-generiert aus Überschrift und Auszug; kann Details des vollständigen Artikels auslassen. Keine Anlageberatung.",
   upsellAttemptPortfolioNews: "Nachrichten und Stimmung Ihrer Aktien anzeigen.",
   filterByBroker: "Filtern",
   allBrokers: "Alle",

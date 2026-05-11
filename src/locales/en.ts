@@ -1387,6 +1387,13 @@ const en: TranslationStrings = {
   portfolioNewsHoldingBadge: "Your holdings",
   portfolioNewsViewAll: "View all",
   portfolioNewsQuotaExceeded: "Monthly intelligence quota reached. Upgrade or try again after reset.",
+  newsAiSummarizeCta: "AI summary",
+  newsAiSummaryModalTitle: "AI summary",
+  newsAiSummaryLoading: "Generating summary…",
+  newsAiSummaryError: "Could not generate a summary. Try again later.",
+  newsAiSummaryQuotaHint: "Monthly limit reached for AI summaries. Try again after reset or upgrade.",
+  newsAiSummaryDisclaimer:
+    "AI-generated from headline and excerpt only. May miss details from the full article. Not investment advice.",
   upsellAttemptPortfolioNews: "View news and sentiment for your portfolio stocks.",
   filterByBroker: "Filter",
   allBrokers: "All",

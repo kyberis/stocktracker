@@ -29,6 +29,7 @@ export const AI_FLOW_KEYS = [
   "weekly_digest_admin",
   "digest_email",
   "digest_x_post",
+  "news_article_summary",
 ] as const;
 
 export type AiFlowKey = (typeof AI_FLOW_KEYS)[number];
@@ -115,6 +116,12 @@ export const AI_FLOW_META: Record<AiFlowKey, AiFlowMeta> = {
     description: "Generate a tweet-sized X.com post from a published market digest",
     maxTokens: 150,
     temperature: 0.5,
+  },
+  news_article_summary: {
+    label: "Portfolio news article summary",
+    description: "Short neutral summary of a news headline and snippet for Pro users",
+    maxTokens: 450,
+    temperature: 0.25,
   },
 };
 

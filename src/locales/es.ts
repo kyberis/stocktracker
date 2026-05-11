@@ -1389,6 +1389,13 @@ const es: TranslationStrings = {
   portfolioNewsHoldingBadge: "En tu cartera",
   portfolioNewsViewAll: "Ver todo",
   portfolioNewsQuotaExceeded: "Has alcanzado la cuota mensual de inteligencia. Mejora tu plan o vuelve a intentarlo tras el reinicio.",
+  newsAiSummarizeCta: "Resumen IA",
+  newsAiSummaryModalTitle: "Resumen IA",
+  newsAiSummaryLoading: "Generando resumen…",
+  newsAiSummaryError: "No se pudo generar el resumen. Inténtalo más tarde.",
+  newsAiSummaryQuotaHint: "Límite mensual de resúmenes IA alcanzado. Vuelve tras el reinicio o mejora tu plan.",
+  newsAiSummaryDisclaimer:
+    "Generado por IA a partir del titular y extracto; puede omitir detalles del artículo completo. No es asesoramiento de inversión.",
   upsellAttemptPortfolioNews: "Ver noticias y sentimiento de las acciones de tu portafolio.",
   filterByBroker: "Filtrar",
   allBrokers: "Todos",

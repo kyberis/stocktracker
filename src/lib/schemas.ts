@@ -643,3 +643,12 @@ export const chartChatRequestSchema = z.object({
     }),
   }),
 });
+
+export const newsArticleSummarySchema = z.object({
+  title: z.string().min(1).max(500),
+  summary: z.string().max(8000).optional().default(""),
+  source: z.string().max(200).optional().default(""),
+  url: z.string().url().max(4000),
+  publishedAt: z.string().max(80).optional(),
+  language: z.string().max(12).optional(),
+});

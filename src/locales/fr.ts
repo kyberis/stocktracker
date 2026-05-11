@@ -1388,6 +1388,14 @@ const fr: TranslationStrings = {
   portfolioNewsViewAll: "Tout voir",
   portfolioNewsQuotaExceeded:
     "Quota mensuel d'intelligence atteint. Passez à une offre supérieure ou réessayez après la réinitialisation.",
+  newsAiSummarizeCta: "Résumé IA",
+  newsAiSummaryModalTitle: "Résumé IA",
+  newsAiSummaryLoading: "Génération du résumé…",
+  newsAiSummaryError: "Impossible de générer le résumé. Réessayez plus tard.",
+  newsAiSummaryQuotaHint:
+    "Limite mensuelle de résumés IA atteinte. Réessayez après la réinitialisation ou passez à une offre supérieure.",
+  newsAiSummaryDisclaimer:
+    "Généré par IA à partir du titre et de l'extrait ; peut omettre des détails de l'article complet. Pas un conseil en investissement.",
   upsellAttemptPortfolioNews: "Voir les actualités et le sentiment de vos actions.",
   filterByBroker: "Filtre",
   allBrokers: "Tous",

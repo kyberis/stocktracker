@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
+        text: "Pro: each portfolio news card has an “AI summary” action that sends the headline and feed excerpt to the AI for a short neutral summary (full article is not fetched). Free users see the same control as an upgrade link to billing. Uses the monthly `news_ai_summary` quota (Free tier limit is 0).",
+        translations: {
+          es: "Pro: cada noticia de cartera incluye la acción «Resumen IA», que envía titular y extracto del feed a la IA para un breve resumen neutral (no se descarga el artículo completo). En plan gratuito el mismo control enlaza a facturación. Usa la cuota mensual `news_ai_summary` (el límite en gratuito es 0).",
+        },
+      },
+      {
+        type: "feature",
         text: "Dashboard home replaces the inline Goal Planner with a compact portfolio news preview (full feed still under News). News is available on the Free plan; headline matches your holdings are highlighted. Stories are stored in the database and merged over time so routine views read from Turso—external news APIs run only on a timed refresh per symbol (configurable via PORTFOLIO_NEWS_SYMBOL_STALE_MS). Intelligence quota is consumed only when a provider fetch runs, not on cache reads.",
         translations: {
           es: "La portada sustituye el Planificador de metas por un avance de noticias de cartera (el listado completo sigue en Noticias). Las noticias están en el plan gratuito; se destacan las que coinciden con tus posiciones. Los artículos se guardan en base de datos y se van acumulando; las vistas habituales leen desde Turso y las APIs externas solo se usan al refrescar cada símbolo (PORTFOLIO_NEWS_SYMBOL_STALE_MS). La cuota de intelligence solo se gasta cuando hay llamada al proveedor, no al leer caché.",

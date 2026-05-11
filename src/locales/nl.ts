@@ -1387,6 +1387,14 @@ const nl: TranslationStrings = {
   portfolioNewsViewAll: "Alles bekijken",
   portfolioNewsQuotaExceeded:
     "Maandelijks intelligencequotum bereikt. Upgrade of probeer het opnieuw na de reset.",
+  newsAiSummarizeCta: "AI-samenvatting",
+  newsAiSummaryModalTitle: "AI-samenvatting",
+  newsAiSummaryLoading: "Samenvatting wordt gegenereerd…",
+  newsAiSummaryError: "Kon geen samenvatting genereren. Probeer het later opnieuw.",
+  newsAiSummaryQuotaHint:
+    "Maandelijks limiet voor AI-samenvattingen bereikt. Probeer na reset opnieuw of upgrade.",
+  newsAiSummaryDisclaimer:
+    "Door AI gegenereerd op basis van kop en fragment; kan details uit het volledige artikel missen. Geen beleggingsadvies.",
   upsellAttemptPortfolioNews: "Bekijk nieuws en sentiment voor uw portefeuille-aandelen.",
   filterByBroker: "Filter",
   allBrokers: "Alle",

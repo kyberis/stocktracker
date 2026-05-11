@@ -108,6 +108,8 @@ export type FeatureQuotaKey =
   | "ai_portfolio_review"
   | "ai_import"
   | "support_chat"
+  /** Short AI summaries of portfolio news headlines (Pro-only via quota: free tier limit is 0). */
+  | "news_ai_summary"
   // Premium market-data features (FMP / AV / Finnhub cost)
   | "fundamentals"
   | "etf_holdings"
@@ -143,6 +145,7 @@ export const FEATURE_QUOTAS: Record<FeatureQuotaKey, FeatureQuotaConfig> = {
   ai_portfolio_review: { free: 1, pro: 15, window: "month", label: "AI portfolio reviews" },
   ai_import: { free: 3, pro: 20, window: "day", label: "AI imports" },
   support_chat: { free: 5, pro: 50, window: "day", label: "Support chat messages" },
+  news_ai_summary: { free: 0, pro: 200, window: "month", label: "AI news summaries" },
 
   // ── Premium market-data features ──────────────────────────
   fundamentals: { free: 20, pro: 500, window: "month", label: "Fundamentals lookups" },
