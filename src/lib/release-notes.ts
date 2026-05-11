@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.18",
+    date: "2026-05-11",
+    title: "IdP home sign-in",
+    titleTranslations: {
+      es: "Inicio de sesión en la home del IdP",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The identity service home page (user.trefolio.com) now shows a primary “Sign in” button that opens trefolio’s /login with your chosen UI language, so you can start authentication without guessing which app to open first.",
+        translations: {
+          es: "La página principal del servicio de identidad (user.trefolio.com) muestra un botón principal «Iniciar sesión» que abre /login en trefolio con el idioma de interfaz elegido, para poder empezar la autenticación sin adivinar qué app abrir primero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.17",
     date: "2026-05-11",
     title: "IdP sync reliability",
