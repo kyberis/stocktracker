@@ -86,7 +86,7 @@ function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onA
           <div className="flex flex-col gap-4 min-w-0">
             <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
             <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
-            <PortfolioNewsFeed variant="compact" maxItems={5} onViewAll={onNavigateToNews} />
+            <PortfolioNewsFeed variant="compact" maxItems={10} onViewAll={onNavigateToNews} />
             <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
           </div>
           <div className="flex flex-col gap-3">
@@ -135,7 +135,7 @@ function CollapsedLayout({ chartBlock, holdings, cashEntries, allCashEntries, on
           <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
           <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
           <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
-          <PortfolioNewsFeed variant="compact" maxItems={5} onViewAll={onNavigateToNews} />
+          <PortfolioNewsFeed variant="compact" maxItems={10} onViewAll={onNavigateToNews} />
           <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
         </div>
         <div className="flex flex-col gap-3">

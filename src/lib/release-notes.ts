@@ -33,6 +33,13 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "improvement",
+        text: "Dashboard home compact news preview shows 10 headlines (was 5) before View all.",
+        translations: {
+          es: "El avance de noticias en la portada muestra 10 titulares (antes 5) antes de Ver todo.",
+        },
+      },
+      {
+        type: "improvement",
         text: "Goal Planner (growth projection) moved to Tools → Goal Planner at /tools/projection for all plans; goal progress shortcuts open that page.",
         translations: {
           es: "El Planificador de metas (proyección) pasa a Herramientas → Planificador de metas en /tools/projection para todos los planes; los accesos rápidos de progreso abren esa página.",

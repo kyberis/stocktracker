@@ -390,7 +390,7 @@ export default function MobileDashboard() {
 
                 <PortfolioCards holdings={filteredHoldings} />
                 <MarketAndCash holdings={filteredHoldings} cashEntries={cashEntries} />
-                <PortfolioNewsFeed variant="compact" maxItems={5} onViewAll={() => handleTabChange("news")} />
+                <PortfolioNewsFeed variant="compact" maxItems={10} onViewAll={() => handleTabChange("news")} />
                 <GoalCelebration holdings={filteredHoldings} cashEntries={filteredCash} />
 
                 <PortfolioScoreCard holdings={filteredHoldings} cashEntries={filteredCash} />
