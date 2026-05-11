@@ -1071,6 +1071,8 @@ const pt: TranslationStrings = {
   toolDescScreener: "Filtrar & descobrir ações",
   toolDescTax: "Mais-valias & lotes fiscais",
   toolDescSimulator: "Cenários hipotéticos",
+  toolDescProjection:
+    "Projeção de crescimento e meta de poupança num gráfico interativo",
   toolDescPlanning: "Objetivos financeiros & projeções",
   toolDescScore: "Verificação de saúde & recomendações",
   toolDescEvaluation: "Análise de fosso ao estilo Buffett",
@@ -1080,6 +1082,7 @@ const pt: TranslationStrings = {
   toolsSectionTrefolio: "Trefolio",
   toolsSectionUpgrade: "Atualizar",
   planningToolNav: "Planeamento",
+  projectionToolNav: "Planeador de metas",
   toolsHubCategoryPortfolioActivity: "Atividade do portfólio",
   toolsHubCategoryAnalysis: "Análise & listas de observação",
   toolsHubCategoryPlanningTax: "Planeamento & impostos",
@@ -1381,6 +1384,10 @@ const pt: TranslationStrings = {
   noPortfolioNewsTitle: "Sem notícias ainda",
   emptyStateAddStock: "Adicione a sua primeira ação",
   portfolioNewsDisclaimer: "Notícias fornecidas apenas para fins informativos, não aconselhamento de investimento.",
+  portfolioNewsHoldingBadge: "Na sua carteira",
+  portfolioNewsViewAll: "Ver tudo",
+  portfolioNewsQuotaExceeded:
+    "Quota mensal de inteligência atingida. Faça upgrade ou tente novamente após o reinício.",
   upsellAttemptPortfolioNews: "Ver notícias e sentimento das suas ações.",
   filterByBroker: "Filtro",
   allBrokers: "Todos",

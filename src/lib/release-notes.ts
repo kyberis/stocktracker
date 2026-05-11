@@ -59,6 +59,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Las noticias de cartera en inicio se vuelven a cargar cuando cambian los tickers de tus posiciones (y se cancelan peticiones en curso); un resultado vacío anterior ya no bloquea todas las cargas posteriores.",
         },
       },
+      {
+        type: "fix",
+        text: "Add missing Goal Planner and portfolio news UI strings for French, German, Portuguese, and Dutch so locale parity tests pass.",
+        translations: {
+          es: "Añade las cadenas faltantes del Planificador de metas y de las noticias de cartera en francés, alemán, portugués y neerlandés para que pasen las pruebas de paridad de idiomas.",
+        },
+      },
     ],
   },
   {

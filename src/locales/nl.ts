@@ -1070,6 +1070,8 @@ const nl: TranslationStrings = {
   toolDescScreener: "Filter & ontdek aandelen",
   toolDescTax: "Kapitaalwinst & belastinglots",
   toolDescSimulator: "Wat-als scenario's",
+  toolDescProjection:
+    "Groei-projectie en spaardoel op een interactieve grafiek",
   toolDescPlanning: "Financiële doelen & projecties",
   toolDescScore: "Gezondheidscheck & aanbevelingen",
   toolDescEvaluation: "Buffett-stijl moat analyse",
@@ -1079,6 +1081,7 @@ const nl: TranslationStrings = {
   toolsSectionTrefolio: "Trefolio",
   toolsSectionUpgrade: "Upgrade",
   planningToolNav: "Planning",
+  projectionToolNav: "Doelenplanner",
   toolsHubCategoryPortfolioActivity: "Portefeuille & activiteit",
   toolsHubCategoryAnalysis: "Analyse & watchlists",
   toolsHubCategoryPlanningTax: "Planning & belasting",
@@ -1380,6 +1383,10 @@ const nl: TranslationStrings = {
   noPortfolioNewsTitle: "Nog geen nieuws",
   emptyStateAddStock: "Voeg uw eerste aandeel toe",
   portfolioNewsDisclaimer: "Nieuws wordt alleen ter informatie verstrekt, geen beleggingsadvies.",
+  portfolioNewsHoldingBadge: "In uw portefeuille",
+  portfolioNewsViewAll: "Alles bekijken",
+  portfolioNewsQuotaExceeded:
+    "Maandelijks intelligencequotum bereikt. Upgrade of probeer het opnieuw na de reset.",
   upsellAttemptPortfolioNews: "Bekijk nieuws en sentiment voor uw portefeuille-aandelen.",
   filterByBroker: "Filter",
   allBrokers: "Alle",
