@@ -124,12 +124,14 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [strategies](strategies.md) — saved investment ideas + auto-alerts.
 - [tax-reports](tax-reports.md) — year-end tax reports per country.
 - [tools-index](tools-index.md) — `/tools` hub page + favorites.
+- [warren-screener](warren-screener.md) — value-style moat list (low P/E, cap limit).
 
 ## Import & Brokers
 
 - [broker-integration-requests](broker-integration-requests.md) — vote for new brokers.
 - [broker-parsers](broker-parsers.md) — CSV/PDF broker parsers.
 - [ibkr-flex](ibkr-flex.md) — Flex query token import.
+- [myinvestor-import](myinvestor-import.md) — MyInvestor / Inversis Excel operations import.
 - [import-hub](import-hub.md) — unified `/import` page.
 - [snaptrade-import](snaptrade-import.md) — OAuth broker connections.
 
@@ -217,9 +219,9 @@ Domains are considered well-covered today (see counts in
 pass by [`doc-gardener`](../../.cursor/skills/doc-gardener/SKILL.md) or a
 domain engineer:
 
-- **Import & Brokers** — per-broker parser specs (only the umbrella
-  `broker-parsers` exists). Candidates: DeGiro, IBKR CSV, Trading212, Revolut,
-  Bitpanda, Plus500, Freedom24, XTB, eToro.
+- **Import & Brokers** — candidates still thin: Bitpanda, Plus500, Freedom24,
+  XTB. Covered: [broker-parsers](broker-parsers.md),
+  [myinvestor-import](myinvestor-import.md), [import-hub](import-hub.md).
 - **AI** — prompt/response schema docs per AI endpoint; today only feature-level
   specs exist (`ai-analysis`, `ai-compare`, etc.). Consider extracting a
   `ai-prompts-registry` spec from the code in `src/lib/ai-prompts.ts`.

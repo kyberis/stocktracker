@@ -52,6 +52,7 @@ const BROKER_OPTIONS: { id: BrokerFormat; label: string; guideId: string }[] = [
   { id: "wealthsimple", label: "Wealthsimple", guideId: "wealthsimple" },
   { id: "questrade", label: "Questrade", guideId: "questrade" },
   { id: "firstrade", label: "Firstrade", guideId: "firstrade" },
+  { id: "myinvestor", label: "MyInvestor", guideId: "myinvestor" },
   { id: "simple", label: "Simple CSV", guideId: "simple_csv" },
 ];
 
@@ -575,7 +576,7 @@ export default function ImportPageContent() {
                   onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
                   onDragLeave={() => setIsDragOver(false)}
                   onClick={() => fileRef.current?.click()}
-                  accept=".csv,text/csv"
+                  accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   hint={t("importAccepted")}
                   t={t}
                   inputRef={fileRef}

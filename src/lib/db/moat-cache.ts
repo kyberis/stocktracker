@@ -39,6 +39,8 @@ export interface MoatCacheRow {
   capexEfficiencyStatus: string | null;
   productDurabilityStatus: string | null;
   updatedAt: string;
+  /** From screener_cache join; provider-native units (typically USD). */
+  marketCap: number | null;
 }
 
 export interface MoatScreenerFilters {
@@ -49,6 +51,10 @@ export interface MoatScreenerFilters {
   industry?: string;
   peMin?: number;
   peMax?: number;
+  /** Minimum market cap (requires non-null sc.market_cap). */
+  marketCapMin?: number;
+  /** Maximum market cap (requires non-null sc.market_cap). */
+  marketCapMax?: number;
   priceMin?: number;
   priceMax?: number;
   earningsConsistency?: CriterionStatus;
@@ -170,6 +176,7 @@ const VALID_SORT_COLUMNS: Record<string, string> = {
   sector: "mc.sector",
   pe: "mc.pe_ratio",
   price: "sc.regular_market_price",
+  marketCap: "sc.market_cap",
   passed: "mc.passed_count",
   updated: "mc.updated_at",
 };
@@ -211,6 +218,16 @@ export async function queryMoatCache(
     conditions.push("mc.pe_ratio <= ?");
     args.push(filters.peMax);
   }
+  if (filters.marketCapMin != null) {
+    conditions.push("sc.market_cap IS NOT NULL");
+    conditions.push("sc.market_cap >= ?");
+    args.push(filters.marketCapMin);
+  }
+  if (filters.marketCapMax != null) {
+    conditions.push("sc.market_cap IS NOT NULL");
+    conditions.push("sc.market_cap <= ?");
+    args.push(filters.marketCapMax);
+  }
   if (filters.priceMin != null) {
     conditions.push("sc.regular_market_price >= ?");
     args.push(filters.priceMin);
@@ -251,7 +268,7 @@ export async function queryMoatCache(
     client.execute({
       sql: `SELECT mc.symbol, mc.company_name, mc.sector, mc.industry, mc.score_pct, mc.verdict,
               mc.passed_count, mc.criteria_count, mc.pe_ratio,
-              sc.regular_market_price, sc.currency,
+              sc.regular_market_price, sc.currency, sc.market_cap,
               mc.earnings_consistency_status, mc.gross_margin_status, mc.net_margin_status,
               mc.retained_earnings_status, mc.return_on_equity_status, mc.debt_sustainability_status,
               mc.capex_efficiency_status, mc.product_durability_status, mc.updated_at
@@ -275,6 +292,7 @@ export async function queryMoatCache(
       peRatio: row.pe_ratio != null ? Number(row.pe_ratio) : null,
       price: row.regular_market_price != null ? Number(row.regular_market_price) : null,
       currency: row.currency != null ? str(row.currency) : null,
+      marketCap: row.market_cap != null ? Number(row.market_cap) : null,
       earningsConsistencyStatus: str(row.earnings_consistency_status) || null,
       grossMarginStatus: str(row.gross_margin_status) || null,
       netMarginStatus: str(row.net_margin_status) || null,

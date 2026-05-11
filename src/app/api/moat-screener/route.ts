@@ -41,6 +41,16 @@ export const GET = withMetrics("/api/moat-screener", async (request: NextRequest
   if (peMin) filters.peMin = Number(peMin);
   const peMax = searchParams.get("peMax");
   if (peMax) filters.peMax = Number(peMax);
+  const marketCapMin = searchParams.get("marketCapMin");
+  if (marketCapMin) {
+    const n = Number(marketCapMin);
+    if (Number.isFinite(n)) filters.marketCapMin = n;
+  }
+  const marketCapMax = searchParams.get("marketCapMax");
+  if (marketCapMax) {
+    const n = Number(marketCapMax);
+    if (Number.isFinite(n)) filters.marketCapMax = n;
+  }
   const priceMin = searchParams.get("priceMin");
   if (priceMin) filters.priceMin = Number(priceMin);
   const priceMax = searchParams.get("priceMax");

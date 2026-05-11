@@ -11,6 +11,7 @@ export type ToolTabId =
   | "watchlist"
   | "alerts"
   | "screener"
+  | "warren"
   | "tax"
   | "simulator"
   | "planning"
@@ -42,8 +43,8 @@ export type ToolHubCategory =
 
 export interface ToolCatalogEntry {
   id: ToolTabId;
-  /** `/tools/[tab]` except screener, which is nested at `/tools/screener`. */
-  route: { kind: "dynamic" } | { kind: "nested"; segment: "screener" };
+  /** `/tools/[tab]` except nested tools under `/tools/<segment>`. */
+  route: { kind: "dynamic" } | { kind: "nested"; segment: "screener" | "warren-screener" };
   labelKey: TranslationKey;
   descKey: TranslationKey;
   icon: string;
@@ -168,6 +169,18 @@ export const TOOLS_CATALOG: ToolCatalogEntry[] = [
     descKey: "toolDescScreener",
     icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z",
     gradient: "from-sky-500 to-blue-600",
+    tierBadge: "pro",
+    hubVisibility: "always",
+    nativeInteractive: false,
+    hubCategory: "analysis",
+  },
+  {
+    id: "warren",
+    route: { kind: "nested", segment: "warren-screener" },
+    labelKey: "warrenScreenerNav",
+    descKey: "toolDescWarrenScreener",
+    icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+    gradient: "from-teal-500 to-emerald-600",
     tierBadge: "pro",
     hubVisibility: "always",
     nativeInteractive: false,

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import ToolsPageGate from "@/components/ToolsPageGate";
 import { VALID_DYNAMIC_TAB_IDS, type ToolTabId } from "@/lib/tools-registry";
 
-/** Tab ids for this segment; `screener` is served by `tools/screener/page.tsx` instead. */
+/** Tab ids for this segment; `screener` and `warren-screener` are nested under `tools/*` instead. */
 const validDynamicSet = new Set<string>(VALID_DYNAMIC_TAB_IDS);
 
 interface PageProps {

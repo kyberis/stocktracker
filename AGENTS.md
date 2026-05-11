@@ -127,7 +127,7 @@ cursor-plugins/       kyberis/cursor-plugins submodule — Cursor Marketplace pl
 
 ## Cross-references
 
-- Skills (domain experts the agent can consult): [`.cursor/skills/`](.cursor/skills) — includes [`integration-trefolio-accounts`](.cursor/skills/integration-trefolio-accounts/SKILL.md) for OIDC ↔ `user.trefolio.com`
+- Skills (domain experts the agent can consult): [`.cursor/skills/`](.cursor/skills) — includes [`integration-trefolio-accounts`](.cursor/skills/integration-trefolio-accounts/SKILL.md) for OIDC ↔ `user.trefolio.com` and [`architect-software-systems`](.cursor/skills/architect-software-systems/SKILL.md) for service boundaries, scaling, and design-pattern choices
 - Rules (always-applied guardrails): [`.cursor/rules/`](.cursor/rules)
 - Release notes source of truth: [`src/lib/release-notes.ts`](src/lib/release-notes.ts)
 - Seed data for onboarding / demo: [`data/`](data)

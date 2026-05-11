@@ -17,6 +17,64 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.16",
+    date: "2026-05-11",
+    title: "Warren Screener",
+    titleTranslations: {
+      es: "Warren Screener",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "New Warren Screener under Tools: lists moat-evaluated stocks with preset positive P/E under 15 and market cap under about five billion (screener-feed units), optional min/max cap filters on the classic Moat Screener tab, and sort by market cap.",
+        translations: {
+          es: "Nuevo Warren Screener en Herramientas: lista acciones con evaluación moat con P/E positivo bajo 15 y capitalización hasta unos 5.000M (unidades del feed del screener), filtros opcionales de capitalización mín./máx. en el buscador Moat clásico y ordenación por capitalización.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.15",
+    date: "2026-05-11",
+    title: "MyInvestor stock import",
+    titleTranslations: {
+      es: "Importación de acciones MyInvestor",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Broker CSV import adds MyInvestor (Inversis): upload the Excel operations export from inversis.com/cbmyinvestor; the server decodes .xls/.xlsx (first sheet) and maps buys, sells, dividends, and fees into your ledger.",
+        translations: {
+          es: "La importación CSV añade MyInvestor (Inversis): sube el Excel de operaciones desde inversis.com/cbmyinvestor; el servidor decodifica .xls/.xlsx (primera hoja) y mapea compras, ventas, dividendos y comisiones al libro de transacciones.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Broker import uploads now send native files so Excel exports parse correctly for Revolut, eToro, and other spreadsheet-capable brokers—not only plain CSV text.",
+        translations: {
+          es: "Las subidas de importación por bróker envían el archivo original para que los Excel se procesen bien en Revolut, eToro y otros casos con hoja de cálculo, no solo CSV en texto plano.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.14",
+    date: "2026-05-11",
+    title: "IdP Telegram agent directory",
+    titleTranslations: {
+      es: "Directorio de agentes de Telegram en el IdP",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Service-only GET `/api/internal/telegram-link-status?sub=…` (Bearer `IDP_SERVICE_TOKEN`) reports whether the linked trefolio user has connected the Warren Telegram bot — used by user.trefolio.com account hub with no PII beyond the boolean.",
+        translations: {
+          es: "Nuevo GET `/api/internal/telegram-link-status?sub=…` solo para servicios (Bearer `IDP_SERVICE_TOKEN`) que indica si el usuario de trefolio asociado al `sub` del IdP tiene el bot de Telegram Warren vinculado — para la cuenta en user.trefolio.com, sin datos personales salvo el booleano.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.13",
     date: "2026-05-11",
     title: "Internal ops metrics for IdP digest",

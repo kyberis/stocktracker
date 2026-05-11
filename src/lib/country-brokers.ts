@@ -45,6 +45,7 @@ const COUNTRY_BROKER_MAP: Record<string, CountryBroker[]> = {
     ...GLOBAL_BROKERS,
   ],
   ES: [
+    { name: "MyInvestor", csvFormat: "myinvestor", hasSnapTrade: false },
     { name: "DEGIRO", csvFormat: "degiro", hasSnapTrade: false },
     { name: "Trading 212", csvFormat: "trading_212", hasSnapTrade: false },
     ...GLOBAL_BROKERS,

@@ -13,6 +13,25 @@ import { runBackfillForUser } from "@/lib/backfill-snapshots";
 import { materializeCurrentSnapshotsForUser } from "@/lib/cron-portfolio-snapshots";
 import { getHoldingsLimit } from "@/lib/subscription";
 import type { SubscriptionPlan } from "@/lib/types";
+import { blobToUtf8CsvOrPlainText } from "@/lib/spreadsheet-to-csv";
+
+async function resolveCsvFromFormData(formData: FormData): Promise<string> {
+  const csvRaw = formData.get("csv");
+  const file = formData.get("file");
+
+  let csv = typeof csvRaw === "string" ? csvRaw : "";
+  if (!csv && csvRaw && typeof csvRaw === "object" && typeof (csvRaw as Blob).arrayBuffer === "function") {
+    const b = csvRaw as Blob;
+    const fname = typeof File !== "undefined" && b instanceof File ? b.name : "";
+    csv = await blobToUtf8CsvOrPlainText(b, fname);
+  }
+  if (!csv && file && typeof file === "object" && typeof (file as Blob).arrayBuffer === "function") {
+    const b = file as Blob;
+    const fname = typeof File !== "undefined" && b instanceof File ? b.name : "";
+    csv = await blobToUtf8CsvOrPlainText(b, fname);
+  }
+  return csv;
+}
 
 const KNOWN_ISINS: Record<string, string> = {
   "US0378331005": "AAPL",
@@ -276,16 +295,8 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     return NextResponse.json(status);
   }
 
-  /* ── Read CSV data ── */
-  const file = formData.get("file");
-  const csvRaw = formData.get("csv");
-  let csv = typeof csvRaw === "string" ? csvRaw : "";
-  if (!csv && csvRaw && typeof csvRaw === "object" && typeof (csvRaw as Blob).text === "function") {
-    csv = await (csvRaw as Blob).text();
-  }
-  if (!csv && file && typeof file === "object" && typeof (file as Blob).text === "function") {
-    csv = await (file as Blob).text();
-  }
+  /* ── Read CSV / spreadsheet (Excel decoded server-side) ── */
+  const csv = await resolveCsvFromFormData(formData);
   if (!csv) {
     portfolioImportsTotal.inc({ source: "broker", status: "error" });
     return NextResponse.json({ error: "No CSV data provided." }, { status: 400 });

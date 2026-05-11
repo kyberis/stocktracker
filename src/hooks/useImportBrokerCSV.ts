@@ -22,6 +22,7 @@ const FORMAT_LABELS: Record<BrokerFormat, string> = {
   wealthsimple: "Wealthsimple",
   questrade: "Questrade",
   firstrade: "Firstrade",
+  myinvestor: "MyInvestor",
   simple: "CSV",
 };
 
@@ -83,6 +84,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
   const [importedTxCount, setImportedTxCount] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const rawCsvRef = useRef<string>("");
+  const rawFileRef = useRef<File | null>(null);
 
   const reset = useCallback(() => {
     setStep("idle");
@@ -96,6 +98,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     setImportedTxCount(0);
     setErrorMsg("");
     rawCsvRef.current = "";
+    rawFileRef.current = null;
   }, []);
 
   const parseFile = useCallback(async (file: File, broker: BrokerFormat, portfolioId?: string | null) => {
@@ -103,14 +106,14 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     setErrorMsg("");
 
     try {
-      const csv = await file.text();
-      rawCsvRef.current = csv;
+      rawFileRef.current = file;
+      rawCsvRef.current = "";
 
       const parseForm = new FormData();
       parseForm.append("action", "parse");
       parseForm.append("broker", broker);
       if (portfolioId) parseForm.append("portfolioId", portfolioId);
-      parseForm.append("file", new Blob([csv], { type: "text/csv" }), "import.csv");
+      parseForm.append("file", file);
 
       const parseController = new AbortController();
       const parseTimer = setTimeout(() => parseController.abort(), 30_000);
@@ -315,17 +318,21 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
 
       setHoldingsCapped(totalHoldingsCapped);
 
-      if (cashBalances.length > 0 && rawCsvRef.current) {
+      if (cashBalances.length > 0 && (rawFileRef.current || rawCsvRef.current)) {
         try {
           const cashForm = new FormData();
           cashForm.append("action", "import-cash");
           cashForm.append("broker", broker);
           if (portfolioId) cashForm.append("portfolioId", portfolioId);
-          cashForm.append(
-            "file",
-            new Blob([rawCsvRef.current], { type: "text/csv" }),
-            "import.csv"
-          );
+          if (rawFileRef.current) {
+            cashForm.append("file", rawFileRef.current);
+          } else {
+            cashForm.append(
+              "file",
+              new Blob([rawCsvRef.current], { type: "text/csv" }),
+              "import.csv"
+            );
+          }
           const cashRes = await fetch("/api/transactions/import-broker", {
             method: "POST",
             body: cashForm,

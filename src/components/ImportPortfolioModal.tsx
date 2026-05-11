@@ -8,7 +8,7 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
 import ProCompareCard from "@/components/ProCompareCard";
 import { mergeHoldingsIntoTransactions } from "@/lib/merge-ai-import-rows";
 
-type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "simple" | "ai_import";
+type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "myinvestor" | "simple" | "ai_import";
 
 interface ImportPortfolioModalProps {
   isOpen: boolean;
@@ -79,6 +79,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
   const [portfolios, setPortfolios] = useState<{ id: string; name: string; isDefault: boolean }[]>([]);
   const [targetPortfolioId, setTargetPortfolioId] = useState<string>("");
   const rawCsvRef = useRef<string>("");
+  const rawFileRef = useRef<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -113,6 +114,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     setHoldingsCapped(0);
     setTargetPortfolioId("");
     rawCsvRef.current = "";
+    rawFileRef.current = null;
   };
 
   const isBusy = step === "extracting" || step === "importing" || step === "backfilling";
@@ -140,15 +142,23 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     }
 
     try {
-      const isCsv = file.type === "text/csv" || file.name.endsWith(".csv") || file.type === "application/vnd.ms-excel";
+      const isBrokerUpload =
+        !isImage &&
+        csvFormat !== "ai_import" &&
+        (file.type === "text/csv" ||
+          file.type === "application/vnd.ms-excel" ||
+          file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+          file.name.endsWith(".csv") ||
+          file.name.endsWith(".xls") ||
+          file.name.endsWith(".xlsx"));
 
-      if (isCsv && csvFormat !== "ai_import") {
-        const csv = await file.text();
-        rawCsvRef.current = csv;
+      if (isBrokerUpload) {
+        rawFileRef.current = file;
+        rawCsvRef.current = "";
         const parseForm = new FormData();
         parseForm.append("action", "parse");
         parseForm.append("broker", csvFormat);
-        parseForm.append("file", new Blob([csv], { type: "text/csv" }), "import.csv");
+        parseForm.append("file", file);
         if (targetPortfolioId) parseForm.append("portfolioId", targetPortfolioId);
         const parseController = new AbortController();
         const parseTimer = setTimeout(() => parseController.abort(), 30_000);
@@ -309,7 +319,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
       revolut: "Revolut", charles_schwab: "Charles Schwab", fidelity: "Fidelity",
       nordnet: "Nordnet", tastytrade: "Tastytrade", freetrade: "Freetrade",
       etoro: "eToro", wealthsimple: "Wealthsimple", questrade: "Questrade",
-      firstrade: "Firstrade", simple: "CSV", ai_import: "AI",
+      firstrade: "Firstrade", myinvestor: "MyInvestor", simple: "CSV", ai_import: "AI",
     };
     const importSource = isImageImport ? "Image import" : `${formatLabels[csvFormat]} import`;
 
@@ -372,12 +382,16 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
 
     // Import cash balances for DEGIRO imports
     let cashCount = 0;
-    if (csvFormat === "degiro" && cashBalances.length > 0 && rawCsvRef.current) {
+    if (csvFormat === "degiro" && cashBalances.length > 0 && (rawFileRef.current || rawCsvRef.current)) {
       try {
         const cashForm = new FormData();
         cashForm.append("action", "import-cash");
         cashForm.append("broker", "degiro");
-        cashForm.append("file", new Blob([rawCsvRef.current], { type: "text/csv" }), "import.csv");
+        if (rawFileRef.current) {
+          cashForm.append("file", rawFileRef.current);
+        } else {
+          cashForm.append("file", new Blob([rawCsvRef.current], { type: "text/csv" }), "import.csv");
+        }
         if (targetPortfolioId) cashForm.append("portfolioId", targetPortfolioId);
         const cashRes = await fetch("/api/transactions/import-broker", {
           method: "POST",
@@ -471,6 +485,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                   { id: "wealthsimple" as CsvFormat, label: "Wealthsimple", desc: "Activities Export CSV" },
                   { id: "questrade" as CsvFormat, label: "Questrade", desc: "Account Activity CSV" },
                   { id: "firstrade" as CsvFormat, label: "Firstrade", desc: "Account History CSV" },
+                  { id: "myinvestor" as CsvFormat, label: "MyInvestor", desc: "Inversis operations Excel export" },
                   { id: "simple" as CsvFormat, label: t("simpleCSV"), desc: "ticker, type, price, amount, currency" },
                   { id: "ai_import" as CsvFormat, label: t("aiImportLabel"), desc: t("aiImportDesc") },
                 ]).map((fmt) => (
@@ -582,7 +597,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                   <input
                     ref={fileRef}
                     type="file"
-                    accept={csvFormat === "ai_import" ? ".csv,text/csv,image/png,image/jpeg,image/webp" : ".csv,text/csv"}
+                    accept={csvFormat === "ai_import" ? ".csv,text/csv,image/png,image/jpeg,image/webp" : ".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
                     onChange={handleFileSelect}
                     className="hidden"
                   />

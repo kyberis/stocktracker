@@ -16,6 +16,7 @@ When any file in the **Code** column changes, the corresponding **Guide** locati
 | `src/lib/broker-parsers/interactive-brokers.ts` | Import page — IBKR CSV how-to | Supported statement types |
 | `src/lib/broker-parsers/trading-212.ts` | Import page — Trading 212 how-to | Export menu path |
 | `src/lib/broker-parsers/revolut.ts` | Import page — Revolut how-to | Export menu path, file format |
+| `src/lib/broker-parsers/myinvestor.ts` | Import page — MyInvestor how-to | Inversis portal path, Excel format |
 | `src/lib/broker-parsers/index.ts` | Import page — broker selector options | Broker list, labels |
 | `src/app/api/transactions/import-broker/route.ts` | Import page — all broker guides | Parse/import behavior, error messages |
 | `src/app/api/import-portfolio/route.ts` | Import page — AI import guide | Supported formats, rate limits |

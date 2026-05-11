@@ -3,9 +3,12 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
+import { formatCompactNumber } from "@/lib/utils";
 
 interface MoatScreenerProps {
   onReportSaved?: () => void;
+  /** Preset filters and higher page size for value-style screening. */
+  variant?: "default" | "warren";
 }
 
 interface ScreenerRow {
@@ -29,6 +32,7 @@ interface ScreenerRow {
   capexEfficiencyStatus: string | null;
   productDurabilityStatus: string | null;
   updatedAt: string;
+  marketCap: number | null;
 }
 
 interface ScreenerMeta {
@@ -69,9 +73,10 @@ const VERDICT_COLORS: Record<string, string> = {
   "No Clear Moat Detected": "text-red-500 bg-red-500/10",
 };
 
-export default function MoatScreener({ onReportSaved }: MoatScreenerProps) {
+export default function MoatScreener({ onReportSaved, variant = "default" }: MoatScreenerProps) {
   const { t } = useI18n();
   const router = useRouter();
+  const pageSize = variant === "warren" ? 100 : 20;
 
   const [meta, setMeta] = useState<ScreenerMeta | null>(null);
   const [results, setResults] = useState<ScreenerRow[]>([]);
@@ -81,8 +86,10 @@ export default function MoatScreener({ onReportSaved }: MoatScreenerProps) {
 
   const [scoreMin, setScoreMin] = useState(0);
   const [sector, setSector] = useState("");
-  const [peMin, setPeMin] = useState("");
-  const [peMax, setPeMax] = useState("");
+  const [peMin, setPeMin] = useState(variant === "warren" ? "0.01" : "");
+  const [peMax, setPeMax] = useState(variant === "warren" ? "15" : "");
+  const [marketCapMin, setMarketCapMin] = useState("");
+  const [marketCapMax, setMarketCapMax] = useState(variant === "warren" ? "5000000000" : "");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [criteriaFilters, setCriteriaFilters] = useState<Record<string, string>>({});
@@ -155,6 +162,8 @@ export default function MoatScreener({ onReportSaved }: MoatScreenerProps) {
     if (sector) params.set("sector", sector);
     if (peMin) params.set("peMin", peMin);
     if (peMax) params.set("peMax", peMax);
+    if (marketCapMin) params.set("marketCapMin", marketCapMin);
+    if (marketCapMax) params.set("marketCapMax", marketCapMax);
     if (priceMin) params.set("priceMin", priceMin);
     if (priceMax) params.set("priceMax", priceMax);
     for (const [k, v] of Object.entries(criteriaFilters)) {
@@ -163,7 +172,7 @@ export default function MoatScreener({ onReportSaved }: MoatScreenerProps) {
     params.set("sortBy", sortBy);
     params.set("sortDir", sortDir);
     params.set("page", String(p));
-    params.set("limit", "20");
+    params.set("limit", String(pageSize));
 
     try {
       const res = await fetch(`/api/moat-screener?${params}`);
@@ -175,11 +184,11 @@ export default function MoatScreener({ onReportSaved }: MoatScreenerProps) {
       }
     } catch { /* ignore */ }
     setLoading(false);
-  }, [scoreMin, sector, peMin, peMax, priceMin, priceMax, criteriaFilters, sortBy, sortDir]);
+  }, [scoreMin, sector, peMin, peMax, marketCapMin, marketCapMax, priceMin, priceMax, criteriaFilters, sortBy, sortDir, pageSize]);
 
   useEffect(() => { runSearch(1); }, [runSearch]);
 
-  const totalPages = Math.ceil(total / 20);
+  const totalPages = Math.ceil(total / pageSize);
 
   const getStatusDots = (row: ScreenerRow) => [
     row.earningsConsistencyStatus,
@@ -196,9 +205,15 @@ export default function MoatScreener({ onReportSaved }: MoatScreenerProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-1">
         <svg className="w-5 h-5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-        <h3 className="text-base font-bold">{t("moatScreenerTitle")}</h3>
+        <h3 className="text-base font-bold">{variant === "warren" ? t("warrenScreenerPageTitle") : t("moatScreenerTitle")}</h3>
         {meta && <span className="text-[11px] text-[var(--muted)]">{meta.total} {t("moatScreenerStocksEvaluated")}</span>}
       </div>
+
+      {variant === "warren" && (
+        <p className="text-xs text-[var(--muted)] leading-relaxed border border-[var(--border)] bg-[var(--card)] rounded-lg px-3 py-2">
+          {t("warrenScreenerIntro")}
+        </p>
+      )}
 
       {/* Filters */}
       <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-3">
@@ -278,6 +293,32 @@ export default function MoatScreener({ onReportSaved }: MoatScreenerProps) {
           </div>
         </div>
 
+        <div className="flex items-center gap-2 flex-wrap">
+          <label className="text-[12px] font-semibold text-[var(--muted)] w-24 flex-shrink-0">{t("marketCap")}</label>
+          <input
+            type="number"
+            min={0}
+            step="any"
+            placeholder={t("moatScreenerMarketCapMin")}
+            value={marketCapMin}
+            onChange={(e) => setMarketCapMin(e.target.value)}
+            title={t("moatScreenerMarketCapMin")}
+            className="w-28 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
+          />
+          <span className="text-[var(--muted)] text-xs">–</span>
+          <input
+            type="number"
+            min={0}
+            step="any"
+            placeholder={t("moatScreenerMarketCapMax")}
+            value={marketCapMax}
+            onChange={(e) => setMarketCapMax(e.target.value)}
+            title={t("moatScreenerMarketCapMax")}
+            className="w-28 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
+          />
+          <span className="text-[10px] text-[var(--muted)]">{t("moatScreenerMarketCapHint")}</span>
+        </div>
+
         {/* Criterion filters */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {CRITERIA_KEYS.map(({ key, label }) => (
@@ -317,6 +358,7 @@ export default function MoatScreener({ onReportSaved }: MoatScreenerProps) {
               { key: "symbol", label: "Symbol" },
               { key: "price", label: t("moatScreenerPrice") },
               { key: "pe", label: "P/E" },
+              { key: "marketCap", label: t("marketCap") },
               { key: "passed", label: t("moatScreenerPassed") },
             ].map(({ key, label }) => (
               <button
@@ -386,6 +428,11 @@ export default function MoatScreener({ onReportSaved }: MoatScreenerProps) {
                         {row.peRatio != null && (
                           <span className={`text-[11px] tabular-nums ${row.peRatio >= 40 ? "text-red-500" : row.peRatio >= 25 ? "text-amber-500" : "text-[var(--muted)]"}`}>
                             P/E {row.peRatio.toFixed(1)}
+                          </span>
+                        )}
+                        {row.marketCap != null && (
+                          <span className="text-[11px] text-[var(--muted)] tabular-nums" title={t("marketCap")}>
+                            {formatCompactNumber(row.marketCap)}
                           </span>
                         )}
                         <span className="text-[11px] text-[var(--muted)]">{row.passedCount}/{row.criteriaCount}</span>

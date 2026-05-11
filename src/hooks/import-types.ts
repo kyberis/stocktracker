@@ -12,6 +12,7 @@ export type BrokerFormat =
   | "wealthsimple"
   | "questrade"
   | "firstrade"
+  | "myinvestor"
   | "simple";
 
 export interface ExtractedTransaction {

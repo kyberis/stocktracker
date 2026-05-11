@@ -70,11 +70,11 @@ export const featureDomains: FeatureDomain[] = [
     id: "data-imports",
     name: "Data & Imports",
     description:
-      "Database schema, seed data, CSV import (DEGIRO and Simple CSV), AI-powered import from screenshots/CSV, and data normalization.",
+      "Database schema, seed data, broker CSV/Excel import (many parsers including DEGIRO, MyInvestor, Simple CSV), AI-powered import from screenshots/CSV, and data normalization.",
     status: "stable",
     version: "0.10.0",
     components: [
-      { path: "src/components/BrokerImport.tsx", description: "DEGIRO and Simple CSV import wizard" },
+      { path: "src/components/BrokerImport.tsx", description: "Multi-broker CSV/Excel import wizard" },
       { path: "src/components/ImportPortfolioModal.tsx", description: "AI import from screenshots or CSV" },
       { path: "src/components/ResetPortfolioModal.tsx", description: "Reset portfolio to seed or empty" },
     ],
@@ -89,11 +89,13 @@ export const featureDomains: FeatureDomain[] = [
       { path: "src/lib/db/index.ts", description: "Turso/libSQL database access layer" },
       { path: "src/lib/db/seed.ts", description: "Seed data for new accounts" },
       { path: "src/lib/degiro-parser.ts", description: "DEGIRO Account.csv parser" },
+      { path: "src/lib/spreadsheet-to-csv.ts", description: "Decode .xls/.xlsx uploads for broker import API" },
       { path: "src/lib/types.ts", description: "Shared TypeScript types" },
       { path: "src/lib/initial-data.ts", description: "Default portfolio data" },
     ],
     patterns: [
       "DEGIRO parser extracts buys, sells, dividends, fees, and cash balances",
+      "Excel uploads decoded server-side (SheetJS) before CSV-style parsing",
       "Simple CSV format: ticker, type, price, amount, currency (+ optional date, name)",
       "AI import uses OpenAI to extract structured data from unstructured inputs",
       "ISIN-to-ticker mapping via Yahoo Finance search API",

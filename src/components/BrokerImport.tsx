@@ -28,7 +28,7 @@ interface ImportSummary {
   unmapped: string[];
 }
 
-type Broker = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade";
+type Broker = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "myinvestor";
 type Step = "upload" | "preview" | "importing" | "done";
 
 const TYPE_COLORS: Record<TransactionType, string> = {
@@ -52,6 +52,7 @@ const BROKERS: { id: Broker; label: string; desc: string; descEs: string; server
   { id: "wealthsimple", label: "Wealthsimple", desc: "Activities Export CSV", descEs: "Exportar actividades CSV", serverParsed: true },
   { id: "questrade", label: "Questrade", desc: "Account Activity CSV", descEs: "CSV de actividad de cuenta", serverParsed: true },
   { id: "firstrade", label: "Firstrade", desc: "Account History CSV", descEs: "Historial de cuenta CSV", serverParsed: true },
+  { id: "myinvestor", label: "MyInvestor", desc: "Inversis operations Excel export", descEs: "Excel de operaciones Inversis", serverParsed: true },
 ];
 
 function mapTx(tx: Record<string, unknown>): ParsedTx {
@@ -82,10 +83,10 @@ export default function BrokerImport() {
   const [step, setStep] = useState<Step>("upload");
   const [importedCount, setImportedCount] = useState(0);
   const [error, setError] = useState("");
-  const [csvText, setCsvText] = useState("");
   const [portfolios, setPortfolios] = useState<{ id: string; name: string; isDefault: boolean }[]>([]);
   const [targetPortfolioId, setTargetPortfolioId] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const uploadFileRef = useRef<File | null>(null);
 
   useEffect(() => {
     fetch("/api/portfolios")
@@ -107,7 +108,7 @@ export default function BrokerImport() {
     setParsed([]);
     setSummary(null);
     setError("");
-    setCsvText("");
+    uploadFileRef.current = null;
     setImportedCount(0);
     setTargetPortfolioId("");
     if (fileRef.current) fileRef.current.value = "";
@@ -119,13 +120,11 @@ export default function BrokerImport() {
     const file = e.target.files?.[0];
     if (!file) return;
     setError("");
-    const text = await file.text();
-
-    setCsvText(text);
+    uploadFileRef.current = file;
     const form = new FormData();
     form.append("action", "parse");
     form.append("broker", broker);
-    form.append("csv", text);
+    form.append("file", file);
     if (targetPortfolioId) form.append("portfolioId", targetPortfolioId);
     try {
       const res = await fetch("/api/transactions/import-broker", { method: "POST", body: form });
@@ -178,7 +177,10 @@ export default function BrokerImport() {
     const form = new FormData();
     form.append("action", "import");
     form.append("broker", broker);
-    form.append("csv", csvText);
+    const upload = uploadFileRef.current;
+    if (upload) {
+      form.append("file", upload);
+    }
     if (targetPortfolioId) form.append("portfolioId", targetPortfolioId);
     try {
       const res = await fetch("/api/transactions/import-broker", { method: "POST", body: form });
@@ -267,6 +269,14 @@ export default function BrokerImport() {
               <p className="text-[10px] text-blue-600 dark:text-blue-400">Invest → More → Statements → Account statement → Excel format.</p>
             </div>
           )}
+          {broker === "myinvestor" && (
+            <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
+              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">MyInvestor / Inversis</p>
+              <p className="text-[10px] text-blue-600 dark:text-blue-400">
+                Chrome → inversis.com/cbmyinvestor → Investments → Stocks → Operations enquiry → download Excel. Upload without re-saving the file.
+              </p>
+            </div>
+          )}
 
           {portfolios.length > 1 && (
             <div className="space-y-1 mb-4">
@@ -299,8 +309,14 @@ export default function BrokerImport() {
                 <svg className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-                <p className="text-sm text-gray-600 dark:text-slate-400">{t("clickToUpload")} {brokerInfo.label} CSV</p>
-                <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleFile} className="hidden" />
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("clickToUpload")} {brokerInfo.label}</p>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  onChange={handleFile}
+                  className="hidden"
+                />
               </div>
 
               {error && <p className="text-xs text-red-500 mt-2" role="alert">{error}</p>}

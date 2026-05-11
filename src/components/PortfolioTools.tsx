@@ -41,6 +41,7 @@ const PortfolioProjection = dynamic(() => import("./PortfolioProjection"), { ssr
 const PortfolioScorePage = dynamic(() => import("./PortfolioScorePage"), { ssr: false });
 const MoatEvaluationPicker = dynamic(() => import("./MoatEvaluationPicker"), { ssr: false });
 const StrategiesTool = dynamic(() => import("./StrategiesTool"), { ssr: false });
+const WarrenScreener = dynamic(() => import("./WarrenScreener"), { ssr: false });
 
 const HUB_CATEGORY_LABEL: Record<ToolHubCategory, TranslationKey> = {
   portfolioActivity: "toolsHubCategoryPortfolioActivity",
@@ -351,6 +352,7 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
               {activeTab === "watchlist" && <Watchlist />}
               {activeTab === "alerts" && <PriceAlerts />}
               {activeTab === "screener" && <StockScreener />}
+              {activeTab === "warren" && <WarrenScreener />}
               {activeTab === "tax" && <TaxReport />}
               {activeTab === "simulator" && <PortfolioSimulator />}
               {activeTab === "projection" && <PortfolioProjection />}

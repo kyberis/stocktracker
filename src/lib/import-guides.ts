@@ -302,6 +302,29 @@ export const IMPORT_GUIDES: ImportGuide[] = [
     ],
   },
   {
+    id: "myinvestor",
+    titleEn: "MyInvestor — Inversis operations export",
+    titleEs: "MyInvestor — Exportación de operaciones Inversis",
+    stepsEn: [
+      "Use Google Chrome (or incognito if myinvestor.es redirects away).",
+      "Open inversis.com/cbmyinvestor and sign in with your MyInvestor credentials.",
+      "Go to Investments → Stocks → Operations & enquiries → Operations enquiry.",
+      "Pick your date range and download the Excel file (.xls / .xlsx).",
+      "Upload the file here without re-saving it (re-saving can change the layout).",
+    ],
+    stepsEs: [
+      "Usa Google Chrome (o incógnito si myinvestor.es te redirige fuera).",
+      "Abre inversis.com/cbmyinvestor e inicia sesión con tu usuario MyInvestor.",
+      "Ve a Inversiones → Acciones → Operaciones y consultas → Consulta de operaciones.",
+      "Elige el rango de fechas y descarga el archivo Excel (.xls / .xlsx).",
+      "Sube el archivo aquí sin volver a guardarlo (guardarlo puede cambiar el formato).",
+    ],
+    noteEn:
+      "Only the first worksheet is read. Funds and ETFs may require separate exports per product. Some Spanish brokers net withholding from sale totals on statements — verify amounts after import.",
+    noteEs:
+      "Solo se lee la primera hoja. Fondos y ETFs pueden requerir exportaciones separadas por producto. En algunas ventas el bruto puede verse afectado por retenciones en el extracto — revisa los importes tras importar.",
+  },
+  {
     id: "firstrade",
     titleEn: "Firstrade — Account History CSV",
     titleEs: "Firstrade — Historial de cuenta CSV",
