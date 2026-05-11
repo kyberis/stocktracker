@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.27",
+    date: "2026-05-12",
+    title: "IdP passkey Set-Cookie",
+    titleTranslations: {
+      es: "Set-Cookie de passkey en el IdP",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Passkey login (and related challenge cookies, account sign-out) now attach Set-Cookie on the JSON Response object instead of relying on cookies().set in Route Handlers, fixing missing idp_session after passkey sign-in on Vercel.",
+        translations: {
+          es: "El login por passkey (y cookies de reto relacionadas, cierre de sesión) adjuntan ahora Set-Cookie en el objeto Response JSON en lugar de cookies().set en Route Handlers, corrigiendo idp_session ausente tras login por passkey en Vercel.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.26",
     date: "2026-05-12",
     title: "IdP impersonation session pairing",
