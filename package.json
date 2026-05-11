@@ -59,7 +59,7 @@
     "@capacitor/status-bar": "^8.0.2",
     "@libsql/client": "^0.17.0",
     "@modelcontextprotocol/sdk": "^1.26.0",
-    "@simplewebauthn/browser": "^13.2.2",
+    "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^9.0.3",
     "@types/bcryptjs": "^3.0.0",
     "@upstash/ratelimit": "^2.0.8",
