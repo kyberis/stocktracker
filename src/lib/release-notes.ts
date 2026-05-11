@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.23",
+    date: "2026-05-11",
+    title: "IdP ops Telegram cookie merge",
+    titleTranslations: {
+      es: "Fusión de cookies ops Telegram en el IdP",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Ops Telegram link API merges `idp_session` / `idp_impersonator` from `NextRequest.cookies` and `cookies()` per cookie name so a non-empty value is found when one store is empty on POST (fixes persistent missing_or_invalid_session).",
+        translations: {
+          es: "La API del enlace ops Telegram fusiona idp_session / idp_impersonator desde NextRequest.cookies y cookies() por nombre para encontrar un valor cuando un almacén está vacío en POST (corrige missing_or_invalid_session persistente).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.22",
     date: "2026-05-11",
     title: "IdP ops Telegram API session",
