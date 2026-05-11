@@ -52,6 +52,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Login IdP unificado detrás de Caddy local: el origen público se trata como HTTPS para `*.trefolio-dev.com` cuando se reenvía `Host` pero falta `X-Forwarded-Proto`, para que el `redirect_uri` de OIDC coincida en el intercambio de token.",
         },
       },
+      {
+        type: "fix",
+        text: "Home portfolio news feed refetches when your holdings tickers change (and cancels in-flight requests); an earlier empty API result no longer blocks all later loads.",
+        translations: {
+          es: "Las noticias de cartera en inicio se vuelven a cargar cuando cambian los tickers de tus posiciones (y se cancelan peticiones en curso); un resultado vacío anterior ya no bloquea todas las cargas posteriores.",
+        },
+      },
     ],
   },
   {

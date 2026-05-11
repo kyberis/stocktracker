@@ -40,12 +40,12 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
   const [articles, setArticles] = useState<NewsArticle[] | null>(null);
   const [status, setStatus] = useState<FeedStatus>("idle");
   const holdingSyms = useMemo(() => holdingTickerSet(holdings), [holdings]);
+  /** Bumps when holdings tickers change so we refetch (empty `[]` from a prior fetch used to block forever). */
+  const holdingsTickerSignature = useMemo(
+    () => holdings.map((h) => h.ticker.trim().toUpperCase()).sort().join(","),
+    [holdings],
+  );
   const isCompact = variant === "compact";
-
-  useEffect(() => {
-    setArticles(null);
-    setStatus("idle");
-  }, [activePortfolioId]);
 
   useEffect(() => {
     if (demoMode) {
@@ -53,16 +53,22 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
       setStatus("done");
       return;
     }
-    if (holdings.length === 0) return;
-    if (articles !== null || status === "loading") return;
+    if (holdings.length === 0) {
+      setArticles(null);
+      setStatus("idle");
+      return;
+    }
 
+    const ac = new AbortController();
     setStatus("loading");
     const headers = getApiHeaders();
     const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
-    fetch(`/api/portfolio-news${qp}`, { headers })
+    fetch(`/api/portfolio-news${qp}`, { headers, signal: ac.signal })
       .then(async (res) => {
         if (res.status === 429) {
-          const body = await res.json().catch(() => null) as { paywall?: boolean; reason?: string } | null;
+          const body = (await res.json().catch(() => null)) as
+            | { paywall?: boolean; reason?: string }
+            | null;
           if (body?.paywall && body?.reason === "quota_exceeded") {
             return { kind: "quota" as const };
           }
@@ -72,6 +78,7 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
         return { kind: "ok" as const, data };
       })
       .then((r) => {
+        if (ac.signal.aborted) return;
         if (r && typeof r === "object" && "kind" in r && (r as { kind: string }).kind === "quota") {
           setArticles([]);
           setStatus("quota");
@@ -84,10 +91,13 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
         }
       })
       .catch(() => {
+        if (ac.signal.aborted) return;
         setArticles([]);
         setStatus("error");
       });
-  }, [demoMode, holdings.length, articles, status, getApiHeaders, activePortfolioId]);
+
+    return () => ac.abort();
+  }, [demoMode, holdings.length, getApiHeaders, activePortfolioId, holdingsTickerSignature]);
 
   const displayArticles = useMemo(() => {
     if (!articles) return [];
