@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.19",
+    date: "2026-05-11",
+    title: "IdP first-party sign-in",
+    titleTranslations: {
+      es: "Inicio de sesión directo en el IdP",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The identity service now exposes /sign-in on user.trefolio.com so password accounts can set the idp_session cookie without an OAuth redirect through trefolio; /agents links there for operators who previously saw no cookie after only logging into the product site.",
+        translations: {
+          es: "El servicio de identidad ofrece /sign-in en user.trefolio.com para que las cuentas con contraseña puedan establecer la cookie idp_session sin el redirect OAuth por trefolio; /agents enlaza ahí para operadores que solo habían iniciado sesión en el producto y no veían cookie.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.18",
     date: "2026-05-11",
     title: "IdP home sign-in",
