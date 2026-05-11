@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.13",
+    date: "2026-05-11",
+    title: "Internal ops metrics for IdP digest",
+    titleTranslations: {
+      es: "Métricas internas de operaciones para el resumen del IdP",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Added service-only GET `/api/internal/ops-metrics` (Bearer `IDP_SERVICE_TOKEN`) exposing aggregate portfolio-app stats for the trefolio-accounts business ops Telegram digest — no personal data in the payload.",
+        translations: {
+          es: "Nuevo GET `/api/internal/ops-metrics` solo para servicios (Bearer `IDP_SERVICE_TOKEN`) con estadísticas agregadas de la app de cartera para el resumen de operaciones en Telegram de trefolio-accounts — sin datos personales en la respuesta.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.12",
     date: "2026-05-10",
     title: "Home portfolio news & goal planner tools tab",

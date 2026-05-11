@@ -27,6 +27,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [auth-verify-email](auth-verify-email.md) — email verification flow.
 - [impersonation](impersonation.md) — admin user-impersonation mode.
 - [membership-grant](membership-grant.md) — admin grants of Pro access.
+- [ops-telegram-agent](ops-telegram-agent.md) — staff ops Telegram bot + IdP digest + internal metrics fan-out.
 - [referral](referral.md) — referral codes + reward tracking.
 - [trial-invitations](trial-invitations.md) — eligibility cron + email invite.
 - [trial-system](trial-system.md) — Pro trial invitations + expiration.

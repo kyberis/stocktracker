@@ -386,6 +386,12 @@ export const featureDomains: FeatureDomain[] = [
       { method: "POST", path: "/api/admin/impersonate", auth: "admin", description: "Sign in as a non-admin user (support)" },
       { method: "POST", path: "/api/auth/exit-impersonation", auth: "session", description: "Restore admin session after impersonation" },
       { method: "POST", path: "/api/admin/feedback/send-completion", auth: "admin", description: "Send feedback completion email to user" },
+      {
+        method: "GET",
+        path: "/api/internal/ops-metrics",
+        auth: "public",
+        description: "IdP ops digest: aggregate DB stats only (requires Bearer IDP_SERVICE_TOKEN)",
+      },
     ],
     libs: [
       { path: "src/lib/auth/guards.ts", description: "requireAdmin guard" },
