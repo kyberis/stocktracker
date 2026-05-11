@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.28",
+    date: "2026-05-12",
+    title: "IdP sign-out link prefetch",
+    titleTranslations: {
+      es: "Prefetch del enlace de cierre en el IdP",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "The identity service no longer uses Next.js `<Link>` for `/api/oauth2/end_session` — production link prefetch could issue a background GET and clear `idp_session` immediately after Google login while `/agents` or admin chrome was visible. Sign out is now a plain anchor.",
+        translations: {
+          es: "El servicio de identidad ya no usa `<Link>` de Next.js para `/api/oauth2/end_session`: el prefetch del enlace en producción podía lanzar un GET en segundo plano y borrar `idp_session` justo tras el login con Google con la barra de /agents o admin visible. Cerrar sesión es ahora un enlace HTML normal.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.27",
     date: "2026-05-12",
     title: "IdP passkey Set-Cookie",
