@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.21",
+    date: "2026-05-11",
+    title: "IdP Google callback redirect",
+    titleTranslations: {
+      es: "Redirección del callback Google del IdP",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Google OAuth callback on the identity service now redirects with an absolute URL after sign-in (fixes production error when next was /agents or other relative paths).",
+        translations: {
+          es: "El callback de Google OAuth en el servicio de identidad redirige ahora con URL absoluta tras iniciar sesión (corrige el error en producción cuando next era /agents u otras rutas relativas).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.20",
     date: "2026-05-11",
     title: "IdP Google on host",
