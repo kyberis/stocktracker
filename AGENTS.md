@@ -16,7 +16,7 @@ Capacitor for iOS/Android, plus a physical "trefolio Leaf" ESP32-S3 device.
 
 ## Node.js
 
-Use **Node.js 22** on your machine for trefolio, `external/accounts`, Clara (`external/etracker`), and Will (`external/notetaker`). Each repo root has `.nvmrc` and `.node-version` set to `22` — run `nvm install` / `nvm use` or `fnm use` after `cd` into that tree. Match the same major for `npm install` and `npm run dev` so native addons (for example `better-sqlite3` in accounts) stay aligned.
+Use **Node.js 22** on your machine for trefolio, `external/accounts`, Clara (`external/etracker`), Will (`external/notetaker`), and Renata (`external/curriculumsupport`). Each repo root has `.nvmrc` and `.node-version` set to `22` — run `nvm install` / `nvm use` or `fnm use` after `cd` into that tree. Match the same major for `npm install` and `npm run dev` so native addons (for example `better-sqlite3` in accounts) stay aligned.
 
 ## Where to look first
 
@@ -40,6 +40,10 @@ Use **Node.js 22** on your machine for trefolio, `external/accounts`, Clara (`ex
  `external/notetaker`, hosted at `will.trefolio.com`). Read before touching
  anything in `external/notetaker/`.
 9. **Unified accounts (IdP)** — [`.cursor/skills/integration-trefolio-accounts/SKILL.md`](.cursor/skills/integration-trefolio-accounts/SKILL.md) maps OIDC wiring in this app; canonical specs are [`knowledge/design-docs/unified-accounts-and-billing.md`](knowledge/design-docs/unified-accounts-and-billing.md), [`knowledge/runbooks/unified-accounts-cutover.md`](knowledge/runbooks/unified-accounts-cutover.md), plus [`knowledge/design-docs/clara-idp-integration.md`](knowledge/design-docs/clara-idp-integration.md) / [`knowledge/design-docs/will-idp-integration.md`](knowledge/design-docs/will-idp-integration.md). Submodule [`external/accounts/`](external/accounts/) has its own copy of the same skill name under `.cursor/skills/`.
+10. [`knowledge/design-docs/curriculumsupport-renata-integration.md`](knowledge/design-docs/curriculumsupport-renata-integration.md)
+   — how trefolio links to Renata (the AI curriculum/CV assistant at
+   `external/curriculumsupport`). Read before touching anything in
+   `external/curriculumsupport/`.
 
 ## Repository layout (high level)
 
@@ -81,6 +85,11 @@ external/
   accounts/           trefolio-accounts IdP (user.trefolio.com), pinned submodule.
                       Next dev port 3300. See knowledge/design-docs/unified-accounts-and-billing.md
                       and .cursor/skills/integration-trefolio-accounts/SKILL.md inside this subtree.
+  curriculumsupport/  Renata — AI curriculum/CV assistant (kyberis/curriculumsupport),
+                      pinned git submodule, READ-ONLY context for the agent.
+                      Trefolio never builds it; ships independently. Excluded from
+                      tsconfig, eslint, vitest, .vercelignore. See
+                      knowledge/design-docs/curriculumsupport-renata-integration.md
 cursor-plugins/       kyberis/cursor-plugins submodule — Cursor Marketplace plugin bundle (rules/skills/agents).
                       See cursor-plugins/README.md. Not imported by the Next.js build.
 .cursor/

@@ -10,3 +10,6 @@
 [submodule "cursor-plugins"]
 	path = cursor-plugins
 	url = https://github.com/kyberis/cursor-plugins.git
+[submodule "external/curriculumsupport"]
+	path = external/curriculumsupport
+	url = https://github.com/kyberis/curriculumsupport.git
