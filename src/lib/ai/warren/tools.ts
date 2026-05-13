@@ -500,6 +500,63 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
         return { proposalId: id, status: "awaiting_user_confirmation" };
       },
     }),
+    // ──────────────── CROSS-AGENT / WEB SEARCH TOOLS ────────────────
+
+    askClara: tool({
+      description:
+        "Ask Clara (financial agents) a question on behalf of the user — e.g. savings balance, budget status, upcoming bills. Returns Clara's answer as text.",
+      inputSchema: z.object({
+        question: z.string().min(1).max(2000).describe("The question to ask Clara"),
+      }),
+      execute: async (input) => {
+        if (ctx.isDemo) return demoBlocked("contact Clara");
+        ctx.emitStep("Consulting Clara...");
+        return {
+          answer:
+            "Clara is not yet connected to Dream Team. Cross-agent communication will be available once Clara's HTTP API is integrated.",
+          status: "pending_integration",
+        };
+      },
+    }),
+
+    askWill: tool({
+      description:
+        "Ask Will (notes & reminders) to create a reminder, look up a note, or schedule a task for the user.",
+      inputSchema: z.object({
+        request: z.string().min(1).max(2000).describe("What to ask Will to do — e.g. 'remind me to review Apple MOAT in 3 days'"),
+      }),
+      execute: async (input) => {
+        if (ctx.isDemo) return demoBlocked("contact Will");
+        ctx.emitStep("Talking to Will...");
+        return {
+          answer:
+            "Will is not yet connected to Dream Team. Reminder scheduling will be available once Will's HTTP API is integrated.",
+          status: "pending_integration",
+        };
+      },
+    }),
+
+    webSearch: tool({
+      description:
+        "Search the web for real-time information about a company, stock, market event, or investment topic. Use this when the user asks you to research a company, perform a MOAT analysis, or find current news.",
+      inputSchema: z.object({
+        query: z.string().min(1).max(500).describe("The search query"),
+        purpose: z
+          .enum(["company_research", "moat_analysis", "news", "general"])
+          .describe("What the search is for — helps format the results"),
+      }),
+      execute: async (input) => {
+        if (ctx.isDemo)
+          return demoBlocked("perform web searches");
+        ctx.emitStep(`Searching: ${input.query}`);
+        return {
+          note: "Web search integration is planned for a future update. For now, Warren uses its training knowledge to answer research questions.",
+          query: input.query,
+          purpose: input.purpose,
+          status: "pending_integration",
+        };
+      },
+    }),
   } as const;
 }
 

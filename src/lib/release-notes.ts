@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.6.0",
+    date: "2026-05-13",
+    title: "Dream Team — multi-agent collaboration room",
+    titleTranslations: {
+      es: "Dream Team — sala de colaboración multi-agente",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Dream Team: a shared room where you talk to Warren, Clara, and Will simultaneously. @-mention any agent to open a threaded conversation — minimize, close, or restore threads at will.",
+        translations: {
+          es: "Dream Team: una sala compartida donde hablas con Warren, Clara y Will a la vez. Menciona cualquier agente con @ para abrir un hilo — minimiza, cierra o restaura conversaciones a voluntad.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Scheduled prompts: ask Warren to deliver a daily portfolio summary, weekly review, or any recurring report on your schedule.",
+        translations: {
+          es: "Prompts programados: pide a Warren un resumen diario de cartera, revisión semanal o cualquier informe recurrente según tu horario.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Cross-agent collaboration: Warren can consult Clara for savings data or ask Will to schedule reminders on your behalf — agents work as a team.",
+        translations: {
+          es: "Colaboración entre agentes: Warren puede consultar a Clara sobre tus ahorros o pedir a Will que programe recordatorios — los agentes trabajan en equipo.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.11",
     date: "2026-05-09",
     title: "Unified IdP login bridge & legacy auth removal",

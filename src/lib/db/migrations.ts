@@ -3311,6 +3311,81 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 112,
+    description:
+      "Dream Team: threads, messages, schedules, and cross-calls tables",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS dream_team_threads (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          agent TEXT NOT NULL CHECK(agent IN ('warren', 'clara', 'will')),
+          topic TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'minimized', 'closed', 'archived')),
+          message_count INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_dream_team_threads_user ON dream_team_threads(user_id, status)",
+      );
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS dream_team_messages (
+          id TEXT PRIMARY KEY,
+          thread_id TEXT NOT NULL REFERENCES dream_team_threads(id) ON DELETE CASCADE,
+          role TEXT NOT NULL CHECK(role IN ('user', 'assistant', 'system')),
+          agent TEXT CHECK(agent IN ('warren', 'clara', 'will')),
+          content TEXT NOT NULL,
+          metadata TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_dream_team_messages_thread ON dream_team_messages(thread_id, created_at)",
+      );
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS dream_team_schedules (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          agent TEXT NOT NULL CHECK(agent IN ('warren', 'clara', 'will')),
+          prompt TEXT NOT NULL,
+          cron_expr TEXT NOT NULL,
+          timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
+          enabled INTEGER NOT NULL DEFAULT 1,
+          last_run_at TEXT,
+          next_run_at TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_dream_team_schedules_user ON dream_team_schedules(user_id)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_dream_team_schedules_next ON dream_team_schedules(next_run_at) WHERE enabled = 1",
+      );
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS dream_team_cross_calls (
+          id TEXT PRIMARY KEY,
+          source_message_id TEXT NOT NULL REFERENCES dream_team_messages(id) ON DELETE CASCADE,
+          from_agent TEXT NOT NULL,
+          to_agent TEXT NOT NULL,
+          query TEXT NOT NULL,
+          response TEXT,
+          status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'completed', 'failed')),
+          duration_ms INTEGER,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_dream_team_cross_calls_msg ON dream_team_cross_calls(source_message_id)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

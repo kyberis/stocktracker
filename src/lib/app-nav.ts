@@ -119,6 +119,16 @@ export const APP_NAV_PRIMARY: AppNavPrimaryItem[] = [
     mobileWebTab: false,
     mobileWebMore: true,
   },
+  {
+    href: "/dream-team",
+    labelKey: "dreamTeamNav",
+    tierBadge: "pro",
+    matches: exactOrChild("/dream-team"),
+    desktop: true,
+    desktopTopStrip: true,
+    mobileWebTab: false,
+    mobileWebMore: true,
+  },
 ];
 
 export interface MobileMoreExtraItem {
@@ -191,6 +201,8 @@ export const MOBILE_TAB_ICON_PATH: Record<string, string> = {
     "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
   "/daily-digests":
     "M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z",
+  "/dream-team":
+    "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
   more: "M4 6h16M4 12h16M4 18h16",
   "/profile":
     "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
@@ -206,7 +218,8 @@ export type AppNavSidebarIconId =
   | "newspaper"
   | "crypto"
   | "indicators"
-  | "network";
+  | "network"
+  | "dream-team";
 
 export const APP_NAV_SIDEBAR_ICON: Record<string, AppNavSidebarIconId> = {
   "/": "home",
@@ -218,4 +231,5 @@ export const APP_NAV_SIDEBAR_ICON: Record<string, AppNavSidebarIconId> = {
   "/crypto": "crypto",
   "/economic-indicators": "indicators",
   "/network": "network",
+  "/dream-team": "dream-team",
 };

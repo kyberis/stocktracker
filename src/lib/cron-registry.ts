@@ -117,4 +117,10 @@ export const CRON_REGISTRY: CronJob[] = [
     schedule: "*/15 * * * *",
     description: "Process queued user feedback into Linear issues via the feedback pipeline",
   },
+  {
+    name: "dream-team-schedules",
+    path: "/api/cron/dream-team-schedules",
+    schedule: "*/5 * * * *",
+    description: "Execute due Dream Team user-scheduled prompts and create threads with agent responses",
+  },
 ];

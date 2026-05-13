@@ -659,3 +659,11 @@ export {
   loadChatMessages,
   clearChatHistory,
 } from "./telegram";
+
+export type { DreamTeamAgent, ThreadStatus, DreamTeamThread, DreamTeamMessage, DreamTeamSchedule, DreamTeamCrossCall } from "./dream-team";
+export {
+  listThreads, createThread, getThread, updateThreadStatus, updateThreadTopic,
+  listMessages, addMessage,
+  listSchedules, createSchedule, updateSchedule, deleteSchedule, getDueSchedules, markScheduleRun,
+  addCrossCall, completeCrossCall, failCrossCall,
+} from "./dream-team";
