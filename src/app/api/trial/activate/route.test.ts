@@ -6,7 +6,11 @@ vi.mock("@/lib/auth/guards", () => ({
 
 vi.mock("@/lib/db", () => ({
   findUserById: vi.fn(),
-  updateUserSubscription: vi.fn(),
+}));
+
+vi.mock("@/lib/trial-activation", () => ({
+  activateProTrial: vi.fn(),
+  getTrialEligibilityError: vi.fn(),
 }));
 
 vi.mock("@/lib/db/client", () => ({
@@ -18,14 +22,14 @@ vi.mock("@/lib/with-metrics", () => ({
 }));
 
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, updateUserSubscription } from "@/lib/db";
-import { ensureInitialized } from "@/lib/db/client";
+import { findUserById } from "@/lib/db";
+import { activateProTrial, getTrialEligibilityError } from "@/lib/trial-activation";
 import { NextRequest, NextResponse } from "next/server";
 
 const mockedRequireSession = vi.mocked(requireSession);
 const mockedFindUser = vi.mocked(findUserById);
-const mockedUpdateSub = vi.mocked(updateUserSubscription);
-const mockedEnsureInit = vi.mocked(ensureInitialized);
+const mockedActivate = vi.mocked(activateProTrial);
+const mockedEligibility = vi.mocked(getTrialEligibilityError);
 
 function makeRequest(body: Record<string, unknown>) {
   return new NextRequest("http://localhost/api/trial/activate", {
@@ -35,13 +39,9 @@ function makeRequest(body: Record<string, unknown>) {
   });
 }
 
-const mockClient = {
-  execute: vi.fn().mockResolvedValue({ rows: [] }),
-};
-
 beforeEach(() => {
   vi.clearAllMocks();
-  mockedEnsureInit.mockResolvedValue(mockClient as never);
+  mockedEligibility.mockReturnValue(null);
 });
 
 describe("POST /api/trial/activate", () => {
@@ -76,6 +76,7 @@ describe("POST /api/trial/activate", () => {
       trial_token: "real-token",
       trial_activated_at: "",
     } as never);
+    mockedEligibility.mockReturnValue("invalid_token");
 
     const { POST } = await import("./route");
     const res = await (POST as (req: NextRequest) => Promise<NextResponse>)(makeRequest({ token: "wrong-token" }));
@@ -95,6 +96,7 @@ describe("POST /api/trial/activate", () => {
       trial_token: "my-token",
       trial_activated_at: "2026-01-01T00:00:00Z",
     } as never);
+    mockedEligibility.mockReturnValue("already_activated");
 
     const { POST } = await import("./route");
     const res = await (POST as (req: NextRequest) => Promise<NextResponse>)(makeRequest({ token: "my-token" }));
@@ -114,6 +116,7 @@ describe("POST /api/trial/activate", () => {
       trial_token: "my-token",
       trial_activated_at: "",
     } as never);
+    mockedEligibility.mockReturnValue("not_free_plan");
 
     const { POST } = await import("./route");
     const res = await (POST as (req: NextRequest) => Promise<NextResponse>)(makeRequest({ token: "my-token" }));
@@ -133,21 +136,14 @@ describe("POST /api/trial/activate", () => {
       trial_token: "valid-token",
       trial_activated_at: "",
     } as never);
+    mockedActivate.mockResolvedValue({ planExpiresAt: "2026-01-08T00:00:00.000Z" });
 
     const { POST } = await import("./route");
     const res = await (POST as (req: NextRequest) => Promise<NextResponse>)(makeRequest({ token: "valid-token" }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.success).toBe(true);
-    expect(body.planExpiresAt).toBeDefined();
-
-    expect(mockedUpdateSub).toHaveBeenCalledWith("u1", {
-      plan: "pro",
-      planExpiresAt: expect.any(String),
-    });
-    expect(mockClient.execute).toHaveBeenCalledWith({
-      sql: expect.stringContaining("trial_activated_at"),
-      args: ["u1"],
-    });
+    expect(body.planExpiresAt).toBe("2026-01-08T00:00:00.000Z");
+    expect(mockedActivate).toHaveBeenCalledWith("u1");
   });
 });

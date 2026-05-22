@@ -10,6 +10,7 @@ const ALLOWED_EVENTS = new Set([
   "referral_link_shared",
   "people_search",
   "feed_view",
+  "onboarding_import_method",
 ]);
 
 const schema = z.object({

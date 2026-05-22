@@ -1,19 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { completeOnboarding, trackEvent } from "@/lib/db";
+import { completeOnboarding, findUserById, isFeatureEnabled, trackEvent } from "@/lib/db";
 import { updateUserSettings } from "@/lib/db/settings";
 import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
 import { onboardingSchema } from "@/lib/schemas";
+import { activateProTrial, getTrialEligibilityError } from "@/lib/trial-activation";
 
 export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
+  if (session.onboardingCompleted) {
+    return NextResponse.json({ error: "Onboarding already completed" }, { status: 400 });
+  }
+
   const result = await parseBody(req, onboardingSchema);
   if (!result.success) return result.error;
-  const { displayName, defaultCurrency, taxResidency, experienceLevel, importMethod, useCase, referralSource } = result.data;
+  const {
+    displayName,
+    defaultCurrency,
+    taxResidency,
+    experienceLevel,
+    importMethod,
+    useCase,
+    referralSource,
+    activateTrial,
+  } = result.data;
+
+  let trialActivated = false;
+  if (activateTrial) {
+    if (!(await isFeatureEnabled("pro_trial_enabled"))) {
+      return NextResponse.json({ error: "Trial is not available" }, { status: 400 });
+    }
+    const user = await findUserById(session.userId);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    const eligibilityError = getTrialEligibilityError(user);
+    if (eligibilityError) {
+      return NextResponse.json({ error: "Trial is not available for this account" }, { status: 400 });
+    }
+    await activateProTrial(session.userId);
+    trialActivated = true;
+    await trackEvent(session.userId, "onboarding_trial_activated", { source: "onboarding" });
+  } else if (activateTrial === false) {
+    await trackEvent(session.userId, "onboarding_trial_skipped", { source: "onboarding" });
+  }
 
   await completeOnboarding(session.userId, {
     displayName: displayName || undefined,
@@ -42,7 +76,11 @@ export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest)
     onboardingCompleted: true,
   });
 
-  const response = NextResponse.json({ ok: true, importMethod: importMethod || "skip" });
+  const response = NextResponse.json({
+    ok: true,
+    importMethod: importMethod || "skip",
+    trialActivated,
+  });
   response.cookies.set(getSessionCookieConfig(newSessionToken));
   return response;
 });

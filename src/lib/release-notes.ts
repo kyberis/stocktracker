@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.29",
+    date: "2026-05-23",
+    title: "Onboarding trial step",
+    titleTranslations: {
+      es: "Trial en el onboarding",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "New signups see a 7-day Trefolio Pro trial offer as the last onboarding step, with Clara and Will access highlighted and no credit card required. Import is offered right after.",
+        translations: {
+          es: "Los nuevos registros ven una oferta de prueba Pro de 7 días como último paso del onboarding, con acceso a Clara y Will y sin tarjeta. La importación se propone justo después.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.28",
     date: "2026-05-12",
     title: "IdP sign-out link prefetch",

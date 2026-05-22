@@ -162,6 +162,7 @@ export async function middleware(req: NextRequest) {
   const ONBOARDING_ALLOWED = new Set([
     "/onboarding",
     "/api/auth/onboarding",
+    "/api/auth/onboarding/trial-shown",
     "/api/auth/me",
     "/api/auth/logout",
     "/api/auth/verify-email",

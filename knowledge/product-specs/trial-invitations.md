@@ -9,7 +9,7 @@
 ## 2. Status
 
 - **Tier:** system (cron)
-- **Feature flag:** _none_
+- **Feature flag:** `pro_trial_enabled` (shared with onboarding trial step and expiration cron)
 - **Health:** green
 - **Owning skill:** [`engineer-payments-subscriptions`](../../.cursor/skills/engineer-payments-subscriptions/SKILL.md)
 
@@ -18,6 +18,8 @@
 | Type | Path | Notes |
 |------|------|-------|
 | Cron | [`src/app/api/cron/trial-invitations/route.ts`](../../src/app/api/cron/trial-invitations/route.ts) | Registered in [`cron-registry.ts`](../../src/lib/cron-registry.ts) and `vercel.json`. |
+| UI | [`src/app/onboarding/page.tsx`](../../src/app/onboarding/page.tsx) | Last onboarding step when `pro_trial_enabled` — tokenless activation via [`POST /api/auth/onboarding`](../../src/app/api/auth/onboarding/route.ts). |
+| API | [`POST /api/auth/onboarding/trial-shown`](../../src/app/api/auth/onboarding/trial-shown/route.ts) | Tracks `onboarding_trial_shown` and sets `trial_invited_at`. |
 
 ## 4. Data model
 
@@ -32,11 +34,13 @@
 
 ## 6. UI surface
 
-None (server cron).
+- **Onboarding (primary for new signups):** step 4 of `/onboarding` offers a 7-day Pro trial; import is proposed after activate/skip.
+- **Email claim page:** `/trial/activate?token=…` for day-7 cron invitations.
 
 ## 7. Business logic
 
-- Eligibility: Free, ≥ 7 days old, ≥ 1 holding, not trialed before, not opted-out.
+- **Onboarding channel:** eligible new users (`plan=free`, `trial_activated_at` empty, flag on) see the offer at signup. Activation is tokenless during incomplete onboarding. `trial_invited_at` is set on view to suppress the day-7 email cron.
+- **Email channel (cron):** Free, ≥ 7 days old, ≥ 1 holding or transaction, `trial_invited_at` and `trial_activated_at` empty, email verified.
 - Batch size limited per run to avoid Resend throttling.
 - Wrapped in `withCronLogging()`.
 
@@ -60,6 +64,7 @@ All locales.
 ## 12. Telemetry
 
 - Metrics: `trial_invitations_sent_total` pushed via `push-gauges`.
+- Analytics events: `onboarding_trial_shown`, `onboarding_trial_activated`, `onboarding_trial_skipped` (admin funnel).
 
 ## 13. Edge cases & gotchas
 
@@ -69,6 +74,8 @@ All locales.
 ## 14. Tests
 
 - [`src/lib/cron-logging.test.ts`](../../src/lib/cron-logging.test.ts).
+- [`src/lib/trial-activation.test.ts`](../../src/lib/trial-activation.test.ts).
+- [`src/app/api/auth/onboarding/trial-shown/route.test.ts`](../../src/app/api/auth/onboarding/trial-shown/route.test.ts).
 
 ## 15. Related skills and rules
 

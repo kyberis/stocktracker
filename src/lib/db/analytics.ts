@@ -199,7 +199,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       client.execute({
         sql: `SELECT event, COUNT(DISTINCT user_id) as cnt
               FROM analytics_events
-              WHERE event IN ('signup', 'upgrade_compare_shown', 'upgrade_compare_clicked', 'billing_checkout_started', 'billing_checkout_completed')
+              WHERE event IN ('signup', 'upgrade_compare_shown', 'upgrade_compare_clicked', 'billing_checkout_started', 'billing_checkout_completed', 'onboarding_trial_shown', 'onboarding_trial_activated', 'onboarding_trial_skipped')
                 AND created_at >= datetime('now', ?)
               GROUP BY event`,
         args: [daysArg],
@@ -327,6 +327,9 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
     },
     funnel: [
       { stage: "Signups", count: funnelMap.get("signup") ?? 0 },
+      { stage: "Trial Offer Shown", count: funnelMap.get("onboarding_trial_shown") ?? 0 },
+      { stage: "Trial Activated", count: funnelMap.get("onboarding_trial_activated") ?? 0 },
+      { stage: "Trial Skipped", count: funnelMap.get("onboarding_trial_skipped") ?? 0 },
       { stage: "Upsell Shown", count: funnelMap.get("upgrade_compare_shown") ?? 0 },
       { stage: "Upsell Clicked", count: funnelMap.get("upgrade_compare_clicked") ?? 0 },
       { stage: "Checkout Started", count: funnelMap.get("billing_checkout_started") ?? 0 },

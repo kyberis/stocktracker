@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ThemeProvider } from "@/lib/theme-context";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { I18nProvider, useI18n } from "@/lib/i18n";
+import { FeatureFlagProvider, useFeatureFlag, useFeatureFlagContext } from "@/lib/feature-flag-context";
 import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
 import { COUNTRIES } from "@/lib/countries";
 import { getBrokersForCountry } from "@/lib/country-brokers";
@@ -391,7 +392,70 @@ function StepReferralSource({
   );
 }
 
-/* ── Step 3: Import ── */
+/* ── Step 3: Trial ── */
+
+function StepTrial({
+  onActivate,
+  onSkip,
+  saving,
+}: {
+  onActivate: () => void;
+  onSkip: () => void;
+  saving: boolean;
+}) {
+  const { t } = useI18n();
+  const shownRef = useRef(false);
+
+  useEffect(() => {
+    if (shownRef.current) return;
+    shownRef.current = true;
+    fetch("/api/auth/onboarding/trial-shown", { method: "POST" }).catch(() => {});
+  }, []);
+
+  const benefits = [
+    t("onboardingTrialBenefit1"),
+    t("onboardingTrialBenefit2"),
+    t("onboardingTrialBenefit3"),
+  ];
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-gray-500 dark:text-slate-400">{t("onboardingTrialSubtitle")}</p>
+      <ul className="space-y-3">
+        {benefits.map((benefit) => (
+          <li key={benefit} className="flex gap-3 text-sm text-gray-700 dark:text-slate-300">
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" aria-hidden>
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            </span>
+            <span>{benefit}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-col gap-3 pt-1">
+        <button
+          type="button"
+          onClick={onActivate}
+          disabled={saving}
+          className="btn-primary w-full disabled:opacity-60"
+        >
+          {saving ? t("onboardingTrialActivating") : t("onboardingTrialActivate")}
+        </button>
+        <button
+          type="button"
+          onClick={onSkip}
+          disabled={saving}
+          className="btn-secondary w-full disabled:opacity-60"
+        >
+          {t("onboardingTrialSkip")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Post-wizard: Import ── */
 
 type ImportChoice = "broker_sync" | "csv" | "ai" | "skip";
 
@@ -462,10 +526,15 @@ const IMPORT_REDIRECTS: Record<ImportChoice, string> = {
   skip: "/",
 };
 
+type OnboardingPhase = "wizard" | "importProposal";
+
 function OnboardingContent() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
   const { t } = useI18n();
+  const trialEnabled = useFeatureFlag("pro_trial_enabled");
+  const { isLoaded: flagsLoaded } = useFeatureFlagContext();
+  const [phase, setPhase] = useState<OnboardingPhase>("wizard");
   const [step, setStep] = useState(0);
   const [displayName, setDisplayName] = useState("");
   const [currency, setCurrency] = useState("EUR");
@@ -474,50 +543,87 @@ function OnboardingContent() {
   const [useCase, setUseCase] = useState<UseCaseOption[]>([]);
   const [referralSource, setReferralSource] = useState<ReferralSourceOption | "">("");
   const [saving, setSaving] = useState(false);
+  const autoCompleteRef = useRef(false);
+
+  const showTrialStep = flagsLoaded && trialEnabled && !user?.trialActivatedAt;
 
   useEffect(() => {
     if (user?.displayName) setDisplayName(user.displayName);
   }, [user?.displayName]);
 
   useEffect(() => {
-    if (user?.onboardingCompleted) {
+    if (user?.onboardingCompleted && phase !== "importProposal") {
       router.replace("/");
     }
-  }, [user?.onboardingCompleted, router]);
+  }, [user?.onboardingCompleted, phase, router]);
 
-  const handleFinish = useCallback(async (importMethod?: ImportChoice) => {
+  const completeOnboarding = useCallback(async (activateTrial?: boolean) => {
     setSaving(true);
     try {
+      const body: Record<string, unknown> = {
+        displayName,
+        defaultCurrency: currency,
+        taxResidency: taxResidency || undefined,
+        experienceLevel: experienceLevel || undefined,
+        useCase: useCase.length > 0 ? useCase : undefined,
+        referralSource: referralSource || undefined,
+      };
+      if (activateTrial === true) body.activateTrial = true;
+      if (activateTrial === false) body.activateTrial = false;
+
       const res = await fetch("/api/auth/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          displayName,
-          defaultCurrency: currency,
-          taxResidency: taxResidency || undefined,
-          experienceLevel: experienceLevel || undefined,
-          importMethod: importMethod || "skip",
-          useCase: useCase.length > 0 ? useCase : undefined,
-          referralSource: referralSource || undefined,
-        }),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
         await refreshUser();
-        const dest = importMethod ? IMPORT_REDIRECTS[importMethod] : "/";
-        router.replace(dest);
+        setPhase("importProposal");
       }
     } catch {
       // Allow retry
     }
     setSaving(false);
-  }, [displayName, currency, taxResidency, experienceLevel, useCase, referralSource, refreshUser, router]);
+  }, [displayName, currency, taxResidency, experienceLevel, useCase, referralSource, refreshUser]);
+
+  useEffect(() => {
+    if (
+      phase !== "wizard" ||
+      step !== 3 ||
+      !flagsLoaded ||
+      showTrialStep ||
+      autoCompleteRef.current ||
+      saving
+    ) {
+      return;
+    }
+    autoCompleteRef.current = true;
+    void completeOnboarding();
+  }, [phase, step, flagsLoaded, showTrialStep, saving, completeOnboarding]);
+
+  const handleImportChoice = useCallback(async (importMethod: ImportChoice) => {
+    await fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: "onboarding_import_method",
+        metadata: { method: importMethod },
+      }),
+    }).catch(() => {});
+    router.replace(IMPORT_REDIRECTS[importMethod]);
+  }, [router]);
 
   const stepTitles = [
     t("onboardingStep1Title"),
     t("onboardingStepUseCaseTitle"),
     t("onboardingStepReferralSourceTitle"),
-    t("onboardingStep3ImportTitle"),
+    t("onboardingStepTrialTitle"),
   ];
+
+  const cardTitle =
+    phase === "importProposal"
+      ? t("onboardingImportAfterTrialTitle")
+      : stepTitles[step];
 
   return (
     <main className="flex-1 flex px-4 py-12">
@@ -547,10 +653,18 @@ function OnboardingContent() {
         </div>
 
         <div className="card p-6">
-          <StepIndicator current={step} />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{stepTitles[step]}</h2>
+          {phase === "wizard" && <StepIndicator current={step} />}
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{cardTitle}</h2>
 
-          {step === 0 && (
+          {phase === "importProposal" && (
+            <StepImport
+              country={taxResidency}
+              onFinish={handleImportChoice}
+              saving={false}
+            />
+          )}
+
+          {phase === "wizard" && step === 0 && (
             <StepProfile
               displayName={displayName}
               setDisplayName={setDisplayName}
@@ -564,7 +678,7 @@ function OnboardingContent() {
               onNext={() => setStep(1)}
             />
           )}
-          {step === 1 && (
+          {phase === "wizard" && step === 1 && (
             <StepUseCase
               selected={useCase}
               setSelected={setUseCase}
@@ -572,7 +686,7 @@ function OnboardingContent() {
               onSkip={() => setStep(2)}
             />
           )}
-          {step === 2 && (
+          {phase === "wizard" && step === 2 && (
             <StepReferralSource
               selected={referralSource}
               setSelected={setReferralSource}
@@ -580,34 +694,46 @@ function OnboardingContent() {
               onSkip={() => setStep(3)}
             />
           )}
-          {step === 3 && (
-            <StepImport
-              country={taxResidency}
-              onFinish={handleFinish}
+          {phase === "wizard" && step === 3 && showTrialStep && (
+            <StepTrial
+              onActivate={() => completeOnboarding(true)}
+              onSkip={() => completeOnboarding(false)}
               saving={saving}
             />
           )}
+          {phase === "wizard" && step === 3 && flagsLoaded && !showTrialStep && saving && (
+            <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">{t("onboardingSaving")}</p>
+          )}
+          {phase === "wizard" && step === 3 && !flagsLoaded && (
+            <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">{t("onboardingSaving")}</p>
+          )}
         </div>
 
-        <div className="flex items-center justify-between mt-4">
-          {step > 0 ? (
-            <button
-              onClick={() => setStep((s) => s - 1)}
-              className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors"
-            >
-              &larr; Back
-            </button>
-          ) : (
-            <span />
-          )}
-          <button
-            onClick={() => handleFinish("skip")}
-            disabled={saving}
-            className="text-sm text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
-          >
-            {t("onboardingSkipSetup")}
-          </button>
-        </div>
+        {phase === "wizard" && (
+          <div className="flex items-center justify-between mt-4">
+            {step > 0 ? (
+              <button
+                onClick={() => setStep((s) => s - 1)}
+                className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors"
+              >
+                &larr; Back
+              </button>
+            ) : (
+              <span />
+            )}
+            {step < 3 ? (
+              <button
+                onClick={() => setStep(3)}
+                disabled={saving}
+                className="text-sm text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+              >
+                {t("onboardingSkipSetup")}
+              </button>
+            ) : (
+              <span />
+            )}
+          </div>
+        )}
       </div>
     </main>
   );
@@ -617,20 +743,22 @@ export default function OnboardingPage() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <I18nProvider>
-          <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900">
-            <OnboardingContent />
-            <footer className="py-6 text-center text-xs text-gray-400 dark:text-slate-500 flex items-center justify-center gap-3 flex-wrap">
-              <span>&copy; {new Date().getFullYear()} trefolio</span>
-              <span className="text-gray-300 dark:text-slate-700">&middot;</span>
-              <Link href="/privacy" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">Privacy</Link>
-              <span className="text-gray-300 dark:text-slate-700">&middot;</span>
-              <Link href="/terms" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">Terms</Link>
-              <span className="text-gray-300 dark:text-slate-700">&middot;</span>
-              <Link href="/contact" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">Contact</Link>
-            </footer>
-          </div>
-        </I18nProvider>
+        <FeatureFlagProvider>
+          <I18nProvider>
+            <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900">
+              <OnboardingContent />
+              <footer className="py-6 text-center text-xs text-gray-400 dark:text-slate-500 flex items-center justify-center gap-3 flex-wrap">
+                <span>&copy; {new Date().getFullYear()} trefolio</span>
+                <span className="text-gray-300 dark:text-slate-700">&middot;</span>
+                <Link href="/privacy" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">Privacy</Link>
+                <span className="text-gray-300 dark:text-slate-700">&middot;</span>
+                <Link href="/terms" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">Terms</Link>
+                <span className="text-gray-300 dark:text-slate-700">&middot;</span>
+                <Link href="/contact" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">Contact</Link>
+              </footer>
+            </div>
+          </I18nProvider>
+        </FeatureFlagProvider>
       </AuthProvider>
     </ThemeProvider>
   );
