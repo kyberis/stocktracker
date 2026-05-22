@@ -2,6 +2,9 @@
 
 export const TRIAL_BANNER_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
+const MS_PER_HOUR = 60 * 60 * 1000;
+const MS_PER_DAY = 24 * MS_PER_HOUR;
+
 export type TrialBannerVariant = "active" | "expired";
 
 export interface TrialBannerVisibility {
@@ -49,8 +52,8 @@ export function getTrialBannerVisibility(input: {
     return {
       show: true,
       variant: "active",
-      days: Math.floor(remaining / TRIAL_BANNER_DURATION_MS),
-      hours: Math.floor((remaining % TRIAL_BANNER_DURATION_MS) / (60 * 60 * 1000)),
+      days: Math.floor(remaining / MS_PER_DAY),
+      hours: Math.floor((remaining % MS_PER_DAY) / MS_PER_HOUR),
     };
   }
 

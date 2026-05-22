@@ -211,4 +211,15 @@ describe("getTrialBannerVisibility", () => {
     expect(result.show).toBe(true);
     expect(result.variant).toBe("expired");
   });
+
+  it("formats remaining time as calendar days and hours within the day", () => {
+    const trialEnd = Date.parse(activatedAt) + TRIAL_DURATION_MS;
+    const result = getTrialBannerVisibility({
+      trialActivatedAt: activatedAt,
+      plan: "pro",
+      planExpiresAt: new Date(trialEnd).toISOString(),
+      nowMs: Date.parse(activatedAt) + 3 * 60 * 60 * 1000,
+    });
+    expect(result).toMatchObject({ show: true, variant: "active", days: 6, hours: 21 });
+  });
 });

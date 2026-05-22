@@ -45,6 +45,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Oficina de agentes — orquestación en vivo, misiones persistentes, integración Clara/Will, APIs Pro y comando /office en Telegram.",
         },
       },
+      {
+        type: "fix",
+        text: "Trial countdown banner now shows calendar days and hours (e.g. 6d 21h) instead of 0d 165h.",
+        translations: {
+          es: "El banner del trial Pro muestra días y horas calendario (p. ej. 6d 21h) en lugar de 0d 165h.",
+        },
+      },
     ],
   },
   {
