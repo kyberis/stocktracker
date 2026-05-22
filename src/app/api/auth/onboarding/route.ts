@@ -6,7 +6,7 @@ import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
 import { onboardingSchema } from "@/lib/schemas";
-import { activateProTrial, getTrialEligibilityError } from "@/lib/trial-activation";
+import { activateProTrial, getTrialEligibilityError, syncOnboardingTrialToIdp } from "@/lib/trial-activation";
 
 export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -42,9 +42,12 @@ export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest)
     if (eligibilityError) {
       return NextResponse.json({ error: "Trial is not available for this account" }, { status: 400 });
     }
-    await activateProTrial(session.userId);
+    const { planExpiresAt } = await activateProTrial(session.userId);
     trialActivated = true;
     await trackEvent(session.userId, "onboarding_trial_activated", { source: "onboarding" });
+    if (user.email) {
+      void syncOnboardingTrialToIdp(user.email, planExpiresAt);
+    }
   } else if (activateTrial === false) {
     await trackEvent(session.userId, "onboarding_trial_skipped", { source: "onboarding" });
   }

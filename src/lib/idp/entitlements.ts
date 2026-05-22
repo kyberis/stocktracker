@@ -3,6 +3,7 @@ import { findUserById, updateUserProfile } from "@/lib/db/users";
 import type { UserPlan } from "@/lib/db/helpers";
 import { fetchEntitlementsBySub, type IdpEntitlementResponse } from "./client";
 import { isIdpEnabled } from "./config";
+import { isLocalTrialActive } from "@/lib/trial-activation";
 
 /**
  * Bridge between the IdP entitlement payload and trefolio's local
@@ -39,6 +40,10 @@ export async function syncEntitlementsForUser(userId: string): Promise<UserPlan 
 
   const nextPlan: UserPlan = payload.entitlements.trefolio_pro ? "pro" : "free";
   const nextExpiresAt = payload.proUntil ?? "";
+
+  if (isLocalTrialActive(user) && !payload.entitlements.trefolio_pro) {
+    return user.plan;
+  }
 
   if (user.plan !== nextPlan || user.plan_expires_at !== nextExpiresAt) {
     const client = await ensureInitialized();

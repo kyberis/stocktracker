@@ -4,14 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
 import type { TranslationKey } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n";
-
-const MS_DAY = 24 * 60 * 60 * 1000;
-
-function parseMs(iso: string): number | null {
-  if (!iso) return null;
-  const t = new Date(iso).getTime();
-  return Number.isFinite(t) ? t : null;
-}
+import { getTrialBannerVisibility } from "@/lib/trial-activation";
 
 function tOr(t: (k: TranslationKey) => string, key: TranslationKey, fallback: string) {
   const v = t(key);
@@ -32,35 +25,12 @@ export default function TrialCountdownBanner() {
 
   const visibility = useMemo(() => {
     if (!user) return { show: false as const };
-    const trialActivatedAt = user.trialActivatedAt?.trim();
-    if (!trialActivatedAt) return { show: false as const };
-
-    if (user.plan === "pro" && !user.planExpiresAt) {
-      return { show: false as const };
-    }
-
-    const now = nowMs;
-    const expiryMs = parseMs(user.planExpiresAt);
-    const activatedMs = parseMs(trialActivatedAt);
-    const approxTrialEndMs = activatedMs !== null ? activatedMs + 7 * MS_DAY : null;
-
-    const trialEndForCutoff =
-      expiryMs !== null && expiryMs > 0 ? expiryMs : approxTrialEndMs !== null ? approxTrialEndMs : null;
-
-    if (trialEndForCutoff !== null && now > trialEndForCutoff + 30 * MS_DAY) {
-      return { show: false as const };
-    }
-
-    const expiresFuture = expiryMs !== null && expiryMs > now;
-
-    if (expiresFuture && user.plan === "pro") {
-      const remaining = Math.max(0, expiryMs! - now);
-      const days = Math.floor(remaining / MS_DAY);
-      const hours = Math.floor((remaining % MS_DAY) / (60 * 60 * 1000));
-      return { show: true as const, variant: "active" as const, days, hours };
-    }
-
-    return { show: true as const, variant: "expired" as const };
+    return getTrialBannerVisibility({
+      trialActivatedAt: user.trialActivatedAt ?? "",
+      plan: user.plan,
+      planExpiresAt: user.planExpiresAt ?? "",
+      nowMs,
+    });
   }, [user, nowMs]);
 
   if (!visibility.show) return null;

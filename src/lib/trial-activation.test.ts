@@ -13,8 +13,11 @@ import { findUserById, updateUserSubscription } from "@/lib/db";
 import { ensureInitialized } from "@/lib/db/client";
 import {
   activateProTrial,
+  getTrialBannerVisibility,
   getTrialEligibilityError,
   getTrialPlanExpiresAt,
+  isLocalTrialActive,
+  TRIAL_DURATION_MS,
 } from "./trial-activation";
 
 const mockedFindUser = vi.mocked(findUserById);
@@ -90,5 +93,64 @@ describe("activateProTrial", () => {
   it("throws when trial already activated", async () => {
     mockedFindUser.mockResolvedValue({ ...freeUser, trial_activated_at: "2026-01-01" } as never);
     await expect(activateProTrial("u1")).rejects.toThrow("already_activated");
+  });
+});
+
+describe("isLocalTrialActive", () => {
+  it("returns true for active local trial", () => {
+    expect(
+      isLocalTrialActive({
+        trial_activated_at: "2026-05-23T00:00:00.000Z",
+        plan: "pro",
+        plan_expires_at: "2026-05-30T00:00:00.000Z",
+      }),
+    ).toBe(true);
+  });
+
+  it("returns false when trial was never activated", () => {
+    expect(
+      isLocalTrialActive({
+        trial_activated_at: "",
+        plan: "free",
+        plan_expires_at: "",
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("getTrialBannerVisibility", () => {
+  const activatedAt = "2026-05-23T12:00:00.000Z";
+
+  it("shows active trial even when plan cache is free but activation is recent", () => {
+    const result = getTrialBannerVisibility({
+      trialActivatedAt: activatedAt,
+      plan: "free",
+      planExpiresAt: "",
+      nowMs: Date.parse(activatedAt) + 2 * 24 * 60 * 60 * 1000,
+    });
+    expect(result.show).toBe(true);
+    expect(result.variant).toBe("active");
+  });
+
+  it("does not show banner when trial was never activated", () => {
+    expect(
+      getTrialBannerVisibility({
+        trialActivatedAt: "",
+        plan: "free",
+        planExpiresAt: "",
+        nowMs: Date.now(),
+      }).show,
+    ).toBe(false);
+  });
+
+  it("shows expired only after the trial window ends", () => {
+    const result = getTrialBannerVisibility({
+      trialActivatedAt: activatedAt,
+      plan: "free",
+      planExpiresAt: "",
+      nowMs: Date.parse(activatedAt) + TRIAL_DURATION_MS + 60_000,
+    });
+    expect(result.show).toBe(true);
+    expect(result.variant).toBe("expired");
   });
 });
