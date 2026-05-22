@@ -73,7 +73,7 @@ export async function confirmAgentMissionStep(opts: {
       return { ok: false, message: "Unknown step kind" };
   }
 
-  let nextSteps = unlockNextSteps(mission.steps, opts.stepNumber);
+  const nextSteps = unlockNextSteps(mission.steps, opts.stepNumber);
   const allDone = nextSteps.every((s) => s.status === "done" || s.status === "skipped");
   const updated = await updateAgentMissionSteps(opts.userId, opts.missionId, nextSteps, allDone ? "completed" : "active");
 
