@@ -90,6 +90,11 @@ export interface TelegramStrings {
   helpDisclaimer: string;
   /** After a Folio-tier Warren reply, nudge upgrade for a higher-quality model (second message). */
   warrenUpgradeModelHint: string;
+  officeProRequired: string;
+  officeNoMission: string;
+  officeMissionSummary: (title: string, pending: number) => string;
+  officeOpenWeb: string;
+  helpOffice: string;
 }
 
 const EN: TelegramStrings = {
@@ -163,6 +168,14 @@ const EN: TelegramStrings = {
     "Warren is AI-generated assistance, not financial advice.",
   warrenUpgradeModelHint:
     "Tip: you're on Folio (free) — Warren uses a compact model here. Trefolio unlocks a larger GPT model, higher AI limits, and premium market data. Upgrade in trefolio → Profile → Subscription.",
+  officeProRequired:
+    "Agent Office is Trefolio Pro only. Upgrade in trefolio → Profile → Subscription, then open /office in the app.",
+  officeNoMission:
+    "No active office mission. Open trefolio → Agent Office and ask Warren to coordinate with Clara and Will.",
+  officeMissionSummary: (title: string, pending: number) =>
+    `🏢 *Agent Office* — active mission: *${title}* (${pending} step${pending === 1 ? "" : "s"} pending). Confirm each step in the web app.`,
+  officeOpenWeb: "Open https://trefolio.com/office to chat and confirm steps.",
+  helpOffice: "Agent Office (Pro)",
 };
 
 const ES: TelegramStrings = {
@@ -236,6 +249,14 @@ const ES: TelegramStrings = {
   helpDisclaimer: "Warren es asistencia generada por IA, no asesoramiento financiero.",
   warrenUpgradeModelHint:
     "Consejo: estás en Folio (gratis) — aquí Warren usa un modelo compacto. Trefolio desbloquea un GPT mayor, más consultas IA y datos de mercado premium. Mejora en trefolio → Perfil → Suscripción.",
+  officeProRequired:
+    "La Oficina de agentes es solo Trefolio Pro. Mejora en trefolio → Perfil → Suscripción y abre /office en la app.",
+  officeNoMission:
+    "Sin misión activa en la Oficina. Abre trefolio → Oficina de agentes y pídele a Warren que coordine con Clara y Will.",
+  officeMissionSummary: (title: string, pending: number) =>
+    `🏢 *Oficina de agentes* — misión activa: *${title}* (${pending} paso${pending === 1 ? "" : "s"} pendiente${pending === 1 ? "" : "s"}). Confirmá cada paso en la web.`,
+  officeOpenWeb: "Abrí https://trefolio.com/office para chatear y confirmar pasos.",
+  helpOffice: "Oficina de agentes (Pro)",
 };
 
 const BUNDLES: Record<TelegramLocale, TelegramStrings> = { en: EN, es: ES };

@@ -91,6 +91,21 @@ function getHeroFeatures(t: T) {
       ],
     },
     {
+      tag: t("landingFeatureOfficeTag"),
+      tagBadge: "Trefolio",
+      title: t("landingFeatureOfficeTitle"),
+      description: t("landingFeatureOfficeDesc"),
+      screenshot: "/screenshots/agent-office.png",
+      points: [
+        t("landingFeatureOfficePoint1"),
+        t("landingFeatureOfficePoint2"),
+        t("landingFeatureOfficePoint3"),
+        t("landingFeatureOfficePoint4"),
+      ],
+      ctaHref: "/office",
+      ctaLabel: t("landingFeatureOfficeCta"),
+    },
+    {
       tag: t("landingFeatureImportTag"),
       title: t("landingFeatureImportTitle"),
       description: t("landingFeatureImportDesc"),
@@ -129,6 +144,7 @@ function getFeatureCards(t: T) {
     { icon: "castle", title: t("landingCardMoatTitle"), desc: t("landingCardMoatDesc") },
     { icon: "wallet", title: t("landingCardNetWorthTitle"), desc: t("landingCardNetWorthDesc") },
     { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc") },
+    { icon: "office", title: t("landingCardOfficeTitle"), desc: t("landingCardOfficeDesc"), badge: "Trefolio" },
     { icon: "upload", title: t("landingCardImportTitle"), desc: t("landingCardImportDesc") },
     { icon: "chart", title: t("landingCardPerfTitle"), desc: t("landingCardPerfDesc") },
     { icon: "beaker", title: t("landingCardSimulatorTitle"), desc: t("landingCardSimulatorDesc") },
@@ -162,7 +178,7 @@ interface PricingTier {
 const LAUNCH_DISCOUNT_PCT = 25;
 
 /** Trefolio tier bullets: 1–22, 24, 25, 26 (23 unused). */
-const TREFOLIO_PRICING_FEATURE_NUMS = [...Array.from({ length: 22 }, (_, i) => i + 1), 24, 25, 26] as const;
+const TREFOLIO_PRICING_FEATURE_NUMS = [...Array.from({ length: 22 }, (_, i) => i + 1), 24, 25, 26, 27] as const;
 
 function getPricing(t: T): PricingTier[] {
   return [
@@ -195,10 +211,14 @@ function getPricing(t: T): PricingTier[] {
 }
 
 function getFaqItems(t: T) {
-  return Array.from({ length: 8 }, (_, i) => ({
+  const base = Array.from({ length: 8 }, (_, i) => ({
     q: t(`landingFaq${i + 1}Q` as TranslationKey),
     a: t(`landingFaq${i + 1}A` as TranslationKey),
   }));
+  return [
+    ...base,
+    { q: t("landingFaqOfficeQ"), a: t("landingFaqOfficeA") },
+  ];
 }
 
 function getTestimonials(t: T) {
@@ -303,6 +323,9 @@ function FeatureIcon({ type }: { type: string }) {
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M4 21V10l2-2V4h2v2h2V4h2v2h2V4h2v2h2V4h2v4l2 2v11" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 21v-4a3 3 0 016 0v4" />
       </>
+    ),
+    office: (
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" />
     ),
   };
 
@@ -731,6 +754,9 @@ function AgentsTeamSection() {
           <p className="text-lg text-slate-500 max-w-2xl mx-auto">
             {t("landingAgentsSubtitle")}
           </p>
+          <p className="text-base text-slate-600 max-w-2xl mx-auto mt-4">
+            {t("landingAgentsOfficeBridge")}
+          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
@@ -863,6 +889,18 @@ function FeaturesSection() {
                       </li>
                     ))}
                   </ul>
+                  {"ctaHref" in feature && feature.ctaHref && "ctaLabel" in feature && feature.ctaLabel ? (
+                    <Link
+                      href={feature.ctaHref}
+                      onClick={() => trackLanding("landing_cta_click", { cta: "feature_office" })}
+                      className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-500/20"
+                    >
+                      {feature.ctaLabel}
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </Link>
+                  ) : null}
                 </div>
 
                 {/* Screenshot side */}

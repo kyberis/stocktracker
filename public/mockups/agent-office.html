@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>trefolio — Oficina de Agentes (mock)</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface-2: #243044;
+      --border: #2d3a4f;
+      --text: #e8edf4;
+      --muted: #8b9cb3;
+      --warren: #10b981;
+      --clara: #f59e0b;
+      --will: #8b5cf6;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      --success: #22c55e;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 72px 280px 1fr 340px;
+      grid-template-rows: 56px 1fr;
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Top bar */
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--warren), #059669);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .topbar h1 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .topbar h1 span { color: var(--muted); font-weight: 400; }
+
+    .stealth-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .stealth-toggle .dot {
+      width: 36px;
+      height: 20px;
+      background: var(--surface-2);
+      border-radius: 10px;
+      position: relative;
+      border: 1px solid var(--border);
+    }
+
+    .stealth-toggle .dot::after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 12px;
+      height: 12px;
+      background: var(--muted);
+      border-radius: 50%;
+    }
+
+    /* Icon rail */
+    .rail {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 0;
+      gap: 8px;
+    }
+
+    .rail-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .rail-icon.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--warren);
+    }
+
+    /* Agent sidebar */
+    .agents-panel {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .agents-panel-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .agents-panel-header h2 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .agents-panel-header p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .agent-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .agent-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      margin-bottom: 4px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .agent-card:hover { background: var(--surface-2); }
+
+    .agent-card.active {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .agent-card.host::after {
+      content: "Anfitrión";
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--warren);
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .avatar.warren { background: linear-gradient(135deg, #10b981, #059669); }
+    .avatar.clara { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .avatar.will { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+    .agent-info h3 { font-size: 14px; font-weight: 600; }
+    .agent-info p { font-size: 12px; color: var(--muted); }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    /* Main chat */
+    .chat-area {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .chat-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .chat-header h2 { font-size: 16px; font-weight: 600; }
+    .chat-header p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .msg {
+      max-width: 85%;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg.user { align-self: flex-end; }
+
+    .msg-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .msg-header .mini-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .msg-header .name { font-size: 12px; font-weight: 600; }
+    .msg-header .time { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+    .bubble {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .msg.user .bubble {
+      background: var(--warren);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg.agent .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg.agent.warren .bubble { border-left: 3px solid var(--warren); }
+    .msg.agent.clara .bubble { border-left: 3px solid var(--clara); }
+    .msg.agent.will .bubble { border-left: 3px solid var(--will); }
+
+    /* Coordination block */
+    .coordination {
+      align-self: stretch;
+      max-width: 100%;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 8px 0;
+    }
+
+    .coordination-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .coordination-header svg { opacity: 0.6; }
+
+    .coord-step {
+      display: flex;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .coord-step:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .coord-arrow {
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+      min-width: 90px;
+    }
+
+    .coord-arrow strong { color: var(--text); }
+
+    .coord-result { color: var(--muted); flex: 1; }
+    .coord-result em { color: var(--text); font-style: normal; font-weight: 500; }
+
+    /* Allocation card inline */
+    .inline-card {
+      margin-top: 10px;
+      background: var(--surface-2);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+    }
+
+    .inline-card .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+
+    .inline-card .row .label { color: var(--muted); }
+    .inline-card .row .value.bad { color: #f87171; }
+    .inline-card .row .value.good { color: var(--success); }
+
+    .bar-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .bar-fill.low { background: #f87171; width: 21%; }
+    .bar-fill.target { background: var(--muted); width: 80%; opacity: 0.3; position: relative; }
+
+    /* Input */
+    .chat-input-area {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .chat-input-wrap {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-size: 14px;
+      resize: none;
+      font-family: inherit;
+      min-height: 44px;
+    }
+
+    .chat-input:focus { outline: none; border-color: var(--warren); }
+
+    .send-btn {
+      background: var(--warren);
+      border: none;
+      border-radius: 10px;
+      width: 44px;
+      height: 44px;
+      color: white;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quick-prompts {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .chip:hover { border-color: var(--warren); color: var(--text); }
+
+    /* Mission board */
+    .mission-board {
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .mission-board-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mission-board-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .mission-board-header p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .missions {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    .mission-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .mission-card.active-mission {
+      border-color: rgba(245, 158, 11, 0.4);
+      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.1);
+    }
+
+    .mission-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--clara);
+      margin-bottom: 8px;
+    }
+
+    .mission-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .mission-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .mission-step {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      background: var(--bg);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .step-num.done { background: var(--success); color: #fff; }
+    .step-num.pending { background: var(--clara); color: #000; }
+
+    .step-body { flex: 1; min-width: 0; }
+    .step-agent {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .step-agent.warren { color: var(--warren); }
+    .step-agent.clara { color: var(--clara); }
+    .step-agent.will { color: var(--will); }
+
+    .step-action { font-size: 12px; color: var(--muted); }
+
+    .step-buttons {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .btn {
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-confirm {
+      background: var(--warren);
+      color: white;
+    }
+
+    .btn-confirm.clara { background: var(--clara); color: #000; }
+    .btn-confirm.will { background: var(--will); color: white; }
+
+    .btn-cancel {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-skip {
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 6px 10px;
+    }
+
+    .disclaimer {
+      padding: 12px 16px;
+      font-size: 10px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      line-height: 1.4;
+    }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .app {
+        grid-template-columns: 72px 1fr;
+        grid-template-rows: 56px auto 1fr;
+      }
+      .agents-panel { display: none; }
+      .mission-board {
+        grid-column: 1 / -1;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        max-height: 280px;
+      }
+      .chat-area { grid-column: 2; }
+      .rail { grid-row: 2 / 4; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="logo">T</div>
+        <h1>Oficina <span>/ Warren, Clara & Will</span></h1>
+      </div>
+      <label class="stealth-toggle">
+        Modo sigiloso
+        <span class="dot"></span>
+      </label>
+    </header>
+
+    <!-- Icon rail -->
+    <nav class="rail">
+      <div class="rail-icon" title="Dashboard">📊</div>
+      <div class="rail-icon active" title="Oficina">🏢</div>
+      <div class="rail-icon" title="Cartera">💼</div>
+      <div class="rail-icon" title="Herramientas">🔧</div>
+    </nav>
+
+    <!-- Agent sidebar -->
+    <aside class="agents-panel">
+      <div class="agents-panel-header">
+        <h2>Tu equipo</h2>
+        <p>Tres agentes, una suscripción Pro</p>
+      </div>
+      <div class="agent-list">
+        <div class="agent-card active host">
+          <div class="avatar warren">W</div>
+          <div class="agent-info">
+            <h3>Warren</h3>
+            <p><span class="status-dot"></span>Analista de cartera</p>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="avatar clara">C</div>
+          <div class="agent-info">
+            <h3>Clara</h3>
+            <p><span class="status-dot"></span>Finanzas personales</p>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="avatar will">Wi</div>
+          <div class="agent-info">
+            <h3>Will</h3>
+            <p><span class="status-dot"></span>Notas inteligentes</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main chat -->
+    <main class="chat-area">
+      <div class="chat-header">
+        <h2>Conversación con Warren</h2>
+        <p>Warren coordina con Clara y Will cuando hace falta — ves todo el proceso</p>
+      </div>
+
+      <div class="messages">
+        <!-- User message -->
+        <div class="msg user">
+          <div class="msg-header">
+            <span class="name">Tú</span>
+            <span class="time">10:42</span>
+          </div>
+          <div class="bubble">¿Hay algo inteligente que pueda hacer con mi plata?</div>
+        </div>
+
+        <!-- Warren analysis -->
+        <div class="msg agent warren">
+          <div class="msg-header">
+            <div class="mini-avatar avatar warren">W</div>
+            <span class="name">Warren</span>
+            <span class="time">10:42</span>
+          </div>
+          <div class="bubble">
+            Revisé tu cartera. Tienes una concentración baja en <strong>Infraestructura</strong> (2,1% vs ~8% que sería razonable para tu perfil). El cash en cartera (€120) no alcanza para un rebalanceo significativo.
+            <div class="inline-card">
+              <div class="row">
+                <span class="label">Infra / Utilities</span>
+                <span class="value bad">2,1%</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill low"></div></div>
+              <div class="row" style="margin-top:8px">
+                <span class="label">Objetivo sugerido</span>
+                <span class="value good">~8%</span>
+              </div>
+            </div>
+            Voy a consultar con Clara si tienes ahorro disponible y con Will por tus notas recientes.
+          </div>
+        </div>
+
+        <!-- Coordination block -->
+        <div class="coordination">
+          <div class="coordination-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Coordinación entre agentes
+          </div>
+          <div class="coord-step">
+            <span class="coord-arrow"><strong>Warren</strong> → Clara</span>
+            <span class="coord-result">¿Cuánto ahorro disponible sin romper el colchón? → <em>€800 excedente seguro</em> (emergencia €4.200, objetivo €3.000 ✓). Presupuesto marzo: €340 libres en Inversión.</span>
+          </div>
+          <div class="coord-step">
+            <span class="coord-arrow"><strong>Warren</strong> → Will</span>
+            <span class="coord-result">Notas sobre diversificación sectorial → <em>"Quiero subir diversificación, especialmente infra. No tocar emergencia."</em> (12 mar 2026)</span>
+          </div>
+          <div class="coord-step">
+            <span class="coord-arrow"><strong>Clara</strong> → Warren</span>
+            <span class="coord-result">Confirmado: €800 pueden moverse a bucket Inversión sin afectar gastos fijos de abril.</span>
+          </div>
+        </div>
+
+        <!-- Warren mission proposal -->
+        <div class="msg agent warren">
+          <div class="msg-header">
+            <div class="mini-avatar avatar warren">W</div>
+            <span class="name">Warren</span>
+            <span class="time">10:43</span>
+          </div>
+          <div class="bubble">
+            Con lo que dijo Clara y tu nota en Will, armé una <strong>misión de 3 pasos</strong>. Revisala en el tablero → confirmá cada paso por separado. Nada se ejecuta sin tu OK.
+          </div>
+        </div>
+
+        <!-- Clara chimes in -->
+        <div class="msg agent clara">
+          <div class="msg-header">
+            <div class="mini-avatar avatar clara">C</div>
+            <span class="name">Clara</span>
+            <span class="time">10:43</span>
+          </div>
+          <div class="bubble">
+            El paso 1 lo manejo yo: marco €800 del excedente de emergencia como disponibles para inversión. Tu presupuesto de abril queda intacto.
+          </div>
+        </div>
+
+        <!-- Will chimes in -->
+        <div class="msg agent will">
+          <div class="msg-header">
+            <div class="mini-avatar avatar will">Wi</div>
+            <span class="name">Will</span>
+            <span class="time">10:43</span>
+          </div>
+          <div class="bubble">
+            Cuando confirmes, puedo registrar la decisión en tu diario de inversión — así queda trazabilidad de por qué moviste plata a infra.
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <div class="quick-prompts">
+          <span class="chip">Resumen de cartera</span>
+          <span class="chip">¿Cuánto gasté este mes?</span>
+          <span class="chip">Buscar en mis notas</span>
+        </div>
+        <div class="chat-input-wrap">
+          <textarea class="chat-input" rows="1" placeholder="Escribí a Warren, o cambiá de agente en el panel…"></textarea>
+          <button class="send-btn" aria-label="Enviar">↑</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Mission board -->
+    <aside class="mission-board">
+      <div class="mission-board-header">
+        <h2>Tablero de misiones</h2>
+        <p>1 misión pendiente · confirmación por agente</p>
+      </div>
+
+      <div class="missions">
+        <div class="mission-card active-mission">
+          <div class="mission-badge">● Misión activa</div>
+          <div class="mission-title">Rebalanceo sector Infra</div>
+          <div class="mission-desc">Mover excedente de ahorro (Clara) hacia infraestructura subponderada (Warren). Alineado con tu nota del 12/3.</div>
+
+          <div class="mission-step">
+            <div class="step-num pending">1</div>
+            <div class="step-body">
+              <div class="step-agent clara">Clara · Finanzas</div>
+              <div class="step-action">Marcar €800 del excedente de emergencia como "disponible para inversión"</div>
+              <div class="step-buttons">
+                <button class="btn btn-confirm clara">Confirmar</button>
+                <button class="btn btn-cancel">Cancelar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mission-step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-agent warren">Warren · Cartera</div>
+              <div class="step-action">Añadir posición ~€800 en ETF infra (ej. VUAA o similar) — requiere paso 1</div>
+              <div class="step-buttons">
+                <button class="btn btn-confirm" disabled style="opacity:0.4;cursor:not-allowed">Confirmar</button>
+                <button class="btn btn-cancel">Cancelar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mission-step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-agent will">Will · Notas</div>
+              <div class="step-action">Registrar: "Rebalanceo infra con excedente Clara — 23 may 2026"</div>
+              <div class="step-buttons">
+                <button class="btn btn-confirm will">Confirmar</button>
+                <button class="btn btn-skip">Omitir</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        Esto no es asesoramiento financiero. Las propuestas son informativas; vos confirmás cada acción. Los agentes no ejecutan nada sin tu aprobación explícita.
+      </div>
+    </aside>
+  </div>
+</body>
+</html>

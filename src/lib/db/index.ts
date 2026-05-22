@@ -261,6 +261,17 @@ export {
   getRateLimitStats,
 } from "./rate-limits";
 
+export type { OfficeMessageRow } from "./agent-office";
+export {
+  listActiveAgentMissions,
+  getAgentMissionById,
+  createAgentMission,
+  updateAgentMissionSteps,
+  listOfficeMessages,
+  appendOfficeMessage,
+  clearOfficeSession,
+} from "./agent-office";
+
 export type { MetricsSnapshot } from "./metrics-snapshot";
 export { getMetricsSnapshot } from "./metrics-snapshot";
 

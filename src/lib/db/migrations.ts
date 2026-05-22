@@ -3349,6 +3349,41 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 113,
+    description: "Agent Office: missions and chat messages",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS agent_missions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          title TEXT NOT NULL DEFAULT '',
+          description TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'active'
+            CHECK(status IN ('active', 'completed', 'cancelled')),
+          steps_json TEXT NOT NULL DEFAULT '[]',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_agent_missions_user_status ON agent_missions(user_id, status, updated_at DESC)",
+      );
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS agent_office_messages (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          role TEXT NOT NULL DEFAULT 'user'
+            CHECK(role IN ('user', 'warren', 'clara', 'will')),
+          content TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_agent_office_messages_user ON agent_office_messages(user_id, created_at ASC)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

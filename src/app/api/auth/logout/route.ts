@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getExpiredSessionCookieConfig } from "@/lib/auth/session";
+import { getExpiredLayoutThemeCookieConfig } from "@/lib/theme-preferences";
 import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
 import { getIdpClientId, getIdpIssuer } from "@/lib/idp/config";
@@ -31,5 +32,6 @@ export const POST = withMetrics("/api/auth/logout", async (req: NextRequest) => 
 
   const response = NextResponse.json({ ok: true, next });
   response.cookies.set(getExpiredSessionCookieConfig());
+  response.cookies.set(getExpiredLayoutThemeCookieConfig());
   return response;
 });

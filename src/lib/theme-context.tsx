@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import type { LayoutTheme } from "./types";
+import { THEME_MODE_STORAGE_KEY } from "./theme-preferences";
 
 type Theme = "light" | "dark";
 
@@ -36,8 +37,6 @@ const ThemeContext = createContext<ThemeContextValue>({
   setLayoutTheme: () => {},
 });
 
-const STORAGE_KEY = "trefolio-theme";
-
 interface ThemeProviderProps {
   children: React.ReactNode;
   initialTheme?: LayoutTheme;
@@ -49,7 +48,7 @@ export function ThemeProvider({ children, initialTheme = "default" }: ThemeProvi
 
   useEffect(() => {
     const forced = FORCED_MODE[currentLayout];
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    const stored = localStorage.getItem(THEME_MODE_STORAGE_KEY) as Theme | null;
     const preferred = forced ?? stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     setTheme(preferred);
     document.documentElement.classList.toggle("dark", preferred === "dark");
@@ -69,7 +68,7 @@ export function ThemeProvider({ children, initialTheme = "default" }: ThemeProvi
     if (FORCED_MODE[currentLayout]) return;
     setTheme((prev) => {
       const next = prev === "light" ? "dark" : "light";
-      localStorage.setItem(STORAGE_KEY, next);
+      localStorage.setItem(THEME_MODE_STORAGE_KEY, next);
       document.documentElement.classList.toggle("dark", next === "dark");
       return next;
     });

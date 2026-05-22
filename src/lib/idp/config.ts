@@ -71,12 +71,20 @@ export function getIdpBillingPortalUrl(): string | null {
 /**
  * Hosted Pro upgrade page on the IdP (`/upgrade` → Stripe Checkout there).
  */
-export function resolveIdpUpgradeHref(opts?: { interval?: "monthly" | "annual" }): string {
+export function resolveIdpUpgradeHref(opts?: {
+  interval?: "monthly" | "annual";
+  feature?: string;
+}): string {
   const issuer = getIdpIssuer();
-  if (!issuer) return "/upgrade";
+  if (!issuer) {
+    const local = new URL("/upgrade", "http://local");
+    if (opts?.feature) local.searchParams.set("feature", opts.feature);
+    return `${local.pathname}${local.search}`;
+  }
   const u = new URL(`${issuer.replace(/\/+$/, "")}/upgrade`);
   u.searchParams.set("from", "trefolio");
   if (opts?.interval) u.searchParams.set("interval", opts.interval);
+  if (opts?.feature) u.searchParams.set("feature", opts.feature);
   return u.toString();
 }
 

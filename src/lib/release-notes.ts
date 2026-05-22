@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.30",
+    date: "2026-05-23",
+    title: "Agent Office",
+    titleTranslations: {
+      es: "Oficina de agentes",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "New Agent Office (/office) — Trefolio Pro workspace where Warren, Clara, and Will coordinate visible multi-step missions with per-agent Confirm. Free users see a preview paywall; featured on the landing page.",
+        translations: {
+          es: "Nueva Oficina de agentes (/office) — espacio Pro donde Warren, Clara y Will coordinan misiones visibles con Confirmar por agente. Usuarios free ven paywall con preview; destacada en la landing.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Signing out now resets the dashboard theme to Default on the login page and landing — layout theme cookie and light/dark local preference are cleared with the session.",
+        translations: {
+          es: "Al cerrar sesión el tema del dashboard vuelve a Default en login y landing — se borran la cookie del tema y la preferencia claro/oscuro junto con la sesión.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Agent Office backend — live chat orchestration, mission persistence, Clara/Will integration stubs, Pro-gated APIs, and /office on Telegram.",
+        translations: {
+          es: "Oficina de agentes — orquestación en vivo, misiones persistentes, integración Clara/Will, APIs Pro y comando /office en Telegram.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.29",
     date: "2026-05-23",
     title: "Onboarding trial step",

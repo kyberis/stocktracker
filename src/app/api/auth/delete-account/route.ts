@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { findUserById, deleteUser } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 import { getExpiredSessionCookieConfig } from "@/lib/auth/session";
+import { getExpiredLayoutThemeCookieConfig } from "@/lib/theme-preferences";
 import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
@@ -40,6 +41,7 @@ export const POST = withMetrics("/api/auth/delete-account", async (req: NextRequ
     authEventsTotal.inc({ event: "account_delete" });
     const response = NextResponse.json({ ok: true });
     response.cookies.set(getExpiredSessionCookieConfig());
+    response.cookies.set(getExpiredLayoutThemeCookieConfig());
     return response;
   } catch (err) {
     console.error("Delete account failed:", err);

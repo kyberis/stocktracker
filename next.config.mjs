@@ -44,7 +44,7 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts"],
-    serverComponentsExternalPackages: ["@libsql/client"],
+    serverComponentsExternalPackages: ["@libsql/client", "yahoo-finance2"],
     outputFileTracingIncludes: {
       "/api/admin/docs": [
         "./docs/**/*.html",

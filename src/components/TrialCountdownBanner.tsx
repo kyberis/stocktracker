@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
 import type { TranslationKey } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n";
-import { getTrialBannerVisibility } from "@/lib/trial-activation";
+import { getTrialBannerVisibility } from "@/lib/trial-banner-visibility";
 
 function tOr(t: (k: TranslationKey) => string, key: TranslationKey, fallback: string) {
   const v = t(key);

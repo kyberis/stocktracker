@@ -109,6 +109,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [stock-evaluation](stock-evaluation.md) — rules + AI valuation.
 - [warren-investing-knowledge](warren-investing-knowledge.md) — curated investing-concepts library exposed to Warren as a tool.
 - [warren-telegram-bot](warren-telegram-bot.md) — Warren accessible via Telegram (text + voice).
+- [agent-office](agent-office.md) — Pro workspace where Warren, Clara, and Will coordinate missions (`/office`).
 - [trefolio-mcp-user](trefolio-mcp-user.md) — HTTP MCP read API for portfolio data (`tfp_pat_` via IdP).
 
 ## Tools

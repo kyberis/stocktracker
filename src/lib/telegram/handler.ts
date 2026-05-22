@@ -24,6 +24,7 @@ import {
   listAlerts,
   listHoldings,
   listPortfolios,
+  listActiveAgentMissions,
   loadChatMessages,
   setChatLanguage,
   savePendingProposal,
@@ -33,7 +34,7 @@ import {
   updateProposalStatus,
   type TelegramChatLink,
 } from "@/lib/db";
-import { requireFeatureQuotaByUserId } from "@/lib/auth/guards";
+import { requireFeatureQuotaByUserId, requireTrefolioProByUserId } from "@/lib/auth/guards";
 import type { ModelMessage, UserContent } from "ai";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
 import {
@@ -470,6 +471,33 @@ async function handleCommand(
       if (!sent) {
         await sendMd(bot, chatId, escapeMarkdown(i.chartUnavailable));
       }
+      return;
+    }
+
+    case "/office": {
+      const pro = await requireTrefolioProByUserId(link.userId);
+      if (!pro.allowed) {
+        await sendMd(bot, chatId, escapeMarkdown(i.officeProRequired));
+        return;
+      }
+      const missions = await listActiveAgentMissions(link.userId);
+      const active = missions[0];
+      if (!active) {
+        await sendMd(
+          bot,
+          chatId,
+          `${escapeMarkdown(i.officeNoMission)}\n\n${escapeMarkdown(i.officeOpenWeb)}`,
+        );
+        return;
+      }
+      const pending = active.steps.filter(
+        (s) => s.status !== "done" && s.status !== "skipped" && s.status !== "cancelled",
+      ).length;
+      await sendMd(
+        bot,
+        chatId,
+        `${escapeMarkdown(i.officeMissionSummary(active.title, pending))}\n\n${escapeMarkdown(i.officeOpenWeb)}`,
+      );
       return;
     }
 
@@ -954,6 +982,10 @@ function buildHelp(i: ReturnType<typeof localizeTelegram>): HelpStrings {
       {
         heading: i.helpWatchlist,
         items: ["/watchlist", i.helpEx7],
+      },
+      {
+        heading: i.helpOffice,
+        items: ["/office"],
       },
       {
         heading: i.helpWrites,

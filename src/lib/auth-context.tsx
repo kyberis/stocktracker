@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { SubscriptionPlan } from "@/lib/types";
 import type { FeatureQuotaKey, QuotaWindow } from "@/lib/platform-config";
+import { clearGuestThemePreferences } from "@/lib/theme-preferences";
 
 export interface AuthQuotaUsage {
   used: number;
@@ -104,6 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(null);
     if (typeof window !== "undefined") {
+      clearGuestThemePreferences();
       window.location.href = next;
     }
   }, []);

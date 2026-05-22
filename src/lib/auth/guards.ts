@@ -69,6 +69,61 @@ export async function requirePro(req: NextRequest) {
   return { session, error: null };
 }
 
+/** Agent Office and other Trefolio Pro-only surfaces (plan === "pro", admins bypass). */
+export async function requireTrefolioPro(req: NextRequest) {
+  const { session, error } = await requireSession(req);
+  if (error || !session) return { session: null, error: error! };
+
+  if (session.role === "admin") {
+    return { session, error: null };
+  }
+
+  const user = await findUserById(session.userId);
+  if (!user) {
+    logUnauthorizedApi(req, {
+      source: "requireTrefolioPro",
+      reason: "session_user_not_found",
+    });
+    return {
+      session: null,
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
+  }
+
+  const plan = effectivePlan(user.plan, user.plan_expires_at);
+  if (plan !== "pro") {
+    paywallHitsTotal.inc({ feature: "office", reason: "plan_required" });
+    trackEvent(session.userId, "paywall_shown", { feature: "office", reason: "plan_required" });
+    return {
+      session: null,
+      error: NextResponse.json(
+        {
+          error: "Trefolio Pro required",
+          paywall: true,
+          reason: "plan_required",
+          feature: "office",
+          upgradeUrl: "/upgrade",
+        },
+        { status: 403 },
+      ),
+    };
+  }
+
+  return { session, error: null };
+}
+
+export async function requireTrefolioProByUserId(userId: string): Promise<
+  | { allowed: true }
+  | { allowed: false; reason: "user_not_found" | "plan_required" }
+> {
+  const user = await findUserById(userId);
+  if (!user) return { allowed: false, reason: "user_not_found" };
+  if (user.role === "admin") return { allowed: true };
+  const plan = effectivePlan(user.plan, user.plan_expires_at);
+  if (plan !== "pro") return { allowed: false, reason: "plan_required" };
+  return { allowed: true };
+}
+
 /**
  * @deprecated Universal-access model: pre-flight feature gating is replaced by
  * per-feature quota counters. Use `requireFeatureQuota(req, "<feature_key>")`

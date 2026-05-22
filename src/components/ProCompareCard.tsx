@@ -25,6 +25,7 @@ type BillingPeriod = "monthly" | "annual";
 const TREFOLIO_COMPARE_FEATURE_KEYS = [
   ...Array.from({ length: 22 }, (_, i) => `landingPricingTrefolioFeature${i + 1}` as TranslationKey),
   "landingPricingTrefolioFeature24" as TranslationKey,
+  "landingPricingTrefolioFeature27" as TranslationKey,
 ];
 
 interface TierInfo {

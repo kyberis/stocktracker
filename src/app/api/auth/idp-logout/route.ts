@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getExpiredSessionCookieConfig } from "@/lib/auth/session";
+import { getExpiredLayoutThemeCookieConfig, THEME_MODE_STORAGE_KEY } from "@/lib/theme-preferences";
 
 /**
  * Front-channel logout endpoint loaded as a hidden iframe by the IdP's
@@ -13,7 +14,9 @@ import { getExpiredSessionCookieConfig } from "@/lib/auth/session";
 export const dynamic = "force-dynamic";
 
 function handle() {
-  const res = new NextResponse("<!doctype html><html><body></body></html>", {
+  const res = new NextResponse(
+    `<!doctype html><html><body><script>try{localStorage.removeItem(${JSON.stringify(THEME_MODE_STORAGE_KEY)})}catch(e){}</script></body></html>`,
+    {
     status: 200,
     headers: {
       "content-type": "text/html; charset=utf-8",
@@ -22,6 +25,7 @@ function handle() {
     },
   });
   res.cookies.set(getExpiredSessionCookieConfig());
+  res.cookies.set(getExpiredLayoutThemeCookieConfig());
   return res;
 }
 

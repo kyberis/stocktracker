@@ -606,6 +606,7 @@ export default function AdminUserDetailPage() {
   };
 
   const [backfilling, setBackfilling] = useState(false);
+  const [repairingTrial, setRepairingTrial] = useState(false);
   const [checklistData, setChecklistData] = useState<ChecklistInfo | null>(null);
   const [resettingChecklist, setResettingChecklist] = useState(false);
 
@@ -631,6 +632,33 @@ export default function AdminUserDetailPage() {
       setActionMsg("Rebuild failed");
     }
     setBackfilling(false);
+    setTimeout(() => setActionMsg(""), 6000);
+  };
+
+  const handleRepairTrial = async () => {
+    setRepairingTrial(true);
+    setActionMsg("Repairing trial entitlement…");
+    try {
+      const res = await fetch("/api/admin/repair-trial-entitlements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        if (json.count > 0) {
+          setActionMsg(`Trial repaired until ${new Date(json.repaired[0].planExpiresAt).toLocaleString()}`);
+          await fetchData(selectedPortfolio);
+        } else {
+          setActionMsg("No trial repair needed for this user");
+        }
+      } else {
+        setActionMsg(`Repair failed: ${json.error ?? "unknown error"}`);
+      }
+    } catch {
+      setActionMsg("Trial repair failed");
+    }
+    setRepairingTrial(false);
     setTimeout(() => setActionMsg(""), 6000);
   };
 
@@ -965,6 +993,15 @@ export default function AdminUserDetailPage() {
                 <button onClick={handleBackfill} disabled={backfilling} className="btn-secondary text-xs px-2 py-1">
                   {backfilling ? "Recalculating…" : "Recalculate snapshots"}
                 </button>
+                {user.trialActivatedAt && user.plan !== "pro" ? (
+                  <button
+                    onClick={handleRepairTrial}
+                    disabled={repairingTrial}
+                    className="btn-secondary text-xs px-2 py-1"
+                  >
+                    {repairingTrial ? "Repairing…" : "Repair trial entitlement"}
+                  </button>
+                ) : null}
                 <button onClick={handleGenerateDigest} disabled={generatingDigest} className="btn-secondary text-xs px-2 py-1">
                   {generatingDigest ? "Generating…" : "Generate Digest"}
                 </button>

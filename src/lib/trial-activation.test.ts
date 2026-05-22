@@ -16,7 +16,9 @@ import {
   getTrialBannerVisibility,
   getTrialEligibilityError,
   getTrialPlanExpiresAt,
+  getTrialRepairPlanExpiresAt,
   isLocalTrialActive,
+  isTrialEntitlementRepairCandidate,
   TRIAL_DURATION_MS,
 } from "./trial-activation";
 
@@ -115,6 +117,62 @@ describe("isLocalTrialActive", () => {
         plan_expires_at: "",
       }),
     ).toBe(false);
+  });
+});
+
+describe("isTrialEntitlementRepairCandidate", () => {
+  const activatedAt = "2026-05-23T12:00:00.000Z";
+  const nowMs = Date.parse(activatedAt) + 2 * 24 * 60 * 60 * 1000;
+
+  it("returns true when trial was activated but plan was downgraded to free", () => {
+    expect(
+      isTrialEntitlementRepairCandidate(
+        {
+          trial_activated_at: activatedAt,
+          plan: "free",
+          plan_expires_at: "",
+          stripe_subscription_id: "",
+        },
+        nowMs,
+      ),
+    ).toBe(true);
+  });
+
+  it("returns false when trial is already active locally", () => {
+    expect(
+      isTrialEntitlementRepairCandidate(
+        {
+          trial_activated_at: activatedAt,
+          plan: "pro",
+          plan_expires_at: "2026-05-30T12:00:00.000Z",
+          stripe_subscription_id: "",
+        },
+        nowMs,
+      ),
+    ).toBe(false);
+  });
+
+  it("returns false when trial window has ended", () => {
+    expect(
+      isTrialEntitlementRepairCandidate(
+        {
+          trial_activated_at: activatedAt,
+          plan: "free",
+          plan_expires_at: "",
+          stripe_subscription_id: "",
+        },
+        Date.parse(activatedAt) + TRIAL_DURATION_MS + 60_000,
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("getTrialRepairPlanExpiresAt", () => {
+  it("returns activation plus seven days while still in window", () => {
+    const activatedAt = "2026-05-23T12:00:00.000Z";
+    expect(getTrialRepairPlanExpiresAt(activatedAt, Date.parse(activatedAt) + 60_000)).toBe(
+      "2026-05-30T12:00:00.000Z",
+    );
   });
 });
 

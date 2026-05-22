@@ -77,8 +77,22 @@ function AppFooter() {
 
 function AppShell({ children }: { children: React.ReactNode }) {
   const { layoutTheme } = useTheme();
+  const pathname = usePathname();
+  const isOffice = pathname === "/office" || pathname.startsWith("/office/");
   const isStudio = layoutTheme === "studio";
   const isNative = useIsNative();
+
+  if (isOffice) {
+    return (
+      <>
+        <ImpersonationBanner />
+        <EmailVerificationBanner />
+        <main id="main-content">{children}</main>
+        <CapacitorBridge />
+        <NativePushBridge />
+      </>
+    );
+  }
 
   if (isNative) {
     return <NativeShell>{children}</NativeShell>;
