@@ -1,12 +1,13 @@
 import { getIdpServiceToken } from "@/lib/idp/config";
 import type { OfficeIdentity } from "./office-identity";
+import { normalizeSisterAppBaseUrl } from "./sister-app-url";
 import type { WillNoteHit } from "./types";
 
 const TIMEOUT_MS = 8_000;
 
 function getWillBaseUrl(): string | null {
   const base = process.env.WILL_BASE_URL?.trim();
-  return base ? base.replace(/\/+$/, "") : null;
+  return base ? normalizeSisterAppBaseUrl(base) : null;
 }
 
 function identityPayload(identity: OfficeIdentity) {

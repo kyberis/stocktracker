@@ -74,6 +74,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "fix",
+        text: "Agent Office Clara/Will clients normalize CLARA_BASE_URL and WILL_BASE_URL to https — http:// production URLs no longer fail with a false “auth redirect” on Vercel’s 308 upgrade.",
+        translations: {
+          es: "Los clientes de Clara/Will en la Oficina normalizan CLARA_BASE_URL y WILL_BASE_URL a https — las URLs http:// en producción ya no fallan con un falso «auth redirect» por el 308 de Vercel.",
+        },
+      },
+      {
         type: "improvement",
         text: "Clara and Will now expose Agent Office internal routes (savings summary, note search, mission step actions) so Warren can coordinate live across apps with unified IdP identity.",
         translations: {

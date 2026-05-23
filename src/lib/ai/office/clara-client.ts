@@ -1,12 +1,13 @@
 import { getIdpServiceToken } from "@/lib/idp/config";
 import type { OfficeIdentity } from "./office-identity";
+import { normalizeSisterAppBaseUrl } from "./sister-app-url";
 import type { ClaraSavingsSummary } from "./types";
 
 const TIMEOUT_MS = 8_000;
 
 function getClaraBaseUrl(): string | null {
   const base = process.env.CLARA_BASE_URL?.trim();
-  return base ? base.replace(/\/+$/, "") : null;
+  return base ? normalizeSisterAppBaseUrl(base) : null;
 }
 
 function identityPayload(identity: OfficeIdentity) {
@@ -69,12 +70,7 @@ export async function fetchClaraSavingsSummary(identity: OfficeIdentity): Promis
       },
       signal: controller.signal,
       cache: "no-store",
-      redirect: "manual",
     });
-
-    if (res.status >= 300 && res.status < 400) {
-      return { available: false, note: "Clara auth redirect — internal office route blocked" };
-    }
 
     if (res.status === 404) {
       return {
@@ -128,12 +124,7 @@ export async function proposeClaraSavingsRelease(
       body: JSON.stringify({ ...identityPayload(identity), amountEur }),
       signal: controller.signal,
       cache: "no-store",
-      redirect: "manual",
     });
-
-    if (res.status >= 300 && res.status < 400) {
-      return { ok: false, message: "Clara auth redirect — internal office route blocked" };
-    }
 
     if (!res.ok) {
       const err = await res.text().catch(() => "");
