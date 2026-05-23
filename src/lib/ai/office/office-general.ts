@@ -6,7 +6,7 @@ import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
 import type { SubscriptionPlan } from "@/lib/types";
 import { listOfficeMessages, appendOfficeMessage, type OfficeMessageRow } from "@/lib/db/agent-office";
-import type { OfficeStreamFrame } from "./types";
+import type { OfficeCoordinationLine, OfficeStreamFrame } from "./types";
 import type { RunOfficeOrchestrationInput } from "./orchestrator";
 
 type PersistFn = (
@@ -31,7 +31,8 @@ function officeHistoryToModelMessages(rows: OfficeMessageRow[]): ModelMessage[] 
 }
 
 /**
- * Fallback for free-form Office chat: run full Warren AI with portfolio tools.
+ * Unified Warren AI turn for Agent Office — same motor as the dashboard drawer,
+ * plus Clara/Will coordination bubbles when sister tools run.
  */
 export async function handleGeneralOfficeQuery(
   input: RunOfficeOrchestrationInput,
@@ -49,6 +50,8 @@ export async function handleGeneralOfficeQuery(
     await persist(input, "warren", msg, nextTs());
     return { mission: null };
   }
+
+  const coordinationLines: OfficeCoordinationLine[] = [];
 
   const [history, snapshot] = await Promise.all([
     listOfficeMessages(input.userId, 24),
@@ -77,9 +80,17 @@ export async function handleGeneralOfficeQuery(
       activePortfolioId: input.portfolioId,
       activePortfolioName: input.activePortfolioName,
       snapshot,
+      officeIdentity: input.identity,
       messages,
       gatewayHeaders: input.gatewayHeaders,
       subscriptionPlan: (input.subscriptionPlan || "pro") as SubscriptionPlan,
+      onSisterCoordination: (line) => {
+        coordinationLines.push(line);
+        emitFrame({ kind: "coordination", lines: [...coordinationLines] });
+      },
+      onSisterAgentMessage: async (role, content) => {
+        await persist(input, role, content, nextTs());
+      },
       onFrame: (frame) => {
         if (frame.kind === "text") {
           streamed += frame.delta;

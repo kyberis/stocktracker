@@ -5,17 +5,7 @@ import { fetchClaraSavingsSummary } from "./clara-client";
 import type { OfficeIdentity } from "./office-identity";
 import { searchWillNotes } from "./will-client";
 import { handleGeneralOfficeQuery } from "./office-general";
-import {
-  handleNoteSearch,
-  handlePendingInvestmentQuery,
-  handlePortfolioSummary,
-  handleSpendingQuery,
-  wantsMissionIntent,
-  wantsNoteSearchIntent,
-  wantsPendingInvestmentIntent,
-  wantsPortfolioSummaryIntent,
-  wantsSpendingIntent,
-} from "./office-intents";
+import { wantsMissionIntent } from "./office-intents";
 import type { SubscriptionPlan } from "@/lib/types";
 import type {
   AgentMissionRecord,
@@ -86,19 +76,6 @@ export async function runOfficeOrchestration(
     content: input.userMessage,
     createdAt: userTs,
   });
-
-  if (wantsNoteSearchIntent(input.userMessage)) {
-    return handleNoteSearch(input, locale, nextTs, persistAgentMessage, (frame) => emit(input.onFrame, frame));
-  }
-  if (wantsPortfolioSummaryIntent(input.userMessage)) {
-    return handlePortfolioSummary(input, locale, nextTs, persistAgentMessage);
-  }
-  if (wantsSpendingIntent(input.userMessage)) {
-    return handleSpendingQuery(input, locale, nextTs, persistAgentMessage, (frame) => emit(input.onFrame, frame));
-  }
-  if (wantsPendingInvestmentIntent(input.userMessage)) {
-    return handlePendingInvestmentQuery(input, locale, nextTs, persistAgentMessage, (frame) => emit(input.onFrame, frame));
-  }
 
   const existing = await listActiveAgentMissions(input.userId);
 

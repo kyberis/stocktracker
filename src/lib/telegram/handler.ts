@@ -37,6 +37,7 @@ import {
 import { requireFeatureQuotaByUserId, requireTrefolioProByUserId } from "@/lib/auth/guards";
 import type { ModelMessage, UserContent } from "ai";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
+import { resolveOfficeIdentity } from "@/lib/ai/office/office-identity";
 import {
   buildWarrenMultimodalUserContent,
   WarrenAttachmentError,
@@ -680,6 +681,7 @@ async function runWarrenForText(
 
   const linkedUser = await Promise.resolve(findUserById(userId)).catch(() => null);
   const subscriptionPlan = (linkedUser?.plan ?? "free") as SubscriptionPlan;
+  const officeIdentity = await resolveOfficeIdentity(userId).catch(() => null);
 
   // Load rolling history so multi-turn context survives.
   const history = await loadChatMessages(chatId, 20);
@@ -706,6 +708,7 @@ async function runWarrenForText(
       activePortfolioId: activePortfolioId || undefined,
       activePortfolioName: activePortfolioName || undefined,
       snapshot,
+      officeIdentity,
       messages,
       subscriptionPlan,
       onFrame: statusMessageId

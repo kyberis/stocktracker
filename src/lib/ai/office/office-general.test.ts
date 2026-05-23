@@ -80,6 +80,7 @@ describe("handleGeneralOfficeQuery", () => {
       expect.objectContaining({
         channel: "office",
         userId: "u1",
+        officeIdentity: baseInput.identity,
         messages: [{ role: "user", content: baseInput.userMessage }],
       }),
     );

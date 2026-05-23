@@ -54,7 +54,8 @@ Guard: `requireTrefolioPro` in `src/lib/auth/guards.ts`.
 
 ## 7. Business logic
 
-- Orchestrator: `src/lib/ai/office/orchestrator.ts` — portfolio gap analysis, Clara/Will consult, mission creation, **general Warren AI fallback** (`office-general.ts`).
+- Orchestrator: `src/lib/ai/office/orchestrator.ts` — **unified Warren AI** (`runWarrenTurn` + sister-app tools) for all chat except explicit multi-agent **mission** prompts; mission board for coordinated Clara→Warren→Will steps.
+- Sister-app tools live in `src/lib/ai/warren/sister-agent-tools.ts` and are shared with the dashboard Warren drawer and Telegram.
 - Step dispatch: `src/lib/ai/office/dispatch-step.ts` — Clara release, Warren cash entry, Will note (stubs when sister apps down).
 - Gap analysis: `src/lib/ai/office/analyze-gaps.ts`.
 
@@ -98,7 +99,7 @@ Warren calls Clara/Will via **`/api/internal/office/*`** with `IDP_SERVICE_TOKEN
 ## 13. Edge cases & gotchas
 
 - One active mission shown on the board; new mission-intent messages can create another while the previous stays active.
-- Unrecognized messages run full Warren AI (`runWarrenTurn`, channel `office`) with portfolio tools — counts against `ai_consult` quota. Stream includes Warren cards, moat summaries, stock picks, and confirm proposals (same as drawer).
+- Unrecognized messages run full Warren AI (`runWarrenTurn`, channel `office`) — **same tools as the dashboard drawer**, including `consultClaraSavings`, `searchWillNotes`, `logWillNote`, moat/screener, and cards. Counts against `ai_consult` quota.
 - Clara/Will unavailable → coordination lines note unavailability; confirm steps use local stubs in dev.
 - Coordination panel is stream-only (not persisted on reload).
 

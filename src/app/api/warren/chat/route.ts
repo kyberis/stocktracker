@@ -8,6 +8,7 @@ import { z } from "zod";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
+import { resolveOfficeIdentity } from "@/lib/ai/office/office-identity";
 import {
   buildWarrenMultimodalUserContent,
   WarrenAttachmentError,
@@ -160,6 +161,7 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
 
   const dbUser = await findUserById(session.userId);
   const subscriptionPlan = (dbUser?.plan || session.plan || "free") as SubscriptionPlan;
+  const officeIdentity = await resolveOfficeIdentity(session.userId);
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -178,6 +180,7 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
           activePortfolioId: serverPortfolioId,
           activePortfolioName: serverPortfolioName,
           snapshot: body.portfolioContext,
+          officeIdentity,
           messages: modelMessages,
           gatewayHeaders: req.headers,
           onFrame: send,

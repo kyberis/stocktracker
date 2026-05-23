@@ -102,6 +102,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "feature",
+        text: "Unified Warren motor — dashboard drawer, Agent Office, and Telegram share runWarrenTurn with Clara/Will sister-app tools (consultClaraSavings, searchWillNotes, logWillNote, listOfficeMissions). Same capabilities from home and /office.",
+        translations: {
+          es: "Motor Warren unificado — el drawer del dashboard, la Oficina de agentes y Telegram comparten runWarrenTurn con herramientas Clara/Will (consultClaraSavings, searchWillNotes, logWillNote, listOfficeMissions). Mismas capacidades desde home y /office.",
+        },
+      },
+      {
         type: "improvement",
         text: "Clara and Will now expose Agent Office internal routes (savings summary, note search, mission step actions) so Warren can coordinate live across apps with unified IdP identity.",
         translations: {

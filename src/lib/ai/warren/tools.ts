@@ -21,6 +21,8 @@ import type {
   StockPickCardData,
 } from "@/components/chat-cards/types";
 import { searchKnowledge } from "./knowledge";
+import type { OfficeIdentity } from "@/lib/ai/office/office-identity";
+import { buildSisterAgentTools, sisterAgentToolsEnabled } from "./sister-agent-tools";
 import { rankPortfolioNewsForTickers } from "@/lib/portfolio-news-rank";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import {
@@ -78,9 +80,15 @@ export interface WarrenToolContext {
   /** ISO 639-1 language hint — used to prefer ES titles in knowledge hits. */
   language?: string;
   snapshot?: PortfolioSnapshot;
+  /** Unified IdP identity for Clara / Will sister-app calls. */
+  officeIdentity?: OfficeIdentity | null;
   emitPart: (part: WarrenPart) => void;
   emitProposal: (proposal: WarrenProposal) => void;
   emitStep: (label: string) => void;
+  /** Office UI: show Warren → Clara/Will coordination lines when sister tools run. */
+  emitSisterCoordination?: (line: { from: "warren"; to: "clara" | "will"; summary: string }) => void;
+  /** Office UI: optional direct Clara/Will chat bubbles. */
+  emitSisterAgentMessage?: (role: "clara" | "will", content: string) => void;
 }
 
 const ALLOC_COLORS: Record<string, string> = {
@@ -94,7 +102,10 @@ const ALLOC_COLORS: Record<string, string> = {
 };
 
 export function buildWarrenTools(ctx: WarrenToolContext) {
+  const sisterTools = sisterAgentToolsEnabled(ctx) ? buildSisterAgentTools(ctx) : {};
+
   return {
+    ...sisterTools,
     // ──────────────── READ TOOLS ────────────────
     getPortfolioSummary: tool({
       description:

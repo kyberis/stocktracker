@@ -14,6 +14,7 @@ import {
   type WarrenToolContext,
 } from "./tools";
 import type { WarrenPart, WarrenProposal, WarrenStreamFrame } from "./types";
+import type { OfficeIdentity } from "@/lib/ai/office/office-identity";
 
 export interface RunWarrenTurnOptions {
   userId: string;
@@ -24,12 +25,18 @@ export interface RunWarrenTurnOptions {
   activePortfolioId?: string;
   activePortfolioName?: string;
   snapshot?: PortfolioSnapshot;
+  /** Unified IdP identity — enables Clara / Will sister-app tools. */
+  officeIdentity?: OfficeIdentity | null;
   /** Full conversation for the model (text or multimodal user messages). */
   messages: ModelMessage[];
   /** Vercel OIDC / Gateway auth: pass `request.headers` from API routes when available. */
   gatewayHeaders?: Headers;
   /** Billing tier for model selection (Folio vs Trefolio). */
   subscriptionPlan: SubscriptionPlan;
+  /** Office-only: emit Clara/Will coordination when sister tools run. */
+  onSisterCoordination?: (line: { from: "warren"; to: "clara" | "will"; summary: string }) => void;
+  /** Office-only: persist Clara/Will agent bubbles. */
+  onSisterAgentMessage?: (role: "clara" | "will", content: string) => void;
   /** Called for every NDJSON-style frame: text deltas, parts, proposals, errors. */
   onFrame?: (frame: WarrenStreamFrame) => void;
 }
@@ -111,6 +118,7 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
     baseCurrency: opts.baseCurrency,
     language: opts.language,
     snapshot: opts.snapshot,
+    officeIdentity: opts.officeIdentity,
     emitPart: (part) => {
       collectedParts.push(part);
       emit({ kind: "part", part });
@@ -120,6 +128,8 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
       emit({ kind: "proposal", proposal });
     },
     emitStep: (label) => emit({ kind: "tool_step", label }),
+    emitSisterCoordination: opts.onSisterCoordination,
+    emitSisterAgentMessage: opts.onSisterAgentMessage,
   };
 
   const tools = buildWarrenTools(ctx);
