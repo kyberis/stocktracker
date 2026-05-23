@@ -11,7 +11,7 @@ Will is a sister project — a Telegram-first, MIT-licensed AI note-taking assis
 1. **Will is enlisted as a git submodule** of trefolio at `external/notetaker`, pinned to a specific commit. Bumping the pin is an explicit, reviewable action.
 2. **Trefolio's build/lint/test never touches Will.** The existing wildcard excludes for `external/**` in `tsconfig.json`, `eslint.config.mjs`, `vitest.config.ts`, `.vercelignore`, and `.gitignore` automatically cover the new submodule.
 3. **One repo = one Vercel project.** Trefolio deploys from `kyberis/stocktracker`. Will deploys from `kyberis/notetaker` to `will.trefolio.com`. The trefolio Vercel project keeps **Git Submodules disabled** so Vercel does not even attempt to clone Will (or Clara) during a trefolio deploy.
-4. **No runtime integration in v1.** Unlike Clara, trefolio does not call Will from code today. Will is included purely as agent context — same reasoning as Clara, different runtime relationship.
+4. **Runtime integration via Agent Office.** Trefolio's `/office` feature calls Will over HTTP internal routes (`POST /api/internal/office/search-notes`, `POST /api/internal/office/log-note`) with `IDP_SERVICE_TOKEN` and the user's IdP identity. See [`agent-office.md`](../product-specs/agent-office.md).
 5. **Read-only context for agents.** The trefolio coding agent may read `external/notetaker/**` to learn from Will, but must **not** modify it from this repo. Code changes to Will go in the `kyberis/notetaker` repo directly; trefolio only updates the pin.
 
 ## Why this and not X
@@ -23,7 +23,7 @@ Will is a sister project — a Telegram-first, MIT-licensed AI note-taking assis
 | **Knowledge-base summary only, no code** | Loses fidelity. Agents end up guessing about Will's APIs. Drifts the moment Will changes. |
 | **Monorepo (turborepo etc.)** | Premature. Will and trefolio ship independently and have different version cadences. |
 
-Submodule with no runtime coupling gives us: real source as context, deterministic pin, zero build coupling, independent deploys.
+Submodule with independent deploys gives us: real source as context, deterministic pin, zero build coupling, and optional runtime calls for Agent Office.
 
 ## How to follow it
 
@@ -83,12 +83,12 @@ When reviewing a PR that touches anything Will-adjacent in trefolio:
 - [ ] No imports from `external/notetaker/` in trefolio source.
 - [ ] No build config newly globbing `external/`.
 - [ ] If `external/notetaker` pointer changed, the PR has an explicit "bump will pin" reason.
-- [ ] If trefolio ever starts calling Will at runtime (not the plan in v1), this triggers the `[legal-advisor](../../.cursor/skills/legal-advisor/SKILL.md)` skill (new third-party processor + data path).
+- [ ] If trefolio calls Will at runtime (Agent Office), verify `WILL_BASE_URL` + `IDP_SERVICE_TOKEN` and that identity is passed as `sub` + `email` — see [`agent-office.md`](../product-specs/agent-office.md).
 
 ## Open questions
 
 - **Shared identity?** Resolved — Will, trefolio, and Clara will share an IdP at `user.trefolio.com`. See [unified-accounts-and-billing](unified-accounts-and-billing.md). Will becomes an OIDC client; user identity is the IdP `sub` claim.
-- **Cross-promotion in dashboards?** Still out of scope for runtime. The trefolio landing page now markets Will as part of the three-agent ecosystem (Warren / Clara / Will), but there is no runtime API call between trefolio and Will.
+- **Cross-promotion in dashboards?** Landing page markets Will as part of the three-agent ecosystem. Runtime integration is limited to Agent Office internal routes (`/api/internal/office/*`).
 
 ## Phase 2: IdP integration
 

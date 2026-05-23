@@ -7,8 +7,9 @@ import { z } from "zod";
 import { requireTrefolioPro } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 import { runOfficeOrchestration } from "@/lib/ai/office/orchestrator";
+import { resolveOfficeIdentity } from "@/lib/ai/office/office-identity";
 import type { OfficeStreamFrame } from "@/lib/ai/office/types";
-import { findUserById, listPortfolios } from "@/lib/db";
+import { listPortfolios } from "@/lib/db";
 import { json401 } from "@/lib/log-unauthorized";
 
 const requestSchema = z
@@ -32,8 +33,8 @@ export const POST = withMetrics("/api/office/chat", async (req: NextRequest) => 
     return Response.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const user = await findUserById(session.userId);
-  if (!user) {
+  const identity = await resolveOfficeIdentity(session.userId);
+  if (!identity) {
     return Response.json({ error: "User not found" }, { status: 404 });
   }
 
@@ -57,7 +58,7 @@ export const POST = withMetrics("/api/office/chat", async (req: NextRequest) => 
       try {
         await runOfficeOrchestration({
           userId: session.userId,
-          idpSub: user.idp_sub || "",
+          identity,
           portfolioId: active?.id,
           baseCurrency: body.baseCurrency,
           language: body.language,

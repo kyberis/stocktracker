@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 
 import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
 import { fetchClaraSavingsSummary } from "./clara-client";
+import type { OfficeIdentity } from "./office-identity";
 import { searchWillNotes } from "./will-client";
 import { findPrimarySectorGap, portfolioCashEur } from "./analyze-gaps";
 import type {
@@ -18,7 +19,7 @@ import {
 
 export interface RunOfficeOrchestrationInput {
   userId: string;
-  idpSub: string;
+  identity: OfficeIdentity;
   portfolioId?: string;
   baseCurrency?: string;
   language?: string;
@@ -28,6 +29,21 @@ export interface RunOfficeOrchestrationInput {
 
 function emit(onFrame: RunOfficeOrchestrationInput["onFrame"], frame: OfficeStreamFrame) {
   onFrame?.(frame);
+}
+
+function createOfficeClock(baseMs: number) {
+  let tick = 0;
+  return () => new Date(baseMs + ++tick * 1_200).toISOString();
+}
+
+async function persistAgentMessage(
+  input: RunOfficeOrchestrationInput,
+  role: "warren" | "clara" | "will",
+  content: string,
+  createdAt: string,
+) {
+  await appendOfficeMessage(input.userId, role, content, createdAt);
+  emit(input.onFrame, { kind: "message", role, content, createdAt });
 }
 
 function wantsMissionIntent(message: string): boolean {
@@ -50,15 +66,17 @@ export async function runOfficeOrchestration(
   input: RunOfficeOrchestrationInput,
 ): Promise<{ mission: AgentMissionRecord | null }> {
   const locale = input.language?.startsWith("es") ? "es" : "en";
-  const now = new Date().toISOString();
+  const baseMs = Date.now();
+  const nextTs = createOfficeClock(baseMs);
+  const userTs = new Date(baseMs).toISOString();
 
-  await appendOfficeMessage(input.userId, "user", input.userMessage);
+  await appendOfficeMessage(input.userId, "user", input.userMessage, userTs);
 
   emit(input.onFrame, {
     kind: "message",
     role: "user",
     content: input.userMessage,
-    createdAt: now,
+    createdAt: userTs,
   });
 
   const existing = await listActiveAgentMissions(input.userId);
@@ -67,8 +85,7 @@ export async function runOfficeOrchestration(
       locale === "es"
         ? "Tenés una misión activa en el tablero. Confirmá cada paso cuando estés listo, o cancelala para empezar otra coordinación."
         : "You have an active mission on the board. Confirm each step when ready, or cancel it to start a new coordination.";
-    await appendOfficeMessage(input.userId, "warren", warrenReply);
-    emit(input.onFrame, { kind: "message", role: "warren", content: warrenReply, createdAt: now });
+    await persistAgentMessage(input, "warren", warrenReply, nextTs());
     emit(input.onFrame, { kind: "mission", mission: existing[0]! });
     return { mission: existing[0]! };
   }
@@ -78,8 +95,7 @@ export async function runOfficeOrchestration(
       locale === "es"
         ? "Puedo coordinar con Clara (ahorros) y Will (notas) para proponerte una misión. Probá: «¿Hay algo inteligente que pueda hacer con mi plata?»"
         : "I can coordinate with Clara (savings) and Will (notes) to propose a mission. Try: “Is there anything smart I can do with my money?”";
-    await appendOfficeMessage(input.userId, "warren", warrenReply);
-    emit(input.onFrame, { kind: "message", role: "warren", content: warrenReply, createdAt: now });
+    await persistAgentMessage(input, "warren", warrenReply, nextTs());
     return { mission: null };
   }
 
@@ -93,8 +109,8 @@ export async function runOfficeOrchestration(
   const cashEur = Math.round(portfolioCashEur(snapshot));
 
   const [clara, will] = await Promise.all([
-    fetchClaraSavingsSummary(input.idpSub),
-    searchWillNotes(input.idpSub, "diversification infrastructure emergency savings"),
+    fetchClaraSavingsSummary(input.identity),
+    searchWillNotes(input.identity, "diversification infrastructure emergency savings"),
   ]);
 
   const coordination: OfficeCoordinationLine[] = [];
@@ -105,15 +121,13 @@ export async function runOfficeOrchestration(
         ? `Revisé tu cartera. Tenés baja concentración en ${gap.label} (${formatPct(gap.currentPct, locale)}% vs ~${formatPct(gap.targetPct, locale)}% razonable). Cash en cartera (${formatEur(cashEur, locale)}) no alcanza para un rebalanceo significativo. Voy a consultar con Clara y Will.`
         : `I reviewed your portfolio. You have low concentration in ${gap.label} (${formatPct(gap.currentPct, locale)}% vs ~${formatPct(gap.targetPct, locale)}% reasonable). Portfolio cash (${formatEur(cashEur, locale)}) is not enough for a meaningful rebalance. I'll check with Clara and Will.`;
 
-    await appendOfficeMessage(input.userId, "warren", warrenText);
-    emit(input.onFrame, { kind: "message", role: "warren", content: warrenText, createdAt: now });
+    await persistAgentMessage(input, "warren", warrenText, nextTs());
   } else {
     const warrenText =
       locale === "es"
         ? "No detecté un gap sectorial claro ahora mismo. Igual consulto con Clara y Will por si hay ahorro o notas relevantes."
         : "I didn't detect a clear sector gap right now. I'll still check with Clara and Will for savings or relevant notes.";
-    await appendOfficeMessage(input.userId, "warren", warrenText);
-    emit(input.onFrame, { kind: "message", role: "warren", content: warrenText, createdAt: now });
+    await persistAgentMessage(input, "warren", warrenText, nextTs());
   }
 
   if (clara.available) {
@@ -124,13 +138,19 @@ export async function runOfficeOrchestration(
         : `How much savings without breaking the emergency fund? → ${formatEur(surplus, locale)} safe surplus (emergency ${formatEur(clara.emergencyBalanceEur ?? 0, locale)}, target ${formatEur(clara.emergencyTargetEur ?? 0, locale)} ✓). Budget: ${formatEur(clara.freeInInvestingBucketEur ?? 0, locale)} free in Investing.`;
     coordination.push({ from: "warren", to: "clara", summary: line });
   } else {
+    const claraHint =
+      clara.note ||
+      (input.identity.idpSub
+        ? locale === "es"
+          ? "Clara no respondió — abrí clara.trefolio.com con la misma cuenta."
+          : "Clara did not respond — open clara.trefolio.com with the same account."
+        : locale === "es"
+          ? "Clara no pudo identificarte — usá la misma cuenta en user.trefolio.com y clara.trefolio.com."
+          : "Clara could not identify you — use the same account on user.trefolio.com and clara.trefolio.com.");
     coordination.push({
       from: "warren",
       to: "clara",
-      summary:
-        locale === "es"
-          ? "Clara no disponible — conectá clara.trefolio.com con la misma cuenta Pro."
-          : "Clara unavailable — connect clara.trefolio.com with the same Pro account.",
+      summary: claraHint,
     });
   }
 
@@ -176,8 +196,7 @@ export async function runOfficeOrchestration(
       locale === "es"
         ? "Por ahora no armé una misión: no hay excedente de ahorro claro ni gap sectorial fuerte."
         : "No mission for now: no clear savings surplus or strong sector gap.";
-    await appendOfficeMessage(input.userId, "warren", msg);
-    emit(input.onFrame, { kind: "message", role: "warren", content: msg, createdAt: now });
+    await persistAgentMessage(input, "warren", msg, nextTs());
     return { mission: null };
   }
 
@@ -245,24 +264,21 @@ export async function runOfficeOrchestration(
     locale === "es"
       ? "Armé una misión de 3 pasos. Revisala en el tablero → confirmá cada paso por separado. Nada se ejecuta sin tu OK."
       : "I built a 3-step mission. Review it on the board → confirm each step separately. Nothing runs without your OK.";
-  await appendOfficeMessage(input.userId, "warren", warrenMission);
-  emit(input.onFrame, { kind: "message", role: "warren", content: warrenMission, createdAt: now });
+  await persistAgentMessage(input, "warren", warrenMission, nextTs());
 
   if (clara.available && amount > 0) {
     const claraMsg =
       locale === "es"
         ? `El paso 1 lo manejo yo: marco ${formatEur(amount, locale)} como disponibles para inversión.`
         : `Step 1 is on me: I mark ${formatEur(amount, locale)} as available for investing.`;
-    await appendOfficeMessage(input.userId, "clara", claraMsg);
-    emit(input.onFrame, { kind: "message", role: "clara", content: claraMsg, createdAt: now });
+    await persistAgentMessage(input, "clara", claraMsg, nextTs());
   }
 
   const willMsg =
     locale === "es"
       ? "Cuando confirmes, puedo registrar la decisión en tu diario de inversión."
       : "When you confirm, I can log the decision in your investing journal.";
-  await appendOfficeMessage(input.userId, "will", willMsg);
-  emit(input.onFrame, { kind: "message", role: "will", content: willMsg, createdAt: now });
+  await persistAgentMessage(input, "will", willMsg, nextTs());
 
   emit(input.onFrame, { kind: "mission", mission });
 

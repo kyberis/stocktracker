@@ -109,14 +109,16 @@ export async function appendOfficeMessage(
   userId: string,
   role: string,
   content: string,
+  createdAt?: string,
 ): Promise<OfficeMessageRow> {
   const client = await ensureInitialized();
   const id = randomUUID();
+  const ts = createdAt || new Date().toISOString();
   await client.execute({
-    sql: `INSERT INTO agent_office_messages (id, user_id, role, content) VALUES (?, ?, ?, ?)`,
-    args: [id, userId, role, content.slice(0, 12_000)],
+    sql: `INSERT INTO agent_office_messages (id, user_id, role, content, created_at) VALUES (?, ?, ?, ?, ?)`,
+    args: [id, userId, role, content.slice(0, 12_000), ts],
   });
-  return { id, userId, role, content, createdAt: new Date().toISOString() };
+  return { id, userId, role, content, createdAt: ts };
 }
 
 export async function clearOfficeSession(userId: string): Promise<void> {

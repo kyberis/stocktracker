@@ -1,4 +1,5 @@
 import { getIdpServiceToken } from "@/lib/idp/config";
+import type { OfficeIdentity } from "./office-identity";
 import type { WillNoteHit } from "./types";
 
 const TIMEOUT_MS = 8_000;
@@ -8,10 +9,27 @@ function getWillBaseUrl(): string | null {
   return base ? base.replace(/\/+$/, "") : null;
 }
 
-export async function searchWillNotes(idpSub: string, query: string): Promise<WillNoteHit> {
+function identityPayload(identity: OfficeIdentity) {
+  return {
+    sub: identity.idpSub.trim(),
+    email: identity.email.trim(),
+    trefolioUserId: identity.trefolioUserId,
+  };
+}
+
+function canCallSisterApp(identity: OfficeIdentity): boolean {
+  return Boolean(identity.idpSub.trim() || identity.email.trim());
+}
+
+export async function searchWillNotes(identity: OfficeIdentity, query: string): Promise<WillNoteHit> {
   const base = getWillBaseUrl();
   const token = getIdpServiceToken();
-  if (!base || !token || !idpSub.trim()) {
+
+  if (!canCallSisterApp(identity)) {
+    return { available: false };
+  }
+
+  if (!base || !token) {
     if (process.env.NODE_ENV === "development") {
       return {
         available: true,
@@ -33,11 +51,16 @@ export async function searchWillNotes(idpSub: string, query: string): Promise<Wi
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
         Accept: "application/json",
+        "X-Trefolio-User-Id": identity.trefolioUserId,
       },
-      body: JSON.stringify({ sub: idpSub.trim(), query }),
+      body: JSON.stringify({ ...identityPayload(identity), query }),
       signal: controller.signal,
       cache: "no-store",
     });
+
+    if (res.status === 404) {
+      return { available: false };
+    }
 
     if (!res.ok) {
       return { available: false };
@@ -45,7 +68,7 @@ export async function searchWillNotes(idpSub: string, query: string): Promise<Wi
 
     const data = (await res.json()) as Partial<WillNoteHit>;
     return {
-      available: true,
+      available: Boolean(data.excerpt),
       excerpt: data.excerpt,
       noteDate: data.noteDate,
       query,
@@ -58,13 +81,13 @@ export async function searchWillNotes(idpSub: string, query: string): Promise<Wi
 }
 
 export async function createWillOfficeNote(
-  idpSub: string,
+  identity: OfficeIdentity,
   text: string,
 ): Promise<{ ok: boolean; message: string }> {
   const base = getWillBaseUrl();
   const token = getIdpServiceToken();
-  if (!base || !token || !idpSub.trim()) {
-    return { ok: false, message: "Will not configured" };
+  if (!base || !token || !canCallSisterApp(identity)) {
+    return { ok: false, message: "Will not configured or missing identity" };
   }
 
   const controller = new AbortController();
@@ -77,8 +100,9 @@ export async function createWillOfficeNote(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
         Accept: "application/json",
+        "X-Trefolio-User-Id": identity.trefolioUserId,
       },
-      body: JSON.stringify({ sub: idpSub.trim(), text }),
+      body: JSON.stringify({ ...identityPayload(identity), text }),
       signal: controller.signal,
       cache: "no-store",
     });

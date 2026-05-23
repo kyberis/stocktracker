@@ -2,6 +2,7 @@ import { addCashEntry } from "@/lib/db";
 import { getAgentMissionById, updateAgentMissionSteps } from "@/lib/db/agent-office";
 import { proposeClaraSavingsRelease } from "./clara-client";
 import { createWillOfficeNote } from "./will-client";
+import type { OfficeIdentity } from "./office-identity";
 import { stubClaraRelease, stubWillNote } from "./orchestrator";
 import type { AgentMissionRecord, AgentMissionStep } from "./types";
 
@@ -23,7 +24,7 @@ function unlockNextSteps(steps: AgentMissionStep[], completedStep: number): Agen
 
 export async function confirmAgentMissionStep(opts: {
   userId: string;
-  idpSub: string;
+  identity: OfficeIdentity;
   missionId: string;
   stepNumber: number;
   portfolioId?: string;
@@ -40,7 +41,7 @@ export async function confirmAgentMissionStep(opts: {
   switch (step.kind) {
     case "clara_release_savings": {
       const amountEur = Number(step.payload?.amountEur ?? 0);
-      let result = await proposeClaraSavingsRelease(opts.idpSub, amountEur);
+      let result = await proposeClaraSavingsRelease(opts.identity, amountEur);
       if (!result.ok) result = stubClaraRelease(amountEur);
       if (!result.ok) return { ok: false, message: result.message };
       break;
@@ -64,7 +65,7 @@ export async function confirmAgentMissionStep(opts: {
       return { ok: false, message: "ETF proposals from Office are not wired yet — use Warren drawer." };
     case "will_log_note": {
       const text = String(step.payload?.text || "Office mission note");
-      let result = await createWillOfficeNote(opts.idpSub, text);
+      let result = await createWillOfficeNote(opts.identity, text);
       if (!result.ok) result = stubWillNote(text);
       if (!result.ok) return { ok: false, message: result.message };
       break;

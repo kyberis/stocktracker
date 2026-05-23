@@ -6,7 +6,8 @@ import { z } from "zod";
 import { requireTrefolioPro } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 import { confirmAgentMissionStep } from "@/lib/ai/office/dispatch-step";
-import { findUserById, listPortfolios } from "@/lib/db";
+import { resolveOfficeIdentity } from "@/lib/ai/office/office-identity";
+import { listPortfolios } from "@/lib/db";
 import { json401 } from "@/lib/log-unauthorized";
 
 const bodySchema = z
@@ -36,8 +37,8 @@ export const POST = withMetrics(
       return Response.json({ error: "Invalid request body" }, { status: 400 });
     }
 
-    const user = await findUserById(session.userId);
-    if (!user) return Response.json({ error: "User not found" }, { status: 404 });
+    const identity = await resolveOfficeIdentity(session.userId);
+    if (!identity) return Response.json({ error: "User not found" }, { status: 404 });
 
     const portfolios = await listPortfolios(session.userId).catch(() => []);
     let portfolioId = body.activePortfolioId;
@@ -51,7 +52,7 @@ export const POST = withMetrics(
 
     const result = await confirmAgentMissionStep({
       userId: session.userId,
-      idpSub: user.idp_sub || "",
+      identity,
       missionId: id,
       stepNumber,
       portfolioId: active?.id,

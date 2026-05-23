@@ -219,9 +219,9 @@ export default function OfficeExperienceLive() {
 
   const onChip = useCallback(
     (text: string) => {
-      setDraft(text);
+      void sendMessage(text);
     },
-    [],
+    [sendMessage],
   );
 
   const onSend = () => {

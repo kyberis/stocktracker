@@ -10,7 +10,7 @@ Signed-in Trefolio Pro users open `/office` to chat with Warren, who may consult
 
 - **Tier:** Trefolio Pro (`plan === "pro"`)
 - **Feature flag:** _none_
-- **Health:** yellow (Clara/Will internal APIs live in sister repos; dev stubs when unset)
+- **Health:** green (Clara/Will internal APIs shipped; dev stubs when URLs unset)
 - **Owning skill:** _dashboard + integrations_
 
 ## 3. Entry points
@@ -60,9 +60,21 @@ Guard: `requireTrefolioPro` in `src/lib/auth/guards.ts`.
 
 ## 8. External dependencies
 
-- `CLARA_BASE_URL` + `GET/POST /api/internal/office/*` (Bearer `IDP_SERVICE_TOKEN`, `sub` = user `idp_sub`).
-- `WILL_BASE_URL` + `POST /api/internal/office/search-notes`, `log-note`.
+- `CLARA_BASE_URL` + `GET/POST /api/internal/office/*` (Bearer `IDP_SERVICE_TOKEN`, body/query: `sub`, `email`, `trefolioUserId`).
+- `WILL_BASE_URL` + `POST /api/internal/office/search-notes`, `log-note` (same identity payload).
+- Identity resolution: `src/lib/ai/office/office-identity.ts` — resolves `idp_sub` via IdP import-by-email when missing locally.
 - Dev stubs when URLs unset in `NODE_ENV=development`.
+
+### Sister-app internal routes (REST, not MCP)
+
+Warren calls Clara/Will via **`/api/internal/office/*`** with `IDP_SERVICE_TOKEN`. This is intentional: MCP is for external AI clients with user PATs; Office is server-to-server orchestration with explicit identity (`sub`, `email`, `trefolioUserId`). Sister routes delegate to the same domain layer as MCP tools (`savings.ts`, `notes/persistence.ts`).
+
+| App | Route | Implementation |
+|-----|-------|----------------|
+| Clara | `GET /api/internal/office/savings-summary` | `external/etracker/src/app/api/internal/office/savings-summary/route.ts` |
+| Clara | `POST /api/internal/office/propose-release` | `external/etracker/src/app/api/internal/office/propose-release/route.ts` |
+| Will | `POST /api/internal/office/search-notes` | `external/notetaker/src/app/api/internal/office/search-notes/route.ts` |
+| Will | `POST /api/internal/office/log-note` | `external/notetaker/src/app/api/internal/office/log-note/route.ts` |
 
 ## 9. Currency / FX / tax implications
 
@@ -101,6 +113,5 @@ Guard: `requireTrefolioPro` in `src/lib/auth/guards.ts`.
 
 ## 16. Open questions / planned work
 
-- Sister-repo internal API routes in Clara/Will.
 - `warren_add_holding` step (ETF proposal) — redirect to Warren drawer today.
 - Persist coordination lines for history replay.

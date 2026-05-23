@@ -1,4 +1,5 @@
 import { getIdpServiceToken } from "@/lib/idp/config";
+import type { OfficeIdentity } from "./office-identity";
 import type { ClaraSavingsSummary } from "./types";
 
 const TIMEOUT_MS = 8_000;
@@ -8,14 +9,34 @@ function getClaraBaseUrl(): string | null {
   return base ? base.replace(/\/+$/, "") : null;
 }
 
+function identityPayload(identity: OfficeIdentity) {
+  return {
+    sub: identity.idpSub.trim(),
+    email: identity.email.trim(),
+    trefolioUserId: identity.trefolioUserId,
+  };
+}
+
+function canCallSisterApp(identity: OfficeIdentity): boolean {
+  return Boolean(identity.idpSub.trim() || identity.email.trim());
+}
+
 /**
  * Server-side call to Clara internal office API.
  * Returns `{ available: false }` when Clara is not configured or unreachable.
  */
-export async function fetchClaraSavingsSummary(idpSub: string): Promise<ClaraSavingsSummary> {
+export async function fetchClaraSavingsSummary(identity: OfficeIdentity): Promise<ClaraSavingsSummary> {
   const base = getClaraBaseUrl();
   const token = getIdpServiceToken();
-  if (!base || !token || !idpSub.trim()) {
+
+  if (!canCallSisterApp(identity)) {
+    return {
+      available: false,
+      note: "Missing IdP identity — sign in with your unified trefolio account",
+    };
+  }
+
+  if (!base || !token) {
     if (process.env.NODE_ENV === "development") {
       return {
         available: true,
@@ -34,16 +55,28 @@ export async function fetchClaraSavingsSummary(idpSub: string): Promise<ClaraSav
 
   try {
     const url = new URL(`${base}/api/internal/office/savings-summary`);
-    url.searchParams.set("sub", idpSub.trim());
+    const payload = identityPayload(identity);
+    url.searchParams.set("sub", payload.sub);
+    if (payload.email) url.searchParams.set("email", payload.email);
+    if (payload.trefolioUserId) url.searchParams.set("trefolioUserId", payload.trefolioUserId);
+
     const res = await fetch(url.toString(), {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
+        "X-Trefolio-User-Id": payload.trefolioUserId,
       },
       signal: controller.signal,
       cache: "no-store",
     });
+
+    if (res.status === 404) {
+      return {
+        available: false,
+        note: "No Clara account linked to this identity — sign in at clara.trefolio.com with the same email",
+      };
+    }
 
     if (!res.ok) {
       return { available: false, note: `Clara HTTP ${res.status}` };
@@ -66,13 +99,13 @@ export async function fetchClaraSavingsSummary(idpSub: string): Promise<ClaraSav
 }
 
 export async function proposeClaraSavingsRelease(
-  idpSub: string,
+  identity: OfficeIdentity,
   amountEur: number,
 ): Promise<{ ok: boolean; message: string }> {
   const base = getClaraBaseUrl();
   const token = getIdpServiceToken();
-  if (!base || !token || !idpSub.trim()) {
-    return { ok: false, message: "Clara not configured" };
+  if (!base || !token || !canCallSisterApp(identity)) {
+    return { ok: false, message: "Clara not configured or missing identity" };
   }
 
   const controller = new AbortController();
@@ -85,8 +118,9 @@ export async function proposeClaraSavingsRelease(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
         Accept: "application/json",
+        "X-Trefolio-User-Id": identity.trefolioUserId,
       },
-      body: JSON.stringify({ sub: idpSub.trim(), amountEur }),
+      body: JSON.stringify({ ...identityPayload(identity), amountEur }),
       signal: controller.signal,
       cache: "no-store",
     });

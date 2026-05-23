@@ -32,10 +32,10 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
-        type: "improvement",
-        text: "Signing out now resets the dashboard theme to Default on the login page and landing — layout theme cookie and light/dark local preference are cleared with the session.",
+        type: "fix",
+        text: "IdP admin “Linked apps” now resolves trefolio accounts for users created before OIDC cutover — local rows persist idp_sub on login and onboarding trial sync, and /api/v1/users/by-sub backfills the link when matched by email.",
         translations: {
-          es: "Al cerrar sesión el tema del dashboard vuelve a Default en login y landing — se borran la cookie del tema y la preferencia claro/oscuro junto con la sesión.",
+          es: "El admin del IdP en “Linked apps” vuelve a detectar cuentas de trefolio creadas antes del cutover OIDC: las filas locales guardan idp_sub al iniciar sesión y en el trial de onboarding, y /api/v1/users/by-sub repara el enlace si coincide el email.",
         },
       },
       {
@@ -50,6 +50,20 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Trial countdown banner now shows calendar days and hours (e.g. 6d 21h) instead of 0d 165h.",
         translations: {
           es: "El banner del trial Pro muestra días y horas calendario (p. ej. 6d 21h) en lugar de 0d 165h.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Clara and Will now expose Agent Office internal routes (savings summary, note search, mission step actions) so Warren can coordinate live across apps with unified IdP identity.",
+        translations: {
+          es: "Clara y Will exponen rutas internas de la Oficina de agentes (resumen de ahorros, búsqueda de notas, acciones de misión) para que Warren coordine en vivo entre apps con identidad IdP unificada.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Agent Office now resolves your unified IdP identity (sub + email) before calling Clara or Will, so sister apps know which user Warren is coordinating for. Quick-reply chips send immediately; agent timestamps are staggered in the stream.",
+        translations: {
+          es: "La Oficina de agentes resuelve tu identidad unificada del IdP (sub + email) antes de llamar a Clara o Will, para que las apps hermanas sepan qué usuario coordina Warren. Los chips envían al instante; las marcas de tiempo de los agentes se escalonan en el stream.",
         },
       },
     ],

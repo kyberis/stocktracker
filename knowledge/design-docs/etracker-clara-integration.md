@@ -102,9 +102,9 @@ When reviewing a PR that touches anything Clara-adjacent:
 
 ## Open questions
 
-- **MCP vs raw HTTP**: leaning HTTP for now because trefolio is a Next.js server, not an agent host. We can add MCP transport later without breaking callers.
-- **Auth between trefolio and Clara**: resolved — both apps will share an IdP at `user.trefolio.com`. See [unified-accounts-and-billing](unified-accounts-and-billing.md). Per-request user identity flows through the OIDC `sub` claim; service-to-service calls authenticate with a shared service token.
-- **Multi-tenant data**: now scoped by IdP `sub`. Clara stores `User.idpSub` (unique) and uses it as the join key for all per-user data; trefolio passes the same `sub` when calling Clara's APIs.
+- **MCP vs raw HTTP (Agent Office) — resolved:** Warren uses **internal REST** (`/api/internal/office/*` + `IDP_SERVICE_TOKEN`), not MCP. MCP remains for external AI clients with user PATs (`tfp_pat_…`). Internal routes delegate to the same domain services as MCP tools (`savings.ts`, etc.). See [`agent-office.md`](../product-specs/agent-office.md).
+- **Auth between trefolio and Clara**: resolved — both apps share an IdP at `user.trefolio.com`. Per-request user identity flows through the OIDC `sub` claim; service-to-service calls authenticate with a shared service token.
+- **Multi-tenant data**: scoped by IdP `sub`. Clara stores `User.idpSub` (unique) and uses it as the join key for all per-user data; trefolio passes `sub`, `email`, and `trefolioUserId` when calling Clara's APIs.
 
 ## Phase 2: IdP integration
 
