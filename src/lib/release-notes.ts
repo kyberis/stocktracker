@@ -102,6 +102,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "improvement",
+        text: "Agent Office chat now shows your message immediately on send, Warren’s thinking indicator, then tool steps and streamed replies — matching the dashboard Warren drawer.",
+        translations: {
+          es: "El chat de la Oficina muestra tu mensaje al enviar, el indicador de Warren pensando y luego los pasos de herramientas y respuestas en streaming — igual que el drawer de Warren.",
+        },
+      },
+      {
         type: "fix",
         text: "Warren “show my investment in X” prompts (e.g. Uber) now prefetch the matching holding and route to listHoldings + renderHoldingCard instead of wrongly answering with Agent Office missions.",
         translations: {

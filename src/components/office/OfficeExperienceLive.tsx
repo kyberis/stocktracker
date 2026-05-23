@@ -31,6 +31,43 @@ function makeTimelineId(): string {
   return `office-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+const PENDING_WARREN_PREFIX = "warren-pending-";
+
+function findPendingWarrenIndex(items: OfficeTimelineItem[]): number {
+  return items.findIndex(
+    (m) =>
+      m.kind === "text" &&
+      m.role === "warren" &&
+      m.content === "" &&
+      m.id.startsWith(PENDING_WARREN_PREFIX),
+  );
+}
+
+function stripPendingWarren(items: OfficeTimelineItem[]): OfficeTimelineItem[] {
+  return items.filter(
+    (i) =>
+      !(
+        i.kind === "text" &&
+        i.role === "warren" &&
+        i.content === "" &&
+        i.id.startsWith(PENDING_WARREN_PREFIX)
+      ),
+  );
+}
+
+function insertBeforePendingWarren(
+  prev: OfficeTimelineItem[],
+  item: OfficeTimelineItem,
+): OfficeTimelineItem[] {
+  const pendingIdx = findPendingWarrenIndex(prev);
+  if (pendingIdx >= 0) {
+    const next = [...prev];
+    next.splice(pendingIdx, 0, item);
+    return next;
+  }
+  return [...prev, item];
+}
+
 function bootstrapToTimeline(messages: ChatMessage[]): OfficeTimelineItem[] {
   return messages.map((m) => ({
     id: m.id,
@@ -167,6 +204,18 @@ export default function OfficeExperienceLive() {
           next[idx] = { ...row, content: row.content + frame.delta };
           return next;
         }
+        const pendingIdx = findPendingWarrenIndex(prev);
+        if (pendingIdx >= 0 && frame.role === "warren") {
+          const next = [...prev];
+          next[pendingIdx] = {
+            id: frame.streamId,
+            kind: "text",
+            role: "warren",
+            content: frame.delta,
+            createdAt: new Date().toISOString(),
+          };
+          return next;
+        }
         return [
           ...prev,
           {
@@ -180,6 +229,21 @@ export default function OfficeExperienceLive() {
       });
     } else if (frame.kind === "message") {
       setTimeline((prev) => {
+        if (frame.role === "user") {
+          for (let i = prev.length - 1; i >= 0; i--) {
+            const item = prev[i];
+            if (item?.kind === "text" && item.role === "user" && item.content === frame.content) {
+              const next = [...prev];
+              const row = next[i] as Extract<OfficeTimelineItem, { kind: "text" }>;
+              next[i] = {
+                ...row,
+                id: frame.streamId || row.id,
+                createdAt: frame.createdAt || row.createdAt,
+              };
+              return next;
+            }
+          }
+        }
         if (frame.streamId) {
           const idx = prev.findIndex((m) => m.id === frame.streamId);
           if (idx >= 0 && prev[idx]?.kind === "text") {
@@ -189,6 +253,20 @@ export default function OfficeExperienceLive() {
               ...row,
               content: frame.content,
               createdAt: frame.createdAt || row.createdAt,
+            };
+            return next;
+          }
+        }
+        if (frame.role === "warren") {
+          const pendingIdx = findPendingWarrenIndex(prev);
+          if (pendingIdx >= 0) {
+            const next = [...prev];
+            next[pendingIdx] = {
+              id: frame.streamId || next[pendingIdx]!.id,
+              kind: "text",
+              role: "warren",
+              content: frame.content,
+              createdAt: frame.createdAt || new Date().toISOString(),
             };
             return next;
           }
@@ -205,11 +283,21 @@ export default function OfficeExperienceLive() {
         ];
       });
     } else if (frame.kind === "warren_part") {
-      setTimeline((prev) => [...prev, { id: makeTimelineId(), kind: "warren-part", part: frame.part }]);
+      setTimeline((prev) =>
+        insertBeforePendingWarren(prev, { id: makeTimelineId(), kind: "warren-part", part: frame.part }),
+      );
     } else if (frame.kind === "warren_proposal") {
-      setTimeline((prev) => [...prev, { id: makeTimelineId(), kind: "warren-proposal", proposal: frame.proposal }]);
+      setTimeline((prev) =>
+        insertBeforePendingWarren(prev, {
+          id: makeTimelineId(),
+          kind: "warren-proposal",
+          proposal: frame.proposal,
+        }),
+      );
     } else if (frame.kind === "warren_tool_step") {
-      setTimeline((prev) => [...prev, { id: makeTimelineId(), kind: "warren-tool-step", label: frame.label }]);
+      setTimeline((prev) =>
+        insertBeforePendingWarren(prev, { id: makeTimelineId(), kind: "warren-tool-step", label: frame.label }),
+      );
     } else if (frame.kind === "coordination") {
       setCoordination(frame.lines);
     } else if (frame.kind === "mission") {
@@ -225,9 +313,29 @@ export default function OfficeExperienceLive() {
       const trimmed = text.trim();
       if (!trimmed || sending) return;
 
+      const now = new Date().toISOString();
+      const pendingWarrenId = `${PENDING_WARREN_PREFIX}${Date.now()}`;
+
       setSending(true);
       setCoordination(null);
       setDraft("");
+      setTimeline((prev) => [
+        ...prev,
+        {
+          id: makeTimelineId(),
+          kind: "text",
+          role: "user",
+          content: trimmed,
+          createdAt: now,
+        },
+        {
+          id: pendingWarrenId,
+          kind: "text",
+          role: "warren",
+          content: "",
+          createdAt: now,
+        },
+      ]);
 
       try {
         const res = await fetch("/api/office/chat", {
@@ -268,7 +376,7 @@ export default function OfficeExperienceLive() {
         }
       } catch {
         setTimeline((prev) => [
-          ...prev,
+          ...stripPendingWarren(prev),
           {
             id: makeTimelineId(),
             kind: "text",
@@ -509,12 +617,6 @@ export default function OfficeExperienceLive() {
                     <span className={styles.coordResult}>{line.summary}</span>
                   </div>
                 ))}
-              </div>
-            ) : null}
-
-            {sending && !timeline.some((i) => i.kind === "text" && i.role === "warren" && i.content) ? (
-              <div className={agentMsgClass("warren")}>
-                <div className={styles.bubble}>{t("officeThinking")}</div>
               </div>
             ) : null}
 
