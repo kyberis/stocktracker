@@ -9,7 +9,10 @@ import { withMetrics } from "@/lib/with-metrics";
 import { runOfficeOrchestration } from "@/lib/ai/office/orchestrator";
 import { resolveOfficeIdentity } from "@/lib/ai/office/office-identity";
 import type { OfficeStreamFrame } from "@/lib/ai/office/types";
-import { listPortfolios } from "@/lib/db";
+import { findUserById, listPortfolios } from "@/lib/db";
+import { effectivePlan } from "@/lib/subscription";
+import { sanitizeWarrenPortfolioLabel } from "@/lib/ai/prompt-safety";
+import type { SubscriptionPlan } from "@/lib/types";
 import { json401 } from "@/lib/log-unauthorized";
 
 const requestSchema = z
@@ -48,6 +51,12 @@ export const POST = withMetrics("/api/office/chat", async (req: NextRequest) => 
     portfolios.find((p) => p.isDefault) ||
     portfolios[0];
 
+  const dbUser = await findUserById(session.userId);
+  const subscriptionPlan = effectivePlan(
+    dbUser?.plan || session.plan || "free",
+    dbUser?.plan_expires_at || "",
+  ) as SubscriptionPlan;
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
@@ -60,9 +69,12 @@ export const POST = withMetrics("/api/office/chat", async (req: NextRequest) => 
           userId: session.userId,
           identity,
           portfolioId: active?.id,
+          activePortfolioName: sanitizeWarrenPortfolioLabel(active?.name ?? ""),
           baseCurrency: body.baseCurrency,
           language: body.language,
           userMessage: body.message.trim(),
+          subscriptionPlan,
+          gatewayHeaders: req.headers,
           onFrame: send,
         });
       } catch (err) {

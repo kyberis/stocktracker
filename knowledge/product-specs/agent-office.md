@@ -54,7 +54,7 @@ Guard: `requireTrefolioPro` in `src/lib/auth/guards.ts`.
 
 ## 7. Business logic
 
-- Orchestrator: `src/lib/ai/office/orchestrator.ts` — portfolio gap analysis, Clara/Will consult, mission creation.
+- Orchestrator: `src/lib/ai/office/orchestrator.ts` — portfolio gap analysis, Clara/Will consult, mission creation, **general Warren AI fallback** (`office-general.ts`).
 - Step dispatch: `src/lib/ai/office/dispatch-step.ts` — Clara release, Warren cash entry, Will note (stubs when sister apps down).
 - Gap analysis: `src/lib/ai/office/analyze-gaps.ts`.
 
@@ -97,7 +97,8 @@ Warren calls Clara/Will via **`/api/internal/office/*`** with `IDP_SERVICE_TOKEN
 
 ## 13. Edge cases & gotchas
 
-- One active mission per user unless user sends a new mission-intent message.
+- One active mission shown on the board; new mission-intent messages can create another while the previous stays active.
+- Unrecognized messages run full Warren AI (`runWarrenTurn`, channel `office`) with portfolio tools — counts against `ai_consult` quota.
 - Clara/Will unavailable → coordination lines note unavailability; confirm steps use local stubs in dev.
 - Coordination panel is stream-only (not persisted on reload).
 

@@ -134,16 +134,48 @@ export default function OfficeExperienceLive() {
   }, [messages, coordination, scrollToBottom]);
 
   const applyStreamFrame = useCallback((frame: OfficeStreamFrame) => {
-    if (frame.kind === "message") {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `stream-${Date.now()}-${prev.length}`,
-          role: frame.role,
-          content: frame.content,
-          createdAt: frame.createdAt || new Date().toISOString(),
-        },
-      ]);
+    if (frame.kind === "message_delta") {
+      setMessages((prev) => {
+        const idx = prev.findIndex((m) => m.id === frame.streamId);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = { ...next[idx]!, content: next[idx]!.content + frame.delta };
+          return next;
+        }
+        return [
+          ...prev,
+          {
+            id: frame.streamId,
+            role: frame.role,
+            content: frame.delta,
+            createdAt: new Date().toISOString(),
+          },
+        ];
+      });
+    } else if (frame.kind === "message") {
+      setMessages((prev) => {
+        if (frame.streamId) {
+          const idx = prev.findIndex((m) => m.id === frame.streamId);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = {
+              ...next[idx]!,
+              content: frame.content,
+              createdAt: frame.createdAt || next[idx]!.createdAt,
+            };
+            return next;
+          }
+        }
+        return [
+          ...prev,
+          {
+            id: frame.streamId || `stream-${Date.now()}-${prev.length}`,
+            role: frame.role,
+            content: frame.content,
+            createdAt: frame.createdAt || new Date().toISOString(),
+          },
+        ];
+      });
     } else if (frame.kind === "coordination") {
       setCoordination(frame.lines);
     } else if (frame.kind === "mission") {

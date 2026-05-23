@@ -167,7 +167,7 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
     const durationMs = Date.now() - startedAt;
     insertAiLog({
       userId: opts.userId,
-      source: channel === "telegram" ? "warren_telegram" : "warren_chat",
+      source: channel === "telegram" ? "warren_telegram" : channel === "office" ? "warren_office" : "warren_chat",
       model,
       promptSystem: systemPrompt,
       promptUser: lastUserMsg,
@@ -192,7 +192,7 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
     emit({ kind: "error", message });
     insertAiLog({
       userId: opts.userId,
-      source: channel === "telegram" ? "warren_telegram" : "warren_chat",
+      source: channel === "telegram" ? "warren_telegram" : channel === "office" ? "warren_office" : "warren_chat",
       model,
       promptSystem: systemPrompt,
       promptUser: lastUserMsg,

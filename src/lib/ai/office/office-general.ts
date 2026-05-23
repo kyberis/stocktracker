@@ -1,0 +1,120 @@
+import type { ModelMessage } from "ai";
+
+import { requireFeatureQuotaByUserId } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
+import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
+import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
+import type { SubscriptionPlan } from "@/lib/types";
+import { listOfficeMessages, appendOfficeMessage, type OfficeMessageRow } from "@/lib/db/agent-office";
+import type { OfficeStreamFrame } from "./types";
+import type { RunOfficeOrchestrationInput } from "./orchestrator";
+
+type PersistFn = (
+  input: RunOfficeOrchestrationInput,
+  role: "warren" | "clara" | "will",
+  content: string,
+  createdAt: string,
+) => Promise<void>;
+
+type EmitFn = (frame: OfficeStreamFrame) => void;
+
+function officeHistoryToModelMessages(rows: OfficeMessageRow[]): ModelMessage[] {
+  const out: ModelMessage[] = [];
+  for (const row of rows) {
+    if (row.role === "user") {
+      out.push({ role: "user", content: row.content });
+    } else if (row.role === "warren") {
+      out.push({ role: "assistant", content: row.content });
+    }
+  }
+  return out;
+}
+
+/**
+ * Fallback for free-form Office chat: run full Warren AI with portfolio tools.
+ */
+export async function handleGeneralOfficeQuery(
+  input: RunOfficeOrchestrationInput,
+  locale: "es" | "en",
+  nextTs: () => string,
+  persist: PersistFn,
+  emitFrame: EmitFn,
+): Promise<{ mission: null }> {
+  const quota = await requireFeatureQuotaByUserId(input.userId, "ai_consult");
+  if (!quota.allowed) {
+    const msg =
+      locale === "es"
+        ? "Alcanzaste el límite mensual de consultas AI. Probá mañana o revisá tu plan."
+        : "You've reached the monthly AI consult limit. Try again tomorrow or check your plan.";
+    await persist(input, "warren", msg, nextTs());
+    return { mission: null };
+  }
+
+  const [history, snapshot] = await Promise.all([
+    listOfficeMessages(input.userId, 24),
+    buildPortfolioSnapshot({
+      userId: input.userId,
+      portfolioId: input.portfolioId,
+      baseCurrency: input.baseCurrency || "EUR",
+      enrichForPortfolioAi: true,
+    }),
+  ]);
+
+  const messages = officeHistoryToModelMessages(history);
+  if (messages.length === 0) {
+    messages.push({ role: "user", content: input.userMessage });
+  }
+
+  const streamId = `warren-stream-${Date.now()}`;
+  let streamed = "";
+
+  try {
+    const result = await runWarrenTurn({
+      userId: input.userId,
+      channel: "office",
+      language: input.language,
+      baseCurrency: input.baseCurrency || "EUR",
+      activePortfolioId: input.portfolioId,
+      activePortfolioName: input.activePortfolioName,
+      snapshot,
+      messages,
+      gatewayHeaders: input.gatewayHeaders,
+      subscriptionPlan: (input.subscriptionPlan || "pro") as SubscriptionPlan,
+      onFrame: (frame) => {
+        if (frame.kind === "text") {
+          streamed += frame.delta;
+          emitFrame({ kind: "message_delta", role: "warren", delta: frame.delta, streamId });
+        }
+      },
+    });
+
+    const text = (result.text || streamed).trim();
+    if (!text) {
+      const fallback =
+        locale === "es" ? "No pude generar una respuesta." : "I couldn't generate a response.";
+      await persist(input, "warren", fallback, nextTs());
+      emitFrame({
+        kind: "message",
+        role: "warren",
+        content: fallback,
+        createdAt: nextTs(),
+        streamId,
+      });
+      return { mission: null };
+    }
+
+    const createdAt = nextTs();
+    await appendOfficeMessage(input.userId, "warren", text, createdAt);
+    emitFrame({ kind: "message", role: "warren", content: text, createdAt, streamId });
+    return { mission: null };
+  } catch {
+    await refundFeatureQuota(input.userId, "ai_consult");
+    const err =
+      locale === "es"
+        ? "No pude contactar el servicio de AI ahora. Probá de nuevo en un momento."
+        : "Couldn't reach the AI service right now. Try again in a moment.";
+    await persist(input, "warren", err, nextTs());
+    emitFrame({ kind: "message", role: "warren", content: err, createdAt: nextTs() });
+    return { mission: null };
+  }
+}

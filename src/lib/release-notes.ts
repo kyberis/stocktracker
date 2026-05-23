@@ -81,6 +81,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "feature",
+        text: "Agent Office free-form chat — Warren now answers any portfolio question with full AI + tools (same engine as the Warren drawer), instead of only handling fixed chip intents.",
+        translations: {
+          es: "Chat libre en la Oficina de agentes — Warren responde cualquier pregunta de cartera con AI completa y herramientas (mismo motor que el drawer de Warren), no solo los chips fijos.",
+        },
+      },
+      {
         type: "improvement",
         text: "Clara and Will now expose Agent Office internal routes (savings summary, note search, mission step actions) so Warren can coordinate live across apps with unified IdP identity.",
         translations: {

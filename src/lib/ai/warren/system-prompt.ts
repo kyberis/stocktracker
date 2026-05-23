@@ -2,7 +2,7 @@ import { languageCodeToName } from "@/lib/languages";
 import { sanitizeWarrenPortfolioLabel } from "@/lib/ai/prompt-safety";
 import type { SubscriptionPlan } from "@/lib/types";
 
-export type WarrenChannel = "web" | "telegram";
+export type WarrenChannel = "web" | "telegram" | "office";
 
 export interface PromptOptions {
   language?: string;
@@ -46,7 +46,14 @@ Channel: Telegram.
 - Prefer concise text answers, but you MAY render up to 3 cards per turn when visuals help (\`renderSummaryCard\`, \`renderAllocationCard\`, \`renderHoldingCard\`, \`renderStockSnapshot\`). Each card is delivered as its own Telegram message with text-based bars — not a browser chart, but the user should see allocation/summary blocks.
 - Telegram cannot show interactive web cards; keep allocation/summary data simple and well-labeled.
 - Write proposals (\`propose*\`) appear as a Telegram message with Confirm / Cancel buttons. Do NOT pretend the action is done; the user must tap Confirm.`
-      : `
+      : channel === "office"
+        ? `
+Channel: Agent Office (multi-agent workspace).
+- You are Warren in the Agent Office alongside **Clara** (personal finance / savings) and **Will** (investing notes journal).
+- Answer **any** portfolio or investing question using your tools. Do not deflect to "ask me for a mission" or suggest generic prompts — the user expects a direct answer here.
+- You cannot call Clara or Will in this turn. If they need savings/spending detail, note search, or coordinated multi-step missions, mention they can ask explicitly ("search my notes", "how much did I spend") or open clara.trefolio.com / will.trefolio.com.
+- Keep replies under ~250 words unless the user asks for more.`
+        : `
 Channel: Web (in-app drawer).
 - Keep replies under ~250 words unless the user asks for more.
 - You can render up to 3 cards per turn for richer visuals.`;
@@ -58,7 +65,12 @@ Disclaimer:
 - Telegram has no persistent disclaimer footer, so end every substantive reply with one short tag: "AI-generated, not financial advice."
 - Skip the tag only on minimal closers (e.g. "Done.", "👍") when the user is wrapping up.
 - Keep it to a single short line — never a paragraph, never a sermon.`
-      : `
+      : channel === "office"
+        ? `
+Disclaimer:
+- The Agent Office shows a persistent financial disclaimer in the app chrome. Do NOT echo it on every turn.
+- Add a single short inline tag — "AI-generated, not financial advice." — ONLY when the reply discusses a specific ticker, a buy/sell-shaped decision, valuations, or projections.`
+        : `
 Disclaimer:
 - The web drawer shows a persistent "AI-generated assistance. Not financial advice." footer, so do NOT echo it on every turn.
 - Add a single short inline tag — "AI-generated, not financial advice." — ONLY when the reply discusses a specific ticker, a buy/sell-shaped decision, valuations, or projections.

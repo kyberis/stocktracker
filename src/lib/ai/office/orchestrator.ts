@@ -4,6 +4,7 @@ import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
 import { fetchClaraSavingsSummary } from "./clara-client";
 import type { OfficeIdentity } from "./office-identity";
 import { searchWillNotes } from "./will-client";
+import { handleGeneralOfficeQuery } from "./office-general";
 import {
   handleNoteSearch,
   handlePendingInvestmentQuery,
@@ -15,6 +16,7 @@ import {
   wantsPortfolioSummaryIntent,
   wantsSpendingIntent,
 } from "./office-intents";
+import type { SubscriptionPlan } from "@/lib/types";
 import type {
   AgentMissionRecord,
   AgentMissionStep,
@@ -35,6 +37,9 @@ export interface RunOfficeOrchestrationInput {
   baseCurrency?: string;
   language?: string;
   userMessage: string;
+  subscriptionPlan?: SubscriptionPlan;
+  activePortfolioName?: string;
+  gatewayHeaders?: Headers;
   onFrame?: (frame: OfficeStreamFrame) => void;
 }
 
@@ -96,23 +101,20 @@ export async function runOfficeOrchestration(
   }
 
   const existing = await listActiveAgentMissions(input.userId);
-  if (existing.length > 0 && !wantsMissionIntent(input.userMessage)) {
-    const warrenReply =
-      locale === "es"
-        ? "Tenés una misión activa en el tablero. Confirmá cada paso cuando estés listo, o cancelala para empezar otra coordinación."
-        : "You have an active mission on the board. Confirm each step when ready, or cancel it to start a new coordination.";
-    await persistAgentMessage(input, "warren", warrenReply, nextTs());
-    emit(input.onFrame, { kind: "mission", mission: existing[0]! });
-    return { mission: existing[0]! };
-  }
 
   if (!wantsMissionIntent(input.userMessage)) {
+    return handleGeneralOfficeQuery(input, locale, nextTs, persistAgentMessage, (frame) =>
+      emit(input.onFrame, frame),
+    );
+  }
+
+  if (existing.length > 0) {
     const warrenReply =
       locale === "es"
-        ? "Puedo coordinar con Clara (ahorros) y Will (notas) para proponerte una misión. Probá: «¿Hay algo inteligente que pueda hacer con mi plata?»"
-        : "I can coordinate with Clara (savings) and Will (notes) to propose a mission. Try: “Is there anything smart I can do with my money?”";
+        ? "Tenés una misión activa en el tablero — la dejo ahí mientras armo otra coordinación. Confirmá o cancelá la anterior cuando quieras."
+        : "You have an active mission on the board — I'll leave it there while building another coordination. Confirm or cancel the previous one when ready.";
     await persistAgentMessage(input, "warren", warrenReply, nextTs());
-    return { mission: null };
+    emit(input.onFrame, { kind: "mission", mission: existing[0]! });
   }
 
   const snapshot = await buildPortfolioSnapshot({

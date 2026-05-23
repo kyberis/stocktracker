@@ -46,7 +46,8 @@ export interface OfficeChatMessage {
 }
 
 export type OfficeStreamFrame =
-  | { kind: "message"; role: "user" | OfficeAgentId; content: string; createdAt?: string }
+  | { kind: "message"; role: "user" | OfficeAgentId; content: string; createdAt?: string; streamId?: string }
+  | { kind: "message_delta"; role: OfficeAgentId; delta: string; streamId: string }
   | { kind: "coordination"; lines: OfficeCoordinationLine[] }
   | { kind: "mission"; mission: AgentMissionRecord }
   | { kind: "error"; message: string };
