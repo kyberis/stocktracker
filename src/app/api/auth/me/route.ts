@@ -15,7 +15,7 @@ import { effectivePlan, canAccessTheme, getAiTokenLimit } from "@/lib/subscripti
 import { getAllFeatureQuotas } from "@/lib/feature-quotas";
 import { planExpiredNotification } from "@/lib/notification-templates";
 import { withMetrics } from "@/lib/with-metrics";
-import { syncEntitlementsForUser } from "@/lib/idp/entitlements";
+import { ensureLocalUserLinkedToIdp, syncEntitlementsForUser } from "@/lib/idp/entitlements";
 import { isIdpEnabled, legacyAuthEnabled, resolveIdpAccountHref } from "@/lib/idp/config";
 import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { ensureTrefolioAdminRoleForUser } from "@/lib/auth/admin-allowlist";
@@ -49,7 +49,11 @@ function lazyDowngrade(userId: string): void {
  */
 function lazyIdpEntitlementSync(userId: string): void {
   if (!isIdpEnabled()) return;
-  syncEntitlementsForUser(userId).catch((err) =>
+  const run = async () => {
+    await ensureLocalUserLinkedToIdp(userId);
+    await syncEntitlementsForUser(userId);
+  };
+  run().catch((err) =>
     console.error("[auth/me] IdP entitlement sync failed:", err instanceof Error ? err.message : err),
   );
 }

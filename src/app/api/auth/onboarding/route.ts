@@ -46,7 +46,7 @@ export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest)
     trialActivated = true;
     await trackEvent(session.userId, "onboarding_trial_activated", { source: "onboarding" });
     if (user.email) {
-      void syncOnboardingTrialToIdp(user.email, planExpiresAt);
+      void syncOnboardingTrialToIdp(session.userId, user.email, planExpiresAt);
     }
   } else if (activateTrial === false) {
     await trackEvent(session.userId, "onboarding_trial_skipped", { source: "onboarding" });

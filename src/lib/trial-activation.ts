@@ -1,4 +1,5 @@
 import { findUserById, updateUserSubscription } from "@/lib/db";
+import { linkLocalUserToIdpSub } from "@/lib/idp/entitlements";
 import { ensureInitialized } from "@/lib/db/client";
 import type { DbUser } from "@/lib/db/helpers";
 import { str } from "@/lib/db/helpers";
@@ -115,7 +116,7 @@ export async function repairTrialEntitlements(opts: {
         planExpiresAt: candidate.planExpiresAt,
       });
       if (candidate.email) {
-        await syncOnboardingTrialToIdp(candidate.email, candidate.planExpiresAt);
+        await syncOnboardingTrialToIdp(candidate.userId, candidate.email, candidate.planExpiresAt);
       }
     }
     repaired.push(candidate);
@@ -158,17 +159,24 @@ export async function markTrialOfferShown(userId: string): Promise<void> {
   });
 }
 
-export async function syncOnboardingTrialToIdp(email: string, planExpiresAt: string): Promise<void> {
+export async function syncOnboardingTrialToIdp(
+  userId: string,
+  email: string,
+  planExpiresAt: string,
+): Promise<void> {
   const { isIdpEnabled } = await import("@/lib/idp/config");
   const { importUser } = await import("@/lib/idp/client");
   if (!isIdpEnabled()) return;
 
   try {
-    await importUser({
+    const imported = await importUser({
       email,
       plan: "pro",
       proUntil: planExpiresAt,
     });
+    if (imported.sub) {
+      await linkLocalUserToIdpSub({ localUserId: userId, idpSub: imported.sub });
+    }
   } catch (err) {
     console.error(
       "[idp] failed to sync onboarding trial:",

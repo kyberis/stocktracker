@@ -1,9 +1,10 @@
 import { ensureInitialized } from "@/lib/db/client";
 import { findUserById, updateUserProfile } from "@/lib/db/users";
 import type { UserPlan } from "@/lib/db/helpers";
-import { fetchEntitlementsBySub, type IdpEntitlementResponse } from "./client";
+import { fetchEntitlementsBySub, importUser, type IdpEntitlementResponse } from "./client";
 import { isIdpEnabled } from "./config";
 import { isLocalTrialActive } from "@/lib/trial-activation";
+import { effectivePlan } from "@/lib/subscription";
 
 /**
  * Bridge between the IdP entitlement payload and trefolio's local
@@ -24,6 +25,47 @@ import { isLocalTrialActive } from "@/lib/trial-activation";
  * Returns the resolved plan or null if the IdP is not configured / the user
  * has no idp_sub yet.
  */
+/**
+ * Ensure the local Warren row is linked to the canonical IdP identity for this
+ * email. Idempotent. Used after legacy signup, onboarding trial sync, and on
+ * session refresh so user.trefolio.com admin "Linked apps" probes succeed.
+ */
+export async function ensureLocalUserLinkedToIdp(userId: string): Promise<string | null> {
+  if (!isIdpEnabled()) return null;
+
+  const user = await findUserById(userId);
+  if (!user?.email.trim()) return null;
+
+  const existing = user.idp_sub?.trim();
+  if (existing) return existing;
+
+  try {
+    const plan = effectivePlan(user.plan, user.plan_expires_at);
+    const imported = await importUser({
+      email: user.email.trim(),
+      emailVerified: Boolean(user.email_verified),
+      name: user.display_name || user.username || undefined,
+      googleId: user.google_id || undefined,
+      appleId: user.apple_id || undefined,
+      passwordHash: user.password_hash || undefined,
+      plan: plan === "pro" ? "pro" : "free",
+      proUntil: user.plan_expires_at || undefined,
+      stripeCustomerId: user.stripe_customer_id || undefined,
+      stripeSubscriptionId: user.stripe_subscription_id || undefined,
+    });
+    if (imported.sub) {
+      await linkLocalUserToIdpSub({ localUserId: userId, idpSub: imported.sub });
+      return imported.sub;
+    }
+  } catch (err) {
+    console.warn("[idp] ensureLocalUserLinkedToIdp failed", {
+      userId,
+      err: err instanceof Error ? err.message : err,
+    });
+  }
+  return null;
+}
+
 export async function syncEntitlementsForUser(userId: string): Promise<UserPlan | null> {
   if (!isIdpEnabled()) return null;
 
