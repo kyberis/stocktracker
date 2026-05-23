@@ -6,6 +6,7 @@ import {
   SummaryCard,
   StockPickCard,
 } from "@/components/chat-cards";
+import MoatSummaryCard from "@/components/chat-cards/MoatSummaryCard";
 import { formatChatCardNumber } from "@/components/chat-cards/types";
 import type { WarrenPart } from "@/lib/ai/warren/types";
 
@@ -19,6 +20,8 @@ export default function RenderPart({ part }: { part: WarrenPart }) {
       return <SummaryCard data={part.data} />;
     case "stockPick":
       return <StockPickCard data={part.data} />;
+    case "moatSummary":
+      return <MoatSummaryCard data={part.data} />;
     case "stockSnapshot":
       return <StockSnapshot data={part.data} />;
     default:

@@ -2,9 +2,13 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import AiMarkdown from "@/components/AiMarkdown";
+import ActionCard from "@/components/warren/ActionCard";
+import RenderPart from "@/components/warren/RenderPart";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
+import type { WarrenPart, WarrenProposal } from "@/lib/ai/warren/types";
 import type { AgentMissionRecord, AgentMissionStep, OfficeCoordinationLine, OfficeStreamFrame } from "@/lib/ai/office/types";
 import styles from "./office.module.css";
 
@@ -15,6 +19,26 @@ interface ChatMessage {
   role: "user" | OfficeAgentId;
   content: string;
   createdAt: string;
+}
+
+type OfficeTimelineItem =
+  | { id: string; kind: "text"; role: "user" | OfficeAgentId; content: string; createdAt: string }
+  | { id: string; kind: "warren-part"; part: WarrenPart }
+  | { id: string; kind: "warren-proposal"; proposal: WarrenProposal }
+  | { id: string; kind: "warren-tool-step"; label: string };
+
+function makeTimelineId(): string {
+  return `office-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function bootstrapToTimeline(messages: ChatMessage[]): OfficeTimelineItem[] {
+  return messages.map((m) => ({
+    id: m.id,
+    kind: "text",
+    role: m.role,
+    content: m.content,
+    createdAt: m.createdAt,
+  }));
 }
 
 function CoordinationIcon() {
@@ -87,7 +111,7 @@ export default function OfficeExperienceLive() {
   const { activePortfolioId, activePortfolioCurrency } = usePortfolio();
 
   const [hostAgent, setHostAgent] = useState<OfficeAgentId>("warren");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [timeline, setTimeline] = useState<OfficeTimelineItem[]>([]);
   const [coordination, setCoordination] = useState<OfficeCoordinationLine[] | null>(null);
   const [missions, setMissions] = useState<AgentMissionRecord[]>([]);
   const [draft, setDraft] = useState("");
@@ -115,11 +139,11 @@ export default function OfficeExperienceLive() {
           missions: AgentMissionRecord[];
         };
         if (!cancelled) {
-          setMessages(data.messages);
+          setTimeline(bootstrapToTimeline(data.messages));
           setMissions(data.missions);
         }
       } catch {
-        if (!cancelled) setMessages([]);
+        if (!cancelled) setTimeline([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -131,21 +155,23 @@ export default function OfficeExperienceLive() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, coordination, scrollToBottom]);
+  }, [timeline, coordination, scrollToBottom]);
 
   const applyStreamFrame = useCallback((frame: OfficeStreamFrame) => {
     if (frame.kind === "message_delta") {
-      setMessages((prev) => {
+      setTimeline((prev) => {
         const idx = prev.findIndex((m) => m.id === frame.streamId);
-        if (idx >= 0) {
+        if (idx >= 0 && prev[idx]?.kind === "text") {
           const next = [...prev];
-          next[idx] = { ...next[idx]!, content: next[idx]!.content + frame.delta };
+          const row = next[idx] as Extract<OfficeTimelineItem, { kind: "text" }>;
+          next[idx] = { ...row, content: row.content + frame.delta };
           return next;
         }
         return [
           ...prev,
           {
             id: frame.streamId,
+            kind: "text",
             role: frame.role,
             content: frame.delta,
             createdAt: new Date().toISOString(),
@@ -153,15 +179,16 @@ export default function OfficeExperienceLive() {
         ];
       });
     } else if (frame.kind === "message") {
-      setMessages((prev) => {
+      setTimeline((prev) => {
         if (frame.streamId) {
           const idx = prev.findIndex((m) => m.id === frame.streamId);
-          if (idx >= 0) {
+          if (idx >= 0 && prev[idx]?.kind === "text") {
             const next = [...prev];
+            const row = next[idx] as Extract<OfficeTimelineItem, { kind: "text" }>;
             next[idx] = {
-              ...next[idx]!,
+              ...row,
               content: frame.content,
-              createdAt: frame.createdAt || next[idx]!.createdAt,
+              createdAt: frame.createdAt || row.createdAt,
             };
             return next;
           }
@@ -169,13 +196,20 @@ export default function OfficeExperienceLive() {
         return [
           ...prev,
           {
-            id: frame.streamId || `stream-${Date.now()}-${prev.length}`,
+            id: frame.streamId || makeTimelineId(),
+            kind: "text",
             role: frame.role,
             content: frame.content,
             createdAt: frame.createdAt || new Date().toISOString(),
           },
         ];
       });
+    } else if (frame.kind === "warren_part") {
+      setTimeline((prev) => [...prev, { id: makeTimelineId(), kind: "warren-part", part: frame.part }]);
+    } else if (frame.kind === "warren_proposal") {
+      setTimeline((prev) => [...prev, { id: makeTimelineId(), kind: "warren-proposal", proposal: frame.proposal }]);
+    } else if (frame.kind === "warren_tool_step") {
+      setTimeline((prev) => [...prev, { id: makeTimelineId(), kind: "warren-tool-step", label: frame.label }]);
     } else if (frame.kind === "coordination") {
       setCoordination(frame.lines);
     } else if (frame.kind === "mission") {
@@ -233,10 +267,11 @@ export default function OfficeExperienceLive() {
           }
         }
       } catch {
-        setMessages((prev) => [
+        setTimeline((prev) => [
           ...prev,
           {
-            id: `err-${Date.now()}`,
+            id: makeTimelineId(),
+            kind: "text",
             role: "warren",
             content: t("officeErrorGeneric"),
             createdAt: new Date().toISOString(),
@@ -394,11 +429,36 @@ export default function OfficeExperienceLive() {
           <div className={styles.messages}>
             {loading ? (
               <p className={styles.missionDesc}>{t("officeLoading")}</p>
-            ) : messages.length === 0 ? (
+            ) : timeline.length === 0 ? (
               <p className={styles.missionDesc}>{t("officeEmptyChat")}</p>
             ) : (
-              messages.map((msg) =>
-                msg.role === "user" ? (
+              timeline.map((item) => {
+                if (item.kind === "warren-tool-step") {
+                  return (
+                    <div key={item.id} className={styles.warrenToolStep}>
+                      <span className={styles.warrenToolStepDot} aria-hidden />
+                      {item.label}
+                    </div>
+                  );
+                }
+                if (item.kind === "warren-part") {
+                  return (
+                    <div key={item.id} className={agentMsgClass("warren")}>
+                      <div className={styles.richCardWrap}>
+                        <RenderPart part={item.part} />
+                      </div>
+                    </div>
+                  );
+                }
+                if (item.kind === "warren-proposal") {
+                  return (
+                    <div key={item.id} className={styles.richCardWrap}>
+                      <ActionCard proposal={item.proposal} />
+                    </div>
+                  );
+                }
+                const msg = item;
+                return msg.role === "user" ? (
                   <div key={msg.id} className={`${styles.msg} ${styles.msgUser}`}>
                     <div className={styles.msgHeader}>
                       <span className={styles.msgName}>{t("officeYou")}</span>
@@ -415,10 +475,24 @@ export default function OfficeExperienceLive() {
                       <span className={styles.msgName}>{agentDisplayName(msg.role, t)}</span>
                       <span className={styles.msgTime}>{formatMsgTime(msg.createdAt)}</span>
                     </div>
-                    <div className={styles.bubble}>{msg.content}</div>
+                    <div className={styles.bubble}>
+                      {msg.role === "warren" ? (
+                        msg.content ? (
+                          <AiMarkdown text={msg.content} compact />
+                        ) : sending ? (
+                          <span className={styles.typingDots} aria-label={t("officeThinking")}>
+                            <span />
+                            <span />
+                            <span />
+                          </span>
+                        ) : null
+                      ) : (
+                        msg.content
+                      )}
+                    </div>
                   </div>
-                ),
-              )
+                );
+              })
             )}
 
             {coordination && coordination.length > 0 ? (
@@ -438,7 +512,7 @@ export default function OfficeExperienceLive() {
               </div>
             ) : null}
 
-            {sending ? (
+            {sending && !timeline.some((i) => i.kind === "text" && i.role === "warren" && i.content) ? (
               <div className={agentMsgClass("warren")}>
                 <div className={styles.bubble}>{t("officeThinking")}</div>
               </div>

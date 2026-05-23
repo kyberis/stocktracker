@@ -8,6 +8,8 @@ import {
   listCashEntries,
   listWatchlist as dbListWatchlist,
   listPortfolios as dbListPortfolios,
+  getMoatCache,
+  queryMoatCache,
 } from "@/lib/db";
 import { createProvider } from "@/lib/api-providers";
 import type { WarrenPart, WarrenProposal, StockSnapshotData } from "./types";
@@ -15,6 +17,8 @@ import type {
   HoldingCardData,
   AllocationCardData,
   SummaryCardData,
+  MoatSummaryCardData,
+  StockPickCardData,
 } from "@/components/chat-cards/types";
 import { searchKnowledge } from "./knowledge";
 import { rankPortfolioNewsForTickers } from "@/lib/portfolio-news-rank";
@@ -357,6 +361,130 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
         const data: StockSnapshotData = input;
         ctx.emitPart({ kind: "stockSnapshot", data });
         return { rendered: "stock-snapshot", ticker: input.ticker };
+      },
+    }),
+
+    renderStockPickCard: tool({
+      description:
+        "Display a stock pick card (ticker, optional price and short thesis note). Use for screener results or investment ideas.",
+      inputSchema: z.object({
+        ticker: z.string().min(1).max(20),
+        name: z.string().optional(),
+        currentPrice: z.number().optional(),
+        currency: z.string().optional(),
+        note: z.string().max(200).optional(),
+      }),
+      execute: async (input) => {
+        const data: StockPickCardData = {
+          ticker: input.ticker.toUpperCase(),
+          name: input.name,
+          currentPrice: input.currentPrice,
+          currency: input.currency,
+          note: input.note,
+        };
+        ctx.emitPart({ kind: "stockPick", data });
+        return { rendered: "stock-pick", ticker: data.ticker };
+      },
+    }),
+
+    renderMoatSummaryCard: tool({
+      description:
+        "Display a compact moat evaluation card (score %, verdict, P/E, criteria pass count). Use after getMoatEvaluation or when summarizing a company's competitive moat.",
+      inputSchema: z.object({
+        ticker: z.string().min(1).max(20),
+        companyName: z.string().optional(),
+        scorePct: z.number().min(0).max(100),
+        verdict: z.string().min(1).max(80),
+        peRatio: z.number().nullable().optional(),
+        passedCount: z.number().int().min(0),
+        criteriaCount: z.number().int().min(1),
+        sector: z.string().optional(),
+      }),
+      execute: async (input) => {
+        const data: MoatSummaryCardData = {
+          ticker: input.ticker.toUpperCase(),
+          companyName: input.companyName,
+          scorePct: input.scorePct,
+          verdict: input.verdict,
+          peRatio: input.peRatio,
+          passedCount: input.passedCount,
+          criteriaCount: input.criteriaCount,
+          sector: input.sector,
+        };
+        ctx.emitPart({ kind: "moatSummary", data });
+        return { rendered: "moat-summary", ticker: data.ticker };
+      },
+    }),
+
+    getMoatEvaluation: tool({
+      description:
+        "Load cached Buffett-style moat evaluation for a ticker (8 criteria, score %, verdict, P/E). Use when the user asks about a company's moat, competitive advantage, or moat analysis.",
+      inputSchema: z.object({
+        ticker: z.string().min(1).max(20),
+      }),
+      execute: async ({ ticker }) => {
+        ctx.emitStep(`Loading moat evaluation for ${ticker.toUpperCase()}…`);
+        const hit = await getMoatCache(ticker.toUpperCase(), 30);
+        if (!hit) {
+          return {
+            found: false,
+            note: "No cached moat data for this ticker. It may not be synced yet — suggest Tools → Moat evaluation for a live run.",
+          };
+        }
+        return {
+          found: true,
+          symbol: hit.symbol,
+          companyName: hit.companyName,
+          sector: hit.sector,
+          scorePct: hit.scorePct,
+          verdict: hit.verdict,
+          passedCount: hit.passedCount,
+          criteriaCount: hit.criteriaCount,
+          peRatio: hit.peRatio,
+          updatedAt: hit.updatedAt,
+          tip: "Call renderMoatSummaryCard to show a visual card, then explain 1-2 key criteria in prose.",
+        };
+      },
+    }),
+
+    screenMoatStocks: tool({
+      description:
+        "Screen the moat database for stocks matching value filters (P/E, score, market cap). Use for investment ideas, moat screener, or 'find stocks with wide moat' requests.",
+      inputSchema: z.object({
+        peMax: z.number().positive().optional().describe("Max P/E (default 15)"),
+        scoreMin: z.number().min(0).max(100).optional().describe("Min moat score % (default 60)"),
+        marketCapMax: z.number().positive().optional().describe("Max market cap in provider units (often USD)"),
+        limit: z.number().int().min(1).max(15).optional(),
+        sortBy: z.enum(["score", "pe", "marketCap"]).optional(),
+      }),
+      execute: async (input) => {
+        ctx.emitStep("Screening moat database…");
+        const result = await queryMoatCache({
+          peMax: input.peMax ?? 15,
+          scoreMin: input.scoreMin ?? 60,
+          marketCapMax: input.marketCapMax,
+          limit: input.limit ?? 8,
+          sortBy: input.sortBy ?? "score",
+          sortDir: "desc",
+          page: 1,
+        });
+        return {
+          total: result.total,
+          results: result.results.map((r) => ({
+            symbol: r.symbol,
+            companyName: r.companyName,
+            scorePct: r.scorePct,
+            verdict: r.verdict,
+            peRatio: r.peRatio,
+            price: r.price,
+            currency: r.currency,
+            marketCap: r.marketCap,
+            passedCount: r.passedCount,
+            criteriaCount: r.criteriaCount,
+            sector: r.sector,
+          })),
+          tip: "Pick 2-3 standouts and call renderMoatSummaryCard or renderStockPickCard for each. Not financial advice.",
+        };
       },
     }),
 

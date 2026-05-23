@@ -84,6 +84,12 @@ export async function handleGeneralOfficeQuery(
         if (frame.kind === "text") {
           streamed += frame.delta;
           emitFrame({ kind: "message_delta", role: "warren", delta: frame.delta, streamId });
+        } else if (frame.kind === "part") {
+          emitFrame({ kind: "warren_part", part: frame.part });
+        } else if (frame.kind === "proposal") {
+          emitFrame({ kind: "warren_proposal", proposal: frame.proposal });
+        } else if (frame.kind === "tool_step") {
+          emitFrame({ kind: "warren_tool_step", label: frame.label });
         }
       },
     });

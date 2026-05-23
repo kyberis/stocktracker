@@ -88,6 +88,20 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "feature",
+        text: "Agent Office renders Warren visuals — portfolio cards, stock snapshots, moat summaries, stock picks, and confirm proposals — same rich output as the Warren drawer.",
+        translations: {
+          es: "La Oficina muestra visuales de Warren — tarjetas de cartera, snapshots, resúmenes moat, stock picks y propuestas Confirm — igual que el drawer de Warren.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Warren AI gains moat tools — getMoatEvaluation, screenMoatStocks, renderMoatSummaryCard, and renderStockPickCard — for moat analysis and screener-style ideas in Office and the drawer.",
+        translations: {
+          es: "Warren AI incorpora herramientas moat — getMoatEvaluation, screenMoatStocks, renderMoatSummaryCard y renderStockPickCard — para análisis de moat e ideas tipo screener en la Oficina y el drawer.",
+        },
+      },
+      {
         type: "improvement",
         text: "Clara and Will now expose Agent Office internal routes (savings summary, note search, mission step actions) so Warren can coordinate live across apps with unified IdP identity.",
         translations: {

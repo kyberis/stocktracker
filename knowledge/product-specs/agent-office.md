@@ -98,7 +98,7 @@ Warren calls Clara/Will via **`/api/internal/office/*`** with `IDP_SERVICE_TOKEN
 ## 13. Edge cases & gotchas
 
 - One active mission shown on the board; new mission-intent messages can create another while the previous stays active.
-- Unrecognized messages run full Warren AI (`runWarrenTurn`, channel `office`) with portfolio tools — counts against `ai_consult` quota.
+- Unrecognized messages run full Warren AI (`runWarrenTurn`, channel `office`) with portfolio tools — counts against `ai_consult` quota. Stream includes Warren cards, moat summaries, stock picks, and confirm proposals (same as drawer).
 - Clara/Will unavailable → coordination lines note unavailability; confirm steps use local stubs in dev.
 - Coordination panel is stream-only (not persisted on reload).
 

@@ -3,6 +3,7 @@ import type {
   AllocationCardData,
   SummaryCardData,
   StockPickCardData,
+  MoatSummaryCardData,
 } from "@/components/chat-cards/types";
 
 export type WarrenPart =
@@ -10,6 +11,7 @@ export type WarrenPart =
   | { kind: "allocation"; data: AllocationCardData }
   | { kind: "summary"; data: SummaryCardData }
   | { kind: "stockPick"; data: StockPickCardData }
+  | { kind: "moatSummary"; data: MoatSummaryCardData }
   | { kind: "stockSnapshot"; data: StockSnapshotData }
   | { kind: "chart"; data: ChartPartData };
 

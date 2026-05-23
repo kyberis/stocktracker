@@ -35,7 +35,18 @@ export interface StockPickCardData {
   note?: string;
 }
 
-export type ChatCardKind = "holding" | "allocation" | "summary" | "stock_pick";
+export interface MoatSummaryCardData {
+  ticker: string;
+  companyName?: string;
+  scorePct: number;
+  verdict: string;
+  peRatio?: number | null;
+  passedCount: number;
+  criteriaCount: number;
+  sector?: string;
+}
+
+export type ChatCardKind = "holding" | "allocation" | "summary" | "stock_pick" | "moat_summary";
 
 export function tryParseChatCard<T>(content: string): T | null {
   try {
