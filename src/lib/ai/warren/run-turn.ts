@@ -33,6 +33,8 @@ export interface RunWarrenTurnOptions {
   gatewayHeaders?: Headers;
   /** Billing tier for model selection (Folio vs Trefolio). */
   subscriptionPlan: SubscriptionPlan;
+  /** Extra system instructions for this turn (e.g. moat screener prefetch). */
+  systemAppendix?: string;
   /** Office-only: emit Clara/Will coordination when sister tools run. */
   onSisterCoordination?: (line: { from: "warren"; to: "clara" | "will"; summary: string }) => void;
   /** Office-only: persist Clara/Will agent bubbles. */
@@ -93,15 +95,16 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
     apiKey,
   });
 
-  const systemPrompt = buildWarrenSystemPrompt({
-    language: opts.language,
-    baseCurrency: opts.baseCurrency,
-    activePortfolioId: opts.activePortfolioId,
-    activePortfolioName: opts.activePortfolioName,
-    isDemoMode: !!opts.isDemo,
-    channel,
-    subscriptionPlan: opts.subscriptionPlan,
-  });
+  const systemPrompt =
+    buildWarrenSystemPrompt({
+      language: opts.language,
+      baseCurrency: opts.baseCurrency,
+      activePortfolioId: opts.activePortfolioId,
+      activePortfolioName: opts.activePortfolioName,
+      isDemoMode: !!opts.isDemo,
+      channel,
+      subscriptionPlan: opts.subscriptionPlan,
+    }) + (opts.systemAppendix ? `\n\n${opts.systemAppendix}` : "");
 
   const collectedParts: WarrenPart[] = [];
   const collectedProposals: WarrenProposal[] = [];

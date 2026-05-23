@@ -114,7 +114,7 @@ export function buildSisterAgentTools(ctx: WarrenToolContext) {
 
     listOfficeMissions: tool({
       description:
-        "List active Agent Office missions and pending steps (Clara/Will/Warren coordination). Use for pending investments or open multi-step plans.",
+        "List active Agent Office multi-step missions (Clara→Warren→Will coordination board). ONLY when the user asks about pending mission steps or open coordinated plans — NOT for moat screener, stock ideas, or general investing research.",
       inputSchema: z.object({}),
       execute: async () => {
         const missions = await listActiveAgentMissions(ctx.userId);

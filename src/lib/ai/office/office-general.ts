@@ -3,6 +3,7 @@ import type { ModelMessage } from "ai";
 import { requireFeatureQuotaByUserId } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
+import { buildMoatScreenerPrefetchAppendix } from "@/lib/ai/warren/moat-screener-intent";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
 import type { SubscriptionPlan } from "@/lib/types";
 import { listOfficeMessages, appendOfficeMessage, type OfficeMessageRow } from "@/lib/db/agent-office";
@@ -71,6 +72,8 @@ export async function handleGeneralOfficeQuery(
   const streamId = `warren-stream-${Date.now()}`;
   let streamed = "";
 
+  const systemAppendix = await buildMoatScreenerPrefetchAppendix(input.userMessage);
+
   try {
     const result = await runWarrenTurn({
       userId: input.userId,
@@ -84,6 +87,7 @@ export async function handleGeneralOfficeQuery(
       messages,
       gatewayHeaders: input.gatewayHeaders,
       subscriptionPlan: (input.subscriptionPlan || "pro") as SubscriptionPlan,
+      systemAppendix: systemAppendix ?? undefined,
       onSisterCoordination: (line) => {
         coordinationLines.push(line);
         emitFrame({ kind: "coordination", lines: [...coordinationLines] });

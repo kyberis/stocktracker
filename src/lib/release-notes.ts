@@ -102,10 +102,10 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
-        type: "feature",
-        text: "Unified Warren motor — dashboard drawer, Agent Office, and Telegram share runWarrenTurn with Clara/Will sister-app tools (consultClaraSavings, searchWillNotes, logWillNote, listOfficeMissions). Same capabilities from home and /office.",
+        type: "fix",
+        text: "Warren moat screener prompts (e.g. “ideas with P/E below 15”) now prefetch screener results and route to screenMoatStocks instead of wrongly answering with Agent Office missions.",
         translations: {
-          es: "Motor Warren unificado — el drawer del dashboard, la Oficina de agentes y Telegram comparten runWarrenTurn con herramientas Clara/Will (consultClaraSavings, searchWillNotes, logWillNote, listOfficeMissions). Mismas capacidades desde home y /office.",
+          es: "Los prompts de moat screener en Warren (p. ej. «ideas con P/E bajo 15») precargan resultados y usan screenMoatStocks en lugar de responder erróneamente con misiones de la Oficina.",
         },
       },
       {

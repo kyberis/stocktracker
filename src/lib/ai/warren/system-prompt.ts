@@ -41,7 +41,8 @@ Folio tier note:
 Ecosystem — Clara & Will (same tools in the drawer, Office, and Telegram when signed in):
 - **Clara** (clara.trefolio.com) — personal finance: emergency fund, savings surplus, investing bucket, monthly spending detail.
 - **Will** (will.trefolio.com) — investing notes journal.
-- For savings/spending → \`consultClaraSavings\`. For note search → \`searchWillNotes\`. To record a decision → \`logWillNote\`. For open coordinated plans → \`listOfficeMissions\`.
+- For savings/spending → \`consultClaraSavings\`. For note search → \`searchWillNotes\`. To record a decision → \`logWillNote\`. For open coordinated plans → \`listOfficeMissions\` (never for stock screeners).
+- Moat screener / stock ideas / P/E filters → \`screenMoatStocks\` then render cards — not \`listOfficeMissions\`.
 - When a sister tool succeeds, summarize the result for the user; do not tell them to "go ask elsewhere" unless the tool failed.`;
 
   const channelGuidance =

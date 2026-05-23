@@ -460,7 +460,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
 
     screenMoatStocks: tool({
       description:
-        "Screen the moat database for stocks matching value filters (P/E, score, market cap). Use for investment ideas, moat screener, or 'find stocks with wide moat' requests.",
+        "PRIMARY tool for moat screener / stock ideas requests (e.g. 'ideas del moat screener', 'P/E bajo 15', 'wide moat stocks'). Screens cached moat evaluations with P/E, score, market cap filters. Always follow with renderMoatSummaryCard or renderStockPickCard for top picks.",
       inputSchema: z.object({
         peMax: z.number().positive().optional().describe("Max P/E (default 15)"),
         scoreMin: z.number().min(0).max(100).optional().describe("Min moat score % (default 60)"),
