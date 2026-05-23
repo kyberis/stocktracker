@@ -1,4 +1,5 @@
 import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
+import { listActiveAgentMissions } from "@/lib/db/agent-office";
 import { fetchClaraSavingsSummary } from "./clara-client";
 import { searchWillNotes } from "./will-client";
 import type { OfficeCoordinationLine, OfficeStreamFrame } from "./types";
@@ -22,6 +23,12 @@ export function wantsPortfolioSummaryIntent(message: string): boolean {
 
 export function wantsSpendingIntent(message: string): boolean {
   return /cuánto gast|how much did i spend|spending this month|gasté este mes|gastado este mes/i.test(message);
+}
+
+export function wantsPendingInvestmentIntent(message: string): boolean {
+  return /inversi[oó]n\s+pendiente|pending\s+invest|algo\s+pendiente.*invert|revis(a|ar).*(inversi|invert)|had\s+any.*invest|pendiente.*(invert|compr)|something\s+to\s+invest|left\s+to\s+invest/i.test(
+    message,
+  );
 }
 
 export function wantsMissionIntent(message: string): boolean {
@@ -175,5 +182,129 @@ export async function handleSpendingQuery(
   }
 
   emitFrame({ kind: "coordination", lines: coordination });
+  return { mission: null };
+}
+
+export async function handlePendingInvestmentQuery(
+  input: RunOfficeOrchestrationInput,
+  locale: "es" | "en",
+  nextTs: () => string,
+  persist: PersistFn,
+  emitFrame: EmitFn,
+): Promise<{ mission: null }> {
+  const warrenIntro =
+    locale === "es"
+      ? "Reviso misiones activas, ahorro marcado para invertir en Clara y tus notas en Will."
+      : "Checking active missions, Clara savings marked for investing, and your Will notes.";
+  await persist(input, "warren", warrenIntro, nextTs());
+
+  const [missions, clara, willHit] = await Promise.all([
+    listActiveAgentMissions(input.userId),
+    fetchClaraSavingsSummary(input.identity),
+    searchWillNotes(input.identity, "inversión pendiente pending investment comprar buy plan"),
+  ]);
+
+  const coordination: OfficeCoordinationLine[] = [];
+  const findings: string[] = [];
+
+  const pendingSteps = missions.flatMap((m) =>
+    m.steps.filter((s) => s.status !== "done").map((s) => ({ mission: m, step: s })),
+  );
+  if (pendingSteps.length > 0) {
+    const lines = pendingSteps
+      .slice(0, 3)
+      .map(({ mission, step }) =>
+        locale === "es"
+          ? `• ${mission.title}: paso ${step.step} — ${step.action}`
+          : `• ${mission.title}: step ${step.step} — ${step.action}`,
+      )
+      .join("\n");
+    findings.push(
+      locale === "es"
+        ? `Tenés ${pendingSteps.length} paso(s) pendiente(s) en misiones activas:\n${lines}`
+        : `You have ${pendingSteps.length} pending step(s) in active missions:\n${lines}`,
+    );
+    coordination.push({
+      from: "warren",
+      to: "warren",
+      summary:
+        locale === "es"
+          ? `${pendingSteps.length} paso(s) de misión sin confirmar`
+          : `${pendingSteps.length} unconfirmed mission step(s)`,
+    });
+  }
+
+  const investingBucket = clara.freeInInvestingBucketEur ?? 0;
+  if (clara.available && investingBucket > 0) {
+    findings.push(
+      locale === "es"
+        ? `Clara tiene ${formatEur(investingBucket, locale)} marcados en el bucket Inversión sin desplegar en cartera.`
+        : `Clara has ${formatEur(investingBucket, locale)} marked in the Investing bucket not yet deployed to your portfolio.`,
+    );
+    coordination.push({
+      from: "warren",
+      to: "clara",
+      summary:
+        locale === "es"
+          ? `${formatEur(investingBucket, locale)} libres en Inversión`
+          : `${formatEur(investingBucket, locale)} free in Investing`,
+    });
+  } else if (!clara.available) {
+    coordination.push({
+      from: "warren",
+      to: "clara",
+      summary:
+        clara.note ||
+        (locale === "es" ? "Clara no respondió" : "Clara did not respond"),
+    });
+  }
+
+  if (willHit.available && willHit.excerpt) {
+    findings.push(
+      locale === "es"
+        ? `En Will encontré (${willHit.noteDate || "sin fecha"}): «${willHit.excerpt}»`
+        : `Will note (${willHit.noteDate || "no date"}): “${willHit.excerpt}”`,
+    );
+    coordination.push({
+      from: "warren",
+      to: "will",
+      summary:
+        locale === "es"
+          ? `Nota: «${willHit.excerpt.slice(0, 80)}…»`
+          : `Note: “${willHit.excerpt.slice(0, 80)}…”`,
+    });
+  } else {
+    coordination.push({
+      from: "warren",
+      to: "will",
+      summary:
+        willHit.note ||
+        (locale === "es"
+          ? "Sin notas sobre inversiones pendientes"
+          : "No notes about pending investments"),
+    });
+  }
+
+  emitFrame({ kind: "coordination", lines: coordination });
+
+  if (findings.length === 0) {
+    const none =
+      locale === "es"
+        ? "No encontré inversiones pendientes: no hay pasos de misión abiertos, ni ahorro marcado para invertir en Clara, ni notas relevantes en Will."
+        : "I didn't find pending investments: no open mission steps, no Clara savings marked for investing, and no relevant Will notes.";
+    await persist(input, "warren", none, nextTs());
+    return { mission: null };
+  }
+
+  const summary =
+    locale === "es"
+      ? `Esto es lo que encontré:\n\n${findings.join("\n\n")}`
+      : `Here's what I found:\n\n${findings.join("\n\n")}`;
+  await persist(input, "warren", summary, nextTs());
+
+  if (pendingSteps.length > 0) {
+    emitFrame({ kind: "mission", mission: missions[0]! });
+  }
+
   return { mission: null };
 }

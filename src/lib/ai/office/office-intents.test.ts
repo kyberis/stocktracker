@@ -4,6 +4,7 @@ import {
   extractNoteSearchQuery,
   wantsMissionIntent,
   wantsNoteSearchIntent,
+  wantsPendingInvestmentIntent,
   wantsPortfolioSummaryIntent,
   wantsSpendingIntent,
 } from "./office-intents";
@@ -22,6 +23,12 @@ describe("office-intents", () => {
   it("routes spending chip to spending intent", () => {
     expect(wantsSpendingIntent("How much did I spend this month?")).toBe(true);
     expect(wantsMissionIntent("How much did I spend this month?")).toBe(false);
+  });
+
+  it("routes pending investment questions to dedicated intent, not generic help", () => {
+    expect(wantsPendingInvestmentIntent("revisa si tenia alguna inversion pendiente")).toBe(true);
+    expect(wantsPendingInvestmentIntent("Do I have any pending investment?")).toBe(true);
+    expect(wantsMissionIntent("revisa si tenia alguna inversion pendiente")).toBe(false);
   });
 
   it("keeps smart money prompts as mission intent", () => {

@@ -60,6 +60,20 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "fix",
+        text: "Agent Office answers “pending investment” questions directly — checking active missions, Clara investing-bucket savings, and Will notes — instead of suggesting a generic smart-money prompt.",
+        translations: {
+          es: "La Oficina responde directamente a «¿inversión pendiente?» — revisa misiones activas, ahorro en bucket Inversión de Clara y notas en Will — en lugar de sugerir solo el prompt genérico de «¿algo inteligente con mi plata?».",
+        },
+      },
+      {
+        type: "fix",
+        text: "Clara Agent Office API no longer redirects Warren to /login — internal /api/internal/office/* routes bypass session auth (service token only).",
+        translations: {
+          es: "La API interna de Clara para la Oficina ya no redirige a Warren a /login — las rutas /api/internal/office/* omiten auth de sesión (solo token de servicio).",
+        },
+      },
+      {
         type: "improvement",
         text: "Clara and Will now expose Agent Office internal routes (savings summary, note search, mission step actions) so Warren can coordinate live across apps with unified IdP identity.",
         translations: {

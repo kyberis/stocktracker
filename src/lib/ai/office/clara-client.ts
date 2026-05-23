@@ -69,7 +69,12 @@ export async function fetchClaraSavingsSummary(identity: OfficeIdentity): Promis
       },
       signal: controller.signal,
       cache: "no-store",
+      redirect: "manual",
     });
+
+    if (res.status >= 300 && res.status < 400) {
+      return { available: false, note: "Clara auth redirect — internal office route blocked" };
+    }
 
     if (res.status === 404) {
       return {
@@ -123,7 +128,12 @@ export async function proposeClaraSavingsRelease(
       body: JSON.stringify({ ...identityPayload(identity), amountEur }),
       signal: controller.signal,
       cache: "no-store",
+      redirect: "manual",
     });
+
+    if (res.status >= 300 && res.status < 400) {
+      return { ok: false, message: "Clara auth redirect — internal office route blocked" };
+    }
 
     if (!res.ok) {
       const err = await res.text().catch(() => "");

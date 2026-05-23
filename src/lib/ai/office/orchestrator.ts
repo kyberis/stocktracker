@@ -6,10 +6,12 @@ import type { OfficeIdentity } from "./office-identity";
 import { searchWillNotes } from "./will-client";
 import {
   handleNoteSearch,
+  handlePendingInvestmentQuery,
   handlePortfolioSummary,
   handleSpendingQuery,
   wantsMissionIntent,
   wantsNoteSearchIntent,
+  wantsPendingInvestmentIntent,
   wantsPortfolioSummaryIntent,
   wantsSpendingIntent,
 } from "./office-intents";
@@ -88,6 +90,9 @@ export async function runOfficeOrchestration(
   }
   if (wantsSpendingIntent(input.userMessage)) {
     return handleSpendingQuery(input, locale, nextTs, persistAgentMessage, (frame) => emit(input.onFrame, frame));
+  }
+  if (wantsPendingInvestmentIntent(input.userMessage)) {
+    return handlePendingInvestmentQuery(input, locale, nextTs, persistAgentMessage, (frame) => emit(input.onFrame, frame));
   }
 
   const existing = await listActiveAgentMissions(input.userId);
