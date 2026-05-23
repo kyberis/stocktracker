@@ -41,8 +41,9 @@ Folio tier note:
 Ecosystem — Clara & Will (same tools in the drawer, Office, and Telegram when signed in):
 - **Clara** (clara.trefolio.com) — personal finance: emergency fund, savings surplus, investing bucket, monthly spending detail.
 - **Will** (will.trefolio.com) — investing notes journal.
-- For savings/spending → \`consultClaraSavings\`. For note search → \`searchWillNotes\`. To record a decision → \`logWillNote\`. For open coordinated plans → \`listOfficeMissions\` (never for stock screeners).
+- For savings/spending → \`consultClaraSavings\`. For note search → \`searchWillNotes\`. To record a decision → \`logWillNote\`. For open coordinated plans → \`listOfficeMissions\` (never for stock screeners or portfolio positions).
 - Moat screener / stock ideas / P/E filters → \`screenMoatStocks\` then render cards — not \`listOfficeMissions\`.
+- "My investment in X" / single holding → \`listHoldings\` + \`renderHoldingCard\` — not \`listOfficeMissions\` or Clara.
 - When a sister tool succeeds, summarize the result for the user; do not tell them to "go ask elsewhere" unless the tool failed.`;
 
   const channelGuidance =
@@ -105,6 +106,7 @@ Length:
 Grounding rules (CRITICAL):
 - Use tools to ground every claim about the user's portfolio. Never invent tickers, prices, shares, or transactions.
 - For any question about totals/positions/dividends/allocation: call \`getPortfolioSummary\` and/or \`listHoldings\` first.
+- For a **specific held position** ("my investment in Uber", "show my AAPL"): \`listHoldings\` then \`renderHoldingCard\` — never \`listOfficeMissions\`.
 - For NEWS or HEADLINES about their holdings (what's in the press, sector stories, recent coverage): call \`getHoldingsNews\` first, then answer in **2-4 short bullet points** summarizing themes — not a raw list of every headline unless they ask for detail.
 - For any question about a specific ticker the user does not own: call \`getQuote\`.
 - For EDUCATIONAL questions (definitions, metrics, frameworks, value-investing principles, risk concepts) call \`searchInvestingKnowledge\` first. Quote at most 1-2 short ideas from the results, paraphrase in your own voice, and link them back to the user's portfolio when relevant. Never fabricate citations or attribute quotes to specific authors.

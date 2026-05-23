@@ -37,6 +37,7 @@ import {
 import { requireFeatureQuotaByUserId, requireTrefolioProByUserId } from "@/lib/auth/guards";
 import type { ModelMessage, UserContent } from "ai";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
+import { buildWarrenPrefetchAppendix } from "@/lib/ai/warren/warren-prefetch-appendix";
 import { resolveOfficeIdentity } from "@/lib/ai/office/office-identity";
 import {
   buildWarrenMultimodalUserContent,
@@ -697,6 +698,12 @@ async function runWarrenForText(
   }
   // The latest user message is already at the end via appendChatMessage above.
 
+  const systemAppendix = await buildWarrenPrefetchAppendix(userText, {
+    userId,
+    portfolioId: activePortfolioId || undefined,
+    snapshot,
+  });
+
   let result;
   try {
     result = await runWarrenTurn({
@@ -711,6 +718,7 @@ async function runWarrenForText(
       officeIdentity,
       messages,
       subscriptionPlan,
+      systemAppendix: systemAppendix ?? undefined,
       onFrame: statusMessageId
         ? (frame) => {
             // Only the per-tool labels drive the visible status. We ignore

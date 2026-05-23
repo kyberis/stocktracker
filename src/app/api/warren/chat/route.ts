@@ -8,7 +8,7 @@ import { z } from "zod";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 import { runWarrenTurn, serializeWarrenPromptUserLog } from "@/lib/ai/warren/run-turn";
-import { buildMoatScreenerPrefetchAppendix } from "@/lib/ai/warren/moat-screener-intent";
+import { buildWarrenPrefetchAppendix } from "@/lib/ai/warren/warren-prefetch-appendix";
 import { resolveOfficeIdentity } from "@/lib/ai/office/office-identity";
 import {
   buildWarrenMultimodalUserContent,
@@ -163,7 +163,11 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
   const dbUser = await findUserById(session.userId);
   const subscriptionPlan = (dbUser?.plan || session.plan || "free") as SubscriptionPlan;
   const officeIdentity = await resolveOfficeIdentity(session.userId);
-  const systemAppendix = await buildMoatScreenerPrefetchAppendix(serializeWarrenPromptUserLog(modelMessages));
+  const systemAppendix = await buildWarrenPrefetchAppendix(serializeWarrenPromptUserLog(modelMessages), {
+    userId: session.userId,
+    portfolioId: serverPortfolioId,
+    snapshot: body.portfolioContext,
+  });
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {

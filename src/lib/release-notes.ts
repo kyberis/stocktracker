@@ -103,6 +103,13 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "fix",
+        text: "Warren “show my investment in X” prompts (e.g. Uber) now prefetch the matching holding and route to listHoldings + renderHoldingCard instead of wrongly answering with Agent Office missions.",
+        translations: {
+          es: "Los prompts de Warren «mostrame mi inversión en X» (p. ej. Uber) precargan la posición y usan listHoldings + renderHoldingCard en lugar de responder erróneamente con misiones de la Oficina.",
+        },
+      },
+      {
+        type: "fix",
         text: "Warren moat screener prompts (e.g. “ideas with P/E below 15”) now prefetch screener results and route to screenMoatStocks instead of wrongly answering with Agent Office missions.",
         translations: {
           es: "Los prompts de moat screener en Warren (p. ej. «ideas con P/E bajo 15») precargan resultados y usan screenMoatStocks en lugar de responder erróneamente con misiones de la Oficina.",

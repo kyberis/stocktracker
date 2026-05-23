@@ -120,7 +120,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
 
     listHoldings: tool({
       description:
-        "List all holdings in the user's active portfolio with their ticker, shares, current price, day change, and total return.",
+        "List all holdings in the user's active portfolio with their ticker, shares, current price, day change, and total return. Use when the user asks about a specific position ('my investment in Uber', 'how much AAPL do I own').",
       inputSchema: z.object({
         limit: z.number().int().min(1).max(100).optional().describe("Max number of holdings to return"),
       }),
