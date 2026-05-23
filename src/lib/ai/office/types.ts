@@ -65,6 +65,7 @@ export interface WillNoteHit {
   excerpt?: string;
   noteDate?: string;
   query?: string;
+  note?: string;
 }
 
 export interface SectorGap {

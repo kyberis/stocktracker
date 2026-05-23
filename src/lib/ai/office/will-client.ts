@@ -26,7 +26,7 @@ export async function searchWillNotes(identity: OfficeIdentity, query: string): 
   const token = getIdpServiceToken();
 
   if (!canCallSisterApp(identity)) {
-    return { available: false };
+    return { available: false, note: "Missing IdP identity — sign in with your unified trefolio account" };
   }
 
   if (!base || !token) {
@@ -36,9 +36,10 @@ export async function searchWillNotes(identity: OfficeIdentity, query: string): 
         excerpt: "Diversify into infrastructure when surplus allows",
         noteDate: new Date().toISOString().slice(0, 10),
         query,
+        note: "Dev stub (Will not configured)",
       };
     }
-    return { available: false };
+    return { available: false, note: "Will not configured" };
   }
 
   const controller = new AbortController();
@@ -59,22 +60,29 @@ export async function searchWillNotes(identity: OfficeIdentity, query: string): 
     });
 
     if (res.status === 404) {
-      return { available: false };
+      return {
+        available: false,
+        note: "No Will account linked to this identity — sign in at will.trefolio.com with the same email",
+        query,
+      };
     }
 
     if (!res.ok) {
-      return { available: false };
+      return { available: false, note: `Will HTTP ${res.status}`, query };
     }
 
     const data = (await res.json()) as Partial<WillNoteHit>;
+    if (!data.excerpt) {
+      return { available: false, note: "No matching notes", query };
+    }
     return {
-      available: Boolean(data.excerpt),
+      available: true,
       excerpt: data.excerpt,
       noteDate: data.noteDate,
       query,
     };
   } catch {
-    return { available: false };
+    return { available: false, note: "Will unreachable", query };
   } finally {
     clearTimeout(timer);
   }

@@ -53,6 +53,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "fix",
+        text: "Agent Office chips now run real actions: Search my notes queries Will directly, Portfolio summary shows live holdings, and spending checks Clara — instead of always building the same rebalance mission.",
+        translations: {
+          es: "Los chips de la Oficina ejecutan acciones reales: Buscar en mis notas consulta a Will, Resumen de cartera muestra posiciones en vivo, y gastos consulta a Clara — en lugar de armar siempre la misma misión de rebalanceo.",
+        },
+      },
+      {
         type: "improvement",
         text: "Clara and Will now expose Agent Office internal routes (savings summary, note search, mission step actions) so Warren can coordinate live across apps with unified IdP identity.",
         translations: {

@@ -4,7 +4,15 @@ import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
 import { fetchClaraSavingsSummary } from "./clara-client";
 import type { OfficeIdentity } from "./office-identity";
 import { searchWillNotes } from "./will-client";
-import { findPrimarySectorGap, portfolioCashEur } from "./analyze-gaps";
+import {
+  handleNoteSearch,
+  handlePortfolioSummary,
+  handleSpendingQuery,
+  wantsMissionIntent,
+  wantsNoteSearchIntent,
+  wantsPortfolioSummaryIntent,
+  wantsSpendingIntent,
+} from "./office-intents";
 import type {
   AgentMissionRecord,
   AgentMissionStep,
@@ -16,6 +24,7 @@ import {
   createAgentMission,
   listActiveAgentMissions,
 } from "@/lib/db/agent-office";
+import { findPrimarySectorGap, portfolioCashEur } from "./analyze-gaps";
 
 export interface RunOfficeOrchestrationInput {
   userId: string;
@@ -46,14 +55,6 @@ async function persistAgentMessage(
   emit(input.onFrame, { kind: "message", role, content, createdAt });
 }
 
-function wantsMissionIntent(message: string): boolean {
-  const m = message.toLowerCase();
-  return (
-    /inteligente|smart|opportun|rebalance|diversif|infra|plata|money|ahorro|savings|misión|mission/.test(m) ||
-    /resumen de cartera|portfolio summary|cuánto gast|how much did i spend|buscar en mis notas|search my notes/.test(m)
-  );
-}
-
 function formatPct(n: number, locale: string): string {
   return new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(n);
 }
@@ -78,6 +79,16 @@ export async function runOfficeOrchestration(
     content: input.userMessage,
     createdAt: userTs,
   });
+
+  if (wantsNoteSearchIntent(input.userMessage)) {
+    return handleNoteSearch(input, locale, nextTs, persistAgentMessage, (frame) => emit(input.onFrame, frame));
+  }
+  if (wantsPortfolioSummaryIntent(input.userMessage)) {
+    return handlePortfolioSummary(input, locale, nextTs, persistAgentMessage);
+  }
+  if (wantsSpendingIntent(input.userMessage)) {
+    return handleSpendingQuery(input, locale, nextTs, persistAgentMessage, (frame) => emit(input.onFrame, frame));
+  }
 
   const existing = await listActiveAgentMissions(input.userId);
   if (existing.length > 0 && !wantsMissionIntent(input.userMessage)) {
@@ -168,9 +179,10 @@ export async function runOfficeOrchestration(
       from: "warren",
       to: "will",
       summary:
-        locale === "es"
+        will.note ||
+        (locale === "es"
           ? "Will no devolvió notas recientes sobre diversificación."
-          : "Will returned no recent notes on diversification.",
+          : "Will returned no recent notes on diversification."),
     });
   }
 
