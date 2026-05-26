@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePortfolio } from "@/lib/portfolio-context";
 
 const DISMISS_KEY = "promo_banner_dismissed";
 
@@ -15,10 +16,12 @@ interface BannerConfig {
 }
 
 export default function LeafPromoBanner() {
+  const { demoMode } = usePortfolio();
   const [config, setConfig] = useState<BannerConfig | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (demoMode) return;
     try {
       if (localStorage.getItem(DISMISS_KEY)) return;
     } catch { /* private browsing */ }
@@ -32,7 +35,7 @@ export default function LeafPromoBanner() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [demoMode]);
 
   function dismiss() {
     setVisible(false);

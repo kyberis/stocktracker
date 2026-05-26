@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ThemeProvider } from "@/lib/theme-context";
 import { AuthProvider } from "@/lib/auth-context";
-import { I18nProvider } from "@/lib/i18n";
+import { LandingI18nProvider } from "@/lib/i18n";
 import { SettingsProvider } from "@/lib/settings-context";
 import { StealthProvider } from "@/lib/stealth-context";
 import { PortfolioProvider } from "@/lib/portfolio-context";
@@ -55,9 +55,9 @@ export default function DemoShell({
 }: Props) {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <I18nProvider>
-          <SettingsProvider>
+      <AuthProvider demoMode>
+        <LandingI18nProvider>
+          <SettingsProvider demoMode>
             <StealthProvider>
               <PortfolioProvider
                 initialHoldings={initialHoldings}
@@ -68,10 +68,16 @@ export default function DemoShell({
                 initialGoal={DEMO_GOAL}
               >
                 <PortfolioCommandProvider>
-                  <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-14 sm:pb-0">
+                  <div
+                    className="min-h-screen pb-14 sm:pb-0"
+                    style={{
+                      background: "var(--shell-background)",
+                      fontFamily: "var(--font-primary, inherit)",
+                    }}
+                  >
                     <DemoBanner />
                     <MarketTickerBar demoMode />
-                    <AppNav />
+                    <AppNav demoMode />
                     <main id="main-content">
                       <Dashboard />
                     </main>
@@ -81,7 +87,7 @@ export default function DemoShell({
               </PortfolioProvider>
             </StealthProvider>
           </SettingsProvider>
-        </I18nProvider>
+        </LandingI18nProvider>
       </AuthProvider>
     </ThemeProvider>
   );
@@ -89,22 +95,27 @@ export default function DemoShell({
 
 function DemoBanner() {
   return (
-    <div className="sticky top-0 z-50 bg-emerald-600 text-white text-center py-2.5 px-4 text-sm font-medium shadow-md">
-      <span className="inline-flex items-center gap-2">
-        <span className="bg-white text-emerald-700 font-bold text-[10px] tracking-widest uppercase px-2 py-0.5 rounded">
-          Demo
-        </span>
-        <span>You&apos;re viewing a demo portfolio with sample data.</span>
-      </span>
-      <Link
-        href="/signup"
-        className="inline-flex items-center gap-1 ml-2 bg-white text-emerald-700 font-semibold px-3 py-1 rounded-md text-xs hover:bg-emerald-50 transition-colors"
-      >
-        Sign Up Free to track your own
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-        </svg>
-      </Link>
+    <div className="sticky top-0 z-50 border-b border-[color:var(--border)] bg-[color:var(--surface-strong)]/95 backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl flex-col gap-2 px-3 py-2 text-sm text-[color:var(--muted)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="flex min-w-0 items-center gap-2.5 text-left">
+          <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-emerald-500/18 bg-emerald-500/10 px-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-500">
+            Demo
+          </span>
+          <p className="min-w-0 text-sm leading-5">
+            <span className="font-semibold text-[color:var(--foreground)]">Sample portfolio.</span>{" "}
+            You&apos;re viewing preloaded holdings and market data.
+          </p>
+        </div>
+        <Link
+          href="/signup"
+          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 self-start rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-xs font-semibold text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-highlight)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:self-auto"
+        >
+          Sign up free
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+        </Link>
+      </div>
     </div>
   );
 }

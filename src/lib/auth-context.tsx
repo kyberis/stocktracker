@@ -67,11 +67,22 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({
+  children,
+  demoMode = false,
+}: {
+  children: React.ReactNode;
+  demoMode?: boolean;
+}) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!demoMode);
 
   const refreshUser = useCallback(async () => {
+    if (demoMode) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const res = await fetchWithAuthRedirect("/api/auth/me", { cache: "no-store" });
@@ -91,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [demoMode]);
 
   const logout = useCallback(async () => {
     let next = "/";
@@ -112,17 +123,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const exitImpersonation = useCallback(async () => {
+    if (demoMode) return;
     const res = await fetchWithAuthRedirect("/api/auth/exit-impersonation", { method: "POST" });
     if (!res.ok) return;
     setUser(null);
     if (typeof window !== "undefined") {
       window.location.href = "/admin/users";
     }
-  }, []);
+  }, [demoMode]);
 
   useEffect(() => {
+    if (demoMode) {
+      setIsLoading(false);
+      return;
+    }
     refreshUser();
-  }, [refreshUser]);
+  }, [demoMode, refreshUser]);
 
   const value = useMemo(
     () => ({ user, isLoading, refreshUser, logout, exitImpersonation }),

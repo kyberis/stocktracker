@@ -92,15 +92,15 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested, inl
       {cells.map((c) => (
         <div
           key={c.label}
-          className={`rounded-lg px-2.5 py-2 ${
+          className={`rounded-[16px] border px-3 py-3 ${
             c.highlight
               ? c.positive
-                ? "bg-emerald-50 dark:bg-emerald-500/[0.06] border border-emerald-200/60 dark:border-emerald-500/15"
-                : "bg-red-50 dark:bg-red-500/[0.06] border border-red-200/60 dark:border-red-500/15"
-              : "bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04]"
+                ? "bg-emerald-500/[0.1] border-emerald-400/16 shadow-[0_10px_24px_rgba(16,185,129,0.08)]"
+                : "bg-red-500/[0.1] border-red-400/16 shadow-[0_10px_24px_rgba(239,68,68,0.08)]"
+              : "bg-[color:var(--surface-soft)] border-[color:var(--border)] shadow-[0_10px_24px_rgba(2,8,20,0.14)]"
           }`}
         >
-          <p className="text-[9px] font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wide">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[color:var(--muted)]">
             {c.label}
           </p>
           <p
@@ -109,7 +109,7 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested, inl
                 ? c.positive
                   ? "text-emerald-600 dark:text-emerald-400"
                   : "text-red-500 dark:text-red-400"
-                : "text-gray-900 dark:text-white"
+                : "text-[color:var(--foreground)]"
             }`}
           >
             {c.value}

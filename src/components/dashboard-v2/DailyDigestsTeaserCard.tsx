@@ -43,7 +43,7 @@ export default function DailyDigestsTeaserCard() {
 
   if (loading) {
     return (
-      <div className="card rounded-2xl p-4 h-[88px] animate-pulse bg-gray-50 dark:bg-white/[0.02]" aria-hidden />
+      <div className="card h-[88px] rounded-[var(--radius-card)] bg-gray-50 p-4 dark:bg-white/[0.02]" aria-hidden />
     );
   }
 
@@ -56,10 +56,10 @@ export default function DailyDigestsTeaserCard() {
     : null;
 
   return (
-    <section className="card rounded-2xl p-4 border border-gray-200/80 dark:border-white/[0.06]" aria-labelledby="daily-digests-teaser-heading">
+    <section className="card rounded-[var(--radius-card)] border border-[color:var(--border)] p-4 shadow-[0_14px_28px_rgba(1,6,16,0.22)]" aria-labelledby="daily-digests-teaser-heading">
       <div className="flex items-start gap-3">
         <div
-          className="shrink-0 w-9 h-9 rounded-xl bg-emerald-500/15 dark:bg-emerald-500/20 flex items-center justify-center"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)]"
           aria-hidden
         >
           <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -67,19 +67,19 @@ export default function DailyDigestsTeaserCard() {
           </svg>
         </div>
         <div className="min-w-0 flex-1">
-          <h2 id="daily-digests-teaser-heading" className="text-xs font-bold text-gray-900 dark:text-white">
+          <h2 id="daily-digests-teaser-heading" className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--foreground)]">
             {t("dailyDigestsTeaserTitle")}
           </h2>
-          <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 leading-snug">{t("dailyDigestsTeaserDesc")}</p>
+          <p className="mt-0.5 text-[10px] leading-snug text-[color:var(--muted)]">{t("dailyDigestsTeaserDesc")}</p>
           {insight && (
-            <p className="text-[11px] text-gray-600 dark:text-slate-300 mt-2 line-clamp-2 font-medium">{insight.title}</p>
+            <p className="mt-2 line-clamp-2 text-[11px] font-medium text-[color:var(--foreground)]">{insight.title}</p>
           )}
           {insight && dateStr && (
-            <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{dateStr}</p>
+            <p className="mt-0.5 text-[10px] text-[color:var(--muted)]">{dateStr}</p>
           )}
           <Link
             href="/daily-digests"
-            className="inline-flex items-center gap-1 mt-2 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 rounded"
+            className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 rounded"
           >
             {t("dailyDigestsTeaserCta")}
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

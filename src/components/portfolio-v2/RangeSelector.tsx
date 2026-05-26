@@ -25,7 +25,7 @@ export default function RangeSelector({ value, onChange }: Props) {
   const isPaid = user?.plan === "pro";
 
   return (
-    <div className="flex gap-0.5 rounded-lg bg-gray-100/60 dark:bg-white/[0.04] p-0.5">
+    <div className="flex gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1 backdrop-blur-md">
       {RANGES.map(({ key, label }) => {
         const needsPro = !FREE_RANGES.has(key) && !isPaid;
         const isActive = value === key;
@@ -33,10 +33,10 @@ export default function RangeSelector({ value, onChange }: Props) {
           <button
             key={key}
             onClick={() => onChange(key)}
-            className={`relative text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors ${
+            className={`relative min-h-10 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors ${
               isActive
-                ? "bg-blue-500/12 text-blue-500 dark:bg-blue-500/15 dark:text-blue-400"
-                : "text-gray-500 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300"
+                ? "bg-blue-500/15 text-blue-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                : "text-[color:var(--muted)] hover:bg-white/[0.06] hover:text-[color:var(--foreground)]"
             }`}
           >
             {label}

@@ -162,7 +162,7 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
     variant === "studio"
       ? "bg-zinc-900/90 border border-white/10 focus-within:border-emerald-500/40 focus-within:ring-1 focus-within:ring-emerald-500/20"
       : variant === "command"
-        ? "bg-gray-100 dark:bg-slate-800/90 border border-gray-200 dark:border-slate-600 focus-within:border-emerald-400/60 dark:focus-within:border-emerald-500/40 focus-within:ring-2 focus-within:ring-emerald-500/15"
+        ? "border border-[color:var(--border)] bg-[color:var(--surface-strong)] focus-within:border-[color:var(--accent)] focus-within:ring-0"
         : "bg-gray-100 dark:bg-slate-800/90 border border-gray-200 dark:border-slate-600 focus-within:border-emerald-400/60 dark:focus-within:border-emerald-500/40 focus-within:ring-2 focus-within:ring-emerald-500/15";
 
   const radiusClass = variant === "command" || variant === "studio" ? "rounded-xl" : "rounded-full";
@@ -171,7 +171,9 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
   const panelShell =
     variant === "studio"
       ? "border border-white/10 bg-zinc-950 shadow-xl"
-      : "border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 shadow-lg";
+      : variant === "command"
+        ? "border border-[color:var(--border)] bg-[color:var(--surface-overlay)] shadow-xl"
+        : "border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 shadow-lg";
 
   const showPanel =
     trimmed.length >= 1 &&
@@ -190,6 +192,7 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
         role="search"
         aria-label={t("navAssetSearchAria")}
         className={`flex w-full min-w-0 items-center gap-1.5 px-2.5 sm:px-3 ${verticalPad} transition-shadow ${radiusClass} ${shell}`}
+        style={variant === "command" ? { background: "var(--surface-strong)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)" } : undefined}
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -265,7 +268,7 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
         />
         <button
           type="submit"
-          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
+          className={`shrink-0 rounded-xl px-3 py-1.5 text-[11px] font-semibold transition-colors ${
             variant === "studio"
               ? "bg-emerald-600 text-white hover:bg-emerald-500"
               : "bg-emerald-600 text-white hover:bg-emerald-500 dark:bg-emerald-600 dark:hover:bg-emerald-500"
@@ -323,8 +326,8 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
                         ? "bg-white/10 text-white"
                         : "text-zinc-200 hover:bg-white/5"
                       : highlight === idx
-                        ? "bg-emerald-500/10 text-gray-900 dark:text-white"
-                        : "text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800"
+                        ? "bg-[color:var(--surface-soft)] text-gray-900 dark:text-white"
+                        : "text-gray-900 dark:text-white hover:bg-[color:var(--surface-soft)]"
                   }`}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => navigateToResult(r)}

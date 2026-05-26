@@ -2,11 +2,34 @@
 
 let loginRedirectStarted = false;
 let navigateToLogin = (href: string) => window.location.replace(href);
+const PUBLIC_CLIENT_ROUTES = new Set([
+  "/login",
+  "/signup",
+  "/landing",
+  "/privacy",
+  "/terms",
+  "/verify-email",
+  "/demo",
+  "/releasenotes",
+  "/leaf",
+  "/unsubscribe",
+  "/about",
+  "/contact",
+]);
 
 function getCurrentAppPath(): string {
   if (typeof window === "undefined") return "/";
   const { pathname, search, hash } = window.location;
   return `${pathname}${search}${hash}`;
+}
+
+function isPublicClientPath(pathname: string): boolean {
+  if (PUBLIC_CLIENT_ROUTES.has(pathname)) return true;
+  if (pathname.startsWith("/blog")) return true;
+  if (pathname.startsWith("/p/")) return true;
+  if (pathname.startsWith("/u/")) return true;
+  if (pathname.startsWith("/trial/")) return true;
+  return false;
 }
 
 function normalizeRedirectTarget(target?: string | null): string {
@@ -58,6 +81,7 @@ export function shouldRedirectToLogin(response: Response, input: RequestInfo | U
   if (response.status !== 401) return false;
   if (typeof window === "undefined") return false;
   if (window.location.pathname === "/login") return false;
+  if (isPublicClientPath(window.location.pathname)) return false;
 
   const pathname = getRequestPathname(input);
   return Boolean(pathname?.startsWith("/api/"));

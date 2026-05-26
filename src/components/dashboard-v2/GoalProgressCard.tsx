@@ -31,24 +31,24 @@ export default function GoalProgressCard({ holdings, cashEntries }: Props) {
   return (
     <div className="card p-3">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-gray-900 dark:text-white">{t("v2MyGoal")}</p>
-        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--foreground)]">{t("v2MyGoal")}</p>
+        <span className="text-sm font-bold tabular-nums text-emerald-400">
           {pct.toFixed(1)}%
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center text-sm shrink-0">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-emerald-500/14 bg-emerald-500/12 text-sm">
           🎯
         </div>
-        <p className="text-[10px] text-gray-500 dark:text-slate-500 flex-1">
+        <p className="flex-1 text-[10px] text-[color:var(--muted)]">
           {stealthMode
             ? "••••• / •••••"
             : `${formatCurrency(totals.totalCurrentEUR, cur)} / ${formatCurrency(goal.targetAmount, cur)}`}
         </p>
       </div>
-      <div className="h-[3px] mt-2 rounded-full bg-gray-100 dark:bg-white/[0.06] overflow-hidden">
+      <div className="mt-2 h-[3px] overflow-hidden rounded-full bg-[color:var(--surface-highlight)]">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500"
+          className="h-full rounded-full bg-emerald-400"
           style={{ width: `${pct}%` }}
         />
       </div>

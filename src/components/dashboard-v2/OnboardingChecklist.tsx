@@ -114,7 +114,7 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
   }, []);
 
   if (demoMode || !user) return null;
-  if (loading) return <div className="card rounded-xl h-[52px] animate-pulse bg-gray-50 dark:bg-white/[0.02]" />;
+  if (loading) return <div className="card h-[52px] rounded-[var(--radius-card)] bg-gray-50 animate-pulse dark:bg-white/[0.02]" />;
   if (!data || data.dismissed) return null;
 
   const completedCount = data.steps.filter((s) => s.completedAt).length;
@@ -152,18 +152,18 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
   ];
 
   return (
-    <div className="card rounded-xl overflow-hidden">
+    <div className="card overflow-hidden rounded-[var(--radius-card)]">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+        className="flex w-full items-center gap-3 bg-[color:var(--surface-strong)] p-3 text-left transition-colors hover:bg-[color:var(--surface-soft)]"
         aria-expanded={expanded}
         aria-controls="onboarding-checklist-body"
       >
         <MiniRing completed={completedCount} total={total} />
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-gray-900 dark:text-white">{t("checklistTitle")}</p>
-          <div className="h-1 rounded-full bg-gray-100 dark:bg-white/[0.06] overflow-hidden mt-1.5">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--foreground)]">{t("checklistTitle")}</p>
+          <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[color:var(--surface-highlight)]">
             <div
               className="h-full rounded-full bg-emerald-500 transition-all duration-500"
               style={{ width: `${pct}%` }}
@@ -173,7 +173,7 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
         <svg
           width="16" height="16" viewBox="0 0 24 24"
           fill="none" stroke="currentColor" strokeWidth={2}
-          className={`shrink-0 text-gray-400 dark:text-slate-500 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}
+          className={`shrink-0 text-[color:var(--muted)] transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}
           aria-hidden="true"
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -186,7 +186,7 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
         style={{ gridTemplateRows: expanded ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <div className="border-t border-gray-100 dark:border-white/[0.04] px-3 pb-3">
+          <div className="border-t border-[color:var(--border)] px-3 pb-3">
             {STEPS.map((item) => {
               const stepData = data.steps.find((s) => s.step === item.step);
               const done = !!stepData?.completedAt;
@@ -197,7 +197,7 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
                     className={`w-4 h-4 rounded flex items-center justify-center shrink-0 transition-colors ${
                       done
                         ? "bg-emerald-500"
-                        : "border border-gray-300 dark:border-slate-600"
+                        : "border border-[color:var(--border)]"
                     }`}
                   >
                     {done && (
@@ -210,8 +210,8 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
                   <span
                     className={`text-[11px] flex-1 ${
                       done
-                        ? "text-gray-400 dark:text-slate-500 line-through"
-                        : "text-gray-700 dark:text-slate-300"
+                        ? "text-[color:var(--muted)] line-through"
+                        : "text-[color:var(--foreground)]"
                     }`}
                   >
                     {t(item.labelKey as keyof typeof t)}
@@ -221,7 +221,7 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
                     item.actionHref ? (
                       <a
                         href={item.actionHref}
-                        className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold whitespace-nowrap hover:underline"
+                        className="whitespace-nowrap text-[10px] font-semibold text-emerald-400 hover:underline"
                         onClick={() => markStep(item.step)}
                       >
                         {t(item.actionKey as keyof typeof t)} &rarr;
@@ -232,7 +232,7 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
                           markStep(item.step);
                           item.onAction?.();
                         }}
-                        className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold whitespace-nowrap hover:underline"
+                        className="whitespace-nowrap text-[10px] font-semibold text-emerald-400 hover:underline"
                       >
                         {t(item.actionKey as keyof typeof t)} &rarr;
                       </button>
@@ -244,7 +244,7 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
 
             <button
               onClick={dismiss}
-              className="mt-1 text-[10px] text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+              className="mt-1 text-[10px] text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
             >
               {t("checklistDismiss")} &times;
             </button>

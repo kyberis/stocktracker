@@ -12,7 +12,7 @@ export default function WarrenTrigger({ onOpen }: Props) {
   return (
     <button
       onClick={onOpen}
-      className="w-full card p-3 bg-gradient-to-br from-amber-500/[0.08] to-[#5e3a20]/[0.04] border-amber-500/30 hover:border-amber-400/50 hover:-translate-y-px transition-all cursor-pointer text-left"
+      className="w-full cursor-pointer text-left transition-all hover:-translate-y-px card border-amber-500/16 bg-amber-500/[0.06] p-3 hover:border-amber-400/28"
     >
       <div className="flex items-center gap-3">
         <WarrenAvatar size={36} />
@@ -21,7 +21,7 @@ export default function WarrenTrigger({ onOpen }: Props) {
             <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
               {t("warrenName")}
             </span>
-            <span className="text-[9px] font-semibold bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+            <span className="rounded-full border border-amber-500/18 bg-amber-500/12 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">
               AI
             </span>
           </div>

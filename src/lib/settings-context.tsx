@@ -44,7 +44,13 @@ interface SettingsContextType {
 
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
-export function SettingsProvider({ children }: { children: React.ReactNode }) {
+export function SettingsProvider({
+  children,
+  demoMode = false,
+}: {
+  children: React.ReactNode;
+  demoMode?: boolean;
+}) {
   const { setLayoutTheme } = useTheme();
   const [refreshInterval, setRefreshIntervalState] = useState<RefreshInterval>(15);
   const [dashboardTheme, setDashboardThemeState] = useState<LayoutTheme>(getInitialLayoutTheme);
@@ -63,6 +69,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [defaultCurrency, setDefaultCurrencyState] = useState("EUR");
 
   useEffect(() => {
+    if (demoMode) return;
     const load = async () => {
       try {
         const res = await fetch("/api/user-settings", { cache: "no-store" });
@@ -129,10 +136,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     };
 
     load();
-  }, []);
+  }, [demoMode]);
 
   const setRefreshInterval = useCallback(async (interval: RefreshInterval) => {
     setRefreshIntervalState(interval);
+    if (demoMode) return;
     try {
       await fetch("/api/user-settings", {
         method: "PUT",
@@ -142,7 +150,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Keep optimistic UI state.
     }
-  }, []);
+  }, [demoMode]);
 
   const setDashboardTheme = useCallback(async (theme: LayoutTheme) => {
     setDashboardThemeState(theme);
@@ -153,6 +161,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       html.classList.remove("theme-terminal", "theme-canvas", "theme-studio");
       if (theme !== "default") html.classList.add(`theme-${theme}`);
     } catch { /* SSR */ }
+    if (demoMode) {
+      window.location.reload();
+      return;
+    }
     try {
       await fetch("/api/user-settings", {
         method: "PUT",
@@ -163,10 +175,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       // Keep optimistic UI state.
     }
     window.location.reload();
-  }, [setLayoutTheme]);
+  }, [demoMode, setLayoutTheme]);
 
   const setDefaultCurrency = useCallback(async (currency: string) => {
     setDefaultCurrencyState(currency);
+    if (demoMode) return;
     try {
       await fetch("/api/user-settings", {
         method: "PUT",
@@ -174,7 +187,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ defaultCurrency: currency }),
       });
     } catch { /* keep optimistic */ }
-  }, []);
+  }, [demoMode]);
 
   const getApiHeaders = useCallback((): Record<string, string> => {
     return {};

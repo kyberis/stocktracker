@@ -152,12 +152,12 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
   return (
     <div className="card">
       <div className="mb-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
+        <h3 className="flex items-center gap-1.5 text-sm font-semibold text-[color:var(--foreground)]">
           {t("portfolioGrowth")}
           <TierFeatureBadge requiredPlan="pro" size="sm" />
           <button
           onClick={() => setShowHelp((v) => !v)}
-          className="ml-auto p-1 rounded-full text-gray-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+          className="ml-auto rounded-full p-1 text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-soft)] hover:text-emerald-400"
           aria-label={t("portfolioGrowth")}
           title={t("portfolioGrowth")}
         >
@@ -166,24 +166,24 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
           </svg>
         </button>
       </h3>
-        <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{t("portfolioGrowthSubtitle")}</p>
+        <p className="mt-0.5 text-[10px] text-[color:var(--muted)]">{t("portfolioGrowthSubtitle")}</p>
       </div>
 
       {showHelp && (
-        <div className="mb-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 p-3 space-y-2.5 text-xs">
+        <div className="mb-3 space-y-2.5 rounded-[var(--radius-card)] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-3 text-xs">
           <div>
-            <p className="font-semibold text-gray-800 dark:text-slate-200">{t("ytd")}</p>
-            <p className="text-gray-600 dark:text-slate-400 mt-0.5 leading-relaxed text-[11px]">{t("growthHelpYtd")}</p>
+            <p className="font-semibold text-[color:var(--foreground)]">{t("ytd")}</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-[color:var(--muted)]">{t("growthHelpYtd")}</p>
           </div>
           <div>
-            <p className="font-semibold text-gray-800 dark:text-slate-200">{t("oneMonth")}</p>
-            <p className="text-gray-600 dark:text-slate-400 mt-0.5 leading-relaxed text-[11px]">{t("growthHelpOneMonth")}</p>
+            <p className="font-semibold text-[color:var(--foreground)]">{t("oneMonth")}</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-[color:var(--muted)]">{t("growthHelpOneMonth")}</p>
           </div>
           <div>
-            <p className="font-semibold text-gray-800 dark:text-slate-200">{t("oneYear")}</p>
-            <p className="text-gray-600 dark:text-slate-400 mt-0.5 leading-relaxed text-[11px]">{t("growthHelpOneYear")}</p>
+            <p className="font-semibold text-[color:var(--foreground)]">{t("oneYear")}</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-[color:var(--muted)]">{t("growthHelpOneYear")}</p>
           </div>
-          <p className="text-gray-500 dark:text-slate-500 text-[10px] italic pt-1 border-t border-gray-200 dark:border-slate-700">{t("growthCaveat")}</p>
+          <p className="border-t border-[color:var(--border)] pt-1 text-[10px] italic text-[color:var(--muted)]">{t("growthCaveat")}</p>
         </div>
       )}
 
@@ -203,8 +203,8 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
             : !hasValue
               ? "bg-gray-50 dark:bg-slate-800/50"
               : isPositive
-                ? "bg-emerald-50 dark:bg-emerald-500/10"
-                : "bg-red-50 dark:bg-red-500/10";
+                ? "border border-emerald-500/14 bg-emerald-500/[0.08]"
+                : "border border-red-500/14 bg-red-500/[0.08]";
 
           const formatted = hasValue ? formatPercent(p.value!) : "—";
           const longValue = formatted.length > 7;
@@ -212,10 +212,10 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
           return (
             <div
               key={p.label}
-              className={`${bg} rounded-xl p-3 text-center`}
+              className={`${bg} rounded-[16px] p-3 text-center`}
               title={t("growthCaveat")}
             >
-              <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium uppercase mb-1">
+              <p className="mb-1 text-[10px] font-medium uppercase tracking-[0.14em] text-[color:var(--muted)]">
                 {p.label}
               </p>
               <p className={`${longValue ? "text-base" : "text-lg"} font-bold tabular-nums ${color} ${loading ? "animate-value-shimmer" : ""}`}>
@@ -225,7 +225,7 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
           );
         })}
       </div>
-      <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-2 text-center">
+      <p className="mt-2 text-center text-[10px] text-[color:var(--muted)]">
         {t("growthCaveat")}
       </p>
     </div>

@@ -96,7 +96,7 @@ interface Props {
 }
 
 export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
-  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, isLoading, addCashEntry, updateCashEntry, removeCashEntry, activePortfolioCurrency, portfolios, activePortfolioId, moveToPortfolio } = usePortfolio();
+  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, isLoading, addCashEntry, updateCashEntry, removeCashEntry, activePortfolioCurrency, portfolios, activePortfolioId, moveToPortfolio, demoMode } = usePortfolio();
   const { user } = useAuth();
   const baseCurrency = activePortfolioCurrency;
   const holdings = holdingsProp ?? ctxHoldings;
@@ -144,6 +144,10 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
   };
 
   const fetchIndices = useCallback(async () => {
+    if (demoMode) {
+      setIndices((prev) => prev.map((i) => ({ ...i, loading: false })));
+      return;
+    }
     try {
       const symbols = INDICES.map((i) => i.symbol).join(",");
       const res = await fetch(`/api/quote?symbols=${encodeURIComponent(symbols)}&provider=yahoo`);
@@ -166,7 +170,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
     } catch {
       setIndices((prev) => prev.map((i) => ({ ...i, loading: false })));
     }
-  }, []);
+  }, [demoMode]);
 
   useEffect(() => {
     fetchIndices();
@@ -241,7 +245,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
       ? "bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden"
       : layoutTheme === "studio"
       ? "rounded-[20px] border border-white/5 bg-white/[0.02] backdrop-blur-sm overflow-hidden"
-      : "bg-[var(--card)] border border-[var(--border)] rounded-[var(--radius-card,16px)] shadow-sm text-[var(--foreground)] overflow-hidden";
+      : "overflow-hidden rounded-[var(--radius-card,16px)] border border-[var(--border)] bg-[color:var(--surface-strong)] text-[var(--foreground)] shadow-[0_14px_28px_rgba(1,6,16,0.22)]";
 
   const sectionPad =
     layoutTheme === "terminal"
@@ -252,7 +256,14 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
       ? "p-4 sm:p-5"
       : "p-4 sm:p-5";
 
-  const dividerClass = "border-gray-100 dark:border-slate-700";
+  const dividerClass =
+    layoutTheme === "terminal"
+      ? "border-zinc-800"
+      : layoutTheme === "canvas"
+        ? "border-slate-200"
+        : layoutTheme === "studio"
+          ? "border-white/5"
+          : "border-[color:var(--border)]";
 
   return (
     <div className={cardClass}>
@@ -260,12 +271,12 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
         {/* Market Indices */}
         <div className={`${sectionPad} lg:border-r ${dividerClass}`}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-sm font-semibold text-[color:var(--foreground)]">
               {t("marketsToday")}
             </h3>
             <button
               onClick={fetchIndices}
-              className="text-xs text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+              className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-2 text-xs text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-highlight)] hover:text-[color:var(--foreground)]"
               title="Refresh"
               aria-label="Refresh"
             >
@@ -280,17 +291,17 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
               <caption className="sr-only">Market indices</caption>
               <thead>
                 <tr className={`border-b ${dividerClass}`}>
-                  <th scope="col" className="text-left text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pl-3 sm:pl-4">{t("stock")}</th>
-                  <th scope="col" className="text-center text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 hidden sm:table-cell">{t("weekTrend")}</th>
-                  <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 hidden sm:table-cell">{t("dayChange")}</th>
-                  <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pr-3 sm:pr-4">{t("change")}</th>
+                  <th scope="col" className="pb-2 pl-3 text-left text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--muted)] sm:pl-4">{t("stock")}</th>
+                  <th scope="col" className="hidden pb-2 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--muted)] sm:table-cell">{t("weekTrend")}</th>
+                  <th scope="col" className="hidden pb-2 text-right text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--muted)] sm:table-cell">{t("dayChange")}</th>
+                  <th scope="col" className="pb-2 pr-3 text-right text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--muted)] sm:pr-4">{t("change")}</th>
                 </tr>
               </thead>
               <tbody>
                 {holdings.length > 0 && (
-                  <tr className={`border-b border-gray-200 dark:border-slate-600 bg-emerald-50/40 dark:bg-emerald-500/5 border-l-2 border-l-emerald-500 dark:border-l-emerald-400`}>
+                  <tr className={`border-b border-l-2 border-l-emerald-400 bg-emerald-500/[0.05] ${dividerClass}`}>
                     <td className="py-2.5 pl-3 sm:pl-4">
-                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                      <span className="font-semibold text-emerald-400">
                         {t("portfolio")}
                       </span>
                     </td>
@@ -316,9 +327,9 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                   </tr>
                 )}
                 {indices.map((idx) => (
-                  <tr key={idx.symbol} className="border-b border-gray-50 dark:border-slate-700/50 last:border-0">
+                  <tr key={idx.symbol} className={`border-b last:border-0 ${dividerClass}`}>
                     <td className="py-2.5 pl-3 sm:pl-4">
-                      <span className="font-medium text-gray-900 dark:text-white">
+                      <span className="font-medium text-[color:var(--foreground)]">
                         {t(idx.name as Parameters<typeof t>[0])}
                       </span>
                     </td>
@@ -356,7 +367,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                 track("benchmark_chart_toggled");
                 setShowChart(!showChart);
               }}
-              className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-medium text-emerald-400 transition-colors hover:text-emerald-300"
             >
               <svg className={`w-3.5 h-3.5 transition-transform ${showChart ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -375,12 +386,12 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
         {/* Assets & Cash Balances */}
         <div id="dashboard-cash-assets" className={`${sectionPad} border-t lg:border-t-0 ${dividerClass} scroll-mt-24`}>
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("manualAssets")}</h3>
+            <h3 className="text-sm font-semibold text-[color:var(--foreground)]">{t("manualAssets")}</h3>
           </div>
 
           {cashEntries.length > 0 && (
             <div className="mb-3">
-              <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums">
+              <span className="text-xl font-bold tabular-nums text-[color:var(--foreground)]">
                 {formatCurrency(cashTotal, baseCurrency)}
               </span>
 
@@ -404,7 +415,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                     {activeTypes.map((type) => (
                       <div key={type} className="flex items-center gap-1">
                         <span className={`inline-block w-2 h-2 rounded-full ${ASSET_TYPE_META[type].color}`} />
-                        <span className="text-[10px] text-gray-500 dark:text-slate-400">
+                        <span className="text-[10px] text-[color:var(--muted)]">
                           {t(ASSET_TYPE_META[type].labelKey as Parameters<typeof t>[0])}
                         </span>
                       </div>
@@ -417,7 +428,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
 
           <div className="space-y-2 mb-3">
             {cashEntries.length === 0 ? (
-              <p className="text-xs text-gray-400 dark:text-slate-500">{t("noCashEntries")}</p>
+              <p className="text-xs text-[color:var(--muted)]">{t("noCashEntries")}</p>
             ) : (
               activeTypes.map((type) => {
                 const meta = ASSET_TYPE_META[type];
@@ -429,10 +440,10 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                     {showHeader && (
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className="text-xs">{meta.icon}</span>
-                        <span className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                        <span className="text-xs font-semibold text-[color:var(--foreground)]">
                           {t(meta.labelKey as Parameters<typeof t>[0])}
                         </span>
-                        <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 ml-auto tabular-nums">
+                        <span className="ml-auto text-xs font-semibold tabular-nums text-[color:var(--muted)]">
                           {formatCurrency(groupTotal, baseCurrency)}
                         </span>
                       </div>
@@ -440,7 +451,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                     {entries.map((entry) => {
                       const isEditing = editingId === entry.id;
                       return isEditing ? (
-                        <div key={entry.id} className="rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-500/5 p-2 space-y-1.5">
+                        <div key={entry.id} className="space-y-1.5 rounded-xl border border-emerald-500/18 bg-emerald-500/[0.05] p-2">
                           <input
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
@@ -469,22 +480,22 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                       ) : (
                         <div
                           key={entry.id}
-                          className="group flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors"
+                          className="group -mx-2 flex items-center justify-between rounded-xl px-2 py-1.5 transition-colors hover:bg-[color:var(--surface-soft)]"
                         >
                           <div className="min-w-0 flex-1 mr-2">
-                            <span className="text-sm text-gray-600 dark:text-slate-300 truncate block">{entry.name}</span>
+                            <span className="block truncate text-sm text-[color:var(--foreground)]">{entry.name}</span>
                             {entry.notes && (
-                              <span className="text-[11px] text-gray-400 dark:text-slate-500 truncate block">{entry.notes}</span>
+                              <span className="block truncate text-[11px] text-[color:var(--muted)]">{entry.notes}</span>
                             )}
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="text-sm font-medium text-gray-900 dark:text-white tabular-nums">
+                            <span className="text-sm font-medium tabular-nums text-[color:var(--foreground)]">
                               {formatCurrency(entry.amountEUR, baseCurrency)}
                             </span>
                             <div className="hidden group-hover:flex items-center gap-1">
                               <button
                                 onClick={() => startEdit(entry.id, entry.name, entry.amountEUR)}
-                                className="p-0.5 rounded text-gray-400 hover:text-emerald-500 transition-colors"
+                                className="rounded p-0.5 text-[color:var(--muted)] transition-colors hover:text-emerald-400"
                                 title={t("editValues")}
                                 aria-label={t("editValues")}
                               >
@@ -497,7 +508,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                                   <button
                                     onClick={() => setMovingCashId(movingCashId === entry.id ? null : entry.id)}
                                     disabled={moveCashLoading}
-                                    className="p-0.5 rounded text-gray-400 hover:text-blue-500 transition-colors disabled:opacity-50"
+                                    className="rounded p-0.5 text-[color:var(--muted)] transition-colors hover:text-blue-300 disabled:opacity-50"
                                     title={t("moveToPortfolio")}
                                     aria-label={t("moveToPortfolio")}
                                   >
@@ -506,13 +517,13 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                                     </svg>
                                   </button>
                                   {movingCashId === entry.id && (
-                                    <div className="absolute bottom-full right-0 mb-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg py-1 min-w-[160px] z-20">
+                                    <div className="absolute bottom-full right-0 z-20 mb-1 min-w-[160px] rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-overlay)] py-1 shadow-lg">
                                       {otherPortfolios.map((p) => (
                                         <button
                                           key={p.id}
                                           onClick={() => handleMoveCash(entry.id, p.id)}
                                           disabled={moveCashLoading}
-                                          className="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                                          className="w-full px-3 py-1.5 text-left text-xs text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-soft)] disabled:opacity-50"
                                         >
                                           {p.name}
                                         </button>
@@ -523,7 +534,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                               )}
                               <button
                                 onClick={() => removeCashEntry(entry.id)}
-                                className="p-0.5 rounded text-gray-400 hover:text-red-500 transition-colors"
+                                className="rounded p-0.5 text-[color:var(--muted)] transition-colors hover:text-red-400"
                                 title={t("removeStock")}
                                 aria-label={t("removeStock")}
                               >
@@ -542,7 +553,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
             )}
           </div>
 
-          <div className={`flex items-center gap-1.5 pt-2 border-t ${dividerClass}`}>
+          <div className={`flex items-center gap-1.5 border-t pt-2 ${dividerClass}`}>
             <input
               value={cashName}
               onChange={(e) => setCashName(e.target.value)}

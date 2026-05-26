@@ -62,46 +62,46 @@ export default function CompactDividendCard({ holdings, cashEntries, onNavigateT
 
   return (
     <div
-      className="card p-3 cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500/40 transition-colors"
+      className="card cursor-pointer p-3 transition-colors hover:border-emerald-400/28"
       onClick={onNavigateToDividends}
       role={onNavigateToDividends ? "button" : undefined}
       tabIndex={onNavigateToDividends ? 0 : undefined}
       onKeyDown={onNavigateToDividends ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onNavigateToDividends(); } } : undefined}
     >
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-gray-900 dark:text-white">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--foreground)]">
           {t("v2Dividends")}
         </p>
         {onNavigateToDividends && (
-          <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
+          <span className="text-[11px] font-medium text-emerald-400 hover:underline">
             {t("v2ViewAll")}
           </span>
         )}
       </div>
       <div className="grid grid-cols-2 gap-1.5">
-        <div className="rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04] px-2.5 py-2">
-          <p className="text-[9px] font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wide">
+        <div className="rounded-[16px] border border-emerald-500/14 bg-emerald-500/[0.05] px-2.5 py-2">
+          <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-[color:var(--muted)]">
             {t("v2DivReceived")}
           </p>
-          <p className="text-sm font-bold tabular-nums mt-0.5 text-emerald-600 dark:text-emerald-400">
+          <p className="mt-0.5 text-sm font-bold tabular-nums text-emerald-400">
             {ytdReceived === null
               ? "--"
               : stealthMode
                 ? "•••••"
                 : formatCurrency(ytdReceived, cur)}
           </p>
-          <p className="text-[9px] text-gray-400 dark:text-slate-600 mt-0.5">
+          <p className="mt-0.5 text-[9px] text-[color:var(--muted)]">
             {thisYear} YTD
           </p>
         </div>
-        <div className="rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04] px-2.5 py-2">
-          <p className="text-[9px] font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wide">
+        <div className="rounded-[16px] border border-amber-500/14 bg-amber-500/[0.05] px-2.5 py-2">
+          <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-[color:var(--muted)]">
             {t("v2DivEstimated")}
           </p>
-          <p className="text-sm font-bold tabular-nums mt-0.5 text-amber-600 dark:text-amber-400">
+          <p className="mt-0.5 text-sm font-bold tabular-nums text-amber-300">
             {stealthMode ? "•••••" : formatCurrency(estimatedAnnual, cur)}
           </p>
-          <p className="text-[9px] text-gray-400 dark:text-slate-600 mt-0.5">
+          <p className="mt-0.5 text-[9px] text-[color:var(--muted)]">
             {t("v2DivFullYear")}
           </p>
         </div>

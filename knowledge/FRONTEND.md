@@ -11,10 +11,31 @@
 ## Themes
 
 Four themes (listed in `LayoutTheme`): `default`, `canvas`, `terminal`, `studio`.
-Each supports a dark and light mode. Theme parity is enforced by the
-[`theme-parity`](../.cursor/skills/theme-parity/SKILL.md) skill — if a component
+The default theme is the primary glass-based visual direction. `canvas`,
+`terminal`, and `studio` stay supported through token overrides, not through
+separate component trees. See
+[`knowledge/design-docs/glass-visual-system.md`](design-docs/glass-visual-system.md).
+
+Mode behavior is not identical across themes:
+
+- `default`: light/dark toggle
+- `canvas`: forced light
+- `terminal`: forced dark
+- `studio`: forced dark
+
+Theme parity is enforced by the
+[`theme-parity`](../.cursor/skills/theme-parity/SKILL.md) skill. If a component
 looks broken in one theme, it ships broken for everyone. Test all four whenever
 you change UI.
+
+## Surface system
+
+- Shared surfaces inherit from semantic tokens in `src/app/globals.css`.
+- Prefer `.card`, `.glass-toolbar`, and `.glass-overlay` over ad-hoc `bg-white`
+  / `dark:bg-slate-*` combinations.
+- Overlays, sheets, and drawers must be more opaque than decorative cards.
+- Charts may live inside glass containers, but the plotting area itself must
+  remain readability-first.
 
 ## Dashboard shell
 
@@ -36,6 +57,8 @@ shell at [`src/app/demo/demo-shell.tsx`](../src/app/demo/demo-shell.tsx) (see
 - Layouts are responsive, validated at 375px, 390px, 428px, 768px, 1024px, 1440px.
 - Touch targets ≥ 44x44px.
 - Bottom-sheet modals on mobile; centered dialogs on desktop.
+- On mobile, keep glass calmer than desktop. Dense card stacks should not become
+  visually noisy just because the desktop hero card is more decorative.
 - See [`mobile-usability-reviewer`](../.cursor/skills/mobile-usability-reviewer/SKILL.md)
   skill for the checklist.
 

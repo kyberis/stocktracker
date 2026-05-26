@@ -159,16 +159,19 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
             type="button"
             onClick={() => onFilterChange?.(isSelected ? "all" : e.key)}
             aria-pressed={isSelected}
-            className={`relative overflow-hidden text-left rounded-lg border p-2.5 transition-colors ${
+            className={`relative overflow-hidden rounded-[20px] border p-3 text-left transition-colors backdrop-blur-md ${
               isSelected
                 ? "border-transparent"
-                : "border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600"
+                : "border-white/10 hover:border-white/20"
             }`}
             style={isSelected ? {
-              borderColor: `color-mix(in srgb, ${color} 40%, transparent)`,
-              background: `color-mix(in srgb, ${color} 5%, var(--card))`,
-              boxShadow: `0 0 0 1px color-mix(in srgb, ${color} 30%, transparent)`,
-            } : { background: "var(--card)" }}
+              borderColor: `color-mix(in srgb, ${color} 38%, transparent)`,
+              background: `linear-gradient(180deg, color-mix(in srgb, ${color} 16%, rgba(255,255,255,0.08)), rgba(255,255,255,0.02)), color-mix(in srgb, ${color} 4%, var(--card))`,
+              boxShadow: `0 0 0 1px color-mix(in srgb, ${color} 30%, transparent), 0 16px 32px rgba(2,8,20,0.18)`,
+            } : {
+              background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), var(--card)",
+              boxShadow: "0 12px 24px rgba(2,8,20,0.12)",
+            }}
           >
             <span
               className="absolute top-0 left-0 w-[3px] h-full"
@@ -177,7 +180,7 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
             />
             <div className="pl-1.5">
               <div className="flex items-center justify-between gap-2 min-h-[14px]">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-500 truncate">
+                <span className="truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--muted)]">
                   {e.label}
                 </span>
                 {showDayCell ? (
@@ -191,22 +194,22 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
                     {dayIsPos ? "+" : ""}{e.dayPct.toFixed(2)}%
                   </span>
                 ) : (
-                  <span className="text-[10px] font-medium text-gray-400 dark:text-slate-500 shrink-0">
+                  <span className="shrink-0 text-[10px] font-medium text-[color:var(--muted)]">
                     {t("marketClosed")}
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-sm font-bold tabular-nums text-gray-900 dark:text-white truncate">
+              <p className="mt-1 text-sm font-bold tabular-nums truncate text-[color:var(--foreground)]">
                 {stealthMode ? "•••••" : formatCurrency(e.value, cur)}
               </p>
               <div className="mt-1.5 flex items-center gap-1.5">
-                <div className="flex-1 h-[2px] rounded-full bg-gray-100 dark:bg-slate-700 overflow-hidden">
+                <div className="h-[2px] flex-1 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{ width: `${Math.min(Math.max(e.alloc, 0), 100)}%`, background: color }}
                   />
                 </div>
-                <span className="text-[10px] tabular-nums text-gray-500 dark:text-slate-500 shrink-0">
+                <span className="shrink-0 text-[10px] tabular-nums text-[color:var(--muted)]">
                   {formatPercent(e.alloc)}
                 </span>
               </div>

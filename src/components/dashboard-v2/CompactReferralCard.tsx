@@ -18,9 +18,9 @@ export default function CompactReferralCard({ onShare }: { onShare: () => void }
   return (
     <button
       onClick={onShare}
-      className="w-full card flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-500/[0.06] to-blue-500/[0.04] border-emerald-500/20 hover:border-emerald-500/40 transition-colors cursor-pointer text-left"
+      className="w-full cursor-pointer text-left transition-colors card flex items-center gap-3 border-emerald-500/16 bg-emerald-500/[0.05] p-3 hover:border-emerald-500/28"
     >
-      <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center text-base shrink-0">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-emerald-500/14 bg-emerald-500/12 text-base">
         🎁
       </div>
       <div className="flex-1 min-w-0">

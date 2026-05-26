@@ -6,14 +6,16 @@ Ensures every dashboard feature is present and functional in all four themes (De
 
 All themes render the **same components** with the same data. Themes only change visual presentation (CSS custom properties on `<html>`, layout mode, typography, spacing, border radii). The HTML/JSX structure is shared — themes NEVER remove features, they only restyle them.
 
+Default theme now uses the glass visual system described in `knowledge/design-docs/glass-visual-system.md`. Parity does not mean every theme must look equally glassy; it means every theme must preserve structure, readability, and interaction quality.
+
 ### Theme Registry
 
 | Theme | CSS class | Tier | Layout | Fonts | Mode | Key Trait |
 |-------|-----------|------|--------|-------|------|-----------|
-| **Default** | (none / `theme-default`) | All tiers | Top nav | Geist Sans / Mono | Dark/Light toggle | Current app design, emerald accent |
+| **Default** | (none / `theme-default`) | All tiers | Top nav | Geist Sans / Mono | Dark/Light toggle | Primary glass system |
 | **Canvas** | `theme-canvas` | Bifolio (Starter)+ | Top nav (pill-style) | DM Sans | Forced light | Warm, spacious, rounded cards |
 | **Terminal** | `theme-terminal` | Trefolio (Pro) | Top nav | IBM Plex Mono | Forced dark | Dense monospace, compact, hacker aesthetic |
-| **Studio** | `theme-studio` | Trefolio (Pro) | Sidebar nav | Plus Jakarta Sans + Space Mono | Forced dark | Premium sidebar, glass effects, sparklines |
+| **Studio** | `theme-studio` | Trefolio (Pro) | Sidebar nav | Plus Jakarta Sans + Space Mono | Forced dark | Premium dark glass with sidebar shell |
 
 ### Tier Gating Rules
 
@@ -37,7 +39,7 @@ All themes render the **same components** with the same data. Themes only change
 
 ## Complete Feature Checklist
 
-Every item below MUST be present in ALL three themes. When modifying the dashboard, verify every item renders correctly in each theme.
+Every item below MUST be present in ALL four themes. When modifying the dashboard, verify every item renders correctly in each theme.
 
 ### App Shell (from `layout.tsx`)
 
@@ -150,6 +152,9 @@ For each theme, confirm:
 - [ ] Cards, buttons, inputs use the theme's border-radius variables
 - [ ] Monospace font is used for all numerical values
 - [ ] Chart colors use theme accent variables
+- [ ] Overlays are more opaque than standard cards
+- [ ] Default-theme glass does not reduce chart or table legibility
+- [ ] Mobile and tablet layouts remain calmer than the desktop hero treatment
 
 ### Step 5: New Feature Gate
 
@@ -157,7 +162,7 @@ When adding a new dashboard component:
 1. Add it to the shared HTML/JSX (not per-theme)
 2. Style it using CSS custom properties only (never hard-coded colors)
 3. Add it to the checklist in this file
-4. Test rendering in all three themes
+4. Test rendering in all four themes
 5. If the component has tier-gated content, use `BlurredProSection` consistently
 
 ## Files to Check
@@ -166,7 +171,7 @@ When adding a new dashboard component:
 |------|---------------|
 | `src/components/Dashboard.tsx` | Component render order, feature completeness |
 | `src/app/(app)/layout.tsx` | App shell components |
-| `src/app/globals.css` | Theme CSS variables for all three themes |
+| `src/app/globals.css` | Theme CSS variables for all four themes |
 | `src/lib/settings-context.tsx` | Theme selection storage and fallback logic |
 | `src/components/ThemeSelector.tsx` | Tier gating UI in theme picker |
 | `src/components/PortfolioSummary.tsx` | AI Review, BrokerSyncDot, allocation |

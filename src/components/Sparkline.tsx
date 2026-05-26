@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, memo } from "react";
+import { usePortfolio } from "@/lib/portfolio-context";
 
 interface SparklineProps {
   ticker: string;
@@ -51,9 +52,14 @@ function buildPath(points: number[], w: number, h: number): string {
 }
 
 function Sparkline({ ticker, width = 80, height = 24, positive, className = "" }: SparklineProps) {
+  const { demoMode } = usePortfolio();
   const [points, setPoints] = useState<number[]>(() => cache.get(ticker) || []);
 
   useEffect(() => {
+    if (demoMode) {
+      setPoints([]);
+      return;
+    }
     if (cache.has(ticker)) {
       setPoints(cache.get(ticker)!);
       return;
@@ -63,7 +69,7 @@ function Sparkline({ ticker, width = 80, height = 24, positive, className = "" }
       if (!cancelled) setPoints(data);
     });
     return () => { cancelled = true; };
-  }, [ticker]);
+  }, [ticker, demoMode]);
 
   if (points.length < 2) {
     return <svg className={className} width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true" />;

@@ -45,7 +45,7 @@ export default function NotificationBell() {
     <>
       <button
         onClick={handleOpen}
-        className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 transition-colors"
+        className="relative min-h-11 min-w-11 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-2 text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-highlight)]"
         title="Notifications"
         aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
       >

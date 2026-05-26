@@ -25,10 +25,31 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "improvement",
+        text: "The default dashboard now leans into a sharper finance-first visual direction with denser chrome, cleaner search and action controls, more disciplined chart surfaces, and calmer right-rail widgets, while preserving the distinct Canvas, Terminal, and Studio themes.",
+        translations: {
+          es: "El dashboard por defecto ahora adopta una dirección visual más financiera y precisa, con chrome más denso, búsqueda y acciones más limpias, superficies de gráficos más disciplinadas y widgets laterales más sobrios, manteniendo los temas Canvas, Terminal y Studio con su identidad propia.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "The app now uses a new glass-inspired visual system across the default shell, navigation, dashboard hero cards, and mobile chrome, while keeping Canvas, Terminal, and Studio themes compatible.",
+        translations: {
+          es: "La app ahora usa un nuevo sistema visual inspirado en vidrio en el shell por defecto, la navegación, las tarjetas hero del dashboard y el chrome móvil, manteniendo compatibles los temas Canvas, Terminal y Studio.",
+        },
+      },
+      {
         type: "fix",
         text: "When a signed-in browser tab keeps running after the session expires, authenticated client requests now redirect back to /login with the current page preserved instead of quietly piling up repeated 401 errors.",
         translations: {
           es: "Cuando una pestaña autenticada sigue abierta después de expirar la sesión, las peticiones cliente autenticadas ahora redirigen a /login conservando la página actual en lugar de acumular silenciosamente errores 401 repetidos.",
+        },
+      },
+      {
+        type: "fix",
+        text: "The public demo no longer bounces unauthenticated visitors to login: demo mode now skips session bootstrap calls and hides header widgets that require private notification/account APIs.",
+        translations: {
+          es: "La demo pública ya no rebota a los visitantes sin sesión hacia el login: el modo demo ahora evita las llamadas iniciales de sesión y oculta los widgets del header que dependen de APIs privadas de cuenta y notificaciones.",
         },
       },
       {

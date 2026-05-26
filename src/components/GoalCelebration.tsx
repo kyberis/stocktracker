@@ -104,7 +104,7 @@ export default function GoalCelebration({ holdings: holdingsProp, cashEntries: c
 
   return (
     <div
-      className="fixed bottom-36 sm:bottom-24 right-4 sm:right-6 z-50 w-[340px] max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-500/40 rounded-2xl p-4 shadow-2xl animate-in slide-in-from-right-full duration-300 overflow-hidden"
+      className="fixed bottom-36 right-4 z-50 w-[340px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[var(--radius-card)] border border-emerald-500/18 bg-[color:var(--surface-overlay)] p-4 shadow-2xl animate-in slide-in-from-right-full duration-300 sm:bottom-24 sm:right-6"
       role="alert"
     >
       {/* CSS confetti */}
@@ -125,7 +125,7 @@ export default function GoalCelebration({ holdings: holdingsProp, cashEntries: c
 
       <button
         onClick={dismiss}
-        className="absolute top-3 right-3 w-6 h-6 rounded-md flex items-center justify-center text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+        className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-md text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]"
         aria-label="Dismiss"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -134,19 +134,19 @@ export default function GoalCelebration({ holdings: holdingsProp, cashEntries: c
       </button>
 
       <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center text-xl shrink-0">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/14 bg-emerald-500/12 text-xl">
           {config.icon}
         </div>
         <div>
-          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{t(config.titleKey as never)}</p>
-          <p className="text-xs text-gray-600 dark:text-slate-300 mt-0.5">
+          <p className="text-sm font-bold text-emerald-400">{t(config.titleKey as never)}</p>
+          <p className="mt-0.5 text-xs text-[color:var(--foreground)]">
             {(t(config.subKey as never) as string).replace("{name}", goal.name)}
           </p>
         </div>
       </div>
 
       {/* Auto-dismiss progress bar */}
-      <div className="w-full h-1 bg-gray-200 dark:bg-slate-700 rounded-full mt-3 overflow-hidden">
+      <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-[color:var(--surface-highlight)]">
         <div
           className="h-full bg-emerald-500 rounded-full animate-goal-dismiss"
         />

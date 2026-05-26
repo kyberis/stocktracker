@@ -86,11 +86,11 @@ function TaxResidencyPicker({ value, onChange }: { value: string; onChange: (v: 
 
   return (
     <div ref={containerRef} className="relative">
-      <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("profileTaxResidency")}</label>
+      <label className="mb-1 block text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--muted)]">{t("profileTaxResidency")}</label>
       <button
         type="button"
         onClick={() => { setOpen(!open); setSearch(""); }}
-        className="w-full flex items-center gap-2 text-left text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white hover:border-gray-300 dark:hover:border-slate-500 transition-colors"
+        className="flex w-full items-center gap-2 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-left text-sm text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-highlight)]"
       >
         {selected ? (
           <>
@@ -98,18 +98,18 @@ function TaxResidencyPicker({ value, onChange }: { value: string; onChange: (v: 
             <span className="flex-1 truncate">{selected.name}</span>
           </>
         ) : (
-          <span className="flex-1 text-gray-400 dark:text-slate-500">{t("profileTaxResidencyNone")}</span>
+          <span className="flex-1 text-[color:var(--muted)]">{t("profileTaxResidencyNone")}</span>
         )}
-        <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className={`h-4 w-4 text-[color:var(--muted)] transition-transform ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
         </svg>
       </button>
-      <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{t("profileTaxResidencyHint")}</p>
+      <p className="mt-0.5 text-xs text-[color:var(--muted)]">{t("profileTaxResidencyHint")}</p>
       {open && (
-        <div className="absolute z-20 mt-1 w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg shadow-lg overflow-hidden">
-          <div className="p-2 border-b border-gray-100 dark:border-slate-700">
+        <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-[18px] border border-[color:var(--border)] bg-[color:var(--surface-overlay)] shadow-lg">
+          <div className="border-b border-[color:var(--border)] p-2">
             <div className="relative">
-              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[color:var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
               <input
@@ -117,7 +117,7 @@ function TaxResidencyPicker({ value, onChange }: { value: string; onChange: (v: 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t("profileSearchCountry")}
-                className="w-full pl-8 pr-3 py-1.5 text-sm rounded border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-400 dark:placeholder:text-slate-500"
+                className="w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] py-1.5 pl-8 pr-3 text-sm text-[color:var(--foreground)] focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-[color:var(--muted)]"
                 autoFocus
               />
             </div>
@@ -127,13 +127,13 @@ function TaxResidencyPicker({ value, onChange }: { value: string; onChange: (v: 
               <button
                 type="button"
                 onClick={() => { onChange(""); setOpen(false); }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-left text-sm text-gray-400 dark:text-slate-500 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-[color:var(--muted)] hover:bg-[color:var(--surface-soft)]"
               >
                 &times; {t("profileTaxResidencyNone")}
               </button>
             )}
             {filtered.length === 0 ? (
-              <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-3">No results</p>
+              <p className="py-3 text-center text-sm text-[color:var(--muted)]">No results</p>
             ) : (
               filtered.map((c) => (
                 <button
@@ -143,8 +143,8 @@ function TaxResidencyPicker({ value, onChange }: { value: string; onChange: (v: 
                   onClick={() => { onChange(c.code); setOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-left text-sm transition-colors ${
                     value === c.code
-                      ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                      : "text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+                      ? "bg-emerald-500/10 text-emerald-300"
+                      : "text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
                   }`}
                 >
                   <span className="text-base leading-none">{c.flag}</span>
@@ -206,7 +206,7 @@ function PortfolioShareSection() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  if (loading) return <div className="text-sm text-gray-400 dark:text-slate-500">{t("loading")}</div>;
+  if (loading) return <div className="text-sm text-[color:var(--muted)]">{t("loading")}</div>;
 
   return (
     <div className="space-y-3">
@@ -328,23 +328,23 @@ function PortfolioAlertSection() {
   };
 
   return (
-    <div className="card p-6 space-y-4">
+    <div className="card space-y-4 p-6">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-500/16 bg-amber-500/12">
           <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
           </svg>
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("portfolioAlert")}</h2>
-          <p className="text-xs text-gray-500 dark:text-slate-400">{t("portfolioAlertDesc")}</p>
+          <h2 className="text-lg font-semibold text-[color:var(--foreground)]">{t("portfolioAlert")}</h2>
+          <p className="text-xs text-[color:var(--muted)]">{t("portfolioAlertDesc")}</p>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-sm text-gray-400 dark:text-slate-500">{t("loading")}</div>
+        <div className="text-sm text-[color:var(--muted)]">{t("loading")}</div>
       ) : portfolioAlert ? (
-        <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-500/10 rounded-xl px-4 py-3">
+        <div className="flex items-center justify-between rounded-xl border border-amber-500/16 bg-amber-500/[0.06] px-4 py-3">
           <div>
             <p className="text-sm font-medium text-amber-700 dark:text-amber-400">{t("portfolioAlertEnabled")}</p>
             <p className="text-xs text-amber-600/80 dark:text-amber-400/70">
@@ -354,14 +354,14 @@ function PortfolioAlertSection() {
           <button
             onClick={handleDisable}
             disabled={saving}
-            className="text-xs px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors disabled:opacity-40"
+            className="rounded-xl border border-red-500/16 bg-red-500/10 px-3 py-1.5 text-xs text-red-300 transition-colors hover:bg-red-500/16 disabled:opacity-40"
           >
             {t("disablePortfolioAlert")}
           </button>
         </div>
       ) : (
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500 dark:text-slate-400">±</span>
+          <span className="text-sm text-[color:var(--muted)]">±</span>
           <input
             type="number"
             step="0.5"
@@ -371,7 +371,7 @@ function PortfolioAlertSection() {
             className="w-20 text-sm"
             aria-label={t("portfolioAlertThreshold")}
           />
-          <span className="text-sm text-gray-500 dark:text-slate-400">%</span>
+          <span className="text-sm text-[color:var(--muted)]">%</span>
           <button
             onClick={handleEnable}
             disabled={saving || !threshold}
@@ -496,7 +496,7 @@ function PortfolioManagementSection() {
       {/* Portfolio list */}
       <div className="space-y-2">
         {portfolios.map((p) => (
-          <div key={p.id} className="flex items-center justify-between gap-3 py-2 px-3 rounded-lg bg-gray-50 dark:bg-slate-700/50">
+          <div key={p.id} className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2">
             {editingId === p.id ? (
               <div className="flex items-center gap-2 flex-1">
                 <input
@@ -513,17 +513,17 @@ function PortfolioManagementSection() {
             ) : (
               <>
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.name}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-slate-400 font-medium">
+                  <span className="truncate text-sm font-medium text-[color:var(--foreground)]">{p.name}</span>
+                  <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-highlight)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--muted)]">
                     {p.currency ?? "EUR"}
                   </span>
                   {p.isDefault && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-medium">
+                    <span className="rounded-full border border-emerald-500/16 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300">
                       Default
                     </span>
                   )}
                   {isOverLimit && !p.isDefault && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 font-medium">
+                    <span className="rounded-full border border-amber-500/16 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
                       Read-only
                     </span>
                   )}
@@ -532,7 +532,7 @@ function PortfolioManagementSection() {
                   {!(isOverLimit && !p.isDefault) && (
                     <button
                       onClick={() => { setEditingId(p.id); setEditName(p.name); }}
-                      className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                      className="text-xs text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
                     >
                       Rename
                     </button>
@@ -542,7 +542,7 @@ function PortfolioManagementSection() {
                       {!(isOverLimit && !p.isDefault) && (
                         <button
                           onClick={() => handleSetDefault(p.id)}
-                          className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                          className="text-xs text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
                         >
                           Set Default
                         </button>
@@ -575,7 +575,7 @@ function PortfolioManagementSection() {
               className="text-sm flex-1"
               maxLength={50}
             />
-            <div className="flex items-center gap-0 rounded-lg border border-gray-200 dark:border-slate-600 overflow-hidden shrink-0">
+            <div className="flex shrink-0 items-center gap-0 overflow-hidden rounded-xl border border-[color:var(--border)]">
               {(["EUR", "USD"] as const).map((cur) => (
                 <button
                   key={cur}
@@ -583,8 +583,8 @@ function PortfolioManagementSection() {
                   onClick={() => setNewCurrency(cur)}
                   className={`px-2.5 py-1 text-xs font-medium transition-colors ${
                     newCurrency === cur
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700"
+                      ? "bg-blue-500 text-white"
+                      : "bg-[color:var(--surface-soft)] text-[color:var(--muted)] hover:bg-[color:var(--surface-highlight)]"
                   }`}
                 >
                   {cur === "EUR" ? "\u20AC EUR" : "$ USD"}
@@ -599,7 +599,7 @@ function PortfolioManagementSection() {
       )}
 
       {!isPro && portfolios.length >= limit && (
-        <p className="text-xs text-gray-500 dark:text-slate-400">
+        <p className="text-xs text-[color:var(--muted)]">
           Upgrade to Trefolio to create up to 5 portfolios.
         </p>
       )}
@@ -608,17 +608,17 @@ function PortfolioManagementSection() {
 
       {/* Device & Widget portfolio selector */}
       {portfolios.length > 1 && (
-        <div className="pt-3 border-t border-gray-200 dark:border-slate-700 space-y-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-slate-300">
+        <div className="space-y-2 border-t border-[color:var(--border)] pt-3">
+          <label className="text-sm font-medium text-[color:var(--foreground)]">
             Device & Widget Portfolio
           </label>
-          <p className="text-xs text-gray-500 dark:text-slate-400">
+          <p className="text-xs text-[color:var(--muted)]">
             Choose which portfolio the home screen widget and trefolio Leaf use. This is separate from the portfolio picker on the dashboard—each place shows totals for its own scope. Leave on &quot;All Portfolios&quot; for a combined view on device and widget.
           </p>
           <select
             value={devicePortfolioId}
             onChange={(e) => handleDevicePortfolioChange(e.target.value)}
-            className="text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 w-full focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+            className="w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
           >
             <option value="">All Portfolios</option>
             {portfolios.map((p) => (
@@ -759,16 +759,16 @@ function SocialProfileSection() {
   return (
     <>
       {/* Social Profile Settings */}
-      <div className="card p-6 space-y-5">
+      <div className="card space-y-5 p-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-500/16 bg-blue-500/10">
             <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-[color:var(--foreground)]">
               {language === "es" ? "Perfil Social" : "Social Profile"}
             </h2>
-            <p className="text-xs text-gray-500 dark:text-slate-400">
+            <p className="text-xs text-[color:var(--muted)]">
               {language === "es" ? "Configura tu perfil público y visibilidad" : "Configure your public profile and visibility"}
             </p>
           </div>
@@ -777,13 +777,13 @@ function SocialProfileSection() {
         <div className="grid gap-4">
           {/* Profile Visibility */}
           <div>
-            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+            <label className="mb-1 block text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--muted)]">
               {language === "es" ? "Visibilidad del perfil" : "Profile Visibility"}
             </label>
             <select
               value={form.socialVisibility}
               onChange={(e) => setForm((f) => ({ ...f, socialVisibility: e.target.value as "public" | "private" }))}
-              className="w-full text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
             >
               <option value="public">{language === "es" ? "Público" : "Public"}</option>
               <option value="private">{language === "es" ? "Privado" : "Private"}</option>
@@ -792,11 +792,11 @@ function SocialProfileSection() {
 
           {/* Profile URL */}
           <div>
-            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+            <label className="mb-1 block text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--muted)]">
               {language === "es" ? "URL del perfil" : "Profile URL"}
             </label>
             <div className="flex items-center gap-0">
-              <span className="text-sm px-3 py-2 bg-gray-100 dark:bg-slate-600 border border-r-0 border-gray-200 dark:border-slate-600 rounded-l-lg text-gray-500 dark:text-slate-400 whitespace-nowrap">
+              <span className="whitespace-nowrap rounded-l-xl border border-r-0 border-[color:var(--border)] bg-[color:var(--surface-highlight)] px-3 py-2 text-sm text-[color:var(--muted)]">
                 trefolio.app/u/
               </span>
               <input
@@ -805,10 +805,10 @@ function SocialProfileSection() {
                 onChange={(e) => handleSlugChange(e.target.value)}
                 placeholder="your-name"
                 maxLength={40}
-                className={`flex-1 text-sm border rounded-r-lg px-3 py-2 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-emerald-500 focus:outline-none ${
+                className={`flex-1 rounded-r-xl border px-3 py-2 text-sm bg-[color:var(--surface-soft)] focus:ring-1 focus:ring-emerald-500 focus:outline-none ${
                   slugError
                     ? "border-red-300 dark:border-red-500"
-                    : "border-gray-200 dark:border-slate-600"
+                    : "border-[color:var(--border)]"
                 }`}
               />
             </div>
@@ -822,7 +822,7 @@ function SocialProfileSection() {
 
           {/* Headline */}
           <div>
-            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+            <label className="mb-1 block text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--muted)]">
               {language === "es" ? "Titular" : "Headline"}
             </label>
             <input
@@ -837,13 +837,13 @@ function SocialProfileSection() {
 
           {/* Experience Level */}
           <div>
-            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+            <label className="mb-1 block text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--muted)]">
               {language === "es" ? "Nivel de experiencia" : "Experience Level"}
             </label>
             <select
               value={form.experienceLevel}
               onChange={(e) => setForm((f) => ({ ...f, experienceLevel: e.target.value }))}
-              className="w-full text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
             >
               {EXPERIENCE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -855,7 +855,7 @@ function SocialProfileSection() {
 
           {/* Bio */}
           <div>
-            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+            <label className="mb-1 block text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--muted)]">
               {language === "es" ? "Biografía" : "Bio"}
             </label>
             <textarea
@@ -864,26 +864,26 @@ function SocialProfileSection() {
               placeholder={language === "es" ? "Cuéntanos sobre ti y tu enfoque de inversión..." : "Tell us about yourself and your investing approach..."}
               maxLength={500}
               rows={4}
-              className="w-full text-sm rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none placeholder:text-gray-400 dark:placeholder:text-slate-500 resize-none"
+              className="w-full resize-none rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-[color:var(--muted)]"
             />
-            <p className="text-xs text-gray-400 dark:text-slate-500 text-right mt-0.5">
+            <p className="mt-0.5 text-right text-xs text-[color:var(--muted)]">
               {form.bio.length}/500
             </p>
           </div>
         </div>
 
         {/* Sharing toggles */}
-        <div className="space-y-3 pt-2 border-t border-gray-200 dark:border-slate-700">
-          <p className="text-sm font-medium text-gray-900 dark:text-white">
+        <div className="space-y-3 border-t border-[color:var(--border)] pt-2">
+          <p className="text-sm font-medium text-[color:var(--foreground)]">
             {language === "es" ? "Compartir en perfil público" : "Public Profile Sharing"}
           </p>
 
           <label className="flex items-center justify-between gap-3 cursor-pointer">
             <div>
-              <p className="text-sm text-gray-700 dark:text-slate-300">
+              <p className="text-sm text-[color:var(--foreground)]">
                 {language === "es" ? "Compartir valor del portafolio" : "Share Portfolio Value"}
               </p>
-              <p className="text-xs text-gray-400 dark:text-slate-500">
+              <p className="text-xs text-[color:var(--muted)]">
                 {language === "es" ? "Muestra tu valor total, ganancia/pérdida y gráfico" : "Shows your total value, gain/loss, and chart"}
               </p>
             </div>
@@ -893,7 +893,7 @@ function SocialProfileSection() {
               aria-checked={form.sharePortfolioValue}
               onClick={() => setForm((f) => ({ ...f, sharePortfolioValue: !f.sharePortfolioValue }))}
               className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${
-                form.sharePortfolioValue ? "bg-emerald-500" : "bg-gray-200 dark:bg-slate-600"
+                form.sharePortfolioValue ? "bg-emerald-500" : "bg-[color:var(--surface-highlight)]"
               }`}
             >
               <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
@@ -904,10 +904,10 @@ function SocialProfileSection() {
 
           <label className="flex items-center justify-between gap-3 cursor-pointer">
             <div>
-              <p className="text-sm text-gray-700 dark:text-slate-300">
+              <p className="text-sm text-[color:var(--foreground)]">
                 {language === "es" ? "Compartir posiciones" : "Share Holdings"}
               </p>
-              <p className="text-xs text-gray-400 dark:text-slate-500">
+              <p className="text-xs text-[color:var(--muted)]">
                 {language === "es" ? "Muestra tus tickers, asignación y desglose por sector" : "Shows your tickers, allocation, and sector breakdown"}
               </p>
             </div>
@@ -917,7 +917,7 @@ function SocialProfileSection() {
               aria-checked={form.shareHoldings}
               onClick={() => setForm((f) => ({ ...f, shareHoldings: !f.shareHoldings }))}
               className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${
-                form.shareHoldings ? "bg-emerald-500" : "bg-gray-200 dark:bg-slate-600"
+                form.shareHoldings ? "bg-emerald-500" : "bg-[color:var(--surface-highlight)]"
               }`}
             >
               <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
@@ -928,10 +928,10 @@ function SocialProfileSection() {
 
           <label className="flex items-center justify-between gap-3 cursor-pointer">
             <div>
-              <p className="text-sm text-gray-700 dark:text-slate-300">
+              <p className="text-sm text-[color:var(--foreground)]">
                 {language === "es" ? "Permitir comentarios" : "Allow Comments"}
               </p>
-              <p className="text-xs text-gray-400 dark:text-slate-500">
+              <p className="text-xs text-[color:var(--muted)]">
                 {language === "es" ? "Otros usuarios pueden comentar en tus publicaciones" : "Other users can comment on your posts"}
               </p>
             </div>
@@ -941,7 +941,7 @@ function SocialProfileSection() {
               aria-checked={form.allowComments}
               onClick={() => setForm((f) => ({ ...f, allowComments: !f.allowComments }))}
               className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${
-                form.allowComments ? "bg-emerald-500" : "bg-gray-200 dark:bg-slate-600"
+                form.allowComments ? "bg-emerald-500" : "bg-[color:var(--surface-highlight)]"
               }`}
             >
               <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
@@ -965,9 +965,9 @@ function SocialProfileSection() {
       </div>
 
       {/* Profile Preview */}
-      <div className="card p-6 space-y-4">
+      <div className="card space-y-4 p-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-highlight)]">
             {form.socialVisibility === "public" ? (
               <Eye className="w-5 h-5 text-gray-500 dark:text-slate-400" />
             ) : (
@@ -975,30 +975,30 @@ function SocialProfileSection() {
             )}
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-[color:var(--foreground)]">
               {language === "es" ? "Vista previa del perfil" : "Profile Preview"}
             </h2>
-            <p className="text-xs text-gray-500 dark:text-slate-400">
+            <p className="text-xs text-[color:var(--muted)]">
               {language === "es" ? "Así se verá tu perfil público" : "This is how your public profile will look"}
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/40 p-4 space-y-3">
+        <div className="space-y-3 rounded-[var(--radius-card)] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4">
           <div className="flex items-center gap-3">
             {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-12 h-12 rounded-full object-cover border border-gray-200 dark:border-slate-600" />
+              <img src={avatarUrl} alt="" className="h-12 w-12 rounded-full border border-[color:var(--border)] object-cover" />
             ) : (
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white text-sm font-bold">
                 {initials}
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+              <p className="truncate text-sm font-semibold text-[color:var(--foreground)]">
                 {displayName || (language === "es" ? "Tu nombre" : "Your name")}
               </p>
               {form.headline && (
-                <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{form.headline}</p>
+                <p className="truncate text-xs text-[color:var(--muted)]">{form.headline}</p>
               )}
               {form.experienceLevel && (
                 <span className={`inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
@@ -1008,7 +1008,7 @@ function SocialProfileSection() {
                       ? "bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300"
                       : form.experienceLevel === "intermediate"
                         ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                        : "bg-gray-100 dark:bg-slate-600 text-gray-600 dark:text-slate-300"
+                        : "border border-[color:var(--border)] bg-[color:var(--surface-highlight)] text-[color:var(--muted)]"
                 }`}>
                   {EXPERIENCE_OPTIONS.find((o) => o.value === form.experienceLevel)?.[language === "es" ? "labelEs" : "label"] || form.experienceLevel}
                 </span>
@@ -1016,10 +1016,10 @@ function SocialProfileSection() {
             </div>
           </div>
           {form.bio && (
-            <p className="text-xs text-gray-600 dark:text-slate-300 line-clamp-3">{form.bio}</p>
+            <p className="line-clamp-3 text-xs text-[color:var(--foreground)]">{form.bio}</p>
           )}
-          <p className="text-[10px] text-gray-400 dark:text-slate-500 font-mono">{profileUrl}</p>
-          <div className="flex items-center gap-3 text-[10px] text-gray-400 dark:text-slate-500">
+          <p className="font-mono text-[10px] text-[color:var(--muted)]">{profileUrl}</p>
+          <div className="flex items-center gap-3 text-[10px] text-[color:var(--muted)]">
             {form.sharePortfolioValue && <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {language === "es" ? "Valor visible" : "Value visible"}</span>}
             {form.shareHoldings && <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {language === "es" ? "Posiciones visibles" : "Holdings visible"}</span>}
             {!form.sharePortfolioValue && !form.shareHoldings && (
@@ -1537,31 +1537,36 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("profile")}</h1>
 
         {/* Tab navigation */}
-        <div className="sticky top-0 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+        <div
+          className="sticky top-0 z-10 -mx-4 px-4 py-2 backdrop-blur-md sm:-mx-6 sm:px-6"
+          style={{ background: "transparent" }}
+        >
           <div className="overflow-x-auto no-scrollbar">
-          <div role="tablist" aria-label={t("profile")} className="flex flex-nowrap gap-1 min-w-max bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm">
-            {visibleTabs.map((tab) => {
-              const Icon = TAB_ICONS[tab];
-              return (
-                <button
-                  key={tab}
-                  id={`profile-tab-${tab}`}
-                  role="tab"
-                  aria-selected={effectiveTab === tab}
-                  aria-controls={`profile-tabpanel-${tab}`}
-                  onClick={() => handleTabChange(tab)}
-                  className={`flex items-center gap-1.5 whitespace-nowrap text-xs font-medium px-3 py-2 rounded-xl transition-all ${
-                    effectiveTab === tab
-                      ? "bg-emerald-500 text-white shadow-sm"
-                      : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-700"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{t(TAB_LABEL_KEYS[tab] as TranslationKey)}</span>
-                </button>
-              );
-            })}
-          </div>
+            <div
+              role="tablist"
+              aria-label={t("profile")}
+              className="flex min-w-max flex-nowrap items-end gap-5 border-b border-[color:var(--border)]"
+            >
+              {visibleTabs.map((tab) => {
+                return (
+                  <button
+                    key={tab}
+                    id={`profile-tab-${tab}`}
+                    role="tab"
+                    aria-selected={effectiveTab === tab}
+                    aria-controls={`profile-tabpanel-${tab}`}
+                    onClick={() => handleTabChange(tab)}
+                    className={`-mb-px flex min-h-11 items-center whitespace-nowrap border-b-2 px-0.5 pb-3 pt-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                      effectiveTab === tab
+                        ? "border-[color:var(--foreground)] text-[color:var(--foreground)]"
+                        : "border-transparent text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
+                    }`}
+                  >
+                    <span>{t(TAB_LABEL_KEYS[tab] as TranslationKey)}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -1573,7 +1578,7 @@ export default function ProfilePage() {
           className="space-y-6"
         >
         {user?.accountEditingOnIdp && user?.unifiedAccountUrl ? (
-          <div className="card p-6 space-y-4 border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-500/5">
+          <div className="card space-y-4 border border-emerald-500/18 bg-emerald-500/[0.06] p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("profileSettings")}</h2>
             <p className="text-sm text-gray-600 dark:text-slate-400">
               {language === "es"
@@ -1584,7 +1589,7 @@ export default function ProfilePage() {
               href={user.unifiedAccountUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2.5 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/16 bg-emerald-500/14 px-4 py-2.5 text-sm font-medium text-emerald-200 transition-colors hover:bg-emerald-500/20"
             >
               <Globe className="w-4 h-4" aria-hidden />
               {language === "es" ? "Abrir cuenta unificada" : "Open unified account"}
@@ -1668,14 +1673,14 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">{t("profileSectionAccess")}</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--muted)]">{t("profileSectionAccess")}</h2>
         </div>
         {/* Connected Accounts */}
-        <div className="card p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("connectedAccounts")}</h2>
+        <div className="card space-y-4 p-6">
+          <h2 className="text-lg font-semibold text-[color:var(--foreground)]">{t("connectedAccounts")}</h2>
 
           <div className="flex items-center gap-3 py-2">
-            <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 flex items-center justify-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -1684,8 +1689,8 @@ export default function ProfilePage() {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Google</p>
-              <p className="text-xs text-gray-500 dark:text-slate-400">
+              <p className="text-sm font-medium text-[color:var(--foreground)]">Google</p>
+              <p className="text-xs text-[color:var(--muted)]">
                 {user?.googleLinked ? t("googleConnected") : t("googleNotConnected")}
               </p>
             </div>
@@ -1705,7 +1710,7 @@ export default function ProfilePage() {
                 {t("connectGoogle")}
               </a>
             ) : (
-              <p className="text-xs text-gray-400 dark:text-slate-500">{t("setEmailFirst")}</p>
+              <p className="text-xs text-[color:var(--muted)]">{t("setEmailFirst")}</p>
             )}
           </div>
 
@@ -1717,9 +1722,9 @@ export default function ProfilePage() {
         <TelegramConnectCard />
 
         {/* Passkeys */}
-        <div className="card p-6 space-y-4">
+        <div className="card space-y-4 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("passkeys")}</h2>
+            <h2 className="text-lg font-semibold text-[color:var(--foreground)]">{t("passkeys")}</h2>
             {passkeySupported && (
               <button
                 onClick={handleAddPasskey}
@@ -1732,16 +1737,16 @@ export default function ProfilePage() {
           </div>
 
           {!passkeySupported && (
-            <p className="text-xs text-gray-400 dark:text-slate-500">{t("passkeyNotSupported")}</p>
+            <p className="text-xs text-[color:var(--muted)]">{t("passkeyNotSupported")}</p>
           )}
 
           {passkeySupported && passkeys.length === 0 && (
-            <p className="text-sm text-gray-500 dark:text-slate-400">{t("noPasskeys")}</p>
+            <p className="text-sm text-[color:var(--muted)]">{t("noPasskeys")}</p>
           )}
 
           {passkeys.map((pk) => (
-            <div key={pk.id} className="flex items-center gap-3 py-2 border-t border-gray-100 dark:border-slate-700/50">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center">
+            <div key={pk.id} className="flex items-center gap-3 border-t border-[color:var(--border)] py-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-500/16 bg-emerald-500/10">
                 <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 11a4 4 0 1 0-2.68 3.77" />
                   <path d="M12.68 14.77L11 23l2.5-1.5L16 23l-1.32-5.23" />
@@ -1765,8 +1770,8 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{pk.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-slate-400">
+                    <p className="truncate text-sm font-medium text-[color:var(--foreground)]">{pk.name}</p>
+                    <p className="text-xs text-[color:var(--muted)]">
                       {t("passkeyLastUsed")}: {pk.lastUsedAt ? new Date(pk.lastUsedAt).toLocaleDateString() : t("passkeyNeverUsed")}
                     </p>
                   </>

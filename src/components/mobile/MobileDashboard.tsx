@@ -233,16 +233,16 @@ export default function MobileDashboard() {
   return (
     <div className="overflow-x-hidden">
       {/* Mobile header with portfolio switcher + actions */}
-      <div className="z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 px-4 py-3">
+      <div className="glass-toolbar z-30 border-b border-[color:var(--border)] px-4 py-3">
         <div className="flex items-center justify-between">
           <button
             onClick={() => { if (portfolios.length > 0) { hapticImpact("Light"); setShowPortfolioPicker(true); } }}
             className="flex items-center gap-1.5 min-w-0"
             disabled={portfolios.length === 0}
           >
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate max-w-[200px]">{activeName}</h1>
+            <h1 className="max-w-[200px] truncate text-lg font-bold text-[color:var(--foreground)]">{activeName}</h1>
             {portfolios.length > 0 && (
-              <svg className="w-4 h-4 shrink-0 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="h-4 w-4 shrink-0 text-[color:var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </svg>
             )}
@@ -258,7 +258,7 @@ export default function MobileDashboard() {
                   setIsRefreshing(false);
                 }
               }}
-              className="p-2.5 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 disabled:opacity-60"
+              className="min-h-11 min-w-11 rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 text-[color:var(--muted)] backdrop-blur-md transition-colors hover:border-white/20 hover:text-[color:var(--foreground)] disabled:opacity-60"
               aria-label={isRefreshing ? t("refreshing") : t("refreshPrices")}
               aria-busy={isRefreshing}
               disabled={isRefreshing}
@@ -269,7 +269,7 @@ export default function MobileDashboard() {
             </button>
             <button
               onClick={() => setShowAddMenu(true)}
-              className={`p-2.5 rounded-xl text-white ${holdingsAtLimit ? "bg-amber-500" : "bg-emerald-500"}`}
+              className={`min-h-11 min-w-11 rounded-2xl border border-white/10 p-2.5 text-white shadow-lg ${holdingsAtLimit ? "bg-amber-500" : "bg-emerald-500"}`}
               aria-label={t("addAsset")}
             >
               {holdingsAtLimit ? (
@@ -288,7 +288,7 @@ export default function MobileDashboard() {
 
       <div className="px-4 py-3 space-y-4">
         {/* Same shortcuts as desktop: Holdings, Tools, News, Import, Views, More */}
-        <div className="-mx-4 min-w-0 border-b border-gray-100 dark:border-slate-800 bg-gray-50/95 dark:bg-slate-800/50 px-3 py-2 sm:px-4">
+        <div className="-mx-4 min-w-0 border-b border-[color:var(--border)] bg-white/[0.04] px-3 py-2 backdrop-blur-md sm:px-4">
           <DashboardTabBarQuickLinks
             variant="default"
             activeTab={activeTab}
@@ -323,7 +323,7 @@ export default function MobileDashboard() {
             ) : (
               <>
                 {showHoldingsUsageBanner && (
-                  <div className="rounded-lg border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center justify-between gap-3 rounded-[20px] border border-amber-400/20 bg-amber-500/[0.12] p-3 backdrop-blur-md">
                     <div className="flex items-center gap-2 min-w-0">
                       <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -473,15 +473,15 @@ export default function MobileDashboard() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="mobile-add-asset-title"
-            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl animate-slide-up"
+            className="glass-overlay relative w-full max-w-lg rounded-t-3xl animate-slide-up shadow-2xl"
             style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
             onKeyDown={(e) => { if (e.key === "Escape") setShowAddMenu(false); }}
           >
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-slate-600" />
+            <div className="flex justify-center pb-1 pt-3">
+              <div className="h-1 w-10 rounded-full bg-white/18" />
             </div>
             <div className="px-5 pb-2 pt-1">
-              <h2 id="mobile-add-asset-title" className="text-base font-bold text-gray-900 dark:text-white">{t("addAsset")}</h2>
+              <h2 id="mobile-add-asset-title" className="text-base font-bold text-[color:var(--foreground)]">{t("addAsset")}</h2>
             </div>
             <div className="px-2 pb-6 space-y-1">
               <button
@@ -605,15 +605,15 @@ export default function MobileDashboard() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="mobile-portfolio-picker-title"
-            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl animate-slide-up"
+            className="glass-overlay relative w-full max-w-lg rounded-t-3xl animate-slide-up shadow-2xl"
             style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
             onKeyDown={(e) => { if (e.key === "Escape") setShowPortfolioPicker(false); }}
           >
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-slate-600" />
+            <div className="flex justify-center pb-1 pt-3">
+              <div className="h-1 w-10 rounded-full bg-white/18" />
             </div>
             <div className="px-5 pb-2 pt-1">
-              <h2 id="mobile-portfolio-picker-title" className="text-base font-bold text-gray-900 dark:text-white">{t("portfolio")}</h2>
+              <h2 id="mobile-portfolio-picker-title" className="text-base font-bold text-[color:var(--foreground)]">{t("portfolio")}</h2>
             </div>
             <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
               {hasMultiplePortfolios && (

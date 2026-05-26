@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
+import { usePortfolio } from "@/lib/portfolio-context";
 
 interface BackfillStatus {
   needsBackfill: boolean;
@@ -17,12 +18,14 @@ interface Props {
 
 export default function BackfillCTA({ holdingsCount, onComplete }: Props) {
   const { t } = useI18n();
+  const { demoMode } = usePortfolio();
   const [status, setStatus] = useState<BackfillStatus | null>(null);
   const [backfilling, setBackfilling] = useState(false);
   const [error, setError] = useState(false);
   const [checkKey, setCheckKey] = useState(0);
 
   useEffect(() => {
+    if (demoMode) return;
     if (holdingsCount === 0) return;
     let cancelled = false;
     fetch("/api/portfolio/backfill-snapshots?check=true", { credentials: "include" })
@@ -32,9 +35,10 @@ export default function BackfillCTA({ holdingsCount, onComplete }: Props) {
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [holdingsCount, checkKey]);
+  }, [demoMode, holdingsCount, checkKey]);
 
   const runBackfill = useCallback(async () => {
+    if (demoMode) return;
     setBackfilling(true);
     setError(false);
     const controller = new AbortController();
@@ -55,8 +59,9 @@ export default function BackfillCTA({ holdingsCount, onComplete }: Props) {
       clearTimeout(timeout);
       setBackfilling(false);
     }
-  }, [onComplete]);
+  }, [demoMode, onComplete]);
 
+  if (demoMode) return null;
   if (holdingsCount === 0 || (status && !status.needsBackfill)) return null;
   if (!status) return null;
 
@@ -109,7 +114,7 @@ export default function BackfillCTA({ holdingsCount, onComplete }: Props) {
         : "Some historical data may be incomplete.";
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-400/30 bg-amber-500/5 text-sm">
+    <div className="flex items-center gap-3 rounded-[var(--radius-card)] border border-amber-400/18 bg-amber-500/[0.06] px-4 py-3 text-sm">
       <span className="text-amber-500 shrink-0">⚠</span>
       <span className="flex-1 text-gray-700 dark:text-slate-300">
         Portfolio history can be improved. {reasonText}
@@ -125,7 +130,7 @@ export default function BackfillCTA({ holdingsCount, onComplete }: Props) {
       <button
         onClick={runBackfill}
         disabled={backfilling}
-        className="shrink-0 px-3.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-semibold text-xs transition-colors disabled:opacity-50"
+        className="shrink-0 rounded-xl border border-amber-400/14 bg-amber-500/10 px-3.5 py-1.5 text-xs font-semibold text-amber-600 transition-colors hover:bg-amber-500/18 dark:text-amber-400 disabled:opacity-50"
       >
         {backfilling ? "Recalculating…" : "Recalculate"}
       </button>
