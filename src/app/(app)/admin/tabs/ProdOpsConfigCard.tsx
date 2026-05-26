@@ -1,12 +1,9 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import type {
-  ProdOpsConfig,
-  ProdOpsDestination,
-  ProdOpsEventType,
-} from "@/lib/types";
+import type { ProdOpsConfig, ProdOpsEventType } from "@/lib/types";
+import { normalizeProdOpsBotUsername } from "@/lib/prodops-link";
 
 type ProdOpsBatchData = {
   config: ProdOpsConfig;
@@ -15,17 +12,21 @@ type ProdOpsBatchData = {
   secretSource: "env" | "database" | "none";
 };
 
+const EVENT_TYPES: ProdOpsEventType[] = [
+  "user_registered",
+  "membership_paid",
+  "feedback_received",
+  "broker_request_created",
+  "trial_activated",
+];
+
 const DEFAULT_CONFIG: ProdOpsConfig = {
   enabled: false,
   baseUrl: "",
-  enabledEventTypes: [
-    "user_registered",
-    "membership_paid",
-    "feedback_received",
-    "broker_request_created",
-    "trial_activated",
-  ],
-  destinations: [],
+  botUsername: "",
+  enabledEventTypes: [...EVENT_TYPES],
+  recipient: null,
+  pendingLink: null,
 };
 
 const EVENT_LABELS: Record<ProdOpsEventType, string> = {
@@ -37,30 +38,36 @@ const EVENT_LABELS: Record<ProdOpsEventType, string> = {
   test_notification: "Test notification",
 };
 
-function createDestination(): ProdOpsDestination {
-  return {
-    id:
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `dest-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    label: "",
-    chatId: "",
-    enabled: true,
-    enabledEventTypes: [...DEFAULT_CONFIG.enabledEventTypes],
-  };
-}
-
 function sanitizeConfig(config: ProdOpsConfig): ProdOpsConfig {
   return {
     enabled: config.enabled,
     baseUrl: config.baseUrl.trim(),
+    botUsername: normalizeProdOpsBotUsername(config.botUsername),
     enabledEventTypes: [...config.enabledEventTypes],
-    destinations: config.destinations.map((destination) => ({
-      ...destination,
-      label: destination.label.trim(),
-      chatId: destination.chatId.trim(),
-    })),
+    recipient: config.recipient
+      ? {
+          ...config.recipient,
+          label: config.recipient.label.trim(),
+          chatId: config.recipient.chatId.trim(),
+          telegramUsername: config.recipient.telegramUsername?.trim().replace(/^@+/, "") || undefined,
+          telegramDisplayName: config.recipient.telegramDisplayName?.trim() || undefined,
+        }
+      : null,
+    pendingLink: config.pendingLink,
   };
+}
+
+function isPendingLinkActive(config: ProdOpsConfig): boolean {
+  const expiresAt = config.pendingLink?.tokenExpiresAt;
+  if (!expiresAt) return false;
+  return new Date(expiresAt).getTime() > Date.now();
+}
+
+function formatDateTime(value?: string): string {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString();
 }
 
 export default function ProdOpsConfigCard({
@@ -78,47 +85,78 @@ export default function ProdOpsConfigCard({
   const [loading, setLoading] = useState(!initialData);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [unlinking, setUnlinking] = useState(false);
+  const [cachedDeepLink, setCachedDeepLink] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
+  const hydrate = useCallback((data: ProdOpsBatchData) => {
+    setConfig(data.config || DEFAULT_CONFIG);
+    setHasSharedSecret(Boolean(data.hasSharedSecret));
+    setMaskedSharedSecret(data.maskedSharedSecret || "");
+    setSecretSource(data.secretSource || "none");
+  }, []);
+
+  const fetchConfig = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
+      try {
+        const response = await fetch("/api/admin/prodops-config", { cache: "no-store" });
+        const data = (await response.json()) as ProdOpsBatchData;
+        if (!response.ok) {
+          throw new Error("Failed to load ProdOps config.");
+        }
+        hydrate(data);
+      } catch (nextError) {
+        setError(nextError instanceof Error ? nextError.message : "Failed to load ProdOps config.");
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [hydrate],
+  );
+
   useEffect(() => {
     if (!initialData) return;
-    setConfig(initialData.config || DEFAULT_CONFIG);
-    setHasSharedSecret(Boolean(initialData.hasSharedSecret));
-    setMaskedSharedSecret(initialData.maskedSharedSecret || "");
-    setSecretSource(initialData.secretSource || "none");
+    hydrate(initialData);
     setLoading(false);
-  }, [initialData]);
+  }, [hydrate, initialData]);
 
   useEffect(() => {
     if (initialData) return;
-    fetch("/api/admin/prodops-config", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((data: ProdOpsBatchData) => {
-        setConfig(data.config || DEFAULT_CONFIG);
-        setHasSharedSecret(Boolean(data.hasSharedSecret));
-        setMaskedSharedSecret(data.maskedSharedSecret || "");
-        setSecretSource(data.secretSource || "none");
-      })
-      .catch(() => setError("Failed to load ProdOps config."))
-      .finally(() => setLoading(false));
-  }, [initialData]);
+    fetchConfig();
+  }, [fetchConfig, initialData]);
+
+  useEffect(() => {
+    if (!isPendingLinkActive(config)) return;
+    const intervalId = window.setInterval(() => {
+      fetchConfig(true);
+    }, 3000);
+    return () => window.clearInterval(intervalId);
+  }, [config, fetchConfig]);
+
+  const recipientState = useMemo(() => {
+    if (config.recipient?.source === "telegram_link") return "linked";
+    if (config.recipient?.source === "legacy_manual" && config.recipient.chatId) return "legacy";
+    if (isPendingLinkActive(config)) return "pending";
+    if (config.pendingLink) return "expired";
+    return "unlinked";
+  }, [config]);
 
   const canRunTest = useMemo(() => {
-    return config.enabled && config.baseUrl.trim().length > 0 && hasSharedSecret && config.destinations.length > 0;
+    return (
+      config.enabled &&
+      config.baseUrl.trim().length > 0 &&
+      hasSharedSecret &&
+      Boolean(config.recipient?.chatId) &&
+      config.recipient?.enabled !== false
+    );
   }, [config, hasSharedSecret]);
 
-  function updateDestination(
-    id: string,
-    updater: (destination: ProdOpsDestination) => ProdOpsDestination,
-  ) {
-    setConfig((current) => ({
-      ...current,
-      destinations: current.destinations.map((destination) =>
-        destination.id === id ? updater(destination) : destination,
-      ),
-    }));
-  }
+  const canStartLink = useMemo(() => {
+    return config.botUsername.trim().length > 0 && hasSharedSecret;
+  }, [config.botUsername, hasSharedSecret]);
 
   function toggleEventType(eventType: ProdOpsEventType) {
     setConfig((current) => {
@@ -132,14 +170,18 @@ export default function ProdOpsConfigCard({
     });
   }
 
-  function toggleDestinationEventType(id: string, eventType: ProdOpsEventType) {
-    updateDestination(id, (destination) => {
-      const exists = destination.enabledEventTypes.includes(eventType);
+  function toggleRecipientEventType(eventType: ProdOpsEventType) {
+    setConfig((current) => {
+      if (!current.recipient) return current;
+      const exists = current.recipient.enabledEventTypes.includes(eventType);
       return {
-        ...destination,
-        enabledEventTypes: exists
-          ? destination.enabledEventTypes.filter((item) => item !== eventType)
-          : [...destination.enabledEventTypes, eventType],
+        ...current,
+        recipient: {
+          ...current.recipient,
+          enabledEventTypes: exists
+            ? current.recipient.enabledEventTypes.filter((item) => item !== eventType)
+            : [...current.recipient.enabledEventTypes, eventType],
+        },
       };
     });
   }
@@ -157,20 +199,73 @@ export default function ProdOpsConfigCard({
           sharedSecret: secretDraft.trim() ? secretDraft.trim() : undefined,
         }),
       });
-      const data = await response.json();
+      const data = (await response.json()) as ProdOpsBatchData & { error?: string };
       if (!response.ok) {
         throw new Error(typeof data.error === "string" ? data.error : "Failed to save ProdOps config.");
       }
-      setConfig(data.config || DEFAULT_CONFIG);
-      setHasSharedSecret(Boolean(data.hasSharedSecret));
-      setMaskedSharedSecret(data.maskedSharedSecret || "");
-      setSecretSource(data.secretSource || "none");
+      hydrate(data);
       setSecretDraft("");
       setStatus("ProdOps settings saved.");
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Failed to save ProdOps config.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function startLinkFlow() {
+    setLinking(true);
+    setStatus("");
+    setError("");
+    try {
+      const response = await fetch("/api/admin/prodops-config/link", {
+        method: "POST",
+      });
+      const data = (await response.json()) as {
+        ok?: boolean;
+        deepLink?: string;
+        expiresAt?: string;
+        error?: string;
+      };
+      if (!response.ok || !data.deepLink) {
+        throw new Error(typeof data.error === "string" ? data.error : "Failed to create Telegram link.");
+      }
+      setCachedDeepLink(data.deepLink);
+      await fetchConfig(true);
+      setStatus(
+        `Open Telegram and press Start from the account that should receive ops alerts before ${formatDateTime(
+          data.expiresAt,
+        )}.`,
+      );
+      if (typeof window !== "undefined") {
+        window.open(data.deepLink, "_blank", "noopener,noreferrer");
+      }
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Failed to create Telegram link.");
+    } finally {
+      setLinking(false);
+    }
+  }
+
+  async function unlinkRecipient() {
+    setUnlinking(true);
+    setStatus("");
+    setError("");
+    try {
+      const response = await fetch("/api/admin/prodops-config/link", {
+        method: "DELETE",
+      });
+      const data = (await response.json()) as ProdOpsBatchData & { error?: string };
+      if (!response.ok) {
+        throw new Error(typeof data.error === "string" ? data.error : "Failed to unlink Telegram recipient.");
+      }
+      hydrate(data);
+      setCachedDeepLink("");
+      setStatus("ProdOps Telegram recipient unlinked.");
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Failed to unlink Telegram recipient.");
+    } finally {
+      setUnlinking(false);
     }
   }
 
@@ -199,9 +294,11 @@ export default function ProdOpsConfigCard({
       <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
         <div>
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">ProdOps Telegram</h3>
-          <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 max-w-2xl">
+          <p className="mt-1 max-w-2xl text-xs text-gray-500 dark:text-slate-400">
             Queue product-side ops events in trefolio and dispatch them asynchronously to the
-            external <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-slate-800">trefolio-prodops</code> service.
+            external <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-slate-800">trefolio-prodops</code>{" "}
+            service. The recipient DM is now linked via a Telegram Start handshake instead of a
+            pasted chat id.
           </p>
         </div>
         <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600 dark:bg-slate-800 dark:text-slate-300">
@@ -233,32 +330,56 @@ export default function ProdOpsConfigCard({
                 Enable operational notifications
               </span>
               <span className="block text-xs text-gray-500 dark:text-slate-400">
-                Business routes will keep writing to the outbox even when disabled, but the
-                dispatcher will only deliver while this switch is on.
+                Business routes keep writing to the outbox even when disabled, but dispatch only
+                runs while this switch is on.
               </span>
             </span>
           </label>
 
-          <div className="space-y-2">
-            <label
-              htmlFor="prodops-base-url"
-              className="block text-sm font-medium text-gray-900 dark:text-white"
-            >
-              ProdOps base URL
-            </label>
-            <input
-              id="prodops-base-url"
-              type="url"
-              value={config.baseUrl}
-              onChange={(event) =>
-                setConfig((current) => ({ ...current, baseUrl: event.target.value }))
-              }
-              placeholder="https://ops.trefolio.com"
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-            />
-            <p className="text-xs text-gray-500 dark:text-slate-400">
-              Local dev example: <code>http://localhost:3400</code>
-            </p>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="space-y-2">
+              <label
+                htmlFor="prodops-base-url"
+                className="block text-sm font-medium text-gray-900 dark:text-white"
+              >
+                ProdOps base URL
+              </label>
+              <input
+                id="prodops-base-url"
+                type="url"
+                value={config.baseUrl}
+                onChange={(event) =>
+                  setConfig((current) => ({ ...current, baseUrl: event.target.value }))
+                }
+                placeholder="https://ops.trefolio.com"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+              />
+              <p className="text-xs text-gray-500 dark:text-slate-400">
+                Local dev example: <code>http://localhost:3400</code>
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="prodops-bot-username"
+                className="block text-sm font-medium text-gray-900 dark:text-white"
+              >
+                Telegram bot username
+              </label>
+              <input
+                id="prodops-bot-username"
+                type="text"
+                value={config.botUsername}
+                onChange={(event) =>
+                  setConfig((current) => ({ ...current, botUsername: event.target.value }))
+                }
+                placeholder="trefolio_prodops_bot"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+              />
+              <p className="text-xs text-gray-500 dark:text-slate-400">
+                Used to generate the Telegram deep link opened from admin.
+              </p>
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -270,7 +391,8 @@ export default function ProdOpsConfigCard({
                 Shared secret
               </label>
               <p className="text-xs text-gray-500 dark:text-slate-400">
-                Used to sign each dispatcher request to the external service.
+                Used to sign dispatcher requests and the link-completion callback from the external
+                bot service.
               </p>
             </div>
             <div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -302,15 +424,7 @@ export default function ProdOpsConfigCard({
               Enabled event types
             </legend>
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              {(
-                [
-                  "user_registered",
-                  "membership_paid",
-                  "feedback_received",
-                  "broker_request_created",
-                  "trial_activated",
-                ] as ProdOpsEventType[]
-              ).map((eventType) => (
+              {EVENT_TYPES.map((eventType) => (
                 <label
                   key={eventType}
                   className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-slate-700"
@@ -330,170 +444,185 @@ export default function ProdOpsConfigCard({
           <section className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Destinations</h4>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Recipient DM</h4>
                 <p className="text-xs text-gray-500 dark:text-slate-400">
-                  Configure one or more Telegram chats or topics that will receive staff alerts.
+                  Link the Telegram account that should receive staff alerts by opening the bot and
+                  pressing Start, like the Clara and Will account-link flows.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setConfig((current) => ({
-                    ...current,
-                    destinations: [...current.destinations, createDestination()],
-                  }))
-                }
-                className="btn-secondary text-xs px-4 py-2"
-              >
-                Add destination
-              </button>
+              <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600 dark:bg-slate-800 dark:text-slate-300">
+                {recipientState === "linked"
+                  ? "Linked"
+                  : recipientState === "pending"
+                    ? "Pending"
+                    : recipientState === "expired"
+                      ? "Expired"
+                      : recipientState === "legacy"
+                        ? "Legacy manual"
+                        : "Unlinked"}
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {config.destinations.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-gray-300 px-4 py-5 text-sm text-gray-500 dark:border-slate-700 dark:text-slate-400">
-                  No Telegram destinations configured yet.
-                </div>
-              ) : (
-                config.destinations.map((destination) => (
-                  <div
-                    key={destination.id}
-                    className="rounded-2xl border border-gray-200 p-4 dark:border-slate-700"
-                  >
-                    <div className="flex flex-col gap-4">
-                      <div className="flex flex-col gap-4 lg:flex-row">
-                        <div className="flex-1 space-y-2">
-                          <label
-                            htmlFor={`prodops-label-${destination.id}`}
-                            className="block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400"
-                          >
-                            Label
-                          </label>
-                          <input
-                            id={`prodops-label-${destination.id}`}
-                            type="text"
-                            value={destination.label}
-                            onChange={(event) =>
-                              updateDestination(destination.id, (current) => ({
-                                ...current,
-                                label: event.target.value,
-                              }))
-                            }
-                            placeholder="Support team"
-                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                          />
-                        </div>
-                        <div className="flex-1 space-y-2">
-                          <label
-                            htmlFor={`prodops-chat-${destination.id}`}
-                            className="block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400"
-                          >
-                            Chat ID
-                          </label>
-                          <input
-                            id={`prodops-chat-${destination.id}`}
-                            type="text"
-                            value={destination.chatId}
-                            onChange={(event) =>
-                              updateDestination(destination.id, (current) => ({
-                                ...current,
-                                chatId: event.target.value,
-                              }))
-                            }
-                            placeholder="-1001234567890"
-                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                          />
-                        </div>
-                        <div className="space-y-2 lg:w-40">
-                          <label
-                            htmlFor={`prodops-thread-${destination.id}`}
-                            className="block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400"
-                          >
-                            Topic ID
-                          </label>
-                          <input
-                            id={`prodops-thread-${destination.id}`}
-                            type="number"
-                            min={1}
-                            value={destination.messageThreadId ?? ""}
-                            onChange={(event) =>
-                              updateDestination(destination.id, (current) => ({
-                                ...current,
-                                messageThreadId: event.target.value
-                                  ? Number.parseInt(event.target.value, 10)
-                                  : undefined,
-                              }))
-                            }
-                            placeholder="optional"
-                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-slate-200">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                            checked={destination.enabled}
-                            onChange={(event) =>
-                              updateDestination(destination.id, (current) => ({
-                                ...current,
-                                enabled: event.target.checked,
-                              }))
-                            }
-                          />
-                          Destination enabled
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setConfig((current) => ({
-                              ...current,
-                              destinations: current.destinations.filter((item) => item.id !== destination.id),
-                            }))
-                          }
-                          className="text-sm font-medium text-red-500 hover:text-red-600"
-                        >
-                          Remove
-                        </button>
-                      </div>
-
-                      <fieldset className="space-y-2">
-                        <legend className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400">
-                          Destination event filter
-                        </legend>
-                        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                          {(
-                            [
-                              "user_registered",
-                              "membership_paid",
-                              "feedback_received",
-                              "broker_request_created",
-                              "trial_activated",
-                            ] as ProdOpsEventType[]
-                          ).map((eventType) => (
-                            <label
-                              key={`${destination.id}-${eventType}`}
-                              className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-slate-700"
-                            >
-                              <input
-                                type="checkbox"
-                                className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                                checked={destination.enabledEventTypes.includes(eventType)}
-                                onChange={() => toggleDestinationEventType(destination.id, eventType)}
-                              />
-                              <span className="text-gray-700 dark:text-slate-200">
-                                {EVENT_LABELS[eventType]}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </fieldset>
-                    </div>
+            <div className="rounded-2xl border border-gray-200 p-4 dark:border-slate-700">
+              <div className="space-y-4">
+                {recipientState === "linked" && config.recipient ? (
+                  <div className="space-y-2 text-sm text-gray-700 dark:text-slate-200">
+                    <p className="font-medium">{config.recipient.label}</p>
+                    <p>
+                      {config.recipient.telegramUsername ? (
+                        <>
+                          Telegram username: <code>@{config.recipient.telegramUsername}</code>
+                        </>
+                      ) : (
+                        <>
+                          Telegram user id: <code>{config.recipient.telegramUserId || "unknown"}</code>
+                        </>
+                      )}
+                    </p>
+                    {config.recipient.telegramDisplayName ? (
+                      <p>
+                        Display name: <code>{config.recipient.telegramDisplayName}</code>
+                      </p>
+                    ) : null}
+                    <p>
+                      Chat id: <code>{config.recipient.chatId}</code>
+                    </p>
+                    <p>
+                      Linked at: <code>{formatDateTime(config.recipient.linkedAt)}</code>
+                    </p>
                   </div>
-                ))
-              )}
+                ) : null}
+
+                {recipientState === "legacy" && config.recipient ? (
+                  <div className="space-y-2 text-sm text-amber-700 dark:text-amber-300">
+                    <p className="font-medium">Legacy manual destination detected.</p>
+                    <p>
+                      Current chat id: <code>{config.recipient.chatId}</code>
+                    </p>
+                    <p>
+                      Relink it through Telegram to verify the DM recipient and stop depending on a
+                      pasted chat id.
+                    </p>
+                  </div>
+                ) : null}
+
+                {recipientState === "pending" ? (
+                  <div className="space-y-2 text-sm text-gray-700 dark:text-slate-200">
+                    <p className="font-medium">Waiting for Telegram confirmation.</p>
+                    <p>
+                      Open the bot from the account that should receive ops alerts and press Start
+                      before <code>{formatDateTime(config.pendingLink?.tokenExpiresAt)}</code>.
+                    </p>
+                  </div>
+                ) : null}
+
+                {recipientState === "expired" ? (
+                  <div className="space-y-2 text-sm text-amber-700 dark:text-amber-300">
+                    <p className="font-medium">The last Telegram link expired.</p>
+                    <p>Generate a new link and press Start again from the recipient account.</p>
+                  </div>
+                ) : null}
+
+                {recipientState === "unlinked" ? (
+                  <p className="text-sm text-gray-500 dark:text-slate-400">
+                    No Telegram recipient is linked yet.
+                  </p>
+                ) : null}
+
+                {cachedDeepLink ? (
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
+                    If Telegram did not open automatically,{" "}
+                    <a
+                      href={cachedDeepLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                    >
+                      open the link again
+                    </a>
+                    .
+                  </p>
+                ) : null}
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={startLinkFlow}
+                    disabled={linking || !canStartLink}
+                    className="btn-secondary px-4 py-2 text-sm disabled:opacity-60"
+                  >
+                    {linking
+                      ? "Preparing…"
+                      : recipientState === "linked"
+                        ? "Relink recipient"
+                        : recipientState === "pending"
+                          ? "Generate new link"
+                          : "Link Telegram recipient"}
+                  </button>
+                  {config.recipient ? (
+                    <button
+                      type="button"
+                      onClick={unlinkRecipient}
+                      disabled={unlinking}
+                      className="btn-secondary px-4 py-2 text-sm text-red-600 disabled:opacity-60 dark:text-red-300"
+                    >
+                      {unlinking ? "Unlinking…" : "Unlink recipient"}
+                    </button>
+                  ) : null}
+                </div>
+
+                {!canStartLink ? (
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
+                    Set both the Telegram bot username and the shared secret before starting the
+                    link flow.
+                  </p>
+                ) : null}
+
+                {config.recipient ? (
+                  <>
+                    <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-slate-200">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        checked={config.recipient.enabled}
+                        onChange={(event) =>
+                          setConfig((current) => ({
+                            ...current,
+                            recipient: current.recipient
+                              ? { ...current.recipient, enabled: event.target.checked }
+                              : null,
+                          }))
+                        }
+                      />
+                      Recipient enabled
+                    </label>
+
+                    <fieldset className="space-y-2">
+                      <legend className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                        Recipient event filter
+                      </legend>
+                      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                        {EVENT_TYPES.map((eventType) => (
+                          <label
+                            key={`recipient-${eventType}`}
+                            className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-slate-700"
+                          >
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                              checked={config.recipient?.enabledEventTypes.includes(eventType) ?? false}
+                              onChange={() => toggleRecipientEventType(eventType)}
+                            />
+                            <span className="text-gray-700 dark:text-slate-200">
+                              {EVENT_LABELS[eventType]}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  </>
+                ) : null}
+              </div>
             </div>
           </section>
 

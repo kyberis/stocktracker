@@ -40,14 +40,21 @@ describe("prodops", () => {
     vi.mocked(getProdOpsConfig).mockResolvedValue({
       enabled: true,
       baseUrl: "https://ops.trefolio.com",
+      botUsername: "trefolio_prodops_bot",
       enabledEventTypes: ["user_registered"],
-      destinations: [{
-        id: "dest_1",
-        label: "Ops",
-        chatId: "-1001",
+      recipient: {
+        id: "recipient_1",
+        label: "@ops",
+        type: "telegram_dm",
+        source: "telegram_link",
+        chatId: "12345",
         enabled: true,
         enabledEventTypes: ["user_registered"],
-      }],
+        telegramUserId: "777",
+        telegramUsername: "ops",
+        linkedAt: "2026-05-26T00:00:00.000Z",
+      },
+      pendingLink: null,
     });
     vi.mocked(getProdOpsSharedSecret).mockResolvedValue("shared-secret");
     vi.mocked(listProdOpsEventsReady).mockResolvedValue([{
@@ -107,8 +114,10 @@ describe("prodops", () => {
     vi.mocked(getProdOpsConfig).mockResolvedValue({
       enabled: true,
       baseUrl: "https://ops.trefolio.com",
+      botUsername: "trefolio_prodops_bot",
       enabledEventTypes: ["membership_paid"],
-      destinations: [],
+      recipient: null,
+      pendingLink: null,
     });
     vi.mocked(getProdOpsSharedSecret).mockResolvedValue("shared-secret");
     vi.mocked(listProdOpsEventsReady).mockResolvedValue([{

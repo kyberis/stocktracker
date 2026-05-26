@@ -23,8 +23,8 @@ export const POST = withMetrics("/api/admin/prodops-config/test", async (req: Ne
   if (!secret.trim()) {
     return NextResponse.json({ error: "ProdOps shared secret is missing" }, { status: 400 });
   }
-  if (config.destinations.length === 0) {
-    return NextResponse.json({ error: "Add at least one destination first" }, { status: 400 });
+  if (!config.recipient?.chatId || config.recipient.enabled === false) {
+    return NextResponse.json({ error: "Link a Telegram recipient first" }, { status: 400 });
   }
 
   await enqueueProdOpsTestEvent(session.userId);

@@ -26,8 +26,10 @@ describe("admin prodops config route", () => {
     vi.mocked(getProdOpsConfig).mockResolvedValue({
       enabled: true,
       baseUrl: "https://ops.trefolio.com",
+      botUsername: "trefolio_prodops_bot",
       enabledEventTypes: ["user_registered"],
-      destinations: [],
+      recipient: null,
+      pendingLink: null,
     });
     vi.mocked(getProdOpsSharedSecretMeta).mockResolvedValue({
       hasSecret: true,
@@ -43,8 +45,10 @@ describe("admin prodops config route", () => {
       config: {
         enabled: true,
         baseUrl: "https://ops.trefolio.com",
+        botUsername: "trefolio_prodops_bot",
         enabledEventTypes: ["user_registered"],
-        destinations: [],
+        recipient: null,
+        pendingLink: null,
       },
       hasSharedSecret: true,
       maskedSharedSecret: "shar...cret",
@@ -57,14 +61,21 @@ describe("admin prodops config route", () => {
     vi.mocked(setProdOpsConfig).mockResolvedValue({
       enabled: true,
       baseUrl: "https://ops.trefolio.com",
+      botUsername: "trefolio_prodops_bot",
       enabledEventTypes: ["user_registered", "membership_paid"],
-      destinations: [{
-        id: "dest_1",
-        label: "Ops",
-        chatId: "-1001",
+      recipient: {
+        id: "recipient_1",
+        label: "@ops",
+        type: "telegram_dm",
+        source: "telegram_link",
+        chatId: "12345",
         enabled: true,
         enabledEventTypes: ["user_registered"],
-      }],
+        telegramUserId: "777",
+        telegramUsername: "ops",
+        linkedAt: "2026-05-26T00:00:00.000Z",
+      },
+      pendingLink: null,
     });
     vi.mocked(getProdOpsSharedSecretMeta).mockResolvedValue({
       hasSecret: true,
@@ -79,14 +90,20 @@ describe("admin prodops config route", () => {
         body: JSON.stringify({
           enabled: true,
           baseUrl: "https://ops.trefolio.com",
+          botUsername: "@trefolio_prodops_bot",
           enabledEventTypes: ["user_registered", "membership_paid"],
-          destinations: [{
-            id: "dest_1",
-            label: "Ops",
-            chatId: "-1001",
+          recipient: {
+            id: "recipient_1",
+            label: "@ops",
+            type: "telegram_dm",
+            source: "telegram_link",
+            chatId: "12345",
             enabled: true,
             enabledEventTypes: ["user_registered"],
-          }],
+            telegramUserId: "777",
+            telegramUsername: "ops",
+            linkedAt: "2026-05-26T00:00:00.000Z",
+          },
           sharedSecret: "shared-secret",
         }),
       }),
@@ -97,14 +114,20 @@ describe("admin prodops config route", () => {
     expect(setProdOpsConfig).toHaveBeenCalledWith({
       enabled: true,
       baseUrl: "https://ops.trefolio.com",
+      botUsername: "@trefolio_prodops_bot",
       enabledEventTypes: ["user_registered", "membership_paid"],
-      destinations: [{
-        id: "dest_1",
-        label: "Ops",
-        chatId: "-1001",
+      recipient: {
+        id: "recipient_1",
+        label: "@ops",
+        type: "telegram_dm",
+        source: "telegram_link",
+        chatId: "12345",
         enabled: true,
         enabledEventTypes: ["user_registered"],
-      }],
+        telegramUserId: "777",
+        telegramUsername: "ops",
+        linkedAt: "2026-05-26T00:00:00.000Z",
+      },
     });
   });
 });

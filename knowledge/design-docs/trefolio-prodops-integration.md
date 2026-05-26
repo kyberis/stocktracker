@@ -16,7 +16,7 @@ We want:
 ## Decision
 
 1. **`trefolio-prodops` is a sibling repo** under `external/prodops`, following the same context-and-deploy separation used for Clara, Will, and Renata.
-2. **Trefolio owns configuration and event production.** Admins configure the ProdOps base URL, shared secret, enabled event types, and Telegram destinations from trefolio's admin settings.
+2. **Trefolio owns configuration and event production.** Admins configure the ProdOps base URL, bot username, shared secret, enabled event types, and the linked Telegram recipient from trefolio's admin settings.
 3. **Trefolio writes an outbox row, not a Telegram message.** Business routes enqueue ops events into `ops_event_outbox`; a cron dispatcher sends them asynchronously.
 4. **Runtime integration shape is signed HTTP.** Trefolio posts a signed JSON envelope to `trefolio-prodops` using an HMAC shared secret (`X-ProdOps-Timestamp` + `X-ProdOps-Signature`).
 5. **ProdOps owns Telegram delivery and delivery-side dedupe.** The service verifies the signature, deduplicates by `eventId`, formats the operator message, and uses the Telegram Bot API.
@@ -46,6 +46,7 @@ npm run dev:prodops
 Then set trefolio admin config:
 
 - base URL: `http://localhost:3400`
+- bot username: the Telegram bot username that points at `trefolio-prodops`
 - shared secret: same value as `external/prodops/.env.local:PRODOPS_SHARED_SECRET`
 
 ### Event flow
@@ -56,6 +57,18 @@ flowchart LR
   outbox --> cronDispatcher["/api/cron/prodops-dispatch"]
   cronDispatcher -->|"HMAC signed POST"| prodops["external/prodops /api/intake"]
   prodops --> telegram["Telegram Bot API"]
+```
+
+### Recipient linking flow
+
+```mermaid
+flowchart LR
+  adminPanel["trefolio admin"] --> mint["POST /api/admin/prodops-config/link"]
+  mint --> deepLink["t.me/<bot>?start=<token>"]
+  deepLink --> telegram["Telegram Bot /start"]
+  telegram --> prodopsWebhook["external/prodops /api/telegram/webhook"]
+  prodopsWebhook -->|"HMAC signed POST"| complete["/api/admin/prodops-config/link/complete"]
+  complete --> config["ProdOpsConfig.recipient"]
 ```
 
 ### Payload contract
@@ -72,13 +85,14 @@ Trefolio sends:
 - `metadata`
 - `destinations`
 
-The `destinations` list is resolved in trefolio from admin settings, so `prodops` stays delivery-focused and does not own operator configuration.
+The `destinations` list is resolved in trefolio from the single linked recipient in admin settings, so `prodops` stays delivery-focused and does not own operator configuration.
 
 ### Security
 
 - Shared secret is stored in trefolio admin settings (encrypted at rest) or via env.
 - Delivery uses HMAC SHA-256 over `timestamp.body`.
 - `prodops` rejects unsigned, invalid, or stale payloads.
+- Recipient links use a short random Telegram token whose hash and expiry are stored in trefolio; the plaintext token is only returned once to the admin browser.
 - Telegram payloads are deliberately minimal: human summary + admin link + selected metadata.
 
 ## How to enforce it
@@ -88,6 +102,7 @@ The `destinations` list is resolved in trefolio from admin settings, so `prodops
 | Area | Source |
 |---|---|
 | Admin config | `src/app/api/admin/prodops-config/route.ts`, `src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx` |
+| Link flow | `src/app/api/admin/prodops-config/link/route.ts`, `src/app/api/admin/prodops-config/link/complete/route.ts`, `src/lib/prodops-link.ts` |
 | Outbox DB | `src/lib/db/ops-events.ts`, migration `v114` |
 | Dispatcher cron | `src/app/api/cron/prodops-dispatch/route.ts` |
 | Event builders | `src/lib/prodops.ts` |
@@ -97,6 +112,7 @@ The `destinations` list is resolved in trefolio from admin settings, so `prodops
 | Area | Source |
 |---|---|
 | Intake verification | `external/prodops/app/api/intake/route.ts`, `external/prodops/lib/signature.ts` |
+| Telegram link webhook | `external/prodops/app/api/telegram/webhook/route.ts` |
 | Telegram delivery | `external/prodops/lib/telegram.ts` |
 | Dedupe / audit | `external/prodops/lib/store.ts` |
 | Health | `external/prodops/app/api/health/route.ts` |

@@ -815,19 +815,23 @@ describe("settings", () => {
   });
 
   describe("ProdOps config", () => {
-    it("returns env base URL fallback when no config row exists", async () => {
+    it("returns env base URL and bot username fallbacks when no config row exists", async () => {
       const original = process.env.PRODOPS_BASE_URL;
+      const originalBot = process.env.PRODOPS_TELEGRAM_BOT_USERNAME;
       process.env.PRODOPS_BASE_URL = "https://ops.trefolio.com";
+      process.env.PRODOPS_TELEGRAM_BOT_USERNAME = "@trefolio_prodops_bot";
       mockExecute.mockResolvedValue({ rows: [] });
 
       const result = await settings.getProdOpsConfig();
 
       expect(result.baseUrl).toBe("https://ops.trefolio.com");
+      expect(result.botUsername).toBe("trefolio_prodops_bot");
       expect(result.enabled).toBe(false);
       process.env.PRODOPS_BASE_URL = original;
+      process.env.PRODOPS_TELEGRAM_BOT_USERNAME = originalBot;
     });
 
-    it("normalizes destinations and event types when saving config", async () => {
+    it("normalizes recipient, bot username, and event types when saving config", async () => {
       mockExecute
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] });
@@ -835,32 +839,137 @@ describe("settings", () => {
       const result = await settings.setProdOpsConfig({
         enabled: true,
         baseUrl: "https://ops.trefolio.com/",
+        botUsername: "@trefolio_prodops_bot",
         enabledEventTypes: ["user_registered", "membership_paid", "membership_paid"] as never,
-        destinations: [
-          {
-            id: "dest_1",
-            label: " Ops ",
-            chatId: " -100123 ",
-            enabled: true,
-            enabledEventTypes: ["user_registered"],
-          },
-          {
-            id: "",
-            label: "",
-            chatId: "",
-            enabled: true,
-            enabledEventTypes: ["trial_activated"],
-          },
-        ] as never,
+        recipient: {
+          id: "recipient_1",
+          label: " Ops ",
+          type: "telegram_dm",
+          source: "telegram_link",
+          chatId: " 12345 ",
+          enabled: true,
+          enabledEventTypes: ["user_registered"],
+          telegramUsername: "@ops",
+          linkedAt: "2026-05-26T00:00:00.000Z",
+        } as never,
       });
 
       expect(result.baseUrl).toBe("https://ops.trefolio.com");
-      expect(result.destinations).toHaveLength(1);
-      expect(result.destinations[0].label).toBe("Ops");
+      expect(result.botUsername).toBe("trefolio_prodops_bot");
+      expect(result.recipient?.label).toBe("Ops");
+      expect(result.recipient?.chatId).toBe("12345");
       expect(mockExecute).toHaveBeenNthCalledWith(2, {
         sql: expect.stringContaining("INSERT INTO platform_settings"),
-        args: ["prodops_config", expect.stringContaining("\"chatId\":\"-100123\"")],
+        args: ["prodops_config", expect.stringContaining("\"chatId\":\"12345\"")],
       });
+    });
+
+    it("creates and completes a ProdOps Telegram link", async () => {
+      const prodOpsLink = await import("@/lib/prodops-link");
+      vi.spyOn(prodOpsLink, "hashProdOpsLinkToken").mockReturnValue("ignored");
+
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{
+            value: JSON.stringify({
+              enabled: true,
+              baseUrl: "https://ops.trefolio.com",
+              botUsername: "trefolio_prodops_bot",
+              enabledEventTypes: ["user_registered"],
+              recipient: null,
+              pendingLink: null,
+            }),
+          }],
+        })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const { deepLink, expiresAt } = await settings.createProdOpsRecipientLink();
+      const token = deepLink.split("start=")[1];
+
+      expect(deepLink).toContain("https://t.me/trefolio_prodops_bot?start=");
+      expect(expiresAt).toBeTruthy();
+
+      mockExecute.mockReset();
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{
+            value: JSON.stringify({
+              enabled: true,
+              baseUrl: "https://ops.trefolio.com",
+              botUsername: "trefolio_prodops_bot",
+              enabledEventTypes: ["user_registered"],
+              recipient: null,
+              pendingLink: {
+                tokenHash: "ignored",
+                tokenIssuedAt: "2026-05-26T00:00:00.000Z",
+                tokenExpiresAt: "2999-05-26T00:15:00.000Z",
+              },
+            }),
+          }],
+        })
+        .mockResolvedValueOnce({
+          rows: [{
+            value: JSON.stringify({
+              enabled: true,
+              baseUrl: "https://ops.trefolio.com",
+              botUsername: "trefolio_prodops_bot",
+              enabledEventTypes: ["user_registered"],
+              recipient: null,
+              pendingLink: {
+                tokenHash: "ignored",
+                tokenIssuedAt: "2026-05-26T00:00:00.000Z",
+                tokenExpiresAt: "2999-05-26T00:15:00.000Z",
+              },
+            }),
+          }],
+        })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const recipient = await settings.completeProdOpsRecipientLink({
+        token,
+        chatId: "12345",
+        telegramUserId: "777",
+        telegramUsername: "ops",
+        telegramDisplayName: "Ops Admin",
+      });
+
+      expect(recipient?.chatId).toBe("12345");
+      expect(recipient?.telegramUsername).toBe("ops");
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO platform_settings"),
+        args: ["prodops_config", expect.stringContaining("\"recipient\"")],
+      });
+    });
+
+    it("unlinks the ProdOps recipient", async () => {
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{
+            value: JSON.stringify({
+              enabled: true,
+              baseUrl: "https://ops.trefolio.com",
+              botUsername: "trefolio_prodops_bot",
+              enabledEventTypes: ["user_registered"],
+              recipient: {
+                id: "recipient_1",
+                label: "@ops",
+                type: "telegram_dm",
+                source: "telegram_link",
+                chatId: "12345",
+                enabled: true,
+                enabledEventTypes: ["user_registered"],
+              },
+              pendingLink: null,
+            }),
+          }],
+        })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await settings.unlinkProdOpsRecipient();
+
+      expect(result.recipient).toBeNull();
+      expect(result.pendingLink).toBeNull();
     });
 
     it("prefers env shared secret over stored value", async () => {

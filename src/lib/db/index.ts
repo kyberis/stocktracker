@@ -198,6 +198,9 @@ export {
   getProdOpsSharedSecret,
   getProdOpsSharedSecretMeta,
   setProdOpsSharedSecret,
+  createProdOpsRecipientLink,
+  completeProdOpsRecipientLink,
+  unlinkProdOpsRecipient,
   PRODOPS_EVENT_TYPES,
 } from "./settings";
 

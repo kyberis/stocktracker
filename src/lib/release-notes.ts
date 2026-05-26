@@ -32,6 +32,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "improvement",
+        text: "ProdOps Telegram recipients can now be linked from admin with a one-time Telegram Start flow, matching the Clara/Will handshake instead of manually pasting a chat id.",
+        translations: {
+          es: "Los destinatarios de ProdOps por Telegram ahora se pueden vincular desde admin con un flujo de Start de un solo uso, alineado con Clara/Will en lugar de pegar el chat id manualmente.",
+        },
+      },
+      {
         type: "feature",
         text: "New Agent Office (/office) — Trefolio Pro workspace where Warren, Clara, and Will coordinate visible multi-step missions with per-agent Confirm. Free users see a preview paywall; featured on the landing page.",
         translations: {

@@ -1,3 +1,4 @@
+import { createHmac } from "crypto";
 import { test, expect } from "@playwright/test";
 import { loginAsAdmin, createTestUser, ensureLoggedOut } from "./helpers";
 
@@ -112,11 +113,14 @@ test.describe("Admin Panel", () => {
     const getRes = await request.get("/api/admin/prodops-config");
     expect(getRes.status()).toBe(200);
 
+    const sharedSecret = "shared-secret-for-e2e";
+
     const putRes = await request.put("/api/admin/prodops-config", {
       data: {
         enabled: true,
         baseUrl: "https://ops.trefolio.test",
-        sharedSecret: "shared-secret-for-e2e",
+        botUsername: "trefolio_prodops_bot",
+        sharedSecret,
         enabledEventTypes: [
           "user_registered",
           "membership_paid",
@@ -124,18 +128,42 @@ test.describe("Admin Panel", () => {
           "broker_request_created",
           "trial_activated",
         ],
-        destinations: [
-          {
-            id: "e2e-prodops",
-            label: "E2E Ops",
-            chatId: "-1001234567890",
-            enabled: true,
-            enabledEventTypes: ["user_registered", "membership_paid"],
-          },
-        ],
+        recipient: null,
       },
     });
     expect(putRes.status()).toBe(200);
+
+    const linkRes = await request.post("/api/admin/prodops-config/link");
+    expect(linkRes.status()).toBe(200);
+    const linkBody = await linkRes.json();
+    const deepLink = String(linkBody.deepLink || "");
+    expect(deepLink).toContain("https://t.me/trefolio_prodops_bot?start=");
+
+    const token = new URL(deepLink).searchParams.get("start");
+    expect(token).toBeTruthy();
+
+    const completionBody = JSON.stringify({
+      token,
+      chatId: "12345",
+      telegramUserId: "777",
+      telegramUsername: "ops",
+      telegramDisplayName: "Ops Admin",
+    });
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const signature = `sha256=${createHmac("sha256", sharedSecret)
+      .update(`${timestamp}.${completionBody}`)
+      .digest("hex")}`;
+
+    const completeRes = await request.fetch("/api/admin/prodops-config/link/complete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-ProdOps-Timestamp": timestamp,
+        "X-ProdOps-Signature": signature,
+      },
+      data: completionBody,
+    });
+    expect(completeRes.status()).toBe(200);
 
     const testRes = await request.post("/api/admin/prodops-config/test");
     expect(testRes.status()).toBe(200);

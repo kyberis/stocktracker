@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/auth/guards";
-import type { ProdOpsConfig } from "@/lib/types";
+import type { ProdOpsConfig, ProdOpsRecipient } from "@/lib/types";
 import {
   getProdOpsConfig,
   getProdOpsSharedSecretMeta,
@@ -10,16 +10,17 @@ import {
 } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
-function parseDestinations(value: unknown): ProdOpsConfig["destinations"] | undefined {
-  if (value === undefined) return undefined;
-  if (!Array.isArray(value)) return [];
-  return value as ProdOpsConfig["destinations"];
-}
-
 function parseEventTypes(value: unknown): ProdOpsConfig["enabledEventTypes"] | undefined {
   if (value === undefined) return undefined;
   if (!Array.isArray(value)) return [];
   return value.map((item) => String(item || "")) as ProdOpsConfig["enabledEventTypes"];
+}
+
+function parseRecipient(value: unknown): ProdOpsRecipient | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (!value || typeof value !== "object") return null;
+  return value as ProdOpsRecipient;
 }
 
 export const GET = withMetrics("/api/admin/prodops-config", async (req: NextRequest) => {
@@ -64,12 +65,23 @@ export const PUT = withMetrics("/api/admin/prodops-config", async (req: NextRequ
     updates.baseUrl = body.baseUrl;
   }
 
+  if (body.botUsername !== undefined) {
+    if (typeof body.botUsername !== "string") {
+      return NextResponse.json({ error: "botUsername must be a string" }, { status: 400 });
+    }
+    updates.botUsername = body.botUsername;
+  }
+
   if (body.enabledEventTypes !== undefined) {
     updates.enabledEventTypes = parseEventTypes(body.enabledEventTypes);
   }
 
-  if (body.destinations !== undefined) {
-    updates.destinations = parseDestinations(body.destinations);
+  if (body.recipient !== undefined) {
+    updates.recipient = parseRecipient(body.recipient);
+  }
+
+  if (body.destinations !== undefined && Array.isArray(body.destinations)) {
+    updates.recipient = parseRecipient(body.destinations[0] ?? null);
   }
 
   if (body.sharedSecret !== undefined) {

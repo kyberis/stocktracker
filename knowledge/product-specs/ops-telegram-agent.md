@@ -18,21 +18,25 @@ Trefolio emits operator-relevant events such as new registrations, successful me
 | Type | Path | Notes |
 |------|------|-------|
 | API | [`src/app/api/admin/prodops-config/route.ts`](../../src/app/api/admin/prodops-config/route.ts) | Admin GET/PUT for ProdOps configuration |
+| API | [`src/app/api/admin/prodops-config/link/route.ts`](../../src/app/api/admin/prodops-config/link/route.ts) | Admin mint/unlink flow for the Telegram recipient |
+| API | [`src/app/api/admin/prodops-config/link/complete/route.ts`](../../src/app/api/admin/prodops-config/link/complete/route.ts) | Signed callback that redeems the Telegram `/start` token |
 | API | [`src/app/api/admin/prodops-config/test/route.ts`](../../src/app/api/admin/prodops-config/test/route.ts) | Queue a test notification from admin |
 | API | [`src/app/api/internal/ops-metrics/route.ts`](../../src/app/api/internal/ops-metrics/route.ts) | Aggregate metrics for ecosystem digests |
 | Cron | [`src/app/api/cron/prodops-dispatch/route.ts`](../../src/app/api/cron/prodops-dispatch/route.ts) | Sends queued events to the external service |
 | Component | [`src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx`](../../src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx) | Admin settings UI |
 | Lib | [`src/lib/prodops.ts`](../../src/lib/prodops.ts) | Event builders, signature, dispatcher |
+| Lib | [`src/lib/prodops-link.ts`](../../src/lib/prodops-link.ts) | Telegram link token + deep-link helpers |
 | Lib | [`src/lib/db/ops-events.ts`](../../src/lib/db/ops-events.ts) | Outbox persistence |
 | External API | [`external/prodops/app/api/intake/route.ts`](../../external/prodops/app/api/intake/route.ts) | Signed intake endpoint |
 | External API | [`external/prodops/app/api/health/route.ts`](../../external/prodops/app/api/health/route.ts) | Health check for admin testing |
+| External API | [`external/prodops/app/api/telegram/webhook/route.ts`](../../external/prodops/app/api/telegram/webhook/route.ts) | Telegram `/start` webhook that completes recipient linking |
 
 ## 4. Data model
 
 Tables in [`src/lib/db/`](../../src/lib/db) and types in [`src/lib/types.ts`](../../src/lib/types.ts):
 
 - `ops_event_outbox` — async delivery queue with `dedupe_key`, retry counters, next-attempt timestamp, and terminal states (`sent`, `dropped`, `dead`).
-- `ProdOpsConfig`, `ProdOpsDestination`, `ProdOpsOutboxEvent` — admin config and queue shapes used across API + UI.
+- `ProdOpsConfig`, `ProdOpsRecipient`, `ProdOpsPendingLink`, `ProdOpsOutboxEvent` — admin config, verified Telegram recipient metadata, pending one-time link state, and queue shapes used across API + UI.
 - Existing aggregate metrics stay in `ops-metrics.ts` and expose counts only (no per-user payload).
 
 Schema source: migration `v114` in [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts).
@@ -42,7 +46,10 @@ Schema source: migration `v114` in [`src/lib/db/migrations.ts`](../../src/lib/db
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
 | GET | `/api/admin/prodops-config` | admin | Admin | Fetch effective config + secret status |
-| PUT | `/api/admin/prodops-config` | admin | Admin | Save base URL, enabled events, destinations, shared secret |
+| PUT | `/api/admin/prodops-config` | admin | Admin | Save base URL, bot username, enabled events, linked recipient settings, shared secret |
+| POST | `/api/admin/prodops-config/link` | admin | Admin | Mint a one-time Telegram deep link for the recipient |
+| DELETE | `/api/admin/prodops-config/link` | admin | Admin | Unlink the current Telegram recipient |
+| POST | `/api/admin/prodops-config/link/complete` | HMAC signed | Admin | Redeem the `/start` token and persist the linked recipient |
 | POST | `/api/admin/prodops-config/test` | admin | Admin | Queue a test notification |
 | POST | `/api/cron/prodops-dispatch` | cron bearer | Admin | Dispatch queued outbox items to ProdOps |
 | GET | `/api/internal/ops-metrics` | Bearer `IDP_SERVICE_TOKEN` | Admin | Aggregate-only ecosystem metrics |
@@ -56,7 +63,8 @@ Schema source: migration `v114` in [`src/lib/db/migrations.ts`](../../src/lib/db
 
 - Product routes enqueue events but never call Telegram directly.
 - The cron dispatcher resolves the current admin config at send time, so destination changes apply to queued items too.
-- Destination routing is two-layered: global enabled event types plus per-destination event-type filters.
+- Recipient routing is two-layered: global enabled event types plus per-recipient event-type filters.
+- The recipient link uses a short-lived Telegram deep link (`t.me/<bot>?start=<token>`). `trefolio-prodops` receives `/start`, then calls back into trefolio with the shared secret to complete the binding.
 - Retry policy is exponential-ish with terminal dead-letter state after repeated failures.
 
 ## 8. External dependencies
@@ -90,15 +98,16 @@ None. This feature is operational only.
 ## 13. Edge cases & gotchas
 
 - If ProdOps is disabled or misconfigured, events remain queued and do not block the originating business route.
+- Telegram link tokens are stored as hashes with a short TTL; admins can mint a fresh link without exposing the previous token.
 - Trial activation via emailed token now emits the same analytics-style signal and ProdOps event as onboarding activation.
 - Full feedback bodies are intentionally not sent to Telegram; only a summary and admin link are forwarded.
 - When the IdP owns signup/billing, a future producer can reuse the same envelope contract.
 
 ## 14. Tests
 
-- Unit: route and settings tests covering config persistence, outbox behavior, and dispatcher signing/retries.
-- E2E: admin settings coverage for reading/updating ProdOps config and queueing a test notification.
-- Manual smoke: enable config, queue a test event, run `/api/cron/prodops-dispatch`, verify Telegram delivery.
+- Unit: route and settings tests covering config persistence, link mint/redeem, outbox behavior, and dispatcher signing/retries.
+- E2E: admin settings coverage for reading/updating ProdOps config, minting the Telegram recipient link, and queueing a test notification.
+- Manual smoke: generate the admin deep link, press Start in Telegram, confirm the linked recipient appears in admin, queue a test event, run `/api/cron/prodops-dispatch`, verify Telegram delivery.
 
 ## 15. Related skills and rules
 

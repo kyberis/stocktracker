@@ -1,8 +1,7 @@
-import { createHmac, randomUUID } from "crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "crypto";
 
 import type {
   ProdOpsConfig,
-  ProdOpsDestination,
   ProdOpsEventType,
   ProdOpsOutboxEvent,
 } from "@/lib/types";
@@ -80,23 +79,52 @@ function resolveDestinations(config: ProdOpsConfig, eventType: ProdOpsEventType)
     eventType === "test_notification" || config.enabledEventTypes.includes(eventType);
   if (!allowByGlobal) return [];
 
-  return config.destinations
-    .filter((destination) => {
-      if (!destination.enabled) return false;
-      if (eventType === "test_notification") return true;
-      return destination.enabledEventTypes.includes(eventType);
-    })
-    .map((destination) => ({
-      label: destination.label,
-      chatId: destination.chatId,
-      messageThreadId: destination.messageThreadId,
-    }));
+  const recipient = config.recipient;
+  if (!recipient?.chatId || !recipient.enabled) return [];
+  if (
+    eventType !== "test_notification" &&
+    !recipient.enabledEventTypes.includes(eventType)
+  ) {
+    return [];
+  }
+
+  return [
+    {
+      label: recipient.label,
+      chatId: recipient.chatId,
+      messageThreadId: recipient.messageThreadId,
+    },
+  ];
 }
 
 export function signProdOpsBody(body: string, secret: string, timestamp: string): string {
   const mac = createHmac("sha256", secret);
   mac.update(`${timestamp}.${body}`);
   return `sha256=${mac.digest("hex")}`;
+}
+
+export function verifyProdOpsBodySignature(input: {
+  body: string;
+  secret: string;
+  timestamp: string;
+  signature: string;
+  maxAgeSeconds?: number;
+}): boolean {
+  const issuedAt = Number.parseInt(input.timestamp, 10);
+  if (!Number.isFinite(issuedAt)) return false;
+  const maxAge = input.maxAgeSeconds ?? 300;
+  const age = Math.abs(Math.floor(Date.now() / 1000) - issuedAt);
+  if (age > maxAge) return false;
+
+  const expected = signProdOpsBody(input.body, input.secret, input.timestamp);
+  const a = Buffer.from(expected);
+  const b = Buffer.from(input.signature);
+  if (a.length !== b.length) return false;
+  try {
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
 }
 
 async function postProdOpsEnvelope(baseUrl: string, secret: string, envelope: ProdOpsEnvelope): Promise<Response> {
@@ -357,6 +385,6 @@ export async function enqueueProdOpsTestEvent(adminUserId: string): Promise<void
   });
 }
 
-export function getProdOpsDestinationLabels(destinations: ProdOpsDestination[]): string[] {
-  return destinations.map((destination) => str(destination.label)).filter(Boolean);
+export function getProdOpsDestinationLabels(config: ProdOpsConfig): string[] {
+  return config.recipient?.label ? [str(config.recipient.label)] : [];
 }

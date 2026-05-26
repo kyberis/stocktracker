@@ -5,8 +5,9 @@ import type {
   Language,
   NotificationChannel,
   ProdOpsConfig,
-  ProdOpsDestination,
   ProdOpsEventType,
+  ProdOpsPendingLink,
+  ProdOpsRecipient,
 } from "@/lib/types";
 import type { ToolTabId } from "@/lib/tools-registry";
 import { TOOLS_CATALOG } from "@/lib/tools-registry";
@@ -14,6 +15,13 @@ import { isValidLanguage } from "@/lib/languages";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { randomUUID, randomBytes } from "crypto";
+import {
+  PRODOPS_TELEGRAM_LINK_TTL_MINUTES,
+  buildProdOpsTelegramDeepLink,
+  generateProdOpsLinkToken,
+  hashProdOpsLinkToken,
+  normalizeProdOpsBotUsername,
+} from "@/lib/prodops-link";
 
 export type PlatformFeature =
   | "alerts_enabled" | "csv_export_enabled" | "apple_signin_enabled" | "device_enabled"
@@ -897,6 +905,7 @@ const PRODOPS_SECRET_KEY = "prodops_shared_secret";
 const DEFAULT_PRODOPS_CONFIG: ProdOpsConfig = {
   enabled: false,
   baseUrl: "",
+  botUsername: "",
   enabledEventTypes: [
     "user_registered",
     "membership_paid",
@@ -904,7 +913,8 @@ const DEFAULT_PRODOPS_CONFIG: ProdOpsConfig = {
     "broker_request_created",
     "trial_activated",
   ],
-  destinations: [],
+  recipient: null,
+  pendingLink: null,
 };
 
 function normalizeProdOpsEventTypes(value: unknown): ProdOpsEventType[] {
@@ -920,19 +930,32 @@ function normalizeProdOpsEventTypes(value: unknown): ProdOpsEventType[] {
   return next.length > 0 ? next : [...DEFAULT_PRODOPS_CONFIG.enabledEventTypes];
 }
 
-function normalizeProdOpsDestination(value: unknown): ProdOpsDestination | null {
+function normalizeProdOpsRecipient(value: unknown): ProdOpsRecipient | null {
   if (!value || typeof value !== "object") return null;
   const raw = value as Record<string, unknown>;
-  const label = String(raw.label || "").trim().slice(0, 80);
   const chatId = String(raw.chatId || "").trim().slice(0, 120);
-  if (!label || !chatId) return null;
+  if (!chatId) return null;
 
   const threadValue = String(raw.messageThreadId || "").trim();
   const parsedThread = threadValue ? Number.parseInt(threadValue, 10) : undefined;
+  const telegramUsername = String(raw.telegramUsername || "").trim().replace(/^@+/, "").slice(0, 120);
+  const telegramDisplayName = String(raw.telegramDisplayName || "").trim().slice(0, 120);
+  const linkedAt = String(raw.linkedAt || "").trim().slice(0, 80);
+  const label =
+    String(raw.label || "").trim().slice(0, 80) ||
+    (telegramUsername ? `@${telegramUsername}` : telegramDisplayName || "Primary recipient");
+  const source =
+    raw.source === "telegram_link" || raw.source === "legacy_manual"
+      ? raw.source
+      : linkedAt || String(raw.telegramUserId || "").trim()
+        ? "telegram_link"
+        : "legacy_manual";
 
   return {
     id: String(raw.id || randomUUID()).trim() || randomUUID(),
     label,
+    type: "telegram_dm",
+    source,
     chatId,
     messageThreadId:
       parsedThread !== undefined && Number.isFinite(parsedThread) && parsedThread > 0
@@ -940,20 +963,38 @@ function normalizeProdOpsDestination(value: unknown): ProdOpsDestination | null 
         : undefined,
     enabled: raw.enabled !== false,
     enabledEventTypes: normalizeProdOpsEventTypes(raw.enabledEventTypes),
+    telegramUserId: String(raw.telegramUserId || "").trim().slice(0, 120) || undefined,
+    telegramUsername: telegramUsername || undefined,
+    telegramDisplayName: telegramDisplayName || undefined,
+    linkedAt: linkedAt || undefined,
   };
 }
 
-function normalizeProdOpsDestinations(value: unknown): ProdOpsDestination[] {
-  if (!Array.isArray(value)) return [];
-  const next: ProdOpsDestination[] = [];
-  const seen = new Set<string>();
-  for (const raw of value) {
-    const normalized = normalizeProdOpsDestination(raw);
-    if (!normalized || seen.has(normalized.id)) continue;
-    seen.add(normalized.id);
-    next.push(normalized);
-  }
-  return next.slice(0, 20);
+function normalizeProdOpsLegacyRecipient(value: unknown): ProdOpsRecipient | null {
+  if (!Array.isArray(value) || value.length === 0) return null;
+  const first = normalizeProdOpsRecipient({
+    ...(value[0] as Record<string, unknown>),
+    source: "legacy_manual",
+  });
+  if (!first) return null;
+  return {
+    ...first,
+    source: "legacy_manual",
+  };
+}
+
+function normalizeProdOpsPendingLink(value: unknown): ProdOpsPendingLink | null {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Record<string, unknown>;
+  const tokenHash = String(raw.tokenHash || "").trim().slice(0, 128);
+  const tokenIssuedAt = String(raw.tokenIssuedAt || "").trim().slice(0, 80);
+  const tokenExpiresAt = String(raw.tokenExpiresAt || "").trim().slice(0, 80);
+  if (!tokenHash || !tokenExpiresAt) return null;
+  return {
+    tokenHash,
+    tokenIssuedAt,
+    tokenExpiresAt,
+  };
 }
 
 function normalizeProdOpsBaseUrl(value: unknown): string {
@@ -963,19 +1004,36 @@ function normalizeProdOpsBaseUrl(value: unknown): string {
 export async function getProdOpsConfig(): Promise<ProdOpsConfig> {
   const raw = await getPlatformSetting(PRODOPS_CONFIG_KEY);
   const envBaseUrl = process.env.PRODOPS_BASE_URL?.trim() || "";
+  const envBotUsername = normalizeProdOpsBotUsername(
+    process.env.PRODOPS_TELEGRAM_BOT_USERNAME?.trim() || "",
+  );
   if (!raw) {
-    return { ...DEFAULT_PRODOPS_CONFIG, baseUrl: envBaseUrl };
+    return {
+      ...DEFAULT_PRODOPS_CONFIG,
+      baseUrl: envBaseUrl,
+      botUsername: envBotUsername,
+    };
   }
   try {
-    const parsed = JSON.parse(raw) as Partial<ProdOpsConfig>;
+    const parsed = JSON.parse(raw) as Partial<ProdOpsConfig> & {
+      destinations?: unknown[];
+    };
     return {
       enabled: parsed.enabled === true,
       baseUrl: normalizeProdOpsBaseUrl(parsed.baseUrl) || envBaseUrl,
+      botUsername: normalizeProdOpsBotUsername(String(parsed.botUsername || "")) || envBotUsername,
       enabledEventTypes: normalizeProdOpsEventTypes(parsed.enabledEventTypes),
-      destinations: normalizeProdOpsDestinations(parsed.destinations),
+      recipient:
+        normalizeProdOpsRecipient(parsed.recipient) ??
+        normalizeProdOpsLegacyRecipient(parsed.destinations),
+      pendingLink: normalizeProdOpsPendingLink(parsed.pendingLink),
     };
   } catch {
-    return { ...DEFAULT_PRODOPS_CONFIG, baseUrl: envBaseUrl };
+    return {
+      ...DEFAULT_PRODOPS_CONFIG,
+      baseUrl: envBaseUrl,
+      botUsername: envBotUsername,
+    };
   }
 }
 
@@ -984,14 +1042,22 @@ export async function setProdOpsConfig(config: Partial<ProdOpsConfig>): Promise<
   const next: ProdOpsConfig = {
     enabled: config.enabled ?? current.enabled,
     baseUrl: config.baseUrl !== undefined ? normalizeProdOpsBaseUrl(config.baseUrl) : current.baseUrl,
+    botUsername:
+      config.botUsername !== undefined
+        ? normalizeProdOpsBotUsername(String(config.botUsername || ""))
+        : current.botUsername,
     enabledEventTypes:
       config.enabledEventTypes !== undefined
         ? normalizeProdOpsEventTypes(config.enabledEventTypes)
         : current.enabledEventTypes,
-    destinations:
-      config.destinations !== undefined
-        ? normalizeProdOpsDestinations(config.destinations)
-        : current.destinations,
+    recipient:
+      config.recipient !== undefined
+        ? normalizeProdOpsRecipient(config.recipient)
+        : current.recipient,
+    pendingLink:
+      config.pendingLink !== undefined
+        ? normalizeProdOpsPendingLink(config.pendingLink)
+        : current.pendingLink,
   };
   await setPlatformSetting(PRODOPS_CONFIG_KEY, JSON.stringify(next));
   return next;
@@ -1028,6 +1094,82 @@ export async function getProdOpsSharedSecretMeta(): Promise<{
 
 export async function setProdOpsSharedSecret(secret: string): Promise<void> {
   await setPlatformSetting(PRODOPS_SECRET_KEY, secret.trim() ? encrypt(secret.trim()) : "");
+}
+
+export async function createProdOpsRecipientLink(): Promise<{
+  deepLink: string;
+  expiresAt: string;
+}> {
+  const current = await getProdOpsConfig();
+  if (!current.botUsername) {
+    throw new Error("ProdOps Telegram bot username is missing");
+  }
+
+  const token = generateProdOpsLinkToken();
+  const expiresAt = new Date(
+    Date.now() + PRODOPS_TELEGRAM_LINK_TTL_MINUTES * 60 * 1000,
+  ).toISOString();
+
+  await setProdOpsConfig({
+    pendingLink: {
+      tokenHash: hashProdOpsLinkToken(token),
+      tokenIssuedAt: new Date().toISOString(),
+      tokenExpiresAt: expiresAt,
+    },
+  });
+
+  return {
+    deepLink: buildProdOpsTelegramDeepLink(current.botUsername, token),
+    expiresAt,
+  };
+}
+
+export async function completeProdOpsRecipientLink(input: {
+  token: string;
+  chatId: string;
+  telegramUserId?: string;
+  telegramUsername?: string;
+  telegramDisplayName?: string;
+}): Promise<ProdOpsRecipient | null> {
+  const current = await getProdOpsConfig();
+  const pending = current.pendingLink;
+  if (!pending?.tokenHash || !pending.tokenExpiresAt) return null;
+  if (!input.token.trim() || !input.chatId.trim()) return null;
+  if (new Date(pending.tokenExpiresAt).getTime() <= Date.now()) return null;
+  if (hashProdOpsLinkToken(input.token.trim()) !== pending.tokenHash) return null;
+
+  const nextRecipient = normalizeProdOpsRecipient({
+    id: current.recipient?.id || randomUUID(),
+    label:
+      current.recipient?.label ||
+      (input.telegramUsername ? `@${input.telegramUsername.replace(/^@+/, "")}` : "") ||
+      input.telegramDisplayName ||
+      "Primary recipient",
+    type: "telegram_dm",
+    source: "telegram_link",
+    chatId: input.chatId.trim(),
+    enabled: current.recipient?.enabled ?? true,
+    enabledEventTypes: current.recipient?.enabledEventTypes ?? current.enabledEventTypes,
+    telegramUserId: input.telegramUserId?.trim() || "",
+    telegramUsername: input.telegramUsername?.trim().replace(/^@+/, "") || "",
+    telegramDisplayName: input.telegramDisplayName?.trim() || "",
+    linkedAt: new Date().toISOString(),
+  });
+
+  if (!nextRecipient) return null;
+
+  const next = await setProdOpsConfig({
+    recipient: nextRecipient,
+    pendingLink: null,
+  });
+  return next.recipient;
+}
+
+export async function unlinkProdOpsRecipient(): Promise<ProdOpsConfig> {
+  return setProdOpsConfig({
+    recipient: null,
+    pendingLink: null,
+  });
 }
 
 /* ─── AI Model Config ─── */

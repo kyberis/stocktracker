@@ -47,20 +47,36 @@ export type ProdOpsEventType =
   | "trial_activated"
   | "test_notification";
 
-export interface ProdOpsDestination {
+export type ProdOpsRecipientSource = "telegram_link" | "legacy_manual";
+
+export interface ProdOpsRecipient {
   id: string;
   label: string;
+  type: "telegram_dm";
+  source: ProdOpsRecipientSource;
   chatId: string;
   messageThreadId?: number;
   enabled: boolean;
   enabledEventTypes: ProdOpsEventType[];
+  telegramUserId?: string;
+  telegramUsername?: string;
+  telegramDisplayName?: string;
+  linkedAt?: string;
+}
+
+export interface ProdOpsPendingLink {
+  tokenHash: string;
+  tokenIssuedAt: string;
+  tokenExpiresAt: string;
 }
 
 export interface ProdOpsConfig {
   enabled: boolean;
   baseUrl: string;
+  botUsername: string;
   enabledEventTypes: ProdOpsEventType[];
-  destinations: ProdOpsDestination[];
+  recipient: ProdOpsRecipient | null;
+  pendingLink: ProdOpsPendingLink | null;
 }
 
 export type ProdOpsOutboxStatus = "pending" | "sent" | "dropped" | "dead";
