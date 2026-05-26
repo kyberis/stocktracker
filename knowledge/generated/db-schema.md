@@ -9,6 +9,8 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | Table | Data access module |
 |-------|--------------------|
 | `accounts` | [`src/lib/db/accounts.ts`](../../src/lib/db/accounts.ts) |
+| `agent_missions` | [`src/lib/db/agent-office.ts`](../../src/lib/db/agent-office.ts) |
+| `agent_office_messages` | [`src/lib/db/agent-office.ts`](../../src/lib/db/agent-office.ts) |
 | `ai_logs` | [`src/lib/db/ai-logs.ts`](../../src/lib/db/ai-logs.ts) |
 | `analytics_events` | [`src/lib/db/analytics.ts`](../../src/lib/db/analytics.ts) |
 | `broker_integration_requests` | [`src/lib/db/broker-integration-requests.ts`](../../src/lib/db/broker-integration-requests.ts) |
@@ -37,6 +39,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `moat_reports` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `notifications` | [`src/lib/db/device-notifications.ts`](../../src/lib/db/device-notifications.ts) |
 | `onboarding_checklist` | [`src/lib/db/checklist.ts`](../../src/lib/db/checklist.ts) |
+| `ops_event_outbox` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `passkeys` | [`src/lib/db/index.ts`](../../src/lib/db/index.ts) |
 | `platform_settings` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_news_article_symbols` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |

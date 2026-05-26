@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-235 routes.
+251 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -45,10 +45,15 @@
 | `/api/admin/moat-auto-tickers` | GET, POST, DELETE | [`src/app/api/admin/moat-auto-tickers/route.ts`](../../src/app/api/admin/moat-auto-tickers/route.ts) |
 | `/api/admin/notifications` | GET, POST | [`src/app/api/admin/notifications/route.ts`](../../src/app/api/admin/notifications/route.ts) |
 | `/api/admin/openai-key` | GET, PUT | [`src/app/api/admin/openai-key/route.ts`](../../src/app/api/admin/openai-key/route.ts) |
+| `/api/admin/prodops-config` | GET, PUT | [`src/app/api/admin/prodops-config/route.ts`](../../src/app/api/admin/prodops-config/route.ts) |
+| `/api/admin/prodops-config/link` | POST, DELETE | [`src/app/api/admin/prodops-config/link/route.ts`](../../src/app/api/admin/prodops-config/link/route.ts) |
+| `/api/admin/prodops-config/link/complete` | POST | [`src/app/api/admin/prodops-config/link/complete/route.ts`](../../src/app/api/admin/prodops-config/link/complete/route.ts) |
+| `/api/admin/prodops-config/test` | POST | [`src/app/api/admin/prodops-config/test/route.ts`](../../src/app/api/admin/prodops-config/test/route.ts) |
 | `/api/admin/promo-banner` | GET, PUT | [`src/app/api/admin/promo-banner/route.ts`](../../src/app/api/admin/promo-banner/route.ts) |
 | `/api/admin/rate-limits` | GET | [`src/app/api/admin/rate-limits/route.ts`](../../src/app/api/admin/rate-limits/route.ts) |
 | `/api/admin/refund-requests` | GET | [`src/app/api/admin/refund-requests/route.ts`](../../src/app/api/admin/refund-requests/route.ts) |
 | `/api/admin/refund-requests/[id]` | PUT | [`src/app/api/admin/refund-requests/[id]/route.ts`](../../src/app/api/admin/refund-requests/[id]/route.ts) |
+| `/api/admin/repair-trial-entitlements` | POST | [`src/app/api/admin/repair-trial-entitlements/route.ts`](../../src/app/api/admin/repair-trial-entitlements/route.ts) |
 | `/api/admin/resend-key` | GET, PUT | [`src/app/api/admin/resend-key/route.ts`](../../src/app/api/admin/resend-key/route.ts) |
 | `/api/admin/reset-data` | POST | [`src/app/api/admin/reset-data/route.ts`](../../src/app/api/admin/reset-data/route.ts) |
 | `/api/admin/satisfaction` | GET | [`src/app/api/admin/satisfaction/route.ts`](../../src/app/api/admin/satisfaction/route.ts) |
@@ -94,6 +99,7 @@
 | `/api/auth/oidc/signup-start` | GET | [`src/app/api/auth/oidc/signup-start/route.ts`](../../src/app/api/auth/oidc/signup-start/route.ts) |
 | `/api/auth/oidc/start` | GET | [`src/app/api/auth/oidc/start/route.ts`](../../src/app/api/auth/oidc/start/route.ts) |
 | `/api/auth/onboarding` | POST | [`src/app/api/auth/onboarding/route.ts`](../../src/app/api/auth/onboarding/route.ts) |
+| `/api/auth/onboarding/trial-shown` | POST | [`src/app/api/auth/onboarding/trial-shown/route.ts`](../../src/app/api/auth/onboarding/trial-shown/route.ts) |
 | `/api/auth/passkey/[id]` | PATCH, DELETE | [`src/app/api/auth/passkey/[id]/route.ts`](../../src/app/api/auth/passkey/[id]/route.ts) |
 | `/api/auth/passkey/list` | GET | [`src/app/api/auth/passkey/list/route.ts`](../../src/app/api/auth/passkey/list/route.ts) |
 | `/api/auth/passkey/login-options` | POST | [`src/app/api/auth/passkey/login-options/route.ts`](../../src/app/api/auth/passkey/login-options/route.ts) |
@@ -127,6 +133,7 @@
 | `/api/cron/feedback-pipeline` | GET, POST | [`src/app/api/cron/feedback-pipeline/route.ts`](../../src/app/api/cron/feedback-pipeline/route.ts) |
 | `/api/cron/moat-sync` | GET | [`src/app/api/cron/moat-sync/route.ts`](../../src/app/api/cron/moat-sync/route.ts) |
 | `/api/cron/portfolio-snapshots` | GET, POST | [`src/app/api/cron/portfolio-snapshots/route.ts`](../../src/app/api/cron/portfolio-snapshots/route.ts) |
+| `/api/cron/prodops-dispatch` | POST | [`src/app/api/cron/prodops-dispatch/route.ts`](../../src/app/api/cron/prodops-dispatch/route.ts) |
 | `/api/cron/push-gauges` | GET | [`src/app/api/cron/push-gauges/route.ts`](../../src/app/api/cron/push-gauges/route.ts) |
 | `/api/cron/refresh-holdings` | GET | [`src/app/api/cron/refresh-holdings/route.ts`](../../src/app/api/cron/refresh-holdings/route.ts) |
 | `/api/cron/screener-sync` | GET | [`src/app/api/cron/screener-sync/route.ts`](../../src/app/api/cron/screener-sync/route.ts) |
@@ -168,6 +175,9 @@
 | `/api/import-portfolio` | POST | [`src/app/api/import-portfolio/route.ts`](../../src/app/api/import-portfolio/route.ts) |
 | `/api/integrations/telegram/link` | GET, POST, DELETE | [`src/app/api/integrations/telegram/link/route.ts`](../../src/app/api/integrations/telegram/link/route.ts) |
 | `/api/intelligence` | GET | [`src/app/api/intelligence/route.ts`](../../src/app/api/intelligence/route.ts) |
+| `/api/internal/ops-metrics` | GET | [`src/app/api/internal/ops-metrics/route.ts`](../../src/app/api/internal/ops-metrics/route.ts) |
+| `/api/internal/prodops-query` | POST | [`src/app/api/internal/prodops-query/route.ts`](../../src/app/api/internal/prodops-query/route.ts) |
+| `/api/internal/telegram-link-status` | GET | [`src/app/api/internal/telegram-link-status/route.ts`](../../src/app/api/internal/telegram-link-status/route.ts) |
 | `/api/market-insights` | GET | [`src/app/api/market-insights/route.ts`](../../src/app/api/market-insights/route.ts) |
 | `/api/mcp/user/[transport]` | GET, POST, DELETE | [`src/app/api/mcp/user/[transport]/route.ts`](../../src/app/api/mcp/user/[transport]/route.ts) |
 | `/api/membership-grant/activate` | POST | [`src/app/api/membership-grant/activate/route.ts`](../../src/app/api/membership-grant/activate/route.ts) |
@@ -176,11 +186,17 @@
 | `/api/moat-reports/[id]` | GET, PATCH, DELETE | [`src/app/api/moat-reports/[id]/route.ts`](../../src/app/api/moat-reports/[id]/route.ts) |
 | `/api/moat-reports/tags` | GET | [`src/app/api/moat-reports/tags/route.ts`](../../src/app/api/moat-reports/tags/route.ts) |
 | `/api/moat-screener` | GET | [`src/app/api/moat-screener/route.ts`](../../src/app/api/moat-screener/route.ts) |
+| `/api/news-article-summary` | POST | [`src/app/api/news-article-summary/route.ts`](../../src/app/api/news-article-summary/route.ts) |
 | `/api/notifications` | GET, PUT | [`src/app/api/notifications/route.ts`](../../src/app/api/notifications/route.ts) |
 | `/api/notifications/preferences` | GET, PUT | [`src/app/api/notifications/preferences/route.ts`](../../src/app/api/notifications/preferences/route.ts) |
 | `/api/notifications/push/subscribe` | POST, DELETE | [`src/app/api/notifications/push/subscribe/route.ts`](../../src/app/api/notifications/push/subscribe/route.ts) |
 | `/api/notifications/push/vapid-key` | GET | [`src/app/api/notifications/push/vapid-key/route.ts`](../../src/app/api/notifications/push/vapid-key/route.ts) |
 | `/api/notifications/telegram/link` | POST | [`src/app/api/notifications/telegram/link/route.ts`](../../src/app/api/notifications/telegram/link/route.ts) |
+| `/api/office/bootstrap` | GET | [`src/app/api/office/bootstrap/route.ts`](../../src/app/api/office/bootstrap/route.ts) |
+| `/api/office/chat` | POST | [`src/app/api/office/chat/route.ts`](../../src/app/api/office/chat/route.ts) |
+| `/api/office/missions/[id]/cancel` | POST | [`src/app/api/office/missions/[id]/cancel/route.ts`](../../src/app/api/office/missions/[id]/cancel/route.ts) |
+| `/api/office/missions/[id]/steps/[step]/confirm` | POST | [`src/app/api/office/missions/[id]/steps/[step]/confirm/route.ts`](../../src/app/api/office/missions/[id]/steps/[step]/confirm/route.ts) |
+| `/api/office/missions/[id]/steps/[step]/skip` | POST | [`src/app/api/office/missions/[id]/steps/[step]/skip/route.ts`](../../src/app/api/office/missions/[id]/steps/[step]/skip/route.ts) |
 | `/api/overview` | GET | [`src/app/api/overview/route.ts`](../../src/app/api/overview/route.ts) |
 | `/api/p/[token]` | GET | [`src/app/api/p/[token]/route.ts`](../../src/app/api/p/[token]/route.ts) |
 | `/api/portfolio-news` | GET | [`src/app/api/portfolio-news/route.ts`](../../src/app/api/portfolio-news/route.ts) |

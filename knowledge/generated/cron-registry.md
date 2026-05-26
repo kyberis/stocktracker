@@ -25,3 +25,4 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Schedules 
 | `moat-sync` | `0 */4 * * *` | `/api/cron/moat-sync` | Evaluate stale/missing moat scores for screener-universe stocks using Alpha Vantage fundamentals |
 | `compact-snapshots` | `0 4 * * *` | `/api/cron/compact-snapshots` | Compact old hourly portfolio snapshots into daily (and weekly) rows to bound storage |
 | `feedback-pipeline` | `*/15 * * * *` | `/api/cron/feedback-pipeline` | Process queued user feedback into Linear issues via the feedback pipeline |
+| `prodops-dispatch` | `*/5 * * * *` | `/api/cron/prodops-dispatch` | Dispatch queued staff ops notifications to the external ProdOps Telegram service |

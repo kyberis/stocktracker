@@ -9,6 +9,7 @@
 | [`accessibility-reviewer`](../../.cursor/skills/accessibility-reviewer/SKILL.md) | --- |
 | [`analytics-instrumentation`](../../.cursor/skills/analytics-instrumentation/SKILL.md) | --- |
 | [`architect-hardware`](../../.cursor/skills/architect-hardware/SKILL.md) | --- |
+| [`architect-software-systems`](../../.cursor/skills/architect-software-systems/SKILL.md) | --- |
 | [`automated-user-comms`](../../.cursor/skills/automated-user-comms/SKILL.md) | --- |
 | [`designer-device`](../../.cursor/skills/designer-device/SKILL.md) | --- |
 | [`doc-gardener`](../../.cursor/skills/doc-gardener/SKILL.md) | --- |
