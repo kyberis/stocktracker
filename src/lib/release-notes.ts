@@ -47,6 +47,13 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "fix",
+        text: "ProdOps staff Telegram queries (`latest user created`, etc.) no longer hit session middleware — `/api/internal/prodops-query` bypasses cookie auth so the external ProdOps service can authenticate with the shared HMAC secret only.",
+        translations: {
+          es: "Las consultas de staff en Telegram de ProdOps (`latest user created`, etc.) ya no pasan por el middleware de sesión — `/api/internal/prodops-query` omite la cookie para que el servicio externo ProdOps se autentique solo con el secreto HMAC compartido.",
+        },
+      },
+      {
+        type: "fix",
         text: "ProdOps Telegram linking now reports callback/configuration failures separately from expired links, avoiding false 'invalid or expired' bot replies when the server-to-server callback is blocked upstream.",
         translations: {
           es: "El vinculado de ProdOps por Telegram ahora distingue fallos de callback/configuración de enlaces vencidos, evitando respuestas falsas de 'inválido o vencido' cuando el callback entre servidores queda bloqueado aguas arriba.",

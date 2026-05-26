@@ -124,6 +124,10 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith("/api/mcp/user")) {
     return NextResponse.next();
   }
+  // Service-to-service internal APIs — Bearer or HMAC auth is enforced inside each route.
+  if (pathname.startsWith("/api/internal/")) {
+    return NextResponse.next();
+  }
 
   const token = req.cookies.get("trefolio_session")?.value;
   const session = token ? await verifySessionToken(token) : null;
