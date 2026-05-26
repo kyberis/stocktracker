@@ -2,7 +2,9 @@
 
 import React, { createContext, FormEvent, useContext, useEffect, useRef, useState } from "react";
 import XKeysCard from "./XKeysCard";
+import ProdOpsConfigCard from "./ProdOpsConfigCard";
 import { CRON_REGISTRY } from "@/lib/cron-registry";
+import type { ProdOpsConfig } from "@/lib/types";
 
 /* ── Batch Settings Context ───────────────────────────────── */
 
@@ -27,6 +29,12 @@ interface BatchSettingsData {
   capacity?: { available: boolean; currentCount: number; maxCount: number; remaining: number };
   rateLimits?: { perUser: any[] };
   aiModels?: Record<string, string>;
+  prodOps?: {
+    config: ProdOpsConfig;
+    hasSharedSecret: boolean;
+    maskedSharedSecret: string;
+    secretSource: "env" | "database" | "none";
+  };
 }
 
 const BatchSettingsContext = createContext<BatchSettingsData | null | undefined>(undefined);
@@ -2935,6 +2943,7 @@ export default function SettingsTab() {
         <PromoBannerCard />
         <UtmTaxonomyCard />
         <SupportChatConfigCard />
+        <ProdOpsConfigCard initialData={batch?.prodOps} />
         <GaConfigCard />
         <AdConfigCard />
         <StripePricesCard />

@@ -117,4 +117,10 @@ export const CRON_REGISTRY: CronJob[] = [
     schedule: "*/15 * * * *",
     description: "Process queued user feedback into Linear issues via the feedback pipeline",
   },
+  {
+    name: "prodops-dispatch",
+    path: "/api/cron/prodops-dispatch",
+    schedule: "*/5 * * * *",
+    description: "Dispatch queued staff ops notifications to the external ProdOps Telegram service",
+  },
 ];

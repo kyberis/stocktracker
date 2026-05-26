@@ -190,7 +190,11 @@ export default function PrivacyPolicyPage() {
                 <strong className="text-slate-800">Telegram chat identifier</strong> — 
                 if you opt in to Telegram alert notifications (Pro plan), we store
                 your Telegram chat id after you open our bot and tap Start with a one-time link.
-                It is used solely for delivering price alert messages via the Telegram Bot API.
+                It is used for delivering price alert messages via the Telegram Bot API. Separately,
+                staff-operated Telegram destinations may receive limited operational summaries
+                about account events (for example a new signup, a paid membership, a feedback
+                submission, or a broker request) so our team can respond quickly; those summaries
+                contain only the minimum details needed plus a secure admin link.
               </li>
               <li>
                 <strong className="text-slate-800">Push notification subscription</strong> — 
@@ -399,8 +403,8 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Telegram (Telegram Bot API)</td>
-                    <td className="py-3 pr-6">Telegram alert notifications (Trefolio)</td>
-                    <td className="py-3">Telegram chat id for outbound price alerts; messages contain stock ticker and price data only</td>
+                    <td className="py-3 pr-6">Telegram alert notifications and staff operational alerts (Trefolio)</td>
+                    <td className="py-3">Telegram chat id for outbound price alerts; messages contain stock ticker and price data only. Staff-operated operational channels may also receive concise summaries of signup, membership, feedback, broker-request, or trial-activation events with an admin link and no full free-text feedback body.</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Telegram Messenger Inc.</td>

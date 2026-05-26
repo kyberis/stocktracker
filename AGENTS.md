@@ -16,7 +16,7 @@ Capacitor for iOS/Android, plus a physical "trefolio Leaf" ESP32-S3 device.
 
 ## Node.js
 
-Use **Node.js 22** on your machine for trefolio, `external/accounts`, Clara (`external/etracker`), Will (`external/notetaker`), and Renata (`external/curriculumsupport`). Each repo root has `.nvmrc` and `.node-version` set to `22` — run `nvm install` / `nvm use` or `fnm use` after `cd` into that tree. Match the same major for `npm install` and `npm run dev` so native addons (for example `better-sqlite3` in accounts) stay aligned.
+Use **Node.js 22** on your machine for trefolio, `external/accounts`, Clara (`external/etracker`), Will (`external/notetaker`), Renata (`external/curriculumsupport`), and ProdOps (`external/prodops`). Each repo root has `.nvmrc` and `.node-version` set to `22` — run `nvm install` / `nvm use` or `fnm use` after `cd` into that tree. Match the same major for `npm install` and `npm run dev` so native addons (for example `better-sqlite3` in accounts) stay aligned.
 
 ## Where to look first
 
@@ -44,6 +44,9 @@ Use **Node.js 22** on your machine for trefolio, `external/accounts`, Clara (`ex
    — how trefolio links to Renata (the AI curriculum/CV assistant at
    `external/curriculumsupport`). Read before touching anything in
    `external/curriculumsupport/`.
+11. [`knowledge/design-docs/trefolio-prodops-integration.md`](knowledge/design-docs/trefolio-prodops-integration.md)
+   — how trefolio emits staff ops events to the external ProdOps Telegram service
+   at `external/prodops`. Read before touching ops notifications or admin routing.
 
 ## Repository layout (high level)
 
@@ -90,6 +93,12 @@ external/
                       Trefolio never builds it; ships independently. Excluded from
                       tsconfig, eslint, vitest, .vercelignore. See
                       knowledge/design-docs/curriculumsupport-renata-integration.md
+  prodops/            trefolio-prodops — staff ops Telegram delivery service
+                      (kyberis/trefolio-prodops). Runs as a separate Vercel app;
+                      trefolio emits signed outbox events to it over HTTP.
+                      Excluded from trefolio build/lint/test/deploy like other
+                      sibling apps. See
+                      knowledge/design-docs/trefolio-prodops-integration.md
 cursor-plugins/       kyberis/cursor-plugins submodule — Cursor Marketplace plugin bundle (rules/skills/agents).
                       See cursor-plugins/README.md. Not imported by the Next.js build.
 .cursor/

@@ -6,6 +6,7 @@ vi.mock("@/lib/auth/guards", () => ({
 
 vi.mock("@/lib/db", () => ({
   findUserById: vi.fn(),
+  trackEvent: vi.fn(),
 }));
 
 vi.mock("@/lib/trial-activation", () => ({
@@ -19,6 +20,10 @@ vi.mock("@/lib/db/client", () => ({
 
 vi.mock("@/lib/with-metrics", () => ({
   withMetrics: (_name: string, handler: unknown) => handler,
+}));
+
+vi.mock("@/lib/prodops", () => ({
+  enqueueProdOpsTrialActivatedEvent: vi.fn(),
 }));
 
 import { requireSession } from "@/lib/auth/guards";

@@ -18,6 +18,7 @@ import { welcomeNotification } from "@/lib/notification-templates";
 import { normalizeAttribution, parseFirstTouchAttributionCookie, FIRST_TOUCH_ATTRIBUTION_COOKIE } from "@/lib/attribution";
 import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
 import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
+import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
 
 function deriveUsername(email: string): string {
   const prefix = email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "");
@@ -134,6 +135,10 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
       source: attribution.source,
       medium: attribution.medium,
       campaign: attribution.campaign || "none",
+    });
+    await enqueueProdOpsUserRegisteredEvent({
+      userId: user.id,
+      method: "credentials",
     });
     authEventsTotal.inc({ event: "signup" });
 

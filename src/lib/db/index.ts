@@ -133,7 +133,18 @@ export {
   getManualAssetCount,
 } from "./cash";
 
-export type { PlatformFeature, TelegramQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig, XKeyName, UtmTaxonomyConfig, FeatureFlagOverride, DigestSenderDomain } from "./settings";
+export type {
+  PlatformFeature,
+  TelegramQuota,
+  StripePriceKey,
+  PromoBannerConfig,
+  AdConfig,
+  AdSlotConfig,
+  XKeyName,
+  UtmTaxonomyConfig,
+  FeatureFlagOverride,
+  DigestSenderDomain,
+} from "./settings";
 export {
   getUserSettings,
   updateUserSettings,
@@ -182,7 +193,25 @@ export {
   getDigestSenderDomains,
   setDigestSenderDomains,
   buildDigestGmailQuery,
+  getProdOpsConfig,
+  setProdOpsConfig,
+  getProdOpsSharedSecret,
+  getProdOpsSharedSecretMeta,
+  setProdOpsSharedSecret,
+  PRODOPS_EVENT_TYPES,
 } from "./settings";
+
+export type { CreateProdOpsEventInput } from "./ops-events";
+export {
+  getProdOpsEventById,
+  getProdOpsEventByDedupeKey,
+  createProdOpsEvent,
+  listProdOpsEventsReady,
+  markProdOpsEventSent,
+  scheduleProdOpsEventRetry,
+  markProdOpsEventDropped,
+  listRecentProdOpsEvents,
+} from "./ops-events";
 
 export {
   listAccounts,

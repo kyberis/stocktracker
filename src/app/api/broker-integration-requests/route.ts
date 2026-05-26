@@ -8,6 +8,7 @@ import {
 } from "@/lib/db";
 import { sendBrokerIntegrationRequestReceivedEmail } from "@/lib/broker-integration-request-email";
 import { withMetrics } from "@/lib/with-metrics";
+import { enqueueProdOpsBrokerRequestCreatedEvent } from "@/lib/prodops";
 
 const requestSchema = z.object({
   brokerName: z.string().trim().min(2).max(100),
@@ -34,6 +35,11 @@ export const POST = withMetrics("/api/broker-integration-requests", async (req: 
     userId: session.userId,
     brokerName: parsed.data.brokerName,
     note: parsed.data.note || "",
+  });
+  await enqueueProdOpsBrokerRequestCreatedEvent({
+    requestId: created.id,
+    userId: session.userId,
+    brokerName: created.brokerName,
   });
 
   const [user, settings] = await Promise.all([

@@ -813,4 +813,71 @@ describe("settings", () => {
       expect(result).toEqual({});
     });
   });
+
+  describe("ProdOps config", () => {
+    it("returns env base URL fallback when no config row exists", async () => {
+      const original = process.env.PRODOPS_BASE_URL;
+      process.env.PRODOPS_BASE_URL = "https://ops.trefolio.com";
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      const result = await settings.getProdOpsConfig();
+
+      expect(result.baseUrl).toBe("https://ops.trefolio.com");
+      expect(result.enabled).toBe(false);
+      process.env.PRODOPS_BASE_URL = original;
+    });
+
+    it("normalizes destinations and event types when saving config", async () => {
+      mockExecute
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await settings.setProdOpsConfig({
+        enabled: true,
+        baseUrl: "https://ops.trefolio.com/",
+        enabledEventTypes: ["user_registered", "membership_paid", "membership_paid"] as never,
+        destinations: [
+          {
+            id: "dest_1",
+            label: " Ops ",
+            chatId: " -100123 ",
+            enabled: true,
+            enabledEventTypes: ["user_registered"],
+          },
+          {
+            id: "",
+            label: "",
+            chatId: "",
+            enabled: true,
+            enabledEventTypes: ["trial_activated"],
+          },
+        ] as never,
+      });
+
+      expect(result.baseUrl).toBe("https://ops.trefolio.com");
+      expect(result.destinations).toHaveLength(1);
+      expect(result.destinations[0].label).toBe("Ops");
+      expect(mockExecute).toHaveBeenNthCalledWith(2, {
+        sql: expect.stringContaining("INSERT INTO platform_settings"),
+        args: ["prodops_config", expect.stringContaining("\"chatId\":\"-100123\"")],
+      });
+    });
+
+    it("prefers env shared secret over stored value", async () => {
+      const original = process.env.PRODOPS_SHARED_SECRET;
+      process.env.PRODOPS_SHARED_SECRET = "env-secret";
+      mockExecute.mockResolvedValue({ rows: [{ value: "db-secret" }] });
+
+      const value = await settings.getProdOpsSharedSecret();
+      const meta = await settings.getProdOpsSharedSecretMeta();
+
+      expect(value).toBe("env-secret");
+      expect(meta).toEqual({
+        hasSecret: true,
+        maskedSecret: "env-...cret",
+        source: "env",
+      });
+      process.env.PRODOPS_SHARED_SECRET = original;
+    });
+  });
 });

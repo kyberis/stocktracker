@@ -39,6 +39,49 @@ export type AlertCondition = "above" | "below";
 export type AlertType = "threshold" | "percent_change";
 export type PercentBasis = "daily" | "purchase";
 export type NotificationChannel = "email" | "push" | "telegram" | "device";
+export type ProdOpsEventType =
+  | "user_registered"
+  | "membership_paid"
+  | "feedback_received"
+  | "broker_request_created"
+  | "trial_activated"
+  | "test_notification";
+
+export interface ProdOpsDestination {
+  id: string;
+  label: string;
+  chatId: string;
+  messageThreadId?: number;
+  enabled: boolean;
+  enabledEventTypes: ProdOpsEventType[];
+}
+
+export interface ProdOpsConfig {
+  enabled: boolean;
+  baseUrl: string;
+  enabledEventTypes: ProdOpsEventType[];
+  destinations: ProdOpsDestination[];
+}
+
+export type ProdOpsOutboxStatus = "pending" | "sent" | "dropped" | "dead";
+
+export interface ProdOpsOutboxEvent {
+  id: string;
+  eventType: ProdOpsEventType;
+  userId: string;
+  dedupeKey: string;
+  sourceApp: "trefolio";
+  summary: string;
+  adminUrl: string;
+  payloadJson: string;
+  status: ProdOpsOutboxStatus;
+  attempts: number;
+  nextAttemptAt: string;
+  lastAttemptedAt: string;
+  lastError: string;
+  sentAt: string;
+  createdAt: string;
+}
 
 export interface PriceAlert {
   id: string;

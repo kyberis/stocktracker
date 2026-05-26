@@ -4,6 +4,7 @@ import { createFeedback, getFeedbackByUser, getAllFeedback, getAllFeedbackPagina
 import { parseBody } from "@/lib/api-response";
 import { createFeedbackSchema, replyFeedbackSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
+import { enqueueProdOpsFeedbackReceivedEvent } from "@/lib/prodops";
 
 export const GET = withMetrics("/api/feedback", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -46,6 +47,12 @@ export const POST = withMetrics("/api/feedback", async (req: NextRequest) => {
   }
 
   const entry = await createFeedback(session.userId, subject, message, type, enrichedContext);
+  await enqueueProdOpsFeedbackReceivedEvent({
+    feedbackId: entry.id,
+    userId: session.userId,
+    subject: entry.subject,
+    type: entry.type,
+  });
   return NextResponse.json(entry, { status: 201 });
 });
 

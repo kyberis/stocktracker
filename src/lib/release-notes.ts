@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
+        text: "Admin settings can now route operational Telegram alerts through an external ProdOps service: trefolio queues signup, membership, feedback, broker-request, and trial-activation events in an outbox and dispatches them asynchronously to staff channels.",
+        translations: {
+          es: "Ajustes de admin ya puede enviar alertas operativas por Telegram mediante un servicio externo ProdOps: trefolio encola eventos de registro, membresía, feedback, solicitud de broker y activación de trial en un outbox y los despacha de forma asíncrona a canales del equipo.",
+        },
+      },
+      {
+        type: "feature",
         text: "New Agent Office (/office) — Trefolio Pro workspace where Warren, Clara, and Will coordinate visible multi-step missions with per-agent Confirm. Free users see a preview paywall; featured on the landing page.",
         translations: {
           es: "Nueva Oficina de agentes (/office) — espacio Pro donde Warren, Clara y Will coordinan misiones visibles con Confirmar por agente. Usuarios free ven paywall con preview; destacada en la landing.",

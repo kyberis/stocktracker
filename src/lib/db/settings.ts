@@ -1,7 +1,13 @@
 import { ensureInitialized } from "./client";
 import { str, num, parseRefreshInterval, parseAlertChannels, monthWindowKey, shouldResetDailyAiWindow, SUPPORTED_PORTFOLIO_CURRENCIES } from "./helpers";
 import type { UserSettings, PortfolioCurrency } from "./helpers";
-import type { Language, NotificationChannel } from "@/lib/types";
+import type {
+  Language,
+  NotificationChannel,
+  ProdOpsConfig,
+  ProdOpsDestination,
+  ProdOpsEventType,
+} from "@/lib/types";
 import type { ToolTabId } from "@/lib/tools-registry";
 import { TOOLS_CATALOG } from "@/lib/tools-registry";
 import { isValidLanguage } from "@/lib/languages";
@@ -871,6 +877,157 @@ export function buildDigestGmailQuery(domains: DigestSenderDomain[]): string {
   if (domains.length === 0) return "to:digest@trefolio.com is:unread";
   const fromClauses = domains.map((d) => `from:${d.value}`).join(" OR ");
   return `to:digest@trefolio.com (${fromClauses}) is:unread`;
+}
+
+/* ─── ProdOps Config ─── */
+
+export const PRODOPS_EVENT_TYPES: ProdOpsEventType[] = [
+  "user_registered",
+  "membership_paid",
+  "feedback_received",
+  "broker_request_created",
+  "trial_activated",
+  "test_notification",
+];
+
+const PRODOPS_EVENT_TYPE_SET = new Set<ProdOpsEventType>(PRODOPS_EVENT_TYPES);
+const PRODOPS_CONFIG_KEY = "prodops_config";
+const PRODOPS_SECRET_KEY = "prodops_shared_secret";
+
+const DEFAULT_PRODOPS_CONFIG: ProdOpsConfig = {
+  enabled: false,
+  baseUrl: "",
+  enabledEventTypes: [
+    "user_registered",
+    "membership_paid",
+    "feedback_received",
+    "broker_request_created",
+    "trial_activated",
+  ],
+  destinations: [],
+};
+
+function normalizeProdOpsEventTypes(value: unknown): ProdOpsEventType[] {
+  if (!Array.isArray(value)) return [...DEFAULT_PRODOPS_CONFIG.enabledEventTypes];
+  const next: ProdOpsEventType[] = [];
+  const seen = new Set<ProdOpsEventType>();
+  for (const raw of value) {
+    const candidate = String(raw || "") as ProdOpsEventType;
+    if (!PRODOPS_EVENT_TYPE_SET.has(candidate) || seen.has(candidate)) continue;
+    seen.add(candidate);
+    next.push(candidate);
+  }
+  return next.length > 0 ? next : [...DEFAULT_PRODOPS_CONFIG.enabledEventTypes];
+}
+
+function normalizeProdOpsDestination(value: unknown): ProdOpsDestination | null {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Record<string, unknown>;
+  const label = String(raw.label || "").trim().slice(0, 80);
+  const chatId = String(raw.chatId || "").trim().slice(0, 120);
+  if (!label || !chatId) return null;
+
+  const threadValue = String(raw.messageThreadId || "").trim();
+  const parsedThread = threadValue ? Number.parseInt(threadValue, 10) : undefined;
+
+  return {
+    id: String(raw.id || randomUUID()).trim() || randomUUID(),
+    label,
+    chatId,
+    messageThreadId:
+      parsedThread !== undefined && Number.isFinite(parsedThread) && parsedThread > 0
+        ? parsedThread
+        : undefined,
+    enabled: raw.enabled !== false,
+    enabledEventTypes: normalizeProdOpsEventTypes(raw.enabledEventTypes),
+  };
+}
+
+function normalizeProdOpsDestinations(value: unknown): ProdOpsDestination[] {
+  if (!Array.isArray(value)) return [];
+  const next: ProdOpsDestination[] = [];
+  const seen = new Set<string>();
+  for (const raw of value) {
+    const normalized = normalizeProdOpsDestination(raw);
+    if (!normalized || seen.has(normalized.id)) continue;
+    seen.add(normalized.id);
+    next.push(normalized);
+  }
+  return next.slice(0, 20);
+}
+
+function normalizeProdOpsBaseUrl(value: unknown): string {
+  return String(value || "").trim().replace(/\/+$/, "").slice(0, 200);
+}
+
+export async function getProdOpsConfig(): Promise<ProdOpsConfig> {
+  const raw = await getPlatformSetting(PRODOPS_CONFIG_KEY);
+  const envBaseUrl = process.env.PRODOPS_BASE_URL?.trim() || "";
+  if (!raw) {
+    return { ...DEFAULT_PRODOPS_CONFIG, baseUrl: envBaseUrl };
+  }
+  try {
+    const parsed = JSON.parse(raw) as Partial<ProdOpsConfig>;
+    return {
+      enabled: parsed.enabled === true,
+      baseUrl: normalizeProdOpsBaseUrl(parsed.baseUrl) || envBaseUrl,
+      enabledEventTypes: normalizeProdOpsEventTypes(parsed.enabledEventTypes),
+      destinations: normalizeProdOpsDestinations(parsed.destinations),
+    };
+  } catch {
+    return { ...DEFAULT_PRODOPS_CONFIG, baseUrl: envBaseUrl };
+  }
+}
+
+export async function setProdOpsConfig(config: Partial<ProdOpsConfig>): Promise<ProdOpsConfig> {
+  const current = await getProdOpsConfig();
+  const next: ProdOpsConfig = {
+    enabled: config.enabled ?? current.enabled,
+    baseUrl: config.baseUrl !== undefined ? normalizeProdOpsBaseUrl(config.baseUrl) : current.baseUrl,
+    enabledEventTypes:
+      config.enabledEventTypes !== undefined
+        ? normalizeProdOpsEventTypes(config.enabledEventTypes)
+        : current.enabledEventTypes,
+    destinations:
+      config.destinations !== undefined
+        ? normalizeProdOpsDestinations(config.destinations)
+        : current.destinations,
+  };
+  await setPlatformSetting(PRODOPS_CONFIG_KEY, JSON.stringify(next));
+  return next;
+}
+
+export async function getProdOpsSharedSecret(): Promise<string> {
+  const fromEnv = process.env.PRODOPS_SHARED_SECRET?.trim() || "";
+  if (fromEnv) return fromEnv;
+  const raw = await getPlatformSetting(PRODOPS_SECRET_KEY);
+  return raw ? tryDecryptOrPlaintext(raw) : "";
+}
+
+export async function getProdOpsSharedSecretMeta(): Promise<{
+  hasSecret: boolean;
+  maskedSecret: string;
+  source: "env" | "database" | "none";
+}> {
+  const fromEnv = process.env.PRODOPS_SHARED_SECRET?.trim() || "";
+  if (fromEnv) {
+    return {
+      hasSecret: true,
+      maskedSecret: `${fromEnv.slice(0, 4)}...${fromEnv.slice(-4)}`,
+      source: "env",
+    };
+  }
+  const raw = await getPlatformSetting(PRODOPS_SECRET_KEY);
+  const value = raw ? tryDecryptOrPlaintext(raw) : "";
+  return {
+    hasSecret: value.length > 0,
+    maskedSecret: value ? `${value.slice(0, 4)}...${value.slice(-4)}` : "",
+    source: value ? "database" : "none",
+  };
+}
+
+export async function setProdOpsSharedSecret(secret: string): Promise<void> {
+  await setPlatformSetting(PRODOPS_SECRET_KEY, secret.trim() ? encrypt(secret.trim()) : "");
 }
 
 /* ─── AI Model Config ─── */

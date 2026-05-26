@@ -15,6 +15,8 @@ import {
   countProSubscribers,
   getRateLimitStats,
   getAiModelConfig,
+  getProdOpsConfig,
+  getProdOpsSharedSecretMeta,
 } from "@/lib/db";
 import { getCronStats } from "@/lib/cron-logging";
 import { isGrafanaCloudConfigured } from "@/lib/grafana-push";
@@ -66,6 +68,8 @@ export const GET = withMetrics("/api/admin/settings", async (req: NextRequest) =
     proCount,
     rateLimits,
     aiModels,
+    prodOpsConfig,
+    prodOpsSecret,
   ] = await Promise.all([
     Promise.all(ALLOWED_FLAGS.map(async (f) => [f, await isFeatureEnabled(f)] as const)),
     getGlobalResendApiKey(),
@@ -89,6 +93,8 @@ export const GET = withMetrics("/api/admin/settings", async (req: NextRequest) =
     countProSubscribers(),
     getRateLimitStats(),
     getAiModelConfig(),
+    getProdOpsConfig(),
+    getProdOpsSharedSecretMeta(),
   ]);
 
   const flags: Record<string, boolean> = {};
@@ -134,5 +140,11 @@ export const GET = withMetrics("/api/admin/settings", async (req: NextRequest) =
     },
     rateLimits,
     aiModels,
+    prodOps: {
+      config: prodOpsConfig,
+      hasSharedSecret: prodOpsSecret.hasSecret,
+      maskedSharedSecret: prodOpsSecret.maskedSecret,
+      secretSource: prodOpsSecret.source,
+    },
   });
 });

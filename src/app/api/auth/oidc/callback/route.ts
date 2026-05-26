@@ -36,6 +36,7 @@ import {
   isRequestPublicHttps,
 } from "@/lib/http/request-public-origin";
 import { ensureTrefolioAdminRoleForUser } from "@/lib/auth/admin-allowlist";
+import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
 
 /**
  * GET /api/auth/oidc/callback
@@ -256,6 +257,10 @@ export async function GET(req: NextRequest) {
       getEmailLocale(claims.locale || "en"),
       publicUser.id,
     ).catch((err) => console.error("[oidc] welcome email failed", err));
+    await enqueueProdOpsUserRegisteredEvent({
+      userId: publicUser.id,
+      method: "oidc",
+    });
     // Admin "new user" email is sent once from user.trefolio.com (IdP) on createUser — not here.
   }
 

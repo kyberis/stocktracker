@@ -107,4 +107,40 @@ test.describe("Admin Panel", () => {
     expect(me2Body.user.impersonation).toBeNull();
     expect(me2Body.user.role).toBe("admin");
   });
+
+  test("admin can configure prodops and queue a test event", async ({ request }) => {
+    const getRes = await request.get("/api/admin/prodops-config");
+    expect(getRes.status()).toBe(200);
+
+    const putRes = await request.put("/api/admin/prodops-config", {
+      data: {
+        enabled: true,
+        baseUrl: "https://ops.trefolio.test",
+        sharedSecret: "shared-secret-for-e2e",
+        enabledEventTypes: [
+          "user_registered",
+          "membership_paid",
+          "feedback_received",
+          "broker_request_created",
+          "trial_activated",
+        ],
+        destinations: [
+          {
+            id: "e2e-prodops",
+            label: "E2E Ops",
+            chatId: "-1001234567890",
+            enabled: true,
+            enabledEventTypes: ["user_registered", "membership_paid"],
+          },
+        ],
+      },
+    });
+    expect(putRes.status()).toBe(200);
+
+    const testRes = await request.post("/api/admin/prodops-config/test");
+    expect(testRes.status()).toBe(200);
+    const body = await testRes.json();
+    expect(body.ok).toBe(true);
+    expect(body.queued).toBe(true);
+  });
 });

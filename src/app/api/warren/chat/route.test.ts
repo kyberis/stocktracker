@@ -13,6 +13,7 @@ vi.mock("@/lib/db", () => ({
 }));
 vi.mock("@/lib/ai/warren/run-turn", () => ({
   runWarrenTurn: vi.fn(),
+  serializeWarrenPromptUserLog: vi.fn().mockReturnValue(""),
 }));
 
 import { requireFeatureQuota } from "@/lib/auth/guards";
@@ -59,7 +60,11 @@ beforeEach(() => {
   mockedListPortfolios.mockResolvedValue([
     { id: "p-default", name: "Main", isDefault: true },
   ] as never);
-  mockedFindUserById.mockResolvedValue({ plan: "free" } as never);
+  mockedFindUserById.mockResolvedValue({
+    plan: "free",
+    email: "w@test.dev",
+    idp_sub: "",
+  } as never);
   mockedRunWarrenTurn.mockResolvedValue({
     text: "",
     parts: [],

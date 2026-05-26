@@ -21,6 +21,7 @@ import {
   planExpiredNotification,
 } from "@/lib/notification-templates";
 import { isIdpEnabled } from "@/lib/idp/config";
+import { enqueueProdOpsMembershipPaidEvent } from "@/lib/prodops";
 
 function stripeCustomerId(value: string | Stripe.Customer | Stripe.DeletedCustomer | null): string {
   if (!value) return "";
@@ -91,6 +92,13 @@ async function handleDeviceGrantCheckoutCompleted(session: Stripe.Checkout.Sessi
   trackEvent(user.id, "checkout_completed", {
     source: "stripe_webhook",
     plan: checkoutPlan,
+    mode: "device_grant",
+  });
+  await enqueueProdOpsMembershipPaidEvent({
+    userId: user.id,
+    plan: checkoutPlan,
+    source: "stripe_webhook",
+    externalId: session.id,
     mode: "device_grant",
   });
   sendTrefolioUpgradeEmail(user.email, user.display_name || "", "en", user.id).catch((err) =>
@@ -182,6 +190,13 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
             trackEvent(user.id, "checkout_completed", {
               source: "stripe_webhook",
               plan: checkoutPlan,
+              mode: session.metadata?.deviceGrant === "true" ? "device_grant" : "subscription",
+            });
+            await enqueueProdOpsMembershipPaidEvent({
+              userId: user.id,
+              plan: checkoutPlan,
+              source: "stripe_webhook",
+              externalId: session.id,
               mode: session.metadata?.deviceGrant === "true" ? "device_grant" : "subscription",
             });
             sendTrefolioUpgradeEmail(user.email, user.display_name || "", "en", user.id).catch((err) =>

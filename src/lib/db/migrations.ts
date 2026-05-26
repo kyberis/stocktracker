@@ -3384,6 +3384,38 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 114,
+    description: "ProdOps Telegram: ops event outbox for async external dispatch",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS ops_event_outbox (
+          id TEXT PRIMARY KEY,
+          event_type TEXT NOT NULL,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          dedupe_key TEXT NOT NULL UNIQUE,
+          source_app TEXT NOT NULL DEFAULT 'trefolio',
+          summary TEXT NOT NULL DEFAULT '',
+          admin_url TEXT NOT NULL DEFAULT '',
+          payload_json TEXT NOT NULL DEFAULT '{}',
+          status TEXT NOT NULL DEFAULT 'pending'
+            CHECK(status IN ('pending', 'sent', 'dropped', 'dead')),
+          attempts INTEGER NOT NULL DEFAULT 0,
+          next_attempt_at TEXT NOT NULL DEFAULT (datetime('now')),
+          last_attempted_at TEXT NOT NULL DEFAULT '',
+          last_error TEXT NOT NULL DEFAULT '',
+          sent_at TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ops_event_outbox_status_next_attempt ON ops_event_outbox(status, next_attempt_at)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ops_event_outbox_user_created ON ops_event_outbox(user_id, created_at DESC)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

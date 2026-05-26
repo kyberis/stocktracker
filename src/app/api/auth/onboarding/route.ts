@@ -7,6 +7,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
 import { onboardingSchema } from "@/lib/schemas";
 import { activateProTrial, getTrialEligibilityError, syncOnboardingTrialToIdp } from "@/lib/trial-activation";
+import { enqueueProdOpsTrialActivatedEvent } from "@/lib/prodops";
 
 export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -45,6 +46,11 @@ export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest)
     const { planExpiresAt } = await activateProTrial(session.userId);
     trialActivated = true;
     await trackEvent(session.userId, "onboarding_trial_activated", { source: "onboarding" });
+    await enqueueProdOpsTrialActivatedEvent({
+      userId: session.userId,
+      source: "onboarding",
+      planExpiresAt,
+    });
     if (user.email) {
       void syncOnboardingTrialToIdp(session.userId, user.email, planExpiresAt);
     }

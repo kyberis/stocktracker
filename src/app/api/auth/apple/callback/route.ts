@@ -23,6 +23,7 @@ import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
 import { FIRST_TOUCH_ATTRIBUTION_COOKIE, normalizeAttribution, parseFirstTouchAttributionCookie } from "@/lib/attribution";
 import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
+import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
 
 const APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
 const APPLE_JWKS_URL = new URL("https://appleid.apple.com/auth/keys");
@@ -272,6 +273,10 @@ export async function POST(req: NextRequest) {
         source: attribution.source,
         medium: attribution.medium,
         campaign: attribution.campaign || "none",
+      });
+      await enqueueProdOpsUserRegisteredEvent({
+        userId: publicUser.id,
+        method: "apple",
       });
       authEventsTotal.inc({ event: "signup" });
       if (appleEmail) {

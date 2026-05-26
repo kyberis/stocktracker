@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById } from "@/lib/db";
+import { findUserById, trackEvent } from "@/lib/db";
 import { activateProTrial, getTrialEligibilityError } from "@/lib/trial-activation";
 import { withMetrics } from "@/lib/with-metrics";
+import { enqueueProdOpsTrialActivatedEvent } from "@/lib/prodops";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_token: "Invalid or expired trial token",
@@ -37,5 +38,11 @@ export const POST = withMetrics("/api/trial/activate", async (req: NextRequest) 
   }
 
   const { planExpiresAt } = await activateProTrial(session.userId);
+  await trackEvent(session.userId, "onboarding_trial_activated", { source: "activation_link" });
+  await enqueueProdOpsTrialActivatedEvent({
+    userId: session.userId,
+    source: "activation_link",
+    planExpiresAt,
+  });
   return NextResponse.json({ success: true, planExpiresAt });
 });

@@ -24,6 +24,7 @@ import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
 import { FIRST_TOUCH_ATTRIBUTION_COOKIE, normalizeAttribution, parseFirstTouchAttributionCookie } from "@/lib/attribution";
 import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
+import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -340,6 +341,10 @@ async function handleLoginFlow(
         source: attribution.source,
         medium: attribution.medium,
         campaign: attribution.campaign || "none",
+      });
+      await enqueueProdOpsUserRegisteredEvent({
+        userId: publicUser.id,
+        method: "google",
       });
       authEventsTotal.inc({ event: "signup" });
       sendWelcomeEmail(googleUser.email.toLowerCase(), googleUser.name || "", "en", publicUser.id).catch((err) =>

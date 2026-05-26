@@ -13,3 +13,6 @@
 [submodule "external/curriculumsupport"]
 	path = external/curriculumsupport
 	url = https://github.com/kyberis/curriculumsupport.git
+[submodule "external/prodops"]
+	path = external/prodops
+	url = https://github.com/kyberis/trefolio-prodops.git
