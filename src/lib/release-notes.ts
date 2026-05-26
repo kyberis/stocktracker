@@ -46,6 +46,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "improvement",
+        text: "Admin ProdOps settings now show the exact TREFOLIO_BASE_URL to set on ops.trefolio.com, plus a GET probe on /api/internal/prodops-query so operators can verify the route exists before debugging Telegram queries.",
+        translations: {
+          es: "Ajustes de ProdOps en admin muestran el TREFOLIO_BASE_URL exacto para ops.trefolio.com y un GET de prueba en /api/internal/prodops-query para verificar la ruta antes de depurar consultas en Telegram.",
+        },
+      },
+      {
         type: "fix",
         text: "ProdOps now detects a misconfigured TREFOLIO_BASE_URL (for example user.trefolio.com instead of https://trefolio.com), logs the target URL on query failures, and returns a clearer Telegram error when the query API returns 404.",
         translations: {
