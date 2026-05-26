@@ -46,6 +46,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "fix",
+        text: "ProdOps Telegram recipient linking works again: the signed link-completion callback and prodops-dispatch cron are no longer blocked by session middleware before HMAC/cron auth runs.",
+        translations: {
+          es: "El vinculado de destinatarios ProdOps por Telegram vuelve a funcionar: el callback firmado de completado de enlace y el cron prodops-dispatch ya no los bloquea el middleware de sesión antes de aplicar la autenticación HMAC/cron.",
+        },
+      },
+      {
         type: "feature",
         text: "New Agent Office (/office) — Trefolio Pro workspace where Warren, Clara, and Will coordinate visible multi-step missions with per-agent Confirm. Free users see a preview paywall; featured on the landing page.",
         translations: {
