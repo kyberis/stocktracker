@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 import type {
   BrokerFormat,
   ExtractedTransaction,
@@ -120,7 +121,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
 
       let parseRes: Response;
       try {
-        parseRes = await fetch("/api/transactions/import-broker", {
+        parseRes = await fetchWithAuthRedirect("/api/transactions/import-broker", {
           method: "POST",
           body: parseForm,
           signal: parseController.signal,
@@ -286,7 +287,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
           const bulkUrl = portfolioId
             ? `/api/transactions/bulk?portfolioId=${encodeURIComponent(portfolioId)}`
             : "/api/transactions/bulk";
-          const res = await fetch(bulkUrl, {
+          const res = await fetchWithAuthRedirect(bulkUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -333,7 +334,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
               "import.csv"
             );
           }
-          const cashRes = await fetch("/api/transactions/import-broker", {
+          const cashRes = await fetchWithAuthRedirect("/api/transactions/import-broker", {
             method: "POST",
             body: cashForm,
           });
@@ -351,7 +352,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
         setStep("error");
       } else {
         setStep("backfilling");
-        fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+        fetchWithAuthRedirect("/api/portfolio/backfill-snapshots", { method: "POST" })
           .catch(() => {})
           .finally(() => setStep("done"));
       }

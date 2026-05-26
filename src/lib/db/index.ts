@@ -75,8 +75,9 @@ export {
   listUsersWithStats,
   listUsersWithStatsPaginated,
   getUserDetailData,
+  getLatestCreatedUser,
 } from "./users";
-export type { AdminUserWithStats } from "./users";
+export type { AdminUserWithStats, ProdOpsLatestCreatedUser } from "./users";
 export type { MembershipGrantTokenStatus } from "./users";
 
 export type { DistinctHoldingTicker } from "./holdings";
@@ -242,7 +243,9 @@ export {
   trackLandingEvent,
   getAnalyticsSummary,
   purgeOldAnalyticsEvents,
+  getLatestAnalyticsInteraction,
 } from "./analytics";
+export type { ProdOpsLatestAnalyticsInteraction } from "./analytics";
 
 export type { ReferralStatus, Referral, ReferralStats, ReferralFunnelStats } from "./referrals";
 export {
@@ -262,8 +265,10 @@ export {
   getFeedbackById,
   getAllFeedback,
   getAllFeedbackPaginated,
+  getLatestFeedbackEntries,
   replyToFeedback,
 } from "./feedback";
+export type { ProdOpsFeedbackPreview } from "./feedback";
 
 export type { CronAlert, HoldingForAlert } from "./alerts";
 export {

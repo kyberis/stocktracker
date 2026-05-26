@@ -87,6 +87,37 @@ export async function listUsers(): Promise<PublicUser[]> {
   return result.rows.map(rowToDbUser).map(mapUser);
 }
 
+export interface ProdOpsLatestCreatedUser {
+  id: string;
+  username: string;
+  email: string;
+  displayName: string;
+  authProvider: AuthProvider;
+  plan: UserPlan;
+  createdAt: string;
+}
+
+export async function getLatestCreatedUser(): Promise<ProdOpsLatestCreatedUser | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT id, username, email, display_name, auth_provider, plan, created_at
+          FROM users
+          ORDER BY created_at DESC
+          LIMIT 1`,
+  });
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    id: str(row.id),
+    username: str(row.username),
+    email: str(row.email),
+    displayName: str(row.display_name),
+    authProvider: str(row.auth_provider) as AuthProvider,
+    plan: str(row.plan) as UserPlan,
+    createdAt: str(row.created_at),
+  };
+}
+
 export async function createUser(params: {
   username: string;
   passwordHash: string;

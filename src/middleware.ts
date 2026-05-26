@@ -60,6 +60,13 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/device-interest/count",
 ]);
 
+function buildLoginRedirectUrl(req: NextRequest): URL {
+  const loginUrl = new URL("/login", req.url);
+  const redirectTarget = `${req.nextUrl.pathname}${req.nextUrl.search}`;
+  loginUrl.searchParams.set("redirect", redirectTarget);
+  return loginUrl;
+}
+
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_ROUTES.has(pathname)) return true;
   if (pathname.startsWith("/blog")) return true;
@@ -132,7 +139,7 @@ export async function middleware(req: NextRequest) {
     if (pathname === "/") {
       return NextResponse.rewrite(new URL("/landing", req.url));
     }
-    return NextResponse.redirect(new URL("/", req.url));
+    return NextResponse.redirect(buildLoginRedirectUrl(req));
   }
 
   if (

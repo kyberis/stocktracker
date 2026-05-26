@@ -7,6 +7,7 @@ import Link from "next/link";
 import { NetworkSidebar, NetworkMobileNav } from "@/components/social/NetworkSidebar";
 import { ChatRoomView } from "@/app/chat/chat-room-view";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 const LIST_POLL_MS = 5000;
 
@@ -130,7 +131,7 @@ export default function NetworkConversationsPage() {
 
   const fetchRooms = useCallback(async () => {
     try {
-      const res = await fetch("/api/chats", { cache: "no-store" });
+      const res = await fetchWithAuthRedirect("/api/chats", { cache: "no-store" });
       if (res.ok) {
         const data: ChatRoomSummary[] = await res.json();
         setRooms(data);
@@ -143,8 +144,8 @@ export default function NetworkConversationsPage() {
   useEffect(() => {
     Promise.all([
       fetchRooms(),
-      fetch("/api/social/profile").then(r => r.ok ? r.json() : null),
-      fetch("/api/social/connections?filter=pending_received").then(r => r.ok ? r.json() : { counts: {} }),
+      fetchWithAuthRedirect("/api/social/profile").then(r => r.ok ? r.json() : null),
+      fetchWithAuthRedirect("/api/social/connections?filter=pending_received").then(r => r.ok ? r.json() : { counts: {} }),
     ]).then(([, profileData, connData]) => {
       setProfile(profileData);
       setPendingCount(connData.counts?.pendingReceived || 0);

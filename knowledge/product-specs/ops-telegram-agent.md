@@ -21,6 +21,7 @@ Trefolio emits operator-relevant events such as new registrations, successful me
 | API | [`src/app/api/admin/prodops-config/link/route.ts`](../../src/app/api/admin/prodops-config/link/route.ts) | Admin mint/unlink flow for the Telegram recipient |
 | API | [`src/app/api/admin/prodops-config/link/complete/route.ts`](../../src/app/api/admin/prodops-config/link/complete/route.ts) | Signed callback that redeems the Telegram `/start` token |
 | API | [`src/app/api/admin/prodops-config/test/route.ts`](../../src/app/api/admin/prodops-config/test/route.ts) | Queue a test notification from admin |
+| API | [`src/app/api/internal/prodops-query/route.ts`](../../src/app/api/internal/prodops-query/route.ts) | Signed internal query endpoint for staff Telegram queries |
 | API | [`src/app/api/internal/ops-metrics/route.ts`](../../src/app/api/internal/ops-metrics/route.ts) | Aggregate metrics for ecosystem digests |
 | Cron | [`src/app/api/cron/prodops-dispatch/route.ts`](../../src/app/api/cron/prodops-dispatch/route.ts) | Sends queued events to the external service |
 | Component | [`src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx`](../../src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx) | Admin settings UI |
@@ -29,7 +30,7 @@ Trefolio emits operator-relevant events such as new registrations, successful me
 | Lib | [`src/lib/db/ops-events.ts`](../../src/lib/db/ops-events.ts) | Outbox persistence |
 | External API | [`external/prodops/app/api/intake/route.ts`](../../external/prodops/app/api/intake/route.ts) | Signed intake endpoint |
 | External API | [`external/prodops/app/api/health/route.ts`](../../external/prodops/app/api/health/route.ts) | Health check for admin testing |
-| External API | [`external/prodops/app/api/telegram/webhook/route.ts`](../../external/prodops/app/api/telegram/webhook/route.ts) | Telegram `/start` webhook that completes recipient linking |
+| External API | [`external/prodops/app/api/telegram/webhook/route.ts`](../../external/prodops/app/api/telegram/webhook/route.ts) | Telegram webhook that completes recipient linking and answers supported staff queries |
 
 ## 4. Data model
 
@@ -65,6 +66,7 @@ Schema source: migration `v114` in [`src/lib/db/migrations.ts`](../../src/lib/db
 - The cron dispatcher resolves the current admin config at send time, so destination changes apply to queued items too.
 - Recipient routing is two-layered: global enabled event types plus per-recipient event-type filters.
 - The recipient link uses a short-lived Telegram deep link (`t.me/<bot>?start=<token>`). `trefolio-prodops` receives `/start`, then calls back into trefolio with the shared secret to complete the binding.
+- Once linked, the same ProdOps Telegram DM can answer a small deterministic set of staff queries (`latest user created`, `latest feedbacks`, `latest user interaction`) by calling back into trefolio over the same signed HMAC boundary.
 - Retry policy is exponential-ish with terminal dead-letter state after repeated failures.
 
 ## 8. External dependencies
@@ -101,6 +103,7 @@ None. This feature is operational only.
 - Telegram link tokens are stored as hashes with a short TTL; admins can mint a fresh link without exposing the previous token.
 - Trial activation via emailed token now emits the same analytics-style signal and ProdOps event as onboarding activation.
 - Full feedback bodies are intentionally not sent to Telegram; only a summary and admin link are forwarded.
+- Staff query replies over Telegram also stay intentionally narrow: no raw full feedback body and no unbounded `analytics_events.metadata` dump.
 - When the IdP owns signup/billing, a future producer can reuse the same envelope contract.
 
 ## 14. Tests

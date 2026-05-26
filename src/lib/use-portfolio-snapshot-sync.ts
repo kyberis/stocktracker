@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { computeValueByAssetType } from "@/lib/portfolio-summary";
 import { isAnyMarketActive } from "@/lib/market-hours";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 /** Match /api/portfolio/snapshot 5-minute UTC buckets — writes create new rows while the app stays open. */
 const SNAPSHOT_INTERVAL_MS = 5 * 60 * 1000;
@@ -34,7 +35,7 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
     const holdingsValue = byType.stock + byType.etf + byType.crypto;
     if (holdingsValue <= 0) return;
 
-    fetch("/api/portfolio/snapshot", {
+    fetchWithAuthRedirect("/api/portfolio/snapshot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

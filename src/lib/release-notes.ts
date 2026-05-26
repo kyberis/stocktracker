@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "fix",
+        text: "When a signed-in browser tab keeps running after the session expires, authenticated client requests now redirect back to /login with the current page preserved instead of quietly piling up repeated 401 errors.",
+        translations: {
+          es: "Cuando una pestaña autenticada sigue abierta después de expirar la sesión, las peticiones cliente autenticadas ahora redirigen a /login conservando la página actual en lugar de acumular silenciosamente errores 401 repetidos.",
+        },
+      },
+      {
         type: "feature",
         text: "Admin settings can now route operational Telegram alerts through an external ProdOps service: trefolio queues signup, membership, feedback, broker-request, and trial-activation events in an outbox and dispatches them asynchronously to staff channels.",
         translations: {

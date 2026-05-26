@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { TrendingUp, TrendingDown, RefreshCw, ChevronDown } from "lucide-react";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 interface WidgetData {
   totalValueEUR: number;
@@ -50,7 +51,7 @@ export default function WidgetPage() {
     try {
       setLoading(true);
       const params = portfolioId ? `?portfolio=${portfolioId}` : "";
-      const res = await fetch(`/api/portfolio/summary${params}`);
+      const res = await fetchWithAuthRedirect(`/api/portfolio/summary${params}`);
       if (!res.ok) throw new Error("Failed to load");
       const json = await res.json();
       setData(json);
@@ -63,8 +64,8 @@ export default function WidgetPage() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/portfolios")
-      .then((r) => r.json())
+    fetchWithAuthRedirect("/api/portfolios")
+      .then((r) => (r.ok ? r.json() : { portfolios: [] }))
       .then((d) => {
         if (d.portfolios) setPortfolios(d.portfolios.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })));
       })

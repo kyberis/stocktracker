@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { ChatListSidebar, type ChatRoomSummary } from "./chat-list-sidebar";
 import { ChatRoomView } from "@/app/chat/chat-room-view";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 const LIST_POLL_MS = 5000;
 
@@ -18,7 +19,7 @@ export function ChatListShell() {
 
   const fetchRooms = useCallback(async () => {
     try {
-      const res = await fetch("/api/chats", { cache: "no-store" });
+      const res = await fetchWithAuthRedirect("/api/chats", { cache: "no-store" });
       if (res.ok) {
         const data: ChatRoomSummary[] = await res.json();
         setRooms(data);

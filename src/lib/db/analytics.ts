@@ -81,6 +81,30 @@ export interface AnalyticsSummary {
   };
 }
 
+export interface ProdOpsLatestAnalyticsInteraction {
+  userId: string;
+  username: string;
+  event: string;
+  metadataSummary: string;
+  createdAt: string;
+}
+
+function summarizeAnalyticsMetadata(raw: unknown): string {
+  const json = str(raw);
+  if (!json) return "";
+  try {
+    const parsed = JSON.parse(json) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return "";
+    const entries = Object.entries(parsed as Record<string, unknown>)
+      .filter(([, value]) => ["string", "number", "boolean"].includes(typeof value))
+      .slice(0, 3)
+      .map(([key, value]) => `${key}=${String(value)}`);
+    return entries.join(", ").slice(0, 160);
+  } catch {
+    return "";
+  }
+}
+
 export async function trackEvent(
   userId: string,
   event: string,
@@ -115,6 +139,26 @@ export async function trackLandingEvent(
   } catch (err) {
     console.error("Failed to track landing event:", err instanceof Error ? err.message : err);
   }
+}
+
+export async function getLatestAnalyticsInteraction(): Promise<ProdOpsLatestAnalyticsInteraction | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT ae.user_id, ae.event, ae.metadata, ae.created_at, u.username
+          FROM analytics_events ae
+          LEFT JOIN users u ON u.id = ae.user_id
+          ORDER BY ae.created_at DESC
+          LIMIT 1`,
+  });
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    userId: str(row.user_id),
+    username: str(row.username),
+    event: str(row.event),
+    metadataSummary: summarizeAnalyticsMetadata(row.metadata),
+    createdAt: str(row.created_at),
+  };
 }
 
 export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> {

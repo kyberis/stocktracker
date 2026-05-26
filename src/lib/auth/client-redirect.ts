@@ -1,0 +1,84 @@
+"use client";
+
+let loginRedirectStarted = false;
+let navigateToLogin = (href: string) => window.location.replace(href);
+
+function getCurrentAppPath(): string {
+  if (typeof window === "undefined") return "/";
+  const { pathname, search, hash } = window.location;
+  return `${pathname}${search}${hash}`;
+}
+
+function normalizeRedirectTarget(target?: string | null): string {
+  if (!target) return "/";
+  if (!target.startsWith("/") || target.startsWith("//")) return "/";
+  return target;
+}
+
+function getRequestPathname(input: RequestInfo | URL): string | null {
+  if (typeof input === "string") {
+    if (input.startsWith("/")) return input;
+    try {
+      return new URL(input, window.location.origin).pathname;
+    } catch {
+      return null;
+    }
+  }
+
+  if (input instanceof URL) return input.pathname;
+
+  if (typeof Request !== "undefined" && input instanceof Request) {
+    try {
+      return new URL(input.url, window.location.origin).pathname;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+export function buildLoginRedirectHref(target?: string | null): string {
+  const params = new URLSearchParams();
+  params.set("redirect", normalizeRedirectTarget(target ?? getCurrentAppPath()));
+  return `/login?${params.toString()}`;
+}
+
+export function redirectToLogin(target?: string | null): boolean {
+  if (typeof window === "undefined") return false;
+  if (window.location.pathname === "/login") return false;
+  if (loginRedirectStarted) return false;
+
+  loginRedirectStarted = true;
+  navigateToLogin(buildLoginRedirectHref(target));
+  return true;
+}
+
+export function shouldRedirectToLogin(response: Response, input: RequestInfo | URL): boolean {
+  if (response.status !== 401) return false;
+  if (typeof window === "undefined") return false;
+  if (window.location.pathname === "/login") return false;
+
+  const pathname = getRequestPathname(input);
+  return Boolean(pathname?.startsWith("/api/"));
+}
+
+export function maybeRedirectToLogin(response: Response, input: RequestInfo | URL): boolean {
+  if (!shouldRedirectToLogin(response, input)) return false;
+  return redirectToLogin();
+}
+
+export async function fetchWithAuthRedirect(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const response = await fetch(input, init);
+  maybeRedirectToLogin(response, input);
+  return response;
+}
+
+export function __resetLoginRedirectStateForTests() {
+  loginRedirectStarted = false;
+  navigateToLogin = (href: string) => window.location.replace(href);
+}
+
+export function __setLoginRedirectNavigatorForTests(navigate: (href: string) => void) {
+  navigateToLogin = navigate;
+}

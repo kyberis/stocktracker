@@ -71,6 +71,19 @@ flowchart LR
   complete --> config["ProdOpsConfig.recipient"]
 ```
 
+### Staff query flow
+
+```mermaid
+flowchart LR
+  staffDm["Staff Telegram DM"] --> prodopsWebhook["external/prodops /api/telegram/webhook"]
+  prodopsWebhook --> queryMatch["deterministic query matcher"]
+  queryMatch -->|"HMAC signed POST"| prodopsQuery["/api/internal/prodops-query"]
+  prodopsQuery --> dataReaders["users + feedback + analytics_events"]
+  dataReaders --> prodopsQuery
+  prodopsQuery --> prodopsWebhook
+  prodopsWebhook --> staffDm
+```
+
 ### Payload contract
 
 Trefolio sends:
@@ -94,6 +107,7 @@ The `destinations` list is resolved in trefolio from the single linked recipient
 - `prodops` rejects unsigned, invalid, or stale payloads.
 - Recipient links use a short random Telegram token whose hash and expiry are stored in trefolio; the plaintext token is only returned once to the admin browser.
 - Telegram payloads are deliberately minimal: human summary + admin link + selected metadata.
+- Staff query replies are also deliberately minimal and fetched on demand from trefolio; `prodops` does not become the source of truth for user/account data.
 
 ## How to enforce it
 
@@ -112,7 +126,8 @@ The `destinations` list is resolved in trefolio from the single linked recipient
 | Area | Source |
 |---|---|
 | Intake verification | `external/prodops/app/api/intake/route.ts`, `external/prodops/lib/signature.ts` |
-| Telegram link webhook | `external/prodops/app/api/telegram/webhook/route.ts` |
+| Telegram link + query webhook | `external/prodops/app/api/telegram/webhook/route.ts` |
+| Signed trefolio query client | `external/prodops/lib/trefolio.ts` |
 | Telegram delivery | `external/prodops/lib/telegram.ts` |
 | Dedupe / audit | `external/prodops/lib/store.ts` |
 | Health | `external/prodops/app/api/health/route.ts` |

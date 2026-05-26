@@ -58,6 +58,18 @@ test.describe("Authentication", () => {
     expect(me2.status()).toBe(401);
   });
 
+  test("preserves the target path when redirecting an unauthenticated user to login", async ({ page }) => {
+    await page.goto("/chats?filter=unread", { waitUntil: "domcontentloaded" });
+
+    await page.waitForURL((url) => {
+      const redirect = url.searchParams.get("redirect");
+      return (
+        (url.pathname === "/login" || url.pathname === "/api/auth/oidc/start") &&
+        redirect === "/chats?filter=unread"
+      );
+    }, { timeout: 7_000 });
+  });
+
   test("change password via API works", async ({ request }) => {
     const { email, password } = await createTestUser(request);
     const newPassword = "NewPass2!";

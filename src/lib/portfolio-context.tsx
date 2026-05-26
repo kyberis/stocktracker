@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import type { CashEntry, Holding, QuoteData, ExchangeRates, Goal } from "./types";
 import { generateId, normalizeCurrency } from "./utils";
 import { useSettings } from "./settings-context";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 const QUOTES_CACHE_KEY = "trefolio-quotes-v3";
 const RATES_CACHE_KEY = "trefolio-rates-v1";
@@ -190,7 +191,7 @@ export function PortfolioProvider({
   const fetchingRef = useRef(false);
   const fetchPortfolios = useCallback(async (): Promise<PortfolioInfo[]> => {
     try {
-      const res = await fetch("/api/portfolios", { cache: "no-store" });
+      const res = await fetchWithAuthRedirect("/api/portfolios", { cache: "no-store" });
       if (!res.ok) return [];
       const data = await res.json();
       const list: PortfolioInfo[] = data.portfolios ?? [];
@@ -202,7 +203,7 @@ export function PortfolioProvider({
   const fetchHoldings = useCallback(async () => {
     try {
       const url = activePortfolioId ? `/api/holdings?portfolioId=${encodeURIComponent(activePortfolioId)}` : "/api/holdings";
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await fetchWithAuthRedirect(url, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch holdings");
       const loaded = (await res.json()) as Holding[];
       setHoldings(loaded);
@@ -217,7 +218,7 @@ export function PortfolioProvider({
   const fetchCashEntries = useCallback(async () => {
     try {
       const url = activePortfolioId ? `/api/cash?portfolioId=${encodeURIComponent(activePortfolioId)}` : "/api/cash";
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await fetchWithAuthRedirect(url, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch cash entries");
       const loaded = (await res.json()) as CashEntry[];
       setCashEntries(loaded);
@@ -265,8 +266,8 @@ export function PortfolioProvider({
       if (needsFetch) {
         const qp = resolvedPortfolioId ? `?portfolioId=${encodeURIComponent(resolvedPortfolioId)}` : "";
         const [holdingsRes, cashRes] = await Promise.all([
-          fetch(`/api/holdings${qp}`, { cache: "no-store" }),
-          fetch(`/api/cash${qp}`, { cache: "no-store" }),
+          fetchWithAuthRedirect(`/api/holdings${qp}`, { cache: "no-store" }),
+          fetchWithAuthRedirect(`/api/cash${qp}`, { cache: "no-store" }),
         ]);
         holdingsData = holdingsRes.ok ? await holdingsRes.json() : [];
         const cashData: CashEntry[] = cashRes.ok ? await cashRes.json() : [];
@@ -301,13 +302,13 @@ export function PortfolioProvider({
         if (cachedRates?.data) setExchangeRates(cachedRates.data);
       }
 
-      fetch("/api/alerts/tickers", { cache: "no-store" })
+      fetchWithAuthRedirect("/api/alerts/tickers", { cache: "no-store" })
         .then((r) => r.ok ? r.json() : { tickers: [] })
         .then((d) => setAlertedTickers(new Set(d.tickers ?? [])))
         .catch(() => {});
 
       const goalQp = resolvedPortfolioId ? `?portfolioId=${encodeURIComponent(resolvedPortfolioId)}` : "?portfolioId=";
-      fetch(`/api/goals${goalQp}`, { cache: "no-store" })
+      fetchWithAuthRedirect(`/api/goals${goalQp}`, { cache: "no-store" })
         .then((r) => r.ok ? r.json() : { goals: [] })
         .then((d) => setGoals(d.goals ?? (d.goal ? [d.goal] : [])))
         .catch(() => {});
@@ -344,8 +345,8 @@ export function PortfolioProvider({
       try {
         const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
         const [holdingsRes, cashRes] = await Promise.all([
-          fetch(`/api/holdings${qp}`, { cache: "no-store" }),
-          fetch(`/api/cash${qp}`, { cache: "no-store" }),
+          fetchWithAuthRedirect(`/api/holdings${qp}`, { cache: "no-store" }),
+          fetchWithAuthRedirect(`/api/cash${qp}`, { cache: "no-store" }),
         ]);
 
         if (switchVersionRef.current !== version) return;
@@ -363,7 +364,7 @@ export function PortfolioProvider({
         }
 
         const goalQp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "?portfolioId=";
-        fetch(`/api/goals${goalQp}`, { cache: "no-store" })
+        fetchWithAuthRedirect(`/api/goals${goalQp}`, { cache: "no-store" })
           .then((r) => r.ok ? r.json() : { goals: [] })
           .then((d) => { if (switchVersionRef.current === version) setGoals(d.goals ?? (d.goal ? [d.goal] : [])); })
           .catch(() => {});
@@ -393,7 +394,7 @@ export function PortfolioProvider({
     const fxPairs = buildFxPairs(currentHoldings ?? holdings, getPortfolioCurrency());
     if (fxPairs.length === 0) return {};
     const params = new URLSearchParams({ pairs: fxPairs.join(",") });
-    const res = await fetch(`/api/exchange-rates?${params}`);
+    const res = await fetchWithAuthRedirect(`/api/exchange-rates?${params}`);
     if (res.status === 429) throw new Error("rate_limited");
     if (!res.ok) throw new Error("Failed to fetch exchange rates");
     const data = await res.json();
@@ -421,7 +422,7 @@ export function PortfolioProvider({
         Promise.all(
           batches.map(async (batch) => {
             const url = buildFetchUrl("/api/quote", { symbols: batch.join(",") });
-            const res = await fetch(url, { headers });
+            const res = await fetchWithAuthRedirect(url, { headers });
             if (res.status === 429) throw new Error("rate_limited");
             if (!res.ok) throw new Error("Failed to fetch quotes");
             return res.json();
@@ -489,7 +490,7 @@ export function PortfolioProvider({
     try {
       const headers = getApiHeaders();
       const url = buildFetchUrl("/api/quote", { symbols: ticker });
-      const res = await fetch(url, { headers });
+      const res = await fetchWithAuthRedirect(url, { headers });
       if (!res.ok) throw new Error("Failed to fetch quote");
 
       const allQuotes = (await res.json()) as Record<string, QuoteData>;
@@ -528,7 +529,7 @@ export function PortfolioProvider({
     try {
       const headers = getApiHeaders();
       const url = buildFetchUrl("/api/quote", { symbols: ticker });
-      const res = await fetch(url, { headers });
+      const res = await fetchWithAuthRedirect(url, { headers });
       if (!res.ok) return;
       const data = (await res.json()) as Record<string, QuoteData>;
       const q = data[ticker];
@@ -553,7 +554,7 @@ export function PortfolioProvider({
 
     try {
       const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
-      const res = await fetch(`/api/holdings${qp}`, {
+      const res = await fetchWithAuthRedirect(`/api/holdings${qp}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(holding),
@@ -588,7 +589,7 @@ export function PortfolioProvider({
 
     try {
       const qp = activePortfolioId ? `&portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
-      const res = await fetch(`/api/holdings?id=${encodeURIComponent(id)}${qp}`, {
+      const res = await fetchWithAuthRedirect(`/api/holdings?id=${encodeURIComponent(id)}${qp}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to remove holding");
@@ -604,7 +605,7 @@ export function PortfolioProvider({
     setHoldings((prev) => prev.map((h) => (h.id === id ? { ...h, ...updates } : h)));
 
     try {
-      const res = await fetch("/api/holdings", {
+      const res = await fetchWithAuthRedirect("/api/holdings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, updates }),
@@ -624,7 +625,7 @@ export function PortfolioProvider({
     setCashEntries((prev) => [...prev, optimistic]);
     try {
       const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
-      const res = await fetch(`/api/cash${qp}`, {
+      const res = await fetchWithAuthRedirect(`/api/cash${qp}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(entry),
@@ -644,7 +645,7 @@ export function PortfolioProvider({
     setCashEntries((prev) => prev.filter((c) => c.id !== id));
     try {
       const qp = activePortfolioId ? `&portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
-      const res = await fetch(`/api/cash?id=${encodeURIComponent(id)}${qp}`, { method: "DELETE" });
+      const res = await fetchWithAuthRedirect(`/api/cash?id=${encodeURIComponent(id)}${qp}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to remove cash entry");
       setMutationVersion((v) => v + 1);
     } catch (err) {
@@ -657,7 +658,7 @@ export function PortfolioProvider({
     const previous = cashEntries;
     setCashEntries((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
     try {
-      const res = await fetch("/api/cash", {
+      const res = await fetchWithAuthRedirect("/api/cash", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, updates }),
@@ -692,7 +693,7 @@ export function PortfolioProvider({
 
   const refreshAlertedTickers = useCallback(async () => {
     try {
-      const res = await fetch("/api/alerts/tickers", { cache: "no-store" });
+      const res = await fetchWithAuthRedirect("/api/alerts/tickers", { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
       setAlertedTickers(new Set(data.tickers ?? []));
@@ -703,7 +704,7 @@ export function PortfolioProvider({
     if (demoMode) return;
     try {
       const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "?portfolioId=";
-      const res = await fetch(`/api/goals${qp}`, { cache: "no-store" });
+      const res = await fetchWithAuthRedirect(`/api/goals${qp}`, { cache: "no-store" });
       if (!res.ok) { setGoals([]); return; }
       const data = await res.json();
       setGoals(data.goals ?? (data.goal ? [data.goal] : []));
@@ -712,7 +713,7 @@ export function PortfolioProvider({
 
   const saveGoalCb = useCallback(async (params: Omit<Goal, "id" | "userId" | "createdAt" | "updatedAt">): Promise<Goal | null> => {
     try {
-      const res = await fetch("/api/goals", {
+      const res = await fetchWithAuthRedirect("/api/goals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(params),
@@ -733,7 +734,7 @@ export function PortfolioProvider({
     const id = goalId ?? goals[0]?.id;
     if (!id) return;
     try {
-      await fetch(`/api/goals?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      await fetchWithAuthRedirect(`/api/goals?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       setGoals((prev) => prev.filter((g) => g.id !== id));
     } catch { /* non-critical */ }
   }, [goals]);
@@ -751,7 +752,7 @@ export function PortfolioProvider({
     toPortfolioId: string;
   }): Promise<boolean> => {
     try {
-      const res = await fetch("/api/portfolios/move", {
+      const res = await fetchWithAuthRedirect("/api/portfolios/move", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(params),

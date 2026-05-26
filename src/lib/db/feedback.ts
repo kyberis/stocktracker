@@ -135,6 +135,38 @@ export async function getAllFeedbackPaginated(page: number, pageSize: number): P
   };
 }
 
+export interface ProdOpsFeedbackPreview {
+  id: string;
+  userId: string;
+  username: string;
+  subject: string;
+  type: FeedbackType;
+  status: "open" | "answered" | "closed";
+  createdAt: string;
+}
+
+export async function getLatestFeedbackEntries(limit = 3): Promise<ProdOpsFeedbackPreview[]> {
+  const client = await ensureInitialized();
+  const safeLimit = Math.max(1, Math.min(10, Math.trunc(limit || 3)));
+  const result = await client.execute({
+    sql: `SELECT f.id, f.user_id, f.subject, f.type, f.status, f.created_at, u.username
+          FROM feedback f
+          JOIN users u ON u.id = f.user_id
+          ORDER BY f.created_at DESC
+          LIMIT ?`,
+    args: [safeLimit],
+  });
+  return result.rows.map((row) => ({
+    id: str(row.id),
+    userId: str(row.user_id),
+    username: str(row.username),
+    subject: str(row.subject),
+    type: feedbackType(row.type),
+    status: feedbackStatus(row.status),
+    createdAt: str(row.created_at),
+  }));
+}
+
 export async function replyToFeedback(
   feedbackId: string,
   reply: string,

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import NotificationCenter from "./NotificationCenter";
 import { useTrack } from "@/lib/use-track";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -12,7 +13,7 @@ export default function NotificationBell() {
 
   const fetchCount = useCallback(async () => {
     try {
-      const res = await fetch("/api/notifications?countOnly=true");
+      const res = await fetchWithAuthRedirect("/api/notifications?countOnly=true");
       if (res.ok) {
         const data = await res.json();
         setUnreadCount(data.count ?? 0);

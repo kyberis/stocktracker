@@ -35,7 +35,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="text-slate-500">
-            Last updated: May 9, 2026
+            Last updated: May 26, 2026
           </p>
         </header>
 
@@ -196,8 +196,10 @@ export default function PrivacyPolicyPage() {
                 (user id, username, and optional display name) to verify and route staff alerts.
                 Staff-operated Telegram destinations may receive limited operational summaries
                 about account events (for example a new signup, a paid membership, a feedback
-                submission, or a broker request) so our team can respond quickly; those summaries
-                contain only the minimum details needed plus a secure admin link.
+                submission, or a broker request) so our team can respond quickly. The same linked
+                staff bot may also answer narrow operational queries requested by our team
+                (for example the latest signup, latest feedback entries, or the latest tracked
+                product interaction) using only the minimum details needed plus a secure admin link.
               </li>
               <li>
                 <strong className="text-slate-800">Push notification subscription</strong> — 
@@ -407,7 +409,7 @@ export default function PrivacyPolicyPage() {
                   <tr>
                     <td className="py-3 pr-6">Telegram (Telegram Bot API)</td>
                     <td className="py-3 pr-6">Telegram alert notifications and staff operational alerts (Trefolio)</td>
-                    <td className="py-3">Telegram chat id for outbound price alerts; messages contain stock ticker and price data only. For staff operational alerts, we also store the linked recipient&apos;s Telegram user id, username, optional display name, and DM chat id after an admin completes the Telegram Start link flow. Staff-operated operational channels may receive concise summaries of signup, membership, feedback, broker-request, or trial-activation events with an admin link and no full free-text feedback body.</td>
+                    <td className="py-3">Telegram chat id for outbound price alerts; messages contain stock ticker and price data only. For staff operational alerts, we also store the linked recipient&apos;s Telegram user id, username, optional display name, and DM chat id after an admin completes the Telegram Start link flow. Staff-operated operational channels may receive concise summaries of signup, membership, feedback, broker-request, or trial-activation events with an admin link and no full free-text feedback body. The same linked staff bot may answer narrow operational queries such as the latest signup, latest feedback entries, or the latest tracked product interaction using minimal account details only.</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Telegram Messenger Inc.</td>

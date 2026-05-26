@@ -1,20 +1,33 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useImportBrokerCSV } from "./useImportBrokerCSV";
+import {
+  __resetLoginRedirectStateForTests,
+  __setLoginRedirectNavigatorForTests,
+} from "@/lib/auth/client-redirect";
 
 let fetchSpy: ReturnType<typeof vi.fn>;
+const navigateSpy = vi.fn();
 
 const backfillOk = { ok: true };
 
 beforeEach(() => {
   fetchSpy = vi.fn();
   vi.stubGlobal("fetch", fetchSpy);
+  __resetLoginRedirectStateForTests();
+  __setLoginRedirectNavigatorForTests(navigateSpy);
+  navigateSpy.mockReset();
+  window.history.replaceState({}, "", "/import");
   // jsdom File lacks text(); stub it so parseFile can read CSV
   if (!File.prototype.text) {
     (File.prototype as unknown as { text: () => Promise<string> }).text =
       vi.fn().mockResolvedValue("date,ticker,shares\n2024-01-15,AAPL,10");
   }
+});
+
+afterEach(() => {
+  __resetLoginRedirectStateForTests();
 });
 
 describe("useImportBrokerCSV", () => {
@@ -93,6 +106,7 @@ describe("useImportBrokerCSV", () => {
 
     expect(result.current.step).toBe("error");
     expect(result.current.errorMsg).toContain("Session expired");
+    expect(navigateSpy).toHaveBeenCalledWith("/login?redirect=%2Fimport");
   });
 
   it("reset returns to idle", async () => {

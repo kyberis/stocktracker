@@ -36,6 +36,7 @@ import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { Holding } from "@/lib/types";
 import AggregatedPortfolioPeriodMetrics from "./AggregatedPortfolioPeriodMetrics";
 import PortfolioQuoteFreshness from "@/components/PortfolioQuoteFreshness";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 // ── Types ──
 
@@ -338,7 +339,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     try {
       const params = new URLSearchParams({ range: RANGE_MAP_API[r], portfolioId });
       if (r === "1d" && dateOverride) params.set("date", dateOverride);
-      const res = await fetch(`/api/portfolio/history?${params}`, { credentials: "include" });
+      const res = await fetchWithAuthRedirect(`/api/portfolio/history?${params}`, { credentials: "include" });
       if (!res.ok) throw new Error("fetch failed");
       const data = await res.json();
       if (version !== fetchVersionRef.current) return;
@@ -436,7 +437,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     Promise.all(
       benchmarkEntries.map(async (b) => {
         try {
-          const res = await fetch(`/api/historical?symbol=${encodeURIComponent(b.symbol)}&period=${period}`);
+          const res = await fetchWithAuthRedirect(`/api/historical?symbol=${encodeURIComponent(b.symbol)}&period=${period}`);
           if (!res.ok) return { key: b.key, values: [] as number[] };
           const json = await res.json();
           const raw: { date: string; close: number }[] = Array.isArray(json) ? json : json.data || [];

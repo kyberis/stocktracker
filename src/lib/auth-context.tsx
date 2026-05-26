@@ -4,6 +4,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import type { SubscriptionPlan } from "@/lib/types";
 import type { FeatureQuotaKey, QuotaWindow } from "@/lib/platform-config";
 import { clearGuestThemePreferences } from "@/lib/theme-preferences";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 export interface AuthQuotaUsage {
   used: number;
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      const res = await fetchWithAuthRedirect("/api/auth/me", { cache: "no-store" });
       if (!res.ok) {
         setUser(null);
         return;
@@ -111,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const exitImpersonation = useCallback(async () => {
-    const res = await fetch("/api/auth/exit-impersonation", { method: "POST" });
+    const res = await fetchWithAuthRedirect("/api/auth/exit-impersonation", { method: "POST" });
     if (!res.ok) return;
     setUser(null);
     if (typeof window !== "undefined") {

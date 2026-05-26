@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 
 import { VoiceMessagePlayer } from "./voice-message-player";
 import { ChatCardRenderer } from "@/components/chat-cards";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 const SharePortfolioModal = dynamic(() => import("./share-portfolio-modal"), { ssr: false });
 const TickerPreviewPanel = dynamic(() => import("./ticker-preview-panel"), { ssr: false });
@@ -568,7 +569,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   useEffect(() => { const id = setInterval(() => setTick((t) => t + 1), 1000); return () => clearInterval(id); }, []);
 
   useEffect(() => {
-    fetch("/api/auth/me", { cache: "no-store" })
+    fetchWithAuthRedirect("/api/auth/me", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.user?.id) setCurrentUserId(data.user.id); })
       .catch(() => {});
@@ -587,7 +588,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     setMembership(null);
     setInviterPreview(null);
 
-    fetch(`/api/chat/${token}`)
+    fetchWithAuthRedirect(`/api/chat/${token}`)
       .then(async (r) => {
         if (r.status === 403) {
           const errBody = await r.json().catch(() => ({}));
@@ -614,7 +615,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
         if (m === "active" && data.messages.length > 0) {
           const lastId = data.messages[data.messages.length - 1].id;
           lastMessageIdRef.current = lastId;
-          fetch(`/api/chat/${token}?lastRead=${lastId}`).catch(() => {});
+          fetchWithAuthRedirect(`/api/chat/${token}?lastRead=${lastId}`).catch(() => {});
         }
         setError(null);
       })
@@ -629,7 +630,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       if (lastMessageIdRef.current) params.set("after", lastMessageIdRef.current);
       if (lastMessageIdRef.current) params.set("lastRead", lastMessageIdRef.current);
       const qs = params.toString();
-      fetch(`/api/chat/${token}${qs ? `?${qs}` : ""}`)
+      fetchWithAuthRedirect(`/api/chat/${token}${qs ? `?${qs}` : ""}`)
         .then((r) => (r.ok ? r.json() : null))
         .then((data: { room: ChatRoomData; messages: ChatMessage[]; participants: Participant[]; reactions?: Record<string, ChatReaction[]>; membership?: string } | null) => {
           if (!data) return;
@@ -668,7 +669,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     const now = Date.now();
     if (now - lastTypingSentRef.current < TYPING_HEARTBEAT_MS) return;
     lastTypingSentRef.current = now;
-    fetch(`/api/chat/${token}/typing`, { method: "POST" }).catch(() => {});
+    fetchWithAuthRedirect(`/api/chat/${token}/typing`, { method: "POST" }).catch(() => {});
   }
 
   async function sendMessage(type: "text" | "link" | "image" | "audio", content: string) {
@@ -676,7 +677,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     setSending(true);
     try {
       if (editingMsg) {
-        const res = await fetch(`/api/chat/${token}/messages`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messageId: editingMsg.id, content }) });
+        const res = await fetchWithAuthRedirect(`/api/chat/${token}/messages`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messageId: editingMsg.id, content }) });
         if (!res.ok) { const data = await res.json().catch(() => ({ error: "Failed to edit" })); throw new Error(data.error || "Failed to edit"); }
         const updated: ChatMessage = await res.json();
         setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
@@ -684,7 +685,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       } else {
         const body: Record<string, string> = { type, content };
         if (replyTo) body.replyToId = replyTo.id;
-        const res = await fetch(`/api/chat/${token}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        const res = await fetchWithAuthRedirect(`/api/chat/${token}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
         if (!res.ok) { const data = await res.json().catch(() => ({ error: "Failed to send" })); throw new Error(data.error || "Failed to send"); }
         const msg: ChatMessage = await res.json();
         setMessages((prev) => { if (prev.some((m) => m.id === msg.id)) return prev; return [...prev, msg]; });
@@ -698,7 +699,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     setSending(true);
     try {
       const body: Record<string, unknown> = { type, content, persistent };
-      const res = await fetch(`/api/chat/${token}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const res = await fetchWithAuthRedirect(`/api/chat/${token}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) { const data = await res.json().catch(() => ({ error: "Failed to send" })); throw new Error(data.error || "Failed to send"); }
       const msg: ChatMessage = await res.json();
       setMessages((prev) => { if (prev.some((m) => m.id === msg.id)) return prev; return [...prev, msg]; });
@@ -760,7 +761,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       const controller = new AbortController();
       tickerAbortRef.current = controller;
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, { signal: controller.signal });
+        const res = await fetchWithAuthRedirect(`/api/search?q=${encodeURIComponent(query)}`, { signal: controller.signal });
         if (!res.ok) return;
         const results: { symbol: string; shortname: string; exchange: string }[] = await res.json();
         if (!controller.signal.aborted) {
@@ -815,7 +816,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   async function handleClearChat() {
     setClearing(true);
     try {
-      const res = await fetch(`/api/chat/${token}/clear`, { method: "DELETE" });
+      const res = await fetchWithAuthRedirect(`/api/chat/${token}/clear`, { method: "DELETE" });
       if (res.ok) {
         setMessages([]);
         lastMessageIdRef.current = null;
@@ -857,7 +858,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     });
 
     try {
-      const res = await fetch(`/api/chat/${token}/reactions`, {
+      const res = await fetchWithAuthRedirect(`/api/chat/${token}/reactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messageId, emoji }),
@@ -1055,7 +1056,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
           ? "m4a"
           : "audio";
       fd.append("file", new File([blob], `voice.${ext}`, { type: meta.mime }));
-      const up = await fetch(`/api/chat/${token}/audio`, { method: "POST", body: fd });
+      const up = await fetchWithAuthRedirect(`/api/chat/${token}/audio`, { method: "POST", body: fd });
       if (!up.ok) {
         const data = await up.json().catch(() => ({}));
         throw new Error(typeof data.error === "string" ? data.error : "Upload failed");
@@ -1182,12 +1183,12 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     setInviteActionLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/chat/${token}/invite/accept`, { method: "POST" });
+      const res = await fetchWithAuthRedirect(`/api/chat/${token}/invite/accept`, { method: "POST" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(typeof data.error === "string" ? data.error : "Could not accept invitation");
       }
-      const chatRes = await fetch(`/api/chat/${token}`);
+      const chatRes = await fetchWithAuthRedirect(`/api/chat/${token}`);
       if (!chatRes.ok) throw new Error("Failed to reload chat");
       const data = await chatRes.json() as {
         room: ChatRoomData;
@@ -1205,7 +1206,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       if (data.messages && data.messages.length > 0) {
         const lastId = data.messages[data.messages.length - 1].id;
         lastMessageIdRef.current = lastId;
-        fetch(`/api/chat/${token}?lastRead=${lastId}`).catch(() => {});
+        fetchWithAuthRedirect(`/api/chat/${token}?lastRead=${lastId}`).catch(() => {});
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to accept");
@@ -1218,7 +1219,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     setInviteActionLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/chat/${token}/invite/decline`, { method: "POST" });
+      const res = await fetchWithAuthRedirect(`/api/chat/${token}/invite/decline`, { method: "POST" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(typeof data.error === "string" ? data.error : "Could not decline invitation");

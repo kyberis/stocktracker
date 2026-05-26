@@ -7,6 +7,7 @@ import { downloadImportTemplate } from "@/lib/download-import-template";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import ProCompareCard from "@/components/ProCompareCard";
 import { mergeHoldingsIntoTransactions } from "@/lib/merge-ai-import-rows";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "myinvestor" | "simple" | "ai_import";
 
@@ -83,7 +84,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch("/api/portfolios")
+    fetchWithAuthRedirect("/api/portfolios")
       .then((r) => r.ok ? r.json() : { portfolios: [] })
       .then((d) => {
         const list = d.portfolios || [];
@@ -164,7 +165,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
         const parseTimer = setTimeout(() => parseController.abort(), 30_000);
         let parseRes: Response;
         try {
-          parseRes = await fetch("/api/transactions/import-broker", {
+          parseRes = await fetchWithAuthRedirect("/api/transactions/import-broker", {
             method: "POST",
             body: parseForm,
             signal: parseController.signal,
@@ -235,7 +236,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
       const formData = new FormData();
       formData.append("file", file);
       if (targetPortfolioId) formData.append("portfolioId", targetPortfolioId);
-      const res = await fetch("/api/import-portfolio", { method: "POST", body: formData });
+      const res = await fetchWithAuthRedirect("/api/import-portfolio", { method: "POST", body: formData });
 
       if (res.status === 501) {
         setErrorMsg("OpenAI API key not configured.");
@@ -355,7 +356,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
         const bulkUrl = targetPortfolioId
           ? `/api/transactions/bulk?portfolioId=${encodeURIComponent(targetPortfolioId)}`
           : "/api/transactions/bulk";
-        const res = await fetch(bulkUrl, {
+        const res = await fetchWithAuthRedirect(bulkUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ transactions: payload, finalize: isLastChunk }),
@@ -393,7 +394,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
           cashForm.append("file", new Blob([rawCsvRef.current], { type: "text/csv" }), "import.csv");
         }
         if (targetPortfolioId) cashForm.append("portfolioId", targetPortfolioId);
-        const cashRes = await fetch("/api/transactions/import-broker", {
+        const cashRes = await fetchWithAuthRedirect("/api/transactions/import-broker", {
           method: "POST",
           body: cashForm,
         });
@@ -413,7 +414,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
       setStep("error");
     } else {
       setStep("backfilling");
-      fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+      fetchWithAuthRedirect("/api/portfolio/backfill-snapshots", { method: "POST" })
         .catch(() => {})
         .finally(() => setStep("done"));
     }

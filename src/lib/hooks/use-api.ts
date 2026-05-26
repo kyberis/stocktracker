@@ -2,9 +2,10 @@
 
 import useSWR, { type SWRConfiguration } from "swr";
 import type { Transaction, WatchlistItem, Account, RebalanceTarget, PriceAlert } from "@/lib/types";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 const fetcher = async (url: string) => {
-  const res = await fetch(url);
+  const res = await fetchWithAuthRedirect(url);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 };

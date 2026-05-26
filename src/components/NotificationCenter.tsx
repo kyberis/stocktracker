@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { AppNotification, NotificationType } from "@/lib/types";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
 interface NotificationCenterProps {
   isOpen: boolean;
@@ -90,7 +91,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/notifications?limit=50");
+      const res = await fetchWithAuthRedirect("/api/notifications?limit=50");
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications ?? []);
@@ -113,7 +114,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
   const markAllRead = async () => {
     const count = notifications.filter((n) => !n.read).length;
     try {
-      await fetch("/api/notifications", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+      await fetchWithAuthRedirect("/api/notifications", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       track("notifications_mark_all_read", { count: String(count) });
     } catch {
@@ -123,7 +124,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
 
   const markOneRead = async (id: string, type?: string) => {
     try {
-      await fetch("/api/notifications", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: [id] }) });
+      await fetchWithAuthRedirect("/api/notifications", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: [id] }) });
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
       track("notification_read", { notification_id: id, notification_type: type || "" });
     } catch {
