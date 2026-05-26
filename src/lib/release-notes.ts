@@ -39,6 +39,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "fix",
+        text: "ProdOps Telegram linking now reports callback/configuration failures separately from expired links, avoiding false 'invalid or expired' bot replies when the server-to-server callback is blocked upstream.",
+        translations: {
+          es: "El vinculado de ProdOps por Telegram ahora distingue fallos de callback/configuración de enlaces vencidos, evitando respuestas falsas de 'inválido o vencido' cuando el callback entre servidores queda bloqueado aguas arriba.",
+        },
+      },
+      {
         type: "feature",
         text: "New Agent Office (/office) — Trefolio Pro workspace where Warren, Clara, and Will coordinate visible multi-step missions with per-agent Confirm. Free users see a preview paywall; featured on the landing page.",
         translations: {
