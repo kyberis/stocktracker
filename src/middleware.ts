@@ -41,6 +41,9 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/cron/moat-sync",
   "/api/cron/feedback-pipeline",
   "/api/cron/compact-snapshots",
+  "/api/cron/prodops-dispatch",
+  // ProdOps Telegram /start callback — HMAC auth is enforced inside the route.
+  "/api/admin/prodops-config/link/complete",
   "/api/webhooks/linear",
   "/api/webhooks/telegram",
   "/api/portfolio/summary",
