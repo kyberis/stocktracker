@@ -49,6 +49,8 @@ Then set trefolio admin config:
 - bot username: the Telegram bot username that points at `trefolio-prodops`
 - shared secret: same value as `external/prodops/.env.local:PRODOPS_SHARED_SECRET`
 
+On the **ProdOps** Vercel project, set `TREFOLIO_BASE_URL` to the main app host (`https://trefolio.com` in production, `http://localhost:3010` locally). **Do not** point it at `user.trefolio.com` (IdP) — that host does not expose `/api/internal/prodops-query` and staff queries will fail with HTTP 404.
+
 ### Event flow
 
 ```mermaid
