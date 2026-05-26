@@ -146,7 +146,7 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
     return (
       <div className={`space-y-4 ${isCompact ? "" : ""}`}>
         <SectionHeader variant={variant} onViewAll={onViewAll} />
-        <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
+        <div className="card flex items-center justify-center gap-3 px-6 py-10 text-sm text-[color:var(--muted)]">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
           {t("loadingPortfolioNews")}
         </div>
@@ -194,7 +194,7 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
         ))}
       </div>
       {!isCompact && (
-        <p className="text-[10px] text-gray-400 dark:text-slate-600 italic text-center pt-2">
+        <p className="pt-2 text-center text-[10px] italic text-[color:var(--muted)]">
           {t("portfolioNewsDisclaimer")}
         </p>
       )}
@@ -217,7 +217,7 @@ function SectionHeader({
         <svg className={`${compact ? "w-4 h-4" : "w-5 h-5"} text-emerald-500 shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
         </svg>
-        <h2 className={`${compact ? "text-sm" : "text-lg"} font-semibold text-gray-900 dark:text-white truncate`}>
+        <h2 className={`${compact ? "text-sm" : "text-lg"} truncate font-semibold text-[color:var(--foreground)]`}>
           {t("portfolioNews")}
         </h2>
       </div>
@@ -243,9 +243,9 @@ function sentimentColor(label: string): string {
 
 function sentimentBg(label: string): string {
   const l = label.toLowerCase();
-  if (l.includes("bullish")) return "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20";
-  if (l.includes("bearish")) return "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20";
-  return "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20";
+  if (l.includes("bullish")) return "bg-emerald-500/10 border-emerald-500/18";
+  if (l.includes("bearish")) return "bg-red-500/10 border-red-500/18";
+  return "bg-amber-500/10 border-amber-500/18";
 }
 
 function formatNewsDate(raw: string): string {
@@ -300,17 +300,17 @@ function NewsArticleSummaryModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="news-ai-summary-title"
-        className="relative w-full max-w-lg max-h-[85vh] rounded-xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-2xl overflow-hidden flex flex-col"
+        className="relative flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border)] bg-[color:var(--surface-overlay)] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-slate-800 shrink-0">
-          <h2 id="news-ai-summary-title" className="text-base font-semibold text-gray-900 dark:text-white pr-2">
+        <div className="flex shrink-0 items-center justify-between border-b border-[color:var(--border)] px-5 py-4">
+          <h2 id="news-ai-summary-title" className="pr-2 text-base font-semibold text-[color:var(--foreground)]">
             {t("newsAiSummaryModalTitle")}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors shrink-0"
+            className="shrink-0 rounded-lg p-1.5 text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]"
             aria-label={t("closeGuide")}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -318,10 +318,10 @@ function NewsArticleSummaryModal({
             </svg>
           </button>
         </div>
-        <p className="px-5 pt-3 text-xs text-gray-500 dark:text-slate-400 line-clamp-2">{title}</p>
+        <p className="line-clamp-2 px-5 pt-3 text-xs text-[color:var(--muted)]">{title}</p>
         <div className="overflow-y-auto px-5 py-4 flex-1 min-h-[120px]">
           {loading && (
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-sm text-[color:var(--muted)]">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
               {t("newsAiSummaryLoading")}
             </div>
@@ -330,12 +330,12 @@ function NewsArticleSummaryModal({
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           )}
           {!loading && !error && summaryText && (
-            <div className="text-sm text-gray-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+            <div className="whitespace-pre-wrap text-sm leading-relaxed text-[color:var(--foreground)]">
               {summaryText}
             </div>
           )}
         </div>
-        <p className="px-5 pb-4 text-[10px] text-gray-400 dark:text-slate-500 border-t border-gray-100 dark:border-slate-800 pt-3">
+        <p className="border-t border-[color:var(--border)] px-5 pb-4 pt-3 text-[10px] text-[color:var(--muted)]">
           {t("newsAiSummaryDisclaimer")}
         </p>
       </div>
@@ -414,50 +414,50 @@ function NewsCard({
   };
 
   const ctaClassPro =
-    "inline-flex items-center justify-center gap-1 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-500/35 text-emerald-800 dark:text-emerald-200 bg-emerald-50/90 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors";
+    "inline-flex items-center justify-center gap-1 rounded-xl border border-emerald-500/16 bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-semibold text-emerald-200 transition-colors hover:bg-emerald-500/16";
 
   const ctaClassFree =
-    "inline-flex items-center justify-center gap-1 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border border-amber-200/90 dark:border-amber-500/30 text-amber-900 dark:text-amber-100 bg-amber-50/90 dark:bg-amber-500/[0.12] hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors";
+    "inline-flex items-center justify-center gap-1 rounded-xl border border-amber-500/16 bg-amber-500/10 px-2.5 py-1.5 text-[10px] font-semibold text-amber-200 transition-colors hover:bg-amber-500/16";
 
   return (
     <div
-      className={`card px-5 py-4 transition-shadow hover:shadow-md hover:ring-1 hover:ring-emerald-500/20 ${highlightHoldings ? "ring-1 ring-emerald-500/35 bg-emerald-50/40 dark:bg-emerald-500/5" : ""}`}
+      className={`card px-5 py-4 transition-shadow hover:shadow-md hover:ring-1 hover:ring-emerald-500/20 ${highlightHoldings ? "ring-1 ring-emerald-500/24 bg-emerald-500/[0.05]" : ""}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-start gap-3">
         <a
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 min-w-0 block rounded-lg -m-1 p-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+          className="block min-w-0 flex-1 -m-1 rounded-lg p-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
         >
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug line-clamp-2">
+            <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-[color:var(--foreground)]">
               {article.title}
             </h4>
             {highlightHoldings && (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-500/30">
+              <span className="rounded-full border border-emerald-500/16 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
                 {t("portfolioNewsHoldingBadge")}
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 line-clamp-2">
+          <p className="mt-1 line-clamp-2 text-xs text-[color:var(--muted)]">
             {article.summary}
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-2">
-            <span className="text-[10px] text-gray-400 dark:text-slate-500">
+            <span className="text-[10px] text-[color:var(--muted)]">
               {article.source}
             </span>
-            <span className="text-gray-300 dark:text-slate-600">&middot;</span>
-            <span className="text-[10px] text-gray-400 dark:text-slate-500">
+            <span className="text-[color:var(--muted)]">&middot;</span>
+            <span className="text-[10px] text-[color:var(--muted)]">
               {formatNewsDate(article.publishedAt)}
             </span>
             {article.topics.length > 0 && (
               <>
-                <span className="text-gray-300 dark:text-slate-600">&middot;</span>
+                <span className="text-[color:var(--muted)]">&middot;</span>
                 {article.topics.slice(0, 3).map((topic, ti) => (
                   <span
                     key={ti}
-                    className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400"
+                    className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-1.5 py-0.5 text-[10px] text-[color:var(--muted)]"
                   >
                     {topic}
                   </span>

@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useAuth } from "@/lib/auth-context";
 import { useFeatureFlags } from "@/lib/feature-flag-context";
+import { usePortfolioCommand } from "@/contexts/portfolio-command-context";
 import TierFeatureBadge from "./TierFeatureBadge";
 import NotificationBell from "./NotificationBell";
 import GlobalPortfolioSelector from "./GlobalPortfolioSelector";
@@ -99,6 +100,7 @@ export default function SidebarNav() {
   const { stealthMode } = useStealthMode();
   const { user, logout } = useAuth();
   const flags = useFeatureFlags();
+  const { openSettings } = usePortfolioCommand();
 
   /** Full desktop nav list — studio sidebar is vertical, so no overflow strip / More menu. */
   const visibleNavLinks = getDesktopNavItems(flags);
@@ -108,7 +110,10 @@ export default function SidebarNav() {
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
   return (
-    <aside className="hidden sm:flex w-[200px] flex-shrink-0 flex-col border-r border-white/5 bg-[#09090b] sticky top-0 h-screen overflow-y-auto" data-tour="nav">
+    <aside
+      className="glass-overlay hidden sm:flex h-screen w-[220px] flex-shrink-0 flex-col border-r border-[color:var(--border)] sticky top-0 overflow-y-auto"
+      data-tour="nav"
+    >
       {/* Logo */}
       <div className="flex items-center gap-2 px-4 py-4">
         <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" aria-hidden="true">
@@ -120,7 +125,7 @@ export default function SidebarNav() {
             <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#34d399" transform="rotate(270)"/>
           </g>
         </svg>
-        <span className="text-base font-extrabold text-white tracking-tight">{t("appTitle")}</span>
+        <span className="text-base font-extrabold tracking-tight text-[color:var(--foreground)]">{t("appTitle")}</span>
       </div>
 
       {/* Portfolio selector */}
@@ -131,7 +136,7 @@ export default function SidebarNav() {
       {/* Main nav */}
       <nav className="px-3 mt-2" aria-label={t("mainNavigation")}>
         <h2 className="sr-only">Main</h2>
-        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 px-2 mb-1" aria-hidden="true">
+        <div className="mb-1 px-2 text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]" aria-hidden="true">
           Main
         </div>
         {visibleNavLinks.map((link) => {
@@ -142,13 +147,13 @@ export default function SidebarNav() {
               key={link.href}
               href={link.href}
               aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-medium transition-colors mb-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+              className={`mb-0.5 flex min-h-11 items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                 active
-                  ? "text-white bg-emerald-500/10"
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]"
+                  ? "border-emerald-500/30 bg-emerald-500/12 text-[color:var(--foreground)]"
+                  : "border-transparent text-[color:var(--muted)] hover:border-[color:var(--border)] hover:text-[color:var(--foreground)] hover:bg-white/[0.04]"
               }`}
             >
-              <span className={active ? "text-emerald-500" : "text-zinc-600"} aria-hidden="true">
+              <span className={active ? "text-emerald-400" : "text-[color:var(--muted)]"} aria-hidden="true">
                 {iconId ? ICONS[iconId] : null}
               </span>
               {t(link.labelKey)}
@@ -161,9 +166,19 @@ export default function SidebarNav() {
       {/* Account */}
       <nav className="px-3 mt-4" aria-label="Account navigation">
         <h2 className="sr-only">Account</h2>
-        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 px-2 mb-1" aria-hidden="true">
+        <div className="mb-1 px-2 text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]" aria-hidden="true">
           Account
         </div>
+        <button
+          type="button"
+          onClick={openSettings}
+          className="mb-0.5 flex min-h-11 w-full items-center gap-2 rounded-2xl border border-transparent px-3 py-2 text-left text-sm font-medium text-[color:var(--muted)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 hover:border-[color:var(--border)] hover:bg-white/[0.04] hover:text-[color:var(--foreground)]"
+        >
+          <span className="text-[color:var(--muted)]" aria-hidden="true">
+            {ICONS.settings}
+          </span>
+          {t("settings")}
+        </button>
         {ACCOUNT_LINKS
           .filter((link) => !("adminOnly" in link && link.adminOnly) || user?.role === "admin")
           .map((link) => {
@@ -173,13 +188,13 @@ export default function SidebarNav() {
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-medium transition-colors mb-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                className={`mb-0.5 flex min-h-11 items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                   active
-                    ? "text-white bg-emerald-500/10"
-                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]"
+                    ? "border-emerald-500/30 bg-emerald-500/12 text-[color:var(--foreground)]"
+                    : "border-transparent text-[color:var(--muted)] hover:border-[color:var(--border)] hover:text-[color:var(--foreground)] hover:bg-white/[0.04]"
                 }`}
               >
-                <span className={active ? "text-emerald-500" : "text-zinc-600"} aria-hidden="true">
+                <span className={active ? "text-emerald-400" : "text-[color:var(--muted)]"} aria-hidden="true">
                   {ICONS[link.icon]}
                 </span>
                 {t(link.labelKey)}
@@ -189,16 +204,16 @@ export default function SidebarNav() {
       </nav>
 
       {/* User */}
-      <div className="mt-auto border-t border-white/5 px-3 py-3">
+      <div className="mt-auto border-t border-[color:var(--border)] px-3 py-3">
         <div className="flex items-center gap-2 px-1">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-xs font-bold text-white shadow-lg shadow-cyan-500/10">
             {stealthMode ? "••" : initials}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-white truncate">
+            <div className="truncate text-sm font-semibold text-[color:var(--foreground)]">
               {stealthMode ? "••••" : (user?.displayName || user?.email || "User")}
             </div>
-            <div className="text-xs text-zinc-600 truncate">
+            <div className="truncate text-xs text-[color:var(--muted)]">
               {user?.plan === "pro" ? "Trefolio (Pro)" : "Folio (Free)"}
             </div>
           </div>
@@ -207,7 +222,7 @@ export default function SidebarNav() {
             onClick={logout}
             title={t("signOut")}
             aria-label={t("signOut")}
-            className="p-1.5 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-white/[0.03] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            className="min-h-10 min-w-10 rounded-2xl border border-transparent p-1.5 text-[color:var(--muted)] transition-colors hover:border-[color:var(--border)] hover:bg-white/[0.04] hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1" />

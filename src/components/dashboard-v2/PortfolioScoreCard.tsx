@@ -66,17 +66,17 @@ function CompactGauge({ score, percentile }: { score: number; percentile: number
     <div className="flex flex-col items-center">
       <svg viewBox="0 0 112 80" className="w-28 h-auto">
         <path d={bgArc} fill="none" stroke="currentColor" strokeWidth={8} strokeLinecap="round"
-          className="text-gray-200 dark:text-white/[0.06]" />
+          className="text-gray-200 dark:text-white/[0.08]" />
         <path d={fgArc} fill="none" stroke={color} strokeWidth={8} strokeLinecap="round"
           style={{ transition: "d 0.6s ease-out" }} />
-        <text x={cx} y={cy + 8} textAnchor="middle" className="fill-gray-900 dark:fill-white" fontSize={24} fontWeight={700}>
+        <text x={cx} y={cy + 8} textAnchor="middle" className="fill-[var(--foreground)]" fontSize={24} fontWeight={700}>
           {score}
         </text>
-        <text x={cx} y={cy + 18} textAnchor="middle" className="fill-gray-400 dark:fill-slate-500" fontSize={8}>
+        <text x={cx} y={cy + 18} textAnchor="middle" className="fill-[var(--muted)]" fontSize={8}>
           /10
         </text>
       </svg>
-      <p className="text-[11px] text-gray-500 dark:text-slate-500 -mt-1 text-center">
+      <p className="-mt-1 text-center text-[11px] text-[color:var(--muted)]">
         {t("portfolioScorePercentile").replace("{pct}", String(percentile))}
       </p>
     </div>
@@ -99,8 +99,8 @@ function MiniScore({ category, data }: { category: string; data: CategoryScore }
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] font-medium text-gray-600 dark:text-slate-400 w-20 truncate">{label}</span>
-      <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
+      <span className="w-20 truncate text-[10px] font-medium text-[color:var(--foreground)]">{label}</span>
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
       <span className="text-[10px] font-bold tabular-nums w-6 text-right" style={{ color }}>
@@ -195,16 +195,16 @@ export default function PortfolioScoreCard({ holdings, cashEntries }: Props) {
 
   if (status === "idle" || status === "error" || status === "limit-reached") {
     return (
-      <div className="card p-3 border-amber-500/20">
+      <div className="card border-amber-500/16 bg-amber-500/[0.05] p-4 shadow-[0_14px_28px_rgba(1,6,16,0.22)]">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white shrink-0">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-amber-500/16 bg-amber-500/12 text-amber-300">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
             </svg>
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-xs font-semibold text-gray-900 dark:text-white">{t("portfolioScore")}</span>
-            <p className="text-[10px] text-gray-500 dark:text-slate-500 mt-0.5 leading-snug">{t("portfolioScoreDescription")}</p>
+            <span className="text-xs font-semibold text-[color:var(--foreground)]">{t("portfolioScore")}</span>
+            <p className="mt-0.5 text-[10px] leading-snug text-[color:var(--muted)]">{t("portfolioScoreDescription")}</p>
           </div>
         </div>
 
@@ -217,12 +217,12 @@ export default function PortfolioScoreCard({ holdings, cashEntries }: Props) {
         <button
           onClick={generateScore}
           disabled={holdings.length === 0 || remaining <= 0}
-          className="w-full py-2 px-3 text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40"
+          className="w-full rounded-xl border border-amber-500/16 bg-amber-500/14 px-3 py-2.5 text-xs font-semibold text-amber-200 transition-colors hover:bg-amber-500/20 disabled:opacity-40"
         >
           {t("portfolioScoreButton")}
         </button>
         {!isAdmin && (
-          <p className="text-[9px] text-gray-400 dark:text-slate-600 mt-1.5 text-center">
+          <p className="mt-1.5 text-center text-[9px] text-[color:var(--muted)]">
             {t("portfolioReviewUsage").replace("{used}", String(used)).replace("{limit}", String(limit))}
           </p>
         )}
@@ -232,10 +232,10 @@ export default function PortfolioScoreCard({ holdings, cashEntries }: Props) {
 
   if (status === "loading") {
     return (
-      <div className="card p-4 border-amber-500/20">
+      <div className="card border-amber-500/16 bg-amber-500/[0.05] p-4 shadow-[0_14px_28px_rgba(1,6,16,0.22)]">
         <div className="flex flex-col items-center gap-3 py-3">
           <div className="w-8 h-8 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin" />
-          <p className="text-[10px] text-gray-500 dark:text-slate-400">{t("portfolioScoreRunning")}</p>
+          <p className="text-[10px] text-[color:var(--muted)]">{t("portfolioScoreRunning")}</p>
         </div>
       </div>
     );
@@ -244,21 +244,21 @@ export default function PortfolioScoreCard({ holdings, cashEntries }: Props) {
   if (!score) return null;
 
   return (
-    <div className="card p-3 border-amber-500/20">
+    <div className="card border-amber-500/16 bg-amber-500/[0.05] p-4 shadow-[0_14px_28px_rgba(1,6,16,0.22)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded-md bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white">
+          <div className="flex h-6 w-6 items-center justify-center rounded-xl border border-amber-500/16 bg-amber-500/12 text-amber-300">
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
             </svg>
           </div>
-          <span className="text-xs font-semibold text-gray-900 dark:text-white">{t("portfolioScore")}</span>
+          <span className="text-xs font-semibold text-[color:var(--foreground)]">{t("portfolioScore")}</span>
         </div>
         <button
           onClick={generateScore}
           disabled={remaining <= 0}
-          className="text-[10px] text-gray-500 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors disabled:opacity-40"
+          className="rounded-xl border border-transparent p-1.5 text-[10px] text-[color:var(--muted)] transition-colors hover:border-[color:var(--border)] hover:text-amber-400 disabled:opacity-40"
           title={t("portfolioScoreRefresh")}
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -289,10 +289,10 @@ export default function DashboardTabBarQuickLinks({
         active ? "border-emerald-400 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"
       }`;
     }
-    return `shrink-0 px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+    return `shrink-0 rounded-xl border px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
       active
-        ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-500/30"
-        : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700/80"
+        ? "border-[color:var(--border)] bg-[color:var(--surface-soft)] text-[color:var(--foreground)]"
+        : "border-transparent text-[color:var(--muted)] hover:border-[color:var(--border)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]"
     }`;
   };
 
@@ -303,7 +303,7 @@ export default function DashboardTabBarQuickLinks({
         ? "shrink-0 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
         : variant === "studio"
           ? "shrink-0 px-3 py-1.5 text-xs sm:text-sm font-medium border border-white/15 text-zinc-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-          : "shrink-0 px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium rounded-xl border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500";
+          : "shrink-0 rounded-xl border border-[color:var(--border)] px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium text-[color:var(--muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500";
 
   const panelSurfaceClass =
     variant === "terminal"
@@ -312,7 +312,7 @@ export default function DashboardTabBarQuickLinks({
         ? "max-h-[min(70vh,420px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
         : variant === "studio"
           ? "max-h-[min(70vh,420px)] overflow-y-auto rounded-lg border border-white/10 bg-zinc-950 py-1 shadow-xl"
-          : "max-h-[min(70vh,420px)] overflow-y-auto rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 py-1 shadow-xl";
+          : "max-h-[min(70vh,420px)] overflow-y-auto rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-overlay)] py-1 shadow-xl";
 
   const itemClass =
     variant === "terminal"
@@ -321,7 +321,7 @@ export default function DashboardTabBarQuickLinks({
         ? "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
         : variant === "studio"
           ? "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-white/5"
-          : "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-gray-800 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800";
+          : "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]";
 
   const toolbarRowClass =
     "flex min-w-0 flex-nowrap items-center gap-1 sm:gap-1.5 overflow-x-hidden overflow-y-hidden";

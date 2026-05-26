@@ -292,7 +292,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
 
   const fxTag = fxImpactEUR !== null && Math.abs(fxImpactEUR) >= 0.01 ? (
     <span
-      className={`text-[10px] px-1 py-0.5 rounded ${fxImpactEUR >= 0 ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400"}`}
+      className={`rounded-full px-1.5 py-0.5 text-[10px] ${fxImpactEUR >= 0 ? "border border-blue-400/18 bg-blue-500/10 text-blue-300" : "border border-amber-400/18 bg-amber-500/10 text-amber-300"}`}
       title={t("fxImpact")}
     >
       FX {fxImpactEUR >= 0 ? "+" : ""}{formatCurrency(fxImpactEUR, "EUR")}
@@ -301,11 +301,11 @@ function StockRow({ holding, onSelect }: StockRowProps) {
 
   /* ── DEFAULT: Single-line grid layout ──────────────────────── */
   return (
-    <div className="border-b border-gray-50 dark:border-white/[0.04] last:border-b-0" data-testid="stock-row-default">
+    <div className="border-b border-[color:var(--border)] last:border-b-0" data-testid="stock-row-default">
       <div
         role="button"
         tabIndex={0}
-        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50/70 dark:hover:bg-white/[0.02] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500"
+        className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-[color:var(--surface-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500"
         aria-label={rowLabel}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
@@ -316,18 +316,18 @@ function StockRow({ holding, onSelect }: StockRowProps) {
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{holding.name}</p>
+              <p className="truncate text-sm font-medium text-[color:var(--foreground)]">{holding.name}</p>
               {assetTypeBadge}
               <AlertBadge ticker={holding.ticker} />
               {refreshSpinner}
             </div>
-            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5 truncate">{priceInfoDefault}</p>
+            <p className="mt-0.5 truncate text-[11px] text-[color:var(--muted)]">{priceInfoDefault}</p>
           </div>
         </div>
         <HoldingHealthBadge holding={holding} size={24} />
         <Sparkline ticker={holding.ticker} width={56} height={20} positive={hasQuote ? dayIsPositive : undefined} className="hidden md:block shrink-0" />
         <div className="w-[110px] text-right tabular-nums shrink-0">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">
+          <p className="text-sm font-semibold text-[color:var(--foreground)]">
             {awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}
           </p>
         </div>
@@ -340,7 +340,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
               tabIndex={0}
               onClick={(e) => { e.stopPropagation(); toggleReturnMode(); }}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReturnMode(); } }}
-              className={`text-sm font-medium flex items-center justify-end gap-1 cursor-pointer hover:underline ${displayColor}`}
+              className={`flex cursor-pointer items-center justify-end gap-1 text-sm font-medium ${displayColor} hover:underline`}
               title={returnMode === "pct" ? "Click for absolute" : "Click for %"}
             >
               {returnText}

@@ -159,6 +159,7 @@ function DesktopDashboard() {
 
 
   useEffect(() => {
+    if (demoMode) return;
     const timer = setTimeout(() => {
       fetch("/api/support-chat/config")
         .then((r) => r.ok ? r.json() : null)
@@ -171,7 +172,7 @@ function DesktopDashboard() {
         .catch(() => {});
     }, 3_000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [demoMode]);
 
   const investmentCashEntries = useMemo(
     () => cashEntries.filter((c) => !c.type || c.type === "cash"),
@@ -248,12 +249,12 @@ function DesktopDashboard() {
             ) : (
               <>
                 {showHoldingsBanner && !holdingsAtLimit && (
-                  <div className="rounded-lg border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3 flex items-center justify-between gap-3">
+                  <div className="glass-panel flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-amber-400/20 bg-amber-500/[0.12] p-4">
                     <div className="flex items-center gap-2 min-w-0">
                       <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
                       </svg>
-                      <span className="text-sm text-amber-800 dark:text-amber-200">
+                      <span className="text-sm text-[color:var(--foreground)]">
                         {t("holdingsUsage").replace("{used}", String(holdingsCount)).replace("{limit}", String(holdingsLimit))}
                       </span>
                     </div>
@@ -409,7 +410,7 @@ function DesktopDashboard() {
         {supportChatEnabled && (user?.plan === "pro") && (
           <button
             onClick={() => setShowSupportChat((v) => !v)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium shadow-lg transition-colors"
+            className="glass-overlay flex min-h-11 items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/[0.16] px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-colors hover:bg-blue-500/[0.24]"
             title={t("supportChatTitle")}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -420,7 +421,7 @@ function DesktopDashboard() {
         )}
         <button
           onClick={() => setShowFeedback(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-lg transition-colors"
+          className="glass-overlay flex min-h-11 items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/[0.16] px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-colors hover:bg-emerald-500/[0.24]"
           title={t("feedback")}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

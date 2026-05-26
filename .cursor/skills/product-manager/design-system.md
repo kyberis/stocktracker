@@ -3,6 +3,8 @@
 Single source of truth for visual tokens, component patterns, voice, and customer definitions.
 Referenced by the PM skill for mockups and design reviews, and by `ui-design-system.mdc` for engineer implementation.
 
+The current default app direction is a restrained glass system. Use this doc together with `knowledge/design-docs/glass-visual-system.md` when reviewing or mocking app UI.
+
 ---
 
 ## A. Customers and Personas
@@ -97,18 +99,18 @@ Friendly, approachable, jargon-free — like explaining stocks to a friend.
 
 | Token | Light | Dark | Usage |
 |---|---|---|---|
-| `--background` | `#f8fafc` (gray-50) | `#0f172a` (slate-900) | Page background |
-| `--foreground` | `#0f172a` (slate-900) | `#f1f5f9` (slate-100) | Primary text |
-| `--card` | `#ffffff` | `#1e293b` (slate-800) | Card surfaces |
-| `--card-hover` | `#f1f5f9` (slate-100) | `#334155` (slate-700) | Card hover state |
-| `--border` | `#e2e8f0` (slate-200) | `#334155` (slate-700) | Default borders |
-| `--muted` | `#64748b` (slate-500) | `#94a3b8` (slate-400) | Secondary/muted text |
+| `--background` | soft slate-blue | deep navy | base page color |
+| `--foreground` | deep blue-slate | near-white | primary text |
+| `--card` | translucent white | translucent navy | main card surface |
+| `--border` | soft frosted border | soft frosted border | default separators |
+| `--muted` | muted slate | muted blue-gray | secondary text |
 | `--gain` | `#10b981` (emerald-500) | `#10b981` | Positive values |
 | `--loss` | `#ef4444` (red-500) | `#ef4444` | Negative values |
-| `--accent` | `#10b981` (emerald-500) | `#10b981` | Brand accent, CTAs |
-| `--accent-light` | `#d1fae5` (emerald-100) | `#d1fae5` | Accent backgrounds |
-| `--nav-bg` | `#0f172a` | `#0f172a` | Nav bar (constant) |
-| `--nav-text` | `#f1f5f9` | `#f1f5f9` | Nav text (constant) |
+| `--accent` | teal-emerald | aqua-teal | brand accent, CTAs |
+| `--surface-strong` | high-opacity frosted white | high-opacity frosted navy | hero cards / toolbars |
+| `--surface-soft` | light translucent white | subtle translucent white | dense card internals |
+| `--surface-overlay` | opaque frosted shell | opaque frosted shell | sheets / drawers / modals |
+| `--glass-blur` | medium blur | medium blur | shared blur intensity |
 
 ### Functional Colors
 
@@ -133,7 +135,8 @@ Friendly, approachable, jargon-free — like explaining stocks to a friend.
 - Always pair light classes with `dark:` variants for text, backgrounds, and borders.
 - Never convey meaning by color alone — always add an icon, arrow, or +/- sign alongside gain/loss colors.
 - Use `dark:bg-{color}-500/10` for soft colored backgrounds in dark mode, not `dark:bg-{color}-900`.
-- The nav bar stays dark navy (`#0f172a`) in both themes — no `dark:` changes needed.
+- Default theme uses layered glass. Alternate themes may reduce or disable the effect, but should still consume the same token model.
+- Overlays and sheets must be more opaque than regular cards.
 
 ---
 
@@ -180,7 +183,7 @@ Friendly, approachable, jargon-free — like explaining stocks to a friend.
 ### Page Layout
 
 - Max content width: `max-w-7xl mx-auto px-4 sm:px-6`
-- Page background: `bg-gray-50 dark:bg-slate-900`
+- Page background: semantic gradient from globals, not a flat `bg-gray-50`
 - Mobile bottom tab bar: `pb-14 sm:pb-0`
 
 ### Spacing Scale
@@ -202,8 +205,8 @@ Friendly, approachable, jargon-free — like explaining stocks to a friend.
 
 | Token | Class | Use |
 |---|---|---|
-| Large | `rounded-2xl` | Cards, modals, drawers |
-| Medium | `rounded-lg` | Buttons, inputs, selects |
+| Large | `rounded-[24px]` to `rounded-[30px]` | Hero cards, major containers |
+| Medium | `rounded-2xl` | Buttons, inputs, compact cards |
 | Full | `rounded-full` | Pills, badges, avatars |
 
 ### Responsive Breakpoints
@@ -226,16 +229,16 @@ Friendly, approachable, jargon-free — like explaining stocks to a friend.
 .card
 ```
 
-`bg-white border border-gray-100 rounded-2xl p-5 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:shadow-none`
+Translucent semantic card surface with softened border, blur, and depth from globals.
 
-Use for every content container on the dashboard. Prefer shadows over heavy borders for visual separation.
+Use for every content container on the dashboard. Prefer semantic surface tokens and depth over hard gray fills.
 
 ### Buttons
 
 | Variant | Class | Appearance |
 |---|---|---|
-| Primary | `.btn-primary` | Emerald-500 bg, white text, shadow-sm, hover:emerald-600 |
-| Secondary | `.btn-secondary` | Gray-100 bg (dark: slate-700), gray-700 text (dark: slate-200) |
+| Primary | `.btn-primary` | Teal/emerald glass-aware CTA with white text |
+| Secondary | `.btn-secondary` | Soft frosted secondary action |
 | Danger | `.btn-danger` | Red-500 bg, white text, shadow-sm, hover:red-600 |
 
 All buttons: `font-medium px-4 py-2 rounded-lg transition-colors`.

@@ -41,7 +41,7 @@ function StudioCommandStrip() {
   const flags = useFeatureFlags();
   const { t } = useI18n();
   return (
-    <div className="border-b border-white/5 bg-[#09090b] px-3 sm:px-4 py-2">
+    <div className="glass-toolbar border-b border-[color:var(--border)] bg-[color:var(--nav-bg)] px-3 py-2 sm:px-4">
       <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-2">
         <NavAssetSearch variant="studio" />
         <AppNavPrimaryPills
@@ -57,18 +57,18 @@ function StudioCommandStrip() {
 
 function AppFooter() {
   return (
-    <footer className="hidden sm:flex items-center justify-center gap-3 py-3 text-[11px] text-gray-400 dark:text-slate-500">
+    <footer className="hidden sm:flex items-center justify-center gap-3 px-4 py-4 text-[11px] text-[color:var(--muted)]">
       <span>&copy; {new Date().getFullYear()} trefolio</span>
       <span className="opacity-40">·</span>
-      <Link href="/releasenotes" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
+      <Link href="/releasenotes" className="transition-colors hover:text-[color:var(--foreground)]">
         v{CURRENT_VERSION} &mdash; What&apos;s New
       </Link>
       <span className="opacity-40">·</span>
-      <Link href="/privacy" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
+      <Link href="/privacy" className="transition-colors hover:text-[color:var(--foreground)]">
         Privacy
       </Link>
       <span className="opacity-40">·</span>
-      <Link href="/terms" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
+      <Link href="/terms" className="transition-colors hover:text-[color:var(--foreground)]">
         Terms
       </Link>
     </footer>
@@ -100,9 +100,20 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isStudio) {
     return (
-      <div className="min-h-screen bg-[#09090b] flex" style={{ fontFamily: "var(--font-primary, inherit)" }}>
+      <div
+        className="min-h-screen flex"
+        style={{
+          fontFamily: "var(--font-primary, inherit)",
+          background: "var(--page-gradient), var(--page-background)",
+        }}
+      >
         <SidebarNav />
-        <div className="flex-1 min-h-screen bg-[#18181b] pb-14 sm:pb-0 overflow-x-hidden">
+        <div
+          className="flex-1 min-h-screen pb-14 sm:pb-0 overflow-x-hidden"
+          style={{
+            background: "var(--shell-background)",
+          }}
+        >
           <ImpersonationBanner />
           <EmailVerificationBanner />
           <SyncConfidenceBanner />
@@ -123,7 +134,13 @@ function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen pb-14 sm:pb-0 overflow-x-hidden" style={{ background: "var(--background)", fontFamily: "var(--font-primary, inherit)" }}>
+    <div
+      className="min-h-screen pb-14 sm:pb-0 overflow-x-hidden"
+      style={{
+        background: "var(--shell-background)",
+        fontFamily: "var(--font-primary, inherit)",
+      }}
+    >
       <ImpersonationBanner />
       <EmailVerificationBanner />
       <SyncConfidenceBanner />

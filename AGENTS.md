@@ -23,7 +23,7 @@ Use **Node.js 22** on your machine for trefolio, `external/accounts`, Clara (`ex
 1. [`ARCHITECTURE.md`](ARCHITECTURE.md) — domain map, layering, permitted edges.
 2. [`knowledge/product-specs/index.md`](knowledge/product-specs/index.md) — every
  feature, one spec per file. Start here when working on a specific capability.
-3. [`knowledge/design-docs/index.md`](knowledge/design-docs/index.md) — core
+3. [`knowledge/design-docs/README.md`](knowledge/design-docs/README.md) — core
  beliefs and cross-cutting patterns (EUR base currency, snapshots, demo mode,
  feature flags, broker parsers, AI streaming).
 4. [`knowledge/QUALITY_SCORE.md`](knowledge/QUALITY_SCORE.md) — per-domain grades
@@ -116,7 +116,7 @@ cursor-plugins/       kyberis/cursor-plugins submodule — Cursor Marketplace pl
 - Feature flags gate anything experimental. See
   [`knowledge/design-docs/feature-flags-system.md`](knowledge/design-docs/feature-flags-system.md).
 - Money is floating point in JS — always round at display time, never mid-calc.
-  See [`knowledge/design-docs/index.md`](knowledge/design-docs/index.md).
+  See [`knowledge/design-docs/README.md`](knowledge/design-docs/README.md).
 - Cron jobs live in `src/app/api/cron/*` and MUST be registered in both
   [`src/lib/cron-registry.ts`](src/lib/cron-registry.ts) and `vercel.json`.
 - Release notes entries are mandatory. See [`.cursor/rules/release-notes.mdc`](.cursor/rules/release-notes.mdc).

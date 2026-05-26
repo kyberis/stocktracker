@@ -44,8 +44,8 @@ export default function AssetPerformanceTable({ holdings, cashEntries }: Props) 
     return byType[key];
   }
 
-  const thClass = "text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-500 text-right py-2 px-2";
-  const tdClass = "text-[12px] font-medium tabular-nums text-right py-2.5 px-2 border-t border-gray-100 dark:border-slate-800";
+  const thClass = "px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--muted)]";
+  const tdClass = "border-t border-[color:var(--border)] px-2 py-2.5 text-right text-[12px] font-medium tabular-nums";
 
   const modes: { key: PerfMode; label: string }[] = [
     { key: "total", label: t("totalGainLabel") },
@@ -55,18 +55,18 @@ export default function AssetPerformanceTable({ holdings, cashEntries }: Props) 
   return (
     <div className="card overflow-hidden">
       <div className="px-4 pt-3.5 pb-2 flex items-center justify-between gap-2">
-        <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-[13px] font-semibold text-[color:var(--foreground)]">
           {t("performanceByAssetType")}
         </h3>
-        <div className="flex gap-0.5 bg-gray-100 dark:bg-white/[0.04] rounded-md p-0.5">
+        <div className="flex gap-0.5 rounded-xl bg-[color:var(--surface-soft)] p-0.5">
           {modes.map((m) => (
             <button
               key={m.key}
               onClick={() => setMode(m.key)}
               className={`px-2.5 py-0.5 rounded text-[10px] font-medium capitalize transition-colors ${
                 mode === m.key
-                  ? "bg-white dark:bg-white/[0.08] text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-500 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300"
+                  ? "bg-[color:var(--surface-highlight)] text-[color:var(--foreground)] shadow-sm"
+                  : "text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
               }`}
             >
               {m.label}
@@ -100,7 +100,7 @@ export default function AssetPerformanceTable({ holdings, cashEntries }: Props) 
               return (
                 <tr key={key}>
                   <td className={`${tdClass} text-left`}>
-                    <span className="inline-flex items-center gap-2 font-semibold text-gray-800 dark:text-slate-200">
+                    <span className="inline-flex items-center gap-2 font-semibold text-[color:var(--foreground)]">
                       <span
                         className="w-2 h-2 rounded-full shrink-0"
                         style={{ background: color }}
@@ -108,7 +108,7 @@ export default function AssetPerformanceTable({ holdings, cashEntries }: Props) 
                       {t(labelKey)}
                     </span>
                   </td>
-                  <td className={`${tdClass} text-gray-700 dark:text-slate-300`}>
+                  <td className={`${tdClass} text-[color:var(--foreground)]`}>
                     {stealthMode ? "•••••" : formatCurrency(totals.totalCurrentEUR, cur)}
                   </td>
                   <td className={`${tdClass} ${isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>

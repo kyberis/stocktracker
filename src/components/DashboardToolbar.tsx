@@ -53,10 +53,10 @@ function AddMenu({ onAddStock, onAddCrypto, onAddAsset }: { onAddStock: () => vo
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+        <div className="glass-overlay absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-[18px] border border-[color:var(--border)] py-1 shadow-2xl">
           <button
             onClick={() => { onAddStock(); setOpen(false); }}
-            className="w-full text-left px-3 py-2.5 text-sm flex items-center gap-2.5 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            className="flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-soft)]"
           >
             <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
@@ -66,7 +66,7 @@ function AddMenu({ onAddStock, onAddCrypto, onAddAsset }: { onAddStock: () => vo
           {onAddCrypto && (
             <button
               onClick={() => { onAddCrypto(); setOpen(false); }}
-              className="w-full text-left px-3 py-2.5 text-sm flex items-center gap-2.5 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              className="flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-soft)]"
             >
               <span className="w-4 h-4 rounded-full bg-[#f7931a] flex items-center justify-center text-white text-[10px] font-bold shrink-0">₿</span>
               {t("addCrypto")}
@@ -76,7 +76,7 @@ function AddMenu({ onAddStock, onAddCrypto, onAddAsset }: { onAddStock: () => vo
           {onAddAsset && (
             <button
               onClick={() => { onAddAsset(); setOpen(false); }}
-              className="w-full text-left px-3 py-2.5 text-sm flex items-center gap-2.5 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              className="flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-soft)]"
             >
               <span className="w-4 h-4 flex items-center justify-center text-sm shrink-0">🏠</span>
               {t("addManualAsset")}
@@ -139,18 +139,25 @@ export default function DashboardToolbar({
           : "tabbar-default";
 
   return (
-    <div className={
-      layoutTheme === "terminal"
-        ? "border-b border-zinc-800 bg-transparent"
-        : layoutTheme === "canvas"
-        ? "bg-white border-b border-slate-200"
-        : layoutTheme === "studio"
-        ? "border-b border-white/5 bg-transparent"
-        : "bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-800"
-    } data-testid="dashboard-toolbar">
+    <div
+      className={
+        layoutTheme === "terminal"
+          ? "border-b border-zinc-800 bg-transparent"
+          : "border-b border-[color:var(--border)]"
+      }
+      style={
+        layoutTheme === "terminal"
+          ? undefined
+          : {
+              background: "var(--nav-bg)",
+              boxShadow: "none",
+            }
+      }
+      data-testid="dashboard-toolbar"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div
-          className={`flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 py-1.5 sm:gap-x-3 ${quickNav ? "justify-between" : "justify-end"}`}
+          className={`flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 py-2 sm:gap-x-3 ${quickNav ? "justify-between" : "justify-end"}`}
         >
           {quickNav && (
             <div className="flex min-w-0 flex-1 basis-0 items-center gap-2 sm:gap-3">
@@ -174,7 +181,7 @@ export default function DashboardToolbar({
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5" data-tour="actions">
           <button
             onClick={onOpenSettings}
-            className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-200 dark:text-slate-400 dark:hover:bg-slate-700 sm:min-h-[36px] sm:min-w-[36px] sm:p-2"
+            className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-2 text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-highlight)] sm:min-h-[44px] sm:min-w-[44px]"
             title={t("settings")}
             aria-label={t("settings")}
           >
@@ -187,7 +194,8 @@ export default function DashboardToolbar({
           <button
             onClick={refreshQuotes}
             disabled={isLoading}
-            className="flex items-center gap-1 rounded-lg border border-black/[0.06] bg-black/5 px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-black/10 disabled:opacity-50 dark:border-white/[0.06] dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-sm"
+            className="flex min-h-[40px] items-center gap-1 rounded-xl border border-[color:var(--border)] px-2.5 py-1.5 text-xs font-medium text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-highlight)] disabled:opacity-50 sm:min-h-[44px] sm:gap-1.5 sm:px-3 sm:text-sm"
+            style={{ background: "var(--surface-soft)" }}
             title={t("syncButton")}
             aria-label={t("syncButton")}
           >
@@ -210,7 +218,7 @@ export default function DashboardToolbar({
 
           <button
             onClick={() => router.push("/import")}
-            className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-200 dark:text-slate-400 dark:hover:bg-slate-700 sm:min-h-[36px] sm:min-w-[36px] sm:p-2"
+            className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-2 text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-highlight)] sm:min-h-[44px] sm:min-w-[44px]"
             title={t("importPortfolio")}
             aria-label={t("importPortfolio")}
           >
@@ -222,7 +230,7 @@ export default function DashboardToolbar({
           {onResetPortfolio && (
             <button
               onClick={onResetPortfolio}
-              className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-200 dark:text-slate-400 dark:hover:bg-slate-700 sm:min-h-[36px] sm:min-w-[36px] sm:p-2"
+              className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-2 text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-highlight)] sm:min-h-[44px] sm:min-w-[44px]"
               title={t("resetPortfolio")}
               aria-label={t("resetPortfolio")}
             >

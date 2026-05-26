@@ -242,7 +242,19 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
     </div>
   );
 
-  const reviewTypesBtn = <AssetTypeReviewLauncher />;
+  const reviewTypesBtn = (
+    <AssetTypeReviewLauncher
+      className={
+        layoutTheme === "terminal"
+          ? undefined
+          : layoutTheme === "canvas"
+            ? undefined
+            : layoutTheme === "studio"
+              ? undefined
+              : "inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-amber-500/16 bg-amber-500/10 px-2.5 py-1.5 text-xs font-medium text-amber-300 transition-colors hover:bg-amber-500/16"
+      }
+    />
+  );
 
   const addTransactionBtn = onAddStock && (
     <button
@@ -254,7 +266,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
           ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
           : layoutTheme === "studio"
           ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
-          : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+          : "rounded-xl border border-emerald-500/16 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/16"
       }`}
     >
       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -389,10 +401,10 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
 
   return (
     <ReturnDisplayContext.Provider value={returnDisplayCtx}>
-      <div className="card p-0 overflow-hidden" data-testid="portfolio-table-default" data-tour="holdings">
-        <div className="px-4 py-3 border-b border-gray-100 dark:border-white/[0.06] flex items-center gap-3 flex-wrap">
+      <div className="card overflow-hidden p-0" data-testid="portfolio-table-default" data-tour="holdings">
+        <div className="flex flex-wrap items-center gap-3 border-b border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3">
           <div className="relative flex-1 min-w-[180px]">
-            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 dark:text-slate-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[color:var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
             <input
@@ -404,7 +416,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
               }}
               placeholder={t("searchPlaceholder")}
               aria-label={t("searchPlaceholder")}
-              className="w-full text-sm pl-8 pr-2 py-1.5 rounded-md bg-transparent border border-transparent hover:border-gray-200 dark:hover:border-white/[0.08] focus:border-gray-200 dark:focus:border-white/[0.12] focus:bg-gray-50/60 dark:focus:bg-white/[0.02] focus:outline-none transition-colors placeholder-gray-400 dark:placeholder-slate-500"
+              className="w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] py-2 pl-9 pr-3 text-sm placeholder:text-[color:var(--muted)] hover:bg-[color:var(--surface-highlight)] focus:border-[color:var(--accent)] focus:bg-[color:var(--surface-highlight)] focus:outline-none"
             />
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -413,18 +425,18 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
             <select
               value={sortField}
               onChange={handleSortChange}
-              className="bg-transparent border border-gray-200 dark:border-white/[0.08] text-gray-600 dark:text-slate-300 text-xs font-medium rounded-md px-2 py-1 hover:border-gray-300 dark:hover:border-white/[0.15] focus:ring-1 focus:ring-emerald-500 focus:outline-none cursor-pointer"
+              className="cursor-pointer rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2.5 py-1.5 text-xs font-medium text-[color:var(--foreground)] focus:outline-none focus:ring-1 focus:ring-emerald-500"
               aria-label={t("sortBy")}
             >
               {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-            <button onClick={() => setSortDir((d) => d === "asc" ? "desc" : "asc")} className="text-xs text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-200 transition-colors px-1" aria-label={sortDir === "asc" ? "Sort descending" : "Sort ascending"}>
+            <button onClick={() => setSortDir((d) => d === "asc" ? "desc" : "asc")} className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2 py-1.5 text-xs text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-highlight)] hover:text-[color:var(--foreground)]" aria-label={sortDir === "asc" ? "Sort descending" : "Sort ascending"}>
               {sortDir === "asc" ? "↑" : "↓"}
             </button>
-            <span className="text-xs text-gray-400 dark:text-slate-500 tabular-nums">{sortedHoldings.length}</span>
+            <span className="tabular-nums text-xs text-[color:var(--muted)]">{sortedHoldings.length}</span>
           </div>
         </div>
-        <div className="hidden sm:flex px-4 py-2 border-b border-gray-50 dark:border-white/[0.04] text-[10px] font-semibold tracking-[0.12em] uppercase text-gray-400 dark:text-slate-500 items-center gap-3">
+        <div className="hidden items-center gap-3 border-b border-[color:var(--border)] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--muted)] sm:flex">
           <span className="flex-1 min-w-0">{t("name")}</span>
           <span className="w-[110px] text-right">{t("valueLabel")}</span>
           <span className="w-[110px] text-right">{returnColumnLabel}</span>
@@ -434,7 +446,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
           {visibleHoldings.map((h) => <StockRow key={h.id} holding={h} onSelect={setSelectedHolding} />)}
         </div>
         {canExpand && (
-          <button onClick={handleToggleExpand} className="w-full px-4 py-2.5 text-xs font-medium text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-gray-50/60 dark:hover:bg-white/[0.02] border-t border-gray-100 dark:border-white/[0.06] transition-colors flex items-center justify-center gap-1.5">
+          <button onClick={handleToggleExpand} className="flex w-full items-center justify-center gap-1.5 border-t border-[color:var(--border)] px-4 py-2.5 text-xs font-medium text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]">
             {expanded ? t("showLess") : `${t("viewAll")} (${sortedHoldings.length})`}
             <svg className={`w-3 h-3 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />

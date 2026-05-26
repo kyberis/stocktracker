@@ -21,9 +21,9 @@ const THEMES: ThemeOption[] = [
     id: "default",
     nameKey: "themeDefault",
     descKey: "themeDefaultDesc",
-    previewBg: "#0f172a",
-    previewFg: "#f1f5f9",
-    previewAccent: "#10b981",
+    previewBg: "linear-gradient(180deg, #06101d 0%, #0c1727 100%)",
+    previewFg: "#f8fafc",
+    previewAccent: "#2dd4bf",
   },
   {
     id: "canvas",
@@ -101,7 +101,7 @@ export default function ThemeSelector() {
               key={theme.id}
               onClick={() => handleSelect(theme.id)}
               disabled={locked}
-              className={`relative rounded-xl border-2 p-3 text-left transition-all ${
+              className={`card relative rounded-[22px] border-2 p-3 text-left transition-all ${
                 active
                   ? "border-emerald-500 ring-2 ring-emerald-500/20"
                   : locked
@@ -113,8 +113,8 @@ export default function ThemeSelector() {
             >
               {/* Preview swatch */}
               <div
-                className={`w-full h-14 rounded-lg mb-2 flex items-end px-2 pb-1.5 gap-1 ${locked ? "opacity-50" : ""}`}
-                style={{ background: theme.previewBg }}
+                className={`mb-2 flex h-16 w-full items-end gap-1 rounded-2xl border border-white/10 px-2 pb-1.5 ${locked ? "opacity-50" : ""}`}
+                style={{ background: theme.previewBg, boxShadow: theme.id === "default" ? "inset 0 1px 0 rgba(255,255,255,0.18)" : undefined }}
               >
                 <div className="w-3 h-6 rounded-sm" style={{ background: theme.previewAccent, opacity: 0.8 }} />
                 <div className="w-5 h-4 rounded-sm" style={{ background: theme.previewAccent, opacity: 0.5 }} />
@@ -162,7 +162,7 @@ export default function ThemeSelector() {
       {hasChanges && (
         <button
           onClick={handleSave}
-          className="mt-4 w-full py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-colors"
+          className="btn-primary mt-4 w-full text-sm font-semibold"
         >
           {t("save")}
         </button>

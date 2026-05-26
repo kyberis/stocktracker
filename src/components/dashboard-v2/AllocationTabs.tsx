@@ -33,7 +33,7 @@ function Donut({ segments, centerLabel, centerValue }: {
   return (
     <div className="relative w-[120px] h-[120px] mx-auto mb-2">
       <svg viewBox="0 0 100 100" width="120" height="120">
-        <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" className="text-gray-100 dark:text-white/[0.04]" strokeWidth="10" />
+        <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" className="text-[color:var(--surface-highlight)]" strokeWidth="10" />
         {segments.map((seg) =>
           seg.percent > 0.5 ? (
             <path
@@ -48,8 +48,8 @@ function Donut({ segments, centerLabel, centerValue }: {
         )}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-[10px] text-gray-500 dark:text-slate-500">{centerLabel}</span>
-        <span className={`${valueSizeClass} font-bold text-gray-900 dark:text-white tabular-nums`}>{centerValue}</span>
+        <span className="text-[10px] text-[color:var(--muted)]">{centerLabel}</span>
+        <span className={`${valueSizeClass} font-bold tabular-nums text-[color:var(--foreground)]`}>{centerValue}</span>
       </div>
     </div>
   );
@@ -62,9 +62,9 @@ function Legend({ items }: { items: TaxonomyAllocation[] }) {
         <div key={a.label} className="flex items-center justify-between py-0.5 text-[11px]">
           <div className="flex items-center gap-1.5">
             <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: a.color }} />
-            <span className="text-gray-600 dark:text-slate-400">{a.label}</span>
+            <span className="text-[color:var(--muted)]">{a.label}</span>
           </div>
-          <span className="font-semibold tabular-nums text-gray-900 dark:text-white">{a.percent.toFixed(1)}%</span>
+          <span className="font-semibold tabular-nums text-[color:var(--foreground)]">{a.percent.toFixed(1)}%</span>
         </div>
       ))}
     </div>
@@ -139,23 +139,23 @@ export default function AllocationTabs({ holdings, cashEntries, onShowMore }: Pr
   return (
     <div className="card p-3">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-gray-900 dark:text-white">{t("v2Allocation")}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--foreground)]">{t("v2Allocation")}</p>
         {onShowMore && (
-          <button onClick={onShowMore} className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
+          <button onClick={onShowMore} className="text-[11px] font-medium text-emerald-400 hover:underline">
             {t("v2ShowMore")}
           </button>
         )}
       </div>
 
-      <div className="flex gap-0.5 bg-gray-100 dark:bg-white/[0.04] rounded-lg p-0.5 mb-3">
+      <div className="mb-3 flex gap-0.5 rounded-xl bg-[color:var(--surface-soft)] p-0.5">
         {tabs.map((tb) => (
           <button
             key={tb.key}
             onClick={() => setTab(tb.key)}
-            className={`flex-1 px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${
+            className={`flex-1 rounded-lg px-2 py-1 text-[10px] font-medium transition-colors ${
               tab === tb.key
-                ? "bg-white dark:bg-white/[0.08] text-gray-900 dark:text-white shadow-sm"
-                : "text-gray-500 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300"
+                ? "bg-[color:var(--surface-highlight)] text-[color:var(--foreground)] shadow-sm"
+                : "text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
             }`}
           >
             {tb.label}

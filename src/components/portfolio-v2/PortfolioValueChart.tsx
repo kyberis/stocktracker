@@ -295,7 +295,7 @@ interface Props {
 }
 
 export default function PortfolioValueChart({ holdings, assetFilter, refreshKey, onRecalculate, recalculating, onOpenAi, expanded, onToggleExpand, totalValue, investedValue, cashValue, onUpdateCash, dayGainLoss, dayGainLossPercent, onAssetFilterChange, dayChangePctByType, chartVisible, onToggleChartVisible, breakdownSlot }: Props) {
-  const { activePortfolioId, activePortfolioCurrency, mutationVersion, quotes } = usePortfolio();
+  const { activePortfolioId, activePortfolioCurrency, mutationVersion, quotes, demoMode } = usePortfolio();
   const { user } = useAuth();
   const { stealthMode } = useStealthMode();
   const { t } = useI18n();
@@ -334,6 +334,12 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   // ── Fetch history ──
 
   const fetchHistory = useCallback(async (r: EvolutionRange, dateOverride?: string | null) => {
+    if (demoMode) {
+      setPoints([]);
+      setEvents([]);
+      setLoading(false);
+      return;
+    }
     const version = ++fetchVersionRef.current;
     setLoading(true);
     try {
@@ -354,17 +360,29 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     } finally {
       if (version === fetchVersionRef.current) setLoading(false);
     }
-  }, [portfolioId]);
+  }, [demoMode, portfolioId]);
 
   useEffect(() => {
+    if (demoMode) {
+      setLoading(false);
+      setPoints([]);
+      setEvents([]);
+      return;
+    }
     if (activePortfolioId == null) {
       setLoading(false);
       setPoints([]);
       setEvents([]);
     }
-  }, [activePortfolioId]);
+  }, [activePortfolioId, demoMode]);
 
   useEffect(() => {
+    if (demoMode) {
+      setLoading(false);
+      setPoints([]);
+      setEvents([]);
+      return;
+    }
     if (activePortfolioId == null) return;
     if (!isChartVisible) {
       // Skip history fetch while the graph is collapsed; clear the spinner so
@@ -377,16 +395,17 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       return;
     }
     fetchHistory(range, range === "1d" ? debugDate : null);
-  }, [activePortfolioId, range, isPaid, fetchHistory, mutationVersion, refreshKey, debugDate, isChartVisible]);
+  }, [activePortfolioId, range, isPaid, fetchHistory, mutationVersion, refreshKey, debugDate, isChartVisible, demoMode]);
 
   // ── Auto-refresh for 1D (every 5 min) ──
 
   useEffect(() => {
+    if (demoMode) return;
     if (!isChartVisible) return;
     if (activePortfolioId == null || range !== "1d" || debugDate) return;
     const interval = setInterval(() => fetchHistory("1d"), 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [activePortfolioId, range, fetchHistory, debugDate, isChartVisible]);
+  }, [activePortfolioId, range, fetchHistory, debugDate, isChartVisible, demoMode]);
 
   // ── Derive effective points (must be before benchmark fetch) ──
 
@@ -421,6 +440,10 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   );
 
   useEffect(() => {
+    if (demoMode) {
+      setBenchmarkData({});
+      return;
+    }
     if (!isChartVisible) {
       setBenchmarkData({});
       return;
@@ -476,7 +499,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     });
 
     return () => { cancelled = true; };
-  }, [benchmarkEntries, range, effectivePoints, isChartVisible]);
+  }, [benchmarkEntries, range, effectivePoints, isChartVisible, demoMode]);
 
   // ── Persist benchmark selection ──
 
@@ -721,11 +744,13 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
 
   const isIntraday = range === "1d";
 
+  const controlButtonClass = "min-h-10 min-w-10 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-1.5 text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-highlight)] hover:text-[color:var(--foreground)]";
+
   const topButtons = (
-    <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
+    <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
       <button
         onClick={() => setShowGuide(true)}
-        className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+        className={controlButtonClass}
         title={t("chartGuide")}
         aria-label={t("chartGuide")}
       >
@@ -737,7 +762,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       {onToggleChartVisible && (
         <button
           onClick={onToggleChartVisible}
-          className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+          className={controlButtonClass}
           title={t("chartHideGraph")}
           aria-label={t("chartHideGraph")}
         >
@@ -749,7 +774,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       {onToggleExpand && (
         <button
           onClick={onToggleExpand}
-          className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+          className={controlButtonClass}
           title={expanded ? t("chartMinimize") : t("chartExpand")}
           aria-label={expanded ? t("chartMinimize") : t("chartExpand")}
         >
@@ -790,12 +815,12 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   const dayArrow = isFlatDay ? "•" : isPositiveDay ? "▲" : "▼";
 
   const inlineHeader = hasHeader ? (
-    <div className="px-5 pt-4 pb-2">
-      <div className="text-[10.5px] font-medium tracking-[0.14em] uppercase text-gray-400 dark:text-slate-500 mb-1.5">
+    <div className="px-5 pt-5 pb-3">
+      <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
         {t("investedAssets")}
       </div>
       <div className="flex items-baseline gap-3 flex-wrap">
-        <h2 className={`text-[30px] font-semibold tracking-tight leading-none tabular-nums ${investedEmpty ? "text-gray-400 dark:text-slate-500" : "text-gray-900 dark:text-white"}`}>
+        <h2 className={`text-[34px] font-semibold tracking-tight leading-none tabular-nums ${investedEmpty ? "text-[color:var(--muted)]" : "text-[color:var(--foreground)]"}`}>
           {stealthMode ? "•••••" : formatCurrency(headlineValue ?? 0, activePortfolioCurrency)}
         </h2>
         {!investedEmpty && (
@@ -807,33 +832,33 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
             <span>
               {stealthMode ? "" : `${isPositiveDay && !isFlatDay ? "+" : ""}${formatPercent(dayPct)}`}
             </span>
-            <span className="text-gray-400 dark:text-slate-500 font-normal ml-0.5">{t("todayLabel")}</span>
+            <span className="ml-0.5 font-normal text-[color:var(--muted)]">{t("todayLabel")}</span>
           </span>
         )}
         {investedEmpty && (
-          <span className="text-xs text-gray-500 dark:text-slate-400">
+          <span className="text-xs text-[color:var(--muted)]">
             {t("noGainsYetInvestedEmpty")}
           </span>
         )}
       </div>
       {hasCash && (
-        <div className="mt-3 flex items-center gap-3 rounded-lg border border-gray-100 dark:border-white/[0.06] bg-gray-50/60 dark:bg-white/[0.02] px-3 py-2">
-          <span className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md bg-slate-200/60 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300">
+        <div className="mt-4 flex items-center gap-3 rounded-[var(--radius-card)] border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-4 py-3">
+          <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-highlight)] text-[color:var(--foreground)]">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l2-3h14l2 3M9 13h6" />
             </svg>
           </span>
           <div className="flex-1 min-w-0">
-            <div className="text-[11px] text-gray-500 dark:text-slate-500 leading-tight">
+            <div className="text-[11px] leading-tight text-[color:var(--muted)]">
               {t("cashAvailableForInvestment")}
             </div>
             <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
+              <span className="text-sm font-semibold tabular-nums text-[color:var(--foreground)]">
                 {stealthMode ? "•••" : formatCurrency(cashValue!, activePortfolioCurrency)}
               </span>
               {netWorthValue != null && (
                 <span
-                  className="text-[11px] text-gray-400 dark:text-slate-500 border-b border-dashed border-gray-300 dark:border-slate-600 cursor-help"
+                  className="cursor-help border-b border-dashed border-[color:var(--border)] text-[11px] text-[color:var(--muted)]"
                   title={`${t("netWorthInline")}: ${formatCurrency(netWorthValue, activePortfolioCurrency)}`}
                 >
                   {t("netWorthInline")} {stealthMode ? "•••" : formatCurrency(netWorthValue, activePortfolioCurrency)}
@@ -847,7 +872,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
               onClick={onUpdateCash}
               aria-label={t("updateCashCtaAria")}
               title={t("updateCashCtaAria")}
-              className="flex-shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-md text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-white/[0.08] hover:border-gray-300 dark:hover:border-white/[0.16] hover:bg-white dark:hover:bg-white/[0.04] transition-colors"
+              className="inline-flex min-h-10 flex-shrink-0 items-center gap-1.5 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-highlight)] px-3 py-2 text-xs font-medium text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-soft)]"
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
@@ -869,10 +894,10 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   // omit the chart guide + expand buttons since they only make sense once the
   // graph is rendered.
   const collapsedTopButtons = onToggleChartVisible ? (
-    <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
+    <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
       <button
         onClick={onToggleChartVisible}
-        className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+        className={controlButtonClass}
         title={t("chartDeepDive")}
         aria-label={t("chartDeepDive")}
       >
@@ -885,7 +910,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
 
   if (!isChartVisible) {
     return (
-      <div className="card overflow-hidden relative">
+      <div className="card relative overflow-hidden rounded-[var(--radius-card)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]">
         {collapsedTopButtons}
         {inlineHeader}
         <PortfolioQuoteFreshness className="px-5 pb-3" />
@@ -898,22 +923,22 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
         <button
           type="button"
           onClick={onToggleChartVisible}
-          className="group w-full flex items-center gap-3 px-5 py-3 border-t border-gray-100 dark:border-white/[0.05] hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors text-left"
+          className="group flex w-full items-center gap-3 border-t border-[color:var(--border)] px-5 py-4 text-left transition-colors hover:bg-[color:var(--surface-soft)]"
         >
-          <span className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
+          <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-blue-400/18 bg-blue-500/10 text-blue-300">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 14l4-4 4 4 5-7" />
             </svg>
           </span>
           <span className="flex-1 min-w-0">
-            <span className="block text-sm font-semibold text-gray-900 dark:text-white">
+            <span className="block text-sm font-semibold text-[color:var(--foreground)]">
               {t("chartDeepDive")}
             </span>
-            <span className="block text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            <span className="mt-0.5 block text-xs text-[color:var(--muted)]">
               {t("chartDeepDiveHint")}
             </span>
           </span>
-          <svg className="w-4 h-4 text-gray-400 dark:text-slate-500 flex-shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-gray-600 dark:group-hover:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="h-4 w-4 flex-shrink-0 text-[color:var(--muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-[color:var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
@@ -922,10 +947,10 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   }
 
   const aggregatedTopButtons = onToggleExpand ? (
-    <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
+    <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
       <button
         onClick={onToggleExpand}
-        className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+        className={controlButtonClass}
         title={expanded ? t("chartMinimize") : t("chartExpand")}
         aria-label={expanded ? t("chartMinimize") : t("chartExpand")}
       >
@@ -944,14 +969,14 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
 
   if (activePortfolioId == null) {
     return (
-      <div className="card overflow-hidden relative">
+      <div className="card relative overflow-hidden rounded-[var(--radius-card)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]">
         {aggregatedTopButtons}
         {inlineHeader}
         <PortfolioQuoteFreshness className="px-5 pb-2" />
         <div className="min-h-[280px] flex flex-col justify-center">
           <AggregatedPortfolioPeriodMetrics holdings={relevantHoldings} refreshKey={refreshKey} />
         </div>
-        <div className="flex items-center justify-between px-5 py-2 border-t border-gray-100 dark:border-white/[0.04] text-[11px] text-gray-500 dark:text-slate-500">
+        <div className="flex items-center justify-between border-t border-[color:var(--border)] px-5 py-3 text-[11px] text-[color:var(--muted)]">
           <span>{t("allPortfoliosEvolutionNote")}</span>
           <div className="flex items-center gap-3">
             {onRecalculate && (
@@ -959,7 +984,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
                 type="button"
                 onClick={onRecalculate}
                 disabled={recalculating}
-                className="inline-flex items-center gap-1 font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1 font-medium text-blue-400 transition-colors hover:text-blue-300 disabled:opacity-50"
               >
                 <svg
                   width="11"
@@ -988,7 +1013,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
 
   if (loading && points.length === 0) {
     return (
-      <div className="card overflow-hidden relative">
+      <div className="card relative overflow-hidden rounded-[var(--radius-card)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]">
         {topButtons}
         {showGuide && <ChartGuideModal mode={mode} onClose={() => setShowGuide(false)} />}
         {inlineHeader}
@@ -999,9 +1024,9 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
         </div>
-        {range === "1d" && <div className="min-h-[32px] border-t border-gray-100 dark:border-white/[0.04]" />}
-        <div className="min-h-[36px] border-t border-gray-100 dark:border-white/[0.04]" />
-        <div className="min-h-[32px] border-t border-gray-100 dark:border-white/[0.04]" />
+        {range === "1d" && <div className="min-h-[32px] border-t border-[color:var(--border)]" />}
+        <div className="min-h-[36px] border-t border-[color:var(--border)]" />
+        <div className="min-h-[32px] border-t border-[color:var(--border)]" />
       </div>
     );
   }
@@ -1011,27 +1036,27 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     !(assetFilter === "all" && holdings.some((h) => h.assetType === "crypto"));
 
   return (
-    <div className="card overflow-hidden relative">
+    <div className="card relative overflow-hidden rounded-[var(--radius-card)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]">
       {topButtons}
       {showGuide && <ChartGuideModal mode={mode} onClose={() => setShowGuide(false)} />}
       {inlineHeader}
       <PortfolioQuoteFreshness className="px-5 pb-2" />
 
       {/* Chart */}
-      <div className={`h-[340px] px-2 ${hasHeader ? "pt-1" : "pt-3"} relative`}>
+      <div className={`relative h-[340px] px-3 ${hasHeader ? "pt-2" : "pt-3"}`}>
         {showMarketsClosedBanner && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
             <div className="flex flex-col items-center gap-2.5 text-center">
-              <div className="w-10 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white/80 dark:bg-white/5 flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-slate-500">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-highlight)]">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[color:var(--muted)]">
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
               </div>
-              <p className="text-sm font-semibold text-gray-700 dark:text-slate-300">
+              <p className="text-sm font-semibold text-[color:var(--foreground)]">
                 {t("marketsClosedTitle")}
               </p>
-              <p className="text-xs text-gray-500 dark:text-slate-500 max-w-[320px] leading-relaxed">
+              <p className="max-w-[320px] text-xs leading-relaxed text-[color:var(--muted)]">
                 {t("marketsClosedBody").replace(
                   "{value}",
                   stealthMode
@@ -1043,7 +1068,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
                 )}
               </p>
               {nextOpen && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 mt-1">
+                <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[10px] font-medium text-[color:var(--muted)]">
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-slate-600" />
                   {t("marketsClosedOpens")
                     .replace("{market}", nextOpen.market)
@@ -1303,11 +1328,11 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
 
       {/* Market sessions bar (1D) — always reserve space to avoid layout shift */}
       {range === "1d" && (
-        <div className="flex items-center gap-4 px-5 py-2 border-t border-gray-100 dark:border-white/[0.04] text-[11px] text-gray-500 dark:text-slate-500 overflow-x-auto min-h-[32px]">
+        <div className="flex min-h-[32px] items-center gap-4 overflow-x-auto border-t border-[color:var(--border)] px-5 py-2 text-[11px] text-[color:var(--muted)]">
           {sessionOverlays.map((s, i) => (
             <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
               <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-              <span className="font-semibold text-gray-600 dark:text-slate-400">{s.name}</span>
+              <span className="font-semibold text-[color:var(--foreground)]">{s.name}</span>
               <span>{s.openLabel} – {s.closeLabel}</span>
             </div>
           ))}
@@ -1330,7 +1355,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       />
 
       {/* Sync status & recalculate */}
-      <div className="flex items-center justify-between px-5 py-2 border-t border-gray-100 dark:border-white/[0.04] text-[11px] text-gray-500 dark:text-slate-500">
+      <div className="flex items-center justify-between border-t border-[color:var(--border)] px-5 py-3 text-[11px] text-[color:var(--muted)]">
         {range === "1d" ? (
           <div className="flex items-center gap-1.5">
             {debugDate ? (
@@ -1358,7 +1383,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
             <button
               onClick={onRecalculate}
               disabled={recalculating}
-              className="inline-flex items-center gap-1 font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1 font-medium text-blue-400 transition-colors hover:text-blue-300 disabled:opacity-50"
             >
               <svg
                 width="11"
@@ -1458,27 +1483,27 @@ function ChartFooter({
   onOpenAi,
 }: ChartFooterProps) {
   return (
-    <div className="flex items-center justify-between px-5 py-2.5 border-t border-gray-100 dark:border-white/[0.04] flex-wrap gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[color:var(--border)] px-5 py-3">
       <div className="flex items-center gap-2">
         {/* Mode toggle */}
         <div className="flex items-center gap-1">
-          <div className="flex rounded-lg bg-gray-100/60 dark:bg-white/[0.04] p-0.5">
+          <div className="flex rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-1">
             <button
               onClick={() => setMode("value")}
-              className={`text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors ${
+              className={`min-h-10 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors ${
                 mode === "value"
-                  ? "bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-500 dark:text-slate-500"
+                  ? "bg-[color:var(--surface-highlight)] text-[color:var(--foreground)] shadow-sm"
+                  : "text-[color:var(--muted)]"
               }`}
             >
               Value
             </button>
             <button
               onClick={() => setMode("performance")}
-              className={`text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors ${
+              className={`min-h-10 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors ${
                 mode === "performance"
-                  ? "bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-500 dark:text-slate-500"
+                  ? "bg-white/12 text-[color:var(--foreground)] shadow-sm"
+                  : "text-[color:var(--muted)]"
               }`}
             >
               Performance
@@ -1507,12 +1532,12 @@ function ChartFooter({
         {benchmarkEntries.map((b) => (
           <span
             key={b.key}
-            className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-md bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-slate-400 cursor-pointer hover:bg-gray-200 dark:hover:bg-white/[0.06]"
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2.5 py-1.5 text-[10px] font-semibold text-[color:var(--foreground)] hover:bg-[color:var(--surface-highlight)]"
             onClick={() => setBenchmarkKeys(benchmarkKeys.filter((k) => k !== b.key))}
           >
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: b.color }} />
             {b.label}
-            <span className="text-gray-400 dark:text-slate-600 ml-0.5">&times;</span>
+            <span className="ml-0.5 text-[color:var(--muted)]">&times;</span>
           </span>
         ))}
 
@@ -1520,7 +1545,7 @@ function ChartFooter({
         <div className="relative">
           <button
             onClick={() => setShowCompareDropdown(!showCompareDropdown)}
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:border-blue-400/40 hover:text-blue-500 transition-colors"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-1.5 text-[11px] font-semibold text-[color:var(--muted)] transition-colors hover:border-blue-400/24 hover:text-blue-300"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M3 3v18h18" />
@@ -1540,7 +1565,7 @@ function ChartFooter({
         {onOpenAi && (
           <button
             onClick={onOpenAi}
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-violet-400/30 text-violet-400 hover:border-violet-400/60 hover:text-violet-300 transition-colors"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-blue-400/18 bg-blue-500/10 px-3 py-1.5 text-[11px] font-semibold text-blue-300 transition-colors hover:border-blue-400/34 hover:text-blue-200"
           >
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />

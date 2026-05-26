@@ -4,6 +4,7 @@ Cross-cutting patterns, principles, and non-obvious contracts that apply across 
 
 ## Index
 
+- [glass-visual-system.md](glass-visual-system.md) — Default glass surface language, token model, and theme-compatibility rules for app chrome, dashboard cards, overlays, and charts.
 - [core-beliefs.md](core-beliefs.md) — The handful of non-negotiables that govern our engineering.
 - [eur-base-fx.md](eur-base-fx.md) — Why and how the entire app uses EUR as the internal base for FX math.
 - [tier-gating-pattern.md](tier-gating-pattern.md) — The paywall/feature-flag/tier resolution pattern.

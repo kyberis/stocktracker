@@ -64,4 +64,13 @@ describe("client auth redirect", () => {
     expect(response.status).toBe(401);
     expect(navigateSpy).toHaveBeenCalledWith("/login?redirect=%2Fdashboard%3Ftab%3Dholdings%23chart");
   });
+
+  it("does not redirect on public demo route even when an api returns 401", () => {
+    window.history.replaceState({}, "", "/demo");
+
+    const redirected = maybeRedirectToLogin(new Response(null, { status: 401 }), "/api/notifications");
+
+    expect(redirected).toBe(false);
+    expect(navigateSpy).not.toHaveBeenCalled();
+  });
 });

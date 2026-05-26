@@ -58,16 +58,16 @@ function MobileNavMoreSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="absolute bottom-0 left-0 right-0 max-h-[min(70vh,420px)] overflow-y-auto rounded-t-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl pb-[max(1rem,env(safe-area-inset-bottom))]"
+        className="glass-overlay absolute bottom-0 left-0 right-0 max-h-[min(70vh,420px)] overflow-y-auto rounded-t-[28px] border border-[color:var(--border)] shadow-2xl pb-[max(1rem,env(safe-area-inset-bottom))]"
       >
-        <div className="px-4 pt-3 pb-2 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
-          <h2 id={titleId} className="text-sm font-semibold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between border-b border-[color:var(--border)] px-4 pb-2 pt-3">
+          <h2 id={titleId} className="text-sm font-semibold text-[color:var(--foreground)]">
             {t("moreNav")}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400"
+            className="min-h-11 min-w-11 rounded-2xl border border-transparent p-2 text-[color:var(--muted)] hover:border-[color:var(--border)] hover:bg-white/10"
             aria-label={t("close")}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -84,10 +84,10 @@ function MobileNavMoreSheet({
                   <Link
                     href={item.href}
                     onClick={onClose}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    className={`flex min-h-11 items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition-colors ${
                       active
-                        ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300"
-                        : "text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800"
+                        ? "border-emerald-500/25 bg-emerald-500/12 text-[color:var(--foreground)]"
+                        : "border-transparent text-[color:var(--foreground)] hover:border-[color:var(--border)] hover:bg-white/10"
                     }`}
                     aria-current={active ? "page" : undefined}
                   >
@@ -106,10 +106,10 @@ function MobileNavMoreSheet({
                   <Link
                     href={item.href}
                     onClick={onClose}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    className={`flex min-h-11 items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition-colors ${
                       active
-                        ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300"
-                        : "text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800"
+                        ? "border-emerald-500/25 bg-emerald-500/12 text-[color:var(--foreground)]"
+                        : "border-transparent text-[color:var(--foreground)] hover:border-[color:var(--border)] hover:bg-white/10"
                     }`}
                     aria-current={active ? "page" : undefined}
                   >
@@ -147,7 +147,7 @@ export default function MobileTabBar() {
 
   if (isNative) {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)] sm:hidden">
+      <nav className="glass-overlay fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--border)] pb-[env(safe-area-inset-bottom)] sm:hidden">
         <div className="flex items-stretch">
           {NATIVE_MOBILE_TABS.map((tab) => {
             const active = tab.match(pathname);
@@ -156,8 +156,8 @@ export default function MobileTabBar() {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
-                  active ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-slate-500"
+                className={`flex-1 flex min-h-14 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+                  active ? "text-emerald-600 dark:text-emerald-400" : "text-[color:var(--muted)]"
                 }`}
               >
                 {iconPath ? (
@@ -176,7 +176,7 @@ export default function MobileTabBar() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)] sm:hidden">
+      <nav className="glass-overlay fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--border)] pb-[env(safe-area-inset-bottom)] sm:hidden">
         <div className="flex items-stretch">
           {webTabs.map((tab) => {
             const active = tab.matches(pathname);
@@ -185,8 +185,8 @@ export default function MobileTabBar() {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors min-w-0 ${
-                  active ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-slate-500"
+                className={`flex-1 flex min-h-14 min-w-0 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+                  active ? "text-emerald-600 dark:text-emerald-400" : "text-[color:var(--muted)]"
                 }`}
               >
                 {iconPath ? (
@@ -203,8 +203,8 @@ export default function MobileTabBar() {
             onClick={() => setMoreOpen(true)}
             aria-expanded={moreOpen}
             aria-haspopup="dialog"
-            className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors min-w-0 ${
-              moreActive ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-slate-500"
+            className={`flex-1 flex min-h-14 min-w-0 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+              moreActive ? "text-emerald-600 dark:text-emerald-400" : "text-[color:var(--muted)]"
             }`}
           >
             <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={moreActive ? 2.5 : 2} aria-hidden="true">

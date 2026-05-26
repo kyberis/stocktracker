@@ -49,7 +49,7 @@ function NavLogoWordmark() {
           <circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35" />
         </g>
       </svg>
-      <span className="hidden sm:inline text-base font-bold text-gray-900 dark:text-white">{t("appTitle")}</span>
+      <span className="hidden sm:inline text-base font-bold text-[color:var(--foreground)]">{t("appTitle")}</span>
     </Link>
   );
 }
@@ -60,24 +60,26 @@ function HeaderActions({
   canToggleMode,
   isDark,
   toggleTheme,
+  demoMode,
 }: {
   stealthMode: boolean;
   onStealthToggle: () => void;
   canToggleMode: boolean;
   isDark: boolean;
   toggleTheme: () => void;
+  demoMode?: boolean;
 }) {
   const { t } = useI18n();
   return (
     <>
-      <NotificationBell />
+      {!demoMode && <NotificationBell />}
       <button
         onClick={onStealthToggle}
         aria-pressed={stealthMode}
         aria-label={stealthMode ? t("stealthModeDisable") : t("stealthModeEnable")}
         title={stealthMode ? t("stealthModeDisable") : t("stealthModeEnable")}
-        className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors ${
-          stealthMode ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-slate-400"
+        className={`min-h-11 min-w-11 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-2 transition-colors hover:border-[color:var(--border)] hover:bg-[color:var(--surface-highlight)] ${
+          stealthMode ? "text-emerald-600 dark:text-emerald-400" : "text-[color:var(--muted)]"
         }`}
       >
         {stealthMode ? (
@@ -103,7 +105,7 @@ function HeaderActions({
       {canToggleMode && (
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 transition-colors"
+          className="min-h-11 min-w-11 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-2 text-[color:var(--muted)] transition-colors hover:border-[color:var(--border)] hover:bg-[color:var(--surface-highlight)]"
           title={isDark ? "Light mode" : "Dark mode"}
           aria-label={isDark ? "Light mode" : "Dark mode"}
         >
@@ -127,12 +129,12 @@ function HeaderActions({
         <LanguageSwitcher />
       </div>
 
-      <UserDropdown />
+      {!demoMode && <UserDropdown />}
     </>
   );
 }
 
-export default function AppNav() {
+export default function AppNav({ demoMode = false }: { demoMode?: boolean }) {
   const { t } = useI18n();
   const { isDark, canToggleMode, toggleTheme } = useTheme();
   const { stealthMode, toggleStealth } = useStealthMode();
@@ -149,12 +151,20 @@ export default function AppNav() {
     canToggleMode,
     isDark,
     toggleTheme,
+    demoMode,
   };
 
   return (
     <>
-      <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-nav-bg sticky top-7 z-40" data-tour="nav">
-        <div className="max-w-7xl mx-auto min-w-0 px-3 py-1.5 sm:px-6 sm:py-2">
+      <header
+        className="sticky top-7 z-40 border-b border-[color:var(--border)] backdrop-blur-md"
+        style={{
+          background: "var(--nav-bg)",
+          boxShadow: "0 12px 26px rgba(1, 6, 16, 0.18)",
+        }}
+        data-tour="nav"
+      >
+        <div className="max-w-7xl mx-auto min-w-0 px-3 py-2 sm:px-6 sm:py-3">
           {/* Desktop (lg+): logo | search | actions */}
           <div className="hidden lg:grid lg:grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto] lg:items-center lg:gap-x-6">
             <div className="flex min-w-0 items-center gap-3">
@@ -165,7 +175,7 @@ export default function AppNav() {
               <NavAssetSearch variant="command" />
             </div>
 
-            <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-1.5">
+            <div className="flex shrink-0 items-center justify-end gap-1">
               <HeaderActions {...actionsProps} />
             </div>
           </div>

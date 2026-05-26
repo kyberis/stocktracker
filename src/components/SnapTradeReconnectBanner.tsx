@@ -3,18 +3,21 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
+import { usePortfolio } from "@/lib/portfolio-context";
 import type { DisabledBrokerageConnection } from "@/hooks/import-types";
 
 const DISMISS_KEY = "snaptrade_reconnect_dismissed";
 
 export default function SnapTradeReconnectBanner() {
   const { t } = useI18n();
+  const { demoMode } = usePortfolio();
   const [needsAttention, setNeedsAttention] = useState(false);
   const [disabledConnections, setDisabledConnections] = useState<DisabledBrokerageConnection[]>([]);
   const [dismissed, setDismissed] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   useEffect(() => {
+    if (demoMode) return;
     try {
       if (localStorage.getItem(DISMISS_KEY)) {
         setDismissed(true);
@@ -34,7 +37,7 @@ export default function SnapTradeReconnectBanner() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [demoMode]);
 
   const dismiss = useCallback(() => {
     setDismissed(true);

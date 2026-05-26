@@ -45,20 +45,20 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
       .finally(() => setLoading(false));
   }, [activePortfolioId, demoMode]);
 
-  if (loading) return <div className="card rounded-2xl h-24 animate-pulse bg-gray-50 dark:bg-white/[0.02]" />;
+  if (loading) return <div className="card h-24 rounded-[var(--radius-card)] bg-gray-50 animate-pulse dark:bg-white/[0.02]" />;
 
   if (!digest) {
     return (
-      <div className="card rounded-2xl p-3 bg-gradient-to-br from-violet-500/[0.06] to-cyan-500/[0.04] border-violet-500/10">
+      <div className="card rounded-[var(--radius-card)] border border-[color:var(--border)] p-4 shadow-[0_14px_28px_rgba(1,6,16,0.22)]">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth={2}>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-violet-300" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
             </svg>
           </div>
-          <div className="text-xs font-bold text-gray-900 dark:text-white">{t("weeklyDigestTitle")}</div>
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--foreground)]">{t("weeklyDigestTitle")}</div>
         </div>
-        <p className="text-[10px] text-gray-500 dark:text-slate-400">{t("weeklyDigestNoData")}</p>
+        <p className="text-[10px] text-[color:var(--muted)]">{t("weeklyDigestNoData")}</p>
       </div>
     );
   }
@@ -111,38 +111,38 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
   }
 
   return (
-    <div className="card rounded-2xl p-3 bg-gradient-to-br from-violet-500/[0.06] to-cyan-500/[0.04] border-violet-500/10">
+    <div className="card rounded-[var(--radius-card)] border border-[color:var(--border)] p-4 shadow-[0_14px_28px_rgba(1,6,16,0.22)]">
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center shrink-0">
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth={2}>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-violet-300" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
           </svg>
         </div>
         <div>
-          <div className="text-xs font-bold text-gray-900 dark:text-white">{t("weeklyDigestTitle")}</div>
-          <div className="text-[10px] text-gray-400 dark:text-slate-500">{digest.weekStart} – {digest.weekEnd}</div>
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--foreground)]">{t("weeklyDigestTitle")}</div>
+          <div className="text-[10px] text-[color:var(--muted)]">{digest.weekStart} – {digest.weekEnd}</div>
         </div>
       </div>
 
       {statItems.length > 0 && (
         <div className="grid grid-cols-2 gap-1.5 mb-2">
           {statItems.map((s, i) => (
-            <div key={i} className="rounded-lg bg-white/40 dark:bg-white/[0.03] p-2 text-center">
-              <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500">{s.label}</div>
-              <div className={`text-xs font-bold font-mono mt-0.5 ${s.color || "text-gray-900 dark:text-white"}`}>{s.value}</div>
+            <div key={i} className="rounded-[16px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-3 text-center">
+              <div className="text-[9px] uppercase tracking-[0.16em] text-[color:var(--muted)]">{s.label}</div>
+              <div className={`mt-0.5 text-xs font-bold font-mono ${s.color || "text-[color:var(--foreground)]"}`}>{s.value}</div>
             </div>
           ))}
         </div>
       )}
 
       {stats.weekChange !== undefined && (
-        <p className="text-[9px] text-gray-500 dark:text-slate-500 leading-snug mb-2">{t("weeklyDigestSnapshotNote")}</p>
+        <p className="mb-2 text-[9px] leading-snug text-[color:var(--muted)]">{t("weeklyDigestSnapshotNote")}</p>
       )}
 
-      <p className="text-[11px] text-gray-600 dark:text-slate-300 leading-relaxed mb-2">
+      <p className="mb-2 text-[11px] leading-relaxed text-[color:var(--foreground)]">
         {digest.summaryText}
       </p>
-      <p className="text-[9px] text-gray-400 dark:text-slate-600 italic">{t("weeklyDigestDisclaimer")}</p>
+      <p className="text-[9px] italic text-[color:var(--muted)]">{t("weeklyDigestDisclaimer")}</p>
     </div>
   );
 }

@@ -31,7 +31,7 @@ export default function GoalPromptCard({ holdings }: Props) {
   };
 
   return (
-    <div className="card rounded-2xl p-3 relative group">
+    <div className="card relative rounded-[var(--radius-card)] border border-[color:var(--border)] p-3 group">
       <button
         onClick={handleDismiss}
         className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-gray-300 dark:text-slate-600 hover:text-gray-500 dark:hover:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -43,7 +43,7 @@ export default function GoalPromptCard({ holdings }: Props) {
       </button>
 
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shrink-0">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/14 bg-emerald-500/12">
           <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v1.5M3 21v-6m0 0l2.77-.693a9 9 0 016.208.682l.108.054a9 9 0 006.086.71l3.114-.732a48.524 48.524 0 01-.005-10.499l-3.11.732a9 9 0 01-6.085-.711l-.108-.054a9 9 0 00-6.208-.682L3 4.5M3 15V4.5" />
           </svg>
@@ -55,7 +55,7 @@ export default function GoalPromptCard({ holdings }: Props) {
         <button
           type="button"
           onClick={() => router.push("/tools/projection")}
-          className="shrink-0 px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 transition-colors"
+          className="shrink-0 rounded-xl border border-emerald-500/16 bg-emerald-500/14 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition-colors hover:bg-emerald-500/20"
         >
           {t("goalPromptCta")}
         </button>
