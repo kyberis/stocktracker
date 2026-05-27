@@ -1318,6 +1318,9 @@ const pt: TranslationStrings = {
   generateHistoryBody: "Vamos calcular a evolução do valor do seu portfólio a partir das suas transações e dados de mercado. Isto pode demorar um minuto.",
   generateHistoryBtn: "Gerar Histórico",
   generatingHistory: "A gerar histórico…",
+  updatingPortfolioHistory: "A atualizar o histórico do portfólio…",
+  backfillHistoryFailed: "Não foi possível atualizar o histórico do portfólio.",
+  backfillHistoryRetry: "Tentar novamente",
   marketsClosedTitle: "Faça uma pausa — os mercados estão fechados",
   marketsClosedBody: "O seu portfólio fechou a {value}. O gráfico irá retomar o acompanhamento quando os mercados reabrirem.",
   marketsClosedOpens: "{market} abre {time}",
@@ -2446,6 +2449,22 @@ const pt: TranslationStrings = {
   matrixPeriod5y: "5A",
   matrixPeriod10y: "10A",
   matrixPeriodAll: "Total",
+  matrixHowItWorksAria: "Como o desempenho é calculado",
+  matrixExplainerTitle: "Como o desempenho é calculado",
+  matrixExplainerIntro:
+    "Esta matriz mostra o retorno por classe de ativos e período. As percentagens são relativas ao valor no início de cada período.",
+  matrixExplainerTodayTitle: "Hoje",
+  matrixExplainerTodayBody:
+    "O retorno de hoje é P/L do dia dividido pelo valor de fecho de ontem (× 100). Em ações e ETFs só entram posições cujo mercado abriu hoje; cripto conta sempre.",
+  matrixExplainerAllAssetsTitle: "Todos os ativos vs. cada classe",
+  matrixExplainerAllAssetsBody:
+    "Cada linha de classe mostra o retorno médio desse grupo. Todos os ativos soma todo o portfólio: se uma classe sobe e outra desce, o total pode ficar perto de 0% mesmo com movimento nas classes.",
+  matrixExplainerPeriodsTitle: "Semana, mês, ano e mais",
+  matrixExplainerPeriodsBody:
+    "Colunas longas comparam o valor atual com uma data passada usando snapshots diários do portfólio ou preços históricos. Horizontes 3A, 5A, 10A e Total requerem Pro.",
+  matrixExplainerDisplayTitle: "% ou moeda",
+  matrixExplainerDisplayBody:
+    "No modo % vê o retorno relativo. No modo moeda vê a variação absoluta na moeda do portfólio.",
   allAssets: "Todos os Ativos",
   stocksLabel: "Ações",
   etfsLabel: "ETFs",

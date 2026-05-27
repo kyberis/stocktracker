@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useStealthMode } from "@/lib/stealth-context";
 import { formatCurrency, formatPercent } from "@/lib/utils";
@@ -15,6 +15,7 @@ import {
   type MatrixRow,
 } from "@/lib/portfolio-performance-matrix";
 import { usePortfolioPerformanceMatrix } from "@/hooks/use-portfolio-performance-matrix";
+import PerformanceMatrixExplainerModal from "./PerformanceMatrixExplainerModal";
 import type { Holding, CashEntry } from "@/lib/types";
 
 const ASSET_LABEL_KEYS: Record<AssetFilter, string> = {
@@ -78,6 +79,7 @@ export default function PortfolioPerformanceMatrix({
 }: Props) {
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
+  const [explainerOpen, setExplainerOpen] = useState(false);
   const { rows, loading, displayMode, setDisplayMode, isPro, baseCurrency } =
     usePortfolioPerformanceMatrix({
       holdings,
@@ -111,6 +113,16 @@ export default function PortfolioPerformanceMatrix({
           <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)]">
             {t("performanceMatrixTitle")}
           </h3>
+          <button
+            type="button"
+            onClick={() => setExplainerOpen(true)}
+            className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-full text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]"
+            aria-label={t("matrixHowItWorksAria")}
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
           {!isPro && <TierFeatureBadge requiredPlan="pro" size="sm" />}
         </div>
         <div
@@ -204,6 +216,8 @@ export default function PortfolioPerformanceMatrix({
       </div>
 
       <p className="px-5 pb-4 pt-2 text-center text-[10px] text-[color:var(--muted)]">{t("growthCaveat")}</p>
+
+      <PerformanceMatrixExplainerModal isOpen={explainerOpen} onClose={() => setExplainerOpen(false)} />
     </section>
   );
 }

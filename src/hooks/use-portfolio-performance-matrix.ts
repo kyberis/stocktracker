@@ -4,8 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { calculateTotalsByAssetType } from "@/lib/portfolio-summary";
-import { getMarketStatus } from "@/lib/market-hours";
-import { convertCurrency } from "@/lib/utils";
+import { computeDayChangeByType } from "@/lib/day-change-pct";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 import {
   buildMatrixFromHistorical,
@@ -20,16 +19,6 @@ import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import demoMatrix from "../../data/demo-performance-matrix.json";
 
 type HistoricalApiResponse = { data?: HistoricalDataPoint[] };
-
-function isAssetTypeMarketOpen(holdings: Holding[], assetType: "stock" | "etf" | "crypto"): boolean {
-  if (assetType === "crypto") return true;
-  return holdings
-    .filter((h) => (h.assetType ?? "stock") === assetType)
-    .some((h) => {
-      const ex = h.exchange?.toUpperCase();
-      return ex ? getMarketStatus(ex).isOpen : false;
-    });
-}
 
 export interface UsePortfolioPerformanceMatrixArgs {
   holdings: Holding[];
@@ -61,29 +50,12 @@ export function usePortfolioPerformanceMatrix({
   const investedTotal =
     byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.crypto.totalCurrentEUR;
 
-  const marketOpen = useMemo(
-    () => ({
-      stock: isAssetTypeMarketOpen(holdings, "stock"),
-      etf: isAssetTypeMarketOpen(holdings, "etf"),
-      crypto: true,
-    }),
-    [holdings],
+  const dayChangeComputed = useMemo(
+    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency),
+    [holdings, quotes, exchangeRates, baseCurrency],
   );
 
   const { currentByAsset, dayPctByAsset, dayAbsByAsset } = useMemo(() => {
-    const allDayPL =
-      (marketOpen.stock ? byType.stock.dayGainLossEUR : 0) +
-      (marketOpen.etf ? byType.etf.dayGainLossEUR : 0) +
-      (marketOpen.crypto ? byType.crypto.dayGainLossEUR : 0);
-    const allPrior = investedTotal - allDayPL;
-    const allDayPct = allPrior > 0 ? (allDayPL / allPrior) * 100 : 0;
-
-    const pctFor = (type: "stock" | "etf" | "crypto", value: number, dayPL: number, open: boolean) => {
-      if (!open) return undefined;
-      const prior = value - dayPL;
-      return prior > 0 ? (dayPL / prior) * 100 : 0;
-    };
-
     const current: Partial<Record<AssetFilter, number>> = {
       all: investedTotal,
       stock: byType.stock.totalCurrentEUR,
@@ -92,21 +64,18 @@ export function usePortfolioPerformanceMatrix({
     };
 
     const pct: Partial<Record<AssetFilter, number>> = {
-      all: dayChangePctProp?.all ?? allDayPct,
-      stock: dayChangePctProp?.stock ?? pctFor("stock", byType.stock.totalCurrentEUR, byType.stock.dayGainLossEUR, marketOpen.stock),
-      etf: dayChangePctProp?.etf ?? pctFor("etf", byType.etf.totalCurrentEUR, byType.etf.dayGainLossEUR, marketOpen.etf),
-      crypto: dayChangePctProp?.crypto ?? pctFor("crypto", byType.crypto.totalCurrentEUR, byType.crypto.dayGainLossEUR, true),
+      all: dayChangePctProp?.all ?? dayChangeComputed.pct.all,
+      stock: dayChangePctProp?.stock ?? dayChangeComputed.pct.stock,
+      etf: dayChangePctProp?.etf ?? dayChangeComputed.pct.etf,
+      crypto: dayChangePctProp?.crypto ?? dayChangeComputed.pct.crypto,
     };
 
-    const abs: Partial<Record<AssetFilter, number>> = {
-      all: marketOpen.stock || marketOpen.etf || marketOpen.crypto ? allDayPL : undefined,
-      stock: marketOpen.stock ? byType.stock.dayGainLossEUR : undefined,
-      etf: marketOpen.etf ? byType.etf.dayGainLossEUR : undefined,
-      crypto: byType.crypto.dayGainLossEUR,
+    return {
+      currentByAsset: current,
+      dayPctByAsset: pct,
+      dayAbsByAsset: dayChangeComputed.abs,
     };
-
-    return { currentByAsset: current, dayPctByAsset: pct, dayAbsByAsset: abs };
-  }, [byType, investedTotal, marketOpen, dayChangePctProp]);
+  }, [byType, investedTotal, dayChangePctProp, dayChangeComputed]);
 
   const assetKeys = useMemo(() => resolveMatrixAssetKeys(currentByAsset), [currentByAsset]);
 

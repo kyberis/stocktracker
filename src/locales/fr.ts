@@ -1318,6 +1318,9 @@ const fr: TranslationStrings = {
   generateHistoryBody: "Nous calculerons l'évolution de la valeur de votre portefeuille à partir de vos transactions et des données du marché. Cela peut prendre une minute.",
   generateHistoryBtn: "Générer l'historique",
   generatingHistory: "Génération de l'historique…",
+  updatingPortfolioHistory: "Mise à jour de l'historique du portefeuille…",
+  backfillHistoryFailed: "Impossible de mettre à jour l'historique du portefeuille.",
+  backfillHistoryRetry: "Réessayer",
   marketsClosedTitle: "Faites une pause — les marchés sont fermés",
   marketsClosedBody: "Votre portefeuille a fermé à {value}. Le graphique reprendra le suivi lorsque les marchés rouvriront.",
   marketsClosedOpens: "{market} ouvre {time}",
@@ -2434,6 +2437,22 @@ const fr: TranslationStrings = {
   matrixPeriod5y: "5A",
   matrixPeriod10y: "10A",
   matrixPeriodAll: "Total",
+  matrixHowItWorksAria: "Comment la performance est calculée",
+  matrixExplainerTitle: "Comment la performance est calculée",
+  matrixExplainerIntro:
+    "Ce tableau montre le rendement par classe d'actifs et par période. Les pourcentages sont relatifs à la valeur au début de chaque période.",
+  matrixExplainerTodayTitle: "Aujourd'hui",
+  matrixExplainerTodayBody:
+    "Le rendement du jour est le P/L du jour divisé par la valeur de clôture d'hier (× 100). Pour les actions et ETF, seules les positions dont le marché a ouvert aujourd'hui comptent ; la crypto compte toujours.",
+  matrixExplainerAllAssetsTitle: "Total vs. chaque classe",
+  matrixExplainerAllAssetsBody:
+    "Chaque ligne de classe montre le rendement moyen de ce groupe. Total combine tout le portefeuille : si une classe monte et une autre baisse, le total peut être proche de 0 % même si les classes bougent.",
+  matrixExplainerPeriodsTitle: "Semaine, mois, année et plus",
+  matrixExplainerPeriodsBody:
+    "Les colonnes longues comparent la valeur actuelle à une date passée via les snapshots quotidiens du portefeuille ou les prix historiques. Les horizons 3A, 5A, 10A et Total nécessitent Pro.",
+  matrixExplainerDisplayTitle: "% ou devise",
+  matrixExplainerDisplayBody:
+    "En mode %, vous voyez le rendement relatif. En mode devise, la variation absolue dans la monnaie du portefeuille.",
 
   investedAssets: "Actifs investis",
   cashAvailableForInvestment: "Liquidités disponibles pour investir",

@@ -1318,6 +1318,9 @@ const de: TranslationStrings = {
   generateHistoryBody: "Wir berechnen die Entwicklung Ihres Portfolio-Wertes aus Ihren Transaktionen und Marktdaten. Dies kann eine Minute dauern.",
   generateHistoryBtn: "Historie generieren",
   generatingHistory: "Historie wird generiert…",
+  updatingPortfolioHistory: "Portfolio-Historie wird aktualisiert…",
+  backfillHistoryFailed: "Portfolio-Historie konnte nicht aktualisiert werden.",
+  backfillHistoryRetry: "Erneut versuchen",
   marketsClosedTitle: "Machen Sie eine Pause — Märkte sind geschlossen",
   marketsClosedBody: "Ihr Portfolio schloss bei {value}. Das Diagramm wird die Verfolgung wieder aufnehmen, wenn die Märkte wieder öffnen.",
   marketsClosedOpens: "{market} öffnet {time}",
@@ -2446,6 +2449,22 @@ const de: TranslationStrings = {
   matrixPeriod5y: "5J",
   matrixPeriod10y: "10J",
   matrixPeriodAll: "Gesamt",
+  matrixHowItWorksAria: "So wird die Performance berechnet",
+  matrixExplainerTitle: "So wird die Performance berechnet",
+  matrixExplainerIntro:
+    "Diese Matrix zeigt die Rendite nach Anlageklasse und Zeitraum. Prozentwerte beziehen sich auf den Wert zu Beginn des jeweiligen Zeitraums.",
+  matrixExplainerTodayTitle: "Heute",
+  matrixExplainerTodayBody:
+    "Die Tagesrendite ist Tages-P/L geteilt durch den Schlusswert von gestern (× 100). Bei Aktien und ETFs zählen nur Positionen, deren Markt heute geöffnet war; Krypto zählt immer.",
+  matrixExplainerAllAssetsTitle: "Alle Assets vs. einzelne Klassen",
+  matrixExplainerAllAssetsBody:
+    "Jede Klassenzeile zeigt die durchschnittliche Rendite dieser Gruppe. Alle Assets kombiniert das gesamte Portfolio: steigt eine Klasse und fällt eine andere, kann das Total nahe 0% liegen.",
+  matrixExplainerPeriodsTitle: "Woche, Monat, Jahr und länger",
+  matrixExplainerPeriodsBody:
+    "Längere Spalten vergleichen den aktuellen Wert mit einem vergangenen Datum anhand täglicher Portfolio-Snapshots oder historischer Kurse. Horizonte 3J, 5J, 10J und Gesamt erfordern Pro.",
+  matrixExplainerDisplayTitle: "% oder Währung",
+  matrixExplainerDisplayBody:
+    "Im %-Modus sehen Sie die relative Rendite. Im Währungsmodus die absolute Veränderung in Ihrer Portfoliowährung.",
   allAssets: "Alle Vermögenswerte",
   stocksLabel: "Aktien",
   etfsLabel: "ETFs",
