@@ -501,6 +501,8 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
         <div className="card px-6 py-5">
           <StockChart
             ticker={ticker}
+            exchange={holding?.exchange ?? exchange}
+            isin={holding?.isin}
             purchasePrice={holding?.purchasePrice}
             displayCurrency={holding?.displayCurrency || quote?.currency || "USD"}
           />

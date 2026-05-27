@@ -47,6 +47,20 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "fix",
+        text: "The invested-assets headline day change now uses the same market-aware formula as the performance matrix and asset pills, so it no longer disagrees after European markets close.",
+        translations: {
+          es: "El cambio diario del titular de activos invertidos usa ahora la misma fórmula que la matriz de rendimiento y las pastillas por tipo, y ya no contradice el resto tras el cierre de Europa.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Holdings imported with the exchange code as the ticker (e.g. TDG.DE on Tradegate) now load price history and live quotes via ISIN when available.",
+        translations: {
+          es: "Las posiciones importadas con el código de mercado como ticker (p. ej. TDG.DE en Tradegate) cargan ahora historial y cotización en vivo mediante el ISIN cuando está disponible.",
+        },
+      },
+      {
+        type: "fix",
         text: "Portfolio day change for All Assets now uses the same calculation as each asset class in the performance matrix and breakdown pills, so totals no longer show 0% while individual classes move.",
         translations: {
           es: "El cambio diario de Todos los activos usa ahora el mismo cálculo que cada clase en la matriz de rendimiento y las pastillas del desglose, para que el total ya no muestre 0% cuando las clases individuales sí se mueven.",

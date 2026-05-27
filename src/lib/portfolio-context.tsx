@@ -5,6 +5,7 @@ import type { CashEntry, Holding, QuoteData, ExchangeRates, Goal } from "./types
 import { generateId, normalizeCurrency } from "./utils";
 import { useSettings } from "./settings-context";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
+import { marketDataSymbolForHolding } from "@/lib/market-symbol";
 
 const QUOTES_CACHE_KEY = "trefolio-quotes-v3";
 const RATES_CACHE_KEY = "trefolio-rates-v1";
@@ -401,6 +402,14 @@ export function PortfolioProvider({
     return parseExchangeRatesFromApi(data);
   }, [holdings, getPortfolioCurrency]);
 
+  const quoteRequestSymbol = useCallback(
+    (ticker: string) => {
+      const holding = holdings.find((h) => h.ticker === ticker);
+      return holding ? marketDataSymbolForHolding(holding) : ticker;
+    },
+    [holdings],
+  );
+
   const fetchQuotes = useCallback(async (tickers: string[], options?: { background?: boolean }) => {
     if (fetchingRef.current || tickers.length === 0) return;
     const { background = false } = options ?? {};
@@ -413,9 +422,14 @@ export function PortfolioProvider({
       const batchSize = 10;
       const headers = getApiHeaders();
 
+      const requestByTicker = new Map(
+        tickers.map((t) => [t, quoteRequestSymbol(t)] as const),
+      );
+      const uniqueRequestSymbols = [...new Set(requestByTicker.values())];
+
       const batches: string[][] = [];
-      for (let i = 0; i < tickers.length; i += batchSize) {
-        batches.push(tickers.slice(i, i + batchSize));
+      for (let i = 0; i < uniqueRequestSymbols.length; i += batchSize) {
+        batches.push(uniqueRequestSymbols.slice(i, i + batchSize));
       }
 
       const [batchResults, rates] = await Promise.all([
@@ -438,9 +452,12 @@ export function PortfolioProvider({
       const stockQuotes: Record<string, QuoteData> = {};
       const now = Date.now();
       const updatedAtByTicker: Record<string, number> = {};
-      for (const [key, val] of Object.entries(allQuotes)) {
-        stockQuotes[key] = { ...val, fetchedAt: now };
-        updatedAtByTicker[key] = now;
+      for (const ticker of tickers) {
+        const requestSymbol = requestByTicker.get(ticker) ?? ticker;
+        const val = allQuotes[requestSymbol] ?? allQuotes[ticker];
+        if (!val) continue;
+        stockQuotes[ticker] = { ...val, fetchedAt: now };
+        updatedAtByTicker[ticker] = now;
       }
 
       setQuotes(stockQuotes);
@@ -459,7 +476,7 @@ export function PortfolioProvider({
       setIsRefreshing(false);
       fetchingRef.current = false;
     }
-  }, [getApiHeaders, buildFetchUrl, fetchExchangeRates]);
+  }, [getApiHeaders, buildFetchUrl, fetchExchangeRates, quoteRequestSymbol]);
 
   const refreshQuotes = useCallback(async () => {
     const tickers = [...new Set(holdings.map((h) => h.ticker))];
@@ -489,13 +506,14 @@ export function PortfolioProvider({
 
     try {
       const headers = getApiHeaders();
-      const url = buildFetchUrl("/api/quote", { symbols: ticker });
+      const requestSymbol = quoteRequestSymbol(ticker);
+      const url = buildFetchUrl("/api/quote", { symbols: requestSymbol });
       const res = await fetchWithAuthRedirect(url, { headers });
       if (!res.ok) throw new Error("Failed to fetch quote");
 
       const allQuotes = (await res.json()) as Record<string, QuoteData>;
       const now = Date.now();
-      const nextQuote = allQuotes[ticker];
+      const nextQuote = allQuotes[requestSymbol] ?? allQuotes[ticker];
       if (nextQuote) {
         const withTimestamp = { ...nextQuote, fetchedAt: now };
         setQuotes((prev) => {
@@ -522,17 +540,18 @@ export function PortfolioProvider({
         return next;
       });
     }
-  }, [buildFetchUrl, getApiHeaders, refreshingTickers, fetchExchangeRates]);
+  }, [buildFetchUrl, getApiHeaders, refreshingTickers, fetchExchangeRates, quoteRequestSymbol]);
 
   const fetchQuoteForTicker = useCallback(async (ticker: string) => {
     setRefreshingTickers((prev) => { const s = new Set(prev); s.add(ticker); return s; });
     try {
       const headers = getApiHeaders();
-      const url = buildFetchUrl("/api/quote", { symbols: ticker });
+      const requestSymbol = quoteRequestSymbol(ticker);
+      const url = buildFetchUrl("/api/quote", { symbols: requestSymbol });
       const res = await fetchWithAuthRedirect(url, { headers });
       if (!res.ok) return;
       const data = (await res.json()) as Record<string, QuoteData>;
-      const q = data[ticker];
+      const q = data[requestSymbol] ?? data[ticker];
       if (q) {
         const now = Date.now();
         const stamped = { ...q, fetchedAt: now };
@@ -545,7 +564,7 @@ export function PortfolioProvider({
     } catch { /* non-critical */ } finally {
       setRefreshingTickers((prev) => { const s = new Set(prev); s.delete(ticker); return s; });
     }
-  }, [getApiHeaders, buildFetchUrl, fetchExchangeRates]);
+  }, [getApiHeaders, buildFetchUrl, fetchExchangeRates, quoteRequestSymbol]);
 
   const addHolding = useCallback(async (holding: Omit<Holding, "id"> & { purchaseDate?: string }) => {
     const tempId = generateId();

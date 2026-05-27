@@ -5,9 +5,8 @@ import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
-import { getMarketStatus } from "@/lib/market-hours";
-import { computeDayChangeByType } from "@/lib/day-change-pct";
-import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
+import { computeDayChangeByType, computeDayChangeHeadline } from "@/lib/day-change-pct";
+import { convertCurrency } from "@/lib/utils";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import BackfillCTA from "./BackfillCTA";
 import MarketAwareBreakdown from "./MarketAwareBreakdown";
@@ -29,27 +28,6 @@ const PortfolioEvolutionChart = dynamic(() => import("./PortfolioEvolutionChart"
     <div className="card h-[420px] animate-pulse rounded-xl bg-gray-50 dark:bg-white/[0.02]" />
   ),
 });
-
-function computeMarketAwareDayPL(
-  holdings: Holding[],
-  quotes: Record<string, QuoteData>,
-  exchangeRates: ExchangeRates,
-  baseCurrency: string,
-): number {
-  let dayPL = 0;
-  for (const h of holdings) {
-    const isCrypto = h.assetType === "crypto";
-    if (!isCrypto) {
-      if (!getMarketStatus(h.exchange).isOpen) continue;
-    }
-    const quote = quotes[h.ticker];
-    if (!quote || quote.regularMarketPrice <= 0) continue;
-    const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
-    const dayDelta = h.shares * (quote.regularMarketChange ?? 0);
-    dayPL += convertCurrency(dayDelta, quoteCurrency, baseCurrency, exchangeRates);
-  }
-  return dayPL;
-}
 
 export default function PortfolioPage() {
   const searchParams = useSearchParams();
@@ -92,15 +70,20 @@ export default function PortfolioPage() {
   );
   const investedValueBase = Math.max(0, totals.totalCurrentEUR - cashValueBase);
 
-  const dayGainLoss = useMemo(
-    () => computeMarketAwareDayPL(filteredHoldings, quotes, exchangeRates, baseCurrency),
-    [filteredHoldings, quotes, exchangeRates, baseCurrency],
-  );
-
   const dayChangePctByType = useMemo(
     () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency).pct,
     [holdings, quotes, exchangeRates, baseCurrency],
   );
+
+  const { dayGainLoss, dayGainLossPercent } = useMemo(() => {
+    const headline = computeDayChangeHeadline(
+      filteredHoldings,
+      quotes,
+      exchangeRates,
+      baseCurrency,
+    );
+    return { dayGainLoss: headline.abs, dayGainLossPercent: headline.pct };
+  }, [filteredHoldings, quotes, exchangeRates, baseCurrency]);
 
   const handleBackfillComplete = useCallback(() => {
     setRefreshKey((k) => k + 1);
@@ -167,11 +150,7 @@ export default function PortfolioPage() {
           investedValue={investedValueBase}
           cashValue={cashValueBase}
           dayGainLoss={dayGainLoss}
-          dayGainLossPercent={
-            investedValueBase - dayGainLoss > 0
-              ? (dayGainLoss / (investedValueBase - dayGainLoss)) * 100
-              : 0
-          }
+          dayGainLossPercent={dayGainLossPercent}
           dayChangePctByType={dayChangePctByType}
           hideViewChartLink
           breakdownSlot={

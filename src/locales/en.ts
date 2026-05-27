@@ -54,6 +54,9 @@ const en: TranslationStrings = {
   period1y: "1Y",
   periodAll: "All",
   priceHistory: "Price History",
+  chartNoData: "No data available",
+  chartTickerExchangeHint:
+    "This symbol looks like a market code (e.g. Tradegate TDG), not the ETF ticker. Edit the holding: set the correct symbol (e.g. VWCE.DE) or add the ISIN.",
   dayChange: "Day Change",
   dayPlusMinus: "Day +/-",
   priceTimesCount: "Price × Nᵒ",

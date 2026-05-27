@@ -16,9 +16,12 @@ import { useSettings } from "@/lib/settings-context";
 import { useTheme } from "@/lib/theme-context";
 import { formatCurrency, convertCurrency, normalizeCurrency } from "@/lib/utils";
 import type { HistoricalDataPoint, TimePeriod } from "@/lib/types";
+import { marketDataSymbolForHolding, isTickerExchangeCollision } from "@/lib/market-symbol";
 
 interface StockChartProps {
   ticker: string;
+  exchange?: string;
+  isin?: string;
   purchasePrice?: number;
   displayCurrency: string;
 }
@@ -48,7 +51,16 @@ function ChartTooltip({ active, payload, displayCurrency }: { active?: boolean; 
   );
 }
 
-export default function StockChart({ ticker, purchasePrice, displayCurrency }: StockChartProps) {
+export default function StockChart({
+  ticker,
+  exchange = "",
+  isin = "",
+  purchasePrice,
+  displayCurrency,
+}: StockChartProps) {
+  const fetchSymbol = marketDataSymbolForHolding({ ticker, exchange, isin });
+  const showExchangeHint =
+    isTickerExchangeCollision(ticker, exchange) && !isin.trim();
   const [rawData, setRawData] = useState<HistoricalDataPoint[]>([]);
   const [period, setPeriod] = useState<TimePeriod>("3m");
   const [loading, setLoading] = useState(true);
@@ -83,7 +95,7 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ symbol: ticker, period });
+      const params = new URLSearchParams({ symbol: fetchSymbol, period });
       const headers = getApiHeaders();
       const res = await fetch(`/api/historical?${params}`, { headers });
       if (res.ok) {
@@ -99,7 +111,7 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
     } finally {
       setLoading(false);
     }
-  }, [ticker, period, getApiHeaders]);
+  }, [fetchSymbol, period, getApiHeaders]);
 
   useEffect(() => {
     fetchData();
@@ -158,8 +170,16 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
         </div>
       ) : data.length === 0 ? (
-        <div className="flex items-center justify-center text-gray-400 dark:text-slate-500" style={{ aspectRatio: "2.8/1", maxHeight: "min(300px, 45vh)" }}>
-          No data available
+        <div
+          className="flex flex-col items-center justify-center gap-2 px-4 text-center text-gray-400 dark:text-slate-500"
+          style={{ aspectRatio: "2.8/1", maxHeight: "min(300px, 45vh)" }}
+        >
+          <p>{t("chartNoData")}</p>
+          {showExchangeHint && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 max-w-md">
+              {t("chartTickerExchangeHint")}
+            </p>
+          )}
         </div>
       ) : (
         <div role="img" aria-label="Stock price chart" style={{ aspectRatio: "2.8/1", maxHeight: "min(300px, 45vh)" }}>

@@ -559,6 +559,8 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
           {!isCashHolding && (
             <StockChart
               ticker={holding.ticker}
+              exchange={holding.exchange}
+              isin={holding.isin}
               purchasePrice={holding.purchasePrice}
               displayCurrency={holding.displayCurrency}
             />

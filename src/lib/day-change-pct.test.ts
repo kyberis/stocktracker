@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeDayChangeByType } from "./day-change-pct";
+import { computeDayChangeByType, computeDayChangeHeadline } from "./day-change-pct";
 import type { ExchangeRates, Holding, QuoteData } from "./types";
 
 const EUR_RATES: ExchangeRates = { EUR: 1, USD: 0.92, GBP: 1.17 };
@@ -70,5 +70,20 @@ describe("computeDayChangeByType", () => {
     expect(pct.all).toBeDefined();
     expect(abs.all).toBeDefined();
     expect(pct.stock).toBeCloseTo(1.01, 1);
+  });
+
+  it("headline matches the all-assets bucket from computeDayChangeByType", () => {
+    const holdings = [
+      holding("STK", "stock", 100, 645.4, 1.42, "NASDAQ"),
+      holding("ETF", "etf", 10, 148.59, -0.162, "NASDAQ"),
+    ];
+    const quotes: Record<string, QuoteData> = {
+      STK: quote("STK", 645.4, 1.42),
+      ETF: quote("ETF", 148.59, -0.162),
+    };
+    const byType = computeDayChangeByType(holdings, quotes, EUR_RATES, "EUR", MARKET_NOW);
+    const headline = computeDayChangeHeadline(holdings, quotes, EUR_RATES, "EUR", MARKET_NOW);
+    expect(headline.pct).toBe(byType.pct.all);
+    expect(headline.abs).toBe(byType.abs.all);
   });
 });

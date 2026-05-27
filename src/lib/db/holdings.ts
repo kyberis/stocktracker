@@ -5,8 +5,6 @@ import {
   num,
   holdingAssetType,
   normalizeTickerForExchange,
-  EXCHANGE_SUFFIX_MAP,
-  normalizeCryptoTicker,
   parseHoldingTagsJson,
   serializeHoldingTags,
   mergeHoldingTags,
@@ -18,24 +16,11 @@ import { listTransactions } from "./transactions";
 import { findOrCreateBrokerAccount } from "./accounts";
 import { resolvePortfolioId } from "./portfolios";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
+import { marketDataSymbolForHolding } from "@/lib/market-symbol";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
 
 const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
-
-/**
- * Build a Yahoo-compatible ticker from a holding's ticker + exchange.
- * Handles bare tickers like "AALLON" that need a suffix (".HE") based on
- * the exchange field, and tickers that already carry the suffix.
- */
-function yahooTickerForHolding(h: { ticker: string; exchange: string }): string {
-  if (h.ticker.includes(".")) return h.ticker;
-  if (h.exchange) {
-    if (h.exchange.toUpperCase() === "CRYPTO") return normalizeCryptoTicker(h.ticker);
-    const suffix = EXCHANGE_SUFFIX_MAP[h.exchange.toUpperCase()];
-    if (suffix) return `${h.ticker}${suffix}`;
-  }
-  return normalizeCryptoTicker(h.ticker);
-}
 
 async function enrichValueInEUR(derived: Holding[]): Promise<void> {
   if (derived.length === 0) return;
@@ -47,7 +32,7 @@ async function enrichValueInEUR(derived: Holding[]): Promise<void> {
   const yahooToOriginal = new Map<string, string>();
   for (const h of derived) {
     if (tickerToYahoo.has(h.ticker)) continue;
-    const yt = yahooTickerForHolding(h);
+    const yt = marketDataSymbolForHolding(h);
     tickerToYahoo.set(h.ticker, yt);
     yahooToOriginal.set(yt, h.ticker);
   }
@@ -60,7 +45,8 @@ async function enrichValueInEUR(derived: Holding[]): Promise<void> {
     const chunk = yahooTickers.slice(i, i + BATCH);
     const results = await Promise.allSettled(
       chunk.map(async (t) => {
-        const q = await yahoo.getQuote(t);
+        const resolved = await resolveIsinToTicker(yahoo, t);
+        const q = await yahoo.getQuote(resolved);
         return { ticker: t, price: q.regularMarketPrice, currency: q.currency };
       })
     );

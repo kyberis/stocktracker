@@ -63,3 +63,15 @@ export function computeDayChangeByType(
 
   return { pct, abs };
 }
+
+/** Headline day P/L for a holdings list (same rules as the performance matrix). */
+export function computeDayChangeHeadline(
+  holdings: Holding[],
+  quotes: Record<string, QuoteData>,
+  exchangeRates: ExchangeRates,
+  baseCurrency: string,
+  now?: Date,
+): { abs: number; pct: number } {
+  const { pct, abs } = computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency, now);
+  return { abs: abs.all ?? 0, pct: pct.all ?? 0 };
+}

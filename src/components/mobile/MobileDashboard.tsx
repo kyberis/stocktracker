@@ -145,6 +145,7 @@ export default function MobileDashboard() {
     cashValueBase,
     investedValueBase,
     dayGainLoss,
+    dayGainLossPercent,
     dayChangePctByType,
     refreshKey,
     recalculating,
@@ -362,7 +363,7 @@ export default function MobileDashboard() {
                       }, 1600);
                     }}
                     dayGainLoss={dayGainLoss}
-                    dayGainLossPercent={investedValueBase - dayGainLoss > 0 ? (dayGainLoss / (investedValueBase - dayGainLoss)) * 100 : 0}
+                    dayGainLossPercent={dayGainLossPercent}
                     dayChangePctByType={dayChangePctByType as Partial<Record<AssetFilter, number>>}
                     breakdownSlot={
                       <MarketAwareBreakdown

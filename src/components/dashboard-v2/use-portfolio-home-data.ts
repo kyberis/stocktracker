@@ -3,30 +3,10 @@
 import { useCallback, useMemo, useState } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
-import { getMarketStatus } from "@/lib/market-hours";
-import { computeDayChangeByType } from "@/lib/day-change-pct";
-import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
+import { computeDayChangeByType, computeDayChangeHeadline } from "@/lib/day-change-pct";
+import { convertCurrency } from "@/lib/utils";
 import type { Holding, CashEntry } from "@/lib/types";
 import type { AssetFilter } from "./AssetTypeFilter";
-
-function computeMarketAwareDayPL(
-  holdings: Holding[],
-  quotes: ReturnType<typeof usePortfolio>["quotes"],
-  exchangeRates: ReturnType<typeof usePortfolio>["exchangeRates"],
-  baseCurrency: string,
-): number {
-  let dayPL = 0;
-  for (const h of holdings) {
-    const isCrypto = h.assetType === "crypto";
-    if (!isCrypto && !getMarketStatus(h.exchange).isOpen) continue;
-    const quote = quotes[h.ticker];
-    if (!quote || quote.regularMarketPrice <= 0) continue;
-    const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
-    const dayDelta = h.shares * (quote.regularMarketChange ?? 0);
-    dayPL += convertCurrency(dayDelta, quoteCurrency, baseCurrency, exchangeRates);
-  }
-  return dayPL;
-}
 
 export interface UsePortfolioHomeDataArgs {
   holdings: Holding[];
@@ -45,6 +25,7 @@ export interface PortfolioHomeData {
   cashValueBase: number;
   investedValueBase: number;
   dayGainLoss: number;
+  dayGainLossPercent: number;
   dayChangePctByType: Partial<Record<AssetFilter, number>>;
   refreshKey: number;
   recalculating: boolean;
@@ -94,15 +75,22 @@ export function usePortfolioHomeData(
   );
   const investedValueBase = Math.max(0, totals.totalCurrentEUR - cashValueBase);
 
-  const dayGainLoss = useMemo(
-    () => computeMarketAwareDayPL(filteredHoldings, quotes, exchangeRates, baseCurrency),
-    [filteredHoldings, quotes, exchangeRates, baseCurrency],
-  );
-
-  const dayChangePctByType = useMemo(
-    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency).pct,
+  const dayChangeByType = useMemo(
+    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency),
     [holdings, quotes, exchangeRates, baseCurrency],
   );
+
+  const dayChangePctByType = dayChangeByType.pct;
+
+  const { dayGainLoss, dayGainLossPercent } = useMemo(() => {
+    const headline = computeDayChangeHeadline(
+      filteredHoldings,
+      quotes,
+      exchangeRates,
+      baseCurrency,
+    );
+    return { dayGainLoss: headline.abs, dayGainLossPercent: headline.pct };
+  }, [filteredHoldings, quotes, exchangeRates, baseCurrency]);
 
   const handleBackfillComplete = useCallback(() => {
     setRefreshKey((k) => k + 1);
@@ -130,6 +118,7 @@ export function usePortfolioHomeData(
     cashValueBase,
     investedValueBase,
     dayGainLoss,
+    dayGainLossPercent,
     dayChangePctByType,
     refreshKey,
     recalculating,

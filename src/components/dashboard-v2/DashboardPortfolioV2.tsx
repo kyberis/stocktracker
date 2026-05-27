@@ -82,6 +82,7 @@ function V2Dashboard(props: Props) {
     cashValueBase,
     investedValueBase,
     dayGainLoss,
+    dayGainLossPercent,
     dayChangePctByType,
     refreshKey,
     recalculating,
@@ -115,9 +116,7 @@ function V2Dashboard(props: Props) {
             }, 1600);
           }}
           dayGainLoss={dayGainLoss}
-          dayGainLossPercent={
-            investedValueBase - dayGainLoss > 0 ? (dayGainLoss / (investedValueBase - dayGainLoss)) * 100 : 0
-          }
+          dayGainLossPercent={dayGainLossPercent}
           dayChangePctByType={dayChangePctByType as Partial<Record<AssetFilter, number>>}
           breakdownSlot={
             <MarketAwareBreakdown
