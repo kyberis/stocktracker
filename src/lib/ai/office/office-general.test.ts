@@ -37,12 +37,23 @@ const baseInput: RunOfficeOrchestrationInput = {
   subscriptionPlan: "pro",
 };
 
+const mockAiConsultQuota = {
+  allowed: true as const,
+  feature: "ai_consult" as const,
+  plan: "pro" as const,
+  used: 1,
+  limit: 100,
+  remaining: 99,
+  resetAt: "2026-06-01T00:00:00.000Z",
+  window: "month" as const,
+};
+
 describe("handleGeneralOfficeQuery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(requireFeatureQuotaByUserId).mockResolvedValue({
       allowed: true,
-      quota: { allowed: true, used: 1, limit: 100, resetAt: "" },
+      quota: mockAiConsultQuota,
     });
     vi.mocked(listOfficeMessages).mockResolvedValue([
       { id: "1", userId: "u1", role: "user", content: baseInput.userMessage, createdAt: "2026-05-23T15:00:00Z" },

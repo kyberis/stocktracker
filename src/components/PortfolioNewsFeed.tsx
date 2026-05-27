@@ -444,12 +444,12 @@ function NewsCard({
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
-            className="mt-2 block min-w-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+          className="mt-2 block min-w-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
         >
-            <h4 className={`${compact ? "text-[15px] leading-6" : "text-lg leading-7"} line-clamp-3 font-semibold text-[color:var(--foreground)]`}>
-              {article.title}
-            </h4>
-            <p className={`${compact ? "text-[13px] leading-5" : "text-sm leading-6"} mt-2 line-clamp-4 text-[color:var(--muted)]`}>
+          <h4 className={`${compact ? "text-[15px] leading-6" : "text-lg leading-7"} line-clamp-3 font-semibold text-[color:var(--foreground)]`}>
+            {article.title}
+          </h4>
+          <p className={`${compact ? "text-[13px] leading-5" : "text-sm leading-6"} mt-2 line-clamp-4 text-[color:var(--muted)]`}>
             {article.summary}
           </p>
         </a>
