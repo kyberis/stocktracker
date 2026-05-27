@@ -39,6 +39,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "improvement",
+        text: "The performance matrix includes an info popup that explains how Today, All Assets, and longer periods are calculated, in your language.",
+        translations: {
+          es: "La matriz de rendimiento incluye un popup informativo que explica cómo se calculan Hoy, Todos los activos y los periodos largos, en tu idioma.",
+        },
+      },
+      {
         type: "fix",
         text: "Portfolio day change for All Assets now uses the same calculation as each asset class in the performance matrix and breakdown pills, so totals no longer show 0% while individual classes move.",
         translations: {

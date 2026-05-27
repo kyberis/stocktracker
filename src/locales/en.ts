@@ -2629,6 +2629,22 @@ const en: TranslationStrings = {
   matrixPeriod5y: "5Y",
   matrixPeriod10y: "10Y",
   matrixPeriodAll: "All",
+  matrixHowItWorksAria: "How performance is calculated",
+  matrixExplainerTitle: "How performance is calculated",
+  matrixExplainerIntro:
+    "This matrix shows return by asset class and time period. Percentages are relative to the value at the start of each period.",
+  matrixExplainerTodayTitle: "Today",
+  matrixExplainerTodayBody:
+    "Today's return is day P/L divided by yesterday's closing value (× 100). For stocks and ETFs we only include holdings whose market opened today; crypto always counts.",
+  matrixExplainerAllAssetsTitle: "All Assets vs. each class",
+  matrixExplainerAllAssetsBody:
+    "Each class row shows that bucket's average return. All Assets combines every holding: if one class rises and another falls, the total can be near 0% even when individual classes move.",
+  matrixExplainerPeriodsTitle: "Week, month, year and longer",
+  matrixExplainerPeriodsBody:
+    "Longer columns compare today's value with a past date using daily portfolio snapshots when available, or historical prices otherwise. Horizons 3Y, 5Y, 10Y and All require Pro.",
+  matrixExplainerDisplayTitle: "% or currency",
+  matrixExplainerDisplayBody:
+    "In % mode you see relative return. In currency mode you see the absolute change in your portfolio currency.",
 
   // Hero: invested vs cash split
   investedAssets: "Invested assets",

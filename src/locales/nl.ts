@@ -1317,6 +1317,9 @@ const nl: TranslationStrings = {
   generateHistoryBody: "We zullen je portefeuillewaarde-evolutie berekenen op basis van je transacties en marktgegevens. Dit kan een minuut duren.",
   generateHistoryBtn: "Genereer Geschiedenis",
   generatingHistory: "Geschiedenis genereren…",
+  updatingPortfolioHistory: "Portefeuillegeschiedenis bijwerken…",
+  backfillHistoryFailed: "Portefeuillegeschiedenis kon niet worden bijgewerkt.",
+  backfillHistoryRetry: "Opnieuw proberen",
   marketsClosedTitle: "Neem een pauze — markten zijn gesloten",
   marketsClosedBody: "Je portefeuille sloot op {value}. De grafiek zal weer volgen wanneer de markten heropenen.",
   marketsClosedOpens: "{market} opent om {time}",
@@ -2445,6 +2448,22 @@ const nl: TranslationStrings = {
   matrixPeriod5y: "5J",
   matrixPeriod10y: "10J",
   matrixPeriodAll: "Totaal",
+  matrixHowItWorksAria: "Hoe rendement wordt berekend",
+  matrixExplainerTitle: "Hoe rendement wordt berekend",
+  matrixExplainerIntro:
+    "Deze matrix toont rendement per activaklasse en periode. Percentages zijn relatief ten opzichte van de waarde aan het begin van elke periode.",
+  matrixExplainerTodayTitle: "Vandaag",
+  matrixExplainerTodayBody:
+    "Het dagrendement is dag-P/L gedeeld door de slotwaarde van gisteren (× 100). Voor aandelen en ETF's tellen alleen posities waarvan de markt vandaag open was; crypto telt altijd mee.",
+  matrixExplainerAllAssetsTitle: "Alle activa vs. elke klasse",
+  matrixExplainerAllAssetsBody:
+    "Elke klassenrij toont het gemiddelde rendement van die groep. Alle activa combineert het hele portfolio: stijgt de ene klasse en daalt de andere, kan het totaal dicht bij 0% liggen.",
+  matrixExplainerPeriodsTitle: "Week, maand, jaar en langer",
+  matrixExplainerPeriodsBody:
+    "Langere kolommen vergelijken de huidige waarde met een datum in het verleden via dagelijkse portfolio-snapshots of historische koersen. Horizonten 3J, 5J, 10J en Totaal vereisen Pro.",
+  matrixExplainerDisplayTitle: "% of valuta",
+  matrixExplainerDisplayBody:
+    "In %-modus zie je relatief rendement. In valuta-modus de absolute verandering in je portfoliovaluta.",
   allAssets: "Alle Activa",
   stocksLabel: "Aandelen",
   etfsLabel: "ETF's",

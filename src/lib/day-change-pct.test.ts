@@ -9,13 +9,14 @@ function holding(
   assetType: "stock" | "etf" | "crypto",
   shares: number,
   price: number,
-  change: number,
+  _change: number,
   exchange = "NASDAQ",
 ): Holding {
   return {
     id: ticker,
     ticker,
     name: ticker,
+    isin: "",
     shares,
     purchasePrice: price,
     displayCurrency: "USD",
@@ -25,12 +26,17 @@ function holding(
   };
 }
 
-function quote(price: number, change: number): QuoteData {
+function quote(ticker: string, price: number, change: number): QuoteData {
   return {
+    symbol: ticker,
+    shortName: ticker,
     regularMarketPrice: price,
     regularMarketChange: change,
-    regularMarketChangePercent: (change / (price - change)) * 100,
+    regularMarketChangePercent: price > 0 ? (change / (price - change)) * 100 : 0,
     currency: "USD",
+    regularMarketPreviousClose: price - change,
+    fiftyTwoWeekHigh: price * 1.2,
+    fiftyTwoWeekLow: price * 0.8,
   };
 }
 
@@ -44,9 +50,9 @@ describe("computeDayChangeByType", () => {
       holding("BTC", "crypto", 1, 6659, -129, "CRYPTO"),
     ];
     const quotes: Record<string, QuoteData> = {
-      STK: quote(645.4, 1.42),
-      ETF: quote(148.59, -0.162),
-      BTC: quote(6659, -129),
+      STK: quote("STK", 645.4, 1.42),
+      ETF: quote("ETF", 148.59, -0.162),
+      BTC: quote("BTC", 6659, -129),
     };
 
     const { pct } = computeDayChangeByType(holdings, quotes, EUR_RATES, "EUR", MARKET_NOW);
@@ -59,7 +65,7 @@ describe("computeDayChangeByType", () => {
 
   it("includes all buckets when at least one market was open today", () => {
     const holdings = [holding("STK", "stock", 10, 100, 1, "NASDAQ")];
-    const quotes = { STK: quote(100, 1) };
+    const quotes = { STK: quote("STK", 100, 1) };
     const { pct, abs } = computeDayChangeByType(holdings, quotes, EUR_RATES, "EUR", MARKET_NOW);
     expect(pct.all).toBeDefined();
     expect(abs.all).toBeDefined();

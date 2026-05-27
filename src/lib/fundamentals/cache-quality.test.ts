@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { isCacheableFundamentalData } from "./cache-quality";
-import type { FundamentalData } from "@/lib/types";
+import type { FundamentalData, IncomeStatementReport } from "@/lib/types";
 
 describe("isCacheableFundamentalData", () => {
   it("rejects null data", () => {
@@ -14,11 +14,7 @@ describe("isCacheableFundamentalData", () => {
   });
 
   it("rejects Yahoo-sparse income (revenue without cost/gross)", () => {
-    const sparse: FundamentalData<{
-      totalRevenue: number | null;
-      costOfRevenue: number | null;
-      grossProfit: number | null;
-    }> = {
+    const sparse: FundamentalData<IncomeStatementReport> = {
       annual: [
         {
           fiscalDateEnding: "2024-12-31",
@@ -43,11 +39,7 @@ describe("isCacheableFundamentalData", () => {
   });
 
   it("accepts complete income", () => {
-    const complete: FundamentalData<{
-      totalRevenue: number | null;
-      costOfRevenue: number | null;
-      grossProfit: number | null;
-    }> = {
+    const complete: FundamentalData<IncomeStatementReport> = {
       annual: [
         {
           fiscalDateEnding: "2024-12-31",

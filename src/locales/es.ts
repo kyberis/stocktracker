@@ -2631,6 +2631,22 @@ const es: TranslationStrings = {
   matrixPeriod5y: "5A",
   matrixPeriod10y: "10A",
   matrixPeriodAll: "Todo",
+  matrixHowItWorksAria: "Cómo se calcula el rendimiento",
+  matrixExplainerTitle: "Cómo se calcula el rendimiento",
+  matrixExplainerIntro:
+    "Esta matriz muestra el rendimiento por clase de activo y periodo. Los porcentajes son relativos al valor al inicio de cada periodo.",
+  matrixExplainerTodayTitle: "Hoy",
+  matrixExplainerTodayBody:
+    "El rendimiento de hoy es el P/L del día dividido entre el valor de cierre de ayer (× 100). En acciones y ETFs solo entran posiciones cuyo mercado abrió hoy; las cripto cuentan siempre.",
+  matrixExplainerAllAssetsTitle: "Todos los activos vs. cada clase",
+  matrixExplainerAllAssetsBody:
+    "Cada fila de clase muestra el rendimiento medio de ese grupo. Todos los activos suma todo el portfolio: si una clase sube y otra baja, el total puede estar cerca de 0% aunque las clases se muevan por separado.",
+  matrixExplainerPeriodsTitle: "Semana, mes, año y más",
+  matrixExplainerPeriodsBody:
+    "Las columnas largas comparan el valor actual con una fecha pasada usando snapshots diarios del portfolio cuando existen, o precios históricos. Los horizontes 3A, 5A, 10A y Todo requieren Pro.",
+  matrixExplainerDisplayTitle: "% o divisa",
+  matrixExplainerDisplayBody:
+    "En modo % ves el rendimiento relativo. En modo divisa ves la variación absoluta en la moneda del portfolio.",
 
   // Hero: invertido vs efectivo
   investedAssets: "Activos invertidos",

@@ -26,6 +26,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `feature_flag_overrides` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `feed_items` | [`src/lib/db/feed.ts`](../../src/lib/db/feed.ts) |
 | `feedback` | [`src/lib/db/email-template-seeds.ts`](../../src/lib/db/email-template-seeds.ts) |
+| `fundamentals_cache` | [`src/lib/db/fundamentals-cache.ts`](../../src/lib/db/fundamentals-cache.ts) |
 | `goals` | [`src/lib/db/goals.ts`](../../src/lib/db/goals.ts) |
 | `holdings` | [`src/lib/db/accounts.ts`](../../src/lib/db/accounts.ts) |
 | `ibkr_connections` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
