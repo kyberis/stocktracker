@@ -51,7 +51,18 @@ function useInViewOnce(callback: () => void) {
 
 type T = (key: TranslationKey) => string;
 
-function getHeroFeatures(t: T) {
+interface HeroFeature {
+  tag: string;
+  title: string;
+  description: string;
+  screenshot: string;
+  points: string[];
+  tagBadge?: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+}
+
+function getHeroFeatures(t: T): HeroFeature[] {
   return [
     {
       tag: t("landingFeaturePortfolioTag"),
@@ -874,7 +885,7 @@ function FeaturesSection() {
                       </li>
                     ))}
                   </ul>
-                  {"ctaHref" in feature && feature.ctaHref && "ctaLabel" in feature && feature.ctaLabel ? (
+                  {feature.ctaHref && feature.ctaLabel ? (
                     <Link
                       href={feature.ctaHref}
                       onClick={() => trackLanding("landing_cta_click", { cta: "feature_office" })}
