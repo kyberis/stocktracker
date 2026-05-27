@@ -39,6 +39,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "improvement",
+        text: "Portfolio News on the dashboard home now uses a dense wire-style headline list (time, source, tickers) instead of stacked cards; the full News tab still shows richer article cards with summaries.",
+        translations: {
+          es: "Portfolio News en la home del dashboard ahora usa un listado denso estilo wire (hora, fuente, tickers) en lugar de tarjetas apiladas; la pestaña completa de noticias sigue mostrando tarjetas más ricas con resumen.",
+        },
+      },
+      {
         type: "fix",
         text: "When a signed-in browser tab keeps running after the session expires, authenticated client requests now redirect back to /login with the current page preserved instead of quietly piling up repeated 401 errors.",
         translations: {

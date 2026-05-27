@@ -144,12 +144,31 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
 
   if (status === "loading" || status === "idle") {
     return (
-      <div className={`space-y-4 ${isCompact ? "" : ""}`}>
+      <div className="space-y-4">
         <SectionHeader variant={variant} onViewAll={onViewAll} />
-        <div className="card flex items-center justify-center gap-3 px-6 py-10 text-sm text-[color:var(--muted)]">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
-          {t("loadingPortfolioNews")}
-        </div>
+        {isCompact ? (
+          <div
+            className="border-t border-[color:var(--border)]"
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            {Array.from({ length: 5 }, (_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 border-b border-[color:var(--border)] py-2.5 last:border-b-0"
+              >
+                <div className="h-3 w-12 shrink-0 animate-pulse rounded bg-[color:var(--surface-soft)]" />
+                <div className="h-3 min-w-0 flex-1 animate-pulse rounded bg-[color:var(--surface-soft)]" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="card flex items-center justify-center gap-3 px-6 py-10 text-sm text-[color:var(--muted)]">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
+            {t("loadingPortfolioNews")}
+          </div>
+        )}
       </div>
     );
   }
@@ -182,18 +201,29 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
   }
 
   return (
-    <div className={`space-y-4 ${isCompact ? "" : ""}`}>
+    <div className="space-y-4">
       <SectionHeader variant={variant} onViewAll={onViewAll} />
-      <div className="space-y-3">
-        {displayArticles.map((article, idx) => (
-          <NewsCard
-            key={`${article.url}-${idx}`}
-            article={article}
-            highlightHoldings={articleTouchesHoldings(article, holdingSyms)}
-            variant={variant}
-          />
-        ))}
-      </div>
+      {isCompact ? (
+        <div className="border-t border-[color:var(--border)]">
+          {displayArticles.map((article, idx) => (
+            <NewsListRow
+              key={`${article.url}-${idx}`}
+              article={article}
+              highlightHoldings={articleTouchesHoldings(article, holdingSyms)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {displayArticles.map((article, idx) => (
+            <NewsCard
+              key={`${article.url}-${idx}`}
+              article={article}
+              highlightHoldings={articleTouchesHoldings(article, holdingSyms)}
+            />
+          ))}
+        </div>
+      )}
       {!isCompact && (
         <p className="pt-2 text-center text-[10px] italic text-[color:var(--muted)]">
           {t("portfolioNewsDisclaimer")}
@@ -213,10 +243,18 @@ function SectionHeader({
   const { t } = useI18n();
   const compact = variant === "compact";
   return (
-    <div className={`flex items-end gap-3 border-b border-[color:var(--border)] ${compact ? "justify-between pb-2.5" : "pb-3"}`}>
+    <div
+      className={`flex items-end gap-3 border-b border-[color:var(--border)] ${
+        compact ? "justify-between pb-2.5" : "pb-3"
+      }`}
+    >
       <div className="flex min-w-0 items-center gap-3">
         <span className="h-5 w-px shrink-0 bg-emerald-500/60" aria-hidden="true" />
-        <h2 className={`${compact ? "text-sm" : "text-base"} truncate font-semibold tracking-[0.01em] text-[color:var(--foreground)]`}>
+        <h2
+          className={`${
+            compact ? "text-sm tracking-[0.02em]" : "text-base tracking-[0.01em]"
+          } truncate font-semibold text-[color:var(--foreground)]`}
+        >
           {t("portfolioNews")}
         </h2>
       </div>
@@ -224,7 +262,7 @@ function SectionHeader({
         <button
           type="button"
           onClick={onViewAll}
-          className="shrink-0 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+          className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-600 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 dark:text-emerald-400"
         >
           {t("portfolioNewsViewAll")}
         </button>
@@ -265,6 +303,102 @@ function formatNewsDate(raw: string): string {
   const dateStr = `${year}-${month}-${day}`;
   if (hour && min) return `${dateStr} ${hour}:${min}`;
   return dateStr;
+}
+
+/** Compact home feed: time-first column for terminal-style scanability. */
+function formatNewsDateCompact(raw: string): string {
+  const full = formatNewsDate(raw);
+  if (!full) return full;
+  const space = full.indexOf(" ");
+  if (space === -1) return full.slice(5);
+  return full.slice(space + 1);
+}
+
+function primaryTickers(article: NewsArticle, max = 3): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const ts of article.tickerSentiment) {
+    const t = ts.ticker.toUpperCase();
+    if (seen.has(t)) continue;
+    seen.add(t);
+    out.push(t);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+function useNewsArticleSummary(article: NewsArticle) {
+  const { t, language } = useI18n();
+  const { getApiHeaders } = useSettings();
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryText, setSummaryText] = useState<string | null>(null);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+
+  const runSummarize = async () => {
+    setSummaryOpen(true);
+    setSummaryLoading(true);
+    setSummaryError(null);
+    setSummaryText(null);
+    try {
+      const headers = {
+        ...getApiHeaders(),
+        "Content-Type": "application/json",
+      };
+      const res = await fetch("/api/news-article-summary", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          title: article.title,
+          summary: article.summary,
+          source: article.source,
+          url: article.url,
+          publishedAt: article.publishedAt,
+          language,
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+        summary?: string;
+        paywall?: boolean;
+      } | null;
+      if (res.status === 429) {
+        setSummaryError(data?.paywall ? t("newsAiSummaryQuotaHint") : data?.error || t("newsAiSummaryError"));
+        return;
+      }
+      if (!res.ok || !data?.summary) {
+        setSummaryError(data?.error || t("newsAiSummaryError"));
+        return;
+      }
+      setSummaryText(data.summary);
+    } catch {
+      setSummaryError(t("newsAiSummaryError"));
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const onSummarizeClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    void runSummarize();
+  };
+
+  const closeSummary = () => {
+    setSummaryOpen(false);
+    setSummaryLoading(false);
+    setSummaryError(null);
+    setSummaryText(null);
+  };
+
+  return {
+    summaryOpen,
+    summaryLoading,
+    summaryText,
+    summaryError,
+    onSummarizeClick,
+    closeSummary,
+  };
 }
 
 function NewsArticleSummaryModal({
@@ -343,87 +477,152 @@ function NewsArticleSummaryModal({
   );
 }
 
-function NewsCard({
+function NewsSummarizeControl({
+  layout,
+  onSummarizeClick,
+}: {
+  layout: "card" | "list";
+  onSummarizeClick: (e: MouseEvent<HTMLButtonElement>) => void;
+}) {
+  const { t } = useI18n();
+  const { user } = useAuth();
+  const isPro = user?.plan === "pro" || user?.role === "admin";
+
+  const listClass =
+    "inline-flex min-h-9 items-center justify-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500";
+  const cardClassPro =
+    "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-[11px] font-semibold text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-highlight)]";
+  const cardClassFree =
+    "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-[11px] font-semibold text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-highlight)]";
+
+  const sparkle = (
+    <svg className="w-3.5 h-3.5 shrink-0 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+    </svg>
+  );
+
+  if (layout === "list") {
+    if (isPro) {
+      return (
+        <button type="button" className={listClass} onClick={onSummarizeClick}>
+          {sparkle}
+          <span className="hidden sm:inline">{t("newsAiSummarizeCta")}</span>
+        </button>
+      );
+    }
+    return (
+      <Link href="/billing" className={listClass} onClick={(e) => e.stopPropagation()} prefetch={false}>
+        {sparkle}
+        <span className="hidden sm:inline">{t("newsAiSummarizeCta")}</span>
+      </Link>
+    );
+  }
+
+  if (isPro) {
+    return (
+      <button type="button" className={cardClassPro} onClick={onSummarizeClick}>
+        {sparkle}
+        {t("newsAiSummarizeCta")}
+      </button>
+    );
+  }
+  return (
+    <Link href="/billing" className={cardClassFree} onClick={(e) => e.stopPropagation()} prefetch={false}>
+      {sparkle}
+      {t("newsAiSummarizeCta")}
+      <span className="text-[9px] font-bold uppercase tracking-wide opacity-80">Pro</span>
+    </Link>
+  );
+}
+
+function NewsListRow({
   article,
   highlightHoldings,
-  variant,
 }: {
   article: NewsArticle;
   highlightHoldings: boolean;
-  variant: "full" | "compact";
 }) {
-  const { t, language } = useI18n();
-  const { getApiHeaders } = useSettings();
-  const { user } = useAuth();
-  const isPro = user?.plan === "pro" || user?.role === "admin";
-  const compact = variant === "compact";
-
-  const [summaryOpen, setSummaryOpen] = useState(false);
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const [summaryText, setSummaryText] = useState<string | null>(null);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
-
-  const runSummarize = async () => {
-    setSummaryOpen(true);
-    setSummaryLoading(true);
-    setSummaryError(null);
-    setSummaryText(null);
-    try {
-      const headers = {
-        ...getApiHeaders(),
-        "Content-Type": "application/json",
-      };
-      const res = await fetch("/api/news-article-summary", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          title: article.title,
-          summary: article.summary,
-          source: article.source,
-          url: article.url,
-          publishedAt: article.publishedAt,
-          language,
-        }),
-      });
-      const data = (await res.json().catch(() => null)) as { error?: string; summary?: string; paywall?: boolean } | null;
-      if (res.status === 429) {
-        setSummaryError(data?.paywall ? t("newsAiSummaryQuotaHint") : data?.error || t("newsAiSummaryError"));
-        return;
-      }
-      if (!res.ok || !data?.summary) {
-        setSummaryError(data?.error || t("newsAiSummaryError"));
-        return;
-      }
-      setSummaryText(data.summary);
-    } catch {
-      setSummaryError(t("newsAiSummaryError"));
-    } finally {
-      setSummaryLoading(false);
-    }
-  };
-
-  const onSummarizeClick = (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    void runSummarize();
-  };
-
-  const closeSummary = () => {
-    setSummaryOpen(false);
-    setSummaryLoading(false);
-    setSummaryError(null);
-    setSummaryText(null);
-  };
-
-  const ctaClassPro =
-    "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-[11px] font-semibold text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-highlight)]";
-
-  const ctaClassFree =
-    "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-[11px] font-semibold text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-highlight)]";
+  const { t } = useI18n();
+  const tickers = primaryTickers(article);
+  const {
+    summaryOpen,
+    summaryLoading,
+    summaryText,
+    summaryError,
+    onSummarizeClick,
+    closeSummary,
+  } = useNewsArticleSummary(article);
 
   return (
     <article
-      className={`card relative overflow-hidden ${compact ? "px-4 py-4" : "px-5 py-5"} transition-colors hover:bg-[color:var(--surface-soft)] ${
+      className={`group relative border-b border-[color:var(--border)] py-2.5 transition-colors last:border-b-0 hover:bg-[color:var(--surface-soft)]/55 ${
+        highlightHoldings ? "bg-emerald-500/[0.04] pl-2 before:absolute before:inset-y-2 before:left-0 before:w-px before:bg-emerald-500/75" : ""
+      }`}
+    >
+      <div className="flex items-start gap-2.5 sm:gap-3">
+        <time
+          dateTime={article.publishedAt}
+          className="w-[2.85rem] shrink-0 pt-0.5 text-[10px] font-medium tabular-nums leading-4 text-[color:var(--muted)] sm:w-[3.25rem]"
+        >
+          {formatNewsDateCompact(article.publishedAt)}
+        </time>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)]">
+            <span className="truncate">{article.source}</span>
+            {highlightHoldings && (
+              <span className="text-emerald-600 dark:text-emerald-400">{t("portfolioNewsHoldingBadge")}</span>
+            )}
+            {tickers.length > 0 && (
+              <span className="font-mono text-[10px] font-medium normal-case tracking-normal text-[color:var(--foreground)]/75">
+                {tickers.join(" · ")}
+              </span>
+            )}
+          </div>
+          <a
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-0.5 block min-w-0 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+          >
+            <h4 className="line-clamp-2 text-[13px] font-semibold leading-5 text-[color:var(--foreground)] group-hover:text-emerald-600 dark:group-hover:text-emerald-300">
+              {article.title}
+            </h4>
+          </a>
+        </div>
+        <NewsSummarizeControl layout="list" onSummarizeClick={onSummarizeClick} />
+      </div>
+      <NewsArticleSummaryModal
+        open={summaryOpen}
+        title={article.title}
+        loading={summaryLoading}
+        error={summaryError}
+        summaryText={summaryText}
+        onClose={closeSummary}
+      />
+    </article>
+  );
+}
+
+function NewsCard({
+  article,
+  highlightHoldings,
+}: {
+  article: NewsArticle;
+  highlightHoldings: boolean;
+}) {
+  const { t } = useI18n();
+  const {
+    summaryOpen,
+    summaryLoading,
+    summaryText,
+    summaryError,
+    onSummarizeClick,
+    closeSummary,
+  } = useNewsArticleSummary(article);
+
+  return (
+    <article
+      className={`card relative overflow-hidden px-5 py-5 transition-colors hover:bg-[color:var(--surface-soft)] ${
         highlightHoldings ? "border-l-[3px] border-l-emerald-400/70" : ""
       }`}
     >
@@ -446,10 +645,10 @@ function NewsCard({
           rel="noopener noreferrer"
           className="mt-2 block min-w-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
         >
-          <h4 className={`${compact ? "text-[15px] leading-6" : "text-lg leading-7"} line-clamp-3 font-semibold text-[color:var(--foreground)]`}>
+          <h4 className="line-clamp-3 text-lg font-semibold leading-7 text-[color:var(--foreground)]">
             {article.title}
           </h4>
-          <p className={`${compact ? "text-[13px] leading-5" : "text-sm leading-6"} mt-2 line-clamp-4 text-[color:var(--muted)]`}>
+          <p className="mt-2 line-clamp-4 text-sm leading-6 text-[color:var(--muted)]">
             {article.summary}
           </p>
         </a>
@@ -462,27 +661,7 @@ function NewsCard({
               {article.overallSentiment}
             </span>
           )}
-          {isPro ? (
-            <button type="button" className={ctaClassPro} onClick={onSummarizeClick}>
-              <svg className="w-3.5 h-3.5 shrink-0 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-              </svg>
-              {t("newsAiSummarizeCta")}
-            </button>
-          ) : (
-            <Link
-              href="/billing"
-              className={ctaClassFree}
-              onClick={(e) => e.stopPropagation()}
-              prefetch={false}
-            >
-              <svg className="w-3.5 h-3.5 shrink-0 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-              </svg>
-              {t("newsAiSummarizeCta")}
-              <span className="text-[9px] font-bold uppercase tracking-wide opacity-80">Pro</span>
-            </Link>
-          )}
+          <NewsSummarizeControl layout="card" onSummarizeClick={onSummarizeClick} />
         </div>
       </div>
 
