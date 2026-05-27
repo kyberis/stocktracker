@@ -3,7 +3,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
-import { getMarketStatus, wasMarketOpenToday } from "@/lib/market-hours";
+import { getMarketStatus } from "@/lib/market-hours";
+import { computeDayChangeByType } from "@/lib/day-change-pct";
 import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
 import type { Holding, CashEntry } from "@/lib/types";
 import type { AssetFilter } from "./AssetTypeFilter";
@@ -98,34 +99,10 @@ export function usePortfolioHomeData(
     [filteredHoldings, quotes, exchangeRates, baseCurrency],
   );
 
-  const dayChangePctByType = useMemo(() => {
-    const result: Partial<Record<AssetFilter, number>> = {};
-    const groups: AssetFilter[] = ["all", "stock", "etf", "crypto"];
-    for (const group of groups) {
-      const groupHoldings = group === "all" ? holdings : holdings.filter((h) => (h.assetType ?? "stock") === group);
-      if (groupHoldings.length === 0) continue;
-      let weightedChange = 0;
-      let totalValue = 0;
-      for (const h of groupHoldings) {
-        const quote = quotes[h.ticker];
-        if (!quote || quote.regularMarketPrice <= 0) continue;
-        const isCrypto = h.assetType === "crypto";
-        const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
-        const posValue = Math.abs(h.shares * quote.regularMarketPrice);
-        const posValueBase = convertCurrency(posValue, quoteCurrency, baseCurrency, exchangeRates);
-        if (!isCrypto && !wasMarketOpenToday(h.exchange)) {
-          totalValue += posValueBase;
-          continue;
-        }
-        const dayDelta = h.shares * (quote.regularMarketChange ?? 0);
-        const dayDeltaBase = convertCurrency(dayDelta, quoteCurrency, baseCurrency, exchangeRates);
-        weightedChange += dayDeltaBase;
-        totalValue += posValueBase;
-      }
-      result[group] = totalValue > 0 ? (weightedChange / totalValue) * 100 : 0;
-    }
-    return result;
-  }, [holdings, quotes, exchangeRates, baseCurrency]);
+  const dayChangePctByType = useMemo(
+    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency).pct,
+    [holdings, quotes, exchangeRates, baseCurrency],
+  );
 
   const handleBackfillComplete = useCallback(() => {
     setRefreshKey((k) => k + 1);

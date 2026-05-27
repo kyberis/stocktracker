@@ -5,11 +5,11 @@ import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { calculateTotalsByAssetType } from "@/lib/portfolio-summary";
-import { getMarketStatus } from "@/lib/market-hours";
+import { computeDayChangeByType } from "@/lib/day-change-pct";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { ASSET_COLORS } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
-import type { Holding, CashEntry, HoldingAssetType } from "@/lib/types";
+import type { Holding, CashEntry } from "@/lib/types";
 
 interface Props {
   holdings: Holding[];
@@ -19,20 +19,8 @@ interface Props {
 }
 
 /**
- * For stocks and ETFs, check if any holding in that group has an open market.
- * If none are open, the day change for the whole group is zeroed out.
- * Crypto is always considered active.
+ * Compact asset-type pills with day change aligned to the performance matrix.
  */
-function isAssetTypeMarketOpen(holdings: Holding[], assetType: HoldingAssetType): boolean {
-  if (assetType === "crypto") return true;
-  return holdings
-    .filter((h) => (h.assetType ?? "stock") === assetType)
-    .some((h) => {
-      const ex = h.exchange?.toUpperCase();
-      return ex ? getMarketStatus(ex).isOpen : false;
-    });
-}
-
 export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterChange, activeFilter }: Props) {
   const { t } = useI18n();
   const { quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
@@ -45,25 +33,13 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
     [holdings, cashEntries, quotes, exchangeRates, cur],
   );
 
-  const marketOpen = useMemo(
-    () => ({
-      stock: isAssetTypeMarketOpen(holdings, "stock"),
-      etf: isAssetTypeMarketOpen(holdings, "etf"),
-      crypto: true,
-    }),
-    [holdings],
+  const dayChange = useMemo(
+    () => computeDayChangeByType(holdings, quotes, exchangeRates, cur),
+    [holdings, quotes, exchangeRates, cur],
   );
 
   const investedTotal =
     byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.crypto.totalCurrentEUR;
-
-  const allDayPL =
-    (marketOpen.stock ? byType.stock.dayGainLossEUR : 0) +
-    (marketOpen.etf ? byType.etf.dayGainLossEUR : 0) +
-    (marketOpen.crypto ? byType.crypto.dayGainLossEUR : 0);
-  const allPriorClose = investedTotal - allDayPL;
-  const allDayPct = allPriorClose > 0 ? (allDayPL / allPriorClose) * 100 : 0;
-  const anyMarketOpen = marketOpen.stock || marketOpen.etf;
 
   const hasAnyValue = investedTotal > 0;
   if (!hasAnyValue) return null;
@@ -76,7 +52,7 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
     value: number;
     alloc: number;
     dayPct: number;
-    marketOpen: boolean;
+    showDayChange: boolean;
   };
 
   // When the portfolio holds only a single asset type, the "All Assets" pill
@@ -95,8 +71,8 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
           label: t("allAssets"),
           value: investedTotal,
           alloc: 100,
-          dayPct: allDayPct,
-          marketOpen: anyMarketOpen || true, // always show value; day cell will decide
+          dayPct: dayChange.pct.all ?? 0,
+          showDayChange: dayChange.abs.all != null,
         }]
       : []),
     {
@@ -104,30 +80,24 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
       label: t("stocksLabel"),
       value: byType.stock.totalCurrentEUR,
       alloc: byType.allocations.stock,
-      dayPct: byType.stock.totalCurrentEUR > 0 && (byType.stock.totalCurrentEUR - byType.stock.dayGainLossEUR) > 0
-        ? (byType.stock.dayGainLossEUR / (byType.stock.totalCurrentEUR - byType.stock.dayGainLossEUR)) * 100
-        : 0,
-      marketOpen: marketOpen.stock,
+      dayPct: dayChange.pct.stock ?? 0,
+      showDayChange: dayChange.abs.stock != null,
     },
     {
       key: "etf",
       label: t("etfsLabel"),
       value: byType.etf.totalCurrentEUR,
       alloc: byType.allocations.etf,
-      dayPct: byType.etf.totalCurrentEUR > 0 && (byType.etf.totalCurrentEUR - byType.etf.dayGainLossEUR) > 0
-        ? (byType.etf.dayGainLossEUR / (byType.etf.totalCurrentEUR - byType.etf.dayGainLossEUR)) * 100
-        : 0,
-      marketOpen: marketOpen.etf,
+      dayPct: dayChange.pct.etf ?? 0,
+      showDayChange: dayChange.abs.etf != null,
     },
     {
       key: "crypto",
       label: t("cryptoLabel"),
       value: byType.crypto.totalCurrentEUR,
       alloc: byType.allocations.crypto,
-      dayPct: byType.crypto.totalCurrentEUR > 0 && (byType.crypto.totalCurrentEUR - byType.crypto.dayGainLossEUR) > 0
-        ? (byType.crypto.dayGainLossEUR / (byType.crypto.totalCurrentEUR - byType.crypto.dayGainLossEUR)) * 100
-        : 0,
-      marketOpen: true,
+      dayPct: dayChange.pct.crypto ?? 0,
+      showDayChange: dayChange.abs.crypto != null,
     },
   ];
 
@@ -150,7 +120,7 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
       {visibleEntries.map((e) => {
         const color = ASSET_COLORS[e.key];
         const isSelected = activeKey === e.key;
-        const showDayCell = e.key === "all" ? anyMarketOpen : e.marketOpen;
+        const showDayCell = e.showDayChange;
         const dayIsPos = e.dayPct >= 0;
 
         return (

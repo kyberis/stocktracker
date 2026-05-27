@@ -39,6 +39,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "fix",
+        text: "Portfolio day change for All Assets now uses the same calculation as each asset class in the performance matrix and breakdown pills, so totals no longer show 0% while individual classes move.",
+        translations: {
+          es: "El cambio diario de Todos los activos usa ahora el mismo cálculo que cada clase en la matriz de rendimiento y las pastillas del desglose, para que el total ya no muestre 0% cuando las clases individuales sí se mueven.",
+        },
+      },
+      {
         type: "improvement",
         text: "Stock financial statements (income, balance sheet, cash flow, earnings) now load from FMP with a permanent cache, so repeat visits are faster and line items are more complete than Yahoo-only data.",
         translations: {
