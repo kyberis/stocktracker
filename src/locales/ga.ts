@@ -209,7 +209,7 @@ const ga: TranslationStrings = {
   earnings: "Ioncaim",
   annual: "Bliantúil",
   quarterly: "Ráithiúil",
-  fundamentalsRequireAV: "Teastaíonn Alpha Vantage le haghaidh sonraí bunfhaisnéise. Cumasaigh é sna Socruithe.",
+  fundamentalsRequirePaidPlan: "Teastaíonn Alpha Vantage le haghaidh sonraí bunfhaisnéise. Cumasaigh é sna Socruithe.",
   noFundamentalData: "Níl sonraí bunfhaisnéise ar fáil don stoc seo.",
   totalRevenue: "Ioncaim Iomlán",
   costOfRevenue: "Costas Ioncaim",

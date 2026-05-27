@@ -59,7 +59,7 @@ export const GET = withMetrics("/api/portfolio-news", async (request: NextReques
       const resolved = await getPremiumMarketDataFromRequest(request, "portfolio_news");
       if (resolved) {
         const { provider, backend } = resolved;
-        const rl = await requireRateLimit(request, backend === "fmp" ? "fmp" : "alphavantage");
+        const rl = await requireRateLimit(request, "fmp");
         if (rl.error) {
           await refundFeatureQuota(userId, "intelligence");
           return rl.error;

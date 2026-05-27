@@ -1,14 +1,14 @@
 # backfill-snapshots
 
-> One-off batch backfill of snapshots for new users or after imports.
+> Batch backfill of snapshots for new users, after imports, or when stored history is incomplete.
 
 ## 1. Summary
 
-On initial import, a user has months/years of transactions but no snapshots. `backfill-snapshots` fills the gap so the portfolio-value chart is useful from day one.
+On initial import, a user has months/years of transactions but no snapshots. `backfill-snapshots` fills the gap so the portfolio-value chart is useful from day one. The dashboard also auto-triggers a rebuild when stored snapshots are missing cost basis (`total_invested_eur`) or per-asset-type breakdown.
 
 ## 2. Status
 
-- **Tier:** user-triggered (on import) + admin
+- **Tier:** automatic (dashboard + import) + admin manual
 - **Feature flag:** _none_
 - **Health:** B
 - **Owning skill:** [`engineer-tools`](../../.cursor/skills/engineer-tools/SKILL.md)
@@ -17,7 +17,9 @@ On initial import, a user has months/years of transactions but no snapshots. `ba
 
 | Type | Path | Notes |
 |------|------|-------|
+| API | [`src/app/api/portfolio/backfill-snapshots/`](../../src/app/api/portfolio/backfill-snapshots) | User GET check + POST rebuild. |
 | API | [`src/app/api/admin/backfill-snapshots/`](../../src/app/api/admin/backfill-snapshots) | Admin run. |
+| UI | [`src/components/portfolio-v2/BackfillCTA.tsx`](../../src/components/portfolio-v2/BackfillCTA.tsx) | Silent auto-POST when GET check reports incomplete data. |
 | Library | [`src/lib/backfill-snapshots.ts`](../../src/lib/backfill-snapshots.ts) | Core routine. |
 
 ## 4. Data model
@@ -28,17 +30,30 @@ On initial import, a user has months/years of transactions but no snapshots. `ba
 
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
+| GET | `/api/portfolio/backfill-snapshots?check=true` | user | Free | Returns `needsBackfill` when history gaps or stale invested/asset-type columns exist. |
+| POST | `/api/portfolio/backfill-snapshots` | user | Free | Full daily rebuild + intraday sync. Returns `409` if a rebuild is already in flight for the user. |
 | POST | `/api/admin/backfill-snapshots` | admin | Admin | `{ userId, since }`. |
 
 ## 6. UI surface
 
-Admin only.
+- Dashboard / portfolio chart: [`BackfillCTA`](../../src/components/portfolio-v2/BackfillCTA.tsx) polls GET on load and POSTs silently when repair is needed (minimal progress text; retry on failure).
+- Admin user panel: manual Recalculate snapshots.
 
 ## 7. Business logic
 
 - Walks historical quotes day-by-day, derives holdings at that point, computes value.
 - Batches to avoid function-timeout.
 - Idempotent via upsert.
+- POST acquires a per-user in-memory lock (~5 min TTL) to avoid duplicate concurrent rebuilds (e.g. multiple tabs).
+
+### Triggers
+
+| Event | Behavior |
+|-------|----------|
+| Broker / bulk / SnapTrade import | Server `runBackfillForUser` after import |
+| New transaction with past date | `runIncrementalBackfill` in background |
+| Dashboard load with incomplete snapshots | Client auto-POST via `BackfillCTA` |
+| Admin | POST `/api/admin/backfill-snapshots` |
 
 ## 8. External dependencies
 
@@ -50,11 +65,12 @@ Admin only.
 
 ## 10. i18n
 
-N/A.
+- `updatingPortfolioHistory`, `backfillHistoryFailed`, `backfillHistoryRetry` in EN/ES.
 
 ## 11. Permissions / tier gating / rate limits
 
-- `requireAdmin()`.
+- User routes: `requireSession()`.
+- Admin route: `requireAdmin()`.
 
 ## 12. Telemetry
 
@@ -64,6 +80,7 @@ N/A.
 
 - Delisted tickers: skip with a warning; leave gap.
 - Currencies that changed code (e.g., legacy TRY) handled via manual overrides.
+- Concurrent POST from two tabs: second request gets `409`; client polls GET until `needsBackfill` is false.
 
 ## 14. Tests
 
@@ -76,4 +93,5 @@ N/A.
 
 ## 16. Open questions / planned work
 
-- Auto-trigger on import when the user has ≥ 10 transactions.
+- Nightly cron sweep for users with stale invested/asset-type snapshot rows.
+- Incremental backfill on transaction PATCH/DELETE.

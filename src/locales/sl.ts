@@ -209,7 +209,7 @@ const sl: TranslationStrings = {
   earnings: "Rezultati",
   annual: "Letno",
   quarterly: "Četrtletno",
-  fundamentalsRequireAV: "Temeljni podatki zahtevajo Alpha Vantage. Omogočite v Nastavitvah.",
+  fundamentalsRequirePaidPlan: "Temeljni podatki zahtevajo Alpha Vantage. Omogočite v Nastavitvah.",
   noFundamentalData: "Za to delnico ni na voljo temeljnih podatkov.",
   totalRevenue: "Skupni prihodek",
   costOfRevenue: "Strošek prihodka",

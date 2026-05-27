@@ -530,6 +530,17 @@ export {
   removeMoatAutoTicker,
 } from "./moat-auto-tickers";
 
+export type {
+  FundamentalsCacheType,
+  FundamentalsCacheProvider,
+  FundamentalsCacheRow,
+} from "./fundamentals-cache";
+export {
+  getFundamentalsCache,
+  upsertFundamentalsCache,
+  deleteFundamentalsCache,
+} from "./fundamentals-cache";
+
 export {
   normalizePortfolioNewsSymbol,
   ingestNewsArticles,

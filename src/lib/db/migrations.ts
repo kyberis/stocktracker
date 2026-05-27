@@ -3416,6 +3416,26 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 115,
+    description: "Create fundamentals_cache for permanent income/balance/cashflow/earnings storage",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS fundamentals_cache (
+          symbol TEXT NOT NULL,
+          type TEXT NOT NULL,
+          data_json TEXT NOT NULL,
+          provider TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          PRIMARY KEY (symbol, type)
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_fundamentals_cache_symbol ON fundamentals_cache(symbol)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

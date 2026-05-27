@@ -209,7 +209,7 @@ const lt: TranslationStrings = {
   earnings: "Pelnas",
   annual: "Metinis",
   quarterly: "Ketvirtinis",
-  fundamentalsRequireAV: "Fundamentų duomenys reikalauja Alpha Vantage. Įjunkite Nustatymuose.",
+  fundamentalsRequirePaidPlan: "Fundamentų duomenys reikalauja Alpha Vantage. Įjunkite Nustatymuose.",
   noFundamentalData: "Šiai akcijai nėra fundamentų duomenų.",
   totalRevenue: "Bendros pajamos",
   costOfRevenue: "Pajamų išlaidos",

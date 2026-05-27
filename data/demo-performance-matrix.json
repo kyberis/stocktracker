@@ -1,0 +1,64 @@
+{
+  "rows": [
+    {
+      "assetKey": "all",
+      "currentValue": 72647.56,
+      "cells": {
+        "today": { "kind": "percent", "value": -0.17 },
+        "oneWeek": { "kind": "percent", "value": -0.58 },
+        "oneMonth": { "kind": "percent", "value": 1.24 },
+        "ytd": { "kind": "percent", "value": 4.82 },
+        "oneYear": { "kind": "percent", "value": 12.4 },
+        "threeYear": { "kind": "percent", "value": 28.1 },
+        "fiveYear": { "kind": "percent", "value": 41.2 },
+        "tenYear": { "kind": "percent", "value": 52.0 },
+        "all": { "kind": "percent", "value": 41.2 }
+      }
+    },
+    {
+      "assetKey": "stock",
+      "currentValue": 64510.38,
+      "cells": {
+        "today": { "kind": "percent", "value": -0.12 },
+        "oneWeek": { "kind": "percent", "value": -0.42 },
+        "oneMonth": { "kind": "percent", "value": 1.08 },
+        "ytd": { "kind": "percent", "value": 5.1 },
+        "oneYear": { "kind": "percent", "value": 13.1 },
+        "threeYear": { "kind": "percent", "value": 30.2 },
+        "fiveYear": { "kind": "percent", "value": 44.8 },
+        "tenYear": { "kind": "percent", "value": 55.0 },
+        "all": { "kind": "percent", "value": 44.8 }
+      }
+    },
+    {
+      "assetKey": "etf",
+      "currentValue": 1484.72,
+      "cells": {
+        "today": { "kind": "percent", "value": -0.35 },
+        "oneWeek": { "kind": "percent", "value": -1.17 },
+        "oneMonth": { "kind": "percent", "value": -0.42 },
+        "ytd": { "kind": "percent", "value": 2.1 },
+        "oneYear": { "kind": "percent", "value": 8.4 },
+        "threeYear": { "kind": "percent", "value": 18.6 },
+        "fiveYear": { "kind": "percent", "value": 22.1 },
+        "tenYear": { "kind": "percent", "value": 25.0 },
+        "all": { "kind": "percent", "value": 22.1 }
+      }
+    },
+    {
+      "assetKey": "crypto",
+      "currentValue": 6652.46,
+      "cells": {
+        "today": { "kind": "percent", "value": -0.89 },
+        "oneWeek": { "kind": "percent", "value": -2.0 },
+        "oneMonth": { "kind": "percent", "value": 2.8 },
+        "ytd": { "kind": "percent", "value": -1.2 },
+        "oneYear": { "kind": "percent", "value": 6.2 },
+        "threeYear": { "kind": "percent", "value": 45.0 },
+        "fiveYear": { "kind": "percent", "value": 210.0 },
+        "tenYear": { "kind": "percent", "value": 320.0 },
+        "all": { "kind": "percent", "value": 210.0 }
+      }
+    }
+  ]
+}

@@ -209,7 +209,7 @@ const hu: TranslationStrings = {
   earnings: "Eredmények",
   annual: "Éves",
   quarterly: "Negyedéves",
-  fundamentalsRequireAV: "Az alapadatokhoz Alpha Vantage szükséges. Engedélyezd a Beállításokban.",
+  fundamentalsRequirePaidPlan: "Az alapadatokhoz Alpha Vantage szükséges. Engedélyezd a Beállításokban.",
   noFundamentalData: "Nincs alapadat elérhető ehhez a részvényhez.",
   totalRevenue: "Összes bevétel",
   costOfRevenue: "Bevétel költsége",

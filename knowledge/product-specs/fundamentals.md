@@ -1,79 +1,58 @@
 # fundamentals
 
-> Income, balance sheet, and cash-flow data for Pro features.
+> Income, balance sheet, cash-flow, and earnings data for paid stock detail.
 
 ## 1. Summary
 
-Fundamentals power stock evaluation, moat reports, screener, and the stock intelligence tab. Pulled from Alpha Vantage and FMP, cached in `moat_cache` / similar, and served to UI endpoints.
+Fundamentals power the stock detail **Financials** and **Earnings** tabs. Data is fetched from **FMP** when configured, with **Yahoo Finance** as fallback. Responses are stored permanently in `fundamentals_cache` (write-through, no TTL). Moat evaluation uses the same FMP provider (not Alpha Vantage).
 
 ## 2. Status
 
-- **Tier:** Trefolio
-- **Feature flag:** _none_
-- **Health:** B
+- **Tier:** Bifolio / Trefolio (paid + `hasPremiumMarketData`)
+- **Feature flag:** `market_data_fmp_fundamentals` (FMP rollout)
+- **Health:** B+
 - **Owning skill:** [`engineer-integrations`](../../.cursor/skills/engineer-integrations/SKILL.md)
 
 ## 3. Entry points
 
 | Type | Path | Notes |
 |------|------|-------|
-| API | [`src/app/api/fundamentals/`](../../src/app/api/fundamentals) | Per-ticker fundamentals. |
-| Library | [`src/lib/api-providers/alphavantage.ts`](../../src/lib/api-providers/alphavantage.ts), [`fmp.ts`](../../src/lib/api-providers/fmp.ts) | Clients. |
+| API | [`src/app/api/fundamentals/route.ts`](../../src/app/api/fundamentals/route.ts) | Cache-first; quota on miss only. |
+| DB | [`src/lib/db/fundamentals-cache.ts`](../../src/lib/db/fundamentals-cache.ts) | Permanent cache per `(symbol, type)`. |
+| Quality | [`src/lib/fundamentals/cache-quality.ts`](../../src/lib/fundamentals/cache-quality.ts) | Skips caching sparse Yahoo rows. |
+| Provider | [`src/lib/api-providers/fmp-market-data.ts`](../../src/lib/api-providers/fmp-market-data.ts) | Primary. |
+| Fallback | [`src/lib/api-providers/yahoo.ts`](../../src/lib/api-providers/yahoo.ts) | When FMP unavailable. |
 
 ## 4. Data model
 
-- `moat_cache`, ad-hoc JSON cache tables — see migrations.
+- `fundamentals_cache(symbol, type, data_json, provider, created_at, updated_at)` — `type` ∈ `income|balance|cashflow|earnings`, `provider` ∈ `fmp|yahoo`.
+- `moat_cache` — separate; moat scores derived from fundamentals + overview.
 
 ## 5. API surface
 
-| Method | Route | Auth | Tier | Description |
-|--------|-------|------|------|-------------|
-| GET | `/api/fundamentals?ticker=` | user | Pro | Fundamentals JSON. |
+| Method | Route | Auth | Quota | Description |
+|--------|-------|------|-------|-------------|
+| GET | `/api/fundamentals?symbol=&type=` | session | `fundamentals` on cache miss | `FundamentalData` JSON + optional `_cached`, `_provider`. |
 
 ## 6. UI surface
 
-- Stock detail intelligence tab; moat report generator.
+- [`src/components/StockDetail.tsx`](../../src/components/StockDetail.tsx) — Financials sub-tabs, Earnings (default quarterly period).
 
 ## 7. Business logic
 
-- Cache-first lookup; refetch on staleness (30 days for static data).
-- Missing-data handling (show "N/A" rather than 0).
+1. Resolve ticker (ISIN → symbol).
+2. Read `fundamentals_cache`; on hit return immediately (no quota).
+3. On miss: enforce `fundamentals` quota, fetch FMP → Yahoo fallback.
+4. Upsert only if `isCacheableFundamentalData` passes (avoids locking in sparse Yahoo rows).
 
 ## 8. External dependencies
 
-- Alpha Vantage, FMP. Quota-sensitive — watch `AV_API_KEY` minute limit.
+- FMP (`FMP_API_KEY`), Yahoo (`quoteSummary` modules).
 
-## 9. Currency / FX / tax implications
+## 9. Operations
 
-- Reported in the company's filing currency.
+- Purge cache: `npx tsx scripts/clear-fundamentals-cache.ts --symbol AAPL` or `--all`.
 
-## 10. i18n
+## 10. Related specs
 
-Key names English, values shown with locale-aware formatters.
-
-## 11. Permissions / tier gating / rate limits
-
-- `requireSubscriptionFeature('fundamentals')`.
-- 60/hour/user.
-
-## 12. Telemetry
-
-- `fundamentals_fetch_total{provider}`.
-
-## 13. Edge cases & gotchas
-
-- Non-US tickers have patchy AV coverage — fallback to FMP.
-- Use `asOf` timestamp to avoid stale data confusion.
-
-## 14. Tests
-
-- Provider tests; integration in moat tests.
-
-## 15. Related skills and rules
-
-- [`engineer-integrations`](../../.cursor/skills/engineer-integrations/SKILL.md)
-- Related specs: [moat-reports](moat-reports.md), [stock-evaluation](stock-evaluation.md).
-
-## 16. Open questions / planned work
-
-- Alternative free-tier provider for non-US fundamentals.
+- [moat-reports](moat-reports.md), [stock-evaluation](stock-evaluation.md).

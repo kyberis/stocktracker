@@ -1,6 +1,6 @@
 # portfolio-value-chart
 
-> The core portfolio-value line chart on the dashboard.
+> Interactive portfolio evolution chart (Recharts). **Default surface moved to `/portfolio#chart`**; the dashboard hero uses [portfolio-performance-matrix](portfolio-performance-matrix.md).
 
 ## 1. Summary
 Recharts line chart backed by `portfolio_snapshots` + a live quote overlay for the current tail. Supports benchmarks, range switching, market-session shading, and spike attribution.
@@ -14,7 +14,7 @@ Recharts line chart backed by `portfolio_snapshots` + a live quote overlay for t
 ## 3. Entry points
 | Type | Path | Notes |
 |------|------|-------|
-| Component | [`src/components/PortfolioValueChart.tsx`](../../src/components/PortfolioValueChart.tsx) | Root chart. |
+| Component | [`src/components/portfolio-v2/PortfolioEvolutionChart.tsx`](../../src/components/portfolio-v2/PortfolioEvolutionChart.tsx) | Root chart ( `/portfolio` ). |
 | Component | `ChartTooltip`, `RangeSelector`, `BenchmarkOverlay`, `SpikeMarker`. |
 | API | [`src/app/api/portfolio-history/`](../../src/app/api/portfolio-history) | Returns snapshots + benchmarks. |
 

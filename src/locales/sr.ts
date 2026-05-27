@@ -209,7 +209,7 @@ const sr: TranslationStrings = {
   earnings: "Зараде",
   annual: "Годишње",
   quarterly: "Квартално",
-  fundamentalsRequireAV: "Основни подаци захтевају Alpha Vantage. Омогућите у Подешавањима.",
+  fundamentalsRequirePaidPlan: "Основни подаци захтевају Alpha Vantage. Омогућите у Подешавањима.",
   noFundamentalData: "Нема основних података за ову акцију.",
   totalRevenue: "Укупан приход",
   costOfRevenue: "Трошак прихода",

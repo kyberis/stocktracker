@@ -123,7 +123,7 @@ async function handleHistory(
   const { provider, backend } = resolved;
   const pd = provider as CryptoPd;
 
-  const rl = await requireRateLimit(request, backend === "fmp" ? "fmp" : "alphavantage");
+  const rl = await requireRateLimit(request, "fmp");
   if (rl.error) return rl.error;
   const rateLimitUserId = rl.session?.userId ?? null;
 
@@ -195,7 +195,7 @@ async function handleExchangeRates(
   const { provider, backend } = resolved;
   const pd = provider as CryptoPd;
 
-  const rl = await requireRateLimit(request, backend === "fmp" ? "fmp" : "alphavantage");
+  const rl = await requireRateLimit(request, "fmp");
   if (rl.error) return rl.error;
   const rateLimitUserId = rl.session?.userId ?? null;
 

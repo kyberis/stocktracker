@@ -209,7 +209,7 @@ const sk: TranslationStrings = {
   earnings: "Výsledky",
   annual: "Ročné",
   quarterly: "Štvrťročné",
-  fundamentalsRequireAV: "Fundamentálne údaje vyžadujú Alpha Vantage. Povolte v Nastaveniach.",
+  fundamentalsRequirePaidPlan: "Fundamentálne údaje vyžadujú Alpha Vantage. Povolte v Nastaveniach.",
   noFundamentalData: "Pre túto akciu nie sú dostupné fundamentálne údaje.",
   totalRevenue: "Celkové výnosy",
   costOfRevenue: "Náklady na výnosy",

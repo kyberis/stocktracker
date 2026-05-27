@@ -209,7 +209,7 @@ const is: TranslationStrings = {
   earnings: "Tekjur",
   annual: "Árleg",
   quarterly: "Ársfjórðungsleg",
-  fundamentalsRequireAV: "Grundvallargögn krefjast Alpha Vantage. Virkjaðu í Stillingum.",
+  fundamentalsRequirePaidPlan: "Grundvallargögn krefjast Alpha Vantage. Virkjaðu í Stillingum.",
   noFundamentalData: "Engin grundvallarupplýsingar tiltækar fyrir þetta hlutabréf.",
   totalRevenue: "Heildartekjur",
   costOfRevenue: "Tekjukostnaður",

@@ -60,7 +60,7 @@ export const GET = withMetrics("/api/intelligence", async (request: NextRequest)
 
   const { provider, backend } = resolved;
 
-  const rl = await requireRateLimit(request, backend === "fmp" ? "fmp" : "alphavantage");
+  const rl = await requireRateLimit(request, "fmp");
   if (rl.error) return rl.error;
   const rateLimitUserId = rl.session?.userId ?? null;
 

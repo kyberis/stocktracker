@@ -209,7 +209,7 @@ const el: TranslationStrings = {
   earnings: "Αποτελέσματα",
   annual: "Ετήσια",
   quarterly: "Τριμηνιαία",
-  fundamentalsRequireAV: "Τα θεμελιώδη δεδομένα απαιτούν Alpha Vantage. Ενεργοποιήστε στις Ρυθμίσεις.",
+  fundamentalsRequirePaidPlan: "Τα θεμελιώδη δεδομένα απαιτούν Alpha Vantage. Ενεργοποιήστε στις Ρυθμίσεις.",
   noFundamentalData: "Δεν υπάρχουν θεμελιώδη δεδομένα για αυτή τη μετοχή.",
   totalRevenue: "Συνολικό έσοδο",
   costOfRevenue: "Κόστος εσόδων",

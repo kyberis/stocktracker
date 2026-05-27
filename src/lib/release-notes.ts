@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.31",
+    date: "2026-05-27",
+    title: "Financial statements data",
+    titleTranslations: {
+      es: "Datos de estados financieros",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The portfolio hero now shows a performance matrix by asset class (Today, 1W, 1M, YTD, 1Y, and longer horizons on Pro) instead of the inline chart. Open the full interactive chart from View chart on the dashboard or on /portfolio.",
+        translations: {
+          es: "El hero del portfolio muestra ahora una matriz de rendimiento por clase de activo (Hoy, 1S, 1M, YTD, 1A y horizontes largos en Pro) en lugar del gráfico inline. Abre el gráfico interactivo completo con Ver gráfico en el dashboard o en /portfolio.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Stock financial statements (income, balance sheet, cash flow, earnings) now load from FMP with a permanent cache, so repeat visits are faster and line items are more complete than Yahoo-only data.",
+        translations: {
+          es: "Los estados financieros (resultados, balance, flujo de caja y ganancias) ahora se cargan desde FMP con caché permanente: las visitas repetidas son más rápidas y las partidas más completas que con solo Yahoo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Moat evaluation and sync now use FMP only for fundamental data (Alpha Vantage removed from that path).",
+        translations: {
+          es: "La evaluación Moat y su sincronización usan solo FMP para datos fundamentales (Alpha Vantage eliminado de ese flujo).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.30",
     date: "2026-05-23",
     title: "Agent Office",

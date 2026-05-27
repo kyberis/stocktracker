@@ -209,7 +209,7 @@ const cy: TranslationStrings = {
   earnings: "Enillion",
   annual: "Blynyddol",
   quarterly: "Chwarterol",
-  fundamentalsRequireAV: "Mae data sylfaenol yn gofyn am Alpha Vantage. Galluogwch yn Gosodiadau.",
+  fundamentalsRequirePaidPlan: "Mae data sylfaenol yn gofyn am Alpha Vantage. Galluogwch yn Gosodiadau.",
   noFundamentalData: "Dim data sylfaenol ar gael ar gyfer y stoc hon.",
   totalRevenue: "Incwm Cyfanswm",
   costOfRevenue: "Cost Incwm",

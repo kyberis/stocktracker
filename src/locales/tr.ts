@@ -209,7 +209,7 @@ const tr: TranslationStrings = {
   earnings: "Kazançlar",
   annual: "Yıllık",
   quarterly: "Üç Aylık",
-  fundamentalsRequireAV: "Temel veriler Alpha Vantage gerektirir. Ayarlardan etkinleştirin.",
+  fundamentalsRequirePaidPlan: "Temel veriler Alpha Vantage gerektirir. Ayarlardan etkinleştirin.",
   noFundamentalData: "Bu hisse için temel veri mevcut değil.",
   totalRevenue: "Toplam Gelir",
   costOfRevenue: "Gelir Maliyeti",

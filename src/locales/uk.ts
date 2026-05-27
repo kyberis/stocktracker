@@ -209,7 +209,7 @@ const uk: TranslationStrings = {
   earnings: "Результати",
   annual: "Щорічно",
   quarterly: "Щоквартально",
-  fundamentalsRequireAV: "Фундаментальні дані потребують Alpha Vantage. Увімкніть у Налаштуваннях.",
+  fundamentalsRequirePaidPlan: "Фундаментальні дані потребують Alpha Vantage. Увімкніть у Налаштуваннях.",
   noFundamentalData: "Немає фундаментальних даних для цієї акції.",
   totalRevenue: "Загальні доходи",
   costOfRevenue: "Собівартість",

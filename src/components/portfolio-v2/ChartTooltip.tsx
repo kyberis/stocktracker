@@ -3,7 +3,7 @@
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { getActiveMarketsAt, MARKET_SESSION_COLORS } from "@/lib/market-hours";
 import type { Holding } from "@/lib/types";
-import type { BenchmarkOverlayEntry, EventMarker, SpikeContributor, SpikeDetail } from "./PortfolioValueChart";
+import type { BenchmarkOverlayEntry, EventMarker, SpikeContributor, SpikeDetail } from "./portfolio-chart-types";
 
 interface Props {
   active?: boolean;

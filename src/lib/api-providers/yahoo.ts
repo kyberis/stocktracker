@@ -388,7 +388,7 @@ export class YahooProvider implements StockDataProvider {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mapRow = (row: any): IncomeStatementReport => ({
         fiscalDateEnding: row.endDate ? new Date(row.endDate).toISOString().slice(0, 10) : "",
-        reportedCurrency: "USD",
+        reportedCurrency: String(row.currency ?? row.reportedCurrency ?? "USD"),
         totalRevenue: numOrNull(row.totalRevenue),
         costOfRevenue: numOrNull(row.costOfRevenue),
         grossProfit: numOrNull(row.grossProfit),
@@ -425,22 +425,38 @@ export class YahooProvider implements StockDataProvider {
       ok = true;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mapRow = (row: any): BalanceSheetReport => ({
+      const mapRow = (row: any): BalanceSheetReport => {
+        const totalAssets = numOrNull(row.totalAssets);
+        const totalCurrentAssets = numOrNull(row.totalCurrentAssets);
+        const totalLiabilities = numOrNull(row.totalLiab);
+        const totalCurrentLiabilities = numOrNull(row.totalCurrentLiabilities);
+        const nonCurrentAssets =
+          numOrNull(row.totalNonCurrentAssets) ??
+          (totalAssets != null && totalCurrentAssets != null
+            ? totalAssets - totalCurrentAssets
+            : null);
+        const nonCurrentLiabilities =
+          numOrNull(row.totalNonCurrentLiabilities) ??
+          (totalLiabilities != null && totalCurrentLiabilities != null
+            ? totalLiabilities - totalCurrentLiabilities
+            : null);
+        return {
         fiscalDateEnding: row.endDate ? new Date(row.endDate).toISOString().slice(0, 10) : "",
-        reportedCurrency: "USD",
-        totalAssets: numOrNull(row.totalAssets),
-        totalCurrentAssets: numOrNull(row.totalCurrentAssets),
+        reportedCurrency: String(row.currency ?? row.reportedCurrency ?? "USD"),
+        totalAssets,
+        totalCurrentAssets,
         cashAndEquivalents: numOrNull(row.cash),
-        totalNonCurrentAssets: null,
-        totalLiabilities: numOrNull(row.totalLiab),
-        totalCurrentLiabilities: numOrNull(row.totalCurrentLiabilities),
-        totalNonCurrentLiabilities: null,
+        totalNonCurrentAssets: nonCurrentAssets,
+        totalLiabilities,
+        totalCurrentLiabilities,
+        totalNonCurrentLiabilities: nonCurrentLiabilities,
         totalShareholderEquity: numOrNull(row.totalStockholderEquity),
         retainedEarnings: numOrNull(row.retainedEarnings),
         longTermDebt: numOrNull(row.longTermDebt),
         shortTermDebt: numOrNull(row.shortTermBorrowings),
         commonStockSharesOutstanding: numOrNull(row.commonStock),
-      });
+      };
+      };
 
       return {
         annual: (result.balanceSheetHistory?.balanceSheetStatements ?? []).map(mapRow),
@@ -466,7 +482,7 @@ export class YahooProvider implements StockDataProvider {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mapRow = (row: any): CashFlowReport => ({
         fiscalDateEnding: row.endDate ? new Date(row.endDate).toISOString().slice(0, 10) : "",
-        reportedCurrency: "USD",
+        reportedCurrency: String(row.currency ?? row.reportedCurrency ?? "USD"),
         operatingCashflow: numOrNull(row.totalCashFromOperatingActivities),
         capitalExpenditures: numOrNull(row.capitalExpenditures),
         changeInCash: numOrNull(row.changeInCash),
@@ -507,7 +523,17 @@ export class YahooProvider implements StockDataProvider {
         surprisePercentage: numOrNull(row.surprisePercent),
       }));
 
-      return { annual: [], quarterly };
+      const annualByYear = new Map<string, EarningsReport>();
+      for (const q of quarterly) {
+        const year = q.fiscalDateEnding.slice(0, 4);
+        if (!year) continue;
+        if (!annualByYear.has(year)) annualByYear.set(year, q);
+      }
+      const annual = Array.from(annualByYear.values()).sort((a, b) =>
+        b.fiscalDateEnding.localeCompare(a.fiscalDateEnding)
+      );
+
+      return { annual, quarterly };
     } catch {
       return null;
     } finally {

@@ -31,9 +31,9 @@ import { usePortfolioHomeData } from "@/components/dashboard-v2/use-portfolio-ho
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { CashEntry } from "@/lib/types";
 
-const PortfolioValueChart = dynamic(() => import("@/components/portfolio-v2/PortfolioValueChart"), {
+const PortfolioHeroCard = dynamic(() => import("@/components/portfolio-v2/PortfolioHeroCard"), {
   ssr: false,
-  loading: () => <div className="card rounded-xl h-[480px] animate-pulse bg-gray-50 dark:bg-white/[0.02]" />,
+  loading: () => <div className="card h-[320px] animate-pulse rounded-xl bg-gray-50 dark:bg-white/[0.02]" />,
 });
 
 function CardSkeleton({ h = "h-24" }: { h?: string }) {
@@ -135,11 +135,9 @@ export default function MobileDashboard() {
   );
 
   // Shared data-prep with desktop DashboardPortfolioV2 — guarantees mobile and
-  // desktop pass identical props to PortfolioValueChart / StatsGrid / etc.
+  // desktop pass identical props to PortfolioHeroCard / StatsGrid / etc.
   const home = usePortfolioHomeData({ holdings, cashEntries: investmentCashEntries });
   const {
-    chartVisible,
-    handleToggleChartVisible,
     assetFilter,
     setAssetFilter,
     filteredHoldings,
@@ -342,8 +340,9 @@ export default function MobileDashboard() {
 
                 <BackfillCTA holdingsCount={holdingsCount} onComplete={handleBackfillComplete} />
                 <ErrorBoundary>
-                  <PortfolioValueChart
+                  <PortfolioHeroCard
                     holdings={holdings}
+                    cashEntries={investmentCashEntries}
                     assetFilter={assetFilter}
                     refreshKey={refreshKey}
                     onRecalculate={handleRecalculate}
@@ -364,11 +363,7 @@ export default function MobileDashboard() {
                     }}
                     dayGainLoss={dayGainLoss}
                     dayGainLossPercent={investedValueBase - dayGainLoss > 0 ? (dayGainLoss / (investedValueBase - dayGainLoss)) * 100 : 0}
-                    totalGainLossPercent={totals.totalGainLossPercent}
-                    onAssetFilterChange={setAssetFilter}
                     dayChangePctByType={dayChangePctByType as Partial<Record<AssetFilter, number>>}
-                    chartVisible={chartVisible}
-                    onToggleChartVisible={handleToggleChartVisible}
                     breakdownSlot={
                       <MarketAwareBreakdown
                         holdings={holdings}

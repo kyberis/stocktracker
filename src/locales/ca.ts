@@ -209,7 +209,7 @@ const ca: TranslationStrings = {
   earnings: "Resultats",
   annual: "Anual",
   quarterly: "Trimestral",
-  fundamentalsRequireAV: "Les dades fonamentals requereixen Alpha Vantage. Activeu-ho a Configuració.",
+  fundamentalsRequirePaidPlan: "Les dades fonamentals requereixen Alpha Vantage. Activeu-ho a Configuració.",
   noFundamentalData: "No hi ha dades fonamentals per aquesta acció.",
   totalRevenue: "Ingressos Totals",
   costOfRevenue: "Cost de Vendes",

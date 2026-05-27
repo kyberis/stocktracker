@@ -1,10 +1,9 @@
 import type { NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth/session";
-import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import { FmpMarketDataProvider } from "@/lib/api-providers/fmp-market-data";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { StockDataProvider } from "@/lib/api-providers/types";
 import {
-  getGlobalAlphaVantageApiKey,
   getGlobalFmpApiKey,
   hasPremiumMarketDataConfigured,
   isFeatureEnabled,
@@ -13,7 +12,8 @@ import {
 import type { MarketDataSurface } from "./surface";
 import { MARKET_DATA_SURFACE_FLAG } from "./surface-flags";
 
-export type MarketDataBackend = "fmp" | "alphavantage";
+export type MarketDataBackend = "fmp";
+export type FundamentalsDataBackend = "fmp" | "yahoo";
 
 export async function shouldUseFmpForSurface(
   userId: string | null,
@@ -27,40 +27,43 @@ export async function shouldUseFmpForSurface(
 }
 
 /**
- * Resolves the stock data provider for premium routes. When `market_data_alpha_vantage`
- * is off, only FMP is used (all surfaces). When on: uses FMP if the surface FMP flag
- * is on and `FMP_API_KEY` is set; otherwise falls back to Alpha Vantage when configured.
+ * Resolves FMP for premium routes (moat, intelligence, search, etc.).
+ * Returns null when FMP_API_KEY is missing or the surface FMP flag is off.
  */
 export async function resolvePremiumStockDataProvider(
   userId: string | null,
   surface: MarketDataSurface
 ): Promise<{ provider: StockDataProvider; backend: MarketDataBackend } | null> {
-  const avAllowed = await isFeatureEnabled("market_data_alpha_vantage");
-  /** When AV is disabled, every premium surface uses FMP only (no per-surface FMP flags required). */
-  const useFmp = !avAllowed || (await shouldUseFmpForSurface(userId, surface));
+  const useFmp = await shouldUseFmpForSurface(userId, surface);
   const fmpKey = getGlobalFmpApiKey();
-  const avKey = getGlobalAlphaVantageApiKey();
+  if (!useFmp || !fmpKey) return null;
+  try {
+    return { provider: new FmpMarketDataProvider(fmpKey), backend: "fmp" };
+  } catch {
+    return null;
+  }
+}
 
+/**
+ * Fundamentals API: FMP when configured, otherwise Yahoo (no Alpha Vantage).
+ */
+export async function resolveFundamentalsProvider(
+  userId: string | null
+): Promise<{ provider: StockDataProvider; backend: FundamentalsDataBackend }> {
+  const fmpKey = getGlobalFmpApiKey();
+  const useFmp = await shouldUseFmpForSurface(userId, "fundamentals");
   if (useFmp && fmpKey) {
     try {
       return { provider: new FmpMarketDataProvider(fmpKey), backend: "fmp" };
     } catch {
-      /* fall through */
+      /* fall through to Yahoo */
     }
   }
-  if (avAllowed && avKey) {
-    try {
-      return { provider: new AlphaVantageProvider(avKey), backend: "alphavantage" };
-    } catch {
-      return null;
-    }
-  }
-  return null;
+  return { provider: new YahooProvider(), backend: "yahoo" };
 }
 
 /**
- * Pro-only: returns a market data provider for routes that previously used
- * {@link getAlphaVantageFromRequest}. Respects FMP rollout flags per surface.
+ * Pro-only: returns FMP for routes that previously used Alpha Vantage.
  */
 export async function getPremiumMarketDataFromRequest(
   request: NextRequest,

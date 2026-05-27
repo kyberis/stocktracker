@@ -75,14 +75,14 @@ describe("api-providers index", () => {
   describe("getAlphaVantageFromRequest", () => {
     it("with pro session + resolved provider returns provider", async () => {
       vi.mocked(getPremiumMarketDataFromRequest).mockResolvedValue({
-        provider: { name: "alphavantage" } as never,
-        backend: "alphavantage",
+        provider: { name: "fmp" } as never,
+        backend: "fmp",
       });
 
       const req = {} as Request;
       const provider = await getAlphaVantageFromRequest(req as never);
 
-      expect(provider).toEqual({ name: "alphavantage" });
+      expect(provider).toEqual({ name: "fmp" });
       expect(getPremiumMarketDataFromRequest).toHaveBeenCalledWith(req, "intelligence");
     });
 

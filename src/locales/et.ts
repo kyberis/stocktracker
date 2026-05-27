@@ -209,7 +209,7 @@ const et: TranslationStrings = {
   earnings: "Tulokset",
   annual: "Vuosittain",
   quarterly: "Neljännesvuosittain",
-  fundamentalsRequireAV: "Fundamenttidata vaatii Alpha Vantagen. Ota se käyttöön Asetuksissa.",
+  fundamentalsRequirePaidPlan: "Fundamenttidata vaatii Alpha Vantagen. Ota se käyttöön Asetuksissa.",
   noFundamentalData: "Ei fundamenttidataa tälle osakkeelle.",
   totalRevenue: "Kokonaistuotot",
   costOfRevenue: "Tuotokustannukset",

@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { getMarketStatus, wasMarketOpenToday } from "@/lib/market-hours";
@@ -11,20 +12,23 @@ import BackfillCTA from "./BackfillCTA";
 import MarketAwareBreakdown from "./MarketAwareBreakdown";
 import WarrenDrawer from "@/components/warren/WarrenDrawer";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { AssetTypeReviewLauncher } from "@/components/AssetTypeReviewModal";
+import type { Holding, QuoteData, ExchangeRates } from "@/lib/types";
 
-const PortfolioValueChart = dynamic(() => import("./PortfolioValueChart"), {
+const PortfolioHeroCard = dynamic(() => import("./PortfolioHeroCard"), {
   ssr: false,
   loading: () => (
-    <div className="card rounded-xl h-[480px] animate-pulse bg-gray-50 dark:bg-white/[0.02]" />
+    <div className="card h-[320px] animate-pulse rounded-xl bg-gray-50 dark:bg-white/[0.02]" />
   ),
 });
-import { AssetTypeReviewLauncher } from "@/components/AssetTypeReviewModal";
-import type { Holding, QuoteData, ExchangeRates, HoldingAssetType } from "@/lib/types";
 
-/**
- * Compute day P/L only from holdings whose market is currently open.
- * Crypto counts as always-open. Stocks/ETFs with closed markets contribute 0 day change.
- */
+const PortfolioEvolutionChart = dynamic(() => import("./PortfolioEvolutionChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="card h-[420px] animate-pulse rounded-xl bg-gray-50 dark:bg-white/[0.02]" />
+  ),
+});
+
 function computeMarketAwareDayPL(
   holdings: Holding[],
   quotes: Record<string, QuoteData>,
@@ -47,12 +51,14 @@ function computeMarketAwareDayPL(
 }
 
 export default function PortfolioPage() {
+  const searchParams = useSearchParams();
   const {
     holdings,
     cashEntries,
     quotes,
     exchangeRates,
     activePortfolioCurrency,
+    activePortfolioId,
     isInitializing,
   } = usePortfolio();
 
@@ -142,11 +148,20 @@ export default function PortfolioPage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (searchParams.get("view") !== "chart") return;
+    const el = document.getElementById("chart");
+    if (!el) return;
+    window.requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [searchParams]);
+
   if (isInitializing) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-        <div className="h-[500px] flex items-center justify-center">
-          <svg className="animate-spin h-8 w-8 text-gray-400" viewBox="0 0 24 24" fill="none">
+      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+        <div className="flex h-[500px] items-center justify-center">
+          <svg className="h-8 w-8 animate-spin text-gray-400" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
@@ -156,20 +171,19 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4">
-      {/* Backfill CTA */}
+    <div className="mx-auto max-w-5xl space-y-4 px-4 py-4 sm:px-6 sm:py-6">
       <BackfillCTA holdingsCount={holdings.length} onComplete={handleBackfillComplete} />
 
       {holdings.length > 0 && (
-        <div className="flex justify-end -mt-1">
+        <div className="-mt-1 flex justify-end">
           <AssetTypeReviewLauncher />
         </div>
       )}
 
-      {/* Chart (with integrated header + filter) */}
       <ErrorBoundary>
-        <PortfolioValueChart
+        <PortfolioHeroCard
           holdings={holdings}
+          cashEntries={cashEntries}
           assetFilter={assetFilter}
           refreshKey={refreshKey}
           onRecalculate={handleRecalculate}
@@ -184,9 +198,8 @@ export default function PortfolioPage() {
               ? (dayGainLoss / (investedValueBase - dayGainLoss)) * 100
               : 0
           }
-          totalGainLossPercent={totals.totalGainLossPercent}
-          onAssetFilterChange={setAssetFilter}
           dayChangePctByType={dayChangePctByType}
+          hideViewChartLink
           breakdownSlot={
             <MarketAwareBreakdown
               holdings={holdings}
@@ -198,10 +211,20 @@ export default function PortfolioPage() {
         />
       </ErrorBoundary>
 
-      <WarrenDrawer
-        isOpen={aiDrawerOpen}
-        onClose={() => setAiDrawerOpen(false)}
-      />
+      {activePortfolioId != null && holdings.length > 0 && (
+        <ErrorBoundary>
+          <PortfolioEvolutionChart
+            holdings={holdings}
+            assetFilter={assetFilter}
+            refreshKey={refreshKey}
+            onRecalculate={handleRecalculate}
+            recalculating={recalculating}
+            onOpenAi={() => setAiDrawerOpen(true)}
+          />
+        </ErrorBoundary>
+      )}
+
+      <WarrenDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
     </div>
   );
 }

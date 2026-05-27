@@ -209,7 +209,7 @@ const bg: TranslationStrings = {
   earnings: "Приходи",
   annual: "Годишен",
   quarterly: "Тримесечен",
-  fundamentalsRequireAV: "Фундаменталните данни изискват Alpha Vantage. Активирайте в Настройки.",
+  fundamentalsRequirePaidPlan: "Фундаменталните данни изискват Alpha Vantage. Активирайте в Настройки.",
   noFundamentalData: "Няма налични фундаментални данни за тази акция.",
   totalRevenue: "Общ приход",
   costOfRevenue: "Разход за приход",

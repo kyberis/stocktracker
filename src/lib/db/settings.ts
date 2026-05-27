@@ -363,18 +363,10 @@ export function getGlobalFmpApiKey(): string {
 }
 
 /**
- * True when a premium backend is effectively available: FMP key, or Alpha Vantage key
- * when the `market_data_alpha_vantage` feature flag is enabled.
+ * True when FMP is configured for premium market data routes.
  */
 export async function hasPremiumMarketDataConfigured(): Promise<boolean> {
-  if (getGlobalFmpApiKey().length > 0) return true;
-  if (
-    getGlobalAlphaVantageApiKey().length > 0 &&
-    (await isFeatureEnabled("market_data_alpha_vantage"))
-  ) {
-    return true;
-  }
-  return false;
+  return getGlobalFmpApiKey().length > 0;
 }
 
 /** Env keys only (ignores AV kill-switch). For metrics/cron pre-checks. */

@@ -43,7 +43,7 @@ export const GET = withMetrics("/api/economic-indicators", async (request: NextR
     return Response.json({ error: "Economic indicators not available" }, { status: 503 });
   }
 
-  const rl = await requireRateLimit(request, backend === "fmp" ? "fmp" : "alphavantage");
+  const rl = await requireRateLimit(request, "fmp");
   if (rl.error) return rl.error;
   const rateLimitUserId = rl.session?.userId ?? null;
 

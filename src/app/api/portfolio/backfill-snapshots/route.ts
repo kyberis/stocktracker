@@ -4,6 +4,7 @@ import { ensureInitialized } from "@/lib/db/client";
 import { str, num } from "@/lib/db/helpers";
 import { withMetrics } from "@/lib/with-metrics";
 import { runBackfillForUser } from "@/lib/backfill-snapshots";
+import { acquireBackfillLock, releaseBackfillLock } from "@/lib/backfill-snapshots-lock";
 import { materializeCurrentSnapshotsForUser } from "@/lib/cron-portfolio-snapshots";
 
 export const dynamic = "force-dynamic";
@@ -93,6 +94,11 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
   const { session, error } = await requireSession(req);
   if (error || !session) return error!;
 
+  if (!acquireBackfillLock(session.userId)) {
+    return NextResponse.json({ inProgress: true }, { status: 409 });
+  }
+
+  try {
   const client = await ensureInitialized();
 
   // Only wipe daily (date-only) rows — intraday snapshots from the cron and
@@ -194,4 +200,7 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
   }
 
   return NextResponse.json({ ...result, liveSnapshots, intradaySynced });
+  } finally {
+    releaseBackfillLock(session.userId);
+  }
 });

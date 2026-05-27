@@ -1,4 +1,4 @@
-import { recordAvUsageAsync, recordFmpUsageAsync } from "@/lib/rate-limit";
+import { recordFmpUsageAsync } from "@/lib/rate-limit";
 import type { MarketDataBackend } from "./resolve-provider";
 
 export function recordMarketDataUsageAsync(
@@ -7,5 +7,5 @@ export function recordMarketDataUsageAsync(
   callCount: number
 ): Promise<void> {
   if (backend === "fmp") return recordFmpUsageAsync(userId, callCount);
-  return recordAvUsageAsync(userId, callCount);
+  return Promise.resolve();
 }

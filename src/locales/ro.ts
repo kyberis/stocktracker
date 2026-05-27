@@ -209,7 +209,7 @@ const ro: TranslationStrings = {
   earnings: "Rezultate",
   annual: "Anual",
   quarterly: "Trimestrial",
-  fundamentalsRequireAV: "Datele fundamentale necesită Alpha Vantage. Activați în Setări.",
+  fundamentalsRequirePaidPlan: "Datele fundamentale necesită Alpha Vantage. Activați în Setări.",
   noFundamentalData: "Nu există date fundamentale pentru această acțiune.",
   totalRevenue: "Venituri Totale",
   costOfRevenue: "Costul Veniturilor",

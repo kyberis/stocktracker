@@ -83,6 +83,7 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
   const [mainTab, setMainTab] = useState<MainTab>("overview");
   const [financialSub, setFinancialSub] = useState<FinancialSub>("income");
   const [period, setPeriod] = useState<Period>("annual");
+  const [earningsPeriod, setEarningsPeriod] = useState<Period>("quarterly");
   const [now, setNow] = useState(() => new Date());
 
   const [overview, setOverview] = useState<CompanyOverview | null>(null);
@@ -534,7 +535,7 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
                 </svg>
               </div>
               <p className="text-gray-600 dark:text-slate-300 text-sm max-w-md mx-auto">
-                {t("fundamentalsRequireAV")}
+                {t("fundamentalsRequirePaidPlan")}
               </p>
               <Link href="/" className="inline-block mt-4 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors">
                 {t("backToPortfolio")}
@@ -625,7 +626,12 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
 
             {/* Earnings Tab (stocks only) */}
             {mainTab === "earnings" && (
-              <EarningsTab data={earnings} period={period} setPeriod={setPeriod} loading={earningsLoading} />
+              <EarningsTab
+                data={earnings}
+                period={earningsPeriod}
+                setPeriod={setEarningsPeriod}
+                loading={earningsLoading}
+              />
             )}
 
             {/* ETF Holdings Tab */}

@@ -209,7 +209,7 @@ const be: TranslationStrings = {
   earnings: "Даходы",
   annual: "Штогадова",
   quarterly: "Квартальна",
-  fundamentalsRequireAV: "Асноўныя даныя патрабуюць Alpha Vantage. Уключыце ў Наладах.",
+  fundamentalsRequirePaidPlan: "Асноўныя даныя патрабуюць Alpha Vantage. Уключыце ў Наладах.",
   noFundamentalData: "Няма асноўных даных для гэтай акцыі.",
   totalRevenue: "Агульны даход",
   costOfRevenue: "Кошт даходу",

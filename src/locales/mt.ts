@@ -209,7 +209,7 @@ const mt: TranslationStrings = {
   earnings: "Qligħ",
   annual: "Annwali",
   quarterly: "Kwartali",
-  fundamentalsRequireAV: "Id-data fundamentali teħtieġ Alpha Vantage. Attivala fl-Impostazzjonijiet.",
+  fundamentalsRequirePaidPlan: "Id-data fundamentali teħtieġ Alpha Vantage. Attivala fl-Impostazzjonijiet.",
   noFundamentalData: "M'hemm l-ebda data fundamentali disponibbli għal din l-azzjoni.",
   totalRevenue: "Dħul Totali",
   costOfRevenue: "Spiza tal-Bejjiet",

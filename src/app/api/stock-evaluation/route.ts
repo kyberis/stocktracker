@@ -48,13 +48,13 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
   if (!resolved) {
     await refundFeatureQuota(session.userId, "stock_evaluation");
     return Response.json(
-      { error: "Market data API not configured. Ask your administrator to set FMP_API_KEY or Alpha Vantage." },
+      { error: "Market data API not configured. Ask your administrator to set FMP_API_KEY." },
       { status: 501 },
     );
   }
   const { provider, backend } = resolved;
 
-  const rl = await requireRateLimit(request, backend === "fmp" ? "fmp" : "alphavantage");
+  const rl = await requireRateLimit(request, "fmp");
   if (rl.error) {
     await refundFeatureQuota(session.userId, "stock_evaluation");
     return rl.error;

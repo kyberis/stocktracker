@@ -10,41 +10,12 @@ import {
   calculatePeriodReturn,
   type HoldingSeriesEntry,
 } from "@/lib/performance";
+import { getAggregatedPeriodAnchorDates } from "@/lib/portfolio-performance-matrix";
 import type { HistoricalDataPoint, Holding } from "@/lib/types";
 
 type HistoricalApiResponse = {
   data?: HistoricalDataPoint[];
 };
-
-/** Anchor dates for 1W, 3M, 6M, YTD, 1Y — aligned with portfolio history range semantics. */
-export function getAggregatedPeriodAnchorDates(): {
-  oneWeek: string;
-  threeMonth: string;
-  sixMonth: string;
-  ytd: string;
-  oneYear: string;
-} {
-  const now = new Date();
-  const ytd = `${now.getFullYear()}-01-01`;
-
-  const ow = new Date(now);
-  ow.setDate(ow.getDate() - 7);
-  const oneWeek = ow.toISOString().split("T")[0];
-
-  const m3 = new Date(now);
-  m3.setMonth(m3.getMonth() - 3);
-  const threeMonth = m3.toISOString().split("T")[0];
-
-  const m6 = new Date(now);
-  m6.setMonth(m6.getMonth() - 6);
-  const sixMonth = m6.toISOString().split("T")[0];
-
-  const oy = new Date(now);
-  oy.setFullYear(oy.getFullYear() - 1);
-  const oneYear = oy.toISOString().split("T")[0];
-
-  return { oneWeek, threeMonth, sixMonth, ytd, oneYear };
-}
 
 interface Props {
   holdings: Holding[];

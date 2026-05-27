@@ -209,7 +209,7 @@ const da: TranslationStrings = {
   earnings: "Resultater",
   annual: "Årlig",
   quarterly: "Kvartalsvis",
-  fundamentalsRequireAV: "Fundamentadata kræver Alpha Vantage. Aktiver i Indstillinger.",
+  fundamentalsRequirePaidPlan: "Fundamentadata kræver Alpha Vantage. Aktiver i Indstillinger.",
   noFundamentalData: "Ingen fundamentaldata tilgængelig for denne aktie.",
   totalRevenue: "Samlet omsætning",
   costOfRevenue: "Omkostning til omsætning",

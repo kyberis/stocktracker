@@ -209,7 +209,7 @@ const sq: TranslationStrings = {
   earnings: "Të ardhurat",
   annual: "Vjetore",
   quarterly: "Tremujore",
-  fundamentalsRequireAV: "Të dhënat themelore kërkojnë Alpha Vantage. Aktivizojeni në Cilësimet.",
+  fundamentalsRequirePaidPlan: "Të dhënat themelore kërkojnë Alpha Vantage. Aktivizojeni në Cilësimet.",
   noFundamentalData: "Nuk ka të dhëna themelore për këtë aksion.",
   totalRevenue: "Të ardhurat totale",
   costOfRevenue: "Kostoja e të ardhurave",

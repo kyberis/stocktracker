@@ -209,7 +209,7 @@ const lv: TranslationStrings = {
   earnings: "Ieņēmumi",
   annual: "Gada",
   quarterly: "Ceturkšņa",
-  fundamentalsRequireAV: "Fundamentālie dati prasa Alpha Vantage. Iespējojiet Iestatījumos.",
+  fundamentalsRequirePaidPlan: "Fundamentālie dati prasa Alpha Vantage. Iespējojiet Iestatījumos.",
   noFundamentalData: "Šai akcijai nav fundamentālo datu.",
   totalRevenue: "Kopējie ieņēmumi",
   costOfRevenue: "Ieņēmumu izmaksas",

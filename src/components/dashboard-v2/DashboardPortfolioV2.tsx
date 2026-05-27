@@ -8,13 +8,12 @@ import BackfillCTA from "@/components/portfolio-v2/BackfillCTA";
 import MarketAwareBreakdown from "@/components/portfolio-v2/MarketAwareBreakdown";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
-// Heavy (~1.5k line) chart component — lazily loaded to keep dashboard shell light.
-const PortfolioValueChart = dynamic(
-  () => import("@/components/portfolio-v2/PortfolioValueChart"),
+const PortfolioHeroCard = dynamic(
+  () => import("@/components/portfolio-v2/PortfolioHeroCard"),
   {
     ssr: false,
     loading: () => (
-      <div className="card rounded-xl h-[480px] animate-pulse bg-gray-50 dark:bg-white/[0.02]" />
+      <div className="card h-[320px] animate-pulse rounded-xl bg-gray-50 dark:bg-white/[0.02]" />
     ),
   },
 );
@@ -60,118 +59,21 @@ interface Props {
   onShareReferral: () => void;
 }
 
-// ── Shared sidebar + table sections ──
-
-function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onNavigateToNews, onShareReferral, aiDrawerOpen, setAiDrawerOpen }: {
-  chartBlock: React.ReactNode;
-  holdings: Holding[];
-  cashEntries: CashEntry[];
-  allCashEntries: CashEntry[];
-  onAddStock: () => void;
-  onNavigateToEvents: () => void;
-  onNavigateToDividends: () => void;
-  onNavigateToDiversification: () => void;
-  onNavigateToNews: () => void;
-  onShareReferral: () => void;
-  aiDrawerOpen: boolean;
-  setAiDrawerOpen: (v: boolean) => void;
-}) {
-  return (
-    <>
-      <div className="flex flex-col gap-4">
-        {chartBlock}
-        <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
-          <div className="flex flex-col gap-4 min-w-0">
-            <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
-            <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
-            <PortfolioNewsFeed variant="compact" maxItems={10} onViewAll={onNavigateToNews} />
-            <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
-          </div>
-          <div className="flex flex-col gap-3">
-            <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
-            <OnboardingChecklist onOpenAddStock={onAddStock} />
-            <DailyDigestsTeaserCard />
-            <WeeklyDigestCard position="promoted" />
-            <CompactReferralCard onShare={onShareReferral} />
-            <GoalPromptCard holdings={holdings} />
-            <PortfolioScoreCard holdings={holdings} cashEntries={cashEntries} />
-            <GoalProgressCard holdings={holdings} cashEntries={cashEntries} />
-            <AllocationTabs holdings={holdings} cashEntries={allCashEntries} onShowMore={onNavigateToDiversification} />
-            <CompactDividendCard holdings={holdings} cashEntries={cashEntries} onNavigateToDividends={onNavigateToDividends} />
-            <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />
-            <PortfolioGrowthPeriods holdings={holdings} />
-            <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
-            <WeeklyDigestCard position="default" />
-          </div>
-        </div>
-      </div>
-      <WarrenDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
-    </>
-  );
-}
-
-function CollapsedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onNavigateToNews, onShareReferral, aiDrawerOpen, setAiDrawerOpen, sidebarExtra }: {
-  chartBlock: React.ReactNode;
-  holdings: Holding[];
-  cashEntries: CashEntry[];
-  allCashEntries: CashEntry[];
-  onAddStock: () => void;
-  onNavigateToEvents: () => void;
-  onNavigateToDividends: () => void;
-  onNavigateToDiversification: () => void;
-  onNavigateToNews: () => void;
-  onShareReferral: () => void;
-  aiDrawerOpen: boolean;
-  setAiDrawerOpen: (v: boolean) => void;
-  sidebarExtra?: React.ReactNode;
-}) {
-  return (
-    <>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
-        <div className="flex flex-col gap-4 min-w-0">
-          {chartBlock}
-          <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
-          <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
-          <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
-          <PortfolioNewsFeed variant="compact" maxItems={10} onViewAll={onNavigateToNews} />
-          <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
-        </div>
-        <div className="flex flex-col gap-3">
-          <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
-          <OnboardingChecklist onOpenAddStock={onAddStock} />
-          <DailyDigestsTeaserCard />
-          <WeeklyDigestCard position="promoted" />
-          <CompactReferralCard onShare={onShareReferral} />
-          <GoalPromptCard holdings={holdings} />
-          <PortfolioScoreCard holdings={holdings} cashEntries={cashEntries} />
-          <GoalProgressCard holdings={holdings} cashEntries={cashEntries} />
-          {sidebarExtra}
-          <AllocationTabs holdings={holdings} cashEntries={allCashEntries} onShowMore={onNavigateToDiversification} />
-          <CompactDividendCard holdings={holdings} cashEntries={cashEntries} onNavigateToDividends={onNavigateToDividends} />
-          <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />
-          <PortfolioGrowthPeriods holdings={holdings} />
-          <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
-          <WeeklyDigestCard position="default" />
-        </div>
-      </div>
-      <WarrenDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
-    </>
-  );
-}
-
-// ── Dashboard with V2 chart ──
-
 function V2Dashboard(props: Props) {
-  const { holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onNavigateToNews, onShareReferral } = props;
+  const {
+    holdings,
+    cashEntries,
+    allCashEntries,
+    onAddStock,
+    onNavigateToEvents,
+    onNavigateToDividends,
+    onNavigateToDiversification,
+    onNavigateToNews,
+    onShareReferral,
+  } = props;
 
   const home = usePortfolioHomeData({ holdings, cashEntries });
   const {
-    chartVisible,
-    handleToggleChartVisible,
-    chartExpanded,
-    setChartExpanded,
     aiDrawerOpen,
     setAiDrawerOpen,
     assetFilter,
@@ -187,19 +89,18 @@ function V2Dashboard(props: Props) {
     handleBackfillComplete,
   } = home;
 
-  const v2ChartBlock = (
+  const heroBlock = (
     <>
       <BackfillCTA holdingsCount={holdings.length} onComplete={handleBackfillComplete} />
       <ErrorBoundary>
-        <PortfolioValueChart
+        <PortfolioHeroCard
           holdings={holdings}
+          cashEntries={cashEntries}
           assetFilter={assetFilter}
           refreshKey={refreshKey}
           onRecalculate={handleRecalculate}
           recalculating={recalculating}
           onOpenAi={() => setAiDrawerOpen(true)}
-          expanded={chartExpanded}
-          onToggleExpand={() => setChartExpanded(!chartExpanded)}
           totalValue={totals.totalCurrentEUR}
           investedValue={investedValueBase}
           cashValue={cashValueBase}
@@ -208,19 +109,16 @@ function V2Dashboard(props: Props) {
             const el = document.getElementById("dashboard-cash-assets");
             if (!el) return;
             el.scrollIntoView({ behavior: "smooth", block: "start" });
-            // Briefly highlight so the user sees which widget opened.
             el.classList.add("ring-2", "ring-emerald-400/60", "transition");
             window.setTimeout(() => {
               el.classList.remove("ring-2", "ring-emerald-400/60", "transition");
             }, 1600);
           }}
           dayGainLoss={dayGainLoss}
-          dayGainLossPercent={investedValueBase - dayGainLoss > 0 ? (dayGainLoss / (investedValueBase - dayGainLoss)) * 100 : 0}
-          totalGainLossPercent={totals.totalGainLossPercent}
-          onAssetFilterChange={setAssetFilter}
+          dayGainLossPercent={
+            investedValueBase - dayGainLoss > 0 ? (dayGainLoss / (investedValueBase - dayGainLoss)) * 100 : 0
+          }
           dayChangePctByType={dayChangePctByType as Partial<Record<AssetFilter, number>>}
-          chartVisible={chartVisible || chartExpanded}
-          onToggleChartVisible={handleToggleChartVisible}
           breakdownSlot={
             <MarketAwareBreakdown
               holdings={holdings}
@@ -234,29 +132,37 @@ function V2Dashboard(props: Props) {
     </>
   );
 
-  if (chartExpanded) {
-    return (
-      <ExpandedLayout
-        chartBlock={v2ChartBlock}
-        holdings={holdings} cashEntries={cashEntries} allCashEntries={allCashEntries}
-        onAddStock={onAddStock} onNavigateToEvents={onNavigateToEvents}
-        onNavigateToDividends={onNavigateToDividends} onNavigateToDiversification={onNavigateToDiversification}
-        onNavigateToNews={onNavigateToNews}
-        onShareReferral={onShareReferral} aiDrawerOpen={aiDrawerOpen} setAiDrawerOpen={setAiDrawerOpen}
-      />
-    );
-  }
-
   return (
-    <CollapsedLayout
-      chartBlock={v2ChartBlock}
-      holdings={holdings} cashEntries={cashEntries} allCashEntries={allCashEntries}
-      onAddStock={onAddStock} onNavigateToEvents={onNavigateToEvents}
-      onNavigateToDividends={onNavigateToDividends} onNavigateToDiversification={onNavigateToDiversification}
-      onNavigateToNews={onNavigateToNews}
-      onShareReferral={onShareReferral} aiDrawerOpen={aiDrawerOpen} setAiDrawerOpen={setAiDrawerOpen}
-      sidebarExtra={<StatsGrid holdings={holdings} cashEntries={cashEntries} />}
-    />
+    <>
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="flex min-w-0 flex-col gap-4">
+          {heroBlock}
+          <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
+          <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
+          <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
+          <PortfolioNewsFeed variant="compact" maxItems={10} onViewAll={onNavigateToNews} />
+          <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
+        </div>
+        <div className="flex flex-col gap-3">
+          <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
+          <OnboardingChecklist onOpenAddStock={onAddStock} />
+          <DailyDigestsTeaserCard />
+          <WeeklyDigestCard position="promoted" />
+          <CompactReferralCard onShare={onShareReferral} />
+          <GoalPromptCard holdings={holdings} />
+          <PortfolioScoreCard holdings={holdings} cashEntries={cashEntries} />
+          <GoalProgressCard holdings={holdings} cashEntries={cashEntries} />
+          <StatsGrid holdings={holdings} cashEntries={cashEntries} />
+          <AllocationTabs holdings={holdings} cashEntries={allCashEntries} onShowMore={onNavigateToDiversification} />
+          <CompactDividendCard holdings={holdings} cashEntries={cashEntries} onNavigateToDividends={onNavigateToDividends} />
+          <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />
+          <PortfolioGrowthPeriods holdings={holdings} />
+          <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
+          <WeeklyDigestCard position="default" />
+        </div>
+      </div>
+      <WarrenDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
+    </>
   );
 }
 

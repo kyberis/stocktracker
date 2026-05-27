@@ -209,7 +209,7 @@ const pl: TranslationStrings = {
   earnings: "Wyniki",
   annual: "Rocznie",
   quarterly: "Kwartalnie",
-  fundamentalsRequireAV: "Dane fundamentalne wymagają Alpha Vantage. Włącz w Ustawieniach.",
+  fundamentalsRequirePaidPlan: "Dane fundamentalne wymagają Alpha Vantage. Włącz w Ustawieniach.",
   noFundamentalData: "Brak danych fundamentalnych dla tej akcji.",
   totalRevenue: "Przychody całkowite",
   costOfRevenue: "Koszt sprzedaży",

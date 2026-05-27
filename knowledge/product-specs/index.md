@@ -85,7 +85,8 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [chart-ai-chat-panel](chart-ai-chat-panel.md) — AI panel docked in the chart.
 - [chart-tooltip](chart-tooltip.md) — hover tooltip with derived data.
 - [market-session-rendering](market-session-rendering.md) — pre/post/open session shading.
-- [portfolio-value-chart](portfolio-value-chart.md) — the main chart component.
+- [portfolio-value-chart](portfolio-value-chart.md) — interactive evolution chart on `/portfolio`.
+- [portfolio-performance-matrix](portfolio-performance-matrix.md) — hero performance table by asset class and period.
 - [range-selector](range-selector.md) — 1D/1W/1M/1Y selector.
 - [spike-attribution](spike-attribution.md) — explain which holding caused a move.
 
