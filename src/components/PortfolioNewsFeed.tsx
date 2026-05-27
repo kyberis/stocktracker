@@ -190,6 +190,7 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
             key={`${article.url}-${idx}`}
             article={article}
             highlightHoldings={articleTouchesHoldings(article, holdingSyms)}
+            variant={variant}
           />
         ))}
       </div>
@@ -212,12 +213,10 @@ function SectionHeader({
   const { t } = useI18n();
   const compact = variant === "compact";
   return (
-    <div className={`flex items-center gap-2 ${compact ? "justify-between flex-wrap" : ""}`}>
-      <div className="flex items-center gap-2 min-w-0">
-        <svg className={`${compact ? "w-4 h-4" : "w-5 h-5"} text-emerald-500 shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-        </svg>
-        <h2 className={`${compact ? "text-sm" : "text-lg"} truncate font-semibold text-[color:var(--foreground)]`}>
+    <div className={`flex items-end gap-3 border-b border-[color:var(--border)] ${compact ? "justify-between pb-2.5" : "pb-3"}`}>
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="h-5 w-px shrink-0 bg-emerald-500/60" aria-hidden="true" />
+        <h2 className={`${compact ? "text-sm" : "text-base"} truncate font-semibold tracking-[0.01em] text-[color:var(--foreground)]`}>
           {t("portfolioNews")}
         </h2>
       </div>
@@ -225,7 +224,7 @@ function SectionHeader({
         <button
           type="button"
           onClick={onViewAll}
-          className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline shrink-0"
+          className="shrink-0 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
         >
           {t("portfolioNewsViewAll")}
         </button>
@@ -347,14 +346,17 @@ function NewsArticleSummaryModal({
 function NewsCard({
   article,
   highlightHoldings,
+  variant,
 }: {
   article: NewsArticle;
   highlightHoldings: boolean;
+  variant: "full" | "compact";
 }) {
   const { t, language } = useI18n();
   const { getApiHeaders } = useSettings();
   const { user } = useAuth();
   const isPro = user?.plan === "pro" || user?.role === "admin";
+  const compact = variant === "compact";
 
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [summaryLoading, setSummaryLoading] = useState(false);
@@ -414,62 +416,48 @@ function NewsCard({
   };
 
   const ctaClassPro =
-    "inline-flex items-center justify-center gap-1 rounded-xl border border-emerald-500/16 bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-semibold text-emerald-200 transition-colors hover:bg-emerald-500/16";
+    "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-[11px] font-semibold text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-highlight)]";
 
   const ctaClassFree =
-    "inline-flex items-center justify-center gap-1 rounded-xl border border-amber-500/16 bg-amber-500/10 px-2.5 py-1.5 text-[10px] font-semibold text-amber-200 transition-colors hover:bg-amber-500/16";
+    "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-[11px] font-semibold text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-highlight)]";
 
   return (
-    <div
-      className={`card px-5 py-4 transition-shadow hover:shadow-md hover:ring-1 hover:ring-emerald-500/20 ${highlightHoldings ? "ring-1 ring-emerald-500/24 bg-emerald-500/[0.05]" : ""}`}
+    <article
+      className={`card relative overflow-hidden ${compact ? "px-4 py-4" : "px-5 py-5"} transition-colors hover:bg-[color:var(--surface-soft)] ${
+        highlightHoldings ? "border-l-[3px] border-l-emerald-400/70" : ""
+      }`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--muted)] sm:text-[11px]">
+            <span>{article.source}</span>
+            <span aria-hidden="true">&middot;</span>
+            <span>{formatNewsDate(article.publishedAt)}</span>
+            {highlightHoldings && (
+              <>
+                <span aria-hidden="true">&middot;</span>
+                <span className="text-emerald-500">{t("portfolioNewsHoldingBadge")}</span>
+              </>
+            )}
+          </div>
         <a
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block min-w-0 flex-1 -m-1 rounded-lg p-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+            className="mt-2 block min-w-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
         >
-          <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-[color:var(--foreground)]">
+            <h4 className={`${compact ? "text-[15px] leading-6" : "text-lg leading-7"} line-clamp-3 font-semibold text-[color:var(--foreground)]`}>
               {article.title}
             </h4>
-            {highlightHoldings && (
-              <span className="rounded-full border border-emerald-500/16 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-                {t("portfolioNewsHoldingBadge")}
-              </span>
-            )}
-          </div>
-          <p className="mt-1 line-clamp-2 text-xs text-[color:var(--muted)]">
+            <p className={`${compact ? "text-[13px] leading-5" : "text-sm leading-6"} mt-2 line-clamp-4 text-[color:var(--muted)]`}>
             {article.summary}
           </p>
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            <span className="text-[10px] text-[color:var(--muted)]">
-              {article.source}
-            </span>
-            <span className="text-[color:var(--muted)]">&middot;</span>
-            <span className="text-[10px] text-[color:var(--muted)]">
-              {formatNewsDate(article.publishedAt)}
-            </span>
-            {article.topics.length > 0 && (
-              <>
-                <span className="text-[color:var(--muted)]">&middot;</span>
-                {article.topics.slice(0, 3).map((topic, ti) => (
-                  <span
-                    key={ti}
-                    className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-1.5 py-0.5 text-[10px] text-[color:var(--muted)]"
-                  >
-                    {topic}
-                  </span>
-                ))}
-              </>
-            )}
-          </div>
         </a>
-        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 shrink-0 sm:pt-0">
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:max-w-[220px] sm:justify-end">
           {article.overallSentiment && (
             <span
-              className={`flex-shrink-0 text-[10px] font-semibold px-2 py-1 rounded-full border ${sentimentBg(article.overallSentiment)} ${sentimentColor(article.overallSentiment)}`}
+              className={`flex-shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${sentimentBg(article.overallSentiment)} ${sentimentColor(article.overallSentiment)}`}
             >
               {article.overallSentiment}
             </span>
@@ -498,28 +486,45 @@ function NewsCard({
         </div>
       </div>
 
-      {article.tickerSentiment.length > 0 && (
-        <a
-          href={article.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-wrap gap-1.5 mt-3 pt-2.5 border-t border-gray-100 dark:border-slate-700 hover:opacity-90"
-        >
-          {article.tickerSentiment.map((ts, ti) => (
-            <span
-              key={ti}
-              className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
-                ts.sentimentLabel
-                  ? `${sentimentBg(ts.sentimentLabel)} ${sentimentColor(ts.sentimentLabel)}`
-                  : "bg-gray-50 dark:bg-slate-700 border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300"
-              }`}
+      {(article.topics.length > 0 || article.tickerSentiment.length > 0) && (
+        <div className="mt-4 border-t border-[color:var(--border)] pt-3">
+          {article.topics.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {article.topics.slice(0, 3).map((topic, ti) => (
+                <span
+                  key={ti}
+                  className="rounded-full border border-[color:var(--border)] bg-transparent px-2 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--muted)]"
+                >
+                  {topic}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {article.tickerSentiment.length > 0 && (
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`mt-2 flex flex-wrap gap-1.5 hover:opacity-90 ${article.topics.length > 0 ? "" : ""}`}
             >
-              {ts.sentimentLabel
-                ? `${ts.ticker}: ${ts.sentimentLabel} (${(ts.sentimentScore * 100).toFixed(0)}%)`
-                : ts.ticker}
-            </span>
-          ))}
-        </a>
+              {article.tickerSentiment.map((ts, ti) => (
+                <span
+                  key={ti}
+                  className={`rounded-full border px-2.5 py-1 text-[10px] font-medium ${
+                    ts.sentimentLabel
+                      ? `${sentimentBg(ts.sentimentLabel)} ${sentimentColor(ts.sentimentLabel)}`
+                      : "border-[color:var(--border)] bg-transparent text-[color:var(--muted)]"
+                  }`}
+                >
+                  {ts.sentimentLabel
+                    ? `${ts.ticker}: ${ts.sentimentLabel} (${(ts.sentimentScore * 100).toFixed(0)}%)`
+                    : ts.ticker}
+                </span>
+              ))}
+            </a>
+          )}
+        </div>
       )}
 
       <NewsArticleSummaryModal
@@ -530,6 +535,6 @@ function NewsCard({
         summaryText={summaryText}
         onClose={closeSummary}
       />
-    </div>
+    </article>
   );
 }

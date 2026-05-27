@@ -53,6 +53,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "improvement",
+        text: "Portfolio news now uses a cleaner editorial layout in both dashboard previews and the full news tab, with clearer bylines, calmer metadata, and the same topic/ticker coverage preserved.",
+        translations: {
+          es: "Las noticias de la cartera ahora usan una composición más editorial y limpia tanto en los previews del dashboard como en la pestaña completa de noticias, con bylines más claros, metadatos más sobrios y la misma cobertura de temas y tickers intacta.",
+        },
+      },
+      {
         type: "feature",
         text: "Admin settings can now route operational Telegram alerts through an external ProdOps service: trefolio queues signup, membership, feedback, broker-request, and trial-activation events in an outbox and dispatches them asynchronously to staff channels.",
         translations: {

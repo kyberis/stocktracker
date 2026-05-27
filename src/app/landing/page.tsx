@@ -91,21 +91,6 @@ function getHeroFeatures(t: T) {
       ],
     },
     {
-      tag: t("landingFeatureOfficeTag"),
-      tagBadge: "Trefolio",
-      title: t("landingFeatureOfficeTitle"),
-      description: t("landingFeatureOfficeDesc"),
-      screenshot: "/screenshots/agent-office.png",
-      points: [
-        t("landingFeatureOfficePoint1"),
-        t("landingFeatureOfficePoint2"),
-        t("landingFeatureOfficePoint3"),
-        t("landingFeatureOfficePoint4"),
-      ],
-      ctaHref: "/office",
-      ctaLabel: t("landingFeatureOfficeCta"),
-    },
-    {
       tag: t("landingFeatureImportTag"),
       title: t("landingFeatureImportTitle"),
       description: t("landingFeatureImportDesc"),
