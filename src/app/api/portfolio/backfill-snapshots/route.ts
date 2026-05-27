@@ -99,9 +99,9 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
   }
 
   try {
-  const client = await ensureInitialized();
+    const client = await ensureInitialized();
 
-  // Only wipe daily (date-only) rows — intraday snapshots from the cron and
+    // Only wipe daily (date-only) rows — intraday snapshots from the cron and
   // client sync are preserved. The history API already prefers intraday over
   // daily when both exist for the same calendar day, so there's no conflict.
   await client.execute({

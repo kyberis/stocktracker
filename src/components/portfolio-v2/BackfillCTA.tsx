@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 
@@ -23,7 +23,7 @@ async function fetchBackfillStatus(): Promise<BackfillStatus> {
 
 async function pollUntilBackfillComplete(
   onComplete: () => void,
-  setCheckKey: React.Dispatch<React.SetStateAction<number>>,
+  setCheckKey: Dispatch<SetStateAction<number>>,
 ): Promise<void> {
   for (let i = 0; i < 36; i++) {
     await new Promise((resolve) => setTimeout(resolve, 5000));

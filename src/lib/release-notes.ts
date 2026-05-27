@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "improvement",
+        text: "When portfolio history is incomplete (missing cost basis or asset breakdown), the dashboard now rebuilds it automatically in the background instead of showing a Recalculate banner.",
+        translations: {
+          es: "Cuando el historial del portafolio está incompleto (falta cost basis o desglose por activo), el dashboard ahora lo reconstruye automáticamente en segundo plano en lugar de mostrar un banner de Recalcular.",
+        },
+      },
+      {
         type: "feature",
         text: "The portfolio hero now shows a performance matrix by asset class (Today, 1W, 1M, YTD, 1Y, and longer horizons on Pro) instead of the inline chart. Open the full interactive chart from View chart on the dashboard or on /portfolio.",
         translations: {
