@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-251 routes.
+261 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -34,6 +34,7 @@
 | `/api/admin/feature-flags` | GET, PUT | [`src/app/api/admin/feature-flags/route.ts`](../../src/app/api/admin/feature-flags/route.ts) |
 | `/api/admin/feature-flags/overrides` | GET, POST, DELETE | [`src/app/api/admin/feature-flags/overrides/route.ts`](../../src/app/api/admin/feature-flags/overrides/route.ts) |
 | `/api/admin/feedback/send-completion` | POST | [`src/app/api/admin/feedback/send-completion/route.ts`](../../src/app/api/admin/feedback/send-completion/route.ts) |
+| `/api/admin/finpulse-handles` | GET, PUT | [`src/app/api/admin/finpulse-handles/route.ts`](../../src/app/api/admin/finpulse-handles/route.ts) |
 | `/api/admin/ga-config` | GET, PUT | [`src/app/api/admin/ga-config/route.ts`](../../src/app/api/admin/ga-config/route.ts) |
 | `/api/admin/grafana-url` | GET | [`src/app/api/admin/grafana-url/route.ts`](../../src/app/api/admin/grafana-url/route.ts) |
 | `/api/admin/impersonate` | POST | [`src/app/api/admin/impersonate/route.ts`](../../src/app/api/admin/impersonate/route.ts) |
@@ -76,6 +77,13 @@
 | `/api/admin/x-posts/post` | POST | [`src/app/api/admin/x-posts/post/route.ts`](../../src/app/api/admin/x-posts/post/route.ts) |
 | `/api/admin/x-posts/seed` | POST | [`src/app/api/admin/x-posts/seed/route.ts`](../../src/app/api/admin/x-posts/seed/route.ts) |
 | `/api/ai-analysis` | POST | [`src/app/api/ai-analysis/route.ts`](../../src/app/api/ai-analysis/route.ts) |
+| `/api/aid/digest` | GET | [`src/app/api/aid/digest/route.ts`](../../src/app/api/aid/digest/route.ts) |
+| `/api/aid/earnings-recap` | GET | [`src/app/api/aid/earnings-recap/route.ts`](../../src/app/api/aid/earnings-recap/route.ts) |
+| `/api/aid/feed` | GET | [`src/app/api/aid/feed/route.ts`](../../src/app/api/aid/feed/route.ts) |
+| `/api/aid/finpulse` | GET | [`src/app/api/aid/finpulse/route.ts`](../../src/app/api/aid/finpulse/route.ts) |
+| `/api/aid/insights` | GET | [`src/app/api/aid/insights/route.ts`](../../src/app/api/aid/insights/route.ts) |
+| `/api/aid/refresh` | POST | [`src/app/api/aid/refresh/route.ts`](../../src/app/api/aid/refresh/route.ts) |
+| `/api/aid/status` | GET, POST | [`src/app/api/aid/status/route.ts`](../../src/app/api/aid/status/route.ts) |
 | `/api/alerts` | GET, POST, PATCH, DELETE | [`src/app/api/alerts/route.ts`](../../src/app/api/alerts/route.ts) |
 | `/api/alerts/tickers` | GET | [`src/app/api/alerts/tickers/route.ts`](../../src/app/api/alerts/tickers/route.ts) |
 | `/api/analytics/conversions` | POST | [`src/app/api/analytics/conversions/route.ts`](../../src/app/api/analytics/conversions/route.ts) |
@@ -126,6 +134,8 @@
 | `/api/chat/[token]/typing` | POST | [`src/app/api/chat/[token]/typing/route.ts`](../../src/app/api/chat/[token]/typing/route.ts) |
 | `/api/chats` | GET | [`src/app/api/chats/route.ts`](../../src/app/api/chats/route.ts) |
 | `/api/contact` | POST | [`src/app/api/contact/route.ts`](../../src/app/api/contact/route.ts) |
+| `/api/cron/aid-digest` | GET | [`src/app/api/cron/aid-digest/route.ts`](../../src/app/api/cron/aid-digest/route.ts) |
+| `/api/cron/aid-finpulse` | GET | [`src/app/api/cron/aid-finpulse/route.ts`](../../src/app/api/cron/aid-finpulse/route.ts) |
 | `/api/cron/check-alerts` | GET | [`src/app/api/cron/check-alerts/route.ts`](../../src/app/api/cron/check-alerts/route.ts) |
 | `/api/cron/compact-snapshots` | GET, POST | [`src/app/api/cron/compact-snapshots/route.ts`](../../src/app/api/cron/compact-snapshots/route.ts) |
 | `/api/cron/digest-email` | GET | [`src/app/api/cron/digest-email/route.ts`](../../src/app/api/cron/digest-email/route.ts) |
