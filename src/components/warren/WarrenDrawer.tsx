@@ -43,6 +43,8 @@ interface Props {
   onClose: () => void;
   /** Inline panel for AID — no overlay drawer */
   embedded?: boolean;
+  /** Optional height/layout override when `embedded` (e.g. AID sticky column). */
+  embeddedClassName?: string;
   suggestionPrompts?: string[];
   onSuggestionClick?: (prompt: string) => void;
 }
@@ -98,7 +100,14 @@ function buildSnapshot(args: {
   };
 }
 
-export default function WarrenDrawer({ isOpen, onClose, embedded = false, suggestionPrompts, onSuggestionClick }: Props) {
+export default function WarrenDrawer({
+  isOpen,
+  onClose,
+  embedded = false,
+  embeddedClassName,
+  suggestionPrompts,
+  onSuggestionClick,
+}: Props) {
   const { t, language } = useI18n();
   const { userPlan } = usePlatform();
   const {
@@ -309,7 +318,11 @@ export default function WarrenDrawer({ isOpen, onClose, embedded = false, sugges
       <aside
         className={
           embedded
-            ? "flex h-[min(560px,calc(100vh-14rem))] w-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]"
+            ? [
+                "flex w-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]",
+                embeddedClassName ??
+                  "h-[min(560px,calc(100vh-14rem))]",
+              ].join(" ")
             : `fixed top-0 right-0 z-[101] w-[460px] max-w-[calc(100vw-1rem)] h-full flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                 isOpen ? "translate-x-0" : "translate-x-full"
               } bg-white dark:bg-[#151e2f] text-gray-900 dark:text-slate-100 border-l border-gray-200 dark:border-amber-500/15`

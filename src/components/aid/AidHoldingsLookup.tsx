@@ -130,7 +130,22 @@ export default function AidHoldingsLookup({ holdings }: Props) {
         </button>
       </div>
 
-      <div ref={containerRef} className="relative">
+      {!panelOpen && (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {sorted.slice(0, 8).map((h) => (
+            <button
+              key={h.id}
+              type="button"
+              onClick={() => goToHolding(h)}
+              className={`rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--foreground)] hover:border-emerald-500/30 hover:bg-emerald-500/10 ${AID_FOCUS}`}
+            >
+              {h.ticker}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div ref={containerRef} className="relative z-30">
         <label htmlFor={`${listId}-input`} className="sr-only">
           {t("aidHoldingsLookupPlaceholder")}
         </label>
@@ -166,10 +181,10 @@ export default function AidHoldingsLookup({ holdings }: Props) {
           <ul
             id={`${listId}-listbox`}
             role="listbox"
-            className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] py-1 shadow-lg"
+            className="absolute z-50 mt-1 max-h-[min(420px,70vh)] w-full overflow-y-auto rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] shadow-xl"
           >
             {visible.length === 0 ? (
-              <li className="px-3 py-2 text-xs text-[color:var(--muted)]">{t("aidHoldingsLookupEmpty")}</li>
+              <li className="px-3 py-3 text-xs text-[color:var(--muted)]">{t("aidHoldingsLookupEmpty")}</li>
             ) : (
               visible.map((h, i) => {
                 const q = quotes[h.ticker];
@@ -182,39 +197,47 @@ export default function AidHoldingsLookup({ holdings }: Props) {
                       : "text-red-500 dark:text-red-400";
                 const intel = intelligenceHref(h);
                 return (
-                  <li key={h.id} role="option" aria-selected={highlight === i}>
+                  <li
+                    key={h.id}
+                    role="option"
+                    aria-selected={highlight === i}
+                    className="border-b border-[color:var(--border)]/60 last:border-b-0"
+                  >
                     <div
-                      className={`flex flex-wrap items-center gap-2 px-3 py-2 ${
+                      className={`space-y-2 px-3 py-3 ${
                         highlight === i ? "bg-[color:var(--surface-highlight)]" : ""
                       }`}
+                      onMouseEnter={() => setHighlight(i)}
                     >
-                      <button
-                        type="button"
-                        className={`min-w-0 flex-1 text-left ${AID_FOCUS}`}
-                        onMouseEnter={() => setHighlight(i)}
-                        onClick={() => goToHolding(h)}
-                      >
-                        <span className="block text-sm font-semibold text-[color:var(--foreground)]">{h.ticker}</span>
-                        <span className="block truncate text-[11px] text-[color:var(--muted)]">{h.name}</span>
-                      </button>
-                      <div className="flex shrink-0 flex-col items-end gap-0.5 text-right">
-                        <span className="text-[11px] tabular-nums text-[color:var(--foreground)]">
-                          {stealthMode ? "•••" : formatCurrency(h.valueInEUR, activePortfolioCurrency)}
-                        </span>
-                        {pct != null && (
-                          <span className={`text-[10px] font-semibold tabular-nums ${pctClass}`}>
-                            {pct >= 0 ? "+" : ""}
-                            {formatPercent(pct)}
+                      <div className="flex items-start justify-between gap-3">
+                        <button
+                          type="button"
+                          className={`min-w-0 flex-1 text-left ${AID_FOCUS}`}
+                          onClick={() => goToHolding(h)}
+                        >
+                          <span className="block text-sm font-semibold text-[color:var(--foreground)]">{h.ticker}</span>
+                          <span className="mt-0.5 block text-[11px] leading-snug text-[color:var(--muted)] line-clamp-2">
+                            {h.name}
                           </span>
-                        )}
+                        </button>
+                        <div className="shrink-0 text-right">
+                          <span className="block text-xs tabular-nums text-[color:var(--foreground)]">
+                            {stealthMode ? "•••" : formatCurrency(h.valueInEUR, activePortfolioCurrency)}
+                          </span>
+                          {pct != null && (
+                            <span className={`mt-0.5 block text-[11px] font-semibold tabular-nums ${pctClass}`}>
+                              {formatPercent(pct)}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex w-full gap-1.5 sm:w-auto sm:flex-col">
+                      <div className="flex flex-wrap gap-2">
                         <Link
                           href={holdingDetailHref(h)}
                           onClick={() =>
                             track("aid_holding_detail_clicked", { ticker: h.ticker, assetType: h.assetType ?? "stock" })
                           }
-                          className={`rounded-full border border-[color:var(--border)] px-2 py-1 text-[10px] font-semibold text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)] ${AID_FOCUS}`}
+                          className={`inline-flex min-h-8 items-center rounded-full border border-[color:var(--border)] px-3 text-[11px] font-semibold text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)] ${AID_FOCUS}`}
                         >
                           {t("aidHoldingsLookupDetail")}
                         </Link>
@@ -222,7 +245,7 @@ export default function AidHoldingsLookup({ holdings }: Props) {
                           <Link
                             href={intel}
                             onClick={() => track("aid_holding_intelligence_clicked", { ticker: h.ticker })}
-                            className={`rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15 ${AID_FOCUS}`}
+                            className={`inline-flex min-h-8 items-center rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15 ${AID_FOCUS}`}
                           >
                             {t("aidHoldingsLookupIntel")}
                           </Link>
@@ -235,19 +258,9 @@ export default function AidHoldingsLookup({ holdings }: Props) {
             )}
           </ul>
         )}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {sorted.slice(0, 8).map((h) => (
-          <button
-            key={h.id}
-            type="button"
-            onClick={() => goToHolding(h)}
-            className={`rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--foreground)] hover:border-emerald-500/30 hover:bg-emerald-500/10 ${AID_FOCUS}`}
-          >
-            {h.ticker}
-          </button>
-        ))}
+        {panelOpen && visible.length > 0 && (
+          <div className="h-[min(280px,45vh)]" aria-hidden="true" />
+        )}
       </div>
     </section>
   );

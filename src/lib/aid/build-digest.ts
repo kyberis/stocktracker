@@ -18,6 +18,7 @@ import { rankPortfolioNewsForTickers } from "@/lib/portfolio-news-rank";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { summarizeAidDigestItem } from "@/lib/aid/summarize-digest";
 import { searchTavilyForTicker } from "@/lib/aid/tavily-search";
+import { earningsEventKey, earningsExpiresAt } from "@/lib/aid/earnings-keys";
 import { languageCodeToName } from "@/lib/languages";
 import type { AidDigestItem, AidNewsFilterTag, NewsArticle } from "@/lib/types";
 import type { QuoteData } from "@/lib/types";
@@ -28,10 +29,6 @@ const MAX_GENERATE_PER_REQUEST = 10;
 
 function articleEventKey(article: NewsArticle): string {
   return `article:${article.url.slice(0, 200)}`;
-}
-
-function earningsEventKey(ticker: string, date: string): string {
-  return `earnings:${date}`;
 }
 
 function cacheRowToItem(
@@ -107,7 +104,7 @@ export async function buildAidDigest(args: {
 
   const langName = languageCodeToName(args.language);
   const today = new Date().toISOString().slice(0, 10);
-  const expiresAt = new Date(Date.now() + CACHE_TTL_MS).toISOString();
+  const newsExpiresAt = new Date(Date.now() + CACHE_TTL_MS).toISOString();
 
   let generated = 0;
   const maxGenerate = args.maxGenerate ?? MAX_GENERATE_PER_REQUEST;
@@ -202,7 +199,7 @@ export async function buildAidDigest(args: {
         summary: { ...summary, filterTags: tags },
         sources: [article.url],
         usedWeb: false,
-        expiresAt,
+        expiresAt: newsExpiresAt,
       });
       generated += 1;
     }

@@ -26,6 +26,20 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
+        text: "AID earnings recap: web search + AI summaries for your holdings that reported in the last 21 days, cached for 90 days on aid_news_cache.",
+        translations: {
+          es: "Resumen de resultados AID: búsqueda web + IA para posiciones que reportaron en 21 días, caché 90 días.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "AID Warren chat stays pinned on desktop while you scroll the dashboard (sticky column with taller viewport height).",
+        translations: {
+          es: "El chat Warren en AID permanece fijo en escritorio al hacer scroll (columna sticky con más altura).",
+        },
+      },
+      {
+        type: "feature",
         text: "AID holdings lookup: search your portfolio positions from the dashboard and jump to stock detail or intelligence pages.",
         translations: {
           es: "Buscador AID: busca posiciones de tu cartera en el panel y abre la ficha o intelligence de cada valor.",

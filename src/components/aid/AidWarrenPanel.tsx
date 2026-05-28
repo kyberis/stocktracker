@@ -71,10 +71,14 @@ export default function AidWarrenPanel({ hasHoldings }: { hasHoldings: boolean }
 
   if (isLgUp) {
     return (
-      <section aria-label={t("warrenName")}>
+      <section
+        aria-label={t("warrenName")}
+        className="lg:sticky lg:top-24 lg:z-30 lg:w-full lg:self-start"
+      >
         {badges}
         <WarrenDrawer
           embedded
+          embeddedClassName="h-[calc(100dvh-7rem)] min-h-[480px] max-h-[720px]"
           isOpen
           onClose={() => {}}
           suggestionPrompts={suggestionPrompts}

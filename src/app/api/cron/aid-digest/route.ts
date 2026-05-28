@@ -5,6 +5,7 @@ import {
   listPortfolios,
 } from "@/lib/db";
 import { buildAidDigest } from "@/lib/aid/build-digest";
+import { buildAidEarningsRecap } from "@/lib/aid/build-earnings-recap";
 import { listAidWarmUserIds } from "@/lib/aid/warm-users";
 import { providerQuotesToQuoteMap } from "@/lib/aid/quotes-map";
 import { getQuotesWithCache } from "@/lib/quote-cache";
@@ -33,13 +34,23 @@ const runAidDigest = withCronLogging("aid-digest", async () => {
       const providerQuotes = await getQuotesWithCache(tickers);
       const quotes = providerQuotesToQuoteMap(providerQuotes);
 
-      await buildAidDigest({
-        userId,
-        portfolioId,
-        language: settings.language || "en",
-        quotes,
-        maxGenerate: 8,
-      });
+      const language = settings.language || "en";
+      await Promise.all([
+        buildAidDigest({
+          userId,
+          portfolioId,
+          language,
+          quotes,
+          maxGenerate: 8,
+        }),
+        buildAidEarningsRecap({
+          userId,
+          portfolioId,
+          language,
+          quotes,
+          maxGenerate: 4,
+        }),
+      ]);
       warmed += 1;
     } catch (err) {
       console.warn("[aid-digest cron] user", userId, err instanceof Error ? err.message : err);

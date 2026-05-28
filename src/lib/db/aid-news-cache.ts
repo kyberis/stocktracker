@@ -40,6 +40,23 @@ export async function getAidNewsCacheEntry(
   return row;
 }
 
+export async function listAidEarningsRecapCache(
+  userId: string,
+  limit = 30,
+): Promise<AidNewsCacheRow[]> {
+  const client = await ensureInitialized();
+  const now = new Date().toISOString();
+  const result = await client.execute({
+    sql: `SELECT id, user_id, ticker, event_key, headline, summary_json, sources_json, used_web, fetched_at, expires_at
+          FROM aid_news_cache
+          WHERE user_id = ? AND event_key LIKE 'earnings:%' AND (expires_at = '' OR expires_at > ?)
+          ORDER BY event_key DESC
+          LIMIT ?`,
+    args: [userId, now, limit],
+  });
+  return result.rows.map((r) => rowToCache(r as Record<string, unknown>));
+}
+
 export async function listAidNewsCacheForUser(
   userId: string,
   limit = 50,

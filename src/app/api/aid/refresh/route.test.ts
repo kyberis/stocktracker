@@ -19,6 +19,10 @@ vi.mock("@/lib/aid/build-digest", () => ({
   buildAidDigest: vi.fn(),
 }));
 
+vi.mock("@/lib/aid/build-earnings-recap", () => ({
+  buildAidEarningsRecap: vi.fn(),
+}));
+
 vi.mock("@/lib/quote-cache", () => ({
   getQuotesWithCache: vi.fn(),
 }));
@@ -26,6 +30,7 @@ vi.mock("@/lib/quote-cache", () => ({
 import { requireSession } from "@/lib/auth/guards";
 import { isFeatureEnabledForUser, getUserSettings, listHoldings } from "@/lib/db";
 import { buildAidDigest } from "@/lib/aid/build-digest";
+import { buildAidEarningsRecap } from "@/lib/aid/build-earnings-recap";
 import { getQuotesWithCache } from "@/lib/quote-cache";
 
 const mockedSession = vi.mocked(requireSession);
@@ -33,6 +38,7 @@ const mockedFlag = vi.mocked(isFeatureEnabledForUser);
 const mockedSettings = vi.mocked(getUserSettings);
 const mockedHoldings = vi.mocked(listHoldings);
 const mockedBuild = vi.mocked(buildAidDigest);
+const mockedEarningsRecap = vi.mocked(buildAidEarningsRecap);
 const mockedQuotes = vi.mocked(getQuotesWithCache);
 
 beforeEach(() => {
@@ -46,6 +52,7 @@ beforeEach(() => {
   mockedHoldings.mockResolvedValue([{ ticker: "AAPL", shares: 1 }] as never);
   mockedQuotes.mockResolvedValue({ AAPL: { regularMarketPrice: 100 } } as never);
   mockedBuild.mockResolvedValue({ items: [], earningsTodayCount: 1 });
+  mockedEarningsRecap.mockResolvedValue({ items: [] });
 });
 
 describe("POST /api/aid/refresh", () => {

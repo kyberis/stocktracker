@@ -12,6 +12,7 @@ import CloverToLogo from "@/components/CloverToLogo";
 import AidPortfolioCard from "./AidPortfolioCard";
 import AidHoldingsLookup from "./AidHoldingsLookup";
 import AidEmptyMain from "./AidEmptyMain";
+import AidEarningsRecap from "./AidEarningsRecap";
 import AidNewsDigest from "./AidNewsDigest";
 import AidExtrasRow from "./AidExtrasRow";
 import AidShortcutsSection from "./AidShortcutsSection";
@@ -93,6 +94,7 @@ export default function AidDashboard() {
             <>
               <AidPortfolioCard holdings={holdings} cashEntries={investmentCash} />
               <AidHoldingsLookup holdings={holdings} />
+              <AidEarningsRecap hasHoldings={hasHoldings} />
               <AidNewsDigest hasHoldings={hasHoldings} />
               <AidExtrasRow holdings={holdings} cashEntries={investmentCash} />
               <AidShortcutsSection hasHoldings={hasHoldings} />
