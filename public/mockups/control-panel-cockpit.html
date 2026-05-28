@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>trefolio — Panel de control (mockup)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #070d17;
+      --foreground: #f1f2f6;
+      --surface: #14171f;
+      --surface-2: #1a1e28;
+      --surface-soft: rgba(255, 255, 255, 0.03);
+      --surface-highlight: rgba(255, 255, 255, 0.06);
+      --nav-bg: rgba(7, 13, 23, 0.94);
+      --border: #232838;
+      --text: var(--foreground);
+      --muted: #9399ad;
+      --faint: #5a6079;
+      --gain: #34d399;
+      --gain-dim: rgba(52, 211, 153, 0.12);
+      --loss: #f87171;
+      --loss-dim: rgba(248, 113, 113, 0.12);
+      --warren: #10b981;
+      --clara: #f59e0b;
+      --will: #a78bfa;
+      --accent: #10b981;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-button: 16px;
+    }
+
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Proposal banner (toggle) ── */
+    .proposal-banner {
+      background: linear-gradient(135deg, #1e3a2f 0%, #14171f 60%);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .proposal-banner strong { color: var(--text); }
+    .proposal-banner summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--accent);
+      list-style: none;
+    }
+    .proposal-banner summary::-webkit-details-marker { display: none; }
+    .proposal-banner ul { margin: 10px 0 0 20px; font-size: 12px; }
+    .proposal-banner li { margin-bottom: 4px; }
+
+    /* ── trefolio AppNav + ticker (reused chrome) ── */
+    .app-chrome {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .ticker-bar {
+      flex-shrink: 0;
+      background: #020617;
+      border-bottom: 1px solid #1e293b;
+      overflow: hidden;
+      z-index: 50;
+    }
+    .ticker-track {
+      display: flex;
+      align-items: center;
+      height: 28px;
+      padding: 0 12px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      white-space: nowrap;
+      animation: ticker-scroll 40s linear infinite;
+    }
+    @keyframes ticker-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ticker-item { color: #94a3b8; margin-right: 20px; }
+    .ticker-item strong { color: #e2e8f0; font-weight: 500; }
+    .ticker-item .up { color: #34d399; }
+    .ticker-item .down { color: #f87171; }
+    .ticker-dot {
+      display: inline-block; width: 6px; height: 6px;
+      border-radius: 50%; background: #34d399;
+      box-shadow: 0 0 4px rgba(52,211,153,0.6);
+      margin-right: 4px; vertical-align: middle;
+    }
+    .ticker-dot.closed { background: #64748b; box-shadow: none; }
+
+    .tref-header {
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--nav-bg);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 26px rgba(1, 6, 16, 0.18);
+    }
+    .tref-header-row {
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 10px 24px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 24px;
+    }
+    .tref-logo {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; color: var(--foreground);
+    }
+    .tref-logo span { font-size: 16px; font-weight: 700; }
+    .tref-search {
+      display: flex; align-items: stretch;
+      max-width: 520px; width: 100%; margin: 0 auto;
+      border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+    }
+    .tref-search input {
+      flex: 1; border: none; background: transparent;
+      padding: 10px 14px; color: var(--foreground);
+      font-size: 13px; outline: none;
+    }
+    .tref-search input::placeholder { color: var(--faint); }
+    .tref-search button {
+      border: none; background: var(--accent); color: #fff;
+      font-weight: 600; font-size: 13px; padding: 0 18px;
+      cursor: pointer;
+    }
+    .tref-actions {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .tref-icon-btn {
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .tref-icon-btn svg { width: 16px; height: 16px; }
+    .tref-lang, .tref-user {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 12px; border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      font-size: 12px; color: var(--foreground);
+      cursor: pointer;
+    }
+    .tref-user-avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--gain-dim); color: var(--warren);
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .tref-toolbar {
+      border-top: 1px solid var(--border);
+      background: var(--nav-bg);
+    }
+    .tref-toolbar-inner {
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 8px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px 12px;
+    }
+    .tref-toolbar-left {
+      display: flex; min-width: 0; flex: 1;
+      align-items: center; gap: 10px;
+    }
+    .tref-portfolio-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 10px; border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      font-size: 13px; font-weight: 500;
+      color: var(--foreground); cursor: pointer;
+      white-space: nowrap;
+    }
+    .tref-portfolio-btn .eur-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 6px; border-radius: 6px;
+      background: var(--gain-dim); color: var(--warren);
+    }
+    .tref-nav-pills {
+      display: flex; flex-wrap: wrap; align-items: center;
+      gap: 4px; min-width: 0;
+    }
+    .tref-pill {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font: 500 13px/1 "DM Sans", sans-serif;
+      padding: 6px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .tref-pill:hover {
+      border-color: var(--border);
+      background: var(--surface-soft);
+      color: var(--foreground);
+    }
+    .tref-pill.active {
+      border-color: var(--border);
+      background: var(--surface-soft);
+      color: var(--foreground);
+    }
+    .tref-toolbar-right {
+      display: flex; shrink: 0; align-items: center; gap: 6px;
+    }
+    .tref-sync-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 12px; border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      font-size: 13px; color: var(--foreground);
+      cursor: pointer;
+    }
+    .tref-sync-btn svg { width: 14px; height: 14px; }
+    .tref-add-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: var(--radius-button);
+      border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+      background: linear-gradient(180deg, #34d399, #059669);
+      color: #fff; font-weight: 600; font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(16, 185, 129, 0.16);
+    }
+
+    .app-body {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      overflow: hidden;
+    }
+
+    .main {
+      overflow-y: auto;
+      padding: 16px 20px 24px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    .sidebar {
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--faint);
+      margin-bottom: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    /* ── Hero portfolio ── */
+    .hero-row {
+      display: flex; flex-wrap: wrap;
+      align-items: flex-end; justify-content: space-between;
+      gap: 16px;
+    }
+    .hero-value {
+      font-size: 36px; font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+    .hero-change {
+      font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px; margin-top: 4px;
+    }
+    .hero-change.positive { color: var(--gain); }
+    .hero-change.negative { color: var(--loss); }
+
+    .period-tabs {
+      display: flex; gap: 4px;
+      background: var(--surface-2);
+      border-radius: 12px; padding: 4px;
+    }
+    .period-tabs button {
+      border: none; background: transparent;
+      color: var(--faint); font: 500 12px/1 "DM Sans", sans-serif;
+      padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    }
+    .period-tabs button.active {
+      background: var(--accent); color: #0b0d12;
+    }
+
+    .period-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .period-stat {
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+    }
+    .period-stat .label { font-size: 11px; color: var(--faint); }
+    .period-stat .val { font-size: 15px; font-weight: 600; margin-top: 2px; }
+    .period-stat .val.up { color: var(--gain); }
+    .period-stat .val.down { color: var(--loss); }
+
+    /* ── Asset numbers (no chart) ── */
+    .asset-numbers {
+      margin-top: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .asset-numbers table {
+      width: 100%;
+      border-collapse: collapse;
+      font-variant-numeric: tabular-nums;
+    }
+    .asset-numbers th,
+    .asset-numbers td {
+      padding: 10px 12px;
+      text-align: right;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .asset-numbers th {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--faint);
+      background: var(--surface-2);
+    }
+    .asset-numbers th:first-child,
+    .asset-numbers td:first-child {
+      text-align: left;
+    }
+    .asset-numbers tr:last-child td { border-bottom: none; }
+    .asset-numbers tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    .asset-type-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .asset-type-cell .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .asset-type-cell .sub {
+      display: block;
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--faint);
+      margin-top: 1px;
+    }
+    .asset-numbers .val-eur {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 13px;
+    }
+    .asset-numbers .up { color: var(--gain); font-weight: 600; }
+    .asset-numbers .down { color: var(--loss); font-weight: 600; }
+    .asset-numbers .flat { color: var(--faint); }
+    .asset-numbers-foot {
+      padding: 8px 12px;
+      font-size: 10px;
+      color: var(--faint);
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .asset-numbers-foot kbd {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+    }
+    .card-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .card-title-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .card-popup-btn {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      font: 600 11px/1 "DM Sans", sans-serif;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .alloc-open-btn {
+      color: var(--warren);
+    }
+    .alloc-open-btn:hover {
+      background: var(--gain-dim);
+      border-color: rgba(52, 211, 153, 0.35);
+    }
+    .div-open-btn {
+      color: var(--clara);
+    }
+    .div-open-btn:hover {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+    .portfolio-card.alloc-card { cursor: default; }
+    .asset-numbers tbody tr.alloc-row {
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .asset-numbers tbody tr.alloc-row:hover td {
+      background: rgba(16, 185, 129, 0.06);
+    }
+    .asset-numbers tbody tr.alloc-row:focus-visible {
+      outline: 2px solid var(--warren);
+      outline-offset: -2px;
+    }
+    .asset-type-cell .open-hint {
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--warren);
+      opacity: 0;
+      transition: opacity 0.12s;
+    }
+    .alloc-row:hover .open-hint { opacity: 1; }
+
+    /* Allocation + dividends modals (shared shell) */
+    .alloc-modal-backdrop,
+    .div-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .alloc-modal-backdrop.open,
+    .div-modal-backdrop.open { display: flex; }
+    .alloc-modal,
+    .div-modal {
+      width: 100%;
+      max-width: 440px;
+      max-height: min(90vh, 560px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+    }
+    .alloc-modal-head {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .alloc-modal-head h2 { font-size: 16px; font-weight: 700; }
+    .alloc-modal-head p { font-size: 11px; color: var(--faint); margin-top: 2px; }
+    .alloc-modal-close {
+      width: 32px; height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-2);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .alloc-modal-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 10px 18px 0;
+    }
+    .alloc-modal-tabs button {
+      flex: 1;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font: 500 11px/1 "DM Sans", sans-serif;
+      padding: 8px 6px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .alloc-modal-tabs button.active {
+      background: var(--gain-dim);
+      color: var(--gain);
+      border-color: rgba(52, 211, 153, 0.35);
+    }
+    .div-modal-tabs button.active {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--clara);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+    .div-hero-stat {
+      text-align: center;
+      padding: 12px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+    }
+    .div-hero-stat .amount {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--clara);
+      font-variant-numeric: tabular-nums;
+    }
+    .div-hero-stat .sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .div-yield-pill {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--clara);
+    }
+    .alloc-modal-body {
+      padding: 16px 18px 18px;
+      overflow-y: auto;
+    }
+    .alloc-donut-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .alloc-donut {
+      position: relative;
+      width: 140px;
+      height: 140px;
+    }
+    .alloc-donut svg { width: 100%; height: 100%; }
+    .alloc-donut-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .alloc-donut-center .lbl { font-size: 10px; color: var(--faint); }
+    .alloc-donut-center .val { font-size: 15px; font-weight: 700; }
+    .alloc-legend { width: 100%; }
+    .alloc-legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .alloc-legend-row:last-child { border-bottom: none; }
+    .alloc-legend-row .left {
+      display: flex; align-items: center; gap: 8px;
+      color: var(--muted);
+    }
+    .alloc-legend-row .pct { font-weight: 700; color: var(--text); }
+    .alloc-target-block {
+      margin-top: 14px;
+      padding: 10px 12px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+    }
+    .alloc-target-block h3 {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--faint);
+      margin-bottom: 8px;
+    }
+    .alloc-target-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      color: var(--muted);
+    }
+    .alloc-target-row .delta { font-weight: 600; }
+    .alloc-target-row .delta.warn { color: var(--clara); }
+    .alloc-detail-list {
+      margin-top: 12px;
+    }
+    .alloc-detail-list h3 {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--faint);
+      margin-bottom: 6px;
+    }
+    .alloc-detail-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 5px 0;
+      color: var(--muted);
+    }
+    .alloc-detail-item strong { color: var(--text); font-family: "JetBrains Mono", monospace; font-size: 10px; }
+    .alloc-modal-foot {
+      padding: 10px 18px 14px;
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--faint);
+      text-align: center;
+    }
+    .alloc-panel { display: none; }
+    .alloc-panel.active { display: block; }
+
+  .badge {
+      font-size: 10px; font-weight: 600;
+      padding: 2px 6px; border-radius: 4px;
+    }
+    .badge-stocks { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .badge-etf { background: rgba(167,139,250,0.15); color: var(--will); }
+    .badge-crypto { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .badge-cash { background: rgba(148,163,184,0.15); color: #cbd5e1; }
+
+    /* ── News digest (scannable) ── */
+    .news-toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 8px; margin-bottom: 12px;
+    }
+    .news-toolbar .hint { font-size: 11px; color: var(--faint); }
+    .news-filters { display: flex; gap: 4px; }
+    .news-filters button {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--faint);
+      font: 500 10px/1 "DM Sans", sans-serif;
+      padding: 5px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .news-filters button.active {
+      background: var(--gain-dim);
+      color: var(--gain);
+      border-color: rgba(52, 211, 153, 0.3);
+    }
+    .pulse-list { display: flex; flex-direction: column; gap: 6px; }
+    .pulse-row {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 10px 12px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .pulse-row.earnings { border-color: rgba(16, 185, 129, 0.35); }
+    .pulse-row.muted-row { opacity: 0.72; }
+    .pulse-ticker {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px; font-weight: 700;
+      color: var(--text);
+    }
+    .pulse-ticker .move {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .pulse-ticker .move.up { color: var(--gain); }
+    .pulse-ticker .move.down { color: var(--loss); }
+    .pulse-ticker .move.flat { color: var(--faint); }
+    .pulse-body { min-width: 0; }
+    .pulse-headline {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-bottom: 6px;
+    }
+    .pulse-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .pulse-bullets li {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+      padding-left: 12px;
+      position: relative;
+    }
+    .pulse-bullets li::before {
+      content: "·";
+      position: absolute;
+      left: 0;
+      color: var(--warren);
+      font-weight: 700;
+    }
+    .pulse-meta-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .impact-pill {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 7px;
+      border-radius: 4px;
+    }
+    .impact-pill.high { background: rgba(248,113,113,0.15); color: var(--loss); }
+    .impact-pill.med { background: rgba(245,158,11,0.15); color: var(--clara); }
+    .impact-pill.low { background: rgba(148,163,184,0.12); color: var(--muted); }
+    .cache-pill {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: rgba(96, 165, 250, 0.12);
+      color: #60a5fa;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .cache-pill.saved::before { content: "◆"; font-size: 7px; }
+    .web-pill {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--warren);
+    }
+    .pulse-time { font-size: 10px; color: var(--faint); }
+    .earnings-banner {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .earnings-banner strong { color: var(--warren); }
+    .news-footer {
+      margin-top: 10px;
+      font-size: 10px;
+      color: var(--faint);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    /* Warren web search in chat */
+    .msg-search {
+      font-size: 11px;
+      color: var(--faint);
+      padding: 8px 10px;
+      background: var(--surface-2);
+      border-radius: 8px;
+      border: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      align-self: flex-start;
+      max-width: 92%;
+    }
+    .msg-search .spinner {
+      width: 12px; height: 12px;
+      border: 2px solid var(--border);
+      border-top-color: var(--warren);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .msg-search.done .spinner { display: none; }
+    .msg-search.done::before {
+      content: "🌐";
+      font-size: 12px;
+    }
+    .msg-sources {
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--faint);
+    }
+    .warren-badge-web {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--warren);
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .warren-badge-moat {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(96, 165, 250, 0.15);
+      color: #60a5fa;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    /* Suggested prompts */
+    .chat-suggestions {
+      padding: 0 14px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .chat-suggestions-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--faint);
+      margin-bottom: 8px;
+    }
+    .suggestion-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 88px;
+      overflow-y: auto;
+    }
+    .suggestion-chip {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--muted);
+      font: 500 11px/1.3 "DM Sans", sans-serif;
+      padding: 6px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .suggestion-chip:hover {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--text);
+      background: rgba(16, 185, 129, 0.08);
+    }
+    .suggestion-chip.moat-chip {
+      border-color: rgba(96, 165, 250, 0.25);
+    }
+    .suggestion-chip.moat-chip:hover {
+      border-color: rgba(96, 165, 250, 0.5);
+      background: rgba(96, 165, 250, 0.08);
+    }
+
+    /* MOAT result in chat */
+    .moat-card {
+      margin-top: 8px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 11px;
+    }
+    .moat-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .moat-card-head .sym {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .moat-verdict {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--gain-dim);
+      color: var(--gain);
+      white-space: nowrap;
+    }
+    .moat-verdict.narrow {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--clara);
+    }
+    .moat-score-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .moat-score-row .score {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .moat-score-row .of { font-size: 11px; color: var(--faint); }
+    .moat-criteria {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .moat-crit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .moat-crit .dot-status {
+      width: 6px; height: 6px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .moat-crit .dot-status.pass { background: var(--gain); }
+    .moat-crit .dot-status.warn { background: var(--clara); }
+    .moat-crit .dot-status.fail { background: var(--loss); }
+    .moat-card-actions {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .moat-card-actions button {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--warren);
+      font: 600 10px/1 "DM Sans", sans-serif;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .moat-card-actions button:hover {
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    /* ── Moats & strategies ── */
+    .mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mini-list { display: flex; flex-direction: column; gap: 6px; }
+    .mini-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; padding: 8px 10px;
+      background: var(--surface-2); border-radius: 8px;
+    }
+    .mini-row .sym { font-weight: 600; font-family: "JetBrains Mono", monospace; font-size: 11px; }
+    .moat-strong { color: var(--gain); font-size: 10px; font-weight: 600; }
+    .moat-narrow { color: var(--clara); font-size: 10px; font-weight: 600; }
+
+    /* ── Extras proposal row ── */
+    .extras-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .extra-tile {
+      background: var(--surface-2);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      font-size: 11px;
+    }
+    .extra-tile .label { color: var(--faint); margin-bottom: 4px; }
+    .extra-tile .val { font-weight: 600; font-size: 13px; }
+
+    /* ── Right sidebar ── */
+    .sidebar-scroll {
+      flex: 1; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 0;
+    }
+
+    .agent-strip {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex; gap: 6px;
+    }
+    .agent-chip {
+      flex: 1;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 6px 4px;
+      border-radius: 8px;
+      color: var(--faint);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .agent-chip.active-warren { background: rgba(16,185,129,0.12); color: var(--warren); border-color: rgba(16,185,129,0.25); }
+    .agent-chip.active-will { background: rgba(167,139,250,0.12); color: var(--will); border-color: rgba(167,139,250,0.25); }
+    .agent-chip.active-clara { background: rgba(245,158,11,0.12); color: var(--clara); border-color: rgba(245,158,11,0.25); }
+
+    /* Warren chat */
+    .warren-panel {
+      flex: 1;
+      display: flex; flex-direction: column;
+      min-height: 280px;
+      border-bottom: 1px solid var(--border);
+    }
+    .warren-header {
+      padding: 12px 14px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .agent-avatar {
+      width: 32px; height: 32px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+    }
+    .agent-avatar.warren { background: rgba(16,185,129,0.2); color: var(--warren); }
+    .warren-header h2 { font-size: 14px; font-weight: 600; }
+    .warren-header p { font-size: 11px; color: var(--faint); }
+
+    .chat-messages {
+      flex: 1; overflow-y: auto;
+      padding: 12px 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      max-height: 260px;
+    }
+    .msg {
+      max-width: 92%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .msg.bot {
+      background: var(--surface-2);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .msg.user {
+      background: rgba(16,185,129,0.15);
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .msg .who { font-size: 10px; font-weight: 600; color: var(--warren); margin-bottom: 4px; }
+
+    .chat-input-wrap {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 8px;
+    }
+    .chat-input-wrap input {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 12px;
+      outline: none;
+    }
+    .chat-input-wrap input::placeholder { color: var(--faint); }
+    .chat-input-wrap button {
+      background: var(--warren);
+      border: none;
+      color: #0b0d12;
+      font-weight: 600;
+      padding: 0 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    /* Insight cards (Will, Clara) — non-conversational */
+    .insight-block {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .insight-block .agent-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px;
+    }
+    .agent-avatar.will { background: rgba(167,139,250,0.2); color: var(--will); font-size: 12px; }
+    .agent-avatar.clara { background: rgba(245,158,11,0.2); color: var(--clara); font-size: 12px; }
+    .insight-block h3 { font-size: 12px; font-weight: 600; }
+    .insight-block .sub { font-size: 10px; color: var(--faint); }
+
+    .cash-hero {
+      font-size: 22px; font-weight: 700;
+      color: var(--clara);
+      font-variant-numeric: tabular-nums;
+    }
+    .cash-detail { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    .tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
+    .inv-tag {
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(167,139,250,0.12);
+      color: var(--will);
+      border: 1px solid rgba(167,139,250,0.2);
+      cursor: default;
+    }
+    .inv-tag .date { opacity: 0.6; font-size: 10px; margin-left: 4px; }
+
+    .note-snippet {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 8px;
+      background: var(--surface-2);
+      border-radius: 8px;
+      border-left: 2px solid var(--will);
+    }
+
+    @media (max-width: 640px) {
+      .pulse-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+      .pulse-meta-col {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+    }
+
+    .page-intro {
+      margin-bottom: 4px;
+    }
+    .page-intro h1 {
+      font-size: 20px; font-weight: 700;
+    }
+    .page-intro p {
+      font-size: 12px; color: var(--faint);
+      margin-top: 2px;
+    }
+
+    /* Mobile */
+    @media (max-width: 1024px) {
+      .app-chrome { height: auto; max-height: none; }
+      .app-body { grid-template-columns: 1fr; overflow: visible; }
+      .tref-header-row { grid-template-columns: auto 1fr; padding: 10px 16px; }
+      .tref-search { display: none; }
+      .sidebar { border-left: none; border-top: 1px solid var(--border); max-height: none; }
+      .main { overflow: visible; }
+      .extras-row { grid-template-columns: 1fr; }
+      .tref-nav-pills { overflow-x: auto; flex-wrap: nowrap; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <details class="proposal-banner" open>
+    <summary>📐 Mockup AID — con posiciones · <a href="../../knowledge/exec-plans/active/advanced-investor-dashboard.md" style="color:var(--accent)">spec + agent prompt</a></summary>
+    <p style="margin-top:8px">
+      <strong>Objetivo:</strong> una sola pantalla al entrar — “¿qué pasa y cómo vengo?” —
+      cartera + evolución + noticias AI + contexto de Warren / Will / Clara sin salir del panel.
+    </p>
+    <ul>
+      <li><strong>Chrome:</strong> menú real de trefolio (ticker + AppNav + strip Holdings/Tools/…).</li>
+      <li><strong>Centro:</strong> valor total + tabla por tipo; <strong>Asignación</strong> y <strong>Dividendos</strong> abren popups (mismo patrón).</li>
+      <li><strong>Noticias:</strong> bullets directos por ticker · impacto en una mirada.</li>
+      <li><strong>Warren + web (estilo Renata):</strong> si hay resultados/earnings, busca publicaciones, resume y <strong>guarda en caché</strong> hasta el próximo evento (no reprocesa).</li>
+      <li><strong>Preguntas sugeridas:</strong> chips con lo más preguntado (cartera, noticias, moat, concentración).</li>
+      <li><strong>MOAT en chat:</strong> “Evalúa moat de MSFT” ejecuta el mismo motor que Tools → Moat screener y permite guardar.</li>
+      <li><strong>Derecha (arriba):</strong> chat con Warren — conversacional.</li>
+      <li><strong>Derecha (abajo):</strong> Will y Clara — tarjetas de recordatorio, no chat.</li>
+      <li><strong>Moats y estrategias:</strong> accesos rápidos a lo que guardaste en Tools.</li>
+      <li><strong>Extras propuestos</strong> (fila inferior): alertas, calendario, movers, desviación vs objetivo.</li>
+    </ul>
+  </details>
+
+  <div class="app-chrome">
+    <!-- MarketTickerBar (simplified) -->
+    <div class="ticker-bar" role="marquee" aria-label="Mercados">
+      <div class="ticker-track">
+        <span class="ticker-item"><strong>EUR/USD</strong> 1.0842</span>
+        <span class="ticker-item"><strong>BTC</strong> $108,420 <span class="down">-1.59%</span></span>
+        <span class="ticker-item"><strong>Gold</strong> $3,342 <span class="up">+0.17%</span></span>
+        <span class="ticker-item"><strong>Silver</strong> $33.12 <span class="up">+0.42%</span></span>
+        <span class="ticker-item"><strong>S&amp;P 500</strong> 5,921 <span class="up">+0.31%</span></span>
+        <span class="ticker-item"><strong>Oil</strong> $64.20 <span class="down">-0.22%</span></span>
+        <span class="ticker-item"><span class="ticker-dot"></span>LSE</span>
+        <span class="ticker-item"><span class="ticker-dot"></span>ENX</span>
+        <span class="ticker-item"><span class="ticker-dot closed"></span>TSE</span>
+        <span class="ticker-item"><span class="ticker-dot"></span>NYSE</span>
+        <span class="ticker-item"><span class="ticker-dot"></span>NASDAQ</span>
+        <span class="ticker-item"><strong>EUR/USD</strong> 1.0842</span>
+        <span class="ticker-item"><strong>BTC</strong> $108,420 <span class="down">-1.59%</span></span>
+        <span class="ticker-item"><strong>Gold</strong> $3,342 <span class="up">+0.17%</span></span>
+        <span class="ticker-item"><strong>Silver</strong> $33.12 <span class="up">+0.42%</span></span>
+        <span class="ticker-item"><strong>S&amp;P 500</strong> 5,921 <span class="up">+0.31%</span></span>
+        <span class="ticker-item"><strong>Oil</strong> $64.20 <span class="down">-0.22%</span></span>
+        <span class="ticker-item"><span class="ticker-dot"></span>LSE</span>
+        <span class="ticker-item"><span class="ticker-dot"></span>ENX</span>
+        <span class="ticker-item"><span class="ticker-dot closed"></span>TSE</span>
+        <span class="ticker-item"><span class="ticker-dot"></span>NYSE</span>
+        <span class="ticker-item"><span class="ticker-dot"></span>NASDAQ</span>
+      </div>
+    </div>
+
+    <!-- AppNav + AppPortfolioCommandStrip -->
+    <header class="tref-header">
+      <div class="tref-header-row">
+        <a href="/" class="tref-logo" aria-label="trefolio">
+          <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="7" fill="#0f172a"/>
+            <g transform="translate(16,16) rotate(45)">
+              <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#6ee7b7"/>
+              <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#34d399" transform="rotate(90)"/>
+              <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#10b981" transform="rotate(180)"/>
+              <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#a7f3d0" transform="rotate(270)"/>
+            </g>
+          </svg>
+          <span>trefolio</span>
+        </a>
+        <div class="tref-search">
+          <input type="search" placeholder="Search tickers, ETFs, crypto…" aria-label="Buscar activos" />
+          <button type="button">Search</button>
+        </div>
+        <div class="tref-actions">
+          <button type="button" class="tref-icon-btn" title="Notificaciones" aria-label="Notificaciones">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-6-6 6 6 0 00-6 6v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          </button>
+          <button type="button" class="tref-icon-btn" title="Modo discreto" aria-label="Modo discreto">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </button>
+          <button type="button" class="tref-icon-btn" title="Tema" aria-label="Tema claro">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          </button>
+          <button type="button" class="tref-lang">EN English ▾</button>
+          <button type="button" class="tref-user"><span class="tref-user-avatar">M</span> Marcos Suarez ▾</button>
+        </div>
+      </div>
+      <div class="tref-toolbar">
+        <div class="tref-toolbar-inner">
+          <div class="tref-toolbar-left">
+            <button type="button" class="tref-portfolio-btn" aria-haspopup="listbox">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+              Degiro <span class="eur-badge">EUR</span> ▾
+            </button>
+            <nav class="tref-nav-pills" aria-label="Accesos rápidos del dashboard">
+              <button type="button" class="tref-pill active" aria-current="page">Holdings</button>
+              <a href="/tools" class="tref-pill">Tools</a>
+              <button type="button" class="tref-pill">Views ▾</button>
+              <a href="/tools/strategies" class="tref-pill">Strategies</a>
+              <button type="button" class="tref-pill">Dividends</button>
+              <a href="/tools/moat" class="tref-pill">Moat Evaluation</a>
+              <a href="/tools/screener" class="tref-pill">Screener</a>
+              <button type="button" class="tref-pill">More ▾</button>
+            </nav>
+          </div>
+          <div class="tref-toolbar-right">
+            <button type="button" class="tref-icon-btn" title="Ajustes" aria-label="Ajustes">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </button>
+            <button type="button" class="tref-sync-btn">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Sync
+            </button>
+            <button type="button" class="tref-icon-btn" title="Importar" aria-label="Importar">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+            </button>
+            <button type="button" class="tref-icon-btn" title="Vaciar cartera" aria-label="Vaciar cartera">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+            </button>
+            <button type="button" class="tref-add-btn">+ Add ▾</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="app-body">
+    <main class="main">
+      <div class="page-intro">
+        <h1>Panel de control</h1>
+        <p>Propuesta · vista al entrar · Mié 27 may 2026 · Degiro EUR · <a href="control-panel-cockpit-empty.html" style="color:var(--warren)">cartera vacía →</a></p>
+      </div>
+      <!-- Hero + periods · click filas → popup asignación -->
+      <section class="card portfolio-card alloc-card" id="portfolio-card">
+        <div class="hero-row">
+          <div>
+            <div class="card-title-row" style="margin-bottom:8px">
+              <div class="card-title" style="margin:0">Valor de cartera</div>
+              <div class="card-title-actions">
+                <button type="button" class="card-popup-btn alloc-open-btn" id="alloc-open-btn" aria-haspopup="dialog" aria-controls="alloc-modal">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+                  Asignación
+                </button>
+                <button type="button" class="card-popup-btn div-open-btn" id="div-open-btn" aria-haspopup="dialog" aria-controls="div-modal">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  Dividendos
+                </button>
+              </div>
+            </div>
+            <div class="hero-value">€ 284.520</div>
+            <div class="hero-change positive">
+              <span>+ € 1.840 (+0,65%)</span>
+              <span style="color:var(--faint);font-weight:400">hoy</span>
+            </div>
+          </div>
+          <div class="period-tabs" role="tablist">
+            <button class="active" type="button">Día</button>
+            <button type="button">Semana</button>
+            <button type="button">Mes</button>
+          </div>
+        </div>
+
+        <div class="period-stats">
+          <div class="period-stat">
+            <div class="label">Hoy</div>
+            <div class="val up">+0,65%</div>
+          </div>
+          <div class="period-stat">
+            <div class="label">Esta semana</div>
+            <div class="val up">+2,1%</div>
+          </div>
+          <div class="period-stat">
+            <div class="label">Este mes</div>
+            <div class="val down">−0,8%</div>
+          </div>
+        </div>
+
+        <div class="asset-numbers">
+          <table>
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th>Día</th>
+                <th>Semana</th>
+                <th>Mes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="alloc-row" tabindex="0" role="button" data-alloc="stock" aria-label="Ver asignación: Acciones">
+                <td>
+                  <div class="asset-type-cell">
+                    <span class="dot" style="background:#60a5fa"></span>
+                    <span>Acciones<span class="sub">62% · 18 pos. <span class="open-hint">· ver</span></span></span>
+                  </div>
+                </td>
+                <td class="val-eur">€ 176.400</td>
+                <td><span class="up">+1.410</span><br /><span class="up">+0,8%</span></td>
+                <td><span class="up">+3.520</span><br /><span class="up">+2,0%</span></td>
+                <td><span class="down">−890</span><br /><span class="down">−0,5%</span></td>
+              </tr>
+              <tr class="alloc-row" tabindex="0" role="button" data-alloc="etf" aria-label="Ver asignación: ETFs">
+                <td>
+                  <div class="asset-type-cell">
+                    <span class="dot" style="background:#a78bfa"></span>
+                    <span>ETFs<span class="sub">28% · 4 fondos <span class="open-hint">· ver</span></span></span>
+                  </div>
+                </td>
+                <td class="val-eur">€ 79.660</td>
+                <td><span class="up">+318</span><br /><span class="up">+0,4%</span></td>
+                <td><span class="up">+1.590</span><br /><span class="up">+2,0%</span></td>
+                <td><span class="up">+478</span><br /><span class="up">+0,6%</span></td>
+              </tr>
+              <tr class="alloc-row" tabindex="0" role="button" data-alloc="crypto" aria-label="Ver asignación: Crypto">
+                <td>
+                  <div class="asset-type-cell">
+                    <span class="dot" style="background:#fbbf24"></span>
+                    <span>Crypto<span class="sub">5% · BTC, ETH <span class="open-hint">· ver</span></span></span>
+                  </div>
+                </td>
+                <td class="val-eur">€ 14.230</td>
+                <td><span class="down">−171</span><br /><span class="down">−1,2%</span></td>
+                <td><span class="down">−428</span><br /><span class="down">−2,9%</span></td>
+                <td><span class="down">−856</span><br /><span class="down">−5,7%</span></td>
+              </tr>
+              <tr class="alloc-row" tabindex="0" role="button" data-alloc="cash" aria-label="Ver asignación: Efectivo">
+                <td>
+                  <div class="asset-type-cell">
+                    <span class="dot" style="background:#94a3b8"></span>
+                    <span>Efectivo<span class="sub">5% <span class="open-hint">· ver</span></span></span>
+                  </div>
+                </td>
+                <td class="val-eur">€ 14.230</td>
+                <td class="flat">—</td>
+                <td class="flat">—</td>
+                <td class="flat">—</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="asset-numbers-foot">
+            <span>Clic en tipo · <strong style="color:var(--muted)">Asignación</strong> · <strong style="color:var(--muted)">Dividendos</strong></span>
+            <span>actualizado hace 2 min</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI News — direct, scannable -->
+      <section class="card">
+        <div class="card-title" style="margin-bottom:0">Qué está pasando</div>
+        <div class="news-toolbar">
+          <span class="hint">48 h · solo tus posiciones · Warren</span>
+          <div class="news-filters" role="tablist">
+            <button class="active" type="button">Todo</button>
+            <button type="button">Resultados</button>
+            <button type="button">Movimiento</button>
+          </div>
+        </div>
+
+        <div class="earnings-banner">
+          <span>📊</span>
+          <span><strong>2 resultados hoy</strong> — Warren buscó en web, resumió y guardó. No se vuelve a procesar hasta el próximo informe.</span>
+        </div>
+
+        <div class="pulse-list">
+          <article class="pulse-row earnings">
+            <div class="pulse-ticker">
+              MSFT
+              <span class="move up">+4,2%</span>
+            </div>
+            <div class="pulse-body">
+              <div class="pulse-headline">Resultados Q3: ingresos y cloud por encima de estimaciones</div>
+              <ul class="pulse-bullets">
+                <li>Azure +35% YoY — driver principal del salto en bolsa.</li>
+                <li>Guidance FY26 confirmado; mercado premia visibilidad.</li>
+                <li>Para ti: 4,1% de cartera — contribuye +0,17 pp al día.</li>
+              </ul>
+            </div>
+            <div class="pulse-meta-col">
+              <span class="impact-pill high">Alto</span>
+              <span class="web-pill">Web · guardado</span>
+              <span class="pulse-time">hace 2 h</span>
+            </div>
+          </article>
+
+          <article class="pulse-row earnings">
+            <div class="pulse-ticker">
+              ASML
+              <span class="move up">+3,2%</span>
+            </div>
+            <div class="pulse-body">
+              <div class="pulse-headline">Pedidos 2026 revisados al alza en call con analistas</div>
+              <ul class="pulse-bullets">
+                <li>Management sube rango de pedidos netos; semis europeas siguen.</li>
+                <li>Sin sorpresa negativa en márgenes.</li>
+                <li>Para ti: mayor peso en semis (+12%) — vigila concentración.</li>
+              </ul>
+            </div>
+            <div class="pulse-meta-col">
+              <span class="impact-pill med">Medio</span>
+              <span class="cache-pill saved">Caché 26 may</span>
+              <span class="pulse-time">hace 6 h</span>
+            </div>
+          </article>
+
+          <article class="pulse-row">
+            <div class="pulse-ticker">
+              BMW
+              <span class="move down">−2,1%</span>
+            </div>
+            <div class="pulse-body">
+              <div class="pulse-headline">Presión por aranceles y márgenes en auto europeo</div>
+              <ul class="pulse-bullets">
+                <li>Titulares negativos exportación EE.UU.</li>
+                <li>Impacto bajo en cartera total (1,8%).</li>
+              </ul>
+            </div>
+            <div class="pulse-meta-col">
+              <span class="impact-pill low">Bajo</span>
+              <span class="pulse-time">hace 14 h</span>
+            </div>
+          </article>
+
+          <article class="pulse-row muted-row">
+            <div class="pulse-ticker">
+              VWCE
+              <span class="move flat">+0,4%</span>
+            </div>
+            <div class="pulse-body">
+              <div class="pulse-headline">Sin noticia — solo beta de mercado</div>
+              <ul class="pulse-bullets">
+                <li>Ex-dividendo en 12 días (calendario).</li>
+              </ul>
+            </div>
+            <div class="pulse-meta-col">
+              <span class="impact-pill low">—</span>
+              <span class="pulse-time">—</span>
+            </div>
+          </article>
+        </div>
+
+        <div class="news-footer">
+          <span>3 resúmenes en caché · 2 búsquedas web hoy</span>
+          <span>Actualizar solo si hay nuevo resultado o &gt;24 h sin evento</span>
+        </div>
+      </section>
+
+      <!-- Moats + Strategies -->
+      <section class="mini-grid">
+        <div class="card">
+          <div class="card-title">Moats guardados</div>
+          <div class="mini-list">
+            <div class="mini-row"><span class="sym">MSFT</span><span class="moat-strong">Wide moat</span></div>
+            <div class="mini-row"><span class="sym">KO</span><span class="moat-strong">Wide moat</span></div>
+            <div class="mini-row"><span class="sym">INTC</span><span class="moat-narrow">Narrow</span></div>
+          </div>
+          <p style="font-size:10px;color:var(--faint);margin-top:8px">Tools → Moat screener · 3 evaluaciones</p>
+        </div>
+        <div class="card">
+          <div class="card-title">Estrategias guardadas</div>
+          <div class="mini-list">
+            <div class="mini-row"><span>Infra rebalance Q2</span><span style="color:var(--gain);font-size:10px">activa</span></div>
+            <div class="mini-row"><span>Dividend aristocrats</span><span style="color:var(--faint);font-size:10px">pausa</span></div>
+          </div>
+          <p style="font-size:10px;color:var(--faint);margin-top:8px">Tools → Estrategias · editar en un clic</p>
+        </div>
+      </section>
+
+      <!-- Proposed extras -->
+      <section class="card">
+        <div class="card-title">Información adicional propuesta</div>
+        <div class="extras-row">
+          <div class="extra-tile">
+            <div class="label">Top movers hoy</div>
+            <div class="val" style="color:var(--gain)">ASML +3,2%</div>
+            <div class="val" style="color:var(--loss);font-size:11px;margin-top:2px">BMW −2,1%</div>
+          </div>
+          <div class="extra-tile">
+            <div class="label">vs objetivo asignación</div>
+            <div class="val">ETFs −3 pp</div>
+            <div style="font-size:10px;color:var(--faint);margin-top:2px">Infra −2 pp · rebalance sugerido</div>
+          </div>
+          <div class="extra-tile">
+            <div class="label">Próximos 7 días</div>
+            <div class="val">3 eventos</div>
+            <div style="font-size:10px;color:var(--faint);margin-top:2px">Ex-div VWCE · earnings MSFT</div>
+          </div>
+          <div class="extra-tile">
+            <div class="label">Alertas activas</div>
+            <div class="val">2 disparadas</div>
+            <div style="font-size:10px;color:var(--clara);margin-top:2px">NVDA &gt; €120 · BTC −5%</div>
+          </div>
+          <div class="extra-tile">
+            <div class="label">Dividendos este mes</div>
+            <div class="val">€ 412 est.</div>
+            <div style="font-size:10px;color:var(--faint);margin-top:2px">yield cartera 2,1%</div>
+          </div>
+          <div class="extra-tile">
+            <div class="label">Concentración</div>
+            <div class="val">Top 3 = 38%</div>
+            <div style="font-size:10px;color:var(--faint);margin-top:2px">ASML · VWCE · MSFT</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="sidebar">
+      <div class="agent-strip">
+        <div class="agent-chip active-warren">Warren</div>
+        <div class="agent-chip">Will</div>
+        <div class="agent-chip">Clara</div>
+      </div>
+
+      <div class="sidebar-scroll">
+        <!-- Warren chat -->
+        <div class="warren-panel">
+          <div class="warren-header">
+            <div class="agent-avatar warren">W</div>
+            <div>
+              <h2>Warren
+                <span class="warren-badge-web">web</span>
+                <span class="warren-badge-moat">moat</span>
+              </h2>
+              <p>Cartera · noticias · evaluación moat en chat</p>
+            </div>
+          </div>
+
+          <div class="chat-suggestions">
+            <div class="chat-suggestions-label">Preguntas frecuentes</div>
+            <div class="suggestion-chips" role="list">
+              <button type="button" class="suggestion-chip" data-prompt="¿Cómo va mi cartera hoy?">¿Cómo va mi cartera hoy?</button>
+              <button type="button" class="suggestion-chip" data-prompt="¿Qué posiciones más mueven hoy?">Top movers hoy</button>
+              <button type="button" class="suggestion-chip" data-prompt="Resumen de noticias de mis posiciones (48 h)">Noticias de mis posiciones</button>
+              <button type="button" class="suggestion-chip" data-prompt="¿Estoy muy concentrado en pocas acciones?">¿Muy concentrado?</button>
+              <button type="button" class="suggestion-chip" data-prompt="¿Cómo va mi cartera esta semana?">Rendimiento semanal</button>
+              <button type="button" class="suggestion-chip" data-prompt="Comparar mi asignación actual vs mi objetivo">Asignación vs objetivo</button>
+              <button type="button" class="suggestion-chip" data-prompt="¿Qué resultados corporativos tengo esta semana en cartera?">Resultados esta semana</button>
+              <button type="button" class="suggestion-chip" data-prompt="Dividendos estimados este mes en mi cartera">Dividendos del mes</button>
+              <button type="button" class="suggestion-chip moat-chip" data-prompt="Evalúa el moat de MSFT">Moat de MSFT</button>
+              <button type="button" class="suggestion-chip moat-chip" data-prompt="Evalúa el moat de ASML">Moat de ASML</button>
+              <button type="button" class="suggestion-chip moat-chip" data-prompt="Evalúa el moat de KO">Moat de KO</button>
+            </div>
+          </div>
+
+          <div class="chat-messages" id="warren-chat">
+            <div class="msg bot">
+              <div class="who">Warren</div>
+              Hoy +0,65%. Destacan MSFT y ASML (resultados). Toca una pregunta frecuente o escribe — puedo buscar en web, evaluar <strong>moat</strong> de cualquier ticker o revisar tu cartera.
+            </div>
+            <div class="msg user">Evalúa el moat de MSFT</div>
+            <div class="msg bot">
+              <div class="who">Warren · Moat screener</div>
+              Evaluación con los 8 criterios de Tools (fundamentales en tiempo real):
+              <div class="moat-card">
+                <div class="moat-card-head">
+                  <span class="sym">MSFT</span>
+                  <span class="moat-verdict">Wide moat</span>
+                </div>
+                <div class="moat-score-row">
+                  <span class="score">78</span>
+                  <span class="of">/ 100</span>
+                </div>
+                <div class="moat-criteria">
+                  <div class="moat-crit"><span class="dot-status pass"></span> Beneficios consistentes</div>
+                  <div class="moat-crit"><span class="dot-status pass"></span> ROIC alto</div>
+                  <div class="moat-crit"><span class="dot-status pass"></span> Deuda controlada</div>
+                  <div class="moat-crit"><span class="dot-status warn"></span> P/E vs sector</div>
+                  <div class="moat-crit"><span class="dot-status pass"></span> FCF estable</div>
+                  <div class="moat-crit"><span class="dot-status pass"></span> Margen bruto estable</div>
+                </div>
+                <div class="moat-card-actions">
+                  <button type="button">Guardar moat</button>
+                  <button type="button">Ver en Tools</button>
+                </div>
+              </div>
+              <span class="msg-sources">En cartera: 4,1% · ya tenías MSFT en moats guardados</span>
+            </div>
+            <div class="msg user">¿Qué dijo Microsoft en resultados?</div>
+            <div class="msg-search done" aria-live="polite">
+              Buscando: MSFT earnings Q3 2026…
+            </div>
+            <div class="msg bot">
+              <div class="who">Warren · resumen guardado</div>
+              <strong>MSFT Q3:</strong> ingresos y Azure por encima de consenso; guidance FY26 intacto. Bolsa +4,2%.<br /><br />
+              <strong>En tu cartera:</strong> ~+0,17 pp hoy.<br />
+              <span class="msg-sources">Fuentes: Reuters, MSFT IR · caché hasta próximo informe</span>
+            </div>
+          </div>
+          <div class="chat-input-wrap">
+            <input id="warren-input" type="text" placeholder="Ej: moat de KO, noticias BMW, ¿cómo voy hoy?" aria-label="Mensaje a Warren" />
+            <button type="button">Enviar</button>
+          </div>
+        </div>
+
+        <!-- Will — reminders only -->
+        <div class="insight-block">
+          <div class="agent-row">
+            <div class="agent-avatar will">Wi</div>
+            <div>
+              <h3>Will · ideas que guardaste</h3>
+              <p class="sub">Notas de inversión · sin chat</p>
+            </div>
+          </div>
+          <div class="tag-cloud">
+            <span class="inv-tag">infra-rebalance <span class="date">12 mar</span></span>
+            <span class="inv-tag">no-vender-BMW <span class="date">3 abr</span></span>
+            <span class="inv-tag">DCA-VWCE <span class="date">18 abr</span></span>
+            <span class="inv-tag">margen-seguridad-20% <span class="date">1 may</span></span>
+          </div>
+          <p class="note-snippet">
+            “Si Clara confirma €800 libres en mayo, mover a VWCE hasta 30% ETFs.” — vinculado a misión Agent Office del 23 may.
+          </p>
+        </div>
+
+        <!-- Clara — cash insight -->
+        <div class="insight-block">
+          <div class="agent-row">
+            <div class="agent-avatar clara">C</div>
+            <div>
+              <h3>Clara · efectivo sin asignar</h3>
+              <p class="sub">Finanzas personales · sin chat</p>
+            </div>
+          </div>
+          <div class="cash-hero">€ 2.340</div>
+          <p class="cash-detail">
+            Disponible para invertir sin afectar gastos fijos de junio.
+            <br />Bucket “Inversión” · actualizado hoy 09:15.
+          </p>
+          <p class="cash-detail" style="margin-top:8px;color:var(--faint)">
+            + € 14.230 en broker (efectivo en cartera) — no confundir con ahorro Clara.
+          </p>
+        </div>
+      </div>
+    </aside>
+    </div>
+  </div>
+
+  <!-- Popup asignación (mismo patrón que AllocationTabs en dashboard) -->
+  <div class="alloc-modal-backdrop" id="alloc-modal" role="presentation" hidden>
+    <div class="alloc-modal" role="dialog" aria-modal="true" aria-labelledby="alloc-modal-title">
+      <div class="alloc-modal-head">
+        <div>
+          <h2 id="alloc-modal-title">Asignación</h2>
+          <p id="alloc-modal-sub">Degiro · € 284.520 total</p>
+        </div>
+        <button type="button" class="alloc-modal-close" id="alloc-modal-close" aria-label="Cerrar">×</button>
+      </div>
+      <div class="alloc-modal-tabs" role="tablist">
+        <button type="button" class="active" data-alloc-tab="type" role="tab" aria-selected="true">Por tipo</button>
+        <button type="button" data-alloc-tab="sector" role="tab" aria-selected="false">Sectores</button>
+        <button type="button" data-alloc-tab="region" role="tab" aria-selected="false">Regiones</button>
+      </div>
+      <div class="alloc-modal-body">
+        <div class="alloc-panel active" id="alloc-panel-type" role="tabpanel">
+          <div class="alloc-donut-wrap">
+            <div class="alloc-donut" aria-hidden="true">
+              <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="var(--surface-2)" stroke-width="12"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#60a5fa" stroke-width="12" stroke-dasharray="155 251" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#a78bfa" stroke-width="12" stroke-dasharray="70 251" stroke-dashoffset="-155" transform="rotate(-90 50 50)"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#fbbf24" stroke-width="12" stroke-dasharray="13 251" stroke-dashoffset="-225" transform="rotate(-90 50 50)"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#94a3b8" stroke-width="12" stroke-dasharray="13 251" stroke-dashoffset="-238" transform="rotate(-90 50 50)"/>
+              </svg>
+              <div class="alloc-donut-center">
+                <span class="lbl">Total</span>
+                <span class="val">€ 284.520</span>
+              </div>
+            </div>
+          </div>
+          <div class="alloc-legend" id="alloc-legend-type">
+            <div class="alloc-legend-row"><span class="left"><span class="dot" style="background:#60a5fa;width:8px;height:8px;border-radius:50%"></span> Acciones</span><span class="pct">62,0%</span></div>
+            <div class="alloc-legend-row"><span class="left"><span class="dot" style="background:#a78bfa;width:8px;height:8px;border-radius:50%"></span> ETFs</span><span class="pct">28,0%</span></div>
+            <div class="alloc-legend-row"><span class="left"><span class="dot" style="background:#fbbf24;width:8px;height:8px;border-radius:50%"></span> Crypto</span><span class="pct">5,0%</span></div>
+            <div class="alloc-legend-row"><span class="left"><span class="dot" style="background:#94a3b8;width:8px;height:8px;border-radius:50%"></span> Efectivo</span><span class="pct">5,0%</span></div>
+          </div>
+          <div class="alloc-target-block">
+            <h3>vs objetivo</h3>
+            <div class="alloc-target-row"><span>ETFs</span><span class="delta warn">−3 pp (obj. 31%)</span></div>
+            <div class="alloc-target-row"><span>Acciones</span><span class="delta">+1 pp</span></div>
+            <div class="alloc-target-row"><span>Infra (tag)</span><span class="delta warn">−2 pp</span></div>
+          </div>
+          <div class="alloc-detail-list" id="alloc-detail-highlight">
+            <h3>Detalle · Acciones</h3>
+            <div class="alloc-detail-item"><strong>ASML</strong><span>12,4%</span></div>
+            <div class="alloc-detail-item"><strong>MSFT</strong><span>4,1%</span></div>
+            <div class="alloc-detail-item"><strong>VWCE</strong><span>— en ETFs</span></div>
+          </div>
+        </div>
+        <div class="alloc-panel" id="alloc-panel-sector" role="tabpanel" hidden>
+          <div class="alloc-legend">
+            <div class="alloc-legend-row"><span class="left"><span class="dot" style="background:#34d399;width:8px;height:8px;border-radius:50%"></span> Tecnología</span><span class="pct">34%</span></div>
+            <div class="alloc-legend-row"><span class="left"><span class="dot" style="background:#60a5fa;width:8px;height:8px;border-radius:50%"></span> Industrial</span><span class="pct">18%</span></div>
+            <div class="alloc-legend-row"><span class="left"><span class="dot" style="background:#a78bfa;width:8px;height:8px;border-radius:50%"></span> Financiero</span><span class="pct">12%</span></div>
+            <div class="alloc-legend-row"><span class="left"><span class="dot" style="background:#fbbf24;width:8px;height:8px;border-radius:50%"></span> Consumo</span><span class="pct">9%</span></div>
+            <div class="alloc-legend-row"><span class="left"><span class="dot" style="background:#94a3b8;width:8px;height:8px;border-radius:50%"></span> Otros</span><span class="pct">27%</span></div>
+          </div>
+        </div>
+        <div class="alloc-panel" id="alloc-panel-region" role="tabpanel" hidden>
+          <div class="alloc-legend">
+            <div class="alloc-legend-row"><span class="left">🇺🇸 EE.UU.</span><span class="pct">41%</span></div>
+            <div class="alloc-legend-row"><span class="left">🇪🇺 Europa</span><span class="pct">38%</span></div>
+            <div class="alloc-legend-row"><span class="left">🌐 Global (ETF)</span><span class="pct">16%</span></div>
+            <div class="alloc-legend-row"><span class="left">₿ Crypto</span><span class="pct">5%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="alloc-modal-foot">Mismo componente que Views → Diversificación · mock estático</div>
+    </div>
+  </div>
+
+  <div class="div-modal-backdrop" id="div-modal" role="presentation" hidden>
+    <div class="div-modal alloc-modal" role="dialog" aria-modal="true" aria-labelledby="div-modal-title">
+      <div class="alloc-modal-head">
+        <div>
+          <h2 id="div-modal-title">Dividendos</h2>
+          <p id="div-modal-sub">Degiro · estimado mes actual</p>
+        </div>
+        <button type="button" class="alloc-modal-close" id="div-modal-close" aria-label="Cerrar">×</button>
+      </div>
+      <div class="alloc-modal-tabs div-modal-tabs" role="tablist">
+        <button type="button" class="active" data-div-tab="month" role="tab" aria-selected="true">Este mes</button>
+        <button type="button" data-div-tab="upcoming" role="tab" aria-selected="false">Próximos</button>
+        <button type="button" data-div-tab="yield" role="tab" aria-selected="false">Rendimiento</button>
+      </div>
+      <div class="alloc-modal-body">
+        <div class="alloc-panel active" id="div-panel-month" role="tabpanel">
+          <div class="div-hero-stat">
+            <div class="amount">€ 412</div>
+            <div class="sub">Ingreso estimado · junio 2026</div>
+            <span class="div-yield-pill">Yield cartera 2,1% anual</span>
+          </div>
+          <div class="alloc-legend">
+            <div class="alloc-legend-row"><span class="left"><strong style="font-family:JetBrains Mono;font-size:11px;color:var(--text)">VWCE</strong> ex-div 12 jun</span><span class="pct">€ 186</span></div>
+            <div class="alloc-legend-row"><span class="left"><strong style="font-family:JetBrains Mono;font-size:11px;color:var(--text)">MSFT</strong> pagado 15 may</span><span class="pct">€ 94</span></div>
+            <div class="alloc-legend-row"><span class="left"><strong style="font-family:JetBrains Mono;font-size:11px;color:var(--text)">KO</strong> pagado 1 jun</span><span class="pct">€ 62</span></div>
+            <div class="alloc-legend-row"><span class="left"><strong style="font-family:JetBrains Mono;font-size:11px;color:var(--text)">ASML</strong> trimestral jul</span><span class="pct">€ 48 est.</span></div>
+            <div class="alloc-legend-row"><span class="left"><span style="color:var(--faint)">+4 posiciones</span></span><span class="pct">€ 22</span></div>
+          </div>
+        </div>
+        <div class="alloc-panel" id="div-panel-upcoming" role="tabpanel" hidden>
+          <div class="alloc-legend">
+            <div class="alloc-legend-row"><span class="left">12 jun · <strong style="font-family:JetBrains Mono;font-size:11px">VWCE</strong></span><span class="pct" style="color:var(--clara)">ex-div</span></div>
+            <div class="alloc-legend-row"><span class="left">18 jun · <strong style="font-family:JetBrains Mono;font-size:11px">CSPX</strong></span><span class="pct" style="color:var(--clara)">ex-div</span></div>
+            <div class="alloc-legend-row"><span class="left">8 jul · <strong style="font-family:JetBrains Mono;font-size:11px">ASML</strong></span><span class="pct" style="color:var(--clara)">pago est.</span></div>
+            <div class="alloc-legend-row"><span class="left">24 jul · <strong style="font-family:JetBrains Mono;font-size:11px">MSFT</strong></span><span class="pct" style="color:var(--clara)">ex-div</span></div>
+          </div>
+          <p style="margin-top:12px;font-size:10px;color:var(--faint)">Mismo calendario que pestaña Dividends del dashboard.</p>
+        </div>
+        <div class="alloc-panel" id="div-panel-yield" role="tabpanel" hidden>
+          <div class="alloc-target-block">
+            <h3>Por tipo de activo</h3>
+            <div class="alloc-target-row"><span>Acciones</span><span class="delta">2,4% yield</span></div>
+            <div class="alloc-target-row"><span>ETFs</span><span class="delta">2,0% yield</span></div>
+            <div class="alloc-target-row"><span>Crypto</span><span class="delta" style="color:var(--faint)">—</span></div>
+          </div>
+          <div class="alloc-target-block" style="margin-top:10px">
+            <h3>Top pagadoras</h3>
+            <div class="alloc-target-row"><span>VWCE</span><span class="delta">~1,8% DPS yield</span></div>
+            <div class="alloc-target-row"><span>KO</span><span class="delta">~3,1%</span></div>
+            <div class="alloc-target-row"><span>MSFT</span><span class="delta">~0,7%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="alloc-modal-foot">Vista rápida · pestaña Dividends para historial completo</div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll(".period-tabs button, .news-filters button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const group = btn.parentElement;
+        group.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    const warrenInput = document.getElementById("warren-input");
+    document.querySelectorAll(".suggestion-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const prompt = chip.getAttribute("data-prompt");
+        if (warrenInput && prompt) {
+          warrenInput.value = prompt;
+          warrenInput.focus();
+        }
+      });
+    });
+
+    const allocModal = document.getElementById("alloc-modal");
+    const allocClose = document.getElementById("alloc-modal-close");
+    const allocOpenBtn = document.getElementById("alloc-open-btn");
+    const allocSub = document.getElementById("alloc-modal-sub");
+    const allocDetail = document.getElementById("alloc-detail-highlight");
+    const divModal = document.getElementById("div-modal");
+    const divClose = document.getElementById("div-modal-close");
+    const divOpenBtn = document.getElementById("div-open-btn");
+    const divSub = document.getElementById("div-modal-sub");
+
+    const allocLabels = {
+      stock: { title: "Acciones", detail: [["ASML", "12,4%"], ["MSFT", "4,1%"], ["NVDA", "3,8%"], ["+15 más", "…"]] },
+      etf: { title: "ETFs", detail: [["VWCE", "14,2%"], ["CSPX", "8,1%"], ["EIMI", "3,5%"], ["SGLN", "2,2%"]] },
+      crypto: { title: "Crypto", detail: [["BTC", "3,1%"], ["ETH", "1,9%"]] },
+      cash: { title: "Efectivo", detail: [["Broker EUR", "€ 14.230"], ["Sin posiciones", "—"]] },
+    };
+
+    function setAllocDetail(key) {
+      const info = allocLabels[key] || allocLabels.stock;
+      if (!allocDetail) return;
+      allocDetail.innerHTML =
+        "<h3>Detalle · " + info.title + "</h3>" +
+        info.detail.map(([a, b]) => '<div class="alloc-detail-item"><strong>' + a + "</strong><span>" + b + "</span></div>").join("");
+    }
+
+    function openAllocModal(focusKey) {
+      if (!allocModal) return;
+      document.querySelector('.alloc-modal-tabs button[data-alloc-tab="type"]')?.click();
+      allocModal.hidden = false;
+      allocModal.classList.add("open");
+      document.body.style.overflow = "hidden";
+      if (focusKey) setAllocDetail(focusKey);
+      allocClose?.focus();
+    }
+
+    function closeAllocModal() {
+      if (!allocModal) return;
+      allocModal.classList.remove("open");
+      allocModal.hidden = true;
+      if (!divModal?.classList.contains("open")) document.body.style.overflow = "";
+    }
+
+    allocOpenBtn?.addEventListener("click", () => openAllocModal("stock"));
+    allocClose?.addEventListener("click", closeAllocModal);
+    allocModal?.addEventListener("click", (e) => {
+      if (e.target === allocModal) closeAllocModal();
+    });
+    function openDivModal() {
+      if (!divModal) return;
+      document.querySelector('.div-modal-tabs button[data-div-tab="month"]')?.click();
+      divModal.hidden = false;
+      divModal.classList.add("open");
+      document.body.style.overflow = "hidden";
+      divClose?.focus();
+    }
+
+    function closeDivModal() {
+      if (!divModal) return;
+      divModal.classList.remove("open");
+      divModal.hidden = true;
+      if (!allocModal?.classList.contains("open")) document.body.style.overflow = "";
+    }
+
+    divOpenBtn?.addEventListener("click", openDivModal);
+    divClose?.addEventListener("click", closeDivModal);
+    divModal?.addEventListener("click", (e) => {
+      if (e.target === divModal) closeDivModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if (divModal?.classList.contains("open")) closeDivModal();
+      else if (allocModal?.classList.contains("open")) closeAllocModal();
+    });
+
+    document.querySelectorAll(".alloc-row").forEach((row) => {
+      const open = () => openAllocModal(row.getAttribute("data-alloc"));
+      row.addEventListener("click", open);
+      row.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          open();
+        }
+      });
+    });
+
+    document.querySelectorAll(".alloc-modal-tabs button").forEach((tabBtn) => {
+      tabBtn.addEventListener("click", () => {
+        const tab = tabBtn.getAttribute("data-alloc-tab");
+        document.querySelectorAll(".alloc-modal-tabs button").forEach((b) => {
+          const on = b === tabBtn;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        document.querySelectorAll(".alloc-panel").forEach((panel) => {
+          const show = panel.id === "alloc-panel-" + tab;
+          panel.classList.toggle("active", show);
+          panel.hidden = !show;
+        });
+        if (allocSub && tab === "type") allocSub.textContent = "Degiro · € 284.520 total";
+        else if (allocSub && tab === "sector") allocSub.textContent = "Por sector GICS · cartera";
+        else if (allocSub) allocSub.textContent = "Por región de cotización";
+      });
+    });
+
+    document.querySelectorAll(".div-modal-tabs button").forEach((tabBtn) => {
+      tabBtn.addEventListener("click", () => {
+        const tab = tabBtn.getAttribute("data-div-tab");
+        document.querySelectorAll(".div-modal-tabs button").forEach((b) => {
+          const on = b === tabBtn;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        document.querySelectorAll("#div-modal .alloc-panel").forEach((panel) => {
+          const show = panel.id === "div-panel-" + tab;
+          panel.classList.toggle("active", show);
+          panel.hidden = !show;
+        });
+        if (divSub && tab === "month") divSub.textContent = "Degiro · estimado mes actual";
+        else if (divSub && tab === "upcoming") divSub.textContent = "Próximos pagos y ex-dividendos";
+        else if (divSub) divSub.textContent = "Yield por tipo y top pagadoras";
+      });
+    });
+  </script>
+</body>
+</html>

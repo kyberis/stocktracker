@@ -538,6 +538,44 @@ export interface MoatEvaluation {
   earnings: Record<string, unknown>;
 }
 
+/* ── AID digest ─────────────────────────────────────────────── */
+
+export type AidNewsImpact = "high" | "medium" | "low";
+export type AidNewsFilterTag = "earnings" | "move" | "news";
+
+export interface AidDigestSummary {
+  headline: string;
+  bullets: string[];
+  impact: AidNewsImpact;
+  filterTags: AidNewsFilterTag[];
+}
+
+export interface AidDigestItem {
+  id: string;
+  ticker: string;
+  movePct: number | null;
+  headline: string;
+  bullets: string[];
+  impact: AidNewsImpact;
+  filterTags: AidNewsFilterTag[];
+  usedWeb: boolean;
+  cachedAt: string;
+  eventKey: string;
+}
+
+export interface AidNewsCacheRow {
+  id: string;
+  userId: string;
+  ticker: string;
+  eventKey: string;
+  headline: string;
+  summaryJson: string;
+  sourcesJson: string;
+  usedWeb: boolean;
+  fetchedAt: string;
+  expiresAt: string;
+}
+
 /* ── Alpha Intelligence types ──────────────────────────────── */
 
 export type {

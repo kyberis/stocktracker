@@ -26,6 +26,48 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "AID launch readiness: Privacy Policy entries for Tavily, Clara, and Will; WCAG-focused focus rings and main landmark; Will recent-tags API in notetaker; CI Playwright job for AID; compliance checklist at knowledge/compliance/aid-beta-compliance.md.",
+        translations: {
+          es: "Preparación lanzamiento AID: entradas en Política de Privacidad para Tavily, Clara y Will; anillos de foco y landmark main; API recent-tags en Will; job Playwright en CI; checklist en knowledge/compliance/aid-beta-compliance.md.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "AID mockup parity: extras row with movers, vs-target drift, 7-day events, active alerts, monthly dividends, and top-3 concentration; dividends modal yield by asset type; Will tag cloud via insights API; Clara broker cash note; full analytics events; Playwright E2E; and accessibility tweaks on modals.",
+        translations: {
+          es: "Paridad mockup AID: fila extras con movers, desviación vs objetivo, eventos 7 días, alertas, dividendos mensuales y concentración top-3; rendimiento por tipo en modal dividendos; tags Will vía insights; nota de cash en broker Clara; eventos analytics; E2E Playwright; y mejoras a11y en modales.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "AID polish: Will and Clara insight cards fetch real data via GET /api/aid/insights, mobile Warren opens as a collapsible sheet, page-level AI and financial disclaimers, per-user beta rollout script, and API tests for digest, refresh, insights, and cron auth.",
+        translations: {
+          es: "Pulido AID: tarjetas Will y Clara con datos reales vía GET /api/aid/insights, Warren móvil en sheet colapsable, disclaimers de IA y datos financieros, script de beta por usuario, y tests de APIs digest, refresh, insights y cron.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "AID portfolio extras: week/month performance on the pulse card, allocation vs rebalance targets with top holdings per type, top movers and concentration tiles, per-ticker news refresh, and a cron job that pre-warms digest cache every 6 hours for aid_beta users.",
+        translations: {
+          es: "Extras AID: rendimiento semana/mes en la tarjeta de pulso, asignación vs objetivos de rebalanceo con top holdings por tipo, tiles de top movers y concentración, actualización de noticias por ticker, y cron que precalienta la caché del digest cada 6 h para usuarios aid_beta.",
+        },
+      },
+      {
+        type: "feature",
+        text: "AID news digest: scannable bullet summaries for your tickers (48h), cached per user with optional Tavily web search for earnings days, filters for All / Earnings / Movement, and GET /api/aid/digest plus POST /api/aid/refresh.",
+        translations: {
+          es: "Digest de noticias AID: resúmenes en viñetas para tus tickers (48 h), caché por usuario con búsqueda web Tavily opcional en días de resultados, filtros Todo/Resultados/Movimiento, y APIs GET /api/aid/digest y POST /api/aid/refresh.",
+        },
+      },
+      {
+        type: "feature",
+        text: "AID (Advanced Investor Dashboard) beta: enable the aid_beta feature flag to show a Beta · AID entry on the home dashboard and open /aid — portfolio pulse by asset type, allocation and dividend quick views, compact news, saved moats/strategies, and an embedded Warren panel with Will and Clara insight cards.",
+        translations: {
+          es: "Beta AID (Advanced Investor Dashboard): activa el flag aid_beta para ver la entrada Beta · AID en el home y abrir /aid — pulso de cartera por tipo de activo, vistas rápidas de asignación y dividendos, noticias compactas, moats/estrategias guardados y Warren integrado con tarjetas Will y Clara.",
+        },
+      },
+      {
+        type: "improvement",
         text: "When portfolio history is incomplete (missing cost basis or asset breakdown), the dashboard now rebuilds it automatically in the background instead of showing a Recalculate banner.",
         translations: {
           es: "Cuando el historial del portafolio está incompleto (falta cost basis o desglose por activo), el dashboard ahora lo reconstruye automáticamente en segundo plano en lugar de mostrar un banner de Recalcular.",

@@ -549,6 +549,14 @@ export {
   touchSymbolFetchMeta,
 } from "./portfolio-news";
 
+export type { AidNewsCacheRow } from "@/lib/types";
+export {
+  getAidNewsCacheEntry,
+  listAidNewsCacheForUser,
+  upsertAidNewsCache,
+  parseAidDigestSummary,
+} from "./aid-news-cache";
+
 export type { AiLogEntry, AiLogWithUser, InsertAiLogParams, GetAiLogsOptions } from "./ai-logs";
 export {
   insertAiLog,

@@ -3436,6 +3436,32 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 114,
+    description: "AID news digest cache per user/ticker/event",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS aid_news_cache (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          ticker TEXT NOT NULL DEFAULT '',
+          event_key TEXT NOT NULL DEFAULT '',
+          headline TEXT NOT NULL DEFAULT '',
+          summary_json TEXT NOT NULL DEFAULT '{}',
+          sources_json TEXT NOT NULL DEFAULT '[]',
+          used_web INTEGER NOT NULL DEFAULT 0,
+          fetched_at TEXT NOT NULL DEFAULT (datetime('now')),
+          expires_at TEXT NOT NULL DEFAULT ''
+        )
+      `);
+      await client.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_aid_news_cache_user_event ON aid_news_cache(user_id, ticker, event_key)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_aid_news_cache_user_fetched ON aid_news_cache(user_id, fetched_at DESC)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

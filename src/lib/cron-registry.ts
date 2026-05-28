@@ -123,4 +123,10 @@ export const CRON_REGISTRY: CronJob[] = [
     schedule: "*/5 * * * *",
     description: "Dispatch queued staff ops notifications to the external ProdOps Telegram service",
   },
+  {
+    name: "aid-digest",
+    path: "/api/cron/aid-digest",
+    schedule: "0 */6 * * *",
+    description: "Pre-warm AID news digest cache for aid_beta users (earnings + portfolio news summaries)",
+  },
 ];

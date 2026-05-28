@@ -72,6 +72,19 @@ export interface WillNoteHit {
   note?: string;
 }
 
+export interface WillTagInsight {
+  label: string;
+  date?: string;
+}
+
+export interface WillRecentTagsHit {
+  available: boolean;
+  tags: WillTagInsight[];
+  excerpt?: string;
+  noteDate?: string;
+  note?: string;
+}
+
 export interface SectorGap {
   label: string;
   currentPct: number;

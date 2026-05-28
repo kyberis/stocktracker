@@ -37,6 +37,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 
 ## Portfolio Core
 
+- [advanced-investor-dashboard](advanced-investor-dashboard.md) — AID beta control panel (`/aid`), home CTA, Warren/Will/Clara column.
 - [accounts-manager](accounts-manager.md) — user-visible accounts/brokers.
 - [cash-balances](cash-balances.md) — multi-currency cash entries.
 - [derive-holdings](derive-holdings.md) — pure function: transactions → holdings.

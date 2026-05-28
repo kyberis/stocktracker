@@ -19,6 +19,7 @@
     { "path": "/api/cron/digest-email", "schedule": "*/15 * * * *" },
     { "path": "/api/cron/moat-sync", "schedule": "0 */4 * * *" },
     { "path": "/api/cron/feedback-pipeline", "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/prodops-dispatch", "schedule": "*/5 * * * *" }
+    { "path": "/api/cron/prodops-dispatch", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/aid-digest", "schedule": "0 */6 * * *" }
   ]
 }

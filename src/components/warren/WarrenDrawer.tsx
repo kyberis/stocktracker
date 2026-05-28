@@ -41,6 +41,10 @@ type Bubble =
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  /** Inline panel for AID — no overlay drawer */
+  embedded?: boolean;
+  suggestionPrompts?: string[];
+  onSuggestionClick?: (prompt: string) => void;
 }
 
 function makeId(): string {
@@ -94,7 +98,7 @@ function buildSnapshot(args: {
   };
 }
 
-export default function WarrenDrawer({ isOpen, onClose }: Props) {
+export default function WarrenDrawer({ isOpen, onClose, embedded = false, suggestionPrompts, onSuggestionClick }: Props) {
   const { t, language } = useI18n();
   const { userPlan } = usePlatform();
   const {
@@ -287,7 +291,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
     refreshAlertedTickers?.();
   }, [refreshHoldings, refreshAlertedTickers]);
 
-  const quickPrompts = [
+  const quickPrompts = suggestionPrompts ?? [
     t("warrenChipSummary"),
     t("warrenChipConcentration"),
     t("warrenChipDividends"),
@@ -301,23 +305,18 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
         activePortfolioCurrency,
       )}`;
 
-  return (
-    <>
-      <div
-        className={`fixed inset-0 z-[100] bg-black/55 backdrop-blur-sm transition-opacity duration-250 ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={onClose}
-        aria-hidden={!isOpen}
-      />
-
+  const panel = (
       <aside
-        className={`fixed top-0 right-0 z-[101] w-[460px] max-w-[calc(100vw-1rem)] h-full flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        } bg-white dark:bg-[#151e2f] text-gray-900 dark:text-slate-100 border-l border-gray-200 dark:border-amber-500/15`}
-        role="dialog"
+        className={
+          embedded
+            ? "flex h-[min(560px,calc(100vh-14rem))] w-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]"
+            : `fixed top-0 right-0 z-[101] w-[460px] max-w-[calc(100vw-1rem)] h-full flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                isOpen ? "translate-x-0" : "translate-x-full"
+              } bg-white dark:bg-[#151e2f] text-gray-900 dark:text-slate-100 border-l border-gray-200 dark:border-amber-500/15`
+        }
+        role={embedded ? "region" : "dialog"}
         aria-label="Warren"
-        aria-hidden={!isOpen}
+        aria-hidden={embedded ? undefined : !isOpen}
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-amber-500/10 bg-gradient-to-r from-amber-500/[0.05] to-transparent shrink-0">
@@ -331,6 +330,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
               {t("warrenSubtitle")}
             </div>
           </div>
+          {!embedded && (
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-lg border border-gray-200 dark:border-amber-500/15 bg-gray-50 dark:bg-white/[0.04] flex items-center justify-center text-gray-500 dark:text-amber-200/60 hover:text-amber-700 dark:hover:text-amber-200 hover:border-amber-400/50 transition-colors"
@@ -340,6 +340,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] text-gray-500 dark:text-amber-300/60 border-b border-gray-100 dark:border-amber-500/[0.08] shrink-0">
@@ -435,6 +436,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
               <button
                 key={q}
                 onClick={() => {
+                  onSuggestionClick?.(q);
                   setPendingFiles([]);
                   void sendMessage(q);
                 }}
@@ -532,6 +534,20 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
           </p>
         </div>
       </aside>
+  );
+
+  if (embedded) return panel;
+
+  return (
+    <>
+      <div
+        className={`fixed inset-0 z-[100] bg-black/55 backdrop-blur-sm transition-opacity duration-250 ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onClose}
+        aria-hidden={!isOpen}
+      />
+      {panel}
     </>
   );
 }
