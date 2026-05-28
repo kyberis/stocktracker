@@ -26,6 +26,7 @@ import AidWillCard from "./AidWillCard";
 import AidClaraCard from "./AidClaraCard";
 import { useAidInsights } from "@/hooks/useAidInsights";
 import AidPageFooter from "./AidPageFooter";
+import AidPortfolioHeaderSummary from "./AidPortfolioHeaderSummary";
 
 export default function AidDashboard() {
   const router = useRouter();
@@ -94,7 +95,7 @@ export default function AidDashboard() {
 
   return (
     <main id="aid-main" className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6" aria-labelledby="aid-page-title">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">
@@ -109,9 +110,14 @@ export default function AidDashboard() {
           </div>
           <p className="text-xs text-[color:var(--muted)]">{t("aidSubtitle")}</p>
         </div>
-        <Link href="/" className="text-xs font-semibold text-[color:var(--muted)] hover:text-[color:var(--foreground)]">
-          {t("aidBackHome")}
-        </Link>
+        <div className="flex flex-col items-end gap-1.5">
+          {!isEmpty && hasHoldings ? (
+            <AidPortfolioHeaderSummary holdings={holdings} cashEntries={investmentCash} />
+          ) : null}
+          <Link href="/" className="text-xs font-semibold text-[color:var(--muted)] hover:text-[color:var(--foreground)]">
+            {t("aidBackHome")}
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">

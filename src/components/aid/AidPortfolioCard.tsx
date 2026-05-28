@@ -106,7 +106,7 @@ export default function AidPortfolioCard({ holdings, cashEntries }: Props) {
 
   return (
     <>
-      <section className="card rounded-[var(--radius-card)] p-4 sm:p-5" aria-label={t("aidPortfolioValue")}>
+      <section id="aid-portfolio" className="card rounded-[var(--radius-card)] p-4 sm:p-5" aria-label={t("aidPortfolioValue")}>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--muted)]">
             {t("aidPortfolioValue")}
