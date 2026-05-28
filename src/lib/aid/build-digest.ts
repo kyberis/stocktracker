@@ -19,12 +19,12 @@ import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tic
 import { summarizeAidDigestItem } from "@/lib/aid/summarize-digest";
 import { searchTavilyForTicker } from "@/lib/aid/tavily-search";
 import { languageCodeToName } from "@/lib/languages";
-import type { AidDigestItem, NewsArticle } from "@/lib/types";
+import type { AidDigestItem, AidNewsFilterTag, NewsArticle } from "@/lib/types";
 import type { QuoteData } from "@/lib/types";
 
 const HOURS_48_MS = 48 * 3600 * 1000;
 const CACHE_TTL_MS = 24 * 3600 * 1000;
-const MAX_GENERATE_PER_REQUEST = 3;
+const MAX_GENERATE_PER_REQUEST = 10;
 
 function articleEventKey(article: NewsArticle): string {
   return `article:${article.url.slice(0, 200)}`;
@@ -222,16 +222,19 @@ export async function buildAidDigest(args: {
   }
 
   if (items.length === 0 && ranked.length > 0) {
-    for (const article of ranked.slice(0, 5)) {
+    for (const article of ranked.slice(0, 8)) {
       const ticker = primaryTicker(article, tickers);
+      const pct = moveByTicker.get(ticker.toUpperCase());
+      const tags: AidNewsFilterTag[] = ["news"];
+      if (pct != null && Math.abs(pct) >= 3) tags.push("move");
       items.push({
         id: randomUUID(),
         ticker,
-        movePct: moveByTicker.get(ticker.toUpperCase()) ?? null,
+        movePct: pct ?? null,
         headline: article.title,
         bullets: [(article.summary || article.title).slice(0, 200)],
         impact: "medium",
-        filterTags: ["news"],
+        filterTags: tags,
         usedWeb: false,
         cachedAt: new Date().toISOString(),
         eventKey: articleEventKey(article),
@@ -239,5 +242,24 @@ export async function buildAidDigest(args: {
     }
   }
 
-  return { items, earningsTodayCount };
+  for (const ev of earningsEvents) {
+    const ticker = ev.symbol?.toUpperCase() ?? "";
+    if (!ticker) continue;
+    const eventKey = earningsEventKey(ticker, today);
+    if (items.some((i) => i.eventKey === eventKey)) continue;
+    items.push({
+      id: randomUUID(),
+      ticker,
+      movePct: moveByTicker.get(ticker) ?? null,
+      headline: ev.name || `${ticker} earnings today`,
+      bullets: [(ev.details || `${ticker} reports earnings today.`).slice(0, 240)],
+      impact: "medium",
+      filterTags: ["earnings"],
+      usedWeb: false,
+      cachedAt: new Date().toISOString(),
+      eventKey,
+    });
+  }
+
+  return { items: items.slice(0, 12), earningsTodayCount };
 }

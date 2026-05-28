@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "fix",
+        text: "AID news section: clearer empty states per filter, more tickers supported (e.g. NOVO-B), earnings calendar rows without waiting for AI cache, and Movement filter uses ±3% day change.",
+        translations: {
+          es: "Noticias AID: vacíos más claros por filtro, más tickers (p. ej. NOVO-B), filas de resultados sin esperar caché IA, y filtro Movimiento usa ±3 % del día.",
+        },
+      },
+      {
+        type: "fix",
         text: "AID digest: migration v116 creates aid_news_cache (fixes prod missing table after duplicate v114); Yahoo quote fetch handles symbols with no market data without crashing.",
         translations: {
           es: "Digest AID: migración v116 crea aid_news_cache (corrige tabla ausente en prod tras v114 duplicada); cotizaciones Yahoo sin datos ya no provocan error.",

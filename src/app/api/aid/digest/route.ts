@@ -34,7 +34,8 @@ export const GET = withMetrics("/api/aid/digest", async (req: NextRequest) => {
     portfolioId,
     language,
     quotes,
+    maxGenerate: 10,
   });
 
-  return NextResponse.json({ items, earningsTodayCount });
+  return NextResponse.json({ items, earningsTodayCount, newsTickers: tickers });
 });

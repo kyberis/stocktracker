@@ -6,6 +6,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useTrack } from "@/lib/use-track";
 import { formatPercent } from "@/lib/utils";
 import type { AidDigestItem } from "@/lib/types";
+import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 
 type Filter = "all" | "earnings" | "move";
 
@@ -23,14 +24,19 @@ function impactLabel(impact: AidDigestItem["impact"], t: (k: string) => string):
 
 function matchesFilter(item: AidDigestItem, filter: Filter): boolean {
   if (filter === "all") return true;
-  if (filter === "earnings") return item.filterTags.includes("earnings");
-  if (filter === "move") return item.filterTags.includes("move");
+  if (filter === "earnings") {
+    return item.filterTags.includes("earnings") || item.eventKey.startsWith("earnings:");
+  }
+  if (filter === "move") {
+    if (item.filterTags.includes("move")) return true;
+    return item.movePct != null && Math.abs(item.movePct) >= 3;
+  }
   return true;
 }
 
 export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean }) {
   const { t } = useI18n();
-  const { quotes, activePortfolioId } = usePortfolio();
+  const { quotes, activePortfolioId, holdings } = usePortfolio();
   const track = useTrack();
   const [items, setItems] = useState<AidDigestItem[]>([]);
   const [earningsTodayCount, setEarningsTodayCount] = useState(0);
@@ -38,6 +44,12 @@ export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean })
   const [loading, setLoading] = useState(false);
   const [refreshingTicker, setRefreshingTicker] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const [newsTickerCount, setNewsTickerCount] = useState<number | null>(null);
+
+  const derivedTickerCount = useMemo(
+    () => derivePortfolioNewsTickersFromHoldings(holdings).length,
+    [holdings],
+  );
 
   const enrichItems = useCallback(
     (raw: AidDigestItem[]) =>
@@ -58,17 +70,24 @@ export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean })
       if (activePortfolioId) params.set("portfolioId", activePortfolioId);
       const res = await fetch(`/api/aid/digest?${params}`, { credentials: "include", cache: "no-store" });
       if (!res.ok) throw new Error("digest failed");
-      const data = (await res.json()) as { items?: AidDigestItem[]; earningsTodayCount?: number };
+      const data = (await res.json()) as {
+        items?: AidDigestItem[];
+        earningsTodayCount?: number;
+        newsTickers?: string[];
+      };
       const raw = Array.isArray(data.items) ? data.items : [];
       setItems(enrichItems(raw));
       setEarningsTodayCount(data.earningsTodayCount ?? 0);
+      setNewsTickerCount(
+        Array.isArray(data.newsTickers) ? data.newsTickers.length : derivedTickerCount,
+      );
       track("aid_digest_loaded", { count: String(raw.length) });
     } catch {
       setError(true);
     } finally {
       setLoading(false);
     }
-  }, [hasHoldings, activePortfolioId, enrichItems, track]);
+  }, [hasHoldings, activePortfolioId, enrichItems, track, derivedTickerCount]);
 
   const refreshTicker = useCallback(
     async (ticker: string) => {
@@ -99,6 +118,14 @@ export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean })
   }, [load]);
 
   const filtered = useMemo(() => items.filter((i) => matchesFilter(i, filter)), [items, filter]);
+
+  const emptyMessage = useMemo(() => {
+    const tickers = newsTickerCount ?? derivedTickerCount;
+    if (tickers === 0) return t("aidNewsNoTickers");
+    if (filter === "earnings") return t("aidNewsEmptyEarnings");
+    if (filter === "move") return t("aidNewsEmptyMove");
+    return t("aidNewsEmptyFeed");
+  }, [newsTickerCount, derivedTickerCount, filter, t]);
 
   if (!hasHoldings) return null;
 
@@ -167,7 +194,18 @@ export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean })
       )}
 
       {!loading && !error && filtered.length === 0 && (
-        <p className="text-sm text-[color:var(--muted)]">{t("aidNewsEmpty")}</p>
+        <div className="space-y-2 text-sm text-[color:var(--muted)]">
+          <p>{emptyMessage}</p>
+          {items.length > 0 && filter !== "all" && (
+            <button
+              type="button"
+              onClick={() => setFilter("all")}
+              className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:underline"
+            >
+              {t("aidNewsShowAll")}
+            </button>
+          )}
+        </div>
       )}
 
       <ul className="space-y-3">
