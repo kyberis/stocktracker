@@ -54,6 +54,13 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "fix",
+        text: "Fixed production build: AID earnings digest cache now sets expiresAt via earningsExpiresAt().",
+        translations: {
+          es: "Corregido el build de producción: la caché de resultados AID usa expiresAt con earningsExpiresAt().",
+        },
+      },
+      {
+        type: "fix",
         text: "AID digest: migration v116 creates aid_news_cache (fixes prod missing table after duplicate v114); Yahoo quote fetch handles symbols with no market data without crashing.",
         translations: {
           es: "Digest AID: migración v116 crea aid_news_cache (corrige tabla ausente en prod tras v114 duplicada); cotizaciones Yahoo sin datos ya no provocan error.",
