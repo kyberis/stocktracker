@@ -77,9 +77,12 @@ export class YahooProvider implements StockDataProvider {
     let ok = false;
     try {
       const quote = await yahooFinance.quote(symbol);
+      if (!quote || typeof quote !== "object") {
+        throw new Error(`No quote data for ${symbol}`);
+      }
       ok = true;
       const qt =
-        quote && typeof quote === "object" && "quoteType" in quote
+        "quoteType" in quote
           ? String((quote as { quoteType?: string }).quoteType || "")
           : "";
       const result: ProviderQuoteResult = {

@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "fix",
+        text: "AID digest: migration v116 creates aid_news_cache (fixes prod missing table after duplicate v114); Yahoo quote fetch handles symbols with no market data without crashing.",
+        translations: {
+          es: "Digest AID: migración v116 crea aid_news_cache (corrige tabla ausente en prod tras v114 duplicada); cotizaciones Yahoo sin datos ya no provocan error.",
+        },
+      },
+      {
         type: "improvement",
         text: "AID launch readiness: Privacy Policy entries for Tavily, Clara, and Will; WCAG-focused focus rings and main landmark; Will recent-tags API in notetaker; CI Playwright job for AID; compliance checklist at knowledge/compliance/aid-beta-compliance.md.",
         translations: {

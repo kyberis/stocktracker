@@ -27,7 +27,7 @@
 
 ## 4. Data model
 
-- `aid_news_cache` — per-user ticker digest summaries (migration v114)
+- `aid_news_cache` — per-user ticker digest summaries (migration v116)
 - Reuse: holdings, quotes, moat cache, dividend calendar, rebalance targets, calendar events, alerts
 
 ## 5. API surface

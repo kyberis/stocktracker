@@ -3437,7 +3437,7 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
     },
   },
   {
-    version: 114,
+    version: 116,
     description: "AID news digest cache per user/ticker/event",
     up: async (client: Client) => {
       await client.execute(`
