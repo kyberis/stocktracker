@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import AidDashboard from "@/components/aid/AidDashboard";
 
 export const metadata: Metadata = {
-  title: "AID — Advanced Investor Dashboard",
+  title: "Investor Briefing",
   robots: { index: false },
 };
 

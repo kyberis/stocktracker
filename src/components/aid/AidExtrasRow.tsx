@@ -29,11 +29,13 @@ function Tile({
   children,
   href,
   ariaLabel,
+  urgent,
 }: {
   title: string;
   children: React.ReactNode;
   href?: string;
   ariaLabel?: string;
+  urgent?: boolean;
 }) {
   const inner = (
     <>
@@ -43,7 +45,8 @@ function Tile({
   );
 
   const className =
-    `card flex min-h-[88px] flex-col rounded-[var(--radius-card)] p-3 transition-colors hover:border-emerald-500/20 ${AID_FOCUS}`;
+    `card flex min-h-[88px] flex-col rounded-[var(--radius-card)] p-3 transition-colors hover:border-emerald-500/20 ${AID_FOCUS}` +
+    (urgent ? " border-red-500/35 ring-1 ring-red-500/10" : "");
 
   if (href) {
     return (
@@ -152,95 +155,113 @@ export default function AidExtrasRow({ holdings, cashEntries }: Props) {
 
   if (holdings.length === 0 && cashEntries.length === 0) return null;
 
+  const alertTile = (
+    <Tile
+      key="alerts"
+      title={t("aidPreviewAlerts")}
+      href="/tools?tab=alerts"
+      ariaLabel={t("aidOpenAlerts")}
+      urgent={triggeredAlerts.length > 0}
+    >
+      {alertsDisabled ? (
+        <p className="text-xs text-[color:var(--muted)]">{t("aidAlertsDisabled")}</p>
+      ) : (
+        <>
+          <p className="text-sm font-semibold text-[color:var(--foreground)]">
+            {triggeredAlerts.length > 0
+              ? t("aidAlertsTriggered").replace("{n}", String(triggeredAlerts.length))
+              : activeAlertCount > 0
+                ? t("aidAlertsActive").replace("{n}", String(activeAlertCount))
+                : t("aidAlertsNone")}
+          </p>
+          {triggeredAlerts[0] && (
+            <p className="mt-1 truncate text-[10px] text-amber-700 dark:text-amber-300">
+              {triggeredAlerts[0].ticker || t("aidPortfolioWideAlert")}
+            </p>
+          )}
+        </>
+      )}
+    </Tile>
+  );
+
+  const eventTile = (
+    <Tile key="events" title={t("aidEventsNext7")} href="/?tab=events" ariaLabel={t("aidOpenEvents")}>
+      <p className="text-sm font-semibold text-[color:var(--foreground)]">
+        {eventCount} {t("aidEventsCountLabel")}
+      </p>
+      {eventHint && <p className="mt-1 truncate text-[10px] text-[color:var(--muted)]">{eventHint}</p>}
+    </Tile>
+  );
+
+  const moversTile =
+    movers.length > 0 ? (
+      <Tile key="movers" title={t("aidPreviewMovers")}>
+        <ul className="space-y-1 text-xs">
+          {movers.map((m) => (
+            <li key={m.ticker} className="flex justify-between gap-2">
+              <span className="font-medium">{m.ticker}</span>
+              <span
+                className={`tabular-nums font-semibold ${
+                  (m.pct ?? 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
+                }`}
+              >
+                {stealthMode ? "•••" : `${(m.pct ?? 0) >= 0 ? "+" : ""}${formatPercent(m.pct ?? 0)}`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Tile>
+    ) : null;
+
+  const driftTile =
+    drifts.length > 0 ? (
+      <Tile key="drift" title={t("aidVsTargetTile")} href="/?tab=diversification" ariaLabel={t("aidOpenDiversification")}>
+        <p className="text-sm font-semibold tabular-nums text-[color:var(--foreground)]">
+          {stealthMode
+            ? "•••"
+            : `${drifts[0].label} ${drifts[0].driftPercent >= 0 ? "+" : ""}${drifts[0].driftPercent.toFixed(0)} pp`}
+        </p>
+        {drifts[1] && (
+          <p className="mt-1 text-[10px] text-[color:var(--muted)]">
+            {stealthMode
+              ? "•••"
+              : `${drifts[1].label} ${drifts[1].driftPercent >= 0 ? "+" : ""}${drifts[1].driftPercent.toFixed(0)} pp · ${t("aidRebalanceHint")}`}
+          </p>
+        )}
+      </Tile>
+    ) : null;
+
+  const dividendTile =
+    dividendSummary.monthTotal > 0 ? (
+      <Tile key="dividends" title={t("aidDivThisMonth")} href="/?tab=dividends" ariaLabel={t("aidDivOpenFull")}>
+        <p className="text-sm font-semibold tabular-nums text-[color:var(--foreground)]">{fmt(dividendSummary.monthTotal / 12)}</p>
+        <p className="mt-1 text-[10px] text-[color:var(--muted)]">
+          {stealthMode ? "•••" : `${t("aidDivPortfolioYield")}: ${formatPercent(dividendSummary.portfolioYield)}`}
+        </p>
+      </Tile>
+    ) : null;
+
+  const concentrationTile =
+    concentration.topThreePercent > 0 ? (
+      <Tile key="concentration" title={t("aidConcentration")}>
+        <p className="text-sm font-semibold tabular-nums text-[color:var(--foreground)]">
+          {stealthMode ? "•••" : `${t("aidTop3Label")} = ${concentration.topThreePercent.toFixed(0)}%`}
+        </p>
+        {concentration.topTickers.length > 0 && (
+          <p className="mt-1 truncate text-[10px] text-[color:var(--muted)]">
+            {concentration.topTickers.join(" · ")}
+          </p>
+        )}
+      </Tile>
+    ) : null;
+
+  const tiles = [alertTile, eventTile, moversTile, driftTile, dividendTile, concentrationTile].filter(Boolean);
+
   return (
     <section className="card rounded-[var(--radius-card)] p-4" aria-label={t("aidExtrasTitle")}>
       <h2 className="mb-3 text-sm font-semibold text-[color:var(--foreground)]">{t("aidExtrasTitle")}</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {movers.length > 0 && (
-          <Tile title={t("aidPreviewMovers")}>
-            <ul className="space-y-1 text-xs">
-              {movers.map((m) => (
-                <li key={m.ticker} className="flex justify-between gap-2">
-                  <span className="font-medium">{m.ticker}</span>
-                  <span
-                    className={`tabular-nums font-semibold ${
-                      (m.pct ?? 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
-                    }`}
-                  >
-                    {stealthMode ? "•••" : `${(m.pct ?? 0) >= 0 ? "+" : ""}${formatPercent(m.pct ?? 0)}`}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Tile>
-        )}
-
-        {drifts.length > 0 && (
-          <Tile title={t("aidVsTargetTile")} href="/?tab=diversification" ariaLabel={t("aidOpenDiversification")}>
-            <p className="text-sm font-semibold tabular-nums text-[color:var(--foreground)]">
-              {stealthMode
-                ? "•••"
-                : `${drifts[0].label} ${drifts[0].driftPercent >= 0 ? "+" : ""}${drifts[0].driftPercent.toFixed(0)} pp`}
-            </p>
-            {drifts[1] && (
-              <p className="mt-1 text-[10px] text-[color:var(--muted)]">
-                {stealthMode
-                  ? "•••"
-                  : `${drifts[1].label} ${drifts[1].driftPercent >= 0 ? "+" : ""}${drifts[1].driftPercent.toFixed(0)} pp · ${t("aidRebalanceHint")}`}
-              </p>
-            )}
-          </Tile>
-        )}
-
-        <Tile title={t("aidEventsNext7")} href="/?tab=events" ariaLabel={t("aidOpenEvents")}>
-          <p className="text-sm font-semibold text-[color:var(--foreground)]">
-            {eventCount} {t("aidEventsCountLabel")}
-          </p>
-          {eventHint && <p className="mt-1 truncate text-[10px] text-[color:var(--muted)]">{eventHint}</p>}
-        </Tile>
-
-        <Tile title={t("aidPreviewAlerts")} href="/tools?tab=alerts" ariaLabel={t("aidOpenAlerts")}>
-          {alertsDisabled ? (
-            <p className="text-xs text-[color:var(--muted)]">{t("aidAlertsDisabled")}</p>
-          ) : (
-            <>
-              <p className="text-sm font-semibold text-[color:var(--foreground)]">
-                {triggeredAlerts.length > 0
-                  ? t("aidAlertsTriggered").replace("{n}", String(triggeredAlerts.length))
-                  : activeAlertCount > 0
-                    ? t("aidAlertsActive").replace("{n}", String(activeAlertCount))
-                    : t("aidAlertsNone")}
-              </p>
-              {triggeredAlerts[0] && (
-                <p className="mt-1 truncate text-[10px] text-amber-700 dark:text-amber-300">
-                  {triggeredAlerts[0].ticker || t("aidPortfolioWideAlert")}
-                </p>
-              )}
-            </>
-          )}
-        </Tile>
-
-        {dividendSummary.monthTotal > 0 && (
-          <Tile title={t("aidDivThisMonth")} href="/?tab=dividends" ariaLabel={t("aidDivOpenFull")}>
-            <p className="text-sm font-semibold tabular-nums text-[color:var(--foreground)]">{fmt(dividendSummary.monthTotal / 12)}</p>
-            <p className="mt-1 text-[10px] text-[color:var(--muted)]">
-              {stealthMode ? "•••" : `${t("aidDivPortfolioYield")}: ${formatPercent(dividendSummary.portfolioYield)}`}
-            </p>
-          </Tile>
-        )}
-
-        {concentration.topThreePercent > 0 && (
-          <Tile title={t("aidConcentration")}>
-            <p className="text-sm font-semibold tabular-nums text-[color:var(--foreground)]">
-              {stealthMode ? "•••" : `${t("aidTop3Label")} = ${concentration.topThreePercent.toFixed(0)}%`}
-            </p>
-            {concentration.topTickers.length > 0 && (
-              <p className="mt-1 truncate text-[10px] text-[color:var(--muted)]">
-                {concentration.topTickers.join(" · ")}
-              </p>
-            )}
-          </Tile>
-        )}
+        {tiles.map((tile) => tile)}
       </div>
     </section>
   );

@@ -542,6 +542,18 @@ export interface MoatEvaluation {
 
 export type AidNewsImpact = "high" | "medium" | "low";
 export type AidNewsFilterTag = "earnings" | "move" | "news";
+export type AidImpactScore = 1 | 2 | 3 | 4 | 5;
+export type AidFeedSource = "digest" | "finpulse" | "earnings";
+
+export interface AidFeedItem {
+  id: string;
+  source: AidFeedSource;
+  impactScore: AidImpactScore;
+  headline: string;
+  sortDate: string;
+  anchorId: string;
+  label: string;
+}
 
 export interface AidDigestSummary {
   headline: string;
@@ -557,6 +569,7 @@ export interface AidDigestItem {
   headline: string;
   bullets: string[];
   impact: AidNewsImpact;
+  impactScore: AidImpactScore;
   filterTags: AidNewsFilterTag[];
   usedWeb: boolean;
   cachedAt: string;
@@ -574,6 +587,62 @@ export interface AidNewsCacheRow {
   usedWeb: boolean;
   fetchedAt: string;
   expiresAt: string;
+}
+
+export interface AidFinPulseSummary {
+  headline: string;
+  bullets: string[];
+  impact: AidNewsImpact;
+}
+
+export interface AidFinPulseItem {
+  id: string;
+  handle: string;
+  displayName: string;
+  sourceUrl: string;
+  publishedAt: string;
+  headline: string;
+  bullets: string[];
+  impact: AidNewsImpact;
+  impactScore: AidImpactScore;
+  tickers: string[];
+  tags: string[];
+  cachedAt: string;
+  portfolioRelevant: boolean;
+}
+
+export interface AidSocialPostRow {
+  id: string;
+  handle: string;
+  postKey: string;
+  sourceUrl: string;
+  publishedAt: string;
+  headline: string;
+  summaryJson: string;
+  tickersJson: string;
+  tagsJson: string;
+  fetchedAt: string;
+  expiresAt: string;
+}
+
+export interface AidStatusPayload {
+  newCount: number;
+  caughtUp: boolean;
+  breakdown: {
+    finPulse: number;
+    digest: number;
+    earningsRecap: number;
+    alerts: number;
+  };
+  briefing: string | null;
+  marketSession: "pre" | "open" | "after" | "closed";
+  warrenNudge: {
+    kind: "mover" | "earnings" | "concentration";
+    ticker: string;
+    movePct?: number;
+    concentrationPct?: number;
+    prompt: string;
+  } | null;
 }
 
 /* ── Alpha Intelligence types ──────────────────────────────── */

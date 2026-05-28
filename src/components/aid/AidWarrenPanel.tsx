@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useTrack } from "@/lib/use-track";
+import type { AidStatusPayload } from "@/lib/types";
+import AidWarrenNudge from "./AidWarrenNudge";
 
 const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
 
@@ -22,7 +24,21 @@ function useIsLgUp() {
   return isLgUp;
 }
 
-export default function AidWarrenPanel({ hasHoldings }: { hasHoldings: boolean }) {
+interface Props {
+  hasHoldings: boolean;
+  warrenNudge?: AidStatusPayload["warrenNudge"];
+  triggerPrompt?: string | null;
+  onWarrenAsk?: (prompt: string) => void;
+  onTriggerPromptConsumed?: () => void;
+}
+
+export default function AidWarrenPanel({
+  hasHoldings,
+  warrenNudge,
+  triggerPrompt,
+  onWarrenAsk,
+  onTriggerPromptConsumed,
+}: Props) {
   const { t } = useI18n();
   const { holdings } = usePortfolio();
   const track = useTrack();
@@ -69,12 +85,24 @@ export default function AidWarrenPanel({ hasHoldings }: { hasHoldings: boolean }
     track("aid_warren_chip_used", { prompt: prompt.slice(0, 80) });
   };
 
+  const nudgeBlock =
+    warrenNudge && onWarrenAsk ? (
+      <AidWarrenNudge
+        nudge={warrenNudge}
+        onAsk={(prompt) => {
+          onWarrenAsk(prompt);
+          if (!isLgUp) setMobileOpen(true);
+        }}
+      />
+    ) : null;
+
   if (isLgUp) {
     return (
       <section
         aria-label={t("warrenName")}
-        className="lg:sticky lg:top-24 lg:z-30 lg:w-full lg:self-start"
+        className="lg:sticky lg:top-24 lg:z-30 lg:w-full lg:self-start space-y-4"
       >
+        {nudgeBlock}
         {badges}
         <WarrenDrawer
           embedded
@@ -83,13 +111,16 @@ export default function AidWarrenPanel({ hasHoldings }: { hasHoldings: boolean }
           onClose={() => {}}
           suggestionPrompts={suggestionPrompts}
           onSuggestionClick={handleChip}
+          triggerPrompt={triggerPrompt}
+          onTriggerPromptConsumed={onTriggerPromptConsumed}
         />
       </section>
     );
   }
 
   return (
-    <section aria-label={t("warrenName")} className="lg:hidden">
+    <section aria-label={t("warrenName")} className="lg:hidden space-y-4">
+      {nudgeBlock}
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
@@ -111,6 +142,8 @@ export default function AidWarrenPanel({ hasHoldings }: { hasHoldings: boolean }
         onClose={() => setMobileOpen(false)}
         suggestionPrompts={suggestionPrompts}
         onSuggestionClick={handleChip}
+        triggerPrompt={triggerPrompt}
+        onTriggerPromptConsumed={onTriggerPromptConsumed}
       />
     </section>
   );

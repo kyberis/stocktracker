@@ -16,6 +16,7 @@ import {
 import { fetchFinnhubPortfolioNews } from "@/lib/api-providers/finnhub-news";
 import { rankPortfolioNewsForTickers } from "@/lib/portfolio-news-rank";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
+import { withDigestImpactScore, sortByImpactScore } from "@/lib/aid/impact-score";
 import { summarizeAidDigestItem } from "@/lib/aid/summarize-digest";
 import { searchTavilyForTicker } from "@/lib/aid/tavily-search";
 import { earningsEventKey, earningsExpiresAt } from "@/lib/aid/earnings-keys";
@@ -38,7 +39,7 @@ function cacheRowToItem(
   if (!row) return null;
   const summary = parseAidDigestSummary(row.summaryJson);
   if (!summary) return null;
-  return {
+  return withDigestImpactScore({
     id: row.id,
     ticker: row.ticker,
     movePct,
@@ -49,7 +50,7 @@ function cacheRowToItem(
     usedWeb: row.usedWeb,
     cachedAt: row.fetchedAt,
     eventKey: row.eventKey,
-  };
+  });
 }
 
 function primaryTicker(article: NewsArticle, tickers: string[]): string {
@@ -224,18 +225,20 @@ export async function buildAidDigest(args: {
       const pct = moveByTicker.get(ticker.toUpperCase());
       const tags: AidNewsFilterTag[] = ["news"];
       if (pct != null && Math.abs(pct) >= 3) tags.push("move");
-      items.push({
-        id: randomUUID(),
-        ticker,
-        movePct: pct ?? null,
-        headline: article.title,
-        bullets: [(article.summary || article.title).slice(0, 200)],
-        impact: "medium",
-        filterTags: tags,
-        usedWeb: false,
-        cachedAt: new Date().toISOString(),
-        eventKey: articleEventKey(article),
-      });
+      items.push(
+        withDigestImpactScore({
+          id: randomUUID(),
+          ticker,
+          movePct: pct ?? null,
+          headline: article.title,
+          bullets: [(article.summary || article.title).slice(0, 200)],
+          impact: "medium",
+          filterTags: tags,
+          usedWeb: false,
+          cachedAt: new Date().toISOString(),
+          eventKey: articleEventKey(article),
+        }),
+      );
     }
   }
 
@@ -244,19 +247,21 @@ export async function buildAidDigest(args: {
     if (!ticker) continue;
     const eventKey = earningsEventKey(ticker, today);
     if (items.some((i) => i.eventKey === eventKey)) continue;
-    items.push({
-      id: randomUUID(),
-      ticker,
-      movePct: moveByTicker.get(ticker) ?? null,
-      headline: ev.name || `${ticker} earnings today`,
-      bullets: [(ev.details || `${ticker} reports earnings today.`).slice(0, 240)],
-      impact: "medium",
-      filterTags: ["earnings"],
-      usedWeb: false,
-      cachedAt: new Date().toISOString(),
-      eventKey,
-    });
+    items.push(
+      withDigestImpactScore({
+        id: randomUUID(),
+        ticker,
+        movePct: moveByTicker.get(ticker) ?? null,
+        headline: ev.name || `${ticker} earnings today`,
+        bullets: [(ev.details || `${ticker} reports earnings today.`).slice(0, 240)],
+        impact: "medium",
+        filterTags: ["earnings"],
+        usedWeb: false,
+        cachedAt: new Date().toISOString(),
+        eventKey,
+      }),
+    );
   }
 
-  return { items: items.slice(0, 12), earningsTodayCount };
+  return { items: sortByImpactScore(items).slice(0, 12), earningsTodayCount };
 }

@@ -7,20 +7,10 @@ import { useTrack } from "@/lib/use-track";
 import { formatPercent } from "@/lib/utils";
 import type { AidDigestItem } from "@/lib/types";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
+import { withDigestImpactScore, sortByImpactScore } from "@/lib/aid/impact-score";
+import AidImpactBadge from "./AidImpactBadge";
 
 type Filter = "all" | "earnings" | "move";
-
-function impactClass(impact: AidDigestItem["impact"]): string {
-  if (impact === "high") return "bg-red-500/15 text-red-600 dark:text-red-400";
-  if (impact === "low") return "bg-[color:var(--surface-highlight)] text-[color:var(--muted)]";
-  return "bg-amber-500/15 text-amber-800 dark:text-amber-200";
-}
-
-function impactLabel(impact: AidDigestItem["impact"], t: (k: string) => string): string {
-  if (impact === "high") return t("aidImpactHigh");
-  if (impact === "low") return t("aidImpactLow");
-  return t("aidImpactMedium");
-}
 
 function matchesFilter(item: AidDigestItem, filter: Filter): boolean {
   if (filter === "all") return true;
@@ -53,11 +43,13 @@ export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean })
 
   const enrichItems = useCallback(
     (raw: AidDigestItem[]) =>
-      raw.map((item) => {
-        const q = quotes[item.ticker];
-        const movePct = q?.regularMarketChangePercent ?? item.movePct;
-        return { ...item, movePct: movePct ?? null };
-      }),
+      sortByImpactScore(
+        raw.map((item) => {
+          const q = quotes[item.ticker];
+          const movePct = q?.regularMarketChangePercent ?? item.movePct;
+          return withDigestImpactScore({ ...item, movePct: movePct ?? null });
+        }),
+      ),
     [quotes],
   );
 
@@ -136,7 +128,7 @@ export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean })
   ];
 
   return (
-    <section className="card rounded-[var(--radius-card)] p-4" aria-label={t("aidNewsTitle")}>
+    <section id="aid-news" className="card rounded-[var(--radius-card)] p-4" aria-label={t("aidNewsTitle")}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-[color:var(--foreground)]">{t("aidNewsTitle")}</h3>
         <div className="flex items-center gap-2">
@@ -223,9 +215,7 @@ export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean })
                     {formatPercent(move)}
                   </span>
                 )}
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${impactClass(item.impact)}`}>
-                  {impactLabel(item.impact, t)}
-                </span>
+                <AidImpactBadge impact={item.impact} impactScore={item.impactScore} />
                 {item.usedWeb && (
                   <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
                     {t("aidWebSaved")}

@@ -7,6 +7,7 @@ import {
 import { listCalendarEvents, listHoldings } from "@/lib/db";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { summarizeAidDigestItem } from "@/lib/aid/summarize-digest";
+import { withDigestImpactScore, sortByImpactScore } from "@/lib/aid/impact-score";
 import { searchTavilyForTicker } from "@/lib/aid/tavily-search";
 import {
   earningsEventKey,
@@ -31,7 +32,7 @@ function cacheRowToItem(
   const tags = summary.filterTags.includes("earnings")
     ? summary.filterTags
     : (["earnings", ...summary.filterTags] as AidDigestItem["filterTags"]);
-  return {
+  return withDigestImpactScore({
     id: row.id,
     ticker: row.ticker,
     movePct,
@@ -42,7 +43,7 @@ function cacheRowToItem(
     usedWeb: row.usedWeb,
     cachedAt: row.fetchedAt,
     eventKey: row.eventKey,
-  };
+  });
 }
 
 function sortByReportDateDesc(a: AidDigestItem, b: AidDigestItem): number {
@@ -184,6 +185,6 @@ export async function buildAidEarningsRecap(args: {
     }
   }
 
-  const items = [...byKey.values()].sort(sortByReportDateDesc).slice(0, MAX_DISPLAY);
+  const items = sortByImpactScore([...byKey.values()]).slice(0, MAX_DISPLAY);
   return { items };
 }
