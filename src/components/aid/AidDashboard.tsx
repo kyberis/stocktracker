@@ -10,6 +10,7 @@ import { useTrack } from "@/lib/use-track";
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import CloverToLogo from "@/components/CloverToLogo";
 import AidPortfolioCard from "./AidPortfolioCard";
+import AidHoldingsLookup from "./AidHoldingsLookup";
 import AidEmptyMain from "./AidEmptyMain";
 import AidNewsDigest from "./AidNewsDigest";
 import AidExtrasRow from "./AidExtrasRow";
@@ -91,6 +92,7 @@ export default function AidDashboard() {
           ) : (
             <>
               <AidPortfolioCard holdings={holdings} cashEntries={investmentCash} />
+              <AidHoldingsLookup holdings={holdings} />
               <AidNewsDigest hasHoldings={hasHoldings} />
               <AidExtrasRow holdings={holdings} cashEntries={investmentCash} />
               <AidShortcutsSection hasHoldings={hasHoldings} />

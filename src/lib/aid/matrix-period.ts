@@ -13,3 +13,20 @@ export function matrixCellToPeriodStat(cell: MatrixCell | undefined): PeriodStat
   if (cell.kind === "currency") return { pct: null, abs: cell.value ?? null, unavailable: false };
   return { pct: null, abs: null, unavailable: false };
 }
+
+/** Fill missing € change from % and portfolio value (end-of-period value). */
+export function enrichPeriodStatAbs(
+  stat: PeriodStatValue,
+  portfolioValue: number,
+  dayAbsFallback?: number | null,
+): PeriodStatValue {
+  if (stat.unavailable) return stat;
+  let { pct, abs } = stat;
+  if (pct != null && abs == null && dayAbsFallback != null && Number.isFinite(dayAbsFallback)) {
+    abs = dayAbsFallback;
+  } else if (pct != null && abs == null && portfolioValue > 0) {
+    const r = pct / 100;
+    abs = portfolioValue * (r / (1 + r));
+  }
+  return { pct, abs, unavailable: false };
+}

@@ -23,12 +23,17 @@ interface Props {
 function cellText(
   value: number | undefined,
   kind: "percent" | "empty",
-  currency: string,
   stealthMode: boolean,
 ): string {
   if (kind === "empty" || value == null) return "—";
   if (stealthMode) return "•••";
   return formatPercent(value);
+}
+
+function pnlColorClass(value: number | undefined): string {
+  if (value == null || Number.isNaN(value) || value === 0) return "text-[color:var(--muted)]";
+  if (value > 0) return "text-emerald-600 dark:text-emerald-400";
+  return "text-red-500 dark:text-red-400";
 }
 
 export default function AidAssetTable({ holdings, cashEntries, onRowClick }: Props) {
@@ -84,14 +89,31 @@ export default function AidAssetTable({ holdings, cashEntries, onRowClick }: Pro
             if (value <= 0 && typeKey !== "cash") return null;
 
             const row = typeKey === "cash" ? null : matrixByKey.get(typeKey as "stock" | "etf" | "crypto");
-            const periodCell = (period: MatrixPeriodKey) => {
-              if (typeKey === "cash") return "—";
+            const periodCell = (
+              period: MatrixPeriodKey,
+            ): { text: string; toneValue: number | undefined } => {
+              if (typeKey === "cash") return { text: "—", toneValue: undefined };
               const cell = row?.cells[period];
-              if (!cell || cell.kind === "pro") return "—";
+              if (!cell || cell.kind === "pro") return { text: "—", toneValue: undefined };
               if (displayMode === "currency" && cell.kind === "currency") {
-                return stealthMode ? "•••" : formatCurrency(cell.value ?? 0, activePortfolioCurrency);
+                const v = cell.value ?? 0;
+                return {
+                  text: stealthMode ? "•••" : formatCurrency(v, activePortfolioCurrency),
+                  toneValue: v,
+                };
               }
-              return cellText(cell.value, cell.kind === "empty" ? "empty" : "percent", activePortfolioCurrency, stealthMode);
+              const v = cell.kind === "empty" ? undefined : cell.value;
+              return {
+                text: cellText(v, cell.kind === "empty" ? "empty" : "percent", stealthMode),
+                toneValue: v,
+              };
+            };
+
+            const renderPeriodTd = (period: MatrixPeriodKey) => {
+              const { text, toneValue } = periodCell(period);
+              return (
+                <td className={`py-2.5 text-right tabular-nums ${pnlColorClass(toneValue)}`}>{text}</td>
+              );
             };
 
             return (
@@ -104,9 +126,9 @@ export default function AidAssetTable({ holdings, cashEntries, onRowClick }: Pro
                 <td className="py-2.5 text-right tabular-nums text-[color:var(--foreground)]">
                   {stealthMode ? "•••" : formatCurrency(value, activePortfolioCurrency)}
                 </td>
-                <td className="py-2.5 text-right tabular-nums text-[color:var(--muted)]">{periodCell("today")}</td>
-                <td className="py-2.5 text-right tabular-nums text-[color:var(--muted)]">{periodCell("oneWeek")}</td>
-                <td className="py-2.5 text-right tabular-nums text-[color:var(--muted)]">{periodCell("oneMonth")}</td>
+                {renderPeriodTd("today")}
+                {renderPeriodTd("oneWeek")}
+                {renderPeriodTd("oneMonth")}
               </tr>
             );
           })}

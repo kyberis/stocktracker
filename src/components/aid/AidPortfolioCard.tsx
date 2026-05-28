@@ -7,7 +7,7 @@ import { useStealthMode } from "@/lib/stealth-context";
 import { useTrack } from "@/lib/use-track";
 import { usePortfolioHomeData } from "@/components/dashboard-v2/use-portfolio-home-data";
 import { usePortfolioPerformanceMatrix } from "@/hooks/use-portfolio-performance-matrix";
-import { matrixCellToPeriodStat } from "@/lib/aid/matrix-period";
+import { enrichPeriodStatAbs, matrixCellToPeriodStat } from "@/lib/aid/matrix-period";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import type { CashEntry, Holding } from "@/lib/types";
 import AidAssetTable from "./AidAssetTable";
@@ -69,24 +69,29 @@ export default function AidPortfolioCard({ holdings, cashEntries }: Props) {
   const allRow = useMemo(() => rows.find((r) => r.assetKey === "all"), [rows]);
 
   const periodStats = useMemo(() => {
-    const day = matrixCellToPeriodStat(allRow?.cells.today);
-    const week = matrixCellToPeriodStat(allRow?.cells.oneWeek);
-    const month = matrixCellToPeriodStat(allRow?.cells.oneMonth);
+    const portfolioValue = totals.totalCurrentEUR;
+    const enrich = (stat: ReturnType<typeof matrixCellToPeriodStat>, useDayFallback: boolean) =>
+      enrichPeriodStatAbs(
+        stat,
+        portfolioValue,
+        useDayFallback ? dayGainLoss : null,
+      );
 
-    if (!allRow && dayGainLossPercent != null) {
-      return [
-        { key: "day" as const, label: t("aidPeriodDay"), stat: { pct: dayGainLossPercent, abs: dayGainLoss, unavailable: false } },
-        { key: "week" as const, label: t("aidPeriodWeek"), stat: week },
-        { key: "month" as const, label: t("aidPeriodMonth"), stat: month },
-      ];
-    }
+    const dayRaw =
+      allRow?.cells.today != null
+        ? matrixCellToPeriodStat(allRow.cells.today)
+        : { pct: dayGainLossPercent, abs: dayGainLoss, unavailable: false };
+    const day =
+      dayRaw.pct != null || dayRaw.abs != null
+        ? enrich(dayRaw, true)
+        : enrich({ pct: dayGainLossPercent, abs: dayGainLoss, unavailable: false }, true);
 
     return [
-      { key: "day" as const, label: t("aidPeriodDay"), stat: day.pct != null || day.abs != null ? day : { pct: dayGainLossPercent, abs: dayGainLoss, unavailable: false } },
-      { key: "week" as const, label: t("aidPeriodWeek"), stat: week },
-      { key: "month" as const, label: t("aidPeriodMonth"), stat: month },
+      { key: "day" as const, label: t("aidPeriodDay"), stat: day },
+      { key: "week" as const, label: t("aidPeriodWeek"), stat: enrich(matrixCellToPeriodStat(allRow?.cells.oneWeek), false) },
+      { key: "month" as const, label: t("aidPeriodMonth"), stat: enrich(matrixCellToPeriodStat(allRow?.cells.oneMonth), false) },
     ];
-  }, [allRow, dayGainLoss, dayGainLossPercent, t]);
+  }, [allRow, dayGainLoss, dayGainLossPercent, totals.totalCurrentEUR, t]);
 
   const selectedStat = periodStats.find((p) => p.key === period)?.stat ?? periodStats[0].stat;
   const heroFormatted = formatPeriodStat(selectedStat, activePortfolioCurrency, stealthMode);
@@ -136,11 +141,11 @@ export default function AidPortfolioCard({ holdings, cashEntries }: Props) {
               isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
             }`}
           >
-            {heroFormatted.primary}
+            <span>{heroFormatted.primary}</span>
             {heroFormatted.secondary ? (
-              <span className="ml-1">{heroFormatted.secondary}</span>
+              <span className="ml-1.5 font-medium">{heroFormatted.secondary}</span>
             ) : null}
-            <span className="ml-1 text-[color:var(--muted)]">
+            <span className="ml-1.5 text-[color:var(--muted)]">
               {period === "day" ? t("todayLabel") : period === "week" ? t("aidPeriodWeek") : t("aidPeriodMonth")}
             </span>
           </div>

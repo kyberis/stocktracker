@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "feature",
+        text: "AID holdings lookup: search your portfolio positions from the dashboard and jump to stock detail or intelligence pages.",
+        translations: {
+          es: "Buscador AID: busca posiciones de tu cartera en el panel y abre la ficha o intelligence de cada valor.",
+        },
+      },
+      {
         type: "fix",
         text: "AID news section: clearer empty states per filter, more tickers supported (e.g. NOVO-B), earnings calendar rows without waiting for AI cache, and Movement filter uses ±3% day change.",
         translations: {
