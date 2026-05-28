@@ -56,7 +56,7 @@ export default function AidShortcutsSection({ hasHoldings }: { hasHoldings: bool
       <section className="card rounded-[var(--radius-card)] p-4">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-[color:var(--foreground)]">{t("aidMoatsSaved")}</h3>
-          <Link href="/tools/moat" className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+          <Link href="/tools/evaluation" className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
             {t("aidOpenTools")}
           </Link>
         </div>

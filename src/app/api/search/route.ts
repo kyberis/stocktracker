@@ -9,6 +9,14 @@ export const dynamic = "force-dynamic";
 
 const yahoo = new YahooProvider();
 
+async function fallbackToYahooSearch(query: string) {
+  try {
+    return await yahoo.search(query);
+  } catch {
+    return [];
+  }
+}
+
 export const GET = withMetrics("/api/search", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
@@ -22,11 +30,15 @@ export const GET = withMetrics("/api/search", async (request: NextRequest) => {
 
   if (premiumSearch) {
     if (!getGlobalAlphaVantageApiKey() && !getGlobalFmpApiKey()) {
-      return Response.json([]);
+      const fallback = await fallbackToYahooSearch(query);
+      return Response.json(fallback);
     }
     const session = await getSessionFromRequest(request);
     const resolved = await resolvePremiumStockDataProvider(session?.userId ?? null, "search");
-    if (!resolved) return Response.json([]);
+    if (!resolved) {
+      const fallback = await fallbackToYahooSearch(query);
+      return Response.json(fallback);
+    }
     try {
       const results = await resolved.provider.search(query);
       return Response.json(results, {
@@ -34,7 +46,8 @@ export const GET = withMetrics("/api/search", async (request: NextRequest) => {
       });
     } catch (err) {
       console.error("Premium search failed:", err instanceof Error ? err.message : err);
-      return Response.json([]);
+      const fallback = await fallbackToYahooSearch(query);
+      return Response.json(fallback);
     }
   }
 
