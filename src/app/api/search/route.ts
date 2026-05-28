@@ -41,6 +41,12 @@ export const GET = withMetrics("/api/search", async (request: NextRequest) => {
     }
     try {
       const results = await resolved.provider.search(query);
+      if (!Array.isArray(results) || results.length === 0) {
+        const fallback = await fallbackToYahooSearch(query);
+        return Response.json(fallback, {
+          headers: { "Cache-Control": "public, max-age=30, stale-while-revalidate=120" },
+        });
+      }
       return Response.json(results, {
         headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
       });
