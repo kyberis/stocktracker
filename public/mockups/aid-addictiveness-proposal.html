@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>trefolio AID — Addictiveness proposal</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--background:#07111d;--foreground:#edf4ff;--card:rgba(10,16,26,.9);--border:rgba(154,174,209,.14);--muted:#8ea1bf;--accent:#1dd1a1;--surface-soft:rgba(255,255,255,.03);--surface-highlight:rgba(255,255,255,.045);--radius-card:18px;--gain:#34d399;--loss:#f87171}
+    body{font-family:"DM Sans",system-ui,sans-serif;background:linear-gradient(180deg,#07111d,#0b1627);color:var(--foreground);padding:20px;line-height:1.5}
+    .wrap{max-width:80rem;margin:0 auto}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-card);padding:16px;margin-bottom:16px}
+    .pill-row{display:flex;gap:4px;padding:3px;border:1px solid var(--border);border-radius:999px;background:var(--surface-soft);margin:12px 0}
+    .pill-row button{flex:1;min-height:36px;border:none;border-radius:999px;background:transparent;color:var(--muted);font:600 11px/1 "DM Sans",sans-serif;cursor:pointer}
+    .pill-row button.active{background:var(--surface-highlight);color:var(--foreground)}
+    .badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(52,211,153,.12);color:var(--gain)}
+    .layout{display:grid;gap:16px}@media(min-width:1024px){.layout{grid-template-columns:1fr 360px;align-items:start}}
+    h1{font-size:18px;margin-bottom:4px}.sub{font-size:12px;color:var(--muted)}
+    .item{border:1px solid var(--border);border-radius:12px;background:var(--surface-soft);padding:12px;margin-top:10px}
+    .btn{background:var(--accent);color:#07111d;border:none;border-radius:14px;padding:8px 16px;font-weight:600;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Proposal mockup — matches live /aid glass cards, pill filters, emerald accent (shipped in 2.5.32).</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn" type="button" onclick="show('proposed')">Proposed</button>
+      <button class="pill-row" style="width:auto;padding:8px 16px;border-radius:14px;background:var(--surface-soft);color:var(--foreground);cursor:pointer;border:1px solid var(--border)" type="button" onclick="show('current')">Current</button>
+    </div>
+    <div id="proposed" class="layout">
+      <div>
+        <section class="card">
+          <p class="sub" style="margin-bottom:8px">● Market open</p>
+          <h1>4 <span style="font-size:14px;font-weight:600">Since your last visit</span></h1>
+          <p class="sub" style="margin:8px 0">2 FinPulse · 1 news · 1 alert</p>
+          <div class="item" style="border-left:3px solid var(--accent)"><strong>Morning brief:</strong> NVDA leads movers (+4.2%). Powell patient on cuts. AAPL reports after the bell.</div>
+          <button class="btn" style="margin-top:12px" type="button">Catch up (4)</button>
+        </section>
+        <section class="card" id="finpulse">
+          <h1>FinPulse</h1>
+          <p class="sub">Market voices on X · AI summarized</p>
+          <div class="pill-row"><button class="active" type="button">For you</button><button type="button">Market voices</button></div>
+          <div class="item"><span class="badge">TSLA · holding</span> <span class="badge" style="background:rgba(245,158,11,.15);color:#fbbf24">Medium</span><p style="font-weight:600;margin:8px 0">Musk signals production ramp concerns</p><ul style="font-size:12px;color:var(--muted);padding-left:18px"><li>May affect TSLA sentiment near-term</li></ul></div>
+        </section>
+        <section class="card"><h1>What's happening · 48h</h1><div class="item"><strong>NVDA</strong> <span style="color:var(--gain)">+4.2%</span></div></section>
+        <section class="card"><h1>Portfolio value</h1><p style="font-size:30px;font-weight:600">€142,850</p></section>
+      </div>
+      <aside>
+        <section class="card" style="border-color:rgba(16,185,129,.3)"><h1 style="font-size:14px">Warren noticed</h1><p class="sub">NVDA top mover (+4.2%). Ask Warren?</p></section>
+        <section class="card"><h1 style="font-size:14px;color:var(--gain)">Warren</h1></section>
+      </aside>
+    </div>
+    <div id="current" class="layout" style="display:none">
+      <div>
+        <section class="card"><h1>#1 Portfolio pulse</h1></section>
+        <section class="card"><h1>#4 News digest (buried)</h1></section>
+      </div>
+    </div>
+  </div>
+  <script>
+    function show(id){document.getElementById('proposed').style.display=id==='proposed'?'grid':'none';document.getElementById('current').style.display=id==='current'?'grid':'none'}
+  </script>
+</body>
+</html>

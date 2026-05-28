@@ -12,6 +12,8 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `agent_missions` | [`src/lib/db/agent-office.ts`](../../src/lib/db/agent-office.ts) |
 | `agent_office_messages` | [`src/lib/db/agent-office.ts`](../../src/lib/db/agent-office.ts) |
 | `ai_logs` | [`src/lib/db/ai-logs.ts`](../../src/lib/db/ai-logs.ts) |
+| `aid_news_cache` | [`src/lib/db/aid-news-cache.ts`](../../src/lib/db/aid-news-cache.ts) |
+| `aid_social_posts` | [`src/lib/db/aid-social-posts.ts`](../../src/lib/db/aid-social-posts.ts) |
 | `analytics_events` | [`src/lib/db/analytics.ts`](../../src/lib/db/analytics.ts) |
 | `broker_integration_requests` | [`src/lib/db/broker-integration-requests.ts`](../../src/lib/db/broker-integration-requests.ts) |
 | `calendar_events` | [`src/lib/db/calendar-events.ts`](../../src/lib/db/calendar-events.ts) |
@@ -71,7 +73,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `snaptrade_connections` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `social_post_comments` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `social_post_images` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
-| `social_posts` | [`src/lib/db/feed.ts`](../../src/lib/db/feed.ts) |
+| `social_posts` | [`src/lib/db/aid-social-posts.ts`](../../src/lib/db/aid-social-posts.ts) |
 | `support_chat_conversations` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `telegram_chats` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `telegram_link_tokens` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
@@ -81,7 +83,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `transactions` | [`src/lib/db/admin-raw-export.ts`](../../src/lib/db/admin-raw-export.ts) |
 | `unsubscribe_tokens` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `user_connections` | [`src/lib/db/feed.ts`](../../src/lib/db/feed.ts) |
-| `user_settings` | [`src/lib/db/alerts.ts`](../../src/lib/db/alerts.ts) |
+| `user_settings` | [`src/lib/db/aid-user-state.ts`](../../src/lib/db/aid-user-state.ts) |
 | `user_settings_new` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `users` | [`src/lib/db/ai-logs.ts`](../../src/lib/db/ai-logs.ts) |
 | `watchlist` | [`src/lib/db/email-template-seeds.ts`](../../src/lib/db/email-template-seeds.ts) |

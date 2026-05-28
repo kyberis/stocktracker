@@ -45,8 +45,8 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     group: "Features",
   },
   aid_beta: {
-    label: "AID — Advanced Investor Dashboard",
-    description: "Beta control panel at /aid and Beta · AID CTA on the home dashboard. Portfolio pulse, scannable news, and Warren / Will / Clara column.",
+    label: "Investor Briefing (AID beta)",
+    description: "Beta briefing at /aid and home CTA when enabled. Portfolio pulse, FinPulse, scannable news, and Warren / Will / Clara column.",
     group: "Features",
   },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },

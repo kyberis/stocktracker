@@ -1,7 +1,7 @@
 # AID beta — compliance & accessibility sign-off
 
-**Feature:** Advanced Investor Dashboard (`/aid`, flag `aid_beta`)  
-**Last reviewed:** 2026-05-27  
+**Feature:** Investor Briefing (`/aid`, flag `aid_beta`; internal codename AID)  
+**Last reviewed:** 2026-05-28  
 **Status:** Ready for limited beta (staff + named testers)
 
 ## Legal (GDPR / financial)
@@ -13,8 +13,10 @@
 | Third-party processors documented | Done | Privacy Policy §5: Tavily, Clara, Will (2026-05-27) |
 | Sister apps (Clara/Will) server-to-server only | Done | `GET /api/aid/insights`; no browser calls to sister URLs with service token |
 | No new personal data fields in trefolio DB | Done | Reuses holdings, cache, IdP identity |
-| Tavily receives ticker + search query only | Done | `src/lib/aid/tavily-search.ts` |
-| OpenAI receives portfolio/news context for summaries | Done | Same stack as Warren; disclosed under OpenAI row |
+| Tavily receives ticker + search query only | Done | `tavily-search.ts` + FinPulse X handle queries (`build-finpulse.ts`) |
+| OpenAI receives portfolio/news context for summaries | Done | News digest + FinPulse + priority feed; Privacy Policy v2.5.33 |
+| Admin FinPulse handle list (`aid_finpulse_handles`) | Done | Settings UI + PUT `/api/admin/finpulse-handles` |
+| Impact score 1–5 + engagement telemetry | Done | `aid_return_within_24h`, `aid_section_viewed`, thresholds in product spec |
 
 **Residual:** Formal legal counsel review recommended before public marketing of AID.
 

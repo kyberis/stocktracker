@@ -57,3 +57,7 @@ jobs:
         run: npm run test:e2e -- e2e/aid-dashboard.spec.ts
         env:
           E2E: "1"
+          NEXTAUTH_SECRET: ci-build-secret
+          NEXTAUTH_URL: http://localhost:3000
+          TURSO_DATABASE_URL: libsql://fake.turso.io
+          TURSO_AUTH_TOKEN: fake

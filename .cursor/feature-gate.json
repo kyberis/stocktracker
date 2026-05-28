@@ -1,4 +1,4 @@
 {
-  "landingPageReviewed": false,
-  "notes": "Set landingPageReviewed=true in feature PRs when landing page update is intentionally not required."
+  "landingPageReviewed": true,
+  "notes": "Investor Briefing (/aid) remains beta behind aid_beta; landing page intentionally unchanged per landing-page rule until public launch."
 }

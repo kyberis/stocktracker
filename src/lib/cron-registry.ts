@@ -129,4 +129,10 @@ export const CRON_REGISTRY: CronJob[] = [
     schedule: "0 */6 * * *",
     description: "Pre-warm AID news digest cache for aid_beta users (earnings + portfolio news summaries)",
   },
+  {
+    name: "aid-finpulse",
+    path: "/api/cron/aid-finpulse",
+    schedule: "*/30 * * * *",
+    description: "Ingest FinPulse X influencer posts via Tavily for AID beta",
+  },
 ];

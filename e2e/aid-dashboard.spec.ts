@@ -16,7 +16,7 @@ test.describe("AID dashboard", () => {
     await page.goto("/aid");
     await dismissOverlays(page);
 
-    await expect(page.getByRole("heading", { name: "AID" })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: /Investor Briefing|Briefing de inversor/i })).toBeVisible({ timeout: 15000 });
     await expect(page.getByText(/Portfolio value|Valor del portafolio/i).first()).toBeVisible();
     await expect(page.locator("#aid-main")).toBeVisible();
   });
@@ -41,15 +41,34 @@ test.describe("AID dashboard", () => {
     await expect(page.getByRole("button", { name: /Warren/i })).toBeVisible({ timeout: 15000 });
   });
 
-  test("digest and insights APIs work with aid_beta", async ({ request }) => {
+  test("digest, feed, status and insights APIs work with aid_beta", async ({ request }) => {
     const digest = await request.get("/api/aid/digest");
     expect(digest.status()).toBe(200);
+
+    const feed = await request.get("/api/aid/feed");
+    expect(feed.status()).toBe(200);
+    const feedBody = await feed.json();
+    expect(feedBody).toHaveProperty("priority");
+
+    const status = await request.get("/api/aid/status");
+    expect(status.status()).toBe(200);
+
+    const finpulse = await request.get("/api/aid/finpulse?tab=market_voices");
+    expect(finpulse.status()).toBe(200);
 
     const insights = await request.get("/api/aid/insights");
     expect(insights.status()).toBe(200);
     const body = await insights.json();
     expect(body).toHaveProperty("clara");
     expect(body).toHaveProperty("will");
+  });
+
+  test("briefing and priority sections render for seeded user", async ({ page }) => {
+    await page.goto("/aid");
+    await dismissOverlays(page);
+
+    await expect(page.locator("#aid-finpulse")).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("#aid-news")).toBeVisible();
   });
 });
 

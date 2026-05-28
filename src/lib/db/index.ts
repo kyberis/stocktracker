@@ -557,6 +557,22 @@ export {
   parseAidDigestSummary,
 } from "./aid-news-cache";
 
+export {
+  getLastAidVisitAt,
+  setLastAidVisitAt,
+  getAidWarrenNudgeDate,
+  setAidWarrenNudgeDate,
+} from "./aid-user-state";
+
+export type { AidSocialPostRow } from "@/lib/types";
+export {
+  getAidSocialPost,
+  listAidSocialPosts,
+  listAidSocialPostsSince,
+  upsertAidSocialPost,
+  parseFinPulseSummary,
+} from "./aid-social-posts";
+
 export type { AiLogEntry, AiLogWithUser, InsertAiLogParams, GetAiLogsOptions } from "./ai-logs";
 export {
   insertAiLog,

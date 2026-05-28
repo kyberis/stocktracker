@@ -47,6 +47,9 @@ interface Props {
   embeddedClassName?: string;
   suggestionPrompts?: string[];
   onSuggestionClick?: (prompt: string) => void;
+  /** When set, sends this prompt once (AID Warren nudge). */
+  triggerPrompt?: string | null;
+  onTriggerPromptConsumed?: () => void;
 }
 
 function makeId(): string {
@@ -107,6 +110,8 @@ export default function WarrenDrawer({
   embeddedClassName,
   suggestionPrompts,
   onSuggestionClick,
+  triggerPrompt,
+  onTriggerPromptConsumed,
 }: Props) {
   const { t, language } = useI18n();
   const { userPlan } = usePlatform();
@@ -294,6 +299,17 @@ export default function WarrenDrawer({
       demoMode,
     ],
   );
+
+  const lastTriggerRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!triggerPrompt?.trim() || streaming) return;
+    if (lastTriggerRef.current === triggerPrompt) return;
+    lastTriggerRef.current = triggerPrompt;
+    onTriggerPromptConsumed?.();
+    setPendingFiles([]);
+    void sendMessage(triggerPrompt);
+  }, [triggerPrompt, streaming, sendMessage, onTriggerPromptConsumed]);
 
   const onProposalConfirmed = useCallback(() => {
     refreshHoldings?.();

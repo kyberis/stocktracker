@@ -2617,6 +2617,189 @@ function getColorBg(color: string): string {
     ?? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300";
 }
 
+function FinPulseHandlesCard() {
+  const [handles, setHandles] = useState<{ handle: string; displayName: string; tags: string[] }[]>([]);
+  const [customized, setCustomized] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [newHandle, setNewHandle] = useState("");
+  const [newDisplayName, setNewDisplayName] = useState("");
+  const [newTags, setNewTags] = useState("");
+
+  const load = () => {
+    fetch("/api/admin/finpulse-handles", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        setHandles(d.handles || []);
+        setCustomized(Boolean(d.customized));
+      })
+      .catch((err) => console.error("[SettingsTab] finpulse-handles load failed:", err))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const save = async (next: typeof handles) => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/finpulse-handles", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handles: next }),
+      });
+      const data = await res.json();
+      if (data.handles) {
+        setHandles(data.handles);
+        setCustomized(Boolean(data.customized));
+      }
+    } catch (err) {
+      console.error("[SettingsTab] finpulse-handles save failed:", err);
+    }
+    setSaving(false);
+  };
+
+  const handleAdd = () => {
+    const handle = newHandle.trim().replace(/^@/, "");
+    if (!handle) return;
+    if (handles.some((h) => h.handle.toLowerCase() === handle.toLowerCase())) return;
+    const tags = newTags
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean);
+    const next = [
+      ...handles,
+      { handle, displayName: newDisplayName.trim() || handle, tags },
+    ];
+    setNewHandle("");
+    setNewDisplayName("");
+    setNewTags("");
+    void save(next);
+  };
+
+  const handleRemove = (handle: string) => {
+    void save(handles.filter((h) => h.handle !== handle));
+  };
+
+  const handleReset = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/finpulse-handles", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reset: true }),
+      });
+      const data = await res.json();
+      if (data.handles) {
+        setHandles(data.handles);
+        setCustomized(false);
+      }
+    } catch (err) {
+      console.error("[SettingsTab] finpulse-handles reset failed:", err);
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="card p-6 space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Investor Briefing · FinPulse handles</h3>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+            Curated X accounts for FinPulse Market voices. Tavily cron searches these handles every 30 minutes.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void handleReset()}
+          disabled={saving || !customized}
+          className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-50"
+        >
+          Reset defaults
+        </button>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-gray-400 dark:text-slate-500">Loading…</p>
+      ) : (
+        <>
+          {handles.length > 0 && (
+            <div className="space-y-2">
+              {handles.map((h) => (
+                <div key={h.handle} className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 dark:border-slate-700 px-3 py-2 text-xs">
+                  <span className="font-mono font-semibold text-gray-900 dark:text-white">@{h.handle}</span>
+                  <span className="text-gray-600 dark:text-slate-300">{h.displayName}</span>
+                  {h.tags.map((tag) => (
+                    <span key={tag} className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                      {tag}
+                    </span>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(h.handle)}
+                    className="ml-auto text-gray-400 hover:text-red-500 transition-colors"
+                    aria-label={`Remove @${h.handle}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="border-t border-gray-200 dark:border-slate-700 pt-3 space-y-2">
+            <p className="text-xs font-medium text-gray-700 dark:text-slate-300">Add handle</p>
+            <div className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto] items-end">
+              <div>
+                <label className="block text-[10px] text-gray-500 dark:text-slate-400 mb-0.5">X handle</label>
+                <input
+                  type="text"
+                  value={newHandle}
+                  onChange={(e) => setNewHandle(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                  placeholder="federalreserve"
+                  className="w-full input-field text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-500 dark:text-slate-400 mb-0.5">Display name</label>
+                <input
+                  type="text"
+                  value={newDisplayName}
+                  onChange={(e) => setNewDisplayName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                  placeholder="Federal Reserve"
+                  className="w-full input-field text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-500 dark:text-slate-400 mb-0.5">Tags (comma)</label>
+                <input
+                  type="text"
+                  value={newTags}
+                  onChange={(e) => setNewTags(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                  placeholder="macro, rates"
+                  className="w-full input-field text-xs"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleAdd}
+                disabled={saving || !newHandle.trim()}
+                className="btn-primary text-xs px-3 py-[7px]"
+              >
+                {saving ? "Saving…" : "Add"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function DigestSendersCard() {
   const [domains, setDomains] = useState<{ value: string; label: string; color: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -2948,6 +3131,7 @@ export default function SettingsTab() {
         <AdConfigCard />
         <StripePricesCard />
         <CapacityCard />
+        <FinPulseHandlesCard />
         <DigestSendersCard />
         <CronJobsCard />
         <MoatAutoGenCard />

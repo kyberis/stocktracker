@@ -17,6 +17,75 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.33",
+    date: "2026-05-28",
+    title: "Investor Briefing polish",
+    titleTranslations: {
+      es: "Pulido del Briefing de inversor",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Admin FinPulse handles: manage curated X accounts for Market voices in Settings (aid_finpulse_handles platform setting).",
+        translations: {
+          es: "Admin handles FinPulse: gestiona cuentas X curadas para Voces del mercado en Ajustes (platform setting aid_finpulse_handles).",
+        },
+      },
+      {
+        type: "feature",
+        text: "Unified portfolio impact score (1–5) across news, FinPulse, and earnings — priority strip, sorted feeds, and GET /api/aid/feed.",
+        translations: {
+          es: "Impacto unificado en cartera (1–5) en noticias, FinPulse y resultados — tira prioritaria, feeds ordenados y GET /api/aid/feed.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Investor Briefing telemetry: aid_return_within_24h, aid_section_viewed, aid_feed_loaded, aid_priority_item_clicked; success thresholds documented.",
+        translations: {
+          es: "Telemetría del Briefing de inversor: aid_return_within_24h, aid_section_viewed, aid_feed_loaded, aid_priority_item_clicked; umbrales documentados.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.32",
+    date: "2026-05-28",
+    title: "AID addictiveness",
+    titleTranslations: {
+      es: "AID más adictivo",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Investor Briefing: the /aid beta is now labeled Investor Briefing in the UI (replacing the AID acronym) with a clearer subtitle about portfolio, news, and market voices.",
+        translations: {
+          es: "Briefing de inversor: la beta /aid se muestra como Briefing de inversor (en lugar del acrónimo AID) con un subtítulo más claro sobre cartera, noticias y voces del mercado.",
+        },
+      },
+      {
+        type: "feature",
+        text: "AID FinPulse: dual-tab feed (For you + Market voices) with AI summaries of influential X posts, Tavily ingestion cron, and portfolio relevance badges.",
+        translations: {
+          es: "FinPulse AID: feed con pestañas Para ti y Voces del mercado, resúmenes IA de posts de X, cron Tavily y badges de relevancia para tu cartera.",
+        },
+      },
+      {
+        type: "feature",
+        text: "AID briefing strip: since-your-last-visit counts, AI morning brief, catch-up CTA, and unread badge on the home AID entry.",
+        translations: {
+          es: "Tira de briefing AID: novedades desde la última visita, resumen matinal IA, CTA ponerse al día y badge en la entrada AID del home.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "AID layout reorder: FinPulse and news first, proactive Warren nudge (once per day), extras row sorted by urgency.",
+        translations: {
+          es: "Reorden AID: FinPulse y noticias primero, aviso proactivo de Warren (1/día), extras ordenados por urgencia.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.31",
     date: "2026-05-27",
     title: "Financial statements data",

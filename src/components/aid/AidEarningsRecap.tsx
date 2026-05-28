@@ -7,12 +7,8 @@ import { useTrack } from "@/lib/use-track";
 import { formatPercent } from "@/lib/utils";
 import { reportDateFromEarningsEventKey } from "@/lib/aid/earnings-keys";
 import type { AidDigestItem } from "@/lib/types";
-
-function impactClass(impact: AidDigestItem["impact"]): string {
-  if (impact === "high") return "bg-red-500/15 text-red-600 dark:text-red-400";
-  if (impact === "low") return "bg-[color:var(--surface-highlight)] text-[color:var(--muted)]";
-  return "bg-amber-500/15 text-amber-800 dark:text-amber-200";
-}
+import { withDigestImpactScore, sortByImpactScore } from "@/lib/aid/impact-score";
+import AidImpactBadge from "./AidImpactBadge";
 
 export default function AidEarningsRecap({ hasHoldings }: { hasHoldings: boolean }) {
   const { t } = useI18n();
@@ -37,7 +33,8 @@ export default function AidEarningsRecap({ hasHoldings }: { hasHoldings: boolean
       });
       if (!res.ok) throw new Error("earnings recap failed");
       const data = (await res.json()) as { items?: AidDigestItem[]; lookbackDays?: number };
-      setItems(Array.isArray(data.items) ? data.items : []);
+      const raw = Array.isArray(data.items) ? data.items : [];
+      setItems(sortByImpactScore(raw.map((item) => withDigestImpactScore(item))));
       setLookbackDays(data.lookbackDays ?? 21);
       track("aid_earnings_recap_loaded", { count: String((data.items ?? []).length) });
     } catch {
@@ -76,7 +73,7 @@ export default function AidEarningsRecap({ hasHoldings }: { hasHoldings: boolean
   if (!hasHoldings) return null;
 
   return (
-    <section className="card rounded-[var(--radius-card)] border border-amber-500/20 bg-amber-500/[0.03] p-4" aria-label={t("aidEarningsRecapTitle")}>
+    <section id="aid-earnings" className="card rounded-[var(--radius-card)] border border-amber-500/20 bg-amber-500/[0.03] p-4" aria-label={t("aidEarningsRecapTitle")}>
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-sm font-semibold text-[color:var(--foreground)]">{t("aidEarningsRecapTitle")}</h3>
@@ -139,6 +136,7 @@ export default function AidEarningsRecap({ hasHoldings }: { hasHoldings: boolean
                 <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-200">
                   {t("aidFilterEarnings")}
                 </span>
+                <AidImpactBadge impact={item.impact} impactScore={item.impactScore} />
                 <button
                   type="button"
                   onClick={() => void refreshTicker(item.ticker)}

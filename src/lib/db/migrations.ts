@@ -3462,6 +3462,45 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 117,
+    description: "AID visit tracking, FinPulse social posts cache",
+    up: async (client: Client) => {
+      const settingsCols = await client.execute("PRAGMA table_info(user_settings)");
+      const colNames = new Set(settingsCols.rows.map((r) => String(r.name)));
+      if (!colNames.has("last_aid_visit_at")) {
+        await client.execute({
+          sql: "ALTER TABLE user_settings ADD COLUMN last_aid_visit_at TEXT NOT NULL DEFAULT ''",
+        });
+      }
+      if (!colNames.has("aid_warren_nudge_date")) {
+        await client.execute({
+          sql: "ALTER TABLE user_settings ADD COLUMN aid_warren_nudge_date TEXT NOT NULL DEFAULT ''",
+        });
+      }
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS aid_social_posts (
+          id TEXT PRIMARY KEY,
+          handle TEXT NOT NULL,
+          post_key TEXT NOT NULL,
+          source_url TEXT NOT NULL DEFAULT '',
+          published_at TEXT NOT NULL DEFAULT '',
+          headline TEXT NOT NULL DEFAULT '',
+          summary_json TEXT NOT NULL DEFAULT '{}',
+          tickers_json TEXT NOT NULL DEFAULT '[]',
+          tags_json TEXT NOT NULL DEFAULT '[]',
+          fetched_at TEXT NOT NULL DEFAULT (datetime('now')),
+          expires_at TEXT NOT NULL DEFAULT ''
+        )
+      `);
+      await client.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_aid_social_posts_handle_key ON aid_social_posts(handle, post_key)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_aid_social_posts_fetched ON aid_social_posts(fetched_at DESC)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

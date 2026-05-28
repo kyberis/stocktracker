@@ -1,10 +1,10 @@
-# Advanced Investor Dashboard (AID)
+# Investor Briefing (AID — internal codename)
 
-> Beta control panel: portfolio pulse, scannable AI news, and Warren / Will / Clara — one screen to see how you're doing and what's happening.
+> Beta briefing at `/aid`: portfolio pulse, FinPulse, scannable AI news, and Warren / Will / Clara — one screen for “what changed” and “how am I doing?”
 
 ## 1. Summary
 
-**AID** is a feature-flagged (`aid_beta`) alternative landing experience for authenticated users. It answers “how am I doing and what’s happening?” without replacing the classic dashboard for all users. Entry is a **Beta · AID** CTA on the current home. Two states: **with holdings** (full panel) and **empty portfolio** (onboarding). HTML mockups: `public/mockups/control-panel-cockpit.html` and `control-panel-cockpit-empty.html`.
+**Investor Briefing** (internal codename **AID**, flag `aid_beta`) is a feature-flagged alternative landing experience. User-facing title: **Investor Briefing** / **Briefing de inversor**. Entry: **Beta** CTA on the classic home with unread badge from `/api/aid/status`. Route stays `/aid`. Mockups: `public/mockups/control-panel-cockpit*.html`, `aid-addictiveness-proposal.html`.
 
 ## 2. Status
 
@@ -20,92 +20,89 @@
 | Type | Path | Notes |
 |------|------|-------|
 | Page | `src/app/(app)/aid/page.tsx` | Client shell → `AidDashboard` |
-| CTA | Home dashboard (`/`) desktop + mobile | `AidBetaCta` when `aid_beta` |
-| API | `src/app/api/aid/*` | digest, refresh, insights |
-| Cron | `/api/cron/aid-digest` | Pre-warm cache every 6h |
-| Component | `src/components/aid/*` | 15 components |
+| CTA | Home dashboard (`/`) | `AidBetaCta` when `aid_beta` |
+| API | `src/app/api/aid/*` | digest, status, feed, finpulse, refresh, insights |
+| Cron | `/api/cron/aid-digest` (6h), `/api/cron/aid-finpulse` (30m) | Pre-warm caches |
+| Admin | Settings → FinPulse handles | `GET/PUT /api/admin/finpulse-handles` |
+| Components | `src/components/aid/*` | Briefing, priority strip, FinPulse, digest, etc. |
 
 ## 4. Data model
 
-- `aid_news_cache` — per-user ticker digest summaries (migration v116)
-- Reuse: holdings, quotes, moat cache, dividend calendar, rebalance targets, calendar events, alerts
+- `aid_news_cache` — per-user ticker digest summaries (v116)
+- `aid_social_posts` — FinPulse raw posts + AI summaries (v117)
+- `user_settings.last_aid_visit_at`, `aid_warren_nudge_date` (v117)
+- Platform setting `aid_finpulse_handles` — curated X accounts (JSON)
+- Reuse: holdings, quotes, alerts, calendar events, rebalance targets
 
 ## 5. API surface
 
-| Method | Route | Auth | Tier | Description |
-|--------|-------|------|------|-------------|
-| GET | `/api/aid/digest` | user | `aid_beta` | Cached 48h news rows for portfolio |
-| POST | `/api/aid/refresh` | user | `aid_beta` | Force web refresh for one ticker |
-| GET | `/api/aid/insights` | user | `aid_beta` | Clara savings + Will recent tags |
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/api/aid/digest` | user + `aid_beta` | 48h news rows (sorted by impact score) |
+| GET | `/api/aid/status` | user + `aid_beta` | Since-last-visit counts, briefing, Warren nudge |
+| POST | `/api/aid/status` | user + `aid_beta` | Mark visit (`last_aid_visit_at`) |
+| GET | `/api/aid/feed` | user + `aid_beta` | Top-5 priority items merged across sources |
+| GET | `/api/aid/finpulse` | user + `aid_beta` | FinPulse (`tab=foryou\|market_voices`) |
+| GET | `/api/aid/earnings-recap` | user + `aid_beta` | Recent earnings AI summaries |
+| POST | `/api/aid/refresh` | user + `aid_beta` | Force web refresh for one ticker |
+| GET | `/api/aid/insights` | user + `aid_beta` | Clara + Will cards |
+| GET/PUT | `/api/admin/finpulse-handles` | admin | Curated FinPulse X handles |
 
-Warren moat: reuse `/api/warren/chat` and stock evaluation routes.
+## 6. UI surface (with holdings)
 
-## 6. UI surface
+**Main column order:**
 
-### Chrome (reuse)
+1. Briefing strip (`AidBriefingStrip`) — session dot, new counts, AI brief, catch-up CTA
+2. Priority strip (`AidPriorityStrip`) — top 5 cross-source items by impact 1–5
+3. FinPulse (`AidFinPulse`) — For you / Market voices
+4. News digest (`AidNewsDigest`) — All / Earnings / Movement
+5. Earnings recap (`AidEarningsRecap`)
+6. Portfolio pulse + allocation/dividend modals
+7. Extras row (alerts prioritized)
+8. Holdings lookup + shortcuts
 
-- `MarketTickerBar`, `AppNav`, `AppPortfolioCommandStrip` / `DashboardToolbar`
+**Empty:** welcome CTAs + FinPulse Market voices only (no For you tab).
 
-### Main (with holdings)
+**Sidebar:** Warren (proactive nudge 1/day), Will, Clara.
 
-- Portfolio value + **Allocation** + **Dividends** modals
-- Period tabs: day / week / month; asset-type table (no chart v1)
-- News digest with filters, refresh, web/cache badges
-- Extras row: movers, vs target, events (7d), alerts, dividends, concentration
-- Moats saved + Strategies saved shortcuts
+## 7. Impact score (1–5)
 
-### Main (empty)
-
-- €0, welcome CTAs: Import, Add stock, View demo
-- Empty news / moats / strategies preview states
-
-### Right column
-
-- Warren chat (embedded desktop; collapsible sheet mobile)
-- Will tags + excerpt (via insights API)
-- Clara free investing bucket + broker cash note
-
-## 7. Business logic
-
-- Allocation: `computeAllocationByType`, taxonomy donuts, rebalance drift via `/api/rebalance-targets`
-- Dividends: `computeEstimatedDividends`, yield by asset type, ex-div calendar
-- News: earnings detection → Tavily (optional) → LLM summary → `aid_news_cache`
-- Insights: Clara/Will internal office APIs via `resolveOfficeIdentity`
-- Empty: `holdings.length === 0 && cashEntries.length === 0`
+- Computed in `src/lib/aid/impact-score.ts` from AI `impact` (high/medium/low) + portfolio signals (move %, earnings tag, FinPulse relevance).
+- Shown via `AidImpactBadge`; feeds sorted descending by score.
+- Merged priority list: `mergePriorityFeed()` → `/api/aid/feed`.
 
 ## 8. External dependencies
 
-- `TAVILY_API_KEY` (optional) — earnings web search
-- OpenAI / AI Gateway — summaries
-- `CLARA_BASE_URL`, `WILL_BASE_URL`, `IDP_SERVICE_TOKEN` — sister app insights
-- Market data providers (existing quotes)
+- Tavily — earnings web search + FinPulse X discovery
+- OpenAI / AI Gateway — summaries (digest, FinPulse, briefing)
+- Clara / Will office APIs — insights card
+- Market data — quotes for movers and impact
 
-## 9. Currency / FX / tax implications
+## 9. Telemetry
 
-- Display in user/portfolio currency; storage EUR-base
-- Dividend amounts estimated
-- Page footer: financial + AI + beta disclaimers
+| Event | Purpose |
+|-------|---------|
+| `aid_page_viewed` | Page load (`state`: empty \| holdings) |
+| `aid_return_within_24h` | Repeat visit within 24h (`hours`) |
+| `aid_section_viewed` | First scroll into section (`section`, `order`) |
+| `aid_feed_loaded` | Priority strip loaded (`count`, `topScore`) |
+| `aid_priority_item_clicked` | User jumps to section from priority strip |
+| `aid_briefing_shown`, `aid_caught_up_dismissed` | Briefing engagement |
+| `aid_finpulse_tab`, `aid_finpulse_post_clicked` | FinPulse |
+| `aid_warren_nudge_clicked` | Proactive Warren |
 
-## 10. i18n
+### Success thresholds (beta targets)
 
-- Keys: `aid*` in `src/locales/en.ts` (source of truth), `es.ts`; other locales fall back to EN via `useI18n`
+| Metric | Target | Notes |
+|--------|--------|-------|
+| DAU/WAU on `/aid` | ≥ 25% of `aid_beta` WAU | North star habit |
+| Median visits / week | ≥ 3 among active AID users | Check-in ritual |
+| `aid_return_within_24h` rate | ≥ 30% of visits | Return hook working |
+| `aid_section_viewed` finpulse before news | ≥ 40% of sessions with both | Layout hypothesis |
+| Priority strip CTR | ≥ 15% click `aid_priority_item_clicked` / `aid_feed_loaded` | Impact strip utility |
 
-## 11. Permissions / tier gating / rate limits
+## 10. Related docs
 
-- `aid_beta` feature flag required
-- Digest generation capped per request (`maxGenerate` in `buildAidDigest`)
-- Warren quotas unchanged
-
-## 12. Telemetry
-
-- `aid_beta_cta_clicked`
-- `aid_page_viewed` (`state`: empty | holdings)
-- `aid_allocation_opened`, `aid_dividends_opened`
-- `aid_digest_loaded`, `aid_digest_refresh`, `aid_news_refresh_requested`
-- `aid_warren_chip_used`
-
-## 13. Related docs
-
-- Mockups: `public/mockups/control-panel-cockpit*.html`
+- Compliance: `knowledge/compliance/aid-beta-compliance.md`
 - E2E: `e2e/aid-dashboard.spec.ts`
-- Warren: `src/lib/ai/warren/`
+- Mockups: `public/mockups/aid-addictiveness-proposal.html`

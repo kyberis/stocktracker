@@ -21,7 +21,8 @@ export function enrichPeriodStatAbs(
   dayAbsFallback?: number | null,
 ): PeriodStatValue {
   if (stat.unavailable) return stat;
-  let { pct, abs } = stat;
+  const { pct } = stat;
+  let { abs } = stat;
   if (pct != null && abs == null && dayAbsFallback != null && Number.isFinite(dayAbsFallback)) {
     abs = dayAbsFallback;
   } else if (pct != null && abs == null && portfolioValue > 0) {
