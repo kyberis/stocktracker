@@ -155,7 +155,7 @@ export async function buildAidDigest(args: {
           summary,
           sources: web.map((w) => w.url),
           usedWeb,
-          expiresAt,
+          expiresAt: earningsExpiresAt(),
         });
         generated += 1;
       }
