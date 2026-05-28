@@ -46,12 +46,6 @@ function cacheRowToItem(
   });
 }
 
-function sortByReportDateDesc(a: AidDigestItem, b: AidDigestItem): number {
-  const da = reportDateFromEarningsEventKey(a.eventKey) ?? "";
-  const db = reportDateFromEarningsEventKey(b.eventKey) ?? "";
-  return db.localeCompare(da);
-}
-
 async function generateEarningsSummary(args: {
   userId: string;
   ev: CalendarEvent;
@@ -63,7 +57,7 @@ async function generateEarningsSummary(args: {
 }): Promise<AidDigestItem | null> {
   const { userId, ev, ticker, reportDate, language, movePct, force } = args;
   const eventKey = earningsEventKey(ticker, reportDate);
-  let cached = await getAidNewsCacheEntry(userId, ticker, eventKey);
+  const cached = await getAidNewsCacheEntry(userId, ticker, eventKey);
   if (cached && !force) {
     return cacheRowToItem(cached, movePct);
   }

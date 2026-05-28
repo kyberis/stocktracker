@@ -183,12 +183,12 @@ Wire CTA in [`src/components/Dashboard.tsx`](../../../src/components/Dashboard.t
 
 | Rule / skill | Action |
 |--------------|--------|
-| [release-notes.mdc](.../.cursor/rules/release-notes.mdc) | `feature` entry EN + ES |
-| [demo-page.mdc](.../.cursor/rules/demo-page.mdc) | N/A unless AID becomes demo — prefer link to `/demo` from empty state |
-| [landing-page.mdc](.../.cursor/rules/landing-page.mdc) | Only when launching beta publicly |
-| [legal-advisor](.../.cursor/skills/legal-advisor/SKILL.md) | AI summaries, web search, financial display |
-| [accessibility-reviewer](.../.cursor/skills/accessibility-reviewer/SKILL.md) | Modals, tabs, chat, keyboard |
-| [mobile-usability-reviewer](.../.cursor/skills/mobile-usability-reviewer/SKILL.md) | Two-column → stack |
+| [release-notes.mdc](../../../.cursor/rules/release-notes.mdc) | `feature` entry EN + ES |
+| [demo-page.mdc](../../../.cursor/rules/demo-page.mdc) | N/A unless AID becomes demo — prefer link to `/demo` from empty state |
+| [landing-page.mdc](../../../.cursor/rules/landing-page.mdc) | Only when launching beta publicly |
+| [legal-advisor](../../../.cursor/skills/legal-advisor/SKILL.md) | AI summaries, web search, financial display |
+| [accessibility-reviewer](../../../.cursor/skills/accessibility-reviewer/SKILL.md) | Modals, tabs, chat, keyboard |
+| [mobile-usability-reviewer](../../../.cursor/skills/mobile-usability-reviewer/SKILL.md) | Two-column → stack |
 
 ### Acceptance criteria
 
