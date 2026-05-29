@@ -52,7 +52,7 @@ function SortableSection({ id, editing, label, children }: SortableSectionProps)
           <button
             type="button"
             className="flex min-h-9 min-w-9 shrink-0 cursor-grab items-center justify-center rounded-md text-[color:var(--muted)] hover:bg-[color:var(--surface-highlight)] hover:text-[color:var(--foreground)] active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
-            aria-label={t("aidLayoutDragHandle", { section: label })}
+            aria-label={t("aidLayoutDragHandle").replace("{section}", label)}
             {...attributes}
             {...listeners}
           >

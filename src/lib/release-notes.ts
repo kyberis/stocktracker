@@ -59,6 +59,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Layout del Briefing de inversor: personaliza el orden de secciones en columna principal y barra lateral con asas de arrastre; preferencia guardada en base de datos vía GET/PUT /api/aid/layout.",
         },
       },
+      {
+        type: "improvement",
+        text: "FinPulse shows which X accounts trefolio follows under Market voices (from the curated handle list).",
+        translations: {
+          es: "FinPulse muestra qué cuentas de X sigue trefolio bajo Voces del mercado (lista curada de handles).",
+        },
+      },
     ],
   },
   {

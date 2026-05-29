@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { getUserSettings, isFeatureEnabledForUser, listHoldings } from "@/lib/db";
 import { buildFinPulseForUser } from "@/lib/aid/build-finpulse";
+import { listFinPulseHandles } from "@/lib/aid/finpulse-handles";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
@@ -32,5 +33,10 @@ export const GET = withMetrics("/api/aid/finpulse", async (req: NextRequest) => 
     maxGenerate: tab === "foryou" ? 3 : 0,
   });
 
-  return NextResponse.json({ items, tab });
+  const followedAccounts = (await listFinPulseHandles()).map((h) => ({
+    handle: h.handle,
+    displayName: h.displayName,
+  }));
+
+  return NextResponse.json({ items, tab, followedAccounts });
 });

@@ -3035,6 +3035,7 @@ const en: TranslationStrings = {
 
   aidFinPulseTitle: "FinPulse",
   aidFinPulseDesc: "Market voices on X · AI summarized",
+  aidFinPulseFollowing: "Accounts we follow on X",
   aidFinPulseForYou: "For you",
   aidFinPulseMarketVoices: "Market voices",
   aidFinPulseDisclaimer: "Not investment advice. AI summaries may omit details. Sources are third-party posts on X.",

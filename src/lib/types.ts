@@ -611,6 +611,11 @@ export interface AidFinPulseItem {
   portfolioRelevant: boolean;
 }
 
+export interface AidFinPulseFollowedAccount {
+  handle: string;
+  displayName: string;
+}
+
 export interface AidSocialPostRow {
   id: string;
   handle: string;

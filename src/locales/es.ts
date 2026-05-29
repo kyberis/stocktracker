@@ -3035,6 +3035,7 @@ const es: TranslationStrings = {
 
   aidFinPulseTitle: "FinPulse",
   aidFinPulseDesc: "Voces del mercado en X · resumido por IA",
+  aidFinPulseFollowing: "Cuentas que seguimos en X",
   aidFinPulseForYou: "Para ti",
   aidFinPulseMarketVoices: "Voces del mercado",
   aidFinPulseDisclaimer: "No es asesoramiento de inversión. Los resúmenes de IA pueden omitir detalles. Fuentes: publicaciones de terceros en X.",

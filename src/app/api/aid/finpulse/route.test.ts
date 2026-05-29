@@ -19,9 +19,14 @@ vi.mock("@/lib/aid/build-finpulse", () => ({
   buildFinPulseForUser: vi.fn(),
 }));
 
+vi.mock("@/lib/aid/finpulse-handles", () => ({
+  listFinPulseHandles: vi.fn(),
+}));
+
 import { requireSession } from "@/lib/auth/guards";
 import { isFeatureEnabledForUser, getUserSettings, listHoldings } from "@/lib/db";
 import { buildFinPulseForUser } from "@/lib/aid/build-finpulse";
+import { listFinPulseHandles } from "@/lib/aid/finpulse-handles";
 import { GET } from "./route";
 
 const mockedSession = vi.mocked(requireSession);
@@ -29,6 +34,7 @@ const mockedFlag = vi.mocked(isFeatureEnabledForUser);
 const mockedSettings = vi.mocked(getUserSettings);
 const mockedHoldings = vi.mocked(listHoldings);
 const mockedBuild = vi.mocked(buildFinPulseForUser);
+const mockedHandles = vi.mocked(listFinPulseHandles);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -43,6 +49,9 @@ beforeEach(() => {
     items: [{ id: "1", handle: "federalreserve", headline: "Test", bullets: ["a"], impact: "high" as const, tickers: [], tags: [], cachedAt: "", portfolioRelevant: false, displayName: "Fed", sourceUrl: "https://x.com", publishedAt: "" }],
     generated: 0,
   });
+  mockedHandles.mockResolvedValue([
+    { handle: "federalreserve", displayName: "Federal Reserve", tags: ["macro"] },
+  ]);
 });
 
 describe("GET /api/aid/finpulse", () => {
@@ -52,6 +61,9 @@ describe("GET /api/aid/finpulse", () => {
     const data = await res.json();
     expect(data.items).toHaveLength(1);
     expect(data.tab).toBe("market_voices");
+    expect(data.followedAccounts).toEqual([
+      { handle: "federalreserve", displayName: "Federal Reserve" },
+    ]);
   });
 
   it("requests foryou tab", async () => {

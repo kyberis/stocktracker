@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useTrack } from "@/lib/use-track";
-import type { AidFinPulseItem } from "@/lib/types";
+import type { AidFinPulseFollowedAccount, AidFinPulseItem } from "@/lib/types";
 import AidImpactBadge from "./AidImpactBadge";
 
 type Tab = "foryou" | "market_voices";
@@ -25,6 +25,7 @@ export default function AidFinPulse({ hasHoldings, showForYou = true }: Props) {
   const track = useTrack();
   const [tab, setTab] = useState<Tab>(showForYou && hasHoldings ? "foryou" : "market_voices");
   const [items, setItems] = useState<AidFinPulseItem[]>([]);
+  const [followedAccounts, setFollowedAccounts] = useState<AidFinPulseFollowedAccount[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -44,8 +45,12 @@ export default function AidFinPulse({ hasHoldings, showForYou = true }: Props) {
       if (activePortfolioId) params.set("portfolioId", activePortfolioId);
       const res = await fetch(`/api/aid/finpulse?${params}`, { credentials: "include", cache: "no-store" });
       if (!res.ok) throw new Error("finpulse failed");
-      const data = (await res.json()) as { items?: AidFinPulseItem[] };
+      const data = (await res.json()) as {
+        items?: AidFinPulseItem[];
+        followedAccounts?: AidFinPulseFollowedAccount[];
+      };
       setItems(Array.isArray(data.items) ? data.items : []);
+      setFollowedAccounts(Array.isArray(data.followedAccounts) ? data.followedAccounts : []);
       track("aid_finpulse_tab", { tab });
     } catch {
       setError(true);
@@ -61,9 +66,27 @@ export default function AidFinPulse({ hasHoldings, showForYou = true }: Props) {
   return (
     <section id="aid-finpulse" className="card rounded-[var(--radius-card)] p-4" aria-label={t("aidFinPulseTitle")}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <h3 className="text-sm font-semibold text-[color:var(--foreground)]">{t("aidFinPulseTitle")}</h3>
           <p className="text-[10px] text-[color:var(--muted)]">{t("aidFinPulseDesc")}</p>
+          {followedAccounts.length > 0 ? (
+            <div className="mt-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)]">
+                {t("aidFinPulseFollowing")}
+              </p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {followedAccounts.map((account) => (
+                  <span
+                    key={account.handle}
+                    title={account.displayName}
+                    className="inline-flex max-w-full items-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2 py-0.5 text-[10px] font-semibold text-[color:var(--foreground)]"
+                  >
+                    <span className="truncate">{displayHandle(account.handle)}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
 
