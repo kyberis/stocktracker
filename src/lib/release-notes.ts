@@ -66,6 +66,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "FinPulse muestra qué cuentas de X sigue trefolio bajo Voces del mercado (lista curada de handles).",
         },
       },
+      {
+        type: "fix",
+        text: "Investor Briefing market status uses portfolio exchange hours (EU/US) instead of a broken UTC-only clock; news feed shows up to 40 items with new-since-visit first.",
+        translations: {
+          es: "Estado de mercado del Briefing usa horarios de las bolsas de tu cartera; el feed de noticias muestra hasta 40 ítems priorizando novedades desde la última visita.",
+        },
+      },
     ],
   },
   {

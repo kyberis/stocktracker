@@ -2931,6 +2931,7 @@ const es: TranslationStrings = {
   aidEarningsRecapReported: "Reportado {date}",
   aidNewsTitle: "Qué está pasando",
   aidNews48h: "Últimas 48 h",
+  aidNewsShowingNew: "Mostrando {shown} de {new} novedades desde tu última visita",
   aidNewsEmpty: "Añade posiciones para ver noticias de tus tickers.",
   aidNewsEmptyFeed: "Aún no hay noticias de cartera en las últimas 48 h. Pulsa Actualizar para buscar titulares de tus tickers.",
   aidNewsEmptyEarnings: "No hay resultados en las últimas 48 h. Prueba Todo o actualiza cuando se publiquen.",

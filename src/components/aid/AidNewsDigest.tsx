@@ -29,6 +29,7 @@ export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean })
   const { quotes, activePortfolioId, holdings } = usePortfolio();
   const track = useTrack();
   const [items, setItems] = useState<AidDigestItem[]>([]);
+  const [newSinceVisitCount, setNewSinceVisitCount] = useState(0);
   const [earningsTodayCount, setEarningsTodayCount] = useState(0);
   const [filter, setFilter] = useState<Filter>("all");
   const [loading, setLoading] = useState(false);
@@ -66,9 +67,11 @@ export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean })
         items?: AidDigestItem[];
         earningsTodayCount?: number;
         newsTickers?: string[];
+        newSinceVisitCount?: number;
       };
       const raw = Array.isArray(data.items) ? data.items : [];
       setItems(enrichItems(raw));
+      setNewSinceVisitCount(data.newSinceVisitCount ?? 0);
       setEarningsTodayCount(data.earningsTodayCount ?? 0);
       setNewsTickerCount(
         Array.isArray(data.newsTickers) ? data.newsTickers.length : derivedTickerCount,
@@ -133,6 +136,13 @@ export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean })
         <h3 className="text-sm font-semibold text-[color:var(--foreground)]">{t("aidNewsTitle")}</h3>
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-[color:var(--muted)]">{t("aidNews48h")}</span>
+          {newSinceVisitCount > items.length ? (
+            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+              {t("aidNewsShowingNew")
+                .replace("{shown}", String(filtered.length))
+                .replace("{new}", String(newSinceVisitCount))}
+            </span>
+          ) : null}
           <button
             type="button"
             onClick={() => void load()}

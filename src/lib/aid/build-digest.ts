@@ -26,6 +26,7 @@ import type { QuoteData } from "@/lib/types";
 
 const HOURS_48_MS = 48 * 3600 * 1000;
 const CACHE_TTL_MS = 24 * 3600 * 1000;
+export const AID_DIGEST_FEED_LIMIT = 40;
 const MAX_GENERATE_PER_REQUEST = 10;
 
 function articleEventKey(article: NewsArticle): string {
@@ -94,14 +95,16 @@ export async function buildAidDigest(args: {
   quotes: Record<string, QuoteData>;
   forceRefreshTicker?: string;
   maxGenerate?: number;
-}): Promise<{ items: AidDigestItem[]; earningsTodayCount: number }> {
+  sinceVisit?: string;
+  feedLimit?: number;
+}): Promise<{ items: AidDigestItem[]; earningsTodayCount: number; newSinceVisitCount: number }> {
   const holdings = await listHoldings(args.userId, args.portfolioId);
   if (holdings.length === 0) {
-    return { items: [], earningsTodayCount: 0 };
+    return { items: [], earningsTodayCount: 0, newSinceVisitCount: 0 };
   }
 
   const tickers = derivePortfolioNewsTickersFromHoldings(holdings);
-  if (tickers.length === 0) return { items: [], earningsTodayCount: 0 };
+  if (tickers.length === 0) return { items: [], earningsTodayCount: 0, newSinceVisitCount: 0 };
 
   const langName = languageCodeToName(args.language);
   const today = new Date().toISOString().slice(0, 10);
@@ -206,17 +209,19 @@ export async function buildAidDigest(args: {
     }
   }
 
-  const cachedRows = await listAidNewsCacheForUser(args.userId, 30);
+  const cachedRows = await listAidNewsCacheForUser(args.userId, 60);
   const items: AidDigestItem[] = [];
   const seen = new Set<string>();
+  const feedLimit = args.feedLimit ?? AID_DIGEST_FEED_LIMIT;
+  const sinceVisit = args.sinceVisit ?? "";
 
   for (const row of cachedRows) {
     if (seen.has(row.eventKey)) continue;
+    if (!isWithin48h(row.fetchedAt)) continue;
     seen.add(row.eventKey);
     const movePct = moveByTicker.get(row.ticker.toUpperCase()) ?? null;
     const item = cacheRowToItem(row, movePct);
     if (item) items.push(item);
-    if (items.length >= 10) break;
   }
 
   if (items.length === 0 && ranked.length > 0) {
@@ -263,5 +268,20 @@ export async function buildAidDigest(args: {
     );
   }
 
-  return { items: sortByImpactScore(items).slice(0, 12), earningsTodayCount };
+  let sorted = sortByImpactScore(items);
+  if (sinceVisit) {
+    sorted = [...sorted].sort((a, b) => {
+      const aNew = a.cachedAt > sinceVisit;
+      const bNew = b.cachedAt > sinceVisit;
+      if (aNew !== bNew) return aNew ? -1 : 1;
+      return (b.impactScore ?? 0) - (a.impactScore ?? 0);
+    });
+  }
+
+  const feed = sorted.slice(0, feedLimit);
+  const newSinceVisitCount = sinceVisit
+    ? sorted.filter((item) => item.cachedAt > sinceVisit).length
+    : 0;
+
+  return { items: feed, earningsTodayCount, newSinceVisitCount };
 }

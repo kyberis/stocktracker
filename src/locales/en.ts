@@ -2931,6 +2931,7 @@ const en: TranslationStrings = {
   aidEarningsRecapReported: "Reported {date}",
   aidNewsTitle: "What's happening",
   aidNews48h: "Last 48h",
+  aidNewsShowingNew: "Showing {shown} of {new} new since your last visit",
   aidNewsEmpty: "Add holdings to see portfolio news for your tickers.",
   aidNewsEmptyFeed: "No portfolio news in the last 48 hours yet. Tap Refresh to fetch headlines for your tickers.",
   aidNewsEmptyEarnings: "No earnings items in the last 48 hours. Check All or refresh after results are published.",

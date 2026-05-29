@@ -6,21 +6,18 @@ import { listAlerts } from "@/lib/db/alerts";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { summarizeAidBriefing } from "@/lib/aid/summarize-finpulse";
 import { buildWarrenNudge } from "@/lib/aid/build-warren-nudge";
+import { resolveAidMarketSession } from "@/lib/aid/resolve-market-session";
 import { languageCodeToName } from "@/lib/languages";
 import type { AidStatusPayload, QuoteData } from "@/lib/types";
 
 export type MarketSession = AidStatusPayload["marketSession"];
 
-export function resolveMarketSession(now = new Date()): MarketSession {
-  const day = now.getUTCDay();
-  if (day === 0 || day === 6) return "closed";
-  const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
-  const open = 14 * 60 + 30;
-  const close = 21 * 60;
-  if (mins < open - 90) return "pre";
-  if (mins >= open && mins < close) return "open";
-  if (mins >= close && mins < close + 120) return "after";
-  return "closed";
+const DIGEST_WINDOW_MS = 48 * 3600 * 1000;
+
+function isWithinDigestWindow(iso: string): boolean {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return true;
+  return Date.now() - t <= DIGEST_WINDOW_MS;
 }
 
 export async function buildAidStatus(args: {
@@ -41,7 +38,9 @@ export async function buildAidStatus(args: {
     listAlerts(args.userId),
   ]);
 
-  const digestNew = digestRows.filter((r) => r.fetchedAt > since).length;
+  const digestNew = digestRows.filter(
+    (r) => r.fetchedAt > since && isWithinDigestWindow(r.fetchedAt),
+  ).length;
   const finPulseNew = finPulseRows.length;
   const triggeredAlerts = alerts.filter((a) => a.active && a.triggered).length;
 
@@ -109,7 +108,7 @@ export async function buildAidStatus(args: {
       alerts: triggeredAlerts,
     },
     briefing,
-    marketSession: resolveMarketSession(),
+    marketSession: resolveAidMarketSession(holdings),
     warrenNudge,
   };
 }

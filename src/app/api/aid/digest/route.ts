@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { isFeatureEnabledForUser, getUserSettings, listHoldings } from "@/lib/db";
 import { buildAidDigest } from "@/lib/aid/build-digest";
+import { getLastAidVisitAt } from "@/lib/db/aid-user-state";
 import { providerQuotesToQuoteMap } from "@/lib/aid/quotes-map";
 import { getQuotesWithCache } from "@/lib/quote-cache";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
@@ -29,13 +30,14 @@ export const GET = withMetrics("/api/aid/digest", async (req: NextRequest) => {
   const providerQuotes = tickers.length > 0 ? await getQuotesWithCache(tickers) : {};
   const quotes = providerQuotesToQuoteMap(providerQuotes);
 
-  const { items, earningsTodayCount } = await buildAidDigest({
+  const { items, earningsTodayCount, newSinceVisitCount } = await buildAidDigest({
     userId: session.userId,
     portfolioId,
     language,
     quotes,
     maxGenerate: 10,
+    sinceVisit: (await getLastAidVisitAt(session.userId)) ?? undefined,
   });
 
-  return NextResponse.json({ items, earningsTodayCount, newsTickers: tickers });
+  return NextResponse.json({ items, earningsTodayCount, newsTickers: tickers, newSinceVisitCount });
 });
