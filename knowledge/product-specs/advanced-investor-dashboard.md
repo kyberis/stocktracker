@@ -31,6 +31,7 @@
 - `aid_news_cache` — per-user ticker digest summaries (v116)
 - `aid_social_posts` — FinPulse raw posts + AI summaries (v117)
 - `user_settings.last_aid_visit_at`, `aid_warren_nudge_date` (v117)
+- `user_settings.aid_layout_order` — JSON `{ main, sidebar }` section order (v118)
 - Platform setting `aid_finpulse_handles` — curated X accounts (JSON)
 - Reuse: holdings, quotes, alerts, calendar events, rebalance targets
 
@@ -46,6 +47,7 @@
 | GET | `/api/aid/earnings-recap` | user + `aid_beta` | Recent earnings AI summaries |
 | POST | `/api/aid/refresh` | user + `aid_beta` | Force web refresh for one ticker |
 | GET | `/api/aid/insights` | user + `aid_beta` | Clara + Will cards |
+| GET/PUT | `/api/aid/layout` | user + `aid_beta` | Read/save main + sidebar section order |
 | GET/PUT | `/api/admin/finpulse-handles` | admin | Curated FinPulse X handles |
 
 ## 6. UI surface (with holdings)
@@ -64,6 +66,8 @@
 **Empty:** welcome CTAs + FinPulse Market voices only (no For you tab).
 
 **Sidebar:** Warren (proactive nudge 1/day), Will, Clara.
+
+**Layout customization:** “Customize layout” toggles drag handles on main column and sidebar independently. Order persists in `user_settings.aid_layout_order` via `GET/PUT /api/aid/layout`. Default order matches the list above; new sections append automatically on upgrade.
 
 ## 7. Impact score (1–5)
 
@@ -90,6 +94,7 @@
 | `aid_briefing_shown`, `aid_caught_up_dismissed` | Briefing engagement |
 | `aid_finpulse_tab`, `aid_finpulse_post_clicked` | FinPulse |
 | `aid_warren_nudge_clicked` | Proactive Warren |
+| `aid_layout_reordered` | User reordered main or sidebar (`column`, `count`) |
 
 ### Success thresholds (beta targets)
 

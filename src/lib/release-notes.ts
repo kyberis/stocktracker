@@ -45,6 +45,20 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Telemetría del Briefing de inversor: aid_return_within_24h, aid_section_viewed, aid_feed_loaded, aid_priority_item_clicked; umbrales documentados.",
         },
       },
+      {
+        type: "fix",
+        text: "Investor Briefing catch-up: last-visit now marks reliably after viewing, refreshes the new-count badge, and clarifies that the priority strip shows top 5 of all new items.",
+        translations: {
+          es: "Ponerse al día en Briefing de inversor: la última visita se guarda bien al ver la página, se actualiza el contador de novedades y se aclara que la tira prioritaria muestra el top 5 de todas las novedades.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Investor Briefing layout: customize main column and sidebar section order with drag handles; preference saved in the database via GET/PUT /api/aid/layout.",
+        translations: {
+          es: "Layout del Briefing de inversor: personaliza el orden de secciones en columna principal y barra lateral con asas de arrastre; preferencia guardada en base de datos vía GET/PUT /api/aid/layout.",
+        },
+      },
     ],
   },
   {

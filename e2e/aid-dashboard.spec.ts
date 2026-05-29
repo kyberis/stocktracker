@@ -70,6 +70,28 @@ test.describe("AID dashboard", () => {
     await expect(page.locator("#aid-finpulse")).toBeVisible({ timeout: 15000 });
     await expect(page.locator("#aid-news")).toBeVisible();
   });
+
+  test("layout customize toggle is visible", async ({ page }) => {
+    await page.goto("/aid");
+    await dismissOverlays(page);
+
+    await expect(page.getByRole("button", { name: /Customize layout|Personalizar layout/i })).toBeVisible({
+      timeout: 15000,
+    });
+  });
+
+  test("layout API get and put work with aid_beta", async ({ request }) => {
+    const getRes = await request.get("/api/aid/layout");
+    expect(getRes.status()).toBe(200);
+    const getBody = await getRes.json();
+    expect(getBody.layout).toHaveProperty("main");
+    expect(getBody.layout).toHaveProperty("sidebar");
+
+    const putRes = await request.put("/api/aid/layout", {
+      data: getBody.layout,
+    });
+    expect(putRes.status()).toBe(200);
+  });
 });
 
 test.describe("AID empty state", () => {

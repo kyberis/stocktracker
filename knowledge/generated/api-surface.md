@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-261 routes.
+262 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -82,6 +82,7 @@
 | `/api/aid/feed` | GET | [`src/app/api/aid/feed/route.ts`](../../src/app/api/aid/feed/route.ts) |
 | `/api/aid/finpulse` | GET | [`src/app/api/aid/finpulse/route.ts`](../../src/app/api/aid/finpulse/route.ts) |
 | `/api/aid/insights` | GET | [`src/app/api/aid/insights/route.ts`](../../src/app/api/aid/insights/route.ts) |
+| `/api/aid/layout` | GET, PUT | [`src/app/api/aid/layout/route.ts`](../../src/app/api/aid/layout/route.ts) |
 | `/api/aid/refresh` | POST | [`src/app/api/aid/refresh/route.ts`](../../src/app/api/aid/refresh/route.ts) |
 | `/api/aid/status` | GET, POST | [`src/app/api/aid/status/route.ts`](../../src/app/api/aid/status/route.ts) |
 | `/api/alerts` | GET, POST, PATCH, DELETE | [`src/app/api/alerts/route.ts`](../../src/app/api/alerts/route.ts) |

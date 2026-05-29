@@ -625,6 +625,12 @@ export interface AidSocialPostRow {
   expiresAt: string;
 }
 
+export type {
+  AidLayoutOrder,
+  AidMainSectionId,
+  AidSidebarSectionId,
+} from "@/lib/aid/layout-sections";
+
 export interface AidStatusPayload {
   newCount: number;
   caughtUp: boolean;

@@ -316,6 +316,11 @@ export const favoriteToolIdsBodySchema = z.object({
   ),
 });
 
+export const aidLayoutBodySchema = z.object({
+  main: z.array(z.string()),
+  sidebar: z.array(z.string()),
+});
+
 /* ── Alerts ────────────────────────────────────────────────── */
 
 export const createAlertSchema = z.object({

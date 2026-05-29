@@ -30,10 +30,11 @@ export function useAidStatus(enabled: boolean) {
     if (!enabled) return;
     try {
       await fetch("/api/aid/status", { method: "POST", credentials: "include" });
+      await load();
     } catch {
       /* best-effort */
     }
-  }, [enabled]);
+  }, [enabled, load]);
 
   useEffect(() => {
     void load();

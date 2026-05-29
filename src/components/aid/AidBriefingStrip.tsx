@@ -62,6 +62,9 @@ export default function AidBriefingStrip({ status, loading, onCatchUp }: Props) 
                   .replace("{fin}", String(breakdown.finPulse))
                   .replace("{digest}", String(breakdown.digest))
                   .replace("{alerts}", String(breakdown.alerts))}
+                {breakdown.digest > 5 && (
+                  <span className="block pt-0.5 text-[10px]">{t("aidBriefingFullFeedHint")}</span>
+                )}
               </p>
             )}
           </div>

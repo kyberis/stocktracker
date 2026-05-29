@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useFeatureFlagContext } from "@/lib/feature-flag-context";
@@ -10,6 +10,24 @@ import { useTrack } from "@/lib/use-track";
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import { useAidStatus } from "@/hooks/useAidStatus";
 import { useAidEngagementMetrics } from "@/hooks/useAidEngagementMetrics";
+import { useAidLayout } from "@/hooks/useAidLayout";
+import type { AidMainSectionId, AidSidebarSectionId } from "@/lib/aid/layout-sections";
+
+const AID_SECTION_LABEL_KEYS: Record<AidMainSectionId | AidSidebarSectionId, string> = {
+  briefing: "aidLayoutSectionBriefing",
+  priority: "aidLayoutSectionPriority",
+  finpulse: "aidLayoutSectionFinpulse",
+  news: "aidLayoutSectionNews",
+  earnings: "aidLayoutSectionEarnings",
+  portfolio: "aidLayoutSectionPortfolio",
+  extras: "aidLayoutSectionExtras",
+  holdings_lookup: "aidLayoutSectionHoldingsLookup",
+  shortcuts: "aidLayoutSectionShortcuts",
+  empty_main: "aidLayoutSectionEmptyMain",
+  warren: "aidLayoutSectionWarren",
+  will: "aidLayoutSectionWill",
+  clara: "aidLayoutSectionClara",
+};
 import CloverToLogo from "@/components/CloverToLogo";
 import AidBriefingStrip from "./AidBriefingStrip";
 import AidPriorityStrip from "./AidPriorityStrip";
@@ -27,6 +45,8 @@ import AidClaraCard from "./AidClaraCard";
 import { useAidInsights } from "@/hooks/useAidInsights";
 import AidPageFooter from "./AidPageFooter";
 import AidPortfolioHeaderSummary from "./AidPortfolioHeaderSummary";
+import AidLayoutCustomizeBar from "./AidLayoutCustomizeBar";
+import AidSortableSectionList from "./AidSortableSectionList";
 
 export default function AidDashboard() {
   const router = useRouter();
@@ -48,8 +68,11 @@ export default function AidDashboard() {
 
   const isEmpty = holdings.length === 0 && cashEntries.length === 0;
   const hasHoldings = holdings.length > 0 || investmentCash.length > 0;
+  const layoutEnabled = isLoaded && flags.aid_beta && !isInitializing;
 
-  useAidEngagementMetrics(isLoaded && flags.aid_beta && !isInitializing && !isEmpty);
+  const aidLayout = useAidLayout(layoutEnabled, isEmpty);
+
+  useAidEngagementMetrics(layoutEnabled && !isEmpty);
 
   useEffect(() => {
     if (isLoaded && !flags.aid_beta) {
@@ -76,6 +99,66 @@ export default function AidDashboard() {
     document.getElementById("aid-finpulse")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const sectionLabel = useCallback(
+    (id: AidMainSectionId | AidSidebarSectionId) => t(AID_SECTION_LABEL_KEYS[id] as "aidTitle"),
+    [t],
+  );
+
+  const mainSections = useMemo(() => {
+    const sections: Partial<Record<AidMainSectionId, ReactNode>> = {
+      briefing: (
+        <AidBriefingStrip
+          status={aidStatus.data}
+          loading={aidStatus.loading}
+          onCatchUp={scrollToFinPulse}
+        />
+      ),
+      priority: <AidPriorityStrip hasHoldings={hasHoldings} />,
+      finpulse: <AidFinPulse hasHoldings={hasHoldings} showForYou={hasHoldings} />,
+      news: <AidNewsDigest hasHoldings={hasHoldings} />,
+      earnings: <AidEarningsRecap hasHoldings={hasHoldings} />,
+      portfolio: <AidPortfolioCard holdings={holdings} cashEntries={investmentCash} />,
+      extras: <AidExtrasRow holdings={holdings} cashEntries={investmentCash} />,
+      holdings_lookup: <AidHoldingsLookup holdings={holdings} />,
+      shortcuts: <AidShortcutsSection hasHoldings={hasHoldings} />,
+      empty_main: <AidEmptyMain />,
+    };
+    return sections;
+  }, [
+    aidStatus.data,
+    aidStatus.loading,
+    hasHoldings,
+    holdings,
+    investmentCash,
+  ]);
+
+  const sidebarSections = useMemo(
+    () => ({
+      warren: (
+        <AidWarrenPanel
+          hasHoldings={hasHoldings}
+          warrenNudge={aidStatus.data?.warrenNudge ?? null}
+          triggerPrompt={warrenPrompt}
+          onWarrenAsk={(prompt) => setWarrenPrompt(prompt)}
+          onTriggerPromptConsumed={() => setWarrenPrompt(null)}
+        />
+      ),
+      will: <AidWillCard will={insights.data?.will} loading={insights.loading} />,
+      clara: <AidClaraCard clara={insights.data?.clara} loading={insights.loading} />,
+    }),
+    [aidStatus.data?.warrenNudge, hasHoldings, insights.data?.clara, insights.data?.will, insights.loading, warrenPrompt],
+  );
+
+  const renderMainSection = useCallback(
+    (id: AidMainSectionId) => mainSections[id] ?? null,
+    [mainSections],
+  );
+
+  const renderSidebarSection = useCallback(
+    (id: AidSidebarSectionId) => sidebarSections[id] ?? null,
+    [sidebarSections],
+  );
+
   if (!isLoaded || !flags.aid_beta) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -84,7 +167,7 @@ export default function AidDashboard() {
     );
   }
 
-  if (isInitializing) {
+  if (isInitializing || aidLayout.loading || !aidLayout.layout) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4" role="status">
         <CloverToLogo className="h-16 w-16" once delay={200} transitionMs={1400} />
@@ -120,43 +203,34 @@ export default function AidDashboard() {
         </div>
       </div>
 
+      <AidLayoutCustomizeBar
+        editing={aidLayout.editing}
+        saving={aidLayout.saving}
+        onToggleEditing={() => aidLayout.setEditing((v) => !v)}
+        onReset={aidLayout.resetToDefault}
+      />
+
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        <div className="min-w-0 flex-1 space-y-4">
-          {isEmpty ? (
-            <>
-              <AidEmptyMain />
-              <AidFinPulse hasHoldings={false} showForYou={false} />
-            </>
-          ) : (
-            <>
-              <AidBriefingStrip
-                status={aidStatus.data}
-                loading={aidStatus.loading}
-                onCatchUp={scrollToFinPulse}
-              />
-              <AidPriorityStrip hasHoldings={hasHoldings} />
-              <AidFinPulse hasHoldings={hasHoldings} />
-              <AidNewsDigest hasHoldings={hasHoldings} />
-              <AidEarningsRecap hasHoldings={hasHoldings} />
-              <AidPortfolioCard holdings={holdings} cashEntries={investmentCash} />
-              <AidExtrasRow holdings={holdings} cashEntries={investmentCash} />
-              <AidHoldingsLookup holdings={holdings} />
-              <AidShortcutsSection hasHoldings={hasHoldings} />
-            </>
-          )}
-          {isEmpty && <AidShortcutsSection hasHoldings={false} />}
+        <div className="min-w-0 flex-1">
+          <AidSortableSectionList
+            ids={aidLayout.layout.main}
+            editing={aidLayout.editing}
+            onReorder={aidLayout.reorderMain}
+            getLabel={sectionLabel}
+            renderItem={renderMainSection}
+            ariaLabel={t("aidLayoutMainColumn")}
+          />
         </div>
 
-        <div className="w-full shrink-0 space-y-4 lg:w-[360px]">
-          <AidWarrenPanel
-            hasHoldings={hasHoldings}
-            warrenNudge={aidStatus.data?.warrenNudge ?? null}
-            triggerPrompt={warrenPrompt}
-            onWarrenAsk={(prompt) => setWarrenPrompt(prompt)}
-            onTriggerPromptConsumed={() => setWarrenPrompt(null)}
+        <div className="w-full shrink-0 lg:w-[360px]">
+          <AidSortableSectionList
+            ids={aidLayout.layout.sidebar}
+            editing={aidLayout.editing}
+            onReorder={aidLayout.reorderSidebar}
+            getLabel={sectionLabel}
+            renderItem={renderSidebarSection}
+            ariaLabel={t("aidLayoutSidebarColumn")}
           />
-          <AidWillCard will={insights.data?.will} loading={insights.loading} />
-          <AidClaraCard clara={insights.data?.clara} loading={insights.loading} />
         </div>
       </div>
 

@@ -1,3 +1,4 @@
+import { parseAidLayoutOrderJson, serializeAidLayoutOrder, type AidLayoutOrder } from "@/lib/aid/layout-sections";
 import { ensureInitialized } from "./client";
 
 function str(v: unknown): string {
@@ -38,5 +39,27 @@ export async function setAidWarrenNudgeDate(userId: string, date: string): Promi
   await client.execute({
     sql: "UPDATE user_settings SET aid_warren_nudge_date = ? WHERE user_id = ?",
     args: [date, userId],
+  });
+}
+
+export async function getAidLayoutOrderRaw(userId: string): Promise<string> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT aid_layout_order FROM user_settings WHERE user_id = ?",
+    args: [userId],
+  });
+  if (result.rows.length === 0) return "{}";
+  return str(result.rows[0].aid_layout_order) || "{}";
+}
+
+export async function getAidLayoutOrderPartial(userId: string): Promise<Partial<AidLayoutOrder>> {
+  return parseAidLayoutOrderJson(await getAidLayoutOrderRaw(userId));
+}
+
+export async function setAidLayoutOrder(userId: string, layout: AidLayoutOrder): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE user_settings SET aid_layout_order = ? WHERE user_id = ?",
+    args: [serializeAidLayoutOrder(layout), userId],
   });
 }

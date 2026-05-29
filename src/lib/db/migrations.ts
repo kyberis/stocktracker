@@ -3501,6 +3501,19 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 118,
+    description: "AID layout order preference on user_settings",
+    up: async (client: Client) => {
+      const settingsCols = await client.execute("PRAGMA table_info(user_settings)");
+      const colNames = new Set(settingsCols.rows.map((r) => String(r.name)));
+      if (!colNames.has("aid_layout_order")) {
+        await client.execute({
+          sql: "ALTER TABLE user_settings ADD COLUMN aid_layout_order TEXT NOT NULL DEFAULT '{}'",
+        });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
