@@ -1,4 +1,4 @@
-import { parseAidLayoutOrderJson, serializeAidLayoutOrder, type AidLayoutOrder } from "@/lib/aid/layout-sections";
+import { parseAidLayoutOrderJson, serializeAidLayoutOrder, type AidLayoutOrder, type AidLayoutStored } from "@/lib/aid/layout-sections";
 import { ensureInitialized } from "./client";
 
 function str(v: unknown): string {
@@ -52,7 +52,7 @@ export async function getAidLayoutOrderRaw(userId: string): Promise<string> {
   return str(result.rows[0].aid_layout_order) || "{}";
 }
 
-export async function getAidLayoutOrderPartial(userId: string): Promise<Partial<AidLayoutOrder>> {
+export async function getAidLayoutOrderPartial(userId: string): Promise<AidLayoutStored> {
   return parseAidLayoutOrderJson(await getAidLayoutOrderRaw(userId));
 }
 

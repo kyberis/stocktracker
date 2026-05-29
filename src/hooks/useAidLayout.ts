@@ -80,7 +80,10 @@ export function useAidLayout(enabled: boolean, isEmpty: boolean) {
       const previous = layoutRef.current ?? next;
       layoutRef.current = next;
       setLayout(next);
-      track("aid_layout_reordered", { column, count: column === "main" ? next.main.length : next.sidebar.length });
+      track("aid_layout_reordered", {
+        column,
+        count: String(column === "main" ? next.main.length : next.sidebar.length),
+      });
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
       saveTimerRef.current = window.setTimeout(() => {
         void persist(next, previous);

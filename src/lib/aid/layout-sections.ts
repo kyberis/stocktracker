@@ -64,15 +64,20 @@ function resolveColumn<T extends string>(
   return filtered;
 }
 
-export function parseAidLayoutOrderJson(raw: string | null | undefined): Partial<AidLayoutOrder> {
+export interface AidLayoutStored {
+  main?: readonly string[];
+  sidebar?: readonly string[];
+}
+
+export function parseAidLayoutOrderJson(raw: string | null | undefined): AidLayoutStored {
   if (!raw || raw.trim() === "" || raw.trim() === "{}") return {};
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== "object") return {};
     const obj = parsed as Record<string, unknown>;
     return {
-      main: Array.isArray(obj.main) ? (obj.main as AidMainSectionId[]) : undefined,
-      sidebar: Array.isArray(obj.sidebar) ? (obj.sidebar as AidSidebarSectionId[]) : undefined,
+      main: Array.isArray(obj.main) ? obj.main.map(String) : undefined,
+      sidebar: Array.isArray(obj.sidebar) ? obj.sidebar.map(String) : undefined,
     };
   } catch {
     return {};
@@ -80,7 +85,7 @@ export function parseAidLayoutOrderJson(raw: string | null | undefined): Partial
 }
 
 export function resolveAidLayout(
-  stored: Partial<AidLayoutOrder> | string | null | undefined,
+  stored: AidLayoutStored | string | null | undefined,
   options: { isEmpty: boolean },
 ): AidLayoutOrder {
   const partial =
