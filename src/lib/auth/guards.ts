@@ -10,6 +10,7 @@ import { checkAvRateLimit, checkFmpRateLimit, checkAiRateLimit, checkAiImportRat
 import type { RateLimitProvider } from "@/lib/platform-config";
 import { checkAndIncrementFeatureQuota } from "@/lib/feature-quotas";
 import type { FeatureQuotaKey } from "@/lib/platform-config";
+import { isCommerceEnabled } from "@/lib/commerce-server";
 
 const lastActiveCache = new Map<string, number>();
 const LAST_ACTIVE_THROTTLE_MS = 5 * 60_000;
@@ -94,6 +95,7 @@ export async function requireTrefolioPro(req: NextRequest) {
   if (plan !== "pro") {
     paywallHitsTotal.inc({ feature: "office", reason: "plan_required" });
     trackEvent(session.userId, "paywall_shown", { feature: "office", reason: "plan_required" });
+    const commerceEnabled = await isCommerceEnabled();
     return {
       session: null,
       error: NextResponse.json(
@@ -102,7 +104,7 @@ export async function requireTrefolioPro(req: NextRequest) {
           paywall: true,
           reason: "plan_required",
           feature: "office",
-          upgradeUrl: "/upgrade",
+          ...(commerceEnabled ? { upgradeUrl: "/upgrade" } : {}),
         },
         { status: 403 },
       ),
@@ -184,6 +186,7 @@ export async function requireFeatureQuota(
   paywallHitsTotal.inc({ feature, reason: "quota_exceeded" });
   trackEvent(session.userId, "paywall_shown", { feature, reason: "quota_exceeded" });
 
+  const commerceEnabled = await isCommerceEnabled();
   const res = NextResponse.json(
     {
       error: "Monthly limit reached for this feature",
@@ -193,7 +196,7 @@ export async function requireFeatureQuota(
       used: result.used,
       limit: result.limit,
       resetAt: result.resetAt,
-      upgradeUrl: "/billing",
+      ...(commerceEnabled ? { upgradeUrl: "/billing" } : {}),
     },
     { status: 429 },
   );

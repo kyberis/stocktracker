@@ -12,6 +12,7 @@ import {
 import { billingEventsTotal } from "@/lib/metrics";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { getBillingBaseUrl, getStripeClient } from "@/lib/stripe";
+import { isCommerceEnabled } from "@/lib/commerce-server";
 import { withMetrics } from "@/lib/with-metrics";
 import {
   authProbeLog,
@@ -36,6 +37,10 @@ export const POST = withMetrics("/api/billing/device-checkout", async (req: Next
     { userId: session.userId },
     req.headers,
   );
+
+  if (!(await isCommerceEnabled())) {
+    return NextResponse.json({ error: "Subscriptions are not available at this time" }, { status: 403 });
+  }
 
   const priceId = await getStripePriceConfig("stripe_price_pro_annual");
   if (!priceId) {

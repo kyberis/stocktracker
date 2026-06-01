@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { getSessionFromRequest } from "@/lib/auth/session";
 import { countProSubscribers } from "@/lib/db";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { isCommerceEnabled } from "@/lib/commerce-server";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +11,10 @@ export const dynamic = "force-dynamic";
 export const GET = withMetrics("/api/billing/capacity", async (req: NextRequest) => {
   const { error } = await requireSession(req);
   if (error) return error;
+
+  if (!(await isCommerceEnabled())) {
+    return NextResponse.json({ available: false });
+  }
 
   const currentCount = await countProSubscribers();
   const maxCount = PLATFORM_LIMITS.MAX_PRO_SUBSCRIBERS;

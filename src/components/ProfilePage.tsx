@@ -16,6 +16,7 @@ import NotificationChannels from "@/components/NotificationChannels";
 import TelegramConnectCard from "@/components/profile/TelegramConnectCard";
 import { COUNTRIES } from "@/lib/countries";
 import { resolveBillingPortalHref } from "@/lib/idp/config";
+import { useCommerceEnabled } from "@/lib/commerce";
 
 const PROFILE_TABS = ["account", "subscription", "notifications", "portfolios", "referrals", "social", "devices"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
@@ -1038,6 +1039,7 @@ export default function ProfilePage() {
   const { user, refreshUser } = useAuth();
   const { deviceEnabled } = useSettings();
   const { t, language } = useI18n();
+  const commerceEnabled = useCommerceEnabled();
 
   const sectionParam = searchParams.get("section") as ProfileTab | null;
   const initialTab = sectionParam && PROFILE_TABS.includes(sectionParam) ? sectionParam : "account";
@@ -1980,7 +1982,7 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {deviceProEligible && (
+          {commerceEnabled && deviceProEligible && (
             <div className="rounded-xl border-2 border-emerald-300 dark:border-emerald-500/40 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 p-5 space-y-3">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">

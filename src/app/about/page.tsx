@@ -112,8 +112,7 @@ export default function AboutPage() {
               Ready to take control of your portfolio?
             </h3>
             <p className="text-slate-500 mb-6 max-w-md mx-auto">
-              Start tracking your investments today. Free to get started, upgrade when you&rsquo;re
-              ready.
+              Start tracking your investments today. Free to get started.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link

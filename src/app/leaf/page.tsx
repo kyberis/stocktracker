@@ -10,7 +10,15 @@ export default function LeafWaitlistPage() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "already" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [waitlistCount, setWaitlistCount] = useState<number | null>(null);
+  const [commerceEnabled, setCommerceEnabled] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch("/api/feature-flags")
+      .then((r) => r.json())
+      .then((flags) => setCommerceEnabled(!!flags.commerce_enabled))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/api/device-interest/count")
@@ -217,6 +225,7 @@ export default function LeafWaitlistPage() {
               )}
 
               {/* Price chips */}
+              {commerceEnabled && (
               <div className="flex flex-wrap gap-3">
                 <div className="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm">
                   <span className="text-xs text-slate-500 block">Device only</span>
@@ -227,6 +236,7 @@ export default function LeafWaitlistPage() {
                   <span className="text-sm font-bold text-violet-700">139 EUR</span>
                 </div>
               </div>
+              )}
             </div>
 
             {/* Image side */}
@@ -377,10 +387,14 @@ export default function LeafWaitlistPage() {
       {/* Disclaimer */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <p className="text-xs text-slate-400 text-center leading-relaxed">
-          trefolio Leaf requires a trefolio Pro subscription (7.99 EUR/month or 59.99 EUR/year).
-          The &ldquo;Leaf + 1 Year Pro&rdquo; bundle at 139 EUR includes 12 months of Pro.
+          {commerceEnabled ? (
+            <>
+              trefolio Leaf requires a trefolio Pro subscription (7.99 EUR/month or 59.99 EUR/year).
+              The &ldquo;Leaf + 1 Year Pro&rdquo; bundle at 139 EUR includes 12 months of Pro.{" "}
+            </>
+          ) : null}
           trefolio does not provide financial advice. Past performance does not guarantee future results.
-          Prices shown include VAT where applicable. Shipping costs may vary by destination.
+          {commerceEnabled ? " Prices shown include VAT where applicable. Shipping costs may vary by destination." : null}
           By joining the waitlist, you agree to receive product updates via email.
           You can unsubscribe at any time.
         </p>

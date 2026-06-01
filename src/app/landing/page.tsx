@@ -13,6 +13,17 @@ import { captureFirstTouchAttributionFromWindow } from "@/lib/attribution";
 import CloverToLogo from "@/components/CloverToLogo";
 import QuotaCompareTable from "@/components/QuotaCompareTable";
 
+function useLandingCommerceEnabled() {
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    fetch("/api/feature-flags")
+      .then((r) => r.json())
+      .then((flags) => setEnabled(!!flags.commerce_enabled))
+      .catch(() => {});
+  }, []);
+  return enabled;
+}
+
 /* ─── anonymous analytics helper ─── */
 
 function trackLanding(event: string, metadata?: Record<string, string>) {
@@ -385,14 +396,18 @@ function LangPicker({ className = "" }: { className?: string }) {
 
 function NavBar() {
   const { t } = useI18n();
+  const commerceEnabled = useLandingCommerceEnabled();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  const navLinks = useMemo(() => [
-    { href: "#features", label: t("landingNavFeatures") },
-    { href: "#pricing", label: t("landingNavPricing") },
-    { href: "#faq", label: t("landingNavFaq") },
-  ], [t]);
+  const navLinks = useMemo(() => {
+    const links = [
+      { href: "#features", label: t("landingNavFeatures") },
+      { href: "#pricing", label: t("landingNavPricing") },
+      { href: "#faq", label: t("landingNavFaq") },
+    ];
+    return commerceEnabled ? links : links.filter((l) => l.href !== "#pricing");
+  }, [t, commerceEnabled]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -722,6 +737,7 @@ function StatsBar() {
 
 function AgentsTeamSection() {
   const { t } = useI18n();
+  const commerceEnabled = useLandingCommerceEnabled();
   const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "agents_team" }), []);
   const sectionRef = useInViewOnce(sectionCb);
   const agents = useMemo(() => getAgentsTeam(t), [t]);
@@ -748,11 +764,13 @@ function AgentsTeamSection() {
             <span className="text-emerald-500">{t("landingAgentsHeadingAccent")}</span>
           </h2>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-            {t("landingAgentsSubtitle")}
+            {commerceEnabled ? t("landingAgentsSubtitle") : t("landingAgentsOfficeBridge")}
           </p>
+          {commerceEnabled && (
           <p className="text-base text-slate-600 max-w-2xl mx-auto mt-4">
             {t("landingAgentsOfficeBridge")}
           </p>
+          )}
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
@@ -2092,11 +2110,14 @@ function BillingToggle({
 
 function PricingSection() {
   const { t } = useI18n();
+  const commerceEnabled = useLandingCommerceEnabled();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
   const sectionCb = useCallback(() => trackLanding("landing_pricing_view"), []);
   const sectionRef = useInViewOnce(sectionCb);
   const isAnnual = billingPeriod === "annual";
   const pricing = useMemo(() => getPricing(t), [t]);
+
+  if (!commerceEnabled) return null;
 
   return (
     <section id="pricing" className="py-20 sm:py-28 border-t border-slate-200 bg-[#f5f3ef]" ref={sectionRef as React.RefObject<HTMLElement>}>

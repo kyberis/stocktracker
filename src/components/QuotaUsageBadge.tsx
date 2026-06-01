@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { FEATURE_QUOTAS, type FeatureQuotaKey } from "@/lib/platform-config";
 import Link from "next/link";
+import { useCommerceEnabled } from "@/lib/commerce";
 
 interface QuotaUsageBadgeProps {
   feature: FeatureQuotaKey;
@@ -26,6 +27,7 @@ export default function QuotaUsageBadge({
 }: QuotaUsageBadgeProps) {
   const { user } = useAuth();
   const { t } = useI18n();
+  const commerceEnabled = useCommerceEnabled();
 
   const config = FEATURE_QUOTAS[feature];
   if (!config) return null;
@@ -59,7 +61,7 @@ export default function QuotaUsageBadge({
       title={config.label}
     >
       <span>{text}</span>
-      {exhausted && showUpgrade && (
+      {exhausted && showUpgrade && commerceEnabled && (
         <Link
           href="/billing"
           className="text-[10px] font-bold uppercase tracking-wide hover:underline"

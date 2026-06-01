@@ -49,6 +49,11 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     description: "Beta briefing at /aid and home CTA when enabled. Portfolio pulse, FinPulse, scannable news, and Warren / Will / Clara column.",
     group: "Features",
   },
+  commerce_enabled: {
+    label: "Subscriptions & commerce",
+    description: "Pricing, upsell cards, checkout CTAs, and new Stripe checkout on trefolio",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

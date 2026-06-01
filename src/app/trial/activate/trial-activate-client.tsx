@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider } from "@/lib/theme-context";
 import Link from "next/link";
+import { useCommerceEnabled } from "@/lib/commerce";
 
 export type TrialTokenStatus = "valid" | "already_used" | "invalid";
 
@@ -29,6 +30,7 @@ const ROWS: { feature: string; free: string; pro: string }[] = [
 ];
 
 function TrialUnavailablePage({ reason }: { reason: "already_used" | "invalid" }) {
+  const commerceEnabled = useCommerceEnabled();
   const heading = reason === "already_used" ? "Trial already activated" : "Trial offer unavailable";
   const description =
     reason === "already_used"
@@ -47,12 +49,14 @@ function TrialUnavailablePage({ reason }: { reason: "already_used" | "invalid" }
         <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{heading}</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">{description}</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          {commerceEnabled && (
           <Link
             href="/pricing"
             className="w-full sm:w-auto min-w-[160px] rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-600 text-center"
           >
             View pricing
           </Link>
+          )}
           <Link
             href="/"
             className="w-full sm:w-auto min-w-[160px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700 text-center"

@@ -7,6 +7,7 @@ import { useSettings } from "@/lib/settings-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
+import { useCommerceEnabled } from "@/lib/commerce";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import EmptyState from "@/components/EmptyState";
 import type { NewsArticle } from "@/lib/types";
@@ -486,6 +487,7 @@ function NewsSummarizeControl({
 }) {
   const { t } = useI18n();
   const { user } = useAuth();
+  const commerceEnabled = useCommerceEnabled();
   const isPro = user?.plan === "pro" || user?.role === "admin";
 
   const listClass =
@@ -510,6 +512,7 @@ function NewsSummarizeControl({
         </button>
       );
     }
+    if (!commerceEnabled) return null;
     return (
       <Link href="/billing" className={listClass} onClick={(e) => e.stopPropagation()} prefetch={false}>
         {sparkle}
@@ -526,6 +529,7 @@ function NewsSummarizeControl({
       </button>
     );
   }
+  if (!commerceEnabled) return null;
   return (
     <Link href="/billing" className={cardClassFree} onClick={(e) => e.stopPropagation()} prefetch={false}>
       {sparkle}

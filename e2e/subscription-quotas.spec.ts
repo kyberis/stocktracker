@@ -75,7 +75,9 @@ test.describe("Subscription quotas (v2)", () => {
         expect(body.paywall).toBe(true);
         expect(body.reason).toBe("quota_exceeded");
         expect(body.feature).toBe("csv_export");
-        expect(body.upgradeUrl).toBe("/billing");
+        if (body.upgradeUrl) {
+          expect(body.upgradeUrl).toBe("/billing");
+        }
         return;
       }
     }

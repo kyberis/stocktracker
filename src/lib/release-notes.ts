@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "improvement",
+        text: "Admin feature flag commerce_enabled hides subscription pricing, upsell cards, and checkout on trefolio (default off). Enable Subscriptions & commerce in Feature Flags to resume sales.",
+        translations: {
+          es: "El flag commerce_enabled en Admin oculta precios, upsell y checkout en trefolio (desactivado por defecto). Activa Suscripciones y comercio en Feature Flags para reanudar ventas.",
+        },
+      },
+      {
         type: "feature",
         text: "Admin FinPulse handles: manage curated X accounts for Market voices in Settings (aid_finpulse_handles platform setting).",
         translations: {

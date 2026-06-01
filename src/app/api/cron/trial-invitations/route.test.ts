@@ -30,9 +30,11 @@ vi.mock("@/lib/cron-logging", async () => {
 
 import { ensureInitialized } from "@/lib/db/client";
 import { sendTrialInvitationEmail } from "@/lib/email";
+import { isFeatureEnabled } from "@/lib/db";
 
 const mockedEnsureInit = vi.mocked(ensureInitialized);
 const mockedSendEmail = vi.mocked(sendTrialInvitationEmail);
+const mockedIsFeatureEnabled = vi.mocked(isFeatureEnabled);
 
 const mockClient = {
   execute: vi.fn(),
@@ -41,6 +43,7 @@ const mockClient = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockedEnsureInit.mockResolvedValue(mockClient as never);
+  mockedIsFeatureEnabled.mockResolvedValue(true);
 });
 
 describe("trial-invitations cron", () => {
@@ -77,6 +80,19 @@ describe("trial-invitations cron", () => {
 
     expect(body.invited).toBe(0);
     expect(body.errors).toBe(0);
+    expect(mockedSendEmail).not.toHaveBeenCalled();
+  });
+
+  it("skips when commerce_enabled is off", async () => {
+    mockedIsFeatureEnabled.mockImplementation(async (flag) => flag !== "commerce_enabled");
+
+    const mod = await import("./route");
+    const req = new NextRequest("http://localhost/api/cron/trial-invitations");
+    const res = await (mod.GET as (req: NextRequest) => Promise<Response>)(req);
+    const body = await res.json();
+
+    expect(body.skipped).toBe(true);
+    expect(body.reason).toBe("commerce_enabled flag is off");
     expect(mockedSendEmail).not.toHaveBeenCalled();
   });
 

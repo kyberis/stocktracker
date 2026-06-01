@@ -17,6 +17,7 @@ import TierFeatureBadge from "@/components/TierFeatureBadge";
 import AdSlot from "@/components/AdSlot";
 import AddStockModal from "@/components/AddStockModal";
 import DataUpgradeNudge from "@/components/DataUpgradeNudge";
+import { useCommerceEnabled } from "@/lib/commerce";
 import PortfolioPickerModal from "@/components/PortfolioPickerModal";
 import type { BrokerFormat } from "@/hooks/import-types";
 
@@ -875,6 +876,7 @@ function UploadZone({
 }
 
 function SnapTradeGate({ t }: { t: (key: string) => string }) {
+  const commerceEnabled = useCommerceEnabled();
   return (
     <div className="bg-white dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
       <div className="text-center px-5 py-8">
@@ -902,6 +904,8 @@ function SnapTradeGate({ t }: { t: (key: string) => string }) {
             </div>
           ))}
         </div>
+        {commerceEnabled && (
+        <>
         <a
           href="/billing"
           className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors shadow-sm min-h-[44px]"
@@ -913,6 +917,8 @@ function SnapTradeGate({ t }: { t: (key: string) => string }) {
           <a href="/billing" className="underline hover:text-violet-600 dark:hover:text-violet-400">Trefolio</a>{" "}
           {t("brokerSyncGateAltSuffix") || "for unlimited connections"}
         </p>
+        </>
+        )}
       </div>
     </div>
   );
@@ -939,6 +945,7 @@ function SnapTradeContent({
   onImportAll: () => Promise<void>;
   track: (event: string, metadata?: Record<string, string>) => void;
 }) {
+  const commerceEnabled = useCommerceEnabled();
   if (snapTradeApi.step === "connecting") return <LoadingSpinner label={t("brokerSyncConnecting")} />;
   if (snapTradeApi.step === "reconnecting") return <LoadingSpinner label={t("brokerSyncReconnecting")} />;
   if (snapTradeApi.step === "fetching") return <LoadingSpinner label={t("brokerSyncFetching")} />;
@@ -1165,7 +1172,9 @@ function SnapTradeContent({
                     </div>
                     <p className="text-[11px] text-gray-500 dark:text-slate-400">{t("brokerSyncUpgradeForUnlimited") || "Upgrade to Trefolio for unlimited broker connections"}</p>
                   </div>
+                  {commerceEnabled && (
                   <a href="/billing" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition-colors shadow-sm min-h-[44px]">{t("upgrade") || "Upgrade"}</a>
+                  )}
                 </div>
               )}
 

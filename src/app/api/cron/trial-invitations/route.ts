@@ -12,6 +12,9 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 const runTrialInvitations = withCronLogging("trial-invitations", async () => {
+  if (!(await isFeatureEnabled("commerce_enabled"))) {
+    return { skipped: true, reason: "commerce_enabled flag is off" };
+  }
   if (!(await isFeatureEnabled("pro_trial_enabled"))) {
     return { skipped: true, reason: "pro_trial_enabled flag is off" };
   }

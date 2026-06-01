@@ -31,6 +31,7 @@ Feature flags registered in code, with per-user overrides stored in DB. Both cli
 
 ## 6. UI surface
 - Admin table per user; `/account` "Labs" panel for opt-in flags.
+- **`commerce_enabled`** (default off): hides subscription pricing, upsell/compare cards, checkout CTAs, and new purchase API paths on trefolio. Existing Pro users keep billing portal access. See payments spec.
 
 ## 7. Business logic
 - Resolution: user override → global default.

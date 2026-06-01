@@ -27,6 +27,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "market_data_alpha_vantage",
   "weekly_digest_enabled",
   "aid_beta",
+  "commerce_enabled",
 ];
 
 export const GET = withMetrics("/api/admin/feature-flags", async (req: NextRequest) => {

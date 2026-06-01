@@ -9,6 +9,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
+import { useCommerceEnabled } from "@/lib/commerce";
 import AdSlot from "@/components/AdSlot";
 import TierFeatureBadge from "./TierFeatureBadge";
 import ErrorBoundary from "./ErrorBoundary";
@@ -79,6 +80,7 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
     toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
   } = settings;
   const aiReportEnabled = useFeatureFlag("ai_report_enabled");
+  const commerceEnabled = useCommerceEnabled();
   const { favoriteIds, toggleFavorite, isFavorite } = useFavoriteTools();
   const router = useRouter();
   const activeTab: ToolTabId | null = initialTab ?? null;
@@ -319,7 +321,9 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
                 <h2 className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-2 px-0.5">
                   <span className="text-sm">🍀</span>
                   {t("toolsSectionTrefolio")}
+                  {commerceEnabled && (
                   <a href="/billing" className="ml-1 text-[9px] sm:text-[10px] font-bold bg-violet-500 text-white px-1.5 py-0.5 rounded-md uppercase hover:bg-violet-600 transition-colors">{t("toolsSectionUpgrade")}</a>
+                  )}
                 </h2>
                 <div className="space-y-4">
                   {groupCatalogByCategory(proTabsRest).map(({ category, items }) => (

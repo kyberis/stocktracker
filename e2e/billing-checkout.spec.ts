@@ -23,6 +23,10 @@ test.describe("Billing (Stripe / IdP)", () => {
 
   test("capacity endpoint reflects available Pro slots", async ({ request }) => {
     await loginAsAdmin(request);
+    const flagRes = await request.put("/api/admin/feature-flags", {
+      data: { flag: "commerce_enabled", enabled: true },
+    });
+    expect(flagRes.ok()).toBeTruthy();
     const res = await request.get("/api/billing/capacity");
     expect(res.status()).toBe(200);
     const body = await res.json();

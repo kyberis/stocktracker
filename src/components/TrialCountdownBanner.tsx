@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import type { TranslationKey } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n";
 import { getTrialBannerVisibility } from "@/lib/trial-banner-visibility";
+import { useCommerceEnabled } from "@/lib/commerce";
 
 function tOr(t: (k: TranslationKey) => string, key: TranslationKey, fallback: string) {
   const v = t(key);
@@ -12,6 +13,7 @@ function tOr(t: (k: TranslationKey) => string, key: TranslationKey, fallback: st
 }
 
 export default function TrialCountdownBanner() {
+  const commerceEnabled = useCommerceEnabled();
   const { user } = useAuth();
   const { t } = useI18n();
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -32,6 +34,8 @@ export default function TrialCountdownBanner() {
       nowMs,
     });
   }, [user, nowMs]);
+
+  if (!commerceEnabled) return null;
 
   if (!visibility.show) return null;
 

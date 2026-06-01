@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/auth-context";
 import { getHoldingsLimit } from "@/lib/subscription";
 import { useTrack } from "@/lib/use-track";
 import { initNudgeTracking, shouldShowPaywallNudge, recordPaywallNudgeShown, recordPaywallNudgeDismiss } from "@/lib/paywall-nudge";
+import { useCommerceEnabled } from "@/lib/commerce";
 import { hapticImpact, hapticSelectionChanged } from "@/lib/native-haptics";
 import { hideNativeSplash } from "@/lib/native-splash";
 import { useIsNative } from "@/lib/use-native";
@@ -97,6 +98,7 @@ export default function MobileDashboard() {
     usePortfolio();
   usePortfolioSnapshotSync({ demoMode });
   const { user, isLoading: authLoading } = useAuth();
+  const commerceEnabled = useCommerceEnabled();
   const track = useTrack();
   const isNative = useIsNative();
 
@@ -122,13 +124,13 @@ export default function MobileDashboard() {
   useEffect(() => {
     if (authLoading) return;
     initNudgeTracking();
-    if (userPlan === "free" && shouldShowPaywallNudge()) {
+    if (userPlan === "free" && commerceEnabled && shouldShowPaywallNudge()) {
       recordPaywallNudgeShown();
        
       setPaywallSurface("periodic_nudge");
       setShowPaywall(true);
     }
-  }, [authLoading, userPlan]);
+  }, [authLoading, userPlan, commerceEnabled]);
 
   const investmentCashEntries = useMemo<CashEntry[]>(
     () => cashEntries.filter((c) => !c.type || c.type === "cash"),
@@ -536,7 +538,7 @@ export default function MobileDashboard() {
         <AddManualAssetModal isOpen={showAddAsset} onClose={() => setShowAddAsset(false)} />
       )}
 
-      {showPaywall && (
+      {showPaywall && commerceEnabled && (
         <MobilePaywall
           surface={paywallSurface}
           onDismiss={() => {
@@ -554,7 +556,7 @@ export default function MobileDashboard() {
       )}
 
       {/* Holdings limit paywall trigger */}
-      {holdingsAtLimit && !showPaywall && userPlan === "free" && (
+      {holdingsAtLimit && !showPaywall && userPlan === "free" && commerceEnabled && (
         <div className="fixed bottom-16 left-4 right-4 z-40">
           <button
             onClick={() => { setPaywallSurface("holdings_limit"); setShowPaywall(true); }}

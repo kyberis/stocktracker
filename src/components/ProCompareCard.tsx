@@ -11,6 +11,7 @@ import type { TranslationKey } from "@/lib/i18n";
 import TierIcon from "@/components/TierIcon";
 import QuotaCompareTable from "@/components/QuotaCompareTable";
 import { resolveBillingPortalHref, resolveIdpUpgradeHref } from "@/lib/idp/config";
+import { useCommerceEnabled } from "@/lib/commerce";
 
 interface CapacityInfo {
   available: boolean;
@@ -87,6 +88,7 @@ export default function ProCompareCard({
   aiUsage,
   className = "",
 }: ProCompareCardProps) {
+  const commerceEnabled = useCommerceEnabled();
   const { user } = useAuth();
   const { t } = useI18n();
   const track = useTrack();
@@ -293,6 +295,8 @@ export default function ProCompareCard({
       </div>
     );
   };
+
+  if (!commerceEnabled) return null;
 
   return (
     <div className={`rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/80 p-5 sm:p-6 ${className}`}>

@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import TierIcon from "@/components/TierIcon";
 import { resolveIdpUpgradeHref } from "@/lib/idp/config";
+import { useCommerceEnabled } from "@/lib/commerce";
 
 interface MobilePaywallProps {
   onDismiss: () => void;
@@ -29,6 +30,7 @@ const BENEFIT_FALLBACK: Record<string, { en: string; es: string }> = {
 };
 
 export default function MobilePaywall({ onDismiss, surface }: MobilePaywallProps) {
+  const commerceEnabled = useCommerceEnabled();
   const { user } = useAuth();
   const { t } = useI18n();
   const track = useTrack();
@@ -48,6 +50,10 @@ export default function MobilePaywall({ onDismiss, surface }: MobilePaywallProps
   };
 
   void user;
+
+  if (!commerceEnabled) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-emerald-950 safe-area-top">

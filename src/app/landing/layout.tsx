@@ -1,76 +1,90 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
 
-export const metadata: Metadata = {
-  title: "trefolio — Portfolio Tracking, EU Tax Reports & AI Insights",
-  description:
-    "trefolio is the portfolio tracker built for European investors. EU tax reports (DE/FR/ES/NL/IT), stock screener, net worth tracking, broker sync, AI analysis in 35 languages, and dividend projections. Free to start, Trefolio for €7.99/month.",
-  alternates: {
-    canonical: "https://trefolio.com",
-    languages: {
-      "en": "https://trefolio.com",
-      "es": "https://trefolio.com",
-      "fr": "https://trefolio.com",
-      "de": "https://trefolio.com",
-      "it": "https://trefolio.com",
-      "pt": "https://trefolio.com",
-      "nl": "https://trefolio.com",
-      "pl": "https://trefolio.com",
-      "cs": "https://trefolio.com",
-      "sk": "https://trefolio.com",
-      "hu": "https://trefolio.com",
-      "ro": "https://trefolio.com",
-      "bg": "https://trefolio.com",
-      "hr": "https://trefolio.com",
-      "sl": "https://trefolio.com",
-      "el": "https://trefolio.com",
-      "sv": "https://trefolio.com",
-      "da": "https://trefolio.com",
-      "fi": "https://trefolio.com",
-      "et": "https://trefolio.com",
-      "lv": "https://trefolio.com",
-      "lt": "https://trefolio.com",
-      "ga": "https://trefolio.com",
-      "mt": "https://trefolio.com",
-      "nb": "https://trefolio.com",
-      "uk": "https://trefolio.com",
-      "tr": "https://trefolio.com",
-      "sr": "https://trefolio.com",
-      "is": "https://trefolio.com",
-      "sq": "https://trefolio.com",
-      "bs": "https://trefolio.com",
-      "mk": "https://trefolio.com",
-      "be": "https://trefolio.com",
-      "ca": "https://trefolio.com",
-      "cy": "https://trefolio.com",
-      "x-default": "https://trefolio.com",
-    },
-  },
-  openGraph: {
+import { isCommerceEnabled } from "@/lib/commerce-server";
+
+const DESCRIPTION_COMMERCE =
+  "trefolio is the portfolio tracker built for European investors. EU tax reports (DE/FR/ES/NL/IT), stock screener, net worth tracking, broker sync, AI analysis in 35 languages, and dividend projections. Free to start, Trefolio for €7.99/month.";
+const DESCRIPTION_NO_COMMERCE =
+  "trefolio is the portfolio tracker built for European investors. EU tax reports (DE/FR/ES/NL/IT), stock screener, net worth tracking, broker sync, AI analysis in 35 languages, and dividend projections. Free to start.";
+
+const OG_DESCRIPTION_COMMERCE =
+  "The European investor's portfolio tracker. EU tax reports, stock screener, net worth tracking, AI analysis in 35 languages, and dividend projections — plans from €2.99/month.";
+const OG_DESCRIPTION_NO_COMMERCE =
+  "The European investor's portfolio tracker. EU tax reports, stock screener, net worth tracking, AI analysis in 35 languages, and dividend projections.";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const commerceEnabled = await isCommerceEnabled();
+  const description = commerceEnabled ? DESCRIPTION_COMMERCE : DESCRIPTION_NO_COMMERCE;
+  const ogDescription = commerceEnabled ? OG_DESCRIPTION_COMMERCE : OG_DESCRIPTION_NO_COMMERCE;
+  return {
     title: "trefolio — Portfolio Tracking, EU Tax Reports & AI Insights",
-    description:
-      "The European investor's portfolio tracker. EU tax reports, stock screener, net worth tracking, AI analysis in 35 languages, and dividend projections — plans from €2.99/month.",
-    url: "https://trefolio.com",
-    siteName: "trefolio",
-    locale: "en_US",
-    type: "website",
-    images: [
-      {
-        url: "/screenshots/dashboard-overview.png",
-        width: 1280,
-        height: 800,
-        alt: "trefolio portfolio dashboard showing holdings, performance metrics, and growth projection",
+    description,
+    alternates: {
+      canonical: "https://trefolio.com",
+      languages: {
+        "en": "https://trefolio.com",
+        "es": "https://trefolio.com",
+        "fr": "https://trefolio.com",
+        "de": "https://trefolio.com",
+        "it": "https://trefolio.com",
+        "pt": "https://trefolio.com",
+        "nl": "https://trefolio.com",
+        "pl": "https://trefolio.com",
+        "cs": "https://trefolio.com",
+        "sk": "https://trefolio.com",
+        "hu": "https://trefolio.com",
+        "ro": "https://trefolio.com",
+        "bg": "https://trefolio.com",
+        "hr": "https://trefolio.com",
+        "sl": "https://trefolio.com",
+        "el": "https://trefolio.com",
+        "sv": "https://trefolio.com",
+        "da": "https://trefolio.com",
+        "fi": "https://trefolio.com",
+        "et": "https://trefolio.com",
+        "lv": "https://trefolio.com",
+        "lt": "https://trefolio.com",
+        "ga": "https://trefolio.com",
+        "mt": "https://trefolio.com",
+        "nb": "https://trefolio.com",
+        "uk": "https://trefolio.com",
+        "tr": "https://trefolio.com",
+        "sr": "https://trefolio.com",
+        "is": "https://trefolio.com",
+        "sq": "https://trefolio.com",
+        "bs": "https://trefolio.com",
+        "mk": "https://trefolio.com",
+        "be": "https://trefolio.com",
+        "ca": "https://trefolio.com",
+        "cy": "https://trefolio.com",
+        "x-default": "https://trefolio.com",
       },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "trefolio — Portfolio Tracking, EU Tax Reports & AI Insights",
-    description:
-      "The European investor's portfolio tracker. EU tax reports, stock screener, net worth tracking, AI analysis in 35 languages, and dividend projections — plans from €2.99/month.",
-    images: ["/screenshots/dashboard-overview.png"],
-  },
-};
+    },
+    openGraph: {
+      title: "trefolio — Portfolio Tracking, EU Tax Reports & AI Insights",
+      description: ogDescription,
+      url: "https://trefolio.com",
+      siteName: "trefolio",
+      locale: "en_US",
+      type: "website",
+      images: [
+        {
+          url: "/screenshots/dashboard-overview.png",
+          width: 1280,
+          height: 800,
+          alt: "trefolio portfolio dashboard showing holdings, performance metrics, and growth projection",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "trefolio — Portfolio Tracking, EU Tax Reports & AI Insights",
+      description: ogDescription,
+      images: ["/screenshots/dashboard-overview.png"],
+    },
+  };
+}
 
 const WEBSITE_SCHEMA = {
   "@context": "https://schema.org",
@@ -266,12 +280,20 @@ const FAQ_SCHEMA = {
   ],
 };
 
-export default function LandingLayout({ children }: { children: React.ReactNode }) {
+export default async function LandingLayout({ children }: { children: React.ReactNode }) {
+  const commerceEnabled = await isCommerceEnabled();
+  const softwareSchema = commerceEnabled
+    ? SOFTWARE_APP_SCHEMA
+    : {
+        ...SOFTWARE_APP_SCHEMA,
+        offers: [SOFTWARE_APP_SCHEMA.offers[0]],
+      };
+
   return (
     <>
       <JsonLd data={WEBSITE_SCHEMA} />
       <JsonLd data={ORGANIZATION_SCHEMA} />
-      <JsonLd data={SOFTWARE_APP_SCHEMA} />
+      <JsonLd data={softwareSchema} />
       <JsonLd data={FAQ_SCHEMA} />
       {children}
     </>

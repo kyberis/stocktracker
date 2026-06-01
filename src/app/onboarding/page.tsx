@@ -533,6 +533,7 @@ function OnboardingContent() {
   const { user, refreshUser } = useAuth();
   const { t } = useI18n();
   const trialEnabled = useFeatureFlag("pro_trial_enabled");
+  const commerceEnabled = useFeatureFlag("commerce_enabled");
   const { isLoaded: flagsLoaded } = useFeatureFlagContext();
   const [phase, setPhase] = useState<OnboardingPhase>("wizard");
   const [step, setStep] = useState(0);
@@ -545,7 +546,7 @@ function OnboardingContent() {
   const [saving, setSaving] = useState(false);
   const autoCompleteRef = useRef(false);
 
-  const showTrialStep = flagsLoaded && trialEnabled && !user?.trialActivatedAt;
+  const showTrialStep = flagsLoaded && trialEnabled && commerceEnabled && !user?.trialActivatedAt;
 
   useEffect(() => {
     if (user?.displayName) setDisplayName(user.displayName);

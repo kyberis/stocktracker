@@ -45,7 +45,8 @@ export type PlatformFeature =
   | "market_data_alpha_vantage"
   | "weekly_digest_enabled"
   | "telegram_bot_enabled"
-  | "aid_beta";
+  | "aid_beta"
+  | "commerce_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_enabled",
@@ -449,6 +450,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "weekly_digest_enabled",
   "telegram_bot_enabled",
   "aid_beta",
+  "commerce_enabled",
 ];
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {
