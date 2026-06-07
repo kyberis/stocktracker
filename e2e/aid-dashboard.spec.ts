@@ -1,5 +1,14 @@
 import { test, expect, type Page } from "@playwright/test";
-import { createTestUser, dismissOverlays, loginAsAdmin } from "./helpers";
+import { createTestUser, dismissOverlays, loginAsAdmin, loginViaUI } from "./helpers";
+
+async function enableAidBeta(request: import("@playwright/test").APIRequestContext) {
+  const adminOk = await loginAsAdmin(request);
+  expect(adminOk).toBe(true);
+  const flagRes = await request.put("/api/admin/feature-flags", {
+    data: { flag: "aid_beta", enabled: true },
+  });
+  expect(flagRes.status()).toBe(200);
+}
 
 async function openAidDashboard(page: Page) {
   const flagsP = page
@@ -22,16 +31,12 @@ test.describe.configure({ timeout: 90_000 });
 
 test.describe("AID dashboard", () => {
   test.beforeEach(async ({ request }) => {
-    const adminOk = await loginAsAdmin(request);
-    expect(adminOk).toBe(true);
-    const flagRes = await request.put("/api/admin/feature-flags", {
-      data: { flag: "aid_beta", enabled: true },
-    });
-    expect(flagRes.status()).toBe(200);
-    await createTestUser(request, true);
+    await enableAidBeta(request);
   });
 
-  test("seeded user with aid_beta sees AID dashboard", async ({ page }) => {
+  test("seeded user with aid_beta sees AID dashboard", async ({ page, request }) => {
+    const creds = await createTestUser(request, true);
+    await loginViaUI(page, creds.email, creds.password);
     await openAidDashboard(page);
 
     await expect(page.getByRole("heading", { name: /Investor Briefing|Briefing de inversor/i })).toBeVisible({ timeout: 15000 });
@@ -39,7 +44,9 @@ test.describe("AID dashboard", () => {
     await expect(page.locator("#aid-main")).toBeVisible();
   });
 
-  test("allocation and dividends modals open", async ({ page }) => {
+  test("allocation and dividends modals open", async ({ page, request }) => {
+    const creds = await createTestUser(request, true);
+    await loginViaUI(page, creds.email, creds.password);
     await openAidDashboard(page);
 
     await page.getByRole("button", { name: /Allocation|Asignación/i }).click();
@@ -50,7 +57,9 @@ test.describe("AID dashboard", () => {
     await expect(page.getByRole("dialog")).toBeVisible();
   });
 
-  test("mobile shows Warren sheet opener", async ({ page }) => {
+  test("mobile shows Warren sheet opener", async ({ page, request }) => {
+    const creds = await createTestUser(request, true);
+    await loginViaUI(page, creds.email, creds.password);
     await page.setViewportSize({ width: 390, height: 844 });
     await openAidDashboard(page);
 
@@ -58,6 +67,8 @@ test.describe("AID dashboard", () => {
   });
 
   test("digest, feed, status and insights APIs work with aid_beta", async ({ request }) => {
+    await createTestUser(request, true);
+
     const digest = await request.get("/api/aid/digest");
     expect(digest.status()).toBe(200);
 
@@ -79,14 +90,18 @@ test.describe("AID dashboard", () => {
     expect(body).toHaveProperty("will");
   });
 
-  test("briefing and priority sections render for seeded user", async ({ page }) => {
+  test("briefing and priority sections render for seeded user", async ({ page, request }) => {
+    const creds = await createTestUser(request, true);
+    await loginViaUI(page, creds.email, creds.password);
     await openAidDashboard(page);
 
     await expect(page.locator("#aid-finpulse")).toBeVisible({ timeout: 15000 });
     await expect(page.locator("#aid-news")).toBeVisible();
   });
 
-  test("layout customize toggle is visible", async ({ page }) => {
+  test("layout customize toggle is visible", async ({ page, request }) => {
+    const creds = await createTestUser(request, true);
+    await loginViaUI(page, creds.email, creds.password);
     await openAidDashboard(page);
 
     await expect(page.getByRole("button", { name: /Customize layout|Personalizar layout/i })).toBeVisible({
@@ -95,6 +110,8 @@ test.describe("AID dashboard", () => {
   });
 
   test("layout API get and put work with aid_beta", async ({ request }) => {
+    await createTestUser(request, true);
+
     const getRes = await request.get("/api/aid/layout");
     expect(getRes.status()).toBe(200);
     const getBody = await getRes.json();
@@ -110,14 +127,14 @@ test.describe("AID dashboard", () => {
 
 test.describe("AID empty state", () => {
   test.describe.configure({ timeout: 90_000 });
+
   test.beforeEach(async ({ request }) => {
-    const adminOk = await loginAsAdmin(request);
-    expect(adminOk).toBe(true);
-    await request.put("/api/admin/feature-flags", { data: { flag: "aid_beta", enabled: true } });
-    await createTestUser(request, false);
+    await enableAidBeta(request);
   });
 
-  test("empty user sees welcome CTAs on AID", async ({ page }) => {
+  test("empty user sees welcome CTAs on AID", async ({ page, request }) => {
+    const creds = await createTestUser(request, false);
+    await loginViaUI(page, creds.email, creds.password);
     await openAidDashboard(page);
 
     await expect(page.getByText(/Welcome to trefolio|Bienvenido a trefolio/i)).toBeVisible({ timeout: 15000 });
@@ -125,7 +142,12 @@ test.describe("AID empty state", () => {
   });
 
   test("redirects to home when aid_beta is off", async ({ request, page }) => {
+    const adminOk = await loginAsAdmin(request);
+    expect(adminOk).toBe(true);
     await request.put("/api/admin/feature-flags", { data: { flag: "aid_beta", enabled: false } });
+
+    const creds = await createTestUser(request, false);
+    await loginViaUI(page, creds.email, creds.password);
     await page.goto("/aid");
     await page.waitForURL((url) => !url.pathname.includes("/aid"), { timeout: 15000 });
   });
