@@ -20,6 +20,7 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Schedules 
 | `portfolio-snapshots` | `*/5 * * * *` | `/api/cron/portfolio-snapshots` | Compute and store portfolio value snapshots for all users (every 5 min for dense intraday charts) |
 | `trial-invitations` | `0 10 * * *` | `/api/cron/trial-invitations` | Invite eligible free users to 7-day Pro trial after 1 week of activity |
 | `trial-expiration` | `0 * * * *` | `/api/cron/trial-expiration` | Downgrade expired trial users to free and send expiration email |
+| `commerce-complimentary-renewal` | `0 2 * * *` | `/api/cron/commerce-complimentary-renewal` | Renew 30-day complimentary Trefolio Pro while commerce_enabled is off |
 | `weekly-digest` | `0 8 * * 1` | `/api/cron/weekly-digest` | Generate and send AI-powered weekly portfolio digest to Pro users every Monday |
 | `digest-email` | `*/15 * * * *` | `/api/cron/digest-email` | Poll Gmail for new market digest emails, rewrite with AI, and store as drafts for admin review |
 | `moat-sync` | `0 */4 * * *` | `/api/cron/moat-sync` | Evaluate stale/missing moat scores for screener-universe stocks using Alpha Vantage fundamentals |

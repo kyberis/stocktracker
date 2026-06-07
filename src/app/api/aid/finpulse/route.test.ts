@@ -46,7 +46,7 @@ beforeEach(() => {
   mockedSettings.mockResolvedValue({ language: "en" } as never);
   mockedHoldings.mockResolvedValue([{ ticker: "NVDA", shares: 1 }] as never);
   mockedBuild.mockResolvedValue({
-    items: [{ id: "1", handle: "federalreserve", headline: "Test", bullets: ["a"], impact: "high" as const, tickers: [], tags: [], cachedAt: "", portfolioRelevant: false, displayName: "Fed", sourceUrl: "https://x.com", publishedAt: "" }],
+    items: [{ id: "1", handle: "federalreserve", headline: "Test", bullets: ["a"], impact: "high" as const, impactScore: 4, tickers: [], tags: [], cachedAt: "", portfolioRelevant: false, displayName: "Fed", sourceUrl: "https://x.com", publishedAt: "" }],
     generated: 0,
   });
   mockedHandles.mockResolvedValue([

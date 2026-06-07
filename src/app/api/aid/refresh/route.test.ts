@@ -51,7 +51,7 @@ beforeEach(() => {
   mockedSettings.mockResolvedValue({ language: "en" } as never);
   mockedHoldings.mockResolvedValue([{ ticker: "AAPL", shares: 1 }] as never);
   mockedQuotes.mockResolvedValue({ AAPL: { regularMarketPrice: 100 } } as never);
-  mockedBuild.mockResolvedValue({ items: [], earningsTodayCount: 1 });
+  mockedBuild.mockResolvedValue({ items: [], earningsTodayCount: 1, newSinceVisitCount: 0 });
   mockedEarningsRecap.mockResolvedValue({ items: [] });
 });
 
