@@ -37,6 +37,7 @@ import {
 } from "@/lib/http/request-public-origin";
 import { ensureTrefolioAdminRoleForUser } from "@/lib/auth/admin-allowlist";
 import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
+import { grantCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
 
 /**
  * GET /api/auth/oidc/callback
@@ -241,6 +242,7 @@ export async function GET(req: NextRequest) {
     });
     await ensureDefaultPortfolio(publicUser.id);
     await linkLocalUserToIdpSub({ localUserId: publicUser.id, idpSub: claims.sub });
+    await grantCommerceComplimentaryPro(publicUser.id);
     dbUser = (await findLocalUserByIdpSub(claims.sub)) as DbUser;
     if (!dbUser) {
       authProbeWarn(

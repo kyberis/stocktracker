@@ -25,6 +25,7 @@ import { welcomeNotification } from "@/lib/notification-templates";
 import { FIRST_TOUCH_ATTRIBUTION_COOKIE, normalizeAttribution, parseFirstTouchAttributionCookie } from "@/lib/attribution";
 import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
 import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
+import { grantCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -261,6 +262,7 @@ async function handleLoginFlow(
         attribution,
       });
       await ensureDefaultPortfolio(publicUser.id);
+      const complimentaryGrant = await grantCommerceComplimentaryPro(publicUser.id);
 
       const refCode = req.cookies.get("trefolio_ref")?.value || "";
       if (refCode) {
@@ -283,10 +285,10 @@ async function handleLoginFlow(
         email: publicUser.email,
         display_name: publicUser.displayName,
         avatar_url: publicUser.avatarUrl,
-        plan: publicUser.plan,
+        plan: complimentaryGrant.granted ? "pro" : publicUser.plan,
         stripe_customer_id: "",
         stripe_subscription_id: "",
-        plan_expires_at: "",
+        plan_expires_at: complimentaryGrant.granted ? complimentaryGrant.planExpiresAt : "",
         ai_calls_this_month: 0,
         ai_calls_reset_at: "",
         ai_calls_today: 0,
@@ -321,6 +323,7 @@ async function handleLoginFlow(
         membership_grant_plan: "",
         membership_grant_days: 0,
         membership_grant_created_at: "",
+        commerce_complimentary_at: complimentaryGrant.granted ? new Date().toISOString() : "",
         checklist_dismissed_at: "",
         weekly_digest_enabled: 1,
         profile_slug: "",

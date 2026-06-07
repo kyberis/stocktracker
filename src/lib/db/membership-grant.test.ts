@@ -51,6 +51,7 @@ function mockUser(partial: Partial<DbUser>): DbUser {
     membership_grant_plan: "",
     membership_grant_days: 0,
     membership_grant_created_at: "",
+    commerce_complimentary_at: "",
     checklist_dismissed_at: "",
     weekly_digest_enabled: 1,
     profile_slug: "",

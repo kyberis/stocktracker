@@ -66,6 +66,8 @@ export interface DbUser {
   membership_grant_plan: string;
   membership_grant_days: number;
   membership_grant_created_at: string;
+  /** Set when the user received complimentary Pro while commerce_enabled is off. */
+  commerce_complimentary_at: string;
   checklist_dismissed_at: string;
   weekly_digest_enabled: number;
   profile_slug: string;
@@ -390,6 +392,7 @@ export function rowToDbUser(row: Row): DbUser {
     membership_grant_plan: str(row.membership_grant_plan),
     membership_grant_days: num(row.membership_grant_days),
     membership_grant_created_at: str(row.membership_grant_created_at),
+    commerce_complimentary_at: str(row.commerce_complimentary_at),
     checklist_dismissed_at: str(row.checklist_dismissed_at),
     weekly_digest_enabled: num(row.weekly_digest_enabled ?? 1),
     profile_slug: str(row.profile_slug),

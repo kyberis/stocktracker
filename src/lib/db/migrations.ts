@@ -3514,6 +3514,19 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 119,
+    description: "Commerce-off complimentary Pro grant marker on users",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("commerce_complimentary_at")) {
+        await client.execute(
+          "ALTER TABLE users ADD COLUMN commerce_complimentary_at TEXT NOT NULL DEFAULT ''",
+        );
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

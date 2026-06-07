@@ -19,6 +19,7 @@ import { ensureLocalUserLinkedToIdp, syncEntitlementsForUser } from "@/lib/idp/e
 import { isIdpEnabled, legacyAuthEnabled, resolveIdpAccountHref } from "@/lib/idp/config";
 import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { ensureTrefolioAdminRoleForUser } from "@/lib/auth/admin-allowlist";
+import { renewCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
 
 /**
  * Fire-and-forget: when a plan's grace period has expired, persist the
@@ -67,6 +68,13 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
   if (user) {
     await ensureTrefolioAdminRoleForUser(user.id, user.email);
     user = await findUserById(session.userId);
+  }
+
+  if (user) {
+    const renewResult = await renewCommerceComplimentaryPro(user.id);
+    if (renewResult.renewed) {
+      user = await findUserById(session.userId);
+    }
   }
 
   const [passkeyCount, deviceOn, impersonator] = await Promise.all([

@@ -4,6 +4,7 @@ import type { UserPlan } from "@/lib/db/helpers";
 import { fetchEntitlementsBySub, importUser, type IdpEntitlementResponse } from "./client";
 import { isIdpEnabled } from "./config";
 import { isLocalTrialActive } from "@/lib/trial-activation";
+import { isCommerceComplimentaryActive } from "@/lib/commerce-complimentary-pro";
 import { effectivePlan } from "@/lib/subscription";
 
 /**
@@ -83,7 +84,10 @@ export async function syncEntitlementsForUser(userId: string): Promise<UserPlan 
   const nextPlan: UserPlan = payload.entitlements.trefolio_pro ? "pro" : "free";
   const nextExpiresAt = payload.proUntil ?? "";
 
-  if (isLocalTrialActive(user) && !payload.entitlements.trefolio_pro) {
+  if (
+    (isLocalTrialActive(user) || isCommerceComplimentaryActive(user)) &&
+    !payload.entitlements.trefolio_pro
+  ) {
     return user.plan;
   }
 

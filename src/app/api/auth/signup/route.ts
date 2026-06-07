@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, findUserByEmail, trackEvent, ensureDefaultPortfolio, findUserByReferralCode, createReferral } from "@/lib/db";
+import { createUser, findUserByEmail, findUserById, toPublicUser, trackEvent, ensureDefaultPortfolio, findUserByReferralCode, createReferral } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
 import {
   createSessionToken,
@@ -19,6 +19,7 @@ import { normalizeAttribution, parseFirstTouchAttributionCookie, FIRST_TOUCH_ATT
 import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
 import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
 import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
+import { grantCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
 
 function deriveUsername(email: string): string {
   const prefix = email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "");
@@ -101,6 +102,9 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
     });
 
     await ensureDefaultPortfolio(user.id);
+    await grantCommerceComplimentaryPro(user.id);
+    const dbUser = await findUserById(user.id);
+    const provisionedUser = dbUser ? toPublicUser(dbUser) : user;
 
     // Handle referral code from body or cookie
     const refCode = referralCode || req.cookies.get("trefolio_ref")?.value || "";
@@ -115,12 +119,12 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
     }
 
     const token = await createSessionToken({
-      userId: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      mustChangePassword: user.mustChangePassword,
-      plan: user.plan,
+      userId: provisionedUser.id,
+      username: provisionedUser.username,
+      email: provisionedUser.email,
+      role: provisionedUser.role,
+      mustChangePassword: provisionedUser.mustChangePassword,
+      plan: provisionedUser.plan,
       emailVerified: false,
       onboardingCompleted: false,
     });
@@ -161,7 +165,7 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
       );
     }
 
-    const response = NextResponse.json({ user }, { status: 201 });
+    const response = NextResponse.json({ user: provisionedUser }, { status: 201 });
     response.cookies.set(getSessionCookieConfig(token));
     return response;
   } catch (error) {

@@ -88,6 +88,12 @@ export const CRON_REGISTRY: CronJob[] = [
     description: "Downgrade expired trial users to free and send expiration email",
   },
   {
+    name: "commerce-complimentary-renewal",
+    path: "/api/cron/commerce-complimentary-renewal",
+    schedule: "0 2 * * *",
+    description: "Renew 30-day complimentary Trefolio Pro while commerce_enabled is off",
+  },
+  {
     name: "weekly-digest",
     path: "/api/cron/weekly-digest",
     schedule: "0 8 * * 1",

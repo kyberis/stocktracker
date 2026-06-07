@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "While Subscriptions & commerce is off, new Warren accounts receive 30 days of Trefolio Pro on signup and auto-renew for another 30 days on expiry until commerce is enabled again.",
+        translations: {
+          es: "Con Suscripciones y comercio desactivado, las cuentas nuevas en Warren reciben 30 días de Trefolio Pro al registrarse y se renuevan automáticamente otros 30 días al expirar hasta que se reactive el comercio.",
+        },
+      },
+      {
+        type: "improvement",
         text: "Admin feature flag commerce_enabled hides subscription pricing, upsell cards, and checkout on trefolio (default off). Enable Subscriptions & commerce in Feature Flags to resume sales.",
         translations: {
           es: "El flag commerce_enabled en Admin oculta precios, upsell y checkout en trefolio (desactivado por defecto). Activa Suscripciones y comercio en Feature Flags para reanudar ventas.",
@@ -441,9 +448,9 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "fix",
-        text: "Warren “show my investment in X” prompts (e.g. Uber) now prefetch the matching holding and route to listHoldings + renderHoldingCard instead of wrongly answering with Agent Office missions.",
+        text: "Warren “show my investment in X” prompts now prefetch the matching holding and route to listHoldings + renderHoldingCard instead of wrongly answering with Agent Office missions.",
         translations: {
-          es: "Los prompts de Warren «mostrame mi inversión en X» (p. ej. Uber) precargan la posición y usan listHoldings + renderHoldingCard en lugar de responder erróneamente con misiones de la Oficina.",
+          es: "Los prompts de Warren «mostrame mi inversión en X» precargan la posición y usan listHoldings + renderHoldingCard en lugar de responder erróneamente con misiones de la Oficina.",
         },
       },
       {
