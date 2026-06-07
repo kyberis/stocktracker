@@ -7,11 +7,11 @@ import {
 import { wantsMoatScreenerIntent } from "./moat-screener-intent";
 
 describe("portfolio-holding-intent", () => {
-  it("detects Spanish show-my-Uber-investment prompt", () => {
-    const msg = "mostrame mi inversion en Uber";
+  it("detects Spanish show-my-investment prompt", () => {
+    const msg = "mostrame mi inversion en AAPL";
     expect(wantsPortfolioHoldingIntent(msg)).toBe(true);
     expect(wantsMoatScreenerIntent(msg)).toBe(false);
-    expect(extractHoldingQueryFromMessage(msg)).toBe("Uber");
+    expect(extractHoldingQueryFromMessage(msg)).toBe("AAPL");
   });
 
   it("detects English position lookup", () => {
