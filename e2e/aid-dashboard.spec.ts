@@ -1,13 +1,24 @@
 import { test, expect, type Page } from "@playwright/test";
 import { createTestUser, dismissOverlays, loginAsAdmin } from "./helpers";
 
-async function waitForAidDashboard(page: Page) {
-  await page.waitForResponse(
-    (resp) => resp.url().includes("/api/aid/layout") && resp.status() === 200,
-    { timeout: 45_000 },
-  ).catch(() => {});
-  await expect(page.locator("#aid-main")).toBeVisible({ timeout: 45_000 });
+async function openAidDashboard(page: Page) {
+  const flagsP = page
+    .waitForResponse((r) => r.url().includes("/api/feature-flags") && r.ok(), { timeout: 60_000 })
+    .catch(() => null);
+  const holdingsP = page
+    .waitForResponse((r) => r.url().includes("/api/holdings") && r.ok(), { timeout: 60_000 })
+    .catch(() => null);
+  const layoutP = page
+    .waitForResponse((r) => r.url().includes("/api/aid/layout") && r.ok(), { timeout: 60_000 })
+    .catch(() => null);
+
+  await page.goto("/aid");
+  await dismissOverlays(page);
+  await Promise.all([flagsP, holdingsP, layoutP]);
+  await expect(page.locator("#aid-main")).toBeVisible({ timeout: 60_000 });
 }
+
+test.describe.configure({ timeout: 90_000 });
 
 test.describe("AID dashboard", () => {
   test.beforeEach(async ({ request }) => {
@@ -21,9 +32,7 @@ test.describe("AID dashboard", () => {
   });
 
   test("seeded user with aid_beta sees AID dashboard", async ({ page }) => {
-    await page.goto("/aid");
-    await dismissOverlays(page);
-    await waitForAidDashboard(page);
+    await openAidDashboard(page);
 
     await expect(page.getByRole("heading", { name: /Investor Briefing|Briefing de inversor/i })).toBeVisible({ timeout: 15000 });
     await expect(page.getByText(/Portfolio value|Valor del portafolio/i).first()).toBeVisible();
@@ -31,9 +40,7 @@ test.describe("AID dashboard", () => {
   });
 
   test("allocation and dividends modals open", async ({ page }) => {
-    await page.goto("/aid");
-    await dismissOverlays(page);
-    await waitForAidDashboard(page);
+    await openAidDashboard(page);
 
     await page.getByRole("button", { name: /Allocation|Asignación/i }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
@@ -45,9 +52,7 @@ test.describe("AID dashboard", () => {
 
   test("mobile shows Warren sheet opener", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/aid");
-    await dismissOverlays(page);
-    await waitForAidDashboard(page);
+    await openAidDashboard(page);
 
     await expect(page.getByRole("button", { name: /Warren/i })).toBeVisible({ timeout: 15000 });
   });
@@ -75,18 +80,14 @@ test.describe("AID dashboard", () => {
   });
 
   test("briefing and priority sections render for seeded user", async ({ page }) => {
-    await page.goto("/aid");
-    await dismissOverlays(page);
-    await waitForAidDashboard(page);
+    await openAidDashboard(page);
 
     await expect(page.locator("#aid-finpulse")).toBeVisible({ timeout: 15000 });
     await expect(page.locator("#aid-news")).toBeVisible();
   });
 
   test("layout customize toggle is visible", async ({ page }) => {
-    await page.goto("/aid");
-    await dismissOverlays(page);
-    await waitForAidDashboard(page);
+    await openAidDashboard(page);
 
     await expect(page.getByRole("button", { name: /Customize layout|Personalizar layout/i })).toBeVisible({
       timeout: 15000,
@@ -108,6 +109,7 @@ test.describe("AID dashboard", () => {
 });
 
 test.describe("AID empty state", () => {
+  test.describe.configure({ timeout: 90_000 });
   test.beforeEach(async ({ request }) => {
     const adminOk = await loginAsAdmin(request);
     expect(adminOk).toBe(true);
@@ -116,9 +118,7 @@ test.describe("AID empty state", () => {
   });
 
   test("empty user sees welcome CTAs on AID", async ({ page }) => {
-    await page.goto("/aid");
-    await dismissOverlays(page);
-    await waitForAidDashboard(page);
+    await openAidDashboard(page);
 
     await expect(page.getByText(/Welcome to trefolio|Bienvenido a trefolio/i)).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole("link", { name: /View demo|Ver demo/i })).toBeVisible();

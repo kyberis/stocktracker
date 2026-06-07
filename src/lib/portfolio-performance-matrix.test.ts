@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildMatrixFromSnapshots,
   firstSnapshotAnchorDate,
@@ -56,6 +56,15 @@ describe("valueFromSnapshot", () => {
 });
 
 describe("buildMatrixFromSnapshots", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-15T12:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("computes period returns for all row", () => {
     const rows = buildMatrixFromSnapshots({
       snapshots: SNAPSHOTS,

@@ -100,11 +100,12 @@ describe("activateProTrial", () => {
 
 describe("isLocalTrialActive", () => {
   it("returns true for active local trial", () => {
+    const planExpiresAt = new Date(Date.now() + 5 * 86400000).toISOString();
     expect(
       isLocalTrialActive({
-        trial_activated_at: "2026-05-23T00:00:00.000Z",
+        trial_activated_at: new Date(Date.now() - 2 * 86400000).toISOString(),
         plan: "pro",
-        plan_expires_at: "2026-05-30T00:00:00.000Z",
+        plan_expires_at: planExpiresAt,
       }),
     ).toBe(true);
   });
@@ -121,8 +122,8 @@ describe("isLocalTrialActive", () => {
 });
 
 describe("isTrialEntitlementRepairCandidate", () => {
-  const activatedAt = "2026-05-23T12:00:00.000Z";
-  const nowMs = Date.parse(activatedAt) + 2 * 24 * 60 * 60 * 1000;
+  const nowMs = Date.now();
+  const activatedAt = new Date(nowMs - 2 * 86400000).toISOString();
 
   it("returns true when trial was activated but plan was downgraded to free", () => {
     expect(
@@ -139,12 +140,13 @@ describe("isTrialEntitlementRepairCandidate", () => {
   });
 
   it("returns false when trial is already active locally", () => {
+    const planExpiresAt = new Date(nowMs + 5 * 86400000).toISOString();
     expect(
       isTrialEntitlementRepairCandidate(
         {
           trial_activated_at: activatedAt,
           plan: "pro",
-          plan_expires_at: "2026-05-30T12:00:00.000Z",
+          plan_expires_at: planExpiresAt,
           stripe_subscription_id: "",
         },
         nowMs,
@@ -153,15 +155,16 @@ describe("isTrialEntitlementRepairCandidate", () => {
   });
 
   it("returns false when trial window has ended", () => {
+    const expiredActivation = new Date(nowMs - TRIAL_DURATION_MS - 60_000).toISOString();
     expect(
       isTrialEntitlementRepairCandidate(
         {
-          trial_activated_at: activatedAt,
+          trial_activated_at: expiredActivation,
           plan: "free",
           plan_expires_at: "",
           stripe_subscription_id: "",
         },
-        Date.parse(activatedAt) + TRIAL_DURATION_MS + 60_000,
+        nowMs,
       ),
     ).toBe(false);
   });
