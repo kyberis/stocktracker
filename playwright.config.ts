@@ -22,9 +22,10 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: "npm run build && npm start",
+        // CI pre-builds in the workflow so Playwright only waits for `next start`.
+        command: process.env.CI ? "npm start" : "npm run build && npm start",
         port: 3000,
-        timeout: 120_000,
+        timeout: process.env.CI ? 60_000 : 120_000,
         reuseExistingServer: !process.env.CI,
         env: { E2E: "1" },
       },

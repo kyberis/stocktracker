@@ -53,6 +53,14 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install chromium --with-deps
 
+      - name: Build (E2E webServer uses npm start only in CI)
+        run: npm run build
+        env:
+          NEXTAUTH_SECRET: ci-build-secret
+          NEXTAUTH_URL: http://localhost:3000
+          TURSO_DATABASE_URL: libsql://fake.turso.io
+          TURSO_AUTH_TOKEN: fake
+
       - name: AID dashboard E2E
         run: npm run test:e2e -- e2e/aid-dashboard.spec.ts
         env:
