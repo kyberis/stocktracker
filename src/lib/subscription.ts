@@ -163,6 +163,16 @@ export function getSnapTradeConnectionLimit(plan: SubscriptionPlan): number {
   return PLATFORM_LIMITS.FREE_SNAPTRADE_LIMIT;
 }
 
+/** Bifolio (starter) and Trefolio (pro) can connect brokers via SnapTrade. */
+export function canUseBrokerSync(
+  plan: SubscriptionPlan,
+  planExpiresAt: string,
+  opts?: { isAdmin?: boolean },
+): boolean {
+  if (opts?.isAdmin) return true;
+  return getSnapTradeConnectionLimit(effectivePlan(plan, planExpiresAt)) > 0;
+}
+
 /**
  * Theme access rules per plan.
  * Default: all tiers. Canvas: starter+. Terminal/Studio: pro only.

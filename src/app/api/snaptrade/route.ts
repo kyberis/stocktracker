@@ -41,7 +41,7 @@ import type { ExtractedTransaction } from "@/hooks/import-types";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal } from "@/lib/metrics";
-import { getSnapTradeConnectionLimit } from "@/lib/subscription";
+import { effectivePlan, getSnapTradeConnectionLimit } from "@/lib/subscription";
 import { deferTask, retryAsync } from "@/lib/task-runner";
 import type { SubscriptionPlan } from "@/lib/types";
 
@@ -93,7 +93,10 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     await setSnapTradeNeedsAttention(session.userId, hasDisabled);
 
     const userForPlan = await findUserById(session.userId);
-    const userPlan = (userForPlan?.plan || session.plan) as SubscriptionPlan;
+    const userPlan = effectivePlan(
+      (userForPlan?.plan || session.plan) as SubscriptionPlan,
+      userForPlan?.plan_expires_at ?? "",
+    );
 
     return NextResponse.json({
       connected: true,
@@ -123,7 +126,10 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
 
   /* ── Tier check: Free users cannot access broker sync ── */
   const user = await findUserById(session.userId);
-  const plan = (user?.plan || session.plan) as SubscriptionPlan;
+  const plan = effectivePlan(
+    (user?.plan || session.plan) as SubscriptionPlan,
+    user?.plan_expires_at ?? "",
+  );
   const connectionLimit = getSnapTradeConnectionLimit(plan);
   if (connectionLimit === 0) {
     return NextResponse.json(

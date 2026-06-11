@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import type { TransactionType } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
+import { canUseBrokerSync } from "@/lib/subscription";
 
 interface ParsedTx {
   date: string;
@@ -75,6 +76,11 @@ export default function BrokerImport() {
   const { t } = useI18n();
   const { user } = useAuth();
   const isPro = user?.plan === "pro";
+  const brokerSyncAllowed = canUseBrokerSync(
+    user?.plan ?? "free",
+    user?.planExpiresAt ?? "",
+    { isAdmin: user?.role === "admin" },
+  );
 
   const [broker, setBroker] = useState<Broker>("degiro");
   const [parsed, setParsed] = useState<ParsedTx[]>([]);
@@ -205,7 +211,7 @@ export default function BrokerImport() {
       {step === "upload" && (
         <>
           {/* Broker Sync banner */}
-          {isPro && (
+          {brokerSyncAllowed && (
             <a
               href="/import?method=snaptrade_api"
               className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 border border-blue-200 dark:border-blue-500/30 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-500/15 dark:hover:to-indigo-500/15 transition-colors"

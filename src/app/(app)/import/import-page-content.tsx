@@ -14,6 +14,7 @@ import { IMPORT_GUIDES, type ImportGuide } from "@/lib/import-guides";
 import { downloadImportTemplate } from "@/lib/download-import-template";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
+import { canUseBrokerSync } from "@/lib/subscription";
 import AdSlot from "@/components/AdSlot";
 import AddStockModal from "@/components/AddStockModal";
 import DataUpgradeNudge from "@/components/DataUpgradeNudge";
@@ -133,7 +134,11 @@ export default function ImportPageContent() {
     ? portfolios.find((p) => p.id === activePortfolioId)?.name
     : undefined;
   const isPro = user?.plan === "pro";
-  const canUseBrokerSync = user?.plan === "pro" || user?.plan === "starter";
+  const brokerSyncAllowed = canUseBrokerSync(
+    user?.plan ?? "free",
+    user?.planExpiresAt ?? "",
+    { isAdmin: user?.role === "admin" },
+  );
 
   // Wizard state
   const [step, setStep] = useState<WizardStep>("method");
@@ -609,7 +614,7 @@ export default function ImportPageContent() {
 
               {authLoading ? (
                 <div className="py-12"><div className="w-8 h-8 mx-auto border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>
-              ) : !canUseBrokerSync ? (
+              ) : !brokerSyncAllowed ? (
                 <SnapTradeGate t={t} />
               ) : (
                 <SnapTradeContent

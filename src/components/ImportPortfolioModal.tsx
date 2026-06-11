@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { downloadImportTemplate } from "@/lib/download-import-template";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import ProCompareCard from "@/components/ProCompareCard";
+import { canUseBrokerSync } from "@/lib/subscription";
 
 type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "simple" | "ai_import";
 
@@ -57,6 +58,11 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
   const { t } = useI18n();
   const { user } = useAuth();
   const isPro = user?.plan === "pro";
+  const brokerSyncAllowed = canUseBrokerSync(
+    user?.plan ?? "free",
+    user?.planExpiresAt ?? "",
+    { isAdmin: user?.role === "admin" },
+  );
 
   const [step, setStep] = useState<Step>("upload");
   const [csvFormat, setCsvFormat] = useState<CsvFormat>("degiro");
@@ -449,7 +455,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
           {step === "upload" && (
             <>
               {/* Broker Sync banner */}
-              {isPro && (
+              {brokerSyncAllowed && (
                 <a
                   href="/import?method=snaptrade_api"
                   onClick={onClose}
