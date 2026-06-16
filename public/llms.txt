@@ -63,3 +63,6 @@ Blog content is available in 10 European languages with broker-specific and tax-
 ## Optional
 
 - [Full details](https://trefolio.com/llms-full.txt)
+- [LLM integration API](https://trefolio.com/api/docs) — OpenAPI, MCP, Warren MOAT docs for agents
+- [OpenAPI spec](https://trefolio.com/openapi.json)
+- [Warren MOAT guide](https://trefolio.com/api/docs/warren-moat)

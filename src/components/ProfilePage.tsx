@@ -14,6 +14,7 @@ import TierFeatureBadge from "@/components/TierFeatureBadge";
 import { Smartphone, Monitor, Copy, Check, Trash2, User, Users, CreditCard, Bell, FolderOpen, Gift, Share2, Eye, EyeOff, Globe } from "lucide-react";
 import NotificationChannels from "@/components/NotificationChannels";
 import TelegramConnectCard from "@/components/profile/TelegramConnectCard";
+import ProfileMcpSection from "@/components/profile/ProfileMcpSection";
 import { COUNTRIES } from "@/lib/countries";
 import { resolveBillingPortalHref } from "@/lib/idp/config";
 import { useCommerceEnabled } from "@/lib/commerce";
@@ -2267,6 +2268,9 @@ export default function ProfilePage() {
           aria-labelledby="profile-tab-devices"
           className="space-y-6"
         >
+        {/* MCP Access */}
+        <ProfileMcpSection />
+
         {/* Widget Access */}
         <div className="card p-6 space-y-4">
           <div className="flex items-center gap-3">

@@ -36,7 +36,7 @@ Implementation files: `src/app/api/mcp/user/[transport]/route.ts`, `src/app/.wel
 
 ## 6. UI surface
 
-None — token management lives on **user.trefolio.com → Developer**.
+**Profile → Devices → AI & MCP access** (`ProfileMcpSection`) links to **user.trefolio.com → Developer** for PAT mint/revoke; shows MCP endpoint URL and Cursor config snippet.
 
 ## 7. Business logic
 

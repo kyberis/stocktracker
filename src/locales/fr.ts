@@ -437,6 +437,18 @@ const fr: TranslationStrings = {
   profileTabReferrals: "Parrainages",
   profileTabDevices: "Appareils",
   profileTabSocial: "Social",
+  profileMcpTitle: "Accès IA et MCP",
+  profileMcpSubtitle: "Connectez Cursor, Claude Desktop ou d'autres clients MCP à votre portefeuille",
+  profileMcpDescription:
+    "Générez un jeton d'accès personnel et collez-le dans votre client MCP. Le même jeton fonctionne sur trefolio, Clara et Will.",
+  profileMcpManageTokens: "Générer un jeton d'accès",
+  profileMcpEndpoint: "Point de terminaison MCP",
+  profileMcpCursorConfig: "Configuration Cursor",
+  profileMcpCopyConfig: "Copier la configuration",
+  profileMcpCopied: "Copié !",
+  profileMcpRequiresIdp:
+    "L'accès MCP nécessite un compte trefolio unifié. Connectez-vous avec user.trefolio.com pour générer des jetons.",
+  profileMcpToolsHint: "Outils : listPortfolios, listHoldings, listCash (lecture seule, valeurs stockées).",
   profileSettings: "Paramètres du profil",
   profileSectionIdentity: "Identité",
   profileSectionAccess: "Connexion et accès",

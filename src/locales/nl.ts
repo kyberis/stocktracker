@@ -436,6 +436,18 @@ const nl: TranslationStrings = {
   profileTabReferrals: "Verwijzingen",
   profileTabDevices: "Apparaten",
   profileTabSocial: "Sociaal",
+  profileMcpTitle: "AI- en MCP-toegang",
+  profileMcpSubtitle: "Koppel Cursor, Claude Desktop of andere MCP-clients aan je portefeuille",
+  profileMcpDescription:
+    "Genereer een persoonlijk toegangstoken en plak het in je MCP-client. Hetzelfde token werkt voor trefolio, Clara en Will.",
+  profileMcpManageTokens: "Toegangstoken genereren",
+  profileMcpEndpoint: "MCP-endpoint",
+  profileMcpCursorConfig: "Cursor-configuratie",
+  profileMcpCopyConfig: "Configuratie kopiëren",
+  profileMcpCopied: "Gekopieerd!",
+  profileMcpRequiresIdp:
+    "MCP-toegang vereist een unified trefolio-account. Log in met user.trefolio.com om tokens te genereren.",
+  profileMcpToolsHint: "Tools: listPortfolios, listHoldings, listCash (alleen-lezen, opgeslagen waarden).",
   profileSettings: "Profielinstellingen",
   profileSectionIdentity: "Identiteit",
   profileSectionAccess: "Inloggen en toegang",

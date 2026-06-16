@@ -53,6 +53,10 @@ interface AuthUser {
   quotas?: AuthQuotas;
   /** Absolute URL to unified IdP account hub when legacy auth is off and user linked to IdP. */
   unifiedAccountUrl?: string | null;
+  /** IdP Developer page for MCP personal access tokens (`tfp_pat_…`). */
+  idpDeveloperUrl?: string | null;
+  /** Per-user MCP HTTP endpoint for external AI clients. */
+  mcpEndpointUrl?: string;
   /** When true, profile/passkeys/password edits happen on the IdP account site. */
   accountEditingOnIdp?: boolean;
 }

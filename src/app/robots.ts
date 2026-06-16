@@ -20,6 +20,7 @@ const PUBLIC_ALLOW = [
   "/about",
   "/llms.txt",
   "/llms-full.txt",
+  "/openapi.json",
 ];
 
 const PRIVATE_DISALLOW = ["/api/", "/admin/", "/developer/"];

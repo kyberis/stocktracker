@@ -170,3 +170,15 @@ export function resolveIdpAccountHref(opts?: { from?: "trefolio" | "clara" | "wi
   u.searchParams.set("from", opts?.from ?? "trefolio");
   return u.toString();
 }
+
+/**
+ * PAT mint/revoke UI on the IdP (`/account/developer`). Same browser session as
+ * OIDC sign-in can create `tfp_pat_…` tokens for MCP across the ecosystem.
+ */
+export function resolveIdpDeveloperHref(opts?: { from?: "trefolio" | "clara" | "will" }): string | null {
+  const issuer = getIdpIssuer();
+  if (!issuer) return null;
+  const u = new URL(`${issuer.replace(/\/+$/, "")}/account/developer`);
+  u.searchParams.set("from", opts?.from ?? "trefolio");
+  return u.toString();
+}

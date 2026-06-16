@@ -1,0 +1,43 @@
+import { describe, it, expect } from "vitest";
+
+import { buildCursorMcpConfigSnippet, getMcpUserEndpointUrl } from "@/lib/mcp/public-config";
+import { resolveIdpDeveloperHref } from "@/lib/idp/config";
+
+describe("mcp public config", () => {
+  it("builds endpoint from APP_BASE_URL", () => {
+    const prev = process.env.APP_BASE_URL;
+    process.env.APP_BASE_URL = "https://example.com/";
+    expect(getMcpUserEndpointUrl()).toBe("https://example.com/api/mcp/user");
+    process.env.APP_BASE_URL = prev;
+  });
+
+  it("builds cursor snippet with /mcp suffix", () => {
+    const snippet = buildCursorMcpConfigSnippet("https://trefolio.com/api/mcp/user");
+    expect(snippet).toContain("https://trefolio.com/api/mcp/user/mcp");
+    expect(snippet).toContain("tfp_pat_YOUR_TOKEN_HERE");
+  });
+});
+
+describe("resolveIdpDeveloperHref", () => {
+  it("returns null when IdP issuer is unset in dev", () => {
+    const prevIssuer = process.env.IDP_ISSUER;
+    const prevBase = process.env.IDP_BASE_URL;
+    const prevNode = process.env.NODE_ENV;
+    delete process.env.IDP_ISSUER;
+    delete process.env.IDP_BASE_URL;
+    process.env.NODE_ENV = "development";
+    expect(resolveIdpDeveloperHref({ from: "trefolio" })).toBeNull();
+    process.env.IDP_ISSUER = prevIssuer;
+    process.env.IDP_BASE_URL = prevBase;
+    process.env.NODE_ENV = prevNode;
+  });
+
+  it("builds developer URL from issuer", () => {
+    const prevIssuer = process.env.IDP_ISSUER;
+    process.env.IDP_ISSUER = "https://user.example.com";
+    expect(resolveIdpDeveloperHref({ from: "trefolio" })).toBe(
+      "https://user.example.com/account/developer?from=trefolio",
+    );
+    process.env.IDP_ISSUER = prevIssuer;
+  });
+});

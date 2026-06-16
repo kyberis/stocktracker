@@ -76,8 +76,10 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/sitemap.xml") return true;
   if (pathname === "/llms.txt") return true;
   if (pathname === "/llms-full.txt") return true;
+  if (pathname === "/openapi.json") return true;
   if (pathname === "/manifest.json") return true;
   if (pathname === "/.well-known/mcp.json") return true;
+  if (pathname === "/.well-known/ai-plugin.json") return true;
   // Public portfolio share pages
   if (pathname.startsWith("/p/")) return true;
   // Public social profile pages
@@ -103,6 +105,10 @@ export async function middleware(req: NextRequest) {
 
   // Public portfolio share API (dynamic route)
   if (pathname.startsWith("/api/p/")) {
+    return NextResponse.next();
+  }
+  // Public LLM integration docs (OpenAPI + section guides)
+  if (pathname === "/api/docs" || pathname.startsWith("/api/docs/")) {
     return NextResponse.next();
   }
   // Public social APIs (dynamic routes)

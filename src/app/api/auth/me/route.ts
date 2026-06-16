@@ -16,7 +16,8 @@ import { getAllFeatureQuotas } from "@/lib/feature-quotas";
 import { planExpiredNotification } from "@/lib/notification-templates";
 import { withMetrics } from "@/lib/with-metrics";
 import { ensureLocalUserLinkedToIdp, syncEntitlementsForUser } from "@/lib/idp/entitlements";
-import { isIdpEnabled, legacyAuthEnabled, resolveIdpAccountHref } from "@/lib/idp/config";
+import { isIdpEnabled, legacyAuthEnabled, resolveIdpAccountHref, resolveIdpDeveloperHref } from "@/lib/idp/config";
+import { getMcpUserEndpointUrl } from "@/lib/mcp/public-config";
 import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { ensureTrefolioAdminRoleForUser } from "@/lib/auth/admin-allowlist";
 import { renewCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
@@ -147,6 +148,11 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
         user?.idp_sub && !legacyAuthEnabled() && isIdpEnabled()
           ? resolveIdpAccountHref({ from: "trefolio" })
           : null,
+      idpDeveloperUrl:
+        user?.idp_sub && !legacyAuthEnabled() && isIdpEnabled()
+          ? resolveIdpDeveloperHref({ from: "trefolio" })
+          : null,
+      mcpEndpointUrl: getMcpUserEndpointUrl(),
       accountEditingOnIdp: Boolean(user?.idp_sub) && !legacyAuthEnabled() && isIdpEnabled(),
     },
   });

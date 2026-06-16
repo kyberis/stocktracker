@@ -439,6 +439,18 @@ const es: TranslationStrings = {
   profileTabReferrals: "Referidos",
   profileTabDevices: "Dispositivos",
   profileTabSocial: "Social",
+  profileMcpTitle: "Acceso AI y MCP",
+  profileMcpSubtitle: "Conecta Cursor, Claude Desktop u otros clientes MCP a tu cartera",
+  profileMcpDescription:
+    "Genera un token de acceso personal y pégalo en tu cliente MCP. El mismo token funciona en trefolio, Clara y Will.",
+  profileMcpManageTokens: "Generar token de acceso",
+  profileMcpEndpoint: "Endpoint MCP",
+  profileMcpCursorConfig: "Configuración para Cursor",
+  profileMcpCopyConfig: "Copiar configuración",
+  profileMcpCopied: "¡Copiado!",
+  profileMcpRequiresIdp:
+    "El acceso MCP requiere una cuenta unificada de trefolio. Inicia sesión con user.trefolio.com para generar tokens.",
+  profileMcpToolsHint: "Herramientas: listPortfolios, listHoldings, listCash (solo lectura, valores almacenados).",
   profileSectionIdentity: "Identidad",
   profileSectionAccess: "Inicio de sesión y acceso",
   profileSectionActivitySecurity: "Actividad y seguridad",
