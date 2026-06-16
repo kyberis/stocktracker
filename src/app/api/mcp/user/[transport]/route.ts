@@ -1,7 +1,12 @@
-import { createMcpHandler, withMcpAuth } from "mcp-handler";
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
+import { createMcpHandler } from "mcp-handler";
 import { NextResponse } from "next/server";
 
-import { authenticateTrefolioMcpRequest, verifyTrefolioMcpBearer } from "@/lib/mcp/trefolio-pat-auth";
+import {
+  extractBearer,
+  mcpPatAuthFailureResponse,
+  verifyTrefolioMcpBearerDetailed,
+} from "@/lib/mcp/trefolio-pat-auth";
 import { registerTrefolioUserMcp } from "@/lib/mcp/user-server";
 import { mcpUserRateLimiter, mcpUserUnauthRateLimiter } from "@/lib/upstash";
 import { CURRENT_VERSION } from "@/lib/release-version";
@@ -17,34 +22,30 @@ const baseHandler = createMcpHandler(
     },
   },
   {
-    basePath: "/api/mcp",
+    basePath: "/api/mcp/user",
     maxDuration: 60,
     verboseLogs: process.env.NODE_ENV !== "production",
   },
 );
 
-const authenticatedHandler = withMcpAuth(
-  baseHandler,
-  async (_req, bearer) => {
-    if (!bearer) return undefined;
-    const auth = await verifyTrefolioMcpBearer(bearer);
-    if (!auth) return undefined;
-    return {
-      token: bearer,
-      clientId: auth.tokenId,
-      scopes: ["portfolio:read", "warren:moat"],
-      extra: { userId: auth.userId, tokenId: auth.tokenId },
-    };
-  },
-  { required: true },
-);
+function attachMcpAuth(request: Request, bearer: string, userId: string, tokenId: string): void {
+  const authInfo: AuthInfo = {
+    token: bearer,
+    clientId: tokenId,
+    scopes: ["portfolio:read", "warren:moat"],
+    extra: { userId, tokenId },
+  };
+  (request as Request & { auth?: AuthInfo }).auth = authInfo;
+}
 
 async function rateLimitedHandler(request: Request, context: unknown): Promise<Response> {
-  const auth = await authenticateTrefolioMcpRequest(request);
-  if (auth) {
+  const bearer = extractBearer(request.headers);
+  const authResult = await verifyTrefolioMcpBearerDetailed(bearer);
+
+  if (authResult.ok) {
     const lim = mcpUserRateLimiter();
     if (lim) {
-      const { success } = await lim.limit(auth.userId);
+      const { success } = await lim.limit(authResult.auth.userId);
       if (!success) {
         return NextResponse.json({ error: "rate_limited" }, { status: 429 });
       }
@@ -61,11 +62,11 @@ async function rateLimitedHandler(request: Request, context: unknown): Promise<R
         return NextResponse.json({ error: "rate_limited" }, { status: 429 });
       }
     }
+    return mcpPatAuthFailureResponse(authResult.reason);
   }
-  return (authenticatedHandler as unknown as (req: Request, ctx: unknown) => Promise<Response>)(
-    request,
-    context,
-  );
+
+  attachMcpAuth(request, bearer!, authResult.auth.userId, authResult.auth.tokenId);
+  return (baseHandler as unknown as (req: Request, ctx: unknown) => Promise<Response>)(request, context);
 }
 
 export const GET = rateLimitedHandler;

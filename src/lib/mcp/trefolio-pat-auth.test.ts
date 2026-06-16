@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { extractBearer, verifyTrefolioMcpBearer } from "./trefolio-pat-auth";
+import {
+  extractBearer,
+  mcpPatAuthFailureMessage,
+  verifyTrefolioMcpBearer,
+  verifyTrefolioMcpBearerDetailed,
+} from "./trefolio-pat-auth";
 
 vi.mock("@/lib/accounts-pat-introspect", () => ({
   isTfpPatToken: (s: string) => s.startsWith("tfp_pat_"),
   introspectTfpPat: vi.fn(),
+  introspectTfpPatDetailed: vi.fn(),
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -28,7 +34,11 @@ describe("verifyTrefolioMcpBearer", () => {
     vi.resetAllMocks();
     const intro = await import("@/lib/accounts-pat-introspect");
     const db = await import("@/lib/db");
-    vi.mocked(intro.introspectTfpPat).mockResolvedValue({ sub: "idp|123", tokenId: "tok1" });
+    vi.mocked(intro.introspectTfpPatDetailed).mockResolvedValue({
+      ok: true,
+      sub: "idp|123",
+      tokenId: "tok1",
+    });
     vi.mocked(db.findUserIdByIdpSub).mockResolvedValue("user-uuid");
   });
 
@@ -47,5 +57,36 @@ describe("verifyTrefolioMcpBearer", () => {
     vi.mocked(db.findUserIdByIdpSub).mockResolvedValueOnce(null);
     const auth = await verifyTrefolioMcpBearer("tfp_pat_test");
     expect(auth).toBeNull();
+  });
+});
+
+describe("verifyTrefolioMcpBearerDetailed", () => {
+  beforeEach(async () => {
+    vi.resetAllMocks();
+    const intro = await import("@/lib/accounts-pat-introspect");
+    const db = await import("@/lib/db");
+    vi.mocked(intro.introspectTfpPatDetailed).mockResolvedValue({
+      ok: true,
+      sub: "idp|123",
+      tokenId: "tok1",
+    });
+    vi.mocked(db.findUserIdByIdpSub).mockResolvedValue("user-uuid");
+  });
+
+  it("reports missing bearer", async () => {
+    expect(await verifyTrefolioMcpBearerDetailed(null)).toEqual({ ok: false, reason: "missing_bearer" });
+  });
+
+  it("reports idp_not_configured from introspection", async () => {
+    const intro = await import("@/lib/accounts-pat-introspect");
+    vi.mocked(intro.introspectTfpPatDetailed).mockResolvedValueOnce({
+      ok: false,
+      reason: "idp_not_configured",
+    });
+    expect(await verifyTrefolioMcpBearerDetailed("tfp_pat_test")).toEqual({
+      ok: false,
+      reason: "idp_not_configured",
+    });
+    expect(mcpPatAuthFailureMessage("idp_not_configured")).toContain("user.trefolio.com");
   });
 });
