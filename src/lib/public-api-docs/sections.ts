@@ -132,7 +132,7 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
               id: "mcp",
               recommended: true,
               summary:
-                "Use MCP with a user-issued `tfp_pat_…` token for read-only portfolio access (listPortfolios, listHoldings, listCash).",
+                "Use MCP with a user-issued `tfp_pat_…` token: portfolio reads (listPortfolios, listHoldings, listCash) and Warren MOAT (getMoatEvaluation, generateMoatNarrative, screenMoat, listMoatReports, saveMoatReport).",
               discovery: `${site}/.well-known/mcp.json`,
               endpoint: `${site}/api/mcp/user`,
             },
@@ -186,7 +186,7 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
       return {
         id: "mcp",
         title: "MCP (Model Context Protocol)",
-        description: "Read-only portfolio tools for Cursor, Claude Desktop, and compatible clients.",
+        description: "Portfolio + Warren MOAT tools for Cursor, Claude Desktop, and compatible clients.",
         url: sectionUrl("mcp"),
         content: {
           transport: "HTTP (Streamable HTTP via mcp-handler)",
@@ -213,6 +213,23 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
               description: "Cash positions (optional portfolioId filter).",
               input: { portfolioId: "string, optional" },
             },
+            {
+              name: "getMoatEvaluation",
+              description: "Warren MOAT score (cache or fresh with stock_evaluation quota).",
+              input: { symbol: "string", fresh: "boolean, optional" },
+            },
+            {
+              name: "generateMoatNarrative",
+              description: "Warren AI markdown narrative (ai_consult quota).",
+              input: { symbol: "string, optional", evaluation: "object, optional", language: "string" },
+            },
+            {
+              name: "listMoatReports",
+              description: "Saved MOAT reports for the user.",
+              input: { tags: "string[], optional" },
+            },
+            { name: "screenMoat", description: "Filter cached MOAT universe.", input: {} },
+            { name: "saveMoatReport", description: "Persist evaluation to user library.", input: {} },
           ],
           cursor_example: {
             mcpServers: {
@@ -222,7 +239,7 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
               },
             },
           },
-          note: "MCP returns stored values only — no live quote refresh.",
+          note: "Portfolio tools use stored values. MOAT fresh fetch and AI narrative consume user quotas (same as the web app).",
         },
       };
     case "warren-moat":
@@ -315,10 +332,10 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
             },
           ],
           typical_flow: [
-            "GET /api/stock-evaluation?symbol=KO — quantitative MOAT score",
-            "POST /api/stock-evaluation/ai — optional Warren AI narrative",
-            "POST /api/moat-reports — persist for the user",
-            "GET /api/moat-screener — discover names matching filters",
+            "MCP getMoatEvaluation { symbol: \"KO\" } — or GET /api/stock-evaluation?symbol=KO",
+            "MCP generateMoatNarrative { symbol: \"KO\" } — or POST /api/stock-evaluation/ai",
+            "MCP saveMoatReport — or POST /api/moat-reports",
+            "MCP screenMoat — or GET /api/moat-screener",
           ],
           ui_path: "/tools/moat-evaluation",
           data_source: "FMP or Alpha Vantage fundamentals (server-selected)",

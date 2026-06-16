@@ -42,7 +42,7 @@ Implementation files: `src/app/api/mcp/user/[transport]/route.ts`, `src/app/.wel
 
 - `introspectTfpPat` → `{ sub, token_id }` with short in-memory cache (hash key).
 - `findUserIdByIdpSub(sub)` → local `userId`.
-- Tools: `listPortfolios`, `listHoldings`, `listCash` — DB reads only.
+- Tools: `listPortfolios`, `listHoldings`, `listCash`, `getMoatEvaluation`, `generateMoatNarrative`, `listMoatReports`, `screenMoat`, `saveMoatReport` — PAT auth; MOAT fresh/AI uses Pro quotas.
 
 ## 8. External dependencies
 

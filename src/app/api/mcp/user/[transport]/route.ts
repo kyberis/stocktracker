@@ -32,7 +32,7 @@ const authenticatedHandler = withMcpAuth(
     return {
       token: bearer,
       clientId: auth.tokenId,
-      scopes: ["portfolio:read"],
+      scopes: ["portfolio:read", "warren:moat"],
       extra: { userId: auth.userId, tokenId: auth.tokenId },
     };
   },

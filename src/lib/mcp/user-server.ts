@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import { listCashEntries, listHoldings, listPortfolios } from "@/lib/db";
+import { registerWarrenMoatMcp } from "@/lib/mcp/moat-tools";
 
 function jsonContent(data: unknown) {
   return {
@@ -28,6 +29,8 @@ function getUserIdFromExtra(extra: { authInfo?: { extra?: Record<string, unknown
 
 /** Read-only portfolio MCP tools (no live quote fetch — uses stored EUR values). */
 export function registerTrefolioUserMcp(server: McpServer): void {
+  registerWarrenMoatMcp(server);
+
   server.registerTool(
     "listPortfolios",
     {

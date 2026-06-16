@@ -19,7 +19,7 @@ export async function GET() {
         id: "trefolio-user",
         name: "trefolio (per user)",
         description:
-          "Read-only portfolio tools via MCP. Bearer token `tfp_pat_…` from user.trefolio.com → Developer.",
+          "Portfolio read + Warren MOAT tools via MCP. Bearer token `tfp_pat_…` from user.trefolio.com → Developer.",
         url: `${site}/api/mcp/user`,
         transport: "http",
         protocol: "modelcontextprotocol",
