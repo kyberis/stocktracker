@@ -1,9 +1,12 @@
+import { buildClaudeDesktopMcpConfigSnippet } from "@/lib/mcp/public-config";
+
 import { getPublicDocsSiteUrl } from "./site";
 
 export type PublicDocSectionId =
   | "overview"
   | "authentication"
   | "mcp"
+  | "claude-desktop"
   | "warren-moat"
   | "warren-chat"
   | "portfolio";
@@ -90,8 +93,15 @@ export function listPublicDocSections(): PublicDocSectionSummary[] {
     {
       id: "mcp",
       title: "MCP (Model Context Protocol)",
-      description: "Read-only portfolio tools for Cursor, Claude Desktop, and compatible clients.",
+      description: "Portfolio + Warren MOAT tools for Cursor and compatible MCP clients.",
       url: sectionUrl("mcp"),
+    },
+    {
+      id: "claude-desktop",
+      title: "Claude Desktop setup",
+      description:
+        "Why Custom Connector asks for OAuth Client ID, and how to connect with a personal access token instead.",
+      url: sectionUrl("claude-desktop"),
     },
     {
       id: "warren-moat",
@@ -174,6 +184,10 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
               header: "Authorization: Bearer tfp_pat_<64-hex>",
               used_by: ["MCP /api/mcp/user only"],
               obtain: "Mint at user.trefolio.com → Developer, or from trefolio Profile → Devices → AI & MCP access.",
+              claude_desktop_note:
+                "Claude Settings → Connectors → Custom connector asks for OAuth Client ID. trefolio does NOT use OAuth for MCP — use claude_desktop_config.json with type http and Authorization Bearer header instead.",
+              claude_desktop_config_path:
+                "~/Library/Application Support/Claude/claude_desktop_config.json (macOS)",
             },
           ],
           tiers: {
@@ -242,6 +256,44 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
           note: "Portfolio tools use stored values. MOAT fresh fetch and AI narrative consume user quotas (same as the web app).",
         },
       };
+    case "claude-desktop": {
+      const mcpBase = `${site}/api/mcp/user`;
+      const configExample = JSON.parse(buildClaudeDesktopMcpConfigSnippet(mcpBase)) as Record<
+        string,
+        unknown
+      >;
+      return {
+        id: "claude-desktop",
+        title: "Claude Desktop setup",
+        description:
+          "Why Custom Connector asks for OAuth Client ID, and how to connect with a personal access token instead.",
+        url: sectionUrl("claude-desktop"),
+        content: {
+          problem:
+            "Claude Desktop → Settings → Connectors → Add custom connector shows OAuth fields (Client ID, Client Secret). trefolio MCP does NOT use OAuth — it uses a personal access token (`tfp_pat_…`). There is no Client ID to provide.",
+          do_not_use:
+            "Do not enter your PAT in the OAuth Client ID field. That field is for OAuth client registration, not API keys.",
+          supported_path: "Edit the Claude Desktop config file and pass the token in an Authorization header.",
+          config_file_macos: "~/Library/Application Support/Claude/claude_desktop_config.json",
+          config_file_windows: "%APPDATA%\\Claude\\claude_desktop_config.json",
+          steps: [
+            "Mint `tfp_pat_…` at https://user.trefolio.com/account/developer or trefolio Profile → Devices → Generate access token.",
+            "Quit Claude Desktop completely.",
+            "Paste the JSON below into claude_desktop_config.json (merge with existing mcpServers if needed).",
+            "Replace tfp_pat_YOUR_TOKEN_HERE with your real token.",
+            "Restart Claude Desktop.",
+          ],
+          claude_desktop_config: configExample,
+          claude_code_cli:
+            "claude mcp add --transport http trefolio https://trefolio.com/api/mcp/user/mcp --header \"Authorization: Bearer tfp_pat_YOUR_TOKEN\"",
+          cursor_note: "Cursor uses ~/.cursor/mcp.json with the same url + headers pattern (see /api/docs/mcp).",
+          claude_web_note:
+            "claude.ai web Connectors currently support OAuth only, not static Bearer tokens. Use Claude Desktop config file or Claude Code CLI for trefolio PAT auth.",
+          token_mint: "https://user.trefolio.com/account/developer",
+          docs: `${site}/api/docs/authentication`,
+        },
+      };
+    }
     case "warren-moat":
       return {
         id: "warren-moat",

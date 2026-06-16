@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 
-import { buildCursorMcpConfigSnippet, getMcpUserEndpointUrl } from "@/lib/mcp/public-config";
+import {
+  buildClaudeDesktopMcpConfigSnippet,
+  buildCursorMcpConfigSnippet,
+  getMcpUserEndpointUrl,
+} from "@/lib/mcp/public-config";
 import { resolveIdpDeveloperHref } from "@/lib/idp/config";
 
 describe("mcp public config", () => {
@@ -15,6 +19,15 @@ describe("mcp public config", () => {
     const snippet = buildCursorMcpConfigSnippet("https://trefolio.com/api/mcp/user");
     expect(snippet).toContain("https://trefolio.com/api/mcp/user/mcp");
     expect(snippet).toContain("tfp_pat_YOUR_TOKEN_HERE");
+  });
+
+  it("builds Claude Desktop snippet with type http and bearer header", () => {
+    const snippet = buildClaudeDesktopMcpConfigSnippet("https://trefolio.com/api/mcp/user");
+    const parsed = JSON.parse(snippet) as {
+      mcpServers: { trefolio: { type: string; url: string; headers: { Authorization: string } } };
+    };
+    expect(parsed.mcpServers.trefolio.type).toBe("http");
+    expect(parsed.mcpServers.trefolio.headers.Authorization).toContain("tfp_pat_");
   });
 });
 

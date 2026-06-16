@@ -36,7 +36,11 @@ Implementation files: `src/app/api/mcp/user/[transport]/route.ts`, `src/app/.wel
 
 ## 6. UI surface
 
-**Profile → Devices → AI & MCP access** (`ProfileMcpSection`) links to **user.trefolio.com → Developer** for PAT mint/revoke; shows MCP endpoint URL and Cursor config snippet.
+**Profile → Devices → AI & MCP access** (`ProfileMcpSection`) links to **user.trefolio.com → Developer** for PAT mint/revoke; shows MCP endpoint URL, Claude Desktop config (`claude_desktop_config.json`), and Cursor snippet.
+
+### Claude Desktop (important)
+
+Claude **Settings → Connectors → Custom connector** expects **OAuth Client ID**. trefolio MCP uses **`tfp_pat_…` bearer tokens**, not OAuth — there is no Client ID. Users must edit `claude_desktop_config.json` with `type: "http"` and `Authorization: Bearer tfp_pat_…`. Public doc: `/api/docs/claude-desktop`.
 
 ## 7. Business logic
 

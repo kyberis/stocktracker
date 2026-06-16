@@ -450,7 +450,12 @@ const es: TranslationStrings = {
   profileMcpCopied: "¡Copiado!",
   profileMcpRequiresIdp:
     "El acceso MCP requiere una cuenta unificada de trefolio. Inicia sesión con user.trefolio.com para generar tokens.",
-  profileMcpToolsHint: "Herramientas: listPortfolios, listHoldings, listCash (solo lectura, valores almacenados).",
+  profileMcpToolsHint: "Herramientas: lectura de cartera + Warren MOAT (getMoatEvaluation, generateMoatNarrative, screenMoat, …). Auth: Bearer tfp_pat_… — no OAuth Client ID.",
+  profileMcpClaudeConnectorWarning:
+    "Claude Desktop → Ajustes → Conectores → Conector personalizado pide OAuth (Client ID). trefolio usa un token de acceso personal. Editá claude_desktop_config.json (abajo) — no uses Client ID en la UI de Conectores.",
+  profileMcpClaudeDesktopConfig: "Configuración para Claude Desktop",
+  profileMcpClaudeConfigPath:
+    "macOS: ~/Library/Application Support/Claude/claude_desktop_config.json — reiniciá Claude Desktop.",
   profileSectionIdentity: "Identidad",
   profileSectionAccess: "Inicio de sesión y acceso",
   profileSectionActivitySecurity: "Actividad y seguridad",

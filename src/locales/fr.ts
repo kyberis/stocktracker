@@ -449,6 +449,11 @@ const fr: TranslationStrings = {
   profileMcpRequiresIdp:
     "L'accès MCP nécessite un compte trefolio unifié. Connectez-vous avec user.trefolio.com pour générer des jetons.",
   profileMcpToolsHint: "Outils : listPortfolios, listHoldings, listCash (lecture seule, valeurs stockées).",
+  profileMcpClaudeConnectorWarning:
+    "Claude Desktop → Settings → Connectors → Custom connector expects OAuth (Client ID). trefolio uses a personal access token instead. Edit claude_desktop_config.json (see below) — leave Client ID empty in the Connectors UI.",
+  profileMcpClaudeDesktopConfig: "Claude Desktop configuration",
+  profileMcpClaudeConfigPath:
+    "macOS: ~/Library/Application Support/Claude/claude_desktop_config.json — then restart Claude Desktop.",
   profileSettings: "Paramètres du profil",
   profileSectionIdentity: "Identité",
   profileSectionAccess: "Connexion et accès",

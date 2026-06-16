@@ -16,11 +16,14 @@ describe("public api docs", () => {
 
   it("returns warren-moat section with endpoints", () => {
     expect(isPublicDocSectionId("warren-moat")).toBe(true);
+    expect(isPublicDocSectionId("claude-desktop")).toBe(true);
     expect(isPublicDocSectionId("invalid")).toBe(false);
     const section = getPublicDocSection("warren-moat");
-    expect(section?.content.endpoints).toBeDefined();
     const endpoints = section?.content.endpoints as { path: string }[];
     expect(endpoints.some((e) => e.path === "/api/stock-evaluation")).toBe(true);
+    const claude = getPublicDocSection("claude-desktop");
+    expect(claude?.content.problem).toBeDefined();
+    expect(claude?.content.claude_desktop_config).toBeDefined();
   });
 
   it("openapi includes MOAT paths and x-documentation", () => {

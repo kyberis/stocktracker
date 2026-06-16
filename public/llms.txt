@@ -64,5 +64,6 @@ Blog content is available in 10 European languages with broker-specific and tax-
 
 - [Full details](https://trefolio.com/llms-full.txt)
 - [LLM integration API](https://trefolio.com/api/docs) — OpenAPI, MCP, Warren MOAT docs for agents
+- [Claude Desktop MCP setup](https://trefolio.com/api/docs/claude-desktop) — PAT auth (not OAuth Client ID)
 - [OpenAPI spec](https://trefolio.com/openapi.json)
 - [Warren MOAT guide](https://trefolio.com/api/docs/warren-moat)

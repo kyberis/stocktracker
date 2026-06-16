@@ -273,11 +273,12 @@ Public machine-readable docs for external AI clients:
 
 - Documentation index: https://trefolio.com/api/docs
 - OpenAPI 3.1: https://trefolio.com/openapi.json
-- Warren MOAT guide: https://trefolio.com/api/docs/warren-moat — Buffett-style competitive advantage scoring (`GET /api/stock-evaluation`), AI narrative (`POST /api/stock-evaluation/ai`), screener (`GET /api/moat-screener`), saved reports (`/api/moat-reports`)
-- MCP discovery: https://trefolio.com/.well-known/mcp.json — read-only portfolio tools with user PAT (`tfp_pat_…`)
+- Claude Desktop (PAT, not OAuth Client ID): https://trefolio.com/api/docs/claude-desktop — edit `~/Library/Application Support/Claude/claude_desktop_config.json` with `type: http` and `Authorization: Bearer tfp_pat_…`; do NOT use Settings → Connectors → Custom connector OAuth fields
+- Warren MOAT guide: https://trefolio.com/api/docs/warren-moat — Buffett-style competitive advantage scoring via MCP tools (`getMoatEvaluation`, `generateMoatNarrative`, `screenMoat`, …) or session REST
+- MCP discovery: https://trefolio.com/.well-known/mcp.json — portfolio + MOAT tools with user PAT (`tfp_pat_…`)
 - AI plugin manifest: https://trefolio.com/.well-known/ai-plugin.json
 
-Portfolio read access for agents: MCP + PAT. Warren MOAT and Warren chat: session-authenticated REST (see OpenAPI). Not financial advice.
+Auth: MCP uses Bearer `tfp_pat_…` (mint at user.trefolio.com → Developer). Claude Desktop Custom Connector UI expects OAuth and has no Client ID for trefolio — use the config file guide above. Not financial advice.
 
 ## Contact
 

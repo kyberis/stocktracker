@@ -102,6 +102,7 @@ export function buildPublicOpenApiDocument() {
                   "overview",
                   "authentication",
                   "mcp",
+                  "claude-desktop",
                   "warren-moat",
                   "warren-chat",
                   "portfolio",
@@ -353,6 +354,7 @@ export function buildPublicOpenApiDocument() {
     },
     "x-documentation": {
       index: `${site}/api/docs`,
+      claude_desktop: `${site}/api/docs/claude-desktop`,
       warren_moat: `${site}/api/docs/warren-moat`,
     },
   };
