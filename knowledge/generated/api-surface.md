@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-262 routes.
+265 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -138,6 +138,7 @@
 | `/api/cron/aid-digest` | GET | [`src/app/api/cron/aid-digest/route.ts`](../../src/app/api/cron/aid-digest/route.ts) |
 | `/api/cron/aid-finpulse` | GET | [`src/app/api/cron/aid-finpulse/route.ts`](../../src/app/api/cron/aid-finpulse/route.ts) |
 | `/api/cron/check-alerts` | GET | [`src/app/api/cron/check-alerts/route.ts`](../../src/app/api/cron/check-alerts/route.ts) |
+| `/api/cron/commerce-complimentary-renewal` | GET, POST | [`src/app/api/cron/commerce-complimentary-renewal/route.ts`](../../src/app/api/cron/commerce-complimentary-renewal/route.ts) |
 | `/api/cron/compact-snapshots` | GET, POST | [`src/app/api/cron/compact-snapshots/route.ts`](../../src/app/api/cron/compact-snapshots/route.ts) |
 | `/api/cron/digest-email` | GET | [`src/app/api/cron/digest-email/route.ts`](../../src/app/api/cron/digest-email/route.ts) |
 | `/api/cron/event-sync` | GET | [`src/app/api/cron/event-sync/route.ts`](../../src/app/api/cron/event-sync/route.ts) |
@@ -167,6 +168,8 @@
 | `/api/device/heartbeat` | POST | [`src/app/api/device/heartbeat/route.ts`](../../src/app/api/device/heartbeat/route.ts) |
 | `/api/device/notifications` | GET, POST | [`src/app/api/device/notifications/route.ts`](../../src/app/api/device/notifications/route.ts) |
 | `/api/device/sparkline` | GET | [`src/app/api/device/sparkline/route.ts`](../../src/app/api/device/sparkline/route.ts) |
+| `/api/docs` | GET | [`src/app/api/docs/route.ts`](../../src/app/api/docs/route.ts) |
+| `/api/docs/[section]` | GET | [`src/app/api/docs/[section]/route.ts`](../../src/app/api/docs/[section]/route.ts) |
 | `/api/economic-indicators` | GET | [`src/app/api/economic-indicators/route.ts`](../../src/app/api/economic-indicators/route.ts) |
 | `/api/email/unsubscribe` | GET, POST | [`src/app/api/email/unsubscribe/route.ts`](../../src/app/api/email/unsubscribe/route.ts) |
 | `/api/etf-holdings` | GET | [`src/app/api/etf-holdings/route.ts`](../../src/app/api/etf-holdings/route.ts) |

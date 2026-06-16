@@ -7,5 +7,6 @@
 Flags discovered by scanning `useFeatureFlag(...)` and `getServerFeatureFlag(...)` calls.
 
 - `ai_report_enabled`
+- `commerce_enabled`
 - `pro_trial_enabled`
 - `social_network_enabled`
