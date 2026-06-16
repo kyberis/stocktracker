@@ -23,6 +23,10 @@ vi.mock("@/lib/aid/build-digest", () => ({
   buildAidDigest: vi.fn().mockResolvedValue({ items: [], earningsTodayCount: 0 }),
 }));
 
+vi.mock("@/lib/aid/build-earnings-recap", () => ({
+  buildAidEarningsRecap: vi.fn().mockResolvedValue({ items: [] }),
+}));
+
 vi.mock("@/lib/quote-cache", () => ({
   getQuotesWithCache: vi.fn().mockResolvedValue({}),
 }));

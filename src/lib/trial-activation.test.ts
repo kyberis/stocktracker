@@ -102,9 +102,9 @@ describe("isLocalTrialActive", () => {
   it("returns true for active local trial", () => {
     expect(
       isLocalTrialActive({
-        trial_activated_at: "2026-05-23T00:00:00.000Z",
+        trial_activated_at: "2027-05-23T00:00:00.000Z",
         plan: "pro",
-        plan_expires_at: "2026-05-30T00:00:00.000Z",
+        plan_expires_at: "2027-05-30T00:00:00.000Z",
       }),
     ).toBe(true);
   });
@@ -144,7 +144,7 @@ describe("isTrialEntitlementRepairCandidate", () => {
         {
           trial_activated_at: activatedAt,
           plan: "pro",
-          plan_expires_at: "2026-05-30T12:00:00.000Z",
+          plan_expires_at: "2027-05-30T12:00:00.000Z",
           stripe_subscription_id: "",
         },
         nowMs,

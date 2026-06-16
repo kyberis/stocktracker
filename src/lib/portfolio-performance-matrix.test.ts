@@ -27,7 +27,7 @@ const SNAPSHOTS: SnapshotHistoryPoint[] = [
     cryptoValue: 1100,
   },
   {
-    date: "2025-06-01",
+    date: "2026-06-01",
     value: 12000,
     invested: 9500,
     stockValue: 9600,

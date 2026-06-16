@@ -88,19 +88,17 @@ describe("getSnapTradeConnectionLimit", () => {
 });
 
 describe("canUseBrokerSync", () => {
-  it("denies free users", () => {
-    expect(canUseBrokerSync("free", "")).toBe(false);
+  it("allows free users (soft cap ≥ 1)", () => {
+    expect(canUseBrokerSync("free", "")).toBe(true);
   });
 
-  it("allows Bifolio (starter) and Trefolio (pro)", () => {
-    expect(canUseBrokerSync("starter", "")).toBe(true);
+  it("allows pro users", () => {
     expect(canUseBrokerSync("pro", "")).toBe(true);
   });
 
-  it("denies paid tiers after plan expiry", () => {
+  it("expired pro is treated as free — still allowed (free soft cap ≥ 1)", () => {
     const past = new Date(Date.now() - 1000).toISOString();
-    expect(canUseBrokerSync("pro", past)).toBe(false);
-    expect(canUseBrokerSync("starter", past)).toBe(false);
+    expect(canUseBrokerSync("pro", past)).toBe(true);
   });
 
   it("allows admins regardless of plan", () => {
