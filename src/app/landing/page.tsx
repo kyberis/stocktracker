@@ -841,6 +841,56 @@ function AgentsTeamSection() {
   );
 }
 
+/* ─── developer / MCP docs promo ─── */
+
+function DeveloperDocsSection() {
+  const { t } = useI18n();
+  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "dev_docs" }), []);
+  const sectionRef = useInViewOnce(sectionCb);
+
+  return (
+    <section
+      id="developers"
+      className="py-14 sm:py-16 bg-slate-900 text-white border-y border-slate-800"
+      ref={sectionRef as React.RefObject<HTMLElement>}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+          <div className="max-w-2xl">
+            <span className="inline-block text-xs font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 mb-4">
+              {t("landingDevDocsEyebrow")}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+              {t("landingDevDocsHeading")}{" "}
+              <span className="text-emerald-400">{t("landingDevDocsHeadingAccent")}</span>
+            </h2>
+            <p className="text-slate-300 leading-relaxed">{t("landingDevDocsSubtitle")}</p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <Link
+              href="/docs"
+              onClick={() => trackLanding("landing_cta_click", { cta: "dev_docs_primary" })}
+              className="inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-6 py-3.5 rounded-xl transition-colors"
+            >
+              {t("landingDevDocsCta")}
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+            <Link
+              href="/openapi.json"
+              onClick={() => trackLanding("landing_cta_click", { cta: "dev_docs_openapi" })}
+              className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl border border-slate-600 text-slate-200 hover:border-slate-400 hover:text-white transition-colors"
+            >
+              {t("landingDevDocsSecondary")}
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─── alternating features section ─── */
 
 function FeaturesSection() {
@@ -2340,6 +2390,7 @@ export default function LandingPage() {
       <HeroSection />
       <StatsBar />
       <AgentsTeamSection />
+      <DeveloperDocsSection />
       <FeaturesSection />
       <BrokerSyncCTA />
       <VideoTutorialSection />

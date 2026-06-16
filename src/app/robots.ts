@@ -18,9 +18,15 @@ const PUBLIC_ALLOW = [
   "/releasenotes",
   "/leaf",
   "/about",
+  "/docs",
+  "/docs/",
+  "/api/docs",
+  "/api/docs/",
   "/llms.txt",
   "/llms-full.txt",
   "/openapi.json",
+  "/.well-known/oauth-protected-resource",
+  "/.well-known/mcp.json",
 ];
 
 const PRIVATE_DISALLOW = ["/api/", "/admin/", "/developer/"];

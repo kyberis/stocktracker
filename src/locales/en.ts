@@ -1976,6 +1976,14 @@ const en: TranslationStrings = {
   landingAgentsWillCta: "Try Will",
   landingAgentsFreeNote: "Free tier: 30 messages/day on each of Clara and Will, forever. Pro raises every limit to 200/day.",
 
+  landingDevDocsEyebrow: "Developers & AI",
+  landingDevDocsHeading: "Connect Cursor, Claude, and your agents",
+  landingDevDocsHeadingAccent: "to your portfolio",
+  landingDevDocsSubtitle:
+    "Public documentation for MCP tools, Warren MOAT, OpenAPI, and personal access tokens — no OAuth maze.",
+  landingDevDocsCta: "Browse documentation",
+  landingDevDocsSecondary: "OpenAPI spec",
+
   landingThemesEyebrow: "Personalization",
   landingThemesHeading: "Make it",
   landingThemesHeadingAccent: "yours",

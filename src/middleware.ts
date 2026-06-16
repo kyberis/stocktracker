@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
 import { logUnauthorizedApi } from "@/lib/log-unauthorized";
 
-const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email", "/blog", "/contact", "/demo", "/releasenotes", "/leaf", "/unsubscribe", "/about"]);
+const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email", "/blog", "/contact", "/demo", "/releasenotes", "/leaf", "/unsubscribe", "/about", "/docs"]);
 const PUBLIC_API_ROUTES = new Set([
   "/api/auth/login",
   "/api/auth/signup",
@@ -70,6 +70,7 @@ function buildLoginRedirectUrl(req: NextRequest): URL {
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_ROUTES.has(pathname)) return true;
   if (pathname.startsWith("/blog")) return true;
+  if (pathname === "/docs" || pathname.startsWith("/docs/")) return true;
   if (pathname.startsWith("/_next")) return true;
   if (pathname === "/favicon.ico") return true;
   if (pathname === "/robots.txt") return true;
@@ -80,6 +81,7 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/manifest.json") return true;
   if (pathname === "/.well-known/mcp.json") return true;
   if (pathname === "/.well-known/ai-plugin.json") return true;
+  if (pathname === "/.well-known/oauth-protected-resource") return true;
   // Public portfolio share pages
   if (pathname.startsWith("/p/")) return true;
   // Public social profile pages

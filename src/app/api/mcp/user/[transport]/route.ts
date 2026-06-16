@@ -5,8 +5,9 @@ import { NextResponse } from "next/server";
 import {
   extractBearer,
   mcpPatAuthFailureResponse,
-  verifyTrefolioMcpBearerDetailed,
+  verifyMcpRequestAuthDetailed,
 } from "@/lib/mcp/trefolio-pat-auth";
+import { mcpOAuthUnauthorizedResponse } from "@/lib/mcp/mcp-oauth-discovery";
 import { registerTrefolioUserMcp } from "@/lib/mcp/user-server";
 import { mcpUserRateLimiter, mcpUserUnauthRateLimiter } from "@/lib/upstash";
 import { CURRENT_VERSION } from "@/lib/release-version";
@@ -40,7 +41,7 @@ function attachMcpAuth(request: Request, bearer: string, userId: string, tokenId
 
 async function rateLimitedHandler(request: Request, context: unknown): Promise<Response> {
   const bearer = extractBearer(request.headers);
-  const authResult = await verifyTrefolioMcpBearerDetailed(bearer);
+  const authResult = await verifyMcpRequestAuthDetailed(bearer);
 
   if (authResult.ok) {
     const lim = mcpUserRateLimiter();
@@ -61,6 +62,17 @@ async function rateLimitedHandler(request: Request, context: unknown): Promise<R
       if (!success) {
         return NextResponse.json({ error: "rate_limited" }, { status: 429 });
       }
+    }
+    if (
+      authResult.reason === "missing_bearer" ||
+      authResult.reason === "invalid_token_format" ||
+      (authResult.reason === "inactive" && bearer && !bearer.trim().startsWith("tfp_pat_"))
+    ) {
+      return mcpOAuthUnauthorizedResponse(
+        authResult.reason === "missing_bearer"
+          ? "Authentication required"
+          : "Invalid or expired OAuth access token",
+      );
     }
     return mcpPatAuthFailureResponse(authResult.reason);
   }

@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import { listCashEntries, listHoldings, listPortfolios } from "@/lib/db";
+import { MCP_READ_ONLY } from "@/lib/mcp/mcp-tool-annotations";
 import { registerWarrenMoatMcp } from "@/lib/mcp/moat-tools";
 
 function jsonContent(data: unknown) {
@@ -37,6 +38,7 @@ export function registerTrefolioUserMcp(server: McpServer): void {
       title: "List portfolios",
       description: "Portfolios for the authenticated user.",
       inputSchema: {},
+      annotations: MCP_READ_ONLY,
     },
     async (_args, extra) => {
       const userId = getUserIdFromExtra(extra);
@@ -61,6 +63,7 @@ export function registerTrefolioUserMcp(server: McpServer): void {
       inputSchema: {
         portfolioId: z.string().optional(),
       },
+      annotations: MCP_READ_ONLY,
     },
     async ({ portfolioId }, extra) => {
       const userId = getUserIdFromExtra(extra);
@@ -88,6 +91,7 @@ export function registerTrefolioUserMcp(server: McpServer): void {
       inputSchema: {
         portfolioId: z.string().optional(),
       },
+      annotations: MCP_READ_ONLY,
     },
     async ({ portfolioId }, extra) => {
       const userId = getUserIdFromExtra(extra);

@@ -9,6 +9,7 @@ import {
   screenWarrenMoat,
   type WarrenMoatResult,
 } from "@/lib/services/warren-moat";
+import { MCP_READ_ONLY, MCP_WRITE } from "@/lib/mcp/mcp-tool-annotations";
 
 function jsonContent(data: unknown) {
   return {
@@ -50,6 +51,7 @@ export function registerWarrenMoatMcp(server: McpServer): void {
         symbol: z.string().min(1).max(16),
         fresh: z.boolean().optional(),
       },
+      annotations: MCP_READ_ONLY,
     },
     async ({ symbol, fresh }, extra) => {
       const userId = getUserIdFromExtra(extra);
@@ -69,6 +71,7 @@ export function registerWarrenMoatMcp(server: McpServer): void {
         evaluation: z.record(z.string(), z.unknown()).optional(),
         language: z.string().max(8).optional(),
       },
+      annotations: MCP_READ_ONLY,
     },
     async ({ symbol, evaluation, language }, extra) => {
       const userId = getUserIdFromExtra(extra);
@@ -98,6 +101,7 @@ export function registerWarrenMoatMcp(server: McpServer): void {
       inputSchema: {
         tags: z.array(z.string()).optional(),
       },
+      annotations: MCP_READ_ONLY,
     },
     async ({ tags }, extra) => {
       const userId = getUserIdFromExtra(extra);
@@ -121,6 +125,7 @@ export function registerWarrenMoatMcp(server: McpServer): void {
         page: z.number().int().min(1).optional(),
         limit: z.number().int().min(1).max(50).optional(),
       },
+      annotations: MCP_READ_ONLY,
     },
     async (filters, extra) => {
       const userId = getUserIdFromExtra(extra);
@@ -148,6 +153,7 @@ export function registerWarrenMoatMcp(server: McpServer): void {
         companyName: z.string().optional(),
         tags: z.array(z.string()).optional(),
       },
+      annotations: MCP_WRITE,
     },
     async ({ symbol, evaluation, companyName, tags }, extra) => {
       const userId = getUserIdFromExtra(extra);

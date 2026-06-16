@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildPublicDocsIndex,
   buildPublicOpenApiDocument,
+  buildPublicDocsSitemapEntries,
   getPublicDocSection,
   isPublicDocSectionId,
 } from "@/lib/public-api-docs";
@@ -17,6 +18,7 @@ describe("public api docs", () => {
   it("returns warren-moat section with endpoints", () => {
     expect(isPublicDocSectionId("warren-moat")).toBe(true);
     expect(isPublicDocSectionId("claude-desktop")).toBe(true);
+    expect(isPublicDocSectionId("claude-connectors")).toBe(true);
     expect(isPublicDocSectionId("invalid")).toBe(false);
     const section = getPublicDocSection("warren-moat");
     const endpoints = section?.content.endpoints as { path: string }[];
@@ -33,5 +35,12 @@ describe("public api docs", () => {
     expect(paths["/api/moat-screener"]).toBeDefined();
     const xDoc = spec["x-documentation"] as { warren_moat: string };
     expect(xDoc.warren_moat).toContain("/api/docs/warren-moat");
+  });
+
+  it("builds sitemap entries for HTML docs and JSON index", () => {
+    const entries = buildPublicDocsSitemapEntries();
+    expect(entries.some((e) => e.url.endsWith("/docs"))).toBe(true);
+    expect(entries.some((e) => e.url.includes("/docs/mcp"))).toBe(true);
+    expect(entries.some((e) => e.url.endsWith("/api/docs/mcp"))).toBe(true);
   });
 });

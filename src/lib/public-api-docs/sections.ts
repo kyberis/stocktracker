@@ -1,4 +1,5 @@
 import { buildClaudeDesktopMcpConfigSnippet } from "@/lib/mcp/public-config";
+import { getMcpStreamableHttpUrl } from "@/lib/mcp/mcp-oauth-discovery";
 
 import { getPublicDocsSiteUrl } from "./site";
 
@@ -7,6 +8,7 @@ export type PublicDocSectionId =
   | "authentication"
   | "mcp"
   | "claude-desktop"
+  | "claude-connectors"
   | "warren-moat"
   | "warren-chat"
   | "portfolio";
@@ -104,6 +106,13 @@ export function listPublicDocSections(): PublicDocSectionSummary[] {
       url: sectionUrl("claude-desktop"),
     },
     {
+      id: "claude-connectors",
+      title: "Claude Connectors Directory (marketplace)",
+      description:
+        "OAuth requirements, server URL, and submission checklist for listing trefolio in Claude's connector marketplace.",
+      url: sectionUrl("claude-connectors"),
+    },
+    {
       id: "warren-moat",
       title: "Warren MOAT evaluation",
       description:
@@ -155,6 +164,7 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
             },
           ],
           discovery: {
+            docs_html: `${site}/docs`,
             docs_index: `${site}/api/docs`,
             openapi: `${site}/openapi.json`,
             mcp: `${site}/.well-known/mcp.json`,
@@ -288,9 +298,65 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
             "claude mcp add --transport http trefolio https://trefolio.com/api/mcp/user/mcp --header \"Authorization: Bearer tfp_pat_YOUR_TOKEN\"",
           cursor_note: "Cursor uses ~/.cursor/mcp.json with the same url + headers pattern (see /api/docs/mcp).",
           claude_web_note:
-            "claude.ai web Connectors currently support OAuth only, not static Bearer tokens. Use Claude Desktop config file or Claude Code CLI for trefolio PAT auth.",
+            "claude.ai Connectors Directory uses OAuth 2.0 (not static Bearer tokens). See /docs/claude-connectors for marketplace listing. Custom connectors in Claude Desktop can still use PAT via claude_desktop_config.json.",
+          claude_connectors_docs: `${site}/docs/claude-connectors`,
           token_mint: "https://user.trefolio.com/account/developer",
           docs: `${site}/api/docs/authentication`,
+        },
+      };
+    }
+    case "claude-connectors": {
+      const mcpUrl = getMcpStreamableHttpUrl();
+      return {
+        id: "claude-connectors",
+        title: "Claude Connectors Directory (marketplace)",
+        description:
+          "OAuth requirements, server URL, and submission checklist for listing trefolio in Claude's connector marketplace.",
+        url: sectionUrl("claude-connectors"),
+        content: {
+          summary:
+            "Remote MCP server for portfolio reads and Warren MOAT analysis. Listed via Anthropic's Connectors Directory (Claude marketplace).",
+          server_url: mcpUrl,
+          transport: "Streamable HTTP (POST JSON-RPC to /api/mcp/user/mcp)",
+          auth: {
+            type: "oauth2",
+            authorization_server: "https://user.trefolio.com",
+            protected_resource_metadata: `${site}/.well-known/oauth-protected-resource`,
+            oauth_callback: "https://claude.ai/api/mcp/auth_callback",
+            oauth_client_id: "claude-mcp",
+            anthropic_held_credentials:
+              "Email mcp-review@anthropic.com with claude-mcp client_id + secret if DCR is unavailable.",
+            pat_alternative:
+              "Cursor and Claude Desktop config file still support `Authorization: Bearer tfp_pat_…` (not accepted in the public directory UI).",
+          },
+          documentation_url: `${site}/docs`,
+          privacy_policy_url: `${site}/privacy`,
+          support_contact: "https://trefolio.com/contact",
+          example_prompts: [
+            "List my portfolios and show holdings with stored EUR values.",
+            "Run a Warren MOAT evaluation for AAPL and summarize the verdict.",
+            "Screen my MOAT universe for scores above 70 in the technology sector.",
+          ],
+          tools_read_only: [
+            "listPortfolios",
+            "listHoldings",
+            "listCash",
+            "getMoatEvaluation",
+            "generateMoatNarrative",
+            "listMoatReports",
+            "screenMoat",
+          ],
+          tools_write: ["saveMoatReport"],
+          submission_portal:
+            "Claude.ai → Admin settings → Directory (Team/Enterprise) or https://claude.com/docs/connectors/building/submission",
+          review_email: "mcp-review@anthropic.com",
+          prerequisites: [
+            "HTTPS server URL",
+            "OAuth 401 with WWW-Authenticate resource_metadata on unauthenticated requests",
+            "Every tool has title + readOnlyHint or destructiveHint",
+            "Public docs + privacy policy URLs",
+            "Test account credentials for reviewers",
+          ],
         },
       };
     }

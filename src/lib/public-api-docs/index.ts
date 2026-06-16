@@ -20,5 +20,7 @@ export function buildPublicDocsIndex() {
   };
 }
 
-export { buildPublicOpenApiDocument, getPublicDocSection, listPublicDocSections, getPublicDocsSiteUrl };
-export { isPublicDocSectionId } from "./sections";
+export { buildPublicOpenApiDocument } from "./openapi";
+export { getPublicDocSection, listPublicDocSections, isPublicDocSectionId } from "./sections";
+export { getPublicDocsSiteUrl } from "./site";
+export { buildPublicDocsSitemapEntries } from "./sitemap-urls";

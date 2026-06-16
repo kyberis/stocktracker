@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllPosts, getAllLocalizedSlugs, getPostsByLang } from "@/lib/blog";
+import { buildPublicDocsSitemapEntries } from "@/lib/public-api-docs";
 import "@/lib/blog-posts";
 import "@/lib/blog-posts-es";
 import "@/lib/blog-posts-fr";
@@ -112,5 +113,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    ...buildPublicDocsSitemapEntries(),
   ];
 }

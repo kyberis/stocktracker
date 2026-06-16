@@ -64,6 +64,10 @@ function AppFooter() {
         v{CURRENT_VERSION} &mdash; What&apos;s New
       </Link>
       <span className="opacity-40">·</span>
+      <Link href="/docs" className="transition-colors hover:text-[color:var(--foreground)]">
+        API &amp; MCP docs
+      </Link>
+      <span className="opacity-40">·</span>
       <Link href="/privacy" className="transition-colors hover:text-[color:var(--foreground)]">
         Privacy
       </Link>

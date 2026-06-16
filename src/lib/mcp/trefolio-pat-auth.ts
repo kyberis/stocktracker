@@ -5,6 +5,7 @@ import {
   type PatIntrospectFailureReason,
 } from "@/lib/accounts-pat-introspect";
 import { findUserIdByIdpSub } from "@/lib/db";
+import { isIdpOAuthAccessToken, verifyIdpOAuthAccessBearer } from "@/lib/mcp/idp-oauth-access-auth";
 
 export type TrefolioMcpAuth = { userId: string; tokenId: string };
 
@@ -64,6 +65,27 @@ export async function verifyTrefolioMcpBearer(
 ): Promise<TrefolioMcpAuth | null> {
   const result = await verifyTrefolioMcpBearerDetailed(bearer);
   return result.ok ? result.auth : null;
+}
+
+/** PAT (`tfp_pat_…`) or IdP OAuth access token (`dev-access-…`) for MCP. */
+export async function verifyMcpRequestAuthDetailed(
+  bearer: string | null | undefined,
+): Promise<McpPatAuthResult> {
+  if (!bearer) return { ok: false, reason: "missing_bearer" };
+  const trimmed = bearer.trim();
+  if (isTfpPatToken(trimmed)) return verifyTrefolioMcpBearerDetailed(trimmed);
+  if (isIdpOAuthAccessToken(trimmed)) {
+    const oauth = await verifyIdpOAuthAccessBearer(trimmed);
+    if (!oauth) return { ok: false, reason: "inactive" };
+    return {
+      ok: true,
+      auth: {
+        userId: oauth.userId,
+        tokenId: `oauth:${oauth.sub.length > 12 ? oauth.sub.slice(-12) : oauth.sub}`,
+      },
+    };
+  }
+  return { ok: false, reason: "invalid_token_format" };
 }
 
 export function extractBearer(headers: Headers): string | null {
