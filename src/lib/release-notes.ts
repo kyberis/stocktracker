@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "Published trefolio MCP skill for Claude Skills Directory at skills/trefolio-mcp (portfolio + Warren MOAT tool workflows).",
+        translations: {
+          es: "Skill MCP de trefolio publicado para el Directorio de Skills de Claude en skills/trefolio-mcp (flujos de cartera y herramientas Warren MOAT).",
+        },
+      },
+      {
+        type: "improvement",
         text: "While Subscriptions & commerce is off, new Warren accounts receive 30 days of Trefolio Pro on signup and auto-renew for another 30 days on expiry until commerce is enabled again.",
         translations: {
           es: "Con Suscripciones y comercio desactivado, las cuentas nuevas en Warren reciben 30 días de Trefolio Pro al registrarse y se renuevan automáticamente otros 30 días al expirar hasta que se reactive el comercio.",
