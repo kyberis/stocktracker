@@ -7,6 +7,7 @@ import {
   mcpPatAuthFailureResponse,
   verifyMcpRequestAuthDetailed,
 } from "@/lib/mcp/trefolio-pat-auth";
+import { mcpCorsPreflightResponse, withMcpCors } from "@/lib/mcp/mcp-cors";
 import { mcpOAuthUnauthorizedResponse } from "@/lib/mcp/mcp-oauth-discovery";
 import { registerTrefolioUserMcp } from "@/lib/mcp/user-server";
 import { mcpUserRateLimiter, mcpUserUnauthRateLimiter } from "@/lib/upstash";
@@ -48,7 +49,7 @@ async function rateLimitedHandler(request: Request, context: unknown): Promise<R
     if (lim) {
       const { success } = await lim.limit(authResult.auth.userId);
       if (!success) {
-        return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+        return withMcpCors(NextResponse.json({ error: "rate_limited" }, { status: 429 }));
       }
     }
   } else {
@@ -60,7 +61,7 @@ async function rateLimitedHandler(request: Request, context: unknown): Promise<R
     if (lim) {
       const { success } = await lim.limit(ip);
       if (!success) {
-        return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+        return withMcpCors(NextResponse.json({ error: "rate_limited" }, { status: 429 }));
       }
     }
     if (
@@ -68,21 +69,28 @@ async function rateLimitedHandler(request: Request, context: unknown): Promise<R
       authResult.reason === "invalid_token_format" ||
       (authResult.reason === "inactive" && bearer && !bearer.trim().startsWith("tfp_pat_"))
     ) {
-      return mcpOAuthUnauthorizedResponse(
-        authResult.reason === "missing_bearer"
-          ? "Authentication required"
-          : "Invalid or expired OAuth access token",
+      return withMcpCors(
+        mcpOAuthUnauthorizedResponse(
+          authResult.reason === "missing_bearer"
+            ? "Authentication required"
+            : "Invalid or expired OAuth access token",
+        ),
       );
     }
-    return mcpPatAuthFailureResponse(authResult.reason);
+    return withMcpCors(mcpPatAuthFailureResponse(authResult.reason));
   }
 
   attachMcpAuth(request, bearer!, authResult.auth.userId, authResult.auth.tokenId);
-  return (baseHandler as unknown as (req: Request, ctx: unknown) => Promise<Response>)(request, context);
+  const response = await (baseHandler as unknown as (req: Request, ctx: unknown) => Promise<Response>)(
+    request,
+    context,
+  );
+  return withMcpCors(response);
 }
 
 export const GET = rateLimitedHandler;
 export const POST = rateLimitedHandler;
 export const DELETE = rateLimitedHandler;
+export const OPTIONS = () => mcpCorsPreflightResponse();
 
 export const dynamic = "force-dynamic";

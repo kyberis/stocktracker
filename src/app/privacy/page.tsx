@@ -101,6 +101,17 @@ export default function PrivacyPolicyPage() {
                 you configure a client and uses it solely to authenticate MCP requests
                 against your account.
               </li>
+              <li>
+                <strong className="text-slate-800">Claude Connectors (OAuth)</strong> — if you add
+                trefolio via Anthropic&apos;s Connectors Directory, Claude initiates OAuth 2.0 against{" "}
+                <strong className="text-slate-800">user.trefolio.com</strong> (scopes{" "}
+                <code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">openid</code>,{" "}
+                <code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">profile</code>,{" "}
+                <code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">email</code>,{" "}
+                <code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">mcp:ecosystem</code>).
+                We validate the access token and return only the portfolio or MOAT data you request via MCP
+                tools; we do not sell your portfolio data to Anthropic.
+              </li>
             </ul>
 
             <h3>Referral Data</h3>

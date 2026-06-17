@@ -357,6 +357,33 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
             "Public docs + privacy policy URLs",
             "Test account credentials for reviewers",
           ],
+          troubleshooting: [
+            {
+              issue: "401 / missing auth / expired OAuth token",
+              resolution:
+                "Reconnect the connector in Claude.ai to refresh the OAuth access token. Unauthenticated MCP requests return 401 with WWW-Authenticate resource_metadata pointing at /.well-known/oauth-protected-resource.",
+            },
+            {
+              issue: "user_not_linked (IdP account not linked to trefolio user)",
+              resolution:
+                "OAuth succeeded on user.trefolio.com but no local trefolio user matches that IdP subject. Sign in once at trefolio.com with the same account, then retry the connector.",
+            },
+            {
+              issue: "MOAT quota errors (quota_exceeded)",
+              resolution:
+                "getMoatEvaluation with fresh=true consumes stock_evaluation quota; generateMoatNarrative consumes ai_consult quota. Omit fresh for cached reads, or upgrade tier when limits are hit.",
+            },
+            {
+              issue: "OAuth callback failures",
+              resolution:
+                "Confirm oauth_callback is https://claude.ai/api/mcp/auth_callback, authorization_server is https://user.trefolio.com, client_id claude-mcp is registered with Anthropic, and CORS preflight (OPTIONS) succeeds on the MCP URL.",
+            },
+            {
+              issue: "PAT vs OAuth confusion",
+              resolution:
+                "Connectors Directory uses OAuth 2.0 only. Claude Desktop config-file MCP uses Authorization: Bearer tfp_pat_… — see /docs/claude-desktop.",
+            },
+          ],
         },
       };
     }

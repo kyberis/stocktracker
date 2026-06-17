@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "Claude Connectors docs: troubleshooting for OAuth 401, user_not_linked, MOAT quotas, and PAT vs OAuth; MCP endpoint CORS for browser OAuth preflight from claude.ai.",
+        translations: {
+          es: "Docs Claude Connectors: resolución de problemas para OAuth 401, user_not_linked, cuotas MOAT y PAT vs OAuth; CORS en el endpoint MCP para preflight OAuth desde claude.ai.",
+        },
+      },
+      {
+        type: "improvement",
         text: "Published trefolio MCP skill for Claude Skills Directory at skills/trefolio-mcp (portfolio + Warren MOAT tool workflows).",
         translations: {
           es: "Skill MCP de trefolio publicado para el Directorio de Skills de Claude en skills/trefolio-mcp (flujos de cartera y herramientas Warren MOAT).",
