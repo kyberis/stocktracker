@@ -26,6 +26,15 @@ export function buildCursorMcpConfigSnippet(mcpUrl: string): string {
  * Claude Desktop config file snippet (`claude_desktop_config.json`).
  * Use this — NOT Settings → Connectors → Custom connector (OAuth Client ID).
  */
+/** Claude Code CLI one-liner (token placeholder). */
+export function buildClaudeCodeMcpCliSnippet(mcpUrl: string): string {
+  return `claude mcp add --transport http trefolio ${mcpUrl}/mcp --header "Authorization: Bearer tfp_pat_YOUR_TOKEN_HERE"`;
+}
+
+export function getIdpDeveloperTokensUrl(): string {
+  return "https://user.trefolio.com/account/developer?from=trefolio";
+}
+
 export function buildClaudeDesktopMcpConfigSnippet(mcpUrl: string): string {
   return JSON.stringify(
     {

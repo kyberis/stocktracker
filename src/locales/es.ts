@@ -1978,6 +1978,73 @@ const es: TranslationStrings = {
   landingAgentsWillCta: "Probar Will",
   landingAgentsFreeNote: "Gratis: 30 mensajes/día en Clara y Will para siempre. Pro sube todos los límites a 200/día.",
 
+  landingDevDocsEyebrow: "Desarrolladores e IA",
+  landingDevDocsHeading: "Conecta Cursor, Claude Code y tus agentes",
+  landingDevDocsHeadingAccent: "a tu cartera",
+  landingDevDocsSubtitle:
+    "Usa MCP con un token de acceso personal — lectura de cartera, Warren MOAT y flujos de agentes. Guía paso a paso para Claude Code y Cursor.",
+  landingDevDocsCta: "Guía de configuración MCP",
+  landingDevDocsSecondary: "Documentación completa",
+
+  landingNavMcp: "MCP",
+  landingMcpPromoBadge: "Nuevo",
+  landingMcpPromoTitle: "MCP para Claude Code y Cursor",
+  landingMcpPromoDesc: "Conecta tu cartera a Claude Code, Cursor o Claude Desktop con un token de acceso personal.",
+  landingMcpPromoCta: "Guía de configuración",
+
+  landingCardMcpTitle: "MCP para clientes de IA",
+  landingCardMcpDesc: "Tokens de acceso personal para Claude Code, Cursor y Claude Desktop — lee carteras y ejecuta Warren MOAT desde tu editor.",
+
+  landingMcpBackHome: "Volver al inicio",
+  landingMcpDocsLink: "Docs técnicos",
+  landingMcpEyebrow: "Developer · MCP tokens",
+  landingMcpHeading: "Conecta Claude Code y Cursor",
+  landingMcpHeadingAccent: "a tu cartera",
+  landingMcpSubtitle:
+    "Genera un token de acceso personal en user.trefolio.com (Developer · MCP tokens) y pégalo en Claude Code o Cursor. El mismo token funciona en trefolio, Clara y Will.",
+  landingMcpStepsHeading: "Configuración en 5 pasos",
+  landingMcpStepsSubtitle: "Unos dos minutos. Solo necesitas cuenta en trefolio y Claude Code o Cursor instalado.",
+  landingMcpStep1Title: "Abre Developer · MCP tokens",
+  landingMcpStep1Body:
+    "Inicia sesión en trefolio.com y abre user.trefolio.com → Developer (o Perfil → Dispositivos → Generar token en trefolio). Llegarás a la página de tokens MCP.",
+  landingMcpStep1ScreenshotAlt: "Página Developer de user.trefolio.com con sección MCP tokens",
+  landingMcpStep1ScreenshotPlaceholder: "Captura: página Developer · MCP tokens",
+  landingMcpOpenDeveloper: "Abrir Developer · MCP tokens",
+  landingMcpStep2Title: "Genera tu token",
+  landingMcpStep2Body:
+    "Pulsa Generar token, ponle un nombre (p. ej. «Claude Code») y copia el valor tfp_pat_… al instante — solo se muestra una vez. Guárdalo en un gestor de contraseñas.",
+  landingMcpStep2ScreenshotAlt: "Diálogo para generar token de acceso personal MCP",
+  landingMcpStep2ScreenshotPlaceholder: "Captura: generación de token tfp_pat",
+  landingMcpStep3Title: "Configura Claude Code",
+  landingMcpStep3Body:
+    "En la terminal, ejecuta el comando de abajo (sustituye YOUR_TOKEN por tu token tfp_pat). Reinicia Claude Code y ejecuta /mcp para confirmar que trefolio está conectado.",
+  landingMcpStep3ScreenshotAlt: "Terminal de Claude Code con conexión MCP exitosa",
+  landingMcpStep3ScreenshotPlaceholder: "Captura: Claude Code con MCP conectado",
+  landingMcpCopyClaudeCli: "Copiar comando CLI de Claude Code",
+  landingMcpStep4Title: "Configura Cursor (opcional)",
+  landingMcpStep4Body:
+    "Añade el JSON de abajo a ~/.cursor/mcp.json (combínalo con mcpServers existentes si ya usas MCP). Sustituye YOUR_TOKEN por tu tfp_pat y reinicia Cursor.",
+  landingMcpStep4ScreenshotAlt: "Ajustes MCP de Cursor con servidor trefolio configurado",
+  landingMcpStep4ScreenshotPlaceholder: "Captura: configuración mcp.json en Cursor",
+  landingMcpCopyCursorConfig: "Copiar configuración MCP de Cursor",
+  landingMcpStep5Title: "Verifica y pregunta",
+  landingMcpStep5Body:
+    "Pregunta a Claude Code o Cursor: «Lista mis carteras» o «Evalúa el Warren MOAT de AAPL». Las herramientas de cartera usan valores almacenados; MOAT en vivo consume cuotas de tu plan.",
+  landingMcpStep5ScreenshotAlt: "Cliente de IA listando posiciones vía MCP",
+  landingMcpStep5ScreenshotPlaceholder: "Captura: resultados MCP en Claude Code",
+  landingMcpClaudeDesktopTitle: "Claude Desktop (archivo de config)",
+  landingMcpClaudeDesktopBody:
+    "Claude → Ajustes → Connectors → Custom connector pide OAuth Client ID — el MCP de trefolio usa bearer token. Edita claude_desktop_config.json en macOS o Windows:",
+  landingMcpCopyClaudeDesktop: "Copiar configuración Claude Desktop",
+  landingMcpToolsHeading: "Herramientas MCP disponibles",
+  landingMcpToolsSubtitle: "Lectura de cartera y análisis Warren MOAT — mismas cuotas que la web.",
+  landingMcpTool1: "listPortfolios — tus carteras",
+  landingMcpTool2: "listHoldings / listCash — valores EUR almacenados",
+  landingMcpTool3: "getMoatEvaluation — puntuación Warren MOAT",
+  landingMcpTool4: "generateMoatNarrative — narrativa IA del moat",
+  landingMcpTool5: "screenMoat — filtra el universo MOAT",
+  landingMcpDisclaimer: "No es asesoramiento financiero. Las puntuaciones MOAT y la IA son herramientas educativas; investiga por tu cuenta.",
+
   landingThemesEyebrow: "Personalización",
   landingThemesHeading: "Hazlo",
   landingThemesHeadingAccent: "tuyo",

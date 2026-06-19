@@ -151,6 +151,7 @@ function getFeatureCards(t: T) {
     { icon: "castle", title: t("landingCardMoatTitle"), desc: t("landingCardMoatDesc") },
     { icon: "wallet", title: t("landingCardNetWorthTitle"), desc: t("landingCardNetWorthDesc") },
     { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc") },
+    { icon: "bot", title: t("landingCardMcpTitle"), desc: t("landingCardMcpDesc"), href: "/landing/mcp" },
     { icon: "office", title: t("landingCardOfficeTitle"), desc: t("landingCardOfficeDesc"), badge: "Trefolio" },
     { icon: "upload", title: t("landingCardImportTitle"), desc: t("landingCardImportDesc") },
     { icon: "chart", title: t("landingCardPerfTitle"), desc: t("landingCardPerfDesc") },
@@ -334,6 +335,9 @@ function FeatureIcon({ type }: { type: string }) {
     office: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" />
     ),
+    bot: (
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75h.008v.008H7.5v-.008zm3 0h.008v.008H10.5v-.008zm3 0h.008v.008H13.5v-.008zM15.75 15h1.5a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0017.25 4.5h-9A2.25 2.25 0 006 6.75v6.25A2.25 2.25 0 008.25 15h1.5m6 0v1.875a2.25 2.25 0 01-2.25 2.25h-1.5a2.25 2.25 0 01-2.25-2.25V15m6 0H9" />
+    ),
   };
 
   return (
@@ -403,6 +407,7 @@ function NavBar() {
   const navLinks = useMemo(() => {
     const links = [
       { href: "#features", label: t("landingNavFeatures") },
+      { href: "/landing/mcp", label: t("landingNavMcp"), isRoute: true },
       { href: "#pricing", label: t("landingNavPricing") },
       { href: "#faq", label: t("landingNavFaq") },
     ];
@@ -430,15 +435,25 @@ function NavBar() {
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8">
           <div className="flex items-center gap-6">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map((link) =>
+              "isRoute" in link && link.isRoute ? (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm font-medium text-sky-600 hover:text-sky-800 transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+                >
+                  {link.label}
+                </a>
+              ),
+            )}
           </div>
           <div className="flex items-center gap-3">
             <LangPicker />
@@ -481,16 +496,27 @@ function NavBar() {
       {mobileOpen && (
         <div className="md:hidden bg-[#faf9f7]/98 backdrop-blur-xl border-t border-slate-200">
           <div className="px-4 py-4 space-y-1">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="block px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map((link) =>
+              "isRoute" in link && link.isRoute ? (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-4 py-3 text-sm font-medium text-sky-600 hover:text-sky-800 hover:bg-sky-50 rounded-lg transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  {link.label}
+                </a>
+              ),
+            )}
             <div className="pt-3 border-t border-slate-200 space-y-2">
               <LangPicker className="px-4 py-2" />
               <Link
@@ -654,6 +680,30 @@ function HeroSection() {
             <p className="text-base lg:text-lg text-slate-500 max-w-[460px] mb-5 sm:mb-6 leading-relaxed">
               {t("landingHeroParagraph")}
             </p>
+
+            {/* MCP promo */}
+            <Link
+              href="/landing/mcp"
+              onClick={() => trackLanding("landing_cta_click", { cta: "hero_mcp_promo" })}
+              className="mb-6 sm:mb-8 flex items-start gap-3 rounded-xl border border-sky-200 bg-gradient-to-r from-sky-50 to-emerald-50 px-4 py-3.5 transition-all hover:border-sky-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600">
+                <FeatureIcon type="bot" />
+              </div>
+              <div className="min-w-0 text-left">
+                <div className="mb-0.5 flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-sky-700">{t("landingMcpPromoBadge")}</span>
+                  <span className="text-sm font-semibold text-slate-900">{t("landingMcpPromoTitle")}</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{t("landingMcpPromoDesc")}</p>
+                <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                  {t("landingMcpPromoCta")}
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
+              </div>
+            </Link>
 
             {/* CTA */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6 sm:mb-8">
@@ -855,8 +905,8 @@ function DeveloperDocsSection() {
       ref={sectionRef as React.RefObject<HTMLElement>}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-          <div className="max-w-2xl">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+          <div>
             <span className="inline-block text-xs font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 mb-4">
               {t("landingDevDocsEyebrow")}
             </span>
@@ -864,26 +914,47 @@ function DeveloperDocsSection() {
               {t("landingDevDocsHeading")}{" "}
               <span className="text-emerald-400">{t("landingDevDocsHeadingAccent")}</span>
             </h2>
-            <p className="text-slate-300 leading-relaxed">{t("landingDevDocsSubtitle")}</p>
+            <p className="text-slate-300 leading-relaxed max-w-xl">{t("landingDevDocsSubtitle")}</p>
+            <ul className="mt-5 space-y-2 text-sm text-slate-400">
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+                Developer · MCP tokens on user.trefolio.com
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+                Claude Code, Cursor, Claude Desktop
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+                Portfolio + Warren MOAT tools
+              </li>
+            </ul>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-            <Link
-              href="/docs"
-              onClick={() => trackLanding("landing_cta_click", { cta: "dev_docs_primary" })}
-              className="inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-6 py-3.5 rounded-xl transition-colors"
-            >
-              {t("landingDevDocsCta")}
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-            <Link
-              href="/openapi.json"
-              onClick={() => trackLanding("landing_cta_click", { cta: "dev_docs_openapi" })}
-              className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl border border-slate-600 text-slate-200 hover:border-slate-400 hover:text-white transition-colors"
-            >
-              {t("landingDevDocsSecondary")}
-            </Link>
+          <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-6 sm:p-8">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-sky-500/15 text-sky-300">
+              <FeatureIcon type="bot" />
+            </div>
+            <p className="text-sm font-medium text-slate-200 mb-1">{t("landingMcpPromoTitle")}</p>
+            <p className="text-xs text-slate-400 mb-6">{t("landingMcpPromoDesc")}</p>
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/landing/mcp"
+                onClick={() => trackLanding("landing_cta_click", { cta: "dev_docs_primary" })}
+                className="inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-6 py-3.5 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+              >
+                {t("landingDevDocsCta")}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+              <Link
+                href="/docs"
+                onClick={() => trackLanding("landing_cta_click", { cta: "dev_docs_secondary" })}
+                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl border border-slate-600 text-slate-200 hover:border-slate-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+              >
+                {t("landingDevDocsSecondary")}
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -986,25 +1057,35 @@ function FeaturesSection() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-24">
-          {featureCards.map((card) => (
-            <div
-              key={card.title}
-              className="group rounded-2xl border border-slate-200 bg-white p-6 hover:border-emerald-200 hover:bg-white transition-all"
-            >
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center mb-4 group-hover:bg-emerald-100 transition-colors">
-                <FeatureIcon type={card.icon} />
+          {featureCards.map((card) => {
+            const inner = (
+              <>
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center mb-4 group-hover:bg-emerald-100 transition-colors">
+                  <FeatureIcon type={card.icon} />
+                </div>
+                <h4 className="text-lg font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                  {card.title}
+                  {"badge" in card && card.badge && (
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      {card.badge}
+                    </span>
+                  )}
+                </h4>
+                <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
+              </>
+            );
+            const className =
+              "group rounded-2xl border border-slate-200 bg-white p-6 hover:border-emerald-200 hover:bg-white transition-all block";
+            return "href" in card && card.href ? (
+              <Link key={card.title} href={card.href} className={className}>
+                {inner}
+              </Link>
+            ) : (
+              <div key={card.title} className={className}>
+                {inner}
               </div>
-              <h4 className="text-lg font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                {card.title}
-                {"badge" in card && card.badge && (
-                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                    {card.badge}
-                  </span>
-                )}
-              </h4>
-              <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
 
 import {
+  buildClaudeCodeMcpCliSnippet,
   buildClaudeDesktopMcpConfigSnippet,
   buildCursorMcpConfigSnippet,
+  getIdpDeveloperTokensUrl,
   getMcpUserEndpointUrl,
 } from "@/lib/mcp/public-config";
 import { resolveIdpDeveloperHref } from "@/lib/idp/config";
@@ -28,6 +30,17 @@ describe("mcp public config", () => {
     };
     expect(parsed.mcpServers.trefolio.type).toBe("http");
     expect(parsed.mcpServers.trefolio.headers.Authorization).toContain("tfp_pat_");
+  });
+
+  it("builds Claude Code CLI snippet", () => {
+    const snippet = buildClaudeCodeMcpCliSnippet("https://trefolio.com/api/mcp/user");
+    expect(snippet).toContain("claude mcp add");
+    expect(snippet).toContain("https://trefolio.com/api/mcp/user/mcp");
+    expect(snippet).toContain("tfp_pat_YOUR_TOKEN_HERE");
+  });
+
+  it("returns IdP developer tokens URL", () => {
+    expect(getIdpDeveloperTokensUrl()).toContain("user.trefolio.com/account/developer");
   });
 });
 

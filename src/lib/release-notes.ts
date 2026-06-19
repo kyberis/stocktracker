@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "feature",
+        text: "MCP setup landing at /landing/mcp with step-by-step token and Claude Code guide; more visible MCP promo on the public home page.",
+        translations: {
+          es: "Landing de configuración MCP en /landing/mcp con guía paso a paso para token y Claude Code; promo MCP más visible en la home pública.",
+        },
+      },
+      {
         type: "improvement",
         text: "Claude Connectors docs: troubleshooting for OAuth 401, user_not_linked, MOAT quotas, and PAT vs OAuth; MCP endpoint CORS for browser OAuth preflight from claude.ai.",
         translations: {

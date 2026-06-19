@@ -69,6 +69,7 @@ function buildLoginRedirectUrl(req: NextRequest): URL {
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_ROUTES.has(pathname)) return true;
+  if (pathname.startsWith("/landing")) return true;
   if (pathname.startsWith("/blog")) return true;
   if (pathname === "/docs" || pathname.startsWith("/docs/")) return true;
   if (pathname.startsWith("/_next")) return true;
