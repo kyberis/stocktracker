@@ -1853,6 +1853,10 @@ const nl: TranslationStrings = {
   landingMcpHeadingAccent: "aan je portefeuille",
   landingMcpSubtitle:
     "Genereer een token op user.trefolio.com (Developer · MCP tokens) en plak het in Claude Code of Cursor. Eén token voor trefolio, Clara en Will.",
+  landingMcpHeroScreenshotAlt:
+    "Claude extended thinking met tool-aanroepen en actieve trefolio-connector naast fmp en yahoo-finance",
+  landingMcpHeroScreenshotCaption:
+    "Claude toont zijn redeneringsketen en roept trefolio MCP-tools aan via het Connectors-paneel.",
   landingMcpStepsHeading: "Installatie in 5 stappen",
   landingMcpStepsSubtitle: "Ongeveer twee minuten. Je hebt een trefolio-account en Claude Code of Cursor nodig.",
   landingMcpStep1Title: "Open Developer · MCP tokens",
@@ -1869,8 +1873,8 @@ const nl: TranslationStrings = {
   landingMcpStep3Title: "Configureer Claude Code",
   landingMcpStep3Body:
     "Voer het commando hieronder uit (vervang YOUR_TOKEN door je tfp_pat). Herstart Claude Code en run /mcp.",
-  landingMcpStep3ScreenshotAlt: "Claude Code-terminal met succesvolle MCP-verbinding",
-  landingMcpStep3ScreenshotPlaceholder: "Screenshot: Claude Code MCP verbonden",
+  landingMcpStep3ScreenshotAlt: "Claude Context-paneel met actieve Connectors, inclusief trefolio MCP",
+  landingMcpStep3ScreenshotPlaceholder: "Screenshot: trefolio-connector in Claude",
   landingMcpCopyClaudeCli: "Claude Code CLI-commando kopiëren",
   landingMcpStep4Title: "Configureer Cursor (optioneel)",
   landingMcpStep4Body:
@@ -1881,8 +1885,9 @@ const nl: TranslationStrings = {
   landingMcpStep5Title: "Verifiëren en vragen",
   landingMcpStep5Body:
     "Vraag Claude Code of Cursor: «Lijst mijn portefeuilles» of «Warren MOAT voor AAPL». Live MOAT verbruikt je quotas.",
-  landingMcpStep5ScreenshotAlt: "AI-client toont posities via MCP",
-  landingMcpStep5ScreenshotPlaceholder: "Screenshot: MCP-resultaten in Claude Code",
+  landingMcpStep5ScreenshotAlt:
+    "Claude extended thinking bij REIT-screening met fmp, yahoo-finance en trefolio",
+  landingMcpStep5ScreenshotPlaceholder: "Screenshot: Claude thinking met trefolio MCP",
   landingMcpClaudeDesktopTitle: "Claude Desktop (configbestand)",
   landingMcpClaudeDesktopBody:
     "Claude Instellingen → Connectors → Custom connector vraagt OAuth Client ID — trefolio MCP gebruikt bearer token. Bewerk claude_desktop_config.json:",

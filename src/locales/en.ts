@@ -2000,6 +2000,10 @@ const en: TranslationStrings = {
   landingMcpHeadingAccent: "to your portfolio",
   landingMcpSubtitle:
     "Generate a personal access token on user.trefolio.com (Developer · MCP tokens), then paste it into Claude Code or Cursor. One token works across trefolio, Clara, and Will.",
+  landingMcpHeroScreenshotAlt:
+    "Claude extended thinking with tool calls and the trefolio connector active alongside fmp and yahoo-finance",
+  landingMcpHeroScreenshotCaption:
+    "Claude shows its reasoning chain and calls trefolio MCP tools from the Connectors panel.",
   landingMcpStepsHeading: "Setup in 5 steps",
   landingMcpStepsSubtitle: "Takes about two minutes. You only need a trefolio account and Claude Code or Cursor installed.",
   landingMcpStep1Title: "Open Developer · MCP tokens",
@@ -2016,8 +2020,8 @@ const en: TranslationStrings = {
   landingMcpStep3Title: "Configure Claude Code",
   landingMcpStep3Body:
     "In your terminal, run the command below (replace YOUR_TOKEN with your tfp_pat token). Then restart Claude Code and run /mcp to confirm trefolio is connected.",
-  landingMcpStep3ScreenshotAlt: "Claude Code terminal showing successful MCP connection",
-  landingMcpStep3ScreenshotPlaceholder: "Screenshot: Claude Code MCP connected",
+  landingMcpStep3ScreenshotAlt: "Claude Context panel listing active Connectors including trefolio MCP",
+  landingMcpStep3ScreenshotPlaceholder: "Screenshot: trefolio connector in Claude",
   landingMcpCopyClaudeCli: "Copy Claude Code CLI command",
   landingMcpStep4Title: "Configure Cursor (optional)",
   landingMcpStep4Body:
@@ -2028,8 +2032,9 @@ const en: TranslationStrings = {
   landingMcpStep5Title: "Verify and ask",
   landingMcpStep5Body:
     "Ask Claude Code or Cursor: “List my portfolios” or “Run a Warren MOAT evaluation for AAPL.” Portfolio tools use stored values; fresh MOAT runs consume your plan quotas.",
-  landingMcpStep5ScreenshotAlt: "AI client listing portfolio holdings via MCP",
-  landingMcpStep5ScreenshotPlaceholder: "Screenshot: MCP tool results in Claude Code",
+  landingMcpStep5ScreenshotAlt:
+    "Claude extended thinking screening REITs with fmp, yahoo-finance and trefolio tool results",
+  landingMcpStep5ScreenshotPlaceholder: "Screenshot: Claude thinking with trefolio MCP",
   landingMcpClaudeDesktopTitle: "Claude Desktop (config file)",
   landingMcpClaudeDesktopBody:
     "Claude Settings → Connectors → Custom connector asks for OAuth Client ID — trefolio MCP uses a bearer token instead. Edit claude_desktop_config.json on macOS or Windows:",

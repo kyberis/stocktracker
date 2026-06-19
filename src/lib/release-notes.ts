@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "improvement",
+        text: "MCP landing screenshots: Claude extended thinking with trefolio connector in Context panel (steps 3 & 5 + hero).",
+        translations: {
+          es: "Capturas en la landing MCP: Claude extended thinking con conector trefolio en el panel Context (pasos 3 y 5 + hero).",
+        },
+      },
+      {
         type: "feature",
         text: "MCP setup landing at /landing/mcp with step-by-step token and Claude Code guide; more visible MCP promo on the public home page.",
         translations: {

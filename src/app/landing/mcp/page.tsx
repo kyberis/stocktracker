@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
 import { Bot, Check, Copy, ExternalLink } from "lucide-react";
 
@@ -184,6 +185,17 @@ function McpSetupContent() {
               </p>
             </div>
           </div>
+          <div className="mt-10 overflow-hidden rounded-2xl border border-slate-700/80 shadow-2xl shadow-black/40">
+            <Image
+              src="/screenshots/mcp-claude-thinking-trefolio.png"
+              alt={t("landingMcpHeroScreenshotAlt")}
+              width={1280}
+              height={883}
+              className="h-auto w-full"
+              priority
+            />
+          </div>
+          <p className="mt-3 text-center text-xs text-slate-400">{t("landingMcpHeroScreenshotCaption")}</p>
         </div>
       </header>
 

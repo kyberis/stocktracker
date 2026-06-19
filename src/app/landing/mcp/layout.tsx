@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     description:
       "Generate your tfp_pat token and connect Claude Code, Cursor, or Claude Desktop to your portfolio and Warren MOAT tools.",
     url: "https://trefolio.com/landing/mcp",
-    images: [{ url: "/screenshots/mcp-step-1-developer.png", width: 1280, height: 800 }],
+    images: [{ url: "/screenshots/mcp-claude-thinking-trefolio.png", width: 1280, height: 883 }],
   },
 };
 
