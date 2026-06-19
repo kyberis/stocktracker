@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "MCP landing screenshots for IdP Developer tokens (steps 1–2) and Cursor mcp.json setup (step 4).",
+        translations: {
+          es: "Capturas en la landing MCP para Developer tokens del IdP (pasos 1–2) y configuración mcp.json en Cursor (paso 4).",
+        },
+      },
+      {
+        type: "improvement",
         text: "MCP landing screenshots: Claude extended thinking with trefolio connector in Context panel (steps 3 & 5 + hero).",
         translations: {
           es: "Capturas en la landing MCP: Claude extended thinking con conector trefolio en el panel Context (pasos 3 y 5 + hero).",
