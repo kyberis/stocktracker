@@ -339,7 +339,7 @@ export function buildPublicOpenApiDocument() {
           type: "http",
           scheme: "bearer",
           description:
-            "Personal access token `tfp_pat_…` for MCP only. Mint at user.trefolio.com/account/developer.",
+            "Personal access token `tfp_pat_…` for MCP only. Mint at trefolio Profile → Developer · MCP (`/profile?section=mcp`).",
         },
       },
       schemas: {

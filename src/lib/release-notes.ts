@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "feature",
+        text: "MCP personal access tokens: new Profile → Developer · MCP tab with inline create, list, and revoke — no redirect to user.trefolio.com.",
+        translations: {
+          es: "Tokens MCP: nueva pestaña Perfil → Developer · MCP con creación, listado y revocación integrados — sin redirigir a user.trefolio.com.",
+        },
+      },
+      {
         type: "improvement",
         text: "MCP landing screenshots for IdP Developer tokens (steps 1–2) and Cursor mcp.json setup (step 4).",
         translations: {

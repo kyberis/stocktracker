@@ -11,7 +11,7 @@ import { trackCanonicalConversion } from "@/lib/ad-tracking";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierIcon from "@/components/TierIcon";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
-import { Smartphone, Monitor, Copy, Check, Trash2, User, Users, CreditCard, Bell, FolderOpen, Gift, Share2, Eye, EyeOff, Globe } from "lucide-react";
+import { Smartphone, Monitor, Copy, Check, Trash2, User, Users, CreditCard, Bell, FolderOpen, Gift, Share2, Eye, EyeOff, Globe, Bot } from "lucide-react";
 import NotificationChannels from "@/components/NotificationChannels";
 import TelegramConnectCard from "@/components/profile/TelegramConnectCard";
 import ProfileMcpSection from "@/components/profile/ProfileMcpSection";
@@ -19,11 +19,12 @@ import { COUNTRIES } from "@/lib/countries";
 import { resolveBillingPortalHref } from "@/lib/idp/config";
 import { useCommerceEnabled } from "@/lib/commerce";
 
-const PROFILE_TABS = ["account", "subscription", "notifications", "portfolios", "referrals", "social", "devices"] as const;
+const PROFILE_TABS = ["account", "mcp", "subscription", "notifications", "portfolios", "referrals", "social", "devices"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
 
 const TAB_ICONS: Record<ProfileTab, typeof User> = {
   account: User,
+  mcp: Bot,
   subscription: CreditCard,
   notifications: Bell,
   portfolios: FolderOpen,
@@ -34,6 +35,7 @@ const TAB_ICONS: Record<ProfileTab, typeof User> = {
 
 const TAB_LABEL_KEYS: Record<ProfileTab, string> = {
   account: "profileTabAccount",
+  mcp: "profileTabMcp",
   subscription: "profileTabSubscription",
   notifications: "profileTabNotifications",
   portfolios: "profileTabPortfolios",
@@ -2261,6 +2263,18 @@ export default function ProfilePage() {
           </section>
         )}
 
+        {/* === MCP Tab === */}
+        {effectiveTab === "mcp" && (
+          <section
+            id="profile-tabpanel-mcp"
+            role="tabpanel"
+            aria-labelledby="profile-tab-mcp"
+            className="space-y-6"
+          >
+            <ProfileMcpSection />
+          </section>
+        )}
+
         {/* === Devices Tab === */}
         {effectiveTab === "devices" && <section
           id="profile-tabpanel-devices"
@@ -2268,9 +2282,6 @@ export default function ProfilePage() {
           aria-labelledby="profile-tab-devices"
           className="space-y-6"
         >
-        {/* MCP Access */}
-        <ProfileMcpSection />
-
         {/* Widget Access */}
         <div className="card p-6 space-y-4">
           <div className="flex items-center gap-3">

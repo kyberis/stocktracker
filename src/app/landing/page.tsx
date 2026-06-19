@@ -918,7 +918,7 @@ function DeveloperDocsSection() {
             <ul className="mt-5 space-y-2 text-sm text-slate-400">
               <li className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
-                Developer · MCP tokens on user.trefolio.com
+                Profile → Developer · MCP
               </li>
               <li className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />

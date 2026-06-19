@@ -36,7 +36,7 @@ export async function GET() {
           bearer_pat: {
             type: "bearer",
             token_format: "tfp_pat_<64-hex>",
-            documentation: "https://user.trefolio.com/account/developer",
+            documentation: `${site}/profile?section=mcp`,
           },
         },
         capabilities: {

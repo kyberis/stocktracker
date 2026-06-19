@@ -287,7 +287,7 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
           config_file_macos: "~/Library/Application Support/Claude/claude_desktop_config.json",
           config_file_windows: "%APPDATA%\\Claude\\claude_desktop_config.json",
           steps: [
-            "Mint `tfp_pat_…` at https://user.trefolio.com/account/developer or trefolio Profile → Devices → Generate access token.",
+            "Mint `tfp_pat_…` at trefolio Profile → Developer · MCP (`/profile?section=mcp`).",
             "Quit Claude Desktop completely.",
             "Paste the JSON below into claude_desktop_config.json (merge with existing mcpServers if needed).",
             "Replace tfp_pat_YOUR_TOKEN_HERE with your real token.",
@@ -300,7 +300,7 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
           claude_web_note:
             "claude.ai Connectors Directory uses OAuth 2.0 (not static Bearer tokens). See /docs/claude-connectors for marketplace listing. Custom connectors in Claude Desktop can still use PAT via claude_desktop_config.json.",
           claude_connectors_docs: `${site}/docs/claude-connectors`,
-          token_mint: "https://user.trefolio.com/account/developer",
+          token_mint: `${site}/profile?section=mcp`,
           docs: `${site}/api/docs/authentication`,
         },
       };

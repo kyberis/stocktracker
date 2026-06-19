@@ -4,6 +4,7 @@ import {
   buildClaudeCodeMcpCliSnippet,
   buildClaudeDesktopMcpConfigSnippet,
   buildCursorMcpConfigSnippet,
+  getProfileMcpUrl,
   getIdpDeveloperTokensUrl,
   getMcpUserEndpointUrl,
 } from "@/lib/mcp/public-config";
@@ -39,8 +40,12 @@ describe("mcp public config", () => {
     expect(snippet).toContain("tfp_pat_YOUR_TOKEN_HERE");
   });
 
-  it("returns IdP developer tokens URL", () => {
-    expect(getIdpDeveloperTokensUrl()).toContain("user.trefolio.com/account/developer");
+  it("returns profile MCP tab URL", () => {
+    const prev = process.env.APP_BASE_URL;
+    process.env.APP_BASE_URL = "https://trefolio.com";
+    expect(getProfileMcpUrl()).toBe("https://trefolio.com/profile?section=mcp");
+    expect(getIdpDeveloperTokensUrl()).toBe(getProfileMcpUrl());
+    process.env.APP_BASE_URL = prev;
   });
 });
 

@@ -31,8 +31,14 @@ export function buildClaudeCodeMcpCliSnippet(mcpUrl: string): string {
   return `claude mcp add --transport http trefolio ${mcpUrl}/mcp --header "Authorization: Bearer tfp_pat_YOUR_TOKEN_HERE"`;
 }
 
+export function getProfileMcpUrl(): string {
+  const base = process.env.APP_BASE_URL?.trim().replace(/\/+$/g, "") || "https://trefolio.com";
+  return `${base}/profile?section=mcp`;
+}
+
+/** @deprecated Prefer {@link getProfileMcpUrl} — PAT management lives in trefolio Profile. */
 export function getIdpDeveloperTokensUrl(): string {
-  return "https://user.trefolio.com/account/developer?from=trefolio";
+  return getProfileMcpUrl();
 }
 
 export function buildClaudeDesktopMcpConfigSnippet(mcpUrl: string): string {

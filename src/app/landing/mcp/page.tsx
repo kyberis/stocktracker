@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
-import { Bot, Check, Copy, ExternalLink } from "lucide-react";
+import { Bot, Check, Copy } from "lucide-react";
 
 import McpSetupScreenshot from "@/components/landing/McpSetupScreenshot";
 import PublicFooter from "@/components/PublicFooter";
@@ -11,7 +11,6 @@ import {
   buildClaudeCodeMcpCliSnippet,
   buildClaudeDesktopMcpConfigSnippet,
   buildCursorMcpConfigSnippet,
-  getIdpDeveloperTokensUrl,
   getMcpUserEndpointUrl,
 } from "@/lib/mcp/public-config";
 import { LandingI18nProvider, useI18n, type TranslationKey } from "@/lib/i18n";
@@ -89,7 +88,6 @@ function McpNavBar() {
 function McpSetupContent() {
   const { t } = useI18n();
   const mcpUrl = getMcpUserEndpointUrl();
-  const developerUrl = getIdpDeveloperTokensUrl();
   const claudeCli = useMemo(() => buildClaudeCodeMcpCliSnippet(mcpUrl), [mcpUrl]);
   const cursorConfig = useMemo(() => buildCursorMcpConfigSnippet(mcpUrl), [mcpUrl]);
   const claudeDesktopConfig = useMemo(() => buildClaudeDesktopMcpConfigSnippet(mcpUrl), [mcpUrl]);
@@ -103,15 +101,12 @@ function McpSetupContent() {
       screenshotAltKey: "landingMcpStep1ScreenshotAlt",
       screenshotPlaceholderKey: "landingMcpStep1ScreenshotPlaceholder",
       extra: (
-        <a
-          href={developerUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/profile?section=mcp"
           className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
         >
           {t("landingMcpOpenDeveloper")}
-          <ExternalLink className="h-4 w-4" aria-hidden="true" />
-        </a>
+        </Link>
       ),
     },
     {
