@@ -10,6 +10,7 @@ import {
 import { mcpCorsPreflightResponse, withMcpCors } from "@/lib/mcp/mcp-cors";
 import { mcpOAuthUnauthorizedResponse } from "@/lib/mcp/mcp-oauth-discovery";
 import { registerTrefolioUserMcp } from "@/lib/mcp/user-server";
+import { recordMcpRequestAnalytics } from "@/lib/mcp/record-mcp-analytics";
 import { mcpUserRateLimiter, mcpUserUnauthRateLimiter } from "@/lib/upstash";
 import { CURRENT_VERSION } from "@/lib/release-version";
 
@@ -81,6 +82,7 @@ async function rateLimitedHandler(request: Request, context: unknown): Promise<R
   }
 
   attachMcpAuth(request, bearer!, authResult.auth.userId, authResult.auth.tokenId);
+  recordMcpRequestAnalytics(request, authResult.auth.userId, authResult.auth.tokenId, bearer!);
   const response = await (baseHandler as unknown as (req: Request, ctx: unknown) => Promise<Response>)(
     request,
     context,

@@ -7,6 +7,7 @@ import {
   createPersonalAccessTokenForIdpSub,
   listPersonalAccessTokensForIdpSub,
 } from "@/lib/idp/personal-access-tokens";
+import { recordMcpPatCreated } from "@/lib/mcp/record-mcp-analytics";
 import { withMetrics } from "@/lib/with-metrics";
 
 async function requireLinkedIdpUser(req: NextRequest) {
@@ -39,5 +40,6 @@ export const POST = withMetrics("/api/mcp/personal-access-tokens", async (req: N
     // empty ok
   }
   const data = await createPersonalAccessTokenForIdpSub(ctx.user!.idp_sub!, body);
+  recordMcpPatCreated(ctx.user!.id, data.id, data.name);
   return NextResponse.json(data);
 });

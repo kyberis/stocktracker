@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { findUserById } from "@/lib/db";
 import { getIdpServiceToken, isIdpEnabled } from "@/lib/idp/config";
 import { revokePersonalAccessTokenForIdpSub } from "@/lib/idp/personal-access-tokens";
+import { recordMcpPatRevoked } from "@/lib/mcp/record-mcp-analytics";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const DELETE = withMetrics(
@@ -20,6 +21,7 @@ export const DELETE = withMetrics(
     }
     const { id } = await ctx.params;
     await revokePersonalAccessTokenForIdpSub(user.idp_sub, id);
+    recordMcpPatRevoked(user.id, id);
     return NextResponse.json({ ok: true });
   },
 );

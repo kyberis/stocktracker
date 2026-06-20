@@ -3527,6 +3527,33 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 120,
+    description: "MCP analytics events for admin usage dashboard",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS mcp_analytics_events (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          event_type TEXT NOT NULL,
+          tool_name TEXT,
+          auth_type TEXT,
+          token_id TEXT,
+          metadata TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mcp_analytics_user ON mcp_analytics_events(user_id)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mcp_analytics_event ON mcp_analytics_events(event_type)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mcp_analytics_created ON mcp_analytics_events(created_at)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

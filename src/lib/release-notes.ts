@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
+        text: "Admin MCP Analytics dashboard: adoption funnel, tool calls, recurrence, and per-user usage at /admin/mcp-analytics.",
+        translations: {
+          es: "Panel Admin MCP Analytics: funnel de adopción, llamadas a tools, recurrencia y uso por usuario en /admin/mcp-analytics.",
+        },
+      },
+      {
+        type: "feature",
         text: "MCP personal access tokens: new Profile → Developer · MCP tab with inline create, list, and revoke — no redirect to user.trefolio.com.",
         translations: {
           es: "Tokens MCP: nueva pestaña Perfil → Developer · MCP con creación, listado y revocación integrados — sin redirigir a user.trefolio.com.",

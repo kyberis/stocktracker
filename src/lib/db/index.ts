@@ -247,6 +247,13 @@ export {
 } from "./analytics";
 export type { ProdOpsLatestAnalyticsInteraction } from "./analytics";
 
+export type {
+  McpAnalyticsSummary,
+  McpUserAnalyticsRow,
+  McpAnalyticsEventType,
+} from "./mcp-analytics";
+export { trackMcpAnalyticsEvent, getMcpAnalyticsSummary } from "./mcp-analytics";
+
 export type { ReferralStatus, Referral, ReferralStats, ReferralFunnelStats } from "./referrals";
 export {
   generateReferralCode,

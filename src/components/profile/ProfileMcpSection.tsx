@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bot, Check, Copy } from "lucide-react";
 
 import ProfileMcpPatManager from "@/components/profile/ProfileMcpPatManager";
@@ -21,6 +21,15 @@ export default function ProfileMcpSection() {
   const mcpUrl = getMcpUserEndpointUrl();
   const cursorConfig = useMemo(() => buildCursorMcpConfigSnippet(mcpUrl), [mcpUrl]);
   const claudeConfig = useMemo(() => buildClaudeDesktopMcpConfigSnippet(mcpUrl), [mcpUrl]);
+
+  useEffect(() => {
+    void fetch("/api/mcp/analytics/event", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "profile_view" }),
+    }).catch(() => undefined);
+  }, []);
 
   const copyText = useCallback(async (text: string, which: "endpoint" | "cursor" | "claude") => {
     try {
