@@ -38,13 +38,18 @@ describe("verifyTrefolioMcpBearer", () => {
       ok: true,
       sub: "idp|123",
       tokenId: "tok1",
+      scopes: ["portfolio:read", "tools:read", "warren:moat"],
     });
     vi.mocked(db.findUserIdByIdpSub).mockResolvedValue("user-uuid");
   });
 
   it("returns userId when introspection and local user match", async () => {
     const auth = await verifyTrefolioMcpBearer("tfp_pat_test");
-    expect(auth).toEqual({ userId: "user-uuid", tokenId: "acc:tok1" });
+    expect(auth).toEqual({
+      userId: "user-uuid",
+      tokenId: "acc:tok1",
+      scopes: ["portfolio:read", "tools:read", "warren:moat"],
+    });
   });
 
   it("returns null for non-tfp prefix", async () => {
@@ -69,6 +74,7 @@ describe("verifyTrefolioMcpBearerDetailed", () => {
       ok: true,
       sub: "idp|123",
       tokenId: "tok1",
+      scopes: ["portfolio:read", "tools:read", "warren:moat"],
     });
     vi.mocked(db.findUserIdByIdpSub).mockResolvedValue("user-uuid");
   });

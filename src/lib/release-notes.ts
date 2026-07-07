@@ -25,6 +25,27 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "improvement",
+        text: "MCP ecosystem Phase 4: Clara getSavingsSummary and Will createNote with finance:read/write and notes:read/write PAT scopes; agent routing table in IdP docs.",
+        translations: {
+          es: "MCP ecosistema Fase 4: getSavingsSummary en Clara y createNote en Will con scopes PAT finance:* y notes:*; tabla de enrutamiento para agentes en docs IdP.",
+        },
+      },
+      {
+        type: "feature",
+        text: "MCP tax and portfolio score: getTaxReport and getPortfolioScore tools with granular PAT scopes (tax:read, tools:read) enforced per tool.",
+        translations: {
+          es: "MCP fiscal y portfolio score: herramientas getTaxReport y getPortfolioScore con scopes PAT granulares (tax:read, tools:read) aplicados por herramienta.",
+        },
+      },
+      {
+        type: "feature",
+        text: "MCP expansion: external agents can read portfolio summary, quotes, transactions, dividends, stock screener, alerts, watchlist, and portfolio news via PAT — plus runMoatEvaluation alias for fresh MOAT runs.",
+        translations: {
+          es: "Ampliación MCP: agentes externos pueden leer resumen de cartera, cotizaciones, transacciones, dividendos, screener, alertas, watchlist y noticias vía PAT — más alias runMoatEvaluation para MOAT en vivo.",
+        },
+      },
+      {
         type: "feature",
         text: "Admin MCP Analytics dashboard: adoption funnel, tool calls, recurrence, and per-user usage at /admin/mcp-analytics.",
         translations: {

@@ -31,12 +31,18 @@ const baseHandler = createMcpHandler(
   },
 );
 
-function attachMcpAuth(request: Request, bearer: string, userId: string, tokenId: string): void {
+function attachMcpAuth(
+  request: Request,
+  bearer: string,
+  userId: string,
+  tokenId: string,
+  scopes: string[],
+): void {
   const authInfo: AuthInfo = {
     token: bearer,
     clientId: tokenId,
-    scopes: ["portfolio:read", "warren:moat"],
-    extra: { userId, tokenId },
+    scopes,
+    extra: { userId, tokenId, scopes },
   };
   (request as Request & { auth?: AuthInfo }).auth = authInfo;
 }
@@ -81,7 +87,13 @@ async function rateLimitedHandler(request: Request, context: unknown): Promise<R
     return withMcpCors(mcpPatAuthFailureResponse(authResult.reason));
   }
 
-  attachMcpAuth(request, bearer!, authResult.auth.userId, authResult.auth.tokenId);
+  attachMcpAuth(
+    request,
+    bearer!,
+    authResult.auth.userId,
+    authResult.auth.tokenId,
+    authResult.auth.scopes,
+  );
   recordMcpRequestAnalytics(request, authResult.auth.userId, authResult.auth.tokenId, bearer!);
   const response = await (baseHandler as unknown as (req: Request, ctx: unknown) => Promise<Response>)(
     request,

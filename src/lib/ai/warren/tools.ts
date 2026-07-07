@@ -8,9 +8,9 @@ import {
   listCashEntries,
   listWatchlist as dbListWatchlist,
   listPortfolios as dbListPortfolios,
-  getMoatCache,
   queryMoatCache,
 } from "@/lib/db";
+import { getWarrenMoatEvaluation, mapWarrenMoatEvaluationForTool } from "@/lib/services/warren-moat";
 import { createProvider } from "@/lib/api-providers";
 import type { WarrenPart, WarrenProposal, StockSnapshotData } from "./types";
 import type {
@@ -429,32 +429,33 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
 
     getMoatEvaluation: tool({
       description:
-        "Load cached Buffett-style moat evaluation for a ticker (8 criteria, score %, verdict, P/E). Use when the user asks about a company's moat, competitive advantage, or moat analysis.",
+        "Load Buffett-style moat evaluation for a ticker (8 criteria, score %, verdict, P/E). Uses shared cache via getWarrenMoatEvaluation; may fetch fresh fundamentals when cache is empty (stock_evaluation quota).",
       inputSchema: z.object({
         ticker: z.string().min(1).max(20),
+        fresh: z
+          .boolean()
+          .optional()
+          .describe("When true, bypass cache and re-fetch fundamentals (uses quota)."),
       }),
-      execute: async ({ ticker }) => {
+      execute: async ({ ticker, fresh }) => {
         ctx.emitStep(`Loading moat evaluation for ${ticker.toUpperCase()}…`);
-        const hit = await getMoatCache(ticker.toUpperCase(), 30);
-        if (!hit) {
-          return {
-            found: false,
-            note: "No cached moat data for this ticker. It may not be synced yet — suggest Tools → Moat evaluation for a live run.",
-          };
+        const result = await getWarrenMoatEvaluation(ctx.userId, ticker, { fresh: fresh === true });
+        if (!result.ok) {
+          if (result.code === "not_found") {
+            return {
+              found: false,
+              note: "No fundamental data for this ticker. Try a larger-cap liquid name (e.g. AAPL, KO, MSFT) or Tools → Moat evaluation.",
+            };
+          }
+          if (result.code === "quota_exceeded") {
+            return {
+              found: false,
+              note: "Monthly stock evaluation quota exceeded. Upgrade or try again next period.",
+            };
+          }
+          return { found: false, note: result.error };
         }
-        return {
-          found: true,
-          symbol: hit.symbol,
-          companyName: hit.companyName,
-          sector: hit.sector,
-          scorePct: hit.scorePct,
-          verdict: hit.verdict,
-          passedCount: hit.passedCount,
-          criteriaCount: hit.criteriaCount,
-          peRatio: hit.peRatio,
-          updatedAt: hit.updatedAt,
-          tip: "Call renderMoatSummaryCard to show a visual card, then explain 1-2 key criteria in prose.",
-        };
+        return mapWarrenMoatEvaluationForTool(result.data);
       },
     }),
 

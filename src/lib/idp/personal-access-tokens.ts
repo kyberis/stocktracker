@@ -18,13 +18,14 @@ export function listPersonalAccessTokensForIdpSub(
 
 export function createPersonalAccessTokenForIdpSub(
   sub: string,
-  body: { name?: string },
+  body: { name?: string; scopes?: string[] },
 ): Promise<{
   id: string;
   token: string;
   prefix: string;
   name: string;
   expires_at: string | null;
+  scopes?: string[];
 }> {
   return call(`/v1/users/${encodeURIComponent(sub)}/personal-access-tokens`, {
     method: "POST",

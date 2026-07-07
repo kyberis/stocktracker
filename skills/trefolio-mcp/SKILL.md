@@ -40,9 +40,23 @@ Summarize in the user's preferred display currency when possible. Values are sto
 
 ### Single-stock MOAT
 
-1. `getMoatEvaluation` — `{ symbol: "MSFT" }`; set `fresh: true` only when user explicitly wants a new run (uses quota)
+1. `runMoatEvaluation` or `getMoatEvaluation` — `{ symbol: "MSFT", fresh: true }` for a new run (uses quota); omit `fresh` for cache
 2. `generateMoatNarrative` — pass `symbol` and/or `evaluation`; set `language` (`en`, `es`, …)
 3. `saveMoatReport` — only when user asks to persist the evaluation
+
+### Dividends & activity
+
+1. `getDividendSummary` — forward estimates + received dividends by year
+2. `listTransactions` — filter `type: "dividend"` for payout history
+
+### Stock ideas (non-MOAT screener)
+
+1. `screenStocks` — sector, P/E, yield filters on cached universe
+
+### Portfolio overview (live)
+
+1. `getPortfolioSummary` — totals with live quotes; set `includeDividends: true` when relevant
+2. `listHoldings` / `listCash` — stored DB values when live quotes are not needed
 
 ### Browse saved research
 
@@ -51,7 +65,7 @@ Summarize in the user's preferred display currency when possible. Values are sto
 
 ## Tool reference
 
-See [references/tools.md](references/tools.md) for all eight tools, inputs, and quota notes.
+See [references/tools.md](references/tools.md) for all tools, inputs, and quota notes.
 
 ## Guardrails
 

@@ -99,7 +99,9 @@ export default function PrivacyPolicyPage() {
                 external MCP clients to trefolio, Clara, or Will. The token is stored
                 only on the identity service (hashed); trefolio receives it only when
                 you configure a client and uses it solely to authenticate MCP requests
-                against your account.
+                against your account. You choose which scopes the token grants (for
+                example portfolio read, tax reports, Clara savings, or Will notes write);
+                each product enforces only the scopes relevant to that service.
               </li>
               <li>
                 <strong className="text-slate-800">Claude Connectors (OAuth)</strong> — if you add
@@ -272,9 +274,13 @@ export default function PrivacyPolicyPage() {
               <li>
                 When you connect an MCP client to trefolio using a personal access token,
                 we validate that token with our identity service over TLS, map it to your
-                local account, and return read-only portfolio data you request via MCP
-                tools (no third-party AI provider is invoked for that path unless you use
-                a separate AI product feature).
+                local account, and return portfolio or tool data you request via MCP
+                tools according to the scopes you selected when minting the token
+                (for example holdings, transactions, tax summaries, or MOAT evaluations).
+                The MCP client you configure (such as Claude Desktop or Cursor) receives
+                the JSON responses from those tool calls; we do not invoke OpenAI or
+                Anthropic for MCP read tools unless you separately use an in-app AI feature
+                or a tool that explicitly calls our AI backend (for example MOAT narrative).
               </li>
               <li>
                 Enable private chat rooms for direct communication between you and trefolio support, and between connected users. Messages (text, links, images, and voice) are stored in our database; voice audio files are stored in our Vercel Blob storage and are removed when the message expires. Non-persistent messages are automatically deleted 24 hours after being sent.

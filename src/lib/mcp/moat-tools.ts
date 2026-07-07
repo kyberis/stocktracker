@@ -10,29 +10,7 @@ import {
   type WarrenMoatResult,
 } from "@/lib/services/warren-moat";
 import { MCP_READ_ONLY, MCP_WRITE } from "@/lib/mcp/mcp-tool-annotations";
-
-function jsonContent(data: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify(data, null, 2),
-      },
-    ],
-  };
-}
-
-function errContent(message: string) {
-  return {
-    content: [{ type: "text" as const, text: message }],
-    isError: true as const,
-  };
-}
-
-function getUserIdFromExtra(extra: { authInfo?: { extra?: Record<string, unknown> } }) {
-  const userId = extra.authInfo?.extra?.userId;
-  return typeof userId === "string" && userId.length > 0 ? userId : null;
-}
+import { errContent, gateMcpTool, jsonContent } from "@/lib/mcp/mcp-helpers";
 
 function fromResult<T>(result: WarrenMoatResult<T>) {
   if (result.ok) return jsonContent(result.data);
@@ -54,9 +32,9 @@ export function registerWarrenMoatMcp(server: McpServer): void {
       annotations: MCP_READ_ONLY,
     },
     async ({ symbol, fresh }, extra) => {
-      const userId = getUserIdFromExtra(extra);
-      if (!userId) return errContent("Unauthorized.");
-      return fromResult(await getWarrenMoatEvaluation(userId, symbol, { fresh: fresh === true }));
+      const gate = gateMcpTool(extra, "getMoatEvaluation");
+      if (!gate.ok) return gate.response;
+      return fromResult(await getWarrenMoatEvaluation(gate.userId, symbol, { fresh: fresh === true }));
     },
   );
 
@@ -74,12 +52,12 @@ export function registerWarrenMoatMcp(server: McpServer): void {
       annotations: MCP_READ_ONLY,
     },
     async ({ symbol, evaluation, language }, extra) => {
-      const userId = getUserIdFromExtra(extra);
-      if (!userId) return errContent("Unauthorized.");
+      const gate = gateMcpTool(extra, "generateMoatNarrative");
+      if (!gate.ok) return gate.response;
 
       let evalData = evaluation;
       if (!evalData && symbol) {
-        const fetched = await getWarrenMoatEvaluation(userId, symbol, { fresh: false });
+        const fetched = await getWarrenMoatEvaluation(gate.userId, symbol, { fresh: false });
         if (!fetched.ok) return fromResult(fetched);
         evalData = fetched.data;
       }
@@ -88,7 +66,7 @@ export function registerWarrenMoatMcp(server: McpServer): void {
       }
 
       return fromResult(
-        await generateWarrenMoatNarrative(userId, evalData, language || "en"),
+        await generateWarrenMoatNarrative(gate.userId, evalData, language || "en"),
       );
     },
   );
@@ -104,9 +82,9 @@ export function registerWarrenMoatMcp(server: McpServer): void {
       annotations: MCP_READ_ONLY,
     },
     async ({ tags }, extra) => {
-      const userId = getUserIdFromExtra(extra);
-      if (!userId) return errContent("Unauthorized.");
-      return fromResult(await listWarrenMoatReports(userId, tags));
+      const gate = gateMcpTool(extra, "listMoatReports");
+      if (!gate.ok) return gate.response;
+      return fromResult(await listWarrenMoatReports(gate.userId, tags));
     },
   );
 
@@ -128,10 +106,10 @@ export function registerWarrenMoatMcp(server: McpServer): void {
       annotations: MCP_READ_ONLY,
     },
     async (filters, extra) => {
-      const userId = getUserIdFromExtra(extra);
-      if (!userId) return errContent("Unauthorized.");
+      const gate = gateMcpTool(extra, "screenMoat");
+      if (!gate.ok) return gate.response;
       return fromResult(
-        await screenWarrenMoat(userId, {
+        await screenWarrenMoat(gate.userId, {
           ...filters,
           sortBy: "score",
           sortDir: "desc",
@@ -156,11 +134,29 @@ export function registerWarrenMoatMcp(server: McpServer): void {
       annotations: MCP_WRITE,
     },
     async ({ symbol, evaluation, companyName, tags }, extra) => {
-      const userId = getUserIdFromExtra(extra);
-      if (!userId) return errContent("Unauthorized.");
+      const gate = gateMcpTool(extra, "saveMoatReport");
+      if (!gate.ok) return gate.response;
       return fromResult(
-        await saveWarrenMoatReport(userId, { symbol, evaluation, companyName, tags }),
+        await saveWarrenMoatReport(gate.userId, { symbol, evaluation, companyName, tags }),
       );
+    },
+  );
+
+  server.registerTool(
+    "runMoatEvaluation",
+    {
+      title: "Run fresh MOAT evaluation",
+      description:
+        "Fetch and score a ticker with fresh fundamentals (same as getMoatEvaluation with fresh=true; uses stock_evaluation quota).",
+      inputSchema: {
+        symbol: z.string().min(1).max(16),
+      },
+      annotations: MCP_READ_ONLY,
+    },
+    async ({ symbol }, extra) => {
+      const gate = gateMcpTool(extra, "runMoatEvaluation");
+      if (!gate.ok) return gate.response;
+      return fromResult(await getWarrenMoatEvaluation(gate.userId, symbol, { fresh: true }));
     },
   );
 }

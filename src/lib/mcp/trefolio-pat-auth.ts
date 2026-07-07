@@ -7,7 +7,9 @@ import {
 import { findUserIdByIdpSub } from "@/lib/db";
 import { isIdpOAuthAccessToken, verifyIdpOAuthAccessBearer } from "@/lib/mcp/idp-oauth-access-auth";
 
-export type TrefolioMcpAuth = { userId: string; tokenId: string };
+import { ALL_MCP_PAT_SCOPES } from "@/lib/mcp/pat-scopes";
+
+export type TrefolioMcpAuth = { userId: string; tokenId: string; scopes: string[] };
 
 export type McpPatAuthFailureReason =
   | "missing_bearer"
@@ -56,7 +58,11 @@ export async function verifyTrefolioMcpBearerDetailed(
   if (!userId) return { ok: false, reason: "user_not_linked" };
   return {
     ok: true,
-    auth: { userId, tokenId: intro.tokenId ? `acc:${intro.tokenId}` : "acc:unknown" },
+    auth: {
+      userId,
+      tokenId: intro.tokenId ? `acc:${intro.tokenId}` : "acc:unknown",
+      scopes: intro.scopes,
+    },
   };
 }
 
@@ -82,6 +88,7 @@ export async function verifyMcpRequestAuthDetailed(
       auth: {
         userId: oauth.userId,
         tokenId: `oauth:${oauth.sub.length > 12 ? oauth.sub.slice(-12) : oauth.sub}`,
+        scopes: [...ALL_MCP_PAT_SCOPES],
       },
     };
   }

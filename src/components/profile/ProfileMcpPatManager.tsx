@@ -4,6 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { Check, Copy, Trash2 } from "lucide-react";
 
 import { useI18n } from "@/lib/i18n";
+import {
+  DEFAULT_MCP_PAT_SCOPES,
+  MCP_PAT_SCOPE_IDS,
+  MCP_PAT_SCOPE_LABELS,
+  type McpPatScope,
+} from "@/lib/mcp/pat-scopes";
 
 type TokenRow = {
   id: string;
@@ -22,7 +28,14 @@ export default function ProfileMcpPatManager() {
   const [newToken, setNewToken] = useState<string | null>(null);
   const [tokenCopied, setTokenCopied] = useState(false);
   const [name, setName] = useState("Claude / Cursor");
+  const [selectedScopes, setSelectedScopes] = useState<McpPatScope[]>([...DEFAULT_MCP_PAT_SCOPES]);
   const [busy, setBusy] = useState(false);
+
+  function toggleScope(scope: McpPatScope) {
+    setSelectedScopes((prev) =>
+      prev.includes(scope) ? prev.filter((s) => s !== scope) : [...prev, scope],
+    );
+  }
 
   const load = useCallback(async () => {
     setError(null);
@@ -59,7 +72,7 @@ export default function ProfileMcpPatManager() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, scopes: selectedScopes }),
       });
       const data = (await res.json()) as { token?: string; error?: string; message?: string };
       if (!res.ok) {
@@ -146,12 +159,38 @@ export default function ProfileMcpPatManager() {
         <button
           type="button"
           onClick={() => void createToken()}
-          disabled={busy || Boolean(error && tokens === null)}
+          disabled={busy || Boolean(error && tokens === null) || selectedScopes.length === 0}
           className="btn-primary text-sm disabled:opacity-40"
         >
           {busy ? t("loading") : t("profileMcpManageTokens")}
         </button>
       </div>
+
+      <fieldset className="space-y-2 border-0 p-0">
+        <legend className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-slate-400">
+          MCP scopes
+        </legend>
+        <div className="grid gap-2">
+          {MCP_PAT_SCOPE_IDS.map((scope) => {
+            const meta = MCP_PAT_SCOPE_LABELS[scope];
+            return (
+              <label key={scope} className="flex gap-2.5 items-start text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={selectedScopes.includes(scope)}
+                  onChange={() => toggleScope(scope)}
+                  disabled={busy}
+                />
+                <span>
+                  <span className="font-medium text-gray-900 dark:text-white">{meta.title}</span>
+                  <span className="block text-xs text-gray-500 dark:text-slate-400">{meta.description}</span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
 
       <div>
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t("profileMcpYourTokens")}</h3>

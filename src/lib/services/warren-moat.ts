@@ -49,6 +49,32 @@ function normalizeSymbol(symbol: string): string {
   return symbol.trim().toUpperCase();
 }
 
+/** Shape returned by Warren in-app `getMoatEvaluation` tool. */
+export function mapWarrenMoatEvaluationForTool(data: Record<string, unknown>) {
+  const totalScore = Number(data.totalScore ?? 0);
+  const maxScore = Number(data.maxScore ?? 100);
+  const scorePct = maxScore > 0 ? Math.round((totalScore / maxScore) * 1000) / 10 : 0;
+  const valuation =
+    data.valuation && typeof data.valuation === "object"
+      ? (data.valuation as { peRatio?: number | null })
+      : null;
+
+  return {
+    found: true as const,
+    symbol: String(data.symbol ?? ""),
+    companyName: String(data.companyName ?? ""),
+    sector: data.sector ? String(data.sector) : undefined,
+    scorePct,
+    verdict: String(data.verdict ?? ""),
+    passedCount: Number(data.passedCount ?? 0),
+    criteriaCount: Number(data.criteriaCount ?? 8),
+    peRatio: valuation?.peRatio ?? null,
+    updatedAt: String(data._cachedAt ?? data._evaluatedAt ?? ""),
+    cached: Boolean(data._cached),
+    tip: "Call renderMoatSummaryCard to show a visual card, then explain 1-2 key criteria in prose.",
+  };
+}
+
 export async function getWarrenMoatEvaluation(
   userId: string,
   symbolInput: string,

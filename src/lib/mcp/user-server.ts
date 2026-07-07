@@ -2,35 +2,21 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import { listCashEntries, listHoldings, listPortfolios } from "@/lib/db";
+import { registerActivityMcp } from "@/lib/mcp/activity-tools";
+import { registerAnalysisMcp } from "@/lib/mcp/analysis-tools";
 import { MCP_READ_ONLY } from "@/lib/mcp/mcp-tool-annotations";
+import { gateMcpTool, jsonContent, mapHoldingForMcp } from "@/lib/mcp/mcp-helpers";
 import { registerWarrenMoatMcp } from "@/lib/mcp/moat-tools";
+import { registerPlanningMcp } from "@/lib/mcp/planning-tools";
+import { registerPortfolioMcp } from "@/lib/mcp/portfolio-tools";
 
-function jsonContent(data: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify(data, null, 2),
-      },
-    ],
-  };
-}
-
-function errContent(message: string) {
-  return {
-    content: [{ type: "text" as const, text: message }],
-    isError: true as const,
-  };
-}
-
-function getUserIdFromExtra(extra: { authInfo?: { extra?: Record<string, unknown> } }) {
-  const userId = extra.authInfo?.extra?.userId;
-  return typeof userId === "string" && userId.length > 0 ? userId : null;
-}
-
-/** Read-only portfolio MCP tools (no live quote fetch — uses stored EUR values). */
+/** Read-only portfolio MCP tools; live quotes via getPortfolioSummary / getQuotes. */
 export function registerTrefolioUserMcp(server: McpServer): void {
   registerWarrenMoatMcp(server);
+  registerPortfolioMcp(server);
+  registerActivityMcp(server);
+  registerAnalysisMcp(server);
+  registerPlanningMcp(server);
 
   server.registerTool(
     "listPortfolios",
@@ -41,9 +27,9 @@ export function registerTrefolioUserMcp(server: McpServer): void {
       annotations: MCP_READ_ONLY,
     },
     async (_args, extra) => {
-      const userId = getUserIdFromExtra(extra);
-      if (!userId) return errContent("Unauthorized.");
-      const rows = await listPortfolios(userId);
+      const gate = gateMcpTool(extra, "listPortfolios");
+      if (!gate.ok) return gate.response;
+      const rows = await listPortfolios(gate.userId);
       return jsonContent(
         rows.map((p) => ({
           id: p.id,
@@ -66,20 +52,10 @@ export function registerTrefolioUserMcp(server: McpServer): void {
       annotations: MCP_READ_ONLY,
     },
     async ({ portfolioId }, extra) => {
-      const userId = getUserIdFromExtra(extra);
-      if (!userId) return errContent("Unauthorized.");
-      const holdings = await listHoldings(userId, portfolioId);
-      return jsonContent(
-        holdings.map((h) => ({
-          id: h.id,
-          name: h.name,
-          ticker: h.ticker,
-          shares: h.shares,
-          displayCurrency: h.displayCurrency,
-          valueInEUR: h.valueInEUR,
-          assetType: h.assetType,
-        })),
-      );
+      const gate = gateMcpTool(extra, "listHoldings");
+      if (!gate.ok) return gate.response;
+      const holdings = await listHoldings(gate.userId, portfolioId);
+      return jsonContent(holdings.map(mapHoldingForMcp));
     },
   );
 
@@ -94,9 +70,9 @@ export function registerTrefolioUserMcp(server: McpServer): void {
       annotations: MCP_READ_ONLY,
     },
     async ({ portfolioId }, extra) => {
-      const userId = getUserIdFromExtra(extra);
-      if (!userId) return errContent("Unauthorized.");
-      const cash = await listCashEntries(userId, portfolioId);
+      const gate = gateMcpTool(extra, "listCash");
+      if (!gate.ok) return gate.response;
+      const cash = await listCashEntries(gate.userId, portfolioId);
       return jsonContent(
         cash.map((c) => ({
           id: c.id,

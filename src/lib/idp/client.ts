@@ -177,4 +177,4 @@ export function inviteMembershipGrantViaIdp(payload: {
   });
 }
 
-export { IdpClientError };
+export { IdpClientError, call };

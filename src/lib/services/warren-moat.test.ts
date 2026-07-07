@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { getWarrenMoatEvaluation } from "@/lib/services/warren-moat";
+import { getWarrenMoatEvaluation, mapWarrenMoatEvaluationForTool } from "@/lib/services/warren-moat";
 
 vi.mock("@/lib/auth/guards", () => ({
   requireFeatureQuotaByUserId: vi.fn(),
@@ -44,5 +44,27 @@ describe("getWarrenMoatEvaluation", () => {
     const result = await getWarrenMoatEvaluation("u1", "  ");
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.code).toBe("invalid_input");
+  });
+});
+
+describe("mapWarrenMoatEvaluationForTool", () => {
+  it("maps evaluation fields for Warren tool response", () => {
+    const mapped = mapWarrenMoatEvaluationForTool({
+      symbol: "KO",
+      companyName: "Coca-Cola",
+      sector: "Consumer",
+      totalScore: 56,
+      maxScore: 80,
+      verdict: "Moderate Competitive Advantage",
+      passedCount: 5,
+      criteriaCount: 8,
+      valuation: { peRatio: 24.5 },
+      _cached: true,
+      _cachedAt: "2026-01-01",
+    });
+    expect(mapped.found).toBe(true);
+    expect(mapped.scorePct).toBe(70);
+    expect(mapped.peRatio).toBe(24.5);
+    expect(mapped.cached).toBe(true);
   });
 });

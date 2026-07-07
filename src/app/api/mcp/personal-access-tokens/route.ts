@@ -33,9 +33,9 @@ export const GET = withMetrics("/api/mcp/personal-access-tokens", async (req: Ne
 export const POST = withMetrics("/api/mcp/personal-access-tokens", async (req: NextRequest) => {
   const ctx = await requireLinkedIdpUser(req);
   if ("error" in ctx && ctx.error) return ctx.error;
-  let body: { name?: string } = {};
+  let body: { name?: string; scopes?: string[] } = {};
   try {
-    body = (await req.json()) as { name?: string };
+    body = (await req.json()) as { name?: string; scopes?: string[] };
   } catch {
     // empty ok
   }

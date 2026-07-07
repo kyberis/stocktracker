@@ -9,7 +9,7 @@ import { withMetrics } from "@/lib/with-metrics";
 
 export const DELETE = withMetrics(
   "/api/mcp/personal-access-tokens/[id]",
-  async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx?: unknown) => {
     const { session, error } = await requireSession(req);
     if (error || !session) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     if (!isIdpEnabled() || !getIdpServiceToken()) {
@@ -19,7 +19,7 @@ export const DELETE = withMetrics(
     if (!user?.idp_sub) {
       return NextResponse.json({ error: "idp_link_required" }, { status: 403 });
     }
-    const { id } = await ctx.params;
+    const { id } = await (ctx as { params: Promise<{ id: string }> }).params;
     await revokePersonalAccessTokenForIdpSub(user.idp_sub, id);
     recordMcpPatRevoked(user.id, id);
     return NextResponse.json({ ok: true });

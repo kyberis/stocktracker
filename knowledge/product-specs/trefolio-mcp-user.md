@@ -4,7 +4,7 @@
 
 ## 1. Summary
 
-Authenticated MCP clients (Cursor, Claude, etc.) call `/api/mcp/user` with `Authorization: Bearer tfp_pat_…`. The token is validated server-to-server against **trefolio-accounts** (`/api/v1/pat/introspect`); the IdP `sub` is mapped to a local user via `users.idp_sub`. Tools expose portfolios, holdings, and cash from Turso only (no live quote fetch).
+Authenticated MCP clients (Cursor, Claude, etc.) call `/api/mcp/user` with `Authorization: Bearer tfp_pat_…`. The token is validated server-to-server against **trefolio-accounts** (`/api/v1/pat/introspect`); the IdP `sub` is mapped to a local user via `users.idp_sub`. Tools expose portfolio data, tool outputs (transactions, dividends, screener, news), and Warren MOAT. Live quotes via `getPortfolioSummary` / `getQuotes`; stored EUR values via `listHoldings` / `listCash`. See exec plan [`mcp-full-user-data`](../exec-plans/active/mcp-full-user-data.md).
 
 ## 2. Status
 
@@ -19,11 +19,12 @@ Authenticated MCP clients (Cursor, Claude, etc.) call `/api/mcp/user` with `Auth
 |------|------|-------|
 | API | `src/app/api/mcp/user/[transport]/route.ts` | GET/POST/DELETE; `mcp-handler` + `withMcpAuth` |
 | Discovery | `src/app/.well-known/mcp.json/route.ts` | Static JSON; links to IdP developer page for token |
-| Lib | `src/lib/accounts-pat-introspect.ts`, `src/lib/mcp/trefolio-pat-auth.ts`, `src/lib/mcp/user-server.ts` | Introspection cache, bearer verify, tool registration |
+| Lib | `src/lib/mcp/*` (user-server, portfolio/activity/analysis/moat tools, pat-auth) | Tool registration + auth |
+| Lib | `src/lib/services/*` (portfolio-snapshot, transactions-list, dividend-summary, screener-query, portfolio-news, warren-moat) | Domain services |
 
 ## 4. Data model
 
-Uses existing `users` (`idp_sub`), `portfolios`, `holdings`, `cash_entries` — no new tables.
+Uses existing `users`, `portfolios`, `holdings`, `cash_entries`, `transactions`, screener/moat caches, portfolio news — no new tables.
 
 Implementation files: `src/app/api/mcp/user/[transport]/route.ts`, `src/app/.well-known/mcp.json/route.ts`.
 
@@ -46,7 +47,7 @@ Claude **Settings → Connectors → Custom connector** expects **OAuth Client I
 
 - `introspectTfpPat` → `{ sub, token_id }` with short in-memory cache (hash key).
 - `findUserIdByIdpSub(sub)` → local `userId`.
-- Tools: `listPortfolios`, `listHoldings`, `listCash`, `getMoatEvaluation`, `generateMoatNarrative`, `listMoatReports`, `screenMoat`, `saveMoatReport` — PAT auth; MOAT fresh/AI uses Pro quotas.
+- Tools: **Portfolio** — `listPortfolios`, `listHoldings`, `listCash`, `getPortfolioSummary`, `getQuotes`. **Activity** — `listTransactions`, `getDividendSummary`. **Analysis** — `screenStocks`, `listAlerts`, `listWatchlist`, `getPortfolioNews`, `getPortfolioScore`. **Planning** — `getTaxReport`. **MOAT** — `getMoatEvaluation`, `runMoatEvaluation`, `generateMoatNarrative`, `listMoatReports`, `screenMoat`, `saveMoatReport`. PAT scopes enforced per tool (`portfolio:read`, `tools:read`, `warren:moat`, `warren:ai`, `tax:read`, `portfolio:write`).
 
 ## 8. External dependencies
 
@@ -56,7 +57,7 @@ Claude **Settings → Connectors → Custom connector** expects **OAuth Client I
 
 ## 9. Currency / FX / tax implications
 
-Holdings expose `valueInEUR` and `displayCurrency` as stored in the database; MCP does not refresh FX or quotes.
+Holdings expose `valueInEUR` and `displayCurrency` as stored; `getPortfolioSummary` / `getQuotes` fetch live Yahoo data. Dividend and tax figures are educational — not filing advice.
 
 ## 10. i18n
 
@@ -69,11 +70,11 @@ Discovery and errors are English-only; product UI is unaffected.
 
 ## 12. Telemetry
 
-None dedicated; rely on Vercel logs.
+`mcp_analytics_events` via `recordMcpRequestAnalytics` (initialize + tool_call per tool name). Admin tab `/admin/mcp-analytics`.
 
 ## 13. Testing
 
-- Unit tests recommended for `extractBearer` / auth wiring (`src/lib/mcp/trefolio-pat-auth.test.ts`).
+- Unit: `src/lib/mcp/trefolio-pat-auth.test.ts`, `src/lib/services/portfolio-snapshot.test.ts`, `src/lib/services/transactions-list.test.ts`, `src/lib/services/warren-moat.test.ts`.
 
 ## 14. Rollout / migration
 
@@ -81,4 +82,6 @@ Deploy IdP PAT + secret first; set matching `TREFOLIO_PAT_INTROSPECTION_SECRET` 
 
 ## 15. Open questions
 
-- Optional: expand tools (quotes) behind stricter caps or Pro-only flags.
+- Phase 0: `legal-advisor` review before marketing tax MCP to external agents.
+- Phase 4: Clara/Will MCP servers — see exec plan `mcp-full-user-data`.
+- Optional: expand live quote tools behind stricter caps.

@@ -4,7 +4,7 @@ import { getIdpBaseUrl, getIdpIssuer } from "@/lib/idp/config";
 
 const TFP_PAT_PREFIX = "tfp_pat_";
 
-type CachedOk = { sub: string; tokenId: string; until: number };
+type CachedOk = { sub: string; tokenId: string; scopes: string[]; until: number };
 const cache = new Map<string, CachedOk>();
 const TTL_MS = 45_000;
 const MAX_CACHE = 500;
@@ -17,7 +17,7 @@ export type PatIntrospectFailureReason =
   | "network_error";
 
 export type PatIntrospectResult =
-  | { ok: true; sub: string; tokenId: string }
+  | { ok: true; sub: string; tokenId: string; scopes: string[] }
   | { ok: false; reason: PatIntrospectFailureReason };
 
 function patIntrospectUrl(): string | null {
@@ -51,7 +51,7 @@ export async function introspectTfpPatDetailed(plaintext: string): Promise<PatIn
   const now = Date.now();
   const hit = cache.get(key);
   if (hit && hit.until > now) {
-    return { ok: true, sub: hit.sub, tokenId: hit.tokenId };
+    return { ok: true, sub: hit.sub, tokenId: hit.tokenId, scopes: hit.scopes };
   }
 
   let res: Response;
@@ -70,9 +70,21 @@ export async function introspectTfpPatDetailed(plaintext: string): Promise<PatIn
     return { ok: false, reason: "network_error" };
   }
 
-  let data: { active?: boolean; sub?: string; token_id?: string; error?: string };
+  let data: {
+    active?: boolean;
+    sub?: string;
+    token_id?: string;
+    scopes?: string[];
+    error?: string;
+  };
   try {
-    data = (await res.json()) as { active?: boolean; sub?: string; token_id?: string; error?: string };
+    data = (await res.json()) as {
+      active?: boolean;
+      sub?: string;
+      token_id?: string;
+      scopes?: string[];
+      error?: string;
+    };
   } catch {
     return { ok: false, reason: "network_error" };
   }
@@ -82,19 +94,22 @@ export async function introspectTfpPatDetailed(plaintext: string): Promise<PatIn
   }
   if (!data.active || !data.sub) return { ok: false, reason: "inactive" };
   const tokenId = String(data.token_id ?? "");
+  const scopes = Array.isArray(data.scopes)
+    ? data.scopes.filter((s): s is string => typeof s === "string")
+    : [];
 
   while (cache.size > MAX_CACHE) {
     const first = cache.keys().next().value;
     if (first) cache.delete(first);
     else break;
   }
-  cache.set(key, { sub: data.sub, tokenId, until: now + TTL_MS });
-  return { ok: true, sub: data.sub, tokenId };
+  cache.set(key, { sub: data.sub, tokenId, scopes, until: now + TTL_MS });
+  return { ok: true, sub: data.sub, tokenId, scopes };
 }
 
 export async function introspectTfpPat(
   plaintext: string,
-): Promise<{ sub: string; tokenId: string } | null> {
+): Promise<{ sub: string; tokenId: string; scopes: string[] } | null> {
   const result = await introspectTfpPatDetailed(plaintext);
-  return result.ok ? { sub: result.sub, tokenId: result.tokenId } : null;
+  return result.ok ? { sub: result.sub, tokenId: result.tokenId, scopes: result.scopes } : null;
 }

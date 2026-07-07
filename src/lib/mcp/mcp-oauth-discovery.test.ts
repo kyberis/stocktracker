@@ -40,6 +40,7 @@ describe("verifyMcpRequestAuthDetailed", () => {
       ok: true,
       sub: "idp|123",
       tokenId: "tok1",
+      scopes: ["portfolio:read"],
     });
     vi.mocked(db.findUserIdByIdpSub).mockResolvedValue("user-uuid");
     vi.mocked(oauth.verifyIdpOAuthAccessBearer).mockResolvedValue({
