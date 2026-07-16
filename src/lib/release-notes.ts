@@ -31,6 +31,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Los datos Pro ya no requieren FMP de pago: fundamentals y moat usan Yahoo; noticias, calendarios e insider/ownership usan Finnhub (con fallback EDGAR); indicadores económicos usan FRED; historial crypto usa CoinGecko. Las transcripts de earnings siguen sin fuente gratuita (FMP opcional).",
         },
       },
+      {
+        type: "improvement",
+        text: "Vercel Preview can mint a session for a predefined user via /api/auth/preview-login (PREVIEW_LOGIN_SECRET + PREVIEW_USER_EMAIL); disabled on production.",
+        translations: {
+          es: "En Vercel Preview se puede crear sesión de un usuario predefinido vía /api/auth/preview-login (PREVIEW_LOGIN_SECRET + PREVIEW_USER_EMAIL); desactivado en producción.",
+        },
+      },
     ],
   },
   {

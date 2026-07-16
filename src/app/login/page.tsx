@@ -1,7 +1,9 @@
 import { ThemeProvider } from "@/lib/theme-context";
 import { IdpRedirectBridge } from "@/components/auth/IdpRedirectBridge";
+import { PreviewLoginHint } from "@/components/auth/PreviewLoginHint";
 import { getIdpBridgeCopy } from "@/lib/idp/bridge-copy";
 import { isIdpEnabled } from "@/lib/idp/config";
+import { isPreviewLoginAllowed, previewLoginSecretsConfigured } from "@/lib/auth/preview-login";
 
 interface LoginPageProps {
   searchParams?: {
@@ -33,11 +35,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const copy = await getIdpBridgeCopy();
   const errRaw = searchParams?.error;
   const oauthError = Array.isArray(errRaw) ? errRaw[0] : errRaw;
+  const showPreviewHint =
+    isPreviewLoginAllowed() && previewLoginSecretsConfigured();
 
   if (!isIdpEnabled()) {
     return (
       <ThemeProvider>
         <IdpRedirectBridge variant="login" targetHref="/landing" copy={copy} idpDisabled />
+        {showPreviewHint ? <PreviewLoginHint /> : null}
       </ThemeProvider>
     );
   }
@@ -52,6 +57,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         copy={copy}
         errorMessage={oauthError ?? undefined}
       />
+      {showPreviewHint ? <PreviewLoginHint /> : null}
     </ThemeProvider>
   );
 }
