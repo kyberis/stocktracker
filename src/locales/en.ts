@@ -1807,7 +1807,7 @@ const en: TranslationStrings = {
   landingPricingTrefolioFeature6: "12 EU tax reports / year + 100 CSV exports / month",
   landingPricingTrefolioFeature7: "500 economic-indicator lookups / month",
   landingPricingTrefolioFeature8: "1,000 crypto premium lookups / month",
-  landingPricingTrefolioFeature9: "Alpha Vantage & FMP premium data",
+  landingPricingTrefolioFeature9: "Premium market data via Yahoo, Finnhub, FRED & CoinGecko",
   landingPricingTrefolioFeature10: "20 AI imports / day (any file or screenshot)",
   landingPricingTrefolioFeature11: "500 price alerts + Telegram, push & email",
   landingPricingTrefolioFeature12: "Automatic Broker Sync — 20 brokerage connections",

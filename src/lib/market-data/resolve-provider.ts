@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth/session";
+import { FreePremiumProvider, isFreePremiumStackAvailable } from "@/lib/api-providers/free-premium";
 import { FmpMarketDataProvider } from "@/lib/api-providers/fmp-market-data";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { StockDataProvider } from "@/lib/api-providers/types";
@@ -12,7 +13,7 @@ import {
 import type { MarketDataSurface } from "./surface";
 import { MARKET_DATA_SURFACE_FLAG } from "./surface-flags";
 
-export type MarketDataBackend = "fmp";
+export type MarketDataBackend = "free" | "fmp" | "yahoo";
 export type FundamentalsDataBackend = "fmp" | "yahoo";
 
 export async function shouldUseFmpForSurface(
@@ -27,8 +28,9 @@ export async function shouldUseFmpForSurface(
 }
 
 /**
- * Resolves FMP for premium routes (moat, intelligence, search, etc.).
- * Returns null when FMP_API_KEY is missing or the surface FMP flag is off.
+ * Resolves premium market data for Pro surfaces.
+ * Default: free stack (Yahoo + Finnhub + FRED + CoinGecko).
+ * Optional: FMP when `FMP_API_KEY` is set and the surface FMP flag is on.
  */
 export async function resolvePremiumStockDataProvider(
   userId: string | null,
@@ -36,16 +38,20 @@ export async function resolvePremiumStockDataProvider(
 ): Promise<{ provider: StockDataProvider; backend: MarketDataBackend } | null> {
   const useFmp = await shouldUseFmpForSurface(userId, surface);
   const fmpKey = getGlobalFmpApiKey();
-  if (!useFmp || !fmpKey) return null;
-  try {
-    return { provider: new FmpMarketDataProvider(fmpKey), backend: "fmp" };
-  } catch {
-    return null;
+  if (useFmp && fmpKey) {
+    try {
+      return { provider: new FmpMarketDataProvider(fmpKey), backend: "fmp" };
+    } catch {
+      /* fall through to free stack */
+    }
   }
+
+  if (!isFreePremiumStackAvailable()) return null;
+  return { provider: new FreePremiumProvider(), backend: "free" };
 }
 
 /**
- * Fundamentals API: FMP when configured, otherwise Yahoo (no Alpha Vantage).
+ * Fundamentals API: FMP only when flag + key; otherwise Yahoo (free primary).
  */
 export async function resolveFundamentalsProvider(
   userId: string | null
@@ -63,7 +69,7 @@ export async function resolveFundamentalsProvider(
 }
 
 /**
- * Pro-only: returns FMP for routes that previously used Alpha Vantage.
+ * Pro-only: returns free premium (or FMP when flagged) for routes that need rich market data.
  */
 export async function getPremiumMarketDataFromRequest(
   request: NextRequest,

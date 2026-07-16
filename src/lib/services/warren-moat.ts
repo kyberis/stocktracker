@@ -113,7 +113,7 @@ export async function getWarrenMoatEvaluation(
     await refundFeatureQuota(userId, "stock_evaluation");
     return {
       ok: false,
-      error: "Market data API not configured.",
+      error: "Market data provider unavailable.",
       code: "not_configured",
     };
   }
@@ -123,7 +123,7 @@ export async function getWarrenMoatEvaluation(
     const rl = await checkFmpRateLimit(userId);
     if (!rl.allowed) {
       await refundFeatureQuota(userId, "stock_evaluation");
-      return { ok: false, error: "FMP rate limit exceeded. Try again shortly.", code: "rate_limited" };
+      return { ok: false, error: "Market data rate limit exceeded. Try again shortly.", code: "rate_limited" };
     }
   }
 

@@ -33,7 +33,7 @@ export const GET = withMetrics("/api/economic-indicators", async (request: NextR
   const resolved = await resolvePremiumStockDataProvider(session?.userId ?? null, "economic_indicators");
   if (!resolved) {
     return Response.json(
-      { error: "No market data API key configured. Ask your administrator to add FMP_API_KEY or Alpha Vantage." },
+      { error: "No market data provider available. Set FRED_API_KEY for free US macro series (or optional FMP_API_KEY)." },
       { status: 503 }
     );
   }
@@ -41,6 +41,14 @@ export const GET = withMetrics("/api/economic-indicators", async (request: NextR
   const { provider, backend } = resolved;
   if (!provider.getEconomicIndicator) {
     return Response.json({ error: "Economic indicators not available" }, { status: 503 });
+  }
+
+  // Free stack needs FRED_API_KEY; surface early when missing.
+  if (backend === "free" && !process.env.FRED_API_KEY?.trim()) {
+    return Response.json(
+      { error: "FRED_API_KEY is required for economic indicators on the free market-data stack" },
+      { status: 503 }
+    );
   }
 
   const rl = await requireRateLimit(request, "fmp");

@@ -365,15 +365,22 @@ export function getGlobalFmpApiKey(): string {
 }
 
 /**
- * True when FMP is configured for premium market data routes.
+ * True when Pro market-data surfaces can run.
+ * Free stack (Yahoo + optional Finnhub/FRED/CoinGecko) is always available;
+ * a paid FMP key is no longer required.
  */
 export async function hasPremiumMarketDataConfigured(): Promise<boolean> {
-  return getGlobalFmpApiKey().length > 0;
+  return true;
 }
 
 /** Env keys only (ignores AV kill-switch). For metrics/cron pre-checks. */
 export function hasPremiumMarketDataKeysInEnv(): boolean {
-  return getGlobalAlphaVantageApiKey().length > 0 || getGlobalFmpApiKey().length > 0;
+  return (
+    getGlobalAlphaVantageApiKey().length > 0 ||
+    getGlobalFmpApiKey().length > 0 ||
+    Boolean(process.env.FINNHUB_API_KEY?.trim()) ||
+    Boolean(process.env.FRED_API_KEY?.trim())
+  );
 }
 
 /**

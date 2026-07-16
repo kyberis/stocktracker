@@ -53,12 +53,19 @@ export const GET = withMetrics("/api/intelligence", async (request: NextRequest)
 
   if (!resolved) {
     return Response.json(
-      { error: "Premium market data requires Pro and a configured market data API key" },
+      { error: "Premium market data requires a Pro plan" },
       { status: 400 }
     );
   }
 
   const { provider, backend } = resolved;
+
+  if (type === "transcript" && backend !== "fmp") {
+    return Response.json(
+      { error: "Earnings transcripts are not available on the free market-data stack" },
+      { status: 404 }
+    );
+  }
 
   const rl = await requireRateLimit(request, "fmp");
   if (rl.error) return rl.error;

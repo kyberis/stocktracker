@@ -1809,7 +1809,7 @@ const es: TranslationStrings = {
   landingPricingTrefolioFeature6: "12 informes fiscales UE / año + 100 exportaciones CSV / mes",
   landingPricingTrefolioFeature7: "500 consultas de indicadores económicos / mes",
   landingPricingTrefolioFeature8: "1.000 consultas cripto premium / mes",
-  landingPricingTrefolioFeature9: "Datos premium de Alpha Vantage y FMP",
+  landingPricingTrefolioFeature9: "Datos de mercado premium vía Yahoo, Finnhub, FRED y CoinGecko",
   landingPricingTrefolioFeature10: "20 importaciones con IA / día (cualquier archivo o captura)",
   landingPricingTrefolioFeature11: "500 alertas de precio + Telegram, push y email",
   landingPricingTrefolioFeature12: "Broker Sync automático — 20 conexiones de bróker",

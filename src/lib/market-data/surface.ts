@@ -1,5 +1,5 @@
 /**
- * Internal surfaces used to pick Alpha Vantage vs FMP (feature-flag rollout).
+ * Internal surfaces used to pick free premium vs optional FMP override (feature-flag rollout).
  * Not exposed to the client.
  */
 export type MarketDataSurface =

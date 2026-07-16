@@ -4,24 +4,26 @@ import { listCalendarEvents, listHoldings, findUserById } from "@/lib/db";
 import { canAccessFeature } from "@/lib/subscription";
 import { withMetrics } from "@/lib/with-metrics";
 import type { CalendarEvent } from "@/lib/db";
+import { syncFreeCalendarEventTypes, type FreeCalendarSyncType } from "@/lib/market-data/free-calendar-sync";
 import { syncFmpCalendarEventTypes, type FmpCalendarSyncType } from "@/lib/market-data/fmp-calendar-sync";
+import { getFinnhubApiKey } from "@/lib/api-providers/finnhub";
 import { json401 } from "@/lib/log-unauthorized";
 
-/** Avoid calling FMP on every request when a range truly has no IPO/split rows (empty API result). */
-const FMP_HYDRATE_COOLDOWN_MS = 60 * 60 * 1000;
-const fmpHydrateCooldownUntil = new Map<string, number>();
+/** Avoid calling providers on every request when a range truly has no IPO rows. */
+const HYDRATE_COOLDOWN_MS = 60 * 60 * 1000;
+const hydrateCooldownUntil = new Map<string, number>();
 
-function fmpHydrateCacheKey(types: FmpCalendarSyncType[], from: string, to: string): string {
+function hydrateCacheKey(types: string[], from: string, to: string): string {
   return `${[...types].sort().join(",")}|${from}|${to}`;
 }
 
-function shouldSkipFmpHydrate(key: string): boolean {
-  const until = fmpHydrateCooldownUntil.get(key);
+function shouldSkipHydrate(key: string): boolean {
+  const until = hydrateCooldownUntil.get(key);
   return until != null && Date.now() < until;
 }
 
-function markFmpHydrateCooldown(key: string): void {
-  fmpHydrateCooldownUntil.set(key, Date.now() + FMP_HYDRATE_COOLDOWN_MS);
+function markHydrateCooldown(key: string): void {
+  hydrateCooldownUntil.set(key, Date.now() + HYDRATE_COOLDOWN_MS);
 }
 
 export const dynamic = "force-dynamic";
@@ -128,13 +130,36 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
         from,
         to,
       });
+      const freeSyncable: FreeCalendarSyncType[] = ["economic", "ipo"];
+      const missingFreeTypes = freeSyncable.filter(
+        (t) => otherTypes.includes(t) && !otherEvents.some((e) => e.event_type === t)
+      );
+      if (missingFreeTypes.length > 0 && getFinnhubApiKey()) {
+        const hydrateKey = hydrateCacheKey(missingFreeTypes, from, to);
+        if (!shouldSkipHydrate(hydrateKey)) {
+          try {
+            const fromDate = new Date(`${from}T12:00:00.000Z`);
+            const toDate = new Date(`${to}T12:00:00.000Z`);
+            await syncFreeCalendarEventTypes(fromDate, toDate, missingFreeTypes);
+            otherEvents = await listCalendarEvents({
+              types: otherTypes,
+              from,
+              to,
+            });
+            markHydrateCooldown(hydrateKey);
+          } catch {
+            /* keep DB-backed rows only */
+          }
+        }
+      }
+
       const fmpSyncable: FmpCalendarSyncType[] = ["economic", "ipo", "splits"];
       const missingFmpTypes = fmpSyncable.filter(
         (t) => otherTypes.includes(t) && !otherEvents.some((e) => e.event_type === t)
       );
       if (missingFmpTypes.length > 0 && process.env.FMP_API_KEY) {
-        const hydrateKey = fmpHydrateCacheKey(missingFmpTypes, from, to);
-        if (!shouldSkipFmpHydrate(hydrateKey)) {
+        const hydrateKey = hydrateCacheKey(["fmp", ...missingFmpTypes], from, to);
+        if (!shouldSkipHydrate(hydrateKey)) {
           try {
             const fromDate = new Date(`${from}T12:00:00.000Z`);
             const toDate = new Date(`${to}T12:00:00.000Z`);
@@ -144,9 +169,9 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
               from,
               to,
             });
-            markFmpHydrateCooldown(hydrateKey);
+            markHydrateCooldown(hydrateKey);
           } catch {
-            /* keep DB-backed rows only; no cooldown so the next request may retry */
+            /* keep DB-backed rows only */
           }
         }
       }

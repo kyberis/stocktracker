@@ -54,23 +54,23 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     description: "Pricing, upsell cards, checkout CTAs, and new Stripe checkout on trefolio",
     group: "Features",
   },
-  market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
-  market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
-  market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },
-  market_data_fmp_portfolio_news: { label: "FMP: portfolio news", description: "Portfolio-level news sentiment via FMP", group: "Market data (FMP)" },
-  market_data_fmp_economic_indicators: { label: "FMP: economic indicators", description: "US macro series via FMP", group: "Market data (FMP)" },
-  market_data_fmp_crypto: { label: "FMP: Pro crypto history & FX", description: "Crypto OHLC and cross-rates via FMP", group: "Market data (FMP)" },
-  market_data_fmp_dividends: { label: "FMP: ex-dividend fallback", description: "When Yahoo has no dividend dates, use FMP dividend calendar", group: "Market data (FMP)" },
-  market_data_fmp_event_sync: { label: "FMP: earnings calendar cron", description: "Event-sync cron uses FMP-only for earnings (skip AV CSV)", group: "Market data (FMP)" },
+  market_data_fmp_search: { label: "FMP override: symbol search", description: "Optional: use FMP instead of free Yahoo search when FMP_API_KEY is set", group: "Market data (optional FMP)" },
+  market_data_fmp_fundamentals: { label: "FMP override: fundamentals & moat", description: "Optional: use FMP instead of Yahoo fundamentals when FMP_API_KEY is set", group: "Market data (optional FMP)" },
+  market_data_fmp_intelligence: { label: "FMP override: intelligence", description: "Optional: use FMP for news/insider/transcripts instead of Finnhub/EDGAR", group: "Market data (optional FMP)" },
+  market_data_fmp_portfolio_news: { label: "FMP override: portfolio news", description: "Optional: use FMP for portfolio news instead of Finnhub", group: "Market data (optional FMP)" },
+  market_data_fmp_economic_indicators: { label: "FMP override: economic indicators", description: "Optional: use FMP instead of FRED for US macro series", group: "Market data (optional FMP)" },
+  market_data_fmp_crypto: { label: "FMP override: crypto Pro", description: "Optional: use FMP instead of CoinGecko for crypto OHLC/FX", group: "Market data (optional FMP)" },
+  market_data_fmp_dividends: { label: "FMP override: ex-dividend", description: "Optional: FMP dividend calendar when Yahoo has no dates", group: "Market data (optional FMP)" },
+  market_data_fmp_event_sync: { label: "FMP: earnings calendar preference", description: "When on with FMP key, prefer FMP earnings over Finnhub/AV in event-sync", group: "Market data (optional FMP)" },
   market_data_alpha_vantage: {
-    label: "Alpha Vantage: allow fallback",
+    label: "Alpha Vantage: allow earnings CSV",
     description:
-      "When on, premium data can fall back to Alpha Vantage if FMP is unavailable or a surface flag is off. When off, only FMP is used (set FMP_API_KEY); AV is never called — safe before removing the integration.",
-    group: "Market data (FMP)",
+      "When on, event-sync may use Alpha Vantage earnings CSV if Finnhub has no earnings. Default Pro market data uses Yahoo/Finnhub/FRED/CoinGecko.",
+    group: "Market data (optional FMP)",
   },
 };
 
-const GROUP_DISPLAY_ORDER = ["Features", "Tools", "Market data (FMP)"] as const;
+const GROUP_DISPLAY_ORDER = ["Features", "Tools", "Market data (optional FMP)"] as const;
 
 function orderedFlagGroups(
   meta: typeof FLAG_META,
@@ -269,7 +269,7 @@ export default function FeatureFlagsPage() {
                 ? "Enable or disable user-facing features globally, with optional per-user overrides."
                 : group === "Tools"
                   ? "Show or hide individual tools on the Tools page."
-                  : "FMP per-surface rollout and Alpha Vantage fallback: disable “Alpha Vantage: allow fallback” for FMP-only (requires FMP_API_KEY). When fallback is on, AV is used if a surface FMP flag is off. Per-user overrides apply; the earnings calendar cron flag is global-only."}
+                  : "Default Pro market data uses Yahoo, Finnhub, FRED, and CoinGecko. FMP flags are optional overrides when FMP_API_KEY is set. Per-user overrides apply."}
             </p>
             <div className="divide-y divide-gray-200 dark:divide-slate-700">
               {groupFlags.map(([flag, meta]) => {

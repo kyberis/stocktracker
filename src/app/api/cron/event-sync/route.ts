@@ -1,7 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { upsertCalendarEventsBatch, deleteStaleEvents } from "@/lib/db";
 import { getGlobalAlphaVantageApiKey, isFeatureEnabled } from "@/lib/db";
 import type { FmpEarningsEvent } from "@/lib/api-providers/fmp";
+import {
+  fetchFinnhubEarningsCalendar,
+  getFinnhubApiKey,
+} from "@/lib/api-providers/finnhub";
+import { syncFreeCalendarEventTypes } from "@/lib/market-data/free-calendar-sync";
 import { syncFmpCalendarEventTypes } from "@/lib/market-data/fmp-calendar-sync";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
@@ -39,11 +44,9 @@ async function fetchAvEarningsCalendar(apiKey: string, horizon: string = "3month
 
   const headers = lines[0].split(",");
   const symbolIdx = headers.indexOf("symbol");
-  const nameIdx = headers.indexOf("name");
   const dateIdx = headers.indexOf("reportDate");
   const fiscalIdx = headers.indexOf("fiscalDateEnding");
   const estIdx = headers.indexOf("estimate");
-  const currIdx = headers.indexOf("currency");
 
   const events: FmpEarningsEvent[] = [];
   for (let i = 1; i < lines.length; i++) {
@@ -64,9 +67,7 @@ async function fetchAvEarningsCalendar(apiKey: string, horizon: string = "3month
   return events;
 }
 
-/** How far ahead to sync FMP calendars (economic, IPO, splits) so a full month view has data. */
 const SYNC_HORIZON_DAYS = 90;
-/** Match deleteStaleEvents: keep roughly a week of past dates so early-in-month views still show data. */
 const SYNC_PAST_DAYS = 7;
 
 const runEventSync = withCronLogging("event-sync", async () => {
@@ -78,11 +79,44 @@ const runEventSync = withCronLogging("event-sync", async () => {
 
   const stats = { earnings: 0, economic: 0, ipo: 0, splits: 0, deleted: 0, errors: [] as string[] };
 
-  // --- Earnings from Alpha Vantage (skipped when FMP-only rollout flag is on or AV is disabled) ---
+  // --- Earnings from Finnhub (free primary) ---
+  const finnhubKey = getFinnhubApiKey();
+  if (finnhubKey) {
+    try {
+      const raw = await fetchFinnhubEarningsCalendar(syncFrom, syncTo, finnhubKey);
+      const filtered = raw.filter((e) => e.date >= syncFromStr && e.date <= syncToStr);
+      const mapped = filtered.map((e) => ({
+        id: `earnings:${e.symbol}:${e.date}`,
+        event_type: "earnings",
+        symbol: e.symbol,
+        name: e.symbol,
+        event_date: e.date,
+        event_time: e.time === "--" ? null : e.time,
+        details: JSON.stringify({
+          epsEstimated: e.epsEstimated,
+          eps: e.eps,
+          revenue: e.revenue,
+          revenueEstimated: e.revenueEstimated,
+          fiscalDateEnding: e.fiscalDateEnding,
+          provider: "finnhub",
+        }),
+      }));
+
+      const BATCH = 50;
+      for (let i = 0; i < mapped.length; i += BATCH) {
+        await upsertCalendarEventsBatch(mapped.slice(i, i + BATCH));
+      }
+      stats.earnings = mapped.length;
+    } catch (e) {
+      stats.errors.push(`finnhub-earnings: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  // --- Earnings from Alpha Vantage (optional supplement) ---
   const fmpEarningsOnly = await isFeatureEnabled("market_data_fmp_event_sync");
   const avAllowed = await isFeatureEnabled("market_data_alpha_vantage");
   const avKey = getGlobalAlphaVantageApiKey();
-  if (avAllowed && !fmpEarningsOnly && avKey) {
+  if (avAllowed && !fmpEarningsOnly && avKey && stats.earnings === 0) {
     try {
       const raw = await fetchAvEarningsCalendar(avKey, "3month");
       const filtered = raw.filter((e) => e.date >= syncFromStr && e.date <= syncToStr);
@@ -96,6 +130,7 @@ const runEventSync = withCronLogging("event-sync", async () => {
         details: JSON.stringify({
           epsEstimated: e.epsEstimated,
           fiscalDateEnding: e.fiscalDateEnding,
+          provider: "alphavantage",
         }),
       }));
 
@@ -109,7 +144,7 @@ const runEventSync = withCronLogging("event-sync", async () => {
     }
   }
 
-  // --- Earnings from FMP (supplement with time-of-day data) ---
+  // --- Optional FMP earnings if key still configured ---
   if (process.env.FMP_API_KEY) {
     try {
       const fmpEarnings = await fetchFmpEarnings(syncFrom, syncTo);
@@ -128,6 +163,7 @@ const runEventSync = withCronLogging("event-sync", async () => {
             revenue: e.revenue,
             revenueEstimated: e.revenueEstimated,
             fiscalDateEnding: e.fiscalDateEnding,
+            provider: "fmp",
           }),
         }));
 
@@ -141,19 +177,27 @@ const runEventSync = withCronLogging("event-sync", async () => {
     }
   }
 
-  // --- Economic events, IPO, stock splits from FMP ---
+  // --- Economic + IPO from Finnhub (free primary) ---
+  try {
+    const s = await syncFreeCalendarEventTypes(syncFrom, syncTo, ["economic", "ipo"]);
+    stats.economic = s.economic;
+    stats.ipo = s.ipo;
+  } catch (e) {
+    stats.errors.push(`finnhub-calendar: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // --- Optional FMP economic/IPO/splits if key still configured ---
   if (process.env.FMP_API_KEY) {
     for (const kind of ["economic", "ipo", "splits"] as const) {
       try {
         const s = await syncFmpCalendarEventTypes(syncFrom, syncTo, [kind]);
-        stats[kind] = s[kind];
+        stats[kind] = Math.max(stats[kind], s[kind]);
       } catch (e) {
         stats.errors.push(`${kind}: ${e instanceof Error ? e.message : String(e)}`);
       }
     }
   }
 
-  // --- Cleanup stale events (older than 7 days) ---
   const staleDate = toISODate(addDays(dayStart, -SYNC_PAST_DAYS));
   stats.deleted = await deleteStaleEvents(staleDate);
 
@@ -166,9 +210,8 @@ const runEventSync = withCronLogging("event-sync", async () => {
 });
 
 /**
- * Cron: sync event calendar data from Alpha Vantage (earnings) and FMP (economic, IPO, splits).
- * Runs daily at 6 AM UTC. Stores ~90 days ahead and 7 days back (aligned with stale cleanup).
- * Requires FMP_API_KEY for economic, IPO, and stock splits.
+ * Cron: sync event calendar from Finnhub (free) with optional AV/FMP supplements.
+ * Runs daily at 6 AM UTC. Stores ~90 days ahead and 7 days back.
  */
 export async function GET(req: NextRequest) {
   const denied = verifyCronAuth("event-sync", req);

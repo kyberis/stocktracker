@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import type { FreePremiumProvider } from "@/lib/api-providers/free-premium";
 import type { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import type { FmpMarketDataProvider } from "@/lib/api-providers/fmp-market-data";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
@@ -19,7 +20,7 @@ import { CRYPTO_PAGE_SUPPORTED_SYMBOLS } from "@/lib/crypto-page-symbols";
 
 export const dynamic = "force-dynamic";
 
-type CryptoPd = AlphaVantageProvider | FmpMarketDataProvider;
+type CryptoPd = FreePremiumProvider | AlphaVantageProvider | FmpMarketDataProvider;
 
 type CryptoAction = "tickers" | "detail" | "history" | "exchange-rates";
 
@@ -101,6 +102,15 @@ async function handleDetail(symbol: string): Promise<Response> {
   );
 }
 
+function hasCryptoMethods(provider: unknown): provider is CryptoPd {
+  return (
+    typeof provider === "object" &&
+    provider !== null &&
+    "getCryptoDaily" in provider &&
+    typeof (provider as CryptoPd).getCryptoDaily === "function"
+  );
+}
+
 async function handleHistory(
   request: NextRequest,
   symbol: string,
@@ -113,9 +123,9 @@ async function handleHistory(
 
   const session = await getSessionFromRequest(request);
   const resolved = await resolvePremiumStockDataProvider(session?.userId ?? null, "crypto");
-  if (!resolved) {
+  if (!resolved || !hasCryptoMethods(resolved.provider)) {
     return Response.json(
-      { error: "No market data API key configured" },
+      { error: "Crypto history provider not available" },
       { status: 503 }
     );
   }
@@ -188,8 +198,8 @@ async function handleExchangeRates(
 
   const session = await getSessionFromRequest(request);
   const resolved = await resolvePremiumStockDataProvider(session?.userId ?? null, "crypto");
-  if (!resolved) {
-    return Response.json({ error: "No market data API key configured" }, { status: 503 });
+  if (!resolved || !hasCryptoMethods(resolved.provider)) {
+    return Response.json({ error: "Crypto FX provider not available" }, { status: 503 });
   }
 
   const { provider, backend } = resolved;

@@ -1,7 +1,7 @@
 import type { PlatformFeature } from "@/lib/db/settings";
 import type { MarketDataSurface } from "./surface";
 
-/** Maps each surface to its FMP rollout feature flag (default off). */
+/** Maps each surface to its optional FMP override flag (default off → free stack). */
 export const MARKET_DATA_SURFACE_FLAG: Record<MarketDataSurface, PlatformFeature> = {
   search: "market_data_fmp_search",
   fundamentals: "market_data_fmp_fundamentals",

@@ -10,8 +10,9 @@ surfaces we have, and how agents should reason about failures.
 - **Cache / rate limits:** Upstash Redis.
 - **Queue:** none (cron-driven batch model).
 - **Email:** Resend.
-- **Market data:** Yahoo (free), Alpha Vantage (Pro), FMP (events / fallback),
-  Finnhub (news), CoinLore (crypto), OpenFIGI (ISIN resolution).
+- **Market data:** Yahoo (free backbone), Finnhub (news/calendars/insider), FRED (macro),
+  CoinGecko (crypto Pro), CoinLore (crypto spot), OpenFIGI (identity). Optional paid FMP/AV
+  overrides when keys and flags are set.
 
 ## Cron jobs
 
@@ -82,8 +83,12 @@ Source of truth: [`src/lib/db/rate-limits.ts`](../src/lib/db/rate-limits.ts).
 | Upstream down | Visible behavior | Mitigation |
 |---------------|------------------|------------|
 | Yahoo Finance | Quotes stale; banner in UI. | Serve cached last-known; exchange rates from in-memory fallback. |
-| Alpha Vantage | Fundamentals 503; Pro features show cached. | Cached fundamentals in `fmp_cache` / `moat_cache`. |
-| FMP | Calendar empty. | Yahoo for earnings where possible. |
+| Yahoo | Rate limits / 429s | In-memory TTL cache; retries with jitter. |
+| Finnhub | News/calendar empty | Cached portfolio news; AID digest best-effort. |
+| FRED | Macro series missing | Empty economic indicators UI; set `FRED_API_KEY`. |
+| CoinGecko | Crypto history 429 | Cache OHLC/FX; CoinLore still serves spot list. |
+| FMP (optional) | Calendar empty / restricted | Free Finnhub calendars; Yahoo earnings where possible. |
+| Alpha Vantage (optional) | Earnings CSV empty | Finnhub earnings primary. |
 | SnapTrade | Sync paused; admin banner. | Next cron cycle retries. |
 | OpenAI | AI endpoints return 503 with retry-after. | UI shows "AI temporarily unavailable." |
 | Stripe | Checkout returns 503; webhooks queue at Stripe. | Admin warned via Grafana. |

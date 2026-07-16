@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.34",
+    date: "2026-07-16",
+    title: "Free premium market data stack",
+    titleTranslations: {
+      es: "Stack de datos de mercado premium gratuito",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Pro market data no longer requires paid FMP: fundamentals and moat use Yahoo; news, calendars, and insider/ownership use Finnhub (with SEC EDGAR insider fallback); economic indicators use FRED; crypto history/FX use CoinGecko. Earnings transcripts remain unavailable without an optional FMP key.",
+        translations: {
+          es: "Los datos Pro ya no requieren FMP de pago: fundamentals y moat usan Yahoo; noticias, calendarios e insider/ownership usan Finnhub (con fallback EDGAR); indicadores económicos usan FRED; historial crypto usa CoinGecko. Las transcripts de earnings siguen sin fuente gratuita (FMP opcional).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.33",
     date: "2026-05-28",
     title: "Investor Briefing polish",

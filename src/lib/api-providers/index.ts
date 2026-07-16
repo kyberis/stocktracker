@@ -39,8 +39,8 @@ export async function getProviderFromRequest(_request: NextRequest): Promise<Sto
 }
 
 /**
- * Returns a premium market data provider (FMP when rollout flags say so, else Alpha Vantage)
- * for Pro users when a global key is configured.
+ * Returns a premium market data provider (free stack by default; FMP when override flags say so)
+ * for Pro users.
  */
 export async function getAlphaVantageFromRequest(
   request: NextRequest

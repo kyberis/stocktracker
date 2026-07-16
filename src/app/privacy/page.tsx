@@ -390,28 +390,43 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Yahoo Finance</td>
-                    <td className="py-3 pr-6">Market data</td>
+                    <td className="py-3 pr-6">Market data (quotes, fundamentals)</td>
                     <td className="py-3">Stock ticker symbols requested</td>
                   </tr>
                   <tr>
-                    <td className="py-3 pr-6">Alpha Vantage</td>
-                    <td className="py-3 pr-6">Market data (Trefolio)</td>
+                    <td className="py-3 pr-6">Finnhub</td>
+                    <td className="py-3 pr-6">Market news, calendars, insider/ownership</td>
                     <td className="py-3">Stock ticker symbols requested</td>
                   </tr>
                   <tr>
-                    <td className="py-3 pr-6">Financial Modeling Prep (FMP)</td>
-                    <td className="py-3 pr-6">Market data (Trefolio)</td>
+                    <td className="py-3 pr-6">FRED (Federal Reserve Economic Data)</td>
+                    <td className="py-3 pr-6">US macroeconomic series (Trefolio)</td>
+                    <td className="py-3">No user data sent — only public series IDs retrieved</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">CoinGecko</td>
+                    <td className="py-3 pr-6">Cryptocurrency history and FX (Trefolio)</td>
+                    <td className="py-3">No user data sent — only public coin IDs retrieved</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">U.S. SEC EDGAR</td>
+                    <td className="py-3 pr-6">Insider filing metadata (fallback)</td>
                     <td className="py-3">Stock ticker symbols requested</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">CoinLore</td>
-                    <td className="py-3 pr-6">Cryptocurrency market data</td>
+                    <td className="py-3 pr-6">Cryptocurrency market data (spot)</td>
                     <td className="py-3">No user data sent — only public market data retrieved</td>
                   </tr>
                   <tr>
-                    <td className="py-3 pr-6">Finnhub</td>
-                    <td className="py-3 pr-6">Market news (fallback)</td>
-                    <td className="py-3">Stock ticker symbols requested</td>
+                    <td className="py-3 pr-6">Alpha Vantage</td>
+                    <td className="py-3 pr-6">Optional market data (legacy)</td>
+                    <td className="py-3">Stock ticker symbols requested when configured</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">Financial Modeling Prep (FMP)</td>
+                    <td className="py-3 pr-6">Optional market data override (legacy)</td>
+                    <td className="py-3">Stock ticker symbols requested when configured</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Cloudflare Turnstile</td>
@@ -687,10 +702,10 @@ export default function PrivacyPolicyPage() {
             <h2>10. International Transfers</h2>
             <p>
               Your data may be processed outside the EEA by our third-party
-              service providers (Vercel, OpenAI, Stripe, Cloudflare, Google Analytics, Google AdSense, Finnhub, Interactive Brokers, SnapTrade, Resend, Telegram, Linear). Where
+              service providers (Vercel, OpenAI, Stripe, Cloudflare, Google Analytics, Google AdSense, Yahoo Finance, Finnhub, FRED, CoinGecko, U.S. SEC EDGAR, CoinLore, Interactive Brokers, SnapTrade, Resend, Telegram, Linear). Where
               this occurs, we ensure appropriate safeguards are in place,
               including Standard Contractual Clauses (SCCs) approved by the
-              European Commission.
+              European Commission. Optional legacy market-data providers (Alpha Vantage, Financial Modeling Prep) may be used when configured by us.
             </p>
             <p>
               Cloudflare processes Turnstile bot-detection data as both a data
