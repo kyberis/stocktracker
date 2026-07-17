@@ -171,6 +171,70 @@ describe("parseDegiroCSV", () => {
     expect(txs[0].ticker).toBe("");
     expect(txs[0].isin).toBe("XX0000000000");
   });
+
+  it("parses DELISTING sell and attaches Corporate Action Cash Settlement proceeds", () => {
+    const csv = [
+      HEADER,
+      '16-10-2023,10:05,13-10-2023,ACTIVISION BLIZZARD INC,US00507V1098,Corporate Action Cash Settlement,,USD,"950,00",USD,"950,00",',
+      '16-10-2023,10:00,13-10-2023,ACTIVISION BLIZZARD INC,US00507V1098,DELISTING: Sell 10 Activision Blizzard Inc@0 USD (US00507V1098),,USD,"0,00",USD,"0,00",',
+      '01-06-2022,10:00,01-06-2022,ACTIVISION BLIZZARD INC,US00507V1098,Compra 10 Activision Blizzard Inc@80 USD (US00507V1098),,USD,"-800,00",USD,"-800,00",buy-atvi',
+    ].join("\n");
+
+    const map = { ...ISIN_MAP, US00507V1098: "ATVI" };
+    const txs = parseDegiroCSV(csv, map);
+    const sell = txs.find((t) => t.type === "sell");
+    const buy = txs.find((t) => t.type === "buy");
+
+    expect(txs).toHaveLength(2);
+    expect(buy?.shares).toBe(10);
+    expect(sell).toBeDefined();
+    expect(sell!.ticker).toBe("ATVI");
+    expect(sell!.shares).toBe(10);
+    expect(sell!.totalAmount).toBe(950);
+    expect(sell!.pricePerShare).toBe(95);
+    expect(sell!.currency).toBe("USD");
+  });
+
+  it("parses Spanish Fusión: Venta corporate-action sells", () => {
+    const csv = [
+      HEADER,
+      '10-03-2024,12:00,10-03-2024,TARGET SA,ES0000000001,"Fusión: Venta 50 Target SA@12,5 EUR (ES0000000001)",,EUR,"625,00",EUR,"625,00",',
+    ].join("\n");
+
+    const txs = parseDegiroCSV(csv, { ES0000000001: "TGT" });
+    expect(txs).toHaveLength(1);
+    expect(txs[0].type).toBe("sell");
+    expect(txs[0].shares).toBe(50);
+    expect(txs[0].pricePerShare).toBe(12.5);
+    expect(txs[0].totalAmount).toBe(625);
+  });
+
+  it("parses Dutch Verkoop and WIJZIGING ISIN: Koop paired rows", () => {
+    const csv = [
+      HEADER,
+      '05-01-2024,09:00,05-01-2024,NEW CO,NL0000000002,WIJZIGING ISIN: Koop 20 New Co@10 EUR (NL0000000002),,EUR,"-200,00",EUR,"0,00",',
+      '05-01-2024,09:00,05-01-2024,OLD CO,NL0000000001,WIJZIGING ISIN: Verkoop 20 Old Co@10 EUR (NL0000000001),,EUR,"200,00",EUR,"200,00",',
+    ].join("\n");
+
+    const txs = parseDegiroCSV(csv, {
+      NL0000000001: "OLD",
+      NL0000000002: "NEW",
+    });
+    expect(txs).toHaveLength(2);
+    expect(txs.find((t) => t.type === "sell")?.isin).toBe("NL0000000001");
+    expect(txs.find((t) => t.type === "buy")?.isin).toBe("NL0000000002");
+  });
+
+  it("still ignores money-market fund conversions", () => {
+    const csv = [
+      HEADER,
+      '26-10-2020,09:45,23-10-2020,MORGAN STANLEY EUR LIQUIDITY FUND,LU1959429272,"Conversión fondos del mercado monetario: Compra 0,01 @ 0 EUR",,EUR,"99,16",EUR,"649,32",',
+      '26-10-2020,09:45,23-10-2020,MORGAN STANLEY EUR LIQUIDITY FUND,LU1959429272,"Conversión fondos del mercado monetario: Venta 0,01 @ 0 EUR",,EUR,"-99,16",EUR,"550,16",',
+    ].join("\n");
+
+    const txs = parseDegiroCSV(csv, ISIN_MAP);
+    expect(txs).toHaveLength(0);
+  });
 });
 
 describe("parseDegiroCashBalances", () => {

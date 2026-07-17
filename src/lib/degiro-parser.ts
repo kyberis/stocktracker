@@ -88,8 +88,23 @@ function parseRows(csv: string): RawRow[] {
   }).filter((r) => r.date);
 }
 
-const BUY_RE = /^(?:Compra|Buy)\s+(\d+(?:[.,]\d+)?)\s+.+@([\d.,]+)\s+([A-Z]{3})/i;
-const SELL_RE = /^(?:Venta|Sell)\s+(\d+(?:[.,]\d+)?)\s+.+@([\d.,]+)\s+([A-Z]{3})/i;
+/**
+ * Optional corporate-action prefixes before Compra/Venta.
+ * Keep this allowlist tight so money-market conversions
+ * ("Conversión fondos del mercado monetario: Venta …") stay ignored.
+ */
+const CA_PREFIX =
+  "(?:DELISTING|FUSIE|Fusi[oó]n|Fusion|WIJZIGING ISIN|Cambio de ISIN|ISIN change|Exclusi[oó]n(?: de cotizaci[oó]n)?)\\s*:\\s*";
+const BUY_RE = new RegExp(
+  `^(?:${CA_PREFIX})?(?:Compra|Buy|Koop)\\s+(\\d+(?:[.,]\\d+)?)\\s+.+@([\\d.,]+)\\s+([A-Z]{3})`,
+  "i"
+);
+const SELL_RE = new RegExp(
+  `^(?:${CA_PREFIX})?(?:Venta|Sell|Verkoop)\\s+(\\d+(?:[.,]\\d+)?)\\s+.+@([\\d.,]+)\\s+([A-Z]{3})`,
+  "i"
+);
+const CASH_SETTLEMENT_RE =
+  /^(?:Corporate Action Cash Settlement(?:\s+Stock)?|Liquidaci[oó]n de acci[oó]n corporativa(?:\s+en efectivo)?|Liquidaci[oó]n en efectivo(?: por acci[oó]n corporativa)?)$/i;
 const TX_FEE_RE = /Costes de transacción/i;
 const FX_WITHDRAWAL_RE = /Retirada Cambio de Divisa/i;
 
@@ -142,6 +157,24 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
     }
   }
 
+  // Cash settlements from OPAs / cash takeovers — keyed by ISIN|date.
+  // DELISTING sells often book @0; proceeds live on these companion rows.
+  const cashSettlementByKey: Record<string, { amount: number; currency: string }> = {};
+  for (const row of rows) {
+    if (!row.isin || !CASH_SETTLEMENT_RE.test(row.description)) continue;
+    if (row.changeAmount <= 0) continue;
+    const date = parseDegiroDate(row.valueDate || row.date);
+    const key = `${row.isin}|${date}`;
+    const existing = cashSettlementByKey[key];
+    if (existing) {
+      existing.amount += row.changeAmount;
+    } else {
+      cashSettlementByKey[key] = {
+        amount: row.changeAmount,
+        currency: row.changeCurrency,
+      };
+    }
+  }
   // Group dividend-related rows by ISIN + value date
   const dividendGroups: Record<string, { product: string; isin: string; date: string; currency: string; gross: number; tax: number }> = {};
 
@@ -149,6 +182,11 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
     const desc = row.description;
     const ticker = isinToTicker[row.isin] || "";
     const date = parseDegiroDate(row.valueDate || row.date);
+
+    // Cash settlement rows are merged into CA sells — not standalone txs.
+    if (CASH_SETTLEMENT_RE.test(desc)) {
+      continue;
+    }
 
     // --- Buy / Sell ---
     const buyMatch = desc.match(BUY_RE);
@@ -188,8 +226,8 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
     const sellMatch = desc.match(SELL_RE);
     if (sellMatch) {
       const shares = parseEuropeanNumber(sellMatch[1]);
-      const price = parseEuropeanNumber(sellMatch[2]);
-      const tradeCurrency = row.changeCurrency || sellMatch[3] || "";
+      let price = parseEuropeanNumber(sellMatch[2]);
+      let tradeCurrency = row.changeCurrency || sellMatch[3] || "";
       const feeKey = `${row.orderId}|${row.date}|${row.time}`;
       const matchedFees = row.orderId ? (feesByOrderAndTimestamp[feeKey] || []) : [];
       const fees = matchedFees
@@ -198,7 +236,17 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
           consumedFees.add(fee);
           return sum + fee.amount;
         }, 0);
-      const sellTotal = Math.abs(row.changeAmount) || shares * price;
+      let sellTotal = Math.abs(row.changeAmount) || shares * price;
+
+      // OPA / delisting often books shares @0; attach cash settlement proceeds.
+      const settlementKey = `${row.isin}|${date}`;
+      const settlement = cashSettlementByKey[settlementKey];
+      if (settlement && sellTotal <= 0 && settlement.amount > 0) {
+        sellTotal = settlement.amount;
+        if (!tradeCurrency) tradeCurrency = settlement.currency;
+        if (shares > 0) price = sellTotal / shares;
+      }
+
       const sellFxRate = (row.orderId && fxRateByOrder[row.orderId]) || fxRateByDate[date] || undefined;
       transactions.push({
         date,

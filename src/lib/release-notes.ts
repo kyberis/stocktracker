@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.34",
+    date: "2026-07-17",
+    title: "DEGIRO corporate-action import fix",
+    titleTranslations: {
+      es: "Corrección de importación de acciones corporativas DEGIRO",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "DEGIRO CSV import now treats OPA/delisting/merger share removals (DELISTING, Fusión, WIJZIGING ISIN, etc.) as sells and attaches Corporate Action Cash Settlement proceeds, so positions no longer stay as ghost holdings after cash is credited.",
+        translations: {
+          es: "La importación CSV de DEGIRO ahora trata las salidas por OPA/exclusión/fusión (DELISTING, Fusión, WIJZIGING ISIN, etc.) como ventas y asocia el efectivo de Corporate Action Cash Settlement, evitando posiciones fantasma cuando el cash ya se ha acreditado.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.33",
     date: "2026-05-28",
     title: "Investor Briefing polish",
