@@ -62,7 +62,7 @@ export const GET = withMetrics("/api/auth/preview-login", async (req: NextReques
     email: user.email,
     role: user.role,
     mustChangePassword: user.must_change_password === 1,
-    plan: user.plan === "pro" || user.plan === "starter" ? "pro" : "free",
+    plan: user.plan === "pro" ? "pro" : "free",
     emailVerified: user.email_verified === 1,
     onboardingCompleted: user.onboarding_completed === 1,
   });
