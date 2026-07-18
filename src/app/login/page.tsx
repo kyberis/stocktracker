@@ -35,14 +35,28 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const copy = await getIdpBridgeCopy();
   const errRaw = searchParams?.error;
   const oauthError = Array.isArray(errRaw) ? errRaw[0] : errRaw;
-  const showPreviewHint =
+  const previewReady =
     isPreviewLoginAllowed() && previewLoginSecretsConfigured();
+
+  // Preview without IdP: show preview login as the primary UI (not the IdP error).
+  if (!isIdpEnabled() && previewReady) {
+    return (
+      <ThemeProvider>
+        <PreviewLoginHint asPrimary />
+      </ThemeProvider>
+    );
+  }
 
   if (!isIdpEnabled()) {
     return (
       <ThemeProvider>
         <IdpRedirectBridge variant="login" targetHref="/landing" copy={copy} idpDisabled />
-        {showPreviewHint ? <PreviewLoginHint /> : null}
+        {isPreviewLoginAllowed() ? (
+          <p className="fixed bottom-4 left-1/2 z-50 w-[min(420px,92vw)] -translate-x-1/2 rounded-xl border border-amber-500/40 bg-amber-50 p-3 text-center text-xs text-amber-900 shadow-lg dark:bg-amber-950 dark:text-amber-100">
+            Preview login env vars missing. Set PREVIEW_LOGIN_SECRET and PREVIEW_USER_EMAIL
+            on this Vercel Preview, then redeploy.
+          </p>
+        ) : null}
       </ThemeProvider>
     );
   }
@@ -57,7 +71,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         copy={copy}
         errorMessage={oauthError ?? undefined}
       />
-      {showPreviewHint ? <PreviewLoginHint /> : null}
+      {previewReady ? <PreviewLoginHint /> : null}
     </ThemeProvider>
   );
 }
