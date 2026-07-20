@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.37",
+    date: "2026-07-21",
+    title: "Company analysis week cache",
+    titleTranslations: {
+      es: "Caché semanal del análisis de empresa",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Company analysis reports and AI narratives are stored for 7 days and loaded from cache; the UI shows when the analysis was generated. Missing/unavailable sections are retried without rebuilding the whole report.",
+        translations: {
+          es: "Los informes y narrativas de análisis de empresa se guardan 7 días y se cargan desde caché; la UI muestra cuándo se generó el análisis. Solo se reintentan las secciones faltantes o no disponibles.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.36",
+    date: "2026-07-21",
+    title: "Company analysis web enrichment",
+    titleTranslations: {
+      es: "Enriquecimiento web del análisis de empresa",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Company analysis narratives can use Tavily web search (with citations) for sector outlook and risks; last EPS falls back to FMP earnings when Yahoo history is empty; company guidance appears only with a citable source URL.",
+        translations: {
+          es: "Las narrativas de análisis de empresa pueden usar búsqueda web Tavily (con citas) para outlook y riesgos; el EPS reciente usa FMP si Yahoo no lo trae; el guidance de la compañía solo aparece con URL fuente citable.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.35",
     date: "2026-07-20",
     title: "Company analysis section",

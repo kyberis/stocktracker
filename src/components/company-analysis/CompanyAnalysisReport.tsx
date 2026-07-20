@@ -1,10 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n";
 import type { CompanyAnalysisReport as Report } from "@/lib/company-analysis/types";
+import {
+  applyWebNumericEnrichment,
+  collectWebSources,
+  type WebNumericEnrichment,
+} from "@/lib/company-analysis/apply-web-enrichment";
 import {
   formatAnalysisCompact,
   formatAnalysisDate,
@@ -77,14 +82,16 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [narrative, setNarrative] = useState<{
-    description?: string;
-    competitive?: string;
-    sectorOutlook?: string;
-    risks?: string;
-    technicalReading?: string;
-    insiderReading?: string;
-  } | null>(null);
+  const [narrative, setNarrative] = useState<
+    (WebNumericEnrichment & {
+      description?: string;
+      competitive?: string;
+      sectorOutlook?: string;
+      risks?: string;
+      technicalReading?: string;
+      insiderReading?: string;
+    }) | null
+  >(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -141,6 +148,26 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
     };
   }, [report, language]);
 
+  const fundamentals = useMemo(
+    () =>
+      report
+        ? applyWebNumericEnrichment(report.fundamentals, narrative)
+        : null,
+    [report, narrative],
+  );
+  const sources = useMemo(() => {
+    if (!report) return [];
+    const web = collectWebSources(narrative);
+    const seen = new Set(report.sources.map((s) => s.url));
+    const merged = [...report.sources];
+    for (const s of web) {
+      if (seen.has(s.url)) continue;
+      seen.add(s.url);
+      merged.push(s);
+    }
+    return merged;
+  }, [report, narrative]);
+
   if (loading) {
     return (
       <div className="space-y-4" role="status" aria-live="polite">
@@ -151,7 +178,7 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
     );
   }
 
-  if (error || !report) {
+  if (error || !report || !fundamentals) {
     return (
       <div className="card space-y-3 p-6">
         <p className="text-[color:var(--foreground)]">{error || t("companyAnalysisLoadError")}</p>
@@ -200,8 +227,8 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
               </span>
             </div>
             <p className="mt-2 text-sm text-[color:var(--muted)]">
-              {t("companyAnalysisUpdatedAt")}{" "}
-              {formatAnalysisDateTime(report.updatedAt, language) ?? na}
+              {t("companyAnalysisGeneratedAt")}{" "}
+              {formatAnalysisDateTime(report.generatedAt || report.updatedAt, language) ?? na}
               {report.cached ? ` · ${t("companyAnalysisCached")}` : ""}
             </p>
           </div>
@@ -221,16 +248,18 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
           <StatCard label={t("companyAnalysisMarketCap")} value={mcap} />
           <StatCard
             label={t("companyAnalysisRevenueYoy")}
-            value={<Yoy value={report.fundamentals.lastRevenueYoyPct} language={language} na={na} />}
-            sub={formatAnalysisCompact(report.fundamentals.lastRevenue, language, currency) ?? na}
+            value={<Yoy value={fundamentals.lastRevenueYoyPct} language={language} na={na} />}
+            sub={formatAnalysisCompact(fundamentals.lastRevenue, language, currency) ?? na}
           />
           <StatCard
             label={t("companyAnalysisEps")}
-            value={formatAnalysisNumber(report.fundamentals.lastEps, language) ?? na}
+            value={formatAnalysisNumber(fundamentals.lastEps, language) ?? na}
             sub={
-              report.fundamentals.lastEpsVsConsensusPct != null
-                ? `${t("companyAnalysisVsConsensus")}: ${formatAnalysisNumber(report.fundamentals.lastEpsVsConsensusPct, language, { digits: 1 })}%`
-                : na
+              fundamentals.lastEpsVsConsensusPct != null
+                ? `${t("companyAnalysisVsConsensus")}: ${formatAnalysisNumber(fundamentals.lastEpsVsConsensusPct, language, { digits: 1 })}%`
+                : fundamentals.lastEpsSourceUrl
+                  ? t("companyAnalysisWebEnriched")
+                  : na
             }
           />
           <StatCard
@@ -295,6 +324,11 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
           <span className="rounded bg-[color:var(--accent-light)] px-2 py-0.5 text-[11px] font-semibold uppercase text-[color:var(--accent)]">
             {t("companyAnalysisInterpretationBadge")}
           </span>
+          {narrative?.usedWeb ? (
+            <span className="rounded bg-[color:var(--surface-soft)] px-2 py-0.5 text-[11px] font-semibold uppercase text-[color:var(--muted)]">
+              {t("companyAnalysisWebEnriched")}
+            </span>
+          ) : null}
         </div>
         <p className="text-sm leading-relaxed text-[color:var(--foreground)]">
           {narrative?.sectorOutlook || na}
@@ -302,13 +336,14 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
         <div className="rounded-lg bg-[color:var(--surface-soft)] p-3 text-sm text-[color:var(--foreground)]">
           <strong>{t("companyAnalysisRisks")}:</strong> {narrative?.risks || na}
         </div>
+        <p className="text-xs text-[color:var(--muted)]">{t("aiDisclaimer")}</p>
       </section>
 
       <section className="space-y-4" aria-labelledby="ca-fund">
         <h2 id="ca-fund" className="text-xl font-semibold text-[color:var(--foreground)]">
           {t("companyAnalysisFundamentals")}
         </h2>
-        {report.fundamentals.status === "unavailable" ? (
+        {fundamentals.status === "unavailable" ? (
           <div className="card p-6 text-sm text-[color:var(--muted)]">{na}</div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -318,14 +353,14 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
                   <tr className="border-b border-[color:var(--border)] bg-[color:var(--surface-soft)]">
                     <th className="px-4 py-3 text-left font-semibold">
                       {t("companyAnalysisLastQuarter")} (
-                      {formatAnalysisDate(report.fundamentals.lastReportDate, language) ?? na})
+                      {formatAnalysisDate(fundamentals.lastReportDate, language) ?? na})
                     </th>
                     <th className="px-4 py-3 text-right font-semibold">{t("companyAnalysisValue")}</th>
                     <th className="px-4 py-3 text-right font-semibold">YoY</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {report.fundamentals.rows.map((row) => {
+                  {fundamentals.rows.map((row) => {
                     const rowLabels: Record<string, string> = {
                       revenue: t("companyAnalysisRowRevenue"),
                       eps: t("companyAnalysisRowEps"),
@@ -361,7 +396,7 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
                   <tr className="border-b border-[color:var(--border)] bg-[color:var(--accent-light)]">
                     <th className="px-4 py-3 text-left font-semibold">
                       {t("companyAnalysisNextQuarter")} (
-                      {formatAnalysisDate(report.fundamentals.nextReportDate, language) ?? na})
+                      {formatAnalysisDate(fundamentals.nextReportDate, language) ?? na})
                     </th>
                     <th className="px-4 py-3 text-right font-semibold">{t("companyAnalysisValue")}</th>
                     <th className="px-4 py-3 text-right font-semibold">YoY</th>
@@ -371,28 +406,41 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
                   <tr className="border-b border-[color:var(--border)]">
                     <td className="px-4 py-2.5">{t("companyAnalysisGuidanceRevenue")}</td>
                     <td className="px-4 py-2.5 text-right">
-                      {formatAnalysisCompact(report.fundamentals.companyGuidanceRevenue, language, currency) ?? na}
+                      {formatAnalysisCompact(fundamentals.companyGuidanceRevenue, language, currency) ?? na}
+                      {fundamentals.companyGuidanceSourceUrl ? (
+                        <>
+                          {" "}
+                          <a
+                            href={fundamentals.companyGuidanceSourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[color:var(--accent)] underline decoration-dotted"
+                          >
+                            {t("companyAnalysisSourceLink")}
+                          </a>
+                        </>
+                      ) : null}
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <Yoy value={report.fundamentals.companyGuidanceRevenueVarPct} language={language} na={na} />
+                      <Yoy value={fundamentals.companyGuidanceRevenueVarPct} language={language} na={na} />
                     </td>
                   </tr>
                   <tr className="border-b border-[color:var(--border)]">
                     <td className="px-4 py-2.5">{t("companyAnalysisConsensusRevenue")}</td>
                     <td className="px-4 py-2.5 text-right">
-                      {formatAnalysisCompact(report.fundamentals.consensusRevenue, language, currency) ?? na}
+                      {formatAnalysisCompact(fundamentals.consensusRevenue, language, currency) ?? na}
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <Yoy value={report.fundamentals.consensusRevenueVarPct} language={language} na={na} />
+                      <Yoy value={fundamentals.consensusRevenueVarPct} language={language} na={na} />
                     </td>
                   </tr>
                   <tr>
                     <td className="px-4 py-2.5">{t("companyAnalysisConsensusEps")}</td>
                     <td className="px-4 py-2.5 text-right">
-                      {formatAnalysisNumber(report.fundamentals.consensusEps, language) ?? na}
+                      {formatAnalysisNumber(fundamentals.consensusEps, language) ?? na}
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <Yoy value={report.fundamentals.consensusEpsVarPct} language={language} na={na} />
+                      <Yoy value={fundamentals.consensusEpsVarPct} language={language} na={na} />
                     </td>
                   </tr>
                 </tbody>
@@ -643,14 +691,14 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
       <footer className="space-y-2 border-t border-[color:var(--border)] pt-4 text-xs text-[color:var(--muted)]">
         <p>
           <strong>
-            {t("companyAnalysisUpdatedAt")}{" "}
-            {formatAnalysisDateTime(report.updatedAt, language) ?? na}.
+            {t("companyAnalysisGeneratedAt")}{" "}
+            {formatAnalysisDateTime(report.generatedAt || report.updatedAt, language) ?? na}.
           </strong>{" "}
           {t("financialDataDisclaimer")}
         </p>
         <p>{t("companyAnalysisSources")}</p>
         <p className="flex flex-wrap gap-x-3 gap-y-1">
-          {report.sources.map((s) => (
+          {sources.map((s) => (
             <a
               key={s.url}
               href={s.url}

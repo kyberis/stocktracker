@@ -3554,6 +3554,31 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 121,
+    description: "Company analysis durable 7-day cache (report + narrative)",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS company_analysis_cache (
+          cache_key TEXT PRIMARY KEY,
+          ticker TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          language TEXT NOT NULL DEFAULT '',
+          payload_json TEXT NOT NULL DEFAULT '{}',
+          generated_at TEXT NOT NULL,
+          expires_at TEXT NOT NULL,
+          last_gap_retry_at TEXT,
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_company_analysis_cache_ticker ON company_analysis_cache(ticker)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_company_analysis_cache_expires ON company_analysis_cache(expires_at)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

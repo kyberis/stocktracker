@@ -92,12 +92,14 @@ export function buildFundamentals(
     nextReportDate: null,
     companyGuidanceRevenue: null,
     companyGuidanceRevenueVarPct: null,
+    companyGuidanceSourceUrl: null,
     consensusRevenue: null,
     consensusRevenueVarPct: null,
     consensusEps: null,
     consensusEpsVarPct: null,
     lastEps: null,
     lastEpsVsConsensusPct: null,
+    lastEpsSourceUrl: null,
     lastRevenue: null,
     lastRevenueYoyPct: null,
   };
@@ -215,12 +217,14 @@ export function buildFundamentals(
     nextReportDate,
     companyGuidanceRevenue: null,
     companyGuidanceRevenueVarPct: null,
+    companyGuidanceSourceUrl: null,
     consensusRevenue,
     consensusRevenueVarPct: nextQuarter?.consensusRevenueVarPct ?? null,
     consensusEps,
     consensusEpsVarPct: nextQuarter?.consensusEpsVarPct ?? null,
     lastEps: lastEarn?.reportedEPS ?? null,
     lastEpsVsConsensusPct,
+    lastEpsSourceUrl: null,
     lastRevenue: latest.totalRevenue,
     lastRevenueYoyPct: yoyChange(latest.totalRevenue, priorYear?.totalRevenue),
   };
@@ -486,6 +490,7 @@ export function collectSources(parts: {
 
 export function assembleReport(input: {
   ticker: string;
+  generatedAt?: string;
   updatedAt: string;
   cached: boolean;
   quote: ProviderQuoteResult | null;
@@ -520,6 +525,7 @@ export function assembleReport(input: {
 
   return {
     ticker: input.ticker,
+    generatedAt: input.generatedAt ?? input.updatedAt,
     updatedAt: input.updatedAt,
     cached: input.cached,
     quote,

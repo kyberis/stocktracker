@@ -564,6 +564,14 @@ export {
   parseAidDigestSummary,
 } from "./aid-news-cache";
 
+export type { CompanyAnalysisCacheRow } from "./company-analysis-cache";
+export {
+  companyAnalysisReportCacheKey,
+  companyAnalysisNarrativeCacheKey,
+  getCompanyAnalysisDbCache,
+  upsertCompanyAnalysisDbCache,
+} from "./company-analysis-cache";
+
 export {
   getLastAidVisitAt,
   setLastAidVisitAt,

@@ -1,0 +1,318 @@
+/**
+ * Shared fetch + assemble helpers for company-analysis GET
+ * (full build and gap-only refill).
+ */
+
+import { YahooProvider } from "@/lib/api-providers/yahoo";
+import {
+  fetchEarningsBySymbol,
+  fetchHouseTradesBySymbol,
+  fetchSenateTradesBySymbol,
+  fetchStockPeers,
+  type FmpCongressTrade,
+  type FmpEarningsEvent,
+} from "@/lib/api-providers/fmp";
+import type {
+  CompanyOverview,
+  FundamentalData,
+  IncomeStatementReport,
+  EarningsReport,
+  InsiderTransaction,
+  NewsArticle,
+  ProviderHistoricalPoint,
+  ProviderQuoteResult,
+  StockDataProvider,
+} from "@/lib/api-providers/types";
+import { assembleReport, peerDistanceTo52wHigh } from "@/lib/company-analysis/assemble";
+import {
+  mergeNextQuarterConsensus,
+  pickNextQuarterFromEarningsRows,
+  type NextQuarterConsensus,
+} from "@/lib/company-analysis/next-quarter";
+import {
+  fmpEarningsToFundamentalData,
+  mergeEarningsData,
+} from "@/lib/company-analysis/earnings-merge";
+import type { ReportGap } from "@/lib/company-analysis/gaps";
+import type { CompanyAnalysisPeer, CompanyAnalysisReport } from "@/lib/company-analysis/types";
+import { getGlobalFmpApiKey } from "@/lib/db";
+
+export function hasFmpKey(): boolean {
+  return Boolean(getGlobalFmpApiKey() || process.env.FMP_API_KEY);
+}
+
+export async function settled<T>(p: Promise<T>): Promise<T | null> {
+  try {
+    return await p;
+  } catch (err) {
+    console.warn("[company-analysis] source failed:", err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+export async function loadCongress(symbol: string): Promise<FmpCongressTrade[] | null> {
+  if (!hasFmpKey()) return null;
+  try {
+    const [senate, house] = await Promise.all([
+      fetchSenateTradesBySymbol(symbol),
+      fetchHouseTradesBySymbol(symbol),
+    ]);
+    return [...senate, ...house];
+  } catch (err) {
+    console.warn("[company-analysis] congress failed:", err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+export async function loadPeers(symbol: string): Promise<CompanyAnalysisPeer[]> {
+  if (!hasFmpKey()) return [];
+  try {
+    const peerTickers = (await fetchStockPeers(symbol)).filter((t) => t !== symbol).slice(0, 6);
+    if (!peerTickers.length) return [];
+    const yahoo = new YahooProvider();
+    const quotes = await Promise.all(
+      peerTickers.map(async (t) => {
+        const q = await settled(yahoo.getQuote(t));
+        return { ticker: t, q };
+      }),
+    );
+    return quotes.map(({ ticker, q }) => ({
+      ticker,
+      name: q?.shortName ?? null,
+      price: q?.regularMarketPrice ?? null,
+      distanceTo52wHighPct: peerDistanceTo52wHigh(
+        q?.regularMarketPrice ?? null,
+        q?.fiftyTwoWeekHigh ?? null,
+      ),
+      ma50: null,
+      ma200: null,
+    }));
+  } catch (err) {
+    console.warn("[company-analysis] peers failed:", err instanceof Error ? err.message : err);
+    return [];
+  }
+}
+
+export async function loadFmpEarnings(symbol: string): Promise<FmpEarningsEvent[] | null> {
+  if (!hasFmpKey()) return null;
+  try {
+    return await fetchEarningsBySymbol(symbol);
+  } catch (err) {
+    console.warn(
+      "[company-analysis] FMP earnings failed:",
+      err instanceof Error ? err.message : err,
+    );
+    return null;
+  }
+}
+
+export interface BuildProviders {
+  provider: StockDataProvider;
+  intelProvider: StockDataProvider;
+  usedYahoo: boolean;
+  usedFmp: boolean;
+}
+
+export async function buildFullReport(
+  ticker: string,
+  providers: BuildProviders,
+  generatedAt: string,
+): Promise<CompanyAnalysisReport | null> {
+  const { provider, intelProvider, usedYahoo, usedFmp } = providers;
+  const yahooOutlook = new YahooProvider();
+  const [
+    quoteRes,
+    overviewRes,
+    historyRes,
+    incomeRes,
+    earningsRes,
+    newsRes,
+    insiderRes,
+    congressRes,
+    yahooNext,
+    fmpEarningsRows,
+  ] = await Promise.all([
+    settled(provider.getQuote(ticker)),
+    settled(provider.getOverview?.(ticker) ?? Promise.resolve(null)),
+    settled(provider.getHistorical(ticker, "1y")),
+    settled(provider.getIncomeStatement?.(ticker) ?? Promise.resolve(null)),
+    settled(provider.getEarnings?.(ticker) ?? Promise.resolve(null)),
+    settled(intelProvider.getNewsSentiment?.(ticker) ?? Promise.resolve([])),
+    settled(intelProvider.getInsiderTransactions?.(ticker) ?? Promise.resolve([])),
+    loadCongress(ticker),
+    settled(yahooOutlook.getNextQuarterConsensus(ticker)),
+    loadFmpEarnings(ticker),
+  ]);
+
+  if (!quoteRes && !overviewRes) return null;
+
+  const fmpEarningsData = fmpEarningsRows
+    ? fmpEarningsToFundamentalData(fmpEarningsRows)
+    : null;
+  const earnings = mergeEarningsData(earningsRes, fmpEarningsData);
+  const peers = await loadPeers(ticker);
+
+  const fmpNext = fmpEarningsRows
+    ? pickNextQuarterFromEarningsRows(
+        fmpEarningsRows.map((r) => ({
+          reportDate: r.date || null,
+          fiscalPeriodEnd: r.fiscalDateEnding || null,
+          epsActual: r.eps,
+          epsEstimated: r.epsEstimated,
+          revenueActual: r.revenue,
+          revenueEstimated: r.revenueEstimated,
+        })),
+      )
+    : null;
+  const nextQuarter = mergeNextQuarterConsensus(fmpNext, yahooNext);
+
+  return assembleReport({
+    ticker,
+    generatedAt,
+    updatedAt: generatedAt,
+    cached: false,
+    quote: quoteRes,
+    overview: overviewRes,
+    history: historyRes,
+    income: incomeRes,
+    earnings,
+    nextQuarter,
+    news: newsRes,
+    insiders: insiderRes,
+    congress: congressRes,
+    peers,
+    usedYahoo,
+    usedFmp,
+  });
+}
+
+/** Fetch only the sections listed in `gaps` and assemble a partial report for merging. */
+export async function buildGapFillReport(
+  ticker: string,
+  gaps: ReportGap[],
+  providers: BuildProviders,
+  generatedAt: string,
+): Promise<CompanyAnalysisReport> {
+  const { provider, intelProvider, usedYahoo, usedFmp } = providers;
+  const needCore = gaps.includes("core");
+  const needEarnings = gaps.includes("earnings") || gaps.includes("nextQuarter") || needCore;
+  const needNews = gaps.includes("news");
+  const needInsiders = gaps.includes("insiders");
+  const needCongress = gaps.includes("congress");
+  const needAlt = gaps.includes("alternative");
+
+  let quote: ProviderQuoteResult | null = null;
+  let overview: CompanyOverview | null = null;
+  let history: ProviderHistoricalPoint[] | null = null;
+  let income: FundamentalData<IncomeStatementReport> | null = null;
+  let earnings: FundamentalData<EarningsReport> | null = null;
+  let news: NewsArticle[] | null = null;
+  let insiders: InsiderTransaction[] | null = null;
+  let congress: FmpCongressTrade[] | null = null;
+  let peers: CompanyAnalysisPeer[] = [];
+  let nextQuarter: NextQuarterConsensus | null = null;
+
+  const tasks: Promise<void>[] = [];
+
+  if (needCore) {
+    tasks.push(
+      (async () => {
+        const [q, o, h, inc] = await Promise.all([
+          settled(provider.getQuote(ticker)),
+          settled(provider.getOverview?.(ticker) ?? Promise.resolve(null)),
+          settled(provider.getHistorical(ticker, "1y")),
+          settled(provider.getIncomeStatement?.(ticker) ?? Promise.resolve(null)),
+        ]);
+        quote = q;
+        overview = o;
+        history = h;
+        income = inc;
+      })(),
+    );
+  }
+
+  if (needEarnings) {
+    tasks.push(
+      (async () => {
+        const yahooOutlook = new YahooProvider();
+        const [earningsRes, yahooNext, fmpEarningsRows] = await Promise.all([
+          settled(provider.getEarnings?.(ticker) ?? Promise.resolve(null)),
+          settled(yahooOutlook.getNextQuarterConsensus(ticker)),
+          loadFmpEarnings(ticker),
+        ]);
+        const fmpEarningsData = fmpEarningsRows
+          ? fmpEarningsToFundamentalData(fmpEarningsRows)
+          : null;
+        earnings = mergeEarningsData(earningsRes, fmpEarningsData);
+        const fmpNext = fmpEarningsRows
+          ? pickNextQuarterFromEarningsRows(
+              fmpEarningsRows.map((r) => ({
+                reportDate: r.date || null,
+                fiscalPeriodEnd: r.fiscalDateEnding || null,
+                epsActual: r.eps,
+                epsEstimated: r.epsEstimated,
+                revenueActual: r.revenue,
+                revenueEstimated: r.revenueEstimated,
+              })),
+            )
+          : null;
+        nextQuarter = mergeNextQuarterConsensus(fmpNext, yahooNext);
+      })(),
+    );
+  }
+
+  if (needNews) {
+    tasks.push(
+      (async () => {
+        news = await settled(intelProvider.getNewsSentiment?.(ticker) ?? Promise.resolve([]));
+      })(),
+    );
+  }
+
+  if (needInsiders) {
+    tasks.push(
+      (async () => {
+        insiders = await settled(
+          intelProvider.getInsiderTransactions?.(ticker) ?? Promise.resolve([]),
+        );
+      })(),
+    );
+  }
+
+  if (needCongress) {
+    tasks.push(
+      (async () => {
+        congress = await loadCongress(ticker);
+      })(),
+    );
+  }
+
+  if (needAlt) {
+    tasks.push(
+      (async () => {
+        peers = await loadPeers(ticker);
+      })(),
+    );
+  }
+
+  await Promise.all(tasks);
+
+  return assembleReport({
+    ticker,
+    generatedAt,
+    updatedAt: new Date().toISOString(),
+    cached: false,
+    quote,
+    overview,
+    history,
+    income,
+    earnings,
+    nextQuarter,
+    news,
+    insiders,
+    congress,
+    peers,
+    usedYahoo,
+    usedFmp,
+  });
+}

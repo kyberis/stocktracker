@@ -1,36 +1,31 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
-import { YahooProvider } from "@/lib/api-providers/yahoo";
-import {
-  fetchEarningsBySymbol,
-  fetchHouseTradesBySymbol,
-  fetchSenateTradesBySymbol,
-  fetchStockPeers,
-  type FmpCongressTrade,
-} from "@/lib/api-providers/fmp";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
-import type {
-  CompanyOverview,
-  FundamentalData,
-  IncomeStatementReport,
-  EarningsReport,
-  InsiderTransaction,
-  NewsArticle,
-  ProviderHistoricalPoint,
-  ProviderQuoteResult,
-} from "@/lib/api-providers/types";
 import { requireFeatureQuota, requireRateLimit, requireSession } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
-import { assembleReport, peerDistanceTo52wHigh } from "@/lib/company-analysis/assemble";
-import { getCompanyAnalysisCache, setCompanyAnalysisCache } from "@/lib/company-analysis/cache";
 import {
-  mergeNextQuarterConsensus,
-  pickNextQuarterFromEarningsRows,
-  type NextQuarterConsensus,
-} from "@/lib/company-analysis/next-quarter";
+  buildFullReport,
+  buildGapFillReport,
+  hasFmpKey,
+} from "@/lib/company-analysis/build-report";
+import {
+  COMPANY_ANALYSIS_WEEK_MS,
+  getCompanyAnalysisCache,
+  setCompanyAnalysisCache,
+} from "@/lib/company-analysis/cache";
+import {
+  findReportGaps,
+  mergeReportFill,
+  WEEK_MS,
+} from "@/lib/company-analysis/gaps";
 import { parseTicker } from "@/lib/company-analysis/ticker";
-import type { CompanyAnalysisPeer, CompanyAnalysisReport } from "@/lib/company-analysis/types";
+import type { CompanyAnalysisReport } from "@/lib/company-analysis/types";
+import {
+  companyAnalysisReportCacheKey,
+  getCompanyAnalysisDbCache,
+  upsertCompanyAnalysisDbCache,
+} from "@/lib/db";
 import { json401 } from "@/lib/log-unauthorized";
 import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import {
@@ -39,87 +34,65 @@ import {
 } from "@/lib/market-data/resolve-provider";
 import { deferTask } from "@/lib/task-runner";
 import { withMetrics } from "@/lib/with-metrics";
-import { getGlobalFmpApiKey } from "@/lib/db";
 
-const CACHE_TTL_MS = 30 * 60 * 1000;
-
-function hasFmpKey(): boolean {
-  return Boolean(getGlobalFmpApiKey() || process.env.FMP_API_KEY);
+function memCacheKey(ticker: string): string {
+  return `company-analysis:${ticker}`;
 }
 
-async function settled<T>(p: Promise<T>): Promise<T | null> {
+function expiresAtIso(fromMs = Date.now()): string {
+  return new Date(fromMs + WEEK_MS).toISOString();
+}
+
+function withCacheFlag(report: CompanyAnalysisReport, cached: boolean): CompanyAnalysisReport {
+  return { ...report, cached };
+}
+
+async function loadDurableReport(ticker: string): Promise<{
+  report: CompanyAnalysisReport;
+  generatedAt: string;
+  expiresAt: string;
+} | null> {
+  const mem = getCompanyAnalysisCache<CompanyAnalysisReport>(memCacheKey(ticker));
+  if (mem?.generatedAt) {
+    return {
+      report: mem,
+      generatedAt: mem.generatedAt,
+      expiresAt: expiresAtIso(Date.parse(mem.generatedAt) || Date.now()),
+    };
+  }
+
+  const row = await getCompanyAnalysisDbCache(companyAnalysisReportCacheKey(ticker));
+  if (!row) return null;
   try {
-    return await p;
-  } catch (err) {
-    console.warn("[company-analysis] source failed:", err instanceof Error ? err.message : err);
+    const report = JSON.parse(row.payloadJson) as CompanyAnalysisReport;
+    if (!report?.ticker || !report?.fundamentals) return null;
+    const generatedAt = report.generatedAt || row.generatedAt;
+    const normalized = {
+      ...report,
+      generatedAt,
+      updatedAt: report.updatedAt || row.updatedAt,
+    };
+    setCompanyAnalysisCache(memCacheKey(ticker), normalized, COMPANY_ANALYSIS_WEEK_MS);
+    return { report: normalized, generatedAt, expiresAt: row.expiresAt };
+  } catch {
     return null;
   }
 }
 
-async function loadCongress(symbol: string): Promise<FmpCongressTrade[] | null> {
-  if (!hasFmpKey()) return null;
-  try {
-    const [senate, house] = await Promise.all([
-      fetchSenateTradesBySymbol(symbol),
-      fetchHouseTradesBySymbol(symbol),
-    ]);
-    return [...senate, ...house];
-  } catch (err) {
-    console.warn("[company-analysis] congress failed:", err instanceof Error ? err.message : err);
-    return null;
-  }
-}
-
-async function loadPeers(symbol: string): Promise<CompanyAnalysisPeer[]> {
-  if (!hasFmpKey()) return [];
-  try {
-    const peerTickers = (await fetchStockPeers(symbol)).filter((t) => t !== symbol).slice(0, 6);
-    if (!peerTickers.length) return [];
-    const yahoo = new YahooProvider();
-    const quotes = await Promise.all(
-      peerTickers.map(async (t) => {
-        const q = await settled(yahoo.getQuote(t));
-        return { ticker: t, q };
-      }),
-    );
-    return quotes.map(({ ticker, q }) => ({
-      ticker,
-      name: q?.shortName ?? null,
-      price: q?.regularMarketPrice ?? null,
-      distanceTo52wHighPct: peerDistanceTo52wHigh(
-        q?.regularMarketPrice ?? null,
-        q?.fiftyTwoWeekHigh ?? null,
-      ),
-      ma50: null,
-      ma200: null,
-    }));
-  } catch (err) {
-    console.warn("[company-analysis] peers failed:", err instanceof Error ? err.message : err);
-    return [];
-  }
-}
-
-async function loadFmpNextQuarter(symbol: string): Promise<NextQuarterConsensus | null> {
-  if (!hasFmpKey()) return null;
-  try {
-    const rows = await fetchEarningsBySymbol(symbol);
-    return pickNextQuarterFromEarningsRows(
-      rows.map((r) => ({
-        reportDate: r.date || null,
-        fiscalPeriodEnd: r.fiscalDateEnding || null,
-        epsActual: r.eps,
-        epsEstimated: r.epsEstimated,
-        revenueActual: r.revenue,
-        revenueEstimated: r.revenueEstimated,
-      })),
-    );
-  } catch (err) {
-    console.warn(
-      "[company-analysis] FMP earnings outlook failed:",
-      err instanceof Error ? err.message : err,
-    );
-    return null;
-  }
+async function persistReport(
+  report: CompanyAnalysisReport,
+  generatedAt: string,
+  expiresAt: string,
+): Promise<void> {
+  setCompanyAnalysisCache(memCacheKey(report.ticker), report, COMPANY_ANALYSIS_WEEK_MS);
+  await upsertCompanyAnalysisDbCache({
+    cacheKey: companyAnalysisReportCacheKey(report.ticker),
+    ticker: report.ticker,
+    kind: "report",
+    payload: report,
+    generatedAt,
+    expiresAt,
+  });
 }
 
 export const GET = withMetrics("/api/company-analysis", async (request: NextRequest) => {
@@ -132,16 +105,79 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
     );
   }
 
-  const cacheKey = `company-analysis:${ticker}`;
   const fresh = searchParams.get("fresh") === "1";
+
   if (!fresh) {
-    const cached = getCompanyAnalysisCache<CompanyAnalysisReport>(cacheKey);
-    if (cached) {
+    const durable = await loadDurableReport(ticker);
+    if (durable) {
       const { error: sessionErr } = await requireSession(request);
       if (sessionErr) return sessionErr;
-      return Response.json({ ...cached, cached: true }, {
-        headers: { "Cache-Control": "private, max-age=1800" },
-      });
+
+      const gaps = findReportGaps(durable.report);
+      if (gaps.length === 0) {
+        return Response.json(withCacheFlag(durable.report, true), {
+          headers: { "Cache-Control": "private, max-age=3600" },
+        });
+      }
+
+      // Partial refill for unavailable sections only — no company_analysis quota.
+      const { session } = await requireSession(request);
+      const rl = await requireRateLimit(request, "fmp");
+      if (rl.error) {
+        return Response.json(withCacheFlag(durable.report, true), {
+          headers: { "Cache-Control": "private, max-age=3600" },
+        });
+      }
+
+      const fundamentalsResolved = await resolveFundamentalsProvider(session?.userId ?? null);
+      const premiumResolved = await resolvePremiumStockDataProvider(
+        session?.userId ?? null,
+        "intelligence",
+      );
+      const provider = fundamentalsResolved.provider;
+      const intelProvider = premiumResolved?.provider ?? provider;
+
+      try {
+        const fill = await buildGapFillReport(
+          ticker,
+          gaps,
+          {
+            provider,
+            intelProvider,
+            usedYahoo: fundamentalsResolved.backend === "yahoo" || !premiumResolved,
+            usedFmp: Boolean(premiumResolved) || hasFmpKey(),
+          },
+          durable.generatedAt,
+        );
+        const merged = withCacheFlag(
+          {
+            ...mergeReportFill(durable.report, fill),
+            generatedAt: durable.generatedAt,
+            updatedAt: new Date().toISOString(),
+          },
+          true,
+        );
+        await persistReport(merged, durable.generatedAt, durable.expiresAt);
+        return jsonWithCallCount(provider, merged, {
+          headers: { "Cache-Control": "private, max-age=3600" },
+        });
+      } catch (err) {
+        console.warn(
+          "[company-analysis] gap fill failed:",
+          err instanceof Error ? err.message : err,
+        );
+        return Response.json(withCacheFlag(durable.report, true), {
+          headers: { "Cache-Control": "private, max-age=3600" },
+        });
+      } finally {
+        const count = (provider.callCount ?? 0) + (intelProvider.callCount ?? 0);
+        if (session?.userId && count > 0) {
+          const backend = premiumResolved?.backend ?? fundamentalsResolved.backend;
+          if (backend === "fmp") {
+            deferTask(() => recordMarketDataUsageAsync(session.userId, "fmp", count));
+          }
+        }
+      }
     }
   }
 
@@ -160,56 +196,20 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
   const provider = fundamentalsResolved.provider;
   const intelProvider = premiumResolved?.provider ?? provider;
 
-  let quote: ProviderQuoteResult | null = null;
-  let overview: CompanyOverview | null = null;
-  let history: ProviderHistoricalPoint[] | null = null;
-  let income: FundamentalData<IncomeStatementReport> | null = null;
-  let earnings: FundamentalData<EarningsReport> | null = null;
-  let news: NewsArticle[] | null = null;
-  let insiders: InsiderTransaction[] | null = null;
-  let congress: FmpCongressTrade[] | null = null;
-  let peers: CompanyAnalysisPeer[] = [];
-  let nextQuarter: NextQuarterConsensus | null = null;
-
   try {
-    const yahooOutlook = new YahooProvider();
-    const [
-      quoteRes,
-      overviewRes,
-      historyRes,
-      incomeRes,
-      earningsRes,
-      newsRes,
-      insiderRes,
-      congressRes,
-      yahooNext,
-      fmpNext,
-    ] = await Promise.all([
-      settled(provider.getQuote(ticker)),
-      settled(provider.getOverview?.(ticker) ?? Promise.resolve(null)),
-      settled(provider.getHistorical(ticker, "1y")),
-      settled(provider.getIncomeStatement?.(ticker) ?? Promise.resolve(null)),
-      settled(provider.getEarnings?.(ticker) ?? Promise.resolve(null)),
-      settled(intelProvider.getNewsSentiment?.(ticker) ?? Promise.resolve([])),
-      settled(intelProvider.getInsiderTransactions?.(ticker) ?? Promise.resolve([])),
-      loadCongress(ticker),
-      settled(yahooOutlook.getNextQuarterConsensus(ticker)),
-      loadFmpNextQuarter(ticker),
-    ]);
+    const generatedAt = new Date().toISOString();
+    const report = await buildFullReport(
+      ticker,
+      {
+        provider,
+        intelProvider,
+        usedYahoo: fundamentalsResolved.backend === "yahoo" || !premiumResolved,
+        usedFmp: Boolean(premiumResolved) || hasFmpKey(),
+      },
+      generatedAt,
+    );
 
-    quote = quoteRes;
-    overview = overviewRes;
-    history = historyRes;
-    income = incomeRes;
-    earnings = earningsRes;
-    news = newsRes;
-    insiders = insiderRes;
-    congress = congressRes;
-    peers = await loadPeers(ticker);
-    // Prefer FMP unreported row (exact revenue/EPS) when present; fill gaps from Yahoo 0q.
-    nextQuarter = mergeNextQuarterConsensus(fmpNext, yahooNext);
-
-    if (!quote && !overview) {
+    if (!report) {
       await refundFeatureQuota(session.userId, "company_analysis");
       return Response.json(
         { error: `No market data available for ${ticker}` },
@@ -217,28 +217,10 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
       );
     }
 
-    const report = assembleReport({
-      ticker,
-      updatedAt: new Date().toISOString(),
-      cached: false,
-      quote,
-      overview,
-      history,
-      income,
-      earnings,
-      nextQuarter,
-      news,
-      insiders,
-      congress,
-      peers,
-      usedYahoo: fundamentalsResolved.backend === "yahoo" || !premiumResolved,
-      usedFmp: Boolean(premiumResolved) || hasFmpKey(),
-    });
-
-    setCompanyAnalysisCache(cacheKey, report, CACHE_TTL_MS);
+    await persistReport(report, generatedAt, expiresAtIso());
 
     return jsonWithCallCount(provider, report, {
-      headers: { "Cache-Control": "private, max-age=1800" },
+      headers: { "Cache-Control": "private, max-age=3600" },
     });
   } catch (err) {
     console.error("[company-analysis] Error:", err instanceof Error ? err.message : err);

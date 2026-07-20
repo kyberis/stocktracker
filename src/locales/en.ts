@@ -3212,6 +3212,7 @@ const en: TranslationStrings = {
   companyAnalysisBack: "Back to search",
   companyAnalysisOpenAsset: "Open asset page",
   companyAnalysisUpdatedAt: "Data updated",
+  companyAnalysisGeneratedAt: "Generated",
   companyAnalysisCached: "cached",
   companyAnalysisQuote: "Quote",
   companyAnalysisMarketCap: "Market cap",
@@ -3224,6 +3225,7 @@ const en: TranslationStrings = {
   companyAnalysisChart: "Price chart",
   companyAnalysisChartFallback:
     "If the interactive chart does not load (ad blocker or privacy settings), open it on",
+  companyAnalysisWebEnriched: "Web-enriched",
   companyAnalysisBusiness: "What does the company do?",
   companyAnalysisCompetitive: "Competitive position",
   companyAnalysisInterpretationBadge: "Analysis / interpretation",

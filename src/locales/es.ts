@@ -3210,6 +3210,7 @@ const es: TranslationStrings = {
   companyAnalysisBack: "Volver a la búsqueda",
   companyAnalysisOpenAsset: "Abrir ficha del activo",
   companyAnalysisUpdatedAt: "Datos actualizados el",
+  companyAnalysisGeneratedAt: "Generado el",
   companyAnalysisCached: "en caché",
   companyAnalysisQuote: "Cotización",
   companyAnalysisMarketCap: "Capitalización",
@@ -3222,6 +3223,7 @@ const es: TranslationStrings = {
   companyAnalysisChart: "Gráfico de cotización",
   companyAnalysisChartFallback:
     "Si el gráfico interactivo no carga (bloqueador o privacidad), ábrelo en",
+  companyAnalysisWebEnriched: "Enriquecido con web",
   companyAnalysisBusiness: "¿A qué se dedica?",
   companyAnalysisCompetitive: "Posición competitiva",
   companyAnalysisInterpretationBadge: "Análisis / interpretación",

@@ -26,7 +26,7 @@ Authenticated users open **Analysis** in primary nav, search a US-listed symbol 
 
 ## 4. Data model
 
-No new tables. In-memory TTL cache in `src/lib/company-analysis/cache.ts`. Quota key `company_analysis` in `src/lib/platform-config.ts`.
+Durable Turso table `company_analysis_cache` (migration 121) keyed by `report:TICKER` / `narrative:TICKER:lang`, with `generated_at`, `expires_at` (7 days), and `last_gap_retry_at` for narrative AI gap fills. In-process L1 mirror in `src/lib/company-analysis/cache.ts`. Quota key `company_analysis` in `src/lib/platform-config.ts` (charged on full report build only).
 
 ## 5. API surface
 
@@ -47,7 +47,10 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 
 - `Promise.allSettled`-style per source; one failure does not block others.
 - Technical levels computed from real 1y history (`computeTechnicalLevels`).
-- Next-quarter forecast: Yahoo `earningsTrend`/`calendarEvents` plus FMP `/earnings` unreported row (consensus revenue/EPS). Company guidance stays unavailable unless an explicit guidance source exists.
+- Next-quarter forecast: Yahoo `earningsTrend`/`calendarEvents` plus FMP `/earnings` unreported row (consensus revenue/EPS). Company guidance stays unavailable unless an explicit guidance source exists (API or cited web extract).
+- Last reported EPS: Yahoo earnings history, with FMP `/earnings` fill when Yahoo lacks `reportedEPS`.
+- Narratives (`POST /api/company-analysis/narrative`): optional Tavily web context for outlook/risks/competitive; numeric web fills require `sourceUrl`; durable 7-day cache with merge-only gap retries (AI gap retry at most once per 24h).
+- Report + narrative serve from week cache when present; UI shows `generatedAt`. Unavailable sections (Congress/news/insiders/EPS/etc.) are refetched and merged without wiping good fields; full rebuild only on miss or `?fresh=1`.
 - Insider tags: RSU/tax/options → neutral; open-market buy/sell → buy/sell.
 - Congress: FMP `senate-trades` + `house-trades`; empty state when none in 12 months.
 - Sector alternative: peer with better distance-to-52w-high than subject; editorial disclaimer required.
@@ -57,6 +60,7 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 
 - Yahoo / FMP market data (existing providers)
 - TradingView widgetembed (browser iframe for the price chart)
+- Tavily web search (optional; same key as AID) for narrative enrichment
 - FMP Congress + stock-peers
 - AI Gateway for narratives
 

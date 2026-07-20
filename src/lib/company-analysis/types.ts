@@ -41,12 +41,16 @@ export interface CompanyAnalysisFundamentals {
   nextReportDate: string | null;
   companyGuidanceRevenue: number | null;
   companyGuidanceRevenueVarPct: number | null;
+  /** Present only when guidance came from a citable web/API source. */
+  companyGuidanceSourceUrl: string | null;
   consensusRevenue: number | null;
   consensusRevenueVarPct: number | null;
   consensusEps: number | null;
   consensusEpsVarPct: number | null;
   lastEps: number | null;
   lastEpsVsConsensusPct: number | null;
+  /** Present when last EPS was filled from a citable web fallback. */
+  lastEpsSourceUrl: string | null;
   lastRevenue: number | null;
   lastRevenueYoyPct: number | null;
 }
@@ -126,6 +130,9 @@ export interface CompanyAnalysisSource {
 
 export interface CompanyAnalysisReport {
   ticker: string;
+  /** When this analysis payload was first successfully generated (stable across week cache). */
+  generatedAt: string;
+  /** Last time any section was written (full build or gap fill). */
   updatedAt: string;
   cached: boolean;
   quote: CompanyAnalysisQuote | null;
