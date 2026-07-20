@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.38",
+    date: "2026-07-21",
+    title: "Company analysis narrative AI fix",
+    titleTranslations: {
+      es: "Corrección de narrativa AI del análisis de empresa",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Company analysis competitive position and sector outlook now generate again: the narrative endpoint no longer sends JSON response_format, which gpt-4.1-nano rejects via the AI Gateway.",
+        translations: {
+          es: "La posición competitiva y el outlook de sector del análisis de empresa vuelven a generarse: el endpoint de narrativa ya no envía response_format JSON, que gpt-4.1-nano rechaza en el AI Gateway.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.37",
     date: "2026-07-21",
     title: "Company analysis week cache",

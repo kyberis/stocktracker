@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
@@ -301,7 +302,7 @@ export const POST = withMetrics("/api/company-analysis/narrative", async (reques
 
   const systemPrompt = `You write short informational company-analysis narratives for a portfolio tracker.
 Rules:
-- Respond ONLY with a JSON object with keys: description, competitive, sectorOutlook, risks, technicalReading, insiderReading, companyGuidanceRevenue, companyGuidanceRevenueVarPct, companyGuidanceSourceUrl, lastEps, lastEpsSourceUrl, webSources, usedWeb.
+- Respond ONLY with a JSON object with keys: description, competitive, sectorOutlook, risks, technicalReading, insiderReading, companyGuidanceRevenue, companyGuidanceRevenueVarPct, companyGuidanceSourceUrl, lastEps, lastEpsSourceUrl, webSources, usedWeb. No markdown fences.
 - Use language: ${lang}.
 - Prefer filling these missing fields: ${missingHint}. Leave already-known fields empty string/null if unsure; the server merges.
 - Primary ground truth is the structured JSON. You may ALSO use WEB CONTEXT snippets (with URLs) when provided.
@@ -324,13 +325,14 @@ Rules:
   const started = Date.now();
 
   try {
+    // Do not send response_format:json_object — Folio uses gpt-4.1-nano which rejects it
+    // via the AI Gateway (invalid_request_error on response_format). Prompt + parse is enough.
     const openaiRes = await fetchGatewayChatCompletions(
       {
         model,
         stream: false,
         max_tokens: 1600,
         temperature: 0.3,
-        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -342,6 +344,12 @@ Rules:
     const durationMs = Date.now() - started;
     if (!openaiRes.ok) {
       const errText = await openaiRes.text();
+      console.error(
+        "[company-analysis/narrative] AI error:",
+        openaiRes.status,
+        model,
+        errText.slice(0, 500),
+      );
       insertAiLog({
         userId: session.userId,
         source: "company_analysis_narrative",
