@@ -88,7 +88,7 @@ const nextConfig = {
               "connect-src 'self' https://challenges.cloudflare.com https://vitals.vercel-insights.com https://va.vercel-scripts.com https://vercel.live https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://pagead2.googlesyndication.com",
               /* Voice message preview plays MediaRecorder output via blob: URLs */
               "media-src 'self' blob: https:",
-              "frame-src https://challenges.cloudflare.com https://vercel.live",
+              "frame-src https://challenges.cloudflare.com https://vercel.live https://s.tradingview.com https://www.tradingview.com",
             ].join("; "),
           },
         ],

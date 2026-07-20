@@ -404,6 +404,15 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3">Stock ticker symbols requested</td>
                   </tr>
                   <tr>
+                    <td className="py-3 pr-6">TradingView</td>
+                    <td className="py-3 pr-6">Interactive price charts on company analysis (/analisis)</td>
+                    <td className="py-3">
+                      Ticker and exchange shown in the embedded chart URL only; your browser may also
+                      send standard technical data (IP address, user agent) to TradingView when the
+                      widget loads. No portfolio holdings or account identifiers are sent by trefolio.
+                    </td>
+                  </tr>
+                  <tr>
                     <td className="py-3 pr-6">CoinLore</td>
                     <td className="py-3 pr-6">Cryptocurrency market data</td>
                     <td className="py-3">No user data sent — only public market data retrieved</td>

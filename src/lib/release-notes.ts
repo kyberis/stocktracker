@@ -38,6 +38,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "La previsión del próximo trimestre ahora muestra el consenso de analistas de ventas y EPS (outlook Yahoo + earnings FMP no reportados cuando hay datos), sin presentar el consenso como guidance de la compañía.",
         },
       },
+      {
+        type: "improvement",
+        text: "Company analysis chart uses an interactive TradingView embed (weekly candles, 24-month range) matching the analysis report template, with CSP allowlisting and a fallback link.",
+        translations: {
+          es: "El gráfico de análisis de empresa usa un embed interactivo de TradingView (velas semanales, rango 24 meses) como en la plantilla del informe, con CSP permitido y enlace de respaldo.",
+        },
+      },
     ],
   },
   {

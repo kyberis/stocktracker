@@ -39,7 +39,7 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 
 ## 6. UI surface
 
-- Reuses trefolio `.card` / tokens / `StockChart` (no TradingView, no per-company brand palette).
+- Reuses trefolio `.card` / tokens; price chart is a TradingView `widgetembed` (weekly / 24M) with a public-chart fallback link (no custom TradingView brand palette on the rest of the page).
 - Sections: header stats, chart, business, competitive, sector/risks, fundamentals tables, technicals, news, insiders, Congress, sector alternative (editorial banner), footer sources.
 - Missing fields show **Data unavailable** — never fabricated numbers.
 
@@ -56,6 +56,7 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 ## 8. External dependencies
 
 - Yahoo / FMP market data (existing providers)
+- TradingView widgetembed (browser iframe for the price chart)
 - FMP Congress + stock-peers
 - AI Gateway for narratives
 

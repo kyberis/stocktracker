@@ -3220,6 +3220,8 @@ const es: TranslationStrings = {
   companyAnalysisVsCloseHigh12mHint: "Distancia al máximo de cierre de los últimos 12 meses",
   companyAnalysisCloseHigh12m: "Máximo de cierre 12m",
   companyAnalysisChart: "Gráfico de cotización",
+  companyAnalysisChartFallback:
+    "Si el gráfico interactivo no carga (bloqueador o privacidad), ábrelo en",
   companyAnalysisBusiness: "¿A qué se dedica?",
   companyAnalysisCompetitive: "Posición competitiva",
   companyAnalysisInterpretationBadge: "Análisis / interpretación",

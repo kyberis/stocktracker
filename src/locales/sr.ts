@@ -1034,6 +1034,7 @@ const sr: TranslationStrings = {
   companyAnalysisVsCloseHigh12mHint: "Distance to max close in the last 12 months",
   companyAnalysisCloseHigh12m: "12m close high",
   companyAnalysisChart: "Price chart",
+  companyAnalysisChartFallback: "If the interactive chart does not load (ad blocker or privacy settings), open it on",
   companyAnalysisBusiness: "What does the company do?",
   companyAnalysisCompetitive: "Competitive position",
   companyAnalysisInterpretationBadge: "Analysis / interpretation",

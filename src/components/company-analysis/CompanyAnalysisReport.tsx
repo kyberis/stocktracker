@@ -12,7 +12,10 @@ import {
   formatAnalysisNumber,
 } from "@/lib/company-analysis/format";
 
-const StockChart = dynamic(() => import("@/components/StockChart"), { ssr: false });
+const CompanyAnalysisChart = dynamic(
+  () => import("@/components/company-analysis/CompanyAnalysisChart"),
+  { ssr: false },
+);
 
 function Unavailable({ label }: { label: string }) {
   return <span className="text-[color:var(--muted)]">{label}</span>;
@@ -246,7 +249,10 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
         <h2 id="ca-chart" className="mb-3 text-xl font-semibold text-[color:var(--foreground)]">
           {t("companyAnalysisChart")}
         </h2>
-        <StockChart ticker={report.ticker} exchange={report.profile?.exchange || ""} displayCurrency={currency} />
+        <CompanyAnalysisChart
+          ticker={report.ticker}
+          exchange={report.profile?.exchange || ""}
+        />
       </section>
 
       <section className="card space-y-3 p-6" aria-labelledby="ca-desc">
