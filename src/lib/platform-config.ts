@@ -117,6 +117,7 @@ export type FeatureQuotaKey =
   | "economic_indicators"
   | "screener"
   | "stock_evaluation"
+  | "company_analysis"
   | "crypto_pro"
   | "tax_report"
   | "portfolio_score"
@@ -154,6 +155,7 @@ export const FEATURE_QUOTAS: Record<FeatureQuotaKey, FeatureQuotaConfig> = {
   economic_indicators: { free: 20, pro: 500, window: "month", label: "Economic indicator lookups" },
   screener: { free: 10, pro: 200, window: "month", label: "Screener queries" },
   stock_evaluation: { free: 15, pro: 300, window: "month", label: "Stock evaluations" },
+  company_analysis: { free: 5, pro: 200, window: "month", label: "Company analysis reports" },
   crypto_pro: { free: 50, pro: 1_000, window: "month", label: "Crypto premium lookups" },
   tax_report: { free: 1, pro: 12, window: "year", label: "Tax reports" },
   portfolio_score: { free: 2, pro: 20, window: "month", label: "Portfolio scores" },

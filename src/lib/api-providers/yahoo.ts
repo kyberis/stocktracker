@@ -545,6 +545,77 @@ export class YahooProvider implements StockDataProvider {
     }
   }
 
+  /**
+   * Current-quarter (0q) analyst consensus + next earnings date from Yahoo.
+   * Used by company analysis when earnings history alone has no unreported row.
+   */
+  async getNextQuarterConsensus(symbol: string): Promise<{
+    nextReportDate: string | null;
+    nextQuarterLabel: string | null;
+    consensusEps: number | null;
+    consensusRevenue: number | null;
+    consensusEpsVarPct: number | null;
+    consensusRevenueVarPct: number | null;
+  } | null> {
+    const end = providerRequestDuration.startTimer({
+      provider: "yahoo",
+      operation: "earnings_outlook",
+    });
+    let ok = false;
+    try {
+      const result = await yahooFinance.quoteSummary(symbol, {
+        modules: ["earningsTrend", "calendarEvents"],
+      });
+      ok = true;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const trend = (result.earningsTrend?.trend ?? []) as any[];
+      const currentQ = trend.find((t) => t?.period === "0q") ?? null;
+      const earningsCal = result.calendarEvents?.earnings;
+
+      const reportRaw = Array.isArray(earningsCal?.earningsDate)
+        ? earningsCal.earningsDate[0]
+        : null;
+      const nextReportDate = reportRaw
+        ? new Date(reportRaw as string | Date).toISOString().slice(0, 10)
+        : null;
+
+      const fiscalEnd = currentQ?.endDate
+        ? new Date(currentQ.endDate as string | Date).toISOString().slice(0, 10)
+        : null;
+
+      const epsAvg =
+        numOrNull(currentQ?.earningsEstimate?.avg) ??
+        numOrNull(earningsCal?.earningsAverage);
+      const revAvg =
+        numOrNull(currentQ?.revenueEstimate?.avg) ??
+        numOrNull(earningsCal?.revenueAverage);
+
+      if (epsAvg == null && revAvg == null && !nextReportDate) return null;
+
+      const epsGrowth = numOrNull(currentQ?.earningsEstimate?.growth);
+      const revGrowth = numOrNull(currentQ?.revenueEstimate?.growth);
+
+      return {
+        nextReportDate,
+        nextQuarterLabel: fiscalEnd || nextReportDate,
+        consensusEps: epsAvg,
+        consensusRevenue: revAvg,
+        consensusEpsVarPct: epsGrowth != null ? epsGrowth * 100 : null,
+        consensusRevenueVarPct: revGrowth != null ? revGrowth * 100 : null,
+      };
+    } catch {
+      return null;
+    } finally {
+      end();
+      providerRequestsTotal.inc({
+        provider: "yahoo",
+        operation: "earnings_outlook",
+        status: ok ? "success" : "error",
+      });
+    }
+  }
+
   async getETFHoldings(symbol: string): Promise<ETFHoldingsData | null> {
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "etf_holdings" });
     let ok = false;

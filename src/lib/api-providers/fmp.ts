@@ -115,6 +115,28 @@ export async function fetchEarningsCalendar(
   }));
 }
 
+/** Per-symbol earnings history + upcoming consensus (stable `/earnings`). */
+export async function fetchEarningsBySymbol(
+  symbol: string,
+  limit = 12,
+): Promise<FmpEarningsEvent[]> {
+  const raw = await fmpFetch<FmpStableEarningsResponse>("earnings", {
+    symbol: symbol.toUpperCase(),
+    limit: String(limit),
+  });
+  return raw.map((e) => ({
+    date: e.date,
+    symbol: e.symbol || symbol.toUpperCase(),
+    eps: e.epsActual,
+    epsEstimated: e.epsEstimated,
+    time: "--",
+    revenue: e.revenueActual,
+    revenueEstimated: e.revenueEstimated,
+    fiscalDateEnding: "",
+    updatedFromDate: e.lastUpdated || "",
+  }));
+}
+
 export async function fetchEconomicCalendar(
   from: Date,
   to: Date
@@ -151,4 +173,102 @@ export async function fetchSplitsCalendar(
     from: toISODate(from),
     to: toISODate(to),
   });
+}
+
+/** Raw FMP senate/house trade row (field names vary slightly by endpoint). */
+export interface FmpCongressTradeRaw {
+  symbol?: string;
+  firstName?: string;
+  lastName?: string;
+  office?: string;
+  district?: string;
+  senateOwner?: string;
+  houseOwner?: string;
+  disclosureDate?: string;
+  transactionDate?: string;
+  transactionType?: string;
+  owner?: string;
+  assetDescription?: string;
+  assetType?: string;
+  type?: string;
+  amount?: string;
+  link?: string;
+  url?: string;
+  ptrLink?: string;
+}
+
+export interface FmpCongressTrade {
+  chamber: "senate" | "house";
+  name: string;
+  officeOrDistrict: string;
+  transactionDate: string;
+  disclosureDate: string | null;
+  transactionType: string;
+  amountRange: string | null;
+  assetDescription: string | null;
+  url: string | null;
+  symbol: string;
+}
+
+function mapCongressRow(row: FmpCongressTradeRaw, chamber: "senate" | "house"): FmpCongressTrade {
+  const first = (row.firstName ?? "").trim();
+  const last = (row.lastName ?? "").trim();
+  const name = [first, last].filter(Boolean).join(" ") || (row.office ?? "Unknown");
+  const officeOrDistrict =
+    chamber === "senate"
+      ? String(row.office ?? row.senateOwner ?? "").trim()
+      : String(row.district ?? row.office ?? row.houseOwner ?? "").trim();
+  const link = row.link ?? row.url ?? row.ptrLink ?? null;
+  return {
+    chamber,
+    name,
+    officeOrDistrict,
+    transactionDate: String(row.transactionDate ?? row.disclosureDate ?? ""),
+    disclosureDate: row.disclosureDate ? String(row.disclosureDate) : null,
+    transactionType: String(row.type ?? row.transactionType ?? ""),
+    amountRange: row.amount ? String(row.amount) : null,
+    assetDescription: row.assetDescription ? String(row.assetDescription) : null,
+    url: link ? String(link) : null,
+    symbol: String(row.symbol ?? "").toUpperCase(),
+  };
+}
+
+export async function fetchSenateTradesBySymbol(symbol: string): Promise<FmpCongressTrade[]> {
+  const raw = await fmpFetch<FmpCongressTradeRaw>("senate-trades", { symbol: symbol.toUpperCase() });
+  return raw.map((r) => mapCongressRow(r, "senate"));
+}
+
+export async function fetchHouseTradesBySymbol(symbol: string): Promise<FmpCongressTrade[]> {
+  const raw = await fmpFetch<FmpCongressTradeRaw>("house-trades", { symbol: symbol.toUpperCase() });
+  return raw.map((r) => mapCongressRow(r, "house"));
+}
+
+/** Peer tickers for a symbol (FMP stock-peers). Returns empty array if unavailable. */
+export async function fetchStockPeers(symbol: string): Promise<string[]> {
+  const url = new URL(`${FMP_BASE}/stock-peers`);
+  url.searchParams.set("apikey", getApiKey());
+  url.searchParams.set("symbol", symbol.toUpperCase());
+  const res = await fetch(url.toString());
+  const text = await res.text();
+  if (!res.ok || text.includes("Restricted Endpoint")) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return [];
+  }
+  if (Array.isArray(parsed)) {
+    const first = parsed[0] as { peersList?: string[]; symbol?: string } | string | undefined;
+    if (first && typeof first === "object" && Array.isArray(first.peersList)) {
+      return first.peersList.map((p) => String(p).toUpperCase()).filter(Boolean);
+    }
+    return parsed
+      .map((p) => (typeof p === "string" ? p : (p as { symbol?: string }).symbol))
+      .filter((p): p is string => typeof p === "string" && p.length > 0)
+      .map((p) => p.toUpperCase());
+  }
+  if (parsed && typeof parsed === "object" && Array.isArray((parsed as { peersList?: string[] }).peersList)) {
+    return ((parsed as { peersList: string[] }).peersList).map((p) => p.toUpperCase());
+  }
+  return [];
 }

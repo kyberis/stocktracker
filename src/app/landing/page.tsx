@@ -155,7 +155,7 @@ function getFeatureCards(t: T) {
     { icon: "office", title: t("landingCardOfficeTitle"), desc: t("landingCardOfficeDesc"), badge: "Trefolio" },
     { icon: "upload", title: t("landingCardImportTitle"), desc: t("landingCardImportDesc") },
     { icon: "chart", title: t("landingCardPerfTitle"), desc: t("landingCardPerfDesc") },
-    { icon: "beaker", title: t("landingCardSimulatorTitle"), desc: t("landingCardSimulatorDesc") },
+    { icon: "beaker", title: t("landingCardCompanyAnalysisTitle"), desc: t("landingCardCompanyAnalysisDesc") },
     { icon: "calendar", title: t("landingCardEventsTitle"), desc: t("landingCardEventsDesc") },
     { icon: "globe", title: t("landingCardLangsTitle"), desc: t("landingCardLangsDesc"), badge: t("landingCardLangsBadge") },
   ];

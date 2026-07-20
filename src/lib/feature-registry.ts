@@ -303,6 +303,34 @@ export const featureDomains: FeatureDomain[] = [
     skillFile: ".cursor/skills/engineer-integrations/SKILL.md",
   },
   {
+    id: "company-analysis",
+    name: "Company Analysis",
+    description:
+      "Primary-nav /analisis report: fundamentals, technicals, news, Form 4 insiders, US Congress trading, and momentum-based sector alternative.",
+    status: "beta",
+    version: "0.1.0",
+    components: [
+      { path: "src/app/(app)/analisis/page.tsx", description: "Ticker search landing" },
+      { path: "src/app/(app)/analisis/[ticker]/page.tsx", description: "Analysis report page" },
+      { path: "src/components/company-analysis/CompanyAnalysisReport.tsx", description: "Report UI" },
+    ],
+    apiRoutes: [
+      { method: "GET", path: "/api/company-analysis", auth: "session", description: "Aggregated analysis payload" },
+      { method: "POST", path: "/api/company-analysis/narrative", auth: "session", description: "Grounded AI narrative JSON" },
+    ],
+    libs: [
+      { path: "src/lib/company-analysis/assemble.ts", description: "Report assembly + integrity rules" },
+      { path: "src/lib/api-providers/fmp.ts", description: "Congress trades + stock peers" },
+    ],
+    patterns: [
+      "Strict ticker validation before any provider call",
+      "Per-source failure → section unavailable, never invent numbers",
+      "Editorial banner on sector alternative",
+    ],
+    tech: ["Yahoo Finance", "FMP", "AI Gateway"],
+    skillFile: ".cursor/skills/engineer-integrations/SKILL.md",
+  },
+  {
     id: "alerts",
     name: "Price Alerts",
     description:

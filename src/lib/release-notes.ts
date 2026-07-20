@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.35",
+    date: "2026-07-20",
+    title: "Company analysis section",
+    titleTranslations: {
+      es: "Sección de análisis de empresa",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "New /analisis section: search a ticker and get a fundamentals + technicals report with news, Form 4 insider trades, US Congress trading (FMP), and a momentum-based sector alternative — with clear “data unavailable” states and editorial disclaimers.",
+        translations: {
+          es: "Nueva sección /analisis: busca un ticker y obtén un informe de fundamentales y técnico con noticias, insider Form 4, trading del Congreso EE. UU. (FMP) y una alternativa de sector por momentum — con estados “dato no disponible” y disclaimers editoriales claros.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Next-quarter forecast now shows analyst consensus revenue and EPS (Yahoo earnings outlook + FMP unreported earnings when available), without treating consensus as company guidance.",
+        translations: {
+          es: "La previsión del próximo trimestre ahora muestra el consenso de analistas de ventas y EPS (outlook Yahoo + earnings FMP no reportados cuando hay datos), sin presentar el consenso como guidance de la compañía.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.34",
     date: "2026-07-17",
     title: "DEGIRO corporate-action import fix",

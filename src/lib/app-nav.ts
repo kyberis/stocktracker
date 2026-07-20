@@ -91,6 +91,16 @@ export const APP_NAV_PRIMARY: AppNavPrimaryItem[] = [
     mobileWebMore: true,
   },
   {
+    href: "/analisis",
+    labelKey: "companyAnalysisNav",
+    tierBadge: "pro",
+    matches: exactOrChild("/analisis"),
+    desktop: true,
+    desktopTopStrip: false,
+    mobileWebTab: false,
+    mobileWebMore: true,
+  },
+  {
     href: "/daily-digests",
     labelKey: "dailyDigestsNav",
     matches: exactOrChild("/daily-digests"),
@@ -214,6 +224,7 @@ export type AppNavSidebarIconId =
   | "tools"
   | "office"
   | "explore"
+  | "analisis"
   | "newspaper"
   | "crypto"
   | "indicators"
@@ -226,6 +237,7 @@ export const APP_NAV_SIDEBAR_ICON: Record<string, AppNavSidebarIconId> = {
   "/tools": "tools",
   "/office": "office",
   "/explore": "explore",
+  "/analisis": "analisis",
   "/daily-digests": "newspaper",
   "/crypto": "crypto",
   "/economic-indicators": "indicators",
