@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-265 routes.
+271 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -43,6 +43,7 @@
 | `/api/admin/market-digests/[id]/send` | POST | [`src/app/api/admin/market-digests/[id]/send/route.ts`](../../src/app/api/admin/market-digests/[id]/send/route.ts) |
 | `/api/admin/market-digests/[id]/send-report` | GET | [`src/app/api/admin/market-digests/[id]/send-report/route.ts`](../../src/app/api/admin/market-digests/[id]/send-report/route.ts) |
 | `/api/admin/materialize-portfolio-snapshots` | POST | [`src/app/api/admin/materialize-portfolio-snapshots/route.ts`](../../src/app/api/admin/materialize-portfolio-snapshots/route.ts) |
+| `/api/admin/mcp-analytics` | GET | [`src/app/api/admin/mcp-analytics/route.ts`](../../src/app/api/admin/mcp-analytics/route.ts) |
 | `/api/admin/moat-auto-tickers` | GET, POST, DELETE | [`src/app/api/admin/moat-auto-tickers/route.ts`](../../src/app/api/admin/moat-auto-tickers/route.ts) |
 | `/api/admin/notifications` | GET, POST | [`src/app/api/admin/notifications/route.ts`](../../src/app/api/admin/notifications/route.ts) |
 | `/api/admin/openai-key` | GET, PUT | [`src/app/api/admin/openai-key/route.ts`](../../src/app/api/admin/openai-key/route.ts) |
@@ -134,6 +135,8 @@
 | `/api/chat/[token]/reactions` | POST | [`src/app/api/chat/[token]/reactions/route.ts`](../../src/app/api/chat/[token]/reactions/route.ts) |
 | `/api/chat/[token]/typing` | POST | [`src/app/api/chat/[token]/typing/route.ts`](../../src/app/api/chat/[token]/typing/route.ts) |
 | `/api/chats` | GET | [`src/app/api/chats/route.ts`](../../src/app/api/chats/route.ts) |
+| `/api/company-analysis` | GET | [`src/app/api/company-analysis/route.ts`](../../src/app/api/company-analysis/route.ts) |
+| `/api/company-analysis/narrative` | POST | [`src/app/api/company-analysis/narrative/route.ts`](../../src/app/api/company-analysis/narrative/route.ts) |
 | `/api/contact` | POST | [`src/app/api/contact/route.ts`](../../src/app/api/contact/route.ts) |
 | `/api/cron/aid-digest` | GET | [`src/app/api/cron/aid-digest/route.ts`](../../src/app/api/cron/aid-digest/route.ts) |
 | `/api/cron/aid-finpulse` | GET | [`src/app/api/cron/aid-finpulse/route.ts`](../../src/app/api/cron/aid-finpulse/route.ts) |
@@ -193,7 +196,10 @@
 | `/api/internal/prodops-query` | POST | [`src/app/api/internal/prodops-query/route.ts`](../../src/app/api/internal/prodops-query/route.ts) |
 | `/api/internal/telegram-link-status` | GET | [`src/app/api/internal/telegram-link-status/route.ts`](../../src/app/api/internal/telegram-link-status/route.ts) |
 | `/api/market-insights` | GET | [`src/app/api/market-insights/route.ts`](../../src/app/api/market-insights/route.ts) |
-| `/api/mcp/user/[transport]` | GET, POST, DELETE | [`src/app/api/mcp/user/[transport]/route.ts`](../../src/app/api/mcp/user/[transport]/route.ts) |
+| `/api/mcp/analytics/event` | POST | [`src/app/api/mcp/analytics/event/route.ts`](../../src/app/api/mcp/analytics/event/route.ts) |
+| `/api/mcp/personal-access-tokens` | GET, POST | [`src/app/api/mcp/personal-access-tokens/route.ts`](../../src/app/api/mcp/personal-access-tokens/route.ts) |
+| `/api/mcp/personal-access-tokens/[id]` | DELETE | [`src/app/api/mcp/personal-access-tokens/[id]/route.ts`](../../src/app/api/mcp/personal-access-tokens/[id]/route.ts) |
+| `/api/mcp/user/[transport]` | GET, POST, DELETE, OPTIONS | [`src/app/api/mcp/user/[transport]/route.ts`](../../src/app/api/mcp/user/[transport]/route.ts) |
 | `/api/membership-grant/activate` | POST | [`src/app/api/membership-grant/activate/route.ts`](../../src/app/api/membership-grant/activate/route.ts) |
 | `/api/metrics` | GET | [`src/app/api/metrics/route.ts`](../../src/app/api/metrics/route.ts) |
 | `/api/moat-reports` | GET, POST | [`src/app/api/moat-reports/route.ts`](../../src/app/api/moat-reports/route.ts) |

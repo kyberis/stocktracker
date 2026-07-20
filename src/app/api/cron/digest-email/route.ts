@@ -38,7 +38,18 @@ interface ParsedEmail {
   extractedLinks: { url: string; text: string }[];
 }
 
+const DIGEST_EMAIL_PAUSED = true;
+
 async function processDigestEmail(): Promise<Record<string, unknown>> {
+  // Market digest email pipeline is paused — no longer processed.
+  // Kept as a no-op so manual admin triggers do not hit expired Gmail tokens.
+  if (DIGEST_EMAIL_PAUSED) {
+    return {
+      skipped: true,
+      reason: "digest-email cron paused — market digests no longer processed",
+    };
+  }
+
   if (!isGmailConfigured()) {
     return { skipped: true, reason: "Gmail credentials not configured" };
   }

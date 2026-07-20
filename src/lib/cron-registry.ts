@@ -6,12 +6,14 @@
 export interface CronJob {
   /** Name used in withCronLogging() and the cron_runs table */
   name: string;
-  /** API route path (must match vercel.json) */
+  /** API route path (must match vercel.json when not paused) */
   path: string;
-  /** Cron schedule expression (must match vercel.json) */
+  /** Cron schedule expression (must match vercel.json when not paused) */
   schedule: string;
   /** Human-readable description */
   description: string;
+  /** When true, job is intentionally not scheduled in vercel.json */
+  paused?: boolean;
 }
 
 export const CRON_REGISTRY: CronJob[] = [
@@ -103,7 +105,8 @@ export const CRON_REGISTRY: CronJob[] = [
     name: "digest-email",
     path: "/api/cron/digest-email",
     schedule: "*/15 * * * *",
-    description: "Poll Gmail for new market digest emails, rewrite with AI, and store as drafts for admin review",
+    description: "PAUSED — market digests no longer processed (was: poll Gmail, AI rewrite, store drafts)",
+    paused: true,
   },
   {
     name: "moat-sync",

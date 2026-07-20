@@ -31,6 +31,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Los informes y narrativas de análisis de empresa se guardan 7 días y se cargan desde caché; la UI muestra cuándo se generó el análisis. Solo se reintentan las secciones faltantes o no disponibles.",
         },
       },
+      {
+        type: "fix",
+        text: "Paused the market digest-email cron (Gmail poll every 15 minutes) so expired Gmail tokens no longer spam production errors.",
+        translations: {
+          es: "Pausado el cron digest-email del market digest (Gmail cada 15 minutos) para que tokens de Gmail caducados dejen de llenar de errores la producción.",
+        },
+      },
     ],
   },
   {

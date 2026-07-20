@@ -114,15 +114,19 @@ function genApiSurface() {
 function genCronRegistry() {
   const file = join(ROOT, "src/lib/cron-registry.ts");
   const src = readFileSync(file, "utf8");
-  const re = /{\s*name:\s*"(?<name>[^"]+)",\s*path:\s*"(?<path>[^"]+)",\s*schedule:\s*"(?<schedule>[^"]+)",\s*description:\s*"(?<description>[^"]+)"/g;
+  const re =
+    /{\s*name:\s*"(?<name>[^"]+)",\s*path:\s*"(?<path>[^"]+)",\s*schedule:\s*"(?<schedule>[^"]+)",\s*description:\s*"(?<description>[^"]+)"(?:,\s*paused:\s*(?<paused>true))?/g;
   const lines = [writeHeader("Cron registry"), ""];
-  lines.push("Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Schedules must match `vercel.json`.");
+  lines.push(
+    "Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active schedules must match `vercel.json`; entries with `paused: true` are intentionally omitted from Vercel crons.",
+  );
   lines.push("");
   lines.push("| Name | Schedule | Path | Description |");
   lines.push("|------|----------|------|-------------|");
   for (const m of src.matchAll(re)) {
-    const { name, path, schedule, description } = m.groups as Record<string, string>;
-    lines.push(`| \`${name}\` | \`${schedule}\` | \`${path}\` | ${description} |`);
+    const { name, path, schedule, description, paused } = m.groups as Record<string, string>;
+    const sched = paused === "true" ? `**paused** (was \`${schedule}\`)` : `\`${schedule}\``;
+    lines.push(`| \`${name}\` | ${sched} | \`${path}\` | ${description} |`);
   }
   writeFileSync(join(OUT, "cron-registry.md"), lines.join("\n"));
 }

@@ -20,6 +20,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `cash_entries` | [`src/lib/db/admin-raw-export.ts`](../../src/lib/db/admin-raw-export.ts) |
 | `cash_entries_new` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `cash_entries_v2` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `company_analysis_cache` | [`src/lib/db/company-analysis-cache.ts`](../../src/lib/db/company-analysis-cache.ts) |
 | `cron_executions` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `device_interest` | [`src/lib/db/device-interest.ts`](../../src/lib/db/device-interest.ts) |
 | `device_notifications` | [`src/lib/db/device-notifications.ts`](../../src/lib/db/device-notifications.ts) |
@@ -37,6 +38,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `market_digest_sources` | [`src/lib/db/market-digests.ts`](../../src/lib/db/market-digests.ts) |
 | `market_digest_translations` | [`src/lib/db/market-digests.ts`](../../src/lib/db/market-digests.ts) |
 | `market_digests` | [`src/lib/db/market-digests.ts`](../../src/lib/db/market-digests.ts) |
+| `mcp_analytics_events` | [`src/lib/db/mcp-analytics.ts`](../../src/lib/db/mcp-analytics.ts) |
 | `moat_auto_tickers` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `moat_cache` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `moat_reports` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |

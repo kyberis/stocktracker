@@ -2478,8 +2478,17 @@ function CronJobsCard() {
               const s = statsMap.get(cron.name);
               return (
                 <tr key={cron.name} className="border-t border-gray-100 dark:border-slate-700">
-                  <td className="p-2 font-medium text-gray-900 dark:text-white whitespace-nowrap">{cron.name}</td>
-                  <td className="p-2 text-gray-500 dark:text-slate-400 font-mono whitespace-nowrap">{cron.schedule}</td>
+                  <td className="p-2 font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                    {cron.name}
+                    {cron.paused ? (
+                      <span className="ml-1.5 inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                        paused
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="p-2 text-gray-500 dark:text-slate-400 font-mono whitespace-nowrap">
+                    {cron.paused ? "—" : cron.schedule}
+                  </td>
                   <td className="p-2 text-gray-500 dark:text-slate-400 max-w-52 truncate">{cron.description}</td>
                   <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s ? s.totalRuns : "—"}</td>
                   <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s ? `${s.successRate}%` : "—"}</td>
