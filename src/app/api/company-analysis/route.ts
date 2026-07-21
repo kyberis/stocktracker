@@ -10,7 +10,8 @@ import {
   hasFmpKey,
 } from "@/lib/company-analysis/build-report";
 import {
-  COMPANY_ANALYSIS_WEEK_MS,
+  COMPANY_ANALYSIS_L1_TTL_MS,
+  deleteCompanyAnalysisCacheKey,
   getCompanyAnalysisCache,
   setCompanyAnalysisCache,
 } from "@/lib/company-analysis/cache";
@@ -23,6 +24,7 @@ import { parseTicker } from "@/lib/company-analysis/ticker";
 import type { CompanyAnalysisReport } from "@/lib/company-analysis/types";
 import {
   companyAnalysisReportCacheKey,
+  deleteCompanyAnalysisDbCacheForTicker,
   getCompanyAnalysisDbCache,
   upsertCompanyAnalysisDbCache,
 } from "@/lib/db";
@@ -72,7 +74,7 @@ async function loadDurableReport(ticker: string): Promise<{
       generatedAt,
       updatedAt: report.updatedAt || row.updatedAt,
     };
-    setCompanyAnalysisCache(memCacheKey(ticker), normalized, COMPANY_ANALYSIS_WEEK_MS);
+    setCompanyAnalysisCache(memCacheKey(ticker), normalized, COMPANY_ANALYSIS_L1_TTL_MS);
     return { report: normalized, generatedAt, expiresAt: row.expiresAt };
   } catch {
     return null;
@@ -84,7 +86,7 @@ async function persistReport(
   generatedAt: string,
   expiresAt: string,
 ): Promise<void> {
-  setCompanyAnalysisCache(memCacheKey(report.ticker), report, COMPANY_ANALYSIS_WEEK_MS);
+  setCompanyAnalysisCache(memCacheKey(report.ticker), report, COMPANY_ANALYSIS_L1_TTL_MS);
   await upsertCompanyAnalysisDbCache({
     cacheKey: companyAnalysisReportCacheKey(report.ticker),
     ticker: report.ticker,
@@ -184,6 +186,11 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
   const { session, error } = await requireFeatureQuota(request, "company_analysis");
   if (error) return error;
   if (!session) return json401(request, { source: "api/company-analysis", reason: "no_session" });
+
+  if (fresh) {
+    deleteCompanyAnalysisCacheKey(memCacheKey(ticker));
+    await deleteCompanyAnalysisDbCacheForTicker(ticker);
+  }
 
   const rl = await requireRateLimit(request, "fmp");
   if (rl.error) {

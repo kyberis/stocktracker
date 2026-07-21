@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n";
@@ -82,6 +82,8 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [regenerating, setRegenerating] = useState(false);
+  const [narrativeLoading, setNarrativeLoading] = useState(false);
   const [narrative, setNarrative] = useState<
     (WebNumericEnrichment & {
       description?: string;
@@ -92,26 +94,42 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
       insiderReading?: string;
     }) | null
   >(null);
+  const freshNarrativeRef = useRef(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/company-analysis?symbol=${encodeURIComponent(ticker)}`);
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || t("companyAnalysisLoadError"));
-        setReport(null);
-        return;
+  const load = useCallback(
+    async (opts?: { fresh?: boolean }) => {
+      const fresh = opts?.fresh === true;
+      if (fresh) {
+        setRegenerating(true);
+        setNarrative(null);
+        freshNarrativeRef.current = true;
+      } else {
+        setLoading(true);
       }
-      setReport(data as Report);
-    } catch {
-      setError(t("companyAnalysisLoadError"));
-      setReport(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [ticker, t]);
+      setError(null);
+      try {
+        const qs = new URLSearchParams({ symbol: ticker });
+        if (fresh) qs.set("fresh", "1");
+        const res = await fetch(`/api/company-analysis?${qs.toString()}`);
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || t("companyAnalysisLoadError"));
+          if (!fresh) setReport(null);
+          freshNarrativeRef.current = false;
+          return;
+        }
+        setReport(data as Report);
+      } catch {
+        setError(t("companyAnalysisLoadError"));
+        if (!fresh) setReport(null);
+        freshNarrativeRef.current = false;
+      } finally {
+        setLoading(false);
+        if (!fresh) setRegenerating(false);
+      }
+    },
+    [ticker, t],
+  );
 
   useEffect(() => {
     load();
@@ -120,7 +138,10 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
   useEffect(() => {
     if (!report) return;
     let cancelled = false;
+    const fresh = freshNarrativeRef.current;
+    freshNarrativeRef.current = false;
     (async () => {
+      setNarrativeLoading(true);
       try {
         const res = await fetch("/api/company-analysis/narrative", {
           method: "POST",
@@ -128,6 +149,7 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
           body: JSON.stringify({
             language,
             ticker: report.ticker,
+            fresh,
             profile: report.profile,
             quote: report.quote,
             fundamentals: report.fundamentals,
@@ -141,6 +163,11 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
         if (!cancelled) setNarrative(data);
       } catch {
         /* narrative is optional */
+      } finally {
+        if (!cancelled) {
+          setNarrativeLoading(false);
+          setRegenerating(false);
+        }
       }
     })();
     return () => {
@@ -230,8 +257,22 @@ export default function CompanyAnalysisReportView({ ticker }: { ticker: string }
               {t("companyAnalysisGeneratedAt")}{" "}
               {formatAnalysisDateTime(report.generatedAt || report.updatedAt, language) ?? na}
               {report.cached ? ` · ${t("companyAnalysisCached")}` : ""}
+              {narrativeLoading || regenerating
+                ? ` · ${t("companyAnalysisRegenerating")}`
+                : ""}
             </p>
           </div>
+          <button
+            type="button"
+            className="btn-secondary text-sm shrink-0"
+            disabled={loading || regenerating || narrativeLoading}
+            onClick={() => load({ fresh: true })}
+            title={t("companyAnalysisRegenerateHint")}
+          >
+            {regenerating || narrativeLoading
+              ? t("companyAnalysisRegenerating")
+              : t("companyAnalysisRegenerate")}
+          </button>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           <StatCard

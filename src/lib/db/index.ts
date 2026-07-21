@@ -570,6 +570,8 @@ export {
   companyAnalysisNarrativeCacheKey,
   getCompanyAnalysisDbCache,
   upsertCompanyAnalysisDbCache,
+  deleteCompanyAnalysisDbCache,
+  deleteCompanyAnalysisDbCacheForTicker,
 } from "./company-analysis-cache";
 
 export {

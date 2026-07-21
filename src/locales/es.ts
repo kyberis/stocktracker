@@ -3212,6 +3212,12 @@ const es: TranslationStrings = {
   companyAnalysisUpdatedAt: "Datos actualizados el",
   companyAnalysisGeneratedAt: "Generado el",
   companyAnalysisCached: "en caché",
+  holdingOpenAnalysis: "Análisis",
+  holdingOpenMoat: "Moat",
+  companyAnalysisRegenerate: "Regenerar",
+  companyAnalysisRegenerating: "Regenerando…",
+  companyAnalysisRegenerateHint:
+    "Borra el análisis guardado de este ticker y lo vuelve a generar con datos en vivo (consume cuota).",
   companyAnalysisQuote: "Cotización",
   companyAnalysisMarketCap: "Capitalización",
   companyAnalysisRevenueYoy: "Ventas YoY",

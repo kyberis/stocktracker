@@ -18,6 +18,7 @@ import type { Holding, QuoteData } from "@/lib/types";
 import AlertBadge from "./AlertBadge";
 import Sparkline from "./Sparkline";
 import HoldingHealthBadge from "./HoldingHealthBadge";
+import HoldingResearchLinks from "./HoldingResearchLinks";
 import { useTheme } from "@/lib/theme-context";
 import { useReturnDisplay } from "./PortfolioTable";
 
@@ -188,6 +189,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
             {assetTypeBadge}
             <AlertBadge ticker={holding.ticker} />
             {refreshSpinner}
+            <HoldingResearchLinks holding={holding} className="hidden sm:flex shrink-0" />
           </div>
           <div className="flex items-center gap-4 text-xs shrink-0 tabular-nums">
             <HoldingHealthBadge holding={holding} size={22} />
@@ -249,6 +251,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
             </span>
           </div>
         </div>
+        <HoldingResearchLinks holding={holding} variant="pills" className="mt-3" />
       </div>
     );
   }
@@ -269,6 +272,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
               <p className="text-xs text-zinc-500">{holding.ticker}{holding.exchange ? ` · ${holding.exchange}` : ""}</p>
               {assetTypeBadge}
             </div>
+            <HoldingResearchLinks holding={holding} className="mt-1" />
           </div>
           <HoldingHealthBadge holding={holding} size={26} />
           <Sparkline ticker={holding.ticker} width={64} height={24} positive={hasQuote ? dayIsPositive : undefined} className="mx-2 shrink-0" />
@@ -322,6 +326,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
               {refreshSpinner}
             </div>
             <p className="mt-0.5 truncate text-[11px] text-[color:var(--muted)]">{priceInfoDefault}</p>
+            <HoldingResearchLinks holding={holding} className="mt-1" />
           </div>
         </div>
         <HoldingHealthBadge holding={holding} size={24} />

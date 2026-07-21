@@ -26,6 +26,7 @@ import TradePanel from "./stock-row/TradePanel";
 import AlertForm from "./AlertForm";
 import AlertBadge from "./AlertBadge";
 import TierFeatureBadge from "./TierFeatureBadge";
+import HoldingResearchLinks from "./HoldingResearchLinks";
 import dynamic from "next/dynamic";
 
 const StockChart = dynamic(() => import("./StockChart"), { ssr: false });
@@ -658,6 +659,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
                 <TierFeatureBadge requiredPlan="pro" size="xs" />
               </Link>
             )}
+            <HoldingResearchLinks holding={holding} className="text-sm" />
           </div>
 
           <div className="flex items-center gap-2">

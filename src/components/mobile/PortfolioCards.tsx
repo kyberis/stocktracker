@@ -15,6 +15,7 @@ import {
 } from "@/lib/utils";
 import type { Holding, QuoteData } from "@/lib/types";
 import AlertBadge from "@/components/AlertBadge";
+import HoldingResearchLinks from "@/components/HoldingResearchLinks";
 import { hapticImpact, hapticSelectionChanged } from "@/lib/native-haptics";
 
 const COLLAPSED_COUNT = 7;
@@ -66,9 +67,19 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
       : `${isPositive ? "+" : ""}${hasRate ? formatCurrency(gainLoss, baseCurrency) : "--"}`;
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => { hapticImpact("Light"); router.push(`/stock/${encodeURIComponent(holding.ticker)}`); }}
-      className="w-full text-left bg-white dark:bg-slate-800/80 rounded-2xl border border-gray-100 dark:border-slate-700/60 p-4 active:scale-[0.98] transition-transform"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          hapticImpact("Light");
+          router.push(`/stock/${encodeURIComponent(holding.ticker)}`);
+        }
+      }}
+      className="w-full text-left bg-white dark:bg-slate-800/80 rounded-2xl border border-gray-100 dark:border-slate-700/60 p-4 active:scale-[0.98] transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+      data-testid="holding-card"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -103,15 +114,24 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50 dark:border-slate-700/40">
-        <div className="flex gap-4 text-xs text-gray-500 dark:text-slate-400">
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50 dark:border-slate-700/40 gap-2">
+        <div className="flex gap-4 text-xs text-gray-500 dark:text-slate-400 min-w-0">
           <span>{holding.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} shares</span>
           <span>{hasRate ? formatCurrency(priceInBase, baseCurrency) : "--"}/ea</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <span
             role="button"
+            tabIndex={0}
             onClick={(e) => { e.stopPropagation(); hapticSelectionChanged(); onToggleReturn(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                hapticSelectionChanged();
+                onToggleReturn();
+              }
+            }}
             className={`text-xs font-medium tabular-nums cursor-pointer active:opacity-70 ${displayPositive ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
           >
             {returnText}
@@ -127,7 +147,8 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
           )}
         </div>
       </div>
-    </button>
+      <HoldingResearchLinks holding={holding} variant="pills" className="mt-3" />
+    </div>
   );
 });
 

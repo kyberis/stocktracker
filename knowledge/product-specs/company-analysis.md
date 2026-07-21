@@ -50,7 +50,7 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 - Next-quarter forecast: Yahoo `earningsTrend`/`calendarEvents` plus FMP `/earnings` unreported row (consensus revenue/EPS). Company guidance stays unavailable unless an explicit guidance source exists (API or cited web extract).
 - Last reported EPS: Yahoo earnings history, with FMP `/earnings` fill when Yahoo lacks `reportedEPS`.
 - Narratives (`POST /api/company-analysis/narrative`): optional Tavily web context for outlook/risks/competitive; numeric web fills require `sourceUrl`; durable 7-day cache with merge-only gap retries (AI gap retry at most once per 24h).
-- Report + narrative serve from week cache when present; UI shows `generatedAt`. Unavailable sections (Congress/news/insiders/EPS/etc.) are refetched and merged without wiping good fields; full rebuild only on miss or `?fresh=1`.
+- Report + narrative serve from week cache when present; UI shows `generatedAt`. Unavailable sections (Congress/news/insiders/EPS/etc.) are refetched and merged without wiping good fields; full rebuild only on miss or `?fresh=1` / UI **Regenerate** (clears Turso + L1 for that ticker, then rebuilds; charges quota).
 - Insider tags: RSU/tax/options → neutral; open-market buy/sell → buy/sell.
 - Congress: FMP `senate-trades` + `house-trades`; empty state when none in 12 months.
 - Sector alternative: peer with better distance-to-52w-high than subject; editorial disclaimer required.

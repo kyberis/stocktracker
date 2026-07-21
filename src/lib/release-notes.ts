@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.40",
+    date: "2026-07-21",
+    title: "Analysis and Moat from holdings",
+    titleTranslations: {
+      es: "Análisis y Moat desde posiciones",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Each portfolio holding on the home dashboard links to company analysis and Moat evaluation for that ticker.",
+        translations: {
+          es: "Cada posición de la cartera en la home enlaza al análisis de empresa y a la evaluación Moat de ese ticker.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.39",
+    date: "2026-07-21",
+    title: "Regenerate company analysis",
+    titleTranslations: {
+      es: "Regenerar análisis de empresa",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Company analysis pages include a Regenerate button that clears the week cache for that ticker and rebuilds report + AI narrative from live data.",
+        translations: {
+          es: "Las páginas de análisis de empresa incluyen un botón Regenerar que borra la caché semanal de ese ticker y reconstruye informe + narrativa AI con datos en vivo.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.38",
     date: "2026-07-21",
     title: "Company analysis narrative AI fix",

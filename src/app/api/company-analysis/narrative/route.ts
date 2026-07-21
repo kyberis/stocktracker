@@ -7,6 +7,7 @@ import { requireFeatureQuota, requireSession } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import {
   companyAnalysisNarrativeCacheKey,
+  deleteCompanyAnalysisDbCache,
   findUserById,
   getCompanyAnalysisDbCache,
   insertAiLog,
@@ -29,7 +30,8 @@ import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
 import { parseTicker } from "@/lib/company-analysis/ticker";
 import {
-  COMPANY_ANALYSIS_WEEK_MS,
+  COMPANY_ANALYSIS_L1_TTL_MS,
+  deleteCompanyAnalysisCacheKey,
   getCompanyAnalysisCache,
   setCompanyAnalysisCache,
 } from "@/lib/company-analysis/cache";
@@ -155,7 +157,7 @@ async function loadDurableNarrative(
     const narrative = JSON.parse(row.payloadJson) as NarrativeResult;
     const generatedAt = narrative.generatedAt || row.generatedAt;
     const normalized = { ...narrative, generatedAt };
-    setCompanyAnalysisCache(memKey(ticker, langCode), normalized, COMPANY_ANALYSIS_WEEK_MS);
+    setCompanyAnalysisCache(memKey(ticker, langCode), normalized, COMPANY_ANALYSIS_L1_TTL_MS);
     return {
       narrative: normalized,
       generatedAt,
@@ -176,7 +178,7 @@ async function persistNarrative(args: {
   lastGapRetryAt?: string | null;
 }): Promise<void> {
   const payload = { ...args.narrative, generatedAt: args.generatedAt };
-  setCompanyAnalysisCache(memKey(args.ticker, args.langCode), payload, COMPANY_ANALYSIS_WEEK_MS);
+  setCompanyAnalysisCache(memKey(args.ticker, args.langCode), payload, COMPANY_ANALYSIS_L1_TTL_MS);
   await upsertCompanyAnalysisDbCache({
     cacheKey: companyAnalysisNarrativeCacheKey(args.ticker, args.langCode),
     ticker: args.ticker,
@@ -235,6 +237,12 @@ export const POST = withMetrics("/api/company-analysis/narrative", async (reques
 
   const { error } = await requireFeatureQuota(request, "ai_consult");
   if (error) return error;
+
+  if (body.fresh) {
+    deleteCompanyAnalysisCacheKey(memKey(ticker, langCode));
+    await deleteCompanyAnalysisDbCache(companyAnalysisNarrativeCacheKey(ticker, langCode));
+    durableBase = null;
+  }
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session.plan || "free") as SubscriptionPlan;

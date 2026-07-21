@@ -93,3 +93,20 @@ export async function upsertCompanyAnalysisDbCache(args: {
     ],
   });
 }
+
+export async function deleteCompanyAnalysisDbCache(cacheKey: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `DELETE FROM company_analysis_cache WHERE cache_key = ?`,
+    args: [cacheKey],
+  });
+}
+
+/** Drop all cached report + narrative rows for a ticker (any language). */
+export async function deleteCompanyAnalysisDbCacheForTicker(ticker: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `DELETE FROM company_analysis_cache WHERE ticker = ?`,
+    args: [ticker.toUpperCase()],
+  });
+}
