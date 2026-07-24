@@ -196,6 +196,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [onboarding](onboarding.md) — first-time flow.
 - [pricing](pricing.md) — pricing section + `/pricing`.
 - [seo-metadata](seo-metadata.md) — sitemap/robots/llms.txt.
+- [studio-hub](studio-hub.md) — `/studio` public AI agents studio hub (Warren, Clara, Will, Renata, Roxana).
 
 ## Platform
 

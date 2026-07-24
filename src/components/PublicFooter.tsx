@@ -25,6 +25,7 @@ const PRODUCT_LINKS = [
   { label: "Features", href: "/landing#features" },
   { label: "Pricing", href: "/landing#pricing" },
   { label: "FAQ", href: "/landing#faq" },
+  { label: "AI Studio", href: "/studio" },
   { label: "Blog", href: "/blog" },
   { label: "Developer docs", href: "/docs" },
   { label: "Release Notes", href: "/releasenotes" },

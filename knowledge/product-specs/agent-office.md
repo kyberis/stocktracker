@@ -51,6 +51,7 @@ Guard: `requireTrefolioPro` in `src/lib/auth/guards.ts`.
 - Landing feature block + CTA → `/office` (`src/app/landing/page.tsx`).
 - Nav rail entry with Pro badge (`src/lib/app-nav.ts`).
 - Paywall uses `resolveIdpUpgradeHref({ feature: "office" })`.
+- Do not confuse with the public marketing hub at [`/studio`](studio-hub.md) (five-agent studio story for investors/partners).
 
 ## 7. Business logic
 

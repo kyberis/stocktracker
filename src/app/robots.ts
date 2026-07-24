@@ -18,6 +18,7 @@ const PUBLIC_ALLOW = [
   "/releasenotes",
   "/leaf",
   "/about",
+  "/studio",
   "/docs",
   "/docs/",
   "/api/docs",

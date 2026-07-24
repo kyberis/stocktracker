@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import TierIcon from "@/components/TierIcon";
 import PublicFooter from "@/components/PublicFooter";
+import AgentCard, { type AgentAccent } from "@/components/agents/AgentCard";
 import type { SubscriptionPlan } from "@/lib/types";
 import { LandingI18nProvider, useI18n, type TranslationKey } from "@/lib/i18n";
 import { SUPPORTED_LANGUAGES } from "@/lib/languages";
@@ -249,7 +249,7 @@ function getAgentsTeam(t: T) {
       description: t("landingAgentsWarrenDesc"),
       cta: t("landingAgentsWarrenCta"),
       href: "/signup",
-      accent: "emerald" as const,
+      accent: "emerald" as AgentAccent,
       iconSrc: "/avatars/warren-512.png",
     },
     {
@@ -259,7 +259,7 @@ function getAgentsTeam(t: T) {
       cta: t("landingAgentsClaraCta"),
       href: "https://clara.trefolio.com",
       external: true,
-      accent: "amber" as const,
+      accent: "amber" as AgentAccent,
       iconSrc: "/avatars/clara-512.png",
     },
     {
@@ -269,7 +269,7 @@ function getAgentsTeam(t: T) {
       cta: t("landingAgentsWillCta"),
       href: "https://will.trefolio.com",
       external: true,
-      accent: "violet" as const,
+      accent: "violet" as AgentAccent,
       iconSrc: "/avatars/will-512.png",
     },
   ];
@@ -407,6 +407,7 @@ function NavBar() {
   const navLinks = useMemo(() => {
     const links = [
       { href: "#features", label: t("landingNavFeatures") },
+      { href: "/studio", label: t("landingNavStudio"), isRoute: true },
       { href: "/landing/mcp", label: t("landingNavMcp"), isRoute: true },
       { href: "#pricing", label: t("landingNavPricing") },
       { href: "#faq", label: t("landingNavFaq") },
@@ -792,12 +793,6 @@ function AgentsTeamSection() {
   const sectionRef = useInViewOnce(sectionCb);
   const agents = useMemo(() => getAgentsTeam(t), [t]);
 
-  const accentClasses: Record<"emerald" | "amber" | "violet", { bg: string; ring: string; text: string; hoverBg: string }> = {
-    emerald: { bg: "bg-emerald-500", ring: "ring-emerald-500/30", text: "text-emerald-600", hoverBg: "hover:bg-emerald-600" },
-    amber: { bg: "bg-amber-500", ring: "ring-amber-500/30", text: "text-amber-600", hoverBg: "hover:bg-amber-600" },
-    violet: { bg: "bg-violet-500", ring: "ring-violet-500/30", text: "text-violet-600", hoverBg: "hover:bg-violet-600" },
-  };
-
   return (
     <section
       id="agents-team"
@@ -824,68 +819,38 @@ function AgentsTeamSection() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-          {agents.map((agent) => {
-            const c = accentClasses[agent.accent];
-            return (
-              <div
-                key={agent.name}
-                className="relative bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-              >
-                <div
-                  className={`w-14 h-14 rounded-xl bg-white ring-4 ${c.ring} flex items-center justify-center p-1.5 mb-5 overflow-hidden shrink-0`}
-                  aria-hidden
-                >
-                  <Image
-                    src={agent.iconSrc}
-                    alt=""
-                    width={48}
-                    height={48}
-                    className="object-contain w-full h-full"
-                    sizes="56px"
-                  />
-                </div>
-                <div className="mb-3">
-                  <h3 className="text-2xl font-bold text-slate-900">{agent.name}</h3>
-                  <p className={`text-sm font-semibold ${c.text} uppercase tracking-wider mt-0.5`}>
-                    {agent.role}
-                  </p>
-                </div>
-                <p className="text-slate-600 leading-relaxed mb-6">
-                  {agent.description}
-                </p>
-                {agent.external ? (
-                  <a
-                    href={agent.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => trackLanding("landing_cta_click", { cta: `agents_team_${agent.name.toLowerCase()}` })}
-                    className={`inline-flex items-center gap-2 ${c.bg} ${c.hoverBg} text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors`}
-                  >
-                    {agent.cta}
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  </a>
-                ) : (
-                  <Link
-                    href={agent.href}
-                    onClick={() => trackLanding("landing_cta_click", { cta: `agents_team_${agent.name.toLowerCase()}` })}
-                    className={`inline-flex items-center gap-2 ${c.bg} ${c.hoverBg} text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors`}
-                  >
-                    {agent.cta}
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </Link>
-                )}
-              </div>
-            );
-          })}
+          {agents.map((agent) => (
+            <AgentCard
+              key={agent.name}
+              name={agent.name}
+              role={agent.role}
+              description={agent.description}
+              accent={agent.accent}
+              iconSrc={agent.iconSrc}
+              href={agent.href}
+              cta={agent.cta}
+              external={agent.external}
+              onCtaClick={() =>
+                trackLanding("landing_cta_click", {
+                  cta: `agents_team_${agent.name.toLowerCase()}`,
+                })
+              }
+            />
+          ))}
         </div>
 
-        <p className="text-center text-sm text-slate-500 mt-10 max-w-2xl mx-auto">
-          {t("landingAgentsFreeNote")}
-        </p>
+        <div className="mt-10 flex flex-col items-center gap-3">
+          <p className="text-center text-sm text-slate-500 max-w-2xl">
+            {t("landingAgentsFreeNote")}
+          </p>
+          <Link
+            href="/studio"
+            onClick={() => trackLanding("landing_cta_click", { cta: "agents_team_studio" })}
+            className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+          >
+            {t("landingAgentsSeeAllStudio")}
+          </Link>
+        </div>
       </div>
     </section>
   );

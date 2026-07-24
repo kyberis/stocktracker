@@ -1560,6 +1560,7 @@ const nl: TranslationStrings = {
   syncConfidenceDismiss: "Verwijderen",
   realizedPl: "Gerealiseerde P&L",
   landingNavFeatures: "Kenmerken",
+  landingNavStudio: "Studio",
   landingNavPricing: "Prijzen",
   landingNavFaq: "FAQ",
   landingNavLogin: "Inloggen",
@@ -2896,6 +2897,7 @@ const nl: TranslationStrings = {
   landingAgentsWillDesc: "Captures voice notes and meeting transcripts, summarises them, and links related notes automatically. Ideal for investing journals and decision logs. Telegram bot today, web chat soon.",
   landingAgentsWillCta: "Try Will",
   landingAgentsFreeNote: "Free tier: 30 messages/day on each of Clara and Will, forever. Pro raises every limit to 200/day.",
+  landingAgentsSeeAllStudio: "See all five agents →",
   idpUnifiedBridgeHeadingLogin: "Unified sign-in",
   idpUnifiedBridgeHeadingSignup: "Unified registration",
   idpUnifiedBridgeBodyLogin:

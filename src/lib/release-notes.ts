@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.41",
+    date: "2026-07-25",
+    title: "trefolio Studio hub",
+    titleTranslations: {
+      es: "Hub trefolio Studio",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "New public /studio page presents all five AI agents (Warren, Clara, Will, Renata, Roxana) and the shared platform, linked from the homepage nav and footer.",
+        translations: {
+          es: "Nueva página pública /studio presenta los cinco agentes de IA (Warren, Clara, Will, Renata, Roxana) y la plataforma compartida, enlazada desde el menú y el pie de la homepage.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.40",
     date: "2026-07-21",
     title: "Analysis and Moat from holdings",

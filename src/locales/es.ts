@@ -1567,6 +1567,7 @@ const es: TranslationStrings = {
 
   // ─── Landing page ───
   landingNavFeatures: "Características",
+  landingNavStudio: "Studio",
   landingNavPricing: "Precios",
   landingNavFaq: "FAQ",
   landingNavLogin: "Iniciar sesión",
@@ -1999,6 +2000,7 @@ const es: TranslationStrings = {
   landingAgentsWillDesc: "Captura audios y transcripciones de reuniones, los resume y enlaza notas relacionadas automáticamente. Ideal para diarios de inversión y registros de decisiones. Bot de Telegram hoy, chat web pronto.",
   landingAgentsWillCta: "Probar Will",
   landingAgentsFreeNote: "Gratis: 30 mensajes/día en Clara y Will para siempre. Pro sube todos los límites a 200/día.",
+  landingAgentsSeeAllStudio: "Ver los cinco agentes →",
 
   landingDevDocsEyebrow: "Desarrolladores e IA",
   landingDevDocsHeading: "Conecta Cursor, Claude Code y tus agentes",
