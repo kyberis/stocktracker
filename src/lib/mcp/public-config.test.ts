@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 import {
   buildClaudeCodeMcpCliSnippet,
@@ -51,16 +51,12 @@ describe("mcp public config", () => {
 
 describe("resolveIdpDeveloperHref", () => {
   it("returns null when IdP issuer is unset in dev", () => {
-    const prevIssuer = process.env.IDP_ISSUER;
-    const prevBase = process.env.IDP_BASE_URL;
-    const prevNode = process.env.NODE_ENV;
-    delete process.env.IDP_ISSUER;
-    delete process.env.IDP_BASE_URL;
-    process.env.NODE_ENV = "development";
+    // `NODE_ENV` is readonly to TypeScript, so it has to be stubbed rather than assigned.
+    vi.stubEnv("IDP_ISSUER", undefined);
+    vi.stubEnv("IDP_BASE_URL", undefined);
+    vi.stubEnv("NODE_ENV", "development");
     expect(resolveIdpDeveloperHref({ from: "trefolio" })).toBeNull();
-    process.env.IDP_ISSUER = prevIssuer;
-    process.env.IDP_BASE_URL = prevBase;
-    process.env.NODE_ENV = prevNode;
+    vi.unstubAllEnvs();
   });
 
   it("builds developer URL from issuer", () => {
