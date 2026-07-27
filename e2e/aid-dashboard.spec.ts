@@ -31,12 +31,13 @@ test.describe("AID dashboard", () => {
     await page.goto("/aid");
     await dismissOverlays(page);
 
-    await expect(page.getByRole("button", { name: /Allocation|Asignación/i })).toBeVisible({ timeout: 15000 });
-    await page.getByRole("button", { name: /Allocation|Asignación/i }).click();
+    const allocBtn = page.getByRole("button", { name: "Allocation", exact: true });
+    await expect(allocBtn).toBeVisible({ timeout: 15000 });
+    await allocBtn.click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.getByRole("button", { name: /Close|Cerrar/i }).click();
 
-    await page.getByRole("button", { name: /Dividends|Dividendos/i }).click();
+    await page.getByRole("button", { name: /Dividends|Dividendos/i }).first().click();
     await expect(page.getByRole("dialog")).toBeVisible();
   });
 
@@ -45,7 +46,7 @@ test.describe("AID dashboard", () => {
     await page.goto("/aid");
     await dismissOverlays(page);
 
-    await expect(page.getByRole("button", { name: /Warren/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('button[aria-controls="aid-warren-sheet"]')).toBeVisible({ timeout: 15000 });
   });
 
   test("digest, feed, status and insights APIs work with aid_beta", async ({ request }) => {
