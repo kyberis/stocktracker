@@ -17,6 +17,7 @@ Cross-cutting patterns, principles, and non-obvious contracts that apply across 
 - [clara-idp-integration.md](clara-idp-integration.md) — Clara-side change list to become an OIDC client of `user.trefolio.com`.
 - [notetaker-will-integration.md](notetaker-will-integration.md) — How trefolio links to Will (the note-taking sister codebase).
 - [will-idp-integration.md](will-idp-integration.md) — Will-side change list to become an OIDC client of `user.trefolio.com`.
+- [kyberis-agent-os.md](kyberis-agent-os.md) — The shared agent platform (`@kyberis/agent-os`): duplication audit, module boundaries, design rules, adoption status.
 
 ## Cursor skills
 

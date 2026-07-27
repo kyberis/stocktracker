@@ -8,85 +8,67 @@
  * 3. `VERCEL_OIDC_TOKEN` (builds / `vercel env pull` for local dev)
  * 4. `STOCKTRACKER_OPENAI_API_KEY` (legacy env name)
  * 5. `platform_settings.openai_api_key` (admin-stored bearer)
+ *
+ * The resolution itself lives in `@kyberis/agent-os/runtime`, shared with Clara
+ * and Will. This file supplies the two things that are Warren's alone: the
+ * legacy env name and the admin-stored key.
  */
+
+import {
+  fetchGatewayChatCompletions as sharedFetchGatewayChatCompletions,
+  hasGatewayKeyInEnv,
+  resolveGatewayApiKey as sharedResolveGatewayApiKey,
+  toGatewayModelId,
+  VERCEL_AI_GATEWAY_BASE,
+  VERCEL_OIDC_REQUEST_HEADER,
+  type GatewayChatCompletionsBody,
+} from "@kyberis/agent-os/runtime";
 
 import { getPlatformSetting } from "@/lib/db/settings";
 
-export const VERCEL_AI_GATEWAY_BASE = "https://ai-gateway.vercel.sh/v1";
-
-/** Incoming request header where Vercel injects a short-lived OIDC JWT for AI Gateway. */
-export const VERCEL_OIDC_REQUEST_HEADER = "x-vercel-oidc-token";
+export {
+  toGatewayModelId,
+  VERCEL_AI_GATEWAY_BASE,
+  VERCEL_OIDC_REQUEST_HEADER,
+  type GatewayChatCompletionsBody,
+};
 
 const PLATFORM_LLM_KEY = "openai_api_key";
 
-/** Maps admin-configured bare IDs (e.g. `gpt-4o-mini`) to Gateway `provider/model` strings. */
-export function toGatewayModelId(model: string): string {
-  const t = model.trim();
-  if (!t) return "openai/gpt-4o-mini";
-  if (t.includes("/")) return t;
-  return `openai/${t}`;
-}
+/**
+ * Warren's chain, which is the shared default plus one legacy name. The
+ * ordering is data rather than code so Will and Clara can keep their own tail
+ * without any of us re-deriving the priority rules.
+ */
+const WARREN_GATEWAY_ENV_KEYS = [
+  "AI_GATEWAY_API_KEY",
+  "VERCEL_OIDC_TOKEN",
+  "STOCKTRACKER_OPENAI_API_KEY",
+] as const;
 
 /**
  * @param incomingHeaders Optional request headers from a Vercel Function (pass `request.headers` in API routes).
  */
 export async function resolveGatewayApiKey(incomingHeaders?: Headers): Promise<string | null> {
-  const explicit = process.env.AI_GATEWAY_API_KEY?.trim();
-  if (explicit) return explicit;
-
-  const fromVercelRequest = incomingHeaders?.get(VERCEL_OIDC_REQUEST_HEADER)?.trim();
-  if (fromVercelRequest) return fromVercelRequest;
-
-  const oidcEnv = process.env.VERCEL_OIDC_TOKEN?.trim();
-  if (oidcEnv) return oidcEnv;
-
-  const legacy = process.env.STOCKTRACKER_OPENAI_API_KEY?.trim();
-  if (legacy) return legacy;
-
-  const platform = (await getPlatformSetting(PLATFORM_LLM_KEY)).trim();
-  return platform || null;
+  return sharedResolveGatewayApiKey({
+    envKeys: WARREN_GATEWAY_ENV_KEYS,
+    headers: incomingHeaders,
+    fallback: async () => (await getPlatformSetting(PLATFORM_LLM_KEY)) || null,
+  });
 }
 
 /** Fast sync check for env vars only (excludes admin-stored platform key and OIDC headers). */
 export function hasAiGatewayKeyInEnv(): boolean {
-  return !!(
-    process.env.AI_GATEWAY_API_KEY?.trim() ||
-    process.env.VERCEL_OIDC_TOKEN?.trim() ||
-    process.env.STOCKTRACKER_OPENAI_API_KEY?.trim()
-  );
+  return hasGatewayKeyInEnv({ envKeys: WARREN_GATEWAY_ENV_KEYS });
 }
-
-export type GatewayChatCompletionsBody = {
-  model: string;
-  stream?: boolean;
-  stream_options?: { include_usage?: boolean };
-  max_tokens?: number;
-  temperature?: number;
-  messages?: unknown[];
-  response_format?: unknown;
-  [key: string]: unknown;
-};
 
 export async function fetchGatewayChatCompletions(
   body: GatewayChatCompletionsBody,
   options?: { headers?: Headers },
 ): Promise<Response> {
-  const apiKey = await resolveGatewayApiKey(options?.headers);
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: { message: "AI Gateway not configured" } }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  const payload = { ...body, model: toGatewayModelId(body.model) };
-
-  return fetch(`${VERCEL_AI_GATEWAY_BASE}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(payload),
+  return sharedFetchGatewayChatCompletions(body, {
+    envKeys: WARREN_GATEWAY_ENV_KEYS,
+    headers: options?.headers,
+    fallback: async () => (await getPlatformSetting(PLATFORM_LLM_KEY)) || null,
   });
 }

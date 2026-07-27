@@ -12,15 +12,22 @@
  * styling we use frequently; for that we wrap unescaped content in `*…*`.
  */
 
+import {
+  chunkMessage,
+  escapeMarkdownV2,
+  markdownToTelegramMarkdownV2,
+  stripMarkdown,
+  TELEGRAM_HARD_LIMIT,
+} from "@kyberis/agent-os/channels";
+import { encodeProposalCallback } from "@kyberis/agent-os/safety";
+
 import type { WarrenPart, WarrenProposal } from "@/lib/ai/warren/types";
 
-const TELEGRAM_HARD_LIMIT = 4096;
 const SPLIT_TARGET = 3500;
 
 /** Escape every MarkdownV2 special character. Safe for any user text. */
 export function escapeMarkdown(text: string): string {
-  if (!text) return "";
-  return text.replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, "\\$1");
+  return escapeMarkdownV2(text);
 }
 
 /** Build a `*bold*` span where the inner text is auto-escaped. */
@@ -84,159 +91,42 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 
 /**
  * Convert CommonMark-style Markdown produced by the AI (the same syntax
- * ChatGPT/Claude emit by default — `### Heading`, `**bold**`, `_italic_`,
- * `` `code` ``, ```` ```fenced``` ````, `[label](url)`, `- bullets`) into
- * Telegram MarkdownV2.
+ * ChatGPT/Claude emit by default) into Telegram MarkdownV2.
  *
  * Why this exists: Warren produces standard Markdown in `result.text`, but
  * Telegram's MarkdownV2 has a different syntax (`*` for bold instead of `**`)
  * and a long list of mandatory escape characters. Naively running
- * `escapeMarkdown(text)` makes Telegram render `### Adobe` and `**Price**`
- * as literal text. This function recognises and translates the common
- * structures, then escapes everything else.
+ * `escapeMarkdown(text)` makes Telegram render `### Adobe` and `**Price**` as
+ * literal text.
  *
- * Strategy: replace each formatted span with a sentinel containing the
- * already-rendered MarkdownV2, escape what's left, and finally restore the
- * sentinels. We use control chars (\u0001 / \u0002) as sentinel boundaries
- * because they aren't escaped by MarkdownV2 and don't appear in normal text.
+ * The translation now lives in `@kyberis/agent-os/channels`, shared with Clara
+ * and Will — a missed escape used to be three separate bugs.
  */
 export function commonMarkToTelegram(input: string): string {
-  if (!input) return "";
-
-  let text = input.replace(/\r\n/g, "\n");
-  const tokens: string[] = [];
-  const SEN_OPEN = "\u0001";
-  const SEN_CLOSE = "\u0002";
-  const push = (replacement: string): string => {
-    const i = tokens.length;
-    tokens.push(replacement);
-    return `${SEN_OPEN}${i}${SEN_CLOSE}`;
-  };
-
-  // Inside fenced/inline code, only ``` ` ``` and `\` need escaping.
-  const escapeCode = (s: string): string => s.replace(/([`\\])/g, "\\$1");
-
-  // Inside formatted spans (bold / italic / link label) every special char
-  // still needs MarkdownV2 escaping.
-  const escapeInner = (s: string): string =>
-    s.replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, "\\$1");
-
-  // 1) Fenced code blocks: ```lang\n...\n``` (handle before everything else
-  //    so `**bold**` inside code isn't interpreted).
-  text = text.replace(/```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```/g, (_, lang, body) => {
-    const safe = escapeCode(body.replace(/\n+$/, ""));
-    const fence = lang ? `\`\`\`${lang}\n${safe}\n\`\`\`` : `\`\`\`\n${safe}\n\`\`\``;
-    return push(fence);
-  });
-
-  // 2) Inline code: `foo`
-  text = text.replace(/`([^`\n]+)`/g, (_, body) => push(`\`${escapeCode(body)}\``));
-
-  // 3) Links: [label](url) — MarkdownV2 link, label is escaped.
-  text = text.replace(/\[([^\]\n]+)\]\(([^()\s]+)\)/g, (_, label, url) => {
-    const safeUrl = url.replace(/([\\)])/g, "\\$1");
-    return push(`[${escapeInner(label)}](${safeUrl})`);
-  });
-
-  // 4) ATX headings: `# Heading` … `###### Heading` → bold. Process before
-  //    bold/italic so the heading text is treated as plain content (avoids
-  //    nested `**` issues).
-  text = text.replace(/^(#{1,6})[ \t]+(.+?)[ \t]*$/gm, (_, _h, body) => {
-    // The AI sometimes wraps the heading in **double asterisks** even though
-    // headings already imply bold; strip them so we don't end up with
-    // visible `**` after restore.
-    const stripped = body
-      .replace(/^\*\*([\s\S]+)\*\*$/, "$1")
-      .replace(/^__([\s\S]+)__$/, "$1");
-    return push(`*${escapeInner(stripped)}*`);
-  });
-
-  // 5) Bold: **text** or __text__ → *text*
-  text = text.replace(/\*\*([^\n*]+?)\*\*/g, (_, body) => push(`*${escapeInner(body)}*`));
-  text = text.replace(/__([^\n_]+?)__/g, (_, body) => push(`*${escapeInner(body)}*`));
-
-  // 6) Italic: *text* or _text_ → _text_  (single delimiter, no whitespace
-  //    immediately inside, not surrounded by another of the same delimiter).
-  text = text.replace(
-    /(^|[^*\w\u0001])\*(?=\S)([^\n*]+?)(?<=\S)\*(?!\w)/g,
-    (_match, pre: string, body: string) => `${pre}${push(`_${escapeInner(body)}_`)}`,
-  );
-  text = text.replace(
-    /(^|[^_\w\u0001])_(?=\S)([^\n_]+?)(?<=\S)_(?!\w)/g,
-    (_match, pre: string, body: string) => `${pre}${push(`_${escapeInner(body)}_`)}`,
-  );
-
-  // 7) Bullet lists: lines starting with `- `, `* `, or `• ` → use `•`
-  text = text.replace(/^([ \t]*)[-*•][ \t]+/gm, (_match, indent: string) => `${indent}${push("• ")}`);
-
-  // 8) Block quotes (`> text`) — MarkdownV2 supports `>` natively.
-  text = text.replace(/^>[ \t]?/gm, () => push(">"));
-
-  // 9) Now escape every remaining MarkdownV2 special char in the leftover
-  //    text. Sentinels (\u0001…\u0002) survive untouched.
-  text = text.replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, "\\$1");
-
-  // 10) Restore sentinels. A token's replacement may itself contain another
-  //     sentinel (e.g. a link inside a heading), so loop until stable.
-  const sentinelRe = new RegExp(`${SEN_OPEN}(\\d+)${SEN_CLOSE}`, "g");
-  let prev = "";
-  while (prev !== text) {
-    prev = text;
-    text = text.replace(sentinelRe, (_match, i: string) => tokens[Number(i)] ?? "");
-  }
-  return text;
+  return markdownToTelegramMarkdownV2(input);
 }
 
 /**
- * Strip CommonMark-ish formatting from text so it can be passed to a TTS
- * engine (or any plain-text consumer). Removes headings, bold/italic markers,
- * inline/fenced code fences, link syntax (keeps the label), and
- * blockquote markers. Leaves bullet markers as a leading dash so the
+ * Strip CommonMark-ish formatting so the text can be handed to a TTS engine or
+ * any other plain-text consumer. Bullet markers become a leading dash so the
  * spoken cadence stays natural.
  */
 export function stripMarkdownForPlain(input: string): string {
-  if (!input) return "";
-  let text = input.replace(/\r\n/g, "\n");
-  // Fenced code blocks
-  text = text.replace(/```[a-zA-Z0-9_-]*\n?([\s\S]*?)```/g, "$1");
-  // Inline code
-  text = text.replace(/`([^`\n]+)`/g, "$1");
-  // Links: keep the label, drop the URL
-  text = text.replace(/\[([^\]\n]+)\]\(([^()\s]+)\)/g, "$1");
-  // ATX headings → plain
-  text = text.replace(/^#{1,6}[ \t]+/gm, "");
-  // Bold / italic markers
-  text = text.replace(/\*\*([^\n*]+?)\*\*/g, "$1");
-  text = text.replace(/__([^\n_]+?)__/g, "$1");
-  text = text.replace(/\*(?=\S)([^\n*]+?)(?<=\S)\*/g, "$1");
-  text = text.replace(/_(?=\S)([^\n_]+?)(?<=\S)_/g, "$1");
-  // Bullet markers → dash for natural speech
-  text = text.replace(/^[ \t]*[-*•][ \t]+/gm, "- ");
-  // Blockquote markers
-  text = text.replace(/^>[ \t]?/gm, "");
-  // Collapse 3+ blank lines
-  text = text.replace(/\n{3,}/g, "\n\n");
-  return text.trim();
+  return stripMarkdown(input);
 }
 
 /**
- * Split a long MarkdownV2 message into Telegram-sized chunks (≤4096 chars,
- * targeting ≤3500 to leave headroom). Splits on paragraph boundaries first,
- * then on lines, then on hard chars.
+ * Split a long MarkdownV2 message into Telegram-sized chunks. Warren aims at
+ * 3500 characters for headroom but only starts splitting once the transport's
+ * 4096 ceiling is actually breached. Paragraph boundaries win over line
+ * boundaries.
  */
 export function splitForTelegram(text: string, target = SPLIT_TARGET): string[] {
-  if (text.length <= TELEGRAM_HARD_LIMIT) return [text];
-  const chunks: string[] = [];
-  let remaining = text;
-  while (remaining.length > target) {
-    let cut = remaining.lastIndexOf("\n\n", target);
-    if (cut < target / 2) cut = remaining.lastIndexOf("\n", target);
-    if (cut < target / 2) cut = target;
-    chunks.push(remaining.slice(0, cut).trimEnd());
-    remaining = remaining.slice(cut).trimStart();
-  }
-  if (remaining) chunks.push(remaining);
-  return chunks;
+  return chunkMessage(text, {
+    max: target,
+    hardLimit: TELEGRAM_HARD_LIMIT,
+    preferParagraphs: true,
+  });
 }
 
 // ─────────────────────────── Warren parts → messages ───────────────────────
@@ -411,8 +301,8 @@ export function renderWarrenProposal(
   const keyboard = {
     inline_keyboard: [
       [
-        { text: confirmLabel, callback_data: `p:${proposal.id}:y` },
-        { text: labels.cancel, callback_data: `p:${proposal.id}:n` },
+        { text: confirmLabel, callback_data: encodeProposalCallback(proposal.id, "confirm") },
+        { text: labels.cancel, callback_data: encodeProposalCallback(proposal.id, "cancel") },
       ],
     ],
   };
