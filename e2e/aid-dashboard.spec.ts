@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { createTestUser, dismissOverlays, loginAsAdmin } from "./helpers";
+import { adoptApiSessionInBrowser, createTestUser, dismissOverlays, loginAsAdmin } from "./helpers";
 
 test.describe("AID dashboard", () => {
-  test.beforeEach(async ({ request }) => {
+  test.beforeEach(async ({ request, context }) => {
     const adminOk = await loginAsAdmin(request);
     expect(adminOk).toBe(true);
     const flagRes = await request.put("/api/admin/feature-flags", {
@@ -10,6 +10,7 @@ test.describe("AID dashboard", () => {
     });
     expect(flagRes.status()).toBe(200);
     await createTestUser(request, true);
+    await adoptApiSessionInBrowser(request, context);
   });
 
   test("seeded user with aid_beta sees AID dashboard", async ({ page }) => {
@@ -95,11 +96,12 @@ test.describe("AID dashboard", () => {
 });
 
 test.describe("AID empty state", () => {
-  test.beforeEach(async ({ request }) => {
+  test.beforeEach(async ({ request, context }) => {
     const adminOk = await loginAsAdmin(request);
     expect(adminOk).toBe(true);
     await request.put("/api/admin/feature-flags", { data: { flag: "aid_beta", enabled: true } });
     await createTestUser(request, false);
+    await adoptApiSessionInBrowser(request, context);
   });
 
   test("empty user sees welcome CTAs on AID", async ({ page }) => {

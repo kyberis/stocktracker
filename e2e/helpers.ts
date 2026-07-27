@@ -1,4 +1,20 @@
-import { type Page, type APIRequestContext, expect, test } from "@playwright/test";
+import { type Page, type APIRequestContext, type BrowserContext, expect, test } from "@playwright/test";
+
+/**
+ * Hand the session held by an `APIRequestContext` to the browser.
+ *
+ * The `request` fixture keeps its own cookie jar, so a spec that authenticates
+ * over the API and then drives `page` would browse as an anonymous visitor.
+ * Driving `/login` instead is not an option: since the unified IdP took over,
+ * that page is a redirect bridge with no password form.
+ */
+export async function adoptApiSessionInBrowser(
+  request: APIRequestContext,
+  context: BrowserContext,
+) {
+  const { cookies } = await request.storageState();
+  await context.addCookies(cookies);
+}
 
 /**
  * When the IdP is configured, `/login` shows the unified-account bridge (no local
