@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 vi.mock("@/lib/auth/guards", () => ({
   requireSession: vi.fn(),
@@ -25,7 +25,10 @@ describe("GET /api/aid/feed", () => {
   });
 
   it("returns 401 without session", async () => {
-    vi.mocked(requireSession).mockResolvedValue({ session: null, error: new Response(null, { status: 401 }) });
+    vi.mocked(requireSession).mockResolvedValue({
+      session: null,
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    });
     const res = await GET(new NextRequest("http://localhost/api/aid/feed"));
     expect(res.status).toBe(401);
   });
@@ -33,8 +36,8 @@ describe("GET /api/aid/feed", () => {
   it("returns 403 when aid_beta off", async () => {
     vi.mocked(requireSession).mockResolvedValue({
       session: { userId: "u1", email: "a@b.com", role: "user" },
-      error: undefined,
-    });
+      error: null,
+    } as never);
     vi.mocked(isFeatureEnabledForUser).mockResolvedValue(false);
     const res = await GET(new NextRequest("http://localhost/api/aid/feed"));
     expect(res.status).toBe(403);
@@ -43,8 +46,8 @@ describe("GET /api/aid/feed", () => {
   it("returns priority feed", async () => {
     vi.mocked(requireSession).mockResolvedValue({
       session: { userId: "u1", email: "a@b.com", role: "user" },
-      error: undefined,
-    });
+      error: null,
+    } as never);
     vi.mocked(isFeatureEnabledForUser).mockResolvedValue(true);
     vi.mocked(getUserSettings).mockResolvedValue({ language: "en" } as never);
     vi.mocked(buildAidFeed).mockResolvedValue({
