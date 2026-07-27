@@ -13,12 +13,17 @@ test.describe("AID dashboard", () => {
     await adoptApiSessionInBrowser(request, context);
   });
 
-  test("seeded user with aid_beta sees AID dashboard", async ({ page }) => {
+  test("seeded user with aid_beta sees AID dashboard", async ({ page, request }) => {
+    const holdingsRes = await request.get("/api/holdings");
+    expect(holdingsRes.status()).toBe(200);
+    const holdings = await holdingsRes.json();
+    expect(Array.isArray(holdings) ? holdings.length : 0).toBeGreaterThan(0);
+
     await page.goto("/aid");
     await dismissOverlays(page);
 
     await expect(page.getByRole("heading", { name: /Investor Briefing|Briefing de inversor/i })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/Portfolio value|Valor del portafolio/i).first()).toBeVisible();
+    await expect(page.getByText(/Portfolio value|Valor del portafolio/i).first()).toBeVisible({ timeout: 15000 });
     await expect(page.locator("#aid-main")).toBeVisible();
   });
 
@@ -26,6 +31,7 @@ test.describe("AID dashboard", () => {
     await page.goto("/aid");
     await dismissOverlays(page);
 
+    await expect(page.getByRole("button", { name: /Allocation|Asignación/i })).toBeVisible({ timeout: 15000 });
     await page.getByRole("button", { name: /Allocation|Asignación/i }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.getByRole("button", { name: /Close|Cerrar/i }).click();
@@ -69,7 +75,7 @@ test.describe("AID dashboard", () => {
     await dismissOverlays(page);
 
     await expect(page.locator("#aid-finpulse")).toBeVisible({ timeout: 15000 });
-    await expect(page.locator("#aid-news")).toBeVisible();
+    await expect(page.locator("#aid-news")).toBeVisible({ timeout: 15000 });
   });
 
   test("layout customize toggle is visible", async ({ page }) => {
@@ -113,7 +119,14 @@ test.describe("AID empty state", () => {
   });
 
   test("redirects to home when aid_beta is off", async ({ request, page }) => {
-    await request.put("/api/admin/feature-flags", { data: { flag: "aid_beta", enabled: false } });
+    // beforeEach left the request jar on the test user; admin is required to flip flags.
+    const adminOk = await loginAsAdmin(request);
+    expect(adminOk).toBe(true);
+    const flagRes = await request.put("/api/admin/feature-flags", {
+      data: { flag: "aid_beta", enabled: false },
+    });
+    expect(flagRes.status()).toBe(200);
+    // Browser still holds the empty test-user session from beforeEach.
     await page.goto("/aid");
     await page.waitForURL((url) => !url.pathname.includes("/aid"), { timeout: 15000 });
   });
