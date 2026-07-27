@@ -87,11 +87,22 @@ export async function dismissOverlays(page: Page) {
     await page.waitForTimeout(500);
   }
 
-  // Theme tour wizard
-  const skipTour = page.getByRole("button", { name: "Skip tour" });
-  if (await skipTour.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await skipTour.click({ force: true });
+  // Theme tour wizard (can appear after the first paint on AID)
+  const themeTour = page.getByRole("dialog", { name: /Theme tour/i });
+  if (await themeTour.isVisible({ timeout: 2000 }).catch(() => false)) {
+    const skipTour = page.getByRole("button", { name: /Skip tour|Saltar/i });
+    if (await skipTour.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await skipTour.click({ force: true });
+    } else {
+      await page.keyboard.press("Escape");
+    }
     await page.waitForTimeout(500);
+  } else {
+    const skipTour = page.getByRole("button", { name: "Skip tour" });
+    if (await skipTour.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await skipTour.click({ force: true });
+      await page.waitForTimeout(500);
+    }
   }
 
   // Secure Your Account prompt

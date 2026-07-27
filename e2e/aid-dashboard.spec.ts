@@ -34,11 +34,14 @@ test.describe("AID dashboard", () => {
     const allocBtn = page.getByRole("button", { name: "Allocation", exact: true });
     await expect(allocBtn).toBeVisible({ timeout: 15000 });
     await allocBtn.click();
-    await expect(page.getByRole("dialog")).toBeVisible();
-    await page.getByRole("button", { name: /Close|Cerrar/i }).click();
+    const allocDialog = page.getByRole("dialog", { name: /Allocation|Asignación/i });
+    await expect(allocDialog).toBeVisible({ timeout: 10000 });
+    await allocDialog.getByRole("button", { name: /Close|Cerrar/i }).last().click();
+    await expect(allocDialog).toBeHidden({ timeout: 10000 });
 
     await page.getByRole("button", { name: /Dividends|Dividendos/i }).first().click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    const divDialog = page.getByRole("dialog", { name: /Dividends|Dividendos/i });
+    await expect(divDialog).toBeVisible({ timeout: 10000 });
   });
 
   test("mobile shows Warren sheet opener", async ({ page }) => {
