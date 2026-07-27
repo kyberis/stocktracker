@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.42",
+    date: "2026-07-25",
+    title: "Shared agent platform",
+    titleTranslations: {
+      es: "Plataforma compartida de agentes",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Warren now shares its AI Gateway routing, Telegram message formatting and confirmation buttons with the other trefolio agents through a common platform, so fixes and safety checks land everywhere at once.",
+        translations: {
+          es: "Warren ahora comparte el enrutado de AI Gateway, el formato de mensajes de Telegram y los botones de confirmación con los demás agentes de trefolio a través de una plataforma común, así las correcciones y comprobaciones de seguridad llegan a todos a la vez.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.41",
     date: "2026-07-25",
     title: "trefolio Studio hub",

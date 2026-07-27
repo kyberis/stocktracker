@@ -10,6 +10,8 @@
  * Warren drawer.
  */
 
+import { decodeProposalCallback } from "@kyberis/agent-os/safety";
+
 import {
   appendChatMessage,
   completeTelegramLink,
@@ -846,14 +848,13 @@ async function handleCallbackQuery(query: TelegramCallbackQuery): Promise<void> 
   }
   const i = await localeForLink(link, query.from.language_code);
 
-  // Format: p:<id>:y or p:<id>:n
-  const m = /^p:([A-Za-z0-9_\-]+):(y|n)$/.exec(data);
-  if (!m) {
+  const decoded = decodeProposalCallback(data);
+  if (!decoded) {
     await bot.answerCallbackQuery(query.id);
     return;
   }
-  const proposalId = m[1];
-  const isConfirm = m[2] === "y";
+  const proposalId = decoded.id;
+  const isConfirm = decoded.decision === "confirm";
 
   const proposal = await getPendingProposal(proposalId);
   if (!proposal) {
