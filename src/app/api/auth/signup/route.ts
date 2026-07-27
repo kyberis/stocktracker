@@ -62,7 +62,10 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
 
   let rawJson: Record<string, unknown> = {};
   try { rawJson = await req.clone().json(); } catch {}
-  const seedWithData = isDev && rawJson.seedWithData === true;
+  // E2E runs `next start` (NODE_ENV=production). Seeding must still work there —
+  // otherwise AID smoke specs create empty users and assert against holdings UI.
+  const seedWithData =
+    (isDev || isE2EAuthBypassActive()) && rawJson.seedWithData === true;
 
   const result = await parseBody(req, signupSchema);
   if (!result.success) return result.error;

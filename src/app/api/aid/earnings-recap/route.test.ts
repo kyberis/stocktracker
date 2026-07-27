@@ -43,6 +43,7 @@ describe("GET /api/aid/earnings-recap", () => {
           headline: "Beat on EPS",
           bullets: ["Revenue up"],
           impact: "medium",
+          impactScore: 3,
           filterTags: ["earnings"],
           usedWeb: true,
           cachedAt: "2026-05-20T00:00:00.000Z",
