@@ -1,3 +1,5 @@
+import { normalizeHkYahooSymbol } from "@/lib/market-symbol";
+
 const OPENFIGI_URL = "https://api.openfigi.com/v3/mapping";
 
 // Without API key: max 10 jobs per request, 25 requests/minute.
@@ -101,7 +103,9 @@ export async function batchResolveFigi(
       }
 
       const suffix = EXCHCODE_TO_YAHOO_SUFFIX[best.exchCode] ?? "";
-      const yahooTicker = suffix ? `${best.ticker}${suffix}` : best.ticker;
+      const yahooTicker = normalizeHkYahooSymbol(
+        suffix ? `${best.ticker}${suffix}` : best.ticker,
+      );
 
       results.set(item.figiShareClass, {
         figiShareClass: item.figiShareClass,

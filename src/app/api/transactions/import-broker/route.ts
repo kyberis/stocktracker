@@ -76,6 +76,7 @@ const KNOWN_ISINS: Record<string, string> = {
   "IE00B3XXRP09": "VUSA.L",
   "IE00B8GKDB10": "VHYL.L",
   "IE000ZIJ5B20": "WCOS.L",
+  "KYG4672G1064": "0215.HK",
 };
 
 const ISIN_LOOKUP_TIMEOUT_MS = 5_000;
@@ -126,6 +127,7 @@ function inferExchangeFromTicker(ticker: string): string {
   if (suffix === "DE" || suffix === "F") return "XET";
   if (suffix === "CO") return "OMK";
   if (suffix === "TO") return "TSE";
+  if (suffix === "HK") return "HKG";
   return "";
 }
 

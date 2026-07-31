@@ -20,7 +20,7 @@ import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
 import { marketDataSymbolForHolding } from "@/lib/market-symbol";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
 
-const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
+const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD", "EURHKD"];
 
 async function enrichValueInEUR(derived: Holding[]): Promise<void> {
   if (derived.length === 0) return;

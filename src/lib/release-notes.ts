@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.43",
+    date: "2026-07-31",
+    title: "Hong Kong market data",
+    titleTranslations: {
+      es: "Datos de mercado de Hong Kong",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Hong Kong stocks (for example Hutchison Tele / 215.HK from DeGiro) now load prices and charts by using Yahoo’s 4-digit ticker format (0215.HK).",
+        translations: {
+          es: "Las acciones de Hong Kong (por ejemplo Hutchison Tele / 215.HK desde DeGiro) ahora cargan precios y gráficos usando el formato de 4 dígitos de Yahoo (0215.HK).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.42",
     date: "2026-07-25",
     title: "Shared agent platform",

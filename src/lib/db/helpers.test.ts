@@ -331,6 +331,8 @@ describe("EXCHANGE_SUFFIX_MAP", () => {
       SWX: ".SW",
       TSE: ".TO",
       TOR: ".TO",
+      HKG: ".HK",
+      XHKG: ".HK",
     };
     for (const [exchange, suffix] of Object.entries(expected)) {
       expect(EXCHANGE_SUFFIX_MAP[exchange]).toBe(suffix);

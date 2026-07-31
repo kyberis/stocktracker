@@ -237,6 +237,13 @@ const YAHOO_SUFFIX_TO_EXCHANGE: Record<string, string> = {
  *   - `IS0E.XGAT`   (same pattern)
  *   - `AAPL`         (US ticker, no change)
  */
+function padHkYahooTicker(ticker: string): string {
+  const upper = ticker.trim().toUpperCase();
+  const match = upper.match(/^0*(\d{1,5})\.HK$/);
+  if (!match) return ticker;
+  return `${match[1].padStart(4, "0")}.HK`;
+}
+
 function normalizeSnapTradeTicker(
   rawSymbol: string,
   exchangeMic?: string,
@@ -258,7 +265,7 @@ function normalizeSnapTradeTicker(
       const suffix = MIC_TO_YAHOO_SUFFIX[mic] ?? "";
       const yahooTicker = `${baseTicker}-${shareClass}${suffix}`;
       return {
-        ticker: yahooTicker,
+        ticker: padHkYahooTicker(yahooTicker),
         exchange: YAHOO_SUFFIX_TO_EXCHANGE[suffix] || mic || "",
       };
     }
@@ -274,7 +281,7 @@ function normalizeSnapTradeTicker(
 
     if (MIC_TO_YAHOO_SUFFIX[afterDot] !== undefined) {
       const suffix = MIC_TO_YAHOO_SUFFIX[afterDot];
-      const yahooTicker = `${beforeDot}${suffix}`;
+      const yahooTicker = padHkYahooTicker(`${beforeDot}${suffix}`);
       return {
         ticker: yahooTicker,
         exchange: YAHOO_SUFFIX_TO_EXCHANGE[suffix] || afterDot || "",
@@ -298,13 +305,16 @@ function normalizeSnapTradeTicker(
     // Only add suffix if the symbol doesn't already have a Yahoo-style suffix
     if (!symbol.includes(".") && suffix) {
       return {
-        ticker: `${symbol}${suffix}`,
+        ticker: padHkYahooTicker(`${symbol}${suffix}`),
         exchange: YAHOO_SUFFIX_TO_EXCHANGE[suffix] || mic || "",
       };
     }
   }
 
-  return { ticker: symbol, exchange: YAHOO_SUFFIX_TO_EXCHANGE[`.${symbol.split(".").pop()}`] || "" };
+  return {
+    ticker: padHkYahooTicker(symbol),
+    exchange: YAHOO_SUFFIX_TO_EXCHANGE[`.${symbol.split(".").pop()}`] || "",
+  };
 }
 
 function inferAssetType(description?: string | null, type?: string | null): "stock" | "etf" {

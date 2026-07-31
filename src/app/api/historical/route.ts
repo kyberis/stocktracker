@@ -3,6 +3,7 @@ import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { TimePeriod } from "@/lib/api-providers/types";
 import { DE_FALLBACK_SUFFIXES, PA_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
 import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
+import { normalizeHkYahooSymbol } from "@/lib/market-symbol";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
@@ -48,7 +49,7 @@ export const GET = withMetrics("/api/historical", async (request: NextRequest) =
   }
 
   const yahoo = new YahooProvider();
-  const ticker = await resolveIsinToTicker(yahoo, symbol);
+  const ticker = normalizeHkYahooSymbol(await resolveIsinToTicker(yahoo, symbol));
 
   try {
     const data = await yahoo.getHistorical(ticker, period);

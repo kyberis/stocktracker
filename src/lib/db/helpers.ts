@@ -187,6 +187,8 @@ export const EXCHANGE_SUFFIX_MAP: Record<string, string> = {
   SWX: ".SW",
   TSE: ".TO",
   TOR: ".TO",
+  HKG: ".HK",
+  XHKG: ".HK",
 };
 
 export function str(val: unknown): string {

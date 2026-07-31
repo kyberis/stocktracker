@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { DE_FALLBACK_SUFFIXES, PA_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
 import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
+import { normalizeHkYahooSymbol } from "@/lib/market-symbol";
 import { withMetrics } from "@/lib/with-metrics";
 import { getCachedQuotes, setCachedQuotes } from "@/lib/quote-cache";
 import type { ProviderQuoteResult } from "@/lib/api-providers/types";
@@ -81,7 +82,9 @@ export const GET = withMetrics("/api/quote", async (request: NextRequest) => {
 
     const stockPromises = misses.map(async (symbol) => {
       const resolved = await resolveIsinToTicker(yahoo, symbol);
-      const ticker = resolved.includes(" ") ? resolved.replace(/\s+/g, "-") : resolved;
+      const ticker = normalizeHkYahooSymbol(
+        resolved.includes(" ") ? resolved.replace(/\s+/g, "-") : resolved,
+      );
       try {
         const quote = await yahoo.getQuote(ticker);
         if (quote.regularMarketPrice > 0) {

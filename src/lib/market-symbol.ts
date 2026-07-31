@@ -44,11 +44,38 @@ export function isTickerExchangeCollision(ticker: string, exchange: string): boo
   return false;
 }
 
+/**
+ * Yahoo Finance requires Hong Kong tickers zero-padded to 4 digits.
+ * `215.HK` → `0215.HK`. Non-numeric or already-padded symbols pass through.
+ */
+export function normalizeHkYahooSymbol(symbol: string): string {
+  const upper = symbol.trim().toUpperCase();
+  const match = upper.match(/^0*(\d{1,5})\.HK$/);
+  if (!match) return symbol;
+  return `${match[1].padStart(4, "0")}.HK`;
+}
+
 /** Yahoo-compatible symbol from bare ticker + exchange (no ISIN fallback). */
 export function yahooSymbolFromTickerExchange(ticker: string, exchange: string): string {
-  if (ticker.includes(".")) return ticker;
-  if (exchange.toUpperCase() === "CRYPTO") return normalizeCryptoTicker(ticker);
-  return normalizeTickerForExchange(ticker, exchange);
+  const ex = exchange.trim().toUpperCase();
+  let symbol: string;
+  if (ticker.includes(".")) {
+    symbol = ticker;
+  } else if (ex === "CRYPTO") {
+    symbol = normalizeCryptoTicker(ticker);
+  } else {
+    symbol = normalizeTickerForExchange(ticker, exchange);
+  }
+
+  // Bare numeric + HKG → 0215.HK even if EXCHANGE_SUFFIX_MAP was missing
+  if ((ex === "HKG" || ex === "XHKG") && !symbol.toUpperCase().endsWith(".HK")) {
+    const digits = symbol.trim().match(/^0*(\d{1,5})$/);
+    if (digits) {
+      return `${digits[1].padStart(4, "0")}.HK`;
+    }
+  }
+
+  return normalizeHkYahooSymbol(symbol);
 }
 
 /**

@@ -168,6 +168,7 @@ export class AlphaVantageProvider implements StockDataProvider {
     if (s.endsWith(".TO") || s.endsWith(".V")) return "CAD";
     if (s.endsWith(".T")) return "JPY";
     if (s.endsWith(".SW")) return "CHF";
+    if (s.endsWith(".HK")) return "HKD";
     return "USD";
   }
 
