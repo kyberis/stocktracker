@@ -23,6 +23,7 @@ vi.mock("@/lib/crypto", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockExecute.mockReset();
 });
 
 const DEFAULT_SETTINGS = {
@@ -306,9 +307,10 @@ describe("settings", () => {
     it("resets global counter and writes reset_at when global month reset (5 executes)", async () => {
       const now = new Date();
       const todayIso = now.toISOString();
-      const lastMonth = new Date(now);
-      lastMonth.setUTCMonth(lastMonth.getUTCMonth() - 1);
-      const oldMonthStart = `${lastMonth.getUTCFullYear()}-${String(lastMonth.getUTCMonth() + 1).padStart(2, "0")}-01`;
+      // Use day-1 of previous UTC month — setUTCMonth(now-1) on day 31 can roll
+      // into the current month (e.g. Jul 31 → Jun 31 → Jul 1).
+      const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+      const oldMonthStart = `${prev.getUTCFullYear()}-${String(prev.getUTCMonth() + 1).padStart(2, "0")}-01`;
       mockExecute
         .mockResolvedValueOnce({
           rows: [{
