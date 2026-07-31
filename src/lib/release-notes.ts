@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.45",
+    date: "2026-07-31",
+    title: "FMP market data via MCP",
+    titleTranslations: {
+      es: "Datos de mercado FMP vía MCP",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Pro users can call Financial Modeling Prep’s stable API through MCP tools `listFmpEndpoints` and `fmpRequest` with the opt-in PAT scope `market:fmp` (feature flag `mcp_fmp_proxy`, rate limited). Informational only — not investment advice.",
+        translations: {
+          es: "Los usuarios Pro pueden consultar la API estable de Financial Modeling Prep mediante las herramientas MCP `listFmpEndpoints` y `fmpRequest` con el scope PAT opcional `market:fmp` (feature flag `mcp_fmp_proxy`, con límite de tasa). Solo informativo — no es consejo de inversión.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Company analysis (`/analisis`) shows a clearer loading skeleton, pulses AI sections while they generate, and hides empty optional rows (such as company revenue guidance without a cited source) instead of “Data unavailable”.",
+        translations: {
+          es: "El análisis de empresa (`/analisis`) muestra un esqueleto de carga más claro, anima las secciones de IA mientras se generan y oculta filas opcionales vacías (como la guía de ingresos sin fuente citada) en lugar de “Dato no disponible”.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.44",
     date: "2026-07-31",
     title: "Multi-currency FX conversion",

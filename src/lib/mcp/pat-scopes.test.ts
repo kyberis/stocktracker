@@ -7,6 +7,8 @@ describe("mcp pat scopes", () => {
     expect(requiredScopeForMcpTool("getTaxReport")).toBe("tax:read");
     expect(requiredScopeForMcpTool("getPortfolioScore")).toBe("tools:read");
     expect(requiredScopeForMcpTool("saveMoatReport")).toBe("portfolio:write");
+    expect(requiredScopeForMcpTool("fmpRequest")).toBe("market:fmp");
+    expect(requiredScopeForMcpTool("listFmpEndpoints")).toBe("market:fmp");
   });
 
   it("enforces scope membership", () => {

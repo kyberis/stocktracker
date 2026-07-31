@@ -143,6 +143,34 @@ Cached AI portfolio score (if generated in the app). Requires `tools:read`.
 | `portfolioId` | string | No |
 | `history` | boolean | No — past scores |
 
+## Market data (FMP)
+
+Requires Pro, PAT scope `market:fmp` (opt-in; not in default scopes), feature flag `mcp_fmp_proxy` (on by default), and server `FMP_API_KEY`. Rate limited (FMP per-user minute bucket). Informational only — not investment advice.
+
+### listFmpEndpoints
+
+Curated catalog of FMP stable endpoints for discovery (not an allowlist).
+
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `category` | enum | No — `quote_search`, `company`, `statements`, `calendar`, `news_insider`, `crypto_fx`, `macro`, `lists`, `other` |
+
+### fmpRequest
+
+GET proxy to `https://financialmodelingprep.com/stable/{path}`. Server injects the API key; never pass `apikey`. Accepts any sanitized stable path.
+
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `path` | string | Yes — e.g. `quote`, `income-statement`, `news/stock` |
+| `params` | object | No — query params (`apikey` stripped) |
+| `limitBytes` | number | No — max response size (default 1MB, max 2MB) |
+
+**Example:** `fmpRequest({ path: "quote", params: { symbol: "AAPL" } })`
+
 ## PAT scopes
 
 Mint tokens at user.trefolio.com → Developer (or trefolio Profile → MCP). Default scopes: `portfolio:read`, `tools:read`, `warren:moat`.
@@ -155,6 +183,7 @@ Mint tokens at user.trefolio.com → Developer (or trefolio Profile → MCP). De
 | `warren:ai` | generateMoatNarrative |
 | `tax:read` | getTaxReport |
 | `portfolio:write` | saveMoatReport |
+| `market:fmp` | listFmpEndpoints, fmpRequest (Pro; opt-in) |
 
 Legacy tokens (created before scopes) retain full access until revoked.
 

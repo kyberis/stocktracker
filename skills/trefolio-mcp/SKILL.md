@@ -63,6 +63,13 @@ Summarize in the user's preferred display currency when possible. Values are sto
 1. `listMoatReports` — optional `tags` filter
 2. `screenMoat` — filter the cached MOAT universe when user asks for ideas matching criteria
 
+### FMP market data (Pro + `market:fmp`)
+
+1. `listFmpEndpoints` — discover common FMP stable paths
+2. `fmpRequest` — GET proxy, e.g. `{ path: "quote", params: { symbol: "AAPL" } }`
+
+Requires opt-in PAT scope `market:fmp`, Pro, and server flag `mcp_fmp_proxy`. Informational only — not investment advice.
+
 ## Tool reference
 
 See [references/tools.md](references/tools.md) for all tools, inputs, and quota notes.
@@ -73,3 +80,4 @@ See [references/tools.md](references/tools.md) for all tools, inputs, and quota 
 - Do not invent holdings, scores, or prices — always call MCP tools
 - Fresh MOAT evaluation and AI narrative consume the same quotas as the trefolio web app
 - Clarify that portfolio tool output reflects last stored values, not real-time quotes
+- FMP MCP data is third-party market data for information only; never present it as personalized investment advice

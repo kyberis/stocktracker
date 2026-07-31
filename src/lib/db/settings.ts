@@ -43,6 +43,7 @@ export type PlatformFeature =
   | "market_data_fmp_dividends"
   | "market_data_fmp_event_sync"
   | "market_data_alpha_vantage"
+  | "mcp_fmp_proxy"
   | "weekly_digest_enabled"
   | "telegram_bot_enabled"
   | "aid_beta"
@@ -58,6 +59,7 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "tool_watchlist_enabled",
   "ai_report_enabled",
   "market_data_alpha_vantage",
+  "mcp_fmp_proxy",
   "weekly_digest_enabled",
   "telegram_bot_enabled",
 ]);
@@ -447,6 +449,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "market_data_fmp_dividends",
   "market_data_fmp_event_sync",
   "market_data_alpha_vantage",
+  "mcp_fmp_proxy",
   "weekly_digest_enabled",
   "telegram_bot_enabled",
   "aid_beta",

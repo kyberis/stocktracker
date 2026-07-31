@@ -100,7 +100,7 @@ export default function PrivacyPolicyPage() {
                 only on the identity service (hashed); trefolio receives it only when
                 you configure a client and uses it solely to authenticate MCP requests
                 against your account. You choose which scopes the token grants (for
-                example portfolio read, tax reports, Clara savings, or Will notes write);
+                example portfolio read, tax reports, FMP market data, Clara savings, or Will notes write);
                 each product enforces only the scopes relevant to that service.
               </li>
               <li>
@@ -276,7 +276,9 @@ export default function PrivacyPolicyPage() {
                 we validate that token with our identity service over TLS, map it to your
                 local account, and return portfolio or tool data you request via MCP
                 tools according to the scopes you selected when minting the token
-                (for example holdings, transactions, tax summaries, or MOAT evaluations).
+                (for example holdings, transactions, tax summaries, MOAT evaluations, or
+                Financial Modeling Prep market-data proxy requests when you grant
+                <code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">market:fmp</code>).
                 The MCP client you configure (such as Claude Desktop or Cursor) receives
                 the JSON responses from those tool calls; we do not invoke OpenAI or
                 Anthropic for MCP read tools unless you separately use an in-app AI feature
@@ -400,8 +402,12 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Financial Modeling Prep (FMP)</td>
-                    <td className="py-3 pr-6">Market data (Trefolio)</td>
-                    <td className="py-3">Stock ticker symbols requested</td>
+                    <td className="py-3 pr-6">Market data (Trefolio), including optional MCP proxy</td>
+                    <td className="py-3">
+                      Stock ticker symbols and related query parameters you request in-app or
+                      via MCP (for example symbol, date ranges, indicator names). No portfolio
+                      holdings or account identifiers are sent.
+                    </td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">TradingView</td>

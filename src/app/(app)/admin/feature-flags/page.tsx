@@ -62,6 +62,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
   market_data_fmp_crypto: { label: "FMP: Pro crypto history & FX", description: "Crypto OHLC and cross-rates via FMP", group: "Market data (FMP)" },
   market_data_fmp_dividends: { label: "FMP: ex-dividend fallback", description: "When Yahoo has no dividend dates, use FMP dividend calendar", group: "Market data (FMP)" },
   market_data_fmp_event_sync: { label: "FMP: earnings calendar cron", description: "Event-sync cron uses FMP-only for earnings (skip AV CSV)", group: "Market data (FMP)" },
+  mcp_fmp_proxy: {
+    label: "FMP: MCP proxy",
+    description:
+      "Expose Financial Modeling Prep stable API via MCP tools fmpRequest / listFmpEndpoints (Pro + market:fmp PAT scope; rate limited). On by default.",
+    group: "Market data (FMP)",
+  },
   market_data_alpha_vantage: {
     label: "Alpha Vantage: allow fallback",
     description:

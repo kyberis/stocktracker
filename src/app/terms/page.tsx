@@ -364,7 +364,10 @@ export default function TermsOfServicePage() {
               <li>
                 We do not guarantee uninterrupted or error-free service. Market
                 data feeds, AI analysis, third-party integrations (including
-                SnapTrade brokerage connections), and optional MCP access may experience downtime.
+                SnapTrade brokerage connections and optional Financial Modeling Prep
+                data accessed via MCP), and optional MCP access may experience downtime.
+                Market data obtained through MCP is for informational purposes only and
+                is not investment advice.
               </li>
             </ul>
           </section>

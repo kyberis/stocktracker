@@ -41,7 +41,8 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 
 - Reuses trefolio `.card` / tokens; price chart is a TradingView `widgetembed` (weekly / 24M) with a public-chart fallback link (no custom TradingView brand palette on the rest of the page).
 - Sections: header stats, chart, business, competitive, sector/risks, fundamentals tables, technicals, news, insiders, Congress, sector alternative (editorial banner), footer sources.
-- Missing fields show **Data unavailable** — never fabricated numbers.
+- Initial load uses a report-shaped skeleton; AI narrative sections pulse while `/narrative` is in flight (never flash empty copy as “unavailable”).
+- Optional missing fields/rows/sections are **omitted** after load — never fabricated numbers. Company guidance row appears only when a citable value exists. Whole blocks with `status: unavailable` (or empty news) are hidden; loaded-empty insider/Congress lists keep their dedicated empty copy.
 
 ## 7. Business logic
 
@@ -92,7 +93,7 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 
 ## 14. Tests
 
-- `src/lib/company-analysis/*.test.ts` — ticker, URLs, technicals, insider tags, congress empty, peer pick.
+- `src/lib/company-analysis/*.test.ts` — ticker, URLs, technicals, insider tags, congress empty, peer pick, empty-UI row/section visibility.
 
 ## 15. Related skills and rules
 

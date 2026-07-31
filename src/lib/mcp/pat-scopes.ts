@@ -6,6 +6,7 @@ export const TREFOLIO_PAT_SCOPE_IDS = [
   "warren:ai",
   "tax:read",
   "portfolio:write",
+  "market:fmp",
 ] as const;
 
 export const CLARA_PAT_SCOPE_IDS = ["finance:read", "finance:write"] as const;
@@ -39,6 +40,10 @@ export const MCP_PAT_SCOPE_LABELS: Record<McpPatScope, { title: string; descript
   "warren:ai": { title: "MOAT AI narrative", description: "AI markdown narrative (ai_consult quota)" },
   "tax:read": { title: "Tax reports", description: "Year-end tax data (sensitive)" },
   "portfolio:write": { title: "Save MOAT reports", description: "Persist MOAT to your library" },
+  "market:fmp": {
+    title: "FMP market data",
+    description: "Financial Modeling Prep stable API proxy via MCP (Pro; rate limited)",
+  },
   "finance:read": { title: "Clara read", description: "Budget, expenses, savings via Clara MCP" },
   "finance:write": { title: "Clara write", description: "Mutating Clara tools (confirm required)" },
   "notes:read": { title: "Will read", description: "Search and list notes via Will MCP" },
@@ -83,6 +88,8 @@ export const MCP_TOOL_REQUIRED_SCOPE: Record<string, TrefolioMcpScope> = {
   listMoatReports: "warren:moat",
   generateMoatNarrative: "warren:ai",
   saveMoatReport: "portfolio:write",
+  listFmpEndpoints: "market:fmp",
+  fmpRequest: "market:fmp",
 };
 
 export function requiredScopeForMcpTool(toolName: string): TrefolioMcpScope | undefined {

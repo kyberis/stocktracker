@@ -4,6 +4,7 @@ import { z } from "zod";
 import { listCashEntries, listHoldings, listPortfolios } from "@/lib/db";
 import { registerActivityMcp } from "@/lib/mcp/activity-tools";
 import { registerAnalysisMcp } from "@/lib/mcp/analysis-tools";
+import { registerFmpMcp } from "@/lib/mcp/fmp-tools";
 import { MCP_READ_ONLY } from "@/lib/mcp/mcp-tool-annotations";
 import { gateMcpTool, jsonContent, mapHoldingForMcp } from "@/lib/mcp/mcp-helpers";
 import { registerWarrenMoatMcp } from "@/lib/mcp/moat-tools";
@@ -17,6 +18,7 @@ export function registerTrefolioUserMcp(server: McpServer): void {
   registerActivityMcp(server);
   registerAnalysisMcp(server);
   registerPlanningMcp(server);
+  registerFmpMcp(server);
 
   server.registerTool(
     "listPortfolios",
