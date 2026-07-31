@@ -2,10 +2,11 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { CashEntry, Holding, QuoteData, ExchangeRates, Goal } from "./types";
-import { generateId, normalizeCurrency } from "./utils";
+import { generateId } from "./utils";
 import { useSettings } from "./settings-context";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 import { marketDataSymbolForHolding } from "@/lib/market-symbol";
+import { buildNeededFxPairs } from "@/lib/fx-pairs";
 
 const QUOTES_CACHE_KEY = "trefolio-quotes-v3";
 const RATES_CACHE_KEY = "trefolio-rates-v1";
@@ -21,24 +22,16 @@ interface PortfolioInfo {
   currency: string;
 }
 
-const BASE_FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
-
-function buildFxPairs(holdings: Holding[], portfolioCurrency: string): string[] {
-  const needed = new Set<string>();
-  for (const pair of BASE_FX_PAIRS) needed.add(pair);
-
-  for (const h of holdings) {
-    const norm = normalizeCurrency(h.displayCurrency);
-    if (norm === "EUR") continue;
-    if (norm === "GBX") { needed.add("EURGBP"); continue; }
-    needed.add(`EUR${norm}`);
-  }
-
-  if (portfolioCurrency && portfolioCurrency !== "EUR") {
-    needed.add(`EUR${portfolioCurrency}`);
-  }
-
-  return [...needed];
+function buildFxPairs(
+  holdings: Holding[],
+  portfolioCurrency: string,
+  quotes?: Record<string, QuoteData>,
+): string[] {
+  return buildNeededFxPairs([
+    ...holdings.map((h) => h.displayCurrency),
+    portfolioCurrency,
+    ...(quotes ? Object.values(quotes).map((q) => q.currency) : []),
+  ]);
 }
 
 const ACTIVE_PORTFOLIO_KEY = "trefolio-active-portfolio";
@@ -391,8 +384,15 @@ export function PortfolioProvider({
     return found?.currency ?? "EUR";
   }, [activePortfolioId, portfolios]);
 
-  const fetchExchangeRates = useCallback(async (currentHoldings?: Holding[]): Promise<ExchangeRates> => {
-    const fxPairs = buildFxPairs(currentHoldings ?? holdings, getPortfolioCurrency());
+  const fetchExchangeRates = useCallback(async (
+    currentHoldings?: Holding[],
+    currentQuotes?: Record<string, QuoteData>,
+  ): Promise<ExchangeRates> => {
+    const fxPairs = buildFxPairs(
+      currentHoldings ?? holdings,
+      getPortfolioCurrency(),
+      currentQuotes,
+    );
     if (fxPairs.length === 0) return {};
     const params = new URLSearchParams({ pairs: fxPairs.join(",") });
     const res = await fetchWithAuthRedirect(`/api/exchange-rates?${params}`);
@@ -432,18 +432,15 @@ export function PortfolioProvider({
         batches.push(uniqueRequestSymbols.slice(i, i + batchSize));
       }
 
-      const [batchResults, rates] = await Promise.all([
-        Promise.all(
-          batches.map(async (batch) => {
-            const url = buildFetchUrl("/api/quote", { symbols: batch.join(",") });
-            const res = await fetchWithAuthRedirect(url, { headers });
-            if (res.status === 429) throw new Error("rate_limited");
-            if (!res.ok) throw new Error("Failed to fetch quotes");
-            return res.json();
-          })
-        ),
-        fetchExchangeRates(),
-      ]);
+      const batchResults = await Promise.all(
+        batches.map(async (batch) => {
+          const url = buildFetchUrl("/api/quote", { symbols: batch.join(",") });
+          const res = await fetchWithAuthRedirect(url, { headers });
+          if (res.status === 429) throw new Error("rate_limited");
+          if (!res.ok) throw new Error("Failed to fetch quotes");
+          return res.json();
+        }),
+      );
 
       for (const data of batchResults) {
         Object.assign(allQuotes, data);
@@ -459,6 +456,9 @@ export function PortfolioProvider({
         stockQuotes[ticker] = { ...val, fetchedAt: now };
         updatedAtByTicker[ticker] = now;
       }
+
+      // Fetch FX after quotes so quote.currency (e.g. HKD) is included — not only displayCurrency
+      const rates = await fetchExchangeRates(holdings, stockQuotes);
 
       setQuotes(stockQuotes);
       setQuoteUpdatedAt(updatedAtByTicker);

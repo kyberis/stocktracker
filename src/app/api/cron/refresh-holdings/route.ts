@@ -5,47 +5,18 @@ import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
 import type { ExchangeRates } from "@/lib/types";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
+import { buildNeededFxPairs } from "@/lib/fx-pairs";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 const QUOTE_BATCH_SIZE = 15;
-const FX_PAIRS = [
-  "EURUSD", "EURGBP", "EURDKK", "EURCAD", "EURCHF",
-  "EURSEK", "EURNOK", "EURAUD", "EURNZD", "EURJPY",
-  "EURPLN", "EURCZK", "EURHUF", "EURRON", "EURSGD",
-  "EURHKD", "EURZAR", "EURTRY", "EURBRL", "EURMXN",
-];
 
-const runRefreshHoldings = withCronLogging("refresh-holdings", async () => {
-  const distinctTickers = await listDistinctHoldingTickers();
-  if (distinctTickers.length === 0) {
-    return { tickers: 0, updated: 0, errors: 0 };
-  }
-
-  const uniqueTickers = [...new Set(distinctTickers.map((h) => h.ticker))];
-
-  const yahoo = new YahooProvider();
-
-  // 1. Fetch exchange rates once
+async function fetchFxRates(yahoo: YahooProvider, pairs: string[]): Promise<ExchangeRates> {
   const exchangeRates: ExchangeRates = {};
-  const neededCurrencies = new Set(
-    distinctTickers
-      .map((h) => h.displayCurrency.toUpperCase())
-      .filter((c) => c !== "EUR" && c !== "GBX"),
-  );
-  // Only fetch FX pairs we actually need
-  const neededPairs = FX_PAIRS.filter((pair) => {
-    const to = pair.substring(3);
-    return neededCurrencies.has(to);
-  });
-  // Always include EURGBP if any holding uses GBX
-  if (distinctTickers.some((h) => h.displayCurrency === "GBX" || h.displayCurrency === "GBp")) {
-    if (!neededPairs.includes("EURGBP")) neededPairs.push("EURGBP");
-  }
-
+  if (pairs.length === 0) return exchangeRates;
   const rateResults = await Promise.allSettled(
-    neededPairs.map(async (pair) => {
+    pairs.map(async (pair) => {
       const from = pair.substring(0, 3);
       const to = pair.substring(3);
       const rate = await yahoo.getExchangeRate(from, to);
@@ -57,8 +28,20 @@ const runRefreshHoldings = withCronLogging("refresh-holdings", async () => {
       exchangeRates[r.value.pair] = r.value.rate;
     }
   }
+  return exchangeRates;
+}
 
-  // 2. Fetch quotes in batches
+const runRefreshHoldings = withCronLogging("refresh-holdings", async () => {
+  const distinctTickers = await listDistinctHoldingTickers();
+  if (distinctTickers.length === 0) {
+    return { tickers: 0, updated: 0, errors: 0 };
+  }
+
+  const uniqueTickers = [...new Set(distinctTickers.map((h) => h.ticker))];
+
+  const yahoo = new YahooProvider();
+
+  // 1. Fetch quotes first so quote.currency can drive FX needs
   const quotes: Record<string, { price: number; currency: string }> = {};
   let errorCount = 0;
   const failedTickers = new Set<string>();
@@ -82,6 +65,15 @@ const runRefreshHoldings = withCronLogging("refresh-holdings", async () => {
       }
     }
   }
+
+  // 2. FX for holding display currencies + live quote currencies
+  let exchangeRates = await fetchFxRates(
+    yahoo,
+    buildNeededFxPairs([
+      ...distinctTickers.map((h) => h.displayCurrency),
+      ...Object.values(quotes).map((q) => q.currency),
+    ]),
+  );
 
   // 2b. For failed tickers with a FIGI, attempt to resolve the new ticker via OpenFIGI.
   // This is a self-healing mechanism: once resolved, the holding's ticker is updated
@@ -121,6 +113,15 @@ const runRefreshHoldings = withCronLogging("refresh-holdings", async () => {
             }
           } catch { /* quote still fails — leave as error */ }
         }
+
+        // Refresh FX in case newly resolved quotes introduce new currencies
+        exchangeRates = await fetchFxRates(
+          yahoo,
+          buildNeededFxPairs([
+            ...distinctTickers.map((h) => h.displayCurrency),
+            ...Object.values(quotes).map((q) => q.currency),
+          ]),
+        );
       } catch (err) {
         console.warn("[refresh-holdings] OpenFIGI fallback failed:", err instanceof Error ? err.message : err);
       }

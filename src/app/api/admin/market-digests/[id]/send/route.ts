@@ -18,15 +18,11 @@ import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
 import { ensureInitialized } from "@/lib/db/client";
 import { num } from "@/lib/db/helpers";
 import type { ExchangeRates } from "@/lib/types";
+import { ALL_EUR_FX_PAIRS } from "@/lib/fx-pairs";
 
 export const maxDuration = 120;
 
-const FX_PAIRS = [
-  "EURUSD", "EURGBP", "EURDKK", "EURCAD", "EURCHF",
-  "EURSEK", "EURNOK", "EURAUD", "EURNZD", "EURJPY",
-  "EURPLN", "EURCZK", "EURHUF", "EURRON", "EURSGD",
-  "EURHKD", "EURZAR", "EURTRY", "EURBRL", "EURMXN",
-];
+const FX_PAIRS = ALL_EUR_FX_PAIRS;
 
 interface PortfolioStats {
   totalValue: number;

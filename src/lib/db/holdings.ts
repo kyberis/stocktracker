@@ -18,9 +18,30 @@ import { resolvePortfolioId } from "./portfolios";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
 import { marketDataSymbolForHolding } from "@/lib/market-symbol";
-import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
+import { buildNeededFxPairs } from "@/lib/fx-pairs";
+import { convertToEUR, hasExchangeRate, resolveQuoteCurrency } from "@/lib/utils";
 
-const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD", "EURHKD"];
+async function fetchExchangeRatesForPairs(
+  yahoo: YahooProvider,
+  pairs: string[],
+): Promise<ExchangeRates> {
+  const exchangeRates: ExchangeRates = {};
+  if (pairs.length === 0) return exchangeRates;
+  const rateResults = await Promise.allSettled(
+    pairs.map(async (pair) => {
+      const from = pair.substring(0, 3);
+      const to = pair.substring(3);
+      const rate = await yahoo.getExchangeRate(from, to);
+      return { pair, rate };
+    }),
+  );
+  for (const r of rateResults) {
+    if (r.status === "fulfilled" && r.value.rate > 0) {
+      exchangeRates[r.value.pair] = r.value.rate;
+    }
+  }
+  return exchangeRates;
+}
 
 async function enrichValueInEUR(derived: Holding[]): Promise<void> {
   if (derived.length === 0) return;
@@ -58,39 +79,39 @@ async function enrichValueInEUR(derived: Holding[]): Promise<void> {
     }
   }
 
-  const exchangeRates: ExchangeRates = {};
-  const rateResults = await Promise.allSettled(
-    FX_PAIRS.map(async (pair) => {
-      const from = pair.substring(0, 3);
-      const to = pair.substring(3);
-      const rate = await yahoo.getExchangeRate(from, to);
-      return { pair, rate };
-    })
+  const fxCurrencies = [
+    ...derived.map((h) => h.displayCurrency),
+    ...Object.values(quotes).map((q) => q.currency),
+  ];
+  const exchangeRates = await fetchExchangeRatesForPairs(
+    yahoo,
+    buildNeededFxPairs(fxCurrencies),
   );
-  for (const r of rateResults) {
-    if (r.status === "fulfilled" && r.value.rate > 0) {
-      exchangeRates[r.value.pair] = r.value.rate;
-    }
-  }
 
   for (const h of derived) {
     const q = quotes[h.ticker];
     if (q) {
       const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, q.currency);
-      const valueInQuoteCurrency = h.shares * q.price;
-      const valueEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
-      if (Number.isFinite(valueEUR) && valueEUR > 0) {
-        h.valueInEUR = valueEUR;
-        continue;
+      if (!hasExchangeRate(quoteCurrency, exchangeRates) && quoteCurrency !== "EUR") {
+        // Missing FX — leave valueInEUR unset rather than storing raw foreign as EUR
+      } else {
+        const valueInQuoteCurrency = h.shares * q.price;
+        const valueEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
+        if (Number.isFinite(valueEUR) && valueEUR > 0) {
+          h.valueInEUR = valueEUR;
+          continue;
+        }
       }
     }
 
-    // Cost-basis fallback: shares * purchasePrice converted to EUR
+    // Cost-basis fallback: shares * purchasePrice converted to EUR (only with a real rate)
     if (h.valueInEUR <= 0 && h.shares > 0 && h.purchasePrice > 0) {
-      const costValue = h.shares * h.purchasePrice;
-      const costEUR = convertToEUR(costValue, h.displayCurrency, exchangeRates);
-      if (Number.isFinite(costEUR) && costEUR > 0) {
-        h.valueInEUR = costEUR;
+      if (h.displayCurrency === "EUR" || hasExchangeRate(h.displayCurrency, exchangeRates)) {
+        const costValue = h.shares * h.purchasePrice;
+        const costEUR = convertToEUR(costValue, h.displayCurrency, exchangeRates);
+        if (Number.isFinite(costEUR) && costEUR > 0) {
+          h.valueInEUR = costEUR;
+        }
       }
     }
   }
@@ -486,8 +507,9 @@ export async function upsertHoldingsFromPositions(
     const key = `${h.ticker.toUpperCase()}|${h.exchange.toUpperCase()}`;
     const prevVal = existingByKey.get(key)?.valueInEUR || 0;
     let finalVal = h.valueInEUR > 0 ? h.valueInEUR : prevVal;
-    // Last-resort cost-basis estimate so the total is never 0 when data exists
-    if (finalVal <= 0 && h.shares > 0 && h.purchasePrice > 0) {
+    // Last-resort: only store cost as EUR when the holding itself is EUR
+    // (never treat HKD/JPY/etc. amounts as euros).
+    if (finalVal <= 0 && h.shares > 0 && h.purchasePrice > 0 && h.displayCurrency === "EUR") {
       finalVal = h.shares * h.purchasePrice;
     }
     if (finalVal > 0) {
@@ -589,8 +611,8 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     const existingId = metadataByKey.get(key)?.id;
     const id = existingId || randomUUID();
     let valueEUR = h.valueInEUR > 0 ? h.valueInEUR : (prevValueByKey.get(key) || 0);
-    // Last-resort cost-basis estimate so the total is never 0 when data exists
-    if (valueEUR <= 0 && h.shares > 0 && h.purchasePrice > 0) {
+    // Last-resort: only store cost as EUR when the holding itself is EUR
+    if (valueEUR <= 0 && h.shares > 0 && h.purchasePrice > 0 && h.displayCurrency === "EUR") {
       valueEUR = h.shares * h.purchasePrice;
     }
     h.valueInEUR = valueEUR;

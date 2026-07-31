@@ -43,7 +43,11 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
   const priceInBase = hasRate ? convertCurrency(price, normalizedQuoteCurrency, baseCurrency, exchangeRates) : price;
   const totalValue = priceInBase * holding.shares;
   const costPerShare = holding.purchasePrice;
-  const costInBase = hasRate ? convertCurrency(costPerShare, normalizedQuoteCurrency, baseCurrency, exchangeRates) : costPerShare;
+  const costCurrency = normalizeCurrency(holding.displayCurrency);
+  const costHasRate = costCurrency === baseCurrency || hasExchangeRate(costCurrency, exchangeRates);
+  const costInBase = costHasRate
+    ? convertCurrency(costPerShare, costCurrency, baseCurrency, exchangeRates)
+    : costPerShare;
   const totalCost = costInBase * holding.shares;
   const gainLoss = totalValue - totalCost;
   const gainLossPercent = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0;

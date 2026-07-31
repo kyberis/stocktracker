@@ -35,10 +35,12 @@ function StockRow({ holding, onSelect }: StockRowProps) {
     quotes,
     refreshingTickers,
     exchangeRates,
+    activePortfolioCurrency,
   } = usePortfolio();
   const { t } = useI18n();
   const { layoutTheme } = useTheme();
   const [now, setNow] = useState(() => new Date());
+  const baseCurrency = activePortfolioCurrency || "EUR";
 
   const quote: QuoteData | undefined = quotes[holding.ticker];
   const isCashHolding =
@@ -105,6 +107,13 @@ function StockRow({ holding, onSelect }: StockRowProps) {
     ? ((currentPriceInDisplay - holding.purchasePrice) / holding.purchasePrice) * 100
     : 0;
   const totalReturnAbsEUR = totalValueEUR - convertToEUR(totalCost, holding.displayCurrency, exchangeRates);
+  // Display values in the portfolio's main currency (not hard-coded EUR)
+  const totalValueBase = convertCurrency(totalValueEUR, "EUR", baseCurrency, exchangeRates);
+  const dayChangeAmountBase = convertCurrency(dayChangeAmountEUR, "EUR", baseCurrency, exchangeRates);
+  const totalReturnAbsBase = convertCurrency(totalReturnAbsEUR, "EUR", baseCurrency, exchangeRates);
+  const fxImpactBase = fxImpactEUR == null
+    ? null
+    : convertCurrency(fxImpactEUR, "EUR", baseCurrency, exchangeRates);
   const totalReturnIsPositive = totalReturnAbsEUR >= 0;
 
   const dayIsPositive = dayChangeAmountEUR >= 0;
@@ -145,17 +154,17 @@ function StockRow({ holding, onSelect }: StockRowProps) {
   ]
     .filter(Boolean)
     .join(" · ");
-  const dayText = hasQuote ? `${dayIsPositive ? "+" : ""}${formatCurrency(dayChangeAmountEUR, "EUR")} (${formatPercent(dayChangePercent)})` : "--";
+  const dayText = hasQuote ? `${dayIsPositive ? "+" : ""}${formatCurrency(dayChangeAmountBase, baseCurrency)} (${formatPercent(dayChangePercent)})` : "--";
   const returnText = hasQuote
     ? showDayChange
       ? returnMode === "pct"
         ? `${dayIsPositive ? "+" : ""}${formatPercent(dayChangePercent)}`
-        : `${dayIsPositive ? "+" : ""}${formatCurrency(dayChangeAmountEUR, "EUR")}`
+        : `${dayIsPositive ? "+" : ""}${formatCurrency(dayChangeAmountBase, baseCurrency)}`
       : returnMode === "pct"
         ? `${totalReturnIsPositive ? "+" : ""}${formatPercent(totalReturnPct)}`
-        : `${totalReturnIsPositive ? "+" : ""}${formatCurrency(totalReturnAbsEUR, "EUR")}`
+        : `${totalReturnIsPositive ? "+" : ""}${formatCurrency(totalReturnAbsBase, baseCurrency)}`
     : "--";
-  const rowLabel = `${holding.name}, ${formatCurrency(totalValueEUR, "EUR")}, ${dayText}`;
+  const rowLabel = `${holding.name}, ${formatCurrency(totalValueBase, baseCurrency)}, ${dayText}`;
   const assetTypeBadge = holding.assetType === "crypto" ? (
     <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 shrink-0">CRYPTO</span>
   ) : holding.assetType === "etf" ? (
@@ -194,7 +203,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
           <div className="flex items-center gap-4 text-xs shrink-0 tabular-nums">
             <HoldingHealthBadge holding={holding} size={22} />
             <Sparkline ticker={holding.ticker} width={48} height={16} positive={hasQuote ? dayIsPositive : undefined} className="hidden sm:block shrink-0" />
-            <span className="text-zinc-300 w-20 text-right font-semibold">{awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}</span>
+            <span className="text-zinc-300 w-20 text-right font-semibold">{awaitingQuote ? valueShimmer : formatCurrency(totalValueBase, baseCurrency)}</span>
             <span
               role="button"
               tabIndex={0}
@@ -234,7 +243,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
         </div>
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-2xl font-bold text-slate-900">{awaitingQuote ? <span className="inline-block h-7 w-24 rounded bg-slate-200 animate-pulse align-middle" /> : formatCurrency(totalValueEUR, "EUR")}</p>
+            <p className="text-2xl font-bold text-slate-900">{awaitingQuote ? <span className="inline-block h-7 w-24 rounded bg-slate-200 animate-pulse align-middle" /> : formatCurrency(totalValueBase, baseCurrency)}</p>
             <p className="text-xs text-slate-400 mt-0.5">{hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × {holding.shares}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -277,7 +286,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
           <HoldingHealthBadge holding={holding} size={26} />
           <Sparkline ticker={holding.ticker} width={64} height={24} positive={hasQuote ? dayIsPositive : undefined} className="mx-2 shrink-0" />
           <div className="text-right shrink-0">
-            <p className="text-sm font-bold font-mono text-white">{awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}</p>
+            <p className="text-sm font-bold font-mono text-white">{awaitingQuote ? valueShimmer : formatCurrency(totalValueBase, baseCurrency)}</p>
             <p
               role="button"
               tabIndex={0}
@@ -294,12 +303,12 @@ function StockRow({ holding, onSelect }: StockRowProps) {
     );
   }
 
-  const fxTag = fxImpactEUR !== null && Math.abs(fxImpactEUR) >= 0.01 ? (
+  const fxTag = fxImpactBase !== null && Math.abs(fxImpactBase) >= 0.01 ? (
     <span
-      className={`rounded-full px-1.5 py-0.5 text-[10px] ${fxImpactEUR >= 0 ? "border border-blue-400/18 bg-blue-500/10 text-blue-300" : "border border-amber-400/18 bg-amber-500/10 text-amber-300"}`}
+      className={`rounded-full px-1.5 py-0.5 text-[10px] ${fxImpactBase >= 0 ? "border border-blue-400/18 bg-blue-500/10 text-blue-300" : "border border-amber-400/18 bg-amber-500/10 text-amber-300"}`}
       title={t("fxImpact")}
     >
-      FX {fxImpactEUR >= 0 ? "+" : ""}{formatCurrency(fxImpactEUR, "EUR")}
+      FX {fxImpactBase >= 0 ? "+" : ""}{formatCurrency(fxImpactBase, baseCurrency)}
     </span>
   ) : null;
 
@@ -333,7 +342,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
         <Sparkline ticker={holding.ticker} width={56} height={20} positive={hasQuote ? dayIsPositive : undefined} className="hidden md:block shrink-0" />
         <div className="w-[110px] text-right tabular-nums shrink-0">
           <p className="text-sm font-semibold text-[color:var(--foreground)]">
-            {awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}
+            {awaitingQuote ? valueShimmer : formatCurrency(totalValueBase, baseCurrency)}
           </p>
         </div>
         <div className="w-[110px] text-right tabular-nums shrink-0">

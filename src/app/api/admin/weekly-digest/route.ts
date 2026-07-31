@@ -24,15 +24,11 @@ import { computeNetBuyFlowEUR, isDigestBaselineTooOld } from "@/lib/weekly-diges
 import { withMetrics } from "@/lib/with-metrics";
 import type { WeeklyDigestStats } from "@/lib/db/weekly-digest";
 import type { ExchangeRates } from "@/lib/types";
+import { ALL_EUR_FX_PAIRS } from "@/lib/fx-pairs";
 
 export const maxDuration = 120;
 
-const FX_PAIRS = [
-  "EURUSD", "EURGBP", "EURDKK", "EURCAD", "EURCHF",
-  "EURSEK", "EURNOK", "EURAUD", "EURNZD", "EURJPY",
-  "EURPLN", "EURCZK", "EURHUF", "EURRON", "EURSGD",
-  "EURHKD", "EURZAR", "EURTRY", "EURBRL", "EURMXN",
-];
+const FX_PAIRS = ALL_EUR_FX_PAIRS;
 
 function getWeekRange(): { weekStart: string; weekEnd: string } {
   const now = new Date();

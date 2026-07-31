@@ -169,6 +169,14 @@ export class AlphaVantageProvider implements StockDataProvider {
     if (s.endsWith(".T")) return "JPY";
     if (s.endsWith(".SW")) return "CHF";
     if (s.endsWith(".HK")) return "HKD";
+    if (s.endsWith(".ST")) return "SEK";
+    if (s.endsWith(".OL")) return "NOK";
+    if (s.endsWith(".AX")) return "AUD";
+    if (s.endsWith(".SI")) return "SGD";
+    if (s.endsWith(".NZ")) return "NZD";
+    if (s.endsWith(".SS") || s.endsWith(".SZ")) return "CNY";
+    if (s.endsWith(".SA")) return "BRL";
+    if (s.endsWith(".WA")) return "PLN";
     return "USD";
   }
 

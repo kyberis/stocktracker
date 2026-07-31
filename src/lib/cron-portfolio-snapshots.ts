@@ -14,15 +14,9 @@ import { computeValueByAssetType } from "@/lib/portfolio-summary";
 import { generateId } from "@/lib/utils";
 import { isAnyMarketActive } from "@/lib/market-hours";
 import type { CashEntry, ExchangeRates, Holding, QuoteData } from "@/lib/types";
+import { buildNeededFxPairs } from "@/lib/fx-pairs";
 
 const QUOTE_BATCH_SIZE = 15;
-
-const FX_PAIRS = [
-  "EURUSD", "EURGBP", "EURDKK", "EURCAD", "EURCHF",
-  "EURSEK", "EURNOK", "EURAUD", "EURNZD", "EURJPY",
-  "EURPLN", "EURCZK", "EURHUF", "EURRON", "EURSGD",
-  "EURHKD", "EURZAR", "EURTRY", "EURBRL", "EURMXN",
-];
 
 /** 5-minute UTC bucket aligned with POST /api/portfolio/snapshot */
 export function snapshotDateBucketUtc(): string {
@@ -66,33 +60,6 @@ async function buildQuotesAndExchangeRates(distinctTickers: DistinctHoldingTicke
   const yahoo = new YahooProvider();
   const uniqueTickers = [...new Set(distinctTickers.map((h) => h.ticker))];
 
-  const neededCurrencies = new Set(
-    distinctTickers
-      .map((h) => h.displayCurrency.toUpperCase())
-      .filter((c) => c !== "EUR" && c !== "GBX"),
-  );
-  const neededPairs = FX_PAIRS.filter((pair) => {
-    const to = pair.substring(3);
-    return neededCurrencies.has(to);
-  });
-  if (distinctTickers.some((h) => h.displayCurrency === "GBX" || h.displayCurrency === "GBp")) {
-    if (!neededPairs.includes("EURGBP")) neededPairs.push("EURGBP");
-  }
-
-  const rateResults = await Promise.allSettled(
-    neededPairs.map(async (pair) => {
-      const from = pair.substring(0, 3);
-      const to = pair.substring(3);
-      const rate = await yahoo.getExchangeRate(from, to);
-      return { pair, rate };
-    }),
-  );
-  for (const r of rateResults) {
-    if (r.status === "fulfilled" && r.value.rate > 0) {
-      exchangeRates[r.value.pair] = r.value.rate;
-    }
-  }
-
   let errorCount = 0;
 
   for (let i = 0; i < uniqueTickers.length; i += QUOTE_BATCH_SIZE) {
@@ -111,6 +78,24 @@ async function buildQuotesAndExchangeRates(distinctTickers: DistinctHoldingTicke
       } else {
         errorCount++;
       }
+    }
+  }
+
+  const neededPairs = buildNeededFxPairs([
+    ...distinctTickers.map((h) => h.displayCurrency),
+    ...Object.values(quotes).map((q) => q.currency),
+  ]);
+  const rateResults = await Promise.allSettled(
+    neededPairs.map(async (pair) => {
+      const from = pair.substring(0, 3);
+      const to = pair.substring(3);
+      const rate = await yahoo.getExchangeRate(from, to);
+      return { pair, rate };
+    }),
+  );
+  for (const r of rateResults) {
+    if (r.status === "fulfilled" && r.value.rate > 0) {
+      exchangeRates[r.value.pair] = r.value.rate;
     }
   }
 

@@ -4,8 +4,7 @@ import { requireSocialEnabled } from "@/lib/social-gate";
 import { calculatePortfolioTotals, computeAllocationByType } from "@/lib/portfolio-summary";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { ExchangeRates, QuoteData } from "@/lib/types";
-
-const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD", "EURCHF", "EURSEK", "EURNOK"];
+import { buildNeededFxPairs } from "@/lib/fx-pairs";
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const gated = await requireSocialEnabled();
@@ -59,8 +58,13 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   }
 
   const exchangeRates: ExchangeRates = {};
+  const fxPairs = buildNeededFxPairs([
+    ...holdings.map((h) => h.displayCurrency),
+    ...cashEntries.map((c) => c.displayCurrency),
+    ...Object.values(quotes).map((q) => q.currency),
+  ]);
   const rateResults = await Promise.allSettled(
-    FX_PAIRS.map(async (pair) => {
+    fxPairs.map(async (pair) => {
       const from = pair.substring(0, 3);
       const to = pair.substring(3);
       return { pair, rate: await yahoo.getExchangeRate(from, to) };

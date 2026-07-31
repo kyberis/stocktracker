@@ -8,8 +8,7 @@ import { checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
 import { deviceApiCalls } from "@/lib/metrics";
 import { json401 } from "@/lib/log-unauthorized";
 import type { ExchangeRates, QuoteData } from "@/lib/types";
-
-const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
+import { buildNeededFxPairs } from "@/lib/fx-pairs";
 
 type AuthMethod = "session" | "widget_token" | "device_passkey";
 
@@ -130,21 +129,6 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     }
   }
 
-  const exchangeRates: ExchangeRates = {};
-  const rateResults = await Promise.allSettled(
-    FX_PAIRS.map(async (pair) => {
-      const from = pair.substring(0, 3);
-      const to = pair.substring(3);
-      const rate = await yahoo.getExchangeRate(from, to);
-      return { pair, rate };
-    })
-  );
-  for (const r of rateResults) {
-    if (r.status === "fulfilled" && r.value.rate > 0) {
-      exchangeRates[r.value.pair] = r.value.rate;
-    }
-  }
-
   // Resolve portfolio currency for base-currency conversion
   let portfolioCurrency = "EUR";
   let portfolioName = "All Portfolios";
@@ -154,6 +138,27 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     if (portfolio) {
       portfolioName = portfolio.name;
       portfolioCurrency = portfolio.currency;
+    }
+  }
+
+  const fxPairs = buildNeededFxPairs([
+    ...holdings.map((h) => h.displayCurrency),
+    ...cashEntries.map((c) => c.displayCurrency),
+    ...Object.values(quotes).map((q) => q.currency),
+    portfolioCurrency,
+  ]);
+  const exchangeRates: ExchangeRates = {};
+  const rateResults = await Promise.allSettled(
+    fxPairs.map(async (pair) => {
+      const from = pair.substring(0, 3);
+      const to = pair.substring(3);
+      const rate = await yahoo.getExchangeRate(from, to);
+      return { pair, rate };
+    })
+  );
+  for (const r of rateResults) {
+    if (r.status === "fulfilled" && r.value.rate > 0) {
+      exchangeRates[r.value.pair] = r.value.rate;
     }
   }
 

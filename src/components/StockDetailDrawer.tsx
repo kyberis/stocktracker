@@ -50,8 +50,10 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
     alertedTickers,
     portfolios,
     activePortfolioId,
+    activePortfolioCurrency,
     moveToPortfolio,
   } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency || "EUR";
   const { hasPremiumMarketData, getApiHeaders } = useSettings();
   const { user } = useAuth();
   const { t } = useI18n();
@@ -164,6 +166,8 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
   const totalValueEUR = hasQuote
     ? convertToEUR(totalValue, holding.displayCurrency, exchangeRates)
     : holding.valueInEUR;
+  const totalValueBase = convertCurrency(totalValueEUR, "EUR", baseCurrency, exchangeRates);
+  const dayChangeAmountBase = convertCurrency(dayChangeAmountEUR, "EUR", baseCurrency, exchangeRates);
 
   const isPositive = gainLoss >= 0;
   const gainColor = isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
@@ -453,7 +457,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
-                {formatCurrency(totalValueEUR, "EUR")}
+                {formatCurrency(totalValueBase, baseCurrency)}
               </p>
               <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">
                 {hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × {holding.shares} {t("shares")}
@@ -463,7 +467,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
               {hasQuote && (
                 <div className="text-right">
                   <p className={`text-sm font-semibold ${dayColor}`}>
-                    {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountEUR, "EUR")}
+                    {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountBase, baseCurrency)}
                   </p>
                   <p className={`text-xs ${dayColor}`}>
                     {dayIsPositive ? "+" : ""}{formatPercent(dayChangePercent)}

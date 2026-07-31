@@ -8,16 +8,15 @@ import { computeEstimatedDividends, computeTotalEstimatedEUR } from "@/lib/servi
 import { createProvider } from "@/lib/api-providers";
 import { calculatePortfolioTotals, computeAllocationByType } from "@/lib/portfolio-summary";
 import { normalizeCurrency } from "@/lib/utils";
+import { ALL_EUR_FX_PAIRS } from "@/lib/fx-pairs";
 import type { ExchangeRates, QuoteData } from "@/lib/types";
 import type { PortfolioSnapshot } from "./tools";
 import { buildTopHoldingRow } from "./snapshot-shared";
 
 // Rate keys MUST be in the `EUR<CURRENCY>` shape because that's what
-// `convertToEUR` / `convertCurrency` look up. The previous prefetch list used
-// the inverted `<CURRENCY>EUR` shape, which silently produced no-op FX
-// conversion for every non-EUR holding in Warren's snapshot — making totals
-// and per-holding values diverge from the web.
-const FX_PAIRS_TO_PREFETCH = ["EURUSD", "EURGBP", "EURJPY", "EURCHF", "EURCAD", "EURAUD"];
+// `convertToEUR` / `convertCurrency` look up. Prefetch every supported
+// portfolio currency so non-EUR holdings convert correctly.
+const FX_PAIRS_TO_PREFETCH = ALL_EUR_FX_PAIRS;
 
 /**
  * Server-side equivalent of `WarrenDrawer.buildSnapshot`. The web client builds

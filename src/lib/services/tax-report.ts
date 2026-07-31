@@ -10,9 +10,9 @@ import type { ExchangeRates } from "@/lib/types";
 import type { ServiceResult } from "@/lib/services/service-result";
 import { serviceErr } from "@/lib/services/service-result";
 
-const FX_PAIRS = [
-  "EURUSD", "EURGBP", "EURCHF", "EURJPY", "EURCAD", "EURAUD", "EURSEK", "EURNOK", "EURDKK", "EURPLN",
-];
+import { ALL_EUR_FX_PAIRS } from "@/lib/fx-pairs";
+
+const FX_PAIRS = ALL_EUR_FX_PAIRS;
 
 export interface TaxReportOpts {
   country: TaxCountry;

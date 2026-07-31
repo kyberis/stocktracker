@@ -47,7 +47,10 @@ export default function SharePortfolioModal({ open, onClose, onSend }: Props) {
       const [holdingsRes, cashRes, ratesRes] = await Promise.all([
         fetch("/api/holdings"),
         fetch("/api/cash"),
-        fetch("/api/exchange-rates?pairs=EURUSD,EURGBP,EURDKK,EURCAD,EURJPY,EURCHF"),
+        fetch(`/api/exchange-rates?pairs=${encodeURIComponent(
+          // Keep in sync with ALL_EUR_FX_PAIRS (supported portfolio currencies)
+          ["EURUSD","EURGBP","EURCHF","EURSEK","EURNOK","EURDKK","EURCAD","EURAUD","EURNZD","EURJPY","EURPLN","EURCZK","EURHUF","EURRON","EURSGD","EURHKD","EURZAR","EURTRY","EURBRL","EURMXN"].join(",")
+        )}`),
       ]);
 
       if (!holdingsRes.ok || !cashRes.ok || !ratesRes.ok) throw new Error("Failed to load portfolio");

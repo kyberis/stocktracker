@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.44",
+    date: "2026-07-31",
+    title: "Multi-currency FX conversion",
+    titleTranslations: {
+      es: "Conversión multi-divisa",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Foreign holdings (HKD, JPY, SEK, CHF, SGD, and others) now always fetch the right FX rates and convert into your portfolio’s main currency — values are no longer treated as euros when the rate was missing.",
+        translations: {
+          es: "Las posiciones en divisas extranjeras (HKD, JPY, SEK, CHF, SGD y otras) ahora obtienen el tipo de cambio correcto y se convierten a la divisa principal de tu cartera — ya no se tratan como euros cuando faltaba el tipo de cambio.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.43",
     date: "2026-07-31",
     title: "Hong Kong market data",

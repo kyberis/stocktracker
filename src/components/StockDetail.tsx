@@ -660,6 +660,8 @@ function PositionSummary({
   stealthMode: boolean;
 }) {
   const { t } = useI18n();
+  const { activePortfolioCurrency } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency || "EUR";
 
   const quoteCurrency = quote
     ? resolveQuoteCurrency(holding.displayCurrency, quote.currency)
@@ -701,12 +703,14 @@ function PositionSummary({
   const gainLossPercent = totalCost > 0 ? (gainLoss / totalCost) * 100 : 0;
 
   const dayChangePercent = quote?.regularMarketChangePercent ?? 0;
-  const dayChangeAmount = hasQuote && quote
+  const dayChangeInQuote = hasQuote && quote
     ? holding.shares * (quote.regularMarketChange ?? 0)
     : 0;
+  const dayChangeAmount = convertCurrency(dayChangeInQuote, quoteCurrency, cur, exchangeRates);
   const totalValueEUR = hasQuote
     ? convertToEUR(totalValue, holding.displayCurrency, exchangeRates)
     : holding.valueInEUR;
+  const totalValueBase = convertCurrency(totalValueEUR, "EUR", baseCurrency, exchangeRates);
 
   const isPositive = gainLoss >= 0;
   const gainColor = isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
@@ -736,7 +740,7 @@ function PositionSummary({
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
-            {fmt(totalValueEUR, "EUR")}
+            {fmt(totalValueBase, baseCurrency)}
           </p>
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">
             {hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × {holding.shares} {t("shares")}

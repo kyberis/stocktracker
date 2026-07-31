@@ -6,7 +6,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { useStealthMode } from "@/lib/stealth-context";
-import { formatCurrency, formatPercent, formatStealthCurrency, convertToEUR } from "@/lib/utils";
+import { formatCurrency, formatPercent, formatStealthCurrency, convertToEUR, convertCurrency } from "@/lib/utils";
 import type { Holding, QuoteData, ExchangeRates } from "@/lib/types";
 
 const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false });
@@ -94,6 +94,8 @@ export default function CryptoPortfolioTab({ holdings: allHoldings }: Props) {
   const totalCostEUR = rows.reduce((s, r) => s + r.costEUR, 0);
   const totalGainLossEUR = totalValueEUR - totalCostEUR;
   const totalGainLossPct = totalCostEUR > 0 ? ((totalValueEUR - totalCostEUR) / totalCostEUR) * 100 : 0;
+  const totalValueBase = convertCurrency(totalValueEUR, "EUR", baseCurrency, exchangeRates);
+  const totalGainLossBase = convertCurrency(totalGainLossEUR, "EUR", baseCurrency, exchangeRates);
 
   const allHoldingsValueEUR = useMemo(() => {
     let total = 0;
@@ -151,13 +153,13 @@ export default function CryptoPortfolioTab({ holdings: allHoldings }: Props) {
         <div className="card px-4 py-3">
           <p className="text-xs text-gray-500 dark:text-slate-400 mb-1">{t("cryptoTotalValue")}</p>
           <p className="text-lg font-bold text-gray-900 dark:text-white">
-            {formatStealthCurrency(totalValueEUR, baseCurrency, stealthMode)}
+            {formatStealthCurrency(totalValueBase, baseCurrency, stealthMode)}
           </p>
         </div>
         <div className="card px-4 py-3">
           <p className="text-xs text-gray-500 dark:text-slate-400 mb-1">{t("cryptoTotalGainLoss")}</p>
           <p className={`text-lg font-bold ${totalGainLossEUR >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-            {formatStealthCurrency(totalGainLossEUR, baseCurrency, stealthMode)}
+            {formatStealthCurrency(totalGainLossBase, baseCurrency, stealthMode)}
             <span className="text-sm font-medium ml-1">({formatPercent(totalGainLossPct)})</span>
           </p>
         </div>
@@ -232,10 +234,10 @@ export default function CryptoPortfolioTab({ holdings: allHoldings }: Props) {
                       {row.changePct > 0 ? "+" : ""}{row.changePct.toFixed(2)}%
                     </td>
                     <td className="px-3 py-3 text-right font-medium text-gray-900 dark:text-white">
-                      {formatStealthCurrency(row.valueEUR, baseCurrency, stealthMode)}
+                      {formatStealthCurrency(convertCurrency(row.valueEUR, "EUR", baseCurrency, exchangeRates), baseCurrency, stealthMode)}
                     </td>
                     <td className={`px-3 py-3 text-right font-medium ${row.gainLossEUR >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                      {formatStealthCurrency(row.gainLossEUR, baseCurrency, stealthMode)}
+                      {formatStealthCurrency(convertCurrency(row.gainLossEUR, "EUR", baseCurrency, exchangeRates), baseCurrency, stealthMode)}
                       <span className="text-xs ml-1 opacity-75">({formatPercent(row.gainLossPct)})</span>
                     </td>
                     <td className="px-3 py-3 text-center">
