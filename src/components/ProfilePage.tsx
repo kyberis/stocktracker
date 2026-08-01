@@ -1609,15 +1609,29 @@ export default function ProfilePage() {
                 ? "Tu nombre, foto de perfil, residencia fiscal, Google, passkeys, contraseña y eliminación de cuenta se gestionan en la cuenta unificada (user.trefolio.com)."
                 : "Your display name, avatar URL, tax residency, Google sign-in, passkeys, password, and account deletion are managed on the unified account site."}
             </p>
-            <a
-              href={user.unifiedAccountUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/16 bg-emerald-500/14 px-4 py-2.5 text-sm font-medium text-emerald-200 transition-colors hover:bg-emerald-500/20"
-            >
-              <Globe className="w-4 h-4" aria-hidden />
-              {language === "es" ? "Abrir cuenta unificada" : "Open unified account"}
-            </a>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={user.unifiedAccountUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/16 bg-emerald-500/14 px-4 py-2.5 text-sm font-medium text-emerald-200 transition-colors hover:bg-emerald-500/20"
+              >
+                <Globe className="w-4 h-4" aria-hidden />
+                {language === "es" ? "Abrir cuenta unificada" : "Open unified account"}
+              </a>
+              {user.role !== "admin" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteConfirm(true);
+                    document.getElementById("profile-danger-zone")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  className="btn-danger text-sm"
+                >
+                  {t("deleteAccountButton")}
+                </button>
+              ) : null}
+            </div>
           </div>
         ) : (
           <>
@@ -1897,85 +1911,91 @@ export default function ProfilePage() {
           <p className="text-xs text-gray-400 dark:text-slate-500">{t("profileLastActiveHint") || "If you don't recognize this activity, change your password immediately."}</p>
         </div>
 
-        {user?.role !== "admin" && (
-          <>
-          <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">{t("profileSectionDanger")}</h2>
-          </div>
-          <div className="card p-6 space-y-4 border-red-200 dark:border-red-500/20">
-            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">{t("deleteAccount")}</h2>
+        <div id="profile-danger-zone">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">{t("profileSectionDanger")}</h2>
+        </div>
+        <div className="card p-6 space-y-4 border-red-200 dark:border-red-500/20">
+          <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">{t("deleteAccount")}</h2>
+          {user?.role === "admin" ? (
             <p className="text-sm text-gray-600 dark:text-slate-400">
-              {user?.accountEditingOnIdp && user?.unifiedAccountUrl
-                ? t("deleteAccountIdpWarning")
-                : t("deleteAccountWarning")}
+              {language === "es"
+                ? "Las cuentas de administrador no se pueden eliminar desde aquí. Usa una cuenta de usuario normal para probar el flujo, o elimínala desde el panel de admin."
+                : "Admin accounts cannot be deleted here. Use a normal user account to test this flow, or remove the account from the admin panel."}
             </p>
+          ) : (
+            <>
+              <p className="text-sm text-gray-600 dark:text-slate-400">
+                {user?.accountEditingOnIdp && user?.unifiedAccountUrl
+                  ? t("deleteAccountIdpWarning")
+                  : t("deleteAccountWarning")}
+              </p>
 
-            {!showDeleteConfirm ? (
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="btn-danger text-sm"
-              >
-                {t("deleteAccountButton")}
-              </button>
-            ) : user?.accountEditingOnIdp && user?.unifiedAccountUrl ? (
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("deleteAccountIdpConfirm")}</p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleContinueDeleteOnIdp}
-                    className="btn-danger text-sm"
-                  >
-                    {t("deleteAccountContinueToIdp")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowDeleteConfirm(false); setDeleteError(""); }}
-                    className="btn-secondary text-sm"
-                  >
-                    {t("cancel")}
-                  </button>
+              {!showDeleteConfirm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="btn-danger text-sm"
+                >
+                  {t("deleteAccountButton")}
+                </button>
+              ) : user?.accountEditingOnIdp && user?.unifiedAccountUrl ? (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("deleteAccountIdpConfirm")}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleContinueDeleteOnIdp}
+                      className="btn-danger text-sm"
+                    >
+                      {t("deleteAccountContinueToIdp")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowDeleteConfirm(false); setDeleteError(""); }}
+                      className="btn-secondary text-sm"
+                    >
+                      {t("cancel")}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <form onSubmit={handleDeleteAccount} className="space-y-3">
-                <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("deleteAccountConfirm")}</p>
-                <div>
-                  <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("deleteAccountEnterPassword")}</label>
-                  <input
-                    type="password"
-                    value={deletePassword}
-                    onChange={(e) => setDeletePassword(e.target.value)}
-                    className="w-full text-sm"
-                    autoFocus
-                    required
-                  />
-                </div>
-                {deleteError && (
-                  <p className="text-xs text-red-500 dark:text-red-400" role="alert">{deleteError}</p>
-                )}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="submit"
-                    disabled={deleting || !deletePassword}
-                    className="btn-danger text-sm disabled:opacity-40"
-                  >
-                    {deleting ? t("deleteAccountDeleting") : t("deleteAccountConfirmButton")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeleteError(""); }}
-                    className="btn-secondary text-sm"
-                  >
-                    {t("cancel")}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-          </>
-        )}
+              ) : (
+                <form onSubmit={handleDeleteAccount} className="space-y-3">
+                  <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("deleteAccountConfirm")}</p>
+                  <div>
+                    <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("deleteAccountEnterPassword")}</label>
+                    <input
+                      type="password"
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      className="w-full text-sm"
+                      autoFocus
+                      required
+                    />
+                  </div>
+                  {deleteError && (
+                    <p className="text-xs text-red-500 dark:text-red-400" role="alert">{deleteError}</p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="submit"
+                      disabled={deleting || !deletePassword}
+                      className="btn-danger text-sm disabled:opacity-40"
+                    >
+                      {deleting ? t("deleteAccountDeleting") : t("deleteAccountConfirmButton")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeleteError(""); }}
+                      className="btn-secondary text-sm"
+                    >
+                      {t("cancel")}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </>
+          )}
+        </div>
         </section>}
 
         {/* === Subscription Tab === */}

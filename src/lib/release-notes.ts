@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.50",
+    date: "2026-08-01",
+    title: "Delete account visible on Profile for non-admins",
+    titleTranslations: {
+      es: "Eliminar cuenta visible en Perfil para no-admins",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Profile → Account now always shows the Danger zone; non-admins get a Delete my account CTA (including a shortcut on the unified-account card). Admin accounts see an explanation instead of a hidden section.",
+        translations: {
+          es: "Perfil → Cuenta siempre muestra la zona de peligro; los no-admins ven el CTA Eliminar mi cuenta (también un acceso en la tarjeta de cuenta unificada). Las cuentas admin ven una explicación en lugar de una sección oculta.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.49",
     date: "2026-08-01",
     title: "Company analysis pages gain fundamentals, intelligence & valuation tabs",
