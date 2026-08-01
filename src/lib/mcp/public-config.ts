@@ -58,3 +58,41 @@ export function buildClaudeDesktopMcpConfigSnippet(mcpUrl: string): string {
     2,
   );
 }
+
+/**
+ * Third-party Yahoo Finance MCP (stdio via yahoo-finance2).
+ * Runs locally in the MCP client — not hosted by trefolio.
+ * @see https://github.com/gadicc/yahoo-finance2/blob/master/docs/mcp.md
+ */
+export function buildYahooFinanceMcpConfigSnippet(): string {
+  return JSON.stringify(
+    {
+      mcpServers: {
+        "yahoo-finance2": {
+          command: "npx",
+          args: ["-y", "-p", "yahoo-finance2", "yahoo-finance-mcp"],
+        },
+      },
+    },
+    null,
+    2,
+  );
+}
+
+/** Cursor project/global `.cursor/mcp.json` form (stdio + type). */
+export function buildYahooFinanceCursorMcpConfigSnippet(): string {
+  return JSON.stringify(
+    {
+      mcpServers: {
+        "yahoo-finance2": {
+          type: "stdio",
+          command: "npx",
+          args: ["-y", "-p", "yahoo-finance2", "yahoo-finance-mcp"],
+        },
+      },
+    },
+    null,
+    2,
+  );
+}
+

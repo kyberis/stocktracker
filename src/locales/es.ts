@@ -466,20 +466,27 @@ const es: TranslationStrings = {
   profileMcpTokensLoadError: "No se pudieron cargar los tokens.",
   profileMcpTokenCreateError: "No se pudo crear el token.",
   profileMcpTokenRevokeError: "No se pudo revocar el token.",
-  profileMcpIdpUnavailable: "Las cuentas unificadas no están disponibles temporalmente. Inténtalo más tarde.",
+  profileMcpIdpUnavailable: "OneLogin no está disponible temporalmente. Inténtalo más tarde.",
   profileMcpSetupGuide: "Guía paso a paso",
   profileMcpEndpoint: "Endpoint MCP",
   profileMcpCursorConfig: "Configuración para Cursor",
   profileMcpCopyConfig: "Copiar configuración",
   profileMcpCopied: "¡Copiado!",
   profileMcpRequiresIdp:
-    "Inicia sesión con tu cuenta unificada de trefolio para crear tokens MCP aquí.",
+    "Inicia sesión con tu cuenta OneLogin para crear tokens MCP aquí.",
   profileMcpToolsHint: "Herramientas: lectura de cartera + Warren MOAT (getMoatEvaluation, generateMoatNarrative, screenMoat, …). Auth: Bearer tfp_pat_… — no OAuth Client ID.",
   profileMcpClaudeConnectorWarning:
     "Claude Desktop → Ajustes → Conectores → Conector personalizado pide OAuth (Client ID). trefolio usa un token de acceso personal. Editá claude_desktop_config.json (abajo) — no uses Client ID en la UI de Conectores.",
   profileMcpClaudeDesktopConfig: "Configuración para Claude Desktop",
   profileMcpClaudeConfigPath:
     "macOS: ~/Library/Application Support/Claude/claude_desktop_config.json — reiniciá Claude Desktop.",
+  profileMcpYahooTitle: "Yahoo Finance MCP",
+  profileMcpYahooDescription:
+    "MCP opcional de datos de mercado de terceros (yahoo-finance2). Se ejecuta en local en Cursor o Claude — no lo hospeda trefolio y no usa tu token de cartera.",
+  profileMcpYahooHint:
+    "Fusiona el fragmento en tu mapa mcpServers existente y reinicia el cliente. Datos no oficiales de Yahoo Finance; solo con fines informativos.",
+  profileMcpYahooCursorConfig: "Configuración Cursor (Yahoo Finance)",
+  profileMcpYahooClaudeConfig: "Configuración Claude Desktop (Yahoo Finance)",
   profileSectionIdentity: "Identidad",
   profileSectionAccess: "Inicio de sesión y acceso",
   profileSectionActivitySecurity: "Actividad y seguridad",
@@ -626,8 +633,8 @@ const es: TranslationStrings = {
   deleteAccountError: "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
   deleteAccountDeleting: "Eliminando...",
   deleteAccountConfirmButton: "Sí, eliminar permanentemente",
-  deleteAccountIdpWarning: "Elimina permanentemente tu cuenta unificada (inicio de sesión en trefolio, Clara y Will) y los datos asociados. Las suscripciones activas se cancelan. Esta acción no se puede deshacer.",
-  deleteAccountIdpConfirm: "Confirmarás la eliminación en la cuenta unificada (user.trefolio.com). ¿Continuar?",
+  deleteAccountIdpWarning: "Elimina permanentemente tu cuenta OneLogin (inicio de sesión en trefolio, Clara y Will) y los datos asociados. Las suscripciones activas se cancelan. Esta acción no se puede deshacer.",
+  deleteAccountIdpConfirm: "Confirmarás la eliminación en OneLogin (user.trefolio.com). ¿Continuar?",
   deleteAccountContinueToIdp: "Continuar para confirmar la eliminación",
   profileSecurityTitle: "Seguridad",
   profileLastActive: "Última actividad",
@@ -3197,12 +3204,12 @@ const es: TranslationStrings = {
   aidLayoutSectionWill: "Will",
   aidLayoutSectionClara: "Clara",
 
-  idpUnifiedBridgeHeadingLogin: "Inicio de sesión unificado",
-  idpUnifiedBridgeHeadingSignup: "Registro unificado",
+  idpUnifiedBridgeHeadingLogin: "Inicio de sesión OneLogin",
+  idpUnifiedBridgeHeadingSignup: "Registro OneLogin",
   idpUnifiedBridgeBodyLogin:
-    "Te estamos redirigiendo a la cuenta compartida de trefolio en user.trefolio.com. El mismo acceso sirve para trefolio, Clara y Will.",
+    "Te estamos redirigiendo a OneLogin en user.trefolio.com. El mismo acceso sirve para trefolio, Clara y Will.",
   idpUnifiedBridgeBodySignup:
-    "Te estamos redirigiendo para crear tu cuenta en user.trefolio.com. Una sola cuenta desbloquea trefolio, Clara y Will.",
+    "Te estamos redirigiendo para crear tu cuenta OneLogin en user.trefolio.com. Una sola cuenta desbloquea trefolio, Clara y Will.",
   idpUnifiedBridgeCountdown: "Continuando en {seconds}s…",
   idpUnifiedBridgeContinue: "Continuar ahora",
   idpUnifiedBridgeRetry: "Intentar de nuevo",

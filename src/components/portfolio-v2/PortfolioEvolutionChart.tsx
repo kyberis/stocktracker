@@ -10,9 +10,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid,
-  ReferenceArea,
-  ReferenceLine,
 } from "recharts";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
@@ -64,10 +61,6 @@ interface ChartPoint {
   cryptoValue?: number;
   events?: EventMarker[];
   [key: string]: unknown;
-}
-
-function eventDotFill(type: string): string {
-  return type === "sell" ? "#ef4444" : "#10b981";
 }
 
 function attachEventsToPoints(pts: ChartPoint[], evts: EventMarker[]): ChartPoint[] {
@@ -165,47 +158,6 @@ function generatePaddingTicks(fromMs: number, toMs: number, step: number = 5 * 6
     out.push({ date: new Date(t).toISOString() });
   }
   return out;
-}
-
-/**
- * Find the date string in chartData closest to `targetMs`.
- * Recharts categorical XAxis needs an exact string match, so we must
- * return a value that actually exists in the data array.
- */
-function findClosestDataDate(chartData: { date: string }[], targetMs: number): string | null {
-  if (chartData.length === 0) return null;
-  let best = chartData[0].date;
-  let bestDiff = Math.abs(parseTime(best) - targetMs);
-  for (let i = 1; i < chartData.length; i++) {
-    const d = chartData[i].date;
-    const diff = Math.abs(parseTime(d) - targetMs);
-    if (diff < bestDiff) {
-      best = d;
-      bestDiff = diff;
-    }
-    if (diff > bestDiff) break;
-  }
-  return best;
-}
-
-function computeWeekendBands(points: ChartPoint[]): { x1: string; x2: string }[] {
-  if (points.length < 2) return [];
-  const bands: { x1: string; x2: string }[] = [];
-  let weekendStart: string | null = null;
-
-  for (const p of points) {
-    const d = new Date(p.date.replace(" ", "T"));
-    const dow = d.getUTCDay();
-    const isWeekend = dow === 0 || dow === 6;
-    if (isWeekend && !weekendStart) {
-      weekendStart = p.date;
-    } else if (!isWeekend && weekendStart) {
-      bands.push({ x1: weekendStart, x2: p.date });
-      weekendStart = null;
-    }
-  }
-  if (weekendStart) bands.push({ x1: weekendStart, x2: points[points.length - 1].date });
-  return bands;
 }
 
 // ── Component ──
@@ -611,11 +563,6 @@ export default function PortfolioEvolutionChart({
     [chartData, events],
   );
 
-  const weekendBands = useMemo(() => {
-    if (range === "1d") return [];
-    return computeWeekendBands(chartData);
-  }, [range, chartData]);
-
   // ── Y domain ──
 
   const dataKey = showPerformance ? "pct" : "value";
@@ -714,12 +661,15 @@ export default function PortfolioEvolutionChart({
     !(assetFilter === "all" && holdings.some((h) => h.assetType === "crypto"));
 
   return (
-    <div id="chart" className="card relative overflow-hidden rounded-[var(--radius-card)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]">
+    <div
+      id="chart"
+      className="relative overflow-hidden rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)]"
+    >
       {topButtons}
       {showGuide && <ChartGuideModal mode={mode} onClose={() => setShowGuide(false)} />}
 
-      {/* Chart */}
-      <div className="relative h-[340px] px-3 pt-3">
+      {/* Chart — clean area NAV (analysis-like): no grid, weekend bands, or session overlays */}
+      <div className="relative h-[400px] px-2 pt-2 sm:h-[440px] sm:px-3 sm:pt-3">
         {showMarketsClosedBanner && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
             <div className="flex flex-col items-center gap-2.5 text-center">
@@ -758,24 +708,20 @@ export default function PortfolioEvolutionChart({
           <AreaChart data={chartDataWithEvents} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
             <defs>
               <linearGradient id="pv2-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={lineColor} stopOpacity={0.2} />
+                <stop offset="0%" stopColor={lineColor} stopOpacity={0.35} />
+                <stop offset="55%" stopColor={lineColor} stopOpacity={0.08} />
                 <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
               </linearGradient>
-              <pattern id="pv2-weekend" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                <line x1="0" y1="0" x2="0" y2="6" stroke="var(--weekend-hatch, rgba(148,163,184,0.08))" strokeWidth="2" />
-              </pattern>
             </defs>
-
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--grid, rgba(148,163,184,0.08))" />
 
             <XAxis
               dataKey="date"
               tickFormatter={(d: string) => formatDateLabel(d, isIntraday)}
-              tick={{ fontSize: 10, fill: "var(--axis, rgba(148,163,184,0.5))" }}
+              tick={{ fontSize: 11, fill: "var(--muted)" }}
               axisLine={false}
               tickLine={false}
               interval="preserveStartEnd"
-              minTickGap={50}
+              minTickGap={56}
             />
             <YAxis
               domain={yDomain}
@@ -786,10 +732,10 @@ export default function PortfolioEvolutionChart({
                     ? "•••"
                     : formatCurrency(v, baseCurrency)
               }
-              tick={{ fontSize: 10, fill: "var(--axis, rgba(148,163,184,0.5))" }}
+              tick={{ fontSize: 11, fill: "var(--muted)" }}
               axisLine={false}
               tickLine={false}
-              width={70}
+              width={72}
             />
 
             <Tooltip
@@ -804,182 +750,19 @@ export default function PortfolioEvolutionChart({
                   spikeContributors={spikeContributors}
                 />
               }
-              cursor={{ stroke: "var(--cursor, rgba(148,163,184,0.2))", strokeDasharray: "3 3" }}
+              cursor={{ stroke: lineColor, strokeOpacity: 0.35, strokeWidth: 1 }}
             />
-
-            {/* Weekend bands */}
-            {weekendBands.map((band, i) => (
-              <ReferenceArea
-                key={`we-${i}`}
-                x1={band.x1}
-                x2={band.x2}
-                fill="url(#pv2-weekend)"
-                fillOpacity={1}
-                ifOverflow="visible"
-              />
-            ))}
-
-            {/* Market session bands (1D) — labels shown in legend bar below chart */}
-            {dayBounds && sessionOverlays.map((s, i) => {
-              const x1 = findClosestDataDate(chartData, s.openDate.getTime());
-              const x2 = findClosestDataDate(chartData, s.closeDate.getTime());
-              if (!x1 || !x2) return null;
-              return (
-              <ReferenceArea
-                key={`session-${i}`}
-                x1={x1}
-                x2={x2}
-                fill={s.color}
-                fillOpacity={0.05}
-                ifOverflow="visible"
-              />
-              );
-            })}
-
-            {/* "Market closed" labels in pre-market, inter-session gaps, and after-hours (1D) */}
-            {dayBounds && (() => {
-              const sorted = [...sessionOverlays].sort((a, b) => a.openDate.getTime() - b.openDate.getTime());
-              const merged: { open: number; close: number }[] = [];
-              for (const s of sorted) {
-                const o = s.openDate.getTime();
-                const c = s.closeDate.getTime();
-                if (merged.length > 0 && o <= merged[merged.length - 1].close) {
-                  merged[merged.length - 1].close = Math.max(merged[merged.length - 1].close, c);
-                } else {
-                  merged.push({ open: o, close: c });
-                }
-              }
-              const gaps: { x1: string | null; x2: string | null; label: string }[] = [];
-              if (merged.length > 0 && dayBounds.firstOpenMs > dayBounds.startMs + 5 * 60_000) {
-                gaps.push({
-                  x1: findClosestDataDate(chartData, dayBounds.startMs),
-                  x2: findClosestDataDate(chartData, dayBounds.firstOpenMs),
-                  label: "Pre-market",
-                });
-              }
-              for (let i = 0; i < merged.length - 1; i++) {
-                if (merged[i + 1].open > merged[i].close) {
-                  gaps.push({
-                    x1: findClosestDataDate(chartData, merged[i].close),
-                    x2: findClosestDataDate(chartData, merged[i + 1].open),
-                    label: "Market closed",
-                  });
-                }
-              }
-              if (merged.length > 0 && dayBounds.endMs > dayBounds.lastCloseMs + 5 * 60_000) {
-                gaps.push({
-                  x1: findClosestDataDate(chartData, dayBounds.lastCloseMs),
-                  x2: findClosestDataDate(chartData, dayBounds.endMs),
-                  label: "Market closed",
-                });
-              }
-              return gaps.map((g, i) => {
-                if (!g.x1 || !g.x2) return null;
-                return (
-                  <ReferenceArea
-                    key={`gap-${i}`}
-                    x1={g.x1}
-                    x2={g.x2}
-                    fill="transparent"
-                    ifOverflow="visible"
-                    label={({ viewBox }: { viewBox?: { x?: number; y?: number; width?: number } }) => {
-                      const vx = viewBox?.x ?? 0;
-                      const vy = viewBox?.y ?? 0;
-                      return (
-                        <text
-                          x={vx + 6}
-                          y={vy + 16}
-                          fill="var(--closed-label, rgba(100,116,139,0.5))"
-                          fontSize={9}
-                          fontWeight={500}
-                          fontStyle="italic"
-                        >
-                          {g.label}
-                        </text>
-                      );
-                    }}
-                  />
-                );
-              });
-            })()}
-
-            {/* Session open/close vertical markers (1D) */}
-            {sessionOverlays.map((s) => {
-              const x = findClosestDataDate(chartData, s.openDate.getTime());
-              if (!x) return null;
-              return (
-                <ReferenceLine
-                  key={`open-${s.name}`}
-                  x={x}
-                  stroke={s.color}
-                  strokeDasharray="3 3"
-                  strokeOpacity={0.4}
-                />
-              );
-            })}
-            {sessionOverlays.map((s) => {
-              const x = findClosestDataDate(chartData, s.closeDate.getTime());
-              if (!x) return null;
-              return (
-                <ReferenceLine
-                  key={`close-${s.name}`}
-                  x={x}
-                  stroke="var(--axis, rgba(148,163,184,0.25))"
-                  strokeDasharray="3 3"
-                  strokeOpacity={0.25}
-                />
-              );
-            })}
 
             {/* Main area */}
             <Area
               type="monotone"
               dataKey={dataKey}
               stroke={lineColor}
-              strokeWidth={2}
+              strokeWidth={2.25}
               fill="url(#pv2-grad)"
-              fillOpacity={0.8}
-              dot={(props: Record<string, unknown>) => {
-                const { cx, cy, index, payload } = props as {
-                  cx: number;
-                  cy: number;
-                  index: number;
-                  payload: ChartPoint;
-                };
-                if (typeof cx !== "number" || typeof cy !== "number") {
-                  return <g key={`ed-${index}`} />;
-                }
-                const evts = payload?.events;
-                const hasSpike = payload?.spike != null;
-                const hasEvents = evts?.length;
-                if (!hasSpike && !hasEvents) {
-                  return <g key={`ed-${index}`} />;
-                }
-                const spikeColor = hasSpike ? ((payload.spike as number) > 0 ? "#10b981" : "#ef4444") : undefined;
-                return (
-                  <g key={`ed-${index}`}>
-                    {hasSpike && (
-                      <>
-                        <circle cx={cx} cy={cy} r={7} fill={spikeColor} fillOpacity={0.15} />
-                        <circle cx={cx} cy={cy} r={4} fill={spikeColor} fillOpacity={0.5} stroke={spikeColor} strokeWidth={1} />
-                      </>
-                    )}
-                    {hasEvents && evts!.slice(0, 4).map((e, i) => (
-                      <circle
-                        key={e.id || `${e.type}-${e.ticker}-${i}`}
-                        cx={cx + (i - (evts!.slice(0, 4).length - 1) / 2) * 6}
-                        cy={cy}
-                        r={3.5}
-                        fill={eventDotFill(e.type)}
-                        stroke="#fff"
-                        strokeWidth={1.5}
-                        style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.2))" }}
-                      />
-                    ))}
-                  </g>
-                );
-              }}
-              activeDot={{ r: 4, strokeWidth: 2, fill: lineColor }}
+              fillOpacity={1}
+              dot={false}
+              activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--surface)", fill: lineColor }}
               connectNulls={false}
               isAnimationActive={false}
             />
@@ -1002,18 +785,6 @@ export default function PortfolioEvolutionChart({
         </ResponsiveContainer>
       </div>
 
-      {/* Market sessions bar (1D) — always reserve space to avoid layout shift */}
-      {range === "1d" && (
-        <div className="flex min-h-[32px] items-center gap-4 overflow-x-auto border-t border-[color:var(--border)] px-5 py-2 text-[11px] text-[color:var(--muted)]">
-          {sessionOverlays.map((s, i) => (
-            <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-              <span className="font-semibold text-[color:var(--foreground)]">{s.name}</span>
-              <span>{s.openLabel} – {s.closeLabel}</span>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Footer */}
       <ChartFooter

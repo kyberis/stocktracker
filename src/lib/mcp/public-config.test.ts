@@ -4,6 +4,8 @@ import {
   buildClaudeCodeMcpCliSnippet,
   buildClaudeDesktopMcpConfigSnippet,
   buildCursorMcpConfigSnippet,
+  buildYahooFinanceCursorMcpConfigSnippet,
+  buildYahooFinanceMcpConfigSnippet,
   getProfileMcpUrl,
   getIdpDeveloperTokensUrl,
   getMcpUserEndpointUrl,
@@ -46,6 +48,24 @@ describe("mcp public config", () => {
     expect(getProfileMcpUrl()).toBe("https://trefolio.com/profile?section=mcp");
     expect(getIdpDeveloperTokensUrl()).toBe(getProfileMcpUrl());
     process.env.APP_BASE_URL = prev;
+  });
+
+  it("builds Yahoo Finance MCP snippets (third-party stdio)", () => {
+    const claude = JSON.parse(buildYahooFinanceMcpConfigSnippet()) as {
+      mcpServers: { "yahoo-finance2": { command: string; args: string[] } };
+    };
+    expect(claude.mcpServers["yahoo-finance2"].command).toBe("npx");
+    expect(claude.mcpServers["yahoo-finance2"].args).toEqual([
+      "-y",
+      "-p",
+      "yahoo-finance2",
+      "yahoo-finance-mcp",
+    ]);
+
+    const cursor = JSON.parse(buildYahooFinanceCursorMcpConfigSnippet()) as {
+      mcpServers: { "yahoo-finance2": { type: string } };
+    };
+    expect(cursor.mcpServers["yahoo-finance2"].type).toBe("stdio");
   });
 });
 

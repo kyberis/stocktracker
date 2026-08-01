@@ -466,20 +466,27 @@ const en: TranslationStrings = {
   profileMcpTokensLoadError: "Could not load tokens.",
   profileMcpTokenCreateError: "Could not create token.",
   profileMcpTokenRevokeError: "Could not revoke token.",
-  profileMcpIdpUnavailable: "Unified accounts are temporarily unavailable. Try again later.",
+  profileMcpIdpUnavailable: "OneLogin is temporarily unavailable. Try again later.",
   profileMcpSetupGuide: "Step-by-step setup guide",
   profileMcpEndpoint: "MCP endpoint",
   profileMcpCursorConfig: "Cursor configuration",
   profileMcpCopyConfig: "Copy configuration",
   profileMcpCopied: "Copied!",
   profileMcpRequiresIdp:
-    "Sign in with your unified trefolio account to create MCP tokens here.",
+    "Sign in with your OneLogin account to create MCP tokens here.",
   profileMcpToolsHint: "Tools: portfolio reads + Warren MOAT (getMoatEvaluation, generateMoatNarrative, screenMoat, …). Auth: Bearer tfp_pat_… — not OAuth Client ID.",
   profileMcpClaudeConnectorWarning:
     "Claude Desktop → Settings → Connectors → Custom connector expects OAuth (Client ID). trefolio uses a personal access token instead. Edit claude_desktop_config.json (see below) — leave Client ID empty in the Connectors UI.",
   profileMcpClaudeDesktopConfig: "Claude Desktop configuration",
   profileMcpClaudeConfigPath:
     "macOS: ~/Library/Application Support/Claude/claude_desktop_config.json — then restart Claude Desktop.",
+  profileMcpYahooTitle: "Yahoo Finance MCP",
+  profileMcpYahooDescription:
+    "Optional third-party market-data MCP (yahoo-finance2). Runs locally in Cursor or Claude — not hosted by trefolio and not linked to your portfolio token.",
+  profileMcpYahooHint:
+    "Merge the snippet into your existing mcpServers map, then restart the client. Unofficial Yahoo Finance data; for informational use only.",
+  profileMcpYahooCursorConfig: "Cursor configuration (Yahoo Finance)",
+  profileMcpYahooClaudeConfig: "Claude Desktop configuration (Yahoo Finance)",
   profileSectionIdentity: "Identity",
   profileSectionAccess: "Sign-in and access",
   profileSectionActivitySecurity: "Activity and security",
@@ -625,8 +632,8 @@ const en: TranslationStrings = {
   deleteAccountError: "Failed to delete account. Please try again.",
   deleteAccountDeleting: "Deleting...",
   deleteAccountConfirmButton: "Yes, permanently delete",
-  deleteAccountIdpWarning: "Permanently delete your unified account (sign-in for trefolio, Clara, and Will) and associated data. Active subscriptions are cancelled. This cannot be undone.",
-  deleteAccountIdpConfirm: "You'll confirm deletion on the unified account site (user.trefolio.com). Continue?",
+  deleteAccountIdpWarning: "Permanently delete your OneLogin account (sign-in for trefolio, Clara, and Will) and associated data. Active subscriptions are cancelled. This cannot be undone.",
+  deleteAccountIdpConfirm: "You'll confirm deletion on OneLogin (user.trefolio.com). Continue?",
   deleteAccountContinueToIdp: "Continue to confirm deletion",
   profileSecurityTitle: "Security",
   profileLastActive: "Last active",
@@ -3197,13 +3204,13 @@ const en: TranslationStrings = {
   aidLayoutSectionWill: "Will",
   aidLayoutSectionClara: "Clara",
 
-  // Unified IdP redirect bridge (/login, /signup → user.trefolio.com)
-  idpUnifiedBridgeHeadingLogin: "Unified sign-in",
-  idpUnifiedBridgeHeadingSignup: "Unified registration",
+  // OneLogin IdP redirect bridge (/login, /signup → user.trefolio.com)
+  idpUnifiedBridgeHeadingLogin: "OneLogin sign-in",
+  idpUnifiedBridgeHeadingSignup: "OneLogin registration",
   idpUnifiedBridgeBodyLogin:
-    "You are being redirected to the shared trefolio account at user.trefolio.com. The same sign-in works across trefolio, Clara, and Will.",
+    "You are being redirected to OneLogin at user.trefolio.com. The same sign-in works across trefolio, Clara, and Will.",
   idpUnifiedBridgeBodySignup:
-    "You are being redirected to create your account at user.trefolio.com. One account unlocks trefolio, Clara, and Will.",
+    "You are being redirected to create your OneLogin account at user.trefolio.com. One account unlocks trefolio, Clara, and Will.",
   idpUnifiedBridgeCountdown: "Continuing in {seconds}s…",
   idpUnifiedBridgeContinue: "Continue now",
   idpUnifiedBridgeRetry: "Try again",

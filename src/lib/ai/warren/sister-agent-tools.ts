@@ -16,7 +16,7 @@ function sisterUnavailable(ctx: WarrenToolContext) {
     available: false,
     note: ctx.isDemo
       ? "Demo mode — sign in to connect Clara and Will."
-      : "Missing unified account identity — sign in with your trefolio account linked to user.trefolio.com.",
+      : "Missing OneLogin identity — sign in with your trefolio account linked to user.trefolio.com.",
   };
 }
 

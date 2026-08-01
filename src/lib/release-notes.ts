@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.57",
+    date: "2026-08-02",
+    title: "Cleaner portfolio chart, OneLogin naming, Yahoo Finance MCP",
+    titleTranslations: {
+      es: "Gráfico de cartera más limpio, nombre OneLogin y Yahoo Finance MCP",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Portfolio evolution chart keeps Recharts NAV with a cleaner analysis-style area (no grid, weekend bands, or session overlays).",
+        translations: {
+          es: "El gráfico de evolución de la cartera mantiene el NAV en Recharts con un área más limpia al estilo análisis (sin rejilla, bandas de fin de semana ni overlays de sesión).",
+        },
+      },
+      {
+        type: "improvement",
+        text: "User-facing copy now calls the shared identity “OneLogin” instead of “unified account”.",
+        translations: {
+          es: "El texto visible para usuarios llama “OneLogin” a la identidad compartida en lugar de “cuenta unificada”.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Profile → AI & MCP includes copy-paste snippets for the third-party Yahoo Finance MCP (yahoo-finance2) for Cursor and Claude Desktop.",
+        translations: {
+          es: "Perfil → IA y MCP incluye fragmentos listos para pegar del MCP de terceros Yahoo Finance (yahoo-finance2) para Cursor y Claude Desktop.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.56",
     date: "2026-08-02",
     title: "Mutual fund (fondos) support",
