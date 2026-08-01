@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { LayoutDashboard, BarChart3, Sparkles, ShieldCheck, Lock } from "lucide-react";
+import { LayoutDashboard, BarChart3, Sparkles, ShieldCheck, Lock, ExternalLink } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { buildLoginRedirectHref } from "@/lib/auth/client-redirect";
 import { getMarketStatus } from "@/lib/market-hours";
 import { formatAnalysisNumber } from "@/lib/company-analysis/format";
+import { toTradingViewChartUrl } from "@/lib/company-analysis/tradingview";
+import { toYahooFinanceQuoteUrl } from "@/lib/market-symbol";
 import { useTabUrl } from "@/lib/use-tab-url";
 import VerticalTabRail, { type TabRailItem } from "@/components/ui/VerticalTabRail";
 import { useCompanyAnalysisReport } from "@/components/company-analysis/use-company-analysis-report";
@@ -19,6 +21,26 @@ import NewsPanel from "@/components/company-analysis/panels/NewsPanel";
 import AnalysisNarrativePanel from "@/components/company-analysis/panels/AnalysisNarrativePanel";
 import InsidersFlowPanel from "@/components/company-analysis/panels/InsidersFlowPanel";
 import FundamentalsTablePanel from "@/components/company-analysis/panels/FundamentalsTablePanel";
+
+function ExternalQuoteLinks({ ticker, exchange }: { ticker: string; exchange: string }) {
+  const tradingViewUrl = toTradingViewChartUrl(ticker, exchange);
+  const yahooUrl = toYahooFinanceQuoteUrl(ticker, exchange);
+  const linkClass =
+    "inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2.5 py-1.5 text-xs font-semibold text-[color:var(--foreground)] transition-colors hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]";
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <a href={tradingViewUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+        TradingView
+        <ExternalLink className="h-3 w-3 opacity-70" aria-hidden />
+      </a>
+      <a href={yahooUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+        Yahoo Finance
+        <ExternalLink className="h-3 w-3 opacity-70" aria-hidden />
+      </a>
+    </div>
+  );
+}
 
 const StockDetail = dynamic(() => import("@/components/StockDetail"), { ssr: false });
 const StockIntelligence = dynamic(() => import("@/components/StockIntelligence"), { ssr: false });
@@ -146,7 +168,7 @@ export default function AnalisisShell({
       </div>
 
       <header className="card flex flex-wrap items-start justify-between gap-4 p-6">
-        <div>
+        <div className="min-w-0 space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight text-[color:var(--foreground)]">
               {data.loading ? ticker : name}
@@ -172,11 +194,12 @@ export default function AnalisisShell({
             )}
           </div>
           {data.generatedAt && (
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
+            <p className="text-sm text-[color:var(--muted)]">
               {t("companyAnalysisGeneratedAt")} {data.generatedAt}
               {report?.cached ? ` · ${t("companyAnalysisCached")}` : ""}
             </p>
           )}
+          <ExternalQuoteLinks ticker={ticker} exchange={resolvedExchange} />
         </div>
         {priceFormatted != null && (
           <div className="text-right">

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.55",
+    date: "2026-08-02",
+    title: "TradingView and Yahoo Finance on analysis header",
+    titleTranslations: {
+      es: "TradingView y Yahoo Finance en el encabezado de análisis",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Company analysis pages now show clear TradingView and Yahoo Finance buttons in the header (not only under the chart).",
+        translations: {
+          es: "Las páginas de análisis de empresa ahora muestran botones claros de TradingView y Yahoo Finance en el encabezado (no solo debajo del gráfico).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.54",
     date: "2026-08-02",
     title: "Market ticker on the public landing",
