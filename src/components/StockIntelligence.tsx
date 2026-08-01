@@ -25,9 +25,11 @@ type AiStatus = "idle" | "loading" | "done" | "error" | "no-key" | "ai-limit" | 
 interface StockIntelligenceProps {
   ticker: string;
   exchange: string;
+  /** When true, renders as a panel inside another page's layout: no outer <main>, no identity header. */
+  embedded?: boolean;
 }
 
-export default function StockIntelligence({ ticker, exchange }: StockIntelligenceProps) {
+export default function StockIntelligence({ ticker, exchange, embedded = false }: StockIntelligenceProps) {
   const { hasPremiumMarketData, getApiHeaders } = useSettings();
   const { holdings } = usePortfolio();
   const { user } = useAuth();
@@ -265,9 +267,12 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
     (activeTab === "institutional" && institutional && institutional.length > 0) ||
     (activeTab === "transcript" && transcript && transcript.length > 0);
 
+  const Root = embedded ? "div" : "main";
+
   return (
-    <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <Root className={embedded ? "space-y-6" : "max-w-6xl mx-auto px-4 py-6 space-y-6"}>
         {/* Stock Identity */}
+        {!embedded && (
         <div className="card px-6 py-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
@@ -307,6 +312,7 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
             </div>
           </div>
         </div>
+        )}
 
         {/* Upgrade Required */}
         {!canAccessPremium && (
@@ -383,7 +389,7 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
             )}
           </>
         )}
-    </main>
+    </Root>
   );
 }
 

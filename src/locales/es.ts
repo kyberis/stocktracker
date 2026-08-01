@@ -3214,6 +3214,8 @@ const es: TranslationStrings = {
   companyAnalysisLoadError: "No se pudo cargar el análisis de la empresa.",
   companyAnalysisBack: "Volver a la búsqueda",
   companyAnalysisOpenAsset: "Abrir ficha del activo",
+  analisisTabSummary: "Resumen",
+  analisisTabEvaluation: "Valoración y moat",
   companyAnalysisUpdatedAt: "Datos actualizados el",
   companyAnalysisGeneratedAt: "Generado el",
   companyAnalysisCached: "en caché",

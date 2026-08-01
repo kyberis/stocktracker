@@ -15,12 +15,15 @@ interface StockEvaluationProps {
   ticker: string;
   exchange: string;
   reportId?: string;
+  /** When true, renders as a panel inside another page's layout: no outer <main>, no back link/header. */
+  embedded?: boolean;
 }
 
-export default function StockEvaluation({ ticker, exchange, reportId: initialReportId }: StockEvaluationProps) {
+export default function StockEvaluation({ ticker, exchange, reportId: initialReportId, embedded = false }: StockEvaluationProps) {
   const { t, language } = useI18n();
   const { user } = useAuth();
   const router = useRouter();
+  const Root = embedded ? "div" : "main";
 
   const [evaluation, setEvaluation] = useState<MoatEvaluation | null>(null);
   const [loading, setLoading] = useState(false);
@@ -253,7 +256,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
 
   if (error === "upgrade") {
     return (
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 text-center">
+      <Root className={embedded ? "" : "max-w-4xl mx-auto px-4 sm:px-6 py-10 text-center"}>
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-8">
           <h2 className="text-lg font-bold mb-2">{t("moatEvalTitle")}</h2>
           <p className="text-[var(--muted)] text-sm mb-4">{t("moatEvalProRequired")}</p>
@@ -262,25 +265,25 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
             {t("toolsSectionUpgrade")}
           </a>
         </div>
-      </main>
+      </Root>
     );
   }
 
   if (loading) {
     return (
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+      <Root className={embedded ? "" : "max-w-5xl mx-auto px-4 sm:px-6 py-10"}>
         <div className="flex flex-col items-center justify-center min-h-[300px] gap-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
           <p className="text-sm text-[var(--muted)]">{t("moatEvalLoading")}</p>
           <p className="text-xs text-[var(--muted)]">{t("moatEvalLoadingSub")}</p>
         </div>
-      </main>
+      </Root>
     );
   }
 
   if (error) {
     return (
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 text-center">
+      <Root className={embedded ? "" : "max-w-4xl mx-auto px-4 sm:px-6 py-10 text-center"}>
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-8">
           <svg className="w-10 h-10 text-red-500/60 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
           <p className="text-red-500 text-sm mb-4">{error}</p>
@@ -294,7 +297,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
             </button>
           </div>
         </div>
-      </main>
+      </Root>
     );
   }
 
@@ -334,8 +337,8 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
   })();
 
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-5">
-      {/* Back link */}
+    <Root className={embedded ? "space-y-5" : "max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-5"}>
+      {!embedded && (
       <button
         onClick={() => router.push("/tools/evaluation")}
         className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] flex items-center gap-1 transition-colors"
@@ -343,8 +346,8 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
         {t("back")} {t("moatEvalTitle")}
       </button>
+      )}
 
-      {/* Company Header */}
       <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
           <div className="flex items-center gap-3 flex-wrap">
@@ -571,7 +574,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
       <div className="text-center text-[11px] text-[var(--muted)] pt-4 border-t border-[var(--border)]">
         {t("moatEvalDisclaimer")}
       </div>
-    </main>
+    </Root>
   );
 }
 

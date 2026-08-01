@@ -3112,6 +3112,8 @@ const de: TranslationStrings = {
   companyAnalysisLoadError: "Could not load the company analysis.",
   companyAnalysisBack: "Back to search",
   companyAnalysisOpenAsset: "Open asset page",
+  analisisTabSummary: "Summary",
+  analisisTabEvaluation: "Valuation & Moat",
   companyAnalysisUpdatedAt: "Data updated",
   companyAnalysisGeneratedAt: "Generated",
   companyAnalysisCached: "cached",

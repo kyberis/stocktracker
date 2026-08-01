@@ -51,9 +51,11 @@ interface StockDetailProps {
   ticker: string;
   exchange: string;
   fromScreener?: boolean;
+  /** When true, renders as a panel inside another page's layout: no outer <main>, no back button/identity header. */
+  embedded?: boolean;
 }
 
-export default function StockDetail({ ticker, exchange, fromScreener = false }: StockDetailProps) {
+export default function StockDetail({ ticker, exchange, fromScreener = false, embedded = false }: StockDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { hasPremiumMarketData, getApiHeaders } = useSettings();
@@ -339,9 +341,12 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
     }
   };
 
+  const Root = embedded ? "div" : "main";
+
   return (
-    <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <Root className={embedded ? "space-y-6" : "max-w-6xl mx-auto px-4 py-6 space-y-6"}>
         {/* Back button */}
+        {!embedded && (
         <button
           onClick={handleBack}
           className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-colors -mb-3"
@@ -351,8 +356,10 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
           </svg>
           {isFromScreener ? t("screenerNav") : t("backToPortfolio")}
         </button>
+        )}
 
         {/* Stock Identity */}
+        {!embedded && (
         <div className="card px-6 py-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
@@ -454,8 +461,9 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
             </div>
           )}
         </div>
+        )}
 
-        {canAccessPremium && assetType === "stock" && (
+        {!embedded && canAccessPremium && assetType === "stock" && (
           <div className="card px-6 py-4 border border-emerald-200/60 dark:border-emerald-500/25 bg-emerald-50/50 dark:bg-emerald-500/[0.07]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
@@ -642,7 +650,7 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
             )}
           </>
         )}
-    </main>
+    </Root>
   );
 }
 

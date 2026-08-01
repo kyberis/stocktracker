@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.49",
+    date: "2026-08-01",
+    title: "Company analysis pages gain fundamentals, intelligence & valuation tabs",
+    titleTranslations: {
+      es: "Las páginas de análisis de empresa suman pestañas de fundamentales, inteligencia y valoración",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Analysis pages at /analisis/<ticker> now support your exchange and portfolio position, and organize everything into tabs: Summary, Fundamentals, Intelligence, and Valuation & Moat — the first step toward one unified stock page for the whole site.",
+        translations: {
+          es: "Las páginas de análisis en /analisis/<ticker> ahora reconocen tu bolsa y tu posición en cartera, y organizan todo en pestañas: Resumen, Fundamentales, Inteligencia y Valoración y moat — el primer paso hacia una única página de acción para todo el sitio.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.48",
     date: "2026-08-01",
     title: "Delete account on unified Accounts",

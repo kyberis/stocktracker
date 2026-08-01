@@ -1,12 +1,13 @@
 import { parseTicker } from "@/lib/company-analysis/ticker";
-import CompanyAnalysisReportView from "@/components/company-analysis/CompanyAnalysisReport";
+import AnalisisShell from "./analisis-shell";
 
 interface PageProps {
   params: Promise<{ ticker: string }>;
+  searchParams: Promise<{ exchange?: string }>;
 }
 
-export default async function CompanyAnalysisTickerPage({ params }: PageProps) {
-  const { ticker: raw } = await params;
+export default async function CompanyAnalysisTickerPage({ params, searchParams }: PageProps) {
+  const [{ ticker: raw }, { exchange }] = await Promise.all([params, searchParams]);
   const ticker = parseTicker(decodeURIComponent(raw));
 
   if (!ticker) {
@@ -19,9 +20,5 @@ export default async function CompanyAnalysisTickerPage({ params }: PageProps) {
     );
   }
 
-  return (
-    <main>
-      <CompanyAnalysisReportView ticker={ticker} />
-    </main>
-  );
+  return <AnalisisShell ticker={ticker} exchange={exchange || ""} />;
 }

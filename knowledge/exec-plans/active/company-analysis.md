@@ -38,4 +38,4 @@ Ship `/analisis` + `/analisis/[ticker]` with aggregated market data (incl. US Co
 ## Follow-ups
 
 - Optional: company-issued revenue guidance when a structured source exists (never label consensus as guidance).
-- Optional deep-link from `/stock/[ticker]` into `/analisis/[ticker]`.
+- ~~Optional deep-link from `/stock/[ticker]` into `/analisis/[ticker]`.~~ Superseded by [`stock-page-unification.md`](stock-page-unification.md), which merges `/stock/[ticker]` into `/analisis/[ticker]` outright.
