@@ -17,9 +17,11 @@ import { looksLikeIsin } from "@/lib/isin";
 interface AddStockModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Prefill asset type (e.g. open from “Add Fund”). */
+  initialAssetType?: HoldingAssetType;
 }
 
-export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
+export default function AddStockModal({ isOpen, onClose, initialAssetType }: AddStockModalProps) {
   const { addHolding, holdings } = usePortfolio();
   const { user } = useAuth();
   const { getApiHeaders } = useSettings();
@@ -36,20 +38,22 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [exchange, setExchange] = useState("");
-  const [assetType, setAssetType] = useState<HoldingAssetType | "">("");
+  const [assetType, setAssetType] = useState<HoldingAssetType | "">(initialAssetType ?? "");
   const [purchaseDate, setPurchaseDate] = useState(todayLocal);
   const [successToast, setSuccessToast] = useState(false);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const track = useTrack();
   const openedRef = useRef(false);
+  const fundMode = initialAssetType === "fund";
 
   useEffect(() => {
     if (isOpen) {
       if (!openedRef.current) {
         openedRef.current = true;
-        track("add_stock_modal_opened");
+        track(fundMode ? "add_fund_modal_opened" : "add_stock_modal_opened");
       }
+      setAssetType(initialAssetType ?? "");
       if (inputRef.current) inputRef.current.focus();
     } else {
       openedRef.current = false;
@@ -65,7 +69,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
       setAssetType("");
       setPurchaseDate(todayLocal());
     }
-  }, [isOpen]);
+  }, [isOpen, initialAssetType]); // eslint-disable-line react-hooks/exhaustive-deps -- track once per open
 
   const searchStocks = useCallback(async (q: string) => {
     if (q.length < 1) {
@@ -102,7 +106,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
     setTicker(result.symbol);
     setExchange(result.exchange || (result.quoteType === "MUTUALFUND" ? "FUND" : ""));
     const fromQuote = assetTypeFromQuoteType(result.quoteType);
-    setAssetType(fromQuote ?? "stock");
+    setAssetType(fromQuote ?? (fundMode ? "fund" : "stock"));
     setResults([]);
   };
 
@@ -151,7 +155,9 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
       >
         <div className="px-5 pt-5 pb-3 sm:px-6 sm:pt-6 sm:pb-4 border-b border-gray-100 dark:border-slate-700 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <h2 id="addstock-modal-title" className="text-lg font-bold text-gray-900 dark:text-white">{t("addStock")}</h2>
+            <h2 id="addstock-modal-title" className="text-lg font-bold text-gray-900 dark:text-white">
+              {fundMode ? t("addFund") : t("addStock")}
+            </h2>
             <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" aria-label={t("close")}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
@@ -194,7 +200,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
                     type="text"
                     value={query}
                     onChange={(e) => handleQueryChange(e.target.value)}
-                    placeholder={t("searchPlaceholder")}
+                    placeholder={fundMode ? t("searchFundPlaceholder") : t("searchPlaceholder")}
                     className="w-full"
                   />
                   {searching && (

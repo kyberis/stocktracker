@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.58",
+    date: "2026-08-02",
+    title: "Add Fund in + Add and Add Transaction menus",
+    titleTranslations: {
+      es: "Agregar Fondo en los menús + Agregar y Agregar transacción",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Add Fund is now a first-class option in the + Add menu (desktop and mobile) and under Add Transaction on the holdings table.",
+        translations: {
+          es: "Agregar Fondo es ahora una opción de primer nivel en el menú + Agregar (escritorio y móvil) y en Agregar transacción de la tabla de posiciones.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Opening Add Fund preselects the fund asset type and uses an ISIN-friendly search placeholder.",
+        translations: {
+          es: "Abrir Agregar Fondo preselecciona el tipo fondo y usa un placeholder de búsqueda orientado a ISIN.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.57",
     date: "2026-08-02",
     title: "Cleaner portfolio chart, OneLogin naming, Yahoo Finance MCP",

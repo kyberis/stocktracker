@@ -18,8 +18,10 @@ const AddManualAssetModal = dynamic(() => import("@/components/AddManualAssetMod
 const SettingsModal = dynamic(() => import("@/components/SettingsModal"), { ssr: false });
 const ResetPortfolioModal = dynamic(() => import("@/components/ResetPortfolioModal"), { ssr: false });
 
+export type AddCommandAction = "stock" | "fund" | "crypto" | "asset";
+
 export type PortfolioCommandContextValue = {
-  gatedAdd: (action: "stock" | "crypto" | "asset") => void;
+  gatedAdd: (action: AddCommandAction) => void;
   openSettings: () => void;
   openResetPortfolio: () => void;
 };
@@ -42,29 +44,37 @@ export function usePortfolioCommandOptional(): PortfolioCommandContextValue | nu
 export function PortfolioCommandProvider({ children }: { children: ReactNode }) {
   const { portfolios, activePortfolioId } = usePortfolio();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [addModalAssetType, setAddModalAssetType] = useState<"stock" | "fund" | undefined>(undefined);
   const [showAddCrypto, setShowAddCrypto] = useState(false);
   const [showAddAsset, setShowAddAsset] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
-  const [pendingAction, setPendingAction] = useState<"stock" | "crypto" | "asset" | null>(null);
+  const [pendingAction, setPendingAction] = useState<AddCommandAction | null>(null);
 
   const needsPortfolioPick = !activePortfolioId && portfolios.length > 1;
 
+  const openAddHolding = useCallback((kind: "stock" | "fund") => {
+    setAddModalAssetType(kind === "fund" ? "fund" : undefined);
+    setShowAddModal(true);
+  }, []);
+
   const gatedAdd = useCallback(
-    (action: "stock" | "crypto" | "asset") => {
+    (action: AddCommandAction) => {
       if (needsPortfolioPick) {
         setPendingAction(action);
         setShowPortfolioPicker(true);
       } else if (action === "stock") {
-        setShowAddModal(true);
+        openAddHolding("stock");
+      } else if (action === "fund") {
+        openAddHolding("fund");
       } else if (action === "crypto") {
         setShowAddCrypto(true);
       } else {
         setShowAddAsset(true);
       }
     },
-    [needsPortfolioPick],
+    [needsPortfolioPick, openAddHolding],
   );
 
   const openSettings = useCallback(() => setShowSettings(true), []);
@@ -86,13 +96,23 @@ export function PortfolioCommandProvider({ children }: { children: ReactNode }) 
         }}
         onSelect={() => {
           setShowPortfolioPicker(false);
-          if (pendingAction === "stock") setShowAddModal(true);
+          if (pendingAction === "stock") openAddHolding("stock");
+          else if (pendingAction === "fund") openAddHolding("fund");
           else if (pendingAction === "crypto") setShowAddCrypto(true);
           else if (pendingAction === "asset") setShowAddAsset(true);
           setPendingAction(null);
         }}
       />
-      {showAddModal && <AddStockModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />}
+      {showAddModal && (
+        <AddStockModal
+          isOpen={showAddModal}
+          onClose={() => {
+            setShowAddModal(false);
+            setAddModalAssetType(undefined);
+          }}
+          initialAssetType={addModalAssetType}
+        />
+      )}
       {showAddCrypto && <AddCryptoModal isOpen={showAddCrypto} onClose={() => setShowAddCrypto(false)} />}
       {showAddAsset && <AddManualAssetModal isOpen={showAddAsset} onClose={() => setShowAddAsset(false)} />}
       {showSettings && <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />}
