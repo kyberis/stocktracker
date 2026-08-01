@@ -479,6 +479,13 @@ const de: TranslationStrings = {
   profileMcpClaudeDesktopConfig: "Claude Desktop configuration",
   profileMcpClaudeConfigPath:
     "macOS: ~/Library/Application Support/Claude/claude_desktop_config.json — then restart Claude Desktop.",
+  profileMcpYahooTitle: "Yahoo Finance MCP",
+  profileMcpYahooDescription:
+    "Optionaler Drittanbieter-Marktdaten-MCP (yahoo-finance2). Läuft lokal in Cursor oder Claude — nicht von trefolio gehostet und nicht mit deinem Portfolio-Token verknüpft.",
+  profileMcpYahooHint:
+    "Füge den Snippet in deine vorhandene mcpServers-Map ein und starte den Client neu. Inoffizielle Yahoo-Finance-Daten; nur zu Informationszwecken.",
+  profileMcpYahooCursorConfig: "Cursor-Konfiguration (Yahoo Finance)",
+  profileMcpYahooClaudeConfig: "Claude-Desktop-Konfiguration (Yahoo Finance)",
   profileSettings: "Profileinstellungen",
   profileSectionIdentity: "Identität",
   profileSectionAccess: "Anmeldung und Zugriff",
