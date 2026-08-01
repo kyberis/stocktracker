@@ -13,6 +13,7 @@ interface Point {
   invested: number;
   stockValue: number;
   etfValue: number;
+  fundValue: number;
   cryptoValue: number;
 }
 
@@ -107,6 +108,8 @@ function densifyHourlyTimeline(raw: Point[], windowStartMs: number, windowEndMs:
     const sv1 = sorted[i + 1].stockValue;
     const ev0 = sorted[i].etfValue;
     const ev1 = sorted[i + 1].etfValue;
+    const fv0 = sorted[i].fundValue;
+    const fv1 = sorted[i + 1].fundValue;
     const cv0 = sorted[i].cryptoValue;
     const cv1 = sorted[i + 1].cryptoValue;
     let t = t0 + HOUR_MS;
@@ -118,6 +121,7 @@ function densifyHourlyTimeline(raw: Point[], windowStartMs: number, windowEndMs:
         invested: inv0,
         stockValue: sv0 + ratio * (sv1 - sv0),
         etfValue: ev0 + ratio * (ev1 - ev0),
+        fundValue: fv0 + ratio * (fv1 - fv0),
         cryptoValue: cv0 + ratio * (cv1 - cv0),
       });
       t += HOUR_MS;
@@ -151,6 +155,8 @@ function densifyFiveMinuteTimeline(raw: Point[], windowStartMs: number, windowEn
     const sv1 = sorted[i + 1].stockValue;
     const ev0 = sorted[i].etfValue;
     const ev1 = sorted[i + 1].etfValue;
+    const fv0 = sorted[i].fundValue;
+    const fv1 = sorted[i + 1].fundValue;
     const cv0 = sorted[i].cryptoValue;
     const cv1 = sorted[i + 1].cryptoValue;
     let t = t0 + FIVE_MIN_MS;
@@ -162,6 +168,7 @@ function densifyFiveMinuteTimeline(raw: Point[], windowStartMs: number, windowEn
         invested: inv0,
         stockValue: sv0 + ratio * (sv1 - sv0),
         etfValue: ev0 + ratio * (ev1 - ev0),
+        fundValue: fv0 + ratio * (fv1 - fv0),
         cryptoValue: cv0 + ratio * (cv1 - cv0),
       });
       t += FIVE_MIN_MS;
@@ -259,7 +266,7 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
 
   const paidRanges = new Set(["all", "1y", "6m", "3m", "ytd"]);
 
-  const cols = "date, total_value_eur as value, total_invested_eur as invested, stock_value_eur as stockValue, etf_value_eur as etfValue, crypto_value_eur as cryptoValue";
+  const cols = "date, total_value_eur as value, total_invested_eur as invested, stock_value_eur as stockValue, etf_value_eur as etfValue, fund_value_eur as fundValue, crypto_value_eur as cryptoValue";
 
   if (paidRanges.has(range)) {
     if (!canViewFull) {
@@ -353,6 +360,7 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
     invested: (row.invested as number) || 0,
     stockValue: (row.stockValue as number) || 0,
     etfValue: (row.etfValue as number) || 0,
+    fundValue: (row.fundValue as number) || 0,
     cryptoValue: (row.cryptoValue as number) || 0,
   }));
 

@@ -4,11 +4,14 @@ import path from "path";
 import type { Client } from "@libsql/client";
 import { parseDegiroCSV, buildIsinMap } from "@/lib/degiro-parser";
 
+import type { HoldingAssetType } from "@/lib/types";
+import { inferAssetType } from "@/lib/infer-asset-type";
+
 interface SeedHolding {
   name: string;
   ticker: string;
   isin: string;
-  assetType?: "stock" | "etf";
+  assetType?: "stock" | "etf" | "fund";
   shares: number;
   purchasePrice: number;
   displayCurrency: string;
@@ -27,10 +30,9 @@ interface SeedCash {
   valuationDate?: string;
 }
 
-function inferAssetType(row: SeedHolding): "stock" | "etf" {
-  if (row.assetType === "etf") return "etf";
-  if (row.assetType === "stock") return "stock";
-  return row.name.toUpperCase().includes("ETF") ? "etf" : "stock";
+function seedAssetType(row: SeedHolding): HoldingAssetType {
+  if (row.assetType) return row.assetType;
+  return inferAssetType({ name: row.name });
 }
 
 function getSeedHoldings(): SeedHolding[] {
@@ -100,7 +102,7 @@ export async function seedHoldingsForUser(client: Client, userId: string, portfo
       row.name,
       row.ticker,
       row.isin,
-      inferAssetType(row),
+      seedAssetType(row),
       row.shares,
       row.purchasePrice,
       row.displayCurrency,

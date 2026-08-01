@@ -15,6 +15,8 @@ export type BrokerFormat =
   | "myinvestor"
   | "simple";
 
+export type ImportAssetType = "stock" | "etf" | "fund";
+
 export interface ExtractedTransaction {
   date: string;
   type: "buy" | "sell" | "dividend" | "fee";
@@ -26,6 +28,7 @@ export interface ExtractedTransaction {
   totalAmount: number;
   fees: number;
   currency: string;
+  assetType?: ImportAssetType;
   sourceRef?: string;
   brokerName?: string;
 }
@@ -37,7 +40,7 @@ export interface ExtractedHolding {
   purchasePrice: number;
   displayCurrency: string;
   exchange: string;
-  assetType: "stock" | "etf";
+  assetType: ImportAssetType;
   figiShareClass?: string;
 }
 

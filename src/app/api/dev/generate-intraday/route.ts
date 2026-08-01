@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   for (const portfolioId of pIds) {
     const yesterdaySnap = await client.execute({
-      sql: `SELECT total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, crypto_value_eur
+      sql: `SELECT total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, fund_value_eur, crypto_value_eur
             FROM portfolio_snapshots
             WHERE user_id = ? AND portfolio_id = ? AND date >= ? AND date < ?
             ORDER BY date DESC LIMIT 1`,
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     });
 
     const todaySnap = await client.execute({
-      sql: `SELECT total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, crypto_value_eur, date
+      sql: `SELECT total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, fund_value_eur, crypto_value_eur, date
             FROM portfolio_snapshots
             WHERE user_id = ? AND portfolio_id = ? AND date >= ?
             ORDER BY date DESC LIMIT 1`,
@@ -61,12 +61,14 @@ export async function POST(req: NextRequest) {
     const startInv = Number(src.total_invested_eur) || 0;
     const startStk = Number(src.stock_value_eur) || 0;
     const startEtf = Number(src.etf_value_eur) || 0;
+    const startFund = Number(src.fund_value_eur) || 0;
     const startCry = Number(src.crypto_value_eur) || 0;
 
     const endVal = Number(dst.total_value_eur) || 0;
     const endInv = Number(dst.total_invested_eur) || 0;
     const endStk = Number(dst.stock_value_eur) || 0;
     const endEtf = Number(dst.etf_value_eur) || 0;
+    const endFund = Number(dst.fund_value_eur) || 0;
     const endCry = Number(dst.crypto_value_eur) || 0;
 
     const nowMs = Date.now();
@@ -113,6 +115,10 @@ export async function POST(req: NextRequest) {
       const etfNoise = rand() * 0.001 * startEtf * (etfRatio > 0 ? 1 : 0);
       const etf = startEtf + (endEtf - startEtf) * etfRatio + etfNoise;
 
+      const fundRatio = stkRatio;
+      const fundNoise = rand() * 0.001 * startFund * (fundRatio > 0 ? 1 : 0);
+      const fund = startFund + (endFund - startFund) * fundRatio + fundNoise;
+
       // --- Crypto: smooth 24/7 with sinusoidal noise ---
       const cryBase = startCry + (endCry - startCry) * dayRatio;
       const cryAmplitude = Math.abs(endCry - startCry) * 0.08;
@@ -120,17 +126,18 @@ export async function POST(req: NextRequest) {
       const cryNoise = rand() * cryAmplitude * 0.5;
       const cry = cryBase + cryWave + cryNoise;
 
-      const val = stk + etf + cry;
+      const val = stk + etf + fund + cry;
       const inv = startInv + (endInv - startInv) * dayRatio;
 
       stmts.push({
-        sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, crypto_value_eur)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, fund_value_eur, crypto_value_eur)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
               ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
                 total_value_eur = excluded.total_value_eur,
                 total_invested_eur = excluded.total_invested_eur,
                 stock_value_eur = excluded.stock_value_eur,
                 etf_value_eur = excluded.etf_value_eur,
+                fund_value_eur = excluded.fund_value_eur,
                 crypto_value_eur = excluded.crypto_value_eur`,
         args: [
           generateId(), userId, portfolioId, dateBucket,
@@ -138,6 +145,7 @@ export async function POST(req: NextRequest) {
           Math.round(inv * 100) / 100,
           Math.round(stk * 100) / 100,
           Math.round(etf * 100) / 100,
+          Math.round(fund * 100) / 100,
           Math.round(cry * 100) / 100,
         ],
       });

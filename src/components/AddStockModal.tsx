@@ -10,7 +10,9 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useTrack } from "@/lib/use-track";
 import { getHoldingsLimit } from "@/lib/subscription";
 import ProCompareCard from "@/components/ProCompareCard";
-import type { SearchResult } from "@/lib/types";
+import type { SearchResult, HoldingAssetType } from "@/lib/types";
+import { assetTypeFromQuoteType } from "@/lib/infer-asset-type";
+import { looksLikeIsin } from "@/lib/isin";
 
 interface AddStockModalProps {
   isOpen: boolean;
@@ -34,7 +36,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [exchange, setExchange] = useState("");
-  const [assetType, setAssetType] = useState<"stock" | "etf" | "">("");
+  const [assetType, setAssetType] = useState<HoldingAssetType | "">("");
   const [purchaseDate, setPurchaseDate] = useState(todayLocal);
   const [successToast, setSuccessToast] = useState(false);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -98,8 +100,9 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
     setQuery(result.symbol);
     setStockName(result.shortname);
     setTicker(result.symbol);
-    setExchange(result.exchange);
-    setAssetType(result.quoteType === "ETF" ? "etf" : "stock");
+    setExchange(result.exchange || (result.quoteType === "MUTUALFUND" ? "FUND" : ""));
+    const fromQuote = assetTypeFromQuoteType(result.quoteType);
+    setAssetType(fromQuote ?? "stock");
     setResults([]);
   };
 
@@ -107,12 +110,14 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
     if (!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || !price || !assetType) return;
     if (parseFloat(shares) <= 0) return;
 
+    const isinValue = looksLikeIsin(query) || looksLikeIsin(ticker) ? (query.trim().toUpperCase() || ticker.trim().toUpperCase()) : "";
+
     track("stock_added");
     addHolding({
       name: stockName.trim(),
       ticker: ticker.trim().toUpperCase(),
-      isin: "",
-      assetType: assetType as "stock" | "etf",
+      isin: isinValue,
+      assetType: assetType as HoldingAssetType,
       shares: parseFloat(shares),
       purchasePrice: parseFloat(price),
       purchaseDate,
@@ -208,6 +213,12 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
                           <div>
                             <span className="font-medium text-gray-900 dark:text-white">{r.symbol}</span>
                             <span className="text-gray-500 dark:text-slate-400 text-sm ml-2">{r.shortname}</span>
+                            {r.quoteType === "ETF" && (
+                              <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">ETF</span>
+                            )}
+                            {r.quoteType === "MUTUALFUND" && (
+                              <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide text-teal-600 dark:text-teal-400">{t("fundType")}</span>
+                            )}
                           </div>
                           <span className="text-xs text-gray-400 dark:text-slate-500">{r.exchange}</span>
                         </button>
@@ -268,12 +279,13 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
                   <select
                     id="addstock-assettype"
                     value={assetType}
-                    onChange={(e) => setAssetType(e.target.value as "stock" | "etf" | "")}
+                    onChange={(e) => setAssetType(e.target.value as HoldingAssetType | "")}
                     className="w-full"
                   >
                     <option value="" disabled>{t("selectAssetType")}</option>
                     <option value="stock">{t("stockType")}</option>
                     <option value="etf">{t("etfType")}</option>
+                    <option value="fund">{t("fundType")}</option>
                   </select>
                 </div>
 

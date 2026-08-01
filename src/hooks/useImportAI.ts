@@ -2,8 +2,10 @@ import { useState, useCallback } from "react";
 import type {
   ExtractedTransaction,
   ExtractedHolding,
+  ImportAssetType,
 } from "./import-types";
 import { mergeHoldingsIntoTransactions } from "@/lib/merge-ai-import-rows";
+import { inferAssetType } from "@/lib/infer-asset-type";
 
 export type { ExtractedTransaction, ExtractedHolding };
 
@@ -22,6 +24,8 @@ export interface UseImportAIReturn {
   importAll: (portfolioId?: string | null) => Promise<void>;
   removeHolding: (idx: number) => void;
   removeTransaction: (idx: number) => void;
+  updateHoldingAssetType: (idx: number, assetType: ImportAssetType) => void;
+  updateTransactionAssetType: (idx: number, assetType: ImportAssetType) => void;
   reset: () => void;
 }
 
@@ -135,6 +139,14 @@ export function useImportAI(): UseImportAIReturn {
     setTransactions((prev) => prev.filter((_, i) => i !== idx));
   }, []);
 
+  const updateHoldingAssetType = useCallback((idx: number, assetType: ImportAssetType) => {
+    setHoldings((prev) => prev.map((h, i) => (i === idx ? { ...h, assetType } : h)));
+  }, []);
+
+  const updateTransactionAssetType = useCallback((idx: number, assetType: ImportAssetType) => {
+    setTransactions((prev) => prev.map((tx, i) => (i === idx ? { ...tx, assetType } : tx)));
+  }, []);
+
   const importAll = useCallback(async (portfolioId?: string | null) => {
     const unsorted = mergeHoldingsIntoTransactions(holdings, transactions);
 
@@ -171,11 +183,9 @@ export function useImportAI(): UseImportAIReturn {
           holdings.find((h) => h.ticker === tx.ticker)?.exchange || "",
         isin: tx.isin || "",
         assetType:
+          tx.assetType ||
           holdings.find((h) => h.ticker === tx.ticker)?.assetType ||
-          (tx.name.toUpperCase().includes("ETF") ||
-          tx.name.toUpperCase().includes("UCITS")
-            ? "etf"
-            : "stock"),
+          inferAssetType({ name: tx.name }),
         accountId: "",
         type: tx.type,
         date: tx.date,
@@ -254,6 +264,8 @@ export function useImportAI(): UseImportAIReturn {
     importAll,
     removeHolding,
     removeTransaction,
+    updateHoldingAssetType,
+    updateTransactionAssetType,
     reset,
   };
 }

@@ -24,6 +24,7 @@ import {
   refreshBrokerageConnection,
 } from "@/lib/snaptrade-client";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { inferAssetType } from "@/lib/infer-asset-type";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
@@ -131,10 +132,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
           name: tx.name,
           exchange: "",
           isin: tx.isin || "",
-          assetType:
-            tx.name.toUpperCase().includes("ETF") || tx.name.toUpperCase().includes("UCITS")
-              ? "etf"
-              : "stock",
+          assetType: inferAssetType({ name: tx.name, brokerType: tx.brokerName }),
           accountId: "",
           type: tx.type,
           date: tx.date,

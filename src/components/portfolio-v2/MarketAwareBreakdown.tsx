@@ -39,7 +39,7 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
   );
 
   const investedTotal =
-    byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.crypto.totalCurrentEUR;
+    byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.fund.totalCurrentEUR + byType.crypto.totalCurrentEUR;
 
   const hasAnyValue = investedTotal > 0;
   if (!hasAnyValue) return null;
@@ -61,6 +61,7 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
   const activeTypeCount =
     (byType.stock.totalCurrentEUR > 0 ? 1 : 0) +
     (byType.etf.totalCurrentEUR > 0 ? 1 : 0) +
+    (byType.fund.totalCurrentEUR > 0 ? 1 : 0) +
     (byType.crypto.totalCurrentEUR > 0 ? 1 : 0);
   const showAllPill = activeTypeCount > 1;
 
@@ -90,6 +91,14 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
       alloc: byType.allocations.etf,
       dayPct: dayChange.pct.etf ?? 0,
       showDayChange: dayChange.abs.etf != null,
+    },
+    {
+      key: "fund",
+      label: t("fundsLabel"),
+      value: byType.fund.totalCurrentEUR,
+      alloc: byType.allocations.fund,
+      dayPct: dayChange.pct.fund ?? 0,
+      showDayChange: dayChange.abs.fund != null,
     },
     {
       key: "crypto",

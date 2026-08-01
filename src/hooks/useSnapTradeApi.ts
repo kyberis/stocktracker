@@ -5,7 +5,9 @@ import type {
   BrokerageConnection,
   BrokerSyncInfo,
   ExtractedTransaction,
+  ImportAssetType,
 } from "./import-types";
+import { inferAssetType } from "@/lib/infer-asset-type";
 
 export type { SnapTradeConnectionInfo, ExtractedTransaction, BrokerSyncInfo };
 
@@ -47,6 +49,7 @@ export interface UseSnapTradeApiReturn {
   disconnectBroker: (brokerConnectionId: string) => Promise<void>;
   importAll: (portfolioId?: string | null) => Promise<void>;
   removeTransaction: (idx: number) => void;
+  updateTransactionAssetType: (idx: number, assetType: ImportAssetType) => void;
   reset: () => void;
 }
 
@@ -103,11 +106,17 @@ function openPortalPopup(
 }
 
 function normalizeTransaction(tx: Record<string, unknown>): ExtractedTransaction {
+  const name = String(tx.name || "");
+  const rawType = tx.assetType != null ? String(tx.assetType) : "";
+  const assetType: ImportAssetType =
+    rawType === "etf" || rawType === "fund" || rawType === "stock"
+      ? rawType
+      : (inferAssetType({ name }) as ImportAssetType);
   return {
     date: String(tx.date || ""),
     type: String(tx.type || "buy") as ExtractedTransaction["type"],
     ticker: String(tx.ticker || "").toUpperCase(),
-    name: String(tx.name || ""),
+    name,
     isin: tx.isin ? String(tx.isin) : undefined,
     shares: Number(tx.shares || 0),
     pricePerShare: Number(tx.pricePerShare || 0),
@@ -116,6 +125,7 @@ function normalizeTransaction(tx: Record<string, unknown>): ExtractedTransaction
     currency: String(tx.currency || "EUR").toUpperCase(),
     sourceRef: tx.sourceRef ? String(tx.sourceRef) : undefined,
     brokerName: tx.brokerName ? String(tx.brokerName) : undefined,
+    assetType,
   };
 }
 
@@ -366,6 +376,12 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     setTransactions((prev) => prev.filter((_, i) => i !== idx));
   }, []);
 
+  const updateTransactionAssetType = useCallback((idx: number, assetType: ImportAssetType) => {
+    setTransactions((prev) =>
+      prev.map((tx, i) => (i === idx ? { ...tx, assetType } : tx)),
+    );
+  }, []);
+
   const reset = useCallback(() => {
     setStep("idle");
     setTransactions([]);
@@ -402,10 +418,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         name: tx.name,
         exchange: "",
         isin: tx.isin || "",
-        assetType:
-          tx.name.toUpperCase().includes("ETF") || tx.name.toUpperCase().includes("UCITS")
-            ? "etf"
-            : "stock",
+        assetType: tx.assetType || inferAssetType({ name: tx.name }),
         accountId: "",
         type: tx.type,
         date: tx.date,
@@ -525,6 +538,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     disconnectBroker,
     importAll,
     removeTransaction,
+    updateTransactionAssetType,
     reset,
   };
 }

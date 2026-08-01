@@ -9,7 +9,7 @@ import { getHoldingsLimit } from "@/lib/subscription";
 import type { SubscriptionPlan } from "@/lib/types";
 
 const EXTRACTION_PROMPT = `You are a portfolio data extractor. Analyze the provided data and extract two things:
-1. Current stock/ETF **holdings** (net positions).
+1. Current stock/ETF/mutual fund **holdings** (net positions).
 2. Individual **transactions** (buys, sells, dividends, fees).
 
 Return a JSON object with two arrays:
@@ -27,7 +27,7 @@ Return a JSON object with two arrays:
 - purchasePrice: number (average cost per share)
 - displayCurrency: string (currency code, e.g. USD, EUR, GBP)
 - exchange: string (stock exchange, e.g. NYSE, NASDAQ, XETRA, LSE, MAD)
-- assetType: "stock" | "etf"
+- assetType: "stock" | "etf" | "fund"
 
 **transactions** array — each object:
 - date: string (YYYY-MM-DD format)

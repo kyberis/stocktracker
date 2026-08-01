@@ -352,7 +352,7 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
 
     const portfolioTotals = new Map<string, number>();
     let aggregateEUR = 0;
-    const assetBuckets: Record<HoldingAssetType, number> = { stock: 0, etf: 0, crypto: 0 };
+    const assetBuckets: Record<HoldingAssetType, number> = { stock: 0, etf: 0, fund: 0, crypto: 0 };
     const portfolioAssetBuckets = new Map<string, Record<HoldingAssetType, number>>();
 
     for (const h of holdings) {
@@ -373,7 +373,7 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
         const aType = h.assetType ?? "stock";
         assetBuckets[aType] += eurValue;
         if (pid) {
-          const pb = portfolioAssetBuckets.get(pid) ?? { stock: 0, etf: 0, crypto: 0 };
+          const pb = portfolioAssetBuckets.get(pid) ?? { stock: 0, etf: 0, fund: 0, crypto: 0 };
           pb[aType] += eurValue;
           portfolioAssetBuckets.set(pid, pb);
         }
@@ -389,12 +389,13 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
         invested: Math.round(investedAggregate * 100) / 100,
         stockValue: Math.round(assetBuckets.stock * 100) / 100,
         etfValue: Math.round(assetBuckets.etf * 100) / 100,
+        fundValue: Math.round(assetBuckets.fund * 100) / 100,
         cryptoValue: Math.round(assetBuckets.crypto * 100) / 100,
       });
 
       for (const [pid, total] of portfolioTotals) {
         if (pid && total > 0) {
-          const pb = portfolioAssetBuckets.get(pid) ?? { stock: 0, etf: 0, crypto: 0 };
+          const pb = portfolioAssetBuckets.get(pid) ?? { stock: 0, etf: 0, fund: 0, crypto: 0 };
           batch.push({
             id: generateId(),
             portfolioId: pid,
@@ -403,6 +404,7 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
             invested: Math.round((investedByPortfolio.get(pid) || 0) * 100) / 100,
             stockValue: Math.round(pb.stock * 100) / 100,
             etfValue: Math.round(pb.etf * 100) / 100,
+            fundValue: Math.round(pb.fund * 100) / 100,
             cryptoValue: Math.round(pb.crypto * 100) / 100,
           });
         }
@@ -631,7 +633,7 @@ export async function runIncrementalBackfill(
 
     const portfolioTotals = new Map<string, number>();
     let aggregateEUR = 0;
-    const assetBuckets: Record<HoldingAssetType, number> = { stock: 0, etf: 0, crypto: 0 };
+    const assetBuckets: Record<HoldingAssetType, number> = { stock: 0, etf: 0, fund: 0, crypto: 0 };
     const portfolioAssetBuckets = new Map<string, Record<HoldingAssetType, number>>();
 
     for (const h of holdings) {
@@ -649,7 +651,7 @@ export async function runIncrementalBackfill(
         const aType = h.assetType ?? "stock";
         assetBuckets[aType] += eurValue;
         if (pid) {
-          const pb = portfolioAssetBuckets.get(pid) ?? { stock: 0, etf: 0, crypto: 0 };
+          const pb = portfolioAssetBuckets.get(pid) ?? { stock: 0, etf: 0, fund: 0, crypto: 0 };
           pb[aType] += eurValue;
           portfolioAssetBuckets.set(pid, pb);
         }
@@ -663,17 +665,19 @@ export async function runIncrementalBackfill(
         invested: Math.round(investedAggregate * 100) / 100,
         stockValue: Math.round(assetBuckets.stock * 100) / 100,
         etfValue: Math.round(assetBuckets.etf * 100) / 100,
+        fundValue: Math.round(assetBuckets.fund * 100) / 100,
         cryptoValue: Math.round(assetBuckets.crypto * 100) / 100,
       });
       for (const [pid, total] of portfolioTotals) {
         if (pid && total > 0) {
-          const pb = portfolioAssetBuckets.get(pid) ?? { stock: 0, etf: 0, crypto: 0 };
+          const pb = portfolioAssetBuckets.get(pid) ?? { stock: 0, etf: 0, fund: 0, crypto: 0 };
           batch.push({
             id: generateId(), portfolioId: pid, date,
             value: Math.round(total * 100) / 100,
             invested: Math.round((investedByPortfolio.get(pid) || 0) * 100) / 100,
             stockValue: Math.round(pb.stock * 100) / 100,
             etfValue: Math.round(pb.etf * 100) / 100,
+            fundValue: Math.round(pb.fund * 100) / 100,
             cryptoValue: Math.round(pb.crypto * 100) / 100,
           });
         }
@@ -708,6 +712,7 @@ interface SnapshotBatchRow {
   invested: number;
   stockValue: number;
   etfValue: number;
+  fundValue: number;
   cryptoValue: number;
 }
 
@@ -718,15 +723,16 @@ async function flushBatch(
 ) {
   if (batch.length === 0) return;
   const stmts = batch.map((row) => ({
-    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, crypto_value_eur)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, fund_value_eur, crypto_value_eur)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
             total_value_eur = excluded.total_value_eur,
             total_invested_eur = excluded.total_invested_eur,
             stock_value_eur = excluded.stock_value_eur,
             etf_value_eur = excluded.etf_value_eur,
+            fund_value_eur = excluded.fund_value_eur,
             crypto_value_eur = excluded.crypto_value_eur`,
-    args: [row.id, userId, row.portfolioId, row.date, row.value, row.invested, row.stockValue, row.etfValue, row.cryptoValue],
+    args: [row.id, userId, row.portfolioId, row.date, row.value, row.invested, row.stockValue, row.etfValue, row.fundValue, row.cryptoValue],
   }));
   await client.batch(stmts, "write");
 }

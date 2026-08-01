@@ -300,6 +300,7 @@ function AssetTypeReviewModal({ open, onClose }: { open: boolean; onClose: () =>
                       >
                         <option value="stock">{t("stockType")}</option>
                         <option value="etf">{t("etfType")}</option>
+                        <option value="fund">{t("fundType")}</option>
                         <option value="crypto">{t("cryptoType")}</option>
                       </select>
                       <button

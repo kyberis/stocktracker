@@ -190,9 +190,10 @@ describe("createHoldingSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts assetType stock or etf", () => {
+  it("accepts assetType stock, etf, or fund", () => {
     expect(createHoldingSchema.safeParse({ ticker: "AAPL", name: "A", shares: 1, assetType: "stock" }).success).toBe(true);
     expect(createHoldingSchema.safeParse({ ticker: "VOO", name: "V", shares: 1, assetType: "etf" }).success).toBe(true);
+    expect(createHoldingSchema.safeParse({ ticker: "LU123", name: "F", shares: 1, assetType: "fund" }).success).toBe(true);
   });
 
   it("fails when assetType is invalid", () => {

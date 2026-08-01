@@ -27,7 +27,7 @@ export function computeNetWorthBreakdown(
   allocationSlices: AllocationSlice[],
   t: (key: string) => string,
 ): BreakdownItem[] {
-  const investmentTypes = new Set<HoldingAssetType>(["stock", "etf", "crypto"]);
+  const investmentTypes = new Set<HoldingAssetType>(["stock", "etf", "fund", "crypto"]);
   const investmentSlices = allocationSlices.filter((s) => investmentTypes.has(s.key as HoldingAssetType));
   const investmentTotal = investmentSlices.reduce((sum, s) => sum + s.valueEUR, 0);
 

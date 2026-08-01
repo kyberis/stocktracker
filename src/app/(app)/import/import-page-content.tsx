@@ -719,6 +719,8 @@ export default function ImportPageContent() {
                 duplicatesRemoved={brokerCSV.duplicatesRemoved}
                 onRemoveTx={brokerCSV.removeTransaction}
                 onRemoveHolding={brokerCSV.removeHolding}
+                onUpdateHoldingAssetType={brokerCSV.updateHoldingAssetType}
+                onUpdateTxAssetType={brokerCSV.updateTransactionAssetType}
                 onImport={handleBrokerImportAll}
                 onReset={() => { brokerCSV.reset(); setStep("upload"); }}
                 t={t}
@@ -747,6 +749,8 @@ export default function ImportPageContent() {
                 duplicatesRemoved={0}
                 onRemoveTx={aiImport.removeTransaction}
                 onRemoveHolding={aiImport.removeHolding}
+                onUpdateHoldingAssetType={aiImport.updateHoldingAssetType}
+                onUpdateTxAssetType={aiImport.updateTransactionAssetType}
                 onImport={handleAiImportAll}
                 onReset={() => { aiImport.reset(); setStep("upload"); }}
                 t={t}
@@ -763,6 +767,7 @@ export default function ImportPageContent() {
               duplicatesRemoved={0}
               onRemoveTx={snapTradeApi.removeTransaction}
               onRemoveHolding={() => {}}
+              onUpdateTxAssetType={snapTradeApi.updateTransactionAssetType}
               onImport={handleSnapTradeImportAll}
               onReset={() => { snapTradeApi.reset(); setStep("upload"); }}
               t={t}
@@ -1358,17 +1363,21 @@ function PreviewPanel({
   duplicatesRemoved,
   onRemoveTx,
   onRemoveHolding,
+  onUpdateTxAssetType,
+  onUpdateHoldingAssetType,
   onImport,
   onReset,
   t,
   track,
 }: {
-  transactions: { date: string; type: string; ticker: string; name: string; shares: number; pricePerShare: number; totalAmount: number; fees: number; currency: string }[];
+  transactions: { date: string; type: string; ticker: string; name: string; shares: number; pricePerShare: number; totalAmount: number; fees: number; currency: string; assetType?: string }[];
   holdings: { name: string; ticker: string; shares: number; purchasePrice: number; displayCurrency: string; exchange: string; assetType: string }[];
   cashBalances: { currency: string; amount: number }[];
   duplicatesRemoved: number;
   onRemoveTx: (idx: number) => void;
   onRemoveHolding: (idx: number) => void;
+  onUpdateTxAssetType?: (idx: number, assetType: "stock" | "etf" | "fund") => void;
+  onUpdateHoldingAssetType?: (idx: number, assetType: "stock" | "etf" | "fund") => void;
   onImport: () => void;
   onReset: () => void;
   t: (key: string) => string;
@@ -1432,6 +1441,7 @@ function PreviewPanel({
                 <tr className="text-gray-500 dark:text-slate-400">
                   <th scope="col" className="text-left p-2 font-medium">{t("name")}</th>
                   <th scope="col" className="text-left p-2 font-medium">{t("ticker")}</th>
+                  <th scope="col" className="text-left p-2 font-medium">{t("assetType")}</th>
                   <th scope="col" className="text-right p-2 font-medium">{t("shares")}</th>
                   <th scope="col" className="text-right p-2 font-medium">{t("purchasePrice")}</th>
                   <th scope="col" className="p-2"></th>
@@ -1442,6 +1452,17 @@ function PreviewPanel({
                   <tr key={i} className="border-t border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-300">
                     <td className="p-2 max-w-[140px] truncate">{h.name}</td>
                     <td className="p-2 font-mono font-medium text-gray-900 dark:text-white">{h.ticker}</td>
+                    <td className="p-2">
+                      <select
+                        value={h.assetType || "stock"}
+                        onChange={(e) => onUpdateHoldingAssetType?.(i, e.target.value as "stock" | "etf" | "fund")}
+                        className="text-xs rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1"
+                      >
+                        <option value="stock">{t("stockType")}</option>
+                        <option value="etf">{t("etfType")}</option>
+                        <option value="fund">{t("fundType")}</option>
+                      </select>
+                    </td>
                     <td className="p-2 text-right font-mono">{h.shares}</td>
                     <td className="p-2 text-right font-mono">{h.purchasePrice.toFixed(2)}</td>
                     <td className="p-2">
@@ -1468,6 +1489,7 @@ function PreviewPanel({
                   <th scope="col" className="text-left p-2 font-medium">{t("transactionDate")}</th>
                   <th scope="col" className="text-left p-2 font-medium">{t("transactionType")}</th>
                   <th scope="col" className="text-left p-2 font-medium">{t("ticker")}</th>
+                  <th scope="col" className="text-left p-2 font-medium">{t("assetType")}</th>
                   <th scope="col" className="text-right p-2 font-medium">{t("transactionShares")}</th>
                   <th scope="col" className="text-right p-2 font-medium">{t("transactionTotal")}</th>
                   <th scope="col" className="p-2"></th>
@@ -1479,6 +1501,17 @@ function PreviewPanel({
                     <td className="p-2">{tx.date}</td>
                     <td className="p-2"><span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium ${TX_TYPE_COLORS[tx.type] || ""}`}>{tx.type}</span></td>
                     <td className="p-2 font-mono font-medium text-gray-900 dark:text-white">{tx.ticker}</td>
+                    <td className="p-2">
+                      <select
+                        value={tx.assetType || "stock"}
+                        onChange={(e) => onUpdateTxAssetType?.(i, e.target.value as "stock" | "etf" | "fund")}
+                        className="text-xs rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1"
+                      >
+                        <option value="stock">{t("stockType")}</option>
+                        <option value="etf">{t("etfType")}</option>
+                        <option value="fund">{t("fundType")}</option>
+                      </select>
+                    </td>
                     <td className="p-2 text-right font-mono">{tx.shares > 0 ? tx.shares : "—"}</td>
                     <td className="p-2 text-right font-mono font-medium text-gray-900 dark:text-white">{tx.totalAmount.toFixed(2)}</td>
                     <td className="p-2">

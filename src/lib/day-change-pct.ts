@@ -28,7 +28,7 @@ export function computeDayChangeByType(
 ): DayChangeByType {
   const pct: Partial<Record<AssetFilter, number>> = {};
   const abs: Partial<Record<AssetFilter, number | undefined>> = {};
-  const groups: AssetFilter[] = ["all", "stock", "etf", "crypto"];
+  const groups: AssetFilter[] = ["all", "stock", "etf", "fund", "crypto"];
 
   for (const group of groups) {
     const bucket = groupHoldings(holdings, group);

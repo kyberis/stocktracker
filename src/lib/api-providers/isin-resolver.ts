@@ -1,12 +1,9 @@
+import { looksLikeIsin } from "@/lib/isin";
 import { YahooProvider } from "./yahoo";
 
-const ISIN_PATTERN = /^[A-Z]{2}[A-Z0-9]{9}\d$/;
+export { looksLikeIsin };
 
 const isinCache = new Map<string, string>();
-
-export function looksLikeIsin(symbol: string): boolean {
-  return ISIN_PATTERN.test(symbol);
-}
 
 /**
  * Resolve an ISIN to a Yahoo ticker symbol via search.

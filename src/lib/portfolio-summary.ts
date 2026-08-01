@@ -14,6 +14,7 @@ type AllocationKey = HoldingAssetType | ManualAssetType;
 const ALLOCATION_COLORS: Record<AllocationKey, string> = {
   stock: "#6366f1",
   etf: "#10b981",
+  fund: "#14b8a6",
   crypto: "#f59e0b",
   real_estate: "#3b82f6",
   savings: "#06b6d4",
@@ -24,6 +25,7 @@ const ALLOCATION_COLORS: Record<AllocationKey, string> = {
 const ALLOCATION_LABELS: Record<AllocationKey, string> = {
   stock: "Stocks",
   etf: "ETFs",
+  fund: "Funds",
   crypto: "Crypto",
   real_estate: "Real Estate",
   savings: "Savings",
@@ -75,7 +77,7 @@ export function computeAllocationByType(
 
   const grandTotal = Object.values(buckets).reduce((s, v) => s + v, 0);
 
-  const order: AllocationKey[] = ["stock", "etf", "crypto", "real_estate", "savings", "pension", "cash"];
+  const order: AllocationKey[] = ["stock", "etf", "fund", "crypto", "real_estate", "savings", "pension", "cash"];
   return order
     .filter((key) => (buckets[key] ?? 0) > 0)
     .map((key) => ({
@@ -97,7 +99,7 @@ export function computeValueByAssetType(
   exchangeRates: ExchangeRates,
   baseCurrency: string = "EUR",
 ): Record<HoldingAssetType, number> {
-  const buckets: Record<HoldingAssetType, number> = { stock: 0, etf: 0, crypto: 0 };
+  const buckets: Record<HoldingAssetType, number> = { stock: 0, etf: 0, fund: 0, crypto: 0 };
 
   for (const h of holdings) {
     const type: HoldingAssetType = h.assetType ?? "stock";
@@ -132,6 +134,7 @@ export function computeValueByAssetType(
 export interface AssetTypeTotals {
   stock: PortfolioTotals;
   etf: PortfolioTotals;
+  fund: PortfolioTotals;
   crypto: PortfolioTotals;
   allocations: Record<HoldingAssetType, number>;
 }
@@ -147,7 +150,7 @@ export function calculateTotalsByAssetType(
   exchangeRates: ExchangeRates,
   baseCurrency: string = "EUR",
 ): AssetTypeTotals {
-  const groups: Record<HoldingAssetType, Holding[]> = { stock: [], etf: [], crypto: [] };
+  const groups: Record<HoldingAssetType, Holding[]> = { stock: [], etf: [], fund: [], crypto: [] };
   for (const h of holdings) {
     const type: HoldingAssetType = h.assetType ?? "stock";
     groups[type].push(h);
@@ -156,6 +159,7 @@ export function calculateTotalsByAssetType(
   const emptyCash: CashEntry[] = [];
   const stock = calculatePortfolioTotals(groups.stock, emptyCash, quotes, exchangeRates, baseCurrency);
   const etf = calculatePortfolioTotals(groups.etf, emptyCash, quotes, exchangeRates, baseCurrency);
+  const fund = calculatePortfolioTotals(groups.fund, emptyCash, quotes, exchangeRates, baseCurrency);
   const crypto = calculatePortfolioTotals(groups.crypto, emptyCash, quotes, exchangeRates, baseCurrency);
 
   const allTotals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
@@ -164,10 +168,11 @@ export function calculateTotalsByAssetType(
   const allocations: Record<HoldingAssetType, number> = {
     stock: total > 0 ? (stock.totalCurrentEUR / total) * 100 : 0,
     etf: total > 0 ? (etf.totalCurrentEUR / total) * 100 : 0,
+    fund: total > 0 ? (fund.totalCurrentEUR / total) * 100 : 0,
     crypto: total > 0 ? (crypto.totalCurrentEUR / total) * 100 : 0,
   };
 
-  return { stock, etf, crypto, allocations };
+  return { stock, etf, fund, crypto, allocations };
 }
 
 export interface PortfolioTotals {

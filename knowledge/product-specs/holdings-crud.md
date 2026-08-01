@@ -4,7 +4,7 @@
 
 ## 1. Summary
 
-A "holding" is a position in a single ticker at a given exchange. Holdings are derived from transactions for users who import/sync, but can also be added manually. UI surfaces edit (shares, cost basis, tags) and removal; classifications (asset type, country, sector) are autofilled where possible.
+A "holding" is a position in a single ticker at a given exchange. Holdings are derived from transactions for users who import/sync, but can also be added manually. UI surfaces edit (shares, cost basis, tags) and removal; classifications (asset type including **fund**, country, sector) are autofilled where possible.
 
 ## 2. Status
 

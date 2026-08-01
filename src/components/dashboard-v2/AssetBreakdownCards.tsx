@@ -30,9 +30,9 @@ export default function AssetBreakdownCards({ holdings, cashEntries, onFilterCha
   );
 
   const investedTotal =
-    byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.crypto.totalCurrentEUR;
+    byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.fund.totalCurrentEUR + byType.crypto.totalCurrentEUR;
   const allDayPL =
-    byType.stock.dayGainLossEUR + byType.etf.dayGainLossEUR + byType.crypto.dayGainLossEUR;
+    byType.stock.dayGainLossEUR + byType.etf.dayGainLossEUR + byType.fund.dayGainLossEUR + byType.crypto.dayGainLossEUR;
   const allPriorClose = investedTotal - allDayPL;
   const allDayPct = allPriorClose > 0 ? (allDayPL / allPriorClose) * 100 : 0;
 
@@ -55,6 +55,7 @@ export default function AssetBreakdownCards({ holdings, cashEntries, onFilterCha
   const activeTypeCount =
     (byType.stock.totalCurrentEUR > 0 ? 1 : 0) +
     (byType.etf.totalCurrentEUR > 0 ? 1 : 0) +
+    (byType.fund.totalCurrentEUR > 0 ? 1 : 0) +
     (byType.crypto.totalCurrentEUR > 0 ? 1 : 0);
   const showAllPill = activeTypeCount > 1;
 
@@ -78,6 +79,15 @@ export default function AssetBreakdownCards({ holdings, cashEntries, onFilterCha
       alloc: byType.allocations.etf,
       dayPct: byType.etf.totalCurrentEUR > 0 && (byType.etf.totalCurrentEUR - byType.etf.dayGainLossEUR) > 0
         ? (byType.etf.dayGainLossEUR / (byType.etf.totalCurrentEUR - byType.etf.dayGainLossEUR)) * 100
+        : 0,
+    },
+    {
+      key: "fund",
+      label: t("fundsLabel"),
+      value: byType.fund.totalCurrentEUR,
+      alloc: byType.allocations.fund,
+      dayPct: byType.fund.totalCurrentEUR > 0 && (byType.fund.totalCurrentEUR - byType.fund.dayGainLossEUR) > 0
+        ? (byType.fund.dayGainLossEUR / (byType.fund.totalCurrentEUR - byType.fund.dayGainLossEUR)) * 100
         : 0,
     },
     {

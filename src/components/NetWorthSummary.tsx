@@ -96,7 +96,7 @@ export default function NetWorthSummary({ holdings: holdingsProp, cashEntries: c
   );
 
   const breakdown = useMemo<BreakdownItem[]>(() => {
-    const investmentTypes = new Set<HoldingAssetType>(["stock", "etf", "crypto"]);
+    const investmentTypes = new Set<HoldingAssetType>(["stock", "etf", "fund", "crypto"]);
     const investmentSlices = allocationSlices.filter((s) => investmentTypes.has(s.key as HoldingAssetType));
     const investmentTotal = investmentSlices.reduce((sum, s) => sum + s.valueEUR, 0);
 

@@ -95,6 +95,10 @@ describe("holdingAssetType", () => {
     expect(holdingAssetType("crypto")).toBe("crypto");
   });
 
+  it("returns fund for fund", () => {
+    expect(holdingAssetType("fund")).toBe("fund");
+  });
+
   it("returns stock for stock", () => {
     expect(holdingAssetType("stock")).toBe("stock");
   });

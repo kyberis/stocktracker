@@ -9,6 +9,7 @@ const ASSET_COLORS: Record<AssetFilter, string> = {
   all: "var(--gain, #10b981)",
   stock: "#6366f1",
   etf: "#f59e0b",
+  fund: "#14b8a6",
   crypto: "#ec4899",
 };
 
@@ -25,6 +26,7 @@ export default function AssetTypeFilter({ value, onChange, dayChangePct }: Props
     { key: "all", label: t("allAssets") },
     { key: "stock", label: t("stocksLabel") },
     { key: "etf", label: t("etfsLabel") },
+    { key: "fund", label: t("fundsLabel") },
     { key: "crypto", label: t("cryptoLabel") },
   ];
 
