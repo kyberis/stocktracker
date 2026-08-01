@@ -126,7 +126,7 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
         router.push(`/crypto?symbol=${encodeURIComponent(base)}`);
         return;
       }
-      router.push(`/stock/${encodeURIComponent(r.symbol)}?exchange=${encodeURIComponent(r.exchange)}`);
+      router.push(`/analisis/${encodeURIComponent(r.symbol)}?exchange=${encodeURIComponent(r.exchange)}`);
     },
     [router],
   );

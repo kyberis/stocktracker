@@ -133,7 +133,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
 
   const handleClick = useCallback(() => {
     if (typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT) {
-      router.push(`/stock/${encodeURIComponent(holding.ticker)}?exchange=${encodeURIComponent(holding.exchange)}`);
+      router.push(`/analisis/${encodeURIComponent(holding.ticker)}?exchange=${encodeURIComponent(holding.exchange)}`);
     } else {
       onSelect?.(holding);
     }

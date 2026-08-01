@@ -70,7 +70,7 @@ export default function ExploreAssetSearch({ initialQuery = "" }: { initialQuery
       router.push(`/crypto?symbol=${encodeURIComponent(base)}`);
       return;
     }
-    router.push(`/stock/${encodeURIComponent(r.symbol)}?exchange=${encodeURIComponent(r.exchange)}`);
+    router.push(`/analisis/${encodeURIComponent(r.symbol)}?exchange=${encodeURIComponent(r.exchange)}`);
   };
 
   const typeLabel = (qt: string) => {

@@ -643,7 +643,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
         <div className="sticky bottom-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 px-5 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
-              href={`/stock/${encodeURIComponent(holding.ticker)}?exchange=${encodeURIComponent(holding.exchange)}`}
+              href={`/analisis/${encodeURIComponent(holding.ticker)}?exchange=${encodeURIComponent(holding.exchange)}`}
               className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors flex items-center gap-1"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -653,7 +653,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
             </Link>
             {canAccessPremium && (
               <Link
-                href={`/stock/${encodeURIComponent(holding.ticker)}/intelligence?exchange=${encodeURIComponent(holding.exchange)}`}
+                href={`/analisis/${encodeURIComponent(holding.ticker)}?exchange=${encodeURIComponent(holding.exchange)}&tab=intelligence`}
                 className="text-sm text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors flex items-center gap-1"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
