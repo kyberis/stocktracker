@@ -145,9 +145,14 @@ export default function MarketTickerBar({ demoMode = false }: Props) {
     return () => window.clearInterval(id);
   }, []);
 
+  // Prefer aria-label over role="marquee" (deprecated / often ignored by AT).
   if (loading) {
     return (
-      <div className="bg-slate-950 dark:bg-black border-b border-slate-800 sticky top-0 z-50 safe-area-top">
+      <div
+        className="bg-slate-950 dark:bg-black border-b border-slate-800 sticky top-0 z-50 safe-area-top"
+        aria-label={t("tickerMarketLabel")}
+        aria-busy="true"
+      >
         <div className="h-7" />
       </div>
     );
@@ -158,7 +163,6 @@ export default function MarketTickerBar({ demoMode = false }: Props) {
   return (
     <div
       className="bg-slate-950 dark:bg-black border-b border-slate-800 overflow-hidden sticky top-0 z-50 safe-area-top"
-      role="marquee"
       aria-label={t("tickerMarketLabel")}
     >
       <div className="h-7 flex items-center font-mono text-[11px] leading-none ticker-scroll-container">

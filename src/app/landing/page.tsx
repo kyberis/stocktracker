@@ -13,6 +13,7 @@ import { event as gtagEvent } from "@/lib/gtag";
 import { captureFirstTouchAttributionFromWindow } from "@/lib/attribution";
 import CloverToLogo from "@/components/CloverToLogo";
 import QuotaCompareTable from "@/components/QuotaCompareTable";
+import MarketTickerBar from "@/components/MarketTickerBar";
 
 function useLandingCommerceEnabled() {
   const [enabled, setEnabled] = useState(false);
@@ -423,7 +424,7 @@ function NavBar() {
   }, []);
 
   return (
-    <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+    <nav className={`transition-all duration-300 ${
       scrolled
         ? "bg-[#faf9f7]/90 backdrop-blur-xl border-b border-slate-200 shadow-sm"
         : "bg-transparent"
@@ -667,7 +668,7 @@ function HeroSection() {
   ], [t]);
 
   return (
-    <section className="relative pt-36 pb-8 sm:pt-28 sm:pb-16 overflow-hidden">
+    <section className="relative pt-40 pb-8 sm:pt-32 sm:pb-16 overflow-hidden">
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-[8%] right-[-8%] w-[550px] h-[550px] bg-emerald-500/[0.06] rounded-full blur-3xl" />
       </div>
@@ -2445,7 +2446,10 @@ export default function LandingPage() {
     <LandingI18nProvider>
     <NativeRedirect />
     <div className="min-h-screen bg-[#faf9f7] text-slate-800 overflow-x-hidden">
-      <NavBar />
+      <div className="fixed top-0 inset-x-0 z-50">
+        <MarketTickerBar />
+        <NavBar />
+      </div>
       <main id="main-content">
       <HeroSection />
       <StatsBar />

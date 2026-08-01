@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "Investor Briefing (/aid) remains beta behind aid_beta; landing page intentionally unchanged per landing-page rule until public launch."
+  "notes": "2.5.54: live MarketTickerBar added to public landing above the nav; /api/ticker-bar is public + cached. Footer retains Yahoo/AV market-data disclaimer."
 }
