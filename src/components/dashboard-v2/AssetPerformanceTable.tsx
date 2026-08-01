@@ -16,10 +16,11 @@ interface Props {
 
 type PerfMode = "total" | "daily";
 
-const ROWS: { key: HoldingAssetType | "all"; labelKey: "allAssets" | "stocksLabel" | "etfsLabel" | "cryptoLabel" }[] = [
+const ROWS: { key: HoldingAssetType | "all"; labelKey: "allAssets" | "stocksLabel" | "etfsLabel" | "fundsLabel" | "cryptoLabel" }[] = [
   { key: "all", labelKey: "allAssets" },
   { key: "stock", labelKey: "stocksLabel" },
   { key: "etf", labelKey: "etfsLabel" },
+  { key: "fund", labelKey: "fundsLabel" },
   { key: "crypto", labelKey: "cryptoLabel" },
 ];
 
@@ -36,7 +37,7 @@ export default function AssetPerformanceTable({ holdings, cashEntries }: Props) 
     return { byType: bt, allTotals: all };
   }, [holdings, cashEntries, quotes, exchangeRates, cur]);
 
-  const hasMultipleTypes = [byType.stock, byType.etf, byType.crypto].filter(t => t.totalCurrentEUR > 0).length > 1;
+  const hasMultipleTypes = [byType.stock, byType.etf, byType.fund, byType.crypto].filter(t => t.totalCurrentEUR > 0).length > 1;
   if (!hasMultipleTypes) return null;
 
   function getTotals(key: HoldingAssetType | "all") {

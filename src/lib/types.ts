@@ -170,7 +170,7 @@ export interface AppNotification {
 
 export type ManualAssetType = "cash" | "real_estate" | "savings" | "pension";
 
-export type HoldingAssetType = "stock" | "etf" | "crypto";
+export type HoldingAssetType = "stock" | "etf" | "crypto" | "fund";
 
 export interface Holding {
   id: string;

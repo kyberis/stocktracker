@@ -48,7 +48,7 @@ export function usePortfolioPerformanceMatrix({
   );
 
   const investedTotal =
-    byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.crypto.totalCurrentEUR;
+    byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.fund.totalCurrentEUR + byType.crypto.totalCurrentEUR;
 
   const dayChangeComputed = useMemo(
     () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency),
@@ -60,6 +60,7 @@ export function usePortfolioPerformanceMatrix({
       all: investedTotal,
       stock: byType.stock.totalCurrentEUR,
       etf: byType.etf.totalCurrentEUR,
+      fund: byType.fund.totalCurrentEUR,
       crypto: byType.crypto.totalCurrentEUR,
     };
 
@@ -67,6 +68,7 @@ export function usePortfolioPerformanceMatrix({
       all: dayChangePctProp?.all ?? dayChangeComputed.pct.all,
       stock: dayChangePctProp?.stock ?? dayChangeComputed.pct.stock,
       etf: dayChangePctProp?.etf ?? dayChangeComputed.pct.etf,
+      fund: dayChangePctProp?.fund ?? dayChangeComputed.pct.fund,
       crypto: dayChangePctProp?.crypto ?? dayChangeComputed.pct.crypto,
     };
 

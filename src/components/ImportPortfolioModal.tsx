@@ -25,7 +25,7 @@ interface ExtractedHolding {
   purchasePrice: number;
   displayCurrency: string;
   exchange: string;
-  assetType: "stock" | "etf";
+  assetType: "stock" | "etf" | "fund";
 }
 
 interface ExtractedTransaction {

@@ -32,7 +32,7 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
     if (!allHaveFreshQuote) return;
 
     const byType = computeValueByAssetType(holdings, quotes, exchangeRates, "EUR");
-    const holdingsValue = byType.stock + byType.etf + byType.crypto;
+    const holdingsValue = byType.stock + byType.etf + byType.fund + byType.crypto;
     if (holdingsValue <= 0) return;
 
     fetchWithAuthRedirect("/api/portfolio/snapshot", {
@@ -43,6 +43,7 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
         portfolioId: portfolioIdRef.current || "",
         stockValueEUR: byType.stock,
         etfValueEUR: byType.etf,
+        fundValueEUR: byType.fund,
         cryptoValueEUR: byType.crypto,
       }),
     }).catch(() => {});

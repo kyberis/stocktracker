@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.56",
+    date: "2026-08-02",
+    title: "Mutual fund (fondos) support",
+    titleTranslations: {
+      es: "Soporte para fondos de inversión",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Track mutual funds as a first-class asset type: Yahoo search includes MUTUALFUND, add/import flows recognize fondos and SICAVs, portfolio filters and snapshots split fund value, and ISIN search works when adding positions.",
+        translations: {
+          es: "Seguimiento de fondos de inversión como tipo de activo de primera clase: la búsqueda de Yahoo incluye MUTUALFUND, los flujos de alta e importación reconocen fondos y SICAV, los filtros y snapshots del portafolio separan el valor en fondos, y la búsqueda por ISIN funciona al añadir posiciones.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.55",
     date: "2026-08-02",
     title: "TradingView and Yahoo Finance on analysis header",

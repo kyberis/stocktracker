@@ -41,7 +41,7 @@ export const GET = withMetrics("/api/portfolio/backfill-snapshots", async (req: 
     client.execute({
       sql: `SELECT COUNT(*) as cnt FROM portfolio_snapshots
             WHERE user_id = ? AND total_value_eur > 0
-              AND stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0`,
+              AND stock_value_eur = 0 AND etf_value_eur = 0 AND fund_value_eur = 0 AND crypto_value_eur = 0`,
       args: [session.userId],
     }),
   ]);
@@ -132,7 +132,7 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
             LIMIT 1
           ), portfolio_snapshots.total_invested_eur, 0),
           stock_value_eur = CASE
-            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN COALESCE((
+            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND fund_value_eur = 0 AND crypto_value_eur = 0 THEN COALESCE((
               SELECT d.stock_value_eur
               FROM portfolio_snapshots d
               WHERE d.user_id = portfolio_snapshots.user_id
@@ -140,14 +140,14 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
                 AND d.date NOT LIKE '% %'
                 AND d.date NOT LIKE '%T%'
                 AND d.date <= substr(portfolio_snapshots.date, 1, 10)
-                AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.crypto_value_eur > 0)
+                AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.fund_value_eur > 0 OR d.crypto_value_eur > 0)
               ORDER BY d.date DESC
               LIMIT 1
             ), portfolio_snapshots.stock_value_eur, 0)
             ELSE stock_value_eur
           END,
           etf_value_eur = CASE
-            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN COALESCE((
+            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND fund_value_eur = 0 AND crypto_value_eur = 0 THEN COALESCE((
               SELECT d.etf_value_eur
               FROM portfolio_snapshots d
               WHERE d.user_id = portfolio_snapshots.user_id
@@ -155,14 +155,29 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
                 AND d.date NOT LIKE '% %'
                 AND d.date NOT LIKE '%T%'
                 AND d.date <= substr(portfolio_snapshots.date, 1, 10)
-                AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.crypto_value_eur > 0)
+                AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.fund_value_eur > 0 OR d.crypto_value_eur > 0)
               ORDER BY d.date DESC
               LIMIT 1
             ), portfolio_snapshots.etf_value_eur, 0)
             ELSE etf_value_eur
           END,
+          fund_value_eur = CASE
+            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND fund_value_eur = 0 AND crypto_value_eur = 0 THEN COALESCE((
+              SELECT d.fund_value_eur
+              FROM portfolio_snapshots d
+              WHERE d.user_id = portfolio_snapshots.user_id
+                AND d.portfolio_id = portfolio_snapshots.portfolio_id
+                AND d.date NOT LIKE '% %'
+                AND d.date NOT LIKE '%T%'
+                AND d.date <= substr(portfolio_snapshots.date, 1, 10)
+                AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.fund_value_eur > 0 OR d.crypto_value_eur > 0)
+              ORDER BY d.date DESC
+              LIMIT 1
+            ), portfolio_snapshots.fund_value_eur, 0)
+            ELSE fund_value_eur
+          END,
           crypto_value_eur = CASE
-            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN COALESCE((
+            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND fund_value_eur = 0 AND crypto_value_eur = 0 THEN COALESCE((
               SELECT d.crypto_value_eur
               FROM portfolio_snapshots d
               WHERE d.user_id = portfolio_snapshots.user_id
@@ -170,7 +185,7 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
                 AND d.date NOT LIKE '% %'
                 AND d.date NOT LIKE '%T%'
                 AND d.date <= substr(portfolio_snapshots.date, 1, 10)
-                AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.crypto_value_eur > 0)
+                AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.fund_value_eur > 0 OR d.crypto_value_eur > 0)
               ORDER BY d.date DESC
               LIMIT 1
             ), portfolio_snapshots.crypto_value_eur, 0)

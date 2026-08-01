@@ -5,7 +5,9 @@ import type {
   ExtractedTransaction,
   ExtractedHolding,
   CashBalance,
+  ImportAssetType,
 } from "./import-types";
+import { inferAssetType } from "@/lib/infer-asset-type";
 
 export type { ExtractedTransaction, ExtractedHolding, CashBalance, BrokerFormat };
 
@@ -66,6 +68,8 @@ export interface UseImportBrokerCSVReturn {
   importAll: (broker: BrokerFormat, isImageImport?: boolean, portfolioId?: string | null) => Promise<void>;
   removeTransaction: (idx: number) => void;
   removeHolding: (idx: number) => void;
+  updateHoldingAssetType: (idx: number, assetType: ImportAssetType) => void;
+  updateTransactionAssetType: (idx: number, assetType: ImportAssetType) => void;
   reset: () => void;
 }
 
@@ -199,6 +203,14 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     setHoldings((prev) => prev.filter((_, i) => i !== idx));
   }, []);
 
+  const updateHoldingAssetType = useCallback((idx: number, assetType: ImportAssetType) => {
+    setHoldings((prev) => prev.map((h, i) => (i === idx ? { ...h, assetType } : h)));
+  }, []);
+
+  const updateTransactionAssetType = useCallback((idx: number, assetType: ImportAssetType) => {
+    setTransactions((prev) => prev.map((tx, i) => (i === idx ? { ...tx, assetType } : tx)));
+  }, []);
+
   const importAll = useCallback(
     async (broker: BrokerFormat, isImageImport = false, portfolioId?: string | null) => {
       const unsorted: ExtractedTransaction[] =
@@ -264,11 +276,9 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
             holdings.find((h) => h.ticker === tx.ticker)?.exchange || "",
           isin: tx.isin || "",
           assetType:
+            tx.assetType ||
             holdings.find((h) => h.ticker === tx.ticker)?.assetType ||
-            (tx.name.toUpperCase().includes("ETF") ||
-            tx.name.toUpperCase().includes("UCITS")
-              ? "etf"
-              : "stock"),
+            inferAssetType({ name: tx.name }),
           accountId: "",
           type: tx.type,
           date: tx.date,
@@ -375,6 +385,8 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     importAll,
     removeTransaction,
     removeHolding,
+    updateHoldingAssetType,
+    updateTransactionAssetType,
     reset,
   };
 }

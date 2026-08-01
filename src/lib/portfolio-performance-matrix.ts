@@ -13,6 +13,7 @@ export interface SnapshotHistoryPoint {
   invested: number;
   stockValue: number;
   etfValue: number;
+  fundValue: number;
   cryptoValue: number;
 }
 
@@ -127,11 +128,13 @@ export function getAggregatedPeriodAnchorDates(): {
 export function valueFromSnapshot(point: SnapshotHistoryPoint, assetKey: AssetFilter): number {
   const stock = point.stockValue ?? 0;
   const etf = point.etfValue ?? 0;
+  const fund = point.fundValue ?? 0;
   const crypto = point.cryptoValue ?? 0;
-  const perTypeSum = stock + etf + crypto;
+  const perTypeSum = stock + etf + fund + crypto;
 
   if (assetKey === "stock") return stock;
   if (assetKey === "etf") return etf;
+  if (assetKey === "fund") return fund;
   if (assetKey === "crypto") return crypto;
   return perTypeSum > 0 ? perTypeSum : point.value;
 }
@@ -340,7 +343,7 @@ export function buildMatrixFromHistorical(input: BuildMatrixFromHistoricalInput)
 export function resolveMatrixAssetKeys(
   currentByAsset: Partial<Record<AssetFilter, number>>,
 ): AssetFilter[] {
-  const types: AssetFilter[] = ["stock", "etf", "crypto"];
+  const types: AssetFilter[] = ["stock", "etf", "fund", "crypto"];
   const activeTypes = types.filter((k) => (currentByAsset[k] ?? 0) > 0);
   const showAll = activeTypes.length > 1;
   const keys: AssetFilter[] = showAll ? ["all", ...activeTypes] : activeTypes.length > 0 ? activeTypes : ["all"];

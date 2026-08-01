@@ -25,7 +25,7 @@ const bulkTransactionSchema = z.object({
       name: z.string().optional().default(""),
       exchange: z.string().optional().default(""),
       isin: z.string().optional().default(""),
-      assetType: z.enum(["stock", "etf"]).optional().default("stock"),
+      assetType: z.enum(["stock", "etf", "crypto", "fund"]).optional().default("stock"),
       accountId: z.string().optional().default(""),
       shares: z.number().optional().default(0),
       pricePerShare: z.number().optional().default(0),

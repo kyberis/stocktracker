@@ -48,6 +48,7 @@ interface SnapshotPoint {
   invested: number;
   stockValue: number;
   etfValue: number;
+  fundValue: number;
   cryptoValue: number;
 }
 
@@ -59,6 +60,7 @@ interface ChartPoint {
   spikeDetail?: SpikeDetail;
   stockValue?: number;
   etfValue?: number;
+  fundValue?: number;
   cryptoValue?: number;
   events?: EventMarker[];
   [key: string]: unknown;
@@ -96,6 +98,7 @@ const ASSET_FILTER_LINE_COLORS: Record<AssetFilter, string> = {
   all: "#10b981",
   stock: "#6366f1",
   etf: "#f59e0b",
+  fund: "#14b8a6",
   crypto: "#ec4899",
 };
 
@@ -336,12 +339,16 @@ export default function PortfolioEvolutionChart({
 
   const effectivePoints: SnapshotPoint[] = useMemo(() => {
     return points.map((p) => {
-      const perTypeSum = (p.stockValue ?? 0) + (p.etfValue ?? 0) + (p.cryptoValue ?? 0);
+      const perTypeSum = (p.stockValue ?? 0) + (p.etfValue ?? 0) + (p.fundValue ?? 0) + (p.cryptoValue ?? 0);
       const hasPerType = perTypeSum > 0;
       if (!hasPerType) return p;
 
       if (isFilteredSingle) {
-        const key = assetFilter === "stock" ? "stockValue" : assetFilter === "etf" ? "etfValue" : "cryptoValue";
+        const key =
+          assetFilter === "stock" ? "stockValue"
+          : assetFilter === "etf" ? "etfValue"
+          : assetFilter === "fund" ? "fundValue"
+          : "cryptoValue";
         return { ...p, value: p[key] ?? 0 };
       }
 
@@ -502,6 +509,7 @@ export default function PortfolioEvolutionChart({
         pct: firstValue > 0 ? ((p.value - firstValue) / firstValue) * 100 : 0,
         stockValue: p.stockValue,
         etfValue: p.etfValue,
+        fundValue: p.fundValue,
         cryptoValue: p.cryptoValue,
       };
 
@@ -526,9 +534,10 @@ export default function PortfolioEvolutionChart({
           const allTypes: SpikeTypeBreakdown[] = [
             { type: "Stocks", delta: (curr.stockValue ?? 0) - (prev.stockValue ?? 0), pct: 0 },
             { type: "ETFs", delta: (curr.etfValue ?? 0) - (prev.etfValue ?? 0), pct: 0 },
+            { type: "Funds", delta: (curr.fundValue ?? 0) - (prev.fundValue ?? 0), pct: 0 },
             { type: "Crypto", delta: (curr.cryptoValue ?? 0) - (prev.cryptoValue ?? 0), pct: 0 },
           ];
-          const filterMap: Record<string, string> = { stock: "Stocks", etf: "ETFs", crypto: "Crypto" };
+          const filterMap: Record<string, string> = { stock: "Stocks", etf: "ETFs", fund: "Funds", crypto: "Crypto" };
           const types = (assetFilter === "all" ? allTypes : allTypes.filter((t) => t.type === filterMap[assetFilter]))
             .filter((t) => Math.abs(t.delta) > 0.01)
             .map((t) => ({ ...t, pct: totalDelta !== 0 ? (t.delta / Math.abs(totalDelta)) * 100 : 0 }))
@@ -572,6 +581,7 @@ export default function PortfolioEvolutionChart({
             if (p.spikeDetail) kept.spikeDetail = p.spikeDetail;
             if (p.stockValue != null) kept.stockValue = p.stockValue;
             if (p.etfValue != null) kept.etfValue = p.etfValue;
+            if (p.fundValue != null) kept.fundValue = p.fundValue;
             if (p.cryptoValue != null) kept.cryptoValue = p.cryptoValue;
             return kept;
           }

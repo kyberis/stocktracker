@@ -114,7 +114,7 @@ export class YahooProvider implements StockDataProvider {
     try {
       const result = await yahooFinance.search(query, { quotesCount: 8 }, { validateResult: false }) as { quotes?: Array<Record<string, unknown>> };
       ok = true;
-      const allowedTypes = new Set(["EQUITY", "ETF"]);
+      const allowedTypes = new Set(["EQUITY", "ETF", "MUTUALFUND"]);
       if (options?.includeCrypto) allowedTypes.add("CRYPTOCURRENCY");
       return (result.quotes || [])
         .filter(

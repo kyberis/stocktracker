@@ -75,7 +75,7 @@ function parseEtoro(csv: string, _isinToTicker: Record<string, string>): ParsedT
     if (!type) continue;
 
     const assetType = cell(row, assetTypeIdx).toLowerCase();
-    if (assetType && !assetType.includes("stock") && !assetType.includes("etf") && !assetType.includes("equity")) {
+    if (assetType && !assetType.includes("stock") && !assetType.includes("etf") && !assetType.includes("equity") && !assetType.includes("fund") && !assetType.includes("mutual")) {
       continue;
     }
 

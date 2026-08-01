@@ -16,6 +16,7 @@ const SNAPSHOTS: SnapshotHistoryPoint[] = [
     invested: 9000,
     stockValue: 8000,
     etfValue: 1000,
+    fundValue: 0,
     cryptoValue: 1000,
   },
   {
@@ -24,6 +25,7 @@ const SNAPSHOTS: SnapshotHistoryPoint[] = [
     invested: 9000,
     stockValue: 8800,
     etfValue: 1100,
+    fundValue: 0,
     cryptoValue: 1100,
   },
   {
@@ -32,6 +34,7 @@ const SNAPSHOTS: SnapshotHistoryPoint[] = [
     invested: 9500,
     stockValue: 9600,
     etfValue: 1200,
+    fundValue: 0,
     cryptoValue: 1200,
   },
 ];

@@ -3579,6 +3579,19 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 122,
+    description: "fund_value_eur column on portfolio_snapshots",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(portfolio_snapshots)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("fund_value_eur")) {
+        await client.execute(
+          "ALTER TABLE portfolio_snapshots ADD COLUMN fund_value_eur REAL NOT NULL DEFAULT 0",
+        );
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

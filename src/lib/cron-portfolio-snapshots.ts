@@ -129,18 +129,19 @@ async function writeLiveSnapshotsForUser(
     invested: number;
     stockValue: number;
     etfValue: number;
+    fundValue: number;
     cryptoValue: number;
   }
   const rows: SnapshotRow[] = [];
 
-  function assetValues(h: Holding[]): { stockValue: number; etfValue: number; cryptoValue: number } {
+  function assetValues(h: Holding[]): { stockValue: number; etfValue: number; fundValue: number; cryptoValue: number } {
     const b = computeValueByAssetType(h, quotes, exchangeRates, "EUR");
-    return { stockValue: b.stock, etfValue: b.etf, cryptoValue: b.crypto };
+    return { stockValue: b.stock, etfValue: b.etf, fundValue: b.fund, cryptoValue: b.crypto };
   }
 
   if (holdingsAll.every(hasQuote)) {
     const av = assetValues(holdingsAll);
-    const holdingsValue = av.stockValue + av.etfValue + av.cryptoValue;
+    const holdingsValue = av.stockValue + av.etfValue + av.fundValue + av.cryptoValue;
     const emptyCash: CashEntry[] = [];
     const totalsAll = calculatePortfolioTotals(holdingsAll, emptyCash, quotes, exchangeRates, "EUR");
     if (holdingsValue > 0) {
@@ -159,7 +160,7 @@ async function writeLiveSnapshotsForUser(
     if (h.length === 0) continue;
     if (!h.every(hasQuote)) continue;
     const av = assetValues(h);
-    const holdingsValue = av.stockValue + av.etfValue + av.cryptoValue;
+    const holdingsValue = av.stockValue + av.etfValue + av.fundValue + av.cryptoValue;
     if (holdingsValue <= 0) continue;
     const emptyCash: CashEntry[] = [];
     const t = calculatePortfolioTotals(h, emptyCash, quotes, exchangeRates, "EUR");
@@ -176,13 +177,14 @@ async function writeLiveSnapshotsForUser(
   const client = await ensureInitialized();
   const fin = (n: number) => (typeof n === "number" && Number.isFinite(n) ? n : 0);
   const stmts = rows.map((r) => ({
-    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, crypto_value_eur)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, fund_value_eur, crypto_value_eur)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
             total_value_eur = excluded.total_value_eur,
             total_invested_eur = excluded.total_invested_eur,
             stock_value_eur = excluded.stock_value_eur,
             etf_value_eur = excluded.etf_value_eur,
+            fund_value_eur = excluded.fund_value_eur,
             crypto_value_eur = excluded.crypto_value_eur`,
     args: [
       generateId(),
@@ -193,6 +195,7 @@ async function writeLiveSnapshotsForUser(
       fin(r.invested),
       fin(r.stockValue),
       fin(r.etfValue),
+      fin(r.fundValue),
       fin(r.cryptoValue),
     ],
   }));

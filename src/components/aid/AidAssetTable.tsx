@@ -11,7 +11,7 @@ import { formatCurrency, formatPercent } from "@/lib/utils";
 import type { CashEntry, Holding } from "@/lib/types";
 import type { MatrixPeriodKey } from "@/lib/portfolio-performance-matrix";
 
-const TYPE_KEYS = ["stock", "etf", "crypto", "cash"] as const;
+const TYPE_KEYS = ["stock", "etf", "fund", "crypto", "cash"] as const;
 const PERIOD_KEYS: MatrixPeriodKey[] = ["today", "oneWeek", "oneMonth"];
 
 interface Props {
@@ -58,6 +58,7 @@ export default function AidAssetTable({ holdings, cashEntries, onRowClick }: Pro
   const labelForType = (key: string) => {
     if (key === "stock") return t("stocksLabel");
     if (key === "etf") return t("etfsLabel");
+    if (key === "fund") return t("fundsLabel");
     if (key === "crypto") return t("cryptoLabel");
     return t("cash");
   };
@@ -85,10 +86,10 @@ export default function AidAssetTable({ holdings, cashEntries, onRowClick }: Pro
             const value =
               typeKey === "cash"
                 ? cashValue
-                : matrixByKey.get(typeKey as "stock" | "etf" | "crypto")?.currentValue ?? 0;
+                : matrixByKey.get(typeKey as "stock" | "etf" | "fund" | "crypto")?.currentValue ?? 0;
             if (value <= 0 && typeKey !== "cash") return null;
 
-            const row = typeKey === "cash" ? null : matrixByKey.get(typeKey as "stock" | "etf" | "crypto");
+            const row = typeKey === "cash" ? null : matrixByKey.get(typeKey as "stock" | "etf" | "fund" | "crypto");
             const periodCell = (
               period: MatrixPeriodKey,
             ): { text: string; toneValue: number | undefined } => {

@@ -17,7 +17,7 @@ import {
   todayLocal,
 } from "@/lib/utils";
 import { getMarketStatus } from "@/lib/market-hours";
-import type { Holding, QuoteData, CompanyOverview } from "@/lib/types";
+import type { Holding, HoldingAssetType, QuoteData, CompanyOverview } from "@/lib/types";
 import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
 import OverviewSection from "./stock-row/OverviewSection";
 import EditForm from "./stock-row/EditForm";
@@ -73,7 +73,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
   const [editPurchasePrice, setEditPurchasePrice] = useState(String(holding.purchasePrice));
   const [editDisplayCurrency, setEditDisplayCurrency] = useState(holding.displayCurrency);
   const [editExchange, setEditExchange] = useState(holding.exchange);
-  const [editAssetType, setEditAssetType] = useState<"stock" | "etf" | "crypto">(holding.assetType ?? "stock");
+  const [editAssetType, setEditAssetType] = useState<HoldingAssetType>(holding.assetType ?? "stock");
   const [editTags, setEditTags] = useState<string[]>(holding.tags ?? []);
   const [tradeAction, setTradeAction] = useState<"buy" | "sell">("buy");
   const [tradeQuantity, setTradeQuantity] = useState("");
@@ -118,6 +118,10 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
     !isCashHolding &&
     (holding.assetType ?? "stock") === "stock" &&
     holdingIsEtfLike(holding, quote);
+  const suggestFundFix =
+    !isCashHolding &&
+    (holding.assetType ?? "stock") === "stock" &&
+    quote?.quoteType?.toUpperCase() === "MUTUALFUND";
   const isRefreshing = refreshingTickers.has(holding.ticker);
   const marketStatus = isCashHolding ? null : getMarketStatus(holding.exchange, now);
   const lastFetchedAt = quoteUpdatedAt[holding.ticker] ?? quote?.fetchedAt;
@@ -285,6 +289,16 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
     }
   };
 
+  const handleSetAsFund = async () => {
+    if (assetTypeSaving) return;
+    setAssetTypeSaving(true);
+    try {
+      await updateHolding(holding.id, { assetType: "fund" });
+    } finally {
+      setAssetTypeSaving(false);
+    }
+  };
+
   const handleApplyTrade = async () => {
     const qty = parseFloat(tradeQuantity);
     const price = parseFloat(tradePrice);
@@ -425,7 +439,34 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
           </div>
         </div>
 
-        {suggestEtfFix && !isEditing && (
+        {suggestFundFix && !isEditing && (
+          <div
+            className="px-5 py-3 border-b border-teal-200/80 dark:border-teal-500/30 bg-teal-50/90 dark:bg-teal-500/10"
+            role="region"
+            aria-label={t("assetTypeSuggestFund")}
+          >
+            <p className="text-sm text-teal-950 dark:text-teal-100/95 leading-snug">{t("assetTypeSuggestFund")}</p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <button
+                type="button"
+                onClick={handleSetAsFund}
+                disabled={assetTypeSaving}
+                className="btn-primary text-sm px-3 py-1.5 disabled:opacity-60"
+              >
+                {assetTypeSaving ? "…" : t("setAssetTypeFund")}
+              </button>
+              <button
+                type="button"
+                onClick={handleStartEdit}
+                className="btn-secondary text-sm px-3 py-1.5"
+              >
+                {t("changeAssetType")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {suggestEtfFix && !suggestFundFix && !isEditing && (
           <div
             className="px-5 py-3 border-b border-amber-200/80 dark:border-amber-500/30 bg-amber-50/90 dark:bg-amber-500/10"
             role="region"

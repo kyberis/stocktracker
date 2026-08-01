@@ -13,6 +13,7 @@ import { runBackfillForUser } from "@/lib/backfill-snapshots";
 import { materializeCurrentSnapshotsForUser } from "@/lib/cron-portfolio-snapshots";
 import { getHoldingsLimit } from "@/lib/subscription";
 import type { SubscriptionPlan } from "@/lib/types";
+import { inferAssetType } from "@/lib/infer-asset-type";
 import { blobToUtf8CsvOrPlainText } from "@/lib/spreadsheet-to-csv";
 
 async function resolveCsvFromFormData(formData: FormData): Promise<string> {
@@ -195,8 +196,7 @@ async function importTransactions(
       const key = `${tx.ticker}|${inferExchangeFromTicker(tx.ticker)}`;
       if (!allowedTickers.has(key)) continue;
     }
-    const nameUp = (tx.name || "").toUpperCase();
-    const assetType = (nameUp.includes("ETF") || nameUp.includes("UCITS")) ? "etf" : "stock";
+    const assetType = inferAssetType({ name: tx.name });
     const created = await addTransaction(userId, {
       holdingId: "",
       ticker: tx.ticker,

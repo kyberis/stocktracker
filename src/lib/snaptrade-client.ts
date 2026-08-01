@@ -1,6 +1,7 @@
 import { Snaptrade } from "snaptrade-typescript-sdk";
 import type { AccountHoldings, Brokerage, Position, UniversalActivity } from "snaptrade-typescript-sdk";
 import type { ExtractedTransaction, ExtractedHolding, CashBalance } from "@/hooks/import-types";
+import { inferAssetType } from "@/lib/infer-asset-type";
 import { insertSnapTradeLog } from "@/lib/db/snaptrade-logs";
 
 let _client: Snaptrade | null = null;
@@ -317,13 +318,6 @@ function normalizeSnapTradeTicker(
   };
 }
 
-function inferAssetType(description?: string | null, type?: string | null): "stock" | "etf" {
-  const upper = (description || "").toUpperCase();
-  if (upper.includes("ETF") || upper.includes("UCITS") || upper.includes("INDEX FUND")) return "etf";
-  if (type && type.toLowerCase().includes("etf")) return "etf";
-  return "stock";
-}
-
 function positionToHolding(pos: Position): ExtractedHolding | null {
   const sym = pos.symbol?.symbol;
   if (!sym) return null;
@@ -335,6 +329,8 @@ function positionToHolding(pos: Position): ExtractedHolding | null {
   if (!ticker) return null;
 
   const figiShareClass = sym.figi_instrument?.figi_share_class || "";
+  const inferred = inferAssetType({ name: sym.description, brokerType: sym.type?.code });
+  const assetType = inferred === "crypto" ? "stock" : inferred;
 
   return {
     name: sym.description || ticker,
@@ -343,7 +339,7 @@ function positionToHolding(pos: Position): ExtractedHolding | null {
     purchasePrice: pos.average_purchase_price ?? 0,
     displayCurrency: sym.currency?.code || "USD",
     exchange: exchange || sym.exchange?.code || "",
-    assetType: inferAssetType(sym.description, sym.type?.code),
+    assetType,
     ...(figiShareClass ? { figiShareClass } : {}),
   };
 }

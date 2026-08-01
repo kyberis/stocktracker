@@ -3,7 +3,7 @@
 > Asset search used across Add-stock and explore surfaces.
 
 ## 1. Summary
-Debounced search against Yahoo + ISIN + FIGI; returns a normalized list of candidates.
+Debounced search against Yahoo (EQUITY, ETF, **MUTUALFUND**) + ISIN + FIGI; returns a normalized list of candidates.
 
 ## 2. Status
 - **Tier:** Free

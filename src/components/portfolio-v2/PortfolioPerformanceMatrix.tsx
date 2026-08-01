@@ -22,6 +22,7 @@ const ASSET_LABEL_KEYS: Record<AssetFilter, string> = {
   all: "allAssets",
   stock: "stocksLabel",
   etf: "etfsLabel",
+  fund: "fundsLabel",
   crypto: "cryptoLabel",
 };
 
