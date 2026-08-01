@@ -172,7 +172,7 @@ export default function AppNav({ demoMode = false }: { demoMode?: boolean }) {
             </div>
 
             <div className="flex min-w-0 items-center px-0 sm:px-1">
-              <NavAssetSearch variant="command" from="home" />
+              <NavAssetSearch variant="command" />
             </div>
 
             <div className="flex shrink-0 items-center justify-end gap-1">
@@ -190,7 +190,7 @@ export default function AppNav({ demoMode = false }: { demoMode?: boolean }) {
               </div>
             </div>
 
-            <NavAssetSearch variant="command" from="home" />
+            <NavAssetSearch variant="command" />
           </div>
         </div>
         <AppPortfolioCommandStrip />

@@ -8,7 +8,6 @@ import type { ProviderSearchResult } from "@/lib/api-providers/types";
 import { CRYPTO_PAGE_SUPPORTED_SYMBOLS, yahooCryptoSymbolToBase } from "@/lib/crypto-page-symbols";
 
 type Variant = "default" | "studio" | "command" | "landing";
-export type NavAssetSearchFrom = "landing" | "home";
 
 const MAX_SUGGESTIONS = 8;
 const DEBOUNCE_MS = 280;
@@ -21,14 +20,7 @@ function normalizeSearchResponse(data: unknown): ProviderSearchResult[] {
   return [];
 }
 
-export default function NavAssetSearch({
-  variant = "default",
-  from,
-}: {
-  variant?: Variant;
-  /** When set, appended to /analisis navigations so back can return to the origin home. */
-  from?: NavAssetSearchFrom;
-}) {
+export default function NavAssetSearch({ variant = "default" }: { variant?: Variant }) {
   const { t } = useI18n();
   const router = useRouter();
   const listboxId = useId();
@@ -134,12 +126,9 @@ export default function NavAssetSearch({
         router.push(`/crypto?symbol=${encodeURIComponent(base)}`);
         return;
       }
-      const params = new URLSearchParams();
-      params.set("exchange", r.exchange);
-      if (from) params.set("from", from);
-      router.push(`/analisis/${encodeURIComponent(r.symbol)}?${params.toString()}`);
+      router.push(`/analisis/${encodeURIComponent(r.symbol)}?exchange=${encodeURIComponent(r.exchange)}`);
     },
-    [router, from],
+    [router],
   );
 
   const submit = useCallback(() => {
@@ -148,7 +137,8 @@ export default function NavAssetSearch({
       navigateToResult(results[highlight]);
       return;
     }
-    if (from === "landing") {
+    // Landing (anonymous) has no /explore — fall back to public analysis search.
+    if (variant === "landing") {
       if (!q) {
         router.push("/analisis");
         return;
@@ -161,7 +151,7 @@ export default function NavAssetSearch({
       return;
     }
     router.push(`/explore?q=${encodeURIComponent(q)}`);
-  }, [value, highlight, results, navigateToResult, router, from]);
+  }, [value, highlight, results, navigateToResult, router, variant]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.52",
+    date: "2026-08-01",
+    title: "Analysis tabs and back navigation polish",
+    titleTranslations: {
+      es: "Pestañas de análisis y navegación atrás más claras",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Company analysis tabs are a horizontal segmented control (better contrast on the public cream page). Back always returns to home (`/`) based on session — no spoofable `?from=` query.",
+        translations: {
+          es: "Las pestañas de análisis de empresa son un control segmentado horizontal (mejor contraste en la página pública). Atrás vuelve siempre a la home (`/`) según la sesión — sin un `?from=` manipulable.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.51",
     date: "2026-08-01",
     title: "Stock search in landing header",
