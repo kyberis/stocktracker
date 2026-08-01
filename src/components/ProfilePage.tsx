@@ -1606,8 +1606,8 @@ export default function ProfilePage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("profileSettings")}</h2>
             <p className="text-sm text-gray-600 dark:text-slate-400">
               {language === "es"
-                ? "Tu nombre, foto de perfil, residencia fiscal, Google, passkeys, contraseña y eliminación de cuenta se gestionan en la cuenta unificada (user.trefolio.com)."
-                : "Your display name, avatar URL, tax residency, Google sign-in, passkeys, password, and account deletion are managed on the unified account site."}
+                ? "Tu nombre, foto de perfil, residencia fiscal, Google, passkeys, contraseña y eliminación de cuenta se gestionan en OneLogin (user.trefolio.com)."
+                : "Your display name, avatar URL, tax residency, Google sign-in, passkeys, password, and account deletion are managed on OneLogin (user.trefolio.com)."}
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <a
@@ -1617,7 +1617,7 @@ export default function ProfilePage() {
                 className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/16 bg-emerald-500/14 px-4 py-2.5 text-sm font-medium text-emerald-200 transition-colors hover:bg-emerald-500/20"
               >
                 <Globe className="w-4 h-4" aria-hidden />
-                {language === "es" ? "Abrir cuenta unificada" : "Open unified account"}
+                {language === "es" ? "Abrir OneLogin" : "Open OneLogin"}
               </a>
               {user.role !== "admin" ? (
                 <button

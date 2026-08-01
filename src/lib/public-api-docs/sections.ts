@@ -187,7 +187,7 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
               id: "session_cookie",
               header: "Cookie: trefolio_session=<jwt>",
               used_by: ["Warren MOAT REST", "Warren chat", "portfolio REST"],
-              obtain: "Sign in at trefolio.com (OIDC via user.trefolio.com when unified accounts are enabled).",
+              obtain: "Sign in at trefolio.com (OIDC via user.trefolio.com when OneLogin is enabled).",
             },
             {
               id: "bearer_pat",

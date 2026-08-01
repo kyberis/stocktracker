@@ -9,18 +9,22 @@ import { useI18n } from "@/lib/i18n";
 import {
   buildClaudeDesktopMcpConfigSnippet,
   buildCursorMcpConfigSnippet,
+  buildYahooFinanceCursorMcpConfigSnippet,
+  buildYahooFinanceMcpConfigSnippet,
   getMcpUserEndpointUrl,
 } from "@/lib/mcp/public-config";
 
+type CopyTarget = "endpoint" | "cursor" | "claude" | "yahooCursor" | "yahooClaude";
+
 export default function ProfileMcpSection() {
   const { t } = useI18n();
-  const [endpointCopied, setEndpointCopied] = useState(false);
-  const [cursorCopied, setCursorCopied] = useState(false);
-  const [claudeCopied, setClaudeCopied] = useState(false);
+  const [copied, setCopied] = useState<CopyTarget | null>(null);
 
   const mcpUrl = getMcpUserEndpointUrl();
   const cursorConfig = useMemo(() => buildCursorMcpConfigSnippet(mcpUrl), [mcpUrl]);
   const claudeConfig = useMemo(() => buildClaudeDesktopMcpConfigSnippet(mcpUrl), [mcpUrl]);
+  const yahooCursorConfig = useMemo(() => buildYahooFinanceCursorMcpConfigSnippet(), []);
+  const yahooClaudeConfig = useMemo(() => buildYahooFinanceMcpConfigSnippet(), []);
 
   useEffect(() => {
     void fetch("/api/mcp/analytics/event", {
@@ -31,19 +35,11 @@ export default function ProfileMcpSection() {
     }).catch(() => undefined);
   }, []);
 
-  const copyText = useCallback(async (text: string, which: "endpoint" | "cursor" | "claude") => {
+  const copyText = useCallback(async (text: string, which: CopyTarget) => {
     try {
       await navigator.clipboard.writeText(text);
-      if (which === "endpoint") {
-        setEndpointCopied(true);
-        setTimeout(() => setEndpointCopied(false), 2000);
-      } else if (which === "cursor") {
-        setCursorCopied(true);
-        setTimeout(() => setCursorCopied(false), 2000);
-      } else {
-        setClaudeCopied(true);
-        setTimeout(() => setClaudeCopied(false), 2000);
-      }
+      setCopied(which);
+      setTimeout(() => setCopied(null), 2000);
     } catch {
       /* ignore */
     }
@@ -95,7 +91,7 @@ export default function ProfileMcpSection() {
               className="btn-secondary p-2 shrink-0"
               aria-label={t("profileMcpCopyConfig")}
             >
-              {endpointCopied ? (
+              {copied === "endpoint" ? (
                 <Check className="w-4 h-4 text-emerald-500" />
               ) : (
                 <Copy className="w-4 h-4" />
@@ -114,7 +110,7 @@ export default function ProfileMcpSection() {
               onClick={() => void copyText(claudeConfig, "claude")}
               className="btn-secondary text-xs px-2.5 py-1.5 inline-flex items-center gap-1.5"
             >
-              {claudeCopied ? (
+              {copied === "claude" ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-500" />
                   {t("profileMcpCopied")}
@@ -143,7 +139,7 @@ export default function ProfileMcpSection() {
               onClick={() => void copyText(cursorConfig, "cursor")}
               className="btn-secondary text-xs px-2.5 py-1.5 inline-flex items-center gap-1.5"
             >
-              {cursorCopied ? (
+              {copied === "cursor" ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-500" />
                   {t("profileMcpCopied")}
@@ -158,6 +154,72 @@ export default function ProfileMcpSection() {
           </div>
           <pre className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-3 py-3 rounded-lg overflow-x-auto font-mono">
             {cursorConfig}
+          </pre>
+        </div>
+      </div>
+
+      <div className="card p-6 space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {t("profileMcpYahooTitle")}
+          </h2>
+          <p className="mt-1 text-sm text-gray-600 dark:text-slate-300">{t("profileMcpYahooDescription")}</p>
+          <p className="mt-2 text-xs text-gray-500 dark:text-slate-400">{t("profileMcpYahooHint")}</p>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-gray-500 dark:text-slate-400">
+              {t("profileMcpYahooCursorConfig")}
+            </p>
+            <button
+              type="button"
+              onClick={() => void copyText(yahooCursorConfig, "yahooCursor")}
+              className="btn-secondary text-xs px-2.5 py-1.5 inline-flex items-center gap-1.5"
+            >
+              {copied === "yahooCursor" ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  {t("profileMcpCopied")}
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  {t("profileMcpCopyConfig")}
+                </>
+              )}
+            </button>
+          </div>
+          <pre className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-3 py-3 rounded-lg overflow-x-auto font-mono">
+            {yahooCursorConfig}
+          </pre>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-gray-500 dark:text-slate-400">
+              {t("profileMcpYahooClaudeConfig")}
+            </p>
+            <button
+              type="button"
+              onClick={() => void copyText(yahooClaudeConfig, "yahooClaude")}
+              className="btn-secondary text-xs px-2.5 py-1.5 inline-flex items-center gap-1.5"
+            >
+              {copied === "yahooClaude" ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  {t("profileMcpCopied")}
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  {t("profileMcpCopyConfig")}
+                </>
+              )}
+            </button>
+          </div>
+          <pre className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-3 py-3 rounded-lg overflow-x-auto font-mono">
+            {yahooClaudeConfig}
           </pre>
         </div>
       </div>

@@ -94,7 +94,7 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>
                 <strong className="text-slate-800">Developer integrations (personal access token)</strong> —{" "}
-                if you use unified sign-in, you may create a personal access token
+                if you use OneLogin, you may create a personal access token
                 on <strong className="text-slate-800">user.trefolio.com</strong> to connect
                 external MCP clients to trefolio, Clara, or Will. The token is stored
                 only on the identity service (hashed); trefolio receives it only when
@@ -599,7 +599,7 @@ export default function PrivacyPolicyPage() {
                 <strong className="text-slate-800">Erasure</strong> — request
                 deletion of your account and all associated data. You can delete
                 your trefolio product account from Profile settings (password
-                confirmation required). When you use unified sign-in, you can
+                confirmation required). When you use OneLogin, you can
                 also permanently delete your identity on{" "}
                 <strong className="text-slate-800">user.trefolio.com</strong>{" "}
                 (password or typed confirmation required); active subscriptions
