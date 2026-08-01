@@ -29,6 +29,7 @@ function isPublicClientPath(pathname: string): boolean {
   if (pathname.startsWith("/p/")) return true;
   if (pathname.startsWith("/u/")) return true;
   if (pathname.startsWith("/trial/")) return true;
+  if (pathname === "/analisis" || pathname.startsWith("/analisis/")) return true;
   return false;
 }
 

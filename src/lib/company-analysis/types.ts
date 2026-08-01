@@ -2,6 +2,14 @@ import type { InsiderSignalTag } from "./insider-tags";
 
 export type SectionStatus = "ok" | "unavailable";
 
+/**
+ * Sections backed by FMP's paid/restricted endpoints (insider + congress
+ * trading). "locked" means the data exists in the shared cache but was
+ * stripped from an anonymous response — distinct from "unavailable", which
+ * means the data genuinely couldn't be fetched for anyone.
+ */
+export type PaidSectionStatus = SectionStatus | "locked";
+
 export interface CompanyAnalysisQuote {
   price: number | null;
   change: number | null;
@@ -140,8 +148,8 @@ export interface CompanyAnalysisReport {
   fundamentals: CompanyAnalysisFundamentals;
   technicals: CompanyAnalysisTechnicals;
   news: { status: SectionStatus; items: CompanyAnalysisNewsItem[] };
-  insiders: { status: SectionStatus; items: CompanyAnalysisInsiderItem[] };
-  congress: { status: SectionStatus; items: CompanyAnalysisCongressItem[] };
+  insiders: { status: PaidSectionStatus; items: CompanyAnalysisInsiderItem[] };
+  congress: { status: PaidSectionStatus; items: CompanyAnalysisCongressItem[] };
   alternative: CompanyAnalysisAlternative;
   sources: CompanyAnalysisSource[];
 }

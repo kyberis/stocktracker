@@ -30,6 +30,15 @@
 - Middleware rejects unauthenticated requests to `/(app)/*`, `/admin/*`,
   and most `/api/*` routes.
   [`src/middleware.ts`](../src/middleware.ts).
+- Explicit exception: `/analisis`, `/api/search`, `/api/company-analysis`,
+  and `/api/company-analysis/narrative` are allow-listed public (free stock
+  research, no login). Server-side redaction — not the UI — is the actual
+  boundary for the FMP-restricted sections (insider + congressional trading):
+  [`src/lib/company-analysis/redact.ts`](../src/lib/company-analysis/redact.ts)
+  strips them before an anonymous response leaves the server. The UI's locked
+  tabs/CTAs (`analisis-shell.tsx`) are convenience, not enforcement — the
+  underlying `StockDetail`/`StockIntelligence`/`StockEvaluation` APIs still
+  require a session independent of anything the client does.
 
 ## Transport security
 
@@ -96,6 +105,12 @@ limits:
 - Signup: 3/hour/IP (spam).
 - API key generation: 3/hour/user.
 - Passkey registration: 10/hour/user.
+- Public search: 30/min/IP (scraping).
+- Public `/analisis` cached reads: 60/min/IP (scraping).
+- Public never-before-cached ticker build: 3/hour/IP + 200/day global budget
+  across all IPs (cost-drain — this is the one anonymous path that triggers
+  real provider calls; the global budget backstops distributed abuse a
+  per-IP limit alone can't catch).
 
 ## Known risks & mitigations
 

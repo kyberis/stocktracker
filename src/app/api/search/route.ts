@@ -3,6 +3,7 @@ import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { getSessionFromRequest } from "@/lib/auth/session";
 import { findUserById, getGlobalAlphaVantageApiKey, getGlobalFmpApiKey } from "@/lib/db";
 import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
+import { checkPublicSearchRateLimit, getClientIp } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,17 @@ async function fallbackToYahooSearch(query: string) {
 }
 
 export const GET = withMetrics("/api/search", async (request: NextRequest) => {
+  const session = await getSessionFromRequest(request);
+  if (!session) {
+    const rl = await checkPublicSearchRateLimit(getClientIp(request));
+    if (!rl.allowed) {
+      return Response.json(
+        { error: "Too many requests, please try again shortly." },
+        { status: 429, headers: { "Retry-After": "60" } },
+      );
+    }
+  }
+
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
   /** Premium symbol search for moat evaluation (FMP or Alpha Vantage — server-chosen). */

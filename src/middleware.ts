@@ -58,6 +58,11 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/social/profile",
   "/api/social/posts",
   "/api/device-interest/count",
+  // Public stock research: rate-limited in-route, paid-API sections redacted
+  // for anonymous requests (see /api/company-analysis, /api/search).
+  "/api/search",
+  "/api/company-analysis",
+  "/api/company-analysis/narrative",
 ]);
 
 function buildLoginRedirectUrl(req: NextRequest): URL {
@@ -89,6 +94,9 @@ function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/u/")) return true;
   // Trial activation page is public so email links work before login
   if (pathname.startsWith("/trial/")) return true;
+  // Public stock research: search + report page (free data; paid-API sections
+  // are redacted server-side for anonymous requests, see /api/company-analysis)
+  if (pathname === "/analisis" || pathname.startsWith("/analisis/")) return true;
   if (/\.(png|jpg|jpeg|gif|svg|webp|ico|mp4|webm|css|js|woff2?)$/.test(pathname)) return true;
   return false;
 }

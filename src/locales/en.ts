@@ -1595,6 +1595,9 @@ const en: TranslationStrings = {
   landingStatFree: "Zero Data Selling",
   landingStatLabelStart: "GDPR · Privacy-first",
 
+  landingSearchEyebrow: "Free stock research",
+  landingSearchHeading: "Search any stock — no account needed",
+
   landingFeaturesHeading: "Everything You Need to Invest",
   landingFeaturesHeadingAccent: "Confidently",
   landingFeaturesSubtitle: "From real-time tracking to AI-powered analysis — built for European retail investors who want clarity, not complexity.",
@@ -3218,6 +3221,8 @@ const en: TranslationStrings = {
   companyAnalysisOpenAsset: "Open asset page",
   analisisTabSummary: "Summary",
   analisisTabEvaluation: "Valuation & Moat",
+  analisisLockedTitle: "Log in to unlock",
+  analisisLockedBody: "Create a free account to see this stock's fundamentals, AI intelligence, and valuation data.",
   companyAnalysisUpdatedAt: "Data updated",
   companyAnalysisGeneratedAt: "Generated",
   companyAnalysisCached: "cached",
@@ -3279,6 +3284,8 @@ const en: TranslationStrings = {
   companyAnalysisCongressSub: "STOCK Act · Senate & House · last 12 months",
   companyAnalysisCongressEmptyTitle: "No recent reported trades",
   companyAnalysisCongressEmptyBody: "No member of Congress has reported purchases or sales of this ticker in the last 12 months (FMP Senate/House disclosures).",
+  companyAnalysisCongressLockedTitle: "Log in to see congressional trades",
+  companyAnalysisCongressLockedBody: "Senate & House trading disclosures for this ticker require a free account.",
   companyAnalysisSourceLink: "Source filing",
   companyAnalysisAlternative: "Sector investment alternative",
   companyAnalysisAltEditorialBanner: "Editorial content — not investment advice",

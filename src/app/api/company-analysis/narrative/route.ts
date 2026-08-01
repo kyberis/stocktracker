@@ -3,7 +3,8 @@ export const maxDuration = 60;
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { requireFeatureQuota, requireSession } from "@/lib/auth/guards";
+import { requireFeatureQuota } from "@/lib/auth/guards";
+import { getSessionFromRequest } from "@/lib/auth/session";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import {
   companyAnalysisNarrativeCacheKey,
@@ -192,9 +193,7 @@ async function persistNarrative(args: {
 }
 
 export const POST = withMetrics("/api/company-analysis/narrative", async (request: NextRequest) => {
-  const { session, error: sessionError } = await requireSession(request);
-  if (sessionError) return sessionError;
-  if (!session) return json401(request, { source: "api/company-analysis/narrative", reason: "no_session" });
+  const session = await getSessionFromRequest(request);
 
   let body: z.infer<typeof BodySchema>;
   try {
@@ -206,6 +205,11 @@ export const POST = withMetrics("/api/company-analysis/narrative", async (reques
   const ticker = parseTicker(body.ticker);
   if (!ticker) {
     return Response.json({ error: "Invalid ticker" }, { status: 400 });
+  }
+
+  // Regeneration is always a real, session-gated action — never available anonymously.
+  if (body.fresh && !session) {
+    return json401(request, { source: "api/company-analysis/narrative", reason: "fresh_requires_session" });
   }
 
   const langCode = body.language || "en";
@@ -225,14 +229,36 @@ export const POST = withMetrics("/api/company-analysis/narrative", async (reques
     durableBase = await loadDurableNarrative(ticker, langCode);
     if (durableBase) {
       const gaps = findNarrativeGaps(durableBase.narrative as Record<string, unknown>, gapOpts);
-      if (gaps.length === 0 || !shouldRetryNarrativeGaps(durableBase.lastGapRetryAt)) {
+      // Anonymous reads never attempt a gap-retry fill (same reasoning as the
+      // report route's gap-fill) — serve whatever narrative is cached, as-is.
+      if (gaps.length === 0 || !shouldRetryNarrativeGaps(durableBase.lastGapRetryAt) || !session) {
         return Response.json(
           { ...durableBase.narrative, generatedAt: durableBase.generatedAt, cached: true },
-          { headers: { "Cache-Control": "private, max-age=3600" } },
+          {
+            headers: {
+              // A session can hit the AI-fill branch below for the same URL when
+              // gaps exist and the retry window allows — a shared/edge cache
+              // keyed only on URL could otherwise serve a stale anonymous read
+              // (skipping the fill) to an authenticated request. Always private.
+              "Cache-Control": "private, max-age=3600",
+            },
+          },
         );
       }
       // Gaps remain and retry window allows — fall through to AI fill + merge.
     }
+  }
+
+  // No cached narrative (or gaps needing a retry) and no session: never generate
+  // anonymously — narrative for a brand-new ticker only gets built once a real
+  // (any-plan) user visits it. The report itself was already built/cached
+  // separately (see /api/company-analysis's anonymous first-build path); the UI
+  // tolerates an absent narrative gracefully.
+  if (!session) {
+    // Same URL returns real generated content for a session past this point —
+    // "public" here would risk a shared cache serving this empty placeholder
+    // to an authenticated request that should have triggered generation.
+    return Response.json({}, { headers: { "Cache-Control": "private, max-age=300" } });
   }
 
   const { error } = await requireFeatureQuota(request, "ai_consult");

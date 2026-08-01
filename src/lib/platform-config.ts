@@ -84,6 +84,22 @@ export const PLATFORM_LIMITS = {
   /** Legacy AI token monthly limits — retained for analytics/exposure only. */
   AI_FREE_MONTHLY_TOKEN_LIMIT: 90_000,
   AI_PRO_MONTHLY_TOKEN_LIMIT: 3_000_000,
+
+  /** Public (unauthenticated) /api/search requests per IP per minute. */
+  PUBLIC_SEARCH_PER_IP_PER_MINUTE: 30,
+
+  /** Public (unauthenticated) cached-report/narrative reads per IP per minute. */
+  PUBLIC_ANALYSIS_READ_PER_IP_PER_MINUTE: 60,
+
+  /** Public (unauthenticated) never-before-cached ticker builds per IP per hour. */
+  PUBLIC_ANALYSIS_BUILD_PER_IP_PER_HOUR: 3,
+
+  /**
+   * Global cap on never-before-cached ticker builds triggered by anonymous
+   * visitors per calendar day (all IPs combined) — backstop against
+   * distributed abuse that a per-IP limit alone can't catch.
+   */
+  PUBLIC_ANALYSIS_BUILD_GLOBAL_PER_DAY: 200,
 } as const;
 
 export type RateLimitProvider = "alphavantage" | "fmp" | "openai" | "openai_import" | "support_chat";

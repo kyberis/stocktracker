@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n";
+import { buildLoginRedirectHref } from "@/lib/auth/client-redirect";
 import { formatAnalysisDate } from "@/lib/company-analysis/format";
 import type { CompanyAnalysisData } from "../use-company-analysis-report";
 
@@ -17,6 +18,7 @@ export default function InsidersFlowPanel({ data }: { data: CompanyAnalysisData 
   const { report, narrative } = data;
   if (!report) return null;
 
+  const congressLocked = report.congress.status === "locked";
   const showCongress = report.congress.status !== "unavailable";
   const showInsiderReading = Boolean(narrative?.insiderReading);
   if (!showInsiderReading && !showCongress) return null;
@@ -45,7 +47,20 @@ export default function InsidersFlowPanel({ data }: { data: CompanyAnalysisData 
           <p className="mb-4 text-xs uppercase tracking-wide text-[color:var(--muted)]">
             {t("companyAnalysisCongressSub")}
           </p>
-          {report.congress.items.length === 0 ? (
+          {congressLocked ? (
+            <div className="rounded-lg border border-dashed border-[color:var(--border)] bg-[color:var(--surface-soft)] p-6 text-center text-sm text-[color:var(--muted)]">
+              <p className="font-semibold text-[color:var(--foreground)]">
+                {t("companyAnalysisCongressLockedTitle")}
+              </p>
+              <p className="mt-2 text-xs">{t("companyAnalysisCongressLockedBody")}</p>
+              <a
+                href={buildLoginRedirectHref(`/analisis/${report.ticker}`)}
+                className="btn-secondary mt-4 inline-flex text-sm"
+              >
+                {t("landingNavLogin")}
+              </a>
+            </div>
+          ) : report.congress.items.length === 0 ? (
             <div className="rounded-lg border border-dashed border-[color:var(--border)] bg-[color:var(--surface-soft)] p-6 text-center text-sm text-[color:var(--muted)]">
               <p className="font-semibold text-[color:var(--foreground)]">
                 {t("companyAnalysisCongressEmptyTitle")}

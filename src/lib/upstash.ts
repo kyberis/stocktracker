@@ -146,3 +146,54 @@ export function mcpUserUnauthRateLimiter(): Ratelimit | null {
   });
   return _mcpUserUnauthLimiter;
 }
+
+let _publicSearchLimiter: Ratelimit | null | undefined;
+/** Anonymous /api/search: per-IP. */
+export function publicSearchRateLimiter(): Ratelimit | null {
+  if (_publicSearchLimiter !== undefined) return _publicSearchLimiter;
+  const redis = getRedis();
+  if (!redis) {
+    _publicSearchLimiter = null;
+    return null;
+  }
+  _publicSearchLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(PLATFORM_LIMITS.PUBLIC_SEARCH_PER_IP_PER_MINUTE, "1 m"),
+    prefix: "rl:public-search",
+  });
+  return _publicSearchLimiter;
+}
+
+let _publicAnalysisReadLimiter: Ratelimit | null | undefined;
+/** Anonymous cached-report/narrative reads: per-IP. */
+export function publicAnalysisReadRateLimiter(): Ratelimit | null {
+  if (_publicAnalysisReadLimiter !== undefined) return _publicAnalysisReadLimiter;
+  const redis = getRedis();
+  if (!redis) {
+    _publicAnalysisReadLimiter = null;
+    return null;
+  }
+  _publicAnalysisReadLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(PLATFORM_LIMITS.PUBLIC_ANALYSIS_READ_PER_IP_PER_MINUTE, "1 m"),
+    prefix: "rl:public-analysis-read",
+  });
+  return _publicAnalysisReadLimiter;
+}
+
+let _publicAnalysisBuildLimiter: Ratelimit | null | undefined;
+/** Anonymous never-before-cached ticker build: per-IP, the expensive path. */
+export function publicAnalysisBuildRateLimiter(): Ratelimit | null {
+  if (_publicAnalysisBuildLimiter !== undefined) return _publicAnalysisBuildLimiter;
+  const redis = getRedis();
+  if (!redis) {
+    _publicAnalysisBuildLimiter = null;
+    return null;
+  }
+  _publicAnalysisBuildLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.fixedWindow(PLATFORM_LIMITS.PUBLIC_ANALYSIS_BUILD_PER_IP_PER_HOUR, "1h"),
+    prefix: "rl:public-analysis-build",
+  });
+  return _publicAnalysisBuildLimiter;
+}

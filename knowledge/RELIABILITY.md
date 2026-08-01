@@ -65,8 +65,31 @@ Applied per-IP and per-user via Upstash + the `rate_limits` table:
 | Password reset | 3 / hour / email |
 | Broker import (AI) | 3 / 10 min / user |
 | SnapTrade connect | 3 / hour / user |
+| Public (anonymous) search | 30 / min / IP |
+| Public (anonymous) `/analisis` cached reads | 60 / min / IP |
+| Public (anonymous) never-before-cached ticker build | 3 / hour / IP, plus a 200/day global budget across all IPs |
 
-Source of truth: [`src/lib/db/rate-limits.ts`](../src/lib/db/rate-limits.ts).
+Source of truth: [`src/lib/db/rate-limits.ts`](../src/lib/db/rate-limits.ts) (per-key
+counters) and [`src/lib/rate-limit.ts`](../src/lib/rate-limit.ts) (Upstash-first,
+Turso-fallback checks, global daily budget via `platform_settings`).
+
+### Public (anonymous) `/analisis` surface
+
+`/analisis` and `/analisis/[ticker]`, plus `/api/search`,
+`/api/company-analysis`, and `/api/company-analysis/narrative`, are reachable
+without a session (see [`src/middleware.ts`](../src/middleware.ts)'s
+`PUBLIC_ROUTES`/`PUBLIC_API_ROUTES`). Anonymous requests never write to
+per-user quota (there's no user to charge) and never trigger regeneration —
+`fresh=1` is rejected with 401 for anonymous callers in both routes. A cache
+miss for a ticker nobody has ever analyzed is the one path that costs real
+provider calls for an anonymous visitor; it's gated by the per-IP build limit
+and global daily budget above, then persisted to the same ticker-keyed shared
+cache every user reads from. Responses to anonymous requests are always
+`Cache-Control: private` even though the ticker cache itself is shared —
+the response *body* differs by session (redacted paid sections, gap-fill
+eligibility), so a `public` cache-control on this URL would risk a shared/edge
+cache serving the anonymous-redacted body to an authenticated request for the
+same ticker. See [`src/lib/company-analysis/redact.ts`](../src/lib/company-analysis/redact.ts).
 
 ## Retries & idempotency
 
