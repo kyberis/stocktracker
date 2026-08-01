@@ -88,5 +88,8 @@ into `/analisis/[ticker]`" follow-up in
 - Consider sharing glance-data computation (`StockGlanceDrawer` /
   `StockGlanceSheet`) via a `useStockGlanceData(holding)` hook once both
   exist (Phase 4 nice-to-have, not a blocker).
+- Opening this page to anonymous visitors is tracked separately in
+  [`public-analisis-access.md`](public-analisis-access.md) (built on top of
+  Phase 1-2's 4-tab shell, on `feat/public-analisis`).
 - Full plan detail: `/Users/mcsuarez/.claude/plans/fuzzy-hatching-fairy.md`
   (local Claude plan-mode artifact, not in-repo).

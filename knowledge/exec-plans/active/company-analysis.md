@@ -39,3 +39,4 @@ Ship `/analisis` + `/analisis/[ticker]` with aggregated market data (incl. US Co
 
 - Optional: company-issued revenue guidance when a structured source exists (never label consensus as guidance).
 - ~~Optional deep-link from `/stock/[ticker]` into `/analisis/[ticker]`.~~ Superseded by [`stock-page-unification.md`](stock-page-unification.md), which merges `/stock/[ticker]` into `/analisis/[ticker]` outright.
+- Anonymous (no-login) access to this page and its APIs is tracked in [`public-analisis-access.md`](public-analisis-access.md).

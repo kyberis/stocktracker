@@ -14,6 +14,7 @@ import NavigationProgress from "@/components/NavigationProgress";
 import AppNav from "@/components/AppNav";
 import NavAssetSearch from "@/components/NavAssetSearch";
 import AppNavPrimaryPills from "@/components/AppNavPrimaryPills";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { usePathname } from "next/navigation";
 import { useFeatureFlags } from "@/lib/feature-flag-context";
 import { useI18n } from "@/lib/i18n";
@@ -55,6 +56,39 @@ function StudioCommandStrip() {
   );
 }
 
+/**
+ * Minimal chrome for anonymous visitors on the public /analisis surface — the
+ * full AppNav/MarketTickerBar/PortfolioCommandStrip stack assumes a logged-in
+ * user and would render broken/empty portfolio widgets otherwise.
+ */
+function PublicAnalisisTopBar() {
+  const { t } = useI18n();
+  return (
+    <div className="sticky top-0 z-40 border-b border-[color:var(--border)] bg-[color:var(--nav-bg)] px-4 py-3">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3">
+        <Link href="/" className="flex shrink-0 items-center gap-2 text-base font-bold text-[color:var(--foreground)]">
+          trefolio
+        </Link>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <LanguageSwitcher />
+          <Link
+            href="/login"
+            className="px-3 py-1.5 text-sm font-medium text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
+          >
+            {t("landingNavLogin")}
+          </Link>
+          <Link
+            href="/signup"
+            className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-600"
+          >
+            {t("landingNavSignUp")}
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AppFooter() {
   return (
     <footer className="hidden sm:flex items-center justify-center gap-3 px-4 py-4 text-[11px] text-[color:var(--muted)]">
@@ -81,10 +115,26 @@ function AppFooter() {
 
 function AppShell({ children }: { children: React.ReactNode }) {
   const { layoutTheme } = useTheme();
+  const { user } = useAuth();
   const pathname = usePathname();
   const isOffice = pathname === "/office" || pathname.startsWith("/office/");
   const isStudio = layoutTheme === "studio";
   const isNative = useIsNative();
+  const isPublicAnalisis =
+    (pathname === "/analisis" || pathname.startsWith("/analisis/")) && !user;
+
+  if (isPublicAnalisis && !isNative) {
+    return (
+      <div
+        className="min-h-screen overflow-x-hidden"
+        style={{ background: "var(--shell-background)", fontFamily: "var(--font-primary, inherit)" }}
+      >
+        <PublicAnalisisTopBar />
+        <main id="main-content">{children}</main>
+        <AppFooter />
+      </div>
+    );
+  }
 
   if (isOffice) {
     return (

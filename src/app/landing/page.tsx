@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
 import TierIcon from "@/components/TierIcon";
 import PublicFooter from "@/components/PublicFooter";
+import ExploreAssetSearch from "@/components/ExploreAssetSearch";
 import AgentCard, { type AgentAccent } from "@/components/agents/AgentCard";
 import type { SubscriptionPlan } from "@/lib/types";
 import { LandingI18nProvider, useI18n, type TranslationKey } from "@/lib/i18n";
@@ -778,6 +779,29 @@ function StatsBar() {
               <div className="text-sm text-slate-400">{stat.label}</div>
             </div>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── free stock search (public, no login) ─── */
+
+function StockSearchSection() {
+  const { t } = useI18n();
+  return (
+    <section className="py-16 sm:py-20 border-t border-slate-200 bg-[#faf9f7]">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <p className="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-2">
+          {t("landingSearchEyebrow")}
+        </p>
+        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-8">
+          {t("landingSearchHeading")}
+        </h2>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-left">
+          <Suspense fallback={<div className="h-40 animate-pulse rounded-xl bg-slate-100" />}>
+            <ExploreAssetSearch />
+          </Suspense>
         </div>
       </div>
     </section>
@@ -2435,6 +2459,7 @@ export default function LandingPage() {
       <main id="main-content">
       <HeroSection />
       <StatsBar />
+      <StockSearchSection />
       <AgentsTeamSection />
       <DeveloperDocsSection />
       <FeaturesSection />

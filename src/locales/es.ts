@@ -1597,6 +1597,9 @@ const es: TranslationStrings = {
   landingStatFree: "Cero venta de datos",
   landingStatLabelStart: "GDPR · Privacidad primero",
 
+  landingSearchEyebrow: "Análisis de acciones gratis",
+  landingSearchHeading: "Buscá cualquier acción — sin necesidad de cuenta",
+
   landingFeaturesHeading: "Todo lo que necesitas para invertir",
   landingFeaturesHeadingAccent: "con confianza",
   landingFeaturesSubtitle: "Desde seguimiento en tiempo real hasta análisis con IA — diseñado para inversores minoristas europeos que buscan claridad, no complejidad.",
@@ -3216,6 +3219,8 @@ const es: TranslationStrings = {
   companyAnalysisOpenAsset: "Abrir ficha del activo",
   analisisTabSummary: "Resumen",
   analisisTabEvaluation: "Valoración y moat",
+  analisisLockedTitle: "Iniciá sesión para desbloquear",
+  analisisLockedBody: "Creá una cuenta gratis para ver los fundamentales, la inteligencia con IA y la valoración de esta acción.",
   companyAnalysisUpdatedAt: "Datos actualizados el",
   companyAnalysisGeneratedAt: "Generado el",
   companyAnalysisCached: "en caché",
@@ -3277,6 +3282,8 @@ const es: TranslationStrings = {
   companyAnalysisCongressSub: "STOCK Act · Senado y Cámara · últimos 12 meses",
   companyAnalysisCongressEmptyTitle: "Sin operaciones recientes reportadas",
   companyAnalysisCongressEmptyBody: "Ningún miembro del Congreso ha reportado compras o ventas de este ticker en los últimos 12 meses (divulgaciones Senado/Cámara de FMP).",
+  companyAnalysisCongressLockedTitle: "Iniciá sesión para ver operaciones del Congreso",
+  companyAnalysisCongressLockedBody: "Las divulgaciones de operaciones del Senado y la Cámara para este ticker requieren una cuenta gratis.",
   companyAnalysisSourceLink: "Fuente",
   companyAnalysisAlternative: "Alternativa de inversión en el sector",
   companyAnalysisAltEditorialBanner: "Contenido editorial — no es asesoramiento de inversión",

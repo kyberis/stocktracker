@@ -6,7 +6,17 @@ import {
   getPlatformSetting,
   setPlatformSetting,
 } from "@/lib/db";
-import { avRateLimiter, fmpRateLimiter, aiImportRateLimiter, signupRateLimiter, loginRateLimiter, deviceAuthRateLimiter } from "@/lib/upstash";
+import {
+  avRateLimiter,
+  fmpRateLimiter,
+  aiImportRateLimiter,
+  signupRateLimiter,
+  loginRateLimiter,
+  deviceAuthRateLimiter,
+  publicSearchRateLimiter,
+  publicAnalysisReadRateLimiter,
+  publicAnalysisBuildRateLimiter,
+} from "@/lib/upstash";
 import type { NextRequest } from "next/server";
 
 export interface RateLimitResult {
@@ -277,4 +287,71 @@ export async function incrementGlobalAiTokens(tokens: number): Promise<void> {
   const [countStr, storedMonth] = raw.split("|");
   const current = storedMonth === monthKey ? parseInt(countStr, 10) || 0 : 0;
   await setPlatformSetting(OPENAI_TOKENS_KEY, `${current + tokens}|${monthKey}`);
+}
+
+// ── Public (unauthenticated) /analisis rate limiting ────────────
+
+export async function checkPublicSearchRateLimit(ip: string): Promise<RateLimitResult> {
+  const limiter = publicSearchRateLimiter();
+  if (limiter) {
+    const { success, limit, remaining, reset } = await limiter.limit(ip);
+    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
+  }
+  const limit = PLATFORM_LIMITS.PUBLIC_SEARCH_PER_IP_PER_MINUTE;
+  const windowKey = `public-search:${minuteWindowKey()}`;
+  const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "public_search", limit, windowKey);
+  return { allowed, remaining, limit, resetAt };
+}
+
+export async function checkPublicAnalysisReadRateLimit(ip: string): Promise<RateLimitResult> {
+  const limiter = publicAnalysisReadRateLimiter();
+  if (limiter) {
+    const { success, limit, remaining, reset } = await limiter.limit(ip);
+    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
+  }
+  const limit = PLATFORM_LIMITS.PUBLIC_ANALYSIS_READ_PER_IP_PER_MINUTE;
+  const windowKey = `public-analysis-read:${minuteWindowKey()}`;
+  const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "public_analysis_read", limit, windowKey);
+  return { allowed, remaining, limit, resetAt };
+}
+
+export async function checkPublicAnalysisBuildRateLimit(ip: string): Promise<RateLimitResult> {
+  const limiter = publicAnalysisBuildRateLimiter();
+  if (limiter) {
+    const { success, limit, remaining, reset } = await limiter.limit(ip);
+    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
+  }
+  const limit = PLATFORM_LIMITS.PUBLIC_ANALYSIS_BUILD_PER_IP_PER_HOUR;
+  const now = new Date();
+  const windowKey = `public-analysis-build:${now.toISOString().slice(0, 13)}`;
+  const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "public_analysis_build", limit, windowKey);
+  return { allowed, remaining, limit, resetAt };
+}
+
+// ── Global daily budget for anonymous first-time ticker builds ──
+// Mirrors checkGlobalAiCap/incrementGlobalAiCalls above, day-keyed instead
+// of month-keyed: backstop against distributed abuse (many IPs, each under
+// the per-IP limit) that per-IP rate limiting alone can't catch.
+
+const PUBLIC_ANALYSIS_BUILD_GLOBAL_KEY = "public_analysis_build_daily_count";
+
+export async function checkPublicAnalysisBuildGlobalBudget(): Promise<{
+  allowed: boolean;
+  used: number;
+  cap: number;
+}> {
+  const cap = PLATFORM_LIMITS.PUBLIC_ANALYSIS_BUILD_GLOBAL_PER_DAY;
+  const dayKey = dayWindowKey();
+  const raw = await getPlatformSetting(PUBLIC_ANALYSIS_BUILD_GLOBAL_KEY);
+  const [countStr, storedDay] = raw.split("|");
+  const used = storedDay === dayKey ? parseInt(countStr, 10) || 0 : 0;
+  return { allowed: used < cap, used, cap };
+}
+
+export async function incrementPublicAnalysisBuildGlobalBudget(): Promise<void> {
+  const dayKey = dayWindowKey();
+  const raw = await getPlatformSetting(PUBLIC_ANALYSIS_BUILD_GLOBAL_KEY);
+  const [countStr, storedDay] = raw.split("|");
+  const current = storedDay === dayKey ? parseInt(countStr, 10) || 0 : 0;
+  await setPlatformSetting(PUBLIC_ANALYSIS_BUILD_GLOBAL_KEY, `${current + 1}|${dayKey}`);
 }

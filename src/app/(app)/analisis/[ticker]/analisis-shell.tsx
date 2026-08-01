@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { LayoutDashboard, BarChart3, Sparkles, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, BarChart3, Sparkles, ShieldCheck, Lock } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { buildLoginRedirectHref } from "@/lib/auth/client-redirect";
 import { getMarketStatus } from "@/lib/market-hours";
 import { formatAnalysisNumber } from "@/lib/company-analysis/format";
 import { useTabUrl } from "@/lib/use-tab-url";
@@ -42,8 +44,28 @@ const TAB_VALUES = ["summary", "details", "intelligence", "evaluation"] as const
 type TabId = (typeof TAB_VALUES)[number];
 const DEFAULT_TAB: TabId = "summary";
 
+/**
+ * Anonymous visitors: shown in place of StockDetail/StockIntelligence/
+ * StockEvaluation, none of which are mounted at all — they'd just 401 against
+ * their own session-gated APIs.
+ */
+function LockedTabPanel({ ticker }: { ticker: string }) {
+  const { t } = useI18n();
+  return (
+    <div className="card flex flex-col items-center gap-3 p-10 text-center">
+      <Lock className="h-6 w-6 text-[color:var(--muted)]" />
+      <h2 className="text-lg font-semibold text-[color:var(--foreground)]">{t("analisisLockedTitle")}</h2>
+      <p className="max-w-sm text-sm text-[color:var(--muted)]">{t("analisisLockedBody")}</p>
+      <a href={buildLoginRedirectHref(`/analisis/${ticker}`)} className="btn-primary mt-2 inline-flex text-sm">
+        {t("landingNavLogin")}
+      </a>
+    </div>
+  );
+}
+
 export default function AnalisisShell({ ticker, exchange }: { ticker: string; exchange: string }) {
   const { t, language } = useI18n();
+  const { user } = useAuth();
   const { holdings } = usePortfolio();
   const { activeTab, navigateToTab } = useTabUrl<TabId>(TAB_VALUES, DEFAULT_TAB);
   const [visited, setVisited] = useState<Set<TabId>>(() => new Set([DEFAULT_TAB]));
@@ -72,9 +94,9 @@ export default function AnalisisShell({ ticker, exchange }: { ticker: string; ex
 
   const tabs: TabRailItem<TabId>[] = [
     { id: "summary", label: t("analisisTabSummary"), icon: LayoutDashboard },
-    { id: "details", label: t("fundamentals"), icon: BarChart3 },
-    { id: "intelligence", label: t("intelligence"), icon: Sparkles },
-    { id: "evaluation", label: t("analisisTabEvaluation"), icon: ShieldCheck },
+    { id: "details", label: t("fundamentals"), icon: BarChart3, locked: !user },
+    { id: "intelligence", label: t("intelligence"), icon: Sparkles, locked: !user },
+    { id: "evaluation", label: t("analisisTabEvaluation"), icon: ShieldCheck, locked: !user },
   ];
 
   if (data.error || (!data.loading && !data.report)) {
@@ -101,15 +123,17 @@ export default function AnalisisShell({ ticker, exchange }: { ticker: string; ex
         <Link href="/analisis" className="btn-secondary text-sm">
           {t("companyAnalysisBack")}
         </Link>
-        <button
-          type="button"
-          className="btn-secondary text-sm ml-auto"
-          disabled={data.loading || data.narrativePending}
-          onClick={data.regenerate}
-          title={t("companyAnalysisRegenerateHint")}
-        >
-          {data.narrativePending ? t("companyAnalysisRegenerating") : t("companyAnalysisRegenerate")}
-        </button>
+        {user && (
+          <button
+            type="button"
+            className="btn-secondary text-sm ml-auto"
+            disabled={data.loading || data.narrativePending}
+            onClick={data.regenerate}
+            title={t("companyAnalysisRegenerateHint")}
+          >
+            {data.narrativePending ? t("companyAnalysisRegenerating") : t("companyAnalysisRegenerate")}
+          </button>
+        )}
       </div>
 
       <header className="card flex flex-wrap items-start justify-between gap-4 p-6">
@@ -175,17 +199,20 @@ export default function AnalisisShell({ ticker, exchange }: { ticker: string; ex
                     <InsidersFlowPanel data={data} />
                   </div>
                 )}
-                {visited.has("details") && (
+                {activeTab === "details" && !user && <LockedTabPanel ticker={ticker} />}
+                {visited.has("details") && user && (
                   <div hidden={activeTab !== "details"}>
                     <StockDetail ticker={ticker} exchange={resolvedExchange} embedded />
                   </div>
                 )}
-                {visited.has("intelligence") && (
+                {activeTab === "intelligence" && !user && <LockedTabPanel ticker={ticker} />}
+                {visited.has("intelligence") && user && (
                   <div hidden={activeTab !== "intelligence"}>
                     <StockIntelligence ticker={ticker} exchange={resolvedExchange} embedded />
                   </div>
                 )}
-                {visited.has("evaluation") && (
+                {activeTab === "evaluation" && !user && <LockedTabPanel ticker={ticker} />}
+                {visited.has("evaluation") && user && (
                   <div hidden={activeTab !== "evaluation"}>
                     <StockEvaluation ticker={ticker} exchange={resolvedExchange} embedded />
                   </div>
