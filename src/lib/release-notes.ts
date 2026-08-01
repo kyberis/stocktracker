@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.48",
+    date: "2026-08-01",
+    title: "Delete account on unified Accounts",
+    titleTranslations: {
+      es: "Eliminar cuenta en Accounts unificada",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Delete your unified account from Profile on trefolio.com (same confirmation flow on user.trefolio.com) or directly on Accounts; deletions are tracked in analytics.",
+        translations: {
+          es: "Elimina tu cuenta unificada desde Perfil en trefolio.com (mismo flujo de confirmación en user.trefolio.com) o directamente en Accounts; las eliminaciones se registran en analytics.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.47",
     date: "2026-08-01",
     title: "Widget total matches dashboard",

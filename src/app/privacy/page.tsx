@@ -597,7 +597,13 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>
                 <strong className="text-slate-800">Erasure</strong> — request
-                deletion of your account and all associated data.
+                deletion of your account and all associated data. You can delete
+                your trefolio product account from Profile settings (password
+                confirmation required). When you use unified sign-in, you can
+                also permanently delete your identity on{" "}
+                <strong className="text-slate-800">user.trefolio.com</strong>{" "}
+                (password or typed confirmation required); active subscriptions
+                are cancelled.
               </li>
               <li>
                 <strong className="text-slate-800">Data portability</strong> — 

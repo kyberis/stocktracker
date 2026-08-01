@@ -243,7 +243,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       client.execute({
         sql: `SELECT event, COUNT(DISTINCT user_id) as cnt
               FROM analytics_events
-              WHERE event IN ('signup', 'upgrade_compare_shown', 'upgrade_compare_clicked', 'billing_checkout_started', 'billing_checkout_completed', 'onboarding_trial_shown', 'onboarding_trial_activated', 'onboarding_trial_skipped')
+              WHERE event IN ('signup', 'upgrade_compare_shown', 'upgrade_compare_clicked', 'billing_checkout_started', 'billing_checkout_completed', 'onboarding_trial_shown', 'onboarding_trial_activated', 'onboarding_trial_skipped', 'account_delete_started', 'account_deleted')
                 AND created_at >= datetime('now', ?)
               GROUP BY event`,
         args: [daysArg],
@@ -378,6 +378,8 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       { stage: "Upsell Clicked", count: funnelMap.get("upgrade_compare_clicked") ?? 0 },
       { stage: "Checkout Started", count: funnelMap.get("billing_checkout_started") ?? 0 },
       { stage: "Checkout Completed", count: funnelMap.get("billing_checkout_completed") ?? 0 },
+      { stage: "Account Delete Started", count: funnelMap.get("account_delete_started") ?? 0 },
+      { stage: "Account Deleted", count: funnelMap.get("account_deleted") ?? 0 },
     ],
     notificationStats: notifResult.rows.map((r) => ({
       userId: str(r.user_id),

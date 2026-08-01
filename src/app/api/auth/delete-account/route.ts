@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, deleteUser } from "@/lib/db";
+import { findUserById, deleteUser, trackEvent } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 import { getExpiredSessionCookieConfig } from "@/lib/auth/session";
 import { getExpiredLayoutThemeCookieConfig } from "@/lib/theme-preferences";
@@ -36,6 +36,7 @@ export const POST = withMetrics("/api/auth/delete-account", async (req: NextRequ
       return json401(req, { source: "api/auth/delete-account", reason: "wrong_password" }, { error: "Incorrect password." });
     }
 
+    await trackEvent(user.id, "account_deleted", { source: "local" });
     await deleteUser(user.id);
 
     authEventsTotal.inc({ event: "account_delete" });

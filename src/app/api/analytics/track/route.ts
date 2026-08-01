@@ -11,6 +11,7 @@ const ALLOWED_EVENTS = new Set([
   "people_search",
   "feed_view",
   "onboarding_import_method",
+  "account_delete_started",
 ]);
 
 const schema = z.object({

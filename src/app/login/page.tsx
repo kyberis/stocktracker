@@ -1,5 +1,6 @@
 import { ThemeProvider } from "@/lib/theme-context";
 import { IdpRedirectBridge } from "@/components/auth/IdpRedirectBridge";
+import AccountDeletedBeacon from "@/components/auth/AccountDeletedBeacon";
 import { getIdpBridgeCopy } from "@/lib/idp/bridge-copy";
 import { isIdpEnabled } from "@/lib/idp/config";
 
@@ -9,6 +10,7 @@ interface LoginPageProps {
     error?: string | string[];
     email?: string | string[];
     ui_locales?: string | string[];
+    account_deleted?: string | string[];
   };
 }
 
@@ -33,10 +35,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const copy = await getIdpBridgeCopy();
   const errRaw = searchParams?.error;
   const oauthError = Array.isArray(errRaw) ? errRaw[0] : errRaw;
+  const deletedRaw = searchParams?.account_deleted;
+  const accountDeleted = (Array.isArray(deletedRaw) ? deletedRaw[0] : deletedRaw) === "1";
 
   if (!isIdpEnabled()) {
     return (
       <ThemeProvider>
+        <AccountDeletedBeacon active={accountDeleted} />
         <IdpRedirectBridge variant="login" targetHref="/landing" copy={copy} idpDisabled />
       </ThemeProvider>
     );
@@ -46,6 +51,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <ThemeProvider>
+      <AccountDeletedBeacon active={accountDeleted} />
       <IdpRedirectBridge
         variant="login"
         targetHref={targetHref}

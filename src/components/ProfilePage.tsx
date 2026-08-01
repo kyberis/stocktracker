@@ -8,6 +8,7 @@ import { useSettings } from "@/lib/settings-context";
 import { useI18n, type TranslationKey } from "@/lib/i18n";
 import { useIsNative } from "@/lib/use-native";
 import { trackCanonicalConversion } from "@/lib/ad-tracking";
+import { useTrack } from "@/lib/use-track";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierIcon from "@/components/TierIcon";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
@@ -1043,6 +1044,7 @@ export default function ProfilePage() {
   const { deviceEnabled } = useSettings();
   const { t, language } = useI18n();
   const commerceEnabled = useCommerceEnabled();
+  const track = useTrack();
 
   const sectionParam = searchParams.get("section") as ProfileTab | null;
   const initialTab = sectionParam && PROFILE_TABS.includes(sectionParam) ? sectionParam : "account";
@@ -1444,6 +1446,21 @@ export default function ProfilePage() {
     }
   };
 
+  const trackAccountDeleteStarted = useCallback((source: "local" | "idp") => {
+    track("account_delete_started", { source });
+    fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "account_delete_started", metadata: { source } }),
+    }).catch(() => {});
+  }, [track]);
+
+  const handleContinueDeleteOnIdp = useCallback(() => {
+    if (!user?.unifiedAccountUrl) return;
+    trackAccountDeleteStarted("idp");
+    window.location.href = `${user.unifiedAccountUrl}#delete-account`;
+  }, [trackAccountDeleteStarted, user?.unifiedAccountUrl]);
+
   const handleDeleteAccount = async (e: FormEvent) => {
     e.preventDefault();
     setDeleteError("");
@@ -1452,6 +1469,7 @@ export default function ProfilePage() {
       return;
     }
     setDeleting(true);
+    trackAccountDeleteStarted("local");
     try {
       const res = await fetch("/api/auth/delete-account", {
         method: "POST",
@@ -1464,7 +1482,8 @@ export default function ProfilePage() {
         setDeleting(false);
         return;
       }
-      window.location.href = "/login";
+      track("account_deleted", { source: "local" });
+      window.location.href = "/login?account_deleted=1";
     } catch {
       setDeleteError(t("deleteAccountError"));
       setDeleting(false);
@@ -1587,8 +1606,8 @@ export default function ProfilePage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("profileSettings")}</h2>
             <p className="text-sm text-gray-600 dark:text-slate-400">
               {language === "es"
-                ? "Tu nombre, foto de perfil, residencia fiscal, Google, passkeys y contraseña se gestionan en la cuenta unificada (user.trefolio.com)."
-                : "Your display name, avatar URL, tax residency, Google sign-in, passkeys, and password are managed on the unified account site."}
+                ? "Tu nombre, foto de perfil, residencia fiscal, Google, passkeys, contraseña y eliminación de cuenta se gestionan en la cuenta unificada (user.trefolio.com)."
+                : "Your display name, avatar URL, tax residency, Google sign-in, passkeys, password, and account deletion are managed on the unified account site."}
             </p>
             <a
               href={user.unifiedAccountUrl}
@@ -1885,15 +1904,40 @@ export default function ProfilePage() {
           </div>
           <div className="card p-6 space-y-4 border-red-200 dark:border-red-500/20">
             <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">{t("deleteAccount")}</h2>
-            <p className="text-sm text-gray-600 dark:text-slate-400">{t("deleteAccountWarning")}</p>
+            <p className="text-sm text-gray-600 dark:text-slate-400">
+              {user?.accountEditingOnIdp && user?.unifiedAccountUrl
+                ? t("deleteAccountIdpWarning")
+                : t("deleteAccountWarning")}
+            </p>
 
             {!showDeleteConfirm ? (
               <button
+                type="button"
                 onClick={() => setShowDeleteConfirm(true)}
                 className="btn-danger text-sm"
               >
                 {t("deleteAccountButton")}
               </button>
+            ) : user?.accountEditingOnIdp && user?.unifiedAccountUrl ? (
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("deleteAccountIdpConfirm")}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleContinueDeleteOnIdp}
+                    className="btn-danger text-sm"
+                  >
+                    {t("deleteAccountContinueToIdp")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowDeleteConfirm(false); setDeleteError(""); }}
+                    className="btn-secondary text-sm"
+                  >
+                    {t("cancel")}
+                  </button>
+                </div>
+              </div>
             ) : (
               <form onSubmit={handleDeleteAccount} className="space-y-3">
                 <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("deleteAccountConfirm")}</p>
