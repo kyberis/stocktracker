@@ -8,6 +8,7 @@ import {
   toTradingViewLocale,
   toTradingViewSymbol,
 } from "@/lib/company-analysis/tradingview";
+import { toYahooFinanceQuoteUrl } from "@/lib/market-symbol";
 
 interface CompanyAnalysisChartProps {
   ticker: string;
@@ -29,8 +30,12 @@ export default function CompanyAnalysisChart({
     () => toTradingViewSymbol(ticker, exchange),
     [ticker, exchange],
   );
-  const externalUrl = useMemo(
+  const tradingViewUrl = useMemo(
     () => toTradingViewChartUrl(ticker, exchange),
+    [ticker, exchange],
+  );
+  const yahooUrl = useMemo(
+    () => toYahooFinanceQuoteUrl(ticker, exchange),
     [ticker, exchange],
   );
 
@@ -54,6 +59,9 @@ export default function CompanyAnalysisChart({
 
   if (!tvSymbol) return null;
 
+  const externalLinkClass =
+    "font-medium text-[color:var(--foreground)] underline decoration-dotted underline-offset-2 hover:text-[color:var(--accent)]";
+
   return (
     <div className="space-y-2">
       <div className="overflow-hidden rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-3 sm:p-3.5">
@@ -70,12 +78,21 @@ export default function CompanyAnalysisChart({
       <p className="text-xs text-[color:var(--muted)]">
         {t("companyAnalysisChartFallback")}{" "}
         <a
-          href={externalUrl}
+          href={tradingViewUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[color:var(--foreground)] underline decoration-dotted underline-offset-2"
+          className={externalLinkClass}
         >
-          {externalUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+          TradingView
+        </a>
+        {" · "}
+        <a
+          href={yahooUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={externalLinkClass}
+        >
+          Yahoo Finance
         </a>
         .
       </p>

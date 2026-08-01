@@ -3,6 +3,7 @@ import {
   isTickerExchangeCollision,
   marketDataSymbolForHolding,
   normalizeHkYahooSymbol,
+  toYahooFinanceQuoteUrl,
   yahooSymbolFromTickerExchange,
 } from "./market-symbol";
 
@@ -60,6 +61,13 @@ describe("marketDataSymbolForHolding", () => {
         isin: "KYG4672G1064",
       }),
     ).toBe("0215.HK");
+  });
+});
+
+describe("toYahooFinanceQuoteUrl", () => {
+  it("builds a quote URL from ticker + exchange", () => {
+    expect(toYahooFinanceQuoteUrl("SAP", "XET")).toBe("https://finance.yahoo.com/quote/SAP.DE");
+    expect(toYahooFinanceQuoteUrl("AAPL", "NASDAQ")).toBe("https://finance.yahoo.com/quote/AAPL");
   });
 });
 

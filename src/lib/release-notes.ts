@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.53",
+    date: "2026-08-01",
+    title: "Yahoo Finance link on company analysis chart",
+    titleTranslations: {
+      es: "Enlace a Yahoo Finance en el gráfico de análisis",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Company analysis chart fallback now links to both TradingView and Yahoo Finance for the ticker.",
+        translations: {
+          es: "Si el gráfico de análisis no carga, ahora puedes abrirlo en TradingView o en Yahoo Finance para ese ticker.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.52",
     date: "2026-08-01",
     title: "Analysis tabs and back navigation polish",

@@ -55,6 +55,16 @@ export function normalizeHkYahooSymbol(symbol: string): string {
   return `${match[1].padStart(4, "0")}.HK`;
 }
 
+/** Public Yahoo Finance quote URL for a ticker (+ optional exchange). */
+export function toYahooFinanceQuoteUrl(
+  ticker: string,
+  exchange?: string | null,
+): string {
+  const symbol = yahooSymbolFromTickerExchange(ticker.trim(), (exchange ?? "").trim());
+  if (!symbol) return "https://finance.yahoo.com/";
+  return `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}`;
+}
+
 /** Yahoo-compatible symbol from bare ticker + exchange (no ISIN fallback). */
 export function yahooSymbolFromTickerExchange(ticker: string, exchange: string): string {
   const ex = exchange.trim().toUpperCase();
