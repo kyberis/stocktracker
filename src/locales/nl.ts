@@ -1588,8 +1588,6 @@ const nl: TranslationStrings = {
   landingStatFree: "Geen Gegevensverkoop",
   landingStatLabelStart: "GDPR · Privacy-eerst",
 
-  landingSearchEyebrow: "Gratis aandelenonderzoek",
-  landingSearchHeading: "Zoek elk aandeel — geen account nodig",
   landingFeaturesHeading: "Alles Wat U Nodig Heeft om te Investeren",
   landingFeaturesHeadingAccent: "Met Vertrouwen",
   landingFeaturesSubtitle: "Van realtime tracking tot AI-gestuurde analyse — gebouwd voor Europese particuliere investeerders die helderheid willen, geen complexiteit.",

@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import TierIcon from "@/components/TierIcon";
 import PublicFooter from "@/components/PublicFooter";
-import ExploreAssetSearch from "@/components/ExploreAssetSearch";
+import NavAssetSearch from "@/components/NavAssetSearch";
 import AgentCard, { type AgentAccent } from "@/components/agents/AgentCard";
 import type { SubscriptionPlan } from "@/lib/types";
 import { LandingI18nProvider, useI18n, type TranslationKey } from "@/lib/i18n";
@@ -428,70 +428,83 @@ function NavBar() {
         ? "bg-[#faf9f7]/90 backdrop-blur-xl border-b border-slate-200 shadow-sm"
         : "bg-transparent"
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      {/* Desktop */}
+      <div className="hidden md:grid max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 grid-cols-[auto_1fr_minmax(12rem,20rem)_auto] items-center gap-4 lg:gap-6">
+        <div className="flex items-center gap-3 shrink-0">
           <Logo className="w-9 h-9" />
           <span className="text-xl font-bold text-slate-900 tracking-tight">trefolio</span>
         </div>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-8">
-          <div className="flex items-center gap-6">
-            {navLinks.map((link) =>
-              "isRoute" in link && link.isRoute ? (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="text-sm font-medium text-sky-600 hover:text-sky-800 transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ) : (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-                >
-                  {link.label}
-                </a>
-              ),
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            <LangPicker />
-            <Link
-              href="/login"
-              onClick={() => trackLanding("landing_cta_click", { cta: "nav_login" })}
-              className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors px-4 py-2"
-            >
-              {t("landingNavLogin")}
-            </Link>
-            <Link
-              href="/signup"
-              onClick={() => trackLanding("landing_cta_click", { cta: "nav_signup" })}
-              className="text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg transition-all shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/30"
-            >
-              {t("landingNavSignUp")}
-            </Link>
-          </div>
+        <div className="flex items-center gap-5 min-w-0 overflow-x-auto">
+          {navLinks.map((link) =>
+            "isRoute" in link && link.isRoute ? (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-sky-600 hover:text-sky-800 transition-colors whitespace-nowrap"
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors whitespace-nowrap"
+              >
+                {link.label}
+              </a>
+            ),
+          )}
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden p-2 text-slate-500 hover:text-slate-900"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? (
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
-        </button>
+        <div className="min-w-0">
+          <NavAssetSearch variant="landing" from="landing" />
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <LangPicker />
+          <Link
+            href="/login"
+            onClick={() => trackLanding("landing_cta_click", { cta: "nav_login" })}
+            className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors px-3 py-2"
+          >
+            {t("landingNavLogin")}
+          </Link>
+          <Link
+            href="/signup"
+            onClick={() => trackLanding("landing_cta_click", { cta: "nav_signup" })}
+            className="text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg transition-all shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/30"
+          >
+            {t("landingNavSignUp")}
+          </Link>
+        </div>
+      </div>
+
+      {/* Mobile / tablet */}
+      <div className="md:hidden max-w-7xl mx-auto px-4 py-2 space-y-2">
+        <div className="flex h-12 items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Logo className="w-8 h-8 shrink-0" />
+            <span className="text-lg font-bold text-slate-900 tracking-tight truncate">trefolio</span>
+          </div>
+          <button
+            className="p-2 text-slate-500 hover:text-slate-900"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
+        </div>
+        <NavAssetSearch variant="landing" from="landing" />
       </div>
 
       {/* Mobile menu */}
@@ -654,7 +667,7 @@ function HeroSection() {
   ], [t]);
 
   return (
-    <section className="relative pt-24 pb-8 sm:pt-28 sm:pb-16 overflow-hidden">
+    <section className="relative pt-36 pb-8 sm:pt-28 sm:pb-16 overflow-hidden">
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-[8%] right-[-8%] w-[550px] h-[550px] bg-emerald-500/[0.06] rounded-full blur-3xl" />
       </div>
@@ -779,29 +792,6 @@ function StatsBar() {
               <div className="text-sm text-slate-400">{stat.label}</div>
             </div>
           ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── free stock search (public, no login) ─── */
-
-function StockSearchSection() {
-  const { t } = useI18n();
-  return (
-    <section className="py-16 sm:py-20 border-t border-slate-200 bg-[#faf9f7]">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <p className="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-2">
-          {t("landingSearchEyebrow")}
-        </p>
-        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-8">
-          {t("landingSearchHeading")}
-        </h2>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-left">
-          <Suspense fallback={<div className="h-40 animate-pulse rounded-xl bg-slate-100" />}>
-            <ExploreAssetSearch />
-          </Suspense>
         </div>
       </div>
     </section>
@@ -2459,7 +2449,6 @@ export default function LandingPage() {
       <main id="main-content">
       <HeroSection />
       <StatsBar />
-      <StockSearchSection />
       <AgentsTeamSection />
       <DeveloperDocsSection />
       <FeaturesSection />

@@ -17,11 +17,12 @@ Authenticated users open **Analysis** in primary nav, search a US-listed symbol 
 
 | Type | Path | Notes |
 |------|------|-------|
-| Page | `src/app/(app)/analisis/page.tsx` | Search landing |
-| Page | `src/app/(app)/analisis/[ticker]/page.tsx` | Report |
+| Page | `src/app/(app)/analisis/page.tsx` | Search landing (`?q=` prefill) |
+| Page | `src/app/(app)/analisis/[ticker]/page.tsx` | Report (`?exchange=`, `?from=landing\|home` for back) |
 | API | `GET /api/company-analysis` | Aggregated report |
 | API | `POST /api/company-analysis/narrative` | Grounded JSON narratives |
 | Nav | `src/lib/app-nav.ts` | Primary overflow + Pro badge |
+| Nav | `NavAssetSearch` in landing header + AppNav | Select → `/analisis/...?from=landing\|home` |
 | Components | `src/components/company-analysis/*` | Search + report UI |
 
 ## 4. Data model

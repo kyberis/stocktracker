@@ -1595,9 +1595,6 @@ const en: TranslationStrings = {
   landingStatFree: "Zero Data Selling",
   landingStatLabelStart: "GDPR · Privacy-first",
 
-  landingSearchEyebrow: "Free stock research",
-  landingSearchHeading: "Search any stock — no account needed",
-
   landingFeaturesHeading: "Everything You Need to Invest",
   landingFeaturesHeadingAccent: "Confidently",
   landingFeaturesSubtitle: "From real-time tracking to AI-powered analysis — built for European retail investors who want clarity, not complexity.",

@@ -34,11 +34,11 @@ Builds on [`stock-page-unification.md`](stock-page-unification.md)'s
       `useAuth()` has no user; `InsidersFlowPanel` shows a login CTA for
       `congress.status === "locked"`
 - [x] `app-layout-client.tsx`: anonymous visitors on `/analisis*` get a
-      minimal top bar (logo + login/signup) instead of the full portfolio
-      app chrome (`AppNav`/`MarketTickerBar`/`MobileTabBar`/etc.) — not in
-      the original plan text, added after confirming `AppNav` assumes a
-      logged-in user (`UserDropdown`, `AppPortfolioCommandStrip`)
-- [x] `/landing` gets a "search a stock" section mounting `ExploreAssetSearch`
+      landing-styled top bar (logo + `NavAssetSearch` + login/signup) on
+      `#faf9f7` instead of the full portfolio app chrome
+      (`AppNav`/`MarketTickerBar`/`MobileTabBar`/etc.)
+- [x] `/landing` header mounts `NavAssetSearch` (`from=landing`); Back from
+      `/analisis/[ticker]?from=landing|home` returns to `/`
 - [x] Docs: `SECURITY.md`, `RELIABILITY.md` updated
 - [ ] PR opened, reviewed, merged (per the plan's own rollout recommendation
       — this changes the auth boundary, unlike prior direct-to-main pushes)

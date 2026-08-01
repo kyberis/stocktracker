@@ -1589,8 +1589,6 @@ const fr: TranslationStrings = {
   landingStatFree: "Aucune vente de données",
   landingStatLabelStart: "RGPD · Priorité à la vie privée",
 
-  landingSearchEyebrow: "Analyse d'actions gratuite",
-  landingSearchHeading: "Recherchez n'importe quelle action — aucun compte requis",
   landingFeaturesHeading: "Tout ce dont vous avez besoin pour investir",
   landingFeaturesHeadingAccent: "Avec confiance",
   landingFeaturesSubtitle: "Du suivi en temps réel à l'analyse alimentée par l'IA — conçu pour les investisseurs de détail européens qui veulent de la clarté, pas de complexité.",

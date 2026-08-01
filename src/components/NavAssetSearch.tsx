@@ -7,7 +7,8 @@ import { useI18n } from "@/lib/i18n";
 import type { ProviderSearchResult } from "@/lib/api-providers/types";
 import { CRYPTO_PAGE_SUPPORTED_SYMBOLS, yahooCryptoSymbolToBase } from "@/lib/crypto-page-symbols";
 
-type Variant = "default" | "studio" | "command";
+type Variant = "default" | "studio" | "command" | "landing";
+export type NavAssetSearchFrom = "landing" | "home";
 
 const MAX_SUGGESTIONS = 8;
 const DEBOUNCE_MS = 280;
@@ -20,7 +21,14 @@ function normalizeSearchResponse(data: unknown): ProviderSearchResult[] {
   return [];
 }
 
-export default function NavAssetSearch({ variant = "default" }: { variant?: Variant }) {
+export default function NavAssetSearch({
+  variant = "default",
+  from,
+}: {
+  variant?: Variant;
+  /** When set, appended to /analisis navigations so back can return to the origin home. */
+  from?: NavAssetSearchFrom;
+}) {
   const { t } = useI18n();
   const router = useRouter();
   const listboxId = useId();
@@ -126,9 +134,12 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
         router.push(`/crypto?symbol=${encodeURIComponent(base)}`);
         return;
       }
-      router.push(`/analisis/${encodeURIComponent(r.symbol)}?exchange=${encodeURIComponent(r.exchange)}`);
+      const params = new URLSearchParams();
+      params.set("exchange", r.exchange);
+      if (from) params.set("from", from);
+      router.push(`/analisis/${encodeURIComponent(r.symbol)}?${params.toString()}`);
     },
-    [router],
+    [router, from],
   );
 
   const submit = useCallback(() => {
@@ -137,12 +148,20 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
       navigateToResult(results[highlight]);
       return;
     }
+    if (from === "landing") {
+      if (!q) {
+        router.push("/analisis");
+        return;
+      }
+      router.push(`/analisis?q=${encodeURIComponent(q)}`);
+      return;
+    }
     if (!q) {
       router.push("/explore");
       return;
     }
     router.push(`/explore?q=${encodeURIComponent(q)}`);
-  }, [value, highlight, results, navigateToResult, router]);
+  }, [value, highlight, results, navigateToResult, router, from]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -163,9 +182,12 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
       ? "bg-zinc-900/90 border border-white/10 focus-within:border-emerald-500/40 focus-within:ring-1 focus-within:ring-emerald-500/20"
       : variant === "command"
         ? "border border-[color:var(--border)] bg-[color:var(--surface-strong)] focus-within:border-[color:var(--accent)] focus-within:ring-0"
-        : "bg-gray-100 dark:bg-slate-800/90 border border-gray-200 dark:border-slate-600 focus-within:border-emerald-400/60 dark:focus-within:border-emerald-500/40 focus-within:ring-2 focus-within:ring-emerald-500/15";
+        : variant === "landing"
+          ? "border border-slate-200 bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20"
+          : "bg-gray-100 dark:bg-slate-800/90 border border-gray-200 dark:border-slate-600 focus-within:border-emerald-400/60 dark:focus-within:border-emerald-500/40 focus-within:ring-2 focus-within:ring-emerald-500/15";
 
-  const radiusClass = variant === "command" || variant === "studio" ? "rounded-xl" : "rounded-full";
+  const radiusClass =
+    variant === "command" || variant === "studio" || variant === "landing" ? "rounded-xl" : "rounded-full";
   const verticalPad = variant === "command" ? "py-1.5" : variant === "studio" ? "py-2" : "py-1.5";
 
   const panelShell =
@@ -173,7 +195,9 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
       ? "border border-white/10 bg-zinc-950 shadow-xl"
       : variant === "command"
         ? "border border-[color:var(--border)] bg-[color:var(--surface-overlay)] shadow-xl"
-        : "border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 shadow-lg";
+        : variant === "landing"
+          ? "border border-slate-200 bg-white shadow-lg"
+          : "border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 shadow-lg";
 
   const showPanel =
     trimmed.length >= 1 &&
@@ -185,6 +209,33 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
     if (qt === "CRYPTOCURRENCY") return t("exploreAssetTypeCrypto");
     return t("exploreAssetTypeEquity");
   };
+
+  const iconClass =
+    variant === "studio"
+      ? "text-zinc-500"
+      : variant === "landing"
+        ? "text-slate-400"
+        : "text-gray-400 dark:text-slate-500";
+
+  const inputClass =
+    variant === "studio"
+      ? "text-sm text-white"
+      : variant === "command"
+        ? "text-base md:text-sm text-gray-900 dark:text-white"
+        : variant === "landing"
+          ? "text-sm text-slate-900 placeholder:text-slate-400"
+          : "text-sm text-gray-900 dark:text-white";
+
+  const optionHighlightClass =
+    variant === "studio"
+      ? (active: boolean) => (active ? "bg-white/10 text-white" : "text-zinc-200 hover:bg-white/5")
+      : variant === "landing"
+        ? (active: boolean) =>
+            active ? "bg-slate-100 text-slate-900" : "text-slate-900 hover:bg-slate-50"
+        : (active: boolean) =>
+            active
+              ? "bg-[color:var(--surface-soft)] text-gray-900 dark:text-white"
+              : "text-gray-900 dark:text-white hover:bg-[color:var(--surface-soft)]";
 
   return (
     <div ref={containerRef} className="relative w-full min-w-0">
@@ -199,7 +250,7 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
         }}
       >
         <svg
-          className={`h-4 w-4 shrink-0 ${variant === "studio" ? "text-zinc-500" : "text-gray-400 dark:text-slate-500"}`}
+          className={`h-4 w-4 shrink-0 ${iconClass}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -258,13 +309,7 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
           }}
           placeholder={t("navAssetSearchPlaceholder")}
           autoComplete="off"
-          className={`min-w-0 flex-1 border-0 bg-transparent shadow-none outline-none ring-0 focus:ring-0 appearance-none placeholder:text-gray-400 dark:placeholder:text-slate-500 [&::-webkit-search-cancel-button]:hidden ${
-            variant === "studio"
-              ? "text-sm text-white"
-              : variant === "command"
-                ? "text-base md:text-sm text-gray-900 dark:text-white"
-                : "text-sm text-gray-900 dark:text-white"
-          }`}
+          className={`min-w-0 flex-1 border-0 bg-transparent shadow-none outline-none ring-0 focus:ring-0 appearance-none placeholder:text-gray-400 dark:placeholder:text-slate-500 [&::-webkit-search-cancel-button]:hidden ${inputClass}`}
         />
         <button
           type="submit"
@@ -283,12 +328,20 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
           className={`mt-1 rounded-lg border px-2 py-1.5 text-xs ${
             variant === "studio"
               ? "border-amber-500/30 bg-amber-500/10 text-amber-100"
-              : "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-950 dark:text-amber-100/95"
+              : variant === "landing"
+                ? "border-amber-200 bg-amber-50 text-amber-950"
+                : "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-950 dark:text-amber-100/95"
           }`}
           role="alert"
         >
           {t("exploreCryptoUnsupported").replace("{symbol}", unsupportedCrypto)}{" "}
-          <button type="button" onClick={() => router.push("/crypto")} className="font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
+          <button
+            type="button"
+            onClick={() => router.push("/crypto")}
+            className={`font-medium hover:underline ${
+              variant === "landing" ? "text-emerald-700" : "text-emerald-700 dark:text-emerald-400"
+            }`}
+          >
             {t("exploreCryptoOpenMarket")}
           </button>
         </div>
@@ -302,12 +355,18 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
           className={`absolute left-0 right-0 top-full z-[60] mt-1 max-h-[min(320px,70vh)] overflow-y-auto rounded-xl ${panelShell}`}
         >
           {(debouncing || loading) && (
-            <li className="px-3 py-2 text-sm text-gray-500 dark:text-slate-400" role="status">
+            <li
+              className={`px-3 py-2 text-sm ${variant === "landing" ? "text-slate-500" : "text-gray-500 dark:text-slate-400"}`}
+              role="status"
+            >
               {t("exploreSearchLoading")}
             </li>
           )}
           {!debouncing && !loading && showEmpty && results.length === 0 && (
-            <li className="px-3 py-2 text-sm text-gray-500 dark:text-slate-400" role="presentation">
+            <li
+              className={`px-3 py-2 text-sm ${variant === "landing" ? "text-slate-500" : "text-gray-500 dark:text-slate-400"}`}
+              role="presentation"
+            >
               {t("exploreSearchEmpty")}
             </li>
           )}
@@ -320,24 +379,28 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
                   id={`${optionPrefix}-${idx}`}
                   role="option"
                   aria-selected={highlight === idx}
-                  className={`flex w-full items-start justify-between gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                    variant === "studio"
-                      ? highlight === idx
-                        ? "bg-white/10 text-white"
-                        : "text-zinc-200 hover:bg-white/5"
-                      : highlight === idx
-                        ? "bg-[color:var(--surface-soft)] text-gray-900 dark:text-white"
-                        : "text-gray-900 dark:text-white hover:bg-[color:var(--surface-soft)]"
-                  }`}
+                  className={`flex w-full items-start justify-between gap-2 px-3 py-2 text-left text-sm transition-colors ${optionHighlightClass(highlight === idx)}`}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => navigateToResult(r)}
                 >
                   <span className="min-w-0">
                     <span className="font-semibold">{r.symbol}</span>
-                    <span className="block truncate text-xs text-gray-500 dark:text-slate-400">{r.shortname}</span>
+                    <span
+                      className={`block truncate text-xs ${
+                        variant === "landing" ? "text-slate-500" : "text-gray-500 dark:text-slate-400"
+                      }`}
+                    >
+                      {r.shortname}
+                    </span>
                   </span>
                   <span className="shrink-0 text-right">
-                    <span className="text-[10px] uppercase text-gray-400 dark:text-slate-500">{r.exchange || "—"}</span>
+                    <span
+                      className={`text-[10px] uppercase ${
+                        variant === "landing" ? "text-slate-400" : "text-gray-400 dark:text-slate-500"
+                      }`}
+                    >
+                      {r.exchange || "—"}
+                    </span>
                     <span
                       className={`ml-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
                         r.quoteType === "ETF"
