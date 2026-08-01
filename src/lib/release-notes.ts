@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "The public landing now has the same asset search in the header as the logged-in home. Opening a stock from there (or from the app header) returns you to that home on Back, and anonymous analysis pages use landing-style chrome.",
         translations: {
           es: "La landing pública ahora tiene el mismo buscador de activos en el header que la home logueada. Abrir una acción desde ahí (o desde el header de la app) vuelve a esa home al pulsar Atrás, y las páginas de análisis anónimas usan el chrome estilo landing.",
