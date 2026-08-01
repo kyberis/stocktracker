@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo, createContext, useContext } from "react";
+import { useState, useMemo, useEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { usePortfolioCommandOptional } from "@/contexts/portfolio-command-context";
 import { useI18n } from "@/lib/i18n";
 import { convertToEUR } from "@/lib/utils";
 import StockRow from "./StockRow";
@@ -43,11 +44,34 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
   const { t } = useI18n();
   const { layoutTheme } = useTheme();
   const track = useTrack();
+  const portfolioCommand = usePortfolioCommandOptional();
   const [sortField, setSortField] = useState<SortField>("dayChange");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [filter, setFilter] = useState("");
   const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);
   const [expanded, setExpanded] = useState(false);
+  const [addTxMenuOpen, setAddTxMenuOpen] = useState(false);
+  const addTxMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!addTxMenuOpen) return;
+    function close(e: MouseEvent) {
+      if (addTxMenuRef.current && !addTxMenuRef.current.contains(e.target as Node)) {
+        setAddTxMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [addTxMenuOpen]);
+
+  const openAddStock = () => {
+    if (portfolioCommand) portfolioCommand.gatedAdd("stock");
+    else onAddStock?.();
+  };
+  const openAddFund = () => {
+    if (portfolioCommand) portfolioCommand.gatedAdd("fund");
+    else onAddStock?.();
+  };
   const [returnMode, setReturnMode] = useState<ReturnDisplayMode>("pct");
 
   const toggleReturnMode = () => {
@@ -154,11 +178,16 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
             variant: "primary",
             icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>,
           },
-          ...(onAddStock ? [{
+          ...((onAddStock || portfolioCommand) ? [{
             label: t("addStock"),
-            onClick: onAddStock,
+            onClick: openAddStock,
             variant: "secondary" as const,
             icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>,
+          }, {
+            label: t("addFund"),
+            onClick: openAddFund,
+            variant: "secondary" as const,
+            icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>,
           }] : []),
         ]}
       />
@@ -220,9 +249,9 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
       }`}>
         &ldquo;<span className="font-medium">{filter}</span>&rdquo;
       </p>
-      {onAddStock && (
+      {(onAddStock || portfolioCommand) && (
         <button
-          onClick={onAddStock}
+          onClick={openAddStock}
           className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
             layoutTheme === "terminal"
               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 font-mono"
@@ -256,24 +285,61 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
     />
   );
 
-  const addTransactionBtn = onAddStock && (
-    <button
-      onClick={onAddStock}
-      className={`inline-flex items-center gap-1.5 text-xs font-medium rounded-lg px-2.5 py-1 transition-colors shrink-0 ${
-        layoutTheme === "terminal"
-          ? "bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 font-mono"
-          : layoutTheme === "canvas"
-          ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-          : layoutTheme === "studio"
-          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
-          : "rounded-xl border border-emerald-500/16 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/16"
-      }`}
-    >
-      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-      </svg>
-      <span className="hidden sm:inline">{t("addTransaction")}</span>
-    </button>
+  const addTxBtnClass = `inline-flex items-center gap-1.5 text-xs font-medium rounded-lg px-2.5 py-1 transition-colors shrink-0 ${
+    layoutTheme === "terminal"
+      ? "bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 font-mono"
+      : layoutTheme === "canvas"
+      ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+      : layoutTheme === "studio"
+      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+      : "rounded-xl border border-emerald-500/16 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/16"
+  }`;
+
+  const addTransactionBtn = (onAddStock || portfolioCommand) && (
+    portfolioCommand ? (
+      <div className="relative shrink-0" ref={addTxMenuRef}>
+        <button
+          type="button"
+          onClick={() => setAddTxMenuOpen((v) => !v)}
+          className={addTxBtnClass}
+          aria-haspopup="true"
+          aria-expanded={addTxMenuOpen}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          <span className="hidden sm:inline">{t("addTransaction")}</span>
+          <svg className={`w-3 h-3 transition-transform ${addTxMenuOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+        {addTxMenuOpen && (
+          <div className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] py-1 shadow-xl">
+            <button
+              type="button"
+              onClick={() => { setAddTxMenuOpen(false); openAddStock(); }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
+            >
+              {t("addStock")}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setAddTxMenuOpen(false); openAddFund(); }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
+            >
+              {t("addFund")}
+            </button>
+          </div>
+        )}
+      </div>
+    ) : (
+      <button type="button" onClick={openAddStock} className={addTxBtnClass}>
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        <span className="hidden sm:inline">{t("addTransaction")}</span>
+      </button>
+    )
   );
 
   /* ── TERMINAL: Dense compact list, no card, monospace header ── */

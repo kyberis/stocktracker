@@ -64,6 +64,7 @@ function AppPortfolioCommandStripInner() {
   return (
     <DashboardToolbar
       onAddStock={() => gatedAdd("stock")}
+      onAddFund={() => gatedAdd("fund")}
       onAddCrypto={() => gatedAdd("crypto")}
       onAddAsset={() => gatedAdd("asset")}
       onOpenSettings={openSettings}

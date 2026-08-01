@@ -83,6 +83,7 @@ const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), {
 
 export default function MobileDashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [addModalAssetType, setAddModalAssetType] = useState<"fund" | undefined>(undefined);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showAddCrypto, setShowAddCrypto] = useState(false);
   const [showAddAsset, setShowAddAsset] = useState(false);
@@ -485,7 +486,7 @@ export default function MobileDashboard() {
             </div>
             <div className="px-2 pb-6 space-y-1">
               <button
-                onClick={() => { setShowAddMenu(false); setShowAddModal(true); hapticImpact("Light"); }}
+                onClick={() => { setShowAddMenu(false); setAddModalAssetType(undefined); setShowAddModal(true); hapticImpact("Light"); }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left active:bg-gray-100 dark:active:bg-slate-800 transition-colors"
               >
                 <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
@@ -495,6 +496,19 @@ export default function MobileDashboard() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">{t("addStock")}</p>
+                </div>
+              </button>
+              <button
+                onClick={() => { setShowAddMenu(false); setAddModalAssetType("fund"); setShowAddModal(true); hapticImpact("Light"); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left active:bg-gray-100 dark:active:bg-slate-800 transition-colors"
+              >
+                <div className="w-9 h-9 rounded-xl bg-teal-500 flex items-center justify-center shrink-0">
+                  <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+                  </svg>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{t("addFund")}</p>
                 </div>
               </button>
               <button
@@ -527,7 +541,14 @@ export default function MobileDashboard() {
       )}
 
       {showAddModal && (
-        <AddStockModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
+        <AddStockModal
+          isOpen={showAddModal}
+          onClose={() => {
+            setShowAddModal(false);
+            setAddModalAssetType(undefined);
+          }}
+          initialAssetType={addModalAssetType}
+        />
       )}
 
       {showAddCrypto && (

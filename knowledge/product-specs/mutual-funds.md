@@ -19,7 +19,8 @@ Users can track mutual funds and SICAVs as `assetType: "fund"` — distinct from
 |------|------|-------|
 | Library | [`src/lib/infer-asset-type.ts`](../../src/lib/infer-asset-type.ts) | `inferAssetType`, `assetTypeFromQuoteType`. |
 | Library | [`src/lib/isin.ts`](../../src/lib/isin.ts) | `looksLikeIsin` for ISIN detection. |
-| Modal | [`src/components/AddStockModal.tsx`](../../src/components/AddStockModal.tsx) | Fund type + MUTUALFUND auto-select. |
+| Modal | [`src/components/AddStockModal.tsx`](../../src/components/AddStockModal.tsx) | Fund type + MUTUALFUND auto-select; `initialAssetType="fund"` from menus. |
+| UI | [`DashboardToolbar`](../../src/components/DashboardToolbar.tsx), [`PortfolioTable`](../../src/components/PortfolioTable.tsx), mobile add sheet | Explicit **Add Fund** entries in + Add and Add Transaction. |
 | Import | [`src/hooks/useImportBrokerCSV.ts`](../../src/hooks/useImportBrokerCSV.ts), [`useImportAI.ts`](../../src/hooks/useImportAI.ts) | Preview type column + bulk import. |
 | API | [`src/app/api/search/`](../../src/app/api/search) | Yahoo allowlist includes MUTUALFUND. |
 | DB migration | v122 `fund_value_eur` on `portfolio_snapshots` | Per-type snapshot breakdown. |
