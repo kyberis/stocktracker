@@ -32,14 +32,17 @@ describe("recordMcpRequestAnalytics", () => {
     );
   });
 
-  it("records tool_call with tool name", async () => {
+  it("records tool_call with tool name, scope, and allowlisted args", async () => {
     const req = new Request("https://trefolio.com/api/mcp/user/mcp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jsonrpc: "2.0",
         method: "tools/call",
-        params: { name: "listHoldings" },
+        params: {
+          name: "listHoldings",
+          arguments: { portfolioId: "pf-1", ignoreMe: "x" },
+        },
         id: 2,
       }),
     });
@@ -53,8 +56,14 @@ describe("recordMcpRequestAnalytics", () => {
         eventType: "tool_call",
         toolName: "listHoldings",
         authType: "oauth",
+        metadata: expect.objectContaining({
+          scope: "portfolio:read",
+          portfolioId: "pf-1",
+        }),
       }),
     );
+    const call = vi.mocked(trackMcpAnalyticsEvent).mock.calls[0]?.[0];
+    expect(JSON.stringify(call?.metadata)).not.toContain("ignoreMe");
   });
 
   it("ignores non-POST requests", () => {

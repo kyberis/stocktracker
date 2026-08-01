@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.46",
+    date: "2026-08-01",
+    title: "Richer MCP usage analytics",
+    titleTranslations: {
+      es: "Analíticas MCP más detalladas",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Admin MCP Analytics now shows which users call MCP, data domains (scopes), tools, and privacy-safe resource identifiers (tickers, FMP paths, portfolios) plus a recent access feed.",
+        translations: {
+          es: "Admin MCP Analytics ahora muestra qué usuarios usan MCP, dominios de datos (scopes), tools e identificadores de recursos seguros (tickers, rutas FMP, carteras), más un feed de acceso reciente.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.45",
     date: "2026-07-31",
     title: "FMP market data via MCP",

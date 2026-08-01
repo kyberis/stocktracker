@@ -251,6 +251,10 @@ export type {
   McpAnalyticsSummary,
   McpUserAnalyticsRow,
   McpAnalyticsEventType,
+  McpScopeBreakdown,
+  McpResourceBreakdown,
+  McpRecentAccessRow,
+  McpToolBreakdown,
 } from "./mcp-analytics";
 export { trackMcpAnalyticsEvent, getMcpAnalyticsSummary } from "./mcp-analytics";
 

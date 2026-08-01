@@ -1,5 +1,7 @@
 import { randomUUID } from "crypto";
 
+import { MCP_TOOL_REQUIRED_SCOPE } from "@/lib/mcp/pat-scopes";
+
 import { ensureInitialized } from "./client";
 import { num, str } from "./helpers";
 
@@ -37,11 +39,36 @@ export interface McpDailyToolCalls {
 export interface McpToolBreakdown {
   tool: string;
   count: number;
+  users: number;
+}
+
+export interface McpScopeBreakdown {
+  scope: string;
+  calls: number;
+  users: number;
+}
+
+export interface McpResourceBreakdown {
+  key: string;
+  value: string;
+  calls: number;
+  users: number;
 }
 
 export interface McpRecurrenceBucket {
   bucket: string;
   users: number;
+}
+
+export interface McpRecentAccessRow {
+  createdAt: string;
+  userId: string;
+  username: string;
+  email: string;
+  toolName: string;
+  scope: string | null;
+  resources: string | null;
+  authType: string | null;
 }
 
 export interface McpUserAnalyticsRow {
@@ -57,6 +84,8 @@ export interface McpUserAnalyticsRow {
   activeDaysPeriod: number;
   lastToolCallAt: string | null;
   authTypes: string;
+  topTools: string;
+  topScopes: string;
 }
 
 export interface McpAnalyticsSummary {
@@ -64,6 +93,9 @@ export interface McpAnalyticsSummary {
   funnel: McpFunnelStats;
   dailyToolCalls: McpDailyToolCalls[];
   toolBreakdown: McpToolBreakdown[];
+  scopeBreakdown: McpScopeBreakdown[];
+  resourceBreakdown: McpResourceBreakdown[];
+  recentAccess: McpRecentAccessRow[];
   recurrence: McpRecurrenceBucket[];
   users: McpUserAnalyticsRow[];
 }
@@ -95,6 +127,64 @@ function daysSql(days: number): string {
   return `-${Math.min(Math.max(days, 1), 365)} days`;
 }
 
+function parseMetadata(raw: unknown): Record<string, string> {
+  if (raw == null) return {};
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof v === "string") out[k] = v;
+      else if (typeof v === "number" || typeof v === "boolean") out[k] = String(v);
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function resolveScope(toolName: string, metadata: Record<string, string>): string | null {
+  if (metadata.scope) return metadata.scope;
+  return MCP_TOOL_REQUIRED_SCOPE[toolName] ?? null;
+}
+
+function mergeScopeBreakdown(
+  fromSql: McpScopeBreakdown[],
+  toolBreakdown: McpToolBreakdown[],
+): McpScopeBreakdown[] {
+  const map = new Map<string, { calls: number; users: number }>();
+  for (const row of fromSql) {
+    map.set(row.scope, { calls: row.calls, users: row.users });
+  }
+  // Backfill older events that only have tool_name (no metadata.scope).
+  // Prefer SQL counts when present (they include unique users accurately).
+  if (fromSql.length === 0) {
+    for (const t of toolBreakdown) {
+      const scope = MCP_TOOL_REQUIRED_SCOPE[t.tool];
+      if (!scope) continue;
+      const prev = map.get(scope) ?? { calls: 0, users: 0 };
+      map.set(scope, {
+        calls: prev.calls + t.count,
+        users: Math.max(prev.users, t.users),
+      });
+    }
+  }
+  return [...map.entries()]
+    .map(([scope, v]) => ({ scope, calls: v.calls, users: v.users }))
+    .sort((a, b) => b.calls - a.calls);
+}
+
+function topNLabel(
+  counts: Map<string, number>,
+  n: number,
+): string {
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([name, c]) => `${name} (${c})`)
+    .join(", ");
+}
+
 export async function getMcpAnalyticsSummary(days = 30): Promise<McpAnalyticsSummary> {
   const client = await ensureInitialized();
   const since = daysSql(days);
@@ -103,8 +193,12 @@ export async function getMcpAnalyticsSummary(days = 30): Promise<McpAnalyticsSum
     funnelRes,
     dailyRes,
     toolsRes,
+    scopesRes,
+    resourcesRes,
+    recentRes,
     recurrenceRes,
     usersRes,
+    userToolsRes,
   ] = await Promise.all([
     client.execute({
       sql: `
@@ -138,12 +232,76 @@ export async function getMcpAnalyticsSummary(days = 30): Promise<McpAnalyticsSum
     }),
     client.execute({
       sql: `
-        SELECT COALESCE(tool_name, 'unknown') AS tool, COUNT(*) AS cnt
+        SELECT COALESCE(tool_name, 'unknown') AS tool,
+               COUNT(*) AS cnt,
+               COUNT(DISTINCT user_id) AS users
         FROM mcp_analytics_events
         WHERE event_type = 'tool_call' AND created_at >= datetime('now', ?)
         GROUP BY tool_name
         ORDER BY cnt DESC
+        LIMIT 30
+      `,
+      args: [since],
+    }),
+    client.execute({
+      sql: `
+        SELECT COALESCE(json_extract(metadata, '$.scope'), 'unknown') AS scope,
+               COUNT(*) AS calls,
+               COUNT(DISTINCT user_id) AS users
+        FROM mcp_analytics_events
+        WHERE event_type = 'tool_call'
+          AND created_at >= datetime('now', ?)
+          AND metadata IS NOT NULL
+          AND json_extract(metadata, '$.scope') IS NOT NULL
+        GROUP BY scope
+        ORDER BY calls DESC
         LIMIT 20
+      `,
+      args: [since],
+    }),
+    client.execute({
+      sql: `
+        SELECT resource_key, resource_value, COUNT(*) AS calls, COUNT(DISTINCT user_id) AS users
+        FROM (
+          SELECT user_id, 'ticker' AS resource_key, json_extract(metadata, '$.ticker') AS resource_value
+          FROM mcp_analytics_events
+          WHERE event_type = 'tool_call' AND created_at >= datetime('now', ?)
+            AND json_extract(metadata, '$.ticker') IS NOT NULL
+          UNION ALL
+          SELECT user_id, 'symbol', json_extract(metadata, '$.symbol')
+          FROM mcp_analytics_events
+          WHERE event_type = 'tool_call' AND created_at >= datetime('now', ?)
+            AND json_extract(metadata, '$.symbol') IS NOT NULL
+          UNION ALL
+          SELECT user_id, 'path', json_extract(metadata, '$.path')
+          FROM mcp_analytics_events
+          WHERE event_type = 'tool_call' AND created_at >= datetime('now', ?)
+            AND json_extract(metadata, '$.path') IS NOT NULL
+          UNION ALL
+          SELECT user_id, 'portfolioId', json_extract(metadata, '$.portfolioId')
+          FROM mcp_analytics_events
+          WHERE event_type = 'tool_call' AND created_at >= datetime('now', ?)
+            AND json_extract(metadata, '$.portfolioId') IS NOT NULL
+          UNION ALL
+          SELECT user_id, 'year', json_extract(metadata, '$.year')
+          FROM mcp_analytics_events
+          WHERE event_type = 'tool_call' AND created_at >= datetime('now', ?)
+            AND json_extract(metadata, '$.year') IS NOT NULL
+        )
+        GROUP BY resource_key, resource_value
+        ORDER BY calls DESC
+        LIMIT 40
+      `,
+      args: [since, since, since, since, since],
+    }),
+    client.execute({
+      sql: `
+        SELECT e.created_at, e.user_id, u.username, u.email, e.tool_name, e.auth_type, e.metadata
+        FROM mcp_analytics_events e
+        JOIN users u ON u.id = e.user_id
+        WHERE e.event_type = 'tool_call' AND e.created_at >= datetime('now', ?)
+        ORDER BY e.created_at DESC
+        LIMIT 50
       `,
       args: [since],
     }),
@@ -218,6 +376,18 @@ export async function getMcpAnalyticsSummary(days = 30): Promise<McpAnalyticsSum
       `,
       args: [since, since],
     }),
+    client.execute({
+      sql: `
+        SELECT user_id,
+               COALESCE(tool_name, 'unknown') AS tool,
+               COALESCE(json_extract(metadata, '$.scope'), '') AS scope,
+               COUNT(*) AS cnt
+        FROM mcp_analytics_events
+        WHERE event_type = 'tool_call' AND created_at >= datetime('now', ?)
+        GROUP BY user_id, tool_name, scope
+      `,
+      args: [since],
+    }),
   ]);
 
   const f = funnelRes.rows[0] ?? {};
@@ -230,6 +400,38 @@ export async function getMcpAnalyticsSummary(days = 30): Promise<McpAnalyticsSum
     totalToolCalls: num(f.total_tool_calls),
   };
 
+  const toolBreakdown: McpToolBreakdown[] = toolsRes.rows.map((r) => ({
+    tool: str(r.tool),
+    count: num(r.cnt),
+    users: num(r.users),
+  }));
+
+  const scopeFromSql: McpScopeBreakdown[] = scopesRes.rows.map((r) => ({
+    scope: str(r.scope),
+    calls: num(r.calls),
+    users: num(r.users),
+  }));
+
+  const toolsByUser = new Map<string, Map<string, number>>();
+  const scopesByUser = new Map<string, Map<string, number>>();
+  for (const r of userToolsRes.rows) {
+    const userId = str(r.user_id);
+    const tool = str(r.tool);
+    const cnt = num(r.cnt);
+    const scopeRaw = str(r.scope);
+    const scope = scopeRaw || MCP_TOOL_REQUIRED_SCOPE[tool] || "";
+
+    if (!toolsByUser.has(userId)) toolsByUser.set(userId, new Map());
+    const tMap = toolsByUser.get(userId)!;
+    tMap.set(tool, (tMap.get(tool) ?? 0) + cnt);
+
+    if (scope) {
+      if (!scopesByUser.has(userId)) scopesByUser.set(userId, new Map());
+      const sMap = scopesByUser.get(userId)!;
+      sMap.set(scope, (sMap.get(scope) ?? 0) + cnt);
+    }
+  }
+
   return {
     periodDays: days,
     funnel,
@@ -238,27 +440,50 @@ export async function getMcpAnalyticsSummary(days = 30): Promise<McpAnalyticsSum
       calls: num(r.calls),
       users: num(r.users),
     })),
-    toolBreakdown: toolsRes.rows.map((r) => ({
-      tool: str(r.tool),
-      count: num(r.cnt),
+    toolBreakdown,
+    scopeBreakdown: mergeScopeBreakdown(scopeFromSql, toolBreakdown),
+    resourceBreakdown: resourcesRes.rows.map((r) => ({
+      key: str(r.resource_key),
+      value: str(r.resource_value),
+      calls: num(r.calls),
+      users: num(r.users),
     })),
+    recentAccess: recentRes.rows.map((r) => {
+      const toolName = str(r.tool_name) || "unknown";
+      const metadata = parseMetadata(r.metadata);
+      return {
+        createdAt: str(r.created_at),
+        userId: str(r.user_id),
+        username: str(r.username),
+        email: str(r.email),
+        toolName,
+        scope: resolveScope(toolName, metadata),
+        resources: metadata.resources ?? null,
+        authType: str(r.auth_type) || null,
+      };
+    }),
     recurrence: recurrenceRes.rows.map((r) => ({
       bucket: str(r.bucket),
       users: num(r.users),
     })),
-    users: usersRes.rows.map((r) => ({
-      userId: str(r.user_id),
-      username: str(r.username),
-      email: str(r.email),
-      plan: str(r.plan),
-      tokensCreated: num(r.tokens_created),
-      firstTokenAt: str(r.first_token_at) || null,
-      clientConnectedAt: str(r.client_connected_at) || null,
-      toolCallsPeriod: num(r.tool_calls_period),
-      toolCallsAllTime: num(r.tool_calls_all_time),
-      activeDaysPeriod: num(r.active_days_period),
-      lastToolCallAt: str(r.last_tool_call_at) || null,
-      authTypes: str(r.auth_types),
-    })),
+    users: usersRes.rows.map((r) => {
+      const userId = str(r.user_id);
+      return {
+        userId,
+        username: str(r.username),
+        email: str(r.email),
+        plan: str(r.plan),
+        tokensCreated: num(r.tokens_created),
+        firstTokenAt: str(r.first_token_at) || null,
+        clientConnectedAt: str(r.client_connected_at) || null,
+        toolCallsPeriod: num(r.tool_calls_period),
+        toolCallsAllTime: num(r.tool_calls_all_time),
+        activeDaysPeriod: num(r.active_days_period),
+        lastToolCallAt: str(r.last_tool_call_at) || null,
+        authTypes: str(r.auth_types),
+        topTools: topNLabel(toolsByUser.get(userId) ?? new Map(), 3),
+        topScopes: topNLabel(scopesByUser.get(userId) ?? new Map(), 3),
+      };
+    }),
   };
 }

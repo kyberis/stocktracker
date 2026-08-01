@@ -1,9 +1,13 @@
 import type { McpAnalyticsEventType } from "@/lib/db/mcp-analytics";
 import { trackMcpAnalyticsEvent } from "@/lib/db/mcp-analytics";
+import {
+  buildMcpToolCallMetadata,
+  formatPatScopesMetadata,
+} from "@/lib/mcp/mcp-analytics-metadata";
 
 interface JsonRpcBody {
   method?: string;
-  params?: { name?: string };
+  params?: { name?: string; arguments?: unknown };
 }
 
 function mcpAuthType(bearer: string): "pat" | "oauth" {
@@ -26,10 +30,13 @@ export function recordMcpRequestAnalytics(
       if (body.method === "initialize") {
         await trackMcpAnalyticsEvent({ userId, eventType: "client_init", ...base });
       } else if (body.method === "tools/call" && body.params?.name) {
+        const toolName = body.params.name;
+        const metadata = buildMcpToolCallMetadata(toolName, body.params.arguments);
         await trackMcpAnalyticsEvent({
           userId,
           eventType: "tool_call",
-          toolName: body.params.name,
+          toolName,
+          metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
           ...base,
         });
       }
@@ -47,12 +54,16 @@ export function recordMcpPatCreated(
   userId: string,
   tokenId: string,
   name: string,
+  scopes?: string[],
 ): void {
   void trackMcpAnalyticsEvent({
     userId,
     eventType: "pat_created",
     tokenId,
-    metadata: { name: name.slice(0, 80) },
+    metadata: {
+      name: name.slice(0, 80),
+      ...formatPatScopesMetadata(scopes),
+    },
   });
 }
 

@@ -283,6 +283,10 @@ export default function PrivacyPolicyPage() {
                 the JSON responses from those tool calls; we do not invoke OpenAI or
                 Anthropic for MCP read tools unless you separately use an in-app AI feature
                 or a tool that explicitly calls our AI backend (for example MOAT narrative).
+                For product analytics (admin-only), we record which MCP tools were called,
+                the PAT data-domain scope involved, and non-sensitive request identifiers
+                such as ticker symbols, portfolio IDs, tax year, or FMP endpoint paths —
+                not full holdings payloads or secret tokens.
               </li>
               <li>
                 Enable private chat rooms for direct communication between you and trefolio support, and between connected users. Messages (text, links, images, and voice) are stored in our database; voice audio files are stored in our Vercel Blob storage and are removed when the message expires. Non-persistent messages are automatically deleted 24 hours after being sent.

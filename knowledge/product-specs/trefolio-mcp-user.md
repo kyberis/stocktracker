@@ -72,7 +72,7 @@ Discovery and errors are English-only; product UI is unaffected.
 
 ## 12. Telemetry
 
-`mcp_analytics_events` via `recordMcpRequestAnalytics` (initialize + tool_call per tool name). Admin tab `/admin/mcp-analytics`.
+`mcp_analytics_events` via `recordMcpRequestAnalytics` (initialize + `tool_call` with tool name, required scope, and allowlisted resource args such as ticker/path/portfolioId). PAT create also stores granted scopes. Admin tab `/admin/mcp-analytics` shows funnel, scope/tool breakdown, data-accessed resources, recent access feed, and per-user top tools/scopes.
 
 ## 13. Testing
 

@@ -40,6 +40,6 @@ export const POST = withMetrics("/api/mcp/personal-access-tokens", async (req: N
     // empty ok
   }
   const data = await createPersonalAccessTokenForIdpSub(ctx.user!.idp_sub!, body);
-  recordMcpPatCreated(ctx.user!.id, data.id, data.name);
+  recordMcpPatCreated(ctx.user!.id, data.id, data.name, data.scopes ?? body.scopes);
   return NextResponse.json(data);
 });
