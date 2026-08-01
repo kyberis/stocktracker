@@ -1589,8 +1589,6 @@ const pt: TranslationStrings = {
   landingStatFree: "Zero Venda de Dados",
   landingStatLabelStart: "GDPR · Privacidade em Primeiro Lugar",
 
-  landingSearchEyebrow: "Análise de ações gratuita",
-  landingSearchHeading: "Pesquise qualquer ação — sem necessidade de conta",
   landingFeaturesHeading: "Tudo o Que Precisa para Investir",
   landingFeaturesHeadingAccent: "Com Confiança",
   landingFeaturesSubtitle: "Desde o rastreamento em tempo real até análises potenciadas por IA — construído para investidores de retalho europeus que querem clareza, não complexidade.",

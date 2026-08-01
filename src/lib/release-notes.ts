@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.51",
+    date: "2026-08-01",
+    title: "Stock search in landing header",
+    titleTranslations: {
+      es: "Búsqueda de acciones en el header de la landing",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The public landing now has the same asset search in the header as the logged-in home. Opening a stock from there (or from the app header) returns you to that home on Back, and anonymous analysis pages use landing-style chrome.",
+        translations: {
+          es: "La landing pública ahora tiene el mismo buscador de activos en el header que la home logueada. Abrir una acción desde ahí (o desde el header de la app) vuelve a esa home al pulsar Atrás, y las páginas de análisis anónimas usan el chrome estilo landing.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.50",
     date: "2026-08-01",
     title: "Delete account visible on Profile for non-admins",

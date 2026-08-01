@@ -44,7 +44,7 @@ function StudioCommandStrip() {
   return (
     <div className="glass-toolbar border-b border-[color:var(--border)] bg-[color:var(--nav-bg)] px-3 py-2 sm:px-4">
       <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-2">
-        <NavAssetSearch variant="studio" />
+        <NavAssetSearch variant="studio" from="home" />
         <AppNavPrimaryPills
           variant="studio"
           items={getDesktopNavItems(flags)}
@@ -57,23 +57,43 @@ function StudioCommandStrip() {
 }
 
 /**
- * Minimal chrome for anonymous visitors on the public /analisis surface — the
- * full AppNav/MarketTickerBar/PortfolioCommandStrip stack assumes a logged-in
+ * Landing-styled chrome for anonymous visitors on the public /analisis surface —
+ * the full AppNav/MarketTickerBar/PortfolioCommandStrip stack assumes a logged-in
  * user and would render broken/empty portfolio widgets otherwise.
  */
 function PublicAnalisisTopBar() {
   const { t } = useI18n();
   return (
-    <div className="sticky top-0 z-40 border-b border-[color:var(--border)] bg-[color:var(--nav-bg)] px-4 py-3">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3">
-        <Link href="/" className="flex shrink-0 items-center gap-2 text-base font-bold text-[color:var(--foreground)]">
-          trefolio
-        </Link>
-        <div className="flex items-center gap-2 sm:gap-3">
+    <div className="sticky top-0 z-40 border-b border-slate-200 bg-[#faf9f7]/95 backdrop-blur-xl px-4 py-2.5 sm:py-3">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/" className="flex shrink-0 items-center gap-2 text-base font-bold text-slate-900 tracking-tight">
+            trefolio
+          </Link>
+          <div className="flex items-center gap-2 sm:hidden">
+            <LanguageSwitcher />
+            <Link
+              href="/login"
+              className="px-2.5 py-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+            >
+              {t("landingNavLogin")}
+            </Link>
+            <Link
+              href="/signup"
+              className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-600"
+            >
+              {t("landingNavSignUp")}
+            </Link>
+          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <NavAssetSearch variant="landing" from="landing" />
+        </div>
+        <div className="hidden sm:flex shrink-0 items-center gap-2 sm:gap-3">
           <LanguageSwitcher />
           <Link
             href="/login"
-            className="px-3 py-1.5 text-sm font-medium text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
+            className="px-3 py-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
           >
             {t("landingNavLogin")}
           </Link>
@@ -126,8 +146,8 @@ function AppShell({ children }: { children: React.ReactNode }) {
   if (isPublicAnalisis && !isNative) {
     return (
       <div
-        className="min-h-screen overflow-x-hidden"
-        style={{ background: "var(--shell-background)", fontFamily: "var(--font-primary, inherit)" }}
+        className="min-h-screen overflow-x-hidden bg-[#faf9f7] text-slate-800"
+        style={{ fontFamily: "var(--font-primary, inherit)" }}
       >
         <PublicAnalisisTopBar />
         <main id="main-content">{children}</main>

@@ -1589,8 +1589,6 @@ const de: TranslationStrings = {
   landingStatFree: "Keine Datensammlung",
   landingStatLabelStart: "DSGVO · Datenschutz zuerst",
 
-  landingSearchEyebrow: "Kostenlose Aktienanalyse",
-  landingSearchHeading: "Jede Aktie durchsuchen — kein Konto erforderlich",
   landingFeaturesHeading: "Alles, was Sie zum Investieren benötigen",
   landingFeaturesHeadingAccent: "Mit Vertrauen",
   landingFeaturesSubtitle: "Von der Echtzeitverfolgung bis zur KI-gestützten Analyse — entwickelt für europäische Privatanleger, die Klarheit und keine Komplexität wünschen.",

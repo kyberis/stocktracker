@@ -20,6 +20,11 @@ import AnalysisNarrativePanel from "@/components/company-analysis/panels/Analysi
 import InsidersFlowPanel from "@/components/company-analysis/panels/InsidersFlowPanel";
 import FundamentalsTablePanel from "@/components/company-analysis/panels/FundamentalsTablePanel";
 
+function analisisBackHref(from: string | undefined): string {
+  if (from === "landing" || from === "home") return "/";
+  return "/analisis";
+}
+
 const StockDetail = dynamic(() => import("@/components/StockDetail"), { ssr: false });
 const StockIntelligence = dynamic(() => import("@/components/StockIntelligence"), { ssr: false });
 const StockEvaluation = dynamic(() => import("@/components/StockEvaluation"), { ssr: false });
@@ -63,10 +68,19 @@ function LockedTabPanel({ ticker }: { ticker: string }) {
   );
 }
 
-export default function AnalisisShell({ ticker, exchange }: { ticker: string; exchange: string }) {
+export default function AnalisisShell({
+  ticker,
+  exchange,
+  from,
+}: {
+  ticker: string;
+  exchange: string;
+  from?: string;
+}) {
   const { t, language } = useI18n();
   const { user } = useAuth();
   const { holdings } = usePortfolio();
+  const backHref = analisisBackHref(from);
   const { activeTab, navigateToTab } = useTabUrl<TabId>(TAB_VALUES, DEFAULT_TAB);
   const [visited, setVisited] = useState<Set<TabId>>(() => new Set([DEFAULT_TAB]));
   const [now, setNow] = useState(() => new Date());
@@ -104,7 +118,7 @@ export default function AnalisisShell({ ticker, exchange }: { ticker: string; ex
       <div className="mx-auto max-w-5xl space-y-4 px-4 py-8 sm:px-6">
         <div className="card space-y-3 p-6">
           <p className="text-[color:var(--foreground)]">{data.error || t("companyAnalysisLoadError")}</p>
-          <Link href="/analisis" className="btn-secondary inline-flex">
+          <Link href={backHref} className="btn-secondary inline-flex">
             {t("companyAnalysisBack")}
           </Link>
         </div>
@@ -120,7 +134,7 @@ export default function AnalisisShell({ ticker, exchange }: { ticker: string; ex
   return (
     <div className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6">
       <div className="flex flex-wrap items-center gap-3">
-        <Link href="/analisis" className="btn-secondary text-sm">
+        <Link href={backHref} className="btn-secondary text-sm">
           {t("companyAnalysisBack")}
         </Link>
         {user && (

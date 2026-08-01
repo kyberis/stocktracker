@@ -14,10 +14,10 @@ function normalizeSearchResponse(data: unknown): ProviderSearchResult[] {
   return [];
 }
 
-export default function CompanyAnalysisSearch() {
+export default function CompanyAnalysisSearch({ initialQuery = "" }: { initialQuery?: string }) {
   const { t } = useI18n();
   const router = useRouter();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<ProviderSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
