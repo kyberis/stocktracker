@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.47",
+    date: "2026-08-01",
+    title: "Widget total matches dashboard",
+    titleTranslations: {
+      es: "El total del widget coincide con el panel",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Home screen widget and Leaf now use the same net-worth total as the dashboard: investment cash only (not savings/pension/real estate) and Yahoo symbols normalized like the web (e.g. Hong Kong tickers).",
+        translations: {
+          es: "El widget de inicio y Leaf ahora usan el mismo patrimonio neto que el panel: solo cash de inversión (no ahorro/pensión/inmuebles) y símbolos de Yahoo normalizados como en la web (p. ej. tickers de Hong Kong).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.46",
     date: "2026-08-01",
     title: "Richer MCP usage analytics",

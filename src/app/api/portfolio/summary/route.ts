@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth/session";
 import { findUserByWidgetToken, findUserByDevicePasskey, markDeviceLinked, findUserById, listHoldings, listCashEntries } from "@/lib/db";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { investmentCashEntries } from "@/lib/portfolio-summary-cash";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
 import { checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
@@ -9,6 +10,7 @@ import { deviceApiCalls } from "@/lib/metrics";
 import { json401 } from "@/lib/log-unauthorized";
 import type { ExchangeRates, QuoteData } from "@/lib/types";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
+import { marketDataSymbolForHolding } from "@/lib/market-symbol";
 
 type AuthMethod = "session" | "widget_token" | "device_passkey";
 
@@ -75,10 +77,12 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     portfolioId = explicitPortfolioId;
   }
 
-  const [holdings, cashEntries] = await Promise.all([
+  const [holdings, allCashEntries] = await Promise.all([
     listHoldings(userId, portfolioId),
     listCashEntries(userId, portfolioId),
   ]);
+  // Match dashboard net worth: investment cash only (exclude savings/pension/real estate).
+  const cashEntries = investmentCashEntries(allCashEntries);
 
   if (holdings.length === 0 && cashEntries.length === 0) {
     let portfolioName = "All Portfolios";
@@ -108,25 +112,36 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
 
   const yahoo = new YahooProvider();
 
-  const tickers = [...new Set(holdings.map((h) => h.ticker))];
-  const quotes: Record<string, QuoteData> = {};
+  // Fetch via Yahoo-compatible symbols (HK padding, exchange collisions, crypto),
+  // but key the map by holding.ticker so calculatePortfolioTotals matches the web.
+  const requestByTicker = new Map(
+    holdings.map((h) => [h.ticker, marketDataSymbolForHolding(h)] as const),
+  );
+  const uniqueSymbols = [...new Set(requestByTicker.values())];
+  const quotesBySymbol: Record<string, QuoteData> = {};
 
   const quoteChunks: string[][] = [];
-  for (let i = 0; i < tickers.length; i += 10) {
-    quoteChunks.push(tickers.slice(i, i + 10));
+  for (let i = 0; i < uniqueSymbols.length; i += 10) {
+    quoteChunks.push(uniqueSymbols.slice(i, i + 10));
   }
   for (const chunk of quoteChunks) {
     const results = await Promise.allSettled(
-      chunk.map(async (t) => {
-        const q = await yahoo.getQuote(t);
-        return { ticker: t, quote: q };
-      })
+      chunk.map(async (symbol) => {
+        const q = await yahoo.getQuote(symbol);
+        return { symbol, quote: q };
+      }),
     );
     for (const r of results) {
       if (r.status === "fulfilled") {
-        quotes[r.value.ticker] = r.value.quote;
+        quotesBySymbol[r.value.symbol] = r.value.quote;
       }
     }
+  }
+
+  const quotes: Record<string, QuoteData> = {};
+  for (const [ticker, symbol] of requestByTicker) {
+    const q = quotesBySymbol[symbol] ?? quotesBySymbol[ticker];
+    if (q) quotes[ticker] = q;
   }
 
   // Resolve portfolio currency for base-currency conversion

@@ -12,6 +12,7 @@ import { useTrack } from "@/lib/use-track";
 import { useTheme } from "@/lib/theme-context";
 import { useIsNative } from "@/lib/use-native";
 import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
+import { investmentCashEntries } from "@/lib/portfolio-summary-cash";
 import CloverToLogo from "./CloverToLogo";
 
 const MobileDashboard = dynamic(() => import("./mobile/MobileDashboard"), {
@@ -175,8 +176,8 @@ function DesktopDashboard() {
     return () => clearTimeout(timer);
   }, [demoMode]);
 
-  const investmentCashEntries = useMemo(
-    () => cashEntries.filter((c) => !c.type || c.type === "cash"),
+  const investmentCashOnly = useMemo(
+    () => investmentCashEntries(cashEntries),
     [cashEntries],
   );
 
@@ -265,7 +266,7 @@ function DesktopDashboard() {
 
                 <DashboardPortfolioV2
                   holdings={holdings}
-                  cashEntries={investmentCashEntries}
+                  cashEntries={investmentCashOnly}
                   allCashEntries={cashEntries}
                   onAddStock={() => gatedAdd("stock")}
                   onNavigateToEvents={() => handleTabChange("events")}
@@ -327,7 +328,7 @@ function DesktopDashboard() {
             <Suspense fallback={
               <ChartSkeleton />
             }>
-              <PerformancePage holdings={holdings} cashEntries={investmentCashEntries} />
+              <PerformancePage holdings={holdings} cashEntries={investmentCashOnly} />
             </Suspense>
           </div>
         )}
