@@ -20,11 +20,6 @@ import AnalysisNarrativePanel from "@/components/company-analysis/panels/Analysi
 import InsidersFlowPanel from "@/components/company-analysis/panels/InsidersFlowPanel";
 import FundamentalsTablePanel from "@/components/company-analysis/panels/FundamentalsTablePanel";
 
-function analisisBackHref(from: string | undefined): string {
-  if (from === "landing" || from === "home") return "/";
-  return "/analisis";
-}
-
 const StockDetail = dynamic(() => import("@/components/StockDetail"), { ssr: false });
 const StockIntelligence = dynamic(() => import("@/components/StockIntelligence"), { ssr: false });
 const StockEvaluation = dynamic(() => import("@/components/StockEvaluation"), { ssr: false });
@@ -71,16 +66,16 @@ function LockedTabPanel({ ticker }: { ticker: string }) {
 export default function AnalisisShell({
   ticker,
   exchange,
-  from,
 }: {
   ticker: string;
   exchange: string;
-  from?: string;
 }) {
   const { t, language } = useI18n();
   const { user } = useAuth();
   const { holdings } = usePortfolio();
-  const backHref = analisisBackHref(from);
+  // Home for the current audience — middleware serves landing vs dashboard at `/`.
+  // Do not use a client-spoofable ?from= query for this.
+  const backHref = "/";
   const { activeTab, navigateToTab } = useTabUrl<TabId>(TAB_VALUES, DEFAULT_TAB);
   const [visited, setVisited] = useState<Set<TabId>>(() => new Set([DEFAULT_TAB]));
   const [now, setNow] = useState(() => new Date());
@@ -195,46 +190,49 @@ export default function AnalisisShell({
         )}
       </header>
 
-      <div className="grid gap-6 md:grid-cols-[200px_1fr]">
-        <VerticalTabRail tabs={tabs} activeId={activeTab} onChange={navigateToTab} />
+      <VerticalTabRail
+        tabs={tabs}
+        activeId={activeTab}
+        onChange={navigateToTab}
+        tone={user ? "auto" : "light"}
+      />
 
-        <div className="min-w-0 space-y-6">
-          {data.loading && !report ? (
-            <div className="card p-6 text-sm text-[color:var(--muted)]">{t("loading")}</div>
-          ) : (
-            report && (
-              <>
-                {visited.has("summary") && (
-                  <div hidden={activeTab !== "summary"} className="space-y-6">
-                    <SummaryPanel data={data} />
-                    <AnalysisNarrativePanel data={data} />
-                    <FundamentalsTablePanel data={data} />
-                    <NewsPanel data={data} />
-                    <InsidersFlowPanel data={data} />
-                  </div>
-                )}
-                {activeTab === "details" && !user && <LockedTabPanel ticker={ticker} />}
-                {visited.has("details") && user && (
-                  <div hidden={activeTab !== "details"}>
-                    <StockDetail ticker={ticker} exchange={resolvedExchange} embedded />
-                  </div>
-                )}
-                {activeTab === "intelligence" && !user && <LockedTabPanel ticker={ticker} />}
-                {visited.has("intelligence") && user && (
-                  <div hidden={activeTab !== "intelligence"}>
-                    <StockIntelligence ticker={ticker} exchange={resolvedExchange} embedded />
-                  </div>
-                )}
-                {activeTab === "evaluation" && !user && <LockedTabPanel ticker={ticker} />}
-                {visited.has("evaluation") && user && (
-                  <div hidden={activeTab !== "evaluation"}>
-                    <StockEvaluation ticker={ticker} exchange={resolvedExchange} embedded />
-                  </div>
-                )}
-              </>
-            )
-          )}
-        </div>
+      <div className="min-w-0 space-y-6">
+        {data.loading && !report ? (
+          <div className="card p-6 text-sm text-[color:var(--muted)]">{t("loading")}</div>
+        ) : (
+          report && (
+            <>
+              {visited.has("summary") && (
+                <div hidden={activeTab !== "summary"} className="space-y-6">
+                  <SummaryPanel data={data} />
+                  <AnalysisNarrativePanel data={data} />
+                  <FundamentalsTablePanel data={data} />
+                  <NewsPanel data={data} />
+                  <InsidersFlowPanel data={data} />
+                </div>
+              )}
+              {activeTab === "details" && !user && <LockedTabPanel ticker={ticker} />}
+              {visited.has("details") && user && (
+                <div hidden={activeTab !== "details"}>
+                  <StockDetail ticker={ticker} exchange={resolvedExchange} embedded />
+                </div>
+              )}
+              {activeTab === "intelligence" && !user && <LockedTabPanel ticker={ticker} />}
+              {visited.has("intelligence") && user && (
+                <div hidden={activeTab !== "intelligence"}>
+                  <StockIntelligence ticker={ticker} exchange={resolvedExchange} embedded />
+                </div>
+              )}
+              {activeTab === "evaluation" && !user && <LockedTabPanel ticker={ticker} />}
+              {visited.has("evaluation") && user && (
+                <div hidden={activeTab !== "evaluation"}>
+                  <StockEvaluation ticker={ticker} exchange={resolvedExchange} embedded />
+                </div>
+              )}
+            </>
+          )
+        )}
       </div>
     </div>
   );

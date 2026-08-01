@@ -37,8 +37,8 @@ Builds on [`stock-page-unification.md`](stock-page-unification.md)'s
       landing-styled top bar (logo + `NavAssetSearch` + login/signup) on
       `#faf9f7` instead of the full portfolio app chrome
       (`AppNav`/`MarketTickerBar`/`MobileTabBar`/etc.)
-- [x] `/landing` header mounts `NavAssetSearch` (`from=landing`); Back from
-      `/analisis/[ticker]?from=landing|home` returns to `/`
+- [x] `/landing` header mounts `NavAssetSearch`; Back from ticker report
+      returns to `/` (session decides landing vs dashboard via middleware)
 - [x] Docs: `SECURITY.md`, `RELIABILITY.md` updated
 - [ ] PR opened, reviewed, merged (per the plan's own rollout recommendation
       — this changes the auth boundary, unlike prior direct-to-main pushes)

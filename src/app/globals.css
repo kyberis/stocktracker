@@ -51,6 +51,33 @@
   --text-label: 0.75rem;
 }
 
+/**
+ * Public /analisis surface: cream landing chrome. Force light semantic tokens
+ * even when the document has `.dark`, otherwise cards/tabs render light text
+ * on #faf9f7.
+ */
+.public-analisis-shell {
+  --background: #faf9f7;
+  --foreground: #132033;
+  --card: rgba(255, 255, 255, 0.96);
+  --card-hover: rgba(255, 255, 255, 1);
+  --border: rgba(121, 138, 167, 0.22);
+  --muted: #5b6c86;
+  --accent: #119b78;
+  --accent-light: rgba(17, 155, 120, 0.14);
+  --nav-bg: rgba(250, 249, 247, 0.95);
+  --nav-text: #122033;
+  --surface-strong: rgba(255, 255, 255, 0.96);
+  --surface-soft: rgba(255, 255, 255, 0.92);
+  --surface-overlay: rgba(255, 255, 255, 0.98);
+  --surface-highlight: rgba(255, 255, 255, 0.45);
+  --surface-highlight-strong: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+  --card-shadow: var(--glass-shadow);
+  color: var(--foreground);
+  color-scheme: light;
+}
+
 .dark {
   --background: #07111d;
   --foreground: #edf4ff;

@@ -18,12 +18,14 @@ Authenticated users open **Analysis** in primary nav, search a US-listed symbol 
 | Type | Path | Notes |
 |------|------|-------|
 | Page | `src/app/(app)/analisis/page.tsx` | Search landing (`?q=` prefill) |
-| Page | `src/app/(app)/analisis/[ticker]/page.tsx` | Report (`?exchange=`, `?from=landing\|home` for back) |
+| Page | `src/app/(app)/analisis/[ticker]/page.tsx` | Report (`?exchange=`) |
 | API | `GET /api/company-analysis` | Aggregated report |
 | API | `POST /api/company-analysis/narrative` | Grounded JSON narratives |
 | Nav | `src/lib/app-nav.ts` | Primary overflow + Pro badge |
-| Nav | `NavAssetSearch` in landing header + AppNav | Select → `/analisis/...?from=landing\|home` |
+| Nav | `NavAssetSearch` in landing header + AppNav | Select → `/analisis/...?exchange=` |
 | Components | `src/components/company-analysis/*` | Search + report UI |
+
+Back from a ticker report always goes to `/` (landing for anonymous, dashboard when logged in — middleware). No client-spoofable `?from=` param.
 
 ## 4. Data model
 

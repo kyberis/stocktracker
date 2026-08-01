@@ -44,7 +44,7 @@ function StudioCommandStrip() {
   return (
     <div className="glass-toolbar border-b border-[color:var(--border)] bg-[color:var(--nav-bg)] px-3 py-2 sm:px-4">
       <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-2">
-        <NavAssetSearch variant="studio" from="home" />
+        <NavAssetSearch variant="studio" />
         <AppNavPrimaryPills
           variant="studio"
           items={getDesktopNavItems(flags)}
@@ -87,7 +87,7 @@ function PublicAnalisisTopBar() {
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          <NavAssetSearch variant="landing" from="landing" />
+          <NavAssetSearch variant="landing" />
         </div>
         <div className="hidden sm:flex shrink-0 items-center gap-2 sm:gap-3">
           <LanguageSwitcher />
@@ -146,7 +146,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
   if (isPublicAnalisis && !isNative) {
     return (
       <div
-        className="min-h-screen overflow-x-hidden bg-[#faf9f7] text-slate-800"
+        className="public-analisis-shell min-h-screen overflow-x-hidden bg-[#faf9f7]"
         style={{ fontFamily: "var(--font-primary, inherit)" }}
       >
         <PublicAnalisisTopBar />

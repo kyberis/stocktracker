@@ -458,7 +458,7 @@ function NavBar() {
         </div>
 
         <div className="min-w-0">
-          <NavAssetSearch variant="landing" from="landing" />
+          <NavAssetSearch variant="landing" />
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
@@ -504,7 +504,7 @@ function NavBar() {
             )}
           </button>
         </div>
-        <NavAssetSearch variant="landing" from="landing" />
+        <NavAssetSearch variant="landing" />
       </div>
 
       {/* Mobile menu */}

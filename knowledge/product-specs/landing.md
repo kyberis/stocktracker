@@ -25,7 +25,7 @@ Primary marketing page. Features section, pricing tiers, social proof, FAQ, CTA.
 
 ## 6. UI surface
 - Hero, features grid, pricing, testimonials, FAQ.
-- Header includes `NavAssetSearch` (`variant="landing"`, `from="landing"`) → `/analisis/[ticker]?from=landing`.
+- Header includes `NavAssetSearch` (`variant="landing"`) → `/analisis/[ticker]?exchange=…`.
 
 ## 7. Business logic
 - FEATURES array governed by [`landing-page` rule](../../.cursor/rules/landing-page.mdc).
