@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.54",
+    date: "2026-08-02",
+    title: "Market ticker on the public landing",
+    titleTranslations: {
+      es: "Marquisina de mercados en la landing pública",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The public landing now shows the live market ticker bar (EUR/USD, BTC, gold, silver, S&P 500, oil, and exchange open/closed status).",
+        translations: {
+          es: "La landing pública ahora muestra la marquisina de mercados en vivo (EUR/USD, BTC, oro, plata, S&P 500, petróleo y estado abierto/cerrado de bolsas).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.53",
     date: "2026-08-01",
     title: "Yahoo Finance link on company analysis chart",

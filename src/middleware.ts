@@ -22,6 +22,8 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/billing/webhook",
   "/api/billing/portal",
   "/api/analytics/landing",
+  // Public market ticker (landing + demo); cached server-side, no user data
+  "/api/ticker-bar",
   "/api/contact",
   "/api/metrics",
   "/api/cron/push-gauges",

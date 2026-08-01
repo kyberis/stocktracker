@@ -67,7 +67,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [historical-prices](historical-prices.md) — OHLC history cache.
 - [market-insights](market-insights.md) — curated market highlights feed.
 - [market-move-toast](market-move-toast.md) — live market move notifications.
-- [market-ticker-bar](market-ticker-bar.md) — global top-of-page ticker strip.
+- [market-ticker-bar](market-ticker-bar.md) — global top-of-page ticker strip (app, demo, and public landing).
 - [quotes-provider-abstraction](quotes-provider-abstraction.md) — Yahoo/AV/FMP/CoinLore unified.
 
 ## Dashboard
