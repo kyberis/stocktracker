@@ -1,5 +1,8 @@
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
+import { parseAidBriefingBullets } from "@/lib/aid/briefing-bullets";
 import type { AidFinPulseSummary, AidNewsImpact } from "@/lib/types";
+
+export { parseAidBriefingBullets, stripAidBriefingPrefix } from "@/lib/aid/briefing-bullets";
 
 const IMPACT_VALUES = new Set<AidNewsImpact>(["high", "medium", "low"]);
 
@@ -84,8 +87,11 @@ export async function summarizeAidBriefing(args: {
   const gatewayConfigured = await resolveGatewayApiKey();
   if (!gatewayConfigured || args.contextLines.length === 0) return null;
 
-  const system = `Write one sentence (max 220 chars) morning briefing for a portfolio dashboard.
-Write in ${args.language}. Neutral tone, no buy/sell advice.`;
+  const system = `You write a short portfolio check-in as bullet points for a dashboard.
+Write in ${args.language}.
+Return ONLY valid JSON: {"bullets":["...","..."]} with 2-4 short bullets (max 90 characters each).
+Rules: neutral tone, no buy/sell advice, base only on the provided context.
+Do NOT include titles, greetings, or labels like "Morning brief" / "Morning briefing" — just the facts.`;
 
   const user = args.contextLines.join("\n");
 
@@ -93,19 +99,24 @@ Write in ${args.language}. Neutral tone, no buy/sell advice.`;
     const openaiRes = await fetchGatewayChatCompletions({
       model: "openai/gpt-4o-mini",
       stream: false,
-      max_tokens: 120,
+      max_tokens: 220,
       temperature: 0.2,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
       ],
+      response_format: { type: "json_object" },
     });
     if (!openaiRes.ok) return null;
     const result = (await openaiRes.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
-    const text = (result.choices?.[0]?.message?.content ?? "").trim();
-    return text ? text.slice(0, 220) : null;
+    const content = (result.choices?.[0]?.message?.content ?? "").trim();
+    if (!content) return null;
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    const bullets = parseAidBriefingBullets(jsonMatch[0]);
+    return bullets.length > 0 ? bullets.join("\n") : null;
   } catch {
     return null;
   }

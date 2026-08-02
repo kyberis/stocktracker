@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, memo } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
-import { formatCurrency, formatPercent } from "@/lib/utils";
+import { formatCurrency, formatPercent, todayLocal } from "@/lib/utils";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import PortfolioBenchmarkChart from "./PortfolioBenchmarkChart";
 import Sparkline from "./Sparkline";
@@ -11,6 +11,7 @@ import { useTheme } from "@/lib/theme-context";
 import { useAuth } from "@/lib/auth-context";
 import { useTrack } from "@/lib/use-track";
 import type { Holding, CashEntry, ManualAssetType } from "@/lib/types";
+import { fixedReturnProgress, isFixedReturnMatured, maturityDateFor } from "@/lib/fixed-return";
 
 interface IndexQuote {
   symbol: string;
@@ -32,6 +33,7 @@ const ASSET_TYPE_META: Record<ManualAssetType, { icon: string; labelKey: string;
   real_estate: { icon: "🏠", labelKey: "realEstate", color: "bg-blue-400" },
   savings: { icon: "🏦", labelKey: "savingsAccounts", color: "bg-amber-400" },
   pension: { icon: "🏛️", labelKey: "pensionRetirement", color: "bg-violet-400" },
+  fixed_return: { icon: "📉", labelKey: "assetTypeFixedReturn", color: "bg-sky-400" },
   cash: { icon: "💵", labelKey: "assetTypeCash", color: "bg-emerald-400" },
 };
 
@@ -39,10 +41,11 @@ const ASSET_TYPE_BORDER: Record<ManualAssetType, string> = {
   real_estate: "border-l-blue-400",
   savings: "border-l-amber-400",
   pension: "border-l-violet-400",
+  fixed_return: "border-l-sky-400",
   cash: "border-l-emerald-400",
 };
 
-const TYPE_ORDER: ManualAssetType[] = ["real_estate", "savings", "pension", "cash"];
+const TYPE_ORDER: ManualAssetType[] = ["fixed_return", "real_estate", "savings", "pension", "cash"];
 
 function buildSparkPath(points: number[], w: number, h: number): string {
   if (points.length < 2) return "";
@@ -184,7 +187,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
 
   const groupedEntries = useMemo(() => {
     const groups: Record<ManualAssetType, CashEntry[]> = {
-      real_estate: [], savings: [], pension: [], cash: [],
+      real_estate: [], savings: [], pension: [], fixed_return: [], cash: [],
     };
     for (const entry of cashEntries) {
       const type = entry.type ?? "cash";
@@ -199,7 +202,9 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
   );
 
   const groupTotals = useMemo(() => {
-    const totals: Record<ManualAssetType, number> = { real_estate: 0, savings: 0, pension: 0, cash: 0 };
+    const totals: Record<ManualAssetType, number> = {
+      real_estate: 0, savings: 0, pension: 0, fixed_return: 0, cash: 0,
+    };
     for (const type of TYPE_ORDER) {
       totals[type] = groupedEntries[type].reduce((s, e) => s + e.amountEUR, 0);
     }
@@ -484,7 +489,25 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                         >
                           <div className="min-w-0 flex-1 mr-2">
                             <span className="block truncate text-sm text-[color:var(--foreground)]">{entry.name}</span>
-                            {entry.notes && (
+                            {entry.type === "fixed_return" && entry.startDate && (entry.termMonths ?? 0) > 0 && (
+                              <span className="block truncate text-[11px] text-[color:var(--muted)]">
+                                {(() => {
+                                  const params = {
+                                    principal: entry.displayAmount ?? entry.amountEUR,
+                                    startDate: entry.startDate!,
+                                    termMonths: entry.termMonths!,
+                                    totalReturnPct: entry.totalReturnPct ?? 0,
+                                  };
+                                  const asOf = todayLocal();
+                                  const matured = isFixedReturnMatured(params, asOf);
+                                  if (matured) return t("fixedReturnMatured");
+                                  const pct = Math.round(fixedReturnProgress(params, asOf) * 100);
+                                  const maturity = maturityDateFor(params);
+                                  return `${pct}% · ${t("fixedReturnMaturityDate")} ${maturity ?? ""}`;
+                                })()}
+                              </span>
+                            )}
+                            {entry.notes && entry.type !== "fixed_return" && (
                               <span className="block truncate text-[11px] text-[color:var(--muted)]">{entry.notes}</span>
                             )}
                           </div>

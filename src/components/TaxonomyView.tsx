@@ -72,6 +72,7 @@ export default function TaxonomyView() {
           real_estate: t("realEstate"),
           savings: t("assetTypeSavings"),
           pension: t("assetTypePension"),
+          fixed_return: t("assetTypeFixedReturn"),
         },
       });
     }

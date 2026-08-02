@@ -168,7 +168,7 @@ export interface AppNotification {
   createdAt: string;
 }
 
-export type ManualAssetType = "cash" | "real_estate" | "savings" | "pension";
+export type ManualAssetType = "cash" | "real_estate" | "savings" | "pension" | "fixed_return";
 
 export type HoldingAssetType = "stock" | "etf" | "crypto" | "fund";
 
@@ -201,6 +201,12 @@ export interface CashEntry {
   displayAmount?: number;
   notes?: string;
   valuationDate?: string;
+  /** Fixed-return: ISO start date YYYY-MM-DD */
+  startDate?: string;
+  /** Fixed-return: term length in whole months */
+  termMonths?: number;
+  /** Fixed-return: total return over the full term, percent (e.g. 25) */
+  totalReturnPct?: number;
 }
 
 /* ── Transaction Ledger ──────────────────────────────────── */

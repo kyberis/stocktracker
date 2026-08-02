@@ -3,11 +3,11 @@ import AnalisisShell from "./analisis-shell";
 
 interface PageProps {
   params: Promise<{ ticker: string }>;
-  searchParams: Promise<{ exchange?: string }>;
+  searchParams: Promise<{ exchange?: string; reportId?: string }>;
 }
 
 export default async function CompanyAnalysisTickerPage({ params, searchParams }: PageProps) {
-  const [{ ticker: raw }, { exchange }] = await Promise.all([params, searchParams]);
+  const [{ ticker: raw }, { exchange, reportId }] = await Promise.all([params, searchParams]);
   const ticker = parseTicker(decodeURIComponent(raw));
 
   if (!ticker) {
@@ -20,5 +20,5 @@ export default async function CompanyAnalysisTickerPage({ params, searchParams }
     );
   }
 
-  return <AnalisisShell ticker={ticker} exchange={exchange || ""} />;
+  return <AnalisisShell ticker={ticker} exchange={exchange || ""} reportId={reportId} />;
 }

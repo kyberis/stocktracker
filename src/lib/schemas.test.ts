@@ -324,6 +324,31 @@ describe("createCashSchema", () => {
     const result = createCashSchema.safeParse({ name: "", amountEUR: 100 });
     expect(result.success).toBe(false);
   });
+
+  it("accepts fixed_return with schedule fields", () => {
+    const result = createCashSchema.safeParse({
+      name: "Civislend",
+      amountEUR: 1500,
+      type: "fixed_return",
+      displayAmount: 1500,
+      displayCurrency: "EUR",
+      startDate: "2024-01-01",
+      termMonths: 24,
+      totalReturnPct: 25,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects fixed_return without startDate / term", () => {
+    const result = createCashSchema.safeParse({
+      name: "Civislend",
+      amountEUR: 1500,
+      type: "fixed_return",
+      termMonths: 0,
+      totalReturnPct: 25,
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("userSettingsSchema", () => {

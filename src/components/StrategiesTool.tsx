@@ -505,13 +505,13 @@ export default function StrategiesTool() {
 
             <div className="flex flex-wrap gap-3 mt-4 text-xs">
               <Link
-                href={`/stock/${encodeURIComponent(selected.symbol)}?exchange=${encodeURIComponent(selected.exchange)}`}
+                href={`/analisis/${encodeURIComponent(selected.symbol)}?exchange=${encodeURIComponent(selected.exchange)}`}
                 className="text-violet-600 dark:text-violet-400 font-medium hover:underline"
               >
                 {t("strategiesOpenDetail")}
               </Link>
               <Link
-                href={`/stock/${encodeURIComponent(selected.symbol)}/evaluation?exchange=${encodeURIComponent(selected.exchange)}`}
+                href={`/analisis/${encodeURIComponent(selected.symbol)}?tab=evaluation&exchange=${encodeURIComponent(selected.exchange)}`}
                 className="text-violet-600 dark:text-violet-400 font-medium hover:underline inline-flex items-center gap-1"
               >
                 {t("strategiesOpenMoat")}

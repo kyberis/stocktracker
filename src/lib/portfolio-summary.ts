@@ -1,5 +1,10 @@
 import type { CashEntry, ExchangeRates, Holding, HoldingAssetType, ManualAssetType, QuoteData } from "./types";
-import { convertCurrency, convertToEUR, resolveQuoteCurrency } from "./utils";
+import { convertCurrency, convertToEUR, resolveQuoteCurrency, todayLocal } from "./utils";
+import {
+  dayChangeFixedReturnCash,
+  fixedReturnPrincipalEUR,
+  isFixedReturnCashEntry,
+} from "./fixed-return-cash";
 
 export interface AllocationSlice {
   key: string;
@@ -19,6 +24,7 @@ const ALLOCATION_COLORS: Record<AllocationKey, string> = {
   real_estate: "#3b82f6",
   savings: "#06b6d4",
   pension: "#8b5cf6",
+  fixed_return: "#0ea5e9",
   cash: "#1e293b",
 };
 
@@ -30,6 +36,7 @@ const ALLOCATION_LABELS: Record<AllocationKey, string> = {
   real_estate: "Real Estate",
   savings: "Savings",
   pension: "Pension",
+  fixed_return: "Fixed return",
   cash: "Cash",
 };
 
@@ -77,7 +84,7 @@ export function computeAllocationByType(
 
   const grandTotal = Object.values(buckets).reduce((s, v) => s + v, 0);
 
-  const order: AllocationKey[] = ["stock", "etf", "fund", "crypto", "real_estate", "savings", "pension", "cash"];
+  const order: AllocationKey[] = ["stock", "etf", "fund", "crypto", "fixed_return", "real_estate", "savings", "pension", "cash"];
   return order
     .filter((key) => (buckets[key] ?? 0) > 0)
     .map((key) => ({
@@ -232,10 +239,18 @@ export function calculatePortfolioTotals(
     }
   });
 
+  const asOf = todayLocal();
   for (const cash of cashEntries) {
     const cashBase = convertCurrency(cash.amountEUR, "EUR", baseCurrency, exchangeRates);
     totalCurrentBase += cashBase;
-    totalCostBase += cashBase;
+    if (isFixedReturnCashEntry(cash)) {
+      const principalEUR = fixedReturnPrincipalEUR(cash, exchangeRates);
+      totalCostBase += convertCurrency(principalEUR, "EUR", baseCurrency, exchangeRates);
+      const dayDeltaEUR = dayChangeFixedReturnCash(cash, asOf, exchangeRates);
+      dayGainLossBase += convertCurrency(dayDeltaEUR, "EUR", baseCurrency, exchangeRates);
+    } else {
+      totalCostBase += cashBase;
+    }
   }
 
   const totalGainLoss = totalCurrentBase - totalCostBase;

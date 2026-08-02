@@ -49,6 +49,26 @@ function cashEntry(overrides: Partial<CashEntry> = {}): CashEntry {
 }
 
 describe("calculatePortfolioTotals", () => {
+  it("uses principal as cost for fixed_return and accrued as current", () => {
+    const cashEntries: CashEntry[] = [
+      cashEntry({
+        id: "fr1",
+        name: "Civislend",
+        amountEUR: 1687.5,
+        type: "fixed_return",
+        displayAmount: 1500,
+        displayCurrency: "EUR",
+        startDate: "2024-01-01",
+        termMonths: 24,
+        totalReturnPct: 25,
+      }),
+    ];
+    const totals = calculatePortfolioTotals([], cashEntries, {}, emptyRates);
+    expect(totals.totalCurrentEUR).toBe(1687.5);
+    expect(totals.totalCostEUR).toBe(1500);
+    expect(totals.totalGainLoss).toBeCloseTo(187.5, 5);
+  });
+
   it("handles GBX holdings when provider labels quote currency as GBP", () => {
     const holdings: Holding[] = [
       {
@@ -382,6 +402,25 @@ describe("computeAllocationByType", () => {
     expect(result[0].key).toBe("cash");
     expect(result[0].valueEUR).toBe(500);
   });
+
+  it("buckets fixed_return cash entries", () => {
+    const cashEntries: CashEntry[] = [
+      cashEntry({
+        id: "fr1",
+        amountEUR: 1687.5,
+        type: "fixed_return",
+        displayAmount: 1500,
+        startDate: "2024-01-01",
+        termMonths: 24,
+        totalReturnPct: 25,
+      }),
+    ];
+    const result = computeAllocationByType([], cashEntries, {}, emptyRates);
+    expect(result).toHaveLength(1);
+    expect(result[0].key).toBe("fixed_return");
+    expect(result[0].valueEUR).toBe(1687.5);
+  });
+
 
   it("defaults holding assetType to stock when omitted", () => {
     const h = holding({ ticker: "X", valueInEUR: 100, assetType: undefined });

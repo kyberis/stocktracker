@@ -66,7 +66,7 @@ export default function AidShortcutsSection({ hasHoldings }: { hasHoldings: bool
           <ul className="space-y-1.5 text-xs">
             {moats.map((m) => (
               <li key={m.id}>
-                <Link href={`/stock/${encodeURIComponent(m.ticker)}/evaluation`} className="flex justify-between hover:underline">
+                <Link href={`/analisis/${encodeURIComponent(m.ticker)}?tab=evaluation`} className="flex justify-between hover:underline">
                   <span className="font-medium">{m.ticker}</span>
                   {m.score != null && <span className="text-[color:var(--muted)]">{m.score}/100</span>}
                 </Link>

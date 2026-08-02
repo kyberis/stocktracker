@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
+import { parseAidBriefingBullets } from "@/lib/aid/briefing-bullets";
 import type { AidStatusPayload } from "@/lib/types";
 
 function sessionLabel(session: AidStatusPayload["marketSession"], t: (k: string) => string): string {
@@ -20,6 +22,10 @@ interface Props {
 export default function AidBriefingStrip({ status, loading, onCatchUp }: Props) {
   const { t } = useI18n();
   const track = useTrack();
+  const bullets = useMemo(
+    () => (status?.briefing ? parseAidBriefingBullets(status.briefing) : []),
+    [status?.briefing],
+  );
 
   if (loading && !status) {
     return (
@@ -33,7 +39,7 @@ export default function AidBriefingStrip({ status, loading, onCatchUp }: Props) 
 
   if (!status) return null;
 
-  const { newCount, caughtUp, breakdown, briefing, marketSession } = status;
+  const { newCount, caughtUp, breakdown, marketSession } = status;
 
   return (
     <section className="card rounded-[var(--radius-card)] p-4" aria-label={t("aidBriefingTitle")}>
@@ -92,11 +98,15 @@ export default function AidBriefingStrip({ status, loading, onCatchUp }: Props) 
         )}
       </div>
 
-      {briefing && (
-        <p className="rounded-xl border border-[color:var(--border)] border-l-[3px] border-l-emerald-500 bg-[color:var(--surface-soft)] px-3 py-2 text-sm text-[color:var(--foreground)]">
-          <span className="font-semibold">{t("aidBriefingAiLabel")} </span>
-          {briefing}
-        </p>
+      {bullets.length > 0 && (
+        <div className="rounded-xl border border-[color:var(--border)] border-l-[3px] border-l-emerald-500 bg-[color:var(--surface-soft)] px-3 py-2.5">
+          <h3 className="text-xs font-semibold text-[color:var(--muted)]">{t("aidBriefingAiLabel")}</h3>
+          <ul className="mt-1.5 list-disc space-y-1 pl-4 text-sm text-[color:var(--foreground)]">
+            {bullets.map((bullet) => (
+              <li key={bullet}>{bullet}</li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   );

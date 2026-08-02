@@ -166,7 +166,7 @@ export default function DailyDigestsView() {
                             return (
                               <Link
                                 key={ticker}
-                                href={`/stock/${ticker}`}
+                                href={`/analisis/${encodeURIComponent(ticker)}`}
                                 className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-mono font-medium rounded-lg transition-colors ${
                                   inPortfolio
                                     ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 ring-1 ring-emerald-300 dark:ring-emerald-700"

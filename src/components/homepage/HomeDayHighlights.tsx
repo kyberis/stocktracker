@@ -80,7 +80,7 @@ export default function HomeDayHighlights() {
           return (
             <li key={h.ticker}>
               <Link
-                href={`/stock/${encodeURIComponent(h.ticker)}`}
+                href={`/analisis/${encodeURIComponent(h.ticker)}`}
                 onClick={() =>
                   track("home_v2_highlight_clicked", {
                     ticker: h.ticker,

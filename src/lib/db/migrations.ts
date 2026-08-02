@@ -3592,6 +3592,25 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 123,
+    description: "fixed-return fields on cash_entries",
+    up: async (client: Client) => {
+      const alters = [
+        "ALTER TABLE cash_entries ADD COLUMN start_date TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE cash_entries ADD COLUMN term_months INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE cash_entries ADD COLUMN total_return_pct REAL NOT NULL DEFAULT 0",
+      ];
+      for (const sql of alters) {
+        try {
+          await client.execute(sql);
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

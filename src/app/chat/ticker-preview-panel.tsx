@@ -196,7 +196,7 @@ export default function TickerPreviewPanel({ ticker, onClose }: TickerPreviewPan
 
               {/* Full details link */}
               <a
-                href={`/stock/${encodeURIComponent(ticker)}`}
+                href={`/analisis/${encodeURIComponent(ticker)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-sm font-medium transition-colors"

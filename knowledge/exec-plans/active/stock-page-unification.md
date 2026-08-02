@@ -38,9 +38,9 @@ into `/analisis/[ticker]`" follow-up in
       more capable" claim was wrong — only discovered by reading the file.
       Both stay: TradingView chart for research (Summary tab), `StockChart`
       for position tracking (Fundamentals tab, via embedded `StockDetail`).
-- [ ] Phase 3 — `/stock/[ticker]*` become redirects to
-      `/analisis/[ticker]?tab=...`; ~12 internal call sites updated to link
-      directly to `/analisis`
+- [x] Phase 3 — `/stock/[ticker]*` become redirects to
+      `/analisis/[ticker]?tab=...`; internal call sites updated to link
+      directly to `/analisis` (screener path `/tools/screener/stock/*` kept)
 - [ ] Phase 4 — homepage preview: new slim `StockGlanceDrawer` (desktop) and
       `StockGlanceSheet` (mobile bottom sheet), replacing `StockDetailDrawer`
       on the row-click path; trade/edit actions moved behind an explicit

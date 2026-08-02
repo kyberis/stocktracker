@@ -102,6 +102,7 @@ export default function AllocationTabs({ holdings, cashEntries, onShowMore }: Pr
           real_estate: t("realEstate"),
           savings: t("assetTypeSavings"),
           pension: t("assetTypePension"),
+          fixed_return: t("assetTypeFixedReturn"),
         },
       }),
     [holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, t],

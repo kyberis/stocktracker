@@ -33,6 +33,7 @@ import MarketAwareBreakdown from "@/components/portfolio-v2/MarketAwareBreakdown
 import { usePortfolioHomeData } from "@/components/dashboard-v2/use-portfolio-home-data";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { CashEntry } from "@/lib/types";
+import { investmentCashEntries } from "@/lib/portfolio-summary-cash";
 
 const PortfolioHeroCard = dynamic(() => import("@/components/portfolio-v2/PortfolioHeroCard"), {
   ssr: false,
@@ -134,14 +135,14 @@ export default function MobileDashboard() {
     }
   }, [authLoading, userPlan, commerceEnabled]);
 
-  const investmentCashEntries = useMemo<CashEntry[]>(
-    () => cashEntries.filter((c) => !c.type || c.type === "cash"),
+  const investmentCashOnly = useMemo<CashEntry[]>(
+    () => investmentCashEntries(cashEntries),
     [cashEntries],
   );
 
   // Shared data-prep with desktop DashboardPortfolioV2 — guarantees mobile and
   // desktop pass identical props to PortfolioHeroCard / StatsGrid / etc.
-  const home = usePortfolioHomeData({ holdings, cashEntries: investmentCashEntries });
+  const home = usePortfolioHomeData({ holdings, cashEntries: investmentCashOnly });
   const {
     assetFilter,
     setAssetFilter,
@@ -160,7 +161,7 @@ export default function MobileDashboard() {
 
   // Used to scope sidebar-style widgets (compact cards, projections, goals) to
   // the currently-filtered slice when the user toggles asset-type pills.
-  const filteredCash: CashEntry[] = assetFilter === "all" ? investmentCashEntries : [];
+  const filteredCash: CashEntry[] = assetFilter === "all" ? investmentCashOnly : [];
 
   const TIER_GATE: Partial<Record<DashboardTab, "pro">> = {
     metrics: "pro",
@@ -350,7 +351,7 @@ export default function MobileDashboard() {
                 <ErrorBoundary>
                   <PortfolioHeroCard
                     holdings={holdings}
-                    cashEntries={investmentCashEntries}
+                    cashEntries={investmentCashOnly}
                     assetFilter={assetFilter}
                     refreshKey={refreshKey}
                     onRecalculate={handleRecalculate}
@@ -375,7 +376,7 @@ export default function MobileDashboard() {
                     breakdownSlot={
                       <MarketAwareBreakdown
                         holdings={holdings}
-                        cashEntries={investmentCashEntries}
+                        cashEntries={investmentCashOnly}
                         onFilterChange={setAssetFilter}
                         activeFilter={assetFilter}
                       />
@@ -432,7 +433,7 @@ export default function MobileDashboard() {
         {activeTab === "metrics" && (
           <div role="tabpanel" id="mtabpanel-metrics" aria-label={t("performanceTab")} tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
             <Suspense fallback={<ChartSkeleton />}>
-              <PerformancePage holdings={filteredHoldings} cashEntries={investmentCashEntries} />
+              <PerformancePage holdings={filteredHoldings} cashEntries={investmentCashOnly} />
             </Suspense>
           </div>
         )}

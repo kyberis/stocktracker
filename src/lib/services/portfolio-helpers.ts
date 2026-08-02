@@ -16,6 +16,7 @@ const CATEGORY_META: Record<string, { labelKey: string; color: string }> = {
   real_estate: { labelKey: "realEstate", color: "#3b82f6" },
   savings: { labelKey: "savingsAccounts", color: "#06b6d4" },
   pension: { labelKey: "pensionRetirement", color: "#8b5cf6" },
+  fixed_return: { labelKey: "assetTypeFixedReturn", color: "#0ea5e9" },
   cash: { labelKey: "assetTypeCash", color: "#64748b" },
 };
 
@@ -35,6 +36,17 @@ export function computeNetWorthBreakdown(
   if (investmentTotal > 0) {
     items.push({ key: "investments", label: t("investments"), color: "#6366f1", value: investmentTotal });
   }
+  // Fixed-return is hybrid: fold into investments when present
+  const fixedSlice = allocationSlices.find((s) => s.key === "fixed_return");
+  if (fixedSlice && fixedSlice.valueEUR > 0) {
+    const existing = items.find((i) => i.key === "investments");
+    if (existing) {
+      existing.value += fixedSlice.valueEUR;
+    } else {
+      items.push({ key: "investments", label: t("investments"), color: "#6366f1", value: fixedSlice.valueEUR });
+    }
+  }
+
   const manualTypes: ManualAssetType[] = ["real_estate", "savings", "pension", "cash"];
   for (const type of manualTypes) {
     const slice = allocationSlices.find((s) => s.key === type);
@@ -81,6 +93,7 @@ export function groupCashByType(cashEntries: CashEntry[]): Record<ManualAssetTyp
     real_estate: [],
     savings: [],
     pension: [],
+    fixed_return: [],
     cash: [],
   };
   for (const entry of cashEntries) {
@@ -101,6 +114,7 @@ export function computeGroupTotals(
     real_estate: 0,
     savings: 0,
     pension: 0,
+    fixed_return: 0,
     cash: 0,
   };
   for (const type of Object.keys(grouped) as ManualAssetType[]) {

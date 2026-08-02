@@ -24,11 +24,15 @@ export const POST = withMetrics("/api/cash", async (req: NextRequest) => {
   if (!result.success) return result.error;
   const data = result.data;
 
-  if (data.type && data.type !== "cash") {
+  // Net-worth manual assets (savings/pension/real estate) require Bifolio+.
+  // Fixed-return investments are available on Free within the manual-asset soft cap.
+  if (data.type && data.type !== "cash" && data.type !== "fixed_return") {
     const entitlement = canAccessFeature("net-worth", { plan: session.plan, aiCallsThisMonth: 0 });
     if (!entitlement.allowed) {
       return NextResponse.json({ error: "Upgrade to Bifolio to track net worth assets.", code: "upgrade_required" }, { status: 403 });
     }
+  }
+  if (data.type && data.type !== "cash") {
     const count = await getManualAssetCount(session.userId);
     const limit = getManualAssetLimit(session.plan);
     if (count >= limit) {
@@ -44,6 +48,9 @@ export const POST = withMetrics("/api/cash", async (req: NextRequest) => {
     displayAmount: data.displayAmount ?? data.amountEUR,
     notes: data.notes ?? "",
     valuationDate: data.valuationDate ?? "",
+    startDate: data.startDate ?? "",
+    termMonths: data.termMonths ?? 0,
+    totalReturnPct: data.totalReturnPct ?? 0,
   }, portfolioId);
   return NextResponse.json(created, { status: 201 });
 });

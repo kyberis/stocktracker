@@ -19,14 +19,17 @@ function holdingDetailHref(h: Holding): string {
     const base = yahooCryptoSymbolToBase(h.ticker);
     return `/crypto?symbol=${encodeURIComponent(base)}`;
   }
-  const q = h.exchange ? `?exchange=${encodeURIComponent(h.exchange)}` : "";
-  return `/stock/${encodeURIComponent(h.ticker)}${q}`;
+  const q = new URLSearchParams();
+  if (h.exchange) q.set("exchange", h.exchange);
+  const qs = q.toString();
+  return `/analisis/${encodeURIComponent(h.ticker)}${qs ? `?${qs}` : ""}`;
 }
 
 function intelligenceHref(h: Holding): string | null {
   if (h.assetType === "crypto") return null;
-  const q = h.exchange ? `?exchange=${encodeURIComponent(h.exchange)}` : "";
-  return `/stock/${encodeURIComponent(h.ticker)}/intelligence${q}`;
+  const q = new URLSearchParams({ tab: "intelligence" });
+  if (h.exchange) q.set("exchange", h.exchange);
+  return `/analisis/${encodeURIComponent(h.ticker)}?${q.toString()}`;
 }
 
 interface Props {

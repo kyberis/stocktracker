@@ -3,15 +3,16 @@ import { ensureInitialized } from "./client";
 import { str, num } from "./helpers";
 import type { CashEntry, ManualAssetType } from "@/lib/types";
 import { resolvePortfolioId } from "./portfolios";
+import { enrichFixedReturnCashEntry } from "@/lib/fixed-return-cash";
 
 function parseAssetType(raw: unknown): ManualAssetType {
   const s = String(raw || "cash");
-  if (s === "real_estate" || s === "savings" || s === "pension") return s;
+  if (s === "real_estate" || s === "savings" || s === "pension" || s === "fixed_return") return s;
   return "cash";
 }
 
 function rowToCashEntry(row: Record<string, unknown>): CashEntry {
-  return {
+  const entry: CashEntry = {
     id: str(row.id),
     name: str(row.name),
     amountEUR: num(row.amount_eur),
@@ -21,10 +22,15 @@ function rowToCashEntry(row: Record<string, unknown>): CashEntry {
     displayAmount: num(row.display_amount),
     notes: str(row.notes),
     valuationDate: str(row.valuation_date),
+    startDate: str(row.start_date),
+    termMonths: num(row.term_months),
+    totalReturnPct: num(row.total_return_pct),
   };
+  return enrichFixedReturnCashEntry(entry);
 }
 
-const CASH_ENTRY_COLS = "id, name, amount_eur, type, source, display_currency, display_amount, notes, valuation_date";
+const CASH_ENTRY_COLS =
+  "id, name, amount_eur, type, source, display_currency, display_amount, notes, valuation_date, start_date, term_months, total_return_pct";
 
 export async function listCashEntries(userId: string, portfolioId?: string): Promise<CashEntry[]> {
   const client = await ensureInitialized();
@@ -52,24 +58,12 @@ export async function addCashEntry(
   const displayAmount = entry.displayAmount ?? entry.amountEUR;
   const notes = entry.notes ?? "";
   const valuationDate = entry.valuationDate ?? "";
+  const startDate = entry.startDate ?? "";
+  const termMonths = entry.termMonths ?? 0;
+  const totalReturnPct = entry.totalReturnPct ?? 0;
 
-  const result = await client.execute({
-    sql: `INSERT INTO cash_entries (id, user_id, name, amount_eur, type, source, display_currency, display_amount, notes, valuation_date, portfolio_id)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          ON CONFLICT(user_id, name, portfolio_id, source) DO UPDATE SET
-            amount_eur = excluded.amount_eur,
-            type = excluded.type,
-            display_currency = excluded.display_currency,
-            display_amount = excluded.display_amount,
-            notes = excluded.notes,
-            valuation_date = excluded.valuation_date,
-            updated_at = datetime('now')
-          RETURNING id`,
-    args: [id, userId, entry.name, entry.amountEUR, type, source, displayCurrency, displayAmount, notes, valuationDate, resolved],
-  });
-  const returnedId = result.rows.length > 0 ? str(result.rows[0].id) : id;
-  return {
-    id: returnedId,
+  const enriched = enrichFixedReturnCashEntry({
+    id,
     name: entry.name,
     amountEUR: entry.amountEUR,
     type,
@@ -78,7 +72,45 @@ export async function addCashEntry(
     displayAmount,
     notes,
     valuationDate,
-  };
+    startDate,
+    termMonths,
+    totalReturnPct,
+  });
+
+  const result = await client.execute({
+    sql: `INSERT INTO cash_entries (id, user_id, name, amount_eur, type, source, display_currency, display_amount, notes, valuation_date, start_date, term_months, total_return_pct, portfolio_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(user_id, name, portfolio_id, source) DO UPDATE SET
+            amount_eur = excluded.amount_eur,
+            type = excluded.type,
+            display_currency = excluded.display_currency,
+            display_amount = excluded.display_amount,
+            notes = excluded.notes,
+            valuation_date = excluded.valuation_date,
+            start_date = excluded.start_date,
+            term_months = excluded.term_months,
+            total_return_pct = excluded.total_return_pct,
+            updated_at = datetime('now')
+          RETURNING id`,
+    args: [
+      id,
+      userId,
+      enriched.name,
+      enriched.amountEUR,
+      type,
+      source,
+      displayCurrency,
+      displayAmount,
+      notes,
+      valuationDate,
+      startDate,
+      termMonths,
+      totalReturnPct,
+      resolved,
+    ],
+  });
+  const returnedId = result.rows.length > 0 ? str(result.rows[0].id) : id;
+  return { ...enriched, id: returnedId };
 }
 
 export async function updateCashEntry(
@@ -99,23 +131,44 @@ export async function updateCashEntry(
   const nextDisplayAmount = updates.displayAmount ?? current.displayAmount ?? current.amountEUR;
   const nextNotes = updates.notes ?? current.notes ?? "";
   const nextValuationDate = updates.valuationDate ?? current.valuationDate ?? "";
-  const next: CashEntry = {
+  const nextStartDate = updates.startDate ?? current.startDate ?? "";
+  const nextTermMonths = updates.termMonths ?? current.termMonths ?? 0;
+  const nextTotalReturnPct = updates.totalReturnPct ?? current.totalReturnPct ?? 0;
+  const next = enrichFixedReturnCashEntry({
     id: cashId,
     name: updates.name ?? current.name,
     amountEUR: updates.amountEUR ?? current.amountEUR,
     type: nextType,
+    source: current.source,
     displayCurrency: nextDisplayCurrency,
     displayAmount: nextDisplayAmount,
     notes: nextNotes,
     valuationDate: nextValuationDate,
-  };
+    startDate: nextStartDate,
+    termMonths: nextTermMonths,
+    totalReturnPct: nextTotalReturnPct,
+  });
   await client.execute({
     sql: `UPDATE cash_entries
           SET name = ?, amount_eur = ?, type = ?, display_currency = ?,
-              display_amount = ?, notes = ?, valuation_date = ?, updated_at = datetime('now')
+              display_amount = ?, notes = ?, valuation_date = ?,
+              start_date = ?, term_months = ?, total_return_pct = ?,
+              updated_at = datetime('now')
           WHERE id = ? AND user_id = ?`,
-    args: [next.name, next.amountEUR, nextType, nextDisplayCurrency,
-           nextDisplayAmount, nextNotes, nextValuationDate, cashId, userId],
+    args: [
+      next.name,
+      next.amountEUR,
+      nextType,
+      nextDisplayCurrency,
+      nextDisplayAmount,
+      nextNotes,
+      nextValuationDate,
+      nextStartDate,
+      nextTermMonths,
+      nextTotalReturnPct,
+      cashId,
+      userId,
+    ],
   });
   return next;
 }

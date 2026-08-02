@@ -46,6 +46,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [holdings-crud](holdings-crud.md) — add/edit/remove holdings.
 - [mutual-funds](mutual-funds.md) — mutual fund (fondos) asset type.
 - [manual-assets](manual-assets.md) — non-listed assets (real estate, etc.).
+- [fixed-return-investments](fixed-return-investments.md) — custom fixed-return positions with linear accrual.
 - [portfolio-context-demo-mode](portfolio-context-demo-mode.md) — `PortfolioProvider` and `demoMode`.
 - [portfolios-multi](portfolios-multi.md) — up to 3 portfolios per user.
 - [transactions](transactions.md) — transaction ledger and derivation.

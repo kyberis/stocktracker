@@ -45,6 +45,7 @@ function ExternalQuoteLinks({ ticker, exchange }: { ticker: string; exchange: st
 const StockDetail = dynamic(() => import("@/components/StockDetail"), { ssr: false });
 const StockIntelligence = dynamic(() => import("@/components/StockIntelligence"), { ssr: false });
 const StockEvaluation = dynamic(() => import("@/components/StockEvaluation"), { ssr: false });
+const TransactionHistory = dynamic(() => import("@/components/TransactionHistory"), { ssr: false });
 
 /**
  * "summary" bundles every /analisis-native panel (TradingView chart, AI
@@ -88,9 +89,11 @@ function LockedTabPanel({ ticker }: { ticker: string }) {
 export default function AnalisisShell({
   ticker,
   exchange,
+  reportId,
 }: {
   ticker: string;
   exchange: string;
+  reportId?: string;
 }) {
   const { t, language } = useI18n();
   const { user } = useAuth();
@@ -229,6 +232,16 @@ export default function AnalisisShell({
               {visited.has("summary") && (
                 <div hidden={activeTab !== "summary"} className="space-y-6">
                   <SummaryPanel data={data} />
+                  {user && holding && (
+                    <TransactionHistory
+                      holdingId={holding.id}
+                      ticker={holding.ticker}
+                      exchange={holding.exchange}
+                      assetType={holding.assetType}
+                      currency={holding.displayCurrency}
+                      name={holding.name}
+                    />
+                  )}
                   <AnalysisNarrativePanel data={data} />
                   <FundamentalsTablePanel data={data} />
                   <NewsPanel data={data} />
@@ -250,7 +263,12 @@ export default function AnalisisShell({
               {activeTab === "evaluation" && !user && <LockedTabPanel ticker={ticker} />}
               {visited.has("evaluation") && user && (
                 <div hidden={activeTab !== "evaluation"}>
-                  <StockEvaluation ticker={ticker} exchange={resolvedExchange} embedded />
+                  <StockEvaluation
+                    ticker={ticker}
+                    exchange={resolvedExchange}
+                    reportId={reportId}
+                    embedded
+                  />
                 </div>
               )}
             </>

@@ -265,7 +265,9 @@ export const updateTransactionSchema = z.object({
 
 /* ── Cash / Manual Assets ─────────────────────────────────── */
 
-export const manualAssetTypeSchema = z.enum(["cash", "real_estate", "savings", "pension"]);
+export const manualAssetTypeSchema = z.enum(["cash", "real_estate", "savings", "pension", "fixed_return"]);
+
+const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD");
 
 export const createCashSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -275,6 +277,20 @@ export const createCashSchema = z.object({
   displayAmount: z.number().min(0).optional().default(0),
   notes: z.string().optional().default(""),
   valuationDate: z.string().optional().default(""),
+  startDate: z.string().optional().default(""),
+  termMonths: z.number().int().optional().default(0),
+  totalReturnPct: z.number().optional().default(0),
+}).superRefine((data, ctx) => {
+  if (data.type !== "fixed_return") return;
+  if (!isoDateSchema.safeParse(data.startDate).success) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "startDate is required (YYYY-MM-DD)", path: ["startDate"] });
+  }
+  if (!data.termMonths || data.termMonths <= 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "termMonths must be > 0", path: ["termMonths"] });
+  }
+  if (data.totalReturnPct == null || data.totalReturnPct < 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "totalReturnPct must be >= 0", path: ["totalReturnPct"] });
+  }
 });
 
 export const updateCashSchema = z.object({
@@ -287,6 +303,23 @@ export const updateCashSchema = z.object({
     displayAmount: z.number().min(0).optional(),
     notes: z.string().optional(),
     valuationDate: z.string().optional(),
+    startDate: z.string().optional(),
+    termMonths: z.number().int().optional(),
+    totalReturnPct: z.number().optional(),
+  }).superRefine((updates, ctx) => {
+    if (updates.type !== "fixed_return" && updates.startDate == null && updates.termMonths == null && updates.totalReturnPct == null) {
+      return;
+    }
+    // When patching fixed-return fields, validate any provided values
+    if (updates.startDate != null && updates.startDate !== "" && !isoDateSchema.safeParse(updates.startDate).success) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "startDate must be YYYY-MM-DD", path: ["startDate"] });
+    }
+    if (updates.termMonths != null && updates.termMonths <= 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "termMonths must be > 0", path: ["termMonths"] });
+    }
+    if (updates.totalReturnPct != null && updates.totalReturnPct < 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "totalReturnPct must be >= 0", path: ["totalReturnPct"] });
+    }
   }),
 });
 

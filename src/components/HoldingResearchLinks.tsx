@@ -48,7 +48,7 @@ export default function HoldingResearchLinks({
   };
 
   const analysisHref = `/analisis/${encodeURIComponent(holding.ticker)}`;
-  const moatHref = `/stock/${encodeURIComponent(holding.ticker)}/evaluation?exchange=${encodeURIComponent(holding.exchange)}`;
+  const moatHref = `/analisis/${encodeURIComponent(holding.ticker)}?tab=evaluation&exchange=${encodeURIComponent(holding.exchange)}`;
 
   const linkClass =
     variant === "pills"

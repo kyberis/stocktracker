@@ -17,6 +17,54 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.61",
+    date: "2026-08-02",
+    title: "Home brief bullets and analysis as stock home",
+    titleTranslations: {
+      es: "Briefing en bullets y análisis como página de stock",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Morning brief no longer repeats “Morning brief(ing)” — shows short highlight bullets instead of a duplicated sentence.",
+        translations: {
+          es: "El morning brief ya no repite “Morning brief(ing)” — muestra bullets cortos en lugar de una frase duplicada.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "/analisis is the canonical stock page: Home v2 and other links go there; legacy /stock/* redirects with the right tab.",
+        translations: {
+          es: "/analisis es la página canónica de la acción: Home v2 y otros enlaces van allí; /stock/* redirige con la pestaña correcta.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Logged-in holders see Transaction History on the analysis Summary tab.",
+        translations: {
+          es: "Los usuarios con la posición ven el historial de transacciones en la pestaña Resumen de análisis.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.60",
+    date: "2026-08-02",
+    title: "Custom fixed-return investments",
+    titleTranslations: {
+      es: "Inversiones personalizadas de retorno fijo",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Track fixed-return investments (e.g. peer-to-peer or term products): set principal, start date, term, and total return — value accrues linearly into portfolio totals and charts until maturity, then locks.",
+        translations: {
+          es: "Registra inversiones de retorno fijo (p. ej. P2P o productos a plazo): define capital, fecha de inicio, plazo y retorno total — el valor crece linealmente en totales y gráficos hasta el vencimiento, y luego se bloquea.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.59",
     date: "2026-08-02",
     title: "Home v2 daily check-in preview",

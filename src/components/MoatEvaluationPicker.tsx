@@ -97,11 +97,11 @@ export default function MoatEvaluationPicker() {
   }, [query, search]);
 
   const handleSelect = (symbol: string, exchange: string) => {
-    router.push(`/stock/${encodeURIComponent(symbol)}/evaluation${exchange ? `?exchange=${exchange}` : ""}`);
+    router.push(`/analisis/${encodeURIComponent(symbol)}?tab=evaluation${exchange ? `&exchange=${exchange}` : ""}`);
   };
 
   const handleOpenReport = (report: ReportSummary) => {
-    router.push(`/stock/${encodeURIComponent(report.symbol)}/evaluation?reportId=${report.id}`);
+    router.push(`/analisis/${encodeURIComponent(report.symbol)}?tab=evaluation&reportId=${report.id}`);
   };
 
   const handleDeleteReport = async (id: string) => {

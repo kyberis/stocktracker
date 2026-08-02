@@ -402,7 +402,7 @@ export default function StockDetail({ ticker, exchange, fromScreener = false, em
               )}
               {canAccessPremium && (
                 <Link
-                  href={`/stock/${encodeURIComponent(ticker)}/intelligence?exchange=${encodeURIComponent(exchange)}`}
+                  href={`/analisis/${encodeURIComponent(ticker)}?tab=intelligence&exchange=${encodeURIComponent(exchange)}`}
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -471,7 +471,7 @@ export default function StockDetail({ ticker, exchange, fromScreener = false, em
                 <p className="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{t("stockDetailMoatCtaDesc")}</p>
               </div>
               <Link
-                href={`/stock/${encodeURIComponent(ticker)}/evaluation?exchange=${encodeURIComponent(exchange)}`}
+                href={`/analisis/${encodeURIComponent(ticker)}?tab=evaluation&exchange=${encodeURIComponent(exchange)}`}
                 className="inline-flex items-center justify-center shrink-0 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
               >
                 {t("stockDetailMoatCtaButton")}
@@ -518,8 +518,8 @@ export default function StockDetail({ ticker, exchange, fromScreener = false, em
 
         <AdSlot slot="stock-detail" format="auto" />
 
-        {/* Transaction History */}
-        {holding && (
+        {/* Transaction History — on /analisis Summary owns this when embedded */}
+        {holding && !embedded && (
           <TransactionHistory holdingId={holding.id} ticker={holding.ticker} exchange={holding.exchange} assetType={holding.assetType} currency={holding.displayCurrency} name={holding.name} />
         )}
 

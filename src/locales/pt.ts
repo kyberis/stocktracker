@@ -3111,7 +3111,7 @@ const pt: TranslationStrings = {
   aidBriefingBreakdown: "{fin} FinPulse · {digest} news · {alerts} alerts",
   aidBriefingCatchUp: "Catch up ({n})",
   aidBriefingFullFeedHint: "Full feed in Portfolio news below",
-  aidBriefingAiLabel: "Morning brief:",
+  aidBriefingAiLabel: "Destaques",
   aidSessionPre: "Pre-market",
   aidSessionOpen: "Market open",
   aidSessionAfter: "After hours",

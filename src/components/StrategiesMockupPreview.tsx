@@ -82,13 +82,13 @@ export default function StrategiesMockupPreview() {
         </div>
         <div className="flex flex-wrap gap-3 mt-4 text-xs">
           <Link
-            href="/stock/AAPL?exchange=NASDAQ"
+            href="/analisis/AAPL?exchange=NASDAQ"
             className="text-violet-600 dark:text-violet-400 font-medium hover:underline"
           >
             {t("strategiesOpenDetail")}
           </Link>
           <Link
-            href="/stock/AAPL/evaluation?exchange=NASDAQ"
+            href="/analisis/AAPL?tab=evaluation&exchange=NASDAQ"
             className="text-violet-600 dark:text-violet-400 font-medium hover:underline inline-flex items-center gap-1"
           >
             {t("strategiesOpenMoat")}

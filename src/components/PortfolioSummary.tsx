@@ -23,6 +23,7 @@ const CATEGORY_META: Record<string, { label: string; icon: string; color: string
   real_estate: { label: "realEstate", icon: "🏠", color: "#3b82f6" },
   savings: { label: "savingsAccounts", icon: "🏦", color: "#06b6d4" },
   pension: { label: "pensionRetirement", icon: "🏛️", color: "#8b5cf6" },
+  fixed_return: { label: "assetTypeFixedReturn", icon: "📉", color: "#0ea5e9" },
   cash: { label: "assetTypeCash", icon: "💵", color: "#64748b" },
 };
 
@@ -150,6 +151,15 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
     const items: BreakdownItem[] = [];
     if (investmentTotal > 0) {
       items.push({ key: "investments", label: t("investments"), color: "#6366f1", value: investmentTotal });
+    }
+    const fixedSlice = netWorthAllocationSlices.find((s) => s.key === "fixed_return");
+    if (fixedSlice && fixedSlice.valueEUR > 0) {
+      const existing = items.find((i) => i.key === "investments");
+      if (existing) {
+        existing.value += fixedSlice.valueEUR;
+      } else {
+        items.push({ key: "investments", label: t("investments"), color: "#6366f1", value: fixedSlice.valueEUR });
+      }
     }
     const manualTypes: ManualAssetType[] = ["real_estate", "savings", "pension", "cash"];
     for (const type of manualTypes) {

@@ -11,6 +11,7 @@ const labels = {
     real_estate: "Real Estate",
     savings: "Savings",
     pension: "Pension",
+    fixed_return: "Fixed return",
   },
 };
 

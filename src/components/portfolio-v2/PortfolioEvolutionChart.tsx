@@ -16,6 +16,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/utils";
+import { sumFixedReturnValueAt } from "@/lib/fixed-return-cash";
 import {
   isAnyMarketActive,
   getNextMarketOpen,
@@ -179,7 +180,7 @@ export default function PortfolioEvolutionChart({
   recalculating,
   onOpenAi,
 }: Props) {
-  const { activePortfolioId, activePortfolioCurrency, mutationVersion, quotes, demoMode } = usePortfolio();
+  const { activePortfolioId, activePortfolioCurrency, mutationVersion, quotes, demoMode, cashEntries, exchangeRates } = usePortfolio();
   const { user } = useAuth();
   const { stealthMode } = useStealthMode();
   const { t } = useI18n();
@@ -293,7 +294,15 @@ export default function PortfolioEvolutionChart({
     return points.map((p) => {
       const perTypeSum = (p.stockValue ?? 0) + (p.etfValue ?? 0) + (p.fundValue ?? 0) + (p.cryptoValue ?? 0);
       const hasPerType = perTypeSum > 0;
-      if (!hasPerType) return p;
+      // Deterministic fixed-return overlay (linear accrual at point date)
+      const asOf = (p.date || "").slice(0, 10);
+      const fixedOverlay = !isFilteredSingle && asOf
+        ? sumFixedReturnValueAt(cashEntries, asOf, exchangeRates)
+        : 0;
+
+      if (!hasPerType) {
+        return fixedOverlay > 0 ? { ...p, value: (p.value ?? 0) + fixedOverlay } : p;
+      }
 
       if (isFilteredSingle) {
         const key =
@@ -304,11 +313,10 @@ export default function PortfolioEvolutionChart({
         return { ...p, value: p[key] ?? 0 };
       }
 
-      // "All" view: use holdings-only sum so the chart stays consistent with
-      // historical backfill snapshots (which never include manual cash/assets).
-      return { ...p, value: perTypeSum };
+      // "All" view: holdings-only sum + fixed-return hybrid overlay (no plain cash/manual).
+      return { ...p, value: perTypeSum + fixedOverlay };
     });
-  }, [points, isFilteredSingle, assetFilter]);
+  }, [points, isFilteredSingle, assetFilter, cashEntries, exchangeRates]);
 
   // ── Fetch benchmarks ──
 

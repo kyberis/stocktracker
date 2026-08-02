@@ -392,7 +392,7 @@ export default function MoatScreener({ onReportSaved, variant = "default" }: Moa
                 >
                 <button
                   type="button"
-                  onClick={() => router.push(`/stock/${encodeURIComponent(row.symbol)}/evaluation`)}
+                  onClick={() => router.push(`/analisis/${encodeURIComponent(row.symbol)}?tab=evaluation`)}
                   className="flex-1 min-w-0 text-left p-3 hover:bg-[var(--card-hover)]/40 transition-colors"
                 >
                   <div className="flex items-start gap-3">
@@ -544,7 +544,7 @@ export default function MoatScreener({ onReportSaved, variant = "default" }: Moa
               </button>
             </div>
             <a
-              href={`/stock/${encodeURIComponent(saveModalRow.symbol)}/evaluation`}
+              href={`/analisis/${encodeURIComponent(saveModalRow.symbol)}?tab=evaluation`}
               className="inline-block mt-3 text-[12px] text-violet-500 hover:underline"
             >
               {t("moatScreenerView")} — {t("moatEvalTitle")}
