@@ -123,4 +123,25 @@ describe("computeTaxonomyAllocationsWithEtfSectorLookthrough", () => {
     expect(realEstate[0].label).toBe("Real Estate");
     expect(realEstate[0].valueEUR).toBeCloseTo(200, 5);
   });
+
+  it("merges Information Technology with Technology", () => {
+    const holdings = [
+      stockHolding({ id: "a", ticker: "A", sector: "Information Technology", shares: 1 }),
+      stockHolding({ id: "b", ticker: "B", sector: "Technology", shares: 1 }),
+    ];
+    const quotes: Record<string, QuoteData> = { A: quote(100), B: quote(50) };
+    const out = computeTaxonomyAllocationsWithEtfSectorLookthrough(
+      holdings,
+      quotes,
+      eurRates,
+      "sector",
+      "Unclassified",
+      {},
+      true,
+    );
+    const tech = out.filter((x) => sectorAggregationKey(x.label) === "technology");
+    expect(tech).toHaveLength(1);
+    expect(tech[0].label).toBe("Technology");
+    expect(tech[0].valueEUR).toBeCloseTo(150, 5);
+  });
 });

@@ -2,6 +2,7 @@ import { listHoldings, updateHolding } from "@/lib/db";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { Holding } from "@/lib/types";
 import { ETF_NAME_PATTERNS } from "@/lib/services/etf-lookthrough";
+import { normalizeClassificationFields } from "@/lib/classification-normalize";
 
 const MAX_CONCURRENT = 10;
 
@@ -58,10 +59,11 @@ export async function enrichHoldingClassifications(userId: string): Promise<numb
           const data = yahooData ?? classifyFromHolding(holding);
           if (!data) continue;
 
+          const normalized = normalizeClassificationFields(data);
           const updates: Record<string, string> = {};
-          if (!holding.sector && data.sector) updates.sector = data.sector;
-          if (!holding.region && data.region) updates.region = data.region;
-          if (!holding.assetClass && data.assetClass) updates.assetClass = data.assetClass;
+          if (!holding.sector && normalized.sector) updates.sector = normalized.sector;
+          if (!holding.region && normalized.region) updates.region = normalized.region;
+          if (!holding.assetClass && normalized.assetClass) updates.assetClass = normalized.assetClass;
 
           if (Object.keys(updates).length > 0) {
             await updateHolding(userId, id, updates);
@@ -79,4 +81,31 @@ export async function enrichHoldingClassifications(userId: string): Promise<numb
   }
 
   return enriched;
+}
+
+/**
+ * Rewrite stored sector/region/assetClass to canonical aliases
+ * (e.g. "Information Technology" → "Technology"). Returns how many holdings updated.
+ */
+export async function normalizeStoredHoldingClassifications(userId: string): Promise<number> {
+  const holdings = await listHoldings(userId);
+  let updated = 0;
+
+  for (const h of holdings) {
+    const updates = {
+      ...(h.sector ? { sector: h.sector } : {}),
+      ...(h.region ? { region: h.region } : {}),
+      ...(h.assetClass ? { assetClass: h.assetClass } : {}),
+    };
+    const next = normalizeClassificationFields(updates);
+    const patch: Record<string, string> = {};
+    if (next.sector && next.sector !== h.sector) patch.sector = next.sector;
+    if (next.region && next.region !== h.region) patch.region = next.region;
+    if (next.assetClass && next.assetClass !== h.assetClass) patch.assetClass = next.assetClass;
+    if (Object.keys(patch).length === 0) continue;
+    await updateHolding(userId, h.id, patch);
+    updated++;
+  }
+
+  return updated;
 }

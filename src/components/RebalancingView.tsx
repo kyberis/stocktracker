@@ -17,6 +17,11 @@ import type {
 } from "@/lib/types";
 import { computeTaxonomyAllocationsWithEtfSectorLookthrough } from "@/lib/services/taxonomy";
 import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
+import {
+  normalizeAssetClassLabel,
+  normalizeRegionLabel,
+  normalizeSectorLabel,
+} from "@/lib/classification-normalize";
 
 const PIE_COLORS = [
   "#10b981", "#6366f1", "#f59e0b", "#ef4444", "#8b5cf6",
@@ -167,7 +172,15 @@ export default function RebalancingView() {
         if (!label && category === "sector" && h.assetClass && h.assetClass !== "stock") {
           label = h.assetClass.toUpperCase() === "ETF" ? t("etfFundLabel") : h.assetClass;
         }
-        if (!label) label = t("unclassified");
+        if (!label) {
+          label = t("unclassified");
+        } else if (category === "sector") {
+          label = normalizeSectorLabel(label);
+        } else if (category === "region") {
+          label = normalizeRegionLabel(label);
+        } else if (category === "assetClass") {
+          label = normalizeAssetClassLabel(label);
+        }
       }
       buckets[label] = (buckets[label] || 0) + valueEUR;
     });

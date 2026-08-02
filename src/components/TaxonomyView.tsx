@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { formatCurrency } from "@/lib/utils";
@@ -11,6 +11,12 @@ import {
 } from "@/lib/services/taxonomy";
 import { computeTagAllocations } from "@/lib/services/tag-allocation";
 import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
+import {
+  holdingNeedsClassificationNormalize,
+  normalizeAssetClassLabel,
+  normalizeRegionLabel,
+  normalizeSectorLabel,
+} from "@/lib/classification-normalize";
 import HoldingTagsField from "@/components/HoldingTagsField";
 
 type Category = "sector" | "region" | "assetClass" | "assetType" | "tags";
@@ -26,10 +32,12 @@ export default function TaxonomyView() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editVal, setEditVal] = useState("");
   const [autoClassifying, setAutoClassifying] = useState(false);
+  const [unifying, setUnifying] = useState(false);
   const [aiFixingId, setAiFixingId] = useState<string | null>(null);
   const [aiFixError, setAiFixError] = useState<string | null>(null);
   const [etfSectorLookthrough, setEtfSectorLookthrough] = useState(true);
   const [etfSectorWeights, setEtfSectorWeights] = useState<Record<string, ETFSectorWeight[] | null>>({});
+  const unifyAttemptedRef = useRef(false);
 
   useEffect(() => {
     if (category !== "sector" || !etfSectorLookthrough) return;
@@ -97,12 +105,29 @@ export default function TaxonomyView() {
 
   const handleSaveClassification = async (holdingId: string) => {
     if (category === "tags") return;
-    await updateHolding(holdingId, { [category]: editVal } as Record<string, string>);
+    let value = editVal.trim();
+    if (category === "sector") value = normalizeSectorLabel(value);
+    else if (category === "region") value = normalizeRegionLabel(value);
+    else if (category === "assetClass") value = normalizeAssetClassLabel(value);
+    await updateHolding(holdingId, { [category]: value } as Record<string, string>);
     setEditingId(null);
     setEditVal("");
   };
 
   const hasUnclassified = holdings.some((h) => !h.sector && !h.region && !h.assetClass);
+  const needsUnify = holdings.some((h) => holdingNeedsClassificationNormalize(h));
+
+  useEffect(() => {
+    if (demoMode || unifyAttemptedRef.current || !needsUnify || holdings.length === 0) return;
+    unifyAttemptedRef.current = true;
+    setUnifying(true);
+    fetch("/api/holdings/normalize-classifications", { method: "POST" })
+      .then(() => refreshHoldings())
+      .catch(() => {
+        unifyAttemptedRef.current = false;
+      })
+      .finally(() => setUnifying(false));
+  }, [demoMode, needsUnify, holdings.length, refreshHoldings]);
 
   const handleAutoClassify = async () => {
     if (demoMode) return;
@@ -114,6 +139,19 @@ export default function TaxonomyView() {
       // silently ignore — user can retry
     } finally {
       setAutoClassifying(false);
+    }
+  };
+
+  const handleUnifyClassifications = async () => {
+    if (demoMode) return;
+    setUnifying(true);
+    try {
+      await fetch("/api/holdings/normalize-classifications", { method: "POST" });
+      await refreshHoldings();
+    } catch {
+      // silently ignore — user can retry
+    } finally {
+      setUnifying(false);
     }
   };
 
@@ -182,11 +220,23 @@ export default function TaxonomyView() {
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("taxonomy")}</h3>
           {hasUnclassified && (
             <button
-              onClick={handleAutoClassify}
-              disabled={autoClassifying}
+              type="button"
+              onClick={() => void handleAutoClassify()}
+              disabled={autoClassifying || unifying}
               className="text-[10px] font-medium px-2 py-1 rounded-lg transition-colors bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-50"
             >
               {autoClassifying ? t("autoClassifying") : t("autoClassify")}
+            </button>
+          )}
+          {needsUnify && (
+            <button
+              type="button"
+              onClick={() => void handleUnifyClassifications()}
+              disabled={unifying || autoClassifying}
+              title={t("unifyClassificationsHint")}
+              className="text-[10px] font-medium px-2 py-1 rounded-lg transition-colors bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50 disabled:opacity-50"
+            >
+              {unifying ? t("unifyingClassifications") : t("unifyClassifications")}
             </button>
           )}
         </div>

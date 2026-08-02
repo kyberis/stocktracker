@@ -20,9 +20,9 @@ export interface HoldingClassificationResult {
 
 export const HOLDING_CLASSIFICATION_SYSTEM_PROMPT = `You classify securities for a retail portfolio tracker.
 Return ONLY a JSON object with exactly these string fields:
-- "sector": GICS-style sector or fund category (e.g. "Technology", "Healthcare", "Equity ETF — US Large Cap"). Use "Cryptocurrency" for crypto.
-- "region": primary country or region of listing/exposure (e.g. "United States", "Europe", "Global", "Japan"). Empty string if unknown.
-- "assetClass": one of Equity, ETF, Fund, Bond, Commodity, Cryptocurrency, Cash, Other — or a short precise label if none fit.
+- "sector": use one of these when they fit — Technology, Healthcare, Financial Services, Consumer Cyclical, Consumer Defensive, Communication Services, Industrials, Energy, Utilities, Real Estate, Basic Materials, Diversified, Cryptocurrency, ETF. Prefer "Technology" (not "Information Technology"), "Healthcare" (not "Health Care"), "Financial Services" (not "Financials"), "Consumer Cyclical" (not "Consumer Discretionary"), "Consumer Defensive" (not "Consumer Staples"). For funds you may use a short fund category if none fit.
+- "region": primary country or region of listing/exposure (e.g. "United States", "Europe", "Global", "Japan"). Prefer "United States" over "USA"/"US". Empty string if unknown.
+- "assetClass": one of Equity, ETF, Fund, Bond, Commodity, Cryptocurrency, Cash, Other.
 
 Rules:
 - Base the answer on the ticker, name, ISIN, exchange, and any asset/quote type hints provided.

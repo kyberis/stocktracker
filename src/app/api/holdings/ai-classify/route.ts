@@ -25,6 +25,7 @@ import {
   buildHoldingClassificationUserPrompt,
   parseHoldingClassificationResponse,
 } from "@/lib/ai-classify-holding";
+import { normalizeClassificationFields } from "@/lib/classification-normalize";
 import { AI_FLOW_META } from "@/lib/ai-models";
 import type { SubscriptionPlan } from "@/lib/types";
 
@@ -155,10 +156,11 @@ export const POST = withMetrics("/api/holdings/ai-classify", async (request: Nex
       return NextResponse.json({ error: "AI returned an unusable classification." }, { status: 502 });
     }
 
+    const canonical = normalizeClassificationFields(classification);
     const updated = await updateHolding(session.userId, holdingId, {
-      sector: classification.sector,
-      region: classification.region,
-      assetClass: classification.assetClass,
+      sector: canonical.sector,
+      region: canonical.region,
+      assetClass: canonical.assetClass,
     });
 
     await Promise.all([
@@ -182,7 +184,7 @@ export const POST = withMetrics("/api/holdings/ai-classify", async (request: Nex
     ]);
 
     return NextResponse.json({
-      classification,
+      classification: canonical,
       holding: updated,
       aiGenerated: true,
     });

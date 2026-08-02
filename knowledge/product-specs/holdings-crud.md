@@ -41,6 +41,7 @@ A "holding" is a position in a single ticker at a given exchange. Holdings are d
 | DELETE | `/api/holdings?id=` | user | Free | Remove. |
 | POST | `/api/holdings/autofill-classification` | user | Free | Classify via ISIN/Yahoo lookup. |
 | POST | `/api/holdings/ai-classify` | user | Free (uses `ai_consult` quota) | LLM Auto-fix for one holding. |
+| POST | `/api/holdings/normalize-classifications` | user | Free | Rewrite aliases to canonical sector/region/asset class labels. |
 
 ## 6. UI surface
 

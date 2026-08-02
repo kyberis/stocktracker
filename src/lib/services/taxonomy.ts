@@ -1,5 +1,6 @@
 import type { ExchangeRates, Holding, QuoteData, TaxonomyAllocation, ETFSectorWeight } from "@/lib/types";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
+import { normalizeAssetClassLabel, normalizeRegionLabel, normalizeSectorLabel, classificationKey } from "@/lib/classification-normalize";
 import { holdingIsEtfLike } from "./etf-lookthrough";
 
 function holdingValueEur(
@@ -25,17 +26,20 @@ export type TaxonomyCategory = "sector" | "region" | "assetClass" | "assetType";
 
 /** Normalize sector strings so Yahoo ETF keys (e.g. realestate) match stock labels (e.g. "Real Estate"). */
 export function sectorAggregationKey(label: string): string {
-  return label.toLowerCase().replace(/[\s_-]/g, "").replace(/[^a-z0-9]/g, "");
+  return classificationKey(normalizeSectorLabel(label));
 }
 
 function pickPreferredSectorLabel(a: string, b: string): string {
-  const aSpace = a.includes(" ");
-  const bSpace = b.includes(" ");
-  if (aSpace !== bSpace) return aSpace ? a : b;
-  if (a.length !== b.length) return a.length > b.length ? a : b;
+  const aCanon = normalizeSectorLabel(a);
+  const bCanon = normalizeSectorLabel(b);
+  if (aCanon === bCanon) return aCanon;
+  const aSpace = aCanon.includes(" ");
+  const bSpace = bCanon.includes(" ");
+  if (aSpace !== bSpace) return aSpace ? aCanon : bCanon;
+  if (aCanon.length !== bCanon.length) return aCanon.length > bCanon.length ? aCanon : bCanon;
   const capCount = (s: string) => (s.match(/[A-Z]/g) ?? []).length;
-  if (capCount(a) !== capCount(b)) return capCount(a) > capCount(b) ? a : b;
-  return a;
+  if (capCount(aCanon) !== capCount(bCanon)) return capCount(aCanon) > capCount(bCanon) ? aCanon : bCanon;
+  return aCanon;
 }
 
 function addMergedSectorBucket(
@@ -43,14 +47,31 @@ function addMergedSectorBucket(
   rawLabel: string,
   deltaEUR: number,
 ): void {
-  const key = sectorAggregationKey(rawLabel) || "\0";
+  const display = normalizeSectorLabel(rawLabel);
+  const key = sectorAggregationKey(display) || "\0";
   const prev = buckets.get(key);
   if (!prev) {
-    buckets.set(key, { valueEUR: deltaEUR, displayLabel: rawLabel });
+    buckets.set(key, { valueEUR: deltaEUR, displayLabel: display });
     return;
   }
   prev.valueEUR += deltaEUR;
-  prev.displayLabel = pickPreferredSectorLabel(prev.displayLabel, rawLabel);
+  prev.displayLabel = pickPreferredSectorLabel(prev.displayLabel, display);
+}
+
+function taxonomyFieldLabel(
+  category: TaxonomyCategory,
+  holding: Holding,
+  unclassifiedLabel: string,
+): string {
+  if (category === "assetType") {
+    return holding.assetType === "etf" ? "ETF" : "Stock";
+  }
+  const raw = (holding[category] as string) || "";
+  if (!raw) return unclassifiedLabel;
+  if (category === "sector") return normalizeSectorLabel(raw);
+  if (category === "region") return normalizeRegionLabel(raw);
+  if (category === "assetClass") return normalizeAssetClassLabel(raw);
+  return raw;
 }
 
 export function computeTaxonomyAllocations(
@@ -72,12 +93,7 @@ export function computeTaxonomyAllocations(
     }
     total += valueEUR;
 
-    let label: string;
-    if (category === "assetType") {
-      label = h.assetType === "etf" ? "ETF" : "Stock";
-    } else {
-      label = (h[category] as string) || unclassifiedLabel;
-    }
+    const label = taxonomyFieldLabel(category, h, unclassifiedLabel);
     buckets[label] = (buckets[label] || 0) + valueEUR;
   });
 
@@ -131,7 +147,7 @@ export function computeTaxonomyAllocationsWithEtfSectorLookthrough(
       continue;
     }
 
-    const label = (h.sector as string) || unclassifiedLabel;
+    const label = normalizeSectorLabel((h.sector as string) || unclassifiedLabel);
     addMergedSectorBucket(buckets, label, valueEUR);
   }
 

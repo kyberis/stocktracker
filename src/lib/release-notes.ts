@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.69",
+    date: "2026-08-02",
+    title: "Unified classification labels",
+    titleTranslations: {
+      es: "Etiquetas de clasificación unificadas",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Classification merges duplicate sector names (e.g. Information Technology and Technology) in charts and can rewrite saved labels to a single canonical set.",
+        translations: {
+          es: "Clasificación fusiona nombres de sector duplicados (p. ej. Information Technology y Technology) en los gráficos y puede reescribir las etiquetas guardadas a un conjunto canónico.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.68",
     date: "2026-08-02",
     title: "Classification Auto-fix with AI",
