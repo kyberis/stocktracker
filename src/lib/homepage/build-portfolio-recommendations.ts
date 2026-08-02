@@ -1,7 +1,6 @@
 import type { CashEntry, ExchangeRates, Holding, QuoteData } from "@/lib/types";
 import { ALL_SECTORS } from "@/lib/crisis-scenarios";
-import { computeTaxonomyAllocations } from "@/lib/services/taxonomy";
-import { normalizeSectorLabel } from "@/lib/classification-normalize";
+import { classificationKey, normalizeSectorLabel } from "@/lib/classification-normalize";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
 
 export type PortfolioRecommendationKind =
@@ -67,6 +66,40 @@ function holdingQuoteCurrency(h: Holding, quotes: Record<string, QuoteData>): st
   return resolveQuoteCurrency(h.displayCurrency, q?.currency).toUpperCase();
 }
 
+/**
+ * Sector weights using quote→EUR when rates exist, else holding.valueInEUR.
+ * Avoids the empty-FX trap in computeTaxonomyAllocations (everything becomes 0%).
+ */
+export function computeSectorPercentsForRecommendations(
+  holdings: Holding[],
+  quotes: Record<string, QuoteData>,
+  exchangeRates: ExchangeRates,
+  unclassifiedLabel = "Unclassified",
+): Array<{ label: string; percent: number }> {
+  const buckets = new Map<string, { label: string; valueEUR: number }>();
+  let total = 0;
+
+  for (const h of holdings) {
+    const valueEUR = holdingValueEur(h, quotes, exchangeRates);
+    if (!(valueEUR > 0)) continue;
+    total += valueEUR;
+    const raw = (h.sector || "").trim();
+    const label = raw ? normalizeSectorLabel(raw) : unclassifiedLabel;
+    const key = classificationKey(label) || label;
+    const prev = buckets.get(key);
+    if (prev) prev.valueEUR += valueEUR;
+    else buckets.set(key, { label, valueEUR });
+  }
+
+  if (total <= 0) return [];
+  return [...buckets.values()]
+    .map(({ label, valueEUR }) => ({
+      label,
+      percent: (valueEUR / total) * 100,
+    }))
+    .sort((a, b) => b.percent - a.percent);
+}
+
 /** Pick two lowest canonical sectors by current allocation (0 if missing). */
 export function pickUnderweightSectors(
   sectorAlloc: Array<{ label: string; percent: number }>,
@@ -75,13 +108,16 @@ export function pickUnderweightSectors(
   const byKey = new Map<string, number>();
   for (const a of sectorAlloc) {
     const label = normalizeSectorLabel(a.label);
+    const key = classificationKey(label) || label;
+    byKey.set(key, (byKey.get(key) ?? 0) + a.percent);
     byKey.set(label, a.percent);
   }
 
-  const ranked = CANONICAL_RESEARCH_SECTORS.map((label) => ({
-    label,
-    pct: byKey.get(label) ?? byKey.get(normalizeSectorLabel(label)) ?? 0,
-  })).sort((a, b) => a.pct - b.pct || a.label.localeCompare(b.label));
+  const ranked = CANONICAL_RESEARCH_SECTORS.map((label) => {
+    const key = classificationKey(label) || label;
+    const pct = byKey.get(key) ?? byKey.get(label) ?? byKey.get(normalizeSectorLabel(label)) ?? 0;
+    return { label, pct };
+  }).sort((a, b) => a.pct - b.pct || a.label.localeCompare(b.label));
 
   return ranked.slice(0, count);
 }
@@ -101,12 +137,10 @@ export function buildPortfolioRecommendations(
   const totalEUR = investedEUR + cashEUR;
   if (totalEUR <= 0) return [];
 
-  const sectorAlloc = computeTaxonomyAllocations(
+  const sectorAlloc = computeSectorPercentsForRecommendations(
     holdings,
     quotes,
     exchangeRates,
-    "sector",
-    "Unclassified",
   );
   const distinctSectors = new Set(
     sectorAlloc
@@ -116,7 +150,8 @@ export function buildPortfolioRecommendations(
   const weights = holdingValues.map((r) => r.valueEUR / investedEUR);
   const hhi =
     investedEUR > 0 ? weights.reduce((s, w) => s + (Number.isFinite(w) ? w * w : 0), 0) : 1;
-  const topSectorPct = sectorAlloc.reduce((m, a) => Math.max(m, a.percent), 0);
+  const classified = sectorAlloc.filter((a) => a.label !== "Unclassified");
+  const topSectorPct = classified.reduce((m, a) => Math.max(m, a.percent), 0);
 
   const out: PortfolioRecommendation[] = [];
 
@@ -127,13 +162,12 @@ export function buildPortfolioRecommendations(
     topSectorPct >= REC_THRESHOLDS.topSectorPct;
 
   if (needsDiversify) {
-    const under = pickUnderweightSectors(
-      sectorAlloc.map((a) => ({ label: a.label, percent: a.percent })),
-      2,
-    );
+    const under = pickUnderweightSectors(sectorAlloc, 2);
     if (under.length >= 2) {
       const [a, b] = under;
-      const top = [...sectorAlloc].sort((x, y) => y.percent - x.percent)[0];
+      const top =
+        [...classified].sort((x, y) => y.percent - x.percent)[0] ??
+        [...sectorAlloc].sort((x, y) => y.percent - x.percent)[0];
       out.push({
         kind: "diversify",
         key: `diversify:${a!.label}+${b!.label}`,

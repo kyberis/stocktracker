@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.75",
+    date: "2026-08-03",
+    title: "Fix home recommendation sector percentages",
+    titleTranslations: {
+      es: "Corrección de porcentajes de sectores en recomendaciones",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Home portfolio tips no longer show 0% for sectors that actually have allocation when FX rates are missing on the server.",
+        translations: {
+          es: "Los tips de cartera en Home ya no muestran 0% en sectores con exposición real cuando faltan tipos de cambio en el servidor.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.74",
     date: "2026-08-03",
     title: "Home portfolio recommendations",

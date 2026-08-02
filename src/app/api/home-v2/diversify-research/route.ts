@@ -6,8 +6,8 @@ import {
   buildPortfolioRecommendations,
   filterRecommendationQueue,
   pickUnderweightSectors,
+  computeSectorPercentsForRecommendations,
 } from "@/lib/homepage/build-portfolio-recommendations";
-import { computeTaxonomyAllocations } from "@/lib/services/taxonomy";
 import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
 
@@ -28,17 +28,8 @@ export const GET = withMetrics("/api/home-v2/diversify-research", async (req: Ne
   const quotes = tickers.length > 0 ? await getQuotesWithCache(tickers) : {};
   const owned = new Set(tickers.map((t) => t.toUpperCase()));
 
-  const sectorAlloc = computeTaxonomyAllocations(
-    holdings,
-    quotes,
-    {},
-    "sector",
-    "Unclassified",
-  );
-  const under = pickUnderweightSectors(
-    sectorAlloc.map((a) => ({ label: a.label, percent: a.percent })),
-    2,
-  );
+  const sectorAlloc = computeSectorPercentsForRecommendations(holdings, quotes, {});
+  const under = pickUnderweightSectors(sectorAlloc, 2);
 
   // Prefer fingerprint from live diversify recommendation if still active
   const states = await listRecommendationStates(session.userId);

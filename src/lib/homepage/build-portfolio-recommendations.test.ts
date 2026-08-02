@@ -194,4 +194,42 @@ describe("buildPortfolioRecommendations", () => {
     const filtered = filterRecommendationQueue(queue, keys);
     expect(filtered).toHaveLength(0);
   });
+
+  it("uses valueInEUR when FX rates are missing so sector % are not all zero", () => {
+    const holdings = [
+      holding({
+        ticker: "GOOGL",
+        sector: "Communication Services",
+        shares: 10,
+        displayCurrency: "USD",
+        valueInEUR: 9800,
+      }),
+      holding({
+        ticker: "AAPL",
+        sector: "Technology",
+        shares: 5,
+        displayCurrency: "USD",
+        valueInEUR: 200,
+      }),
+    ];
+    // Quotes in USD but empty rates — convertToEUR would NaN without fallback
+    const quotes = {
+      GOOGL: quote("GOOGL", 100, "USD"),
+      AAPL: quote("AAPL", 100, "USD"),
+    };
+    const queue = buildPortfolioRecommendations({
+      holdings,
+      cashEntries: [],
+      quotes,
+      exchangeRates: {},
+      preferredCurrency: "EUR",
+    });
+    const diversify = queue.find((r) => r.kind === "diversify");
+    expect(diversify).toBeTruthy();
+    expect(diversify!.bodyParams.topSector).toBe("Communication Services");
+    expect(Number(diversify!.bodyParams.topPct)).toBeGreaterThan(50);
+    // Communication Services is overweight — must not appear as a 0% underweight chip
+    expect(diversify!.sectors).not.toContain("Communication Services");
+    expect(diversify!.chips.some((c) => /Communication Services 0%/.test(c.label))).toBe(false);
+  });
 });
