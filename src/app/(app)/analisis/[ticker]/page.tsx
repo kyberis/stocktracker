@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import {
   companyAnalysisReportCacheKey,
   getCompanyAnalysisDbCache,
 } from "@/lib/db";
+import { analisisCryptoRedirectHref } from "@/lib/asset-detail-href";
 import { parseTicker } from "@/lib/company-analysis/ticker";
 import type { CompanyAnalysisReport } from "@/lib/company-analysis/types";
 import {
@@ -67,7 +69,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CompanyAnalysisTickerPage({ params, searchParams }: PageProps) {
   const [{ ticker: raw }, { exchange, reportId }] = await Promise.all([params, searchParams]);
-  const ticker = parseTicker(decodeURIComponent(raw));
+  const decoded = decodeURIComponent(raw);
+  const cryptoHref = analisisCryptoRedirectHref(decoded, exchange);
+  if (cryptoHref) redirect(cryptoHref);
+
+  const ticker = parseTicker(decoded);
 
   if (!ticker) {
     return (

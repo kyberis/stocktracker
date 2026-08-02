@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { analisisCryptoRedirectHref } from "@/lib/asset-detail-href";
 import { buildAnalisisRedirectHref } from "@/lib/company-analysis/stock-to-analisis-redirect";
 
 interface PageProps {
@@ -6,11 +7,14 @@ interface PageProps {
   searchParams: Promise<{ exchange?: string }>;
 }
 
-/** Legacy /stock/[ticker] → canonical /analisis/[ticker]. */
+/** Legacy /stock/[ticker] → crypto page or canonical /analisis/[ticker]. */
 export default async function StockDetailPage({ params, searchParams }: PageProps) {
-  const [{ ticker }, { exchange }] = await Promise.all([params, searchParams]);
+  const [{ ticker: raw }, { exchange }] = await Promise.all([params, searchParams]);
+  const ticker = decodeURIComponent(raw);
+  const cryptoHref = analisisCryptoRedirectHref(ticker, exchange);
+  if (cryptoHref) redirect(cryptoHref);
   redirect(
-    buildAnalisisRedirectHref(decodeURIComponent(ticker), {
+    buildAnalisisRedirectHref(ticker, {
       exchange: exchange || undefined,
     }),
   );

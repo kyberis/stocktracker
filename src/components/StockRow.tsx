@@ -15,6 +15,7 @@ import {
 } from "@/lib/utils";
 import { getMarketStatus } from "@/lib/market-hours";
 import type { Holding, QuoteData } from "@/lib/types";
+import { holdingDetailHref } from "@/lib/asset-detail-href";
 import AlertBadge from "./AlertBadge";
 import Sparkline from "./Sparkline";
 import HoldingHealthBadge from "./HoldingHealthBadge";
@@ -133,7 +134,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
 
   const handleClick = useCallback(() => {
     if (typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT) {
-      router.push(`/analisis/${encodeURIComponent(holding.ticker)}?exchange=${encodeURIComponent(holding.exchange)}`);
+      router.push(holdingDetailHref(holding));
     } else {
       onSelect?.(holding);
     }

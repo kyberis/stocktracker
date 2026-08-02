@@ -8,22 +8,11 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useTrack } from "@/lib/use-track";
 import { formatCurrency, formatPercent } from "@/lib/utils";
-import { yahooCryptoSymbolToBase } from "@/lib/crypto-page-symbols";
+import { holdingDetailHref } from "@/lib/asset-detail-href";
 import type { Holding } from "@/lib/types";
 
 const AID_FOCUS =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background)]";
-
-function holdingDetailHref(h: Holding): string {
-  if (h.assetType === "crypto") {
-    const base = yahooCryptoSymbolToBase(h.ticker);
-    return `/crypto?symbol=${encodeURIComponent(base)}`;
-  }
-  const q = new URLSearchParams();
-  if (h.exchange) q.set("exchange", h.exchange);
-  const qs = q.toString();
-  return `/analisis/${encodeURIComponent(h.ticker)}${qs ? `?${qs}` : ""}`;
-}
 
 function intelligenceHref(h: Holding): string | null {
   if (h.assetType === "crypto") return null;

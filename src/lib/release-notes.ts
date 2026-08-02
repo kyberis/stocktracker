@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.71",
+    date: "2026-08-02",
+    title: "Crypto asset page routing",
+    titleTranslations: {
+      es: "Enlace correcto a la página de crypto",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Opening Bitcoin or other crypto from your portfolio now opens the crypto market page with live price and data, instead of the stock analysis page showing $0 and empty results.",
+        translations: {
+          es: "Abrir Bitcoin u otra cripto desde tu cartera ahora abre la página de mercado crypto con precio y datos en vivo, en lugar de la página de análisis de acciones con precio 0 y sin resultados.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.70",
     date: "2026-08-02",
     title: "Public stock analysis SEO",

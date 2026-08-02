@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { CRYPTO_PAGE_SUPPORTED_SYMBOLS } from "@/lib/crypto-page-symbols";
+import { cryptoBaseFromTicker } from "@/lib/asset-detail-href";
 import {
   LineChart,
   Line,
@@ -87,6 +88,7 @@ export default function CryptoMarket() {
   const [tickers, setTickers] = useState<NormalizedCryptoTicker[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [detailFetchAttempted, setDetailFetchAttempted] = useState<string | null>(null);
 
   const [history, setHistory] = useState<HistoryPoint[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -154,18 +156,45 @@ export default function CryptoMarket() {
   useEffect(() => { fetchTickers(); }, [fetchTickers]);
 
   useEffect(() => {
-    const raw = searchParams.get("symbol")?.trim().toUpperCase();
+    const raw = searchParams.get("symbol")?.trim();
     if (!raw) {
       setSymbolFromQueryInvalid(false);
       return;
     }
-    if (CRYPTO_PAGE_SUPPORTED_SYMBOLS.has(raw)) {
-      setSelectedCoin(raw);
+    const base = cryptoBaseFromTicker(raw);
+    if (CRYPTO_PAGE_SUPPORTED_SYMBOLS.has(base)) {
+      setSelectedCoin(base);
       setSymbolFromQueryInvalid(false);
     } else {
       setSymbolFromQueryInvalid(true);
     }
   }, [searchParams]);
+
+  // If the selected coin is missing from the top-tickers list, fetch its detail.
+  useEffect(() => {
+    if (loading || !selectedCoin) return;
+    if (tickers.some((t) => t.symbol === selectedCoin)) return;
+    if (detailFetchAttempted === selectedCoin) return;
+    setDetailFetchAttempted(selectedCoin);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/crypto?action=detail&symbol=${encodeURIComponent(selectedCoin)}`);
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled || !data.ticker) return;
+        setTickers((prev) => {
+          if (prev.some((t) => t.symbol === data.ticker.symbol)) return prev;
+          return [...prev, data.ticker as NormalizedCryptoTicker];
+        });
+      } catch {
+        /* keep empty selection */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, selectedCoin, tickers, detailFetchAttempted]);
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
   useEffect(() => { fetchRates(); }, [fetchRates]);

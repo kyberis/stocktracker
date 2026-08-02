@@ -17,9 +17,9 @@ export const CRYPTO_PAGE_SUPPORTED_SYMBOLS = new Set([
   "SHIB",
 ]);
 
-/** Map a Yahoo-style pair (e.g. BTC-USD) to base symbol. */
+/** Map a Yahoo-style pair (e.g. BTC-USD, BTC USD) to base symbol. */
 export function yahooCryptoSymbolToBase(symbol: string): string {
-  const upper = symbol.trim().toUpperCase();
+  const upper = symbol.trim().toUpperCase().replace(/\s+/g, "-");
   const i = upper.indexOf("-");
   if (i > 0) return upper.slice(0, i);
   return upper;

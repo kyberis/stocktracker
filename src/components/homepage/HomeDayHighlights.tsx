@@ -6,6 +6,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { formatPercent } from "@/lib/utils";
+import { analisisCryptoRedirectHref } from "@/lib/asset-detail-href";
 import type { HomeDayHighlight, HomeDayHighlightReason } from "@/lib/homepage/types";
 
 function reasonLabel(r: HomeDayHighlightReason, t: (k: string) => string): string {
@@ -80,7 +81,7 @@ export default function HomeDayHighlights() {
           return (
             <li key={h.ticker}>
               <Link
-                href={`/analisis/${encodeURIComponent(h.ticker)}`}
+                href={analisisCryptoRedirectHref(h.ticker) ?? `/analisis/${encodeURIComponent(h.ticker)}`}
                 onClick={() =>
                   track("home_v2_highlight_clicked", {
                     ticker: h.ticker,

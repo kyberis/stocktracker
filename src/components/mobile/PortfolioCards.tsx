@@ -14,6 +14,7 @@ import {
   hasExchangeRate,
 } from "@/lib/utils";
 import type { Holding, QuoteData } from "@/lib/types";
+import { holdingDetailHref } from "@/lib/asset-detail-href";
 import AlertBadge from "@/components/AlertBadge";
 import HoldingResearchLinks from "@/components/HoldingResearchLinks";
 import { hapticImpact, hapticSelectionChanged } from "@/lib/native-haptics";
@@ -74,12 +75,12 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
     <div
       role="button"
       tabIndex={0}
-      onClick={() => { hapticImpact("Light"); router.push(`/analisis/${encodeURIComponent(holding.ticker)}`); }}
+      onClick={() => { hapticImpact("Light"); router.push(holdingDetailHref(holding)); }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           hapticImpact("Light");
-          router.push(`/analisis/${encodeURIComponent(holding.ticker)}`);
+          router.push(holdingDetailHref(holding));
         }
       }}
       className="w-full text-left bg-white dark:bg-slate-800/80 rounded-2xl border border-gray-100 dark:border-slate-700/60 p-4 active:scale-[0.98] transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
