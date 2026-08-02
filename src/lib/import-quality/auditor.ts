@@ -1,3 +1,4 @@
+import { currencyFromCryptoTicker } from "@/lib/db/helpers";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import { normalizeHkYahooSymbol, yahooSymbolFromTickerExchange } from "@/lib/market-symbol";
 import { hasExchangeRate, normalizeCurrency } from "@/lib/utils";
@@ -295,17 +296,24 @@ export function auditHolding(
   }
 
   const quoteCur = normalizeCurrency(quote.currency);
+  const cryptoPairCcy = currencyFromCryptoTicker(h.ticker);
   if (
     cur !== quoteCur &&
     !(cur === "GBP" && quoteCur === "GBX") &&
     !(cur === "GBX" && (quoteCur === "GBP" || quoteCur === "GBX"))
   ) {
-    // Only auto-align when purchase price is already in quote units (similar magnitude).
-    // Otherwise changing displayCurrency without converting cost basis would corrupt P&L.
+    // Crypto pairs encode quote ccy in the ticker (BTC-EUR). Aligning is safe —
+    // purchase prices were entered in that pair's units even if mislabeled USD.
+    const cryptoPairFix =
+      !!cryptoPairCcy &&
+      cryptoPairCcy === quoteCur &&
+      cur !== cryptoPairCcy;
+    // Only auto-align equities when purchase price is already in quote units.
     const magnitudeOk =
       h.purchasePrice > 0 &&
       quote.price > 0 &&
       Math.abs(h.purchasePrice - quote.price) / quote.price < 0.25;
+    const auto = cryptoPairFix || magnitudeOk;
     findings.push({
       id: findingId("currency_mismatch", h.ticker),
       severity: "warn",
@@ -317,9 +325,10 @@ export function auditHolding(
         quoteCurrency: quoteCur,
         purchasePrice: h.purchasePrice,
         quotePrice: quote.price,
+        cryptoPairCcy: cryptoPairCcy || undefined,
       },
-      autoFixable: magnitudeOk,
-      fixAction: magnitudeOk ? "align_display_currency" : "none",
+      autoFixable: auto,
+      fixAction: auto ? "align_display_currency" : "none",
     });
   }
 

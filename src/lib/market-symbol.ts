@@ -45,6 +45,23 @@ export function isTickerExchangeCollision(ticker: string, exchange: string): boo
 }
 
 /**
+ * Alternate Yahoo symbols when the primary venue ticker is thin/unavailable.
+ * Tried in order after exchange-suffix fallbacks.
+ */
+const YAHOO_SYMBOL_ALIASES: Record<string, string[]> = {
+  "W9C.DE": ["W9C.F", "CSU.TO"],
+  "W9C.F": ["W9C.DE", "CSU.TO"],
+  W9C: ["W9C.DE", "W9C.F", "CSU.TO"],
+  "CSU.TO": ["W9C.DE", "W9C.F"],
+};
+
+/** Extra Yahoo symbols to try when `symbol` has no usable quote. */
+export function yahooSymbolAliases(symbol: string): string[] {
+  const key = symbol.trim().toUpperCase();
+  return YAHOO_SYMBOL_ALIASES[key] ?? [];
+}
+
+/**
  * Yahoo Finance requires Hong Kong tickers zero-padded to 4 digits.
  * `215.HK` → `0215.HK`. Non-numeric or already-padded symbols pass through.
  */

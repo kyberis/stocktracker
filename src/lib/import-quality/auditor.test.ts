@@ -135,7 +135,7 @@ describe("auditImportBatch", () => {
     expect(after.some((f) => f.fixed)).toBe(true);
   });
 
-  it("does not auto-fix currency mismatch when cost is in a different unit (e.g. crypto)", () => {
+  it("auto-fixes crypto pair currency when ticker encodes quote ccy (BTC-EUR)", () => {
     const findings = auditImportBatch({
       transactions: [],
       holdings: [
@@ -152,7 +152,8 @@ describe("auditImportBatch", () => {
       exchangeRates: { EURUSD: 1.1 },
     });
     const mismatch = findings.find((f) => f.code === "currency_mismatch");
-    expect(mismatch?.autoFixable).toBe(false);
+    expect(mismatch?.autoFixable).toBe(true);
+    expect(mismatch?.fixAction).toBe("align_display_currency");
   });
 
   it("does not rewrite cost basis without confirm (recent trade stays unfixed)", () => {

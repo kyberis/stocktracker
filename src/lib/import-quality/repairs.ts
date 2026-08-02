@@ -2,6 +2,7 @@ import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import {
   normalizeHkYahooSymbol,
+  yahooSymbolAliases,
   yahooSymbolFromTickerExchange,
 } from "@/lib/market-symbol";
 import { convertToEUR, hasExchangeRate, normalizeCurrency, resolveQuoteCurrency } from "@/lib/utils";
@@ -42,6 +43,9 @@ export async function fetchQuotesForTickers(
     const sym = yahooSymbolFromTickerExchange(t.ticker, t.exchange || "");
     const padded = normalizeHkYahooSymbol(sym);
     unique.set(padded, t.ticker);
+    for (const alt of yahooSymbolAliases(padded)) {
+      if (!unique.has(alt)) unique.set(alt, t.ticker);
+    }
   }
   const symbols = [...unique.keys()];
   const BATCH = 8;
@@ -56,7 +60,10 @@ export async function fetchQuotesForTickers(
     for (const r of results) {
       if (r.status === "fulfilled" && r.value.price > 0) {
         const orig = unique.get(r.value.sym) || r.value.sym;
-        quotes[orig] = { price: r.value.price, currency: r.value.currency };
+        // Prefer first successful quote per original ticker
+        if (!quotes[orig]) {
+          quotes[orig] = { price: r.value.price, currency: r.value.currency };
+        }
         quotes[r.value.sym] = { price: r.value.price, currency: r.value.currency };
       }
     }

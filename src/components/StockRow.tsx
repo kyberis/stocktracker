@@ -133,6 +133,12 @@ function StockRow({ holding, onSelect }: StockRowProps) {
   }, []);
 
   const handleClick = useCallback(() => {
+    // Crypto: always open the holding drawer so transactions stay editable.
+    // The /crypto market page has no transaction list.
+    if (holding.assetType === "crypto" && onSelect) {
+      onSelect(holding);
+      return;
+    }
     if (typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT) {
       router.push(holdingDetailHref(holding));
     } else {

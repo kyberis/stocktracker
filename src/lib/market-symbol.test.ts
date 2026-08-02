@@ -4,6 +4,7 @@ import {
   marketDataSymbolForHolding,
   normalizeHkYahooSymbol,
   toYahooFinanceQuoteUrl,
+  yahooSymbolAliases,
   yahooSymbolFromTickerExchange,
 } from "./market-symbol";
 
@@ -16,6 +17,12 @@ describe("isTickerExchangeCollision", () => {
   it("does not flag valid tickers", () => {
     expect(isTickerExchangeCollision("VWCE", "XET")).toBe(false);
     expect(isTickerExchangeCollision("VWCE.DE", "XET")).toBe(false);
+  });
+});
+
+describe("yahooSymbolAliases", () => {
+  it("maps Constellation Tradegate ticker to Frankfurt/Toronto", () => {
+    expect(yahooSymbolAliases("W9C.DE")).toEqual(["W9C.F", "CSU.TO"]);
   });
 });
 

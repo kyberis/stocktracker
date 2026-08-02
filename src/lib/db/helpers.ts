@@ -336,6 +336,20 @@ export function normalizeCryptoTicker(ticker: string): string {
   return ticker.includes(" ") ? ticker.replace(/\s+/g, "-") : ticker;
 }
 
+const CRYPTO_PAIR_CCY = /-(USD|EUR|GBP|USDT|USDC)$/i;
+
+/**
+ * Quote currency encoded in a Yahoo-style crypto pair ticker (`BTC-EUR` → `EUR`).
+ * Returns null when the ticker is not a recognized *-CCY pair.
+ */
+export function currencyFromCryptoTicker(ticker: string): string | null {
+  const m = normalizeCryptoTicker(ticker.trim().toUpperCase()).match(CRYPTO_PAIR_CCY);
+  if (!m) return null;
+  const ccy = m[1].toUpperCase();
+  if (ccy === "USDT" || ccy === "USDC") return "USD";
+  return ccy;
+}
+
 /** Strip known exchange suffixes (.L, .DE, .TO, …) to get the base ticker. */
 export function baseTickerName(ticker: string): string {
   for (const sfx of KNOWN_SUFFIXES) {

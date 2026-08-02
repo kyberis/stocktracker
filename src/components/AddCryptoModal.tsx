@@ -11,6 +11,7 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { getHoldingsLimit } from "@/lib/subscription";
 import ProCompareCard from "@/components/ProCompareCard";
 import type { SearchResult, TransactionType } from "@/lib/types";
+import { currencyFromCryptoTicker } from "@/lib/db/helpers";
 
 const COIN_ICONS: Record<string, { bg: string; label: string }> = {
   BTC: { bg: "bg-[#f7931a]", label: "₿" },
@@ -118,6 +119,7 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
     const pricePerShare = parseFloat(price);
     const totalAmount = shares * pricePerShare;
     const tickerNorm = ticker.trim().toUpperCase().replace(/\s+/g, "-");
+    const pairCcy = currencyFromCryptoTicker(tickerNorm) || "USD";
 
     try {
       const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
@@ -134,8 +136,8 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
           totalAmount,
           fees: 0,
           taxes: 0,
-          currency: "USD",
-          displayCurrency: "USD",
+          currency: pairCcy,
+          displayCurrency: pairCcy,
           exchange: "CRYPTO",
           assetType: "crypto",
         }),

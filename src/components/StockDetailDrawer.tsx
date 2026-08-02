@@ -31,6 +31,7 @@ import HoldingResearchLinks from "./HoldingResearchLinks";
 import dynamic from "next/dynamic";
 
 const StockChart = dynamic(() => import("./StockChart"), { ssr: false });
+const TransactionHistory = dynamic(() => import("./TransactionHistory"), { ssr: false });
 
 interface StockDetailDrawerProps {
   holding: Holding;
@@ -631,6 +632,20 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
               tradeError={tradeError}
               onApply={handleApplyTrade}
             />
+          )}
+
+          {/* Transaction list + edit (stocks and crypto) */}
+          {!isEditing && !isCashHolding && (
+            <div className="mt-4 border-t border-gray-100 dark:border-slate-700 pt-4">
+              <TransactionHistory
+                holdingId={holding.id}
+                ticker={holding.ticker}
+                exchange={holding.exchange}
+                assetType={holding.assetType}
+                currency={holding.displayCurrency}
+                name={holding.name}
+              />
+            </div>
           )}
 
           {/* Edit form */}

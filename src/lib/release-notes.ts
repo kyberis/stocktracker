@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.73",
+    date: "2026-08-02",
+    title: "Crypto transactions + Constellation quotes",
+    titleTranslations: {
+      es: "Transacciones crypto y cotizaciones de Constellation",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Crypto holdings open the portfolio drawer with a full transaction list to edit buys; BTC-EUR/ETH-EUR use EUR (not USD) from the pair ticker; Constellation (W9C.DE) falls back to Frankfurt/Toronto Yahoo symbols when Tradegate has no quote.",
+        translations: {
+          es: "Las posiciones crypto abren el panel con el listado de transacciones para editar compras; BTC-EUR/ETH-EUR usan EUR (no USD) según el par; Constellation (W9C.DE) prueba símbolos Yahoo de Frankfurt/Toronto si Tradegate no cotiza.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.72",
     date: "2026-08-02",
     title: "Import data quality auditor",
