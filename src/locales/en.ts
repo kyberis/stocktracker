@@ -3072,6 +3072,10 @@ const en: TranslationStrings = {
   homeV2FinPulseTitle: "Priority for you",
   homeV2FinPulseSubtitle: "Top impact item from your briefing feed",
   homeV2SeeBriefing: "Open briefing",
+  homeV2PortfolioTotal: "Portfolio total",
+  homeV2AdvancedCta: "Advanced",
+  homeV2SimpleCta: "Summary",
+  homeV2TotalReturn: "Total return",
 
   // ── AID (Investor Briefing — internal codename AID) ──
   aidBetaBadge: "Beta",

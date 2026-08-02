@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>trefolio — Theme Haven (investor mock)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@450;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /*
+     * Theme Haven — soft investor chrome + content
+     * Same AppNav structure; Haven tokens tint header + page.
+     */
+    :root {
+      --bg-deep: #e8eef3;
+      --bg: #f3f6f8;
+      --ink: #1a2430;
+      --ink-soft: #3d4d5c;
+      --muted: #6b7c8d;
+      --faint: #93a3b3;
+      --card: rgba(255, 252, 248, 0.92);
+      --card-solid: #fffcf8;
+      --surface: rgba(255, 255, 255, 0.55);
+      --border: rgba(55, 78, 98, 0.12);
+      --border-strong: rgba(55, 78, 98, 0.2);
+      --accent: #2f6f6a;
+      --accent-soft: rgba(47, 111, 106, 0.1);
+      --gain: #1f7a55;
+      --gain-soft: rgba(31, 122, 85, 0.1);
+      --loss: #c24a3a;
+      --loss-soft: rgba(194, 74, 58, 0.1);
+      --signal: #b7791f;
+      --signal-soft: rgba(183, 121, 31, 0.12);
+      --info: #3d6e9a;
+      --shadow: 0 1px 0 rgba(26, 36, 48, 0.04), 0 18px 40px rgba(55, 78, 98, 0.07);
+      --radius: 20px;
+      --radius-sm: 12px;
+      --font-ui: "Source Sans 3", system-ui, sans-serif;
+      --font-display: "Fraunces", Georgia, serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+      /* Soft header (same palette as content) */
+      --nav-bg: rgba(255, 252, 248, 0.88);
+      --nav-fg: #1a2430;
+      --nav-muted: #6b7c8d;
+      --nav-border: rgba(55, 78, 98, 0.14);
+      --nav-surface: rgba(255, 255, 255, 0.65);
+      --nav-accent: #2f6f6a;
+      --ticker-bg: #eef3f5;
+      --ticker-fg: #5a6d7e;
+      --ticker-strong: #1a2430;
+    }
+
+    html, body {
+      min-height: 100%;
+      font-family: var(--font-ui);
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 80% 50% at 12% -10%, rgba(47, 111, 106, 0.07), transparent 50%),
+        radial-gradient(ellipse 60% 40% at 90% 0%, rgba(61, 110, 154, 0.06), transparent 45%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.45;
+    }
+
+    button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .up { color: var(--gain); }
+    .down { color: var(--loss); }
+    .signal { color: var(--signal); }
+
+    /* ── Proposal chrome (meta, not product UI) ── */
+    .proposal {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      backdrop-filter: blur(14px);
+      background: rgba(243, 246, 248, 0.92);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+    }
+    .proposal-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .proposal h1 {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    .proposal p {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--muted);
+      max-width: 62ch;
+    }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink-soft);
+    }
+    .pill.accent {
+      background: var(--accent-soft);
+      border-color: rgba(47, 111, 106, 0.25);
+      color: var(--accent);
+    }
+
+    /* ── App chrome: unchanged Default (ticker + AppNav) ── */
+    .app-chrome {
+      position: sticky;
+      top: 53px;
+      z-index: 50;
+    }
+
+    .ticker {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      height: 28px;
+      padding: 0 16px;
+      background: var(--ticker-bg);
+      border-bottom: 1px solid var(--nav-border);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ticker-fg);
+    }
+    .ticker b { color: var(--ticker-strong); font-weight: 500; }
+    .ticker .sep { color: var(--faint); margin: 0 10px; }
+    .ticker .up { color: var(--gain); }
+    .ticker .down { color: var(--loss); }
+
+    .app-nav {
+      border-bottom: 1px solid var(--nav-border);
+      background: var(--nav-bg);
+      backdrop-filter: blur(14px) saturate(120%);
+      box-shadow: 0 10px 28px rgba(55, 78, 98, 0.06);
+    }
+    .app-nav-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 10px 20px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 20px;
+      align-items: center;
+    }
+    @media (max-width: 800px) {
+      .app-nav-inner {
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+      .nav-search { grid-column: 1 / -1; order: 3; }
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 17px;
+      letter-spacing: -0.03em;
+      color: var(--nav-fg);
+    }
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: linear-gradient(145deg, #3d8a83 0%, #2f6f6a 55%, #1f4f4c 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.28);
+      position: relative;
+      overflow: hidden;
+    }
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.45), transparent 55%),
+        radial-gradient(circle at 70% 60%, #6eb5ae, transparent 70%);
+    }
+
+    .nav-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 12px;
+      border: 1px solid var(--nav-border);
+      background: var(--nav-surface);
+      color: var(--nav-muted);
+      font-size: 13px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+    .nav-search kbd {
+      margin-left: auto;
+      font-size: 10px;
+      font-family: inherit;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--nav-border);
+      color: var(--faint);
+      background: rgba(255,255,255,0.55);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--nav-border);
+      background: var(--nav-surface);
+      display: grid;
+      place-items: center;
+      color: var(--nav-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .avatar {
+      width: 34px;
+      height: 34px;
+      margin-left: 2px;
+      border-radius: 999px;
+      background: linear-gradient(145deg, #c9d7df, #8fa8b8);
+      border: 1px solid var(--nav-border);
+      color: #1a2430;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .command-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 8px 20px 10px;
+      border-top: 1px solid rgba(55, 78, 98, 0.08);
+    }
+    .command-strip .pf {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--nav-fg);
+      margin-right: 4px;
+    }
+    .command-strip a {
+      font-size: 12px;
+      color: var(--nav-muted);
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+    .command-strip a.active {
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-weight: 600;
+    }
+    .command-strip .spacer { flex: 1; }
+    .command-strip .btn {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--nav-border);
+      background: var(--nav-surface);
+      color: var(--nav-fg);
+    }
+    .command-strip .btn.primary {
+      background: var(--nav-accent);
+      border-color: transparent;
+      color: #f7fbfa;
+    }
+
+    /* ── Haven content ── */
+    .haven {
+      color: var(--ink);
+      min-height: 70vh;
+    }
+    .shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 20px 64px;
+    }
+
+    .brief {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 10px 16px;
+      margin-bottom: 18px;
+      padding: 4px 2px;
+    }
+    .brief-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--faint);
+    }
+    .brief-text { font-size: 15px; color: var(--ink-soft); }
+    .brief-text strong { color: var(--ink); font-weight: 600; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.9fr);
+      gap: 16px;
+    }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+    .card.quiet {
+      background: rgba(255, 252, 248, 0.72);
+      box-shadow: none;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 26px 26px 22px;
+      background: linear-gradient(165deg, rgba(255,252,248,0.98) 0%, rgba(241,247,246,0.95) 100%);
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 18px;
+      bottom: 18px;
+      width: 3px;
+      border-radius: 999px;
+      background: var(--gain);
+    }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 10px;
+    }
+    .hero-value {
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 5vw, 3.4rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      color: var(--ink);
+    }
+    .hero-delta {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-top: 12px;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .hero-delta .pct {
+      font-size: 13px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--gain-soft);
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+    .meta-item label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 4px;
+    }
+    .meta-item span {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--ink-soft);
+    }
+
+    .twin {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 640px) { .twin { grid-template-columns: 1fr; } }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .mover {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .mover:last-child { border-bottom: none; padding-bottom: 0; }
+    .mover:first-of-type { padding-top: 0; }
+    .mover .sym { font-weight: 700; font-size: 14px; }
+    .mover .name { font-size: 12px; color: var(--muted); }
+    .mover .chg {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .attention {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .signal-card {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(183, 121, 31, 0.22);
+      background: var(--signal-soft);
+    }
+    .signal-card .badge {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--signal);
+      padding-top: 2px;
+    }
+    .signal-card h3 { font-size: 14px; font-weight: 700; color: var(--ink); }
+    .signal-card p { margin-top: 2px; font-size: 13px; color: var(--ink-soft); }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card-solid);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      min-height: 36px;
+    }
+    .chip.hot {
+      border-color: rgba(183, 121, 31, 0.35);
+      background: var(--signal-soft);
+      color: #8a5a12;
+    }
+    .chip .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--signal);
+    }
+    .chip .dot.gain { background: var(--gain); }
+    .chip .dot.loss { background: var(--loss); }
+
+    .holdings { margin-top: 16px; overflow: hidden; }
+    .holdings-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .search {
+      flex: 1;
+      max-width: 240px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.7);
+      font-size: 13px;
+      color: var(--ink);
+    }
+    .search::placeholder { color: var(--faint); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--faint);
+      padding: 0 10px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    th.r, td.r { text-align: right; }
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(55, 78, 98, 0.07);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr.signal-row td {
+      background: linear-gradient(90deg, var(--signal-soft), transparent 55%);
+    }
+    .t-name { font-weight: 700; }
+    .t-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .mkt {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gain);
+      margin-right: 6px;
+    }
+    .mkt.closed { background: var(--faint); }
+
+    .rail { display: flex; flex-direction: column; gap: 12px; }
+    .alloc-bar {
+      display: flex;
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 14px 0 12px;
+      background: rgba(55, 78, 98, 0.08);
+    }
+    .alloc-bar span:nth-child(1) { flex: 52; background: #2f6f6a; }
+    .alloc-bar span:nth-child(2) { flex: 28; background: #3d6e9a; }
+    .alloc-bar span:nth-child(3) { flex: 12; background: #8a9a6d; }
+    .alloc-bar span:nth-child(4) { flex: 8; background: #c4b8a5; }
+    .legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .legend b { color: var(--ink-soft); font-weight: 600; }
+
+    .nudge {
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      background: rgba(47, 111, 106, 0.06);
+      border: 1px solid rgba(47, 111, 106, 0.14);
+    }
+    .nudge h3 {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .nudge p { font-size: 13px; color: var(--ink-soft); }
+    .nudge .cta {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #f7fbfa;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .news-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .news-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .news-item:first-of-type { padding-top: 0; }
+    .news-item .src {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--faint);
+    }
+    .news-item h4 {
+      margin-top: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.35;
+    }
+
+    .notes {
+      margin-top: 28px;
+      padding: 20px 22px;
+      border-radius: var(--radius);
+      border: 1px dashed var(--border-strong);
+      background: rgba(255,255,255,0.4);
+    }
+    .notes h2 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    .notes ul {
+      padding-left: 18px;
+      color: var(--ink-soft);
+      font-size: 13px;
+      display: grid;
+      gap: 6px;
+    }
+    .notes code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: rgba(55, 78, 98, 0.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .token-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .swatch {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      background: #fff;
+    }
+    .swatch .c { height: 40px; }
+    .swatch .l { padding: 8px; font-size: 11px; color: var(--muted); }
+    .swatch .l b { display: block; color: var(--ink); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header class="proposal">
+    <div class="proposal-inner">
+      <div>
+        <h1>Theme proposal — Haven</h1>
+        <p>
+          Misma estructura de AppNav, pero con la paleta suave en todo el shell:
+          ticker, header, command strip y contenido. Editorial y calmado.
+        </p>
+      </div>
+      <div class="pill-row">
+        <span class="pill accent">Soft chrome</span>
+        <span class="pill">Forced light</span>
+        <span class="pill">Tier: Bifolio+</span>
+        <span class="pill">CSS: theme-haven</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Product chrome: AppNav structure + Haven soft tokens -->
+  <div class="app-chrome">
+    <div class="ticker" aria-label="Market ticker">
+      <span><b>EUR/USD</b> 1.0842 <span class="up">+0.12%</span></span>
+      <span class="sep">·</span>
+      <span><b>S&amp;P 500</b> 5,428 <span class="up">+0.41%</span></span>
+      <span class="sep">·</span>
+      <span><b>STOXX 50</b> 4,912 <span class="down">−0.18%</span></span>
+      <span class="sep">·</span>
+      <span><b>BTC</b> 67,420 <span class="up">+1.2%</span></span>
+      <span class="sep">·</span>
+      <span><b>Gold</b> 2,341 <span class="up">+0.3%</span></span>
+      <span class="sep">·</span>
+      <span>Markets open</span>
+    </div>
+
+    <header class="app-nav" data-zone="nav">
+      <div class="app-nav-inner">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          trefolio
+        </div>
+        <div class="nav-search" role="search">
+          <span aria-hidden="true">⌕</span>
+          Search assets, tickers…
+          <kbd>⌘K</kbd>
+        </div>
+        <div class="nav-actions">
+          <button class="icon-btn" aria-label="Notifications">bell</button>
+          <button class="icon-btn" aria-label="Stealth mode">eye</button>
+          <button class="icon-btn" aria-label="Theme">☀</button>
+          <button class="icon-btn" aria-label="Language">ES</button>
+          <div class="avatar" aria-label="Account">MS</div>
+        </div>
+      </div>
+      <div class="command-strip" aria-label="Portfolio command">
+        <span class="pf">Main portfolio ▾</span>
+        <a class="active" href="#">Portfolio</a>
+        <a href="#">Import</a>
+        <a href="#">Tools</a>
+        <a href="#">Crypto</a>
+        <span class="spacer"></span>
+        <button class="btn">Refresh</button>
+        <button class="btn primary">Add asset</button>
+      </div>
+    </header>
+  </div>
+
+  <!-- Haven starts here -->
+  <div class="haven">
+    <div class="shell">
+      <section class="brief" aria-label="Morning brief">
+        <span class="brief-label">Desde tu última visita</span>
+        <p class="brief-text">
+          <strong>NVDA</strong> +4.2% con catalizador de earnings ·
+          <strong>ASML</strong> results mañana AMC ·
+          2 alertas disparadas
+        </p>
+      </section>
+
+      <div class="grid">
+        <main>
+          <section class="card hero" aria-labelledby="hero-label">
+            <div class="eyebrow" id="hero-label">Portfolio total · EUR</div>
+            <div class="hero-value mono">€248,642</div>
+            <div class="hero-delta up">
+              <span>+€1,842</span>
+              <span class="pct">+0.75%</span>
+              <span style="color:var(--muted);font-family:var(--font-ui);font-size:13px;font-weight:500">hoy</span>
+            </div>
+            <div class="hero-meta">
+              <div class="meta-item">
+                <label>Cost basis</label>
+                <span>€198,400</span>
+              </div>
+              <div class="meta-item">
+                <label>Total return</label>
+                <span class="up">+25.3%</span>
+              </div>
+              <div class="meta-item">
+                <label>Holdings</label>
+                <span>18 / 50</span>
+              </div>
+              <div class="meta-item">
+                <label>YTD</label>
+                <span class="up">+11.4%</span>
+              </div>
+            </div>
+          </section>
+
+          <div class="twin">
+            <section class="card quiet">
+              <h2 class="section-title">Movers</h2>
+              <div class="mover">
+                <div>
+                  <div class="sym">NVDA</div>
+                  <div class="name">NVIDIA</div>
+                </div>
+                <div class="chg up">+4.21%</div>
+              </div>
+              <div class="mover">
+                <div>
+                  <div class="sym">SAP</div>
+                  <div class="name">SAP SE</div>
+                </div>
+                <div class="chg up">+1.84%</div>
+              </div>
+              <div class="mover">
+                <div>
+                  <div class="sym">IBE.MC</div>
+                  <div class="name">Iberdrola</div>
+                </div>
+                <div class="chg down">−1.12%</div>
+              </div>
+            </section>
+
+            <section class="card quiet">
+              <h2 class="section-title">Catalysts</h2>
+              <div class="mover">
+                <div>
+                  <div class="sym signal">ASML</div>
+                  <div class="name">Earnings · mañana AMC</div>
+                </div>
+                <div class="chg signal">BMO/AMC</div>
+              </div>
+              <div class="mover">
+                <div>
+                  <div class="sym">VWCE</div>
+                  <div class="name">Ex-div · en 9 días</div>
+                </div>
+                <div class="chg" style="color:var(--info)">€0.42</div>
+              </div>
+              <div class="mover">
+                <div>
+                  <div class="sym">AAPL</div>
+                  <div class="name">Near 52w high</div>
+                </div>
+                <div class="chg signal">98%</div>
+              </div>
+            </section>
+          </div>
+
+          <div class="attention" aria-label="Attention signals">
+            <div class="signal-card">
+              <span class="badge">Hoy</span>
+              <div>
+                <h3>ASML reporta mañana — posición 6.2% del portfolio</h3>
+                <p>Único catalizador de alto impacto en las próximas 24h. El resto del día es ruido bajo.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="chips" aria-label="Day highlights">
+            <button class="chip hot"><span class="dot"></span> ASML earnings</button>
+            <button class="chip"><span class="dot gain"></span> NVDA +4.2%</button>
+            <button class="chip"><span class="dot loss"></span> Alert IBE −3%</button>
+            <button class="chip"><span class="dot"></span> VWCE ex-div</button>
+          </div>
+
+          <section class="card holdings" style="margin-top:16px">
+            <div class="holdings-head">
+              <h2 class="section-title" style="margin:0">Holdings</h2>
+              <input class="search" type="search" placeholder="Buscar ticker…" aria-label="Search holdings" />
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Asset</th>
+                  <th class="r">Price</th>
+                  <th class="r">Value</th>
+                  <th class="r">Day</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="signal-row">
+                  <td>
+                    <span class="mkt"></span>
+                    <span class="t-name">ASML</span>
+                    <div class="t-sub">ASML Holding · 6.2%</div>
+                  </td>
+                  <td class="r mono">€842.10</td>
+                  <td class="r mono">€15,412</td>
+                  <td class="r mono up">+0.6%</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="mkt"></span>
+                    <span class="t-name">NVDA</span>
+                    <div class="t-sub">NVIDIA · 8.1%</div>
+                  </td>
+                  <td class="r mono">$118.40</td>
+                  <td class="r mono">€20,180</td>
+                  <td class="r mono up">+4.2%</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="mkt"></span>
+                    <span class="t-name">VWCE</span>
+                    <div class="t-sub">FTSE All-World · 22%</div>
+                  </td>
+                  <td class="r mono">€128.65</td>
+                  <td class="r mono">€54,820</td>
+                  <td class="r mono up">+0.3%</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="mkt closed"></span>
+                    <span class="t-name">IBE.MC</span>
+                    <div class="t-sub">Iberdrola · 4.4%</div>
+                  </td>
+                  <td class="r mono">€12.84</td>
+                  <td class="r mono">€10,940</td>
+                  <td class="r mono down">−1.1%</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="mkt"></span>
+                    <span class="t-name">MSFT</span>
+                    <div class="t-sub">Microsoft · 7.0%</div>
+                  </td>
+                  <td class="r mono">$428.90</td>
+                  <td class="r mono">€17,420</td>
+                  <td class="r mono up">+0.4%</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </main>
+
+        <aside class="rail">
+          <section class="card quiet">
+            <h2 class="section-title">Allocation</h2>
+            <div class="alloc-bar" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <div class="legend">
+              <div>Stocks <b>52%</b></div>
+              <div>ETFs <b>28%</b></div>
+              <div>Crypto <b>12%</b></div>
+              <div>Cash <b>8%</b></div>
+            </div>
+          </section>
+
+          <section class="nudge">
+            <h3>Warren</h3>
+            <p>Concentración en semis al 14%. Con ASML mañana, vale revisar si el tamaño de posición sigue alineado con tu horizonte.</p>
+            <a class="cta" href="#">Abrir briefing</a>
+          </section>
+
+          <section class="card quiet">
+            <h2 class="section-title">Portfolio news</h2>
+            <article class="news-item">
+              <div class="src">Reuters · NVDA</div>
+              <h4>NVIDIA lifts data-center outlook; shares extend rally</h4>
+            </article>
+            <article class="news-item">
+              <div class="src">FT · ASML</div>
+              <h4>Chip-equipment demand stays firm ahead of results</h4>
+            </article>
+            <article class="news-item">
+              <div class="src">Expansión · IBE</div>
+              <h4>Iberdrola ajusta guidance de renovables en Iberia</h4>
+            </article>
+          </section>
+
+          <section class="card quiet">
+            <h2 class="section-title">Claude MCP</h2>
+            <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px">
+              Pregunta a Claude sobre tu portfolio con un PAT local. Sin OAuth Client ID.
+            </p>
+            <a class="cta" href="#" style="background:var(--ink);">Ver setup</a>
+          </section>
+        </aside>
+      </div>
+
+      <section class="notes">
+        <h2>Alcance del theme</h2>
+        <ul>
+          <li><strong>Estructura</strong> — mismo MarketTickerBar + AppNav + command strip (sin fork de JSX).</li>
+          <li><strong>Color</strong> — Haven tiñe también <code>--nav-bg</code>, ticker y botones; forced light.</li>
+          <li><strong>Jerarquía</strong> — chrome calmado; hero + señales ámbar son lo que “habla alto”.</li>
+        </ul>
+        <div class="token-grid" aria-label="Color tokens">
+          <div class="swatch"><div class="c" style="background:#f3f6f8"></div><div class="l"><b>bg</b>#f3f6f8</div></div>
+          <div class="swatch"><div class="c" style="background:#fffcf8"></div><div class="l"><b>nav/card</b>#fffcf8</div></div>
+          <div class="swatch"><div class="c" style="background:#eef3f5"></div><div class="l"><b>ticker</b>#eef3f5</div></div>
+          <div class="swatch"><div class="c" style="background:#1a2430"></div><div class="l"><b>ink</b>#1a2430</div></div>
+          <div class="swatch"><div class="c" style="background:#2f6f6a"></div><div class="l"><b>accent</b>#2f6f6a</div></div>
+          <div class="swatch"><div class="c" style="background:#b7791f"></div><div class="l"><b>signal</b>#b7791f</div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

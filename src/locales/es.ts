@@ -3074,6 +3074,10 @@ const es: TranslationStrings = {
   homeV2FinPulseTitle: "Prioridad para ti",
   homeV2FinPulseSubtitle: "Ítem de mayor impacto de tu briefing",
   homeV2SeeBriefing: "Abrir briefing",
+  homeV2PortfolioTotal: "Portfolio total",
+  homeV2AdvancedCta: "Avanzado",
+  homeV2SimpleCta: "Resumen",
+  homeV2TotalReturn: "Rentabilidad total",
 
   aidBetaBadge: "Beta",
   aidTitle: "Briefing de inversor",

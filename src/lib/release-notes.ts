@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.67",
+    date: "2026-08-02",
+    title: "Home portfolio total + Advanced",
+    titleTranslations: {
+      es: "Portfolio total en Home + Avanzado",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Home leads with a compact Portfolio total card (day P&L and key metrics). Advanced opens the full hero with performance matrix in the same place; Summary returns to the compact view.",
+        translations: {
+          es: "Home arranca con una tarjeta compacta de Portfolio total (P&L del día y métricas clave). Avanzado abre el hero completo con la matriz de rendimiento en el mismo sitio; Resumen vuelve a la vista compacta.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.66",
     date: "2026-08-02",
     title: "Allocation CTA to Classification",

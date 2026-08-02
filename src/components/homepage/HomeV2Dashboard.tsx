@@ -21,6 +21,16 @@ import HomeCatalystsCard from "./HomeCatalystsCard";
 import HomeDayHighlights from "./HomeDayHighlights";
 import HomeMcpCta from "./HomeMcpCta";
 import HomeFinPulseTeaser from "./HomeFinPulseTeaser";
+import HomePortfolioTotalCard from "./HomePortfolioTotalCard";
+
+type HeroMode = "simple" | "advanced";
+const HERO_MODE_KEY = "home_v2_hero_mode";
+
+function readHeroMode(): HeroMode {
+  if (typeof window === "undefined") return "simple";
+  const stored = window.localStorage.getItem(HERO_MODE_KEY);
+  return stored === "advanced" ? "advanced" : "simple";
+}
 
 const PortfolioHeroCard = dynamic(() => import("@/components/portfolio-v2/PortfolioHeroCard"), {
   ssr: false,
@@ -63,10 +73,25 @@ export default function HomeV2Dashboard() {
   const home = usePortfolioHomeData({ holdings, cashEntries });
   const [aiOpen, setAiOpen] = useState(false);
   const [warrenPrompt, setWarrenPrompt] = useState<string | undefined>();
+  const [heroMode, setHeroMode] = useState<HeroMode>("simple");
   const pageViewSent = useRef(false);
   const visitMarked = useRef(false);
   const returnTracked = useRef(false);
   const showClassicLink = isLoaded && !!flags.classic_home;
+
+  useEffect(() => {
+    setHeroMode(readHeroMode());
+  }, []);
+
+  function setAndPersistHeroMode(mode: HeroMode) {
+    setHeroMode(mode);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(HERO_MODE_KEY, mode);
+    }
+    track(
+      mode === "advanced" ? "home_v2_hero_advanced_opened" : "home_v2_hero_simple_restored",
+    );
+  }
 
   // Match Classic: empty when there are no stock/ETF/crypto/fund holdings
   // (cash-only still shows the add/import empty state).
@@ -154,29 +179,53 @@ export default function HomeV2Dashboard() {
       ) : (
         <>
           <ErrorBoundary>
-            <PortfolioHeroCard
-              holdings={holdings}
-              cashEntries={cashEntries}
-              assetFilter={assetFilter}
-              refreshKey={refreshKey}
-              onRecalculate={handleRecalculate}
-              recalculating={recalculating}
-              onOpenAi={() => setAiOpen(true)}
-              totalValue={totals.totalCurrentEUR}
-              investedValue={investedValueBase}
-              cashValue={cashValueBase}
-              dayGainLoss={dayGainLoss}
-              dayGainLossPercent={dayGainLossPercent}
-              dayChangePctByType={dayChangePctByType as Partial<Record<AssetFilter, number>>}
-              breakdownSlot={
-                <MarketAwareBreakdown
+            {heroMode === "simple" ? (
+              <HomePortfolioTotalCard
+                totalValue={totals.totalCurrentEUR}
+                dayGainLoss={dayGainLoss}
+                dayGainLossPercent={dayGainLossPercent}
+                costBasis={totals.totalCostEUR}
+                totalReturnPct={totals.totalGainLossPercent}
+                holdingsCount={holdings.length}
+                onAdvanced={() => setAndPersistHeroMode("advanced")}
+              />
+            ) : (
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setAndPersistHeroMode("simple")}
+                    aria-expanded={true}
+                    className="inline-flex min-h-9 items-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 text-xs font-semibold text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
+                  >
+                    {t("homeV2SimpleCta")}
+                  </button>
+                </div>
+                <PortfolioHeroCard
                   holdings={holdings}
                   cashEntries={cashEntries}
-                  onFilterChange={setAssetFilter}
-                  activeFilter={assetFilter}
+                  assetFilter={assetFilter}
+                  refreshKey={refreshKey}
+                  onRecalculate={handleRecalculate}
+                  recalculating={recalculating}
+                  onOpenAi={() => setAiOpen(true)}
+                  totalValue={totals.totalCurrentEUR}
+                  investedValue={investedValueBase}
+                  cashValue={cashValueBase}
+                  dayGainLoss={dayGainLoss}
+                  dayGainLossPercent={dayGainLossPercent}
+                  dayChangePctByType={dayChangePctByType as Partial<Record<AssetFilter, number>>}
+                  breakdownSlot={
+                    <MarketAwareBreakdown
+                      holdings={holdings}
+                      cashEntries={cashEntries}
+                      onFilterChange={setAssetFilter}
+                      activeFilter={assetFilter}
+                    />
+                  }
                 />
-              }
-            />
+              </div>
+            )}
           </ErrorBoundary>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

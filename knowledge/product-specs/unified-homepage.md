@@ -68,6 +68,8 @@ type HomeDayHighlight = {
 
 **Main column (desktop):** Morning brief → Portfolio hero → Movers \| Catalysts → Day highlights → Holdings → FinPulse teaser → Portfolio News (compact).
 
+**Portfolio hero modes:** Default is a compact **Portfolio total** card (total value in display currency, day P&L, cost basis, total return %, holdings count) with an **Advanced** CTA. Advanced swaps in-place to the existing `PortfolioHeroCard` (invested assets, breakdown, performance matrix). **Summary** restores the compact card. Preference persisted as `home_v2_hero_mode` (`simple` | `advanced`).
+
 **Rail (~320px):** Allocation (CTA → `/tools/taxonomy` to fix unclassified) → Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats. Hidden when empty (no holdings). On mobile, Allocation stays in the main column above holdings.
 
 **Empty (no holdings):** Same `EmptyPortfolio` CTA as Classic `/` (import + add stock). Cash-only still counts as empty for this gate.
