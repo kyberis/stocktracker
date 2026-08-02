@@ -30,6 +30,7 @@ export const AI_FLOW_KEYS = [
   "digest_email",
   "digest_x_post",
   "news_article_summary",
+  "holding_classification",
 ] as const;
 
 export type AiFlowKey = (typeof AI_FLOW_KEYS)[number];
@@ -122,6 +123,12 @@ export const AI_FLOW_META: Record<AiFlowKey, AiFlowMeta> = {
     description: "Short neutral summary of a news headline and snippet for Pro users",
     maxTokens: 450,
     temperature: 0.25,
+  },
+  holding_classification: {
+    label: "Holding classification",
+    description: "Suggest sector, region, and asset class for a single holding (JSON)",
+    maxTokens: 200,
+    temperature: 0.1,
   },
 };
 

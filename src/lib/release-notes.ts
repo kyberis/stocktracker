@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.68",
+    date: "2026-08-02",
+    title: "Classification Auto-fix with AI",
+    titleTranslations: {
+      es: "Auto-corregir clasificación con IA",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Edit Classification on Tools → Classification shows each holding’s name and an Auto-fix action that uses AI to set sector, region, and asset class.",
+        translations: {
+          es: "Editar clasificación en Herramientas → Clasificación muestra el nombre de cada acción y un Auto-corregir que usa IA para definir sector, región y clase de activo.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.67",
     date: "2026-08-02",
     title: "Home portfolio total + Advanced",

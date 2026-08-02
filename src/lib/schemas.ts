@@ -697,3 +697,7 @@ export const newsArticleSummarySchema = z.object({
   publishedAt: z.string().max(80).optional(),
   language: z.string().max(12).optional(),
 });
+
+export const aiClassifyHoldingSchema = z.object({
+  holdingId: z.string().min(1).max(64),
+});

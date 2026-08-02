@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-273 routes.
+274 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -188,6 +188,7 @@
 | `/api/goals` | GET, POST, DELETE | [`src/app/api/goals/route.ts`](../../src/app/api/goals/route.ts) |
 | `/api/historical` | GET | [`src/app/api/historical/route.ts`](../../src/app/api/historical/route.ts) |
 | `/api/holdings` | GET, POST, PUT, DELETE | [`src/app/api/holdings/route.ts`](../../src/app/api/holdings/route.ts) |
+| `/api/holdings/ai-classify` | POST | [`src/app/api/holdings/ai-classify/route.ts`](../../src/app/api/holdings/ai-classify/route.ts) |
 | `/api/holdings/autofill-classification` | POST | [`src/app/api/holdings/autofill-classification/route.ts`](../../src/app/api/holdings/autofill-classification/route.ts) |
 | `/api/home-v2/day-highlights` | GET | [`src/app/api/home-v2/day-highlights/route.ts`](../../src/app/api/home-v2/day-highlights/route.ts) |
 | `/api/import-portfolio` | POST | [`src/app/api/import-portfolio/route.ts`](../../src/app/api/import-portfolio/route.ts) |

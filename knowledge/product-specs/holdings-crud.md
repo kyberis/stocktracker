@@ -18,7 +18,8 @@ A "holding" is a position in a single ticker at a given exchange. Holdings are d
 | Type | Path | Notes |
 |------|------|-------|
 | API | [`src/app/api/holdings/route.ts`](../../src/app/api/holdings/route.ts) | CRUD list + mutations. |
-| API | [`src/app/api/holdings/autofill-classification/`](../../src/app/api/holdings/autofill-classification) | Auto-set asset type/country. |
+| API | [`src/app/api/holdings/autofill-classification/`](../../src/app/api/holdings/autofill-classification) | Auto-set asset type/country via Yahoo / heuristics. |
+| API | [`src/app/api/holdings/ai-classify/`](../../src/app/api/holdings/ai-classify) | Per-holding LLM Auto-fix (sector / region / asset class). |
 | Modal | [`src/components/AddStockModal.tsx`](../../src/components/AddStockModal.tsx) | Add holding. |
 | Modal | [`src/components/AddManualAssetModal.tsx`](../../src/components/AddManualAssetModal.tsx) | Manual (non-listed) asset. |
 | Modal | [`src/components/AssetTypeReviewModal.tsx`](../../src/components/AssetTypeReviewModal.tsx) | Resolve ambiguous classification. |
@@ -39,6 +40,7 @@ A "holding" is a position in a single ticker at a given exchange. Holdings are d
 | PATCH | `/api/holdings` | user | Free | Update shares/tags/cost basis. |
 | DELETE | `/api/holdings?id=` | user | Free | Remove. |
 | POST | `/api/holdings/autofill-classification` | user | Free | Classify via ISIN/Yahoo lookup. |
+| POST | `/api/holdings/ai-classify` | user | Free (uses `ai_consult` quota) | LLM Auto-fix for one holding. |
 
 ## 6. UI surface
 
@@ -55,6 +57,7 @@ A "holding" is a position in a single ticker at a given exchange. Holdings are d
 ## 8. External dependencies
 
 - Yahoo / OpenFIGI / ISIN resolver for autofill.
+- AI Gateway (OpenAI) for per-holding Auto-fix on Tools → Classification.
 
 ## 9. Currency / FX / tax implications
 

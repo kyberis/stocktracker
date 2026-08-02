@@ -15,14 +15,19 @@ import HoldingTagsField from "@/components/HoldingTagsField";
 
 type Category = "sector" | "region" | "assetClass" | "assetType" | "tags";
 
+const SPARKLE_PATH =
+  "M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z";
+
 export default function TaxonomyView() {
   const { t } = useI18n();
-  const { holdings, cashEntries, quotes, exchangeRates, refreshHoldings, activePortfolioCurrency } = usePortfolio();
+  const { holdings, cashEntries, quotes, exchangeRates, refreshHoldings, activePortfolioCurrency, updateHolding, demoMode } = usePortfolio();
   const baseCurrency = activePortfolioCurrency;
   const [category, setCategory] = useState<Category>("sector");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editVal, setEditVal] = useState("");
   const [autoClassifying, setAutoClassifying] = useState(false);
+  const [aiFixingId, setAiFixingId] = useState<string | null>(null);
+  const [aiFixError, setAiFixError] = useState<string | null>(null);
   const [etfSectorLookthrough, setEtfSectorLookthrough] = useState(true);
   const [etfSectorWeights, setEtfSectorWeights] = useState<Record<string, ETFSectorWeight[] | null>>({});
 
@@ -90,8 +95,6 @@ export default function TaxonomyView() {
     return computeTaxonomyAllocations(holdings, quotes, exchangeRates, category, unclassified);
   }, [holdings, cashEntries, quotes, exchangeRates, category, t, etfSectorWeights, etfSectorLookthrough, baseCurrency]);
 
-  const { updateHolding } = usePortfolio();
-
   const handleSaveClassification = async (holdingId: string) => {
     if (category === "tags") return;
     await updateHolding(holdingId, { [category]: editVal } as Record<string, string>);
@@ -102,6 +105,7 @@ export default function TaxonomyView() {
   const hasUnclassified = holdings.some((h) => !h.sector && !h.region && !h.assetClass);
 
   const handleAutoClassify = async () => {
+    if (demoMode) return;
     setAutoClassifying(true);
     try {
       await fetch("/api/holdings/autofill-classification", { method: "POST" });
@@ -110,6 +114,35 @@ export default function TaxonomyView() {
       // silently ignore — user can retry
     } finally {
       setAutoClassifying(false);
+    }
+  };
+
+  const handleAiFixClassification = async (holdingId: string) => {
+    if (demoMode) return;
+    setAiFixError(null);
+    setAiFixingId(holdingId);
+    try {
+      const res = await fetch("/api/holdings/ai-classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ holdingId }),
+      });
+      if (!res.ok) {
+        setAiFixError(t("autoFixClassificationError"));
+        return;
+      }
+      const data = (await res.json()) as {
+        classification?: { sector: string; region: string; assetClass: string };
+      };
+      await refreshHoldings();
+      if (editingId === holdingId && data.classification && category !== "tags" && category !== "assetType") {
+        const next = data.classification[category as "sector" | "region" | "assetClass"];
+        if (typeof next === "string") setEditVal(next);
+      }
+    } catch {
+      setAiFixError(t("autoFixClassificationError"));
+    } finally {
+      setAiFixingId(null);
     }
   };
 
@@ -241,6 +274,9 @@ export default function TaxonomyView() {
               return (
                 <div key={h.id} className="border-b border-gray-100 dark:border-slate-700 pb-3 last:border-0">
                   <span className="font-mono text-gray-700 dark:text-slate-300 text-xs block mb-1">{h.ticker}</span>
+                  {h.name?.trim() && (
+                    <span className="text-[10px] text-gray-500 dark:text-slate-400 block mb-1 truncate">{h.name}</span>
+                  )}
                   <HoldingTagsField
                     tags={h.tags ?? []}
                     onChange={(next) => {
@@ -261,34 +297,80 @@ export default function TaxonomyView() {
 
       {category !== "assetType" && category !== "tags" && (
         <div className="mt-4 border-t border-gray-100 dark:border-slate-700 pt-3">
-          <p className="text-[10px] text-gray-500 dark:text-slate-400 mb-2 uppercase font-medium">{t("editClassification")}</p>
-          <div className="space-y-1 max-h-40 overflow-y-auto">
+          <p className="text-[10px] text-gray-500 dark:text-slate-400 mb-1 uppercase font-medium">{t("editClassification")}</p>
+          <p className="text-[10px] text-gray-400 dark:text-slate-500 mb-2">{t("autoFixClassificationHint")}</p>
+          {aiFixError && (
+            <p className="text-[10px] text-red-500 dark:text-red-400 mb-2" role="alert">{aiFixError}</p>
+          )}
+          <div className="space-y-1.5 max-h-56 overflow-y-auto">
             {holdings.map((h) => {
               const val = (h[category] as string) || "";
+              const displayName = h.name?.trim() || quotes[h.ticker]?.shortName || h.ticker;
+              const isFixing = aiFixingId === h.id;
               return (
                 <div key={h.id} className="flex items-center gap-2 text-xs">
-                  <span className="font-mono text-gray-700 dark:text-slate-300 w-20 truncate">{h.ticker}</span>
+                  <div className="w-36 sm:w-44 flex-shrink-0 min-w-0">
+                    <span className="font-mono text-gray-700 dark:text-slate-300 block truncate">{h.ticker}</span>
+                    <span className="text-[10px] text-gray-500 dark:text-slate-400 block truncate" title={displayName}>
+                      {displayName}
+                    </span>
+                  </div>
                   {editingId === h.id ? (
                     <>
                       <input
                         value={editVal}
                         onChange={(e) => setEditVal(e.target.value)}
-                        className="flex-1 text-xs px-2 py-1"
+                        className="flex-1 text-xs px-2 py-1 min-w-0"
                         autoFocus
+                        aria-label={t("editClassification")}
                       />
-                      <button onClick={() => handleSaveClassification(h.id)} className="text-emerald-500 text-[10px] font-medium">{t("save")}</button>
-                      <button onClick={() => setEditingId(null)} className="text-gray-400 text-[10px]">{t("cancel")}</button>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveClassification(h.id)}
+                        className="text-emerald-500 text-[10px] font-medium flex-shrink-0"
+                      >
+                        {t("save")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(null)}
+                        className="text-gray-400 text-[10px] flex-shrink-0"
+                      >
+                        {t("cancel")}
+                      </button>
                     </>
                   ) : (
                     <>
-                      <span className="flex-1 text-gray-500 dark:text-slate-400">{val || "—"}</span>
-                      <button onClick={() => { setEditingId(h.id); setEditVal(val); }} className="text-emerald-500 text-[10px]">{t("edit")}</button>
+                      <span className="flex-1 text-gray-500 dark:text-slate-400 truncate min-w-0">{val || "—"}</span>
+                      <button
+                        type="button"
+                        onClick={() => void handleAiFixClassification(h.id)}
+                        disabled={isFixing || aiFixingId !== null}
+                        aria-label={`${t("autoFixClassification")}: ${displayName}`}
+                        className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md flex-shrink-0 transition-colors bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/50 disabled:opacity-50"
+                      >
+                        <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d={SPARKLE_PATH} />
+                        </svg>
+                        {isFixing ? t("autoFixingClassification") : t("autoFixClassification")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingId(h.id);
+                          setEditVal(val);
+                        }}
+                        className="text-emerald-500 text-[10px] flex-shrink-0"
+                      >
+                        {t("edit")}
+                      </button>
                     </>
                   )}
                 </div>
               );
             })}
           </div>
+          <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-2">{t("autoFixClassificationDisclaimer")}</p>
         </div>
       )}
     </div>

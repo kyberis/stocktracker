@@ -246,7 +246,7 @@ export const featureDomains: FeatureDomain[] = [
       "Lazy-loaded tool tabs reduce initial bundle size",
       "TTWROR uses Modified Dietz method for time-weighted return",
       "IRR uses XIRR (Newton-Raphson) for internal rate of return",
-      "Classification supports auto-classify via Yahoo Finance metadata + OpenAI fallback",
+      "Classification supports auto-classify via Yahoo Finance metadata + per-holding LLM Auto-fix",
     ],
     tech: ["Recharts", "Newton-Raphson (XIRR)", "Modified Dietz"],
     skillFile: ".cursor/skills/engineer-tools/SKILL.md",
