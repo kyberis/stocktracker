@@ -8,6 +8,7 @@ import type {
   ImportAssetType,
 } from "./import-types";
 import { inferAssetType } from "@/lib/infer-asset-type";
+import type { ImportQualityReport } from "@/lib/import-quality";
 
 export type { ExtractedTransaction, ExtractedHolding, CashBalance, BrokerFormat };
 
@@ -61,6 +62,7 @@ export interface UseImportBrokerCSVReturn {
   duplicatesRemoved: number;
   holdingsCapped: number;
   holdingsLimitInfo: HoldingsLimitInfo | null;
+  qualityReport: ImportQualityReport | null;
   importProgress: { current: number; total: number; errors: number };
   importedTxCount: number;
   errorMsg: string;
@@ -81,6 +83,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
   const [duplicatesRemoved, setDuplicatesRemoved] = useState(0);
   const [holdingsCapped, setHoldingsCapped] = useState(0);
   const [holdingsLimitInfo, setHoldingsLimitInfo] = useState<HoldingsLimitInfo | null>(null);
+  const [qualityReport, setQualityReport] = useState<ImportQualityReport | null>(null);
   const [importProgress, setImportProgress] = useState({
     current: 0,
     total: 0,
@@ -98,6 +101,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     setCashBalances([]);
     setDuplicatesRemoved(0);
     setHoldingsCapped(0);
+    setQualityReport(null);
     setHoldingsLimitInfo(null);
     setImportProgress({ current: 0, total: 0, errors: 0 });
     setImportedTxCount(0);
@@ -178,6 +182,11 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
       }
       setDuplicatesRemoved(dupCount);
       setHoldingsLimitInfo(data.summary?.holdingsLimitInfo ?? null);
+      setQualityReport(
+        data.summary?.quality && Array.isArray(data.summary.quality.findings)
+          ? data.summary.quality
+          : null,
+      );
       setHoldings([]);
       setTransactions(
         parsedTransactions.map((tx: Record<string, unknown>) =>
@@ -378,6 +387,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     duplicatesRemoved,
     holdingsCapped,
     holdingsLimitInfo,
+    qualityReport,
     importProgress,
     importedTxCount,
     errorMsg,

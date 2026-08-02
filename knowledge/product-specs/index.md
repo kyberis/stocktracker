@@ -140,6 +140,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [ibkr-flex](ibkr-flex.md) — Flex query token import.
 - [myinvestor-import](myinvestor-import.md) — MyInvestor / Inversis Excel operations import.
 - [import-hub](import-hub.md) — unified `/import` page.
+- [import-data-quality](import-data-quality.md) — market cross-check + auto-repair on import / existing holdings.
 - [snaptrade-import](snaptrade-import.md) — OAuth broker connections.
 
 ## Alerts & Notifications

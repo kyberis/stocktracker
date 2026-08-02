@@ -1,5 +1,23 @@
 import type { CashEntry, ExchangeRates, Holding, HoldingAssetType, ManualAssetType, QuoteData } from "./types";
-import { convertCurrency, convertToEUR, resolveQuoteCurrency, todayLocal } from "./utils";
+import {
+  canConvertCurrency,
+  convertCurrency,
+  convertToEUR,
+  resolveQuoteCurrency,
+  todayLocal,
+} from "./utils";
+
+/** Convert to base currency, or null when FX is missing (never inflate with raw foreign). */
+function toBaseCurrency(
+  amount: number,
+  fromCurrency: string,
+  baseCurrency: string,
+  rates: ExchangeRates,
+): number | null {
+  if (!canConvertCurrency(fromCurrency, baseCurrency, rates)) return null;
+  const v = convertCurrency(amount, fromCurrency, baseCurrency, rates);
+  return Number.isFinite(v) ? v : null;
+}
 import {
   dayChangeFixedReturnCash,
   fixedReturnPrincipalEUR,
@@ -57,20 +75,23 @@ export function computeAllocationByType(
     if (quote && quote.regularMarketPrice > 0) {
       const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
       const valueInQuoteCurrency = h.shares * quote.regularMarketPrice;
-      const currentBase = convertCurrency(valueInQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
+      const currentBase = toBaseCurrency(valueInQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
       const referenceEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
       const isSuspiciousGBXOutlier =
-        h.displayCurrency === "GBX" && h.valueInEUR > 0 && referenceEUR > h.valueInEUR * 10;
+        h.displayCurrency === "GBX" &&
+        h.valueInEUR > 0 &&
+        Number.isFinite(referenceEUR) &&
+        referenceEUR > h.valueInEUR * 10;
 
       if (isSuspiciousGBXOutlier) {
-        valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
-      } else if (currentBase !== valueInQuoteCurrency || quoteCurrency === baseCurrency) {
+        valueBase = toBaseCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
+      } else if (currentBase != null) {
         valueBase = currentBase;
       } else {
-        valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+        valueBase = toBaseCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
       }
     } else {
-      valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+      valueBase = toBaseCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
     }
 
     buckets[type] = (buckets[type] || 0) + valueBase;
@@ -116,20 +137,23 @@ export function computeValueByAssetType(
     if (quote && quote.regularMarketPrice > 0) {
       const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
       const valueInQuoteCurrency = h.shares * quote.regularMarketPrice;
-      const currentBase = convertCurrency(valueInQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
+      const currentBase = toBaseCurrency(valueInQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
       const referenceEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
       const isSuspiciousGBXOutlier =
-        h.displayCurrency === "GBX" && h.valueInEUR > 0 && referenceEUR > h.valueInEUR * 10;
+        h.displayCurrency === "GBX" &&
+        h.valueInEUR > 0 &&
+        Number.isFinite(referenceEUR) &&
+        referenceEUR > h.valueInEUR * 10;
 
       if (isSuspiciousGBXOutlier) {
-        valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
-      } else if (currentBase !== valueInQuoteCurrency || quoteCurrency === baseCurrency) {
+        valueBase = toBaseCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
+      } else if (currentBase != null) {
         valueBase = currentBase;
       } else {
-        valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+        valueBase = toBaseCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
       }
     } else {
-      valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+      valueBase = toBaseCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
     }
 
     buckets[type] += valueBase;
@@ -205,49 +229,50 @@ export function calculatePortfolioTotals(
     const quote = quotes[h.ticker];
 
     const costInDisplayCurrency = h.shares * h.purchasePrice;
-    const costBase = convertCurrency(costInDisplayCurrency, h.displayCurrency, baseCurrency, exchangeRates);
+    const costBase = toBaseCurrency(costInDisplayCurrency, h.displayCurrency, baseCurrency, exchangeRates);
 
     if (quote && quote.regularMarketPrice > 0) {
       const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
       const valueInQuoteCurrency = h.shares * quote.regularMarketPrice;
-      const currentBase = convertCurrency(valueInQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
+      const currentBase = toBaseCurrency(valueInQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
       const dayDeltaQuoteCurrency = h.shares * (quote.regularMarketChange ?? 0);
-      const dayDeltaBase = convertCurrency(dayDeltaQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
+      const dayDeltaBase = toBaseCurrency(dayDeltaQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
 
       const referenceEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
       const isSuspiciousGBXOutlier =
         h.displayCurrency === "GBX" &&
         h.valueInEUR > 0 &&
+        Number.isFinite(referenceEUR) &&
         referenceEUR > h.valueInEUR * 10;
 
       if (isSuspiciousGBXOutlier) {
-        totalCurrentBase += convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
-      } else if (currentBase !== valueInQuoteCurrency || quoteCurrency === baseCurrency) {
+        totalCurrentBase += toBaseCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
+      } else if (currentBase != null) {
         totalCurrentBase += currentBase;
       } else {
-        totalCurrentBase += convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+        totalCurrentBase += toBaseCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
       }
-      dayGainLossBase += dayDeltaBase;
+      dayGainLossBase += dayDeltaBase ?? 0;
     } else {
-      totalCurrentBase += convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+      totalCurrentBase += toBaseCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
     }
 
-    if (costBase !== costInDisplayCurrency || h.displayCurrency === baseCurrency) {
+    if (costBase != null) {
       totalCostBase += costBase;
     } else {
-      totalCostBase += convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+      totalCostBase += toBaseCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
     }
   });
 
   const asOf = todayLocal();
   for (const cash of cashEntries) {
-    const cashBase = convertCurrency(cash.amountEUR, "EUR", baseCurrency, exchangeRates);
+    const cashBase = toBaseCurrency(cash.amountEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
     totalCurrentBase += cashBase;
     if (isFixedReturnCashEntry(cash)) {
       const principalEUR = fixedReturnPrincipalEUR(cash, exchangeRates);
-      totalCostBase += convertCurrency(principalEUR, "EUR", baseCurrency, exchangeRates);
+      totalCostBase += toBaseCurrency(principalEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
       const dayDeltaEUR = dayChangeFixedReturnCash(cash, asOf, exchangeRates);
-      dayGainLossBase += convertCurrency(dayDeltaEUR, "EUR", baseCurrency, exchangeRates);
+      dayGainLossBase += toBaseCurrency(dayDeltaEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
     } else {
       totalCostBase += cashBase;
     }

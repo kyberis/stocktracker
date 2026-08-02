@@ -121,6 +121,9 @@ export function resolveQuoteCurrency(
  * Convert an amount from one currency to EUR using exchange rates.
  * Exchange rates are stored as "1 EUR = X units of foreign currency"
  * (e.g., EURUSD=1.17 means 1 EUR = 1.17 USD).
+ *
+ * Returns NaN when the required rate is missing — never treat foreign
+ * amounts as EUR (that silently overstated portfolio totals).
  */
 export function convertToEUR(
   amount: number,
@@ -132,18 +135,35 @@ export function convertToEUR(
 
   if (normalized === "GBX") {
     const gbpRate = rates["EURGBP"];
-    if (!gbpRate) return amount;
+    if (!gbpRate) return Number.NaN;
     return (amount / 100) / gbpRate;
   }
 
   const rateKey = `EUR${normalized}`;
   const rate = rates[rateKey];
-  if (!rate) return amount;
+  if (!rate) return Number.NaN;
   return amount / rate;
 }
 
 /**
+ * True when convertCurrency(from → to) can run without a missing-rate gap.
+ */
+export function canConvertCurrency(
+  fromCurrency: string,
+  toCurrency: string,
+  rates: ExchangeRates,
+): boolean {
+  const fromNorm = normalizeCurrency(fromCurrency);
+  const toNorm = normalizeCurrency(toCurrency);
+  if (fromNorm === toNorm) return true;
+  if (fromNorm !== "EUR" && !hasExchangeRate(fromNorm, rates)) return false;
+  if (toNorm !== "EUR" && !hasExchangeRate(toNorm, rates)) return false;
+  return true;
+}
+
+/**
  * Convert an amount from one currency to another.
+ * Returns NaN when a required EUR-anchored rate is missing.
  */
 export function convertCurrency(
   amount: number,
@@ -155,19 +175,22 @@ export function convertCurrency(
   const toNorm = normalizeCurrency(toCurrency);
   if (fromNorm === toNorm) return amount;
 
+  if (!canConvertCurrency(fromNorm, toNorm, rates)) return Number.NaN;
+
   const amountInEUR = convertToEUR(amount, fromCurrency, rates);
+  if (!Number.isFinite(amountInEUR)) return Number.NaN;
 
   if (toNorm === "EUR") return amountInEUR;
 
   if (toNorm === "GBX") {
     const gbpRate = rates["EURGBP"];
-    if (!gbpRate) return amount;
+    if (!gbpRate) return Number.NaN;
     return amountInEUR * gbpRate * 100;
   }
 
   const targetKey = `EUR${toNorm}`;
   const targetRate = rates[targetKey];
-  if (!targetRate) return amount;
+  if (!targetRate) return Number.NaN;
   return amountInEUR * targetRate;
 }
 

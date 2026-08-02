@@ -184,14 +184,14 @@ describe("convertToEUR", () => {
     expect(convertToEUR(86, "GBX", rates)).toBe(1);
   });
 
-  it("falls back to original amount when EURGBP is missing (GBX)", () => {
-    expect(convertToEUR(8600, "GBX", {})).toBe(8600);
-    expect(convertToEUR(100, "GBX", { EURUSD: 1.1 })).toBe(100);
+  it("returns NaN when EURGBP is missing (GBX) — never treat pence as EUR", () => {
+    expect(convertToEUR(8600, "GBX", {})).toBeNaN();
+    expect(convertToEUR(100, "GBX", { EURUSD: 1.1 })).toBeNaN();
   });
 
-  it("falls back to original amount when rate is missing (USD)", () => {
-    expect(convertToEUR(100, "USD", {})).toBe(100);
-    expect(convertToEUR(100, "USD", { EURGBP: 0.86 })).toBe(100);
+  it("returns NaN when rate is missing (USD) — never treat foreign as EUR", () => {
+    expect(convertToEUR(100, "USD", {})).toBeNaN();
+    expect(convertToEUR(100, "USD", { EURGBP: 0.86 })).toBeNaN();
   });
 });
 
@@ -230,13 +230,13 @@ describe("convertCurrency", () => {
     expect(convertCurrency(8600, "GBX", "USD", rates)).toBeCloseTo(110);
   });
 
-  it("falls back to original amount when target rate is missing", () => {
-    expect(convertCurrency(100, "USD", "JPY", rates)).toBe(100);
-    expect(convertCurrency(50, "EUR", "CHF", rates)).toBe(50);
+  it("returns NaN when target rate is missing", () => {
+    expect(convertCurrency(100, "USD", "JPY", rates)).toBeNaN();
+    expect(convertCurrency(50, "EUR", "CHF", rates)).toBeNaN();
   });
 
-  it("falls back to original amount when converting to GBX without EURGBP", () => {
-    expect(convertCurrency(100, "EUR", "GBX", {})).toBe(100);
+  it("returns NaN when converting to GBX without EURGBP", () => {
+    expect(convertCurrency(100, "EUR", "GBX", {})).toBeNaN();
   });
 
   it("handles GBp as from currency (normalized to GBX)", () => {

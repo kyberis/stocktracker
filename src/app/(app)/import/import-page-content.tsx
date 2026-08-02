@@ -20,6 +20,9 @@ import AddStockModal from "@/components/AddStockModal";
 import DataUpgradeNudge from "@/components/DataUpgradeNudge";
 import { useCommerceEnabled } from "@/lib/commerce";
 import PortfolioPickerModal from "@/components/PortfolioPickerModal";
+import { ImportDataQualityPanel } from "@/components/ImportDataQualityPanel";
+import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
+import type { ImportQualityReport } from "@/lib/import-quality";
 import type { BrokerFormat } from "@/hooks/import-types";
 
 type ImportMethod = "broker_csv" | "snaptrade_api" | "ai_import" | "manual";
@@ -160,6 +163,33 @@ export default function ImportPageContent() {
   const aiImport = useImportAI();
   const snapTradeApi = useSnapTradeApi();
   const [snapTradeStartDate, setSnapTradeStartDate] = useState<Record<string, string>>({});
+  const [repairReport, setRepairReport] = useState<ImportQualityReport | null>(null);
+  const [repairBusy, setRepairBusy] = useState(false);
+
+  const runPortfolioQualityRepair = useCallback(async (confirmFindingIds?: string[]) => {
+    setRepairBusy(true);
+    try {
+      const res = await fetchWithAuthRedirect("/api/import/quality-repair", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          portfolioId: activePortfolioId || undefined,
+          locale,
+          confirmFindingIds,
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as ImportQualityReport;
+        setRepairReport(data);
+        await refreshHoldings();
+        await refreshQuotes();
+      }
+    } catch {
+      // keep prior report
+    } finally {
+      setRepairBusy(false);
+    }
+  }, [activePortfolioId, locale, refreshHoldings, refreshQuotes]);
 
   // AI file handling
   const aiFileRef = useRef<HTMLInputElement>(null);
@@ -465,6 +495,31 @@ export default function ImportPageContent() {
               </button>
             ))}
           </div>
+
+          <div className="mt-6 space-y-3">
+            <button
+              type="button"
+              className="btn-secondary w-full min-h-[44px]"
+              disabled={repairBusy}
+              onClick={() => runPortfolioQualityRepair()}
+            >
+              {repairBusy ? t("importQualityRepairing") : t("importQualityRepair")}
+            </button>
+            {repairReport ? (
+              <ImportDataQualityPanel
+                report={repairReport}
+                labels={{
+                  title: t("importQualityRepairDone"),
+                  fixed: t("importQualityFixed"),
+                  needsReview: t("importQualityNeedsReview"),
+                  aiDisclaimer: t("importQualityAiDisclaimer"),
+                  empty: t("importQualityEmpty"),
+                }}
+                confirmLabel={t("importQualityConfirmFix")}
+                onConfirmFinding={(id) => runPortfolioQualityRepair([id])}
+              />
+            ) : null}
+          </div>
         </div>
       )}
 
@@ -697,6 +752,17 @@ export default function ImportPageContent() {
 
           {method === "broker_csv" && brokerCSV.step === "preview" && (
             <>
+              <ImportDataQualityPanel
+                report={brokerCSV.qualityReport}
+                labels={{
+                  title: t("importQualityTitle"),
+                  fixed: t("importQualityFixed"),
+                  needsReview: t("importQualityNeedsReview"),
+                  aiDisclaimer: t("importQualityAiDisclaimer"),
+                  empty: t("importQualityEmpty"),
+                }}
+                confirmLabel={t("importQualityConfirmFix")}
+              />
               {brokerCSV.holdingsLimitInfo && (
                 <div className="flex items-start gap-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-4 py-3 mb-4">
                   <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

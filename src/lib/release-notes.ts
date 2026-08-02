@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.72",
+    date: "2026-08-02",
+    title: "Import data quality auditor",
+    titleTranslations: {
+      es: "Auditor de calidad de datos al importar",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Import and portfolio repair now cross-check data against live market quotes: missing FX, GBX/GBP unit errors, currency mismatches, and unresolved tickers. Safe issues are auto-fixed; an AI summary explains what changed. Missing FX rates no longer inflate foreign holdings as euros.",
+        translations: {
+          es: "La importación y la reparación de cartera cruzan los datos con cotizaciones en vivo: FX faltante, errores de unidad GBX/GBP, divisas incorrectas y tickers sin resolver. Los problemas seguros se corrigen solos; un resumen IA explica los cambios. Si falta el tipo de cambio, las posiciones en divisa ya no se inflan como si fueran euros.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.71",
     date: "2026-08-02",
     title: "Crypto asset page routing",

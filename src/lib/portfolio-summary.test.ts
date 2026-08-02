@@ -192,6 +192,28 @@ describe("calculatePortfolioTotals", () => {
     expect(totals.totalCurrentEUR).toBeLessThan(10000);
   });
 
+  it("uses stored valueInEUR when FX rate is missing instead of treating foreign as EUR", () => {
+    const holdings: Holding[] = [
+      holding({
+        ticker: "215",
+        shares: 2000,
+        purchasePrice: 1.18,
+        displayCurrency: "HKD",
+        valueInEUR: 280.59,
+      }),
+    ];
+    const quotes: Record<string, QuoteData> = {
+      "215": quote({
+        symbol: "215",
+        regularMarketPrice: 1.18,
+        currency: "HKD",
+      }),
+    };
+    // No EURHKD — must not inflate to ~2360
+    const totals = calculatePortfolioTotals(holdings, [], quotes, {});
+    expect(totals.totalCurrentEUR).toBeCloseTo(280.59, 2);
+  });
+
   it("falls back to stored value for suspicious GBX quote outliers", () => {
     const holdings: Holding[] = [
       {

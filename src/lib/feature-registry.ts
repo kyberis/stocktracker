@@ -80,6 +80,7 @@ export const featureDomains: FeatureDomain[] = [
     ],
     apiRoutes: [
       { method: "POST", path: "/api/transactions/import-broker", auth: "session", description: "Parse and import broker CSV" },
+      { method: "POST", path: "/api/import/quality-repair", auth: "session", description: "Audit and auto-repair holdings vs market data" },
       { method: "POST", path: "/api/transactions/import", auth: "session", description: "AI-powered import extraction" },
       { method: "POST", path: "/api/holdings/batch", auth: "session", description: "Batch-import holdings" },
       { method: "GET", path: "/api/transactions", auth: "session", description: "List transaction history" },

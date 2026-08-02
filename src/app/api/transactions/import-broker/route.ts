@@ -15,6 +15,138 @@ import { getHoldingsLimit } from "@/lib/subscription";
 import type { SubscriptionPlan } from "@/lib/types";
 import { inferAssetType } from "@/lib/infer-asset-type";
 import { blobToUtf8CsvOrPlainText } from "@/lib/spreadsheet-to-csv";
+import {
+  auditImportBatch,
+  applyTransactionAutoFixes,
+  buildQualityReport,
+  fetchExchangeRatesForCurrencies,
+  fetchQuotesForTickers,
+  planHoldingAutoFixes,
+  summarizeImportQuality,
+} from "@/lib/import-quality";
+import { updateHolding } from "@/lib/db/holdings";
+
+async function runParseQualityPass(
+  parsed: ParsedTransaction[],
+  unmapped: string[],
+  broker: string,
+  reqHeaders?: Headers,
+): Promise<ReturnType<typeof buildQualityReport>> {
+  const yahoo = new YahooProvider();
+  const tickers = parsed
+    .filter((t) => t.ticker)
+    .map((t) => ({ ticker: t.ticker, exchange: inferExchangeFromTicker(t.ticker) }));
+  // Cap quote lookups during preview for large CSVs
+  const capped = tickers.slice(0, 40);
+  const quotes = await fetchQuotesForTickers(yahoo, capped);
+  let rates = await fetchExchangeRatesForCurrencies(yahoo, [
+    ...parsed.map((t) => t.currency),
+    ...Object.values(quotes).map((q) => q.currency),
+  ]);
+
+  let findings = auditImportBatch({
+    transactions: parsed,
+    quotes,
+    exchangeRates: rates,
+    unmappedIsins: unmapped,
+  });
+
+  // Auto-fetch missing FX once, then re-audit
+  if (findings.some((f) => f.code === "missing_fx")) {
+    rates = await fetchExchangeRatesForCurrencies(yahoo, [
+      ...parsed.map((t) => t.currency),
+      ...Object.values(quotes).map((q) => q.currency),
+      ...findings.filter((f) => f.code === "missing_fx").map((f) => String(f.evidence.currency || "")),
+    ]);
+    findings = auditImportBatch({
+      transactions: parsed,
+      quotes,
+      exchangeRates: rates,
+      unmappedIsins: unmapped,
+    });
+    for (const f of findings) {
+      if (f.code === "missing_fx") {
+        const ccy = String(f.evidence.currency || "");
+        const pair = String(f.evidence.pair || "");
+        if ((ccy && rates[`EUR${ccy}`]) || (pair && rates[pair])) {
+          f.fixed = true;
+          f.after = { fetched: true };
+        }
+      }
+    }
+  }
+
+  const fixed = applyTransactionAutoFixes(parsed, findings, quotes);
+  // mutate caller's array in place
+  parsed.length = 0;
+  parsed.push(...fixed.transactions);
+
+  const aiSummary = await summarizeImportQuality({
+    findings: fixed.findings,
+    broker,
+    headers: reqHeaders,
+  });
+  return buildQualityReport(fixed.findings, aiSummary);
+}
+
+async function runPostImportHoldingRepair(userId: string, portfolioId?: string): Promise<void> {
+  try {
+    const holdings = await listHoldings(userId, portfolioId);
+    if (holdings.length === 0) return;
+    const yahoo = new YahooProvider();
+    const quotes = await fetchQuotesForTickers(
+      yahoo,
+      holdings.map((h) => ({ ticker: h.ticker, exchange: h.exchange })),
+    );
+    let rates = await fetchExchangeRatesForCurrencies(yahoo, [
+      ...holdings.map((h) => h.displayCurrency),
+      ...Object.values(quotes).map((q) => q.currency),
+    ]);
+    let findings = auditImportBatch({
+      transactions: [],
+      holdings: holdings.map((h) => ({
+        id: h.id,
+        ticker: h.ticker,
+        name: h.name,
+        isin: h.isin,
+        shares: h.shares,
+        purchasePrice: h.purchasePrice,
+        displayCurrency: h.displayCurrency,
+        exchange: h.exchange,
+        valueInEUR: h.valueInEUR,
+      })),
+      quotes,
+      exchangeRates: rates,
+    });
+    if (findings.some((f) => f.code === "missing_fx")) {
+      rates = await fetchExchangeRatesForCurrencies(yahoo, [
+        ...holdings.map((h) => h.displayCurrency),
+        ...Object.values(quotes).map((q) => q.currency),
+      ]);
+      findings = auditImportBatch({
+        transactions: [],
+        holdings: holdings.map((h) => ({
+          id: h.id,
+          ticker: h.ticker,
+          shares: h.shares,
+          purchasePrice: h.purchasePrice,
+          displayCurrency: h.displayCurrency,
+          exchange: h.exchange,
+          valueInEUR: h.valueInEUR,
+        })),
+        quotes,
+        exchangeRates: rates,
+      });
+    }
+    const { plans } = planHoldingAutoFixes(holdings, findings, quotes, rates);
+    for (const plan of plans) {
+      if (Object.keys(plan.updates).length === 0) continue;
+      await updateHolding(userId, plan.holdingId, plan.updates);
+    }
+  } catch (err) {
+    console.error("[import-broker] post-import quality repair failed:", err);
+  }
+}
 
 async function resolveCsvFromFormData(formData: FormData): Promise<string> {
   const csvRaw = formData.get("csv");
@@ -223,6 +355,7 @@ async function importTransactions(
 
   if (imported > 0) {
     await rebuildHoldings(userId, portfolioId);
+    await runPostImportHoldingRepair(userId, portfolioId);
   }
 
   let cashImported = 0;
@@ -435,19 +568,30 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
       }
     }
 
+    const unmapped = deduped
+      .filter((t) => !t.ticker && t.isin)
+      .map((t) => t.isin)
+      .filter((v, i, a) => a.indexOf(v) === i);
+
+    // Mutates deduped in place with safe auto-fixes (GBX units, currency align…)
+    let qualityReport: ReturnType<typeof buildQualityReport> | undefined;
+    try {
+      qualityReport = await runParseQualityPass(deduped, unmapped, broker, req.headers);
+    } catch (err) {
+      console.error("[import-broker] quality pass failed:", err);
+    }
+
     const summary = {
       total: deduped.length,
       buys: deduped.filter((t) => t.type === "buy").length,
       sells: deduped.filter((t) => t.type === "sell").length,
       dividends: deduped.filter((t) => t.type === "dividend").length,
       fees: deduped.filter((t) => t.type === "fee").length,
-      unmapped: deduped
-        .filter((t) => !t.ticker && t.isin)
-        .map((t) => t.isin)
-        .filter((v, i, a) => a.indexOf(v) === i),
+      unmapped,
       cashBalances,
       duplicatesRemoved,
       ...(holdingsLimitInfo ? { holdingsLimitInfo } : {}),
+      ...(qualityReport ? { quality: qualityReport } : {}),
     };
     return NextResponse.json({ transactions: deduped, summary });
   }

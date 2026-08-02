@@ -85,10 +85,10 @@ function StockRow({ holding, onSelect }: StockRowProps) {
   const totalCost = holding.shares * holding.purchasePrice;
   const totalValue = hasQuote ? holding.shares * currentPriceInDisplay : totalCost;
   const dayChangePercent = quote?.regularMarketChangePercent ?? 0;
-  const dayChangeAmountEUR = hasQuote && quote
+  const dayChangeAmountEUR = hasQuote && quote && hasExchangeRate(quoteCurrency, exchangeRates)
     ? convertToEUR(holding.shares * (quote.regularMarketChange ?? 0), quoteCurrency, exchangeRates)
     : 0;
-  const totalValueEUR = hasQuote
+  const totalValueEUR = hasQuote && hasExchangeRate(holding.displayCurrency, exchangeRates)
     ? convertToEUR(totalValue, holding.displayCurrency, exchangeRates)
     : holding.valueInEUR;
 

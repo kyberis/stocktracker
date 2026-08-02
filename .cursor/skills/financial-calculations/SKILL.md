@@ -58,6 +58,7 @@ Use `convertToEUR(amount, currency, rates)` from `src/lib/utils.ts`. Do not inli
 - Standard: `amount / rates["EUR${currency}"]`
 - GBX (pence): `amount / 100 / rates["EURGBP"]`
 - EUR: `amount` (identity)
+- **Missing rate:** returns `NaN` (never treat foreign amounts as EUR). Callers must use `hasExchangeRate` / `canConvertCurrency` and fall back to stored `valueInEUR` or `"--"`.
 
 ### Converting Between Currencies
 
