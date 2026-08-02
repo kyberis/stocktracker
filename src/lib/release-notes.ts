@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.66",
+    date: "2026-08-02",
+    title: "Allocation CTA to Classification",
+    titleTranslations: {
+      es: "CTA de Allocation a Clasificación",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The Home Allocation card links to Classification (/tools/taxonomy) so you can fix unclassified holdings; the CTA is emphasized when any position lacks sector, region, or asset class.",
+        translations: {
+          es: "La tarjeta Allocation del Home enlaza a Clasificación (/tools/taxonomy) para corregir posiciones sin clasificar; el CTA se enfatiza cuando falta sector, región o clase de activo.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.65",
     date: "2026-08-02",
     title: "Home Allocation in the right rail",

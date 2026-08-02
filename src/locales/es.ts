@@ -2626,6 +2626,9 @@ const es: TranslationStrings = {
   holdingTagsCryptoNote:
     "La cripto se agrupa en Cripto en el gráfico; las etiquetas solo aplican a acciones y ETFs.",
   v2ShowMore: "Ver más",
+  v2AllocManageCta: "Abrir clasificación",
+  v2AllocFixUnclassifiedCta: "Corregir sin clasificar",
+  v2AllocFixUnclassifiedHint: "Hay posiciones sin clasificar — abre Clasificación para asignar sector, región o etiquetas",
   v2MyGoal: "Mi Objetivo",
   v2UpcomingEarnings: "Próximos Resultados",
   v2ViewAll: "Ver todos",

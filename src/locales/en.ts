@@ -2624,6 +2624,9 @@ const en: TranslationStrings = {
   holdingTagsCryptoNote:
     "Crypto is grouped under Crypto in the chart; tags apply to stocks and ETFs only.",
   v2ShowMore: "Show more",
+  v2AllocManageCta: "Open classification",
+  v2AllocFixUnclassifiedCta: "Fix unclassified",
+  v2AllocFixUnclassifiedHint: "Some holdings are unclassified — open Classification to assign sector, region, or tags",
   v2MyGoal: "My Goal",
   v2UpcomingEarnings: "Upcoming Earnings",
   v2ViewAll: "View all",

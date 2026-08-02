@@ -68,7 +68,7 @@ type HomeDayHighlight = {
 
 **Main column (desktop):** Morning brief → Portfolio hero → Movers \| Catalysts → Day highlights → Holdings → FinPulse teaser → Portfolio News (compact).
 
-**Rail (~320px):** Allocation → Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats. Hidden when empty (no holdings). On mobile, Allocation stays in the main column above holdings.
+**Rail (~320px):** Allocation (CTA → `/tools/taxonomy` to fix unclassified) → Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats. Hidden when empty (no holdings). On mobile, Allocation stays in the main column above holdings.
 
 **Empty (no holdings):** Same `EmptyPortfolio` CTA as Classic `/` (import + add stock). Cash-only still counts as empty for this gate.
 

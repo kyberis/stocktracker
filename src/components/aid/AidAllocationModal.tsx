@@ -210,7 +210,7 @@ export default function AidAllocationModal({ open, onClose, holdings, cashEntrie
         )}
 
         <Link
-          href="/?tab=diversification"
+          href="/tools/taxonomy"
           className="block text-center text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
         >
           {t("aidOpenDiversification")}

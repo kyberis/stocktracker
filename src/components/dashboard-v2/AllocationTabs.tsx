@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
+import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
@@ -13,9 +14,12 @@ import type { AllocationSlice } from "@/lib/portfolio-summary";
 
 type AllocTab = "type" | "sectors" | "regions" | "tags";
 
+const TAXONOMY_HREF = "/tools/taxonomy";
+
 interface Props {
   holdings: Holding[];
   cashEntries: CashEntry[];
+  /** In-dashboard navigation (Classic). When omitted, CTA links to /tools/taxonomy. */
   onShowMore?: () => void;
 }
 
@@ -137,15 +141,36 @@ export default function AllocationTabs({ holdings, cashEntries, onShowMore }: Pr
     { key: "tags", label: t("v2AllocTags") },
   ];
 
+  const unclassifiedLabel = t("v2Unclassified");
+  const hasUnclassified =
+    holdings.some((h) => !h.sector || !h.region || !h.assetClass) ||
+    sectorAlloc.some((a) => a.label === unclassifiedLabel && a.percent > 0) ||
+    regionAlloc.some((a) => a.label === unclassifiedLabel && a.percent > 0);
+
+  const ctaLabel = hasUnclassified ? t("v2AllocFixUnclassifiedCta") : t("v2AllocManageCta");
+
+  const ManageCta = ({ children, className }: { children: ReactNode; className?: string }) => {
+    if (onShowMore) {
+      return (
+        <button type="button" onClick={onShowMore} className={className}>
+          {children}
+        </button>
+      );
+    }
+    return (
+      <Link href={TAXONOMY_HREF} className={className}>
+        {children}
+      </Link>
+    );
+  };
+
   return (
     <div className="card p-3">
-      <div className="flex items-center justify-between mb-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--foreground)]">{t("v2Allocation")}</p>
-        {onShowMore && (
-          <button onClick={onShowMore} className="text-[11px] font-medium text-emerald-400 hover:underline">
-            {t("v2ShowMore")}
-          </button>
-        )}
+        <ManageCta className="min-h-8 shrink-0 text-[11px] font-semibold text-emerald-600 hover:underline dark:text-emerald-400">
+          {ctaLabel}
+        </ManageCta>
       </div>
 
       <div className="mb-3 flex gap-0.5 rounded-xl bg-[color:var(--surface-soft)] p-0.5">
@@ -172,6 +197,18 @@ export default function AllocationTabs({ holdings, cashEntries, onShowMore }: Pr
         />
         <Legend items={current} />
       </div>
+
+      {hasUnclassified && (
+        <ManageCta className="mt-3 block w-full rounded-lg border border-amber-400/30 bg-amber-500/[0.08] px-3 py-2 text-center text-[11px] font-semibold text-amber-800 hover:bg-amber-500/[0.14] dark:text-amber-200">
+          {t("v2AllocFixUnclassifiedHint")}
+        </ManageCta>
+      )}
+
+      {!hasUnclassified && (
+        <ManageCta className="mt-3 block w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-center text-[11px] font-semibold text-[color:var(--foreground)] hover:bg-[color:var(--surface-highlight)]">
+          {t("v2AllocManageCta")}
+        </ManageCta>
+      )}
     </div>
   );
 }

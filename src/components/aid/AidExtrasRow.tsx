@@ -215,7 +215,7 @@ export default function AidExtrasRow({ holdings, cashEntries }: Props) {
 
   const driftTile =
     drifts.length > 0 ? (
-      <Tile key="drift" title={t("aidVsTargetTile")} href="/?tab=diversification" ariaLabel={t("aidOpenDiversification")}>
+      <Tile key="drift" title={t("aidVsTargetTile")} href="/tools/taxonomy" ariaLabel={t("aidOpenDiversification")}>
         <p className="text-sm font-semibold tabular-nums text-[color:var(--foreground)]">
           {stealthMode
             ? "•••"
