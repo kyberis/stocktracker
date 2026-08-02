@@ -190,41 +190,39 @@ export default function HomeV2Dashboard() {
                 onAdvanced={() => setAndPersistHeroMode("advanced")}
               />
             ) : (
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-end">
+              <PortfolioHeroCard
+                holdings={holdings}
+                cashEntries={cashEntries}
+                assetFilter={assetFilter}
+                refreshKey={refreshKey}
+                onRecalculate={handleRecalculate}
+                recalculating={recalculating}
+                onOpenAi={() => setAiOpen(true)}
+                totalValue={totals.totalCurrentEUR}
+                investedValue={investedValueBase}
+                cashValue={cashValueBase}
+                dayGainLoss={dayGainLoss}
+                dayGainLossPercent={dayGainLossPercent}
+                dayChangePctByType={dayChangePctByType as Partial<Record<AssetFilter, number>>}
+                headerAction={
                   <button
                     type="button"
                     onClick={() => setAndPersistHeroMode("simple")}
                     aria-expanded={true}
-                    className="inline-flex min-h-9 items-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 text-xs font-semibold text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
+                    className="inline-flex min-h-11 items-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-4 py-2 text-xs font-semibold text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-highlight)]"
                   >
                     {t("homeV2SimpleCta")}
                   </button>
-                </div>
-                <PortfolioHeroCard
-                  holdings={holdings}
-                  cashEntries={cashEntries}
-                  assetFilter={assetFilter}
-                  refreshKey={refreshKey}
-                  onRecalculate={handleRecalculate}
-                  recalculating={recalculating}
-                  onOpenAi={() => setAiOpen(true)}
-                  totalValue={totals.totalCurrentEUR}
-                  investedValue={investedValueBase}
-                  cashValue={cashValueBase}
-                  dayGainLoss={dayGainLoss}
-                  dayGainLossPercent={dayGainLossPercent}
-                  dayChangePctByType={dayChangePctByType as Partial<Record<AssetFilter, number>>}
-                  breakdownSlot={
-                    <MarketAwareBreakdown
-                      holdings={holdings}
-                      cashEntries={cashEntries}
-                      onFilterChange={setAssetFilter}
-                      activeFilter={assetFilter}
-                    />
-                  }
-                />
-              </div>
+                }
+                breakdownSlot={
+                  <MarketAwareBreakdown
+                    holdings={holdings}
+                    cashEntries={cashEntries}
+                    onFilterChange={setAssetFilter}
+                    activeFilter={assetFilter}
+                  />
+                }
+              />
             )}
           </ErrorBoundary>
 

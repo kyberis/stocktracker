@@ -25,6 +25,8 @@ interface Props {
   dayGainLossPercent?: number;
   dayChangePctByType?: Partial<Record<AssetFilter, number>>;
   breakdownSlot?: React.ReactNode;
+  /** Optional control rendered in the header (e.g. Home "Summary" toggle) */
+  headerAction?: React.ReactNode;
   /** When true, hide the footer link to /portfolio chart (e.g. already on /portfolio) */
   hideViewChartLink?: boolean;
   cashEntries?: import("@/lib/types").CashEntry[];
@@ -45,6 +47,7 @@ export default function PortfolioHeroCard({
   dayGainLossPercent,
   dayChangePctByType,
   breakdownSlot,
+  headerAction,
   hideViewChartLink = false,
   cashEntries = [],
 }: Props) {
@@ -77,8 +80,11 @@ export default function PortfolioHeroCard({
     <div className="card relative overflow-hidden rounded-[var(--radius-card)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]">
       {hasHeader && (
         <div className="px-5 pt-5 pb-3">
-          <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-            {t("investedAssets")}
+          <div className="mb-1.5 flex flex-wrap items-start justify-between gap-3">
+            <div className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+              {t("investedAssets")}
+            </div>
+            {headerAction}
           </div>
           <div className="flex flex-wrap items-baseline gap-3">
             <h2

@@ -31,6 +31,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Home arranca con una tarjeta compacta de Portfolio total (P&L del día y métricas clave). Avanzado abre el hero completo con la matriz de rendimiento en el mismo sitio; Resumen vuelve a la vista compacta.",
         },
       },
+      {
+        type: "fix",
+        text: "On Home Advanced view, the Summary control sits inside the portfolio hero card, aligned with the Advanced CTA.",
+        translations: {
+          es: "En la vista Avanzado del Home, el control Resumen queda dentro de la tarjeta del hero, alineado con el CTA Avanzado.",
+        },
+      },
     ],
   },
   {
