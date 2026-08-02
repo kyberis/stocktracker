@@ -103,6 +103,7 @@ export const APP_NAV_PRIMARY: AppNavPrimaryItem[] = [
   {
     href: "/daily-digests",
     labelKey: "dailyDigestsNav",
+    featureFlag: "daily_digests_enabled",
     matches: exactOrChild("/daily-digests"),
     desktop: true,
     desktopTopStrip: true,

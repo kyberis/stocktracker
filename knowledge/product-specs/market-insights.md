@@ -9,7 +9,7 @@ Single page that aggregates macro indicators, newsworthy moves, and AI-generated
 ## 2. Status
 
 - **Tier:** Trefolio
-- **Feature flag:** _none_
+- **Feature flag:** `daily_digests_enabled` (default off)
 - **Health:** green
 - **Owning skill:** [`engineer-integrations`](../../.cursor/skills/engineer-integrations/SKILL.md)
 
@@ -17,7 +17,8 @@ Single page that aggregates macro indicators, newsworthy moves, and AI-generated
 
 | Type | Path | Notes |
 |------|------|-------|
-| Page | [`src/app/(app)/market-insights/`](../../src/app/(app)/market-insights) | Page. |
+| Page | [`src/app/(app)/daily-digests/`](../../src/app/(app)/daily-digests) | Reader UI (gated by `daily_digests_enabled`). |
+| Page | [`src/app/(app)/market-insights/`](../../src/app/(app)/market-insights) | Redirects to `/daily-digests` when flag on, else `/`. |
 | API | [`src/app/api/market-insights/`](../../src/app/api/market-insights) | Aggregation endpoint. |
 | API | [`src/app/api/portfolio-news/`](../../src/app/api/portfolio-news) | News filtered to user's holdings. |
 

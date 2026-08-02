@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { useFeatureFlagContext } from "@/lib/feature-flag-context";
 
 interface InsightPreview {
   id: string;
@@ -15,11 +16,13 @@ interface InsightPreview {
 export default function DailyDigestsTeaserCard() {
   const { t } = useI18n();
   const { demoMode } = usePortfolio();
+  const { flags, isLoaded } = useFeatureFlagContext();
   const [insight, setInsight] = useState<InsightPreview | null>(null);
   const [loading, setLoading] = useState(true);
+  const enabled = isLoaded && !!flags.daily_digests_enabled;
 
   const load = useCallback(async () => {
-    if (demoMode) {
+    if (demoMode || !enabled) {
       setLoading(false);
       return;
     }
@@ -33,13 +36,13 @@ export default function DailyDigestsTeaserCard() {
       setInsight(null);
     }
     setLoading(false);
-  }, [demoMode]);
+  }, [demoMode, enabled]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  if (demoMode) return null;
+  if (demoMode || !enabled) return null;
 
   if (loading) {
     return (

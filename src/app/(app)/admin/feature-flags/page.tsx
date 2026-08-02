@@ -44,6 +44,11 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     description: "AI weekly digest card on the home dashboard and Monday digest emails (Pro). When off, the card is hidden and the cron does not generate or send digests.",
     group: "Features",
   },
+  daily_digests_enabled: {
+    label: "Daily digests",
+    description: "Market daily digests at /daily-digests, nav entry, and home teaser card. Off by default while unused.",
+    group: "Features",
+  },
   aid_beta: {
     label: "Investor Briefing (AID beta)",
     description: "Beta briefing at /aid and home CTA when enabled. Portfolio pulse, FinPulse, scannable news, and Warren / Will / Clara column.",

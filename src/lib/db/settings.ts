@@ -45,6 +45,7 @@ export type PlatformFeature =
   | "market_data_alpha_vantage"
   | "mcp_fmp_proxy"
   | "weekly_digest_enabled"
+  | "daily_digests_enabled"
   | "telegram_bot_enabled"
   | "aid_beta"
   | "home_v2"
@@ -455,6 +456,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "market_data_alpha_vantage",
   "mcp_fmp_proxy",
   "weekly_digest_enabled",
+  "daily_digests_enabled",
   "telegram_bot_enabled",
   "aid_beta",
   "home_v2",

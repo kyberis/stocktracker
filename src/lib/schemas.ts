@@ -509,6 +509,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "market_data_alpha_vantage",
   "mcp_fmp_proxy",
   "weekly_digest_enabled",
+  "daily_digests_enabled",
   "aid_beta",
   "home_v2",
   "classic_home",

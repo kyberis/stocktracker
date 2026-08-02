@@ -26,6 +26,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "market_data_fmp_event_sync",
   "market_data_alpha_vantage",
   "weekly_digest_enabled",
+  "daily_digests_enabled",
   "aid_beta",
   "home_v2",
   "classic_home",

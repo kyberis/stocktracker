@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.64",
+    date: "2026-08-02",
+    title: "Daily digests behind feature flag",
+    titleTranslations: {
+      es: "Resúmenes diarios detrás de feature flag",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Daily digests (nav, /daily-digests, and home teaser) are gated by daily_digests_enabled and off by default until the feature is used again.",
+        translations: {
+          es: "Los resúmenes diarios (nav, /daily-digests y teaser del home) quedan detrás de daily_digests_enabled y desactivados por defecto hasta que se vuelva a usar la función.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.63",
     date: "2026-08-02",
     title: "New Home is the default dashboard",
