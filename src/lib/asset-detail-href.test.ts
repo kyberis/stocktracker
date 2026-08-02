@@ -11,14 +11,12 @@ import type { Holding } from "./types";
 function holding(partial: Partial<Holding> & Pick<Holding, "ticker">): Holding {
   return {
     id: "h1",
-    ticker: partial.ticker,
     name: partial.name ?? partial.ticker,
     isin: "",
     shares: 1,
     purchasePrice: 1,
     displayCurrency: "USD",
-    exchange: partial.exchange ?? "",
-    assetType: partial.assetType,
+    exchange: "",
     valueInEUR: 1,
     ...partial,
   };
