@@ -45,6 +45,7 @@ const ReferralShareModal = dynamic(() => import("./ReferralShareModal"), { ssr: 
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import SampleDataBanner from "./SampleDataBanner";
 import AidBetaCta from "./aid/AidBetaCta";
+import HomeV2BetaCta from "./homepage/HomeV2BetaCta";
 import SecureAccountPrompt from "./SecureAccountPrompt";
 
 const DashboardUpgradeNudge = dynamic(() => import("./DashboardUpgradeNudge"), { ssr: false });
@@ -225,6 +226,7 @@ function DesktopDashboard() {
     <>
       <main className={`max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6 ${layoutTheme === "terminal" ? "space-y-2 sm:space-y-4" : layoutTheme === "canvas" ? "space-y-5 sm:space-y-10" : "space-y-4 sm:space-y-8"}`}>
         <TrialCountdownBanner />
+        <HomeV2BetaCta />
         <AidBetaCta />
         <SnapTradeReconnectBanner />
         <LeafPromoBanner />

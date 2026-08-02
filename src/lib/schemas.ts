@@ -477,6 +477,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "mcp_fmp_proxy",
   "weekly_digest_enabled",
   "aid_beta",
+  "home_v2",
   "commerce_enabled",
 ]);
 

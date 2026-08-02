@@ -66,7 +66,8 @@ describe("GET /api/aid/digest", () => {
   });
 
   it("returns 403 when aid_beta is disabled", async () => {
-    mockedFlag.mockResolvedValueOnce(false);
+    // canAccessAidData checks aid_beta and home_v2 — both must be off
+    mockedFlag.mockResolvedValue(false);
 
     const { GET } = await import("./route");
     const res = await GET(new NextRequest("http://localhost/api/aid/digest"));

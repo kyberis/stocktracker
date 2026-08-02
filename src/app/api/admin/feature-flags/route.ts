@@ -27,6 +27,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "market_data_alpha_vantage",
   "weekly_digest_enabled",
   "aid_beta",
+  "home_v2",
   "commerce_enabled",
 ];
 

@@ -23,6 +23,7 @@ import DashboardTabBarQuickLinks from "@/components/DashboardTabBarQuickLinks";
 import SampleDataBanner from "@/components/SampleDataBanner";
 import TrialCountdownBanner from "@/components/TrialCountdownBanner";
 import AidBetaCta from "@/components/aid/AidBetaCta";
+import HomeV2BetaCta from "@/components/homepage/HomeV2BetaCta";
 import SecureAccountPrompt from "@/components/SecureAccountPrompt";
 import CloverToLogo from "@/components/CloverToLogo";
 import { ChartSkeleton } from "@/components/Skeleton";
@@ -303,6 +304,7 @@ export default function MobileDashboard() {
         </div>
 
         <TrialCountdownBanner />
+        <HomeV2BetaCta />
         <AidBetaCta />
         <SnapTradeReconnectBanner />
         <LeafPromoBanner />

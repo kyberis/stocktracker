@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>trefolio — Unified Homepage v1 (mockup)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #07111d;
+      --foreground: #edf4ff;
+      --card: rgba(10, 16, 26, 0.92);
+      --surface-soft: rgba(255, 255, 255, 0.03);
+      --surface-highlight: rgba(255, 255, 255, 0.055);
+      --border: rgba(154, 174, 209, 0.14);
+      --muted: #8ea1bf;
+      --faint: #5a6a84;
+      --accent: #1dd1a1;
+      --accent-dim: rgba(29, 209, 161, 0.14);
+      --gain: #34d399;
+      --gain-dim: rgba(52, 211, 153, 0.12);
+      --loss: #f87171;
+      --loss-dim: rgba(248, 113, 113, 0.12);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.14);
+      --violet: #a78bfa;
+      --radius: 18px;
+      --radius-sm: 12px;
+      --radius-btn: 14px;
+    }
+
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: linear-gradient(180deg, #07111d 0%, #0b1627 55%, #07111d 100%);
+      color: var(--foreground);
+      min-height: 100vh;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Proposal chrome ── */
+    .proposal {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      background: rgba(7, 17, 29, 0.88);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+    }
+    .proposal-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .proposal h1 {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .proposal p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .seg {
+      display: flex;
+      gap: 3px;
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-soft);
+    }
+    .seg button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font: 600 11px/1 "DM Sans", sans-serif;
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      min-height: 32px;
+    }
+    .seg button.active {
+      background: var(--surface-highlight);
+      color: var(--foreground);
+    }
+    .ann-toggle {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--muted);
+      font: 600 11px/1 "DM Sans", sans-serif;
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      min-height: 32px;
+    }
+    .ann-toggle.on {
+      color: var(--accent);
+      border-color: rgba(29, 209, 161, 0.35);
+      background: var(--accent-dim);
+    }
+
+    /* ── App shell ── */
+    .frame-wrap {
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .frame {
+      width: 100%;
+      max-width: 1200px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      overflow: hidden;
+      background: rgba(7, 13, 23, 0.65);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      transition: max-width 0.25s ease;
+    }
+    body.mobile-view .frame {
+      max-width: 390px;
+    }
+
+    .ticker {
+      display: flex;
+      gap: 18px;
+      overflow: hidden;
+      padding: 6px 14px;
+      background: #020617;
+      border-bottom: 1px solid #1e293b;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+    .ticker .up { color: var(--gain); }
+    .ticker .down { color: var(--loss); }
+    .ticker strong { color: #e2e8f0; font-weight: 500; }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(7, 13, 23, 0.94);
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+    .brand span { color: var(--accent); }
+    .nav-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .chip {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .toolbar .pf {
+      font-weight: 600;
+      font-size: 13px;
+      margin-right: 4px;
+    }
+    .toolbar .link {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .toolbar .link:hover, .toolbar .link.active {
+      color: var(--foreground);
+      background: var(--surface-highlight);
+    }
+    .btn {
+      border: none;
+      border-radius: var(--radius-btn);
+      padding: 8px 14px;
+      font: 600 12px/1 "DM Sans", sans-serif;
+      cursor: pointer;
+      min-height: 36px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #07111d;
+    }
+    .btn-ghost {
+      background: var(--surface-soft);
+      color: var(--foreground);
+      border: 1px solid var(--border);
+    }
+    .btn-sm {
+      padding: 6px 10px;
+      min-height: 30px;
+      font-size: 11px;
+    }
+    .ml-auto { margin-left: auto; }
+
+    .body {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 14px;
+      padding: 14px;
+      align-items: start;
+    }
+    body.mobile-view .body {
+      grid-template-columns: 1fr;
+    }
+    body.mobile-view .rail-order-mcp {
+      order: 8;
+    }
+    body.mobile-view .main > *,
+    body.mobile-view .rail > * {
+      /* keep natural order; MCP moved via DOM on toggle if needed */
+    }
+
+    .card {
+      position: relative;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .card:last-child { margin-bottom: 0; }
+
+    .ann {
+      display: none;
+      position: absolute;
+      top: -9px;
+      left: 12px;
+      z-index: 2;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #122033;
+      border: 1px solid rgba(29, 209, 161, 0.45);
+      color: var(--accent);
+    }
+    body.show-ann .ann { display: inline-flex; }
+
+    .eyebrow {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Brief */
+    .brief-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .pill.hot {
+      background: var(--amber-dim);
+      border-color: rgba(251, 191, 36, 0.3);
+      color: var(--amber);
+    }
+    .brief-box {
+      border-left: 3px solid var(--accent);
+      background: var(--surface-soft);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 10px 12px;
+      font-size: 13px;
+      margin: 10px 0 12px;
+    }
+    .brief-box strong { color: var(--foreground); }
+
+    /* Hero */
+    .hero-value {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .hero-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gain);
+    }
+    .hero-change.down { color: var(--loss); }
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+    body.mobile-view .matrix {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .matrix-cell {
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+    }
+    .matrix-cell .k {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+    }
+    .matrix-cell .v {
+      font-size: 14px;
+      font-weight: 700;
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .matrix-cell .p {
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .up { color: var(--gain); }
+    .down { color: var(--loss); }
+
+    /* Twin row */
+    .twin {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    body.mobile-view .twin {
+      grid-template-columns: 1fr;
+    }
+    .twin .card { margin-bottom: 0; height: 100%; }
+    .mover, .catalyst {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .mover:first-of-type, .catalyst:first-of-type { margin-top: 0; }
+    .ticker-sym {
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .name-sm {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .pct {
+      font-weight: 700;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+    .pct .eur {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: var(--amber-dim);
+      color: var(--amber);
+      white-space: nowrap;
+    }
+    .badge.earn { background: rgba(167, 139, 250, 0.15); color: var(--violet); }
+    .badge.div { background: var(--gain-dim); color: var(--gain); }
+
+    /* Allocation */
+    .alloc-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+    body.mobile-view .alloc-row {
+      grid-template-columns: 1fr;
+    }
+    .donut {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto;
+      border-radius: 50%;
+      background: conic-gradient(
+        #34d399 0 42%,
+        #60a5fa 42% 68%,
+        #fbbf24 68% 82%,
+        #a78bfa 82% 93%,
+        #94a3b8 93% 100%
+      );
+      position: relative;
+    }
+    .donut::after {
+      content: "";
+      position: absolute;
+      inset: 28px;
+      border-radius: 50%;
+      background: #0a101a;
+      border: 1px solid var(--border);
+    }
+    .legend { display: flex; flex-direction: column; gap: 8px; }
+    .legend-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .legend-item .l {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+    }
+    .swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+    .legend-item .r {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Holdings table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th {
+      text-align: left;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 6px;
+      border-bottom: 1px solid rgba(154, 174, 209, 0.08);
+      font-variant-numeric: tabular-nums;
+    }
+    tr:last-child td { border-bottom: none; }
+    .right { text-align: right; }
+    .holding-cards { display: none; flex-direction: column; gap: 8px; }
+    body.mobile-view .holdings-table { display: none; }
+    body.mobile-view .holding-cards { display: flex; }
+    .h-card {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+    }
+
+    /* FinPulse teaser */
+    .fp-item {
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    .fp-item .meta {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    /* Rail cards */
+    .warren {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.08), var(--card));
+    }
+    .mcp {
+      border-color: rgba(167, 139, 250, 0.35);
+      background: linear-gradient(180deg, rgba(167, 139, 250, 0.08), var(--card));
+    }
+    .mcp .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .mcp-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #d97757;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: white;
+    }
+    .steps {
+      margin: 10px 0 12px;
+      padding-left: 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .steps li { margin-bottom: 4px; }
+
+    .tabs-hint {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .tab-pill {
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      padding: 5px 9px;
+      border-radius: 999px;
+    }
+
+    .footnote {
+      max-width: 1200px;
+      margin: 0 auto 28px;
+      padding: 0 20px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .footnote code {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: var(--accent);
+    }
+
+    body.mobile-view .hide-mobile { display: none !important; }
+    body.desktop-view .hide-desktop { display: none !important; }
+  </style>
+</head>
+<body class="desktop-view show-ann">
+  <header class="proposal">
+    <div class="proposal-inner">
+      <div>
+        <h1>Unified Homepage v1 — mockup</h1>
+        <p>Classic portfolio depth + AID daily briefing · habit loop · Claude MCP CTA</p>
+      </div>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Viewport">
+          <button type="button" class="active" id="btn-desktop" onclick="setView('desktop')">Desktop</button>
+          <button type="button" id="btn-mobile" onclick="setView('mobile')">Mobile</button>
+        </div>
+        <button type="button" class="ann-toggle on" id="btn-ann" onclick="toggleAnn()">Annotations ON</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="frame-wrap">
+    <div class="frame" id="frame">
+      <!-- Ticker -->
+      <div class="ticker" aria-hidden="true">
+        <span><strong>IBEX</strong> 11,842 <span class="up">+0.6%</span></span>
+        <span><strong>DAX</strong> 18,210 <span class="up">+0.4%</span></span>
+        <span><strong>S&amp;P</strong> 5,412 <span class="down">−0.2%</span></span>
+        <span><strong>EUR/USD</strong> 1.084 <span class="up">+0.1%</span></span>
+        <span><strong>BTC</strong> 67,420 <span class="up">+1.8%</span></span>
+      </div>
+
+      <!-- Nav -->
+      <div class="nav">
+        <div class="brand">tre<span>folio</span></div>
+        <div class="nav-actions">
+          <span class="chip hide-mobile">Search holdings…</span>
+          <span class="chip">ES</span>
+          <span class="chip">MS</span>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <span class="pf">Cartera principal ▾</span>
+        <span class="link active">Holdings</span>
+        <span class="link hide-mobile">Tools</span>
+        <span class="link hide-mobile">Views</span>
+        <span class="link hide-mobile">News</span>
+        <button type="button" class="btn btn-ghost btn-sm ml-auto hide-mobile">Sync</button>
+        <button type="button" class="btn btn-primary btn-sm">+ Add</button>
+      </div>
+
+      <div class="body">
+        <main class="main">
+          <!-- 1. Morning Brief -->
+          <section class="card" id="brief">
+            <span class="ann">1 · AID brief</span>
+            <div class="eyebrow"><span class="dot"></span> Mercado abierto · última visita hace 18h</div>
+            <div class="title-row">
+              <div>
+                <h2>4 novedades desde tu última visita</h2>
+                <p class="sub">Tu check-in de hoy — 30 segundos</p>
+              </div>
+              <button type="button" class="btn btn-primary btn-sm">Ponerse al día (4)</button>
+            </div>
+            <div class="brief-stats">
+              <span class="pill hot">2 movimientos fuertes</span>
+              <span class="pill">1 earnings hoy</span>
+              <span class="pill">1 alerta</span>
+            </div>
+            <div class="brief-box">
+              <strong>Morning brief:</strong> ASML lidera (+3.8%). AAPL reporta tras el cierre.
+              Tu cartera va <span class="up">+1.2%</span> hoy — por encima del IBEX.
+            </div>
+          </section>
+
+          <!-- 2. Portfolio Hero -->
+          <section class="card" id="hero">
+            <span class="ann">2 · Classic hero</span>
+            <div class="title-row">
+              <div>
+                <p class="sub">Valor de cartera</p>
+                <div class="hero-value">€148,420</div>
+                <div class="hero-change">▲ +€1,760 · +1.2% hoy</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+                <button type="button" class="btn btn-ghost btn-sm">Día</button>
+                <button type="button" class="btn btn-ghost btn-sm" style="opacity:.55">Semana</button>
+                <button type="button" class="btn btn-ghost btn-sm" style="opacity:.55">Mes</button>
+              </div>
+            </div>
+            <div class="matrix">
+              <div class="matrix-cell">
+                <div class="k">Stocks</div>
+                <div class="v">€62.4k</div>
+                <div class="p up">+1.8%</div>
+              </div>
+              <div class="matrix-cell">
+                <div class="k">ETFs</div>
+                <div class="v">€48.1k</div>
+                <div class="p up">+0.6%</div>
+              </div>
+              <div class="matrix-cell">
+                <div class="k">Crypto</div>
+                <div class="v">€21.9k</div>
+                <div class="p up">+2.4%</div>
+              </div>
+              <div class="matrix-cell">
+                <div class="k">Cash</div>
+                <div class="v">€16.0k</div>
+                <div class="p" style="color:var(--muted)">0.0%</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3. Twin: Movers | Catalysts -->
+          <div class="twin">
+            <section class="card" id="movers">
+              <span class="ann">3a · Movers</span>
+              <div class="title-row">
+                <div>
+                  <h2>Movimientos</h2>
+                  <p class="sub">Mayor impacto en tu cartera hoy</p>
+                </div>
+              </div>
+              <div class="mover">
+                <div>
+                  <div class="ticker-sym">ASML</div>
+                  <div class="name-sm">ASML Holding</div>
+                </div>
+                <div class="pct up">+3.8%<span class="eur">+€842</span></div>
+              </div>
+              <div class="mover">
+                <div>
+                  <div class="ticker-sym">BTC-EUR</div>
+                  <div class="name-sm">Bitcoin</div>
+                </div>
+                <div class="pct up">+1.8%<span class="eur">+€386</span></div>
+              </div>
+              <div class="mover">
+                <div>
+                  <div class="ticker-sym">SAN</div>
+                  <div class="name-sm">Banco Santander</div>
+                </div>
+                <div class="pct down">−1.4%<span class="eur">−€210</span></div>
+              </div>
+            </section>
+
+            <section class="card" id="catalysts">
+              <span class="ann">3b · Catalysts</span>
+              <div class="title-row">
+                <div>
+                  <h2>Catalizadores</h2>
+                  <p class="sub">Próximos eventos que pueden mover el precio</p>
+                </div>
+              </div>
+              <div class="catalyst">
+                <div>
+                  <div class="ticker-sym">AAPL</div>
+                  <div class="name-sm">Earnings · hoy after close</div>
+                </div>
+                <span class="badge earn">Earnings</span>
+              </div>
+              <div class="catalyst">
+                <div>
+                  <div class="ticker-sym">VWCE</div>
+                  <div class="name-sm">Ex-dividend · 5 ago</div>
+                </div>
+                <span class="badge div">Dividendo</span>
+              </div>
+              <div class="catalyst">
+                <div>
+                  <div class="ticker-sym">NVDA</div>
+                  <div class="name-sm">GTC keynote · 12 ago</div>
+                </div>
+                <span class="badge">Catalizador</span>
+              </div>
+            </section>
+          </div>
+
+          <!-- 4. Allocation -->
+          <section class="card" id="alloc">
+            <span class="ann">4 · Allocation</span>
+            <div class="title-row">
+              <div>
+                <h2>Distribución</h2>
+                <p class="sub">Siempre visible · ver Diversificación para más</p>
+              </div>
+              <button type="button" class="btn btn-ghost btn-sm">Por tipo ▾</button>
+            </div>
+            <div class="alloc-row">
+              <div class="donut" aria-hidden="true"></div>
+              <div class="legend">
+                <div class="legend-item"><span class="l"><span class="swatch" style="background:#34d399"></span>Stocks</span><span class="r">42%</span></div>
+                <div class="legend-item"><span class="l"><span class="swatch" style="background:#60a5fa"></span>ETFs</span><span class="r">26%</span></div>
+                <div class="legend-item"><span class="l"><span class="swatch" style="background:#fbbf24"></span>Crypto</span><span class="r">15%</span></div>
+                <div class="legend-item"><span class="l"><span class="swatch" style="background:#a78bfa"></span>Funds</span><span class="r">11%</span></div>
+                <div class="legend-item"><span class="l"><span class="swatch" style="background:#94a3b8"></span>Cash</span><span class="r">6%</span></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 5. Holdings -->
+          <section class="card" id="holdings">
+            <span class="ann">5 · All assets</span>
+            <div class="title-row">
+              <div>
+                <h2>Activos</h2>
+                <p class="sub">12 holdings · ordenados por cambio del día</p>
+              </div>
+              <button type="button" class="btn btn-ghost btn-sm">Filtrar</button>
+            </div>
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th>Ticker</th>
+                  <th class="right">Valor</th>
+                  <th class="right">Día</th>
+                  <th class="right">P&amp;L</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>ASML</strong><div class="name-sm">ASML Holding</div></td>
+                  <td class="right">€22,180</td>
+                  <td class="right up">+3.8%</td>
+                  <td class="right up">+€4,210</td>
+                </tr>
+                <tr>
+                  <td><strong>VWCE</strong><div class="name-sm">FTSE All-World</div></td>
+                  <td class="right">€31,400</td>
+                  <td class="right up">+0.5%</td>
+                  <td class="right up">+€5,880</td>
+                </tr>
+                <tr>
+                  <td><strong>AAPL</strong><div class="name-sm">Apple</div></td>
+                  <td class="right">€14,920</td>
+                  <td class="right up">+0.9%</td>
+                  <td class="right up">+€2,140</td>
+                </tr>
+                <tr>
+                  <td><strong>SAN</strong><div class="name-sm">Santander</div></td>
+                  <td class="right">€9,850</td>
+                  <td class="right down">−1.4%</td>
+                  <td class="right up">+€1,020</td>
+                </tr>
+                <tr>
+                  <td><strong>BTC</strong><div class="name-sm">Bitcoin</div></td>
+                  <td class="right">€18,200</td>
+                  <td class="right up">+1.8%</td>
+                  <td class="right up">+€6,440</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="holding-cards">
+              <div class="h-card">
+                <div><div class="ticker-sym">ASML</div><div class="name-sm">€22,180</div></div>
+                <div class="pct up">+3.8%</div>
+              </div>
+              <div class="h-card">
+                <div><div class="ticker-sym">VWCE</div><div class="name-sm">€31,400</div></div>
+                <div class="pct up">+0.5%</div>
+              </div>
+              <div class="h-card">
+                <div><div class="ticker-sym">AAPL</div><div class="name-sm">€14,920</div></div>
+                <div class="pct up">+0.9%</div>
+              </div>
+            </div>
+            <p class="sub" style="margin-top:10px;text-align:center">Mostrar 7 más ▾</p>
+            <div class="tabs-hint">
+              <span class="tab-pill">Diversificación</span>
+              <span class="tab-pill">Dividendos</span>
+              <span class="tab-pill">Métricas</span>
+              <span class="tab-pill">Eventos</span>
+              <span class="tab-pill">News</span>
+            </div>
+          </section>
+
+          <!-- 6. FinPulse teaser -->
+          <section class="card" id="teaser">
+            <span class="ann">6 · AID teaser</span>
+            <div class="title-row">
+              <div>
+                <h2>FinPulse · para ti</h2>
+                <p class="sub">Voces de mercado resumidas con IA</p>
+              </div>
+              <button type="button" class="btn btn-ghost btn-sm">Ver briefing</button>
+            </div>
+            <div class="fp-item">
+              <div class="meta">
+                <span class="pill">ASML · holding</span>
+                <span class="pill hot">Impacto alto</span>
+              </div>
+              Pedidos de litografía EUV mejoran el guidance del 2H — coherente con el movimiento de hoy.
+            </div>
+          </section>
+        </main>
+
+        <aside class="rail" id="rail">
+          <!-- Warren -->
+          <section class="card warren">
+            <span class="ann">Rail · Warren</span>
+            <div class="eyebrow"><span class="dot"></span> 1 nudge / día</div>
+            <h2 style="font-size:14px">Warren lo ha visto</h2>
+            <p class="sub" style="margin:8px 0 12px">
+              ASML es tu mayor mover (+3.8%). ¿Quieres que revise el thesis o el moat?
+            </p>
+            <button type="button" class="btn btn-primary btn-sm">Preguntar a Warren</button>
+          </section>
+
+          <!-- MCP CTA -->
+          <section class="card mcp" id="mcp">
+            <span class="ann">NEW · MCP Claude</span>
+            <div class="logo-row">
+              <div class="mcp-mark">C</div>
+              <div>
+                <h2 style="font-size:14px">Analiza en Claude</h2>
+                <p class="sub">MCP read-only · tu cartera en el chat</p>
+              </div>
+            </div>
+            <p class="sub" style="margin-bottom:4px">
+              Conecta Claude Desktop o Claude Code con un token personal y pregunta por movers, allocation o tax en lenguaje natural.
+            </p>
+            <ol class="steps">
+              <li>Profile → Developer · MCP</li>
+              <li>Crea un token <code style="color:var(--violet)">tfp_pat_…</code></li>
+              <li>Pégalo en <code style="color:var(--violet)">claude_desktop_config.json</code></li>
+            </ol>
+            <button type="button" class="btn btn-primary" style="width:100%;background:#d97757;color:#fff">
+              Añadir MCP en Claude
+            </button>
+            <p class="sub" style="margin-top:8px;text-align:center">También funciona en Cursor</p>
+          </section>
+
+          <!-- Digests -->
+          <section class="card">
+            <span class="ann">Rail · Digests</span>
+            <h2 style="font-size:14px">Digest diario</h2>
+            <p class="sub" style="margin:6px 0 10px">Índices, FX y titulares antes de la apertura europea.</p>
+            <button type="button" class="btn btn-ghost btn-sm">Activar email</button>
+          </section>
+
+          <section class="card">
+            <h2 style="font-size:14px">Resumen rápido</h2>
+            <div class="legend" style="margin-top:10px">
+              <div class="legend-item"><span class="l">Invertido</span><span class="r">€132.4k</span></div>
+              <div class="legend-item"><span class="l">Ganancia</span><span class="r up">+€16.0k</span></div>
+              <div class="legend-item"><span class="l">Yield div.</span><span class="r">1.8%</span></div>
+              <div class="legend-item"><span class="l">Holdings</span><span class="r">12</span></div>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    Mock de producto — no datos reales.
+    Archivo: <code>public/mockups/unified-homepage-v1.html</code>.
+    Objetivo: ritual diario (brief → cartera → movers/catalizadores → profundidad → Claude).
+    Disclaimers financieros se mantienen en la app real.
+  </div>
+
+  <script>
+    function setView(mode) {
+      document.body.classList.toggle("mobile-view", mode === "mobile");
+      document.body.classList.toggle("desktop-view", mode === "desktop");
+      document.getElementById("btn-desktop").classList.toggle("active", mode === "desktop");
+      document.getElementById("btn-mobile").classList.toggle("active", mode === "mobile");
+      // On mobile, put MCP after holdings for habit + depth then CTA
+      if (mode === "mobile") {
+        const rail = document.getElementById("rail");
+        const mcp = document.getElementById("mcp");
+        const holdings = document.getElementById("holdings");
+        if (mcp && holdings && mcp.parentElement === rail) {
+          holdings.after(mcp);
+        }
+      } else {
+        const rail = document.getElementById("rail");
+        const mcp = document.getElementById("mcp");
+        const warren = rail.querySelector(".warren");
+        if (mcp && warren && mcp.parentElement !== rail) {
+          warren.after(mcp);
+        }
+      }
+    }
+
+    function toggleAnn() {
+      const on = document.body.classList.toggle("show-ann");
+      const btn = document.getElementById("btn-ann");
+      btn.textContent = on ? "Annotations ON" : "Annotations OFF";
+      btn.classList.toggle("on", on);
+    }
+  </script>
+</body>
+</html>

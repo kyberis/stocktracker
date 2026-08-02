@@ -43,6 +43,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "market_data_fmp_event_sync",
   "weekly_digest_enabled",
   "aid_beta",
+  "home_v2",
   "commerce_enabled",
 ];
 

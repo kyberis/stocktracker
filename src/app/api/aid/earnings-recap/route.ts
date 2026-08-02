@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { isFeatureEnabledForUser, getUserSettings, listHoldings } from "@/lib/db";
+import { getUserSettings, listHoldings } from "@/lib/db";
 import { buildAidEarningsRecap } from "@/lib/aid/build-earnings-recap";
+import { canAccessAidData } from "@/lib/aid/can-access-aid-data";
 import { EARNINGS_REPORT_LOOKBACK_DAYS } from "@/lib/aid/earnings-keys";
 import { providerQuotesToQuoteMap } from "@/lib/aid/quotes-map";
 import { getQuotesWithCache } from "@/lib/quote-cache";
@@ -16,7 +17,7 @@ export const GET = withMetrics("/api/aid/earnings-recap", async (req: NextReques
   if (error) return error;
   if (!session) return json401(req, { source: "api/aid/earnings-recap", reason: "no_session" });
 
-  const enabled = await isFeatureEnabledForUser("aid_beta", session.userId);
+  const enabled = await canAccessAidData(session.userId);
   if (!enabled) {
     return NextResponse.json({ error: "AID beta is not enabled" }, { status: 403 });
   }

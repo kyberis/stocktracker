@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { getUserSettings, isFeatureEnabledForUser, listHoldings } from "@/lib/db";
+import { getUserSettings, listHoldings } from "@/lib/db";
 import { buildFinPulseForUser } from "@/lib/aid/build-finpulse";
+import { canAccessAidData } from "@/lib/aid/can-access-aid-data";
 import { listFinPulseHandles } from "@/lib/aid/finpulse-handles";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { withMetrics } from "@/lib/with-metrics";
@@ -14,7 +15,7 @@ export const GET = withMetrics("/api/aid/finpulse", async (req: NextRequest) => 
   if (error) return error;
   if (!session) return json401(req, { source: "api/aid/finpulse", reason: "no_session" });
 
-  const enabled = await isFeatureEnabledForUser("aid_beta", session.userId);
+  const enabled = await canAccessAidData(session.userId);
   if (!enabled) {
     return NextResponse.json({ error: "AID beta is not enabled" }, { status: 403 });
   }

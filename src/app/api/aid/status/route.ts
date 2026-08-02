@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { getUserSettings, isFeatureEnabledForUser, listHoldings } from "@/lib/db";
+import { getUserSettings, listHoldings } from "@/lib/db";
 import { buildAidStatus } from "@/lib/aid/build-status";
+import { canAccessAidData } from "@/lib/aid/can-access-aid-data";
 import { setLastAidVisitAt } from "@/lib/db/aid-user-state";
 import { providerQuotesToQuoteMap } from "@/lib/aid/quotes-map";
 import { getQuotesWithCache } from "@/lib/quote-cache";
@@ -11,16 +12,12 @@ import { json401 } from "@/lib/log-unauthorized";
 
 export const dynamic = "force-dynamic";
 
-async function aidEnabled(userId: string) {
-  return isFeatureEnabledForUser("aid_beta", userId);
-}
-
 export const GET = withMetrics("/api/aid/status", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error) return error;
   if (!session) return json401(req, { source: "api/aid/status", reason: "no_session" });
 
-  const enabled = await aidEnabled(session.userId);
+  const enabled = await canAccessAidData(session.userId);
   if (!enabled) {
     return NextResponse.json({ error: "AID beta is not enabled" }, { status: 403 });
   }
@@ -47,7 +44,7 @@ export const POST = withMetrics("/api/aid/status", async (req: NextRequest) => {
   if (error) return error;
   if (!session) return json401(req, { source: "api/aid/status", reason: "no_session" });
 
-  const enabled = await aidEnabled(session.userId);
+  const enabled = await canAccessAidData(session.userId);
   if (!enabled) {
     return NextResponse.json({ error: "AID beta is not enabled" }, { status: 403 });
   }

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.59",
+    date: "2026-08-02",
+    title: "Home v2 daily check-in preview",
+    titleTranslations: {
+      es: "Preview Home v2 de check-in diario",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Home v2 preview at /home-v2 (feature flag home_v2): morning brief, portfolio hero, movers, catalysts, day highlights, and a Claude MCP CTA — without replacing the classic dashboard.",
+        translations: {
+          es: "Preview Home v2 en /home-v2 (flag home_v2): briefing matutino, hero de cartera, movimientos, catalizadores, highlights del día y CTA MCP de Claude — sin reemplazar el dashboard clásico.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.58",
     date: "2026-08-02",
     title: "Add Fund in + Add and Add Transaction menus",

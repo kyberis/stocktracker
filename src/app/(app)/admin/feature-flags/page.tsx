@@ -49,6 +49,11 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     description: "Beta briefing at /aid and home CTA when enabled. Portfolio pulse, FinPulse, scannable news, and Warren / Will / Clara column.",
     group: "Features",
   },
+  home_v2: {
+    label: "Home v2 (unified daily homepage)",
+    description: "Preview daily home at /home-v2 and Classic CTA when enabled. Morning brief, movers, catalysts, day highlights, and Claude MCP CTA.",
+    group: "Features",
+  },
   commerce_enabled: {
     label: "Subscriptions & commerce",
     description: "Pricing, upsell cards, checkout CTAs, and new Stripe checkout on trefolio",

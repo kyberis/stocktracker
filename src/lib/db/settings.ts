@@ -47,6 +47,7 @@ export type PlatformFeature =
   | "weekly_digest_enabled"
   | "telegram_bot_enabled"
   | "aid_beta"
+  | "home_v2"
   | "commerce_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
@@ -453,6 +454,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "weekly_digest_enabled",
   "telegram_bot_enabled",
   "aid_beta",
+  "home_v2",
   "commerce_enabled",
 ];
 
