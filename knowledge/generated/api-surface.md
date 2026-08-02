@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-272 routes.
+273 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -189,6 +189,7 @@
 | `/api/historical` | GET | [`src/app/api/historical/route.ts`](../../src/app/api/historical/route.ts) |
 | `/api/holdings` | GET, POST, PUT, DELETE | [`src/app/api/holdings/route.ts`](../../src/app/api/holdings/route.ts) |
 | `/api/holdings/autofill-classification` | POST | [`src/app/api/holdings/autofill-classification/route.ts`](../../src/app/api/holdings/autofill-classification/route.ts) |
+| `/api/home-v2/day-highlights` | GET | [`src/app/api/home-v2/day-highlights/route.ts`](../../src/app/api/home-v2/day-highlights/route.ts) |
 | `/api/import-portfolio` | POST | [`src/app/api/import-portfolio/route.ts`](../../src/app/api/import-portfolio/route.ts) |
 | `/api/integrations/telegram/link` | GET, POST, DELETE | [`src/app/api/integrations/telegram/link/route.ts`](../../src/app/api/integrations/telegram/link/route.ts) |
 | `/api/intelligence` | GET | [`src/app/api/intelligence/route.ts`](../../src/app/api/intelligence/route.ts) |

@@ -19,6 +19,7 @@
 | [`engineer-data`](../../.cursor/skills/engineer-data/SKILL.md) | --- |
 | [`engineer-device`](../../.cursor/skills/engineer-device/SKILL.md) | --- |
 | [`engineer-feature-flags`](../../.cursor/skills/engineer-feature-flags/SKILL.md) | --- |
+| [`engineer-homepage`](../../.cursor/skills/engineer-homepage/SKILL.md) | --- |
 | [`engineer-integrations`](../../.cursor/skills/engineer-integrations/SKILL.md) | --- |
 | [`engineer-mobile`](../../.cursor/skills/engineer-mobile/SKILL.md) | --- |
 | [`engineer-payments-subscriptions`](../../.cursor/skills/engineer-payments-subscriptions/SKILL.md) | --- |
