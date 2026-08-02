@@ -15,13 +15,19 @@ export function StatCard({
   label,
   value,
   sub,
+  noSnippet,
 }: {
   label: string;
   value: React.ReactNode;
   sub?: React.ReactNode;
+  /** Exclude volatile figures (e.g. live price) from search snippets. */
+  noSnippet?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4">
+    <div
+      className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4"
+      {...(noSnippet ? { "data-nosnippet": true } : {})}
+    >
       <div className="text-[11px] uppercase tracking-wide text-[color:var(--muted)]">{label}</div>
       <div className="mt-1 text-xl font-semibold text-[color:var(--foreground)]">{value}</div>
       {sub != null && <div className="mt-0.5 text-xs text-[color:var(--muted)]">{sub}</div>}

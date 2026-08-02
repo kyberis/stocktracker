@@ -173,9 +173,9 @@ export default function AnalisisShell({
       <header className="card flex flex-wrap items-start justify-between gap-4 p-6">
         <div className="min-w-0 space-y-3">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-[color:var(--foreground)]">
+            <p className="text-3xl font-bold tracking-tight text-[color:var(--foreground)]">
               {data.loading ? ticker : name}
-            </h1>
+            </p>
             {resolvedExchange && (
               <span className="rounded-lg border border-[color:var(--accent)] px-2.5 py-1 text-sm font-semibold text-[color:var(--accent)]">
                 {resolvedExchange} · {ticker}
@@ -205,7 +205,7 @@ export default function AnalisisShell({
           <ExternalQuoteLinks ticker={ticker} exchange={resolvedExchange} />
         </div>
         {priceFormatted != null && (
-          <div className="text-right">
+          <div className="text-right" data-nosnippet>
             <div className="text-2xl font-semibold text-[color:var(--foreground)]">
               {priceFormatted} {currency}
             </div>

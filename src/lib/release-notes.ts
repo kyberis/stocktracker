@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.70",
+    date: "2026-08-02",
+    title: "Public stock analysis SEO",
+    titleTranslations: {
+      es: "SEO del análisis público de acciones",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Public /analisis pages are indexable (robots, sitemap, metadata, JSON-LD, llms.txt). Live quotes refresh on each visit; company reports cache for one day and rebuild when you open an expired ticker.",
+        translations: {
+          es: "Las páginas públicas /analisis son indexables (robots, sitemap, metadata, JSON-LD, llms.txt). El precio se actualiza en vivo en cada visita; el informe de la empresa se cachea un día y se regenera al abrir un ticker caducado.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.69",
     date: "2026-08-02",
     title: "Unified classification labels",

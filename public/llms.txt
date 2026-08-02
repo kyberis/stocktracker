@@ -16,6 +16,8 @@ trefolio is a web-based portfolio tracker built for European retail investors. I
 - Landing: https://trefolio.com/landing
 - Blog: https://trefolio.com/blog
 - Interactive Demo: https://trefolio.com/demo
+- Company analysis (stocks): https://trefolio.com/analisis
+- Company analysis ticker pattern: https://trefolio.com/analisis/{TICKER} (e.g. /analisis/AAPL)
 - Sign Up: https://trefolio.com/signup
 - Contact: https://trefolio.com/contact
 - Release Notes: https://trefolio.com/releasenotes
@@ -23,6 +25,9 @@ trefolio is a web-based portfolio tracker built for European retail investors. I
 - Privacy Policy: https://trefolio.com/privacy
 - Terms of Service: https://trefolio.com/terms
 
+## Company analysis
+
+Public stock pages at `/analisis/{TICKER}` show fundamentals, technicals, news, and an AI narrative for researched tickers. Live quotes refresh on each visit; the broader company report is cached for one day and rebuilt when a visitor opens an expired ticker. Informational only — not investment advice.
 ## Trefolio ecosystem
 
 - Will (AI notes): https://will.trefolio.com — Telegram-first open-source AI note-taking assistant (MIT).

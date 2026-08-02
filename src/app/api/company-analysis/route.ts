@@ -21,6 +21,7 @@ import {
   mergeReportFill,
   WEEK_MS,
 } from "@/lib/company-analysis/gaps";
+import { withLiveQuote } from "@/lib/company-analysis/live-quote";
 import { redactPaidSections } from "@/lib/company-analysis/redact";
 import { parseTicker } from "@/lib/company-analysis/ticker";
 import type { CompanyAnalysisReport } from "@/lib/company-analysis/types";
@@ -52,6 +53,14 @@ function memCacheKey(ticker: string): string {
 
 function expiresAtIso(fromMs = Date.now()): string {
   return new Date(fromMs + WEEK_MS).toISOString();
+}
+
+/** Cached report body + live quote overlay (not written back to durable cache). */
+async function respondCachedReport(report: CompanyAnalysisReport): Promise<Response> {
+  const withQuote = await withLiveQuote(report);
+  return Response.json(withCacheFlag(withQuote, true), {
+    headers: { "Cache-Control": "private, max-age=60" },
+  });
 }
 
 function withCacheFlag(report: CompanyAnalysisReport, cached: boolean): CompanyAnalysisReport {
@@ -141,26 +150,17 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
       const gaps = findReportGaps(durable.report);
 
       // Anonymous reads never attempt a gap-fill (that path is user-rate-limited
-      // and provider-metered) — serve the durable report as-is, redacted.
+      // and provider-metered) — serve the durable report as-is, redacted, with
+      // a live quote overlay (price is not day-cached).
       if (gaps.length === 0 || !session) {
         const payload = session ? durable.report : redactPaidSections(durable.report);
-        return Response.json(withCacheFlag(payload, true), {
-          headers: {
-            // Body varies by session (redacted vs. full) on an identical URL — a
-            // shared/edge cache honoring "public" here would risk serving the
-            // anonymous-redacted body to an authenticated request for the same
-            // ticker. Always private; only the browser's own cache benefits.
-            "Cache-Control": "private, max-age=3600",
-          },
-        });
+        return respondCachedReport(payload);
       }
 
       // Partial refill for unavailable sections only — no company_analysis quota.
       const rl = await requireRateLimit(request, "fmp");
       if (rl.error) {
-        return Response.json(withCacheFlag(durable.report, true), {
-          headers: { "Cache-Control": "private, max-age=3600" },
-        });
+        return respondCachedReport(durable.report);
       }
 
       const fundamentalsResolved = await resolveFundamentalsProvider(session.userId);
@@ -192,17 +192,16 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
           true,
         );
         await persistReport(merged, durable.generatedAt, durable.expiresAt);
-        return jsonWithCallCount(provider, merged, {
-          headers: { "Cache-Control": "private, max-age=3600" },
+        const withQuote = await withLiveQuote(merged);
+        return jsonWithCallCount(provider, withQuote, {
+          headers: { "Cache-Control": "private, max-age=60" },
         });
       } catch (err) {
         console.warn(
           "[company-analysis] gap fill failed:",
           err instanceof Error ? err.message : err,
         );
-        return Response.json(withCacheFlag(durable.report, true), {
-          headers: { "Cache-Control": "private, max-age=3600" },
-        });
+        return respondCachedReport(durable.report);
       } finally {
         const count = (provider.callCount ?? 0) + (intelProvider.callCount ?? 0);
         if (count > 0) {

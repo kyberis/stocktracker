@@ -5,8 +5,10 @@ interface CacheEntry<T> {
 
 const store = new Map<string, CacheEntry<unknown>>();
 
-/** In-process L1 cache (short). Durable 7-day source of truth is Turso. */
-export const COMPANY_ANALYSIS_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+/** In-process L1 cache (short). Durable 1-day source of truth is Turso. */
+export const COMPANY_ANALYSIS_DAY_MS = 24 * 60 * 60 * 1000;
+/** @deprecated Use COMPANY_ANALYSIS_DAY_MS */
+export const COMPANY_ANALYSIS_WEEK_MS = COMPANY_ANALYSIS_DAY_MS;
 /** Keep L1 short so regenerate on another instance is visible soon. */
 export const COMPANY_ANALYSIS_L1_TTL_MS = 30 * 60 * 1000;
 const DEFAULT_TTL_MS = COMPANY_ANALYSIS_L1_TTL_MS;

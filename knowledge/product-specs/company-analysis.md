@@ -17,8 +17,9 @@ Authenticated users open **Analysis** in primary nav, search a US-listed symbol 
 
 | Type | Path | Notes |
 |------|------|-------|
-| Page | `src/app/(app)/analisis/page.tsx` | Search landing (`?q=` prefill) |
-| Page | `src/app/(app)/analisis/[ticker]/page.tsx` | Report (`?exchange=`) |
+| Page | `src/app/(app)/analisis/page.tsx` | Search landing (`?q=` prefill); hub metadata + WebPage JSON-LD |
+| Page | `src/app/(app)/analisis/[ticker]/page.tsx` | Report (`?exchange=`); `generateMetadata` + SSR SEO article |
+| Component | `src/components/company-analysis/AnalisisSeoContent.tsx` | Crawler/LLM HTML + Corporation/WebPage/Breadcrumb JSON-LD |
 | API | `GET /api/company-analysis` | Aggregated report |
 | API | `POST /api/company-analysis/narrative` | Grounded JSON narratives |
 | Nav | `src/lib/app-nav.ts` | Primary overflow + Pro badge |
@@ -29,7 +30,7 @@ Back from a ticker report always goes to `/` (landing for anonymous, dashboard w
 
 ## 4. Data model
 
-Durable Turso table `company_analysis_cache` (migration 121) keyed by `report:TICKER` / `narrative:TICKER:lang`, with `generated_at`, `expires_at` (7 days), and `last_gap_retry_at` for narrative AI gap fills. In-process L1 mirror in `src/lib/company-analysis/cache.ts`. Quota key `company_analysis` in `src/lib/platform-config.ts` (charged on full report build only).
+Durable Turso table `company_analysis_cache` (migration 121) keyed by `report:TICKER` / `narrative:TICKER:lang`, with `generated_at`, `expires_at` (1 day), and `last_gap_retry_at` for narrative AI gap fills. In-process L1 mirror in `src/lib/company-analysis/cache.ts`. Quota key `company_analysis` in `src/lib/platform-config.ts` (charged on full report build only). Live quote overlays on cache hits via `withLiveQuote` (not written into the day cache).
 
 ## 5. API surface
 
@@ -53,8 +54,9 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 - Technical levels computed from real 1y history (`computeTechnicalLevels`).
 - Next-quarter forecast: Yahoo `earningsTrend`/`calendarEvents` plus FMP `/earnings` unreported row (consensus revenue/EPS). Company guidance stays unavailable unless an explicit guidance source exists (API or cited web extract).
 - Last reported EPS: Yahoo earnings history, with FMP `/earnings` fill when Yahoo lacks `reportedEPS`.
-- Narratives (`POST /api/company-analysis/narrative`): optional Tavily web context for outlook/risks/competitive; numeric web fills require `sourceUrl`; durable 7-day cache with merge-only gap retries (AI gap retry at most once per 24h).
-- Report + narrative serve from week cache when present; UI shows `generatedAt`. Unavailable sections (Congress/news/insiders/EPS/etc.) are refetched and merged without wiping good fields; full rebuild only on miss or `?fresh=1` / UI **Regenerate** (clears Turso + L1 for that ticker, then rebuilds; charges quota).
+- Narratives (`POST /api/company-analysis/narrative`): optional Tavily web context for outlook/risks/competitive; numeric web fills require `sourceUrl`; durable 1-day cache with merge-only gap retries (AI gap retry at most once per 24h).
+- Report + narrative serve from day cache when present; UI shows `generatedAt`. Cache hits overlay a live quote (price/change/marketCap) without rewriting durable storage. Unavailable sections (Congress/news/insiders/EPS/etc.) are refetched and merged without wiping good fields; full rebuild only on miss (expired after 1 day or never cached) or `?fresh=1` / UI **Regenerate** (clears Turso + L1 for that ticker, then rebuilds; charges quota).
+- SEO: `/analisis` allow-listed in `robots.ts`; hub + cached tickers in `sitemap.ts`; SSR summary omits live price (quote is live via API).
 - Insider tags: RSU/tax/options → neutral; open-market buy/sell → buy/sell.
 - Congress: FMP `senate-trades` + `house-trades`; empty state when none in 12 months.
 - Sector alternative: peer with better distance-to-52w-high than subject; editorial disclaimer required.

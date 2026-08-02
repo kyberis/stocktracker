@@ -83,6 +83,13 @@ trefolio is a web-based portfolio tracking application designed for European ret
 - All AI responses in your selected language (35 languages)
 - Powered by OpenAI GPT
 
+### Company analysis (`/analisis`)
+- Public (no login) ticker research pages at https://trefolio.com/analisis and https://trefolio.com/analisis/{TICKER}
+- Aggregated fundamentals, technicals, news, Form 4 / Congress (login for paid sections), and grounded AI narrative
+- Live stock price and daily change refresh on every page visit (quote overlay; not day-cached)
+- Broader company report cached for 1 day; rebuilt automatically when a visitor opens an expired ticker
+- Informational only — trefolio is not a financial advisor; AI narratives may contain errors; not investment advice
+
 ### Onboarding & User Experience
 - Post-signup onboarding wizard: name, default currency, tax residency, passkey, Google account linking
 - Portfolio import step during onboarding (broker connect, CSV, AI import)
@@ -213,6 +220,8 @@ When you import a broker CSV or connect via SnapTrade, dividends, withholding ta
 - Landing: https://trefolio.com/landing
 - Blog: https://trefolio.com/blog
 - Interactive Demo: https://trefolio.com/demo
+- Company analysis hub: https://trefolio.com/analisis
+- Company analysis ticker pattern: https://trefolio.com/analisis/{TICKER} (example: https://trefolio.com/analisis/AAPL)
 - Sign Up: https://trefolio.com/signup
 - Log In: https://trefolio.com/login
 - Contact: https://trefolio.com/contact

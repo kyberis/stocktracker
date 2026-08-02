@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { getAllPosts, getAllLocalizedSlugs, getPostsByLang } from "@/lib/blog";
+import { getAllPosts, getAllLocalizedSlugs } from "@/lib/blog";
+import { listCachedCompanyAnalysisTickers } from "@/lib/db";
 import { buildPublicDocsSitemapEntries } from "@/lib/public-api-docs";
 import "@/lib/blog-posts";
 import "@/lib/blog-posts-es";
@@ -15,7 +16,20 @@ import "@/lib/blog-posts-fi";
 
 const BLOG_LANGS = ["es", "fr", "de", "it", "pt", "nl", "pl", "sv", "da", "fi"];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  let analisisEntries: MetadataRoute.Sitemap = [];
+  try {
+    const cached = await listCachedCompanyAnalysisTickers({ limit: 500 });
+    analisisEntries = cached.map((row) => ({
+      url: `https://trefolio.com/analisis/${encodeURIComponent(row.ticker)}`,
+      lastModified: row.updatedAt ? new Date(row.updatedAt) : new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.7,
+    }));
+  } catch {
+    // Sitemap must still return static routes if Turso is unreachable.
+  }
+
   const blogEntries: MetadataRoute.Sitemap = getAllPosts().map((post) => ({
     url: `https://trefolio.com/blog/${post.slug}`,
     lastModified: new Date(post.date),
@@ -119,6 +133,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    {
+      url: "https://trefolio.com/analisis",
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    ...analisisEntries,
     ...buildPublicDocsSitemapEntries(),
   ];
 }

@@ -110,3 +110,36 @@ export async function deleteCompanyAnalysisDbCacheForTicker(ticker: string): Pro
     args: [ticker.toUpperCase()],
   });
 }
+
+export interface CachedCompanyAnalysisTicker {
+  ticker: string;
+  updatedAt: string;
+}
+
+/**
+ * Tickers with a non-expired report cache row, newest first.
+ * Used by sitemap so crawlers only discover URLs that already have SSR content.
+ */
+export async function listCachedCompanyAnalysisTickers(args?: {
+  limit?: number;
+}): Promise<CachedCompanyAnalysisTicker[]> {
+  const limit = Math.min(Math.max(args?.limit ?? 500, 1), 1000);
+  const client = await ensureInitialized();
+  const now = new Date().toISOString();
+  const result = await client.execute({
+    sql: `SELECT ticker, updated_at
+          FROM company_analysis_cache
+          WHERE kind = 'report'
+            AND expires_at > ?
+          ORDER BY updated_at DESC
+          LIMIT ?`,
+    args: [now, limit],
+  });
+  return result.rows.map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      ticker: str(r.ticker).toUpperCase(),
+      updatedAt: str(r.updated_at),
+    };
+  });
+}

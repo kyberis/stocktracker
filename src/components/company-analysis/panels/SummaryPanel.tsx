@@ -42,6 +42,7 @@ export default function SummaryPanel({ data }: { data: CompanyAnalysisData }) {
             <StatCard
               label={t("companyAnalysisQuote")}
               value={priceStr}
+              noSnippet
               sub={
                 report.quote?.changePercent != null ? (
                   <Yoy value={report.quote.changePercent} language={language} />
@@ -49,7 +50,9 @@ export default function SummaryPanel({ data }: { data: CompanyAnalysisData }) {
               }
             />
           )}
-          {showMcapCard && <StatCard label={t("companyAnalysisMarketCap")} value={mcap} />}
+          {showMcapCard && (
+            <StatCard label={t("companyAnalysisMarketCap")} value={mcap} noSnippet />
+          )}
           {showRevenueCard && (
             <StatCard
               label={t("companyAnalysisRevenueYoy")}

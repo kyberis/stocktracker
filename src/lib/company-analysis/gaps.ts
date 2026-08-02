@@ -189,7 +189,10 @@ export function mergeNarrativeFill<T extends Record<string, unknown>>(
   return out as T;
 }
 
-export const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+/** Durable report/narrative cache TTL — rebuilds on next visit after expiry. */
+export const DAY_MS = 24 * 60 * 60 * 1000;
+/** @deprecated Use DAY_MS — kept as alias for older imports. */
+export const WEEK_MS = DAY_MS;
 /** Don't burn AI on permanently empty guidance more than once per day. */
 export const NARRATIVE_GAP_RETRY_MS = 24 * 60 * 60 * 1000;
 

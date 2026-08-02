@@ -19,6 +19,8 @@ const PUBLIC_ALLOW = [
   "/leaf",
   "/about",
   "/studio",
+  "/analisis",
+  "/analisis/",
   "/docs",
   "/docs/",
   "/api/docs",

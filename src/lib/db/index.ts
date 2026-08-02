@@ -568,7 +568,7 @@ export {
   parseAidDigestSummary,
 } from "./aid-news-cache";
 
-export type { CompanyAnalysisCacheRow } from "./company-analysis-cache";
+export type { CompanyAnalysisCacheRow, CachedCompanyAnalysisTicker } from "./company-analysis-cache";
 export {
   companyAnalysisReportCacheKey,
   companyAnalysisNarrativeCacheKey,
@@ -576,6 +576,7 @@ export {
   upsertCompanyAnalysisDbCache,
   deleteCompanyAnalysisDbCache,
   deleteCompanyAnalysisDbCacheForTicker,
+  listCachedCompanyAnalysisTickers,
 } from "./company-analysis-cache";
 
 export {

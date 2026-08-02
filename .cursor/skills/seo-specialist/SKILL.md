@@ -40,6 +40,8 @@ Pages with metadata:
 | `/signup` | `src/app/signup/layout.tsx` |
 | `/privacy` | `src/app/privacy/page.tsx` |
 | `/terms` | `src/app/terms/page.tsx` |
+| `/analisis` | `src/app/(app)/analisis/page.tsx` |
+| `/analisis/[ticker]` | `src/app/(app)/analisis/[ticker]/page.tsx` (`generateMetadata` from day cache) |
 
 ## Meta Description Pattern
 

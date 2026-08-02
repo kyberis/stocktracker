@@ -138,7 +138,7 @@ export interface CompanyAnalysisSource {
 
 export interface CompanyAnalysisReport {
   ticker: string;
-  /** When this analysis payload was first successfully generated (stable across week cache). */
+  /** When this analysis payload was first successfully generated (stable across day cache). */
   generatedAt: string;
   /** Last time any section was written (full build or gap fill). */
   updatedAt: string;
