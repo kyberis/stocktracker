@@ -5,7 +5,7 @@
 - **Started:** 2026-08-02
 - **Target:** flag-gated beta on `/home-v2` (does not replace `/`)
 - **Mockup SoT:** [`public/mockups/unified-homepage-v1.html`](../../../public/mockups/unified-homepage-v1.html)
-- **Product spec:** [`../product-specs/unified-homepage.md`](../product-specs/unified-homepage.md)
+- **Product spec:** [`../../product-specs/unified-homepage.md`](../../product-specs/unified-homepage.md)
 - **Owning skill:** [`.cursor/skills/engineer-homepage/SKILL.md`](../../../.cursor/skills/engineer-homepage/SKILL.md)
 
 ## Goal
