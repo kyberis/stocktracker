@@ -23,6 +23,29 @@ interface Props {
   onShowMore?: () => void;
 }
 
+function ManageCta({
+  onShowMore,
+  children,
+  className,
+}: {
+  onShowMore?: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
+  if (onShowMore) {
+    return (
+      <button type="button" onClick={onShowMore} className={className}>
+        {children}
+      </button>
+    );
+  }
+  return (
+    <Link href={TAXONOMY_HREF} className={className}>
+      {children}
+    </Link>
+  );
+}
+
 function toTaxonomy(slices: AllocationSlice[]): TaxonomyAllocation[] {
   return slices.map((s) => ({ label: s.label, valueEUR: s.valueEUR, percent: s.percent, color: s.color }));
 }
@@ -149,26 +172,14 @@ export default function AllocationTabs({ holdings, cashEntries, onShowMore }: Pr
 
   const ctaLabel = hasUnclassified ? t("v2AllocFixUnclassifiedCta") : t("v2AllocManageCta");
 
-  const ManageCta = ({ children, className }: { children: ReactNode; className?: string }) => {
-    if (onShowMore) {
-      return (
-        <button type="button" onClick={onShowMore} className={className}>
-          {children}
-        </button>
-      );
-    }
-    return (
-      <Link href={TAXONOMY_HREF} className={className}>
-        {children}
-      </Link>
-    );
-  };
-
   return (
     <div className="card p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--foreground)]">{t("v2Allocation")}</p>
-        <ManageCta className="min-h-8 shrink-0 text-[11px] font-semibold text-emerald-600 hover:underline dark:text-emerald-400">
+        <ManageCta
+          onShowMore={onShowMore}
+          className="min-h-8 shrink-0 text-[11px] font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+        >
           {ctaLabel}
         </ManageCta>
       </div>
@@ -199,13 +210,19 @@ export default function AllocationTabs({ holdings, cashEntries, onShowMore }: Pr
       </div>
 
       {hasUnclassified && (
-        <ManageCta className="mt-3 block w-full rounded-lg border border-amber-400/30 bg-amber-500/[0.08] px-3 py-2 text-center text-[11px] font-semibold text-amber-800 hover:bg-amber-500/[0.14] dark:text-amber-200">
+        <ManageCta
+          onShowMore={onShowMore}
+          className="mt-3 block w-full rounded-lg border border-amber-400/30 bg-amber-500/[0.08] px-3 py-2 text-center text-[11px] font-semibold text-amber-800 hover:bg-amber-500/[0.14] dark:text-amber-200"
+        >
           {t("v2AllocFixUnclassifiedHint")}
         </ManageCta>
       )}
 
       {!hasUnclassified && (
-        <ManageCta className="mt-3 block w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-center text-[11px] font-semibold text-[color:var(--foreground)] hover:bg-[color:var(--surface-highlight)]">
+        <ManageCta
+          onShowMore={onShowMore}
+          className="mt-3 block w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-center text-[11px] font-semibold text-[color:var(--foreground)] hover:bg-[color:var(--surface-highlight)]"
+        >
           {t("v2AllocManageCta")}
         </ManageCta>
       )}
