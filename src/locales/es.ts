@@ -3031,11 +3031,14 @@ const es: TranslationStrings = {
     "Adjunta imágenes, PDF, CSV o audio (máx. 5 archivos; hay límites por tipo)",
 
   // ── Home v2 (preview homepage diaria) ──
-  homeV2BetaBadge: "Preview",
-  homeV2Title: "Home v2",
+  homeV2BetaBadge: "Home",
+  homeV2Title: "Home",
   homeV2Subtitle: "Check-in diario: cartera, movimientos, catalizadores",
   homeV2CheckInHint: "Tu check-in de 30 segundos",
   homeV2BackClassic: "Dashboard clásico",
+  classicHomeCtaTitle: "Dashboard clásico",
+  classicHomeCtaSubtitle: "Pestañas, Mercados y efectivo, y el layout anterior",
+  classicHomeBackToNew: "Volver a Home",
   homeV2EmptyTitle: "Añade tu primera posición",
   homeV2EmptyBody:
     "Cuando añadas acciones o ETFs, este home muestra movimientos, catalizadores y highlights del día.",

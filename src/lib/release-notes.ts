@@ -17,6 +17,47 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.63",
+    date: "2026-08-02",
+    title: "New Home is the default dashboard",
+    titleTranslations: {
+      es: "La nueva Home es el dashboard por defecto",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The daily Home (brief, movers, catalysts, highlights) is now the default at /. Classic dashboard moves to /classic behind the classic_home feature flag.",
+        translations: {
+          es: "La Home diaria (brief, movimientos, catalizadores, highlights) es ahora el default en /. El dashboard clásico pasa a /classic detrás del feature flag classic_home.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.62",
+    date: "2026-08-02",
+    title: "Home v2 Portfolio News and classic empty state",
+    titleTranslations: {
+      es: "Home v2 con Portfolio News y empty state clásico",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Home v2 lists Portfolio News at the bottom of the main column, matching Classic home.",
+        translations: {
+          es: "Home v2 lista Portfolio News al final de la columna principal, como la home clásica.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Home v2 empty state (no holdings) now uses the same import/add CTA as Classic `/`.",
+        translations: {
+          es: "El empty state de Home v2 (sin posiciones) usa el mismo CTA de importar/añadir que Classic `/`.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.61",
     date: "2026-08-02",
     title: "Home brief bullets and analysis as stock home",

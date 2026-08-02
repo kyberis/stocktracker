@@ -10,9 +10,7 @@
 
 ## Goal
 
-Ship a **test URL** `/home-v2` behind feature flag `home_v2` that merges Classic portfolio depth with AID daily briefing patterns: morning brief, hero, movers, catalysts, day highlights, allocation, holdings, Warren nudge, Claude MCP CTA. Classic `/` and `/aid` stay unchanged as defaults.
-
-When done, a user with `home_v2` override can open Classic, click the Home v2 CTA, and complete a &lt;30s daily check-in on `/home-v2`.
+**Graduated (2026-08-02):** unified daily home is the default at `/`. Classic dashboard is opt-in at `/classic` via flag `classic_home`. Legacy `/home-v2` redirects to `/`. `/aid` remains Investor Briefing beta.
 
 ## Acceptance criteria
 

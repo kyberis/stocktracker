@@ -3030,11 +3030,14 @@ const en: TranslationStrings = {
     "Attach images, PDF, CSV, or audio (max 5 files; limits apply per type)",
 
   // ── Home v2 (unified daily homepage preview) ──
-  homeV2BetaBadge: "Preview",
-  homeV2Title: "Home v2",
+  homeV2BetaBadge: "Home",
+  homeV2Title: "Home",
   homeV2Subtitle: "Daily check-in: portfolio, movers, catalysts",
   homeV2CheckInHint: "Your 30-second morning check-in",
   homeV2BackClassic: "Classic dashboard",
+  classicHomeCtaTitle: "Classic dashboard",
+  classicHomeCtaSubtitle: "Tabs, Market & Cash, and the previous home layout",
+  classicHomeBackToNew: "Back to Home",
   homeV2EmptyTitle: "Add your first holding",
   homeV2EmptyBody: "Once you add stocks or ETFs, this home shows movers, catalysts, and day highlights.",
   homeV2EmptyCta: "Add holding",

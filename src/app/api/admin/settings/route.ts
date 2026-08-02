@@ -44,6 +44,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "weekly_digest_enabled",
   "aid_beta",
   "home_v2",
+  "classic_home",
   "commerce_enabled",
 ];
 

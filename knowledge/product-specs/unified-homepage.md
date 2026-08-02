@@ -4,13 +4,13 @@
 
 ## 1. Summary
 
-**Home v2** is a preview homepage for authenticated users with feature flag `home_v2`. It answers in under 30 seconds: how am I doing, what’s moving, what’s coming (catalysts), and how to dig deeper (holdings, allocation, Warren, Claude MCP). Classic `/` remains the default; `/aid` remains the Investor Briefing beta.
+**Home** (formerly Home v2) is the **default** authenticated homepage at `/`. It answers in under 30 seconds: how am I doing, what’s moving, what’s coming (catalysts), and how to dig deeper (holdings, allocation, Warren, Claude MCP). The legacy Classic dashboard lives at `/classic` behind flag `classic_home`. `/aid` remains the Investor Briefing beta.
 
 ## 2. Status
 
 - **Tier:** Authenticated (all tiers; AI/AID-backed bits follow existing AID/Pro rules where applicable)
-- **Feature flag:** `home_v2` (default off)
-- **Health:** yellow (in development)
+- **Feature flags:** `home_v2` (default **on** — powers home APIs); `classic_home` (default **off** — opt-in Classic at `/classic`)
+- **Health:** green (default home)
 - **Owning skill:** [`.cursor/skills/engineer-homepage/SKILL.md`](../../.cursor/skills/engineer-homepage/SKILL.md)
 - **Exec plan:** [`../exec-plans/active/unified-homepage.md`](../exec-plans/active/unified-homepage.md)
 - **Mockup:** [`public/mockups/unified-homepage-v1.html`](../../public/mockups/unified-homepage-v1.html)
@@ -19,9 +19,11 @@
 
 | Type | Path | Notes |
 |------|------|-------|
-| Page | `src/app/(app)/home-v2/page.tsx` | `robots: noindex` |
-| CTA | Classic `/` banners | `HomeV2BetaCta` when `home_v2` |
-| API | `GET /api/home-v2/day-highlights` | Scored per-ticker chips |
+| Page | `src/app/(app)/page.tsx` → `DashboardShell` → `HomeV2Dashboard` | Default home |
+| Legacy preview | `src/app/(app)/home-v2/page.tsx` | Redirects to `/` |
+| Classic | `src/app/(app)/classic/page.tsx` | Requires `classic_home` |
+| CTA | Home → Classic | Header link when `classic_home` |
+| API | `GET /api/home-v2/day-highlights` | Scored per-ticker chips (`home_v2`) |
 | AID reuse | `/api/aid/{status,feed,digest,earnings-recap}` | Guard: `aid_beta \|\| home_v2` |
 | Components | `src/components/homepage/*` | Composition layer |
 | Lib | `src/lib/homepage/score-day-highlights.ts` | Pure scoring |
@@ -64,9 +66,11 @@ type HomeDayHighlight = {
 
 ## 6. UI surface
 
-**Main column (desktop):** Morning brief → Portfolio hero → Movers \| Catalysts → Day highlights → Allocation → Holdings → FinPulse teaser.
+**Main column (desktop):** Morning brief → Portfolio hero → Movers \| Catalysts → Day highlights → Allocation → Holdings → FinPulse teaser → Portfolio News (compact).
 
-**Rail (~320px):** Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats.
+**Rail (~320px):** Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats. Hidden when empty (no holdings).
+
+**Empty (no holdings):** Same `EmptyPortfolio` CTA as Classic `/` (import + add stock). Cash-only still counts as empty for this gate.
 
 **Mobile:** Same order stacked; MCP CTA after holdings; touch targets ≥44px.
 
@@ -99,7 +103,9 @@ type HomeDayHighlight = {
 
 ## 11. Permissions / tier gating / rate limits
 
-- Page + day-highlights API: `home_v2` flag.
+- Default UI at `/` is ungated for authenticated users.
+- Day-highlights API: `home_v2` (default on).
+- Classic UI at `/classic`: `classic_home` (default off).
 - Holding limits and AI quotas unchanged.
 - AID data endpoints: either `aid_beta` or `home_v2`.
 
@@ -107,32 +113,30 @@ type HomeDayHighlight = {
 
 | Event | Purpose |
 |-------|---------|
-| `home_v2_cta_clicked` | Classic banner → `/home-v2` |
 | `home_v2_page_viewed` | Load (`state`: empty \| holdings) |
 | `home_v2_return_within_24h` | Habit signal |
 | `home_v2_section_viewed` | Scroll into section |
 | `home_v2_highlight_clicked` | Chip click (`kind`, `ticker`) |
 | `home_v2_mcp_cta_clicked` | MCP card CTA |
 
-### Success thresholds (preview)
+### Success thresholds
 
 | Metric | Target |
 |--------|--------|
-| Return within 24h among home_v2 users | ≥ 30% |
+| Return within 24h | ≥ 30% |
 | Highlight CTR | ≥ 15% of page views with highlights |
 | MCP CTA CTR | ≥ 5% of holdings sessions |
 
 ## 13. Testing
 
 - Unit: `src/lib/homepage/score-day-highlights.test.ts`
-- E2E: `e2e/home-v2.spec.ts` (flag off / on / empty)
 - Theme + responsive gates per `engineer-homepage` / `engineer-dashboard`
 
 ## 14. Rollout / migration
 
-1. Enable `home_v2` for internal users via Admin overrides.
-2. Iterate on `/home-v2` only.
-3. Later: graduate to default `/`; update demo-shell; consider `/aid` redirect.
+1. Done: Home is default at `/`; Classic behind `classic_home` at `/classic`.
+2. `/home-v2` redirects to `/`.
+3. `/demo` still uses Classic `Dashboard` for static seed parity.
 
 ## 15. Open questions
 

@@ -48,6 +48,7 @@ export type PlatformFeature =
   | "telegram_bot_enabled"
   | "aid_beta"
   | "home_v2"
+  | "classic_home"
   | "commerce_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
@@ -63,6 +64,8 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "mcp_fmp_proxy",
   "weekly_digest_enabled",
   "telegram_bot_enabled",
+  // Default authenticated home (morning brief / day-highlights APIs). Classic is opt-in via classic_home.
+  "home_v2",
 ]);
 
 const VALID_THEMES = new Set(["default", "terminal", "canvas", "studio"]);
@@ -455,6 +458,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "telegram_bot_enabled",
   "aid_beta",
   "home_v2",
+  "classic_home",
   "commerce_enabled",
 ];
 

@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useFeatureFlagContext } from "@/lib/feature-flag-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { usePortfolioCommand } from "@/contexts/portfolio-command-context";
@@ -16,6 +15,7 @@ import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AidBriefingStrip from "@/components/aid/AidBriefingStrip";
 import AidWarrenNudge from "@/components/aid/AidWarrenNudge";
+import EmptyPortfolio from "@/components/EmptyPortfolio";
 import HomeMoversCard from "./HomeMoversCard";
 import HomeCatalystsCard from "./HomeCatalystsCard";
 import HomeDayHighlights from "./HomeDayHighlights";
@@ -49,16 +49,16 @@ const WeeklyDigestCard = dynamic(() => import("@/components/dashboard-v2/WeeklyD
 const WarrenTrigger = dynamic(() => import("@/components/warren/WarrenTrigger"), { ssr: false });
 const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
 const StatsGrid = dynamic(() => import("@/components/dashboard-v2/StatsGrid"), { ssr: false });
+const PortfolioNewsFeed = dynamic(() => import("@/components/PortfolioNewsFeed"), { ssr: false });
 
 export default function HomeV2Dashboard() {
-  const router = useRouter();
   const { flags, isLoaded } = useFeatureFlagContext();
   const { t } = useI18n();
   const track = useTrack();
   const isMobile = useIsMobileViewport();
   const { holdings, cashEntries, isInitializing } = usePortfolio();
   const { gatedAdd } = usePortfolioCommand();
-  const aidEnabled = isLoaded && flags.home_v2 && !isInitializing;
+  const aidEnabled = !isInitializing;
   const aidStatus = useAidStatus(aidEnabled);
   const home = usePortfolioHomeData({ holdings, cashEntries });
   const [aiOpen, setAiOpen] = useState(false);
@@ -66,14 +66,11 @@ export default function HomeV2Dashboard() {
   const pageViewSent = useRef(false);
   const visitMarked = useRef(false);
   const returnTracked = useRef(false);
+  const showClassicLink = isLoaded && !!flags.classic_home;
 
-  const isEmpty = holdings.length === 0 && cashEntries.length === 0;
-
-  useEffect(() => {
-    if (isLoaded && !flags.home_v2) {
-      router.replace("/");
-    }
-  }, [isLoaded, flags.home_v2, router]);
+  // Match Classic: empty when there are no stock/ETF/crypto/fund holdings
+  // (cash-only still shows the add/import empty state).
+  const isEmpty = holdings.length === 0;
 
   useEffect(() => {
     if (!aidEnabled || pageViewSent.current) return;
@@ -92,7 +89,6 @@ export default function HomeV2Dashboard() {
 
   useEffect(() => {
     if (!aidEnabled || returnTracked.current || !aidStatus.data) return;
-    // If status loaded with newCount or briefing, treat as engagement signal when revisiting same day window
     if (typeof window === "undefined") return;
     const key = "home_v2_last_view";
     const prev = window.localStorage.getItem(key);
@@ -106,16 +102,6 @@ export default function HomeV2Dashboard() {
     }
     window.localStorage.setItem(key, String(now));
   }, [aidEnabled, aidStatus.data, track]);
-
-  if (!isLoaded || !flags.home_v2) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center p-8">
-        <p className="text-sm text-[color:var(--muted)]" role="status">
-          {t("loading")}
-        </p>
-      </div>
-    );
-  }
 
   const {
     assetFilter,
@@ -138,16 +124,18 @@ export default function HomeV2Dashboard() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
-            {t("homeV2BetaBadge")} · {t("homeV2Title")}
+            {t("homeV2Title")}
           </p>
           <p className="text-xs text-[color:var(--muted)]">{t("homeV2CheckInHint")}</p>
         </div>
-        <Link
-          href="/"
-          className="min-h-9 rounded-full border border-[color:var(--border)] px-3 text-xs font-semibold text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-        >
-          {t("homeV2BackClassic")}
-        </Link>
+        {showClassicLink && (
+          <Link
+            href="/classic"
+            className="min-h-9 rounded-full border border-[color:var(--border)] px-3 text-xs font-semibold text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
+          >
+            {t("homeV2BackClassic")}
+          </Link>
+        )}
       </div>
 
       {!isEmpty && (
@@ -162,13 +150,7 @@ export default function HomeV2Dashboard() {
       )}
 
       {isEmpty ? (
-        <section className="card rounded-[var(--radius-card)] p-6 text-center">
-          <h2 className="text-lg font-semibold text-[color:var(--foreground)]">{t("homeV2EmptyTitle")}</h2>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">{t("homeV2EmptyBody")}</p>
-          <button type="button" className="btn-primary mt-4 min-h-11 px-4" onClick={openAdd}>
-            {t("homeV2EmptyCta")}
-          </button>
-        </section>
+        <EmptyPortfolio onAddStock={openAdd} />
       ) : (
         <>
           <ErrorBoundary>
@@ -216,6 +198,8 @@ export default function HomeV2Dashboard() {
 
           <HomeFinPulseTeaser enabled={aidEnabled} />
 
+          <PortfolioNewsFeed variant="compact" maxItems={10} />
+
           {isMobile && (
             <>
               {aidStatus.data?.warrenNudge && (
@@ -238,7 +222,7 @@ export default function HomeV2Dashboard() {
   const rail = (
     <aside className="flex flex-col gap-3">
       <WarrenTrigger onOpen={() => setAiOpen(true)} />
-      {!isEmpty && aidStatus.data?.warrenNudge && (
+      {aidStatus.data?.warrenNudge && (
         <AidWarrenNudge
           nudge={aidStatus.data.warrenNudge}
           onAsk={(prompt) => {
@@ -250,13 +234,13 @@ export default function HomeV2Dashboard() {
       <HomeMcpCta />
       <DailyDigestsTeaserCard />
       <WeeklyDigestCard position="promoted" />
-      {!isEmpty && <StatsGrid holdings={holdings} cashEntries={cashEntries} />}
+      <StatsGrid holdings={holdings} cashEntries={cashEntries} />
     </aside>
   );
 
   return (
     <main className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-4 lg:px-6">
-      {isMobile ? (
+      {isMobile || isEmpty ? (
         main
       ) : (
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_320px]">

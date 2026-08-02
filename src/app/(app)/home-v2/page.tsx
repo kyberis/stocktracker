@@ -1,11 +1,6 @@
-import type { Metadata } from "next";
-import HomeV2Dashboard from "@/components/homepage/HomeV2Dashboard";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Home v2",
-  robots: { index: false },
-};
-
+/** Legacy preview URL — Home v2 is now the default at `/`. */
 export default function HomeV2Page() {
-  return <HomeV2Dashboard />;
+  redirect("/");
 }

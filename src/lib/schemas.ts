@@ -511,6 +511,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "weekly_digest_enabled",
   "aid_beta",
   "home_v2",
+  "classic_home",
   "commerce_enabled",
 ]);
 

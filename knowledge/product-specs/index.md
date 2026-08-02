@@ -38,7 +38,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 ## Portfolio Core
 
 - [advanced-investor-dashboard](advanced-investor-dashboard.md) — AID beta control panel (`/aid`), home CTA, Warren/Will/Clara column.
-- [unified-homepage](unified-homepage.md) — Home v2 daily check-in preview (`/home-v2`, flag `home_v2`): brief, movers, catalysts, day highlights, MCP CTA.
+- [unified-homepage](unified-homepage.md) — Default daily home at `/` (`home_v2` on by default); Classic at `/classic` (`classic_home`).
 - [accounts-manager](accounts-manager.md) — user-visible accounts/brokers.
 - [cash-balances](cash-balances.md) — multi-currency cash entries.
 - [derive-holdings](derive-holdings.md) — pure function: transactions → holdings.

@@ -9,17 +9,19 @@ description: Owns the unified daily homepage (Home v2 at /home-v2) — informati
 
 Own the **daily check-in homepage** experience that merges Classic portfolio depth with AID briefing patterns.
 
-- Preview route: `/home-v2` behind flag `home_v2`
-- Does **not** own Classic `/` tabs/tooling (see `engineer-dashboard`) or full AID control panel (see AID spec) — only composition that reuses them
+- **Default route:** `/` via `DashboardShell` → `HomeV2Dashboard` (`home_v2` default on for APIs)
+- **Classic opt-in:** `/classic` behind flag `classic_home` (see `engineer-dashboard`)
+- Does **not** own full AID control panel (see AID spec) — only composition that reuses them
 - Coordinates with `engineer-dashboard`, `engineer-feature-flags`, `analytics-instrumentation`, `theme-parity`, `engineer-mobile`, `ux-writer`
 
 ## Primary files
 
 | Area | Path |
 |------|------|
-| Page | `src/app/(app)/home-v2/page.tsx` |
-| Shell | `src/components/homepage/HomeV2Dashboard.tsx` |
-| CTA | `src/components/homepage/HomeV2BetaCta.tsx` |
+| Default shell | `src/app/(app)/dashboard-shell.tsx` |
+| Page UI | `src/components/homepage/HomeV2Dashboard.tsx` |
+| Classic gate | `src/app/(app)/classic/page.tsx` |
+| Classic banner | `src/components/homepage/ClassicHomeBanner.tsx` |
 | Sections | `src/components/homepage/Home*.tsx` |
 | Scorer | `src/lib/homepage/score-day-highlights.ts` |
 | API | `src/app/api/home-v2/day-highlights/route.ts` |
@@ -36,14 +38,15 @@ Own the **daily check-in homepage** experience that merges Classic portfolio dep
 5. Allocation (always visible)
 6. Holdings table/cards
 7. FinPulse / priority teaser (compact)
-8. Rail: Warren nudge · Claude MCP CTA · digests
+8. Portfolio News (compact feed)
+9. Rail: Warren nudge · Claude MCP CTA · digests
 
-Mobile: same order; MCP after holdings.
+Empty (no holdings): reuse Classic `EmptyPortfolio` (import + add). Mobile: same order; MCP after holdings.
 
 ## Implementation rules
 
 - **Compose, don’t fork** — import `PortfolioHeroCard`, `AllocationTabs`, `PortfolioTable` / `PortfolioCards`, AID brief/nudge helpers.
-- **Flag gate** — page + day-highlights API require `home_v2`. AID data routes: `aid_beta || home_v2`.
+- **Flag gate** — default home is ungated UI; day-highlights / AID data: `home_v2` (default on) or `aid_beta`. Classic UI: `classic_home`.
 - **Empty states** — hide day-highlights / movers / catalysts when no rows; empty portfolio gets add-holding CTA.
 - **Design system** — semantic tokens, `.card`, glass chrome; no hard-coded purple marketing gradients on app home.
 - **i18n** — all strings via locales; EN + ES required.

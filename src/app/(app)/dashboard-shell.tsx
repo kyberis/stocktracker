@@ -1,7 +1,8 @@
 "use client";
 
-import Dashboard from "@/components/Dashboard";
+import HomeV2Dashboard from "@/components/homepage/HomeV2Dashboard";
 
+/** Default authenticated home — unified daily check-in (Home v2). */
 export default function DashboardShell() {
-  return <Dashboard />;
+  return <HomeV2Dashboard />;
 }

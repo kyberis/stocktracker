@@ -50,8 +50,13 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     group: "Features",
   },
   home_v2: {
-    label: "Home v2 (unified daily homepage)",
-    description: "Preview daily home at /home-v2 and Classic CTA when enabled. Morning brief, movers, catalysts, day highlights, and Claude MCP CTA.",
+    label: "Home (unified daily homepage)",
+    description: "Default authenticated home at /. Morning brief, movers, catalysts, day highlights, and Claude MCP CTA. On by default — disable only to turn off home APIs for a user.",
+    group: "Features",
+  },
+  classic_home: {
+    label: "Classic dashboard",
+    description: "Opt-in legacy dashboard at /classic (tabs, Market & Cash layout). Shows a Classic CTA on the new home when enabled.",
     group: "Features",
   },
   commerce_enabled: {
