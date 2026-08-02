@@ -35,13 +35,12 @@ Own the **daily check-in homepage** experience that merges Classic portfolio dep
 2. Portfolio hero + day P&L / matrix
 3. Movers \| Catalysts twin row
 4. Day highlights chips
-5. Allocation (always visible)
-6. Holdings table/cards
-7. FinPulse / priority teaser (compact)
-8. Portfolio News (compact feed)
-9. Rail: Warren nudge · Claude MCP CTA · digests
+5. Holdings table/cards
+6. FinPulse / priority teaser (compact)
+7. Portfolio News (compact feed)
+8. Rail: Allocation · Warren nudge · Claude MCP CTA · digests
 
-Empty (no holdings): reuse Classic `EmptyPortfolio` (import + add). Mobile: same order; MCP after holdings.
+Empty (no holdings): reuse Classic `EmptyPortfolio` (import + add). Mobile: Allocation above holdings; MCP after holdings.
 
 ## Implementation rules
 

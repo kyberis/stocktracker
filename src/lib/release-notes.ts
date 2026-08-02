@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.65",
+    date: "2026-08-02",
+    title: "Home Allocation in the right rail",
+    titleTranslations: {
+      es: "Allocation del Home en la columna derecha",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "On desktop Home, Allocation sits in the right rail so the main column stays focused on the daily check-in and holdings.",
+        translations: {
+          es: "En el Home de escritorio, Allocation pasa a la columna derecha para que la columna principal se centre en el check-in diario y las posiciones.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.64",
     date: "2026-08-02",
     title: "Daily digests behind feature flag",

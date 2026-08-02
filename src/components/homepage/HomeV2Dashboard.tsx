@@ -188,7 +188,9 @@ export default function HomeV2Dashboard() {
             <HomeDayHighlights />
           </div>
 
-          <AllocationTabs holdings={holdings} cashEntries={cashEntries} />
+          {isMobile && (
+            <AllocationTabs holdings={holdings} cashEntries={cashEntries} />
+          )}
 
           {isMobile ? (
             <PortfolioCards holdings={holdings} />
@@ -221,6 +223,7 @@ export default function HomeV2Dashboard() {
 
   const rail = (
     <aside className="flex flex-col gap-3">
+      <AllocationTabs holdings={holdings} cashEntries={cashEntries} />
       <WarrenTrigger onOpen={() => setAiOpen(true)} />
       {aidStatus.data?.warrenNudge && (
         <AidWarrenNudge

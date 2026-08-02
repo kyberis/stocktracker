@@ -72,9 +72,9 @@ Build against mock order:
 | 6 | `HomeAllocationBlock` | `AllocationTabs` |
 | 7 | `HomeHoldingsBlock` | `PortfolioTable` / `PortfolioCards` |
 | 8 | `HomeFinPulseTeaser` | AID feed (1 item) → link `/aid` |
-| Rail | `HomeWarrenNudge`, `HomeMcpCta`, digests teaser | existing patterns |
+| Rail | Allocation (`AllocationTabs`) first, then Warren nudge, MCP CTA, digests | existing patterns |
 
-Desktop: `lg:grid-cols-[1fr_320px]`. Mobile: stack; MCP after holdings.
+Desktop: `lg:grid-cols-[1fr_320px]`; Allocation lives in the rail. Mobile: stack with Allocation above holdings; MCP after holdings.
 
 Reuse App chrome only — no custom left rail.
 
