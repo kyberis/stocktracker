@@ -22,6 +22,7 @@ import HomeDayHighlights from "./HomeDayHighlights";
 import HomeMcpCta from "./HomeMcpCta";
 import HomeFinPulseTeaser from "./HomeFinPulseTeaser";
 import HomePortfolioTotalCard from "./HomePortfolioTotalCard";
+import HomeRecommendationCard from "./HomeRecommendationCard";
 
 type HeroMode = "simple" | "advanced";
 const HERO_MODE_KEY = "home_v2_hero_mode";
@@ -225,6 +226,8 @@ export default function HomeV2Dashboard() {
               />
             )}
           </ErrorBoundary>
+
+          <HomeRecommendationCard />
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <HomeMoversCard holdings={holdings} />

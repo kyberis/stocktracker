@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-275 routes.
+278 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -192,7 +192,10 @@
 | `/api/holdings/autofill-classification` | POST | [`src/app/api/holdings/autofill-classification/route.ts`](../../src/app/api/holdings/autofill-classification/route.ts) |
 | `/api/holdings/normalize-classifications` | POST | [`src/app/api/holdings/normalize-classifications/route.ts`](../../src/app/api/holdings/normalize-classifications/route.ts) |
 | `/api/home-v2/day-highlights` | GET | [`src/app/api/home-v2/day-highlights/route.ts`](../../src/app/api/home-v2/day-highlights/route.ts) |
+| `/api/home-v2/diversify-research` | GET | [`src/app/api/home-v2/diversify-research/route.ts`](../../src/app/api/home-v2/diversify-research/route.ts) |
+| `/api/home-v2/recommendations` | GET, POST | [`src/app/api/home-v2/recommendations/route.ts`](../../src/app/api/home-v2/recommendations/route.ts) |
 | `/api/import-portfolio` | POST | [`src/app/api/import-portfolio/route.ts`](../../src/app/api/import-portfolio/route.ts) |
+| `/api/import/quality-repair` | POST | [`src/app/api/import/quality-repair/route.ts`](../../src/app/api/import/quality-repair/route.ts) |
 | `/api/integrations/telegram/link` | GET, POST, DELETE | [`src/app/api/integrations/telegram/link/route.ts`](../../src/app/api/integrations/telegram/link/route.ts) |
 | `/api/intelligence` | GET | [`src/app/api/intelligence/route.ts`](../../src/app/api/intelligence/route.ts) |
 | `/api/internal/account-deleted` | POST | [`src/app/api/internal/account-deleted/route.ts`](../../src/app/api/internal/account-deleted/route.ts) |

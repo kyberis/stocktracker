@@ -3096,6 +3096,39 @@ const es: TranslationStrings = {
   homeV2SimpleCta: "Resumen",
   homeV2TotalReturn: "Rentabilidad total",
 
+  homeRecEyebrow: "Recomendación de cartera",
+  homeRecDiversifyTitle: "Mejora tu diversificación",
+  homeRecDiversifyBody:
+    "Tu cartera se inclina hacia {topSector} ({topPct}%). Explora {sectorA} y {sectorB}, donde tienes poca o ninguna exposición.",
+  homeRecConcentrationTitle: "Concentración alta en {ticker}",
+  homeRecConcentrationBody:
+    "{ticker} representa el {pct}% de tu cartera. Valora reducir o equilibrar con otros nombres.",
+  homeRecCashTitle: "Mucho cash parado",
+  homeRecCashBody:
+    "El {pct}% de tu patrimonio está en efectivo. Si es intencional, genial; si no, considera desplegar capital.",
+  homeRecFxTitle: "Exposición fuerte a {currency}",
+  homeRecFxBody:
+    "El {pct}% de lo invertido cotiza en {currency}, lejos de tu moneda preferida ({preferred}).",
+  homeRecInvestigateCta: "Investigar sectores",
+  homeRecTookAction: "Tomé acción",
+  homeRecNext: "Siguiente",
+  homeRecAnalyzeTicker: "Analizar {ticker}",
+  homeRecPosition: "{current} de {total}",
+  homeRecDisclaimerShort: "no es asesoramiento financiero",
+  homeRecDiversifyResearchEyebrow: "Research de diversificación",
+  homeRecDiversifyResearchTitle: "Dos sectores para equilibrar",
+  homeRecDiversifyResearchBody:
+    "Ideas large-cap de sectores donde estás infraponderado. Abre el análisis o añádelos a tu watchlist — es informativo, no una recomendación personalizada.",
+  homeRecDiversifyResearchEmpty:
+    "No hay research de sectores ahora. Vuelve cuando cambie tu cartera.",
+  homeRecSectorNone: "Sin exposición actual.",
+  homeRecSectorLow: "Exposición baja frente a un mix diversificado.",
+  homeRecNoCandidates: "Aún no hay candidatos del screener para este sector.",
+  homeRecAnalyzeLink: "Analizar →",
+  homeRecBackHome: "Volver a Home",
+  homeRecDisclaimerFull:
+    "Solo informativo. No es asesoramiento de inversión personalizado. Los candidatos salen de la caché interna del screener y pueden estar incompletos.",
+
   aidBetaBadge: "Beta",
   aidTitle: "Briefing de inversor",
   aidSubtitle: "Tu cartera, noticias y voces del mercado",

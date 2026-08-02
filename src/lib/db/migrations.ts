@@ -3611,6 +3611,24 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 124,
+    description: "portfolio recommendation skip/acted state for home card",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS portfolio_recommendation_state (
+          user_id TEXT NOT NULL,
+          recommendation_key TEXT NOT NULL,
+          status TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          PRIMARY KEY (user_id, recommendation_key)
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_portfolio_rec_state_user ON portfolio_recommendation_state(user_id)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

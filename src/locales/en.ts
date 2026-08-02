@@ -3094,6 +3094,39 @@ const en: TranslationStrings = {
   homeV2SimpleCta: "Summary",
   homeV2TotalReturn: "Total return",
 
+  // ── Home portfolio recommendations ──
+  homeRecEyebrow: "Portfolio tip",
+  homeRecDiversifyTitle: "Improve your diversification",
+  homeRecDiversifyBody:
+    "Your portfolio leans on {topSector} ({topPct}%). Explore {sectorA} and {sectorB}, where you have little or no exposure.",
+  homeRecConcentrationTitle: "High concentration in {ticker}",
+  homeRecConcentrationBody:
+    "{ticker} is {pct}% of your portfolio. Consider trimming or balancing with other holdings.",
+  homeRecCashTitle: "A lot of idle cash",
+  homeRecCashBody:
+    "{pct}% of your net worth is in cash. Fine if intentional — otherwise consider deploying capital.",
+  homeRecFxTitle: "Heavy exposure to {currency}",
+  homeRecFxBody:
+    "{pct}% of invested value is quoted in {currency}, far from your preferred currency ({preferred}).",
+  homeRecInvestigateCta: "Research sectors",
+  homeRecTookAction: "I took action",
+  homeRecNext: "Next",
+  homeRecAnalyzeTicker: "Analyze {ticker}",
+  homeRecPosition: "{current} of {total}",
+  homeRecDisclaimerShort: "Not financial advice",
+  homeRecDiversifyResearchEyebrow: "Diversification research",
+  homeRecDiversifyResearchTitle: "Two sectors to rebalance",
+  homeRecDiversifyResearchBody:
+    "Large-cap ideas from sectors where you are underweight. Open analysis or add to your watchlist — this is informational, not a personalized recommendation.",
+  homeRecDiversifyResearchEmpty: "No sector research available right now. Check back after your portfolio updates.",
+  homeRecSectorNone: "No current exposure.",
+  homeRecSectorLow: "Low exposure versus a diversified mix.",
+  homeRecNoCandidates: "No screener candidates found for this sector yet.",
+  homeRecAnalyzeLink: "Analyze →",
+  homeRecBackHome: "Back to Home",
+  homeRecDisclaimerFull:
+    "Informational only. Not personalized investment advice. Candidates come from the internal screener cache and may be incomplete.",
+
   // ── AID (Investor Briefing — internal codename AID) ──
   aidBetaBadge: "Beta",
   aidTitle: "Investor Briefing",

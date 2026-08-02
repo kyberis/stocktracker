@@ -66,9 +66,11 @@ type HomeDayHighlight = {
 
 ## 6. UI surface
 
-**Main column (desktop):** Morning brief → Portfolio hero → Movers \| Catalysts → Day highlights → Holdings → FinPulse teaser → Portfolio News (compact).
+**Main column (desktop):** Morning brief → Portfolio hero → **Portfolio recommendation card** → Movers \| Catalysts → Day highlights → Holdings → FinPulse teaser → Portfolio News (compact).
 
 **Portfolio hero modes:** Default is a compact **Portfolio total** card (total value in display currency, day P&L, cost basis, total return %, holdings count) with an **Advanced** CTA. Advanced swaps in-place to the existing `PortfolioHeroCard` (invested assets, breakdown, performance matrix). **Summary** restores the compact card. Preference persisted as `home_v2_hero_mode` (`simple` | `advanced`).
+
+**Portfolio recommendation card:** Deterministic tip queue (diversify / concentration / cash / FX). Hide when empty or demo. Diversify CTA → `/recommendations/diversify`. Spec: [home-portfolio-recommendations.md](home-portfolio-recommendations.md).
 
 **Rail (~320px):** Allocation (CTA → `/tools/taxonomy` to fix unclassified) → Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats. Hidden when empty (no holdings). On mobile, Allocation stays in the main column above holdings.
 
@@ -120,6 +122,8 @@ type HomeDayHighlight = {
 | `home_v2_section_viewed` | Scroll into section |
 | `home_v2_highlight_clicked` | Chip click (`kind`, `ticker`) |
 | `home_v2_mcp_cta_clicked` | MCP card CTA |
+| `home_rec_viewed` / `home_rec_next` / `home_rec_acted` | Recommendation card lifecycle |
+| `home_rec_diversify_opened` / `home_rec_candidate_clicked` | Diversify research funnel |
 
 ### Success thresholds
 
@@ -131,8 +135,9 @@ type HomeDayHighlight = {
 
 ## 13. Testing
 
-- Unit: `src/lib/homepage/score-day-highlights.test.ts`
+- Unit: `src/lib/homepage/score-day-highlights.test.ts`, `src/lib/homepage/build-portfolio-recommendations.test.ts`
 - Theme + responsive gates per `engineer-homepage` / `engineer-dashboard`
+- E2E: `e2e/home-v2.spec.ts`
 
 ## 14. Rollout / migration
 

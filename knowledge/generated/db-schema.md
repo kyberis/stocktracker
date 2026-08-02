@@ -50,6 +50,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `portfolio_news_article_symbols` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_news_articles` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_news_symbol_fetch_meta` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `portfolio_recommendation_state` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_scores` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_shares` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_snapshots` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |

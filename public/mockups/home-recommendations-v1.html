@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>trefolio — Home Portfolio Recommendations (mockup)</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07111d; --fg: #edf4ff; --muted: #8ea1bf; --border: rgba(154,174,209,.14);
+      --card: rgba(10,16,26,.92); --soft: rgba(255,255,255,.03); --accent: #1dd1a1;
+      --accent-dim: rgba(29,209,161,.14); --amber: #fbbf24; --radius: 18px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "DM Sans", system-ui, sans-serif; background: linear-gradient(180deg,#07111d,#0b1627 55%,#07111d); color: var(--fg); min-height: 100vh; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+    .proposal { margin-bottom: 20px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--soft); }
+    .proposal h1 { font-size: 15px; margin-bottom: 4px; }
+    .proposal p { font-size: 12px; color: var(--muted); }
+    .seg { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+    .seg button { min-height: 40px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
+    .seg button.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(29,209,161,.35); }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-top: 16px; }
+    .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #2dd4bf; }
+    .title { font-size: 18px; font-weight: 700; margin: 8px 0 6px; }
+    .body { font-size: 14px; color: var(--muted); line-height: 1.5; }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+    .chip { font-size: 11px; padding: 4px 10px; border-radius: 999px; background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(29,209,161,.25); }
+    .chip.warn { background: rgba(251,191,36,.12); color: var(--amber); border-color: rgba(251,191,36,.25); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .btn { min-height: 44px; padding: 0 16px; border-radius: 14px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); }
+    .btn-primary { background: var(--accent); color: #042f24; border-color: transparent; }
+    .btn-secondary { background: var(--soft); color: var(--fg); }
+    .btn-ghost { background: transparent; color: var(--muted); }
+    .meta { font-size: 11px; color: var(--muted); margin-top: 10px; }
+    .disclaimer { font-size: 11px; color: var(--muted); margin-top: 12px; opacity: .85; }
+    .hidden { display: none !important; }
+    .sector { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .sector h3 { font-size: 15px; margin-bottom: 4px; }
+    .candidate { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: var(--soft); border: 1px solid var(--border); margin-top: 8px; min-height: 44px; }
+    .candidate a { color: var(--accent); font-weight: 600; font-size: 13px; text-decoration: none; }
+    .gone { text-align: center; padding: 28px; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="proposal">
+      <h1>Home Portfolio Recommendations — mockup v1</h1>
+      <p>Card after hero · queue diversify → concentration → cash → FX · Tomé acción / Siguiente · diversify opens research.</p>
+      <div class="seg" id="viewSeg">
+        <button type="button" class="active" data-view="card">Home card</button>
+        <button type="button" data-view="research">Diversify research</button>
+        <button type="button" data-view="empty">Queue empty</button>
+      </div>
+      <div class="seg" id="kindSeg">
+        <button type="button" class="active" data-kind="diversify">Diversify</button>
+        <button type="button" data-kind="concentration">Concentration</button>
+        <button type="button" data-kind="cash">Cash idle</button>
+        <button type="button" data-kind="fx">FX</button>
+      </div>
+    </div>
+
+    <section id="view-card" class="card" aria-live="polite">
+      <p class="eyebrow">Recomendación de cartera</p>
+      <h2 class="title" id="recTitle">Mejora tu diversificación</h2>
+      <p class="body" id="recBody">Tu cartera está concentrada en Technology (42%). Explora Healthcare y Utilities, donde casi no tienes exposición.</p>
+      <div class="chips" id="recChips">
+        <span class="chip">Healthcare 2%</span>
+        <span class="chip">Utilities 0%</span>
+      </div>
+      <div class="actions" id="recActions">
+        <button type="button" class="btn btn-primary" id="primaryCta">Investigar sectores</button>
+        <button type="button" class="btn btn-secondary">Tomé acción</button>
+        <button type="button" class="btn btn-ghost">Siguiente</button>
+      </div>
+      <p class="meta" id="recMeta">1 de 3 · no es asesoramiento financiero</p>
+      <p class="disclaimer">Informativo. No constituye recomendación de inversión personalizada.</p>
+    </section>
+
+    <section id="view-research" class="card hidden">
+      <p class="eyebrow">Research de diversificación</p>
+      <h2 class="title">Dos sectores para equilibrar</h2>
+      <p class="body">Candidatos large-cap de sectores donde estás infraponderado. Abre el análisis o añade a tu watchlist.</p>
+      <div class="sector">
+        <h3>Healthcare · 2%</h3>
+        <p class="body">Exposición baja frente a un mix diversificado.</p>
+        <div class="candidate"><div><strong>JNJ</strong> · Johnson &amp; Johnson</div><a href="#">Analizar →</a></div>
+        <div class="candidate"><div><strong>UNH</strong> · UnitedHealth</div><a href="#">Analizar →</a></div>
+        <div class="candidate"><div><strong>LLY</strong> · Eli Lilly</div><a href="#">Analizar →</a></div>
+      </div>
+      <div class="sector">
+        <h3>Utilities · 0%</h3>
+        <p class="body">Sin exposición actual.</p>
+        <div class="candidate"><div><strong>NEE</strong> · NextEra Energy</div><a href="#">Analizar →</a></div>
+        <div class="candidate"><div><strong>DUK</strong> · Duke Energy</div><a href="#">Analizar →</a></div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-primary">Tomé acción</button>
+        <button type="button" class="btn btn-ghost">Volver a Home</button>
+      </div>
+      <p class="disclaimer">Informativo. No constituye recomendación de inversión personalizada. Los candidatos salen del screener interno.</p>
+    </section>
+
+    <section id="view-empty" class="card hidden">
+      <div class="gone">No hay más recomendaciones por ahora. Cuando cambie tu cartera, aparecerán aquí.</div>
+    </section>
+  </div>
+  <script>
+    const copy = {
+      diversify: {
+        title: "Mejora tu diversificación",
+        body: "Tu cartera está concentrada en Technology (42%). Explora Healthcare y Utilities, donde casi no tienes exposición.",
+        chips: [["Healthcare 2%",""],["Utilities 0%",""]],
+        primary: "Investigar sectores",
+        meta: "1 de 3 · no es asesoramiento financiero",
+      },
+      concentration: {
+        title: "Concentración alta en AAPL",
+        body: "Apple representa el 22% de tu cartera. Valora reducir o equilibrar con otros nombres.",
+        chips: [["AAPL 22%","warn"]],
+        primary: null,
+        meta: "2 de 3",
+      },
+      cash: {
+        title: "Mucho cash parado",
+        body: "El 28% de tu patrimonio está en efectivo. Si es intencional, genial; si no, considera desplegar capital.",
+        chips: [["Cash 28%","warn"]],
+        primary: null,
+        meta: "3 de 3",
+      },
+      fx: {
+        title: "Exposición fuerte a USD",
+        body: "El 78% de lo invertido cotiza en USD, lejos de tu moneda preferida (EUR).",
+        chips: [["USD 78%","warn"]],
+        primary: null,
+        meta: "Última",
+      },
+    };
+
+    const viewSeg = document.getElementById("viewSeg");
+    const kindSeg = document.getElementById("kindSeg");
+    function showView(name) {
+      ["card","research","empty"].forEach((v) => {
+        document.getElementById("view-" + v).classList.toggle("hidden", v !== name);
+      });
+      viewSeg.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
+      kindSeg.style.display = name === "card" ? "flex" : "none";
+    }
+    function showKind(kind) {
+      const c = copy[kind];
+      document.getElementById("recTitle").textContent = c.title;
+      document.getElementById("recBody").textContent = c.body;
+      document.getElementById("recMeta").textContent = c.meta;
+      const chips = document.getElementById("recChips");
+      chips.innerHTML = c.chips.map(([t, cls]) => `<span class="chip ${cls}">${t}</span>`).join("");
+      const actions = document.getElementById("recActions");
+      const nextLabel = kind === "fx" ? "" : "Siguiente";
+      actions.innerHTML =
+        (c.primary ? `<button type="button" class="btn btn-primary" id="primaryCta">${c.primary}</button>` : "") +
+        `<button type="button" class="btn btn-secondary">Tomé acción</button>` +
+        (nextLabel ? `<button type="button" class="btn btn-ghost">Siguiente</button>` : "");
+      const p = document.getElementById("primaryCta");
+      if (p) p.onclick = () => showView("research");
+      kindSeg.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.kind === kind));
+    }
+    viewSeg.addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return; showView(b.dataset.view);
+    });
+    kindSeg.addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return; showKind(b.dataset.kind);
+    });
+  </script>
+</body>
+</html>

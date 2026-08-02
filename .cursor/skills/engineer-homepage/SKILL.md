@@ -33,14 +33,17 @@ Own the **daily check-in homepage** experience that merges Classic portfolio dep
 
 1. Morning brief (since last visit)
 2. Portfolio hero + day P&L / matrix
-3. Movers \| Catalysts twin row
-4. Day highlights chips
-5. Holdings table/cards
-6. FinPulse / priority teaser (compact)
-7. Portfolio News (compact feed)
-8. Rail: Allocation · Warren nudge · Claude MCP CTA · digests
+3. Portfolio recommendation card (hide when empty / demo)
+4. Movers \| Catalysts twin row
+5. Day highlights chips
+6. Holdings table/cards
+7. FinPulse / priority teaser (compact)
+8. Portfolio News (compact feed)
+9. Rail: Allocation · Warren nudge · Claude MCP CTA · digests
 
 Empty (no holdings): reuse Classic `EmptyPortfolio` (import + add). Mobile: Allocation above holdings; MCP after holdings.
+
+Related: [home-portfolio-recommendations](../../knowledge/product-specs/home-portfolio-recommendations.md), `HomeRecommendationCard`, `/api/home-v2/recommendations`, `/recommendations/diversify`.
 
 ## Implementation rules
 

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.74",
+    date: "2026-08-03",
+    title: "Home portfolio recommendations",
+    titleTranslations: {
+      es: "Recomendaciones de cartera en Home",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Home shows a portfolio tip card (diversification, concentration, idle cash, FX) with Take action / Next, plus a diversify research page with underweight sector candidates.",
+        translations: {
+          es: "Home muestra una tarjeta de tip de cartera (diversificación, concentración, cash parado, FX) con Tomé acción / Siguiente, y una página de research de sectores infraponderados.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.73",
     date: "2026-08-02",
     title: "Crypto transactions + Constellation quotes",

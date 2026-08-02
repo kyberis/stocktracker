@@ -772,3 +772,12 @@ export {
   loadChatMessages,
   clearChatHistory,
 } from "./telegram";
+
+export type {
+  RecommendationStatus,
+  PortfolioRecommendationStateRow,
+} from "./portfolio-recommendations";
+export {
+  listRecommendationStates,
+  upsertRecommendationState,
+} from "./portfolio-recommendations";
