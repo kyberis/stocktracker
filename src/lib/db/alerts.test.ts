@@ -123,14 +123,54 @@ describe("alerts", () => {
           "",
         ],
       });
-      expect(result).toMatchObject({
+      expect(result.alreadyExists).toBe(false);
+      expect(result.alert).toMatchObject({
         ...alert,
         id: "alert-uuid-456",
         active: true,
         triggered: false,
         triggeredAt: "",
       });
-      expect(result.createdAt).toBeDefined();
+      expect(result.alert.createdAt).toBeDefined();
+    });
+
+    it("returns alreadyExists when identical active alert is present", async () => {
+      mockExecute.mockResolvedValueOnce({
+        rows: [
+          {
+            id: "existing-1",
+            ticker: "GOOGL",
+            name: "GOOGL below 100",
+            condition: "below",
+            threshold: 100,
+            currency: "USD",
+            active: 1,
+            triggered: 0,
+            triggered_at: "",
+            created_at: "2026-01-01",
+            alert_type: "threshold",
+            percent_basis: "",
+            percent_value: 0,
+            is_portfolio_wide: 0,
+            portfolio_id: "",
+          },
+        ],
+      });
+      const result = await alerts.createAlert("user-1", {
+        ticker: "GOOGL",
+        name: "GOOGL below 100",
+        condition: "below",
+        threshold: 100,
+        currency: "USD",
+        alertType: "threshold",
+        percentBasis: "",
+        percentValue: 0,
+        isPortfolioWide: false,
+        portfolioId: "",
+      });
+      expect(result.alreadyExists).toBe(true);
+      expect(result.alert.id).toBe("existing-1");
+      expect(mockExecute).toHaveBeenCalledTimes(1);
     });
   });
 

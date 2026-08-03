@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.87",
+    date: "2026-08-03",
+    title: "REQ P1 follow-up: cross-listings, alerts, metrics",
+    titleTranslations: {
+      es: "REQ P1 follow-up: cross-listings, alertas, métricas",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Dividend views group the same issuer across ISIN/cross-listings (e.g. NVO + NOVO-B.CO); yields above 15% show — with an explanatory tooltip.",
+        translations: {
+          es: "Dividendos agrupan el mismo emisor por ISIN/cross-listing (p. ej. NVO + NOVO-B.CO); yields >15% muestran — con tooltip.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Creating a duplicate price alert tells the user it already exists; moat reports get a unique DB index per symbol/day.",
+        translations: {
+          es: "Crear una alerta duplicada avisa al usuario; los informes moat tienen índice único por símbolo/día.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Portfolio Score and Dividends consume the shared metrics module (totals, yield, sector breakdown, day change).",
+        translations: {
+          es: "Portfolio Score y Dividendos consumen el módulo compartido de métricas (totales, yield, sectores, day change).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.86",
     date: "2026-08-03",
     title: "REQ open items: Views, metrics, news, charts, and polish",

@@ -1,6 +1,6 @@
 import type { ExchangeRates, Holding, QuoteData, Transaction } from "@/lib/types";
 import { convertToEUR } from "@/lib/utils";
-import { clampDividendYieldPct } from "@/lib/portfolio/sanity";
+import { clampDividendYieldPct, DIVIDEND_YIELD_MAX_PCT } from "@/lib/portfolio/sanity";
 
 const DEFAULT_GROWTH_RATE = 0.10;
 const DEFAULT_PROJECTION_YEARS = 5;
@@ -14,11 +14,126 @@ export interface EstimatedDividend {
   annualDividendPerShare: number;
   /** Null when yield cannot be reliably computed (cross-currency mismatch, >15%, negative). */
   dividendYield: number | null;
+  /** Why dividendYield is null — for UI tooltip (TRF-007). */
+  yieldUnavailableReason?: "out_of_range" | "unavailable";
   /** Null when yield-on-cost is out of [0, 15] range. */
   yieldOnCost: number | null;
   annualIncome: number;
   currency: string;
   annualIncomeEUR: number;
+  /** Other tickers merged into this issuer row (cross-listings). */
+  crossListingTickers?: string[];
+}
+
+/**
+ * Known ADR / local cross-listings when holdings lack a shared ISIN (TRF-007).
+ * Keys are uppercase tickers; values are issuer group ids.
+ */
+const CROSS_LISTING_ISSUER: Record<string, string> = {
+  NVO: "novo-nordisk",
+  "NOVO-B.CO": "novo-nordisk",
+  "NOVO-B": "novo-nordisk",
+  W9C: "constellation-software",
+  "W9C.DE": "constellation-software",
+  "W9C.F": "constellation-software",
+  "CSU.TO": "constellation-software",
+};
+
+function issuerGroupKey(holding: Holding | undefined, ticker: string): string {
+  const isin = (holding?.isin || "").trim().toUpperCase();
+  if (isin.length >= 12) return `isin:${isin}`;
+  const mapped = CROSS_LISTING_ISSUER[ticker.toUpperCase()];
+  if (mapped) return `xlist:${mapped}`;
+  return `ticker:${ticker.toUpperCase()}`;
+}
+
+/** Prefer primary listing ticker for display (local exchange over ADR when both present). */
+function preferDisplayTicker(a: string, b: string): string {
+  const score = (t: string) => {
+    if (t.includes(".")) return 2; // local listing often has suffix
+    if (t.length <= 4) return 1; // ADR short
+    return 0;
+  };
+  return score(a) >= score(b) ? a : b;
+}
+
+/**
+ * Group per-ticker dividend estimates by ISIN / known cross-listing so one issuer
+ * appears once in Annual Dividend by Stock (TRF-007).
+ */
+export function groupEstimatedDividendsByIssuer(
+  holdings: Holding[],
+  items: EstimatedDividend[],
+): EstimatedDividend[] {
+  const byTicker = new Map(holdings.map((h) => [h.ticker.toUpperCase(), h]));
+  const groups = new Map<string, EstimatedDividend[]>();
+
+  for (const item of items) {
+    const h = byTicker.get(item.ticker.toUpperCase());
+    const key = issuerGroupKey(h, item.ticker);
+    const list = groups.get(key) ?? [];
+    list.push(item);
+    groups.set(key, list);
+  }
+
+  const merged: EstimatedDividend[] = [];
+  for (const list of groups.values()) {
+    if (list.length === 1) {
+      merged.push(list[0]!);
+      continue;
+    }
+    const tickers = list.map((x) => x.ticker);
+    let displayTicker = tickers[0]!;
+    for (const t of tickers.slice(1)) displayTicker = preferDisplayTicker(displayTicker, t);
+    const primary = list.find((x) => x.ticker === displayTicker) ?? list[0]!;
+    const shares = list.reduce((s, x) => s + x.shares, 0);
+    const annualIncomeEUR = list.reduce((s, x) => s + x.annualIncomeEUR, 0);
+    const annualIncome = list.reduce((s, x) => s + x.annualIncome, 0);
+    // Weighted yield only when all legs have a finite yield in the same currency.
+    const sameCcy = list.every((x) => x.currency === primary.currency);
+    const yields = list.map((x) => x.dividendYield).filter((y): y is number => y != null);
+    let dividendYield: number | null = null;
+    let yieldUnavailableReason: EstimatedDividend["yieldUnavailableReason"];
+    if (sameCcy && yields.length === list.length && annualIncomeEUR > 0) {
+      const incomeWeighted =
+        list.reduce((s, x) => s + (x.dividendYield ?? 0) * x.annualIncomeEUR, 0) / annualIncomeEUR;
+      dividendYield = clampDividendYieldPct(incomeWeighted);
+      if (dividendYield == null) yieldUnavailableReason = "out_of_range";
+    } else if (yields.length === 0) {
+      yieldUnavailableReason = list.some((x) => x.yieldUnavailableReason === "out_of_range")
+        ? "out_of_range"
+        : "unavailable";
+    } else {
+      dividendYield = clampDividendYieldPct(
+        list.reduce((s, x) => s + (x.dividendYield ?? 0) * x.annualIncomeEUR, 0) /
+          Math.max(annualIncomeEUR, 1e-9),
+      );
+      if (dividendYield == null) yieldUnavailableReason = "out_of_range";
+    }
+
+    const yocs = list.map((x) => x.yieldOnCost).filter((y): y is number => y != null);
+    const yieldOnCost =
+      yocs.length > 0
+        ? clampDividendYieldPct(yocs.reduce((s, y) => s + y, 0) / yocs.length)
+        : null;
+
+    merged.push({
+      ticker: displayTicker,
+      name: primary.name,
+      shares,
+      annualDividendPerShare: primary.annualDividendPerShare,
+      dividendYield,
+      yieldUnavailableReason,
+      yieldOnCost,
+      annualIncome,
+      currency: primary.currency,
+      annualIncomeEUR,
+      crossListingTickers: tickers.filter((t) => t !== displayTicker),
+    });
+  }
+
+  merged.sort((a, b) => b.annualIncomeEUR - a.annualIncomeEUR);
+  return merged;
 }
 
 export interface DripProjectionRow {
@@ -90,6 +205,12 @@ export function computeEstimatedDividends(
     // Use clampDividendYieldPct so anything outside [0, 15] becomes null (shows "—" in UI).
     const rawYield = price > 0 ? (rate / price) * 100 : (q.trailingAnnualDividendYield ?? 0) * 100;
     const dividendYield = clampDividendYieldPct(rawYield);
+    const yieldUnavailableReason: EstimatedDividend["yieldUnavailableReason"] =
+      dividendYield == null && Number.isFinite(rawYield) && rawYield > DIVIDEND_YIELD_MAX_PCT
+        ? "out_of_range"
+        : dividendYield == null
+          ? "unavailable"
+          : undefined;
 
     const annualIncome = h.shares * rate;
     const annualIncomeEUR = convertToEUR(annualIncome, cur, exchangeRates);
@@ -104,6 +225,7 @@ export function computeEstimatedDividends(
       shares: h.shares,
       annualDividendPerShare: rate,
       dividendYield,
+      yieldUnavailableReason,
       yieldOnCost,
       annualIncome,
       currency: cur,
@@ -111,7 +233,7 @@ export function computeEstimatedDividends(
     });
   }
   items.sort((a, b) => b.annualIncomeEUR - a.annualIncomeEUR);
-  return items;
+  return groupEstimatedDividendsByIssuer(holdings, items);
 }
 
 export function computeTotalEstimatedEUR(estimated: EstimatedDividend[]): number {

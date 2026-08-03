@@ -3348,6 +3348,9 @@ const de: TranslationStrings = {
   moatReportSortSymbol: "Symbol",
   companyAnalysisAliasNote: "Fundamentals from primary listing: {symbol}",
   featureDisabled: "This feature is currently disabled.",
+  alertAlreadyExists: "An identical alert already exists.",
+  yieldOutOfRangeTooltip: "Yield above 15% is unreliable (often cross-currency) and is hidden.",
+  crossListingMergedTooltip: "Same issuer listings grouped: {tickers}",
 };
 
 export default de;

@@ -62,7 +62,7 @@ export const POST = withMetrics("/api/alerts", async (req: NextRequest) => {
 
   const ticker = data.isPortfolioWide ? "__PORTFOLIO__" : data.ticker.toUpperCase();
 
-  const alert = await createAlert(session.userId, {
+  const { alert, alreadyExists } = await createAlert(session.userId, {
     ticker,
     name: data.name || (data.isPortfolioWide ? "Portfolio-wide" : ticker),
     condition: data.condition,
@@ -75,21 +75,32 @@ export const POST = withMetrics("/api/alerts", async (req: NextRequest) => {
     portfolioId: data.portfolioId,
   });
 
-  trackEvent(session.userId, "alert_created", {
-    ticker: alert.ticker,
-    alertType: alert.alertType,
-    source: data.source,
-    ...(alert.alertType === "percent_change" ? {
-      percentBasis: alert.percentBasis,
-      percentValue: String(alert.percentValue),
-      portfolioWide: String(alert.isPortfolioWide),
-    } : {
-      condition: alert.condition,
-      threshold: String(alert.threshold),
-    }),
-  });
+  if (!alreadyExists) {
+    trackEvent(session.userId, "alert_created", {
+      ticker: alert.ticker,
+      alertType: alert.alertType,
+      source: data.source,
+      ...(alert.alertType === "percent_change" ? {
+        percentBasis: alert.percentBasis,
+        percentValue: String(alert.percentValue),
+        portfolioWide: String(alert.isPortfolioWide),
+      } : {
+        condition: alert.condition,
+        threshold: String(alert.threshold),
+      }),
+    });
+  }
 
-  return NextResponse.json({ alert }, { status: 201 });
+  return NextResponse.json(
+    {
+      alert,
+      alreadyExists,
+      ...(alreadyExists
+        ? { error: "Alert already exists", reason: "alert_already_exists" }
+        : {}),
+    },
+    { status: alreadyExists ? 200 : 201 },
+  );
 });
 
 export const DELETE = withMetrics("/api/alerts", async (req: NextRequest) => {

@@ -3450,6 +3450,9 @@ const es: TranslationStrings = {
   moatReportSortSymbol: "Símbolo",
   companyAnalysisAliasNote: "Fundamentales del listado principal: {symbol}",
   featureDisabled: "Esta función está desactivada actualmente.",
+  alertAlreadyExists: "Ya existe una alerta idéntica.",
+  yieldOutOfRangeTooltip: "Una rentabilidad >15% no es fiable (a menudo por divisas distintas) y se oculta.",
+  crossListingMergedTooltip: "Listados del mismo emisor agrupados: {tickers}",
 };
 
 export default es;
