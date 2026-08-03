@@ -76,8 +76,8 @@ export async function dismissOverlays(page: Page) {
   // Cookie banner has z-[9999] and sits on top of everything — dismiss first
   const cookieAccept = page.getByRole("button", { name: "Accept" });
   if (await cookieAccept.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await cookieAccept.click({ force: true });
-    await page.waitForTimeout(500);
+    await cookieAccept.click({ force: true, timeout: 5_000 }).catch(() => undefined);
+    await page.waitForTimeout(300);
   }
 
   // What's New modal sits above the dashboard

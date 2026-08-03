@@ -42,6 +42,10 @@ export default function MoatEvaluationPicker() {
   const [editingTagsFor, setEditingTagsFor] = useState<string | null>(null);
   const [tagEditDraft, setTagEditDraft] = useState("");
   const [tagSavingId, setTagSavingId] = useState<string | null>(null);
+  const [reportSearch, setReportSearch] = useState("");
+  const [reportSort, setReportSort] = useState<"date" | "score" | "symbol">("date");
+  const [reportPage, setReportPage] = useState(0);
+  const PAGE_SIZE = 20;
 
   const [leftTab, setLeftTab] = useState<"search" | "screener">("search");
   const [portfolioRunning, setPortfolioRunning] = useState(false);
@@ -177,6 +181,21 @@ export default function MoatEvaluationPicker() {
     loadReports();
     loadDistinctTags();
   }, [holdings, loadReports, loadDistinctTags]);
+
+  const filteredReports = savedReports
+    .filter((r) => {
+      if (!reportSearch) return true;
+      const q = reportSearch.toLowerCase();
+      return r.symbol.toLowerCase().includes(q) || r.companyName.toLowerCase().includes(q);
+    })
+    .sort((a, b) => {
+      if (reportSort === "score") return b.totalScore - a.totalScore;
+      if (reportSort === "symbol") return a.symbol.localeCompare(b.symbol);
+      return b.createdAt.localeCompare(a.createdAt);
+    });
+
+  const totalPages = Math.ceil(filteredReports.length / PAGE_SIZE);
+  const pagedReports = filteredReports.slice(reportPage * PAGE_SIZE, (reportPage + 1) * PAGE_SIZE);
 
   const verdictColor = (verdict: string) => {
     if (verdict.toLowerCase().includes("strong")) return "text-emerald-500";
@@ -325,6 +344,30 @@ export default function MoatEvaluationPicker() {
             )}
           </h3>
 
+          {/* Search + sort bar */}
+          {savedReports.length > 0 && (
+            <div className="mb-3 flex gap-2">
+              <input
+                type="search"
+                value={reportSearch}
+                onChange={(e) => { setReportSearch(e.target.value); setReportPage(0); }}
+                placeholder={t("moatReportSearchPlaceholder")}
+                className="flex-1 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)]"
+                aria-label={t("moatReportSearchPlaceholder")}
+              />
+              <select
+                value={reportSort}
+                onChange={(e) => { setReportSort(e.target.value as typeof reportSort); setReportPage(0); }}
+                className="bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)]"
+                aria-label={t("moatReportSortLabel")}
+              >
+                <option value="date">{t("moatReportSortDate")}</option>
+                <option value="score">{t("moatReportSortScore")}</option>
+                <option value="symbol">{t("moatReportSortSymbol")}</option>
+              </select>
+            </div>
+          )}
+
           {distinctTags.length > 0 && (
             <div className="mb-3 space-y-1.5">
               <div className="text-[11px] font-semibold text-[var(--muted)]">{t("moatReportFilterByTags")}</div>
@@ -361,15 +404,19 @@ export default function MoatEvaluationPicker() {
             <div className="flex justify-center py-6">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-500" />
             </div>
-          ) : savedReports.length === 0 ? (
+          ) : filteredReports.length === 0 ? (
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 text-center">
               <p className="text-sm text-[var(--muted)]">
-                {filterTags.length > 0 ? t("moatReportNoTagMatches") : t("moatReportSavedEmpty")}
+                {reportSearch
+                  ? t("moatReportNoSearchMatches")
+                  : filterTags.length > 0
+                    ? t("moatReportNoTagMatches")
+                    : t("moatReportSavedEmpty")}
               </p>
             </div>
           ) : (
             <div className="space-y-2">
-              {savedReports.map((report) => (
+              {pagedReports.map((report) => (
                 <div
                   key={report.id}
                   className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 hover:border-[var(--accent)] transition-colors"
@@ -462,6 +509,29 @@ export default function MoatEvaluationPicker() {
                   )}
                 </div>
               ))}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2 text-[12px] text-[var(--muted)]">
+                  <button
+                    type="button"
+                    onClick={() => setReportPage((p) => Math.max(0, p - 1))}
+                    disabled={reportPage === 0}
+                    className="px-3 py-1.5 rounded-lg bg-[var(--card-hover)] disabled:opacity-40 hover:bg-[var(--border)] transition-colors"
+                  >
+                    ←
+                  </button>
+                  <span>
+                    {reportPage + 1} / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setReportPage((p) => Math.min(totalPages - 1, p + 1))}
+                    disabled={reportPage >= totalPages - 1}
+                    className="px-3 py-1.5 rounded-lg bg-[var(--card-hover)] disabled:opacity-40 hover:bg-[var(--border)] transition-colors"
+                  >
+                    →
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

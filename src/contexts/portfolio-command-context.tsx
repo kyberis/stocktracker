@@ -115,7 +115,16 @@ export function PortfolioCommandProvider({ children }: { children: ReactNode }) 
       )}
       {showAddCrypto && <AddCryptoModal isOpen={showAddCrypto} onClose={() => setShowAddCrypto(false)} />}
       {showAddAsset && <AddManualAssetModal isOpen={showAddAsset} onClose={() => setShowAddAsset(false)} />}
-      {showSettings && <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          onResetPortfolio={() => {
+            setShowSettings(false);
+            setShowReset(true);
+          }}
+        />
+      )}
       {showReset && <ResetPortfolioModal isOpen={showReset} onClose={() => setShowReset(false)} />}
     </PortfolioCommandContext.Provider>
   );

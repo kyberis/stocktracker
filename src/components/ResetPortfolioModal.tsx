@@ -12,12 +12,22 @@ interface ResetPortfolioModalProps {
 
 export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioModalProps) {
   const { t } = useI18n();
-  const { refreshHoldings, activePortfolioId } = usePortfolio();
+  const { refreshHoldings, activePortfolioId, portfolios } = usePortfolio();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmName, setConfirmName] = useState("");
+
+  const activeName =
+    portfolios.find((p) => p.id === activePortfolioId)?.name?.trim() ||
+    t("resetPortfolioDefaultName");
+
+  const nameMatches =
+    confirmName.trim().length > 0 &&
+    confirmName.trim().toLowerCase() === activeName.toLowerCase();
 
   const handleReset = async () => {
+    if (!nameMatches) return;
     setLoading(true);
     setError(null);
     try {
@@ -75,23 +85,37 @@ export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioM
               </div>
             </div>
 
+            <label className="block text-xs text-gray-600 dark:text-slate-300 mb-1.5">
+              {t("resetPortfolioTypeName").replace("{name}", activeName)}
+            </label>
+            <input
+              type="text"
+              value={confirmName}
+              onChange={(e) => setConfirmName(e.target.value)}
+              autoComplete="off"
+              className="w-full mb-4 text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+              placeholder={activeName}
+            />
+
             <div className="space-y-2 mb-5">
               <button
                 onClick={() => handleReset()}
-                disabled={loading}
-                className="w-full btn-danger text-sm py-2.5 disabled:opacity-50"
+                disabled={loading || !nameMatches}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? "Resetting..." : t("resetPortfolioEmpty")}
+                {loading ? t("resetPortfolioWorking") : t("resetPortfolioConfirm")}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                className="w-full py-2.5 rounded-xl text-sm font-medium border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+              >
+                {t("cancel")}
               </button>
             </div>
 
-            {error && (
-              <p className="text-xs text-red-500 text-center mb-3" role="alert">{error}</p>
-            )}
-
-            <button onClick={onClose} disabled={loading} className="w-full btn-secondary text-sm">
-              {t("cancel")}
-            </button>
+            {error && <p className="text-xs text-red-500">{error}</p>}
           </>
         )}
       </div>

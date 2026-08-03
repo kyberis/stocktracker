@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-context";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency } from "@/lib/utils";
+import { parseLocaleNumber } from "@/lib/portfolio/locale-number";
 import { useAlerts } from "@/lib/hooks/use-api";
 import type { QuoteData, SearchResult, AlertCondition, AlertType, PercentBasis } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
@@ -138,8 +139,8 @@ export default function PriceAlerts() {
   const handleCreateAlert = async () => {
     if (alertType === "threshold") {
       if (!selectedStock) return;
-      const num = parseFloat(threshold);
-      if (isNaN(num) || num <= 0) {
+      const num = parseLocaleNumber(threshold);
+      if (num == null || num <= 0) {
         setFormError(t("alertThresholdInvalid"));
         return;
       }
@@ -171,8 +172,8 @@ export default function PriceAlerts() {
       } catch { setFormError("Network error."); }
       setCreating(false);
     } else {
-      const pct = parseFloat(percentValue);
-      if (isNaN(pct) || pct <= 0) {
+      const pct = parseLocaleNumber(percentValue);
+      if (pct == null || pct <= 0) {
         setFormError(t("alertPercentInvalid"));
         return;
       }
@@ -410,28 +411,63 @@ export default function PriceAlerts() {
               const conditionMet = alert.alertType === "threshold" && q &&
                 ((alert.condition === "above" && q.regularMarketPrice >= alert.threshold) ||
                  (alert.condition === "below" && q.regularMarketPrice <= alert.threshold));
+              const isPending = alert.active && !alert.triggered;
+              const isTriggered = alert.triggered;
 
               return (
                 <div
                   key={alert.id}
-                  className={`flex items-center justify-between rounded-lg px-3 py-2 ${alert.triggered ? "bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20" : "bg-gray-50 dark:bg-slate-700/30"}`}
+                  className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                    isTriggered
+                      ? "bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20"
+                      : conditionMet
+                        ? "bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20"
+                        : "bg-gray-50 dark:bg-slate-700/30"
+                  }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${alert.triggered ? "bg-amber-100 dark:bg-amber-500/20" : alert.active ? "bg-emerald-100 dark:bg-emerald-500/20" : "bg-gray-200 dark:bg-slate-600"}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      isTriggered ? "bg-amber-100 dark:bg-amber-500/20"
+                      : conditionMet ? "bg-orange-100 dark:bg-orange-500/20"
+                      : isPending ? "bg-emerald-100 dark:bg-emerald-500/20"
+                      : "bg-gray-200 dark:bg-slate-600"
+                    }`}>
                       {alert.alertType === "percent_change" ? (
-                        <svg className={`w-4 h-4 ${alert.triggered ? "text-amber-600 dark:text-amber-400" : alert.active ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-slate-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className={`w-4 h-4 ${isTriggered ? "text-amber-600 dark:text-amber-400" : conditionMet ? "text-orange-600 dark:text-orange-400" : isPending ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-slate-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
                       ) : (
-                        <svg className={`w-4 h-4 ${alert.triggered ? "text-amber-600 dark:text-amber-400" : alert.active ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-slate-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className={`w-4 h-4 ${isTriggered ? "text-amber-600 dark:text-amber-400" : conditionMet ? "text-orange-600 dark:text-orange-400" : isPending ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-slate-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                       )}
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-900 dark:text-white">
-                        {alert.isPortfolioWide ? t("alertPortfolioWide") : (alert.name || alert.ticker)}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-medium text-gray-900 dark:text-white">
+                          {alert.isPortfolioWide ? t("alertPortfolioWide") : (alert.name || alert.ticker)}
+                        </p>
+                        {isTriggered && (
+                          <span className="text-[9px] font-bold uppercase tracking-wide bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">
+                            {t("alertTriggered")}
+                          </span>
+                        )}
+                        {!isTriggered && conditionMet && (
+                          <span className="text-[9px] font-bold uppercase tracking-wide bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 px-1.5 py-0.5 rounded-full">
+                            {t("alertConditionMet")}
+                          </span>
+                        )}
+                        {isPending && !conditionMet && (
+                          <span className="text-[9px] font-bold uppercase tracking-wide bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">
+                            {t("alertPending")}
+                          </span>
+                        )}
+                        {!alert.active && !isTriggered && (
+                          <span className="text-[9px] font-bold uppercase tracking-wide bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">
+                            {t("alertPaused")}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-gray-500 dark:text-slate-400">
                         <AlertDescription alert={alert} t={t} />
                       </p>
@@ -441,7 +477,7 @@ export default function PriceAlerts() {
                   <div className="flex items-center gap-3">
                     {q && (
                       <div className="text-right">
-                        <p className={`text-xs font-mono font-medium ${conditionMet ? "text-amber-600 dark:text-amber-400" : "text-gray-900 dark:text-white"}`}>
+                        <p className={`text-xs font-mono font-medium ${conditionMet ? "text-orange-600 dark:text-orange-400" : "text-gray-900 dark:text-white"}`}>
                           {formatCurrency(q.regularMarketPrice, q.currency)}
                         </p>
                       </div>

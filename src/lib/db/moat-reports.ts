@@ -76,8 +76,27 @@ export async function saveMoatReport(
   tags: string[] = [],
 ): Promise<string> {
   const client = await ensureInitialized();
-  const id = randomUUID();
   const tagJson = tagsToJson(normalizeMoatReportTags(tags));
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Upsert: dedupe by (user_id, symbol, date) — at most one evaluation per symbol per day.
+  const existing = await client.execute({
+    sql: `SELECT id FROM moat_reports WHERE user_id = ? AND symbol = ? AND DATE(created_at) = ? LIMIT 1`,
+    args: [userId, symbol, today],
+  });
+
+  if (existing.rows.length > 0) {
+    const existingId = str(existing.rows[0]?.id);
+    await client.execute({
+      sql: `UPDATE moat_reports
+            SET company_name = ?, evaluation_json = ?, total_score = ?, max_score = ?, verdict = ?, tags = ?
+            WHERE id = ?`,
+      args: [companyName, evaluationJson, totalScore, maxScore, verdict, tagJson, existingId],
+    });
+    return existingId;
+  }
+
+  const id = randomUUID();
   await client.execute({
     sql: `INSERT INTO moat_reports (id, user_id, symbol, company_name, evaluation_json, total_score, max_score, verdict, tags)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,

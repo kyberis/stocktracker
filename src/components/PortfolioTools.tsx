@@ -41,6 +41,7 @@ const FinancialPlanner = dynamic(() => import("./planning/FinancialPlanner"), { 
 const PortfolioProjection = dynamic(() => import("./PortfolioProjection"), { ssr: false });
 const PortfolioScorePage = dynamic(() => import("./PortfolioScorePage"), { ssr: false });
 const MoatEvaluationPicker = dynamic(() => import("./MoatEvaluationPicker"), { ssr: false });
+const PortfolioEventsView = dynamic(() => import("./PortfolioEventsView"), { ssr: false });
 const StrategiesTool = dynamic(() => import("./StrategiesTool"), { ssr: false });
 const WarrenScreener = dynamic(() => import("./WarrenScreener"), { ssr: false });
 
@@ -378,6 +379,7 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
               {activeTab === "score" && <PortfolioScorePage />}
               {activeTab === "evaluation" && <MoatEvaluationPicker />}
               {activeTab === "strategies" && <StrategiesTool />}
+              {activeTab === "events" && <PortfolioEventsView />}
             </div>
           </Suspense>
         </ErrorBoundary>

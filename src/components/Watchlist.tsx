@@ -9,6 +9,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { getMarketStatus } from "@/lib/market-hours";
 import type { QuoteData, SearchResult } from "@/lib/types";
 import AlertForm from "./AlertForm";
+import { formatWatchlistVenue } from "@/lib/watchlist-venue";
 
 export default function Watchlist() {
   const { t } = useI18n();
@@ -126,7 +127,10 @@ export default function Watchlist() {
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-gray-500 dark:text-slate-400">{item.ticker} · {item.exchange}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-slate-400">
+                        {item.ticker}
+                        {item.exchange ? ` · ${formatWatchlistVenue(item.exchange)}` : ""}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

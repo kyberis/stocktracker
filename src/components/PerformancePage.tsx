@@ -35,6 +35,7 @@ import {
   type PerformanceBreakdown,
 } from "@/lib/performance-breakdown";
 import { formatCurrency, formatPercent } from "@/lib/utils";
+import { sanitizeTtwror } from "@/lib/portfolio/sanity";
 import type { Transaction, Holding, CashEntry, HistoricalDataPoint } from "@/lib/types";
 import TierFeatureBadge from "./TierFeatureBadge";
 import DataUpgradeNudge from "./DataUpgradeNudge";
@@ -267,12 +268,14 @@ export default function PerformancePage({ holdings: holdingsProp, cashEntries: c
     [activeTxs, totalCurrentEUR, totalCostEUR, exchangeRates, baseCurrency],
   );
 
-  const ttwror = calculateTTWROR(activeTxs, totalCurrentEUR, totalCostEUR, exchangeRates, baseCurrency);
+  const rawTtwror = calculateTTWROR(activeTxs, totalCurrentEUR, totalCostEUR, exchangeRates, baseCurrency);
   const cashFlows = buildXIRRCashFlows(activeTxs, totalCurrentEUR, exchangeRates, baseCurrency);
   const irr = cashFlows.length >= 2 ? calculateXIRR(cashFlows) : null;
   const simpleReturn = totalCostEUR > 0
     ? ((totalCurrentEUR - totalCostEUR) / totalCostEUR) * 100
     : 0;
+  // Sanity-gate: discard TTWROR if it diverges from simple return by more than 3×.
+  const ttwror = sanitizeTtwror(rawTtwror, simpleReturn) ?? simpleReturn;
 
   const { sharpe, maxDrawdown, volatility } = useMemo(() => {
     if (!isPaid || Object.keys(historySeries).length === 0) {

@@ -49,7 +49,7 @@ function labelColor(label: string): string {
 
 /* ── Compact main gauge ───────────────────────────────────── */
 
-function CompactGauge({ score, percentile }: { score: number; percentile: number }) {
+function CompactGauge({ score }: { score: number }) {
   const { t } = useI18n();
   const r = 46;
   const cx = 56;
@@ -77,10 +77,17 @@ function CompactGauge({ score, percentile }: { score: number; percentile: number
         </text>
       </svg>
       <p className="-mt-1 text-center text-[11px] text-[color:var(--muted)]">
-        {t("portfolioScorePercentile").replace("{pct}", String(percentile))}
+        {t("portfolioScoreOutOfTen")}
       </p>
     </div>
   );
+}
+
+function isScoreStale(cachedAt: string | null): boolean {
+  if (!cachedAt) return false;
+  const t = Date.parse(cachedAt);
+  if (Number.isNaN(t)) return false;
+  return Date.now() - t > 14 * 24 * 60 * 60 * 1000;
 }
 
 /* ── Mini sub-score row ───────────────────────────────────── */
@@ -267,8 +274,13 @@ export default function PortfolioScoreCard({ holdings, cashEntries }: Props) {
         </button>
       </div>
 
-      {/* Compact gauge */}
-      <CompactGauge score={score.overallScore} percentile={score.percentile} />
+      {/* Compact gauge — TRF-015: no unsubstantiated percentile claim */}
+      <CompactGauge score={score.overallScore} />
+      {isScoreStale(cachedAt) && (
+        <p className="mt-1 text-center text-[10px] text-amber-600 dark:text-amber-400">
+          {t("portfolioScoreStaleWarning")}
+        </p>
+      )}
 
       {/* Sub-score bars */}
       <div className="mt-2 space-y-1.5">

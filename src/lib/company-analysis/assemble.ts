@@ -416,13 +416,15 @@ export function pickSectorAlternative(
 
   // Prefer a peer closer to its 52w high than the subject (better relative momentum).
   // Prefer peers with a usable price (filters out sparse nano quotes when subject has price).
-  const withPrice = ranked.filter((p) => p.price != null && p.price > 0);
-  const pool = withPrice.length > 0 ? withPrice : ranked;
+  // TRF-020: drop sub-cent / zero prints as a crude illiquidity filter when better quotes exist.
+  const withPrice = ranked.filter((p) => p.price != null && p.price >= 0.5);
+  const pool = withPrice.length > 0 ? withPrice : ranked.filter((p) => p.price != null && p.price > 0);
+  const finalPool = pool.length > 0 ? pool : ranked;
   const winner =
-    pool.find((p) => {
+    finalPool.find((p) => {
       if (subjectDist == null) return true;
       return (p.distanceTo52wHighPct ?? -999) > subjectDist;
-    }) ?? pool[0] ?? null;
+    }) ?? finalPool[0] ?? null;
 
   if (!winner) {
     return {
@@ -493,8 +495,25 @@ export function collectSources(parts: {
   return sources;
 }
 
+function isUsEquityListing(ticker: string, exchange?: string | null): boolean {
+  const t = (ticker || "").toUpperCase();
+  if (/\.(DE|F|MC|L|CO|TO|PA|AS|BR|MI|SW|ST|HE|OL|LS|HK|T|AX|SA|MX|IR|VI|AT|WA|PR|BU|AT)$/.test(t)) {
+    return false;
+  }
+  const ex = (exchange || "").toUpperCase();
+  if (
+    ex &&
+    !/(NASDAQ|NYSE|AMEX|ARCA|NMS|NYQ|NGM|NCM|BATS|PCX|ASE|UNITED STATES|^US$)/i.test(ex)
+  ) {
+    return false;
+  }
+  return true;
+}
+
 export function assembleReport(input: {
   ticker: string;
+  /** Actual symbol used by the provider (may differ when resolved via alias). */
+  symbolUsed?: string;
   generatedAt?: string;
   updatedAt: string;
   cached: boolean;
@@ -521,18 +540,24 @@ export function assembleReport(input: {
     profile?.name ?? null,
     fundamentals,
   );
-  const insiders = buildInsiders(input.insiders);
-  const congress = buildCongress(input.congress);
+  // TRF-019: Form 4 / STOCK Act only for US listings — do not surface empty foreign noise.
+  const usListing = isUsEquityListing(input.ticker, profile?.exchange);
+  const insiders = usListing ? buildInsiders(input.insiders) : { status: "unavailable" as const, items: [] };
+  const congress = usListing ? buildCongress(input.congress) : { status: "unavailable" as const, items: [] };
   const subjectDist =
     peerDistanceTo52wHigh(quote?.price ?? null, quote?.fiftyTwoWeekHigh ?? null) ??
     technicals.distanceToCloseHigh12mPct;
   const alternative = pickSectorAlternative(input.ticker, subjectDist, input.peers);
+
+  const symbolUsed =
+    input.symbolUsed && input.symbolUsed !== input.ticker ? input.symbolUsed : undefined;
 
   return {
     ticker: input.ticker,
     generatedAt: input.generatedAt ?? input.updatedAt,
     updatedAt: input.updatedAt,
     cached: input.cached,
+    ...(symbolUsed ? { symbolUsed } : {}),
     quote,
     profile,
     fundamentals,

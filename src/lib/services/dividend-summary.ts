@@ -23,8 +23,8 @@ export interface DividendSummary {
       name: string;
       shares: number;
       annualIncomeEUR: number;
-      dividendYield: number;
-      yieldOnCost: number;
+      dividendYield: number | null;
+      yieldOnCost: number | null;
       currency: string;
     }>;
   };

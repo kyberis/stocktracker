@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-context";
 import { formatCurrency, formatCompactNumber } from "@/lib/utils";
+import { parseLocaleNumber } from "@/lib/portfolio/locale-number";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
 import ProCompareCard from "@/components/ProCompareCard";
 import { useTrack } from "@/lib/use-track";
@@ -244,7 +245,7 @@ export default function StrategiesTool() {
   const handleSubmit = () => {
     setFormError("");
     setFormSuccess("");
-    const parseNum = (s: string) => parseFloat(s.replace(",", "."));
+    const parseNum = (s: string) => parseLocaleNumber(s) ?? NaN;
     const tp = parseNum(targetPrice);
     const sl = parseNum(stopLoss);
     const pp = parseNum(purchasePrice);

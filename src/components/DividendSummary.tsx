@@ -203,11 +203,11 @@ export default function DividendSummary() {
                     <span className="text-gray-400 dark:text-slate-500 mr-1.5">{i + 1}.</span>
                     <span className="font-mono font-medium">{e.ticker}</span>
                     <span className="text-gray-400 dark:text-slate-500 ml-1.5">
-                      {e.dividendYield > 0 ? `${e.dividendYield.toFixed(1)}%` : ""}
+                      {e.dividendYield != null && e.dividendYield > 0 ? `${e.dividendYield.toFixed(1)}%` : ""}
                     </span>
                   </span>
                   <span className="text-amber-600 dark:text-amber-400 font-mono text-[11px] w-14 text-right shrink-0" title={t("yieldOnCost")}>
-                    {e.yieldOnCost > 0 ? `${e.yieldOnCost.toFixed(1)}%` : "--"}
+                    {e.yieldOnCost != null && e.yieldOnCost > 0 ? `${e.yieldOnCost.toFixed(1)}%` : "—"}
                   </span>
                   <div className="flex items-center gap-3">
                     <div className="w-24 h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -529,21 +529,18 @@ export default function DividendSummary() {
 
       {/* ── Income sub-view: dividends vs. capital gains (last 12 months) ── */}
       {hasIncomeData && (
-        <div className="card" aria-label={t("incomeSubviewLabel")}>
+        <div className="card" aria-label={t("monthlyCashFlowCard")}>
           <div className="flex items-center gap-3 mb-4">
-            <p className="text-xs font-semibold text-gray-900 dark:text-white flex-1">{t("incomeSubviewLabel")}</p>
+            <p className="text-xs font-semibold text-gray-900 dark:text-white flex-1">{t("monthlyCashFlowCard")}</p>
             <div className="flex items-center gap-3 text-[10px] text-gray-500 dark:text-slate-400">
               <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-violet-500" />{t("dividends")}</span>
               <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />{t("incomeCapitalGains")}</span>
             </div>
           </div>
-          <div className="space-y-1.5" role="img" aria-label={`${t("incomeSubviewLabel")}: ${t("last12Months")}`}>
+          <div className="space-y-1.5" role="img" aria-label={`${t("monthlyCashFlowCard")}: ${t("last12Months")}`}>
             {incomeByMonth.map(({ month, dividends, gains }) => {
-              const maxDiv = Math.max(...incomeByMonth.map((r) => r.dividends), 1);
-              const divWidth = Math.min(100, (dividends / maxDiv) * 100);
-              // Sales proceeds use their own scale so they don't crush dividend bars
-              const maxGain = Math.max(...incomeByMonth.map((r) => r.gains), 1);
-              const gainWidth = Math.min(100, (gains / maxGain) * 100);
+              const divWidth = Math.min(100, (dividends / maxIncomeBar) * 100);
+              const gainWidth = Math.min(100, (gains / maxIncomeBar) * 100);
               return (
                 <div key={month} className="flex items-center gap-2 text-xs">
                   <span className="text-gray-500 dark:text-slate-400 w-14 shrink-0">{month.slice(0, 7)}</span>

@@ -7,7 +7,7 @@ import { useTransactions } from "@/lib/hooks/use-api";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useTrack } from "@/lib/use-track";
 import { calculateFifoRealizedPL } from "@/lib/performance";
-import { formatStealthCurrency, todayLocal } from "@/lib/utils";
+import { formatStealthCurrency, todayLocal, convertToEUR } from "@/lib/utils";
 import DataUpgradeNudge from "./DataUpgradeNudge";
 import type { Transaction, TransactionType } from "@/lib/types";
 
@@ -57,6 +57,28 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
 
   const baseCurrency = activePortfolioCurrency;
   const hasSells = useMemo(() => txs.some((tx) => tx.type === "sell"), [txs]);
+  const hasMixedCurrencies = useMemo(
+    () => txs.some((tx) => tx.currency && tx.currency !== baseCurrency),
+    [txs, baseCurrency],
+  );
+
+  const toBaseAmount = useCallback(
+    (tx: { totalAmount: number; currency?: string; exchangeRateEur?: number }): number | null => {
+      const txCur = tx.currency || baseCurrency;
+      if (txCur === baseCurrency) return tx.totalAmount;
+      // Use historical rate when available, fall back to current rates
+      const eurAmount = tx.exchangeRateEur
+        ? tx.totalAmount / tx.exchangeRateEur
+        : convertToEUR(tx.totalAmount, txCur, exchangeRates);
+      if (!Number.isFinite(eurAmount)) return null;
+      if (baseCurrency === "EUR") return eurAmount;
+      // Convert EUR → baseCurrency using current rates
+      const rateKey = `EUR${baseCurrency}`;
+      const rate = exchangeRates[rateKey];
+      return rate ? eurAmount * rate : null;
+    },
+    [baseCurrency, exchangeRates],
+  );
   const fifoMap = useMemo(
     () => (hasSells ? calculateFifoRealizedPL(txs, exchangeRates, baseCurrency) : new Map()),
     [txs, exchangeRates, baseCurrency, hasSells],
@@ -390,6 +412,11 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionShares")}</th>
                 <th scope="col" className="text-right p-2 font-medium hidden sm:table-cell">{t("transactionPrice")}</th>
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionTotal")}</th>
+                {hasMixedCurrencies && (
+                  <th scope="col" className="text-right p-2 font-medium hidden sm:table-cell">
+                    {baseCurrency}
+                  </th>
+                )}
                 <th scope="col" className="text-right p-2 font-medium hidden sm:table-cell">{t("transactionFees")}</th>
                 {hasSells && <th scope="col" className="text-right p-2 font-medium hidden sm:table-cell">{t("realizedPl")}</th>}
                 <th scope="col" className="text-left p-2 font-medium hidden sm:table-cell">
@@ -431,6 +458,7 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                     <td className="p-1.5 text-right font-mono text-gray-400 text-[10px]">
                       {((parseFloat(editShares) || 0) * (parseFloat(editPrice) || 0)).toFixed(2)}
                     </td>
+                    {hasMixedCurrencies && <td className="p-1.5 hidden sm:table-cell" />}
                     <td className="p-1.5 hidden sm:table-cell">
                       <input type="number" value={editFees} onChange={(e) => setEditFees(e.target.value)} className="text-xs w-full text-right" step="any" aria-label={t("transactionFees")} />
                     </td>
@@ -491,6 +519,16 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                         {formatStealthCurrency(tx.totalAmount, tx.currency || baseCurrency, stealthMode)}
                       </span>
                     </td>
+                    {hasMixedCurrencies && (() => {
+                      const baseAmt = toBaseAmount(tx);
+                      return (
+                        <td className="p-2 text-right font-mono text-gray-500 dark:text-slate-400 hidden sm:table-cell text-[11px]">
+                          {tx.currency === baseCurrency || baseAmt == null
+                            ? "—"
+                            : formatStealthCurrency(baseAmt, baseCurrency, stealthMode)}
+                        </td>
+                      );
+                    })()}
                     <td className="p-2 text-right font-mono text-gray-400 hidden sm:table-cell">
                       {tx.fees > 0 ? formatStealthCurrency(tx.fees, tx.currency || baseCurrency, stealthMode) : "—"}
                     </td>

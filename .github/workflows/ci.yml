@@ -71,3 +71,38 @@ jobs:
           NEXTAUTH_URL: http://localhost:3000
           TURSO_DATABASE_URL: libsql://fake.turso.io
           TURSO_AUTH_TOKEN: fake
+
+  e2e-a11y:
+    name: E2E — axe a11y smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Build
+        run: npm run build
+        env:
+          E2E: "1"
+          NEXTAUTH_SECRET: ci-build-secret
+          NEXTAUTH_URL: http://localhost:3000
+          TURSO_DATABASE_URL: libsql://fake.turso.io
+          TURSO_AUTH_TOKEN: fake
+
+      - name: Axe smoke E2E
+        run: npm run test:e2e -- e2e/a11y-smoke.spec.ts
+        env:
+          E2E: "1"
+          E2E_PREBUILT: "1"
+          NEXTAUTH_SECRET: ci-build-secret
+          NEXTAUTH_URL: http://localhost:3000
+          TURSO_DATABASE_URL: libsql://fake.turso.io
+          TURSO_AUTH_TOKEN: fake

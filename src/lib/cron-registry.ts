@@ -150,4 +150,10 @@ export const CRON_REGISTRY: CronJob[] = [
     schedule: "*/30 * * * *",
     description: "Ingest FinPulse X influencer posts via Tavily for AID beta",
   },
+  {
+    name: "coverage-reconcile",
+    path: "/api/cron/coverage-reconcile",
+    schedule: "15 2 * * *",
+    description: "Overnight scan: flag holdings that lost Yahoo/alias quote coverage (TRF-104)",
+  },
 ];

@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { formatCompactNumber } from "@/lib/utils";
+import { parseLocaleNumber } from "@/lib/portfolio/locale-number";
 
 interface MoatScreenerProps {
   onReportSaved?: () => void;
@@ -72,6 +73,11 @@ const VERDICT_COLORS: Record<string, string> = {
   "Narrow Moat — Proceed with Caution": "text-amber-500 bg-amber-500/10",
   "No Clear Moat Detected": "text-red-500 bg-red-500/10",
 };
+
+function normalizeParam(raw: string): string {
+  const n = parseLocaleNumber(raw);
+  return n != null ? String(n) : "";
+}
 
 export default function MoatScreener({ onReportSaved, variant = "default" }: MoatScreenerProps) {
   const { t } = useI18n();
@@ -160,12 +166,18 @@ export default function MoatScreener({ onReportSaved, variant = "default" }: Moa
     const params = new URLSearchParams();
     if (scoreMin > 0) params.set("scoreMin", String(scoreMin));
     if (sector) params.set("sector", sector);
-    if (peMin) params.set("peMin", peMin);
-    if (peMax) params.set("peMax", peMax);
-    if (marketCapMin) params.set("marketCapMin", marketCapMin);
-    if (marketCapMax) params.set("marketCapMax", marketCapMax);
-    if (priceMin) params.set("priceMin", priceMin);
-    if (priceMax) params.set("priceMax", priceMax);
+    const nPeMin = normalizeParam(peMin);
+    const nPeMax = normalizeParam(peMax);
+    const nMcMin = normalizeParam(marketCapMin);
+    const nMcMax = normalizeParam(marketCapMax);
+    const nPrMin = normalizeParam(priceMin);
+    const nPrMax = normalizeParam(priceMax);
+    if (nPeMin) params.set("peMin", nPeMin);
+    if (nPeMax) params.set("peMax", nPeMax);
+    if (nMcMin) params.set("marketCapMin", nMcMin);
+    if (nMcMax) params.set("marketCapMax", nMcMax);
+    if (nPrMin) params.set("priceMin", nPrMin);
+    if (nPrMax) params.set("priceMax", nPrMax);
     for (const [k, v] of Object.entries(criteriaFilters)) {
       if (v) params.set(k, v);
     }
@@ -281,7 +293,7 @@ export default function MoatScreener({ onReportSaved, variant = "default" }: Moa
               placeholder={t("min")}
               value={peMin}
               onChange={(e) => setPeMin(e.target.value)}
-              className="w-24 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
+              className="w-24 min-w-0 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
             />
             <span className="text-[var(--muted)] text-xs">–</span>
             <input

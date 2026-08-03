@@ -1,5 +1,4 @@
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
-import { wasMarketOpenToday } from "@/lib/market-hours";
 import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
 import type { ExchangeRates, Holding, QuoteData } from "@/lib/types";
 
@@ -15,16 +14,18 @@ function groupHoldings(holdings: Holding[], group: AssetFilter): Holding[] {
 }
 
 /**
- * Day return (%) and absolute P/L per asset bucket using the same rules everywhere:
- * - Include a holding's day delta only when its market was open today (crypto always).
- * - Return % = sum(day Δ) / sum(prior close value), not a quote-weighted average.
+ * Day return (%) and absolute P/L per asset bucket using the same rules everywhere (TRF-003):
+ * - Include every holding with a usable price; exclude from BOTH amount and % when price is missing.
+ * - Prefer previousClose when present; otherwise derive prior as price − change.
+ * - Return % = sum(day Δ) / sum(prior close value) — never mix scopes.
+ * - `wasMarketOpenToday` only gates whether abs is labeled "active today"; math always includes quotes.
  */
 export function computeDayChangeByType(
   holdings: Holding[],
   quotes: Record<string, QuoteData>,
   exchangeRates: ExchangeRates,
   baseCurrency: string,
-  now?: Date,
+  _now?: Date,
 ): DayChangeByType {
   const pct: Partial<Record<AssetFilter, number>> = {};
   const abs: Partial<Record<AssetFilter, number | undefined>> = {};
@@ -36,29 +37,35 @@ export function computeDayChangeByType(
 
     let dayPL = 0;
     let priorValue = 0;
-    let activeToday = false;
+    let included = 0;
 
     for (const h of bucket) {
       const quote = quotes[h.ticker];
       if (!quote || quote.regularMarketPrice <= 0) continue;
 
-      const isCrypto = h.assetType === "crypto";
-      const countsToday = isCrypto || wasMarketOpenToday(h.exchange, now);
-      if (!countsToday) continue;
+      const change = quote.regularMarketChange;
+      const prevClose =
+        quote.regularMarketPreviousClose != null && quote.regularMarketPreviousClose > 0
+          ? quote.regularMarketPreviousClose
+          : change != null && Number.isFinite(change)
+            ? quote.regularMarketPrice - change
+            : null;
+      // No prior close → exclude from BOTH amount and % (TRF-003).
+      if (prevClose == null || prevClose <= 0) continue;
 
-      activeToday = true;
       const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
-      const posValue = Math.abs(h.shares * quote.regularMarketPrice);
-      const posValueBase = convertCurrency(posValue, quoteCurrency, baseCurrency, exchangeRates);
-      const dayDelta = h.shares * (quote.regularMarketChange ?? 0);
-      const dayDeltaBase = convertCurrency(dayDelta, quoteCurrency, baseCurrency, exchangeRates);
+      const dayDeltaLocal = h.shares * (quote.regularMarketPrice - prevClose);
+      const priorLocal = Math.abs(h.shares * prevClose);
+      const dayDeltaBase = convertCurrency(dayDeltaLocal, quoteCurrency, baseCurrency, exchangeRates);
+      const priorBase = convertCurrency(priorLocal, quoteCurrency, baseCurrency, exchangeRates);
 
       dayPL += dayDeltaBase;
-      priorValue += posValueBase - dayDeltaBase;
+      priorValue += priorBase;
+      included += 1;
     }
 
     pct[group] = priorValue > 0 ? (dayPL / priorValue) * 100 : 0;
-    abs[group] = activeToday ? dayPL : undefined;
+    abs[group] = included > 0 ? dayPL : undefined;
   }
 
   return { pct, abs };
