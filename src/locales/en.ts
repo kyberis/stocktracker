@@ -3099,6 +3099,8 @@ const en: TranslationStrings = {
   homeRecDiversifyTitle: "Improve your diversification",
   homeRecDiversifyBody:
     "Your portfolio leans on {topSector} ({topPct}%). Explore {sectorA} and {sectorB}, where you have little or no exposure.",
+  homeRecDiversifyUnclassifiedBody:
+    "{unclassifiedPct}% of your holdings are unclassified. Classify them and explore {sectorA} and {sectorB} to improve diversification.",
   homeRecConcentrationTitle: "High concentration in {ticker}",
   homeRecConcentrationBody:
     "{ticker} is {pct}% of your portfolio. Consider trimming or balancing with other holdings.",
@@ -3118,11 +3120,14 @@ const en: TranslationStrings = {
   homeRecRunAnalysisLocked: "Available in 7 days",
   homeRecRefreshing: "Analyzing…",
   homeRecRefreshDone: "Analysis updated",
-  homeRecRefreshEmpty: "No tips right now — your portfolio looks balanced",
-  homeRecRefreshCooldownoldown: "You already ran analysis this week — try again in 7 days",
+  homeRecRefreshEmpty: "No matching tips for the current rules — check classification and concentration.",
+  homeRecRefreshAllDone: "You already cleared the current tips. New ones appear when your portfolio changes.",
+  homeRecRefreshCooldown: "You already ran analysis this week — try again in 7 days",
   homeRecRefreshError: "Could not run analysis. Try again.",
   homeRecEmptyTitle: "No portfolio tips right now",
   homeRecEmptyBody: "Run analysis at most once per week, or wait for the Monday refresh.",
+  homeRecEmptyDismissedTitle: "Tips reviewed for now",
+  homeRecEmptyDismissedBody: "You cleared the current tips. New ones appear after portfolio changes or next week’s analysis.",
   homeRecDiversifyResearchEyebrow: "Diversification research",
   homeRecDiversifyResearchTitle: "Two sectors to rebalance",
   homeRecDiversifyResearchBody:

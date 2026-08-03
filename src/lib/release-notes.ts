@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.80",
+    date: "2026-08-03",
+    title: "Diversify tip for unclassified holdings",
+    titleTranslations: {
+      es: "Tip de diversificación por posiciones sin clasificar",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Home tips no longer claim a portfolio is balanced when Unclassified is high; ≥15% unclassified triggers a diversify tip, empty copy is honest, and empty weekly cache is recomputed on load.",
+        translations: {
+          es: "Los tips de Home ya no dicen que la cartera está equilibrada si hay mucho Unclassified; ≥15% sin clasificar dispara diversificación, el copy vacío es honesto y la cache semanal vacía se recalcula al cargar.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.79",
     date: "2026-08-03",
     title: "One manual tip analysis per week",

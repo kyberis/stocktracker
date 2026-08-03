@@ -94,6 +94,16 @@ export async function clearSkippedRecommendationStates(userId: string): Promise<
   return Number(result.rowsAffected ?? 0);
 }
 
+/** Clear all tip states (skipped + acted) — used by manual Run analysis. */
+export async function clearAllRecommendationStates(userId: string): Promise<number> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `DELETE FROM portfolio_recommendation_state WHERE user_id = ?`,
+    args: [userId],
+  });
+  return Number(result.rowsAffected ?? 0);
+}
+
 export async function getRecommendationCache(
   userId: string,
   portfolioId: string,

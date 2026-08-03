@@ -232,4 +232,29 @@ describe("buildPortfolioRecommendations", () => {
     expect(diversify!.sectors).not.toContain("Communication Services");
     expect(diversify!.chips.some((c) => /Communication Services 0%/.test(c.label))).toBe(false);
   });
+
+  it("treats high Unclassified allocation as a diversification gap", () => {
+    const holdings = [
+      holding({ ticker: "AAA", sector: undefined, shares: 30, valueInEUR: 3000 }),
+      holding({ ticker: "BBB", sector: "Technology", shares: 10, valueInEUR: 1000 }),
+      holding({ ticker: "CCC", sector: "Healthcare", shares: 10, valueInEUR: 1000 }),
+      holding({ ticker: "DDD", sector: "Energy", shares: 10, valueInEUR: 1000 }),
+      holding({ ticker: "EEE", sector: "Utilities", shares: 10, valueInEUR: 1000 }),
+      holding({ ticker: "FFF", sector: "Real Estate", shares: 10, valueInEUR: 1000 }),
+    ];
+    const quotes = Object.fromEntries(
+      holdings.map((h) => [h.ticker, quote(h.ticker, 100, "EUR")]),
+    );
+    const queue = buildPortfolioRecommendations({
+      holdings,
+      cashEntries: [],
+      quotes,
+      exchangeRates: {},
+      preferredCurrency: "EUR",
+    });
+    const diversify = queue.find((r) => r.kind === "diversify");
+    expect(diversify).toBeTruthy();
+    expect(diversify!.bodyParams.reason).toBe("unclassified");
+    expect(Number(diversify!.bodyParams.unclassifiedPct)).toBeGreaterThanOrEqual(15);
+  });
 });

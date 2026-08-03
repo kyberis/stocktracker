@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSession } from "@/lib/auth/guards";
 import {
-  clearSkippedRecommendationStates,
+  clearAllRecommendationStates,
   getManualRefreshAvailability,
   getRecommendationCache,
   trackEvent,
@@ -25,6 +25,7 @@ async function withManualMeta(
     current: result.current,
     remaining: result.remaining,
     total: result.total,
+    rawTotal: result.rawTotal,
     queue: result.queue,
     source: result.source,
     weekKey: result.weekKey,
@@ -103,7 +104,7 @@ export const POST = withMetrics("/api/home-v2/recommendations", async (req: Next
       );
     }
 
-    await clearSkippedRecommendationStates(session.userId);
+    await clearAllRecommendationStates(session.userId);
     const result = await resolveRecommendationQueue({
       userId: session.userId,
       portfolioId,

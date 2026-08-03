@@ -40,6 +40,8 @@ export const REC_THRESHOLDS = {
   minDistinctSectors: 5,
   hhiMax: 0.22,
   topSectorPct: 35,
+  /** High missing classification is itself a diversification gap. */
+  unclassifiedMaxPct: 15,
   singleHoldingPct: 15,
   cashIdlePct: 20,
   fxDominantPct: 70,
@@ -151,6 +153,8 @@ export function buildPortfolioRecommendations(
   const hhi =
     investedEUR > 0 ? weights.reduce((s, w) => s + (Number.isFinite(w) ? w * w : 0), 0) : 1;
   const classified = sectorAlloc.filter((a) => a.label !== "Unclassified");
+  const unclassifiedPct =
+    sectorAlloc.find((a) => a.label === "Unclassified")?.percent ?? 0;
   const topSectorPct = classified.reduce((m, a) => Math.max(m, a.percent), 0);
 
   const out: PortfolioRecommendation[] = [];
@@ -159,15 +163,18 @@ export function buildPortfolioRecommendations(
   const needsDiversify =
     distinctSectors.size < REC_THRESHOLDS.minDistinctSectors ||
     hhi >= REC_THRESHOLDS.hhiMax ||
-    topSectorPct >= REC_THRESHOLDS.topSectorPct;
+    topSectorPct >= REC_THRESHOLDS.topSectorPct ||
+    unclassifiedPct >= REC_THRESHOLDS.unclassifiedMaxPct;
 
   if (needsDiversify) {
     const under = pickUnderweightSectors(sectorAlloc, 2);
     if (under.length >= 2) {
       const [a, b] = under;
-      const top =
-        [...classified].sort((x, y) => y.percent - x.percent)[0] ??
-        [...sectorAlloc].sort((x, y) => y.percent - x.percent)[0];
+      const topClassified = [...classified].sort((x, y) => y.percent - x.percent)[0];
+      const useUnclassifiedNarrative = unclassifiedPct >= REC_THRESHOLDS.unclassifiedMaxPct;
+      const top = useUnclassifiedNarrative
+        ? { label: "Unclassified", percent: unclassifiedPct }
+        : topClassified ?? [...sectorAlloc].sort((x, y) => y.percent - x.percent)[0];
       out.push({
         kind: "diversify",
         key: `diversify:${a!.label}+${b!.label}`,
@@ -178,13 +185,18 @@ export function buildPortfolioRecommendations(
           topPct: Math.round(top?.percent ?? topSectorPct),
           sectorA: a!.label,
           sectorB: b!.label,
+          unclassifiedPct: Math.round(unclassifiedPct),
+          reason: useUnclassifiedNarrative ? "unclassified" : "mix",
         },
         chips: [
+          ...(useUnclassifiedNarrative
+            ? [{ label: `Unclassified ${Math.round(unclassifiedPct)}%`, tone: "warn" as const }]
+            : []),
           { label: `${a!.label} ${Math.round(a!.pct)}%` },
           { label: `${b!.label} ${Math.round(b!.pct)}%` },
         ],
         sectors: [a!.label, b!.label],
-        pct: Math.round(topSectorPct),
+        pct: Math.round(useUnclassifiedNarrative ? unclassifiedPct : topSectorPct),
       });
     }
   }

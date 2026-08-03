@@ -783,6 +783,7 @@ export {
   listRecommendationStates,
   upsertRecommendationState,
   clearSkippedRecommendationStates,
+  clearAllRecommendationStates,
   getRecommendationCache,
   upsertRecommendationCache,
   currentRecommendationWeekKey,

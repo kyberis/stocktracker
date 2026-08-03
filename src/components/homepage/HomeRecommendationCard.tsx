@@ -11,6 +11,7 @@ type ApiPayload = {
   current: PortfolioRecommendation | null;
   remaining: number;
   total: number;
+  rawTotal?: number;
   refreshed?: boolean;
   cooldownMs?: number;
   canManualRefresh?: boolean;
@@ -47,6 +48,7 @@ export default function HomeRecommendationCard() {
       current: json.current,
       remaining: json.remaining,
       total: json.total,
+      rawTotal: json.rawTotal,
       canManualRefresh: json.canManualRefresh !== false,
       nextManualRefreshAt: json.nextManualRefreshAt ?? null,
       cooldownMs: json.cooldownMs,
@@ -126,11 +128,15 @@ export default function HomeRecommendationCard() {
         total: String(json.total ?? 0),
       });
       if (res.status === 429 || json.refreshed === false || json.error === "manual_refresh_cooldown") {
-        setStatusMsg(t("homeRecRefreshCooldownoldown"));
+        setStatusMsg(t("homeRecRefreshCooldown"));
       } else if (!res.ok) {
         setStatusMsg(t("homeRecRefreshError"));
       } else if (!json.current) {
-        setStatusMsg(t("homeRecRefreshEmpty"));
+        setStatusMsg(
+          (json.rawTotal ?? 0) > 0
+            ? t("homeRecRefreshAllDone")
+            : t("homeRecRefreshEmpty"),
+        );
       } else {
         setStatusMsg(t("homeRecRefreshDone"));
       }
@@ -150,7 +156,7 @@ export default function HomeRecommendationCard() {
       disabled={refreshing || busy || !canManualRefresh}
       onClick={() => void runAnalysis()}
       aria-busy={refreshing}
-      title={!canManualRefresh ? t("homeRecRefreshCooldownoldown") : undefined}
+      title={!canManualRefresh ? t("homeRecRefreshCooldown") : undefined}
       className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--border)] px-4 text-sm font-semibold text-[color:var(--muted)] hover:text-[color:var(--foreground)] disabled:opacity-60"
     >
       {refreshing
@@ -175,9 +181,11 @@ export default function HomeRecommendationCard() {
           id="home-rec-empty-title"
           className="mt-1 text-base font-bold text-[color:var(--foreground)]"
         >
-          {t("homeRecEmptyTitle")}
+          {(data?.rawTotal ?? 0) > 0 ? t("homeRecEmptyDismissedTitle") : t("homeRecEmptyTitle")}
         </h2>
-        <p className="mt-1 text-sm text-[color:var(--muted)]">{t("homeRecEmptyBody")}</p>
+        <p className="mt-1 text-sm text-[color:var(--muted)]">
+          {(data?.rawTotal ?? 0) > 0 ? t("homeRecEmptyDismissedBody") : t("homeRecEmptyBody")}
+        </p>
         <div className="mt-4 flex flex-wrap gap-2">{refreshButton}</div>
         {statusMsg && (
           <p className="mt-2 text-[11px] text-[color:var(--muted)]" role="status">
@@ -207,7 +215,10 @@ export default function HomeRecommendationCard() {
           : "homeRecFxBody";
 
   const title = interpolate(t(titleKey), current.titleParams);
-  const body = interpolate(t(bodyKey), current.bodyParams);
+  const body =
+    current.kind === "diversify" && current.bodyParams.reason === "unclassified"
+      ? interpolate(t("homeRecDiversifyUnclassifiedBody"), current.bodyParams)
+      : interpolate(t(bodyKey), current.bodyParams);
   const hasNext = (data?.remaining ?? 0) > 0;
   const positionLabel = interpolate(t("homeRecPosition"), {
     current: 1,

@@ -3100,6 +3100,8 @@ const es: TranslationStrings = {
   homeRecDiversifyTitle: "Mejora tu diversificación",
   homeRecDiversifyBody:
     "Tu cartera se inclina hacia {topSector} ({topPct}%). Explora {sectorA} y {sectorB}, donde tienes poca o ninguna exposición.",
+  homeRecDiversifyUnclassifiedBody:
+    "El {unclassifiedPct}% de tus posiciones no está clasificado. Clasifícalas y explora {sectorA} y {sectorB} para mejorar la diversificación.",
   homeRecConcentrationTitle: "Concentración alta en {ticker}",
   homeRecConcentrationBody:
     "{ticker} representa el {pct}% de tu cartera. Valora reducir o equilibrar con otros nombres.",
@@ -3119,11 +3121,14 @@ const es: TranslationStrings = {
   homeRecRunAnalysisLocked: "Disponible en 7 días",
   homeRecRefreshing: "Analizando…",
   homeRecRefreshDone: "Análisis actualizado",
-  homeRecRefreshEmpty: "Sin tips ahora — tu cartera se ve equilibrada",
-  homeRecRefreshCooldownoldown: "Ya ejecutaste el análisis esta semana — vuelve en 7 días",
+  homeRecRefreshEmpty: "No hay tips con las reglas actuales — revisa clasificación y concentración.",
+  homeRecRefreshAllDone: "Ya revisaste los tips actuales. Aparecerán nuevos cuando cambie tu cartera.",
+  homeRecRefreshCooldown: "Ya ejecutaste el análisis esta semana — vuelve en 7 días",
   homeRecRefreshError: "No se pudo ejecutar el análisis. Inténtalo de nuevo.",
   homeRecEmptyTitle: "No hay tips de cartera ahora",
   homeRecEmptyBody: "Puedes ejecutar el análisis como máximo una vez por semana, o esperar al refresco del lunes.",
+  homeRecEmptyDismissedTitle: "Tips revisados por ahora",
+  homeRecEmptyDismissedBody: "Limpiaste los tips actuales. Habrá nuevos tras cambios en la cartera o el análisis de la próxima semana.",
   homeRecDiversifyResearchEyebrow: "Research de diversificación",
   homeRecDiversifyResearchTitle: "Dos sectores para equilibrar",
   homeRecDiversifyResearchBody:

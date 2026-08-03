@@ -4,7 +4,7 @@
 
 ## 1. Summary
 
-Authenticated Home (`/`) shows one portfolio recommendation at a time (diversification, concentration, idle cash, FX). Users can mark **I took action** or **Next**. When the queue is empty the card hides; new fingerprints reappear when the portfolio changes. Diversify opens `/recommendations/diversify` with two underweight canonical sectors and 2–3 large-cap screener candidates each.
+Authenticated Home (`/`) shows one portfolio recommendation at a time (diversification, concentration, idle cash, FX). Users can mark **I took action** or **Next**. When the queue is empty an empty-state card remains (honest copy — never claims “balanced”); new fingerprints reappear when the portfolio changes. Diversify opens `/recommendations/diversify` with two underweight canonical sectors and 2–3 large-cap screener candidates each.
 
 ## 2. Status
 
@@ -45,19 +45,20 @@ Authenticated Home (`/`) shows one portfolio recommendation at a time (diversifi
 
 ## 6. UI surface
 
-- Home card: eyebrow, title, body, chips, CTAs (Investigate / Analyze / Took action / Next), short disclaimer
+- Home card: eyebrow, title, body, chips, CTAs (Investigate / Analyze / Took action / Next / Run analysis), short disclaimer
+- Empty state when queue filtered empty: distinguishes “no tips under rules” vs “tips already cleared”
 - Research page: two sector blocks, candidate rows → `/analisis/[ticker]`, Took action + Back home, full disclaimer
-- Hidden when no holdings, demo mode, or empty queue
+- Hidden when no holdings or demo mode
 
 ## 7. Business logic
 
-**Cadence:** A Monday 07:00 UTC cron analyzes users with ≥1 open holding who were **active in the last 30 days** (`users.last_active_at`) and are **not test accounts** (`test+*@trefolio.com`, `@example.com`, `@test.example.com`). It writes `portfolio_recommendation_cache` for the ISO week and clears prior `skipped` states (`acted` is kept). Home prefers this week's cache; if missing, falls back to live compute. Users can also tap **Run analysis** on Home (`POST … action: refresh`) at most **once every 7 days**, enforced via `last_manual_at` (API returns **429** while on cooldown). The weekly cron does not reset that manual cooldown.
+**Cadence:** A Monday 07:00 UTC cron analyzes users with ≥1 open holding who were **active in the last 30 days** (`users.last_active_at`) and are **not test accounts** (`test+*@trefolio.com`, `@example.com`, `@test.example.com`). It writes `portfolio_recommendation_cache` for the ISO week and clears prior `skipped` states (`acted` is kept). Home prefers this week's **non-empty** cache; if missing or empty (e.g. after rule changes), falls back to live compute without burning the manual cooldown. Users can also tap **Run analysis** on Home (`POST … action: refresh`) at most **once every 7 days**, enforced via `last_manual_at` (API returns **429** while on cooldown). Manual refresh clears all tip states (skipped + acted). The weekly cron does not reset that manual cooldown.
 
 Queue order: diversify → concentration → cash_idle → fx.
 
 | Kind | Trigger |
 |------|---------|
-| diversify | &lt;5 sectors OR HHI ≥ 0.22 OR top sector ≥ 35% |
+| diversify | &lt;5 sectors OR HHI ≥ 0.22 OR top sector ≥ 35% OR Unclassified ≥ 15% |
 | concentration | single holding ≥ 15% of portfolio |
 | cash_idle | cash ≥ 20% of total |
 | fx | ≥ 70% invested in quote currency ≠ preferred |

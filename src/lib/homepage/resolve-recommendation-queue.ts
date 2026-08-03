@@ -20,6 +20,8 @@ export type RecommendationQueueResult = {
   current: PortfolioRecommendation | null;
   remaining: number;
   total: number;
+  /** Tips before skip/acted filter */
+  rawTotal: number;
   queue: PortfolioRecommendation[];
   source: "cache" | "live";
   weekKey: string;
@@ -84,13 +86,21 @@ export async function resolveRecommendationQueue(args: {
 
   if (!args.forceRefresh) {
     const cached = await getRecommendationCache(args.userId, portfolioKey);
-    if (cached && cached.weekKey === weekKey && Array.isArray(cached.queue)) {
+    // Prefer non-empty weekly cache. Empty cache may be stale after rule changes —
+    // recompute live without burning the manual cooldown.
+    if (
+      cached &&
+      cached.weekKey === weekKey &&
+      Array.isArray(cached.queue) &&
+      cached.queue.length > 0
+    ) {
       const active = filterRecommendationQueue(cached.queue, dismissed);
       const current = active[0] ?? null;
       return {
         current,
         remaining: Math.max(0, active.length - (current ? 1 : 0)),
         total: active.length,
+        rawTotal: cached.queue.length,
         queue: active,
         source: "cache",
         weekKey,
@@ -109,6 +119,7 @@ export async function resolveRecommendationQueue(args: {
     current,
     remaining: Math.max(0, active.length - (current ? 1 : 0)),
     total: active.length,
+    rawTotal: queue.length,
     queue: active,
     source: "live",
     weekKey,
