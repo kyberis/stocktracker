@@ -4,6 +4,7 @@ import {
   listCashEntries,
   listHoldings,
   listRecommendationStates,
+  upsertRecommendationCache,
 } from "@/lib/db";
 import { currentRecommendationWeekKey } from "@/lib/db/portfolio-recommendations";
 import {
@@ -71,23 +72,32 @@ export async function computeLiveRecommendationQueue(args: {
 export async function resolveRecommendationQueue(args: {
   userId: string;
   portfolioId?: string;
+  /** Force live recompute and overwrite this week's cache (manual CTA / cron). */
+  forceRefresh?: boolean;
 }): Promise<RecommendationQueueResult> {
   const weekKey = currentRecommendationWeekKey();
   const portfolioKey = args.portfolioId || "";
   const states = await listRecommendationStates(args.userId);
   const dismissed = new Set(states.map((s) => s.recommendationKey));
 
-  const cached = await getRecommendationCache(args.userId, portfolioKey);
-  let queue: PortfolioRecommendation[];
-  let source: "cache" | "live";
-
-  if (cached && cached.weekKey === weekKey && Array.isArray(cached.queue)) {
-    queue = cached.queue;
-    source = "cache";
-  } else {
-    queue = await computeLiveRecommendationQueue(args);
-    source = "live";
+  if (!args.forceRefresh) {
+    const cached = await getRecommendationCache(args.userId, portfolioKey);
+    if (cached && cached.weekKey === weekKey && Array.isArray(cached.queue)) {
+      const active = filterRecommendationQueue(cached.queue, dismissed);
+      const current = active[0] ?? null;
+      return {
+        current,
+        remaining: Math.max(0, active.length - (current ? 1 : 0)),
+        total: active.length,
+        queue: active,
+        source: "cache",
+        weekKey,
+      };
+    }
   }
+
+  const queue = await computeLiveRecommendationQueue(args);
+  await upsertRecommendationCache(args.userId, portfolioKey, weekKey, queue);
 
   const active = filterRecommendationQueue(queue, dismissed);
   const current = active[0] ?? null;
@@ -96,7 +106,7 @@ export async function resolveRecommendationQueue(args: {
     remaining: Math.max(0, active.length - (current ? 1 : 0)),
     total: active.length,
     queue: active,
-    source,
+    source: "live",
     weekKey,
   };
 }

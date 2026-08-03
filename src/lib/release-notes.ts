@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.77",
+    date: "2026-08-03",
+    title: "Manual portfolio tip analysis on Home",
+    titleTranslations: {
+      es: "Análisis manual de tips de cartera en Home",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Home has a Run analysis CTA to recompute portfolio tips on demand (1-minute cooldown), including when the tip queue is empty.",
+        translations: {
+          es: "Home incluye el CTA Ejecutar análisis para recalcular tips de cartera al momento (cooldown de 1 minuto), también cuando no hay tips.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.76",
     date: "2026-08-03",
     title: "Weekly portfolio tip analysis cron",

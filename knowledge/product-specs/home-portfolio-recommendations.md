@@ -39,7 +39,7 @@ Authenticated Home (`/`) shows one portfolio recommendation at a time (diversifi
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
 | GET | `/api/home-v2/recommendations` | session | Free | Current + remaining queue |
-| POST | `/api/home-v2/recommendations` | session | Free | `{ key, action }` then next |
+| POST | `/api/home-v2/recommendations` | session | Free | `{ action: skipped\|acted, key }` or `{ action: refresh }` |
 | GET | `/api/home-v2/diversify-research` | session | Free | 2 sectors × ≤3 candidates |
 | GET | `/api/cron/portfolio-recommendations` | cron secret | — | Weekly precompute for active portfolios |
 
@@ -51,7 +51,7 @@ Authenticated Home (`/`) shows one portfolio recommendation at a time (diversifi
 
 ## 7. Business logic
 
-**Cadence:** A Monday 07:00 UTC cron analyzes every user with ≥1 open holding (all portfolios that have holdings). It writes `portfolio_recommendation_cache` for the ISO week and clears prior `skipped` states (`acted` is kept). Home prefers this week's cache; if missing, falls back to live compute.
+**Cadence:** A Monday 07:00 UTC cron analyzes every user with ≥1 open holding (all portfolios that have holdings). It writes `portfolio_recommendation_cache` for the ISO week and clears prior `skipped` states (`acted` is kept). Home prefers this week's cache; if missing, falls back to live compute. Users can also tap **Run analysis** on Home (`POST … action: refresh`, 60s cooldown) to force the same recompute for their active portfolio.
 
 Queue order: diversify → concentration → cash_idle → fx.
 

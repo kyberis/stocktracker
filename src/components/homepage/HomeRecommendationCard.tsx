@@ -11,6 +11,8 @@ type ApiPayload = {
   current: PortfolioRecommendation | null;
   remaining: number;
   total: number;
+  refreshed?: boolean;
+  cooldownMs?: number;
 };
 
 function interpolate(
@@ -29,7 +31,13 @@ export default function HomeRecommendationCard() {
   const [data, setData] = useState<ApiPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const viewedKey = useRef<string | null>(null);
+
+  const qs = activePortfolioId
+    ? `?portfolioId=${encodeURIComponent(activePortfolioId)}`
+    : "";
 
   const load = useCallback(async () => {
     if (demoMode || holdings.length === 0) {
@@ -39,9 +47,6 @@ export default function HomeRecommendationCard() {
     }
     setLoading(true);
     try {
-      const qs = activePortfolioId
-        ? `?portfolioId=${encodeURIComponent(activePortfolioId)}`
-        : "";
       const res = await fetch(`/api/home-v2/recommendations${qs}`, { cache: "no-store" });
       if (!res.ok) {
         setData(null);
@@ -54,7 +59,7 @@ export default function HomeRecommendationCard() {
     } finally {
       setLoading(false);
     }
-  }, [activePortfolioId, demoMode, holdings.length]);
+  }, [demoMode, holdings.length, qs]);
 
   useEffect(() => {
     void load();
@@ -71,10 +76,8 @@ export default function HomeRecommendationCard() {
   async function postAction(action: "skipped" | "acted") {
     if (!current || busy) return;
     setBusy(true);
+    setStatusMsg(null);
     try {
-      const qs = activePortfolioId
-        ? `?portfolioId=${encodeURIComponent(activePortfolioId)}`
-        : "";
       const res = await fetch(`/api/home-v2/recommendations${qs}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,7 +99,88 @@ export default function HomeRecommendationCard() {
     }
   }
 
-  if (demoMode || loading || !current) return null;
+  async function runAnalysis() {
+    if (refreshing || busy || demoMode || holdings.length === 0) return;
+    setRefreshing(true);
+    setStatusMsg(null);
+    try {
+      const res = await fetch(`/api/home-v2/recommendations${qs}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "refresh" }),
+      });
+      if (!res.ok) {
+        setStatusMsg(t("homeRecRefreshError"));
+        return;
+      }
+      const json = (await res.json()) as ApiPayload;
+      setData({
+        current: json.current,
+        remaining: json.remaining,
+        total: json.total,
+      });
+      viewedKey.current = null;
+      track("home_rec_manual_refresh", {
+        refreshed: json.refreshed === false ? "cooldown" : "ok",
+        total: String(json.total ?? 0),
+      });
+      if (json.refreshed === false) {
+        setStatusMsg(t("homeRecRefreshCooldownoldown"));
+      } else if (!json.current) {
+        setStatusMsg(t("homeRecRefreshEmpty"));
+      } else {
+        setStatusMsg(t("homeRecRefreshDone"));
+      }
+    } catch {
+      setStatusMsg(t("homeRecRefreshError"));
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  if (demoMode || holdings.length === 0) return null;
+  if (loading) return null;
+
+  const refreshButton = (
+    <button
+      type="button"
+      disabled={refreshing || busy}
+      onClick={() => void runAnalysis()}
+      aria-busy={refreshing}
+      className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--border)] px-4 text-sm font-semibold text-[color:var(--muted)] hover:text-[color:var(--foreground)] disabled:opacity-60"
+    >
+      {refreshing ? t("homeRecRefreshing") : t("homeRecRunAnalysis")}
+    </button>
+  );
+
+  // Empty queue: still show compact CTA so users can re-run analysis
+  if (!current) {
+    return (
+      <section
+        className="card rounded-[20px] border border-[color:var(--border)] p-4 sm:p-5"
+        aria-labelledby="home-rec-empty-title"
+        data-testid="home-recommendation-empty"
+      >
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
+          {t("homeRecEyebrow")}
+        </p>
+        <h2
+          id="home-rec-empty-title"
+          className="mt-1 text-base font-bold text-[color:var(--foreground)]"
+        >
+          {t("homeRecEmptyTitle")}
+        </h2>
+        <p className="mt-1 text-sm text-[color:var(--muted)]">{t("homeRecEmptyBody")}</p>
+        <div className="mt-4 flex flex-wrap gap-2">{refreshButton}</div>
+        {statusMsg && (
+          <p className="mt-2 text-[11px] text-[color:var(--muted)]" role="status">
+            {statusMsg}
+          </p>
+        )}
+        <p className="mt-3 text-[11px] text-[color:var(--muted)]">{t("homeRecDisclaimerShort")}</p>
+      </section>
+    );
+  }
 
   const titleKey: TranslationKey =
     current.kind === "diversify"
@@ -129,9 +213,12 @@ export default function HomeRecommendationCard() {
       aria-labelledby="home-rec-title"
       data-testid="home-recommendation-card"
     >
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
-        {t("homeRecEyebrow")}
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
+          {t("homeRecEyebrow")}
+        </p>
+        {refreshButton}
+      </div>
       <h2 id="home-rec-title" className="mt-1 text-base font-bold text-[color:var(--foreground)] sm:text-lg">
         {title}
       </h2>
@@ -176,7 +263,7 @@ export default function HomeRecommendationCard() {
         )}
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || refreshing}
           onClick={() => void postAction("acted")}
           className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold disabled:opacity-60"
         >
@@ -185,7 +272,7 @@ export default function HomeRecommendationCard() {
         {hasNext && (
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || refreshing}
             onClick={() => void postAction("skipped")}
             className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--border)] px-4 text-sm font-semibold text-[color:var(--muted)] hover:text-[color:var(--foreground)] disabled:opacity-60"
           >
@@ -193,6 +280,12 @@ export default function HomeRecommendationCard() {
           </button>
         )}
       </div>
+
+      {statusMsg && (
+        <p className="mt-2 text-[11px] text-[color:var(--muted)]" role="status">
+          {statusMsg}
+        </p>
+      )}
 
       <p className="mt-3 text-[11px] text-[color:var(--muted)]">
         {positionLabel} · {t("homeRecDisclaimerShort")}
