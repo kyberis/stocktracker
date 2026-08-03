@@ -15,7 +15,7 @@ import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import DataUpgradeNudge from "./DataUpgradeNudge";
 import EmptyState from "./EmptyState";
-import { formatCurrency, formatStealthCurrency } from "@/lib/utils";
+import { formatCurrency, formatStealthCurrency, convertToEUR } from "@/lib/utils";
 import type { Transaction } from "@/lib/types";
 import { useTrack } from "@/lib/use-track";
 import { useStealthMode } from "@/lib/stealth-context";
@@ -70,9 +70,11 @@ export default function DividendSummary() {
   const totalPortfolioValue = useMemo(
     () => holdings.reduce((s, h) => {
       const q = quotes[h.ticker];
-      return s + (q ? h.shares * q.regularMarketPrice : 0);
+      if (!q || !(q.regularMarketPrice > 0)) return s;
+      const cur = q.currency || h.displayCurrency || "USD";
+      return s + convertToEUR(h.shares * q.regularMarketPrice, cur, exchangeRates);
     }, 0),
-    [holdings, quotes]
+    [holdings, quotes, exchangeRates]
   );
   const yieldPercent = totalPortfolioValue > 0 ? (annualDividends / totalPortfolioValue) * 100 : 0;
 
@@ -290,7 +292,7 @@ export default function DividendSummary() {
                 </div>
               )}
               <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 text-center">
-                <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium uppercase">{t("dividendYield")}</p>
+                <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium uppercase">{t("dividendYield")} (YTD recorded)</p>
                 <p className="text-lg font-bold text-blue-700 dark:text-blue-300">{yieldPercent.toFixed(2)}%</p>
               </div>
             </div>
@@ -346,7 +348,9 @@ export default function DividendSummary() {
                 </span>
               </div>
               <div className="space-y-1.5">
-                {projections.map(({ year, amount, isProjection }) => (
+                {projections
+                  .filter((r) => r.isProjection || r.year >= thisYear)
+                  .map(({ year, amount, isProjection }) => (
                   <div key={year} className="flex items-center justify-between text-xs">
                     <span className={`font-medium w-10 ${isProjection ? "text-indigo-500 dark:text-indigo-400" : year === thisYear ? "text-emerald-600 dark:text-emerald-400" : "text-gray-600 dark:text-slate-400"}`}>
                       {year}
@@ -430,7 +434,7 @@ export default function DividendSummary() {
 
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dripData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+              <AreaChart data={dripData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="dripWithGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
@@ -481,6 +485,7 @@ export default function DividendSummary() {
                   stroke="#8b5cf6"
                   strokeWidth={2}
                   fill="url(#dripWithGrad)"
+                  isAnimationActive={false}
                 />
                 <Area
                   type="monotone"
@@ -490,6 +495,7 @@ export default function DividendSummary() {
                   strokeWidth={1.5}
                   strokeDasharray="5 3"
                   fill="url(#dripWithoutGrad)"
+                  isAnimationActive={false}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -533,19 +539,22 @@ export default function DividendSummary() {
           </div>
           <div className="space-y-1.5" role="img" aria-label={`${t("incomeSubviewLabel")}: ${t("last12Months")}`}>
             {incomeByMonth.map(({ month, dividends, gains }) => {
-              const divWidth = maxIncomeBar > 0 ? Math.min(100, (dividends / maxIncomeBar) * 100) : 0;
-              const gainWidth = maxIncomeBar > 0 ? Math.min(100, (gains / maxIncomeBar) * 100) : 0;
+              const maxDiv = Math.max(...incomeByMonth.map((r) => r.dividends), 1);
+              const divWidth = Math.min(100, (dividends / maxDiv) * 100);
+              // Sales proceeds use their own scale so they don't crush dividend bars
+              const maxGain = Math.max(...incomeByMonth.map((r) => r.gains), 1);
+              const gainWidth = Math.min(100, (gains / maxGain) * 100);
               return (
                 <div key={month} className="flex items-center gap-2 text-xs">
                   <span className="text-gray-500 dark:text-slate-400 w-14 shrink-0">{month.slice(0, 7)}</span>
                   <div className="flex-1 flex flex-col gap-0.5">
                     {dividends > 0 && (
-                      <div className="w-full h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden" title={`${t("dividends")}: ${formatCurrency(dividends, baseCurrency)}`}>
                         <div className="h-full bg-violet-500 rounded-full" style={{ width: `${divWidth}%` }} />
                       </div>
                     )}
                     {gains > 0 && (
-                      <div className="w-full h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden opacity-70" title={`${t("incomeCapitalGains")}: ${formatCurrency(gains, baseCurrency)}`}>
                         <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${gainWidth}%` }} />
                       </div>
                     )}
@@ -554,7 +563,7 @@ export default function DividendSummary() {
                     )}
                   </div>
                   <span className="font-mono text-gray-900 dark:text-white w-20 text-right shrink-0">
-                    {formatCurrency(dividends + gains, baseCurrency)}
+                    {formatCurrency(dividends, baseCurrency)}
                   </span>
                 </div>
               );

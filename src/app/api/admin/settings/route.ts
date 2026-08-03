@@ -47,6 +47,9 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "home_v2",
   "classic_home",
   "commerce_enabled",
+  "tool_tax_reports_enabled",
+  "tool_simulator_enabled",
+  "tool_planning_enabled",
 ];
 
 export const dynamic = "force-dynamic";

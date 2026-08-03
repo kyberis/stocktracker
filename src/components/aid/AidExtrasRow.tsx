@@ -205,7 +205,7 @@ export default function AidExtrasRow({ holdings, cashEntries }: Props) {
                   (m.pct ?? 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
                 }`}
               >
-                {stealthMode ? "•••" : `${(m.pct ?? 0) >= 0 ? "+" : ""}${formatPercent(m.pct ?? 0)}`}
+                {stealthMode ? "•••" : `${formatPercent(m.pct ?? 0)}`}
               </span>
             </li>
           ))}

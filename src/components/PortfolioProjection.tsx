@@ -186,7 +186,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
   }, [totals.totalCurrentEUR, growthRate, weightedDividendYield, reinvestDividends, yearlyContribution, horizon, goalTarget]);
 
   const finalPoint = projectionData[projectionData.length - 1];
-  const totalContributed = totals.totalCurrentEUR + yearlyContribution * horizon;
+  const totalContributed = totals.totalCostEUR + yearlyContribution * horizon;
   const showDividendLine = reinvestDividends && weightedDividendYield > 0;
   const showContribLine = yearlyContribution > 0;
   const bestLine = showContribLine ? "withContributions" : showDividendLine ? "withDividends" : "base";

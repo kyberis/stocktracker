@@ -16,15 +16,17 @@ interface FinnhubNewsItem {
 
 function parseRelatedTickers(related: string, fetchSymbol: string): string[] {
   const out = new Set<string>();
-  const base = (fetchSymbol.split(".")[0] ?? fetchSymbol).toUpperCase().trim();
-  if (base) out.add(base);
-  if (!related) return [...out];
+  // Do NOT attribute every article to the fetch target — Finnhub company-news
+  // often returns market-wide stories. Only trust the related field + title match later.
+  if (!related) return [];
   for (const part of related.split(/[,;\s]+/)) {
     const raw = part.trim();
     if (!raw) continue;
     const t = (raw.split(".")[0] ?? raw).toUpperCase();
     if (t.length >= 1 && t.length <= 10 && /^[A-Z0-9_-]+$/.test(t)) out.add(t);
   }
+  // If related is empty, allow fetch symbol only when headline mentions it
+  void fetchSymbol;
   return [...out];
 }
 
@@ -32,13 +34,26 @@ function normalizeTickerKey(t: string): string {
   return (t.split(".")[0] ?? t).toUpperCase();
 }
 
+function headlineMentionsSymbol(headline: string, symbol: string): boolean {
+  const base = normalizeTickerKey(symbol);
+  if (!base || base.length < 2) return false;
+  const h = headline.toUpperCase();
+  // Word-boundary-ish match to avoid "MAIN" in "maintain"
+  const re = new RegExp(`(?:^|[^A-Z0-9])${base}(?:[^A-Z0-9]|$)`);
+  return re.test(h);
+}
+
 function toNewsArticle(item: FinnhubNewsItem, fetchSymbol: string): NewsArticle {
   const dt = new Date(item.datetime * 1000);
-  const syms = parseRelatedTickers(item.related, fetchSymbol);
+  let syms = parseRelatedTickers(item.related, fetchSymbol);
   const symKey = normalizeTickerKey(fetchSymbol);
+  if (syms.length === 0 && headlineMentionsSymbol(item.headline || "", fetchSymbol)) {
+    syms = [symKey];
+  }
+  // Drop fetch-symbol attribution when neither related nor headline supports it
   const tickerSentiment = syms.map((ticker) => ({
     ticker,
-    relevance: normalizeTickerKey(ticker) === symKey ? 1 : 0.6,
+    relevance: normalizeTickerKey(ticker) === symKey ? 0.9 : 0.6,
     sentimentScore: 0,
     sentimentLabel: "",
   }));

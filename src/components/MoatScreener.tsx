@@ -246,9 +246,10 @@ export default function MoatScreener({ onReportSaved, variant = "default" }: Moa
         </div>
 
         {/* Price & P/E range filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="flex items-center gap-2">
-            <label className="text-[12px] font-semibold text-[var(--muted)] w-24 flex-shrink-0">{t("moatScreenerPrice")}</label>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+            <label className="text-[12px] font-semibold text-[var(--muted)] sm:w-24 sm:flex-shrink-0">{t("moatScreenerPrice")}</label>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
             <input
               type="number"
               min={0}
@@ -256,7 +257,7 @@ export default function MoatScreener({ onReportSaved, variant = "default" }: Moa
               placeholder={t("min")}
               value={priceMin}
               onChange={(e) => setPriceMin(e.target.value)}
-              className="w-24 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
+              className="w-24 min-w-0 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
             />
             <span className="text-[var(--muted)] text-xs">–</span>
             <input
@@ -266,11 +267,13 @@ export default function MoatScreener({ onReportSaved, variant = "default" }: Moa
               placeholder={t("max")}
               value={priceMax}
               onChange={(e) => setPriceMax(e.target.value)}
-              className="w-24 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
+              className="w-24 min-w-0 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
             />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-[12px] font-semibold text-[var(--muted)] w-24 flex-shrink-0">{t("moatScreenerPE")}</label>
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+            <label className="text-[12px] font-semibold text-[var(--muted)] sm:w-24 sm:flex-shrink-0">{t("moatScreenerPE")}</label>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
             <input
               type="number"
               min={0}
@@ -288,8 +291,9 @@ export default function MoatScreener({ onReportSaved, variant = "default" }: Moa
               placeholder={t("max")}
               value={peMax}
               onChange={(e) => setPeMax(e.target.value)}
-              className="w-24 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
+              className="w-24 min-w-0 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
             />
+            </div>
           </div>
         </div>
 

@@ -37,7 +37,9 @@ async function fetchDividendsFromYahoo(tickers: string[]): Promise<DividendEvent
         declarationDate: "",
         recordDate: "",
         paymentDate: cal?.dividendDate ? new Date(cal.dividendDate).toISOString().slice(0, 10) : "",
-        amount: detail?.dividendRate ?? 0,
+        // Never use summaryDetail.dividendRate — that is the trailing/forward ANNUAL rate,
+        // not the upcoming payment. Amount is filled from premium schedule below.
+        amount: 0,
         currency: detail?.currency ?? "USD",
       } satisfies DividendEvent;
     })
@@ -136,11 +138,47 @@ export const GET = withMetrics("/api/ex-dividend", async (req: NextRequest) => {
     console.warn("[ex-dividend] Yahoo failed:", err instanceof Error ? err.message : err);
   }
 
+  // Always fetch premium schedules for amount (and any tickers Yahoo missed).
+  // Yahoo only provides dates reliably; amounts come from FMP/AV adjDividend.
+  const premiumEvents = await fetchDividendsFromFallback(session.userId, tickers);
+  const premiumByKey = new Map(
+    premiumEvents.map((e) => [`${e.symbol.toUpperCase()}|${e.exDividendDate}`, e]),
+  );
+
+  events = events.map((e) => {
+    const match = premiumByKey.get(`${e.symbol.toUpperCase()}|${e.exDividendDate}`);
+    if (match && match.amount > 0) {
+      return {
+        ...e,
+        amount: match.amount,
+        currency: match.currency || e.currency,
+        paymentDate: e.paymentDate || match.paymentDate,
+        recordDate: e.recordDate || match.recordDate,
+        declarationDate: e.declarationDate || match.declarationDate,
+      };
+    }
+    // Same symbol, nearest upcoming premium event (date may differ slightly)
+    const sameSymbol = premiumEvents.find(
+      (p) => p.symbol.toUpperCase() === e.symbol.toUpperCase() && p.amount > 0,
+    );
+    if (sameSymbol && e.amount <= 0) {
+      return {
+        ...e,
+        amount: sameSymbol.amount,
+        currency: sameSymbol.currency || e.currency,
+        paymentDate: e.paymentDate || sameSymbol.paymentDate,
+      };
+    }
+    return e;
+  });
+
   const covered = tickersWithEvents(events, tickers);
   const missingTickers = tickers.filter((t) => !covered.has(t.toUpperCase()));
 
   if (missingTickers.length > 0) {
-    const fallbackEvents = await fetchDividendsFromFallback(session.userId, missingTickers);
+    const fallbackEvents = premiumEvents.filter((e) =>
+      missingTickers.some((t) => t.toUpperCase() === e.symbol.toUpperCase()),
+    );
     events = events.concat(fallbackEvents);
   }
 

@@ -65,7 +65,7 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
 
   const returnText = showDayChange
     ? returnMode === "pct"
-      ? `${dayPositive ? "+" : ""}${formatPercent(dayChangePct)}`
+      ? `${formatPercent(dayChangePct)}`
       : `${dayPositive ? "+" : ""}${hasRate ? formatCurrency(dayChangeAbs, baseCurrency) : "--"}`
     : returnMode === "pct"
       ? formatPercent(gainLossPercent)
@@ -143,7 +143,7 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
           </span>
           {showDayChange ? (
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium tabular-nums ${isPositive ? "bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400"}`}>
-              {isPositive ? "+" : ""}{formatPercent(gainLossPercent)}
+              {formatPercent(gainLossPercent)}
             </span>
           ) : (
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium tabular-nums ${dayPositive ? "bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400"}`}>

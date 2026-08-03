@@ -107,7 +107,7 @@ export default function PortfolioHeroCard({
                 <span>
                   {stealthMode
                     ? ""
-                    : `${isPositiveDay && !isFlatDay ? "+" : ""}${formatPercent(dayPct)}`}
+                    : `${formatPercent(dayPct)}`}
                 </span>
                 <span className="ml-0.5 font-normal text-[color:var(--muted)]">{t("todayLabel")}</span>
               </span>

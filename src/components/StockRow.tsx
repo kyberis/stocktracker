@@ -165,10 +165,10 @@ function StockRow({ holding, onSelect }: StockRowProps) {
   const returnText = hasQuote
     ? showDayChange
       ? returnMode === "pct"
-        ? `${dayIsPositive ? "+" : ""}${formatPercent(dayChangePercent)}`
+        ? `${formatPercent(dayChangePercent)}`
         : `${dayIsPositive ? "+" : ""}${formatCurrency(dayChangeAmountBase, baseCurrency)}`
       : returnMode === "pct"
-        ? `${totalReturnIsPositive ? "+" : ""}${formatPercent(totalReturnPct)}`
+        ? `${formatPercent(totalReturnPct)}`
         : `${totalReturnIsPositive ? "+" : ""}${formatCurrency(totalReturnAbsBase, baseCurrency)}`
     : "--";
   const rowLabel = `${holding.name}, ${formatCurrency(totalValueBase, baseCurrency)}, ${dayText}`;

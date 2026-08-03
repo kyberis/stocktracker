@@ -706,7 +706,14 @@ function ExposureAnalysis({ drifts, isPro }: { drifts: (RebalanceDrift & { color
             <div
               key={d.label}
               className={`flex flex-col items-center justify-center py-2.5 sm:py-3 px-1.5 sm:px-2 text-white text-center rounded-md cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all ${borderClass}`}
-              style={{ flexBasis: `${widthPct}%`, flexGrow: d.actualPercent, background: d.color, opacity: 0.85, minHeight: 56 }}
+              style={{
+                flexBasis: `${widthPct}%`,
+                flexGrow: d.actualPercent,
+                background:
+                  absDrift > 5 ? "#ef4444" : absDrift > 2 ? "#f59e0b" : "#10b981",
+                opacity: 0.85,
+                minHeight: 56,
+              }}
               title={`${d.label}: ${d.actualPercent.toFixed(1)}%`}
             >
               <span className="text-[9px] sm:text-[10px] font-semibold leading-tight drop-shadow-sm truncate max-w-full">{d.label}</span>

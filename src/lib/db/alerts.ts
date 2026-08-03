@@ -55,6 +55,17 @@ export async function createAlert(
   alert: Omit<PriceAlert, "id" | "active" | "triggered" | "triggeredAt" | "createdAt">
 ): Promise<PriceAlert> {
   const client = await ensureInitialized();
+  // Soft-dedupe: reuse an existing identical active alert instead of creating a duplicate
+  const existing = await client.execute({
+    sql: `SELECT * FROM price_alerts
+          WHERE user_id = ? AND ticker = ? AND condition = ? AND threshold = ?
+            AND currency = ? AND active = 1
+          LIMIT 1`,
+    args: [userId, alert.ticker, alert.condition, alert.threshold, alert.currency],
+  });
+  if (existing.rows.length > 0) {
+    return rowToAlert(existing.rows[0] as unknown as Record<string, unknown>);
+  }
   const id = randomUUID();
   await client.execute({
     sql: `INSERT INTO price_alerts (id, user_id, ticker, name, condition, threshold, currency,

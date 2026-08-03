@@ -31,6 +31,9 @@ export const GET = withMetrics("/api/feature-flags", async (req: NextRequest) =>
     "market_data_fmp_dividends",
     "market_data_fmp_event_sync",
     "commerce_enabled",
+    "tool_tax_reports_enabled",
+    "tool_simulator_enabled",
+    "tool_planning_enabled",
   ] as const;
 
   const flagValues = await Promise.all(ANONYMOUS_FLAGS.map((f) => isFeatureEnabled(f)));

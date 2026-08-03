@@ -130,7 +130,7 @@ export default function Watchlist() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    {q && (
+                    {q && q.regularMarketPrice > 0 && (
                       <div className="text-right">
                         <p className="text-xs font-mono font-medium text-gray-900 dark:text-white">
                           {formatCurrency(q.regularMarketPrice, q.currency)}
@@ -143,6 +143,11 @@ export default function Watchlist() {
                           )}
                           {q.regularMarketChangePercent >= 0 ? "+" : ""}{q.regularMarketChangePercent.toFixed(2)}%
                         </p>
+                      </div>
+                    )}
+                    {q && !(q.regularMarketPrice > 0) && (
+                      <div className="text-right">
+                        <p className="text-xs font-mono text-gray-400 dark:text-slate-500">—</p>
                       </div>
                     )}
                     {/* Set alert button */}

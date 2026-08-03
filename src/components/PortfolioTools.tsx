@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
-import { useFeatureFlag } from "@/lib/feature-flag-context";
+import { useFeatureFlag, useFeatureFlagContext } from "@/lib/feature-flag-context";
 import { useCommerceEnabled } from "@/lib/commerce";
 import AdSlot from "@/components/AdSlot";
 import TierFeatureBadge from "./TierFeatureBadge";
@@ -78,8 +78,13 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
     alertsEnabled, csvExportEnabled,
     toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
     toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
+    settingsReady,
   } = settings;
   const aiReportEnabled = useFeatureFlag("ai_report_enabled");
+  const toolTaxReportsEnabled = useFeatureFlag("tool_tax_reports_enabled");
+  const toolSimulatorEnabled = useFeatureFlag("tool_simulator_enabled");
+  const toolPlanningEnabled = useFeatureFlag("tool_planning_enabled");
+  const { isLoaded: flagsLoaded } = useFeatureFlagContext();
   const commerceEnabled = useCommerceEnabled();
   const { favoriteIds, toggleFavorite, isFavorite } = useFavoriteTools();
   const router = useRouter();
@@ -114,17 +119,27 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
     ]
   );
 
+  const toolFlagExtras = useMemo(
+    () => ({
+      toolTaxReportsEnabled,
+      toolSimulatorEnabled,
+      toolPlanningEnabled,
+    }),
+    [toolTaxReportsEnabled, toolSimulatorEnabled, toolPlanningEnabled],
+  );
+
   const visibleTabs = useMemo(() => {
     return TOOLS_CATALOG.filter((tab) =>
-      resolveHubVisibility(tab.id, visibilitySettings, aiReportEnabled)
+      resolveHubVisibility(tab.id, visibilitySettings, aiReportEnabled, toolFlagExtras)
     );
-  }, [visibilitySettings, aiReportEnabled]);
+  }, [visibilitySettings, aiReportEnabled, toolFlagExtras]);
 
   useEffect(() => {
+    if (!settingsReady || !flagsLoaded) return;
     if (activeTab && visibleTabs.length > 0 && !visibleTabs.some((x) => x.id === activeTab)) {
       router.replace("/tools");
     }
-  }, [visibleTabs, activeTab, router]);
+  }, [visibleTabs, activeTab, router, settingsReady, flagsLoaded]);
 
   const handleExport = (type: string) => {
     window.open(`/api/export/portfolio?type=${type}`, "_blank");
@@ -244,9 +259,8 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
                   </svg>
                 )}
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab(entry.id)}
+              <Link
+                href={getToolPath(entry.id)}
                 className="flex w-full flex-col items-center text-center p-3 sm:p-4 pt-5 sm:pt-6"
               >
                 <div className={`mb-2 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-gradient-to-br ${entry.gradient} shadow-sm`}>
@@ -265,7 +279,7 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
                     Trefolio
                   </span>
                 )}
-              </button>
+              </Link>
             </div>
           );
         };

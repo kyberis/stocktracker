@@ -15,7 +15,7 @@ export default function FinancialPlanner() {
   const { user } = useAuth();
   const [mode, setMode] = useState<PlanningMode>("fire");
 
-  if (user?.plan !== "pro") {
+  if (user?.plan !== "pro" && user?.role !== "admin") {
     return (
       <div className="space-y-4">
         <div>
@@ -28,6 +28,9 @@ export default function FinancialPlanner() {
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
             FIRE calculator, retirement projections, and multi-goal tracking
           </p>
+        </div>
+        <div className="rounded-xl border border-dashed border-gray-300 dark:border-slate-600 p-6 text-center text-sm text-gray-600 dark:text-slate-300">
+          Available on Pro — FIRE calculator, retirement projections, and multi-goal tracking.
         </div>
         <ProCompareCard surface="planning_locked" reason="upgrade_required" />
       </div>

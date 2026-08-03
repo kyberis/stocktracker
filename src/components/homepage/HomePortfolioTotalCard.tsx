@@ -92,7 +92,7 @@ export default function HomePortfolioTotalCard({
             >
               {stealthMode
                 ? ""
-                : `${isPositiveDay && !isFlatDay ? "+" : ""}${formatPercent(dayGainLossPercent)}`}
+                : `${formatPercent(dayGainLossPercent)}`}
             </span>
             <span className="font-normal text-[color:var(--muted)]">{t("todayLabel")}</span>
           </div>
@@ -124,7 +124,7 @@ export default function HomePortfolioTotalCard({
           <div className={`mt-0.5 text-sm font-medium tabular-nums ${returnColor}`}>
             {stealthMode
               ? "•••••"
-              : `${isPositiveReturn ? "+" : ""}${formatPercent(totalReturnPct)}`}
+              : `${formatPercent(totalReturnPct)}`}
           </div>
         </div>
         <div>

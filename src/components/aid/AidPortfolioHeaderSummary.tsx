@@ -23,7 +23,7 @@ export default function AidPortfolioHeaderSummary({ holdings, cashEntries }: Pro
     if (stealthMode) return { pct: "•••", abs: "" };
     const pct =
       dayGainLossPercent != null
-        ? `${dayGainLossPercent >= 0 ? "+" : ""}${formatPercent(dayGainLossPercent)}`
+        ? `${formatPercent(dayGainLossPercent)}`
         : null;
     const abs =
       dayGainLoss != null

@@ -47,7 +47,13 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
 
   if (loading) return <div className="card h-24 rounded-[var(--radius-card)] bg-gray-50 animate-pulse dark:bg-white/[0.02]" />;
 
-  if (!digest) {
+  const MAX_DIGEST_AGE_DAYS = 14;
+  const digestAgeDays = digest
+    ? Math.floor((Date.now() - new Date(digest.weekEnd).getTime()) / 86_400_000)
+    : Infinity;
+  const digestIsStale = !digest || digestAgeDays > MAX_DIGEST_AGE_DAYS;
+
+  if (digestIsStale) {
     return (
       <div className="card rounded-[var(--radius-card)] border border-[color:var(--border)] p-4 shadow-[0_14px_28px_rgba(1,6,16,0.22)]">
         <div className="flex items-center gap-2 mb-2">

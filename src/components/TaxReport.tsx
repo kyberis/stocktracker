@@ -8,7 +8,6 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import TierFeatureBadge from "./TierFeatureBadge";
 import DataUpgradeNudge from "./DataUpgradeNudge";
 import ProCompareCard from "./ProCompareCard";
-import BlurredProSection from "./BlurredProSection";
 import AiMarkdown from "./AiMarkdown";
 import type {
   TaxReport as TaxReportType,
@@ -121,10 +120,10 @@ export default function TaxReport() {
 
   // Auto-fetch once country is resolved from profile (avoids the DE-default race)
   useEffect(() => {
-    if (user?.plan === "pro" && countryResolved) {
+    if ((user?.plan === "pro" || user?.role === "admin") && countryResolved) {
       fetchReport();
     }
-  }, [fetchReport, user?.plan, countryResolved]);
+  }, [fetchReport, user?.plan, user?.role, countryResolved]);
 
   /* ── AI Tax Assistant (Phase 4) ────────────────────────── */
 
@@ -207,7 +206,9 @@ export default function TaxReport() {
 
   /* ── Paywall ───────────────────────────────────────────── */
 
-  if (user?.plan !== "pro") {
+  const hasTaxAccess = user?.plan === "pro" || user?.role === "admin";
+
+  if (!hasTaxAccess) {
     return (
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
@@ -219,34 +220,14 @@ export default function TaxReport() {
           </h1>
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{t("taxReportsUpgradeDesc")}</p>
         </div>
-        <BlurredProSection blurb={t("blurTaxTeaser")}>
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="rounded-xl border border-gray-200 dark:border-slate-700 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500">Realized Gains</div>
-              <div className="text-lg font-bold text-emerald-500 mt-1 font-mono">+&euro;2,847</div>
-            </div>
-            <div className="rounded-xl border border-gray-200 dark:border-slate-700 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500">Dividends</div>
-              <div className="text-lg font-bold mt-1 font-mono">&euro;1,234</div>
-            </div>
-            <div className="rounded-xl border border-gray-200 dark:border-slate-700 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500">Withholding Tax</div>
-              <div className="text-lg font-bold text-red-500 mt-1 font-mono">-&euro;185</div>
-            </div>
-          </div>
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="text-left text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider">
-                <th className="py-2 px-3">Ticker</th><th className="py-2 px-3">Sell Date</th><th className="py-2 px-3">Proceeds</th><th className="py-2 px-3">Cost Basis</th><th className="py-2 px-3">Gain/Loss</th>
-              </tr>
-            </thead>
-            <tbody className="text-gray-600 dark:text-slate-300">
-              <tr><td className="py-2 px-3 font-mono font-semibold">AAPL</td><td className="py-2 px-3">2025-11-15</td><td className="py-2 px-3">&euro;4,280</td><td className="py-2 px-3">&euro;3,120</td><td className="py-2 px-3 text-emerald-500">+&euro;1,160</td></tr>
-              <tr><td className="py-2 px-3 font-mono font-semibold">MSFT</td><td className="py-2 px-3">2025-09-22</td><td className="py-2 px-3">&euro;6,540</td><td className="py-2 px-3">&euro;5,100</td><td className="py-2 px-3 text-emerald-500">+&euro;1,440</td></tr>
-              <tr><td className="py-2 px-3 font-mono font-semibold">META</td><td className="py-2 px-3">2025-08-03</td><td className="py-2 px-3">&euro;2,180</td><td className="py-2 px-3">&euro;2,430</td><td className="py-2 px-3 text-red-500">-&euro;250</td></tr>
-            </tbody>
-          </table>
-        </BlurredProSection>
+        <div className="rounded-xl border border-dashed border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/50 p-8 text-center">
+          <p className="text-sm text-gray-600 dark:text-slate-300 max-w-md mx-auto">
+            {t("taxReportsUpgradeDesc")}
+          </p>
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-3 max-w-md mx-auto">
+            {t("taxReportsDisclaimer")} {t("taxReportsDisclaimerText")}
+          </p>
+        </div>
         <div className="mt-6">
           <ProCompareCard surface="tax_report_locked" reason="upgrade_required" />
         </div>

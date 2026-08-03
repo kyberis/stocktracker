@@ -3270,6 +3270,61 @@ const fr: TranslationStrings = {
   companyAnalysisSources: "Sources consulted:",
   landingCardCompanyAnalysisTitle: "Company analysis",
   landingCardCompanyAnalysisDesc: "Fundamentals, technicals, news, insider Form 4, and US Congress trading in one report",
+  homeRecAnalyzeLink: "Analyze →",
+  homeRecAnalyzeTicker: "Analyze {ticker}",
+  homeRecBackHome: "Back to Home",
+  homeRecCashBody:
+    "{pct}% of your net worth is in cash. Fine if intentional — otherwise consider deploying capital.",
+  homeRecCashTitle: "A lot of idle cash",
+  homeRecConcentrationBody:
+    "{ticker} is {pct}% of your portfolio. Consider trimming or balancing with other holdings.",
+  homeRecConcentrationTitle: "High concentration in {ticker}",
+  homeRecDisclaimerFull:
+    "Informational only. Not personalized investment advice. Candidates come from the internal screener cache and may be incomplete.",
+  homeRecDisclaimerShort: "Not financial advice",
+  homeRecDiversifyBody:
+    "Your portfolio leans on {topSector} ({topPct}%). Explore {sectorA} and {sectorB}, where you have little or no exposure.",
+  homeRecDiversifyResearchBody:
+    "Large-cap ideas from sectors where you are underweight. Open analysis or add to your watchlist — this is informational, not a personalized recommendation.",
+  homeRecDiversifyResearchEmpty: "No sector research available right now. Check back after your portfolio updates.",
+  homeRecDiversifyResearchEyebrow: "Diversification research",
+  homeRecDiversifyResearchTitle: "Two sectors to rebalance",
+  homeRecDiversifyTitle: "Improve your diversification",
+  homeRecDiversifyUnclassifiedBody:
+    "{unclassifiedPct}% of your holdings are unclassified. Classify them and explore {sectorA} and {sectorB} to improve diversification.",
+  homeRecEmptyBody: "Run analysis at most once per week, or wait for the Monday refresh.",
+  homeRecEmptyDismissedBody: "You cleared the current tips. New ones appear after portfolio changes or next week’s analysis.",
+  homeRecEmptyDismissedTitle: "Tips reviewed for now",
+  homeRecEmptyTitle: "No portfolio tips right now",
+  homeRecEyebrow: "Portfolio tip",
+  homeRecFxBody:
+    "{pct}% of invested value is quoted in {currency}, far from your preferred currency ({preferred}).",
+  homeRecFxTitle: "Heavy exposure to {currency}",
+  homeRecInvestigateCta: "Research sectors",
+  homeRecNext: "Next",
+  homeRecNoCandidates: "No screener candidates found for this sector yet.",
+  homeRecPosition: "{current} of {total}",
+  homeRecRefreshAllDone: "You already cleared the current tips. New ones appear when your portfolio changes.",
+  homeRecRefreshCooldown: "You already ran analysis this week — try again in 7 days",
+  homeRecRefreshDone: "Analysis updated",
+  homeRecRefreshEmpty: "No matching tips for the current rules — check classification and concentration.",
+  homeRecRefreshError: "Could not run analysis. Try again.",
+  homeRecRefreshing: "Analyzing…",
+  homeRecRunAnalysis: "Run analysis",
+  homeRecRunAnalysisLocked: "Available in 7 days",
+  homeRecSectorLow: "Low exposure versus a diversified mix.",
+  homeRecSectorNone: "No current exposure.",
+  homeRecTookAction: "I took action",
+  importQualityAiDisclaimer: "AI-generated summary — may be inaccurate. Not investment advice.",
+  importQualityConfirmFix: "Use market price",
+  importQualityEmpty: "Market cross-check found no issues in this import.",
+  importQualityFixed: "fixed",
+  importQualityNeedsReview: "need review",
+  importQualityRepair: "Audit & repair portfolio",
+  importQualityRepairDone: "Portfolio audit finished",
+  importQualityRepairing: "Auditing portfolio…",
+  importQualityTitle: "Data quality check",
+
 };
 
 export default fr;

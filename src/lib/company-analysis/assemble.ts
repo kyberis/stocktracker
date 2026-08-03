@@ -350,7 +350,7 @@ export function buildNews(
 export function buildInsiders(
   rows: InsiderTransaction[] | null,
 ): { status: "ok" | "unavailable"; items: CompanyAnalysisInsiderItem[] } {
-  if (!rows) return { status: "unavailable", items: [] };
+  if (!rows || rows.length === 0) return { status: "unavailable", items: [] };
   const cutoff = daysAgo(90);
   const items = rows
     .filter((r) => {
@@ -377,13 +377,14 @@ export function buildInsiders(
         url: null as string | null,
       };
     });
+  if (items.length === 0) return { status: "unavailable", items: [] };
   return { status: "ok", items };
 }
 
 export function buildCongress(
   trades: FmpCongressTrade[] | null,
 ): { status: "ok" | "unavailable"; items: CompanyAnalysisCongressItem[] } {
-  if (trades == null) return { status: "unavailable", items: [] };
+  if (trades == null || trades.length === 0) return { status: "unavailable", items: [] };
   const cutoff = daysAgo(365);
   const items = trades
     .filter((t) => {
@@ -400,6 +401,7 @@ export function buildCongress(
       amountRange: t.amountRange,
       url: sanitizeHttpUrl(t.url),
     }));
+  if (items.length === 0) return { status: "unavailable", items: [] };
   return { status: "ok", items };
 }
 
@@ -413,11 +415,14 @@ export function pickSectorAlternative(
     .sort((a, b) => (b.distanceTo52wHighPct ?? -999) - (a.distanceTo52wHighPct ?? -999));
 
   // Prefer a peer closer to its 52w high than the subject (better relative momentum).
+  // Prefer peers with a usable price (filters out sparse nano quotes when subject has price).
+  const withPrice = ranked.filter((p) => p.price != null && p.price > 0);
+  const pool = withPrice.length > 0 ? withPrice : ranked;
   const winner =
-    ranked.find((p) => {
+    pool.find((p) => {
       if (subjectDist == null) return true;
       return (p.distanceTo52wHighPct ?? -999) > subjectDist;
-    }) ?? ranked[0] ?? null;
+    }) ?? pool[0] ?? null;
 
   if (!winner) {
     return {

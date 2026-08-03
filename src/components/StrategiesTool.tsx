@@ -244,9 +244,10 @@ export default function StrategiesTool() {
   const handleSubmit = () => {
     setFormError("");
     setFormSuccess("");
-    const tp = parseFloat(targetPrice);
-    const sl = parseFloat(stopLoss);
-    const pp = parseFloat(purchasePrice);
+    const parseNum = (s: string) => parseFloat(s.replace(",", "."));
+    const tp = parseNum(targetPrice);
+    const sl = parseNum(stopLoss);
+    const pp = parseNum(purchasePrice);
     const hasTp = !isNaN(tp) && tp > 0;
     const hasSl = !isNaN(sl) && sl > 0;
     if (!selected) {

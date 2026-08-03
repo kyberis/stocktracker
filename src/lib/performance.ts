@@ -97,10 +97,16 @@ export function calculateTTWROR(
 
   const result = ((currentValue - netCashFlow) / denominator) * 100;
 
-  if (!Number.isFinite(result) || Math.abs(result) > 1000) {
-    return totalInvested > 0
-      ? ((currentValue - totalInvested) / totalInvested) * 100
-      : 0;
+  // Sanity: Modified Dietz without V_start blows up when buy history is incomplete.
+  // Fall back to simple return when TTWROR diverges wildly from (V - cost) / cost.
+  const simpleReturn =
+    totalInvested > 0 ? ((currentValue - totalInvested) / totalInvested) * 100 : 0;
+  if (
+    !Number.isFinite(result) ||
+    Math.abs(result) > 1000 ||
+    (Math.abs(simpleReturn) > 0.5 && Math.abs(result) > Math.abs(simpleReturn) * 5 + 25)
+  ) {
+    return simpleReturn;
   }
 
   return result;

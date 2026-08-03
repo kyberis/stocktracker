@@ -50,7 +50,10 @@ export type PlatformFeature =
   | "aid_beta"
   | "home_v2"
   | "classic_home"
-  | "commerce_enabled";
+  | "commerce_enabled"
+  | "tool_tax_reports_enabled"
+  | "tool_simulator_enabled"
+  | "tool_planning_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_enabled",
@@ -462,6 +465,9 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "home_v2",
   "classic_home",
   "commerce_enabled",
+  "tool_tax_reports_enabled",
+  "tool_simulator_enabled",
+  "tool_planning_enabled",
 ];
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {

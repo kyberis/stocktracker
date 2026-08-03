@@ -36,6 +36,7 @@ import {
 import type { ReportGap } from "@/lib/company-analysis/gaps";
 import type { CompanyAnalysisPeer, CompanyAnalysisReport } from "@/lib/company-analysis/types";
 import { getGlobalFmpApiKey } from "@/lib/db";
+import { yahooSymbolAliases } from "@/lib/market-symbol";
 
 export function hasFmpKey(): boolean {
   return Boolean(getGlobalFmpApiKey() || process.env.FMP_API_KEY);
@@ -48,6 +49,32 @@ export async function settled<T>(p: Promise<T>): Promise<T | null> {
     console.warn("[company-analysis] source failed:", err instanceof Error ? err.message : err);
     return null;
   }
+}
+
+/** Try primary ticker then Yahoo cross-listing aliases until quote or overview succeeds. */
+async function fetchQuoteAndOverview(
+  ticker: string,
+  provider: StockDataProvider,
+): Promise<{
+  symbolUsed: string;
+  quote: ProviderQuoteResult | null;
+  overview: CompanyOverview | null;
+}> {
+  const candidates = [ticker, ...yahooSymbolAliases(ticker)];
+  let lastQuote: ProviderQuoteResult | null = null;
+  let lastOverview: CompanyOverview | null = null;
+  for (const sym of candidates) {
+    const [quote, overview] = await Promise.all([
+      settled(provider.getQuote(sym)),
+      settled(provider.getOverview?.(sym) ?? Promise.resolve(null)),
+    ]);
+    if (quote || overview) {
+      return { symbolUsed: sym, quote, overview };
+    }
+    lastQuote = quote;
+    lastOverview = overview;
+  }
+  return { symbolUsed: ticker, quote: lastQuote, overview: lastOverview };
 }
 
 export async function loadCongress(symbol: string): Promise<FmpCongressTrade[] | null> {
@@ -120,9 +147,12 @@ export async function buildFullReport(
 ): Promise<CompanyAnalysisReport | null> {
   const { provider, intelProvider, usedYahoo, usedFmp } = providers;
   const yahooOutlook = new YahooProvider();
+  const { symbolUsed, quote: quoteRes, overview: overviewRes } = await fetchQuoteAndOverview(
+    ticker,
+    provider,
+  );
+  const dataSymbol = symbolUsed;
   const [
-    quoteRes,
-    overviewRes,
     historyRes,
     incomeRes,
     earningsRes,
@@ -132,16 +162,14 @@ export async function buildFullReport(
     yahooNext,
     fmpEarningsRows,
   ] = await Promise.all([
-    settled(provider.getQuote(ticker)),
-    settled(provider.getOverview?.(ticker) ?? Promise.resolve(null)),
-    settled(provider.getHistorical(ticker, "1y")),
-    settled(provider.getIncomeStatement?.(ticker) ?? Promise.resolve(null)),
-    settled(provider.getEarnings?.(ticker) ?? Promise.resolve(null)),
-    settled(intelProvider.getNewsSentiment?.(ticker) ?? Promise.resolve([])),
-    settled(intelProvider.getInsiderTransactions?.(ticker) ?? Promise.resolve([])),
-    loadCongress(ticker),
-    settled(yahooOutlook.getNextQuarterConsensus(ticker)),
-    loadFmpEarnings(ticker),
+    settled(provider.getHistorical(dataSymbol, "1y")),
+    settled(provider.getIncomeStatement?.(dataSymbol) ?? Promise.resolve(null)),
+    settled(provider.getEarnings?.(dataSymbol) ?? Promise.resolve(null)),
+    settled(intelProvider.getNewsSentiment?.(dataSymbol) ?? Promise.resolve([])),
+    settled(intelProvider.getInsiderTransactions?.(dataSymbol) ?? Promise.resolve([])),
+    loadCongress(dataSymbol),
+    settled(yahooOutlook.getNextQuarterConsensus(dataSymbol)),
+    loadFmpEarnings(dataSymbol),
   ]);
 
   if (!quoteRes && !overviewRes) return null;
@@ -150,7 +178,7 @@ export async function buildFullReport(
     ? fmpEarningsToFundamentalData(fmpEarningsRows)
     : null;
   const earnings = mergeEarningsData(earningsRes, fmpEarningsData);
-  const peers = await loadPeers(ticker);
+  const peers = await loadPeers(dataSymbol);
 
   const fmpNext = fmpEarningsRows
     ? pickNextQuarterFromEarningsRows(
@@ -167,7 +195,7 @@ export async function buildFullReport(
   const nextQuarter = mergeNextQuarterConsensus(fmpNext, yahooNext);
 
   return assembleReport({
-    ticker,
+    ticker, // keep request ticker for URLs/cache key
     generatedAt,
     updatedAt: generatedAt,
     cached: false,

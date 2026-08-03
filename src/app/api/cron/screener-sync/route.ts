@@ -14,6 +14,23 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** Infer listing currency from Yahoo-style exchange suffix when provider omits it. */
+function inferCurrencyFromSymbol(symbol: string): string {
+  const upper = symbol.toUpperCase();
+  if (upper.endsWith(".OL")) return "NOK";
+  if (upper.endsWith(".ST")) return "SEK";
+  if (upper.endsWith(".CO")) return "DKK";
+  if (upper.endsWith(".HE")) return "EUR";
+  if (upper.endsWith(".PA") || upper.endsWith(".AS") || upper.endsWith(".DE") || upper.endsWith(".F") || upper.endsWith(".MC") || upper.endsWith(".MI") || upper.endsWith(".BR") || upper.endsWith(".LS")) return "EUR";
+  if (upper.endsWith(".L")) return "GBP";
+  if (upper.endsWith(".TO") || upper.endsWith(".V")) return "CAD";
+  if (upper.endsWith(".HK")) return "HKD";
+  if (upper.endsWith(".T")) return "JPY";
+  if (upper.endsWith(".AX")) return "AUD";
+  if (upper.endsWith(".SW")) return "CHF";
+  return "USD";
+}
+
 function createSync(offset = 0, limit = 0) {
   return withCronLogging("screener-sync", async () => {
     const yahoo = new YahooProvider();
@@ -46,7 +63,7 @@ function createSync(offset = 0, limit = 0) {
           industry: overview.industry || "",
           country: "",
           exchange: quote?.symbol ? "" : "",
-          currency: overview.currency || quote?.currency || "USD",
+          currency: overview.currency || quote?.currency || inferCurrencyFromSymbol(symbol),
           marketCap: quote?.marketCap ?? null,
           peRatio: overview.peRatio,
           forwardPe: overview.forwardPE,

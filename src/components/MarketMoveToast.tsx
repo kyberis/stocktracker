@@ -165,7 +165,7 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
       <button
         onClick={() => { setCollapsed(false); setExpanded(true); }}
         data-market-toast
-        className="fixed bottom-20 sm:bottom-4 right-4 z-50 flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 border-l-4 border-l-amber-500 rounded-xl shadow-lg hover:shadow-xl transition-shadow animate-slide-in-right"
+        className="fixed bottom-20 sm:bottom-4 right-4 z-[60] flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 border-l-4 border-l-amber-500 rounded-xl shadow-lg hover:shadow-xl transition-shadow animate-slide-in-right"
         aria-label={t("marketAlertTitle") || "Market Alert"}
       >
         <div className="w-5 h-5 rounded-md bg-amber-500/15 flex items-center justify-center shrink-0">
@@ -189,7 +189,7 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
     <div
       role="alert"
       data-market-toast
-      className="fixed bottom-20 sm:bottom-4 right-4 z-50 w-72 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 border-l-4 border-l-amber-500 rounded-xl shadow-lg animate-slide-in-right"
+      className="fixed bottom-36 sm:bottom-24 right-4 z-[60] w-72 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 border-l-4 border-l-amber-500 rounded-xl shadow-lg animate-slide-in-right"
     >
       <div className="p-3.5">
         <div className="flex items-center justify-between mb-2.5">

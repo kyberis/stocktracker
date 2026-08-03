@@ -69,6 +69,21 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     description: "Pricing, upsell cards, checkout CTAs, and new Stripe checkout on trefolio",
     group: "Features",
   },
+  tool_tax_reports_enabled: {
+    label: "Tax Reports",
+    description: "Tax reports tool at /tools/tax. Off by default until the real lot engine is validated — never show fabricated fiscal numbers.",
+    group: "Tools",
+  },
+  tool_simulator_enabled: {
+    label: "Portfolio Simulator",
+    description: "Backtesting / what-if simulator at /tools/simulator. Off by default while the tool is incomplete.",
+    group: "Tools",
+  },
+  tool_planning_enabled: {
+    label: "Financial Planning",
+    description: "FIRE / multi-goal planner at /tools/planning. Off by default while the tool is incomplete.",
+    group: "Tools",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

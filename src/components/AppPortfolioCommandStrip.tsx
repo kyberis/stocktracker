@@ -26,6 +26,7 @@ function AppPortfolioCommandStripInner() {
 
   const holdingsCount = holdings.length;
   const isDashboardRoute = pathname === "/" || pathname === "/demo";
+  const isClassicRoute = pathname === "/classic";
   const hideOnMobileHome = isMobileViewport && isDashboardRoute;
 
   const { activeTab: urlActiveTab, navigateToTab } = useDashboardTabUrl({
@@ -35,24 +36,31 @@ function AppPortfolioCommandStripInner() {
   });
 
   const displayActiveTab = useMemo(
-    () => (isDashboardRoute ? urlActiveTab : null),
-    [isDashboardRoute, urlActiveTab],
+    () => (isDashboardRoute || isClassicRoute ? urlActiveTab : null),
+    [isDashboardRoute, isClassicRoute, urlActiveTab],
   );
 
   const onSelectTab = useCallback(
     (tab: DashboardTab) => {
-      const homePath = pathname.startsWith("/demo") ? "/demo" : "/";
+      const demoPath = pathname.startsWith("/demo");
+      // View tabs only render on classic Dashboard — Home v2 ignores ?tab=
+      if (tab !== "portfolio" && !demoPath) {
+        router.push(buildPathWithTab("/classic", new URLSearchParams(), tab));
+        window.scrollTo({ top: 0, behavior: "instant" });
+        if (tab === "diversification") track("diversification_tab_viewed");
+        if (tab === "dividends") track("dividends_tab_viewed");
+        if (tab === "metrics") track("metrics_tab_viewed");
+        if (tab === "growth") track("growth_tab_viewed");
+        if (tab === "events") track("events_tab_viewed");
+        return;
+      }
+      const homePath = demoPath ? "/demo" : "/";
       if (!isDashboardRoute) {
         router.push(buildPathWithTab(homePath, new URLSearchParams(), tab));
         return;
       }
       navigateToTab(tab);
       window.scrollTo({ top: 0, behavior: "instant" });
-      if (tab === "diversification") track("diversification_tab_viewed");
-      if (tab === "dividends") track("dividends_tab_viewed");
-      if (tab === "metrics") track("metrics_tab_viewed");
-      if (tab === "growth") track("growth_tab_viewed");
-      if (tab === "events") track("events_tab_viewed");
     },
     [isDashboardRoute, navigateToTab, pathname, router, track],
   );

@@ -306,13 +306,9 @@ function formatNewsDate(raw: string): string {
   return dateStr;
 }
 
-/** Compact home feed: time-first column for terminal-style scanability. */
+/** Compact home feed: date + time for scanability. */
 function formatNewsDateCompact(raw: string): string {
-  const full = formatNewsDate(raw);
-  if (!full) return full;
-  const space = full.indexOf(" ");
-  if (space === -1) return full.slice(5);
-  return full.slice(space + 1);
+  return formatNewsDate(raw);
 }
 
 function primaryTickers(article: NewsArticle, max = 3): string[] {

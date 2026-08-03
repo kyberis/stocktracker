@@ -10,3 +10,6 @@ Flags discovered by scanning `useFeatureFlag(...)` and `getServerFeatureFlag(...
 - `commerce_enabled`
 - `pro_trial_enabled`
 - `social_network_enabled`
+- `tool_planning_enabled`
+- `tool_simulator_enabled`
+- `tool_tax_reports_enabled`

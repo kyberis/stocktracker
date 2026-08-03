@@ -24,8 +24,17 @@ function formatPe(val: number | null): string {
 }
 
 function formatPrice(val: number | null, currency: string): string {
-  if (val == null) return "—";
-  const sym = currency === "EUR" ? "€" : currency === "GBP" ? "£" : currency === "CHF" ? "CHF " : "$";
+  if (val == null || !Number.isFinite(val)) return "—";
+  const c = (currency || "").toUpperCase();
+  const sym =
+    c === "EUR" ? "€" :
+    c === "GBP" || c === "GBX" ? "£" :
+    c === "CHF" ? "CHF " :
+    c === "NOK" ? "kr " :
+    c === "SEK" ? "kr " :
+    c === "DKK" ? "kr " :
+    c === "USD" || c === "" ? "$" :
+    `${c} `;
   return `${sym}${val.toFixed(2)}`;
 }
 

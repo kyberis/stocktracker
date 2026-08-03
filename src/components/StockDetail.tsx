@@ -757,10 +757,7 @@ function PositionSummary({
         {hasQuote && (
           <div className="text-right">
             <p className={`text-sm font-semibold ${dayColor}`}>
-              {dayIsPositive ? "+" : ""}{fmt(dayChangeAmount, cur)}
-            </p>
-            <p className={`text-xs ${dayColor}`}>
-              {dayIsPositive ? "+" : ""}{formatPercent(dayChangePercent)}
+              {formatPercent(dayChangePercent)}
             </p>
           </div>
         )}
@@ -769,12 +766,7 @@ function PositionSummary({
       {/* Metric grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className={`rounded-xl px-3.5 py-3 ${gainBg}`}>
-          <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t("gainLoss")}</p>
-          <p className={`text-sm font-bold mt-0.5 ${gainColor}`}>
-            {fmt(gainLoss, cur)}
-          </p>
-          <p className={`text-xs mt-0.5 ${gainColor}`}>
-            {isPositive ? "+" : ""}{formatPercent(gainLossPercent)}
+          <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">{formatPercent(gainLossPercent)}
           </p>
         </div>
         <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-3.5 py-3">

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { computeDayChangeByType, computeDayChangeHeadline } from "./day-change-pct";
 import type { ExchangeRates, Holding, QuoteData } from "./types";
 
-const EUR_RATES: ExchangeRates = { EUR: 1, USD: 0.92, GBP: 1.17 };
+const EUR_RATES: ExchangeRates = { EURUSD: 1 / 0.92, EURGBP: 1 / 1.17 };
 
 function holding(
   ticker: string,
@@ -45,8 +45,8 @@ const MARKET_NOW = new Date("2026-05-27T15:00:00-04:00");
 describe("computeDayChangeByType", () => {
   it("nets offsetting class moves to a near-zero portfolio day return", () => {
     const holdings = [
-      holding("STK", "stock", 100, 645.4, 1.42, "NASDAQ"),
-      holding("ETF", "etf", 10, 148.59, -0.162, "NASDAQ"),
+      holding("STK", "stock", 100, 645.4, 1.42, "NMS"),
+      holding("ETF", "etf", 10, 148.59, -0.162, "NMS"),
       holding("BTC", "crypto", 1, 6659, -129, "CRYPTO"),
     ];
     const quotes: Record<string, QuoteData> = {
@@ -64,7 +64,7 @@ describe("computeDayChangeByType", () => {
   });
 
   it("includes all buckets when at least one market was open today", () => {
-    const holdings = [holding("STK", "stock", 10, 100, 1, "NASDAQ")];
+    const holdings = [holding("STK", "stock", 10, 100, 1, "NMS")];
     const quotes = { STK: quote("STK", 100, 1) };
     const { pct, abs } = computeDayChangeByType(holdings, quotes, EUR_RATES, "EUR", MARKET_NOW);
     expect(pct.all).toBeDefined();
@@ -74,8 +74,8 @@ describe("computeDayChangeByType", () => {
 
   it("headline matches the all-assets bucket from computeDayChangeByType", () => {
     const holdings = [
-      holding("STK", "stock", 100, 645.4, 1.42, "NASDAQ"),
-      holding("ETF", "etf", 10, 148.59, -0.162, "NASDAQ"),
+      holding("STK", "stock", 100, 645.4, 1.42, "NMS"),
+      holding("ETF", "etf", 10, 148.59, -0.162, "NMS"),
     ];
     const quotes: Record<string, QuoteData> = {
       STK: quote("STK", 645.4, 1.42),

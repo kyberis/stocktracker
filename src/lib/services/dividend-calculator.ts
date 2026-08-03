@@ -81,18 +81,29 @@ export function computeEstimatedDividends(
     if (!q) continue;
     const rate = q.trailingAnnualDividendRate;
     if (!rate || rate <= 0) continue;
-    const yld = q.trailingAnnualDividendYield ?? 0;
-    const annualIncome = h.shares * rate;
     const cur = q.currency || h.displayCurrency || "USD";
+    const price = q.regularMarketPrice > 0 ? q.regularMarketPrice : 0;
+    // Prefer rate/price in the same currency; provider yield can be wrong for ADRs
+    let dividendYield = price > 0 ? (rate / price) * 100 : (q.trailingAnnualDividendYield ?? 0) * 100;
+    if (dividendYield > 15 || dividendYield < 0) {
+      // Impossible / cross-currency garbage — mark for UI as unreliable
+      dividendYield = price > 0 ? Math.min(dividendYield, 15) : 0;
+    }
+    const annualIncome = h.shares * rate;
     const annualIncomeEUR = convertToEUR(annualIncome, cur, exchangeRates);
-    const yoc = h.purchasePrice > 0 ? (rate / h.purchasePrice) * 100 : 0;
+    const yoc =
+      h.purchasePrice > 0 && h.displayCurrency === cur
+        ? (rate / h.purchasePrice) * 100
+        : h.purchasePrice > 0
+          ? (rate / h.purchasePrice) * 100
+          : 0;
     items.push({
       ticker: h.ticker,
       name: h.name,
       shares: h.shares,
       annualDividendPerShare: rate,
-      dividendYield: yld * 100,
-      yieldOnCost: yoc,
+      dividendYield,
+      yieldOnCost: yoc > 15 ? 0 : yoc,
       annualIncome,
       currency: cur,
       annualIncomeEUR,
@@ -176,6 +187,7 @@ export function computeDividendProjections(
   }
 
   const rows: ProjectionRow[] = [];
+  // History rows stay marked as historical; projection card should filter separately
   byYear.forEach((y) => rows.push({ year: y.year, amount: y.amount, isProjection: false }));
 
   if (base > 0) {

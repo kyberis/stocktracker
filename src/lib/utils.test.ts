@@ -95,6 +95,11 @@ describe("formatPercent", () => {
 });
 
 describe("formatCompactNumber", () => {
+  it("formats trillions", () => {
+    expect(formatCompactNumber(4_862_400_000_000)).toBe("4.86T");
+    expect(formatCompactNumber(1_000_000_000_000)).toBe("1.00T");
+  });
+
   it("formats billions", () => {
     expect(formatCompactNumber(1_000_000_000)).toBe("1.0B");
     expect(formatCompactNumber(2_500_000_000)).toBe("2.5B");

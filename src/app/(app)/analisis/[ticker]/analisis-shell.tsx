@@ -161,11 +161,15 @@ export default function AnalisisShell({
           <button
             type="button"
             className="btn-secondary text-sm ml-auto"
-            disabled={data.loading || data.narrativePending}
+            disabled={data.loading || data.regenerating}
             onClick={data.regenerate}
             title={t("companyAnalysisRegenerateHint")}
           >
-            {data.narrativePending ? t("companyAnalysisRegenerating") : t("companyAnalysisRegenerate")}
+            {data.regenerating
+              ? t("companyAnalysisRegenerating")
+              : data.loading
+                ? t("loading")
+                : t("companyAnalysisRegenerate")}
           </button>
         )}
       </div>

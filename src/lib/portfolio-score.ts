@@ -341,7 +341,7 @@ CRITICAL FOR WEAK CATEGORIES (score ≤ 6, i.e. Medium or worse):
 - For categories with score > 6, both "weaknesses" and "improvements" must be empty arrays [].
 - The goal is that the user understands EXACTLY what is dragging the score down and EXACTLY what to do about it.
 
-For sectorInsights: list the top 5 sectors from the portfolio data with their actual allocation percentage and assess each as overweight/underweight/balanced relative to a diversified benchmark.
+For sectorInsights: list ALL sectors present in sectorAllocation (not only top 5) with their actual allocation percentage and assess each as overweight/underweight/balanced relative to a diversified benchmark. Use holdingsCount from the payload as the position count — never invent a different count.
 
 For regionInsights: list all regions from the portfolio data with their actual allocation percentage and assess geographic concentration or diversification.
 

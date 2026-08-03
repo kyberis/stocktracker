@@ -31,7 +31,10 @@ export type ToolHubVisibilitySource =
   | "toolRebalancingEnabled"
   | "toolAccountsEnabled"
   | "toolWatchlistEnabled"
-  | "ai_report_enabled";
+  | "ai_report_enabled"
+  | "tool_tax_reports_enabled"
+  | "tool_simulator_enabled"
+  | "tool_planning_enabled";
 
 /** Subsection on /tools hub (tier sections unchanged; this is an extra label inside each tier band). */
 export type ToolHubCategory =
@@ -194,7 +197,7 @@ export const TOOLS_CATALOG: ToolCatalogEntry[] = [
     icon: "M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z",
     gradient: "from-indigo-500 to-violet-600",
     tierBadge: "pro",
-    hubVisibility: "always",
+    hubVisibility: "tool_tax_reports_enabled",
     nativeInteractive: false,
     hubCategory: "planningTax",
   },
@@ -206,7 +209,7 @@ export const TOOLS_CATALOG: ToolCatalogEntry[] = [
     icon: "M3 3v18h18M19 9l-5 5-4-4-3 3",
     gradient: "from-teal-500 to-emerald-600",
     tierBadge: "pro",
-    hubVisibility: "always",
+    hubVisibility: "tool_simulator_enabled",
     nativeInteractive: false,
     hubCategory: "planningTax",
   },
@@ -229,7 +232,7 @@ export const TOOLS_CATALOG: ToolCatalogEntry[] = [
     icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
     gradient: "from-fuchsia-500 to-pink-600",
     tierBadge: "pro",
-    hubVisibility: "always",
+    hubVisibility: "tool_planning_enabled",
     nativeInteractive: false,
     hubCategory: "planningTax",
   },
@@ -294,11 +297,19 @@ export function resolveHubVisibility(
     toolAccountsEnabled: boolean;
     toolWatchlistEnabled: boolean;
   },
-  aiReportEnabled: boolean
+  aiReportEnabled: boolean,
+  extraFlags: {
+    toolTaxReportsEnabled?: boolean;
+    toolSimulatorEnabled?: boolean;
+    toolPlanningEnabled?: boolean;
+  } = {},
 ): boolean {
   const src = CATALOG_BY_ID[id].hubVisibility;
   if (src === "always") return true;
   if (src === "ai_report_enabled") return aiReportEnabled;
+  if (src === "tool_tax_reports_enabled") return extraFlags.toolTaxReportsEnabled === true;
+  if (src === "tool_simulator_enabled") return extraFlags.toolSimulatorEnabled === true;
+  if (src === "tool_planning_enabled") return extraFlags.toolPlanningEnabled === true;
   return settings[src];
 }
 

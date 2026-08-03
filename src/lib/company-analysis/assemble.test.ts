@@ -3,9 +3,9 @@ import { buildCongress, pickSectorAlternative } from "./assemble";
 import type { CompanyAnalysisPeer } from "./types";
 
 describe("buildCongress", () => {
-  it("returns empty list without inventing trades", () => {
+  it("marks empty list as unavailable (hide US-only widgets)", () => {
     const result = buildCongress([]);
-    expect(result.status).toBe("ok");
+    expect(result.status).toBe("unavailable");
     expect(result.items).toEqual([]);
   });
 

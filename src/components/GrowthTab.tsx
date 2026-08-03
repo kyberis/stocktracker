@@ -229,7 +229,7 @@ export default function GrowthTab() {
           {periodReturn !== null && (
             <div className="flex items-center gap-2">
               <span className={`text-sm font-semibold ${periodReturn >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                {periodReturn >= 0 ? "+" : ""}{formatPercent(periodReturn)}
+                {formatPercent(periodReturn)}
               </span>
               {!isPerf && (
                 <span className="text-xs text-gray-400 dark:text-slate-500">
@@ -283,7 +283,7 @@ export default function GrowthTab() {
                 )}
                 <Tooltip
                   formatter={(v, name) => {
-                    if (isPerf) return [`${Number(v) >= 0 ? "+" : ""}${formatPercent(Number(v ?? 0))}`, t("chartModePerformance")];
+                    if (isPerf) return [`${formatPercent(Number(v ?? 0))}`, t("chartModePerformance")];
                     const label = name === "invested" ? t("investedCapital") : t("portfolioValueLabel");
                     return [formatCurrency(Number(v ?? 0), baseCurrency), label];
                   }}

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useI18n } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { useFavoriteTools } from "@/lib/favorite-tools";
@@ -29,7 +30,7 @@ type TailItem =
 
 const DASHBOARD_VIEW_TABS: {
   key: DashboardTab;
-  labelKey: string;
+  labelKey: TranslationKey;
   tierBadge?: "pro";
 }[] = [
   { key: "diversification", labelKey: "diversificationTab" },
@@ -93,6 +94,9 @@ export default function DashboardTabBarQuickLinks({
   const pathname = usePathname();
   const { favoriteIdsOrdered } = useFavoriteTools();
   const aiReportEnabled = useFeatureFlag("ai_report_enabled");
+  const toolTaxReportsEnabled = useFeatureFlag("tool_tax_reports_enabled");
+  const toolSimulatorEnabled = useFeatureFlag("tool_simulator_enabled");
+  const toolPlanningEnabled = useFeatureFlag("tool_planning_enabled");
   const settings = useSettings();
   const {
     alertsEnabled,
@@ -181,10 +185,20 @@ export default function DashboardTabBarQuickLinks({
 
   const visibleTools = useMemo(() => {
     const filtered = TOOLS_CATALOG.filter((e) =>
-      resolveHubVisibility(e.id, visibilitySettings, aiReportEnabled),
+      resolveHubVisibility(e.id, visibilitySettings, aiReportEnabled, {
+        toolTaxReportsEnabled,
+        toolSimulatorEnabled,
+        toolPlanningEnabled,
+      }),
     );
     return sortTabsByHubCategory(filtered);
-  }, [visibilitySettings, aiReportEnabled]);
+  }, [
+    visibilitySettings,
+    aiReportEnabled,
+    toolTaxReportsEnabled,
+    toolSimulatorEnabled,
+    toolPlanningEnabled,
+  ]);
 
   const visibleToolIdSet = useMemo(() => new Set(visibleTools.map((e) => e.id)), [visibleTools]);
 
@@ -346,6 +360,7 @@ export default function DashboardTabBarQuickLinks({
               key={row.key}
               type="button"
               role="menuitem"
+              aria-label={t(row.labelKey)}
               disabled={disabled}
               className={`${itemClass} ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
               onClick={() => {
@@ -447,7 +462,8 @@ export default function DashboardTabBarQuickLinks({
                   <Link
                     href={href}
                     className={`${ctaClass(toolActive)} snap-start`}
-                    title={t(entry.descKey)}
+                    aria-label={t(entry.labelKey)}
+                    title={t(entry.labelKey)}
                     tabIndex={-1}
                   >
                     <span className="inline-flex max-w-[9rem] sm:max-w-none items-center gap-1 truncate">
@@ -524,7 +540,8 @@ export default function DashboardTabBarQuickLinks({
                 key={`tail-fav-${entry.id}`}
                 href={href}
                 className={`${ctaClass(toolActive)} shrink-0 snap-start`}
-                title={t(entry.descKey)}
+                aria-label={t(entry.labelKey)}
+                title={t(entry.labelKey)}
               >
                 <span className="inline-flex max-w-[9rem] sm:max-w-none items-center gap-1 truncate">
                   {t(entry.labelKey)}

@@ -514,10 +514,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
               {hasQuote && (
                 <div className="text-right">
                   <p className={`text-sm font-semibold ${dayColor}`}>
-                    {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountBase, baseCurrency)}
-                  </p>
-                  <p className={`text-xs ${dayColor}`}>
-                    {dayIsPositive ? "+" : ""}{formatPercent(dayChangePercent)}
+                    {formatPercent(dayChangePercent)}
                   </p>
                 </div>
               )}
@@ -564,12 +561,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
           {/* Metric cards */}
           <div className="grid grid-cols-2 gap-3">
             <div className={`rounded-xl px-3.5 py-3 ${gainBg}`}>
-              <p className="text-xs text-gray-500 dark:text-slate-400">{t("gainLoss")}</p>
-              <p className={`text-sm font-bold mt-0.5 ${gainColor}`}>
-                {formatCurrency(gainLoss, cur)}
-              </p>
-              <p className={`text-xs mt-0.5 ${gainColor}`}>
-                {isPositive ? "+" : ""}{formatPercent(gainLossPercent)}
+              <p className="text-xs text-gray-500 dark:text-slate-400">{formatPercent(gainLossPercent)}
               </p>
             </div>
             <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-3.5 py-3">

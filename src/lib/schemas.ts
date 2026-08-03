@@ -514,6 +514,9 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "home_v2",
   "classic_home",
   "commerce_enabled",
+  "tool_tax_reports_enabled",
+  "tool_simulator_enabled",
+  "tool_planning_enabled",
 ]);
 
 export const featureFlagSchema = z.object({

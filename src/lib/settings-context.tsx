@@ -35,6 +35,8 @@ interface SettingsContextType {
   toolRebalancingEnabled: boolean;
   toolAccountsEnabled: boolean;
   toolWatchlistEnabled: boolean;
+  /** True after the initial /api/user-settings fetch completes (success or failure). */
+  settingsReady: boolean;
   setRefreshInterval: (interval: RefreshInterval) => void;
   setDashboardTheme: (theme: LayoutTheme) => void;
   setDefaultCurrency: (currency: string) => void;
@@ -67,6 +69,7 @@ export function SettingsProvider({
   const [toolAccountsEnabled, setToolAccountsEnabled] = useState(true);
   const [toolWatchlistEnabled, setToolWatchlistEnabled] = useState(true);
   const [defaultCurrency, setDefaultCurrencyState] = useState("EUR");
+  const [settingsReady, setSettingsReady] = useState(demoMode);
 
   useEffect(() => {
     if (demoMode) return;
@@ -132,11 +135,13 @@ export function SettingsProvider({
         }
       } catch {
         // Keep defaults.
+      } finally {
+        setSettingsReady(true);
       }
     };
 
     load();
-  }, [demoMode]);
+  }, [demoMode, setLayoutTheme]);
 
   const setRefreshInterval = useCallback(async (interval: RefreshInterval) => {
     setRefreshIntervalState(interval);
@@ -214,6 +219,7 @@ export function SettingsProvider({
       toolRebalancingEnabled,
       toolAccountsEnabled,
       toolWatchlistEnabled,
+      settingsReady,
       setRefreshInterval,
       setDashboardTheme,
       setDefaultCurrency,
@@ -224,6 +230,7 @@ export function SettingsProvider({
       refreshInterval, dashboardTheme, defaultCurrency, hasPremiumMarketData, alertsEnabled, csvExportEnabled, deviceEnabled,
       telegramEnabled, toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
       toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
+      settingsReady,
       setRefreshInterval, setDashboardTheme, setDefaultCurrency, getApiHeaders, getApiParams,
     ]
   );

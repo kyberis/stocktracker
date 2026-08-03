@@ -17,6 +17,51 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.84",
+    date: "2026-08-03",
+    title: "QA reliability fixes across tools and home",
+    titleTranslations: {
+      es: "Correcciones de fiabilidad QA en tools y home",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Removed fabricated Tax Report teaser numbers; Tax/Simulator/Planning are gated behind feature flags until ready.",
+        translations: {
+          es: "Eliminados números ficticios del teaser de Tax Report; Tax/Simulator/Planning quedan detrás de feature flags hasta estar listos.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Views menu now opens classic dashboard tabs; /tools hub cards are real links; deep-links wait for settings before redirecting.",
+        translations: {
+          es: "El menú Views abre las pestañas del dashboard classic; las tarjetas de /tools son enlaces reales; los deep-links esperan a settings antes de redirigir.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Ex-dividend amounts use the upcoming payment (not annual dividend rate); day change and yields share consistent calculators; formatPercent no longer shows ++.",
+        translations: {
+          es: "Los importes de ex-dividendo usan el próximo pago (no el dividendo anual); day change y yields comparten calculadoras; formatPercent ya no muestra ++.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Company analysis tries Yahoo cross-listing aliases (e.g. W9C.DE); portfolio news no longer attributes every story to the fetch ticker; stale weekly digests are hidden.",
+        translations: {
+          es: "El análisis de compañía prueba alias cross-listing de Yahoo (p. ej. W9C.DE); las noticias ya no atribuyen cada historia al ticker de fetch; se ocultan digests semanales caducados.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Rebalancing exposure tiles follow drift legend colors; market-cap formatting supports trillions; shared 404 page with back links.",
+        translations: {
+          es: "Los tiles de exposición de rebalanceo siguen los colores de la leyenda de drift; el market cap soporta billones (T); página 404 compartida con enlaces de vuelta.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.83",
     date: "2026-08-03",
     title: "Readable earnings details in digests",

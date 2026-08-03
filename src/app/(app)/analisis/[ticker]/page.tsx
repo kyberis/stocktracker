@@ -89,7 +89,7 @@ export default async function CompanyAnalysisTickerPage({ params, searchParams }
 
   return (
     <>
-      <AnalisisSeoContent ticker={ticker} report={report} />
+      <AnalisisSeoContent ticker={ticker} report={report} showAuthCta={false} />
       <AnalisisShell ticker={ticker} exchange={exchange || ""} reportId={reportId} />
     </>
   );

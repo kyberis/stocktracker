@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { computeDayChangeHeadline } from "@/lib/day-change-pct";
 import { formatCurrency, formatPercent, resolveQuoteCurrency, convertCurrency } from "@/lib/utils";
 import { getHoldingsLimit } from "@/lib/subscription";
 import type { Holding, CashEntry } from "@/lib/types";
@@ -30,13 +31,16 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested, inl
     [holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency],
   );
 
+  const dayHeadline = useMemo(
+    () => computeDayChangeHeadline(holdings, quotes, exchangeRates, activePortfolioCurrency),
+    [holdings, quotes, exchangeRates, activePortfolioCurrency],
+  );
+
   const investedCost = snapshotInvested ?? totals.totalCostEUR;
   const gainLoss = totals.totalCurrentEUR - investedCost;
-  const dayChange = totals.dayGainLossEUR;
+  const dayChange = dayHeadline.abs;
   const dayIsPositive = dayChange >= 0;
-  const dayPct = totals.totalCurrentEUR > 0
-    ? (dayChange / (totals.totalCurrentEUR - dayChange)) * 100
-    : 0;
+  const dayPct = dayHeadline.pct;
 
   const cur = activePortfolioCurrency;
 

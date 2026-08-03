@@ -15,9 +15,12 @@ import {
 export default function AnalisisSeoContent({
   ticker,
   report,
+  showAuthCta = true,
 }: {
   ticker: string;
   report: CompanyAnalysisReport | null;
+  /** When false (logged-in app shell), hide signup/login teaser. */
+  showAuthCta?: boolean;
 }) {
   const name = report?.profile?.name?.trim() || ticker;
   const description =
@@ -48,7 +51,7 @@ export default function AnalisisSeoContent({
           </ol>
         </nav>
         <h1 className="text-xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-2xl">
-          {name} ({ticker}) stock analysis
+          {name === ticker ? ticker : `${name} (${ticker})`} stock analysis
         </h1>
         <p className="max-w-3xl text-sm leading-relaxed text-[color:var(--muted)]">
           {description.length > 600 ? `${description.slice(0, 597)}…` : description}
@@ -73,16 +76,18 @@ export default function AnalisisSeoContent({
           </ul>
         )}
         <p className="text-xs leading-relaxed text-[color:var(--muted)]">{ANALISIS_FINANCIAL_DISCLAIMER}</p>
-        <p className="text-xs text-[color:var(--muted)]">
-          <Link href="/signup" className="underline-offset-2 hover:underline">
-            Sign up free
-          </Link>
-          {" · "}
-          <Link href="/login" className="underline-offset-2 hover:underline">
-            Log in
-          </Link>
-          {" for live charts, AI narrative, and portfolio tools."}
-        </p>
+        {showAuthCta && (
+          <p className="text-xs text-[color:var(--muted)]">
+            <Link href="/signup" className="underline-offset-2 hover:underline">
+              Sign up free
+            </Link>
+            {" · "}
+            <Link href="/login" className="underline-offset-2 hover:underline">
+              Log in
+            </Link>
+            {" for live charts, AI narrative, and portfolio tools."}
+          </p>
+        )}
       </article>
     </>
   );

@@ -25,7 +25,7 @@ export default function PortfolioSimulator() {
   const { demoMode } = usePortfolio();
   const [mode, setMode] = useState<SimulatorMode>("backtest");
 
-  if (user?.plan !== "pro" && !demoMode) {
+  if (user?.plan !== "pro" && user?.role !== "admin" && !demoMode) {
     return (
       <div className="space-y-4">
         <div>
@@ -36,6 +36,9 @@ export default function PortfolioSimulator() {
             {t("simulatorTitle")}
           </h1>
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{t("simulatorSubtitle")}</p>
+        </div>
+        <div className="rounded-xl border border-dashed border-gray-300 dark:border-slate-600 p-6 text-center text-sm text-gray-600 dark:text-slate-300">
+          {t("simulatorSubtitle")}
         </div>
         <ProCompareCard surface="simulator_locked" reason="upgrade_required" />
       </div>

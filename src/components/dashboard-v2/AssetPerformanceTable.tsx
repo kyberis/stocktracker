@@ -113,7 +113,7 @@ export default function AssetPerformanceTable({ holdings, cashEntries }: Props) 
                     {stealthMode ? "•••••" : formatCurrency(totals.totalCurrentEUR, cur)}
                   </td>
                   <td className={`${tdClass} ${isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                    {isPos ? "+" : ""}{formatPercent(pctReturn)}
+                    {formatPercent(pctReturn)}
                   </td>
                   <td className={`${tdClass} ${isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
                     {stealthMode ? "•••" : `${isPos ? "+" : ""}${formatCurrency(pl, cur)}`}

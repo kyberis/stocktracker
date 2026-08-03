@@ -34,10 +34,14 @@ const SECTOR_ALIASES: Record<string, string> = {
   consumercyclical: "Consumer Cyclical",
   consumerdiscretionary: "Consumer Cyclical",
   discretionary: "Consumer Cyclical",
+  consumercategorical: "Consumer Cyclical",
 
   consumerdefensive: "Consumer Defensive",
   consumerstaples: "Consumer Defensive",
   staples: "Consumer Defensive",
+
+  conglomerate: "Industrials",
+  conglomerates: "Industrials",
 
   communicationservices: "Communication Services",
   communication: "Communication Services",

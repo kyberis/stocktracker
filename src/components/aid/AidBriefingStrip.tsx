@@ -93,7 +93,7 @@ export default function AidBriefingStrip({ status, loading, onCatchUp }: Props) 
             onClick={() => track("aid_caught_up_dismissed")}
             className="min-h-9 rounded-full border border-[color:var(--border)] px-3 text-[11px] font-semibold text-[color:var(--muted)]"
           >
-            {t("aidBriefingCaughtUp")}
+            {t("dismiss")}
           </button>
         )}
       </div>
