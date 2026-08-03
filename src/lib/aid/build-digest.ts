@@ -20,6 +20,7 @@ import { withDigestImpactScore, sortByImpactScore } from "@/lib/aid/impact-score
 import { summarizeAidDigestItem } from "@/lib/aid/summarize-digest";
 import { searchTavilyForTicker } from "@/lib/aid/tavily-search";
 import { earningsEventKey, earningsExpiresAt } from "@/lib/aid/earnings-keys";
+import { formatEarningsCalendarDetails, sanitizeDigestBullet } from "@/lib/aid/format-earnings-details";
 import { languageCodeToName } from "@/lib/languages";
 import type { AidDigestItem, AidNewsFilterTag, NewsArticle } from "@/lib/types";
 import type { QuoteData } from "@/lib/types";
@@ -45,7 +46,7 @@ function cacheRowToItem(
     ticker: row.ticker,
     movePct,
     headline: summary.headline || row.headline,
-    bullets: summary.bullets,
+    bullets: summary.bullets.map(sanitizeDigestBullet),
     impact: summary.impact,
     filterTags: summary.filterTags,
     usedWeb: row.usedWeb,
@@ -143,7 +144,8 @@ export async function buildAidDigest(args: {
       const summary = await summarizeAidDigestItem({
         ticker,
         title: ev.name || `${ticker} earnings today`,
-        excerpt: ev.details || `${ticker} reports earnings today.`,
+        excerpt:
+          formatEarningsCalendarDetails(ev.details) || `${ticker} reports earnings today.`,
         source: "calendar",
         publishedAt: today,
         language: langName,
@@ -258,7 +260,12 @@ export async function buildAidDigest(args: {
         ticker,
         movePct: moveByTicker.get(ticker) ?? null,
         headline: ev.name || `${ticker} earnings today`,
-        bullets: [(ev.details || `${ticker} reports earnings today.`).slice(0, 240)],
+        bullets: [
+          (
+            formatEarningsCalendarDetails(ev.details) ||
+            `${ticker} reports earnings today.`
+          ).slice(0, 240),
+        ],
         impact: "medium",
         filterTags: ["earnings"],
         usedWeb: false,

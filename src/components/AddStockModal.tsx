@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { todayLocal } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useTrack } from "@/lib/use-track";
 import { getHoldingsLimit } from "@/lib/subscription";
 import ProCompareCard from "@/components/ProCompareCard";
+import ExchangeSuggestInput from "@/components/ExchangeSuggestInput";
 import type { SearchResult, HoldingAssetType } from "@/lib/types";
 import { assetTypeFromQuoteType } from "@/lib/infer-asset-type";
 import { looksLikeIsin } from "@/lib/isin";
@@ -46,6 +47,10 @@ export default function AddStockModal({ isOpen, onClose, initialAssetType }: Add
   const track = useTrack();
   const openedRef = useRef(false);
   const fundMode = initialAssetType === "fund";
+  const exchangeExtraCodes = useMemo(
+    () => holdings.map((h) => h.exchange).filter(Boolean),
+    [holdings],
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -268,13 +273,12 @@ export default function AddStockModal({ isOpen, onClose, initialAssetType }: Add
                   </div>
                   <div>
                     <label htmlFor="addstock-exchange" className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">{t("editExchange")}</label>
-                    <input
+                    <ExchangeSuggestInput
                       id="addstock-exchange"
-                      type="text"
                       value={exchange}
-                      onChange={(e) => setExchange(e.target.value)}
+                      onChange={setExchange}
                       placeholder={t("editExchange")}
-                      className="w-full"
+                      extraCodes={exchangeExtraCodes}
                     />
                   </div>
                 </div>

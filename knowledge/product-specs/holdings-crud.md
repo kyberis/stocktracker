@@ -48,6 +48,7 @@ A "holding" is a position in a single ticker at a given exchange. Holdings are d
 - Dashboard table lists holdings with current value, P/L, change.
 - Right-click / tap-actions for edit/remove.
 - `HoldingHealthBadge` signals data quality.
+- Exchange field on Add Stock/Fund and edit uses [`ExchangeSuggestInput`](../../src/components/ExchangeSuggestInput.tsx) with curated codes from [`known-exchanges.ts`](../../src/lib/known-exchanges.ts) (plus any exchanges already on the portfolio). Custom codes remain allowed.
 
 ## 7. Business logic
 

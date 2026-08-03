@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { getSessionFromRequest } from "@/lib/auth/session";
-import { findUserById, getGlobalAlphaVantageApiKey, getGlobalFmpApiKey } from "@/lib/db";
+import { getGlobalAlphaVantageApiKey, getGlobalFmpApiKey } from "@/lib/db";
 import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
 import { checkPublicSearchRateLimit, getClientIp } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
@@ -69,16 +69,9 @@ export const GET = withMetrics("/api/search", async (request: NextRequest) => {
     }
   }
 
-  let includeCrypto = false;
-  if (wantsCrypto) {
-    const session = await getSessionFromRequest(request);
-    if (session) {
-      const user = await findUserById(session.userId);
-      includeCrypto = user?.plan === "pro";
-    }
-  }
-
-  const searchOptions = includeCrypto ? { includeCrypto: true } : undefined;
+  // Yahoo CRYPTOCURRENCY results (e.g. BTC-USD) are free — do not Pro-gate.
+  // Subscription v2 quotas apply to premium crypto history/FX, not symbol search.
+  const searchOptions = wantsCrypto ? { includeCrypto: true } : undefined;
 
   try {
     const results = await yahoo.search(query, searchOptions);

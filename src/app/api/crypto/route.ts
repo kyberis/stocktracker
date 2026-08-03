@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import type { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import type { FmpMarketDataProvider } from "@/lib/api-providers/fmp-market-data";
+import type { TimePeriod } from "@/lib/api-providers/types";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import {
   getTopCryptoTickers,
@@ -101,6 +103,64 @@ async function handleDetail(symbol: string): Promise<Response> {
   );
 }
 
+/** Map crypto page ranges onto Yahoo chart periods. */
+function cryptoRangeToYahooPeriod(range: string): TimePeriod {
+  if (range === "all") return "all";
+  if (range === "1y") return "1y";
+  if (range === "3m") return "3m";
+  return "1m";
+}
+
+/**
+ * Yahoo fallback when FMP crypto surface is off or unconfigured.
+ * Tries `{symbol}-{market}` then `{symbol}-USD` (most liquid Yahoo pair).
+ */
+async function handleHistoryViaYahoo(
+  symbol: string,
+  market: string,
+  range: string
+): Promise<Response> {
+  const yahoo = new YahooProvider();
+  const period = cryptoRangeToYahooPeriod(range);
+  const ttl = range === "all"
+    ? CACHE_TTL.AV_CRYPTO_MONTHLY
+    : range === "1y"
+      ? CACHE_TTL.AV_CRYPTO_WEEKLY
+      : CACHE_TTL.AV_CRYPTO_DAILY;
+  const cacheKey = `crypto:history:yahoo:${symbol}:${market}:${range}`;
+
+  try {
+    const history = await apiCache.getOrFetch(cacheKey, ttl, async () => {
+      const pairs = [
+        `${symbol}-${market.toUpperCase()}`,
+        `${symbol}-USD`,
+        `${symbol}-EUR`,
+      ];
+      const seen = new Set<string>();
+      for (const pair of pairs) {
+        if (seen.has(pair)) continue;
+        seen.add(pair);
+        try {
+          const points = await yahoo.getHistorical(pair, period);
+          if (points.length > 0) return points;
+        } catch {
+          /* try next pair */
+        }
+      }
+      return [];
+    });
+
+    const maxAge = range === "all" || range === "1y" ? 1800 : 900;
+    return Response.json(
+      { history, providerUsed: "yahoo" },
+      { headers: { "Cache-Control": `public, max-age=${maxAge}, stale-while-revalidate=${maxAge * 2}` } },
+    );
+  } catch (err) {
+    console.error(`Failed to fetch Yahoo crypto history for ${symbol}:`, err instanceof Error ? err.message : err);
+    return Response.json({ error: "Failed to fetch data" }, { status: 500 });
+  }
+}
+
 async function handleHistory(
   request: NextRequest,
   symbol: string,
@@ -114,10 +174,7 @@ async function handleHistory(
   const session = await getSessionFromRequest(request);
   const resolved = await resolvePremiumStockDataProvider(session?.userId ?? null, "crypto");
   if (!resolved) {
-    return Response.json(
-      { error: "No market data API key configured" },
-      { status: 503 }
-    );
+    return handleHistoryViaYahoo(symbol, market, range);
   }
 
   const { provider, backend } = resolved;
@@ -164,17 +221,58 @@ async function handleHistory(
       return ts.filter((d: { date: string }) => d.date >= cutStr);
     });
 
+    // Empty FMP series → Yahoo (surface flag on but pair missing / wrong market).
+    if (!Array.isArray(result) || result.length === 0) {
+      return handleHistoryViaYahoo(symbol, market, range);
+    }
+
     const maxAge = range === "all" || range === "1y" ? 1800 : 900;
     return jsonWithCallCount(provider, { history: result }, {
       headers: { "Cache-Control": `public, max-age=${maxAge}, stale-while-revalidate=${maxAge * 2}` },
     });
   } catch (err) {
     console.error(`Failed to fetch crypto history for ${symbol}:`, err instanceof Error ? err.message : err);
-    return jsonWithCallCount(provider, { error: "Failed to fetch data" }, { status: 500 });
+    try {
+      return await handleHistoryViaYahoo(symbol, market, range);
+    } catch {
+      return jsonWithCallCount(provider, { error: "Failed to fetch data" }, { status: 500 });
+    }
   } finally {
     if (rateLimitUserId && provider.callCount) {
       deferTask(() => recordMarketDataUsageAsync(rateLimitUserId, backend, provider.callCount!));
     }
+  }
+}
+
+async function handleExchangeRatesViaYahoo(symbol: string): Promise<Response> {
+  const yahoo = new YahooProvider();
+  const currencies = ["EUR", "USD", "GBP", "JPY"];
+  const cacheKey = `crypto:rates:yahoo:${symbol}`;
+
+  try {
+    const rates = await apiCache.getOrFetch(cacheKey, CACHE_TTL.AV_EXCHANGE_RATE, async () => {
+      const results: Array<{ pair: string; rate: number; bid: number; ask: number }> = [];
+      for (const cur of currencies) {
+        try {
+          const q = await yahoo.getQuote(`${symbol}-${cur}`);
+          const price = q.regularMarketPrice || 0;
+          if (price > 0) {
+            results.push({ pair: `${symbol} / ${cur}`, rate: price, bid: price, ask: price });
+          }
+        } catch {
+          /* skip missing Yahoo pair */
+        }
+      }
+      return results;
+    });
+
+    return Response.json(
+      { rates, providerUsed: "yahoo" },
+      { headers: { "Cache-Control": "public, max-age=300, stale-while-revalidate=600" } },
+    );
+  } catch (err) {
+    console.error(`Failed to fetch Yahoo crypto rates for ${symbol}:`, err instanceof Error ? err.message : err);
+    return Response.json({ error: "Failed to fetch rates" }, { status: 500 });
   }
 }
 
@@ -189,7 +287,7 @@ async function handleExchangeRates(
   const session = await getSessionFromRequest(request);
   const resolved = await resolvePremiumStockDataProvider(session?.userId ?? null, "crypto");
   if (!resolved) {
-    return Response.json({ error: "No market data API key configured" }, { status: 503 });
+    return handleExchangeRatesViaYahoo(symbol);
   }
 
   const { provider, backend } = resolved;
@@ -212,12 +310,20 @@ async function handleExchangeRates(
       return results;
     });
 
+    if (!Array.isArray(rates) || rates.length === 0 || rates.every((r) => !r.rate)) {
+      return handleExchangeRatesViaYahoo(symbol);
+    }
+
     return jsonWithCallCount(provider, { rates }, {
       headers: { "Cache-Control": "public, max-age=300, stale-while-revalidate=600" },
     });
   } catch (err) {
     console.error(`Failed to fetch exchange rates for ${symbol}:`, err instanceof Error ? err.message : err);
-    return jsonWithCallCount(provider, { error: "Failed to fetch rates" }, { status: 500 });
+    try {
+      return await handleExchangeRatesViaYahoo(symbol);
+    } catch {
+      return jsonWithCallCount(provider, { error: "Failed to fetch rates" }, { status: 500 });
+    }
   } finally {
     if (rateLimitUserId && provider.callCount) {
       deferTask(() => recordMarketDataUsageAsync(rateLimitUserId, backend, provider.callCount!));

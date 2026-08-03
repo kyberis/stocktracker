@@ -17,6 +17,57 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.83",
+    date: "2026-08-03",
+    title: "Readable earnings details in digests",
+    titleTranslations: {
+      es: "Detalles de earnings legibles en digests",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "AID digests and earnings recaps no longer show raw calendar JSON; EPS and revenue estimates are formatted as readable bullets.",
+        translations: {
+          es: "Los digests AID y los recaps de earnings ya no muestran JSON crudo del calendario; EPS e ingresos estimados se formatean en bullets legibles.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.82",
+    date: "2026-08-03",
+    title: "Bitcoin search and crypto charts",
+    titleTranslations: {
+      es: "Búsqueda de Bitcoin y gráficos cripto",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Asset search finds Bitcoin and other cryptos for all users again (no longer Pro-only), and the crypto page always loads charts with a Yahoo fallback when FMP crypto history is unavailable.",
+        translations: {
+          es: "La búsqueda vuelve a encontrar Bitcoin y otras criptos para todos los usuarios (ya no solo Pro), y la página de cripto siempre carga gráficos con fallback a Yahoo si el historial FMP no está disponible.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.81",
+    date: "2026-08-03",
+    title: "Exchange suggestions when adding holdings",
+    titleTranslations: {
+      es: "Sugerencias de exchange al añadir posiciones",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Add Fund / Add Stock and edit holding now suggest known exchange codes (Xetra, LSE, Nasdaq, FUND, and more) so you pick a valid venue without guessing.",
+        translations: {
+          es: "Al añadir fondos/acciones y al editar una posición se sugieren códigos de exchange conocidos (Xetra, LSE, Nasdaq, FUND y más) para elegir el mercado correcto sin equivocarte.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.80",
     date: "2026-08-03",
     title: "Diversify tip for unclassified holdings",

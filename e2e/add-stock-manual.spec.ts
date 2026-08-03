@@ -211,7 +211,16 @@ test.describe("Manual stock add — holding persisted & quotes fetched", () => {
 
       await page.locator("#addstock-name").fill("iShares 20+ Year Treasury Bond ETF");
       await page.locator("#addstock-ticker").fill("TLT");
-      await page.locator("#addstock-exchange").fill("NDQ");
+
+      const exchangeInput = page.locator("#addstock-exchange");
+      const listId = await exchangeInput.getAttribute("list");
+      expect(listId).toBeTruthy();
+      const datalist = page.locator(`datalist#${listId}`);
+      await expect(datalist.locator('option[value="NDQ"]')).toHaveCount(1);
+      await expect(datalist.locator('option[value="FUND"]')).toHaveCount(1);
+      await expect(datalist.locator('option[value="XET"]')).toHaveCount(1);
+
+      await exchangeInput.fill("NDQ");
       await page.locator("#addstock-assettype").selectOption("etf");
       await page.locator("#addstock-shares").fill("20");
       await page.locator("#addstock-price").fill("90");

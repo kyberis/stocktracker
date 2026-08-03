@@ -15,6 +15,7 @@ import {
   earningsReportWindow,
   reportDateFromEarningsEventKey,
 } from "@/lib/aid/earnings-keys";
+import { formatEarningsCalendarDetails, sanitizeDigestBullet } from "@/lib/aid/format-earnings-details";
 import { languageCodeToName } from "@/lib/languages";
 import type { AidDigestItem, QuoteData } from "@/lib/types";
 import type { CalendarEvent } from "@/lib/db/calendar-events";
@@ -37,7 +38,7 @@ function cacheRowToItem(
     ticker: row.ticker,
     movePct,
     headline: summary.headline || row.headline,
-    bullets: summary.bullets,
+    bullets: summary.bullets.map(sanitizeDigestBullet),
     impact: summary.impact,
     filterTags: tags,
     usedWeb: row.usedWeb,
@@ -72,7 +73,7 @@ async function generateEarningsSummary(args: {
     ticker,
     title: ev.name || `${ticker} earnings ${reportDate}`,
     excerpt:
-      ev.details ||
+      formatEarningsCalendarDetails(ev.details) ||
       `${ticker} reported quarterly results around ${reportDate}. Summarize reported revenue, EPS, and guidance from sources only.`,
     source: usedWeb ? "web+calendar" : "calendar",
     publishedAt: reportDate,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n";
+import ExchangeSuggestInput from "@/components/ExchangeSuggestInput";
 import type { HoldingAssetType } from "@/lib/types";
 
 interface EditFormProps {
@@ -21,6 +22,8 @@ interface EditFormProps {
   setEditPurchasePrice: (v: string) => void;
   editDisplayCurrency: string;
   setEditDisplayCurrency: (v: string) => void;
+  /** Exchange codes already used on the user's holdings. */
+  exchangeExtraCodes?: string[];
 }
 
 export default function EditForm(props: EditFormProps) {
@@ -31,6 +34,7 @@ export default function EditForm(props: EditFormProps) {
     editAssetType, setEditAssetType, editShares, setEditShares,
     editPurchasePrice, setEditPurchasePrice,
     editDisplayCurrency, setEditDisplayCurrency,
+    exchangeExtraCodes = [],
   } = props;
 
   return (
@@ -49,7 +53,12 @@ export default function EditForm(props: EditFormProps) {
       </div>
       <div>
         <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("editExchange")}</label>
-        <input value={editExchange} onChange={(e) => setEditExchange(e.target.value)} className="w-full" onClick={(e) => e.stopPropagation()} />
+        <ExchangeSuggestInput
+          value={editExchange}
+          onChange={setEditExchange}
+          extraCodes={exchangeExtraCodes}
+          onClick={(e) => e.stopPropagation()}
+        />
       </div>
       <div>
         <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("assetType")}</label>

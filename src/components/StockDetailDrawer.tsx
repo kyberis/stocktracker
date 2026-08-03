@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Link from "next/link";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useSettings } from "@/lib/settings-context";
@@ -56,6 +56,10 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
     moveToPortfolio,
   } = usePortfolio();
   const baseCurrency = activePortfolioCurrency || "EUR";
+  const exchangeExtraCodes = useMemo(
+    () => holdings.map((h) => h.exchange).filter(Boolean),
+    [holdings],
+  );
   const { hasPremiumMarketData, getApiHeaders } = useSettings();
   const { user } = useAuth();
   const { t } = useI18n();
@@ -661,6 +665,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
                 editShares={editShares} setEditShares={setEditShares}
                 editPurchasePrice={editPurchasePrice} setEditPurchasePrice={setEditPurchasePrice}
                 editDisplayCurrency={editDisplayCurrency} setEditDisplayCurrency={setEditDisplayCurrency}
+                exchangeExtraCodes={exchangeExtraCodes}
               />
               {!isCashHolding && (editAssetType === "stock" || editAssetType === "etf") && (
                 <div className="mb-4">

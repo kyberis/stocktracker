@@ -5,8 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { CRYPTO_PAGE_SUPPORTED_SYMBOLS } from "@/lib/crypto-page-symbols";
 import { cryptoBaseFromTicker } from "@/lib/asset-detail-href";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -15,12 +13,9 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-import { useAuth } from "@/lib/auth-context";
-import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
 import type { NormalizedCryptoTicker } from "@/lib/api-providers/coinlore";
-import ProCompareCard from "./ProCompareCard";
 
 type CryptoRange = "1m" | "3m" | "1y" | "all";
 
@@ -71,17 +66,10 @@ function pctStr(val: number): string {
   return `${prefix}${val.toFixed(2)}%`;
 }
 
-import BlurredProSection from "@/components/BlurredProSection";
-
 export default function CryptoMarket() {
   const searchParams = useSearchParams();
-  const { user } = useAuth();
-  const { hasPremiumMarketData } = useSettings();
   const { t, language } = useI18n();
   const { isDark } = useTheme();
-
-  const isPro = user?.plan === "pro";
-  const canAccessPro = isPro && hasPremiumMarketData;
 
   const [selectedCoin, setSelectedCoin] = useState("BTC");
   const [symbolFromQueryInvalid, setSymbolFromQueryInvalid] = useState(false);
@@ -118,7 +106,6 @@ export default function CryptoMarket() {
   }, []);
 
   const fetchHistory = useCallback(async () => {
-    if (!canAccessPro) return;
     setHistoryLoading(true);
     try {
       const res = await fetch(`/api/crypto?action=history&symbol=${selectedCoin}&range=${range}`);
@@ -127,16 +114,17 @@ export default function CryptoMarket() {
         return;
       }
       const data = await res.json();
-      setHistory((data.history || []).reverse());
+      const rows = (data.history || []) as HistoryPoint[];
+      // Normalize ascending by date — FMP may be newest-first; Yahoo is oldest-first.
+      setHistory(rows.slice().sort((a, b) => a.date.localeCompare(b.date)));
     } catch {
       setHistory([]);
     } finally {
       setHistoryLoading(false);
     }
-  }, [canAccessPro, selectedCoin, range]);
+  }, [selectedCoin, range]);
 
   const fetchRates = useCallback(async () => {
-    if (!canAccessPro) return;
     setRatesLoading(true);
     try {
       const res = await fetch(`/api/crypto?action=exchange-rates&symbol=${selectedCoin}`);
@@ -151,7 +139,7 @@ export default function CryptoMarket() {
     } finally {
       setRatesLoading(false);
     }
-  }, [canAccessPro, selectedCoin]);
+  }, [selectedCoin]);
 
   useEffect(() => { fetchTickers(); }, [fetchTickers]);
 
@@ -278,7 +266,7 @@ export default function CryptoMarket() {
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("cryptoTitle")}</h2>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              {canAccessPro ? t("cryptoDescPro") : t("cryptoDesc")}
+              {t("cryptoDesc")}
             </p>
           </div>
         </div>
@@ -358,250 +346,185 @@ export default function CryptoMarket() {
             </div>
           )}
 
-          {/* D: Price Chart (Pro) */}
-          {canAccessPro ? (
-            <div className="card p-5">
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {selectedTicker?.name} ({selectedCoin})
-                </h3>
-                <div className="flex gap-1">
-                  {(["1m", "3m", "1y", "all"] as CryptoRange[]).map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => setRange(r)}
-                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
-                        range === r
-                          ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15"
-                          : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300"
-                      }`}
-                    >
-                      {t(({ "1m": "cryptoRange1m", "3m": "cryptoRange3m", "1y": "cryptoRange1y", all: "cryptoRangeAll" } as const)[r])}
-                    </button>
-                  ))}
-                </div>
+          {/* D: Price Chart — quota-gated on API (`crypto_pro`); Yahoo fallback when FMP is off */}
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                {selectedTicker?.name} ({selectedCoin})
+              </h3>
+              <div className="flex gap-1">
+                {(["1m", "3m", "1y", "all"] as CryptoRange[]).map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setRange(r)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                      range === r
+                        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15"
+                        : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300"
+                    }`}
+                  >
+                    {t(({ "1m": "cryptoRange1m", "3m": "cryptoRange3m", "1y": "cryptoRange1y", all: "cryptoRangeAll" } as const)[r])}
+                  </button>
+                ))}
               </div>
-              {historyLoading ? (
-                <div className="flex items-center justify-center" style={{ aspectRatio: "2.8/1", maxHeight: "min(280px, 45vh)" }}>
-                  <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                </div>
-              ) : chartData.length > 0 ? (
-                <div style={{ aspectRatio: "2.8/1", maxHeight: "min(280px, 45vh)" }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="cryptoGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fill: axisColor, fontSize: 11 }}
-                      tickLine={false}
-                      axisLine={{ stroke: gridColor }}
-                      tickFormatter={(d: string) => {
-                        const dt = new Date(d);
-                        return dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-                      }}
-                      minTickGap={40}
-                    />
-                    <YAxis
-                      tick={{ fill: axisColor, fontSize: 11 }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v: number) => {
-                        if (v >= 1000) return `${(v / 1000).toFixed(0)}k`;
-                        return v.toFixed(2);
-                      }}
-                      domain={["auto", "auto"]}
-                      width={60}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: isDark ? "#1e293b" : "#fff",
-                        border: `1px solid ${isDark ? "#334155" : "#e2e8f0"}`,
-                        borderRadius: 8,
-                        fontSize: 12,
-                      }}
-                      labelFormatter={(d) => new Date(String(d)).toLocaleDateString("en-US", {
-                        month: "short", day: "numeric", year: "numeric",
-                      })}
-                      formatter={(value) => [`$${Number(value).toLocaleString("en-US", { minimumFractionDigits: 2 })}`, "Price"]}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="close"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      fill="url(#cryptoGrad)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="h-64 flex items-center justify-center text-gray-400 dark:text-slate-500 text-sm">
-                  {t("cryptoNoData")}
-                </div>
-              )}
             </div>
-          ) : (
-            <BlurredProSection blurb={t("cryptoProChartBlurb")}>
-              <div className="card p-5">
-                <div className="h-64 bg-gradient-to-b from-emerald-500/10 to-transparent rounded-xl" />
+            {historyLoading ? (
+              <div className="flex items-center justify-center" style={{ aspectRatio: "2.8/1", maxHeight: "min(280px, 45vh)" }}>
+                <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
               </div>
-            </BlurredProSection>
-          )}
-
-          {/* E + F: Market Details + Exchange Rates side-by-side */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* E: Market Details (Pro) */}
-            {canAccessPro ? (
-              <div className="card p-0 overflow-hidden">
-                <div className="px-4 pt-4 pb-2 text-sm font-semibold text-gray-900 dark:text-white">{t("cryptoMarketData")}</div>
-                {lastDay ? (
-                  <div className="grid grid-cols-2 divide-x divide-y divide-gray-100 dark:divide-slate-700">
-                    <StatCell label={t("cryptoOpen")} value={fmt(lastDay.open)} />
-                    <StatCell label={t("cryptoClose")} value={fmt(lastDay.close)} />
-                    <StatCell label={t("cryptoVolume")} value={fmt(lastDay.volume, 0)} />
-                    <StatCell label={t("crypto24hRange")} value={`${fmt(lastDay.low)} – ${fmt(lastDay.high)}`} />
-                    <StatCell
-                      label={t("crypto7dChangeLabel")}
-                      value={selectedTicker ? pctStr(selectedTicker.change7d) : "–"}
-                      valueClass={selectedTicker ? pctClass(selectedTicker.change7d) : ""}
-                    />
-                    <StatCell
-                      label={t("crypto30dChange")}
-                      value={change30d !== null ? pctStr(change30d) : "–"}
-                      valueClass={change30d !== null ? pctClass(change30d) : ""}
-                    />
-                  </div>
-                ) : (
-                  <div className="p-4 text-sm text-gray-400 dark:text-slate-500">{t("cryptoNoData")}</div>
-                )}
-              </div>
-            ) : (
-              <BlurredProSection blurb={t("cryptoProDetailsBlurb")}>
-                <div className="card p-0 overflow-hidden">
-                  <div className="px-4 pt-4 pb-2 text-sm font-semibold">{t("cryptoMarketData")}</div>
-                  <div className="grid grid-cols-2 divide-x divide-y divide-gray-100 dark:divide-slate-700">
-                    <StatCell label="Open" value="$82,204" />
-                    <StatCell label="Close" value="$83,431" />
-                    <StatCell label="Volume" value="28,412" />
-                    <StatCell label="Range" value="$80k–$84k" />
-                  </div>
-                </div>
-              </BlurredProSection>
-            )}
-
-            {/* F: Exchange Rates (Pro) */}
-            {canAccessPro ? (
-              <div className="card p-0 overflow-hidden">
-                <div className="px-4 pt-4 pb-2 text-sm font-semibold text-gray-900 dark:text-white">{t("cryptoExchangeRates")}</div>
-                {ratesLoading ? (
-                  <div className="p-6 flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : rates.length > 0 ? (
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-100 dark:border-slate-700">
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("cryptoPair")}</th>
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("cryptoRate")}</th>
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("cryptoBid")}</th>
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("cryptoAsk")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rates.map((r) => (
-                        <tr key={r.pair} className="border-b border-gray-50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
-                          <td className="px-4 py-2.5 font-semibold text-gray-900 dark:text-white">{r.pair}</td>
-                          <td className="px-4 py-2.5 text-gray-700 dark:text-slate-300">{r.rate.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                          <td className="px-4 py-2.5 text-gray-700 dark:text-slate-300">{r.bid.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                          <td className="px-4 py-2.5 text-gray-700 dark:text-slate-300">{r.ask.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <div className="p-4 text-sm text-gray-400 dark:text-slate-500">{t("cryptoNoData")}</div>
-                )}
+            ) : chartData.length > 0 ? (
+              <div style={{ aspectRatio: "2.8/1", maxHeight: "min(280px, 45vh)" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="cryptoGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fill: axisColor, fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={{ stroke: gridColor }}
+                    tickFormatter={(d: string) => {
+                      const dt = new Date(d);
+                      return dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                    }}
+                    minTickGap={40}
+                  />
+                  <YAxis
+                    tick={{ fill: axisColor, fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v: number) => {
+                      if (v >= 1000) return `${(v / 1000).toFixed(0)}k`;
+                      return v.toFixed(2);
+                    }}
+                    domain={["auto", "auto"]}
+                    width={60}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: isDark ? "#1e293b" : "#fff",
+                      border: `1px solid ${isDark ? "#334155" : "#e2e8f0"}`,
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
+                    labelFormatter={(d) => new Date(String(d)).toLocaleDateString("en-US", {
+                      month: "short", day: "numeric", year: "numeric",
+                    })}
+                    formatter={(value) => [`$${Number(value).toLocaleString("en-US", { minimumFractionDigits: 2 })}`, "Price"]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="close"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    fill="url(#cryptoGrad)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
               </div>
             ) : (
-              <BlurredProSection blurb={t("cryptoProRatesBlurb")}>
-                <div className="card p-0 overflow-hidden">
-                  <div className="px-4 pt-4 pb-2 text-sm font-semibold">{t("cryptoExchangeRates")}</div>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-100 dark:border-slate-700">
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400">Pair</th>
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400">Rate</th>
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400">Bid</th>
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400">Ask</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b"><td className="px-4 py-2.5 font-semibold">BTC / EUR</td><td className="px-4 py-2.5">82,431.50</td><td className="px-4 py-2.5">82,428.20</td><td className="px-4 py-2.5">82,434.80</td></tr>
-                      <tr className="border-b"><td className="px-4 py-2.5 font-semibold">BTC / USD</td><td className="px-4 py-2.5">89,654.00</td><td className="px-4 py-2.5">89,650.10</td><td className="px-4 py-2.5">89,657.90</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </BlurredProSection>
+              <div className="h-64 flex items-center justify-center text-gray-400 dark:text-slate-500 text-sm">
+                {t("cryptoNoData")}
+              </div>
             )}
           </div>
 
-          {/* G: AI Analysis (Pro) */}
-          {canAccessPro ? (
-            <div className="card p-5" style={{ background: isDark ? "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.08))" : "linear-gradient(135deg, rgba(139,92,246,0.04), rgba(59,130,246,0.04))", borderColor: isDark ? "rgba(139,92,246,0.2)" : "rgba(139,92,246,0.15)" }}>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
+          {/* E + F: Market Details + Exchange Rates */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="card p-0 overflow-hidden">
+              <div className="px-4 pt-4 pb-2 text-sm font-semibold text-gray-900 dark:text-white">{t("cryptoMarketData")}</div>
+              {lastDay ? (
+                <div className="grid grid-cols-2 divide-x divide-y divide-gray-100 dark:divide-slate-700">
+                  <StatCell label={t("cryptoOpen")} value={fmt(lastDay.open)} />
+                  <StatCell label={t("cryptoClose")} value={fmt(lastDay.close)} />
+                  <StatCell label={t("cryptoVolume")} value={fmt(lastDay.volume, 0)} />
+                  <StatCell label={t("crypto24hRange")} value={`${fmt(lastDay.low)} – ${fmt(lastDay.high)}`} />
+                  <StatCell
+                    label={t("crypto7dChangeLabel")}
+                    value={selectedTicker ? pctStr(selectedTicker.change7d) : "–"}
+                    valueClass={selectedTicker ? pctClass(selectedTicker.change7d) : ""}
+                  />
+                  <StatCell
+                    label={t("crypto30dChange")}
+                    value={change30d !== null ? pctStr(change30d) : "–"}
+                    valueClass={change30d !== null ? pctClass(change30d) : ""}
+                  />
                 </div>
-                <div>
-                  <div className="text-sm font-semibold text-gray-900 dark:text-white">{t("cryptoAiTitle")}</div>
-                  <div className="text-xs text-gray-500 dark:text-slate-400">{t("cryptoAiDesc")}</div>
-                </div>
-              </div>
-              <button
-                onClick={requestAiAnalysis}
-                disabled={aiStatus === "loading"}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-600 text-white text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-60"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                </svg>
-                {aiStatus === "loading" ? "Analyzing..." : `${t("cryptoAiButton")} ${selectedCoin}`}
-              </button>
-              {aiText && (
-                <div className="mt-3 p-4 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-violet-200/20 text-sm text-gray-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                  {aiText}
-                </div>
-              )}
-              {aiStatus === "error" && (
-                <p className="mt-2 text-sm text-red-500">Failed to get AI analysis. Please try again.</p>
+              ) : (
+                <div className="p-4 text-sm text-gray-400 dark:text-slate-500">{t("cryptoNoData")}</div>
               )}
             </div>
-          ) : (
-            <BlurredProSection blurb={t("cryptoProAiBlurb")}>
-              <div className="card p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold">AI Market Analysis</div>
-                    <div className="text-xs text-gray-500 dark:text-slate-400">AI-powered crypto insights</div>
-                  </div>
+
+            <div className="card p-0 overflow-hidden">
+              <div className="px-4 pt-4 pb-2 text-sm font-semibold text-gray-900 dark:text-white">{t("cryptoExchangeRates")}</div>
+              {ratesLoading ? (
+                <div className="p-6 flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                 </div>
-                <div className="h-24 rounded-lg bg-gray-100 dark:bg-slate-700/30" />
+              ) : rates.length > 0 ? (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 dark:border-slate-700">
+                      <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("cryptoPair")}</th>
+                      <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("cryptoRate")}</th>
+                      <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("cryptoBid")}</th>
+                      <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("cryptoAsk")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rates.map((r) => (
+                      <tr key={r.pair} className="border-b border-gray-50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
+                        <td className="px-4 py-2.5 font-semibold text-gray-900 dark:text-white">{r.pair}</td>
+                        <td className="px-4 py-2.5 text-gray-700 dark:text-slate-300">{r.rate.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td className="px-4 py-2.5 text-gray-700 dark:text-slate-300">{r.bid.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td className="px-4 py-2.5 text-gray-700 dark:text-slate-300">{r.ask.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-4 text-sm text-gray-400 dark:text-slate-500">{t("cryptoNoData")}</div>
+              )}
+            </div>
+          </div>
+
+          {/* G: AI Analysis — quota-gated via /api/ai-analysis */}
+          <div className="card p-5" style={{ background: isDark ? "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.08))" : "linear-gradient(135deg, rgba(139,92,246,0.04), rgba(59,130,246,0.04))", borderColor: isDark ? "rgba(139,92,246,0.2)" : "rgba(139,92,246,0.15)" }}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                </svg>
               </div>
-            </BlurredProSection>
-          )}
+              <div>
+                <div className="text-sm font-semibold text-gray-900 dark:text-white">{t("cryptoAiTitle")}</div>
+                <div className="text-xs text-gray-500 dark:text-slate-400">{t("cryptoAiDesc")}</div>
+              </div>
+            </div>
+            <button
+              onClick={requestAiAnalysis}
+              disabled={aiStatus === "loading"}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-600 text-white text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-60"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+              {aiStatus === "loading" ? "Analyzing..." : `${t("cryptoAiButton")} ${selectedCoin}`}
+            </button>
+            {aiText && (
+              <div className="mt-3 p-4 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-violet-200/20 text-sm text-gray-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                {aiText}
+              </div>
+            )}
+            {aiStatus === "error" && (
+              <p className="mt-2 text-sm text-red-500">Failed to get AI analysis. Please try again.</p>
+            )}
+          </div>
 
           {/* H: Comparison Table (all plans via CoinLore) */}
           <div className="card p-0 overflow-x-auto">

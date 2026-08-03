@@ -1,4 +1,5 @@
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
+import { formatEarningsCalendarDetails } from "@/lib/aid/format-earnings-details";
 import type { AidDigestSummary, AidNewsImpact, AidNewsFilterTag } from "@/lib/types";
 
 const IMPACT_VALUES = new Set<AidNewsImpact>(["high", "medium", "low"]);
@@ -85,7 +86,10 @@ function fallbackSummary(args: {
   excerpt: string;
   kind: "news" | "earnings";
 }): AidDigestSummary {
-  const snippet = (args.excerpt || args.title).trim();
+  const raw = (args.excerpt || args.title).trim();
+  const formatted = formatEarningsCalendarDetails(raw);
+  const fromExcerpt = formatted ?? (raw.startsWith("{") ? "" : raw);
+  const snippet = (fromExcerpt || args.title).trim();
   const bullets: string[] = [];
   if (snippet) bullets.push(snippet.slice(0, 200));
   bullets.push("AI summary unavailable — showing feed excerpt only.");
