@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<title>trefolio — Production QA Test Cases (non-admin)</title>
+<style>
+  @page { size: A4; margin: 14mm 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 0;
+  }
+  .cover {
+    page-break-after: always;
+    padding: 24mm 8mm 0;
+  }
+  .cover h1 {
+    font-size: 28pt;
+    font-weight: 700;
+    margin: 0 0 8pt;
+    letter-spacing: -0.02em;
+  }
+  .cover .sub { font-size: 13pt; color: #444; margin-bottom: 28pt; }
+  .cover dl { display: grid; grid-template-columns: 140px 1fr; gap: 6pt 12pt; font-size: 10.5pt; }
+  .cover dt { font-weight: 600; color: #333; }
+  .cover dd { margin: 0; }
+  .rules {
+    margin-top: 28pt;
+    padding: 14pt;
+    border: 1px solid #ccc;
+    background: #f7f7f5;
+  }
+  .rules h2 { margin: 0 0 8pt; font-size: 12pt; }
+  .rules ul { margin: 0; padding-left: 18pt; }
+  .rules li { margin-bottom: 4pt; }
+  .toc { page-break-after: always; }
+  .toc h2 { font-size: 16pt; margin-bottom: 12pt; }
+  .toc ol { columns: 2; column-gap: 18pt; padding-left: 0; list-style: none; }
+  .toc li { break-inside: avoid; margin-bottom: 5pt; font-size: 9pt; }
+  .toc a { color: #111; text-decoration: none; }
+  .toc-num { display: inline-block; width: 22px; color: #666; }
+  .card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: 1px solid #d0d0d0;
+    margin: 0 0 14pt;
+    padding: 0;
+  }
+  .card header {
+    background: #111;
+    color: #fff;
+    padding: 10pt 12pt;
+  }
+  .card header h2 {
+    margin: 4pt 0 2pt;
+    font-size: 13pt;
+    font-weight: 650;
+  }
+  .meta { display: flex; gap: 10pt; align-items: center; font-size: 8.5pt; opacity: 0.9; }
+  .id { font-family: ui-monospace, Menlo, monospace; font-weight: 700; letter-spacing: 0.02em; }
+  .risk {
+    margin-left: auto;
+    border: 1px solid rgba(255,255,255,0.45);
+    padding: 1pt 6pt;
+    border-radius: 2pt;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 8pt;
+  }
+  .domain, .tier { margin: 2pt 0 0; font-size: 9pt; opacity: 0.92; }
+  .block { padding: 10pt 12pt; }
+  .block.do { background: #f0f6ff; border-bottom: 1px solid #d0d0d0; }
+  .block.verify { background: #f1faf1; }
+  .block h3 {
+    margin: 0 0 6pt;
+    font-size: 9.5pt;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .block.do h3 { color: #0b4f8a; }
+  .block.verify h3 { color: #1b6b2e; }
+  .block ol { margin: 4pt 0 0; padding-left: 18pt; }
+  .block li { margin-bottom: 3pt; }
+  .pre { margin: 0 0 6pt; font-size: 9.5pt; }
+  .passfail, .evidence { margin: 6pt 0 0; font-size: 9.5pt; }
+  code {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 9pt;
+    background: rgba(0,0,0,0.06);
+    padding: 0 3pt;
+  }
+  footer.page-foot {
+    margin-top: 18pt;
+    font-size: 8pt;
+    color: #666;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <section class="cover">
+    <h1>trefolio Production QA</h1>
+    <p class="sub">Casos de prueba no-admin para agente · Qué hacer / Qué verificar</p>
+    <dl>
+      <dt>Entorno</dt><dd><code>https://trefolio.com</code> (IdP: <code>https://user.trefolio.com</code>)</dd>
+      <dt>Cuenta</dt><dd><code>{{TEST_EMAIL}}</code> / <code>{{TEST_PASSWORD}}</code> (inyectadas por el humano)</dd>
+      <dt>Casos</dt><dd>61 use cases (UC-PUB … UC-X)</dd>
+      <dt>Fuente</dt><dd><code>knowledge/qa/production-user-test-catalog.md</code></dd>
+      <dt>Reporte</dt><dd>Pass / Fail / Skip por ID + evidencia (screenshot o texto clave)</dd>
+    </dl>
+    <div class="rules">
+      <h2>Instrucciones para el agente</h2>
+      <ul>
+        <li>Ejecutar cada caso en orden (o el subconjunto pedido). Marcar Pass / Fail / Skip.</li>
+        <li>Tras login: dismiss cookies (Accept), What's New (Got it), theme tour (Skip).</li>
+        <li><strong>Prohibido:</strong> borrar la cuenta, cancelar suscripción, completar pagos Stripe, OAuth de broker real (salvo instrucción), visitar <code>/admin</code>, spam en social.</li>
+        <li>Mutaciones: solo reversibles (añadir y borrar holding/alert/watchlist de prueba).</li>
+        <li>AI: preferir abrir panel; no quemar cuota con streams largos.</li>
+        <li>Al final: entregar QA Report con resultados por UC.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="toc">
+    <h2>Índice</h2>
+    <ol><li><a href="#UC-PUB-01"><span class="toc-num">1</span> UC-PUB-01 — Landing hero</a></li>
+<li><a href="#UC-PUB-02"><span class="toc-num">2</span> UC-PUB-02 — Landing pricing</a></li>
+<li><a href="#UC-PUB-03"><span class="toc-num">3</span> UC-PUB-03 — Interactive demo</a></li>
+<li><a href="#UC-PUB-04"><span class="toc-num">4</span> UC-PUB-04 — Studio hub</a></li>
+<li><a href="#UC-PUB-05"><span class="toc-num">5</span> UC-PUB-05 — Blog index</a></li>
+<li><a href="#UC-PUB-06"><span class="toc-num">6</span> UC-PUB-06 — Legal privacy &amp; terms</a></li>
+<li><a href="#UC-PUB-07"><span class="toc-num">7</span> UC-PUB-07 — Leaf waitlist</a></li>
+<li><a href="#UC-PUB-08"><span class="toc-num">8</span> UC-PUB-08 — Cookie consent</a></li>
+<li><a href="#UC-AUTH-01"><span class="toc-num">9</span> UC-AUTH-01 — IdP login</a></li>
+<li><a href="#UC-AUTH-02"><span class="toc-num">10</span> UC-AUTH-02 — Logout</a></li>
+<li><a href="#UC-AUTH-03"><span class="toc-num">11</span> UC-AUTH-03 — Profile hub</a></li>
+<li><a href="#UC-AUTH-04"><span class="toc-num">12</span> UC-AUTH-04 — Locale &amp; display currency</a></li>
+<li><a href="#UC-AUTH-05"><span class="toc-num">13</span> UC-AUTH-05 — What's New / release notes</a></li>
+<li><a href="#UC-AUTH-06"><span class="toc-num">14</span> UC-AUTH-06 — Onboarding gate</a></li>
+<li><a href="#UC-PORT-01"><span class="toc-num">15</span> UC-PORT-01 — Home daily</a></li>
+<li><a href="#UC-PORT-02"><span class="toc-num">16</span> UC-PORT-02 — Portfolio value &amp; chart</a></li>
+<li><a href="#UC-PORT-03"><span class="toc-num">17</span> UC-PORT-03 — Holdings list</a></li>
+<li><a href="#UC-PORT-04"><span class="toc-num">18</span> UC-PORT-04 — Add/remove stock holding (reversible)</a></li>
+<li><a href="#UC-PORT-05"><span class="toc-num">19</span> UC-PORT-05 — Cash entry smoke</a></li>
+<li><a href="#UC-PORT-06"><span class="toc-num">20</span> UC-PORT-06 — Portfolio switcher</a></li>
+<li><a href="#UC-PORT-07"><span class="toc-num">21</span> UC-PORT-07 — Explore asset search</a></li>
+<li><a href="#UC-PORT-08"><span class="toc-num">22</span> UC-PORT-08 — Classic dashboard</a></li>
+<li><a href="#UC-IMP-01"><span class="toc-num">23</span> UC-IMP-01 — Import hub</a></li>
+<li><a href="#UC-IMP-02"><span class="toc-num">24</span> UC-IMP-02 — Broker CSV path UI</a></li>
+<li><a href="#UC-IMP-03"><span class="toc-num">25</span> UC-IMP-03 — Import data-quality surface</a></li>
+<li><a href="#UC-IMP-04"><span class="toc-num">26</span> UC-IMP-04 — SnapTrade connect UI</a></li>
+<li><a href="#UC-DASH-01"><span class="toc-num">27</span> UC-DASH-01 — Performance matrix</a></li>
+<li><a href="#UC-DASH-02"><span class="toc-num">28</span> UC-DASH-02 — Chart range selector</a></li>
+<li><a href="#UC-DASH-03"><span class="toc-num">29</span> UC-DASH-03 — Tools performance &amp; projection</a></li>
+<li><a href="#UC-DASH-04"><span class="toc-num">30</span> UC-DASH-04 — Economic indicators</a></li>
+<li><a href="#UC-DASH-05"><span class="toc-num">31</span> UC-DASH-05 — Market ticker bar</a></li>
+<li><a href="#UC-TOOL-01"><span class="toc-num">32</span> UC-TOOL-01 — Tools hub</a></li>
+<li><a href="#UC-TOOL-02"><span class="toc-num">33</span> UC-TOOL-02 — Taxonomy / diversification</a></li>
+<li><a href="#UC-TOOL-03"><span class="toc-num">34</span> UC-TOOL-03 — Dividends</a></li>
+<li><a href="#UC-TOOL-04"><span class="toc-num">35</span> UC-TOOL-04 — Events calendar</a></li>
+<li><a href="#UC-TOOL-05"><span class="toc-num">36</span> UC-TOOL-05 — Rebalancing</a></li>
+<li><a href="#UC-TOOL-06"><span class="toc-num">37</span> UC-TOOL-06 — Watchlist (reversible)</a></li>
+<li><a href="#UC-TOOL-07"><span class="toc-num">38</span> UC-TOOL-07 — Stock screener</a></li>
+<li><a href="#UC-TOOL-08"><span class="toc-num">39</span> UC-TOOL-08 — Warren screener</a></li>
+<li><a href="#UC-AI-01"><span class="toc-num">40</span> UC-AI-01 — Company analysis hub</a></li>
+<li><a href="#UC-AI-02"><span class="toc-num">41</span> UC-AI-02 — Company analysis ticker</a></li>
+<li><a href="#UC-AI-03"><span class="toc-num">42</span> UC-AI-03 — Holding or portfolio AI panel</a></li>
+<li><a href="#UC-AI-04"><span class="toc-num">43</span> UC-AI-04 — Agent office</a></li>
+<li><a href="#UC-AI-05"><span class="toc-num">44</span> UC-AI-05 — MCP / docs public</a></li>
+<li><a href="#UC-ALERT-01"><span class="toc-num">45</span> UC-ALERT-01 — Price alert (reversible)</a></li>
+<li><a href="#UC-ALERT-02"><span class="toc-num">46</span> UC-ALERT-02 — In-app notifications bell</a></li>
+<li><a href="#UC-ALERT-03"><span class="toc-num">47</span> UC-ALERT-03 — Goals UI</a></li>
+<li><a href="#UC-CRYPTO-01"><span class="toc-num">48</span> UC-CRYPTO-01 — Crypto market page</a></li>
+<li><a href="#UC-CRYPTO-02"><span class="toc-num">49</span> UC-CRYPTO-02 — Add crypto modal smoke</a></li>
+<li><a href="#UC-SOC-01"><span class="toc-num">50</span> UC-SOC-01 — Network feed</a></li>
+<li><a href="#UC-SOC-02"><span class="toc-num">51</span> UC-SOC-02 — People search</a></li>
+<li><a href="#UC-SOC-03"><span class="toc-num">52</span> UC-SOC-03 — Public profile</a></li>
+<li><a href="#UC-SOC-04"><span class="toc-num">53</span> UC-SOC-04 — Connections</a></li>
+<li><a href="#UC-SOC-05"><span class="toc-num">54</span> UC-SOC-05 — Chats list smoke</a></li>
+<li><a href="#UC-BILL-01"><span class="toc-num">55</span> UC-BILL-01 — Profile subscription</a></li>
+<li><a href="#UC-BILL-02"><span class="toc-num">56</span> UC-BILL-02 — Pro paywall surface</a></li>
+<li><a href="#UC-BILL-03"><span class="toc-num">57</span> UC-BILL-03 — Manage subscription / checkout link</a></li>
+<li><a href="#UC-X-01"><span class="toc-num">58</span> UC-X-01 — Theme switch</a></li>
+<li><a href="#UC-X-02"><span class="toc-num">59</span> UC-X-02 — Locale EN/ES</a></li>
+<li><a href="#UC-X-03"><span class="toc-num">60</span> UC-X-03 — Global search cmd-K</a></li>
+<li><a href="#UC-X-04"><span class="toc-num">61</span> UC-X-04 — Mobile home &amp; portfolio smoke</a></li></ol>
+  </section>
+
+  
+<article class="card" id="UC-PUB-01">
+  <header>
+    <div class="meta">
+      <span class="num">1 / 61</span>
+      <span class="id">UC-PUB-01</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Landing hero</h2>
+    <p class="domain">Marketing · <code>/landing</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Public</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> None (logged out or logged in OK)</p>
+    <ol><li>Open <code>https://trefolio.com/landing</code>.</li>
+<li>Wait for first viewport to paint.</li>
+<li>Confirm brand “trefolio” (or logo) is visible as a primary hero signal.</li>
+<li>Confirm one primary CTA (e.g. Sign up / Try demo / Get started) is visible.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Page loads without blank error; hero has brand + headline + CTA; no <code>/admin</code> chrome.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if brand + CTA visible. Fail on 5xx/blank. Skip never.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of first viewport.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PUB-02">
+  <header>
+    <div class="meta">
+      <span class="num">2 / 61</span>
+      <span class="id">UC-PUB-02</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Landing pricing</h2>
+    <p class="domain">Marketing · <code>/landing#pricing</code> or pricing section on landing</p>
+    <p class="tier"><strong>Tier / flags:</strong> Public</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> None</p>
+    <ol><li>Open <code>https://trefolio.com/landing</code>.</li>
+<li>Scroll to pricing (or navigate to <code>#pricing</code> if present).</li>
+<li>Identify Free / Bifolio / Trefolio (or Folio / Bifolio / Trefolio) tier names and prices.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>At least three tiers visible with price amounts; no claim of admin features.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if tiers + prices visible. Fail if section missing or broken layout.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of pricing block.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PUB-03">
+  <header>
+    <div class="meta">
+      <span class="num">3 / 61</span>
+      <span class="id">UC-PUB-03</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Interactive demo</h2>
+    <p class="domain">Demo · <code>/demo</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Public</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> None</p>
+    <ol><li>Open <code>https://trefolio.com/demo</code>.</li>
+<li>Confirm a demo banner or “demo” indicator is present.</li>
+<li>Confirm dashboard-like content renders (portfolio value, holdings, or chart — seeded data).</li>
+<li>Confirm page did not redirect to <code>/login</code>.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Interactive demo dashboard with static data; no API auth error wall.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if demo UI loads without login. Fail if blank or forced login.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot showing demo content + banner.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PUB-04">
+  <header>
+    <div class="meta">
+      <span class="num">4 / 61</span>
+      <span class="id">UC-PUB-04</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Studio hub</h2>
+    <p class="domain">Marketing · <code>/studio</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Public</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> None</p>
+    <ol><li>Open <code>https://trefolio.com/studio</code>.</li>
+<li>Confirm agents (Warren, Clara, Will, and/or Renata/Roxana) are listed or described.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Studio hub loads; agent cards/sections visible.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if ≥1 agent presented. Fail on blank/5xx.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of agent list/hero.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PUB-05">
+  <header>
+    <div class="meta">
+      <span class="num">5 / 61</span>
+      <span class="id">UC-PUB-05</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Blog index</h2>
+    <p class="domain">Marketing · <code>/blog</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Public</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/blog</code>.</li>
+<li>Confirm at least one post title/link is listed.</li>
+<li>Optionally open one post and confirm article body renders.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Blog index with posts; post page has readable content.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if index lists posts. Fail if empty error or 404 on index.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of index (and post if opened).</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PUB-06">
+  <header>
+    <div class="meta">
+      <span class="num">6 / 61</span>
+      <span class="id">UC-PUB-06</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Legal privacy &amp; terms</h2>
+    <p class="domain">Legal · <code>/privacy</code>, <code>/terms</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Public</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/privacy</code>. Confirm heading related to Privacy and substantial text.</li>
+<li>Open <code>https://trefolio.com/terms</code>. Confirm Terms of Service (or equivalent) and substantial text.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Both pages load with legal copy (not placeholder stub only).</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if both pages have real content. Fail on 404/blank.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Note headings found on each page.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PUB-07">
+  <header>
+    <div class="meta">
+      <span class="num">7 / 61</span>
+      <span class="id">UC-PUB-07</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Leaf waitlist</h2>
+    <p class="domain">Device marketing · <code>/leaf</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Public; buy UI may depend on <code>commerce_enabled</code></p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/leaf</code>.</li>
+<li>Confirm Leaf / device marketing content.</li>
+<li>If a waitlist or interest form exists, do <strong>not</strong> submit unless asked; verify fields render.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Page loads with Leaf product messaging; form visible or clear CTA.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if marketing page renders. Skip buy-checkout path if commerce off (still Pass page smoke).</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of <code>/leaf</code>.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PUB-08">
+  <header>
+    <div class="meta">
+      <span class="num">8 / 61</span>
+      <span class="id">UC-PUB-08</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Cookie consent</h2>
+    <p class="domain">GDPR · any public page</p>
+    <p class="tier"><strong>Tier / flags:</strong> Public</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Prefer fresh session / cleared site cookies for this UC, or first visit of session</p>
+    <ol><li>Open <code>https://trefolio.com/landing</code> in a context where the cookie banner may show.</li>
+<li>If banner visible, click <strong>Accept</strong>.</li>
+<li>Confirm banner dismisses and page remains usable.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Banner can be accepted and does not permanently block UI.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if Accept works or banner already dismissed from prior UC (note “already accepted”). Fail if Accept does nothing and UI stays blocked.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Before/after note or screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-AUTH-01">
+  <header>
+    <div class="meta">
+      <span class="num">9 / 61</span>
+      <span class="id">UC-AUTH-01</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>IdP login</h2>
+    <p class="domain">Auth · <code>/login</code> → IdP → app</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> <code>{{TEST_EMAIL}}</code>, <code>{{TEST_PASSWORD}}</code>; start logged out (clear cookies for trefolio.com + user.trefolio.com if needed)</p>
+    <ol><li>Open <code>https://trefolio.com/login</code>.</li>
+<li>Complete OneLogin / IdP sign-in with test credentials.</li>
+<li>Wait until URL is on <code>trefolio.com</code> and not <code>/login</code>.</li>
+<li>Run dismiss overlays.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Authenticated app chrome (nav/home/portfolio). No endless redirect loop.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if authenticated landing works. Fail on wrong password loop after correct creds, or stuck on IdP.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of post-login home/portfolio.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-AUTH-02">
+  <header>
+    <div class="meta">
+      <span class="num">10 / 61</span>
+      <span class="id">UC-AUTH-02</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Logout</h2>
+    <p class="domain">Auth · profile / account menu</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in (UC-AUTH-01)</p>
+    <ol><li>Open account/profile menu (avatar or Profile).</li>
+<li>Click <strong>Sign out</strong> / <strong>Log out</strong> / equivalent.</li>
+<li>Confirm session ends (redirect to landing/login or unauthenticated marketing).</li>
+<li>Open <code>https://trefolio.com/portfolio</code> — expect redirect to login/IdP, not portfolio data.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Protected routes require login after logout.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if portfolio is gated after logout. Fail if still authenticated.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of post-logout state.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-AUTH-03">
+  <header>
+    <div class="meta">
+      <span class="num">11 / 61</span>
+      <span class="id">UC-AUTH-03</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Profile hub</h2>
+    <p class="domain">Profile · <code>/profile</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any authenticated</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in</p>
+    <ol><li>Open <code>https://trefolio.com/profile</code>.</li>
+<li>Confirm tabs/sections exist (e.g. Profile, Subscription, preferences).</li>
+<li>Confirm email or display identity is shown (may be masked).</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Profile hub loads without error.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if hub + identity/sections visible.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of profile.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-AUTH-04">
+  <header>
+    <div class="meta">
+      <span class="num">12 / 61</span>
+      <span class="id">UC-AUTH-04</span>
+      <span class="risk">reversible (change back to original)</span>
+    </div>
+    <h2>Locale &amp; display currency</h2>
+    <p class="domain">Profile settings · <code>/profile</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in; note current locale and currency first</p>
+    <ol><li>On <code>/profile</code>, find language/locale and display currency controls.</li>
+<li>Change currency to a different supported value (e.g. EUR ↔ USD) if available.</li>
+<li>Navigate to <code>/portfolio</code> and confirm currency symbols/labels reflect the choice (or amounts re-labeled).</li>
+<li>Restore original currency and locale.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Preference persists across navigation; restore succeeds.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if change + restore work. Skip if controls not found (document). Fail if change breaks portfolio page.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of portfolio with temporary currency.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-AUTH-05">
+  <header>
+    <div class="meta">
+      <span class="num">13 / 61</span>
+      <span class="id">UC-AUTH-05</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>What's New / release notes</h2>
+    <p class="domain">Release · modal and/or <code>/releasenotes</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in</p>
+    <ol><li>If What's New appeared at login, confirm <strong>Got it</strong> dismissed it (already in shared setup).</li>
+<li>Open <code>https://trefolio.com/releasenotes</code>.</li>
+<li>Confirm version entries / change list render.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Release notes page has content; modal does not permanently block app.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if page has entries. Fail on blank/404.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of release notes.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-AUTH-06">
+  <header>
+    <div class="meta">
+      <span class="num">14 / 61</span>
+      <span class="id">UC-AUTH-06</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Onboarding gate</h2>
+    <p class="domain">Onboarding · <code>/onboarding</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any; may already be completed</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in</p>
+    <ol><li>Open <code>https://trefolio.com/onboarding</code>.</li>
+<li>If wizard shows, do <strong>not</strong> wipe portfolio; either complete optional skip or navigate away to <code>/</code>.</li>
+<li>If redirected away because already onboarded, note that as Pass.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Either onboarding UI loads cleanly or app correctly skips completed onboarding.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass on either completed-skip or usable wizard. Fail on crash/loop.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Note which path occurred.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PORT-01">
+  <header>
+    <div class="meta">
+      <span class="num">15 / 61</span>
+      <span class="id">UC-PORT-01</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Home daily</h2>
+    <p class="domain">Home · <code>/</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Default home (<code>home_v2</code>); authenticated</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in; overlays dismissed</p>
+    <ol><li>Open <code>https://trefolio.com/</code>.</li>
+<li>Confirm home content (highlights, movers, brief, recommendations, or portfolio summary — not a blank shell).</li>
+<li>Confirm this is not the admin panel.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Daily home renders meaningful sections.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if primary home content visible. Fail if empty error.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of home.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PORT-02">
+  <header>
+    <div class="meta">
+      <span class="num">16 / 61</span>
+      <span class="id">UC-PORT-02</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Portfolio value &amp; chart</h2>
+    <p class="domain">Portfolio · <code>/portfolio</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in; ideally ≥1 holding or cash (else empty state is OK)</p>
+    <ol><li>Open <code>https://trefolio.com/portfolio</code>.</li>
+<li>Confirm “Portfolio Value” or “Total Net Worth” (or localized equivalent) appears, <strong>or</strong> a clear empty/import CTA.</li>
+<li>If holdings exist, confirm a chart or performance visualization area is present.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Portfolio page loads; value/empty state consistent.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if value or empty CTA visible. Fail on crash.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of portfolio hero.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PORT-03">
+  <header>
+    <div class="meta">
+      <span class="num">17 / 61</span>
+      <span class="id">UC-PORT-03</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Holdings list</h2>
+    <p class="domain">Portfolio holdings · <code>/portfolio</code> (or holdings section/tab)</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in</p>
+    <ol><li>On <code>/portfolio</code>, locate holdings table/list.</li>
+<li>If holdings exist: confirm ticker, quantity, and value columns (or cards) render.</li>
+<li>If empty: confirm empty state with import/add CTA.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>List or empty state — no perpetual loading &gt;30s.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass either path. Fail if spinner forever / error toast only.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of holdings or empty state.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PORT-04">
+  <header>
+    <div class="meta">
+      <span class="num">18 / 61</span>
+      <span class="id">UC-PORT-04</span>
+      <span class="risk">reversible</span>
+    </div>
+    <h2>Add/remove stock holding (reversible)</h2>
+    <p class="domain">Holdings CRUD</p>
+    <p class="tier"><strong>Tier / flags:</strong> Subject to Free holding caps (<code>tier-gated</code>)</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in; room under holding limit (or Skip)</p>
+    <ol><li>Open add-holding / add-stock flow from portfolio or toolbar.</li>
+<li>Search for a liquid ticker (e.g. <code>AAPL</code> or <code>MC.PA</code>).</li>
+<li>Add a small test position (e.g. 1 share) with today’s or a clear date; save.</li>
+<li>Confirm holding appears in list.</li>
+<li>Remove/delete that same holding.</li>
+<li>Confirm it is gone.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Create and delete succeed without corrupting other holdings.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if add+remove work. Skip if paywall/cap blocks add (note tier). Fail if add succeeds but delete fails leaving orphan.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshots after add and after remove.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PORT-05">
+  <header>
+    <div class="meta">
+      <span class="num">19 / 61</span>
+      <span class="id">UC-PORT-05</span>
+      <span class="risk">reversible (prefer open modal then cancel if unsure; or add small amount then delete)</span>
+    </div>
+    <h2>Cash entry smoke</h2>
+    <p class="domain">Cash · portfolio cash UI</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in</p>
+    <ol><li>Find cash / balances UI on portfolio or tools/accounts.</li>
+<li>Open add-cash flow.</li>
+<li>Either cancel without saving (smoke) <strong>or</strong> add €1 test cash then delete the entry.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Cash UI opens; cancel or reversible save works.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if UI works. Fail if modal crashes.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of cash modal/section.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PORT-06">
+  <header>
+    <div class="meta">
+      <span class="num">20 / 61</span>
+      <span class="id">UC-PORT-06</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Portfolio switcher</h2>
+    <p class="domain">Multi-portfolio · toolbar / global selector</p>
+    <p class="tier"><strong>Tier / flags:</strong> Multi-portfolio often Bifolio/Trefolio (<code>tier-gated</code>)</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in</p>
+    <ol><li>Locate portfolio selector/switcher in the app chrome.</li>
+<li>If multiple portfolios: switch and confirm holdings/summary change or name updates.</li>
+<li>If only one portfolio: confirm selector shows the current portfolio name (smoke).</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Switcher visible; switch works when &gt;1 portfolio.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass on smoke or successful switch. Skip if UI hidden on Free with clear upgrade — note as Skip only if selector absent entirely; single-portfolio display is Pass.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of selector.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PORT-07">
+  <header>
+    <div class="meta">
+      <span class="num">21 / 61</span>
+      <span class="id">UC-PORT-07</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Explore asset search</h2>
+    <p class="domain">Explore · <code>/explore</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/explore</code>.</li>
+<li>Type a ticker or company name (e.g. <code>AAPL</code>).</li>
+<li>Confirm search results appear.</li>
+<li>Open one result if clickable; confirm detail or add affordance.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Search returns results without error.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if results show. Fail if search errors/empty for known ticker.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of results.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-PORT-08">
+  <header>
+    <div class="meta">
+      <span class="num">22 / 61</span>
+      <span class="id">UC-PORT-08</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Classic dashboard</h2>
+    <p class="domain">Classic · <code>/classic</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> <code>classic_home</code> (or always available legacy)</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/classic</code>.</li>
+<li>If redirected or upgrade wall: document Skip with message.</li>
+<li>If loaded: confirm tabbed dashboard (overview/holdings/etc.) renders.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Classic UI or intentional gate.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if classic UI works. Skip if flag/gate disables with clear message. Fail if 500/blank.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-IMP-01">
+  <header>
+    <div class="meta">
+      <span class="num">23 / 61</span>
+      <span class="id">UC-IMP-01</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Import hub</h2>
+    <p class="domain">Import · <code>/import</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/import</code>.</li>
+<li>Confirm import methods listed (CSV/broker, SnapTrade, etc.).</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Hub loads with ≥1 import method.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if methods visible.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of hub.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-IMP-02">
+  <header>
+    <div class="meta">
+      <span class="num">24 / 61</span>
+      <span class="id">UC-IMP-02</span>
+      <span class="risk">safe (do not upload real PII files unless human provides a fixture)</span>
+    </div>
+    <h2>Broker CSV path UI</h2>
+    <p class="domain">Import · <code>/import</code> broker CSV flow</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>On <code>/import</code>, choose broker CSV / file import method.</li>
+<li>Confirm broker list or file picker UI appears.</li>
+<li>Cancel/back without importing if no fixture provided.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>CSV path UI reachable and dismissible.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if UI opens. Fail if broken navigation.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of broker/file step.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-IMP-03">
+  <header>
+    <div class="meta">
+      <span class="num">25 / 61</span>
+      <span class="id">UC-IMP-03</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Import data-quality surface</h2>
+    <p class="domain">Import quality · <code>/import</code> or post-import / holdings repair UI</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>From import hub or portfolio, look for data quality / review / repair messaging if present.</li>
+<li>Open <code>https://trefolio.com/import/compare</code> if linked; confirm page loads (may be empty state).</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Compare/quality pages do not 500; empty state OK.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if pages load. Skip if feature not exposed to this account (document). Fail on 500.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot or note “empty state OK”.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-IMP-04">
+  <header>
+    <div class="meta">
+      <span class="num">26 / 61</span>
+      <span class="id">UC-IMP-04</span>
+      <span class="risk">external-oauth</span>
+    </div>
+    <h2>SnapTrade connect UI</h2>
+    <p class="domain">SnapTrade · <code>/import?method=snaptrade_api</code> (or hub card)</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any; <code>external-oauth</code></p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open SnapTrade / synced broker connect from import hub.</li>
+<li>Confirm connect/start OAuth CTA appears.</li>
+<li><strong>Do not</strong> complete broker login unless human instructs.</li>
+<li>Optionally open <code>/import/synced</code> and confirm list or empty state.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Connect UI present; canceling leaves app stable.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if CTA/UI visible. Fail if hub claims SnapTrade but click 500s.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of SnapTrade entry point.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-DASH-01">
+  <header>
+    <div class="meta">
+      <span class="num">27 / 61</span>
+      <span class="id">UC-DASH-01</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Performance matrix</h2>
+    <p class="domain">Portfolio performance matrix · <code>/portfolio</code> (hero table)</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>/portfolio</code>.</li>
+<li>Locate performance matrix / breakdown by asset class or period (if present).</li>
+<li>If absent (empty portfolio), confirm no crash — Pass with note.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Matrix renders or graceful empty.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass on render or graceful empty. Fail on layout crash.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-DASH-02">
+  <header>
+    <div class="meta">
+      <span class="num">28 / 61</span>
+      <span class="id">UC-DASH-02</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Chart range selector</h2>
+    <p class="domain">Charts · <code>/portfolio</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>On <code>/portfolio</code>, find range controls (1D / 1W / 1M / 1Y / etc.).</li>
+<li>Click a different range.</li>
+<li>Confirm chart updates or loading then settles (no permanent error).</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Range change works when chart exists.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if ranges work or no chart due to empty portfolio (note). Fail if range click errors.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot after range change.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-DASH-03">
+  <header>
+    <div class="meta">
+      <span class="num">29 / 61</span>
+      <span class="id">UC-DASH-03</span>
+      <span class="risk">safe / tier-gated</span>
+    </div>
+    <h2>Tools performance &amp; projection</h2>
+    <p class="domain">Tools · <code>/tools/performance</code>, <code>/tools/projection</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any / some projection may be gated</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/tools/performance</code>. Confirm distinct performance view (not Home).</li>
+<li>Open <code>https://trefolio.com/tools/projection</code>. Confirm growth/projection UI or paywall.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Routes cold-load dedicated content or clear paywall.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if content or paywall. Fail if both show Home movers by mistake / blank.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshots of both.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-DASH-04">
+  <header>
+    <div class="meta">
+      <span class="num">30 / 61</span>
+      <span class="id">UC-DASH-04</span>
+      <span class="risk">safe / tier-gated</span>
+    </div>
+    <h2>Economic indicators</h2>
+    <p class="domain">Macro · <code>/economic-indicators</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> May be tier-gated</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/economic-indicators</code>.</li>
+<li>Confirm indicators (CPI, rates, etc.) or paywall/upgrade.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Page loads with data or intentional gate.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass on data or paywall. Fail on 500.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-DASH-05">
+  <header>
+    <div class="meta">
+      <span class="num">31 / 61</span>
+      <span class="id">UC-DASH-05</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Market ticker bar</h2>
+    <p class="domain">Market ticker · app chrome / landing</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>On authenticated <code>/</code> or <code>/portfolio</code>, look for top market ticker strip.</li>
+<li>Also check <code>/landing</code> or <code>/demo</code> if not on app.</li>
+<li>Confirm tickers/prices move or static quotes display.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Ticker bar present on at least one of app/demo/landing.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if visible somewhere in session. Fail if documented as always-on but missing on all checked pages.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot including ticker.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-TOOL-01">
+  <header>
+    <div class="meta">
+      <span class="num">32 / 61</span>
+      <span class="id">UC-TOOL-01</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Tools hub</h2>
+    <p class="domain">Tools · <code>/tools</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/tools</code>.</li>
+<li>Confirm tool cards/links (screener, watchlist, alerts, etc.).</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Hub lists multiple tools.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if ≥3 tools linked.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of hub.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-TOOL-02">
+  <header>
+    <div class="meta">
+      <span class="num">33 / 61</span>
+      <span class="id">UC-TOOL-02</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Taxonomy / diversification</h2>
+    <p class="domain"><code>/tools/taxonomy</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/tools/taxonomy</code>.</li>
+<li>Confirm diversification/taxonomy view (allocation chart/table) or empty state — <strong>not</strong> Home highlights.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Dedicated taxonomy content.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if taxonomy UI. Fail if Home content only.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-TOOL-03">
+  <header>
+    <div class="meta">
+      <span class="num">34 / 61</span>
+      <span class="id">UC-TOOL-03</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Dividends</h2>
+    <p class="domain"><code>/tools/dividends</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/tools/dividends</code>.</li>
+<li>Confirm dividends tool UI or empty state.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Page is dividends-specific.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if dedicated UI loads.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-TOOL-04">
+  <header>
+    <div class="meta">
+      <span class="num">35 / 61</span>
+      <span class="id">UC-TOOL-04</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Events calendar</h2>
+    <p class="domain"><code>/tools/events</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/tools/events</code>.</li>
+<li>Confirm events view (<code>portfolio-events</code> or calendar of earnings/ex-div) or empty state.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Events page loads.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if events UI visible.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-TOOL-05">
+  <header>
+    <div class="meta">
+      <span class="num">36 / 61</span>
+      <span class="id">UC-TOOL-05</span>
+      <span class="risk">safe / tier-gated</span>
+    </div>
+    <h2>Rebalancing</h2>
+    <p class="domain"><code>/tools/rebalancing</code> (or rebalance tab under tools)</p>
+    <p class="tier"><strong>Tier / flags:</strong> May be tier-gated</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open rebalancing from <code>/tools</code> or direct tools tab URL.</li>
+<li>Confirm targets UI or paywall.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Rebalance UI or clear upgrade gate.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass on UI or paywall. Fail on 500.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-TOOL-06">
+  <header>
+    <div class="meta">
+      <span class="num">37 / 61</span>
+      <span class="id">UC-TOOL-06</span>
+      <span class="risk">reversible</span>
+    </div>
+    <h2>Watchlist (reversible)</h2>
+    <p class="domain"><code>/tools/watchlist</code> or watchlist tool</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open watchlist tool.</li>
+<li>Add a ticker (e.g. <code>MSFT</code>) if search allows.</li>
+<li>Confirm it appears.</li>
+<li>Remove it.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Add and remove succeed.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if reversible cycle works. Skip if watchlist disabled. Fail if add without remove path.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshots add/remove.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-TOOL-07">
+  <header>
+    <div class="meta">
+      <span class="num">38 / 61</span>
+      <span class="id">UC-TOOL-07</span>
+      <span class="risk">safe / tier-gated</span>
+    </div>
+    <h2>Stock screener</h2>
+    <p class="domain"><code>/tools/screener</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Often Trefolio (<code>tier-gated</code>)</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/tools/screener</code>.</li>
+<li>Confirm screener filters/table <strong>or</strong> paywall.</li>
+<li>If accessible, apply one filter and confirm results refresh.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Screener or paywall — not blank.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass on either. Fail on 500.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-TOOL-08">
+  <header>
+    <div class="meta">
+      <span class="num">39 / 61</span>
+      <span class="id">UC-TOOL-08</span>
+      <span class="risk">safe / tier-gated</span>
+    </div>
+    <h2>Warren screener</h2>
+    <p class="domain"><code>/tools/warren-screener</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> May be tier-gated</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/tools/warren-screener</code>.</li>
+<li>Confirm moat/value list or paywall.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Page loads with list or gate.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass on list or paywall.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-AI-01">
+  <header>
+    <div class="meta">
+      <span class="num">40 / 61</span>
+      <span class="id">UC-AI-01</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Company analysis hub</h2>
+    <p class="domain"><code>/analisis</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any / some sections Pro</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/analisis</code>.</li>
+<li>Confirm search/hub UI for company analysis.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Hub loads with search.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if search/hub visible.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-AI-02">
+  <header>
+    <div class="meta">
+      <span class="num">41 / 61</span>
+      <span class="id">UC-AI-02</span>
+      <span class="risk">safe (prefer cached/public sections; avoid forcing every AI regenerate)</span>
+    </div>
+    <h2>Company analysis ticker</h2>
+    <p class="domain"><code>/analisis/[ticker]</code> e.g. <code>/analisis/AAPL</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Sections may be <code>tier-gated</code></p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/analisis/AAPL</code> (or search from hub).</li>
+<li>Confirm multi-section report shell (fundamentals / news / etc.) or paywall on sections.</li>
+<li>Do not spam regenerate on every section.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Ticker analysis page renders sections or gates.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if page useful. Fail on blank/500.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of report header + one section.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-AI-03">
+  <header>
+    <div class="meta">
+      <span class="num">42 / 61</span>
+      <span class="id">UC-AI-03</span>
+      <span class="risk">safe (minimize quota)</span>
+    </div>
+    <h2>Holding or portfolio AI panel</h2>
+    <p class="domain">AI analysis / portfolio review / chart AI panel</p>
+    <p class="tier"><strong>Tier / flags:</strong> Quota + tier (<code>tier-gated</code>)</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>From portfolio or a holding, open AI analysis / review / chat panel if available.</li>
+<li>Confirm panel opens (composer or existing report).</li>
+<li>Optionally send one short prompt <strong>or</strong> stop at panel-open if quota is a concern.</li>
+<li>Close panel.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Panel opens without crash; if prompt sent, stream or error message is coherent (not silent hang &gt;60s).</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if panel opens. Skip if no AI entry points on Free (document). Fail if open crashes app.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of open panel.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-AI-04">
+  <header>
+    <div class="meta">
+      <span class="num">43 / 61</span>
+      <span class="id">UC-AI-04</span>
+      <span class="risk">safe / minimize missions</span>
+    </div>
+    <h2>Agent office</h2>
+    <p class="domain"><code>/office</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Pro / feature-gated (<code>tier-gated</code>)</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/office</code>.</li>
+<li>Confirm office UI (Warren/Clara/Will) <strong>or</strong> upgrade gate.</li>
+<li>Do not launch long multi-agent missions unless asked.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Office or paywall.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass on UI or gate. Fail on 500.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-AI-05">
+  <header>
+    <div class="meta">
+      <span class="num">44 / 61</span>
+      <span class="id">UC-AI-05</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>MCP / docs public</h2>
+    <p class="domain"><code>/docs</code>, <code>/landing/mcp</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Public docs; token minting may need login</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/docs</code> (or <code>/landing/mcp</code>).</li>
+<li>Confirm MCP/API documentation content.</li>
+<li>Optionally open Profile Developer · MCP tab while logged in — <strong>do not</strong> create tokens unless asked.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Docs land with readable MCP setup info.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if docs render. Fail on 404 for both paths.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of docs/MCP landing.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-ALERT-01">
+  <header>
+    <div class="meta">
+      <span class="num">45 / 61</span>
+      <span class="id">UC-ALERT-01</span>
+      <span class="risk">reversible</span>
+    </div>
+    <h2>Price alert (reversible)</h2>
+    <p class="domain"><code>/tools/alerts</code> or alerts tool</p>
+    <p class="tier"><strong>Tier / flags:</strong> Caps by tier (<code>tier-gated</code>)</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open alerts tool.</li>
+<li>Create a price alert on a ticker far from market (unlikely to fire) if UI allows.</li>
+<li>Confirm alert listed.</li>
+<li>Delete the alert.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Create + delete works; or paywall at cap.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if reversible or clear cap/paywall. Fail if create without delete.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshots.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-ALERT-02">
+  <header>
+    <div class="meta">
+      <span class="num">46 / 61</span>
+      <span class="id">UC-ALERT-02</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>In-app notifications bell</h2>
+    <p class="domain">App chrome notifications</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Click the notifications bell/icon in the app header.</li>
+<li>Confirm drawer/panel opens (list or empty state).</li>
+<li>Close drawer.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Drawer opens and closes without error.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if drawer works. Fail if click no-ops with console error wall.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of open drawer.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-ALERT-03">
+  <header>
+    <div class="meta">
+      <span class="num">47 / 61</span>
+      <span class="id">UC-ALERT-03</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Goals UI</h2>
+    <p class="domain">Goals (home/AID/tools — wherever exposed)</p>
+    <p class="tier"><strong>Tier / flags:</strong> May be gated</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Search UI/nav for Goals / target value.</li>
+<li>Open goals UI if present; confirm list or create form (cancel without saving).</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Goals surface exists or intentional absence on this tier.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if UI works. Skip if feature not exposed (document). Fail if link exists but page 500s.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot or note “not exposed”.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-CRYPTO-01">
+  <header>
+    <div class="meta">
+      <span class="num">48 / 61</span>
+      <span class="id">UC-CRYPTO-01</span>
+      <span class="risk">safe / tier-gated</span>
+    </div>
+    <h2>Crypto market page</h2>
+    <p class="domain"><code>/crypto</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> May be tier-gated</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/crypto</code>.</li>
+<li>Confirm crypto market/list UI or paywall.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Page loads with quotes or gate.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass on market or paywall.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-CRYPTO-02">
+  <header>
+    <div class="meta">
+      <span class="num">49 / 61</span>
+      <span class="id">UC-CRYPTO-02</span>
+      <span class="risk">safe (prefer cancel) or reversible</span>
+    </div>
+    <h2>Add crypto modal smoke</h2>
+    <p class="domain">Add crypto modal (from crypto or portfolio)</p>
+    <p class="tier"><strong>Tier / flags:</strong> Caps / tier</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open add-crypto flow.</li>
+<li>Search a coin (e.g. BTC).</li>
+<li>Cancel without saving <strong>or</strong> add tiny amount then remove.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Modal usable; cancel/remove leaves portfolio clean.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if modal works. Skip if crypto add gated. Fail if modal crashes.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of modal.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-SOC-01">
+  <header>
+    <div class="meta">
+      <span class="num">50 / 61</span>
+      <span class="id">UC-SOC-01</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Network feed</h2>
+    <p class="domain"><code>/network</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> <code>social_network_enabled</code></p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/network</code>.</li>
+<li>Confirm feed UI or feature-disabled message.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Feed or clear disabled state (not 500).</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if feed loads. Skip if flag off with message. Fail on 500.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-SOC-02">
+  <header>
+    <div class="meta">
+      <span class="num">51 / 61</span>
+      <span class="id">UC-SOC-02</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>People search</h2>
+    <p class="domain"><code>/network/search</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> <code>social_network_enabled</code></p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/network/search</code>.</li>
+<li>Enter a short query (e.g. <code>a</code>).</li>
+<li>Confirm results or empty state — no crash.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Search UI functional when social on.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass/Skip same as flag rules. Fail on crash.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-SOC-03">
+  <header>
+    <div class="meta">
+      <span class="num">52 / 61</span>
+      <span class="id">UC-SOC-03</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Public profile</h2>
+    <p class="domain"><code>/u/[slug]</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Public profiles; social flag may apply</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>From people search or known handle, open a public profile <code>/u/...</code>.</li>
+<li>If no handle known: open own profile share link from settings if available.</li>
+<li>Confirm profile header renders.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Profile page loads.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if any profile opens. Skip if no slug discoverable and social off.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-SOC-04">
+  <header>
+    <div class="meta">
+      <span class="num">53 / 61</span>
+      <span class="id">UC-SOC-04</span>
+      <span class="risk">safe (do not mass-follow)</span>
+    </div>
+    <h2>Connections</h2>
+    <p class="domain"><code>/network/connections</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> <code>social_network_enabled</code></p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open <code>https://trefolio.com/network/connections</code>.</li>
+<li>Confirm connections UI (followers/following) or empty state.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Page loads.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass/Skip per flag. Fail on 500.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-SOC-05">
+  <header>
+    <div class="meta">
+      <span class="num">54 / 61</span>
+      <span class="id">UC-SOC-05</span>
+      <span class="risk">safe (do not message strangers)</span>
+    </div>
+    <h2>Chats list smoke</h2>
+    <p class="domain"><code>/chats</code> or <code>/network/conversations</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Social / chat enabled</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open chats/conversations list.</li>
+<li>Confirm list or empty state.</li>
+<li>Do not send messages.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>List UI loads.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if list loads. Skip if chat disabled. Fail on 500.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-BILL-01">
+  <header>
+    <div class="meta">
+      <span class="num">55 / 61</span>
+      <span class="id">UC-BILL-01</span>
+      <span class="risk">billing-ui-only</span>
+    </div>
+    <h2>Profile subscription</h2>
+    <p class="domain"><code>/profile?section=subscription</code> (or Subscription tab)</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open profile Subscription section.</li>
+<li>Confirm current plan/tier label visible (Free / Bifolio / Trefolio / trial).</li>
+<li>Confirm upgrade or manage actions present as appropriate.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Subscription status readable.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if tier shown. Fail if section missing/errors.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot (redact payment method details if shown).</p>
+  </section>
+</article>
+
+<article class="card" id="UC-BILL-02">
+  <header>
+    <div class="meta">
+      <span class="num">56 / 61</span>
+      <span class="id">UC-BILL-02</span>
+      <span class="risk">billing-ui-only / tier-gated</span>
+    </div>
+    <h2>Pro paywall surface</h2>
+    <p class="domain">Any Pro tool (e.g. screener, office, economic indicators)</p>
+    <p class="tier"><strong>Tier / flags:</strong> Free accounts expected to see paywall; Pro may Pass as “feature unlocked”</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Open a known Pro feature URL (e.g. <code>/tools/screener</code> or <code>/office</code>).</li>
+<li>If Free: confirm upgrade/paywall messaging (not a silent blank).</li>
+<li>If Pro: confirm feature content (also Pass).</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Gate or feature — never broken empty page.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass either. Fail if Free gets blank 200 with no CTA.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of paywall or unlocked feature.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-BILL-03">
+  <header>
+    <div class="meta">
+      <span class="num">57 / 61</span>
+      <span class="id">UC-BILL-03</span>
+      <span class="risk">billing-ui-only</span>
+    </div>
+    <h2>Manage subscription / checkout link</h2>
+    <p class="domain">Stripe customer portal or checkout from subscription UI</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>From Subscription, click <strong>Manage subscription</strong> or upgrade CTA.</li>
+<li>Confirm Stripe Checkout or Customer Portal loads (stripe.com or Stripe-hosted UI).</li>
+<li><strong>Do not</strong> complete payment, change plan, or cancel.</li>
+<li>Close tab / back to trefolio.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Stripe UI opens; app still usable after return.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if Stripe opens. Skip if button absent on Free with only in-app pricing (then verify pricing CTA). Fail if button 500s.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of Stripe page header (no card numbers).</p>
+  </section>
+</article>
+
+<article class="card" id="UC-X-01">
+  <header>
+    <div class="meta">
+      <span class="num">58 / 61</span>
+      <span class="id">UC-X-01</span>
+      <span class="risk">reversible</span>
+    </div>
+    <h2>Theme switch</h2>
+    <p class="domain">Theme settings (profile or theme control)</p>
+    <p class="tier"><strong>Tier / flags:</strong> Themes: Default, Canvas, Terminal, Studio</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Note current theme.</li>
+<li>Switch to a different theme (prefer Terminal or Canvas).</li>
+<li>Confirm <code>/portfolio</code> remains readable (text contrast, no missing chrome).</li>
+<li>Switch to a third theme if available.</li>
+<li>Restore original theme.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>≥2 themes render without broken layout; restore works.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if ≥2 themes OK. Fail if theme switch blanks app.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot per theme tried.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-X-02">
+  <header>
+    <div class="meta">
+      <span class="num">59 / 61</span>
+      <span class="id">UC-X-02</span>
+      <span class="risk">reversible</span>
+    </div>
+    <h2>Locale EN/ES</h2>
+    <p class="domain">Profile language</p>
+    <p class="tier"><strong>Tier / flags:</strong> i18n</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Note current language.</li>
+<li>Switch to Spanish (Español) if not already; confirm key chrome strings change (e.g. nav labels).</li>
+<li>Switch to English; confirm strings revert.</li>
+<li>Restore original language.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Language toggle updates UI strings.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if both languages apply. Fail if toggle no-ops.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot ES + EN nav/home.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-X-03">
+  <header>
+    <div class="meta">
+      <span class="num">60 / 61</span>
+      <span class="id">UC-X-03</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Global search cmd-K</h2>
+    <p class="domain">Command palette</p>
+    <p class="tier"><strong>Tier / flags:</strong> Any authenticated</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>On <code>/</code>, press <code>Meta+K</code> (macOS) or <code>Ctrl+K</code>.</li>
+<li>If palette opens, type <code>portfolio</code> or a ticker; confirm results.</li>
+<li>Escape to close.</li>
+<li>If shortcut fails, find Search button in UI and open palette.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Palette opens and returns navigable results.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if palette works. Fail if neither shortcut nor UI search exists.</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshot of palette.</p>
+  </section>
+</article>
+
+<article class="card" id="UC-X-04">
+  <header>
+    <div class="meta">
+      <span class="num">61 / 61</span>
+      <span class="id">UC-X-04</span>
+      <span class="risk">safe</span>
+    </div>
+    <h2>Mobile home &amp; portfolio smoke</h2>
+    <p class="domain"><code>/</code>, <code>/portfolio</code></p>
+    <p class="tier"><strong>Tier / flags:</strong> Any</p>
+  </header>
+
+  <section class="block do">
+    <h3>QUÉ HACER</h3>
+    <p class="pre"><strong>Precondiciones:</strong> Logged in if authenticated UC; see catalog preface.</p>
+    <ol><li>Set viewport to <code>375×812</code>.</li>
+<li>Open <code>/</code> — confirm usable layout (no permanent horizontal scroll; primary content visible).</li>
+<li>Open <code>/portfolio</code> — confirm value/holdings/empty CTA usable; touch targets not clipped by unsafe areas if obvious.</li>
+<li>Restore desktop viewport.</li></ol>
+  </section>
+
+  <section class="block verify">
+    <h3>QUÉ VERIFICAR</h3>
+    <p>Core pages usable on mobile width.</p>
+    <p class="passfail"><strong>Pass / Fail / Skip:</strong> Pass if both usable. Fail if content unreachable / severe overflow.
+
+---</p>
+    <p class="evidence"><strong>Evidencia a capturar:</strong> Screenshots mobile home + portfolio.</p>
+  </section>
+</article>
+
+  <footer class="page-foot">trefolio · Production QA test cases · non-admin · 61 cases</footer>
+</body>
+</html>
