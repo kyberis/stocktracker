@@ -1,7 +1,7 @@
 import type { Holding, CashEntry, QuoteData, ExchangeRates } from "./types";
-import { computeTaxonomyAllocations, type TaxonomyCategory } from "./services/taxonomy";
+import { computeTaxonomyAllocations } from "./services/taxonomy";
 import { computeEstimatedDividends, computeTotalEstimatedEUR } from "./services/dividend-calculator";
-import { calculatePortfolioTotals } from "./portfolio-summary";
+import { getHoldingsCount, getPortfolioTotal, getSectorBreakdown, getDividendYield, getDayChange } from "@/lib/portfolio/metrics";
 import { convertToEUR, resolveQuoteCurrency } from "./utils";
 
 /* ── Response types ──────────────────────────────────────── */
@@ -225,8 +225,10 @@ export function buildScorePayload(
   quotes: Record<string, QuoteData>,
   exchangeRates: ExchangeRates,
 ): ScorePayload {
-  const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, "EUR");
-  const totalValue = totals.totalCurrentEUR;
+  const portfolio = getPortfolioTotal(holdings, cashEntries, quotes, exchangeRates, "EUR");
+  const totalValue = portfolio.netWorth;
+  const holdingsCount = getHoldingsCount(holdings);
+  const dayChange = getDayChange(holdings, quotes, exchangeRates, "EUR");
 
   const holdingSummaries: HoldingSummary[] = holdings.map((h) => {
     const q = quotes[h.ticker];
@@ -272,33 +274,45 @@ export function buildScorePayload(
 
   holdingSummaries.sort((a, b) => b.valueEUR - a.valueEUR);
 
-  const taxonomyCategories: TaxonomyCategory[] = ["sector", "region", "assetType"];
-  const [sectorAlloc, regionAlloc, typeAlloc] = taxonomyCategories.map((cat) =>
-    computeTaxonomyAllocations(holdings, quotes, exchangeRates, cat, "Unclassified").map((a) => ({
-      label: a.label,
-      pct: Math.round(a.percent * 100) / 100,
-    })),
-  );
+  const sectorAlloc = getSectorBreakdown(holdings, quotes, exchangeRates, "Unclassified").map((a) => ({
+    label: a.label,
+    pct: Math.round(a.percent * 100) / 100,
+  }));
+  const regionAlloc = computeTaxonomyAllocations(
+    holdings,
+    quotes,
+    exchangeRates,
+    "region",
+    "Unclassified",
+  ).map((a) => ({ label: a.label, pct: Math.round(a.percent * 100) / 100 }));
+  const typeAlloc = computeTaxonomyAllocations(
+    holdings,
+    quotes,
+    exchangeRates,
+    "assetType",
+    "Unclassified",
+  ).map((a) => ({ label: a.label, pct: Math.round(a.percent * 100) / 100 }));
 
   const estimated = computeEstimatedDividends(holdings, quotes, exchangeRates);
   const totalEstimatedEUR = computeTotalEstimatedEUR(estimated);
-  const portfolioYield = totalValue > 0 ? (totalEstimatedEUR / totalValue) * 100 : 0;
+  const portfolioYield = getDividendYield(holdings, quotes, exchangeRates, "EUR") ?? 0;
 
-  const totalCashEUR = cashEntries.reduce((s, c) => s + c.amountEUR, 0);
-  const cashPct = totalValue > 0 ? (totalCashEUR / totalValue) * 100 : 0;
+  const cashPct = totalValue > 0 ? (portfolio.cash / totalValue) * 100 : 0;
 
   const weights = holdingSummaries.map((h) => h.weightPct / 100);
   const hhi = weights.reduce((s, w) => s + w * w, 0);
   const sortedWeights = [...weights].sort((a, b) => b - a);
+  const totalGainLossPct =
+    portfolio.totalCost > 0
+      ? ((portfolio.netWorth - portfolio.totalCost) / portfolio.totalCost) * 100
+      : 0;
 
   return {
-    holdingsCount: holdings.length,
+    holdingsCount,
     totalValueEUR: Math.round(totalValue * 100) / 100,
-    totalCostEUR: Math.round(totals.totalCostEUR * 100) / 100,
-    totalGainLossPct: Math.round(totals.totalGainLossPercent * 100) / 100,
-    dayChangePct: totals.totalCurrentEUR > 0
-      ? Math.round((totals.dayGainLossEUR / totals.totalCurrentEUR) * 10000) / 100
-      : 0,
+    totalCostEUR: Math.round(portfolio.totalCost * 100) / 100,
+    totalGainLossPct: Math.round(totalGainLossPct * 100) / 100,
+    dayChangePct: Math.round(dayChange.pct * 100) / 100,
     cashAllocationPct: Math.round(cashPct * 100) / 100,
     holdings: holdingSummaries.slice(0, 30),
     sectorAllocation: sectorAlloc,
@@ -313,7 +327,7 @@ export function buildScorePayload(
       top1WeightPct: Math.round((sortedWeights[0] ?? 0) * 10000) / 100,
       top5WeightPct: Math.round(sortedWeights.slice(0, 5).reduce((s, w) => s + w, 0) * 10000) / 100,
       herfindahlIndex: Math.round(hhi * 10000) / 10000,
-      positionCount: holdings.length,
+      positionCount: holdingsCount,
     },
   };
 }

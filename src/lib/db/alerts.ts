@@ -53,7 +53,7 @@ export async function countActiveAlerts(userId: string): Promise<number> {
 export async function createAlert(
   userId: string,
   alert: Omit<PriceAlert, "id" | "active" | "triggered" | "triggeredAt" | "createdAt">
-): Promise<PriceAlert> {
+): Promise<{ alert: PriceAlert; alreadyExists: boolean }> {
   const client = await ensureInitialized();
   // Soft-dedupe: reuse an existing identical active alert instead of creating a duplicate
   const existing = await client.execute({
@@ -64,7 +64,10 @@ export async function createAlert(
     args: [userId, alert.ticker, alert.condition, alert.threshold, alert.currency],
   });
   if (existing.rows.length > 0) {
-    return rowToAlert(existing.rows[0] as unknown as Record<string, unknown>);
+    return {
+      alert: rowToAlert(existing.rows[0] as unknown as Record<string, unknown>),
+      alreadyExists: true,
+    };
   }
   const id = randomUUID();
   await client.execute({
@@ -78,12 +81,15 @@ export async function createAlert(
     ],
   });
   return {
-    ...alert,
-    id,
-    active: true,
-    triggered: false,
-    triggeredAt: "",
-    createdAt: new Date().toISOString(),
+    alert: {
+      ...alert,
+      id,
+      active: true,
+      triggered: false,
+      triggeredAt: "",
+      createdAt: new Date().toISOString(),
+    },
+    alreadyExists: false,
   };
 }
 

@@ -7,6 +7,7 @@ import { computeDayChangeHeadline } from "@/lib/day-change-pct";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
 import { clampDividendYieldPct, sanitizePrice } from "@/lib/portfolio/sanity";
+import { computeTaxonomyAllocations } from "@/lib/services/taxonomy";
 import type { CashEntry, ExchangeRates, Holding, QuoteData } from "@/lib/types";
 
 export interface PortfolioTotalResult {
@@ -124,4 +125,26 @@ export function getEstimatedAnnualDividendIncome(
     );
   }
   return annualDivBase;
+}
+
+export interface SectorBreakdownRow {
+  label: string;
+  valueEUR: number;
+  percent: number;
+}
+
+/** Sector allocation via taxonomy (crypto excluded from sector buckets — TRF-018). */
+export function getSectorBreakdown(
+  holdings: Holding[],
+  quotes: Record<string, QuoteData>,
+  exchangeRates: ExchangeRates,
+  unclassifiedLabel = "Unclassified",
+): SectorBreakdownRow[] {
+  return computeTaxonomyAllocations(holdings, quotes, exchangeRates, "sector", unclassifiedLabel).map(
+    (a) => ({
+      label: a.label,
+      valueEUR: a.valueEUR,
+      percent: a.percent,
+    }),
+  );
 }

@@ -3704,6 +3704,34 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 128,
+    description: "TRF-008 unique index on moat_reports (user, symbol, day)",
+    up: async (client: Client) => {
+      try {
+        await client.execute(`
+          DELETE FROM moat_reports
+          WHERE rowid NOT IN (
+            SELECT MAX(rowid) FROM moat_reports
+            GROUP BY user_id, symbol, DATE(created_at)
+          )
+        `);
+      } catch (e: unknown) {
+        console.warn("[migration 128] moat dedupe:", e instanceof Error ? e.message : e);
+      }
+      try {
+        await client.execute(`
+          CREATE UNIQUE INDEX IF NOT EXISTS idx_moat_reports_unique_day
+          ON moat_reports(user_id, symbol, DATE(created_at))
+        `);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("already exists") && !msg.includes("duplicate")) {
+          console.warn("[migration 128] moat unique index:", msg);
+        }
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

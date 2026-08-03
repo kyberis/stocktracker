@@ -161,8 +161,13 @@ export default function PriceAlerts() {
           }),
         });
         if (res.ok) {
-          setSelectedStock(null);
-          setThreshold("");
+          const data = await res.json().catch(() => null);
+          if (data?.alreadyExists || data?.reason === "alert_already_exists") {
+            setFormError(t("alertAlreadyExists"));
+          } else {
+            setSelectedStock(null);
+            setThreshold("");
+          }
           mutate();
         } else {
           const data = await res.json().catch(() => null);
@@ -198,9 +203,14 @@ export default function PriceAlerts() {
           }),
         });
         if (res.ok) {
-          setSelectedStock(null);
-          setPercentValue("");
-          setIsPortfolioWide(false);
+          const data = await res.json().catch(() => null);
+          if (data?.alreadyExists || data?.reason === "alert_already_exists") {
+            setFormError(t("alertAlreadyExists"));
+          } else {
+            setSelectedStock(null);
+            setPercentValue("");
+            setIsPortfolioWide(false);
+          }
           mutate();
         } else {
           const data = await res.json().catch(() => null);

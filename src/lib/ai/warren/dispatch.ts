@@ -207,7 +207,7 @@ async function runCreateAlert(userId: string, raw: unknown): Promise<DispatchRes
   }
 
   const ticker = data.isPortfolioWide ? "__PORTFOLIO__" : data.ticker.toUpperCase();
-  const alert = await createAlert(userId, {
+  const { alert, alreadyExists } = await createAlert(userId, {
     ticker,
     name: data.isPortfolioWide ? "Portfolio-wide" : ticker,
     condition: data.condition,
@@ -219,8 +219,14 @@ async function runCreateAlert(userId: string, raw: unknown): Promise<DispatchRes
     isPortfolioWide: !!data.isPortfolioWide,
     portfolioId: data.portfolioId || "",
   });
-  trackEvent(userId, "warren_action", { action: "createAlert", ticker });
-  return { ok: true, entityId: alert.id, message: "Alert created." };
+  if (!alreadyExists) {
+    trackEvent(userId, "warren_action", { action: "createAlert", ticker });
+  }
+  return {
+    ok: true,
+    entityId: alert.id,
+    message: alreadyExists ? "Alert already exists." : "Alert created.",
+  };
 }
 
 async function runAddWatchlist(userId: string, raw: unknown): Promise<DispatchResult> {

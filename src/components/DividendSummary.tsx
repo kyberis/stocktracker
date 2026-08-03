@@ -15,7 +15,7 @@ import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import DataUpgradeNudge from "./DataUpgradeNudge";
 import EmptyState from "./EmptyState";
-import { formatCurrency, formatStealthCurrency, convertToEUR } from "@/lib/utils";
+import { formatCurrency, formatStealthCurrency } from "@/lib/utils";
 import type { Transaction } from "@/lib/types";
 import { useTrack } from "@/lib/use-track";
 import { useStealthMode } from "@/lib/stealth-context";
@@ -25,7 +25,6 @@ import {
   filterSellTransactions,
   computeEstimatedDividends,
   computeTotalEstimatedEUR,
-  computeEstimatedYield,
   computeYearlyBreakdown,
   computeMonthlyCalendar,
   computeTopPayers,
@@ -35,6 +34,8 @@ import {
   computePortfolioYieldOnCost,
   computeDripSimulation,
 } from "@/lib/services/dividend-calculator";
+import { getDividendYield, getPortfolioTotal } from "@/lib/portfolio/metrics";
+import { clampDividendYieldPct } from "@/lib/portfolio/sanity";
 
 const ExDividendCalendar = dynamic(() => import("./ExDividendCalendar"), { ssr: false });
 
@@ -68,15 +69,13 @@ export default function DividendSummary() {
   );
 
   const totalPortfolioValue = useMemo(
-    () => holdings.reduce((s, h) => {
-      const q = quotes[h.ticker];
-      if (!q || !(q.regularMarketPrice > 0)) return s;
-      const cur = q.currency || h.displayCurrency || "USD";
-      return s + convertToEUR(h.shares * q.regularMarketPrice, cur, exchangeRates);
-    }, 0),
-    [holdings, quotes, exchangeRates]
+    () => getPortfolioTotal(holdings, [], quotes, exchangeRates, "EUR").invested,
+    [holdings, quotes, exchangeRates],
   );
-  const yieldPercent = totalPortfolioValue > 0 ? (annualDividends / totalPortfolioValue) * 100 : 0;
+  const yieldPercent = useMemo(() => {
+    if (totalPortfolioValue <= 0) return 0;
+    return clampDividendYieldPct((annualDividends / totalPortfolioValue) * 100) ?? 0;
+  }, [annualDividends, totalPortfolioValue]);
 
   const estimated = useMemo(
     () => computeEstimatedDividends(holdings, quotes, exchangeRates),
@@ -86,8 +85,8 @@ export default function DividendSummary() {
   const totalEstimatedEUR = useMemo(() => computeTotalEstimatedEUR(estimated), [estimated]);
 
   const estimatedYieldPercent = useMemo(
-    () => computeEstimatedYield(holdings, quotes, exchangeRates, totalEstimatedEUR),
-    [holdings, quotes, exchangeRates, totalEstimatedEUR]
+    () => getDividendYield(holdings, quotes, exchangeRates, "EUR") ?? 0,
+    [holdings, quotes, exchangeRates],
   );
 
   const portfolioYoc = useMemo(
@@ -182,7 +181,9 @@ export default function DividendSummary() {
               </div>
               <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium uppercase">{t("dividendYield")}</p>
-                <p className="text-lg font-bold text-blue-700 dark:text-blue-300">{estimatedYieldPercent.toFixed(2)}%</p>
+                <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
+                  {estimatedYieldPercent > 0 ? `${estimatedYieldPercent.toFixed(2)}%` : "—"}
+                </p>
               </div>
               <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-3 text-center" title={t("yieldOnCostTooltip")}>
                 <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium uppercase">{t("yieldOnCost")}</p>
@@ -202,8 +203,28 @@ export default function DividendSummary() {
                   <span className="text-gray-700 dark:text-slate-300 flex-1 min-w-0">
                     <span className="text-gray-400 dark:text-slate-500 mr-1.5">{i + 1}.</span>
                     <span className="font-mono font-medium">{e.ticker}</span>
-                    <span className="text-gray-400 dark:text-slate-500 ml-1.5">
-                      {e.dividendYield != null && e.dividendYield > 0 ? `${e.dividendYield.toFixed(1)}%` : ""}
+                    {e.crossListingTickers && e.crossListingTickers.length > 0 && (
+                      <span
+                        className="text-[10px] text-sky-600 dark:text-sky-400 ml-1.5"
+                        title={t("crossListingMergedTooltip").replace(
+                          "{tickers}",
+                          [e.ticker, ...e.crossListingTickers].join(", "),
+                        )}
+                      >
+                        (+{e.crossListingTickers.join(", ")})
+                      </span>
+                    )}
+                    <span
+                      className="text-gray-400 dark:text-slate-500 ml-1.5"
+                      title={
+                        e.yieldUnavailableReason === "out_of_range"
+                          ? t("yieldOutOfRangeTooltip")
+                          : undefined
+                      }
+                    >
+                      {e.dividendYield != null && e.dividendYield > 0
+                        ? `${e.dividendYield.toFixed(1)}%`
+                        : "—"}
                     </span>
                   </span>
                   <span className="text-amber-600 dark:text-amber-400 font-mono text-[11px] w-14 text-right shrink-0" title={t("yieldOnCost")}>
