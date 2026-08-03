@@ -68,7 +68,13 @@ function taxonomyFieldLabel(
   }
   const raw = (holding[category] as string) || "";
   if (!raw) return unclassifiedLabel;
-  if (category === "sector") return normalizeSectorLabel(raw);
+  if (category === "sector") {
+    // TRF-018: crypto is an asset class, not a sector.
+    if (holding.assetType === "crypto") return unclassifiedLabel;
+    const sector = normalizeSectorLabel(raw);
+    if (sector === "Cryptocurrency") return unclassifiedLabel;
+    return sector;
+  }
   if (category === "region") return normalizeRegionLabel(raw);
   if (category === "assetClass") return normalizeAssetClassLabel(raw);
   return raw;

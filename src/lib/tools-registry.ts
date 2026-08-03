@@ -18,7 +18,8 @@ export type ToolTabId =
   | "projection"
   | "score"
   | "evaluation"
-  | "strategies";
+  | "strategies"
+  | "events";
 
 /** Which user-setting or flag controls hub card visibility (matches former `toolFlagMap`). */
 export type ToolHubVisibilitySource =
@@ -259,6 +260,17 @@ export const TOOLS_CATALOG: ToolCatalogEntry[] = [
     hubVisibility: "always",
     nativeInteractive: false,
     hubCategory: "aiInsights",
+  },
+  {
+    id: "events",
+    route: { kind: "dynamic" },
+    labelKey: "eventsTab",
+    descKey: "toolDescEvents",
+    icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+    gradient: "from-sky-500 to-indigo-600",
+    hubVisibility: "always",
+    nativeInteractive: false,
+    hubCategory: "analysis",
   },
 ];
 

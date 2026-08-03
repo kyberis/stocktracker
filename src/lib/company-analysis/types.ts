@@ -143,6 +143,12 @@ export interface CompanyAnalysisReport {
   /** Last time any section was written (full build or gap fill). */
   updatedAt: string;
   cached: boolean;
+  /**
+   * When the provider resolved via a cross-listing alias (e.g. W9C.DE → CSU.TO),
+   * this is the actual symbol used to fetch fundamentals/quote data.
+   * Undefined when it matches `ticker`.
+   */
+  symbolUsed?: string;
   quote: CompanyAnalysisQuote | null;
   profile: CompanyAnalysisProfile | null;
   fundamentals: CompanyAnalysisFundamentals;

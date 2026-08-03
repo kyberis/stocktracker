@@ -211,6 +211,7 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
               key={`${article.url}-${idx}`}
               article={article}
               highlightHoldings={articleTouchesHoldings(article, holdingSyms)}
+              holdingSyms={holdingSyms}
             />
           ))}
         </div>
@@ -221,6 +222,7 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
               key={`${article.url}-${idx}`}
               article={article}
               highlightHoldings={articleTouchesHoldings(article, holdingSyms)}
+              holdingSyms={holdingSyms}
             />
           ))}
         </div>
@@ -286,36 +288,48 @@ function sentimentBg(label: string): string {
   return "bg-amber-500/10 border-amber-500/18";
 }
 
-function formatNewsDate(raw: string): string {
+function formatNewsDate(raw: string, locale?: string): string {
   if (!raw) return raw;
+  let d: Date | null = null;
   if (raw.includes("T") || raw.includes("-")) {
-    const d = new Date(raw);
-    if (!isNaN(d.getTime())) {
-      const pad = (n: number) => String(n).padStart(2, "0");
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    }
+    const parsed = new Date(raw);
+    if (!isNaN(parsed.getTime())) d = parsed;
+  } else if (raw.length >= 8) {
+    const year = Number(raw.slice(0, 4));
+    const month = Number(raw.slice(4, 6)) - 1;
+    const day = Number(raw.slice(6, 8));
+    const hour = raw.length >= 13 ? Number(raw.slice(9, 11)) : 0;
+    const min = raw.length >= 13 ? Number(raw.slice(11, 13)) : 0;
+    const parsed = new Date(year, month, day, hour, min);
+    if (!isNaN(parsed.getTime())) d = parsed;
   }
-  if (raw.length < 8) return raw;
-  const year = raw.slice(0, 4);
-  const month = raw.slice(4, 6);
-  const day = raw.slice(6, 8);
-  const hour = raw.length >= 13 ? raw.slice(9, 11) : "";
-  const min = raw.length >= 13 ? raw.slice(11, 13) : "";
-  const dateStr = `${year}-${month}-${day}`;
-  if (hour && min) return `${dateStr} ${hour}:${min}`;
-  return dateStr;
+  if (!d) return raw;
+  try {
+    return d.toLocaleString(locale || undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return d.toISOString();
+  }
 }
 
 /** Compact home feed: date + time for scanability. */
-function formatNewsDateCompact(raw: string): string {
-  return formatNewsDate(raw);
+function formatNewsDateCompact(raw: string, locale?: string): string {
+  return formatNewsDate(raw, locale);
 }
 
-function primaryTickers(article: NewsArticle, max = 3): string[] {
+/** Returns up to `max` tickers from tickerSentiment that are in the user's holdings.
+ *  Macro/market-wide articles with no holdings match return an empty array. */
+function holdingTickers(article: NewsArticle, holdingSyms: Set<string>, max = 3): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
   for (const ts of article.tickerSentiment) {
     const t = ts.ticker.toUpperCase();
+    if (!holdingSyms.has(t)) continue;
     if (seen.has(t)) continue;
     seen.add(t);
     out.push(t);
@@ -538,12 +552,14 @@ function NewsSummarizeControl({
 function NewsListRow({
   article,
   highlightHoldings,
+  holdingSyms,
 }: {
   article: NewsArticle;
   highlightHoldings: boolean;
+  holdingSyms: Set<string>;
 }) {
-  const { t } = useI18n();
-  const tickers = primaryTickers(article);
+  const { t, language } = useI18n();
+  const tickers = holdingTickers(article, holdingSyms);
   const {
     summaryOpen,
     summaryLoading,
@@ -564,7 +580,7 @@ function NewsListRow({
           dateTime={article.publishedAt}
           className="w-[2.85rem] shrink-0 pt-0.5 text-[10px] font-medium tabular-nums leading-4 text-[color:var(--muted)] sm:w-[3.25rem]"
         >
-          {formatNewsDateCompact(article.publishedAt)}
+          {formatNewsDateCompact(article.publishedAt, language)}
         </time>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)]">
@@ -606,11 +622,13 @@ function NewsListRow({
 function NewsCard({
   article,
   highlightHoldings,
+  holdingSyms,
 }: {
   article: NewsArticle;
   highlightHoldings: boolean;
+  holdingSyms: Set<string>;
 }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const {
     summaryOpen,
     summaryLoading,
@@ -631,7 +649,7 @@ function NewsCard({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--muted)] sm:text-[11px]">
             <span>{article.source}</span>
             <span aria-hidden="true">&middot;</span>
-            <span>{formatNewsDate(article.publishedAt)}</span>
+            <span>{formatNewsDate(article.publishedAt, language)}</span>
             {highlightHoldings && (
               <>
                 <span aria-hidden="true">&middot;</span>
@@ -665,46 +683,51 @@ function NewsCard({
         </div>
       </div>
 
-      {(article.topics.length > 0 || article.tickerSentiment.length > 0) && (
-        <div className="mt-4 border-t border-[color:var(--border)] pt-3">
-          {article.topics.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {article.topics.slice(0, 3).map((topic, ti) => (
-                <span
-                  key={ti}
-                  className="rounded-full border border-[color:var(--border)] bg-transparent px-2 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--muted)]"
-                >
-                  {topic}
-                </span>
-              ))}
-            </div>
-          )}
+      {(() => {
+        const holdingChips = article.tickerSentiment.filter(
+          (ts) => holdingSyms.has(ts.ticker.toUpperCase()),
+        );
+        return (article.topics.length > 0 || holdingChips.length > 0) ? (
+          <div className="mt-4 border-t border-[color:var(--border)] pt-3">
+            {article.topics.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {article.topics.slice(0, 3).map((topic, ti) => (
+                  <span
+                    key={ti}
+                    className="rounded-full border border-[color:var(--border)] bg-transparent px-2 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--muted)]"
+                  >
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            )}
 
-          {article.tickerSentiment.length > 0 && (
-            <a
-              href={article.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`mt-2 flex flex-wrap gap-1.5 hover:opacity-90 ${article.topics.length > 0 ? "" : ""}`}
-            >
-              {article.tickerSentiment.map((ts, ti) => (
-                <span
-                  key={ti}
-                  className={`rounded-full border px-2.5 py-1 text-[10px] font-medium ${
-                    ts.sentimentLabel
-                      ? `${sentimentBg(ts.sentimentLabel)} ${sentimentColor(ts.sentimentLabel)}`
-                      : "border-[color:var(--border)] bg-transparent text-[color:var(--muted)]"
-                  }`}
-                >
-                  {ts.sentimentLabel
-                    ? `${ts.ticker}: ${ts.sentimentLabel} (${(ts.sentimentScore * 100).toFixed(0)}%)`
-                    : ts.ticker}
-                </span>
-              ))}
-            </a>
-          )}
-        </div>
-      )}
+            {holdingChips.length > 0 && (
+              <a
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 flex flex-wrap gap-1.5 hover:opacity-90"
+              >
+                {holdingChips.map((ts, ti) => (
+                  <span
+                    key={ti}
+                    className={`rounded-full border px-2.5 py-1 text-[10px] font-medium ${
+                      ts.sentimentLabel
+                        ? `${sentimentBg(ts.sentimentLabel)} ${sentimentColor(ts.sentimentLabel)}`
+                        : "border-[color:var(--border)] bg-transparent text-[color:var(--muted)]"
+                    }`}
+                  >
+                    {ts.sentimentLabel
+                      ? `${ts.ticker}: ${ts.sentimentLabel} (${(ts.sentimentScore * 100).toFixed(0)}%)`
+                      : ts.ticker}
+                  </span>
+                ))}
+              </a>
+            )}
+          </div>
+        ) : null;
+      })()}
 
       <NewsArticleSummaryModal
         open={summaryOpen}

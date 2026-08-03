@@ -18,6 +18,16 @@ export default function InsidersFlowPanel({ data }: { data: CompanyAnalysisData 
   const { report, narrative } = data;
   if (!report) return null;
 
+  // TRF-019: SEC Form 4 / STOCK Act only apply to US listings.
+  const ticker = (report.ticker || "").toUpperCase();
+  const exchange = (report.profile?.exchange || "").toUpperCase();
+  const nonUsSuffix = /\.(DE|F|MC|L|CO|TO|PA|AS|BR|MI|SW|ST|HE|OL|LS|HK|T|AX|SA|MX)$/.test(ticker);
+  const nonUsExchange = Boolean(
+    exchange &&
+      !/(NASDAQ|NYSE|AMEX|ARCA|NMS|NYQ|NGM|NCM|BATS|UNITED STATES)/i.test(exchange),
+  );
+  if (nonUsSuffix || nonUsExchange) return null;
+
   const congressLocked = report.congress.status === "locked";
   const showCongress = report.congress.status !== "unavailable";
   const showInsiderReading = Boolean(narrative?.insiderReading);

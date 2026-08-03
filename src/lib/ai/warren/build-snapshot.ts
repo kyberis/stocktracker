@@ -127,7 +127,7 @@ export async function buildPortfolioSnapshot(opts: {
     return {
       ...row,
       trailingAnnualDividendPerShare: round(div.annualDividendPerShare, 4),
-      dividendYield: round(div.dividendYield, 2),
+      dividendYield: div.dividendYield == null ? undefined : round(div.dividendYield, 2),
       estimatedAnnualDividend: round(div.annualIncomeEUR, 2),
       dividendCurrency: div.currency,
     };

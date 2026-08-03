@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useTickerBar, BIG_MOVE_THRESHOLD, type QuoteSnapshot } from "@/lib/hooks/use-ticker-bar";
 import { getTickerMarketStatuses, type TickerMarketStatus } from "@/lib/market-hours";
@@ -159,18 +159,47 @@ export default function MarketTickerBar({ demoMode = false }: Props) {
   }
 
   const contentProps = { eurUsd, btcPriceUsd, btcChange24h, gold, silver, sp500, oil, markets, t };
+  const containerRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const [needsDuplicate, setNeedsDuplicate] = useState(true);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const measure = measureRef.current;
+    if (!container || !measure) return;
+    const update = () => {
+      // TRF-023: only duplicate the strip when content overflows the viewport width.
+      setNeedsDuplicate(measure.scrollWidth > container.clientWidth + 4);
+    };
+    update();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
+    ro?.observe(container);
+    ro?.observe(measure);
+    window.addEventListener("resize", update);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [eurUsd, btcPriceUsd, gold, silver, sp500, oil, markets]);
 
   return (
     <div
       className="bg-slate-950 dark:bg-black border-b border-slate-800 overflow-hidden sticky top-0 z-50 safe-area-top"
       aria-label={t("tickerMarketLabel")}
+      ref={containerRef}
     >
-      <div className="h-7 flex items-center font-mono text-[11px] leading-none ticker-scroll-container">
-        <div className="ticker-scroll-track inline-flex items-center">
-          <TickerContent {...contentProps} />
-          <TickerDivider />
-          <TickerContent {...contentProps} />
-          <TickerDivider />
+      <div className={`h-7 flex items-center font-mono text-[11px] leading-none ${needsDuplicate ? "ticker-scroll-container" : ""}`}>
+        <div className={`${needsDuplicate ? "ticker-scroll-track" : ""} inline-flex items-center`}>
+          <span ref={measureRef} className="inline-flex items-center">
+            <TickerContent {...contentProps} />
+          </span>
+          {needsDuplicate && (
+            <span aria-hidden="true" className="inline-flex items-center">
+              <TickerDivider />
+              <TickerContent {...contentProps} />
+              <TickerDivider />
+            </span>
+          )}
         </div>
       </div>
     </div>

@@ -354,22 +354,36 @@ export class FmpMarketDataProvider implements StockDataProvider {
   private mapStockNews(raw: Array<Record<string, unknown>>): NewsArticle[] {
     if (!raw || !Array.isArray(raw)) return [];
     return raw.slice(0, 50).map((item) => {
-      const sym = String(item.symbol ?? item.tickers ?? "").trim();
-      const base = sym.includes(",") ? sym.split(",")[0]?.trim() ?? "" : sym;
-      const ticker = base.includes(".") ? base.split(".")[0] ?? base : base;
-      const tickerSentiment =
-        ticker.length > 0 && ticker.length <= 10
-          ? [
-              {
-                ticker: ticker.toUpperCase(),
-                relevance: 1,
-                sentimentScore: 0,
-                sentimentLabel: "",
-              },
-            ]
-          : [];
+      // FMP's `symbol` field is the query ticker — do NOT blindly stamp it on every article.
+      // Only attribute when the headline explicitly mentions the ticker (word-boundary match),
+      // matching the same convention used in finnhub-news.ts.
+      const rawSym = String(item.symbol ?? item.tickers ?? "").trim();
+      const candidates = rawSym
+        .split(/[,;\s]+/)
+        .map((s) => {
+          const base = s.trim();
+          return (base.split(".")[0] ?? base).toUpperCase();
+        })
+        .filter((t) => t.length >= 1 && t.length <= 10 && /^[A-Z0-9_-]+$/.test(t));
+
+      const title = String(item.title ?? "");
+      const titleUpper = title.toUpperCase();
+
+      const matchedTickers = candidates.filter((t) => {
+        if (t.length < 2) return false;
+        const re = new RegExp(`(?:^|[^A-Z0-9])${t}(?:[^A-Z0-9]|$)`);
+        return re.test(titleUpper);
+      });
+
+      const tickerSentiment = matchedTickers.map((t) => ({
+        ticker: t,
+        relevance: 0.8,
+        sentimentScore: 0,
+        sentimentLabel: "",
+      }));
+
       return {
-        title: String(item.title ?? ""),
+        title,
         url: String(item.url ?? ""),
         source: String(item.site ?? item.source ?? ""),
         publishedAt: String(item.publishedDate ?? item.date ?? ""),

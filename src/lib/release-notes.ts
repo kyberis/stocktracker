@@ -17,6 +17,137 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.86",
+    date: "2026-08-03",
+    title: "REQ open items: Views, metrics, news, charts, and polish",
+    titleTranslations: {
+      es: "REQ abiertos: Views, métricas, noticias, gráficos y pulido",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Views menu items are real links to Taxonomy, Dividends, Performance, Goal Planner, and a new Events tool — no more dead Home tabs.",
+        translations: {
+          es: "Los ítems del menú Views son enlaces reales a Taxonomía, Dividendos, Performance, Goal Planner y un nuevo tool Events — sin pestañas muertas en Home.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Day-change € and % share one calculator (prior-close basis); dividend yield and portfolio totals come from a shared metrics module.",
+        translations: {
+          es: "El day-change € y % comparten una calculadora (base prior-close); yield y totales de cartera salen de un módulo compartido de métricas.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Portfolio news no longer attributes market-wide articles to unrelated tickers; chips only show for holdings with real headline matches.",
+        translations: { es: "Las noticias ya no atribuyen artículos de mercado general a tickers no relacionados; los chips solo muestran acciones en cartera con coincidencia real en el titular." },
+      },
+      {
+        type: "fix",
+        text: "Dividend yield above 15% now shows an em dash instead of a clamped unreliable value.",
+        translations: { es: "La rentabilidad por dividendo superior al 15% ahora muestra un guion en lugar de un valor poco fiable." },
+      },
+      {
+        type: "improvement",
+        text: "Company analysis notes when fundamentals come from a cross-listing alias (e.g. W9C.DE → CSU.TO).",
+        translations: { es: "El análisis de empresa indica cuando los fundamentales vienen de un alias de cotización cruzada." },
+      },
+      {
+        type: "improvement",
+        text: "Price alerts show Live / Active / Triggered badges; moat reports dedupe by symbol/day with search and pagination.",
+        translations: { es: "Las alertas muestran badges Live / Active / Triggered; los informes moat se deduplican por símbolo/día con búsqueda y paginación." },
+      },
+      {
+        type: "fix",
+        text: "Goal Planner chart paints on first load; Monthly Cash Flow uses one bar scale; transaction table adds base-currency column.",
+        translations: {
+          es: "El gráfico del Goal Planner pinta al cargar; Monthly Cash Flow usa una sola escala; transacciones añaden columna en moneda base.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Reset Portfolio moved to Settings with type-to-confirm; overnight coverage-reconcile cron flags holdings without quotes.",
+        translations: {
+          es: "Reset Portfolio se mueve a Ajustes con confirmación por nombre; el cron coverage-reconcile marca holdings sin cotización.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Rebalancing total labeled excl. cash; crypto excluded from sector breakdown; US-only insider/congress widgets hidden for non-US tickers.",
+        translations: {
+          es: "Total de rebalanceo etiquetado excl. caja; crypto fuera del desglose sectorial; widgets US de insiders/congreso ocultos en tickers no-US.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Portfolio Score no longer claims an unverified percentile; scores older than 14 days show a regenerate warning.",
+        translations: {
+          es: "Portfolio Score ya no muestra un percentil no verificado; puntuaciones de más de 14 días avisan para regenerar.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Watchlist venues show country · exchange code; Performance hub copy no longer promises benchmarks that are not on that page.",
+        translations: {
+          es: "La watchlist muestra país · código de mercado; la descripción de Performance ya no promete benchmarks que no están en esa página.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.85",
+    date: "2026-08-03",
+    title: "Sprint 3 UX polish: charts, currency, filters",
+    titleTranslations: {
+      es: "Sprint 3 pulido UX: gráficos, divisa, filtros",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Goal Planner chart no longer paints blank on first load; goal-beyond-horizon shows estimated years with ~ prefix and a clear hint.",
+        translations: {
+          es: "El gráfico del Goal Planner ya no aparece en blanco al cargar; metas fuera del horizonte muestran años estimados con ~ y un mensaje claro.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Monthly Cash Flow card uses a single shared scale for dividend and sales bars, making amounts visually comparable.",
+        translations: {
+          es: "La tarjeta de Flujo de Caja Mensual usa una escala común para las barras de dividendos y ventas.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Semantic color tokens (--price-up/down, --over/under-target, --quality-*) added to the design system and wired through drift indicators.",
+        translations: {
+          es: "Tokens semánticos de color (--price-up/down, --over/under-target, --quality-*) añadidos al sistema de diseño y conectados a los indicadores de drift.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Transaction history shows a base-currency equivalent column when holdings span multiple currencies.",
+        translations: {
+          es: "El historial de transacciones muestra columna equivalente en moneda base cuando hay tenencias en múltiples divisas.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Moat screener and Strategies tool parse European-style decimal numbers (comma as separator) correctly.",
+        translations: {
+          es: "El Moat Screener y la herramienta de Estrategias parsean correctamente números decimales europeos (coma como separador).",
+        },
+      },
+      {
+        type: "fix",
+        text: "Moat screener filter inputs no longer overflow or get clipped at 1280 px viewport.",
+        translations: {
+          es: "Los inputs de filtro del Moat Screener ya no desbordan ni se cortan en viewports de 1280 px.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.84",
     date: "2026-08-03",
     title: "QA reliability fixes across tools and home",

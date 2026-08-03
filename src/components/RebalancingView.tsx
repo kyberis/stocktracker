@@ -22,6 +22,7 @@ import {
   normalizeRegionLabel,
   normalizeSectorLabel,
 } from "@/lib/classification-normalize";
+import { driftTone, driftToneDotClass, driftToneTextClass } from "@/lib/portfolio/drift-tone";
 
 const PIE_COLORS = [
   "#10b981", "#6366f1", "#f59e0b", "#ef4444", "#8b5cf6",
@@ -156,7 +157,7 @@ export default function RebalancingView() {
     }
     const buckets: Record<string, number> = {};
     let total = 0;
-    holdings.forEach((h) => {
+    for (const h of holdings) {
       const q = quotes[h.ticker];
       let valueEUR = 0;
       if (q && q.regularMarketPrice > 0) {
@@ -168,22 +169,33 @@ export default function RebalancingView() {
       if (category === "exchange") {
         label = h.exchange || t("unclassified");
       } else {
-        label = (h[category as keyof typeof h] as string) || "";
-        if (!label && category === "sector" && h.assetClass && h.assetClass !== "stock") {
-          label = h.assetClass.toUpperCase() === "ETF" ? t("etfFundLabel") : h.assetClass;
-        }
-        if (!label) {
+        // TRF-018: crypto is an asset class — keep it out of sector buckets.
+        const assetClassRaw = (h.assetClass || h.assetType || "").toLowerCase();
+        const isCrypto =
+          assetClassRaw === "crypto" ||
+          assetClassRaw === "cryptocurrency" ||
+          h.assetType === "crypto";
+        if (category === "sector" && isCrypto) {
           label = t("unclassified");
-        } else if (category === "sector") {
-          label = normalizeSectorLabel(label);
-        } else if (category === "region") {
-          label = normalizeRegionLabel(label);
-        } else if (category === "assetClass") {
-          label = normalizeAssetClassLabel(label);
+        } else {
+          label = (h[category as keyof typeof h] as string) || "";
+          if (!label && category === "sector" && h.assetClass && h.assetClass !== "stock") {
+            label = h.assetClass.toUpperCase() === "ETF" ? t("etfFundLabel") : h.assetClass;
+          }
+          if (!label) {
+            label = t("unclassified");
+          } else if (category === "sector") {
+            label = normalizeSectorLabel(label);
+            if (label === "Cryptocurrency") label = t("unclassified");
+          } else if (category === "region") {
+            label = normalizeRegionLabel(label);
+          } else if (category === "assetClass") {
+            label = normalizeAssetClassLabel(label);
+          }
         }
       }
       buckets[label] = (buckets[label] || 0) + valueEUR;
-    });
+    }
     return Object.entries(buckets)
       .sort((a, b) => b[1] - a[1])
       .map(([label, valueEUR], i) => ({
@@ -565,11 +577,7 @@ function DriftRow({ drift: d, baseCurrency, onSaveTarget, suggestedTarget }: {
   const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(d.targetPercent.toFixed(1));
-  const driftColor = Math.abs(d.driftPercent) < 2
-    ? "text-gray-500 dark:text-slate-400"
-    : d.driftPercent > 0
-      ? "text-red-500 dark:text-red-400"
-      : "text-emerald-600 dark:text-emerald-400";
+  const driftColor = driftToneTextClass(driftTone(d.driftPercent));
 
   const hasSuggestion = suggestedTarget != null && Math.abs(suggestedTarget - d.targetPercent) > 0.05;
 
@@ -663,7 +671,7 @@ function DonutChart({ allocations, totalValue, baseCurrency }: {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(totalValue, baseCurrency)}</span>
-        <span className="text-[10px] text-gray-500 dark:text-slate-400">{t("total")}</span>
+        <span className="text-[10px] text-gray-500 dark:text-slate-400">{t("rebalancingTotalExclCash")}</span>
       </div>
     </div>
   );
@@ -727,16 +735,16 @@ function ExposureAnalysis({ drifts, isPro }: { drifts: (RebalanceDrift & { color
       {alerts.length > 0 && (
         <div className="space-y-1">
           {alerts.map((d) => {
-            const isOver = d.driftPercent > 0;
+            const tone = driftTone(d.driftPercent, 1);
             return (
               <div key={d.label} className="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-gray-50 dark:bg-slate-800/50 text-xs">
                 <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${isOver ? "bg-red-500" : "bg-emerald-500"}`} />
+                  <span className={`w-2 h-2 rounded-full ${driftToneDotClass(tone)}`} />
                   <span className="text-gray-600 dark:text-slate-300">
-                    {isOver ? t("overexposedTo") : t("underexposedTo")} <strong className="text-gray-900 dark:text-white">{d.label}</strong>
+                    {tone === "over" ? t("overexposedTo") : t("underexposedTo")} <strong className="text-gray-900 dark:text-white">{d.label}</strong>
                   </span>
                 </div>
-                <span className={`font-mono font-medium ${isOver ? "text-red-500" : "text-emerald-500"}`}>
+                <span className={`font-mono font-medium ${driftToneTextClass(tone)}`} data-drift-tone={tone}>
                   {d.driftPercent > 0 ? "+" : ""}{d.driftPercent.toFixed(1)}%
                 </span>
               </div>

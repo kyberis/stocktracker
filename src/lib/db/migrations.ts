@@ -3662,6 +3662,48 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 127,
+    description: "TRF-008 dedupe price_alerts and moat_reports; unique indexes",
+    up: async (client: Client) => {
+      try {
+        await client.execute(`
+          DELETE FROM price_alerts
+          WHERE rowid NOT IN (
+            SELECT MIN(rowid) FROM price_alerts
+            GROUP BY user_id, ticker, condition, threshold, currency
+          )
+        `);
+      } catch (e: unknown) {
+        console.warn("[migration 127] price_alerts dedupe:", e instanceof Error ? e.message : e);
+      }
+
+      try {
+        await client.execute(`
+          CREATE UNIQUE INDEX IF NOT EXISTS idx_price_alerts_unique_active
+          ON price_alerts(user_id, ticker, condition, threshold, currency)
+          WHERE active = 1
+        `);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("already exists") && !msg.includes("duplicate")) {
+          console.warn("[migration 127] price_alerts unique index:", msg);
+        }
+      }
+
+      try {
+        await client.execute(`
+          DELETE FROM moat_reports
+          WHERE rowid NOT IN (
+            SELECT MAX(rowid) FROM moat_reports
+            GROUP BY user_id, symbol, DATE(created_at)
+          )
+        `);
+      } catch (e: unknown) {
+        console.warn("[migration 127] moat_reports dedupe:", e instanceof Error ? e.message : e);
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

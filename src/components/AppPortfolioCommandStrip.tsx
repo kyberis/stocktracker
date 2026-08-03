@@ -22,7 +22,7 @@ function AppPortfolioCommandStripInner() {
   const isMobileViewport = useIsMobileViewport();
   const { holdings } = usePortfolio();
   const { user } = useAuth();
-  const { gatedAdd, openSettings, openResetPortfolio } = usePortfolioCommand();
+  const { gatedAdd, openSettings } = usePortfolioCommand();
 
   const holdingsCount = holdings.length;
   const isDashboardRoute = pathname === "/" || pathname === "/demo";
@@ -76,7 +76,6 @@ function AppPortfolioCommandStripInner() {
       onAddCrypto={() => gatedAdd("crypto")}
       onAddAsset={() => gatedAdd("asset")}
       onOpenSettings={openSettings}
-      onResetPortfolio={openResetPortfolio}
       quickNav={{
         activeTab: displayActiveTab,
         onSelectTab,

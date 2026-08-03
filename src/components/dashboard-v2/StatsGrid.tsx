@@ -6,8 +6,12 @@ import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
-import { computeDayChangeHeadline } from "@/lib/day-change-pct";
-import { formatCurrency, formatPercent, resolveQuoteCurrency, convertCurrency } from "@/lib/utils";
+import {
+  getDayChange,
+  getDividendYield,
+  getEstimatedAnnualDividendIncome,
+} from "@/lib/portfolio/metrics";
+import { formatCurrency, formatPercent } from "@/lib/utils";
 import { getHoldingsLimit } from "@/lib/subscription";
 import type { Holding, CashEntry } from "@/lib/types";
 
@@ -32,32 +36,23 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested, inl
   );
 
   const dayHeadline = useMemo(
-    () => computeDayChangeHeadline(holdings, quotes, exchangeRates, activePortfolioCurrency),
+    () => getDayChange(holdings, quotes, exchangeRates, activePortfolioCurrency),
     [holdings, quotes, exchangeRates, activePortfolioCurrency],
   );
 
   const investedCost = snapshotInvested ?? totals.totalCostEUR;
   const gainLoss = totals.totalCurrentEUR - investedCost;
-  const dayChange = dayHeadline.abs;
+  const dayChange = dayHeadline.amount;
   const dayIsPositive = dayChange >= 0;
   const dayPct = dayHeadline.pct;
 
   const cur = activePortfolioCurrency;
 
   const { divYield, annualDivIncome } = useMemo(() => {
-    if (totals.totalCurrentEUR <= 0) return { divYield: 0, annualDivIncome: 0 };
-    let annualDivBase = 0;
-    for (const h of holdings) {
-      const q = quotes[h.ticker];
-      if (q?.trailingAnnualDividendRate && q.trailingAnnualDividendRate > 0) {
-        const divCurrency = resolveQuoteCurrency(h.displayCurrency, q.currency || h.displayCurrency);
-        const divLocal = q.trailingAnnualDividendRate * h.shares;
-        annualDivBase += convertCurrency(divLocal, divCurrency, cur, exchangeRates);
-      }
-    }
+    const yieldPct = getDividendYield(holdings, quotes, exchangeRates, cur, totals.totalCurrentEUR);
     return {
-      divYield: (annualDivBase / totals.totalCurrentEUR) * 100,
-      annualDivIncome: annualDivBase,
+      divYield: yieldPct,
+      annualDivIncome: getEstimatedAnnualDividendIncome(holdings, quotes, exchangeRates, cur),
     };
   }, [holdings, quotes, exchangeRates, cur, totals.totalCurrentEUR]);
 
@@ -78,7 +73,7 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested, inl
       positive: dayIsPositive,
       highlight: true,
     },
-    { label: t("v2DivYield"), value: `${divYield.toFixed(2)}%` },
+    { label: t("v2DivYield"), value: divYield == null ? "—" : `${divYield.toFixed(2)}%` },
     {
       label: t("v2Holdings"),
       value: holdingsLimit < Infinity ? `${holdings.length}/${holdingsLimit}` : String(holdings.length),

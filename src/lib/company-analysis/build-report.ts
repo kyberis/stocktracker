@@ -196,6 +196,7 @@ export async function buildFullReport(
 
   return assembleReport({
     ticker, // keep request ticker for URLs/cache key
+    symbolUsed: dataSymbol !== ticker ? dataSymbol : undefined,
     generatedAt,
     updatedAt: generatedAt,
     cached: false,

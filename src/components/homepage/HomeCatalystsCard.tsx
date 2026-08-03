@@ -12,7 +12,13 @@ type CatalystRow = {
   date: string;
 };
 
-export default function HomeCatalystsCard({ holdings }: { holdings: Holding[] }) {
+export default function HomeCatalystsCard({
+  holdings,
+  showEmpty = false,
+}: {
+  holdings: Holding[];
+  showEmpty?: boolean;
+}) {
   const { t } = useI18n();
   const { activePortfolioId } = usePortfolio();
   const [rows, setRows] = useState<CatalystRow[]>([]);
@@ -68,7 +74,17 @@ export default function HomeCatalystsCard({ holdings }: { holdings: Holding[] })
     };
   }, [holdings, activePortfolioId, t]);
 
-  if (rows.length === 0) return null;
+  if (rows.length === 0 && !showEmpty) return null;
+
+  if (rows.length === 0) {
+    return (
+      <section className="card h-full rounded-[var(--radius-card)] p-4" aria-label={t("homeV2CatalystsTitle")}>
+        <h2 className="text-sm font-semibold text-[color:var(--foreground)]">{t("homeV2CatalystsTitle")}</h2>
+        <p className="mt-0.5 text-xs text-[color:var(--muted)]">{t("homeV2CatalystsSubtitle")}</p>
+        <p className="mt-3 text-sm text-[color:var(--muted)]">{t("noUpcomingEventsDesc")}</p>
+      </section>
+    );
+  }
 
   return (
     <section className="card h-full rounded-[var(--radius-card)] p-4" aria-label={t("homeV2CatalystsTitle")}>

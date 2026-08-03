@@ -28,20 +28,24 @@ type TailItem =
   | { kind: "news" }
   | { kind: "import" };
 
-const DASHBOARD_VIEW_TABS: {
+/** Views menu → real tool routes (TRF-001 A lite). */
+const DASHBOARD_VIEW_LINKS: {
   key: DashboardTab;
   labelKey: TranslationKey;
+  href: string;
   tierBadge?: "pro";
 }[] = [
-  { key: "diversification", labelKey: "diversificationTab" },
-  { key: "dividends", labelKey: "dividendsTab" },
-  { key: "metrics", labelKey: "performanceTab", tierBadge: "pro" },
-  { key: "growth", labelKey: "growthTab", tierBadge: "pro" },
-  { key: "events", labelKey: "eventsTab" },
+  { key: "diversification", labelKey: "diversificationTab", href: "/tools/taxonomy" },
+  { key: "dividends", labelKey: "dividendsTab", href: "/tools/dividends" },
+  { key: "metrics", labelKey: "performanceTab", href: "/tools/performance", tierBadge: "pro" },
+  { key: "growth", labelKey: "growthTab", href: "/tools/projection", tierBadge: "pro" },
+  { key: "events", labelKey: "eventsTab", href: "/tools/events" },
 ];
 
-function isDashboardViewTab(tab: DashboardTab): boolean {
-  return DASHBOARD_VIEW_TABS.some((v) => v.key === tab);
+function isViewPathActive(pathname: string): boolean {
+  return DASHBOARD_VIEW_LINKS.some(
+    (v) => pathname === v.href || pathname.startsWith(`${v.href}/`),
+  );
 }
 
 function useMenuFixedPosition(
@@ -353,25 +357,37 @@ export default function DashboardTabBarQuickLinks({
         aria-label={t("dashboardTablistLabel")}
         data-testid="dashboard-views-menu"
       >
-        {DASHBOARD_VIEW_TABS.map((row) => {
+        {DASHBOARD_VIEW_LINKS.map((row) => {
           const disabled = row.key === "diversification" && holdingsCount === 0;
+          const active =
+            pathname === row.href || (row.href.length > 1 && pathname.startsWith(`${row.href}/`));
+          if (disabled) {
+            return (
+              <span
+                key={row.key}
+                role="menuitem"
+                aria-disabled="true"
+                aria-label={t(row.labelKey)}
+                className={`${itemClass} opacity-40 cursor-not-allowed`}
+              >
+                <span>{t(row.labelKey)}</span>
+                {row.tierBadge && <TierFeatureBadge requiredPlan={row.tierBadge} size="xs" />}
+              </span>
+            );
+          }
           return (
-            <button
+            <Link
               key={row.key}
-              type="button"
+              href={row.href}
               role="menuitem"
               aria-label={t(row.labelKey)}
-              disabled={disabled}
-              className={`${itemClass} ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
-              onClick={() => {
-                if (disabled) return;
-                onSelectTab(row.key);
-                setViewsOpen(false);
-              }}
+              aria-current={active ? "page" : undefined}
+              className={itemClass}
+              onClick={() => setViewsOpen(false)}
             >
               <span>{t(row.labelKey)}</span>
               {row.tierBadge && <TierFeatureBadge requiredPlan={row.tierBadge} size="xs" />}
-            </button>
+            </Link>
           );
         })}
       </div>,
@@ -512,7 +528,7 @@ export default function DashboardTabBarQuickLinks({
             <button
               ref={viewsBtnRef}
               type="button"
-              className={ctaClass(activeTab != null && isDashboardViewTab(activeTab))}
+              className={ctaClass(isViewPathActive(pathname) || (activeTab != null && ["diversification", "dividends", "metrics", "growth", "events"].includes(activeTab)))}
               aria-haspopup="menu"
               aria-expanded={viewsOpen}
               onClick={() => {

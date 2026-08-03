@@ -15,9 +15,10 @@ import type { SubscriptionPlan } from "@/lib/types";
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onResetPortfolio?: () => void;
 }
 
-export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose, onResetPortfolio }: SettingsModalProps) {
   const { t } = useI18n();
   const { user } = useAuth();
   const { defaultCurrency, setDefaultCurrency } = useSettings();
@@ -97,6 +98,25 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {t("settingsOpenFullProfile")}
           </Link>
         </div>
+
+        {onResetPortfolio && (
+          <div className="mt-5 rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50/50 dark:bg-red-500/5 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-red-600 dark:text-red-400 mb-1">
+              {t("resetPortfolioDangerZone")}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mb-3">{t("resetPortfolioDangerHint")}</p>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onResetPortfolio();
+              }}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold border border-red-300 dark:border-red-500/40 text-red-700 dark:text-red-300 hover:bg-red-100/80 dark:hover:bg-red-500/10 transition-colors"
+            >
+              {t("resetPortfolio")}
+            </button>
+          </div>
+        )}
 
         {/* Footer actions */}
         <div className="flex items-center justify-end mt-6 gap-3">

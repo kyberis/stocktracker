@@ -1,5 +1,6 @@
 import type { ExchangeRates, Holding, QuoteData, Transaction } from "@/lib/types";
 import { convertToEUR } from "@/lib/utils";
+import { clampDividendYieldPct } from "@/lib/portfolio/sanity";
 
 const DEFAULT_GROWTH_RATE = 0.10;
 const DEFAULT_PROJECTION_YEARS = 5;
@@ -11,8 +12,10 @@ export interface EstimatedDividend {
   name: string;
   shares: number;
   annualDividendPerShare: number;
-  dividendYield: number;
-  yieldOnCost: number;
+  /** Null when yield cannot be reliably computed (cross-currency mismatch, >15%, negative). */
+  dividendYield: number | null;
+  /** Null when yield-on-cost is out of [0, 15] range. */
+  yieldOnCost: number | null;
   annualIncome: number;
   currency: string;
   annualIncomeEUR: number;
@@ -83,27 +86,25 @@ export function computeEstimatedDividends(
     if (!rate || rate <= 0) continue;
     const cur = q.currency || h.displayCurrency || "USD";
     const price = q.regularMarketPrice > 0 ? q.regularMarketPrice : 0;
-    // Prefer rate/price in the same currency; provider yield can be wrong for ADRs
-    let dividendYield = price > 0 ? (rate / price) * 100 : (q.trailingAnnualDividendYield ?? 0) * 100;
-    if (dividendYield > 15 || dividendYield < 0) {
-      // Impossible / cross-currency garbage — mark for UI as unreliable
-      dividendYield = price > 0 ? Math.min(dividendYield, 15) : 0;
-    }
+    // Prefer rate/price in the same currency; provider yield can be wrong for ADRs/cross-listings.
+    // Use clampDividendYieldPct so anything outside [0, 15] becomes null (shows "—" in UI).
+    const rawYield = price > 0 ? (rate / price) * 100 : (q.trailingAnnualDividendYield ?? 0) * 100;
+    const dividendYield = clampDividendYieldPct(rawYield);
+
     const annualIncome = h.shares * rate;
     const annualIncomeEUR = convertToEUR(annualIncome, cur, exchangeRates);
-    const yoc =
-      h.purchasePrice > 0 && h.displayCurrency === cur
-        ? (rate / h.purchasePrice) * 100
-        : h.purchasePrice > 0
-          ? (rate / h.purchasePrice) * 100
-          : 0;
+
+    // Yield-on-cost: only meaningful when purchase price and dividend are in the same currency.
+    const rawYoc = h.purchasePrice > 0 ? (rate / h.purchasePrice) * 100 : null;
+    const yieldOnCost = rawYoc != null ? clampDividendYieldPct(rawYoc) : null;
+
     items.push({
       ticker: h.ticker,
       name: h.name,
       shares: h.shares,
       annualDividendPerShare: rate,
       dividendYield,
-      yieldOnCost: yoc > 15 ? 0 : yoc,
+      yieldOnCost,
       annualIncome,
       currency: cur,
       annualIncomeEUR,

@@ -19,6 +19,9 @@ export default function SummaryPanel({ data }: { data: CompanyAnalysisData }) {
   if (!report || !fundamentals) return null;
 
   const currency = report.quote?.currency || "USD";
+  const aliasNote = report.symbolUsed && report.symbolUsed !== report.ticker
+    ? report.symbolUsed
+    : null;
   const priceFormatted = formatAnalysisNumber(report.quote?.price, language);
   const priceStr = priceFormatted != null ? `${priceFormatted} ${currency}` : null;
   const mcap = formatAnalysisCompact(report.quote?.marketCap, language, currency);
@@ -36,6 +39,16 @@ export default function SummaryPanel({ data }: { data: CompanyAnalysisData }) {
 
   return (
     <div className="space-y-6">
+      {aliasNote && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+          <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>
+            {t("companyAnalysisAliasNote").replace("{symbol}", aliasNote)}
+          </span>
+        </div>
+      )}
       {(showQuoteCard || showMcapCard || showRevenueCard || showEpsCard || showDistCard) && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           {showQuoteCard && (

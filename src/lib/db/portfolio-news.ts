@@ -7,10 +7,7 @@ export function normalizePortfolioNewsSymbol(ticker: string): string {
   return base.toUpperCase().trim();
 }
 
-function rowToNewsArticle(
-  row: Record<string, unknown>,
-  symbolCsv: string | null,
-): NewsArticle {
+function rowToNewsArticle(row: Record<string, unknown>): NewsArticle {
   let extra: {
     tickerSentiment?: NewsArticle["tickerSentiment"];
     topics?: string[];
@@ -23,16 +20,7 @@ function rowToNewsArticle(
     extra = {};
   }
 
-  let tickerSentiment = extra.tickerSentiment ?? [];
-  if (tickerSentiment.length === 0 && symbolCsv) {
-    const syms = symbolCsv.split(",").filter(Boolean);
-    tickerSentiment = syms.map((t) => ({
-      ticker: t,
-      relevance: 1,
-      sentimentScore: 0,
-      sentimentLabel: "",
-    }));
-  }
+  const tickerSentiment = extra.tickerSentiment ?? [];
 
   return {
     title: String(row.title ?? ""),
@@ -129,12 +117,7 @@ export async function listPortfolioNewsForTickers(
   const out: NewsArticle[] = [];
   for (const row of res.rows) {
     const r = row as unknown as Record<string, unknown>;
-    out.push(
-      rowToNewsArticle(
-        r,
-        r.symbols != null ? String(r.symbols) : null,
-      ),
-    );
+    out.push(rowToNewsArticle(r));
   }
   return out;
 }

@@ -111,6 +111,7 @@ export default function AnalysisNarrativePanel({ data }: { data: CompanyAnalysis
                   <>
                     <strong>{t("companyAnalysisQuote")}:</strong>{" "}
                     {formatAnalysisNumber(report.alternative.price, language)}
+                    {report.quote?.currency ? ` ${report.quote.currency}` : ""}
                   </>
                 )}
                 {report.alternative.price != null && report.alternative.distanceTo52wHighPct != null

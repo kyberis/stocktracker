@@ -51,7 +51,7 @@ function labelColor(label: string): string {
 
 /* ── Main gauge (large) ───────────────────────────────────── */
 
-function HeroGauge({ score, percentile }: { score: number; percentile: number }) {
+function HeroGauge({ score }: { score: number }) {
   const { t } = useI18n();
   const r = 80;
   const cx = 100;
@@ -82,7 +82,7 @@ function HeroGauge({ score, percentile }: { score: number; percentile: number })
         </text>
       </svg>
       <p className="text-xs text-gray-500 dark:text-slate-500 -mt-1 text-center">
-        {t("portfolioScorePercentile").replace("{pct}", String(percentile))}
+        {t("portfolioScoreOutOfTen")}
       </p>
     </div>
   );
@@ -103,6 +103,9 @@ function CategoryCard({ category, data }: { category: string; data: CategoryScor
   const bgArc = describeArc(cx, cy, r, startAngle, endAngle);
   const fgArc = describeArc(cx, cy, r, startAngle, Math.min(scoreAngle, endAngle));
   const needsAttention = data.score <= 6;
+  const labelLooksStrong = /good|strong|excellent|solid|healthy/i.test(data.label || "");
+  const weaknessTitleKey =
+    needsAttention && !labelLooksStrong ? "portfolioScoreWhyLow" : "portfolioScoreWhatsDriving";
 
   const CATEGORY_KEYS: Record<string, string> = {
     diversification: "scoreCategory_diversification",
@@ -149,19 +152,25 @@ function CategoryCard({ category, data }: { category: string; data: CategoryScor
         </ul>
       )}
 
-      {/* Weaknesses — only for medium/low scores */}
-      {needsAttention && data.weaknesses && data.weaknesses.length > 0 && (
-        <div className="mt-3 p-3 rounded-lg bg-red-50/60 dark:bg-red-500/[0.06] border border-red-100 dark:border-red-500/10">
+      {/* Weaknesses — adapt title to badge (TRF-015) */}
+      {data.weaknesses && data.weaknesses.length > 0 && (needsAttention || !labelLooksStrong) && (
+        <div className={`mt-3 p-3 rounded-lg border ${
+          needsAttention && !labelLooksStrong
+            ? "bg-red-50/60 dark:bg-red-500/[0.06] border-red-100 dark:border-red-500/10"
+            : "bg-slate-50/60 dark:bg-slate-500/[0.06] border-slate-100 dark:border-slate-500/10"
+        }`}>
           <div className="flex items-center gap-1.5 mb-2">
-            <svg className="w-3.5 h-3.5 text-red-500 dark:text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className={`w-3.5 h-3.5 shrink-0 ${needsAttention && !labelLooksStrong ? "text-red-500" : "text-slate-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <span className="text-[11px] font-semibold text-red-700 dark:text-red-400">{t("portfolioScoreWhyLow")}</span>
+            <span className={`text-[11px] font-semibold ${needsAttention && !labelLooksStrong ? "text-red-700 dark:text-red-400" : "text-slate-700 dark:text-slate-300"}`}>
+              {t(weaknessTitleKey as never)}
+            </span>
           </div>
           <ul className="space-y-1.5">
             {data.weaknesses.map((w, i) => (
-              <li key={i} className="flex items-start gap-2 text-[11px] text-red-700/80 dark:text-red-400/80">
-                <span className="text-red-300 dark:text-red-600 mt-0.5 shrink-0">✕</span>
+              <li key={i} className={`flex items-start gap-2 text-[11px] ${needsAttention && !labelLooksStrong ? "text-red-700/80 dark:text-red-400/80" : "text-slate-600 dark:text-slate-400"}`}>
+                <span className="mt-0.5 shrink-0">•</span>
                 <span className="leading-relaxed">{w}</span>
               </li>
             ))}
@@ -549,7 +558,7 @@ export default function PortfolioScorePage() {
       {/* Hero section */}
       <div className="card p-6">
         <div className="flex flex-col sm:flex-row items-center gap-6">
-          <HeroGauge score={score.overallScore} percentile={score.percentile} />
+          <HeroGauge score={score.overallScore} />
           <div className="flex-1 text-center sm:text-left">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{t("portfolioScoreToolTitle")}</h2>
             {cachedAt && (
@@ -557,6 +566,11 @@ export default function PortfolioScorePage() {
                 {t("portfolioScoreCachedAt").replace("{time}",
                   new Date(cachedAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                 )}
+              </p>
+            )}
+            {cachedAt && Date.now() - Date.parse(cachedAt) > 14 * 24 * 60 * 60 * 1000 && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">
+                {t("portfolioScoreStaleWarning")}
               </p>
             )}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

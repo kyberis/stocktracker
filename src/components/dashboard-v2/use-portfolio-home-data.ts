@@ -3,7 +3,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
-import { computeDayChangeByType, computeDayChangeHeadline } from "@/lib/day-change-pct";
+import { computeDayChangeByType } from "@/lib/day-change-pct";
+import { getDayChange } from "@/lib/portfolio/metrics";
 import { convertCurrency } from "@/lib/utils";
 import type { Holding, CashEntry } from "@/lib/types";
 import type { AssetFilter } from "./AssetTypeFilter";
@@ -83,13 +84,13 @@ export function usePortfolioHomeData(
   const dayChangePctByType = dayChangeByType.pct;
 
   const { dayGainLoss, dayGainLossPercent } = useMemo(() => {
-    const headline = computeDayChangeHeadline(
+    const headline = getDayChange(
       filteredHoldings,
       quotes,
       exchangeRates,
       baseCurrency,
     );
-    return { dayGainLoss: headline.abs, dayGainLossPercent: headline.pct };
+    return { dayGainLoss: headline.amount, dayGainLossPercent: headline.pct };
   }, [filteredHoldings, quotes, exchangeRates, baseCurrency]);
 
   const handleBackfillComplete = useCallback(() => {

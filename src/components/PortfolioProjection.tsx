@@ -328,11 +328,13 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
               ) : goalYearInfo.reached ? (
                 <div>
                   <p className={`text-xs font-semibold ${goalYearInfo.withinHorizon ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
-                    {t("projGoalReachedExact").replace("{years}", String(goalYearInfo.years)).replace("{months}", String(goalYearInfo.months))}
+                    {goalYearInfo.withinHorizon
+                      ? t("projGoalReachedExact").replace("{years}", String(goalYearInfo.years)).replace("{months}", String(goalYearInfo.months))
+                      : `~${goalYearInfo.years}y`}
                   </p>
-                  {!goalYearInfo.withinHorizon && (yearlyContribution > 0 || reinvestDividends) && (
-                    <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
-                      {t("projGoalWithPlan")}
+                  {!goalYearInfo.withinHorizon && (
+                    <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-0.5">
+                      {t("projGoalBeyondHorizon").replace("{horizon}", String(horizon))}
                     </p>
                   )}
                   <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
@@ -457,8 +459,8 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
 
       {/* Chart */}
       {projectionData.length > 0 && (
-        <div className="mt-4" role="img" aria-label="Portfolio projection chart" style={{ aspectRatio: "2.8/1", maxHeight: "min(320px, 45vh)" }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <div className="mt-4" role="img" aria-label="Portfolio projection chart" style={{ minHeight: 240, maxHeight: "min(320px, 45vh)", aspectRatio: "2.8/1" }}>
+        <ResponsiveContainer width="100%" height="100%" minHeight={240}>
           <AreaChart data={projectionData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <defs>
               <linearGradient id="gradBase" x1="0" y1="0" x2="0" y2="1">

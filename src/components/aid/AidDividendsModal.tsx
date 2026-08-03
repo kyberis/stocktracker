@@ -144,13 +144,17 @@ export default function AidDividendsModal({
             <ul className="space-y-1.5 text-xs">
               {estimated
                 .slice()
-                .sort((a, b) => b.dividendYield - a.dividendYield)
+                .sort((a, b) => (b.dividendYield ?? -1) - (a.dividendYield ?? -1))
                 .slice(0, 8)
                 .map((row) => (
                   <li key={row.ticker} className="flex justify-between gap-2">
                     <span className="font-medium text-[color:var(--foreground)]">{row.ticker}</span>
                     <span className="tabular-nums text-[color:var(--muted)]">
-                      {stealthMode ? "•••" : formatPercent(row.dividendYield)}
+                      {stealthMode
+                        ? "•••"
+                        : row.dividendYield == null
+                          ? "—"
+                          : formatPercent(row.dividendYield)}
                     </span>
                   </li>
                 ))}

@@ -86,4 +86,56 @@ describe("computeDayChangeByType", () => {
     expect(headline.pct).toBe(byType.pct.all);
     expect(headline.abs).toBe(byType.abs.all);
   });
+
+  it("amount and pct satisfy TRF-003 invariant abs(pct - amount/(prior))", () => {
+    const holdings = [
+      holding("STK", "stock", 50, 200, 4, "NMS"),
+      holding("ETF", "etf", 20, 50, -1, "NMS"),
+      holding("GBP", "stock", 10, 100, 2, "LSE"),
+    ];
+    holdings[2]!.displayCurrency = "GBP";
+    const quotes: Record<string, QuoteData> = {
+      STK: quote("STK", 200, 4),
+      ETF: quote("ETF", 50, -1),
+      GBP: {
+        ...quote("GBP", 100, 2),
+        currency: "GBP",
+      },
+    };
+    const headline = computeDayChangeHeadline(holdings, quotes, EUR_RATES, "EUR", MARKET_NOW);
+    const prior = headline.abs / (headline.pct / 100);
+    const impliedPct = (headline.abs / prior) * 100;
+    expect(Math.abs(impliedPct - headline.pct)).toBeLessThan(0.0005);
+  });
+
+  it("excludes holdings without prevClose from both amount and pct", () => {
+    const holdings = [
+      holding("OK", "stock", 10, 100, 1, "NMS"),
+      holding("BAD", "stock", 10, 100, 0, "NMS"),
+    ];
+    const quotes: Record<string, QuoteData> = {
+      OK: quote("OK", 100, 1),
+      BAD: {
+        symbol: "BAD",
+        shortName: "BAD",
+        regularMarketPrice: 100,
+        regularMarketChange: undefined as unknown as number,
+        regularMarketChangePercent: 0,
+        currency: "USD",
+        regularMarketPreviousClose: 0,
+        fiftyTwoWeekHigh: 120,
+        fiftyTwoWeekLow: 80,
+      },
+    };
+    const headline = computeDayChangeHeadline(holdings, quotes, EUR_RATES, "EUR", MARKET_NOW);
+    const onlyOk = computeDayChangeHeadline(
+      [holdings[0]!],
+      { OK: quotes.OK },
+      EUR_RATES,
+      "EUR",
+      MARKET_NOW,
+    );
+    expect(headline.abs).toBeCloseTo(onlyOk.abs!, 4);
+    expect(headline.pct).toBeCloseTo(onlyOk.pct!, 4);
+  });
 });
