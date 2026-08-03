@@ -67,6 +67,7 @@ export function scoreDayHighlights(input: {
   };
 
   for (const h of input.holdings) {
+    if (!h.ticker) continue;
     const ticker = h.ticker.toUpperCase();
     const pct = h.changePercent;
     if (pct != null) {

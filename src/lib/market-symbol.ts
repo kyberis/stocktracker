@@ -27,9 +27,9 @@ const EXCHANGE_CODES = new Set([
  * True when the stored ticker is actually an exchange code (e.g. TDG + TDG → TDG.DE).
  * Common after broker imports that put the venue in the symbol field.
  */
-export function isTickerExchangeCollision(ticker: string, exchange: string): boolean {
+export function isTickerExchangeCollision(ticker: string, exchange: string | null | undefined): boolean {
   const t = ticker.trim().toUpperCase();
-  const ex = exchange.trim().toUpperCase();
+  const ex = (exchange ?? "").trim().toUpperCase();
   if (!t || !ex) return false;
 
   const base = baseTickerName(t).toUpperCase();
@@ -53,6 +53,17 @@ const YAHOO_SYMBOL_ALIASES: Record<string, string[]> = {
   "W9C.F": ["W9C.DE", "CSU.TO"],
   W9C: ["W9C.DE", "W9C.F", "CSU.TO"],
   "CSU.TO": ["W9C.DE", "W9C.F"],
+  // Novo Nordisk — Copenhagen / ADR (news tickers strip `.CO`)
+  "NOVO-B": ["NOVO-B.CO", "NVO"],
+  "NOVO-B.CO": ["NVO"],
+  NVO: ["NOVO-B.CO"],
+  // Nagarro Tradegate / Xetra
+  NA9: ["NA9.DE", "NA9.F"],
+  "NA9.DE": ["NA9.F"],
+  "NA9.F": ["NA9.DE"],
+  // Hysan / numeric HK bases after news-ticker strip
+  "215": ["0215.HK"],
+  "215.HK": ["0215.HK"],
 };
 
 /** Extra Yahoo symbols to try when `symbol` has no usable quote. */
@@ -83,15 +94,19 @@ export function toYahooFinanceQuoteUrl(
 }
 
 /** Yahoo-compatible symbol from bare ticker + exchange (no ISIN fallback). */
-export function yahooSymbolFromTickerExchange(ticker: string, exchange: string): string {
-  const ex = exchange.trim().toUpperCase();
+export function yahooSymbolFromTickerExchange(
+  ticker: string,
+  exchange: string | null | undefined,
+): string {
+  const rawExchange = exchange ?? "";
+  const ex = rawExchange.trim().toUpperCase();
   let symbol: string;
   if (ticker.includes(".")) {
     symbol = ticker;
   } else if (ex === "CRYPTO") {
     symbol = normalizeCryptoTicker(ticker);
   } else {
-    symbol = normalizeTickerForExchange(ticker, exchange);
+    symbol = normalizeTickerForExchange(ticker, rawExchange);
   }
 
   // Bare numeric + HKG → 0215.HK even if EXCHANGE_SUFFIX_MAP was missing
@@ -111,7 +126,7 @@ export function yahooSymbolFromTickerExchange(ticker: string, exchange: string):
  */
 export function marketDataSymbolForHolding(h: {
   ticker: string;
-  exchange: string;
+  exchange: string | null | undefined;
   isin?: string | null;
 }): string {
   const isin = (h.isin ?? "").trim();

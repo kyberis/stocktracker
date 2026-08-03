@@ -4,9 +4,7 @@ import { getUserSettings, listHoldings } from "@/lib/db";
 import { buildAidEarningsRecap } from "@/lib/aid/build-earnings-recap";
 import { canAccessAidData } from "@/lib/aid/can-access-aid-data";
 import { EARNINGS_REPORT_LOOKBACK_DAYS } from "@/lib/aid/earnings-keys";
-import { providerQuotesToQuoteMap } from "@/lib/aid/quotes-map";
-import { getQuotesWithCache } from "@/lib/quote-cache";
-import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
+import { fetchQuoteMapForHoldings } from "@/lib/holding-quotes";
 import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
 
@@ -25,9 +23,7 @@ export const GET = withMetrics("/api/aid/earnings-recap", async (req: NextReques
   const settings = await getUserSettings(session.userId);
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
   const holdings = await listHoldings(session.userId, portfolioId);
-  const tickers = derivePortfolioNewsTickersFromHoldings(holdings);
-  const providerQuotes = tickers.length > 0 ? await getQuotesWithCache(tickers) : {};
-  const quotes = providerQuotesToQuoteMap(providerQuotes);
+  const quotes = await fetchQuoteMapForHoldings(holdings);
 
   const { items } = await buildAidEarningsRecap({
     userId: session.userId,
