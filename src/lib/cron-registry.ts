@@ -105,7 +105,7 @@ export const CRON_REGISTRY: CronJob[] = [
     name: "portfolio-recommendations",
     path: "/api/cron/portfolio-recommendations",
     schedule: "0 7 * * 1",
-    description: "Weekly portfolio tip analysis for all users with ≥1 holding; cache Home recommendation queue",
+    description: "Weekly portfolio tip analysis for active non-test users (last_active within 30d, ≥1 holding); cache Home recommendation queue",
   },
   {
     name: "digest-email",

@@ -5,7 +5,7 @@ import {
   listCashEntries,
   listDistinctPortfolioIdsForUser,
   listHoldings,
-  listUserIdsWithHoldings,
+  listRecommendationCronCandidates,
   upsertRecommendationCache,
 } from "@/lib/db";
 import { currentRecommendationWeekKey } from "@/lib/db/portfolio-recommendations";
@@ -13,11 +13,14 @@ import { buildPortfolioRecommendations } from "@/lib/homepage/build-portfolio-re
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import { getQuotesWithCache, getRatesWithCache } from "@/lib/quote-cache";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
+import { isTestAccountEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const CONCURRENCY = 4;
+/** Skip users who have not been active for this many days. */
+const ACTIVE_WITHIN_DAYS = 30;
 
 async function processPortfolio(
   userId: string,
@@ -66,7 +69,17 @@ const runPortfolioRecommendations = withCronLogging(
   "portfolio-recommendations",
   async () => {
     const weekKey = currentRecommendationWeekKey();
-    const userIds = await listUserIdsWithHoldings();
+    const candidates = await listRecommendationCronCandidates(ACTIVE_WITHIN_DAYS);
+
+    let skippedTest = 0;
+    const userIds: string[] = [];
+    for (const c of candidates) {
+      if (isTestAccountEmail(c.email)) {
+        skippedTest += 1;
+        continue;
+      }
+      userIds.push(c.userId);
+    }
 
     let processed = 0;
     let emptied = 0;
@@ -96,11 +109,15 @@ const runPortfolioRecommendations = withCronLogging(
 
     return {
       weekKey,
+      candidates: candidates.length,
+      skippedTest,
+      skippedInactiveOrMissing: "filtered_in_sql",
       users: userIds.length,
       portfolios,
       processed,
       emptied,
       errors,
+      activeWithinDays: ACTIVE_WITHIN_DAYS,
     };
   },
 );

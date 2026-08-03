@@ -20,6 +20,11 @@ function isTestEmail(email: string): boolean {
   return isTreefolioTestEmail(email);
 }
 
+/** True for synthetic/E2E accounts that should not receive cron work or outbound mail. */
+export function isTestAccountEmail(email: string): boolean {
+  return isTestEmail(email);
+}
+
 const TREFOLIO_TEST_PREFIX = "test+";
 const TREFOLIO_TEST_DOMAIN = "trefolio.com";
 export const TEST_VERIFICATION_TOKEN = "trefolio-test-verify-000";

@@ -94,6 +94,7 @@ export {
   countHoldings,
   listDistinctHoldingTickers,
   listUserIdsWithHoldings,
+  listRecommendationCronCandidates,
   listDistinctPortfolioIdsForUser,
   listDistinctHoldingTickersForUser,
   batchUpdateValueInEur,

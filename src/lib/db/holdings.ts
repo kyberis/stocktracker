@@ -679,6 +679,31 @@ export async function listUserIdsWithHoldings(): Promise<string[]> {
   return result.rows.map((r) => str(r.user_id));
 }
 
+/**
+ * Users with ≥1 holding who are eligible for weekly recommendation cron:
+ * active within the last `activeWithinDays` (default 30) and not a test email.
+ */
+export async function listRecommendationCronCandidates(
+  activeWithinDays = 30,
+): Promise<Array<{ userId: string; email: string }>> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT DISTINCT h.user_id AS user_id, u.email AS email
+          FROM holdings h
+          INNER JOIN users u ON u.id = h.user_id
+          WHERE h.shares > 0
+            AND h.ticker != ''
+            AND u.last_active_at != ''
+            AND datetime(u.last_active_at) >= datetime('now', ?)
+          ORDER BY h.user_id`,
+    args: [`-${activeWithinDays} days`],
+  });
+  return result.rows.map((r) => ({
+    userId: str(r.user_id),
+    email: str(r.email),
+  }));
+}
+
 /** Non-empty portfolio IDs that have holdings for this user. */
 export async function listDistinctPortfolioIdsForUser(userId: string): Promise<string[]> {
   const client = await ensureInitialized();

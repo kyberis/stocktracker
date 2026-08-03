@@ -22,7 +22,7 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `trial-expiration` | `0 * * * *` | `/api/cron/trial-expiration` | Downgrade expired trial users to free and send expiration email |
 | `commerce-complimentary-renewal` | `0 2 * * *` | `/api/cron/commerce-complimentary-renewal` | Renew 30-day complimentary Trefolio Pro while commerce_enabled is off |
 | `weekly-digest` | `0 8 * * 1` | `/api/cron/weekly-digest` | Generate and send AI-powered weekly portfolio digest to Pro users every Monday |
-| `portfolio-recommendations` | `0 7 * * 1` | `/api/cron/portfolio-recommendations` | Weekly portfolio tip analysis for all users with ≥1 holding; cache Home recommendation queue |
+| `portfolio-recommendations` | `0 7 * * 1` | `/api/cron/portfolio-recommendations` | Weekly portfolio tip analysis for active non-test users (last_active within 30d, ≥1 holding); cache Home recommendation queue |
 | `digest-email` | **paused** (was `*/15 * * * *`) | `/api/cron/digest-email` | PAUSED — market digests no longer processed (was: poll Gmail, AI rewrite, store drafts) |
 | `moat-sync` | `0 */4 * * *` | `/api/cron/moat-sync` | Evaluate stale/missing moat scores for screener-universe stocks using Alpha Vantage fundamentals |
 | `compact-snapshots` | `0 4 * * *` | `/api/cron/compact-snapshots` | Compact old hourly portfolio snapshots into daily (and weekly) rows to bound storage |

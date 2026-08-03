@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.78",
+    date: "2026-08-03",
+    title: "Skip inactive and test users in tip cron",
+    titleTranslations: {
+      es: "El cron de tips omite inactivos y cuentas de test",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Weekly portfolio tip cron skips test emails and users inactive for 30+ days (or never active).",
+        translations: {
+          es: "El cron semanal de tips omite emails de test y usuarios inactivos 30+ días (o sin actividad registrada).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.77",
     date: "2026-08-03",
     title: "Manual portfolio tip analysis on Home",
