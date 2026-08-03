@@ -74,6 +74,8 @@ export async function resolveRecommendationQueue(args: {
   portfolioId?: string;
   /** Force live recompute and overwrite this week's cache (manual CTA / cron). */
   forceRefresh?: boolean;
+  /** When forceRefresh from user CTA, stamp last_manual_at for weekly cooldown. */
+  markManual?: boolean;
 }): Promise<RecommendationQueueResult> {
   const weekKey = currentRecommendationWeekKey();
   const portfolioKey = args.portfolioId || "";
@@ -97,7 +99,9 @@ export async function resolveRecommendationQueue(args: {
   }
 
   const queue = await computeLiveRecommendationQueue(args);
-  await upsertRecommendationCache(args.userId, portfolioKey, weekKey, queue);
+  await upsertRecommendationCache(args.userId, portfolioKey, weekKey, queue, {
+    markManual: !!args.forceRefresh && !!args.markManual,
+  });
 
   const active = filterRecommendationQueue(queue, dismissed);
   const current = active[0] ?? null;

@@ -786,4 +786,6 @@ export {
   getRecommendationCache,
   upsertRecommendationCache,
   currentRecommendationWeekKey,
+  getManualRefreshAvailability,
+  MANUAL_RECOMMENDATION_COOLDOWN_MS,
 } from "./portfolio-recommendations";

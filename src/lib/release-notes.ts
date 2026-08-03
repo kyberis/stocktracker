@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.79",
+    date: "2026-08-03",
+    title: "One manual tip analysis per week",
+    titleTranslations: {
+      es: "Un análisis manual de tips por semana",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Manual Run analysis on Home is limited to once every 7 days, enforced on the API (429) via last_manual_at — separate from the weekly cron.",
+        translations: {
+          es: "Ejecutar análisis en Home está limitado a una vez cada 7 días, con enforcement en la API (429) vía last_manual_at — independiente del cron semanal.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.78",
     date: "2026-08-03",
     title: "Skip inactive and test users in tip cron",

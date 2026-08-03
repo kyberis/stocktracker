@@ -4,6 +4,9 @@ import type { PortfolioRecommendation } from "@/lib/homepage/build-portfolio-rec
 
 export type RecommendationStatus = "skipped" | "acted";
 
+/** Manual "Run analysis" may run at most once per this window (backend-enforced). */
+export const MANUAL_RECOMMENDATION_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
 export interface PortfolioRecommendationStateRow {
   userId: string;
   recommendationKey: string;
@@ -17,6 +20,32 @@ export interface PortfolioRecommendationCacheRow {
   weekKey: string;
   queue: PortfolioRecommendation[];
   computedAt: string;
+  /** ISO timestamp of last user-triggered refresh; empty if never. */
+  lastManualAt: string;
+}
+
+export function getManualRefreshAvailability(lastManualAt: string | null | undefined): {
+  canManualRefresh: boolean;
+  nextManualRefreshAt: string | null;
+  cooldownRemainingMs: number;
+} {
+  if (!lastManualAt) {
+    return { canManualRefresh: true, nextManualRefreshAt: null, cooldownRemainingMs: 0 };
+  }
+  const ts = Date.parse(lastManualAt);
+  if (!Number.isFinite(ts)) {
+    return { canManualRefresh: true, nextManualRefreshAt: null, cooldownRemainingMs: 0 };
+  }
+  const elapsed = Date.now() - ts;
+  if (elapsed < 0 || elapsed >= MANUAL_RECOMMENDATION_COOLDOWN_MS) {
+    return { canManualRefresh: true, nextManualRefreshAt: null, cooldownRemainingMs: 0 };
+  }
+  const remaining = MANUAL_RECOMMENDATION_COOLDOWN_MS - elapsed;
+  return {
+    canManualRefresh: false,
+    nextManualRefreshAt: new Date(ts + MANUAL_RECOMMENDATION_COOLDOWN_MS).toISOString(),
+    cooldownRemainingMs: remaining,
+  };
 }
 
 export async function listRecommendationStates(
@@ -71,7 +100,7 @@ export async function getRecommendationCache(
 ): Promise<PortfolioRecommendationCacheRow | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: `SELECT user_id, portfolio_id, week_key, queue_json, computed_at
+    sql: `SELECT user_id, portfolio_id, week_key, queue_json, computed_at, last_manual_at
           FROM portfolio_recommendation_cache
           WHERE user_id = ? AND portfolio_id = ?`,
     args: [userId, portfolioId],
@@ -91,6 +120,7 @@ export async function getRecommendationCache(
     weekKey: str(row.week_key),
     queue,
     computedAt: str(row.computed_at),
+    lastManualAt: str(row.last_manual_at),
   };
 }
 
@@ -99,13 +129,29 @@ export async function upsertRecommendationCache(
   portfolioId: string,
   weekKey: string,
   queue: PortfolioRecommendation[],
+  opts?: { markManual?: boolean },
 ): Promise<void> {
   const client = await ensureInitialized();
   const now = new Date().toISOString();
+  if (opts?.markManual) {
+    await client.execute({
+      sql: `INSERT INTO portfolio_recommendation_cache
+              (user_id, portfolio_id, week_key, queue_json, computed_at, last_manual_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_id, portfolio_id) DO UPDATE SET
+              week_key = excluded.week_key,
+              queue_json = excluded.queue_json,
+              computed_at = excluded.computed_at,
+              last_manual_at = excluded.last_manual_at`,
+      args: [userId, portfolioId, weekKey, JSON.stringify(queue), now, now],
+    });
+    return;
+  }
+
   await client.execute({
     sql: `INSERT INTO portfolio_recommendation_cache
-            (user_id, portfolio_id, week_key, queue_json, computed_at)
-          VALUES (?, ?, ?, ?, ?)
+            (user_id, portfolio_id, week_key, queue_json, computed_at, last_manual_at)
+          VALUES (?, ?, ?, ?, ?, '')
           ON CONFLICT(user_id, portfolio_id) DO UPDATE SET
             week_key = excluded.week_key,
             queue_json = excluded.queue_json,

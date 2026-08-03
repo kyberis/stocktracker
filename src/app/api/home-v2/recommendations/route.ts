@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSession } from "@/lib/auth/guards";
 import {
   clearSkippedRecommendationStates,
+  getManualRefreshAvailability,
   getRecommendationCache,
   trackEvent,
   upsertRecommendationState,
@@ -13,8 +14,25 @@ import { json401 } from "@/lib/log-unauthorized";
 
 export const dynamic = "force-dynamic";
 
-/** Manual refresh cooldown (ms) — avoid hammering Yahoo/FX. */
-const MANUAL_REFRESH_COOLDOWN_MS = 60_000;
+async function withManualMeta(
+  userId: string,
+  portfolioId: string | undefined,
+  result: Awaited<ReturnType<typeof resolveRecommendationQueue>>,
+) {
+  const cached = await getRecommendationCache(userId, portfolioId || "");
+  const avail = getManualRefreshAvailability(cached?.lastManualAt);
+  return {
+    current: result.current,
+    remaining: result.remaining,
+    total: result.total,
+    queue: result.queue,
+    source: result.source,
+    weekKey: result.weekKey,
+    canManualRefresh: avail.canManualRefresh,
+    nextManualRefreshAt: avail.nextManualRefreshAt,
+    cooldownRemainingMs: avail.cooldownRemainingMs,
+  };
+}
 
 export const GET = withMetrics("/api/home-v2/recommendations", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -27,14 +45,7 @@ export const GET = withMetrics("/api/home-v2/recommendations", async (req: NextR
     portfolioId,
   });
 
-  return NextResponse.json({
-    current: result.current,
-    remaining: result.remaining,
-    total: result.total,
-    queue: result.queue,
-    source: result.source,
-    weekKey: result.weekKey,
-  });
+  return NextResponse.json(await withManualMeta(session.userId, portfolioId, result));
 });
 
 const postSchema = z.discriminatedUnion("action", [
@@ -73,25 +84,23 @@ export const POST = withMetrics("/api/home-v2/recommendations", async (req: Next
 
   if (parsed.data.action === "refresh") {
     const cached = await getRecommendationCache(session.userId, portfolioKey);
-    if (cached?.computedAt) {
-      const age = Date.now() - Date.parse(cached.computedAt);
-      if (Number.isFinite(age) && age >= 0 && age < MANUAL_REFRESH_COOLDOWN_MS) {
-        const result = await resolveRecommendationQueue({
-          userId: session.userId,
-          portfolioId,
-        });
-        return NextResponse.json({
-          ok: true,
+    const avail = getManualRefreshAvailability(cached?.lastManualAt);
+
+    if (!avail.canManualRefresh) {
+      const result = await resolveRecommendationQueue({
+        userId: session.userId,
+        portfolioId,
+      });
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "manual_refresh_cooldown",
           refreshed: false,
-          cooldownMs: MANUAL_REFRESH_COOLDOWN_MS - age,
-          current: result.current,
-          remaining: result.remaining,
-          total: result.total,
-          queue: result.queue,
-          source: result.source,
-          weekKey: result.weekKey,
-        });
-      }
+          ...await withManualMeta(session.userId, portfolioId, result),
+          cooldownMs: avail.cooldownRemainingMs,
+        },
+        { status: 429 },
+      );
     }
 
     await clearSkippedRecommendationStates(session.userId);
@@ -99,6 +108,7 @@ export const POST = withMetrics("/api/home-v2/recommendations", async (req: Next
       userId: session.userId,
       portfolioId,
       forceRefresh: true,
+      markManual: true,
     });
     void trackEvent(session.userId, "home_rec_manual_refresh", {
       portfolioId: portfolioKey,
@@ -108,12 +118,7 @@ export const POST = withMetrics("/api/home-v2/recommendations", async (req: Next
     return NextResponse.json({
       ok: true,
       refreshed: true,
-      current: result.current,
-      remaining: result.remaining,
-      total: result.total,
-      queue: result.queue,
-      source: result.source,
-      weekKey: result.weekKey,
+      ...await withManualMeta(session.userId, portfolioId, result),
     });
   }
 
@@ -130,11 +135,6 @@ export const POST = withMetrics("/api/home-v2/recommendations", async (req: Next
 
   return NextResponse.json({
     ok: true,
-    current: result.current,
-    remaining: result.remaining,
-    total: result.total,
-    queue: result.queue,
-    source: result.source,
-    weekKey: result.weekKey,
+    ...await withManualMeta(session.userId, portfolioId, result),
   });
 });

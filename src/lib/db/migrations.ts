@@ -3648,6 +3648,20 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 126,
+    description: "last_manual_at on portfolio recommendation cache (weekly manual cooldown)",
+    up: async (client: Client) => {
+      try {
+        await client.execute(
+          "ALTER TABLE portfolio_recommendation_cache ADD COLUMN last_manual_at TEXT NOT NULL DEFAULT ''",
+        );
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

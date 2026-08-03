@@ -13,6 +13,9 @@ type ApiPayload = {
   total: number;
   refreshed?: boolean;
   cooldownMs?: number;
+  canManualRefresh?: boolean;
+  nextManualRefreshAt?: string | null;
+  error?: string;
 };
 
 function interpolate(
@@ -39,6 +42,17 @@ export default function HomeRecommendationCard() {
     ? `?portfolioId=${encodeURIComponent(activePortfolioId)}`
     : "";
 
+  const applyPayload = useCallback((json: ApiPayload) => {
+    setData({
+      current: json.current,
+      remaining: json.remaining,
+      total: json.total,
+      canManualRefresh: json.canManualRefresh !== false,
+      nextManualRefreshAt: json.nextManualRefreshAt ?? null,
+      cooldownMs: json.cooldownMs,
+    });
+  }, []);
+
   const load = useCallback(async () => {
     if (demoMode || holdings.length === 0) {
       setData(null);
@@ -52,20 +66,20 @@ export default function HomeRecommendationCard() {
         setData(null);
         return;
       }
-      const json = (await res.json()) as ApiPayload;
-      setData(json);
+      applyPayload((await res.json()) as ApiPayload);
     } catch {
       setData(null);
     } finally {
       setLoading(false);
     }
-  }, [demoMode, holdings.length, qs]);
+  }, [applyPayload, demoMode, holdings.length, qs]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   const current = data?.current ?? null;
+  const canManualRefresh = data?.canManualRefresh !== false;
 
   useEffect(() => {
     if (!current?.key || viewedKey.current === current.key) return;
@@ -84,12 +98,7 @@ export default function HomeRecommendationCard() {
         body: JSON.stringify({ key: current.key, action }),
       });
       if (!res.ok) return;
-      const json = (await res.json()) as ApiPayload;
-      setData({
-        current: json.current,
-        remaining: json.remaining,
-        total: json.total,
-      });
+      applyPayload((await res.json()) as ApiPayload);
       track(action === "acted" ? "home_rec_acted" : "home_rec_next", {
         kind: current.kind,
         key: current.key,
@@ -100,7 +109,7 @@ export default function HomeRecommendationCard() {
   }
 
   async function runAnalysis() {
-    if (refreshing || busy || demoMode || holdings.length === 0) return;
+    if (refreshing || busy || demoMode || holdings.length === 0 || !canManualRefresh) return;
     setRefreshing(true);
     setStatusMsg(null);
     try {
@@ -109,23 +118,17 @@ export default function HomeRecommendationCard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "refresh" }),
       });
-      if (!res.ok) {
-        setStatusMsg(t("homeRecRefreshError"));
-        return;
-      }
       const json = (await res.json()) as ApiPayload;
-      setData({
-        current: json.current,
-        remaining: json.remaining,
-        total: json.total,
-      });
+      applyPayload(json);
       viewedKey.current = null;
       track("home_rec_manual_refresh", {
-        refreshed: json.refreshed === false ? "cooldown" : "ok",
+        refreshed: res.status === 429 || json.refreshed === false ? "cooldown" : "ok",
         total: String(json.total ?? 0),
       });
-      if (json.refreshed === false) {
+      if (res.status === 429 || json.refreshed === false || json.error === "manual_refresh_cooldown") {
         setStatusMsg(t("homeRecRefreshCooldownoldown"));
+      } else if (!res.ok) {
+        setStatusMsg(t("homeRecRefreshError"));
       } else if (!json.current) {
         setStatusMsg(t("homeRecRefreshEmpty"));
       } else {
@@ -144,16 +147,20 @@ export default function HomeRecommendationCard() {
   const refreshButton = (
     <button
       type="button"
-      disabled={refreshing || busy}
+      disabled={refreshing || busy || !canManualRefresh}
       onClick={() => void runAnalysis()}
       aria-busy={refreshing}
+      title={!canManualRefresh ? t("homeRecRefreshCooldownoldown") : undefined}
       className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--border)] px-4 text-sm font-semibold text-[color:var(--muted)] hover:text-[color:var(--foreground)] disabled:opacity-60"
     >
-      {refreshing ? t("homeRecRefreshing") : t("homeRecRunAnalysis")}
+      {refreshing
+        ? t("homeRecRefreshing")
+        : !canManualRefresh
+          ? t("homeRecRunAnalysisLocked")
+          : t("homeRecRunAnalysis")}
     </button>
   );
 
-  // Empty queue: still show compact CTA so users can re-run analysis
   if (!current) {
     return (
       <section
