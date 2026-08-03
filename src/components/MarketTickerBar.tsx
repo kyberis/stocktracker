@@ -161,22 +161,28 @@ export default function MarketTickerBar({ demoMode = false }: Props) {
   const contentProps = { eurUsd, btcPriceUsd, btcChange24h, gold, silver, sp500, oil, markets, t };
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLSpanElement>(null);
-  const [needsDuplicate, setNeedsDuplicate] = useState(true);
+  const [needsDuplicate, setNeedsDuplicate] = useState(false);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
     const measure = measureRef.current;
     if (!container || !measure) return;
+
+    let raf = 0;
     const update = () => {
-      // TRF-023: only duplicate the strip when content overflows the viewport width.
-      setNeedsDuplicate(measure.scrollWidth > container.clientWidth + 4);
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        // TRF-023: only duplicate when a single strip overflows the viewport.
+        const next = measure.scrollWidth > container.clientWidth + 4;
+        setNeedsDuplicate((prev) => (prev === next ? prev : next));
+      });
     };
     update();
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
     ro?.observe(container);
-    ro?.observe(measure);
     window.addEventListener("resize", update);
     return () => {
+      cancelAnimationFrame(raf);
       ro?.disconnect();
       window.removeEventListener("resize", update);
     };
