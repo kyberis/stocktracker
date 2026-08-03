@@ -139,31 +139,17 @@ export default function MarketTickerBar({ demoMode = false }: Props) {
   const { t } = useI18n();
   const { eurUsd, btcPriceUsd, btcChange24h, gold, silver, sp500, oil, loading } = useTickerBar(demoMode);
   const [markets, setMarkets] = useState<TickerMarketStatus[]>(() => getTickerMarketStatuses());
+  const containerRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const [needsDuplicate, setNeedsDuplicate] = useState(false);
 
   useEffect(() => {
     const id = window.setInterval(() => setMarkets(getTickerMarketStatuses()), 60_000);
     return () => window.clearInterval(id);
   }, []);
 
-  // Prefer aria-label over role="marquee" (deprecated / often ignored by AT).
-  if (loading) {
-    return (
-      <div
-        className="bg-slate-950 dark:bg-black border-b border-slate-800 sticky top-0 z-50 safe-area-top"
-        aria-label={t("tickerMarketLabel")}
-        aria-busy="true"
-      >
-        <div className="h-7" />
-      </div>
-    );
-  }
-
-  const contentProps = { eurUsd, btcPriceUsd, btcChange24h, gold, silver, sp500, oil, markets, t };
-  const containerRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLSpanElement>(null);
-  const [needsDuplicate, setNeedsDuplicate] = useState(false);
-
   useLayoutEffect(() => {
+    if (loading) return;
     const container = containerRef.current;
     const measure = measureRef.current;
     if (!container || !measure) return;
@@ -186,7 +172,22 @@ export default function MarketTickerBar({ demoMode = false }: Props) {
       ro?.disconnect();
       window.removeEventListener("resize", update);
     };
-  }, [eurUsd, btcPriceUsd, gold, silver, sp500, oil, markets]);
+  }, [loading, eurUsd, btcPriceUsd, gold, silver, sp500, oil, markets]);
+
+  // Prefer aria-label over role="marquee" (deprecated / often ignored by AT).
+  if (loading) {
+    return (
+      <div
+        className="bg-slate-950 dark:bg-black border-b border-slate-800 sticky top-0 z-50 safe-area-top"
+        aria-label={t("tickerMarketLabel")}
+        aria-busy="true"
+      >
+        <div className="h-7" />
+      </div>
+    );
+  }
+
+  const contentProps = { eurUsd, btcPriceUsd, btcChange24h, gold, silver, sp500, oil, markets, t };
 
   return (
     <div
