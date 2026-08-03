@@ -8,6 +8,7 @@ import {
   resolveMatrixAssetKeys,
 } from "./portfolio-performance-matrix";
 import type { SnapshotHistoryPoint } from "./portfolio-performance-matrix";
+import type { Transaction } from "./types";
 
 const SNAPSHOTS: SnapshotHistoryPoint[] = [
   {
@@ -68,6 +69,9 @@ describe("buildMatrixFromSnapshots", () => {
       isPro: true,
       displayMode: "percent",
       assetKeys: ["all"],
+      transactions: [],
+      exchangeRates: {},
+      baseCurrency: "EUR",
     });
     expect(rows).toHaveLength(1);
     expect(rows[0].cells.today.kind).toBe("percent");
@@ -85,9 +89,117 @@ describe("buildMatrixFromSnapshots", () => {
       isPro: false,
       displayMode: "percent",
       assetKeys: ["all"],
+      transactions: [],
+      exchangeRates: {},
+      baseCurrency: "EUR",
     });
     expect(rows[0].cells.threeYear.kind).toBe("pro");
     expect(rows[0].cells.oneWeek.kind).toBe("percent");
+  });
+});
+
+describe("buildMatrixFromSnapshots flow-adjusted return (TRF-028)", () => {
+  it("attributes a mid-year ETF sale as an outflow, not a crash", () => {
+    // Reproduces the REQ doc's scenario: an ETF-class snapshot of €1200 at
+    // the YTD anchor, a €650 sale mid-year (ISOE.DE-shaped), and €550 left
+    // in the class today. Naive (end-start)/start reads this as a ~-54%
+    // "loss" — the exact class of distortion TRF-028 reported.
+    const now = new Date("2026-08-03T00:00:00Z");
+    const snapshots: SnapshotHistoryPoint[] = [
+      {
+        date: "2025-12-01",
+        value: 12000,
+        invested: 11000,
+        stockValue: 9000,
+        etfValue: 1200,
+        fundValue: 0,
+        cryptoValue: 1800,
+      },
+    ];
+    const sellEtf: Transaction = {
+      id: "tx-etf-sell",
+      holdingId: "h-etf",
+      ticker: "ISOE.DE",
+      assetType: "etf",
+      type: "sell",
+      date: "2026-06-26",
+      shares: 10,
+      pricePerShare: 65,
+      totalAmount: 650,
+      fees: 0,
+      taxes: 0,
+      currency: "EUR",
+      notes: "",
+      createdAt: "2026-06-26",
+    };
+
+    const rows = buildMatrixFromSnapshots({
+      snapshots,
+      currentByAsset: { etf: 550 },
+      dayPctByAsset: {},
+      dayAbsByAsset: {},
+      isPro: true,
+      displayMode: "percent",
+      assetKeys: ["etf"],
+      transactions: [sellEtf],
+      exchangeRates: {},
+      baseCurrency: "EUR",
+      now,
+    });
+
+    const naiveYtd = ((550 - 1200) / 1200) * 100;
+    expect(naiveYtd).toBeLessThan(-50); // confirms the fixture reproduces the distortion
+
+    const ytdCell = rows[0].cells.ytd;
+    expect(ytdCell.kind).toBe("percent");
+    expect(ytdCell.value).toBeGreaterThan(naiveYtd + 20); // materially less negative than naive
+    expect(ytdCell.value).toBeCloseTo(0, 0); // hand-computed: ~0%, see performance.test.ts for the isolated formula check
+  });
+
+  it("does not disturb a class with no transactions in the window", () => {
+    const now = new Date("2026-08-03T00:00:00Z");
+    const snapshots: SnapshotHistoryPoint[] = [
+      {
+        date: "2025-12-01",
+        value: 12000,
+        invested: 11000,
+        stockValue: 9000,
+        etfValue: 1000,
+        fundValue: 0,
+        cryptoValue: 1800,
+      },
+    ];
+    const rows = buildMatrixFromSnapshots({
+      snapshots,
+      currentByAsset: { etf: 1100 },
+      dayPctByAsset: {},
+      dayAbsByAsset: {},
+      isPro: true,
+      displayMode: "percent",
+      assetKeys: ["etf"],
+      transactions: [],
+      exchangeRates: {},
+      baseCurrency: "EUR",
+      now,
+    });
+    expect(rows[0].cells.ytd.kind).toBe("percent");
+    expect(rows[0].cells.ytd.value).toBeCloseTo(10, 6); // unchanged from the naive (1100-1000)/1000
+  });
+
+  it("degrades to empty when no snapshot exists at the period start", () => {
+    const rows = buildMatrixFromSnapshots({
+      snapshots: [],
+      currentByAsset: { etf: 550 },
+      dayPctByAsset: {},
+      dayAbsByAsset: {},
+      isPro: true,
+      displayMode: "percent",
+      assetKeys: ["etf"],
+      transactions: [],
+      exchangeRates: {},
+      baseCurrency: "EUR",
+    });
+    expect(rows[0].cells.ytd.kind).toBe("empty");
   });
 });
 

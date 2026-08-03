@@ -14,7 +14,7 @@ import {
   type SnapshotHistoryPoint,
 } from "@/lib/portfolio-performance-matrix";
 import type { HoldingSeriesEntry } from "@/lib/performance";
-import type { HistoricalDataPoint, Holding, CashEntry } from "@/lib/types";
+import type { HistoricalDataPoint, Holding, CashEntry, Transaction } from "@/lib/types";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import demoMatrix from "../../data/demo-performance-matrix.json";
 
@@ -40,6 +40,7 @@ export function usePortfolioPerformanceMatrix({
 
   const [loading, setLoading] = useState(!demoMode);
   const [snapshots, setSnapshots] = useState<SnapshotHistoryPoint[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [displayMode, setDisplayMode] = useState<"percent" | "currency">("percent");
 
   const byType = useMemo(
@@ -99,6 +100,17 @@ export function usePortfolioPerformanceMatrix({
     return (data.points ?? []) as SnapshotHistoryPoint[];
   }, [activePortfolioId]);
 
+  /** Flow-adjusted return inputs (TRF-028) — scoped to the active portfolio
+   * when one is selected, or all of the user's transactions for the
+   * aggregated "all portfolios" view. */
+  const fetchTransactions = useCallback(async () => {
+    const params = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+    const res = await fetchWithAuthRedirect(`/api/transactions${params}`, { credentials: "include" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (Array.isArray(data) ? data : (data.transactions ?? [])) as Transaction[];
+  }, [activePortfolioId]);
+
   useEffect(() => {
     if (demoMode) {
       setLoading(false);
@@ -106,6 +118,7 @@ export function usePortfolioPerformanceMatrix({
     }
     if (holdings.length === 0) {
       setSnapshots([]);
+      setTransactions([]);
       setLoading(false);
       return;
     }
@@ -115,14 +128,19 @@ export function usePortfolioPerformanceMatrix({
     const load = async () => {
       setLoading(true);
       try {
-        if (activePortfolioId) {
-          const pts = await fetchSnapshots();
-          if (!cancelled) setSnapshots(pts);
-        } else {
-          if (!cancelled) setSnapshots([]);
+        const [pts, txs] = await Promise.all([
+          activePortfolioId ? fetchSnapshots() : Promise.resolve([]),
+          fetchTransactions(),
+        ]);
+        if (!cancelled) {
+          setSnapshots(pts);
+          setTransactions(txs);
         }
       } catch {
-        if (!cancelled) setSnapshots([]);
+        if (!cancelled) {
+          setSnapshots([]);
+          setTransactions([]);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -132,7 +150,7 @@ export function usePortfolioPerformanceMatrix({
     return () => {
       cancelled = true;
     };
-  }, [activePortfolioId, holdings.length, refreshKey, demoMode, fetchSnapshots]);
+  }, [activePortfolioId, holdings.length, refreshKey, demoMode, fetchSnapshots, fetchTransactions]);
 
   const [historicalRows, setHistoricalRows] = useState<MatrixRow[] | null>(null);
 
@@ -165,6 +183,7 @@ export function usePortfolioPerformanceMatrix({
           isPro,
           displayMode,
           assetKeys,
+          transactions,
         });
         setHistoricalRows(rows);
       } catch {
@@ -192,6 +211,7 @@ export function usePortfolioPerformanceMatrix({
     refreshKey,
     demoMode,
     fetchHistorical,
+    transactions,
   ]);
 
   const rows: MatrixRow[] = useMemo(() => {
@@ -212,6 +232,9 @@ export function usePortfolioPerformanceMatrix({
       isPro,
       displayMode,
       assetKeys,
+      transactions,
+      exchangeRates,
+      baseCurrency,
     });
   }, [
     demoMode,
@@ -224,6 +247,9 @@ export function usePortfolioPerformanceMatrix({
     isPro,
     displayMode,
     assetKeys,
+    transactions,
+    exchangeRates,
+    baseCurrency,
   ]);
 
   return {

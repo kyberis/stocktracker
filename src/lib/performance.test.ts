@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { calculateTTWROR, calculateXIRR, buildXIRRCashFlows } from "./performance";
+import {
+  calculateTTWROR,
+  calculateXIRR,
+  buildXIRRCashFlows,
+  calculateWindowedModifiedDietzReturn,
+} from "./performance";
 import type { Transaction, ExchangeRates } from "./types";
 
 function makeTx(overrides: Partial<Transaction>): Transaction {
@@ -189,5 +194,71 @@ describe("calculateTTWROR fallback", () => {
     const result = calculateTTWROR(txs, currentValue, totalInvested, RATES);
     const simpleReturn = ((currentValue - totalInvested) / totalInvested) * 100;
     expect(result).toBeCloseTo(simpleReturn, 2);
+  });
+});
+
+describe("calculateWindowedModifiedDietzReturn (TRF-028)", () => {
+  it("attributes a mid-period sell as an outflow, not a loss — hand-computed", () => {
+    // 10-day window. €1000 at start. Sell €500 on day 5 (weight 0.5 of the
+    // window remains after the flow). Ends at €550.
+    // R = (Vend − Vstart − CF) / (Vstart + Σ w·cf)
+    //   CF = −500 (sell = outflow from this bucket)
+    //   Σ w·cf = 0.5 × −500 = −250
+    //   R = (550 − 1000 − (−500)) / (1000 + (−250)) = 50 / 750 = 6.666...%
+    const txs = [
+      makeTx({ type: "sell", date: "2026-01-06", totalAmount: 500, fees: 0, taxes: 0, currency: "EUR" }),
+    ];
+    const result = calculateWindowedModifiedDietzReturn(1000, 550, txs, "2026-01-01", "2026-01-11", RATES, "EUR");
+    expect(result).toBeCloseTo((50 / 750) * 100, 6);
+    expect(result).toBeCloseTo(6.6667, 3);
+
+    // The naive (end − start) / start a sale-blind calc would show for the
+    // same inputs — this is exactly the -85%-style distortion TRF-028
+    // reported. Dietz must land far from it here, not reproduce it.
+    const naive = ((550 - 1000) / 1000) * 100;
+    expect(naive).toBeCloseTo(-45, 6);
+    expect(result).not.toBeCloseTo(naive, 0);
+  });
+
+  it("matches the simple return when there are no flows in the window", () => {
+    const result = calculateWindowedModifiedDietzReturn(1000, 1100, [], "2026-01-01", "2026-01-11", RATES, "EUR");
+    expect(result).toBeCloseTo(10, 6);
+  });
+
+  it("ignores flows outside the window", () => {
+    const txs = [
+      makeTx({ type: "sell", date: "2025-06-01", totalAmount: 500 }), // before the window
+      makeTx({ id: "tx-2", type: "buy", date: "2026-06-01", totalAmount: 500 }), // after the window
+    ];
+    const result = calculateWindowedModifiedDietzReturn(1000, 1100, txs, "2026-01-01", "2026-01-11", RATES, "EUR");
+    expect(result).toBeCloseTo(10, 6); // unaffected — same as the no-flows case
+  });
+
+  it("returns null when valueAtStart is unavailable (must degrade to —, never 0%)", () => {
+    expect(calculateWindowedModifiedDietzReturn(null, 1100, [], "2026-01-01", "2026-01-11", RATES)).toBeNull();
+    expect(calculateWindowedModifiedDietzReturn(0, 1100, [], "2026-01-01", "2026-01-11", RATES)).toBeNull();
+    expect(calculateWindowedModifiedDietzReturn(-5, 1100, [], "2026-01-01", "2026-01-11", RATES)).toBeNull();
+  });
+
+  it("returns null when the weighted denominator collapses to ~0", () => {
+    // A same-day full liquidation right at period start can zero the
+    // denominator (Vstart + weight≈1 × −Vstart ≈ 0) — no honest rate exists.
+    const txs = [makeTx({ type: "sell", date: "2026-01-01", totalAmount: 1000 })];
+    const result = calculateWindowedModifiedDietzReturn(1000, 0, txs, "2026-01-01", "2026-01-11", RATES, "EUR");
+    expect(result).toBeNull();
+  });
+
+  it("converts non-EUR flows via the stored historical rate, like calculateTTWROR", () => {
+    const txs = [
+      makeTx({
+        type: "sell",
+        date: "2026-01-06",
+        totalAmount: 550,
+        currency: "USD",
+        exchangeRateEur: 1.10, // 550 USD / 1.10 = 500 EUR
+      }),
+    ];
+    const result = calculateWindowedModifiedDietzReturn(1000, 550, txs, "2026-01-01", "2026-01-11", RATES, "EUR");
+    expect(result).toBeCloseTo((50 / 750) * 100, 3); // identical to the EUR fixture above
   });
 });

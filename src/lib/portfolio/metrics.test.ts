@@ -94,11 +94,13 @@ describe("getDividendYield investedTotal (TRF-004-B)", () => {
 
     // Correct call shape (/tools/dividends, and Home after the fix): no override.
     const correct = getDividendYield(holdings, quotes, exchangeRates, "EUR");
-    expect(correct).toBeCloseTo(5, 1); // 10 shares * €5/share = €50 / €1000 invested = 5%
+    expect(correct).not.toBeNull();
+    expect(correct as number).toBeCloseTo(5, 1); // 10 shares * €5/share = €50 / €1000 invested = 5%
 
     // Buggy call shape (Home before the fix): net worth passed as investedTotal.
     const buggy = getDividendYield(holdings, quotes, exchangeRates, "EUR", totals.netWorth);
-    expect(buggy).toBeCloseTo(2.5, 1); // diluted by the €1000 of cash in the denominator
-    expect(buggy).not.toBeCloseTo(correct, 1);
+    expect(buggy).not.toBeNull();
+    expect(buggy as number).toBeCloseTo(2.5, 1); // diluted by the €1000 of cash in the denominator
+    expect(buggy as number).not.toBeCloseTo(correct as number, 1);
   });
 });

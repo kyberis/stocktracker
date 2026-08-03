@@ -267,6 +267,11 @@ export function calculatePortfolioValueOnDate(
 /**
  * Simple period return: (end - start) / start * 100.
  * Returns null when startValue <= 0 or invalid.
+ *
+ * Does not account for cash flows within the period — selling a position
+ * (or moving money to/from another asset class) shows up as a "loss" here
+ * even when nothing lost value; see calculateWindowedModifiedDietzReturn
+ * for the flow-adjusted alternative (TRF-028).
  */
 export function calculatePeriodReturn(
   currentValueEUR: number,
@@ -274,6 +279,85 @@ export function calculatePeriodReturn(
 ): number | null {
   if (valueOnDateEUR <= 0 || !Number.isFinite(currentValueEUR)) return null;
   return ((currentValueEUR - valueOnDateEUR) / valueOnDateEUR) * 100;
+}
+
+/**
+ * Modified Dietz return for an arbitrary [periodStart, periodEnd] window,
+ * per asset-class bucket (TRF-028).
+ *
+ * Deliberately NOT a generalization of calculateTTWROR above: that function
+ * is anchored to "since first transaction" → "today" and backs the
+ * whole-portfolio TTWROR metric protected by non-regression item #8: reusing
+ * it here would mean re-proving its empty-tx / near-zero-denominator /
+ * divergence-clamp branches are preserved for a second, differently-shaped
+ * caller. This duplicates the day-weighting math instead of sharing it.
+ *
+ * A sale within the window is treated as an outflow *from this bucket*
+ * (Transaction.assetType), not a loss — the bug this fixes is exactly that
+ * naive (end − start) / start reads "money left the ETF bucket" as "ETFs
+ * crashed". Buying another asset class with the proceeds is correctly
+ * invisible here: this is a segment/sleeve return, not a portfolio-level one.
+ *
+ * Known limitations (documented, not solved here):
+ * - Assumes valueAtStart, valueAtEnd, and each flow's amount are already in
+ *   the same currency basis. valueAtStart typically comes from a stored EUR
+ *   snapshot, valueAtEnd from live quotes+FX, and flows from each
+ *   transaction's stored exchangeRateEur — for a single-currency (EUR)
+ *   portfolio these agree; a multi-currency portfolio can misattribute part
+ *   of an FX move as return.
+ * - moveHoldingToPortfolio reparents a holding's full transaction history to
+ *   its new portfolio without recording a transfer event, so a moved
+ *   holding's pre-move transactions appear as this portfolio's own flows.
+ *
+ * Returns null (render "—", never a number) when valueAtStart is
+ * unavailable/non-positive or the weighted denominator is ~0 — there is no
+ * mathematically honest return to show in either case.
+ */
+export function calculateWindowedModifiedDietzReturn(
+  valueAtStart: number | null,
+  valueAtEnd: number,
+  transactions: Transaction[],
+  periodStart: string,
+  periodEnd: string,
+  exchangeRates: ExchangeRates,
+  baseCurrency: string = "EUR"
+): number | null {
+  if (valueAtStart == null || !Number.isFinite(valueAtStart) || valueAtStart <= 0) return null;
+  if (!Number.isFinite(valueAtEnd)) return null;
+
+  const startMs = new Date(periodStart).getTime();
+  const endMs = new Date(periodEnd).getTime();
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
+  const totalDays = (endMs - startMs) / 86400000;
+
+  const flows = transactions
+    .filter((t) => t.type === "buy" || t.type === "sell")
+    .filter((t) => t.date >= periodStart.slice(0, 10) && t.date <= periodEnd.slice(0, 10));
+
+  let netCashFlow = 0;
+  let weightedCashFlow = 0;
+
+  for (const tx of flows) {
+    const amount = txAmountToBase(tx.totalAmount, tx, baseCurrency, exchangeRates);
+    const fees = txAmountToBase(tx.fees || 0, tx, baseCurrency, exchangeRates);
+    const taxes = txAmountToBase(tx.taxes || 0, tx, baseCurrency, exchangeRates);
+
+    const flow = tx.type === "buy" ? amount + fees + taxes : -(amount - fees - taxes);
+
+    const txMs = new Date(tx.date).getTime();
+    const daysSinceStart = Math.min(Math.max((txMs - startMs) / 86400000, 0), totalDays);
+    const weight = (totalDays - daysSinceStart) / totalDays;
+
+    netCashFlow += flow;
+    weightedCashFlow += weight * flow;
+  }
+
+  const denominator = valueAtStart + weightedCashFlow;
+  if (Math.abs(denominator) < 0.01) return null;
+
+  const result = ((valueAtEnd - valueAtStart - netCashFlow) / denominator) * 100;
+  if (!Number.isFinite(result)) return null;
+  return result;
 }
 
 /**
