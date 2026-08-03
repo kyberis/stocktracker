@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
@@ -11,6 +11,7 @@ import {
   computeEstimatedYield,
 } from "@/lib/services/dividend-calculator";
 import { computeDividendYieldByAssetType } from "@/lib/aid/dividends-by-type";
+import { useUpcomingExDividends } from "@/hooks/use-upcoming-ex-dividends";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import AidModalShell from "./AidModalShell";
 
@@ -41,25 +42,13 @@ export default function AidDividendsModal({
     () => computeDividendYieldByAssetType(holdings, quotes, exchangeRates),
     [holdings, quotes, exchangeRates],
   );
-  const [upcoming, setUpcoming] = useState<Array<{ ticker: string; exDate: string }>>([]);
-
-  useEffect(() => {
-    if (!open || tab !== "upcoming") return;
-    const tickers = [...new Set(holdings.map((h) => h.ticker))].join(",");
-    if (!tickers) return;
-    fetch(`/api/ex-dividend?tickers=${encodeURIComponent(tickers)}`)
-      .then((r) => (r.ok ? r.json() : { events: [] }))
-      .then((data) => {
-        const events = Array.isArray(data.events) ? data.events : [];
-        setUpcoming(
-          events.slice(0, 8).map((ev: { symbol?: string; ticker?: string; date?: string; exDate?: string }) => ({
-            ticker: ev.symbol ?? ev.ticker ?? "—",
-            exDate: ev.date ?? ev.exDate ?? "—",
-          })),
-        );
-      })
-      .catch(() => setUpcoming([]));
-  }, [open, tab, holdings]);
+  // Same hook /tools/events and /tools/dividends use (TRF-004-B / TRF-026) —
+  // one dedupe+fetch implementation instead of a third divergent copy.
+  const { events: exDivEvents } = useUpcomingExDividends(open && tab === "upcoming" ? holdings : []);
+  const upcoming = useMemo(
+    () => exDivEvents.slice(0, 8).map((ev) => ({ ticker: ev.symbol, exDate: ev.exDividendDate })),
+    [exDivEvents],
+  );
 
   const tabs: { id: DivTab; label: string }[] = [
     { id: "month", label: t("aidDivThisMonth") },

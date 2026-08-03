@@ -1,36 +1,16 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { convertToEUR, formatCurrency } from "@/lib/utils";
-import type { DividendEvent } from "@/lib/api-providers/types";
+import { useUpcomingExDividends } from "@/hooks/use-upcoming-ex-dividends";
 
 export default function ExDividendCalendar() {
   const { t } = useI18n();
   const { holdings, exchangeRates } = usePortfolio();
-  const [events, setEvents] = useState<DividendEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { events, loading, error } = useUpcomingExDividends(holdings);
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
-
-  const tickers = useMemo(
-    () => [...new Set(holdings.map((h) => h.ticker))].join(","),
-    [holdings]
-  );
-
-  useEffect(() => {
-    if (!tickers) { setLoading(false); return; }
-    setLoading(true);
-    setError(false);
-    fetch(`/api/ex-dividend?tickers=${encodeURIComponent(tickers)}`)
-      .then((r) => r.ok ? r.json() : Promise.reject())
-      .then((data) => {
-        setEvents(Array.isArray(data.events) ? data.events : []);
-        setLoading(false);
-      })
-      .catch(() => { setError(true); setLoading(false); });
-  }, [tickers]);
 
   // Build shares map for Est. Total calculation
   const sharesMap = useMemo(() => {

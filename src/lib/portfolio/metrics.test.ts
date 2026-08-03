@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { clampDividendYieldPct, sanitizePe, sanitizePrice, sanitizeTtwror } from "./sanity";
 import { parseLocaleNumber } from "./locale-number";
 import { driftTone } from "./drift-tone";
+import { getDividendYield, getPortfolioTotal } from "./metrics";
+import type { CashEntry, Holding, QuoteData } from "@/lib/types";
 
 describe("portfolio sanity (TRF-102)", () => {
   it("clamps yield above 15% to null", () => {
@@ -46,5 +48,59 @@ describe("driftTone (TRF-005)", () => {
     expect(driftTone(18.6)).toBe("over");
     expect(driftTone(-15)).toBe("under");
     expect(driftTone(0.5)).toBe("neutral");
+  });
+});
+
+describe("getDividendYield investedTotal (TRF-004-B)", () => {
+  // Regression fixture for the Home (1.41%) vs /tools/dividends (1.42%)
+  // discrepancy: StatsGrid used to pass net worth (cash included) as
+  // getDividendYield's investedTotal override, diluting the yield below
+  // what /tools/dividends shows for the identical portfolio (which lets the
+  // function derive its own invested-only total).
+  it("net worth as investedTotal understates yield vs the invested-only default", () => {
+    const holdings: Holding[] = [
+      {
+        id: "1",
+        name: "X",
+        ticker: "X",
+        isin: "",
+        shares: 10,
+        purchasePrice: 100,
+        displayCurrency: "EUR",
+        exchange: "XETRA",
+        valueInEUR: 1000,
+      },
+    ];
+    const quotes: Record<string, QuoteData> = {
+      X: {
+        symbol: "X",
+        shortName: "X",
+        regularMarketPrice: 100,
+        regularMarketChange: 0,
+        regularMarketChangePercent: 0,
+        currency: "EUR",
+        regularMarketPreviousClose: 100,
+        fiftyTwoWeekHigh: 100,
+        fiftyTwoWeekLow: 100,
+        trailingAnnualDividendRate: 5,
+      },
+    };
+    const cashEntries: CashEntry[] = [{ id: "c1", name: "Cash", amountEUR: 1000 }];
+    const exchangeRates = {};
+
+    const totals = getPortfolioTotal(holdings, cashEntries, quotes, exchangeRates, "EUR");
+    expect(totals.invested).toBeCloseTo(1000, 0);
+    expect(totals.netWorth).toBeCloseTo(2000, 0);
+
+    // Correct call shape (/tools/dividends, and Home after the fix): no override.
+    const correct = getDividendYield(holdings, quotes, exchangeRates, "EUR");
+    expect(correct).not.toBeNull();
+    expect(correct as number).toBeCloseTo(5, 1); // 10 shares * €5/share = €50 / €1000 invested = 5%
+
+    // Buggy call shape (Home before the fix): net worth passed as investedTotal.
+    const buggy = getDividendYield(holdings, quotes, exchangeRates, "EUR", totals.netWorth);
+    expect(buggy).not.toBeNull();
+    expect(buggy as number).toBeCloseTo(2.5, 1); // diluted by the €1000 of cash in the denominator
+    expect(buggy as number).not.toBeCloseTo(correct as number, 1);
   });
 });

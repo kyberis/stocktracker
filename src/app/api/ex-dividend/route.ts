@@ -6,6 +6,7 @@ import type { DividendEvent } from "@/lib/api-providers/types";
 import { looksLikeIsin } from "@/lib/api-providers/isin-resolver";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
+import { parseTickersParam } from "./parse-tickers";
 
 const yahooFinance = new YahooFinance();
 
@@ -103,11 +104,7 @@ export const GET = withMetrics("/api/ex-dividend", async (req: NextRequest) => {
 
   const url = new URL(req.url);
   const tickersParam = url.searchParams.get("tickers") || "";
-  let tickers = tickersParam
-    .split(",")
-    .map((t) => t.trim().toUpperCase())
-    .filter(Boolean)
-    .slice(0, 30);
+  let tickers = parseTickersParam(tickersParam);
 
   if (tickers.length === 0) {
     return NextResponse.json({ events: [] });

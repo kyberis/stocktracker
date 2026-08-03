@@ -49,12 +49,18 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested, inl
   const cur = activePortfolioCurrency;
 
   const { divYield, annualDivIncome } = useMemo(() => {
-    const yieldPct = getDividendYield(holdings, quotes, exchangeRates, cur, totals.totalCurrentEUR);
+    // No investedTotal override here (TRF-004-B): totals.totalCurrentEUR is
+    // net worth (cash included, via calculatePortfolioTotals(holdings,
+    // cashEntries, ...) above), but getDividendYield's denominator is
+    // invested-only. Passing net worth diluted Home's yield below what
+    // /tools/dividends shows for the same portfolio. Omitting the argument
+    // lets the function derive the correct invested-only total itself.
+    const yieldPct = getDividendYield(holdings, quotes, exchangeRates, cur);
     return {
       divYield: yieldPct,
       annualDivIncome: getEstimatedAnnualDividendIncome(holdings, quotes, exchangeRates, cur),
     };
-  }, [holdings, quotes, exchangeRates, cur, totals.totalCurrentEUR]);
+  }, [holdings, quotes, exchangeRates, cur]);
 
   const isGain = gainLoss >= 0;
 

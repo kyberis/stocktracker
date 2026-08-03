@@ -1,58 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
+import { useUpcomingExDividends } from "@/hooks/use-upcoming-ex-dividends";
 import HomeCatalystsCard from "@/components/homepage/HomeCatalystsCard";
 import CompactEarningsCard from "@/components/dashboard-v2/CompactEarningsCard";
 import EconomicIndicators from "@/components/EconomicIndicators";
 
-type ExDivRow = {
-  ticker: string;
-  date: string;
-  amount: number | null;
-  currency: string | null;
-};
-
 /**
  * Full Events view (TRF-001): catalysts, earnings, ex-dividends, macro calendar.
+ * Ex-dividends come from useUpcomingExDividends — the same hook /tools/dividends
+ * uses (TRF-004-B / TRF-026) — so both surfaces always agree on the same set.
  */
 export default function PortfolioEventsView() {
   const { t } = useI18n();
   const { holdings, demoMode } = usePortfolio();
-  const [exDiv, setExDiv] = useState<ExDivRow[]>([]);
+  const { events } = useUpcomingExDividends(demoMode ? [] : holdings);
 
-  useEffect(() => {
-    if (demoMode || holdings.length === 0) {
-      setExDiv([]);
-      return;
-    }
-    const tickers = holdings.map((h) => h.ticker).join(",");
-    let cancelled = false;
-    fetch(`/api/ex-dividend?tickers=${encodeURIComponent(tickers)}`, { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : { events: [] }))
-      .then((data) => {
-        if (cancelled) return;
-        const events = Array.isArray(data?.events) ? data.events : Array.isArray(data) ? data : [];
-        setExDiv(
-          events
-            .map((ev: { symbol?: string; ticker?: string; exDate?: string; date?: string; amount?: number; currency?: string }) => ({
-              ticker: String(ev.symbol || ev.ticker || "").toUpperCase(),
-              date: String(ev.exDate || ev.date || "").slice(0, 10),
-              amount: typeof ev.amount === "number" ? ev.amount : null,
-              currency: ev.currency ? String(ev.currency) : null,
-            }))
-            .filter((r: ExDivRow) => r.ticker && r.date)
-            .slice(0, 40),
-        );
-      })
-      .catch(() => {
-        if (!cancelled) setExDiv([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [holdings, demoMode]);
+  const exDiv = useMemo(
+    () =>
+      events
+        .map((ev) => ({
+          ticker: ev.symbol.toUpperCase(),
+          date: ev.exDividendDate.slice(0, 10),
+          amount: ev.amount > 0 ? ev.amount : null,
+          currency: ev.currency || null,
+        }))
+        .filter((r) => r.ticker && r.date)
+        .slice(0, 40),
+    [events],
+  );
 
   return (
     <div className="space-y-6" data-testid="portfolio-events-view">

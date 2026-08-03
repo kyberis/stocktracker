@@ -2,9 +2,11 @@ import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import {
   calculatePeriodReturn,
   calculatePortfolioValueOnDate,
+  calculateWindowedModifiedDietzReturn,
   type HoldingSeriesEntry,
 } from "@/lib/performance";
-import type { ExchangeRates, Holding } from "@/lib/types";
+import { sanitizeTtwror } from "@/lib/portfolio/sanity";
+import type { ExchangeRates, Holding, Transaction } from "@/lib/types";
 
 /** Snapshot row from GET /api/portfolio/history */
 export interface SnapshotHistoryPoint {
@@ -165,17 +167,54 @@ export function firstSnapshotAnchorDate(points: SnapshotHistoryPoint[]): string 
   return sorted[0].date.slice(0, 10);
 }
 
+export interface PeriodReturnFlowsContext {
+  transactions: Transaction[];
+  periodStart: string;
+  periodEnd: string;
+  exchangeRates: ExchangeRates;
+  baseCurrency: string;
+}
+
+/**
+ * Windowed-return cell for one period (TRF-028).
+ *
+ * `past` (the value at the period's start anchor) is still required and
+ * still comes from a real point-in-time source (a stored snapshot or a
+ * current-holdings reconstruction) — that part isn't broken. What's
+ * flow-adjusted is the return *between* past and current: a sale within the
+ * window is attributed as an outflow from this asset-class bucket via
+ * calculateWindowedModifiedDietzReturn, instead of the naive (current -
+ * past) / past reading it as a loss.
+ *
+ * The naive calculatePeriodReturn value is kept only as the reference the
+ * Dietz result gets sanity-checked against (sanitizeTtwror) — never shown
+ * directly once flows are available. Degrades to "—" when Dietz can't be
+ * computed (no past value, or a near-zero weighted denominator) rather than
+ * falling back to the un-adjusted number.
+ */
 function periodReturnCell(
   current: number,
   past: number | null,
   isPro: boolean,
   periodKey: MatrixPeriodKey,
+  flows: PeriodReturnFlowsContext,
 ): MatrixCell {
   if (!isPro && PRO_MATRIX_PERIOD_KEYS.includes(periodKey)) {
     return { kind: "pro" };
   }
   if (past == null || past <= 0) return { kind: "empty" };
-  const pct = calculatePeriodReturn(current, past);
+
+  const simple = calculatePeriodReturn(current, past);
+  const dietz = calculateWindowedModifiedDietzReturn(
+    past,
+    current,
+    flows.transactions,
+    flows.periodStart,
+    flows.periodEnd,
+    flows.exchangeRates,
+    flows.baseCurrency,
+  );
+  const pct = sanitizeTtwror(dietz, simple);
   if (pct == null) return { kind: "empty" };
   return { kind: "percent", value: pct };
 }
@@ -194,6 +233,16 @@ function todayCell(
   return { kind: "percent", value: dayPct };
 }
 
+/** Ticker → assetType lookup so a sell transaction (no assetType of its own
+ * in older rows) can still be attributed to the right bucket. */
+function filterTransactionsByAsset(
+  transactions: Transaction[],
+  assetKey: AssetFilter,
+): Transaction[] {
+  if (assetKey === "all") return transactions;
+  return transactions.filter((t) => (t.assetType ?? "stock") === assetKey);
+}
+
 export interface BuildMatrixFromSnapshotsInput {
   snapshots: SnapshotHistoryPoint[];
   currentByAsset: Partial<Record<AssetFilter, number>>;
@@ -203,6 +252,11 @@ export interface BuildMatrixFromSnapshotsInput {
   displayMode: "percent" | "currency";
   /** Which asset rows to include (non-zero current or history) */
   assetKeys: AssetFilter[];
+  /** Flow-adjusted return inputs (TRF-028). */
+  transactions: Transaction[];
+  exchangeRates: ExchangeRates;
+  baseCurrency: string;
+  now?: Date;
 }
 
 export function buildMatrixFromSnapshots(input: BuildMatrixFromSnapshotsInput): MatrixRow[] {
@@ -214,13 +268,19 @@ export function buildMatrixFromSnapshots(input: BuildMatrixFromSnapshotsInput): 
     isPro,
     displayMode,
     assetKeys,
+    transactions,
+    exchangeRates,
+    baseCurrency,
+    now = new Date(),
   } = input;
 
-  const anchors = getMatrixPeriodAnchorDates();
+  const anchors = getMatrixPeriodAnchorDates(now);
   const allAnchor = firstSnapshotAnchorDate(snapshots);
+  const periodEnd = now.toISOString().slice(0, 10);
 
   return assetKeys.map((assetKey) => {
     const current = currentByAsset[assetKey] ?? 0;
+    const assetTransactions = filterTransactionsByAsset(transactions, assetKey);
 
     const anchorMap: Record<Exclude<MatrixPeriodKey, "today">, string> = {
       oneWeek: anchors.oneWeek,
@@ -240,7 +300,13 @@ export function buildMatrixFromSnapshots(input: BuildMatrixFromSnapshotsInput): 
       if (key === "today") continue;
       const anchor = anchorMap[key];
       const past = snapshotValueOnOrBefore(snapshots, anchor, assetKey);
-      let cell = periodReturnCell(current, past, isPro, key);
+      let cell = periodReturnCell(current, past, isPro, key, {
+        transactions: assetTransactions,
+        periodStart: anchor,
+        periodEnd,
+        exchangeRates,
+        baseCurrency,
+      });
       if (cell.kind === "percent" && displayMode === "currency" && cell.value != null && past != null) {
         cell = { kind: "currency", value: current - past };
       }
@@ -262,6 +328,9 @@ export interface BuildMatrixFromHistoricalInput {
   isPro: boolean;
   displayMode: "percent" | "currency";
   assetKeys: AssetFilter[];
+  /** Flow-adjusted return inputs (TRF-028). */
+  transactions: Transaction[];
+  now?: Date;
 }
 
 export function filterHoldingsByAsset(holdings: Holding[], assetKey: AssetFilter): Holding[] {
@@ -289,13 +358,17 @@ export function buildMatrixFromHistorical(input: BuildMatrixFromHistoricalInput)
     isPro,
     displayMode,
     assetKeys,
+    transactions,
+    now = new Date(),
   } = input;
 
-  const anchors = getMatrixPeriodAnchorDates();
+  const anchors = getMatrixPeriodAnchorDates(now);
+  const periodEnd = now.toISOString().slice(0, 10);
 
   return assetKeys.map((assetKey) => {
     const filteredHoldings = filterHoldingsByAsset(holdings, assetKey);
     const filteredEntries = filterEntriesByAsset(entries, assetKey);
+    const assetTransactions = filterTransactionsByAsset(transactions, assetKey);
     const current = currentByAsset[assetKey] ?? 0;
 
     const anchorMap: Record<Exclude<MatrixPeriodKey, "today">, string> = {
@@ -328,7 +401,13 @@ export function buildMatrixFromHistorical(input: BuildMatrixFromHistoricalInput)
         exchangeRates,
         baseCurrency,
       );
-      let cell = periodReturnCell(current, past, isPro, key);
+      let cell = periodReturnCell(current, past, isPro, key, {
+        transactions: assetTransactions,
+        periodStart: anchorMap[key],
+        periodEnd,
+        exchangeRates,
+        baseCurrency,
+      });
       if (cell.kind === "percent" && displayMode === "currency" && cell.value != null) {
         cell = { kind: "currency", value: current - (past ?? 0) };
       }
