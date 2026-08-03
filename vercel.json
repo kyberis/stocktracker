@@ -16,6 +16,7 @@
     { "path": "/api/cron/trial-expiration", "schedule": "0 * * * *" },
     { "path": "/api/cron/commerce-complimentary-renewal", "schedule": "0 2 * * *" },
     { "path": "/api/cron/weekly-digest", "schedule": "0 8 * * 1" },
+    { "path": "/api/cron/portfolio-recommendations", "schedule": "0 7 * * 1" },
     { "path": "/api/cron/compact-snapshots", "schedule": "0 4 * * *" },
     { "path": "/api/cron/moat-sync", "schedule": "0 */4 * * *" },
     { "path": "/api/cron/feedback-pipeline", "schedule": "*/15 * * * *" },

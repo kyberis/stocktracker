@@ -3629,6 +3629,25 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 125,
+    description: "weekly portfolio recommendation cache",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS portfolio_recommendation_cache (
+          user_id TEXT NOT NULL,
+          portfolio_id TEXT NOT NULL DEFAULT '',
+          week_key TEXT NOT NULL,
+          queue_json TEXT NOT NULL DEFAULT '[]',
+          computed_at TEXT NOT NULL,
+          PRIMARY KEY (user_id, portfolio_id)
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_portfolio_rec_cache_week ON portfolio_recommendation_cache(week_key)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.76",
+    date: "2026-08-03",
+    title: "Weekly portfolio tip analysis cron",
+    titleTranslations: {
+      es: "Cron semanal de análisis de tips de cartera",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Portfolio tips are precomputed every Monday for all active portfolios (≥1 holding) and cached for Home; skipped tips reset each week.",
+        translations: {
+          es: "Los tips de cartera se precalculan cada lunes para todas las carteras activas (≥1 holding) y se cachean en Home; los tips omitidos se reinician cada semana.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.75",
     date: "2026-08-03",
     title: "Fix home recommendation sector percentages",

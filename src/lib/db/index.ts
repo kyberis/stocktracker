@@ -776,8 +776,13 @@ export {
 export type {
   RecommendationStatus,
   PortfolioRecommendationStateRow,
+  PortfolioRecommendationCacheRow,
 } from "./portfolio-recommendations";
 export {
   listRecommendationStates,
   upsertRecommendationState,
+  clearSkippedRecommendationStates,
+  getRecommendationCache,
+  upsertRecommendationCache,
+  currentRecommendationWeekKey,
 } from "./portfolio-recommendations";

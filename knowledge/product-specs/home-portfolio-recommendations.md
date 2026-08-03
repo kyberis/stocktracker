@@ -20,14 +20,17 @@ Authenticated Home (`/`) shows one portfolio recommendation at a time (diversifi
 |------|------|-------|
 | Component | `src/components/homepage/HomeRecommendationCard.tsx` | After hero on `HomeV2Dashboard` |
 | Page | `src/app/(app)/recommendations/diversify/page.tsx` | Sector research |
-| API | `GET/POST /api/home-v2/recommendations` | Queue + skip/acted |
+| API | `GET/POST /api/home-v2/recommendations` | Queue + skip/acted (prefers weekly cache) |
 | API | `GET /api/home-v2/diversify-research` | Candidates (no screener quota) |
+| Cron | `GET /api/cron/portfolio-recommendations` | Mondays 07:00 UTC — analyze users with ≥1 holding |
 | Lib | `src/lib/homepage/build-portfolio-recommendations.ts` | Deterministic engine |
-| DAL | `src/lib/db/portfolio-recommendations.ts` | State table |
+| Lib | `src/lib/homepage/resolve-recommendation-queue.ts` | Cache-or-live resolver |
+| DAL | `src/lib/db/portfolio-recommendations.ts` | State + weekly cache |
 
 ## 4. Data model
 
 - `portfolio_recommendation_state` — `(user_id, recommendation_key)` PK, `status` (`skipped` \| `acted`), `updated_at`
+- `portfolio_recommendation_cache` — `(user_id, portfolio_id)` PK, `week_key`, `queue_json`, `computed_at`
 - Fingerprint keys: `diversify:{A}+{B}`, `concentration:{TICKER}`, `cash_idle`, `fx:{CCY}`
 - Types: `PortfolioRecommendation` in build module
 
@@ -38,6 +41,7 @@ Authenticated Home (`/`) shows one portfolio recommendation at a time (diversifi
 | GET | `/api/home-v2/recommendations` | session | Free | Current + remaining queue |
 | POST | `/api/home-v2/recommendations` | session | Free | `{ key, action }` then next |
 | GET | `/api/home-v2/diversify-research` | session | Free | 2 sectors × ≤3 candidates |
+| GET | `/api/cron/portfolio-recommendations` | cron secret | — | Weekly precompute for active portfolios |
 
 ## 6. UI surface
 
@@ -46,6 +50,8 @@ Authenticated Home (`/`) shows one portfolio recommendation at a time (diversifi
 - Hidden when no holdings, demo mode, or empty queue
 
 ## 7. Business logic
+
+**Cadence:** A Monday 07:00 UTC cron analyzes every user with ≥1 open holding (all portfolios that have holdings). It writes `portfolio_recommendation_cache` for the ISO week and clears prior `skipped` states (`acted` is kept). Home prefers this week's cache; if missing, falls back to live compute.
 
 Queue order: diversify → concentration → cash_idle → fx.
 

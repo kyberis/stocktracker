@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-278 routes.
+279 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -147,6 +147,7 @@
 | `/api/cron/event-sync` | GET | [`src/app/api/cron/event-sync/route.ts`](../../src/app/api/cron/event-sync/route.ts) |
 | `/api/cron/feedback-pipeline` | GET, POST | [`src/app/api/cron/feedback-pipeline/route.ts`](../../src/app/api/cron/feedback-pipeline/route.ts) |
 | `/api/cron/moat-sync` | GET | [`src/app/api/cron/moat-sync/route.ts`](../../src/app/api/cron/moat-sync/route.ts) |
+| `/api/cron/portfolio-recommendations` | GET | [`src/app/api/cron/portfolio-recommendations/route.ts`](../../src/app/api/cron/portfolio-recommendations/route.ts) |
 | `/api/cron/portfolio-snapshots` | GET, POST | [`src/app/api/cron/portfolio-snapshots/route.ts`](../../src/app/api/cron/portfolio-snapshots/route.ts) |
 | `/api/cron/prodops-dispatch` | POST | [`src/app/api/cron/prodops-dispatch/route.ts`](../../src/app/api/cron/prodops-dispatch/route.ts) |
 | `/api/cron/push-gauges` | GET | [`src/app/api/cron/push-gauges/route.ts`](../../src/app/api/cron/push-gauges/route.ts) |
