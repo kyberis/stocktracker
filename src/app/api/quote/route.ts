@@ -1,8 +1,6 @@
 import { NextRequest } from "next/server";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
-import { DE_FALLBACK_SUFFIXES, PA_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
-import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
-import { normalizeHkYahooSymbol, yahooSymbolAliases } from "@/lib/market-symbol";
+import { resolveYahooQuote } from "@/lib/resolve-yahoo-quote";
 import { withMetrics } from "@/lib/with-metrics";
 import { getCachedQuotes, setCachedQuotes } from "@/lib/quote-cache";
 import type { ProviderQuoteResult } from "@/lib/api-providers/types";
@@ -28,55 +26,6 @@ function errorQuote(symbol: string) {
   };
 }
 
-async function tryAliasSymbols(
-  yahoo: YahooProvider,
-  symbol: string,
-): Promise<{ quote: Awaited<ReturnType<YahooProvider["getQuote"]>>; usedSymbol: string } | null> {
-  for (const alt of yahooSymbolAliases(symbol)) {
-    try {
-      const q = await yahoo.getQuote(alt);
-      if (q.regularMarketPrice > 0) {
-        return { quote: q, usedSymbol: alt };
-      }
-    } catch {
-      // try next
-    }
-  }
-  return null;
-}
-
-async function tryExchangeFallback(
-  yahoo: YahooProvider,
-  symbol: string
-): Promise<{ quote: Awaited<ReturnType<YahooProvider["getQuote"]>>; usedSymbol: string } | null> {
-  const upper = symbol.toUpperCase();
-  let suffixes: string[] | null = null;
-  let baseLen = 0;
-
-  if (upper.endsWith(".DE")) {
-    suffixes = DE_FALLBACK_SUFFIXES;
-    baseLen = 3;
-  } else if (upper.endsWith(".PA")) {
-    suffixes = PA_FALLBACK_SUFFIXES;
-    baseLen = 3;
-  }
-
-  if (!suffixes) return null;
-
-  const base = symbol.slice(0, -baseLen);
-  for (const suffix of suffixes) {
-    try {
-      const q = await yahoo.getQuote(`${base}${suffix}`);
-      if (q.regularMarketPrice > 0) {
-        return { quote: q, usedSymbol: `${base}${suffix}` };
-      }
-    } catch {
-      // try next
-    }
-  }
-  return null;
-}
-
 export const GET = withMetrics("/api/quote", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const symbols = searchParams.get("symbols");
@@ -98,50 +47,18 @@ export const GET = withMetrics("/api/quote", async (request: NextRequest) => {
     const toCache: Record<string, ProviderQuoteResult> = {};
 
     const stockPromises = misses.map(async (symbol) => {
-      const resolved = await resolveIsinToTicker(yahoo, symbol);
-      const ticker = normalizeHkYahooSymbol(
-        resolved.includes(" ") ? resolved.replace(/\s+/g, "-") : resolved,
-      );
       try {
-        const quote = await yahoo.getQuote(ticker);
-        if (quote.regularMarketPrice > 0) {
-          const q = { ...quote, symbol };
-          results[symbol] = { ...q, providerUsed: "yahoo" };
-          toCache[symbol] = q;
+        const quote = await resolveYahooQuote(yahoo, symbol);
+        if (quote) {
+          results[symbol] = { ...quote, providerUsed: "yahoo" };
+          toCache[symbol] = quote;
         } else {
-          const fb = await tryExchangeFallback(yahoo, ticker);
-          if (fb) {
-            const resolved = { ...fb.quote, symbol };
-            results[symbol] = { ...resolved, providerUsed: "yahoo" };
-            toCache[symbol] = resolved;
-          } else {
-            const aliasHit = await tryAliasSymbols(yahoo, ticker);
-            if (aliasHit) {
-              const resolved = { ...aliasHit.quote, symbol };
-              results[symbol] = { ...resolved, providerUsed: "yahoo" };
-              toCache[symbol] = resolved;
-            } else {
-              results[symbol] = { ...quote, symbol, providerUsed: "yahoo" };
-            }
-          }
+          console.error(`Failed to fetch quote for ${symbol}: No quote data`);
+          results[symbol] = errorQuote(symbol);
         }
       } catch (err) {
-        const fb = await tryExchangeFallback(yahoo, ticker).catch(() => null);
-        if (fb) {
-          const resolved = { ...fb.quote, symbol };
-          results[symbol] = { ...resolved, providerUsed: "yahoo" };
-          toCache[symbol] = resolved;
-        } else {
-          const aliasHit = await tryAliasSymbols(yahoo, ticker).catch(() => null);
-          if (aliasHit) {
-            const resolved = { ...aliasHit.quote, symbol };
-            results[symbol] = { ...resolved, providerUsed: "yahoo" };
-            toCache[symbol] = resolved;
-          } else {
-            console.error(`Failed to fetch quote for ${symbol}:`, err instanceof Error ? err.message : err);
-            results[symbol] = errorQuote(symbol);
-          }
-        }
+        console.error(`Failed to fetch quote for ${symbol}:`, err instanceof Error ? err.message : err);
+        results[symbol] = errorQuote(symbol);
       }
     });
 

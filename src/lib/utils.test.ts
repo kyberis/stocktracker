@@ -142,6 +142,12 @@ describe("normalizeCurrency", () => {
     expect(normalizeCurrency("DKK")).toBe("DKK");
     expect(normalizeCurrency("CAD")).toBe("CAD");
   });
+
+  it("defaults missing currency to EUR", () => {
+    expect(normalizeCurrency(undefined)).toBe("EUR");
+    expect(normalizeCurrency(null)).toBe("EUR");
+    expect(normalizeCurrency("")).toBe("EUR");
+  });
 });
 
 describe("resolveQuoteCurrency", () => {
@@ -155,6 +161,11 @@ describe("resolveQuoteCurrency", () => {
 
   it("forces GBX when holding is GBp (normalized to GBX) and quote is GBP", () => {
     expect(resolveQuoteCurrency("GBp", "GBP")).toBe("GBX");
+  });
+
+  it("falls back to holding currency when quote currency is missing", () => {
+    expect(resolveQuoteCurrency("USD", undefined)).toBe("USD");
+    expect(resolveQuoteCurrency("EUR", null)).toBe("EUR");
   });
 
   it("passes through non-GBX holding currencies", () => {

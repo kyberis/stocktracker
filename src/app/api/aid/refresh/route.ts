@@ -3,9 +3,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { isFeatureEnabledForUser, getUserSettings, listHoldings } from "@/lib/db";
 import { buildAidDigest } from "@/lib/aid/build-digest";
 import { buildAidEarningsRecap } from "@/lib/aid/build-earnings-recap";
-import { providerQuotesToQuoteMap } from "@/lib/aid/quotes-map";
-import { getQuotesWithCache } from "@/lib/quote-cache";
-import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
+import { fetchQuoteMapForHoldings } from "@/lib/holding-quotes";
 import { parseBody } from "@/lib/api-response";
 import { z } from "zod";
 import { withMetrics } from "@/lib/with-metrics";
@@ -34,9 +32,7 @@ export const POST = withMetrics("/api/aid/refresh", async (req: NextRequest) => 
   const settings = await getUserSettings(session.userId);
   const portfolioId = parsed.data.portfolioId;
   const holdings = await listHoldings(session.userId, portfolioId);
-  const tickers = derivePortfolioNewsTickersFromHoldings(holdings);
-  const providerQuotes = tickers.length > 0 ? await getQuotesWithCache(tickers) : {};
-  const quotes = providerQuotesToQuoteMap(providerQuotes);
+  const quotes = await fetchQuoteMapForHoldings(holdings);
 
   const ticker = parsed.data.ticker.toUpperCase();
   const language = settings.language || "en";

@@ -17,6 +17,44 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.88",
+    date: "2026-08-03",
+    title: "Quote resolution for European & HK tickers",
+    titleTranslations: {
+      es: "Resolución de cotizaciones para tickers europeos y HK",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Server-side quote cache now applies Hong Kong padding, exchange fallbacks, and Yahoo aliases (W9C, NOVO-B, NA9, 215.HK) so AID and Home day highlights stop failing on cross-listed symbols.",
+        translations: {
+          es: "La caché de cotizaciones en servidor aplica padding de Hong Kong, fallbacks de bolsa y aliases de Yahoo (W9C, NOVO-B, NA9, 215.HK) para que AID y los highlights del Home no fallen en símbolos cross-listed.",
+        },
+      },
+      {
+        type: "fix",
+        text: "AID and Home quote lookups use each holding’s market-data symbol and re-key by ticker, instead of stripped news bases.",
+        translations: {
+          es: "AID y Home buscan cotizaciones con el símbolo de market data de cada holding y las re-indexan por ticker, en lugar de bases de noticias sin sufijo.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Missing quote currency no longer crashes Home recommendations via toUpperCase on undefined.",
+        translations: {
+          es: "Una moneda de cotización ausente ya no provoca un crash en las recomendaciones del Home por toUpperCase sobre undefined.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Dashboard quick-nav supports free-text search across Holdings, Tools, Views, and all tools while keeping the chip list.",
+        translations: {
+          es: "El menú rápido del panel permite buscar por texto libre entre Holdings, Tools, Views y todas las herramientas, manteniendo el listado de chips.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.87",
     date: "2026-08-03",
     title: "REQ P1 follow-up: cross-listings, alerts, metrics",

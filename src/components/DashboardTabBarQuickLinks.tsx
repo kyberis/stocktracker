@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useI18n } from "@/lib/i18n";
 import type { TranslationKey } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-context";
@@ -19,6 +19,7 @@ import {
   resolveHubVisibility,
   sortTabsByHubCategory,
 } from "@/lib/tools-registry";
+import { buildNavMenuIndex, filterNavMenuItems, type NavMenuItem } from "@/lib/nav-menu-search";
 import type { DashboardTab } from "@/lib/use-dashboard-tab-url";
 
 export type DashboardTabBarQuickVariant = "default" | "terminal" | "canvas" | "studio";
@@ -96,6 +97,7 @@ export default function DashboardTabBarQuickLinks({
 }) {
   const { t } = useI18n();
   const pathname = usePathname();
+  const router = useRouter();
   const { favoriteIdsOrdered } = useFavoriteTools();
   const aiReportEnabled = useFeatureFlag("ai_report_enabled");
   const toolTaxReportsEnabled = useFeatureFlag("tool_tax_reports_enabled");
@@ -115,25 +117,35 @@ export default function DashboardTabBarQuickLinks({
 
   const [moreOpen, setMoreOpen] = useState(false);
   const [viewsOpen, setViewsOpen] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchHighlight, setSearchHighlight] = useState(0);
   const [mounted, setMounted] = useState(false);
   const moreWrapRef = useRef<HTMLDivElement>(null);
   const viewsWrapRef = useRef<HTMLDivElement>(null);
+  const searchWrapRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const viewsBtnRef = useRef<HTMLButtonElement>(null);
   const moreBtnRef = useRef<HTMLButtonElement>(null);
   const viewsMenuRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const searchMenuRef = useRef<HTMLDivElement>(null);
+  const searchListboxId = useId();
+  const searchOptionPrefix = `${searchListboxId}-opt`;
 
+  const searchPanelOpen = searchExpanded && searchQuery.trim().length >= 1;
   const viewsMenuBox = useMenuFixedPosition(viewsOpen, viewsBtnRef);
   const moreMenuBox = useMenuFixedPosition(moreOpen, moreBtnRef);
+  const searchMenuBox = useMenuFixedPosition(searchPanelOpen, searchWrapRef);
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!viewsOpen) return;
     function handle(e: MouseEvent) {
-      const t = e.target as Node;
-      if (viewsWrapRef.current?.contains(t)) return;
-      if (viewsMenuRef.current?.contains(t)) return;
+      const node = e.target as Node;
+      if (viewsWrapRef.current?.contains(node)) return;
+      if (viewsMenuRef.current?.contains(node)) return;
       setViewsOpen(false);
     }
     document.addEventListener("mousedown", handle);
@@ -143,9 +155,9 @@ export default function DashboardTabBarQuickLinks({
   useEffect(() => {
     if (!moreOpen) return;
     function handle(e: MouseEvent) {
-      const t = e.target as Node;
-      if (moreWrapRef.current?.contains(t)) return;
-      if (moreMenuRef.current?.contains(t)) return;
+      const node = e.target as Node;
+      if (moreWrapRef.current?.contains(node)) return;
+      if (moreMenuRef.current?.contains(node)) return;
       setMoreOpen(false);
     }
     document.addEventListener("mousedown", handle);
@@ -153,16 +165,41 @@ export default function DashboardTabBarQuickLinks({
   }, [moreOpen]);
 
   useEffect(() => {
-    if (!viewsOpen && !moreOpen) return;
+    if (!searchExpanded) return;
+    function handle(e: MouseEvent) {
+      const node = e.target as Node;
+      if (searchWrapRef.current?.contains(node)) return;
+      if (searchMenuRef.current?.contains(node)) return;
+      setSearchExpanded(false);
+      setSearchQuery("");
+      setSearchHighlight(0);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [searchExpanded]);
+
+  useEffect(() => {
+    if (!viewsOpen && !moreOpen && !searchExpanded) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         setViewsOpen(false);
         setMoreOpen(false);
+        if (searchExpanded) {
+          setSearchExpanded(false);
+          setSearchQuery("");
+          setSearchHighlight(0);
+          searchInputRef.current?.blur();
+        }
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [viewsOpen, moreOpen]);
+  }, [viewsOpen, moreOpen, searchExpanded]);
+
+  useEffect(() => {
+    if (!searchExpanded) return;
+    searchInputRef.current?.focus();
+  }, [searchExpanded]);
 
   const visibilitySettings = useMemo(
     () => ({
@@ -229,6 +266,60 @@ export default function DashboardTabBarQuickLinks({
     return [...favoriteEntries, ...rest];
   }, [visibleTools, favoriteIdsOrdered, visibleToolIdSet]);
 
+  const navMenuIndex = useMemo(
+    () =>
+      buildNavMenuIndex({
+        holdingsLabel: t("dashboardHoldingsTab"),
+        toolsLabel: t("toolsNav"),
+        newsLabel: t("newsTab"),
+        importLabel: t("importNav"),
+        viewLinks: DASHBOARD_VIEW_LINKS.map((row) => ({
+          id: row.key,
+          label: t(row.labelKey),
+          href: row.href,
+          tierBadge: row.tierBadge,
+          disabled: row.key === "diversification" && holdingsCount === 0,
+        })),
+        tools: visibleTools.map((entry) => ({
+          id: entry.id,
+          label: t(entry.labelKey),
+          href: getToolPath(entry.id),
+          tierBadge: getTierBadgeForTool(entry.id),
+        })),
+      }),
+    [t, holdingsCount, visibleTools],
+  );
+
+  const searchResults = useMemo(
+    () => filterNavMenuItems(navMenuIndex, searchQuery),
+    [navMenuIndex, searchQuery],
+  );
+
+  useEffect(() => {
+    setSearchHighlight(0);
+  }, [searchQuery]);
+
+  const closeSearch = useCallback(() => {
+    setSearchExpanded(false);
+    setSearchQuery("");
+    setSearchHighlight(0);
+  }, []);
+
+  const activateSearchItem = useCallback(
+    (item: NavMenuItem) => {
+      if (item.disabled) return;
+      if (item.kind === "tab") {
+        onSelectTab(item.tab);
+      } else {
+        router.push(item.href);
+      }
+      closeSearch();
+      setViewsOpen(false);
+      setMoreOpen(false);
+    },
+    [onSelectTab, router, closeSearch],
+  );
+
   const containerRef = useRef<HTMLDivElement>(null);
   const coreWrapRef = useRef<HTMLDivElement>(null);
   const tailMeasureRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -266,7 +357,7 @@ export default function DashboardTabBarQuickLinks({
 
   useLayoutEffect(() => {
     recomputeTailVisibility();
-  }, [recomputeTailVisibility, pathname, activeTab, variant]);
+  }, [recomputeTailVisibility, pathname, activeTab, variant, searchExpanded]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -340,6 +431,27 @@ export default function DashboardTabBarQuickLinks({
         : variant === "studio"
           ? "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-white/5"
           : "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]";
+
+  const searchOptionClass = (active: boolean, disabled?: boolean) => {
+    const base = itemClass;
+    if (disabled) return `${base} opacity-40 cursor-not-allowed`;
+    if (active) {
+      if (variant === "terminal") return `${base} bg-zinc-900`;
+      if (variant === "canvas") return `${base} bg-slate-50`;
+      if (variant === "studio") return `${base} bg-white/5`;
+      return `${base} bg-[color:var(--surface-soft)]`;
+    }
+    return base;
+  };
+
+  const searchInputShell =
+    variant === "terminal"
+      ? "flex items-center gap-1 rounded border border-zinc-700 bg-zinc-950 px-1.5 py-0.5 focus-within:ring-1 focus-within:ring-green-500"
+      : variant === "canvas"
+        ? "flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 focus-within:ring-2 focus-within:ring-green-500"
+        : variant === "studio"
+          ? "flex items-center gap-1 border border-white/15 bg-zinc-900/80 px-1.5 py-0.5 focus-within:ring-2 focus-within:ring-emerald-500"
+          : "flex items-center gap-1 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-2 py-1 focus-within:ring-2 focus-within:ring-emerald-500";
 
   const toolbarRowClass =
     "flex min-w-0 flex-nowrap items-center gap-1 sm:gap-1.5 overflow-x-hidden overflow-y-hidden";
@@ -452,6 +564,55 @@ export default function DashboardTabBarQuickLinks({
       document.body,
     );
 
+  const searchMenuPortal =
+    mounted &&
+    searchPanelOpen &&
+    searchMenuBox &&
+    createPortal(
+      <div
+        ref={searchMenuRef}
+        className={`${panelSurfaceClass} fixed z-[100] min-w-[240px]`}
+        style={{
+          top: searchMenuBox.top,
+          left: Math.min(searchMenuBox.left, window.innerWidth - 260),
+          width: Math.max(240, searchMenuBox.width),
+        }}
+        role="listbox"
+        id={searchListboxId}
+        aria-label={t("dashboardMenuSearchAria")}
+        data-testid="dashboard-menu-search-results"
+      >
+        {searchResults.length === 0 ? (
+          <p className="px-3 py-2 text-sm text-[color:var(--muted)]" role="status" aria-live="polite">
+            {t("dashboardMenuSearchEmpty")}
+          </p>
+        ) : (
+          searchResults.map((item, idx) => {
+            const active = idx === searchHighlight;
+            const optionId = `${searchOptionPrefix}-${idx}`;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                id={optionId}
+                role="option"
+                aria-selected={active}
+                aria-disabled={item.disabled || undefined}
+                disabled={item.disabled}
+                className={searchOptionClass(active, item.disabled)}
+                onMouseEnter={() => setSearchHighlight(idx)}
+                onClick={() => activateSearchItem(item)}
+              >
+                <span>{item.label}</span>
+                {item.tierBadge && <TierFeatureBadge requiredPlan={item.tierBadge} size="xs" />}
+              </button>
+            );
+          })
+        )}
+      </div>,
+      document.body,
+    );
+
   return (
     <>
       {/* Off-screen width probes — must mirror visible tail chips for overflow math. */}
@@ -512,6 +673,7 @@ export default function DashboardTabBarQuickLinks({
       >
         {viewsMenuPortal}
         {moreMenuPortal}
+        {searchMenuPortal}
         <div ref={coreWrapRef} className="flex shrink-0 items-center gap-1 sm:gap-1.5">
           <button
             type="button"
@@ -534,6 +696,7 @@ export default function DashboardTabBarQuickLinks({
               onClick={() => {
                 setViewsOpen((o) => !o);
                 setMoreOpen(false);
+                closeSearch();
               }}
             >
               {t("dashboardViewsHeading")}
@@ -541,6 +704,103 @@ export default function DashboardTabBarQuickLinks({
                 ▾
               </span>
             </button>
+          </div>
+
+          <div ref={searchWrapRef} className="relative shrink-0 snap-start">
+            {searchExpanded ? (
+              <div className={searchInputShell} role="search">
+                <svg
+                  className="h-3.5 w-3.5 shrink-0 text-[color:var(--muted)]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                  />
+                </svg>
+                <label htmlFor="dashboard-menu-search-input" className="sr-only">
+                  {t("dashboardMenuSearchAria")}
+                </label>
+                <input
+                  ref={searchInputRef}
+                  id="dashboard-menu-search-input"
+                  type="search"
+                  role="combobox"
+                  autoComplete="off"
+                  value={searchQuery}
+                  placeholder={t("dashboardMenuSearchPlaceholder")}
+                  aria-label={t("dashboardMenuSearchAria")}
+                  aria-controls={searchPanelOpen ? searchListboxId : undefined}
+                  aria-expanded={searchPanelOpen}
+                  aria-autocomplete="list"
+                  aria-haspopup="listbox"
+                  aria-activedescendant={
+                    searchPanelOpen && searchResults.length > 0
+                      ? `${searchOptionPrefix}-${searchHighlight}`
+                      : undefined
+                  }
+                  className="w-[7.5rem] sm:w-[9.5rem] bg-transparent text-xs sm:text-sm text-[color:var(--foreground)] placeholder:text-[color:var(--muted)] outline-none focus-visible:ring-0"
+                  data-testid="dashboard-menu-search-input"
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      if (searchResults.length === 0) return;
+                      setSearchHighlight((h) => (h + 1) % searchResults.length);
+                      return;
+                    }
+                    if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      if (searchResults.length === 0) return;
+                      setSearchHighlight((h) => (h - 1 + searchResults.length) % searchResults.length);
+                      return;
+                    }
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const item = searchResults[searchHighlight];
+                      if (item) activateSearchItem(item);
+                      return;
+                    }
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      closeSearch();
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <button
+                type="button"
+                className={`${moreBtnClass} inline-flex items-center justify-center !px-2`}
+                aria-label={t("dashboardMenuSearchExpand")}
+                data-testid="dashboard-menu-search-open"
+                onClick={() => {
+                  setSearchExpanded(true);
+                  setViewsOpen(false);
+                  setMoreOpen(false);
+                }}
+              >
+                <svg
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
@@ -595,6 +855,7 @@ export default function DashboardTabBarQuickLinks({
             onClick={() => {
               setMoreOpen((o) => !o);
               setViewsOpen(false);
+              closeSearch();
             }}
           >
             {t("dashboardMoreTools")}

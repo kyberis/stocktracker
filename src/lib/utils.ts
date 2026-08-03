@@ -89,7 +89,8 @@ export function formatCompactNumber(value: number): string {
   return value.toFixed(0);
 }
 
-export function normalizeCurrency(currency: string): string {
+export function normalizeCurrency(currency: string | null | undefined): string {
+  if (!currency) return "EUR";
   if (currency === "GBp") return "GBX";
   return currency;
 }
@@ -104,10 +105,11 @@ export function normalizeCurrency(currency: string): string {
  * since those are clearly distinct currencies (e.g. IB01.L trades in USD).
  */
 export function resolveQuoteCurrency(
-  holdingDisplayCurrency: string,
-  quoteCurrency: string
+  holdingDisplayCurrency: string | null | undefined,
+  quoteCurrency: string | null | undefined,
 ): string {
   const holdingNorm = normalizeCurrency(holdingDisplayCurrency);
+  if (!quoteCurrency) return holdingNorm;
   const quoteNorm = normalizeCurrency(quoteCurrency);
   if (
     holdingNorm === "GBX" &&

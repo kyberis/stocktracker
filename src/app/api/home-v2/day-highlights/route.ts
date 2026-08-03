@@ -9,7 +9,7 @@ import {
   listHoldings,
 } from "@/lib/db";
 import { parseAidDigestSummary } from "@/lib/db/aid-news-cache";
-import { getQuotesWithCache } from "@/lib/quote-cache";
+import { fetchProviderQuotesForHoldings } from "@/lib/holding-quotes";
 import { convertToEUR } from "@/lib/utils";
 import { scoreDayHighlights } from "@/lib/homepage/score-day-highlights";
 import { computeDigestImpactScore } from "@/lib/aid/impact-score";
@@ -38,8 +38,8 @@ export const GET = withMetrics("/api/home-v2/day-highlights", async (req: NextRe
     listAidNewsCacheForUser(session.userId, 40),
   ]);
 
+  const quotes = await fetchProviderQuotesForHoldings(holdings);
   const tickers = [...new Set(holdings.map((h) => h.ticker))];
-  const quotes = tickers.length > 0 ? await getQuotesWithCache(tickers) : {};
 
   const today = new Date();
   const from = today.toISOString().slice(0, 10);

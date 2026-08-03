@@ -1,5 +1,6 @@
 import { getRedisClient } from "@/lib/upstash";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { resolveYahooQuote } from "@/lib/resolve-yahoo-quote";
 import type { ProviderQuoteResult } from "@/lib/api-providers/types";
 
 const QUOTE_TTL = 30;
@@ -144,9 +145,13 @@ export async function getQuotesWithCache(
   await Promise.all(
     misses.map(async (symbol) => {
       try {
-        const quote = await coalesce(symbol, inflightQuotes, () =>
-          yahoo.getQuote(symbol)
-        );
+        const quote = await coalesce(symbol, inflightQuotes, async () => {
+          const resolved = await resolveYahooQuote(yahoo, symbol);
+          if (!resolved) {
+            throw new Error(`No quote data for ${symbol}`);
+          }
+          return resolved;
+        });
         fetched[symbol] = quote;
       } catch (err) {
         console.error(
