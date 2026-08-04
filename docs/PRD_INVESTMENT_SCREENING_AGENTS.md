@@ -1,6 +1,6 @@
 # PRD — Investment Screening & Recommendation Agents (pay-per-generation)
 
-Owner: TBD · Status: Draft v0.5 · Target: Warren Pro / Trefolio Plus
+Owner: TBD · Status: Draft v0.6 · Target: Warren Pro / Trefolio Plus
 
 **Cambios v0.2**: el modelo de negocio pasa de "cuota mensual" a **pago por
 generación** — cada informe es una compra individual. Esto invierte la
@@ -38,6 +38,20 @@ La integración nueva de mayor impacto es **SEC EDGAR** (oficial, gratis):
 le da al QA Agent (§3.7) una tercera fuente independiente contra la cual
 verificar, más fuerte que la que ya usa, porque es el filing regulatorio
 original, no un dato ya parseado por un proveedor.
+
+**Cambios v0.6**: se agrega §3.9, el **Modo Cribado** — un segundo modo
+del mismo pipeline, alineado 1:1 a una especificación funcional externa
+ya escrita (`requerimientos_cribado_diario_fmp.md` v2.0): cribado diario
+y general del mercado, no de la cartera de un usuario, con un embudo de
+3 etapas, un checklist de 9 pasos por candidata y salidas fijas (1 PDF +
+5 filas Excel + 5 entradas JSON). **No hacen falta agentes nuevos** — el
+checklist se reparte completo en los Agentes 1–3 ya existentes,
+redefinidos con el detalle exacto del documento fuente, y el QA Agent
+(§3.7) pasa a auditar el cumplimiento de diez reglas de rigor concretas
+(R1–R10) en vez de un criterio genérico de alucinación. El hallazgo más
+importante: por el volumen de llamadas (~2.600–5.000 por corrida) y la
+necesidad de filesystem real para el Excel, **este modo no corre en
+Vercel** — corre como un job programado aparte (§3.9.5).
 
 ## 1. Problema y caso de uso
 
@@ -191,6 +205,12 @@ flowchart TD
     Tracking -->|"si hubieras invertido, hoy tendrías X"| U
 ```
 
+Este es el **Modo Informe**: lo dispara un usuario sobre su propia
+cartera. Los Agentes 1–3 y el QA Agent (6) tienen un **segundo modo**
+—el Modo Cribado, cribado diario y general del mercado, sin usuario ni
+cobro de por medio— descrito en §3.9, después de definir los 7 agentes
+de este modo.
+
 ### 3.0 Intake Agent (definición del brief)
 
 Responsable de convertir la señal del usuario (mensaje libre en Warren, o
@@ -259,6 +279,10 @@ run fallido que hay que reembolsar, es uno que nunca llegó a cobrarse.
 - Sigue siendo el único agente que hace *filtering* masivo — no porque
   cueste tiempo, sino porque research cualitativo (Agentes 2/3) sobre miles
   de tickers no aporta señal proporcional al costo en $.
+- En Modo Cribado (§3.9.3) este mismo agente corre con el embudo de 3
+  etapas y las fórmulas exactas del documento fuente en vez del criterio
+  genérico de arriba — la descripción de esta sección sigue valiendo
+  para Modo Informe.
 
 ### 3.2 Agente 2 — Investor Relations / Business Agent
 
@@ -418,27 +442,212 @@ verificada" en "un historial verificable".
   los últimos 12 meses" — pero eso es explícitamente fuera de alcance de
   v1 (ver §9).
 
+### 3.9 Modo Cribado — cribado diario del mercado (nuevo en v0.6)
+
+Todo lo de §1-§3.8 es el **Modo Informe**: lo dispara un usuario, es
+sobre su cartera, y se paga por generación. Este PRD parte ahora de una
+especificación funcional exacta y ya validada
+(`requerimientos_cribado_diario_fmp.md`, v2.0) para un **segundo modo**:
+un cribado diario y general del mercado —no de la cartera de nadie—
+construido íntegramente sobre FMP, con 9 pasos de checklist por
+candidata y salidas fijas (1 PDF + 5 filas Excel + 5 entradas JSON). No
+es un producto aparte: reusa los mismos Agentes 1-3 y el QA Agent (6),
+redefinidos con el detalle exacto de esa especificación.
+
+#### 3.9.1 Modo Informe vs. Modo Cribado
+
+| Dimensión | Modo Informe (§1–§3.8) | Modo Cribado (nuevo) |
+|---|---|---|
+| Trigger | Usuario pide un informe, paga | Cron diario, sin intervención de nadie |
+| Alcance | El filtro del usuario (`hardFilters`) | Todo el mercado US: NYSE/NASDAQ/AMEX, 11 sectores GICS |
+| Universo evaluado | Lo que cumple el filtro del usuario | 1.500–3.000 símbolos → embudo de 3 etapas |
+| Candidatos de salida | 3–5, variable | **Exactamente 5**, siempre |
+| Output | Informe en la app + notificación | 1 PDF + 5 filas Excel (append) + 5 entradas JSON |
+| Precio | Pago por generación (§5) | No aplica — nadie lo pidió (ver §11 pregunta abierta) |
+| Agente 4 (Portfolio Context) | Sí | No aplica — no hay cartera de un usuario de por medio |
+| Agente 5 (Risk & Suitability) | Sí | No aplica — no hay perfil de riesgo de un usuario |
+| Agente 7 (Tracking) | Sí, por informe/usuario | Sí, **reusado tal cual** — mismo mecanismo `{ticker, fecha, precio, tesis}`, sólo cambia quién generó la recomendación |
+
+#### 3.9.2 ¿Hacen falta más agentes? No
+
+El checklist de 9 pasos del documento fuente se reparte completo en los
+**3 agentes de research que ya existían** (§3.1–§3.3), sin agregar un
+cuarto agente de research. Lo que sí cambia es cuánto de cada paso es
+**código determinístico** (fórmulas exactas del documento fuente, sin
+LLM) vs. **juicio de un agente** (clasificar una noticia, redactar una
+tesis):
+
+| Paso del cribado | Agente | Código vs. LLM |
+|---|---|---|
+| Etapas A/B/C — embudo de universo (§3.9.3) | **Agente 1** | ~100% código: filtros, medianas, ranking — sin LLM |
+| Paso 1 — valoración relativa (PER vs. histórico propio vs. peers) | **Agente 1** | Código; LLM sólo si hace falta resolver un peer ambiguo |
+| Paso 4 — resiliencia del BPA en crisis (2008/09/18/20/22) | **Agente 1** | Código puro (comparar BPA entre ejercicios) |
+| Paso 5 — calidad de balance | **Agente 1** | Código puro (ratios contra umbrales) |
+| Paso 2 — divergencia precio-fundamentales + motivo de la caída | **Agente 2** | Código para las series; **LLM** para clasificar coyuntural vs. deterioro real (R7) leyendo titulares |
+| Paso 3 — catalizador concreto de re-rating | **Agente 2** | Código para cuantificar recompra/dividendo; **LLM** para leer titulares y fechar el catalizador |
+| Paso 7 — estructura competitiva | **Agente 2** (con conteos de **Agente 1**) | Código para conteo de peers/cobertura; **LLM** para detectar roll-up en noticias |
+| Paso 6 — alineación de intereses (insiders) | **Agente 3** | Código para clasificar `formType`/`transactionType` (R1); LLM sólo para redactar la nota |
+| Paso 9 — sentimiento y superinversores | **Agente 3** | Código para 13F/congreso; **LLM** para clasificar noticias como señal vs. ruido (R2) |
+| Paso 8 — contexto macro (compartido, no puntúa) | **Agente 3**, una vez por corrida | **LLM**: traducir el régimen macro al sector concreto (no es un chequeo de umbral) |
+| Paso 10 — score, veredicto y priorización | **Compiler** | Fórmula fija para el score 0-8; **LLM** para la tesis, riesgos y el orden de prioridad del resumen ejecutivo |
+
+Esto importa para el costo: de las ~2.600–5.000 llamadas a FMP por
+corrida (§3.9.3), la enorme mayoría son *fetches* determinísticos sin
+LLM. El LLM sólo entra en los puntos de juicio de la tabla — del orden
+de 5 candidatas × ~6 puntos de juicio ≈ 30 llamadas a modelo por
+corrida, no miles.
+
+#### 3.9.3 El embudo de universo (Agente 1, redefinido)
+
+Reemplaza la descripción genérica de §3.1 ("universo amplio, sin techo")
+por el embudo de tres etapas exacto del documento fuente:
+
+- **Etapa A** — `company-screener` por cada uno de los 11 sectores GICS
+  (`marketCapMoreThan`/`marketCapLowerThan`, `isActivelyTrading`,
+  `volumeMoreThan`, exchange en NYSE/NASDAQ/AMEX), deduplicado, cruzado
+  contra `financial-statement-symbol-list`, con el **filtro de exclusión
+  de 90 días** aplicado *antes* de gastar llamadas en B/C (§3.9.3.1). →
+  1.500–3.000 símbolos, ~12 llamadas.
+- **Etapa B** — pre-filtro barato: `financial-growth` por símbolo,
+  retener `revenueGrowth ≥ 10%` o `epsgrowth ≥ 10%`. → 300–600 símbolos,
+  1 llamada c/u.
+- **Etapa C** — valoración relativa: `ratios-ttm` + `ratios` (10
+  ejercicios) + `analyst-estimates` por símbolo. PER forward vs. mediana
+  histórica propia (excluyendo ejercicios con BPA negativo o PER > 100;
+  si quedan &lt;4 ejercicios válidos → `N/D`, nunca inventar una media).
+  Ranking = `descuento × 0,5 + crecimiento × 0,5`. → 15–30 candidatas, 3
+  llamadas c/u.
+- **Selección final**: las 5 mejores por ranking, máx. 2 por sector.
+
+**Presupuesto total: ~2.600–5.000 llamadas por corrida.** Caché
+obligatoria (24h para universo/crecimiento, 30 días para
+`profile`/`stock-peers`), paralelización en lotes de 20–50 con backoff
+exponencial ante HTTP 429 (1s/2s/4s/8s, máx. 5 intentos). Símbolos no
+estadounidenses devuelven HTTP 402 bajo el plan actual → se excluyen del
+universo de Etapa A en vez de intentar reconstruir el dato por
+`WebSearch` en la corrida diaria (esa reconstrucción manual sí tiene
+sentido en Modo Informe, donde es 1 ticker puntual, no miles).
+
+##### 3.9.3.1 Registro de 90 días (nuevo, no confundir con el Agente 7)
+
+Un ticker evaluado en los últimos 90 días se excluye de re-evaluarse
+salvo que su precio se haya movido &gt;20% desde entonces —evita gastar el
+presupuesto de llamadas en pantallas ya barridas y evita que las 5
+candidatas de hoy se parezcan demasiado a las de ayer. Esto es un
+**registro de cooldown del cribado**, no el Agente 7: el Agente 7 sigue
+el *resultado* de una recomendación ya hecha; este registro sólo decide
+si vale la pena *re-evaluar* un ticker. Vive como parte del estado del
+Agente 1, no como agente propio — ver `screening_universe_registry` en
+§4.
+
+#### 3.9.4 QA Agent (6): de "detectar alucinación" a "auditar reglas"
+
+El documento fuente trae diez reglas de rigor (R1–R10) muy específicas
+—qué SÍ cuenta como señal y qué NO— que son exactamente lo que el QA
+Agent (§3.7) ya está diseñado para hacer cumplir, sólo que ahora tiene
+una checklist concreta en vez de un criterio genérico:
+
+| Regla | Qué audita | Le pertenece a |
+|---|---|---|
+| R1, R3 | Paso 6 no acredita Formulario 3 / RSU / vesting como compra; toda venta de insider queda registrada como señal en contra | Agente 3 |
+| R2 | Paso 9 no acredita menciones débiles ni contenido automatizado como sentimiento | Agente 3 |
+| R4 | `N/D` declarado explícitamente si hay &lt;4 ejercicios de PER válidos — nunca una media inventada | Agente 1 |
+| R5 | Discrepancias entre fuentes se reportan ambas, nunca se elige en silencio la más favorable | Cualquier agente |
+| R6 | Si hubo cambio de guía posterior al consenso de precio objetivo, advertir que el consenso está desfasado | Agente 2 |
+| R7 | Una caída de precio sólo aprueba el Paso 2 si el motivo es coyuntural, no deterioro real | Agente 2 |
+| R8 | Crecimiento por adquisiciones se distingue del orgánico | Agente 2 |
+| R9 | `stock-peers` siempre filtrado por `industry` antes de usarse | Agente 1 |
+| R10 | `numAnalystsEps` siempre registrado; consenso de 1 sola casa marcado de baja fiabilidad | Agente 1 |
+
+Esto agrega un `issue_type` nuevo a `screening_qa_rounds` (§4):
+`rule_violation`, con un campo `rule_id` (`R1`…`R10`) — el QA Agent no
+sólo dice "hay un error de dato", dice "se violó R7: la caída se
+clasificó como coyuntural sin justificación de que no es deterioro
+real", y la corrección dirigida (§3.7) se le pide al agente dueño de esa
+regla en la tabla de arriba.
+
+#### 3.9.5 Por qué esto no corre en Vercel
+
+El documento fuente asume un entorno con filesystem real: escribe un
+Excel que nunca se sobreescribe (busca la primera fila vacía, copia
+estilo de la última fila, recalcula fórmulas con
+`soffice --headless` y verifica con `openpyxl` que ninguna celda quedó
+en `#ERROR`), y hace ~2.600–5.000 llamadas HTTP por corrida. Ninguna de
+las dos cosas encaja con Vercel Fluid compute (§8): las funciones no
+tienen filesystem persistente entre invocaciones, no hay LibreOffice
+disponible, y una corrida de esa duración excede cómodamente cualquier
+timeout razonable de función serverless.
+
+**Decisión**: el Modo Cribado corre como un **job programado fuera de
+Vercel** — un workflow de GitHub Actions con cron diario (runners con
+`apt-get`, puede instalar LibreOffice, sube el PDF/Excel como artifact,
+y al final hace una llamada a la API de Trefolio para persistir el
+resultado en Turso). La lógica de los Agentes 1–3/QA/Compiler se
+implementa como **módulos TypeScript puros** (sin acoplarse a Next.js ni
+a una request HTTP), reusables desde:
+- El API route de Vercel (Modo Informe, síncrono al request vía
+  `submitJob`).
+- El script de GitHub Actions (Modo Cribado, corrida larga con
+  filesystem real).
+
+Alternativa más simple si se prefiere no salir de Vercel: reemplazar
+LibreOffice por **`exceljs`** (Node) escribiendo valores ya calculados
+en vez de fórmulas vivas — se pierde la recalculación automática que
+pide A79, pero se gana correr todo en un solo runtime. Queda como
+pregunta abierta (§11) cuál de las dos rutas se prioriza.
+
+#### 3.9.6 Salidas y modelo de datos (extiende §4)
+
+- **PDF**: reusa el mismo pipeline HTML→Chromium ya usado para este PRD
+  (skill `pdf` de este workspace) en vez de una librería nueva — 5
+  secciones fijas (portada, resumen ejecutivo con orden de prioridad
+  justificado, tabla comparativa, 5 fichas, disclaimer), como especifica
+  el documento fuente.
+- **Excel**: `exceljs` para leer/escribir sin tocar filas existentes,
+  copiar estilo de la última fila, y validar post-escritura que ninguna
+  celda rota empiece con `#`.
+- **JSON + registro de 90 días**: se recomienda mover
+  `registro_empresas_evaluadas.json` a una tabla Turso
+  (`screening_universe_registry`, §4) en vez de un archivo JSON como
+  fuente de verdad — un archivo compartido entre corridas concurrentes es
+  frágil (escritura parcial, sin locking); la tabla se puede *exportar*
+  a JSON para mantener compatibilidad con el formato del documento
+  fuente, pero el dato vive en la base ya existente.
+
 ## 4. Modelo de datos
 
-- **`screening_runs`** (id, user_id, portfolio_id, brief_json, status,
-  charge_id, created_at) — `charge_id` referencia el cobro (ver §5).
-  `status` incluye `rejected_infeasible` (nuevo en v0.4): el chequeo de
-  viabilidad del Intake Agent (§3.0) rechazó el brief antes de cobrar —
-  `charge_id` queda `null`. Se persiste igual para poder medir qué tan
-  seguido pasa (métrica de producto, no sólo de calidad del informe).
+- **`screening_runs`** (id, `mode` `user_report|daily_screen` (nuevo en
+  v0.6), user_id **nullable**, portfolio_id, brief_json, status,
+  charge_id, created_at) — `charge_id` referencia el cobro (ver §5),
+  siempre `null` cuando `mode = daily_screen` (§3.9, no hay cobro).
+  `user_id` es nullable por la misma razón: un `daily_screen` no
+  pertenece a un usuario. `status` incluye `rejected_infeasible` (nuevo
+  en v0.4): el chequeo de viabilidad del Intake Agent (§3.0) rechazó el
+  brief antes de cobrar — `charge_id` queda `null`. Se persiste igual
+  para poder medir qué tan seguido pasa (métrica de producto, no sólo de
+  calidad del informe).
+- **`screening_universe_registry`** (ticker, last_evaluated_at,
+  last_price, alias_group nullable) — nueva en v0.6: el registro de
+  cooldown de 90 días del Modo Cribado (§3.9.3.1). `alias_group` agrupa
+  un mismo emisor listado en varios mercados (ej. ADR en NYSE + acción
+  local) para que cuenten como el mismo ticker (regla A20 del documento
+  fuente). Reemplaza el archivo `registro_empresas_evaluadas.json` del
+  documento fuente como fuente de verdad — se exporta a ese mismo formato
+  JSON para mantener compatibilidad (§3.9.6).
 - **`screening_agent_outputs`** (run_id, agent_kind, status, output_json,
   latency_ms, cost_estimate) — para debuggear qué agente falló/tardó;
   `latency_ms` se guarda para observabilidad interna, no como SLA hacia el
   usuario.
 - **`screening_qa_rounds`** (id, run_id, round_number, verdict
   `pass|fail`, flagged_agent_kinds json, issue_type
-  `quant_mismatch|unconfirmed_source|cross_agent_inconsistency`,
-  issue_summary, created_at) — nueva en v0.3: una fila por incidencia
-  detectada en cada ronda del QA Agent (§3.7). `issue_type` es lo que
-  hace posible calcular la tasa de alucinación de datos y las demás
-  métricas de calidad del informe (§2) sin tener que parsear texto
-  libre — cada incidencia ya viene clasificada por el propio QA Agent
-  al emitir su veredicto.
+  `quant_mismatch|unconfirmed_source|cross_agent_inconsistency|rule_violation`,
+  rule_id nullable (`R1`…`R10`, sólo si `issue_type = rule_violation`,
+  nuevo en v0.6, ver §3.9.4), issue_summary, created_at) — nueva en v0.3:
+  una fila por incidencia detectada en cada ronda del QA Agent (§3.7).
+  `issue_type` es lo que hace posible calcular la tasa de alucinación de
+  datos y las demás métricas de calidad del informe (§2) sin tener que
+  parsear texto libre — cada incidencia ya viene clasificada por el
+  propio QA Agent al emitir su veredicto.
 - **`screening_reports`** (run_id, summary_json, candidates_json).
 - **`recommendation_outcomes`** (id, run_id, report_id, ticker,
   recommended_at, recommended_price, suggested_alloc_eur, position_kind
@@ -539,6 +748,9 @@ Sprint 0 antes de fijar el precio final):
 | Cron de tracking falla silenciosamente (precios no se actualizan, recomendaciones quedan "congeladas") | Reusa `withCronLogging` (alerting ya existente en `monitoring/`); backfill si se detecta un gap de días sin valuación |
 | Metodología de benchmark cuestionable (¿qué índice/ETF comparar?) | Metodología fija y documentada por sector, mostrada de forma transparente en el UI del track record — no se elige post-hoc para favorecer el resultado |
 | Sobre-alcance de scope (7 agentes → mantenimiento) | v1 = 4 agentes de research + compiler + QA + tracking; Risk Agent (5) puede lanzarse en fase 1.5 si el timeline aprieta sin bloquear el resto |
+| Modo Cribado excede rate limits de FMP (~2.600–5.000 llamadas/corrida) o corre en un entorno sin filesystem real | Corre fuera de Vercel (GitHub Actions programado, §3.9.5), no en Fluid compute; caché de 24h/30 días + backoff exponencial ante 429 (§3.9.3) |
+| Excel del Modo Cribado se corrompe (fórmula rota, fila sobreescrita, celda `#ERROR`) | `exceljs` con verificación post-escritura obligatoria antes de reemplazar el archivo (§3.9.6); nunca sobreescribir filas existentes |
+| Modo Cribado no tiene monetización clara (nadie lo pidió, no aplica pago por generación) | Recomendación: arranca como herramienta interna (alimenta caché de moat-screener, da datos reales al Agente 7 antes de exponerlo) y sólo después se evalúa como beneficio de suscripción Pro, no a la carta (§11 pregunta abierta) |
 
 ## 7. Plan de sprints (2 semanas c/u, salvo Sprint 0)
 
@@ -651,6 +863,30 @@ Sprint 0 antes de fijar el precio final):
 - Fixes de beta, ajuste de prompts según feedback real, GA rollout
   progresivo.
 
+### Fase 1.5 — Modo Cribado (§3.9, no bloquea Sprints 0–9)
+
+Arranca recién cuando los Agentes 1–3 y el QA Agent existen (después de
+Sprint 4), porque los reusa tal cual — no es un pipeline nuevo, es un
+segundo trigger sobre el mismo código.
+
+- Extraer los Agentes 1–3/QA a módulos TypeScript puros, sin acoplar a
+  Next.js, para que los importe tanto el API route (Modo Informe) como
+  el script de GitHub Actions (Modo Cribado).
+- Implementar el embudo de 3 etapas exacto (§3.9.3): umbrales, medianas,
+  ranking, caché de 24h/30 días, backoff ante 429.
+- Tabla `screening_universe_registry` + lógica de cooldown de 90 días
+  (§3.9.3.1).
+- Generación de PDF (reusa el pipeline HTML→Chromium de este PRD) +
+  Excel (`exceljs`, append-only, verificación anti-`#ERROR`) + export
+  JSON de compatibilidad.
+- Workflow de GitHub Actions con cron diario + upload de artifacts +
+  llamada de persistencia a la API de Trefolio.
+- **Salida**: una corrida diaria real produce 1 PDF + 5 filas Excel + 5
+  entradas JSON sin intervención manual, con las 9 reglas (R1–R10)
+  auditadas por el QA Agent.
+- Antes de exponerlo a usuarios: decidir el modelo de distribución
+  (interno vs. beneficio Pro) — ver §11 pregunta abierta.
+
 ## 8. Tecnologías de implementación
 
 No se introduce un framework nuevo — el feature se implementa sobre la
@@ -673,6 +909,8 @@ misma pila que ya corre en producción para Warren, Clara y Will.
 | Notificaciones | **Web Push** (VAPID, `web-push.ts`) + email transaccional (**Resend**) | Mismos canales que ya usa el resto del producto |
 | Observabilidad | **Prometheus + Grafana** (`monitoring/`) | Dashboards de margen por run y de métricas de calidad del informe (§2): rondas de QA, tasa de alucinación de datos, tasa de corrección por agente, gaps del cron de tracking |
 | Tests | **Vitest** (unit/integration) + **Playwright** (e2e) | Mismos frameworks que el resto del repo (`vitest.config.ts`, `playwright.config.ts`) — el loop de QA en sí se testea con casos que fuerzan un error deliberado en un agente para confirmar que la corrección dirigida funciona (ver Sprint 4) |
+| Ejecución del Modo Cribado (§3.9) | **GitHub Actions** (cron diario) en vez de Vercel Fluid compute | Necesita filesystem real y una corrida de varios minutos — ninguna de las dos cosas encaja en una función serverless (§3.9.5) |
+| Generación de Excel (Modo Cribado) | **`exceljs`** | Lee/escribe sin tocar filas existentes, copia estilo; reemplaza el `openpyxl` + `soffice --headless` del documento fuente para poder correr en Node |
 
 ## 9. Integraciones que elevarían la calidad (roadmap)
 
@@ -767,3 +1005,15 @@ para las fases 1.5/2 una vez que el pipeline base esté en producción.
 11. ¿Alguna integración de §9 debería entrar en v1 en vez de fase 1.5,
     particularmente SEC EDGAR — es gratis y mejora directo la tasa de
     alucinación de datos, la métrica de calidad más crítica del producto?
+12. ¿Cómo se distribuye el Modo Cribado (§3.9)? Herramienta interna,
+    beneficio de suscripción Pro (digest diario), o eventualmente su
+    propio cobro — afecta si necesita UI de cara al usuario en Fase 1.5
+    o alcanza con el PDF/Excel/JSON como hoy.
+13. ¿GitHub Actions + `exceljs` (§3.9.5) o vale la pena el entorno con
+    LibreOffice real del documento fuente para tener recalculación de
+    fórmulas en vivo? Afecta el alcance de Fase 1.5.
+14. ¿El registro de 90 días (`screening_universe_registry`, §3.9.3.1)
+    debería compartirse entre Modo Cribado y Modo Informe — si un
+    usuario pide un informe sobre un ticker que el cribado de ayer ya
+    evaluó a fondo, ¿el Agente 1 del Modo Informe puede reusar ese
+    resultado en vez de recalcularlo?
