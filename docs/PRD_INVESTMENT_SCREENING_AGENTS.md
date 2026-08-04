@@ -1,15 +1,22 @@
 # PRD — Investment Screening & Recommendation Agents (pay-per-generation)
 
-Owner: TBD · Status: Draft v0.2 · Target: Warren Pro / Trefolio Plus
+Owner: TBD · Status: Draft v0.3 · Target: Warren Pro / Trefolio Plus
 
 **Cambios v0.2**: el modelo de negocio pasa de "cuota mensual" a **pago por
 generación** — cada informe es una compra individual. Esto invierte la
 prioridad de diseño: la latencia deja de ser una restricción y la
-**exhaustividad** pasa a ser el requisito central (el usuario está pagando
-por profundidad, no por velocidad). Se agrega un **Agente 6 de seguimiento
-de recomendaciones** que seguimenta cada candidato recomendado en el tiempo
-—compró el usuario o no— para poder decir "si hubieras invertido acá, hoy
-tendrías X". Ver §3.6, §4 y §7 para el detalle de qué cambió.
+**exhaustividad** pasa a ser el requisito central. Se agrega un agente de
+seguimiento de recomendaciones que sigue cada candidato en el tiempo —haya
+invertido el usuario o no— para poder decir "si hubieras invertido acá, hoy
+tendrías X".
+
+**Cambios v0.3**: se formaliza el paso de verificación como un **agente
+propio con loop de corrección dirigida** (§3.7) — si encuentra un error,
+sólo se re-invoca el agente responsable, no todo el pipeline, y se vuelve a
+verificar hasta que pasa o se llega a un tope de rondas. Esto corre el
+número del agente de seguimiento (antes "Agente 6") a **Agente 7** (§3.8).
+Se agrega además §8, una descripción de las tecnologías con las que se
+implementa cada pieza.
 
 ## 1. Problema y caso de uso
 
@@ -31,15 +38,16 @@ Es una **feature de pago por generación**: el usuario paga cada vez que pide
 un informe (no una cuota mensual incluida en el plan). Eso cambia el
 contrato implícito con el usuario — no está comprando velocidad, está
 comprando un análisis exhaustivo que le tomaría horas hacer a mano. Un run
-que tarda 6 minutos porque cruzó 30 tickers contra 3 fuentes cada uno vale
-más que uno que tarda 20 segundos y cortó camino.
+que tarda 6 minutos porque cruzó 30 tickers contra 3 fuentes cada uno, y se
+tomó el trabajo de verificarse y corregirse a sí mismo antes de entregar,
+vale más que uno que tarda 20 segundos y cortó camino.
 
 ## 2. Objetivo
 
 Dado un trigger del usuario (manual, "screening" tab, o detectado por Warren
 en conversación: "estoy muy expuesto a tech"), producir — a cambio de un
-pago — un **informe ejecutivo exhaustivo** con 3–5 candidatos accionables,
-cada uno con:
+pago — un **informe ejecutivo exhaustivo y verificado** con 3–5 candidatos
+accionables, cada uno con:
 - Por qué encaja (dato duro + narrativa de negocio + contexto de cartera)
 - Riesgos / qué vigilar, con fuentes citadas
 - Sizing sugerido y si es mejor "comprar nuevo" o "incrementar algo que ya
@@ -60,19 +68,27 @@ ni compite contra un timeout de UI) y notifica cuando termina — reusa
   de tiempo de UI — cortar solo cuando ya no aporta señal).
 - Múltiples rondas de research en Agentes 2/3 (cross-verificar un hecho
   contra 2+ fuentes en vez de aceptar la primera).
-- Un paso de **verificación** en el Compiler antes de entregar (ver §3.6).
+- Un **agente de verificación con loop de corrección** después del borrador
+  del Compiler, que puede pedirle a un agente específico que rehaga su
+  trabajo si encuentra un error, y volver a chequear (ver §3.7).
 
 El límite que sí importa es el **costo en $** de cada run (tokens LLM +
 llamadas FMP/WebSearch), porque tiene que quedar cubierto por el precio
-cobrado — no el tiempo de reloj.
+cobrado — no el tiempo de reloj. Por eso el loop de verificación tiene un
+tope de rondas: exhaustividad no significa loops infinitos pagados por
+nadie.
 
 ### Métricas de éxito
 - ≥80% de los runs generan al menos 1 candidato "accionable" (no vacío) —
   la barra sube respecto a v0.1 porque ahora no hay excusa de "no daba el
   tiempo"
 - **% de recomendaciones con alpha positivo vs. benchmark** a 90 días / 1
-  año, medido por el Agente 6 de seguimiento — es la métrica de verdad del
+  año, medido por el Agente 7 de seguimiento — es la métrica de verdad del
   producto, no un proxy
+- **Tasa de corrección del QA Agent** (% de runs que necesitaron ≥1 ronda de
+  corrección dirigida) y **tasa de agente responsable** (qué agente falla
+  más seguido) — señal de calidad interna por agente, no sólo del producto
+  final
 - Tasa de reembolso automático (runs vacíos o degradados) — debe ser baja;
   cada reembolso es señal de una generación que no debió cobrarse
   (ver §5)
@@ -81,7 +97,7 @@ cobrado — no el tiempo de reloj.
 
 ### Fuera de alcance (v1)
 - Ejecución de órdenes / trading automático
-- Backtesting histórico general (el tracking de §3.6 es forward-looking
+- Backtesting histórico general (el tracking de §3.8 es forward-looking
   desde la fecha de la recomendación, no backtesting retroactivo)
 - Cobertura fuera de US/EU large & mid cap (FMP free/starter tier limita esto)
 - Multi-idioma del research crudo (el resumen final sí respeta `locale`, el
@@ -102,21 +118,24 @@ flowchart TD
 
     subgraph "Job en background (submitJob)"
         Intake[0. Intake Agent] --> Planner[Orchestrator]
-        Planner --> A1[1. Hard Data Agent<br/>FMP + Yahoo — universo amplio]
-        Planner --> A2[2. IR / Business Agent<br/>multi-fuente]
-        Planner --> A3[3. Web & Sentiment Agent<br/>multi-ronda]
-        Planner --> A4[4. Portfolio Context Agent<br/>datos propios de Trefolio]
+        Planner --> A1[1. Hard Data Agent]
+        Planner --> A2[2. IR / Business Agent]
+        Planner --> A3[3. Web & Sentiment Agent]
+        Planner --> A4[4. Portfolio Context Agent]
         Planner --> A5[5. Risk & Suitability Agent]
-        A1 --> Compiler[Executive Summary Compiler<br/>+ paso de verificación]
-        A2 --> Compiler
-        A3 --> Compiler
-        A4 --> Compiler
-        A5 --> Compiler
+        A1 --> Draft[Compiler: borrador]
+        A2 --> Draft
+        A3 --> Draft
+        A4 --> Draft
+        A5 --> Draft
+        Draft --> QA{6. QA / Verification Agent}
+        QA -->|"fail: agente X señalado"| Retry[Re-invoca SÓLO<br/>el agente señalado]
+        Retry --> Draft
+        QA -->|"pass (o tope de 2 rondas)"| Final[Informe final]
     end
 
-    Compiler --> Report[Informe ejecutivo + candidatos]
-    Report -->|push / email| U
-    Report --> Tracking[6. Recommendation Tracking Agent]
+    Final -->|push / email| U
+    Final --> Tracking[7. Recommendation Tracking Agent]
     Tracking -->|cron periódico, semanas/meses| Tracking
     Tracking -->|"si hubieras invertido, hoy tendrías X"| U
 ```
@@ -191,8 +210,8 @@ adivinado a medias.
   reciente", "cobertura analista mayormente bullish/bearish" — con
   citación de fuente y fecha (para evitar alucinación y dar trazabilidad).
 - Sigue siendo el agente con mayor riesgo de alucinar / traer info stale →
-  el Compiler descarta cualquier claim sin fuente o con una sola fuente no
-  corroborada.
+  el QA Agent (§3.7) descarta cualquier claim sin fuente o con una sola
+  fuente no corroborada.
 
 ### 3.4 Agente 4 — Portfolio Context Agent (datos propios de Trefolio)
 
@@ -219,36 +238,78 @@ adivinado a medias.
 - El disclaimer regulatorio no es un agente de research — va cableado
   directo en el Compiler.
 
-### 3.6 Executive Summary Compiler (+ paso de verificación)
+### 3.6 Executive Summary Compiler (borrador)
 
 1. Recibe el output tipado de los 5 agentes (`Promise.allSettled`,
    degradando con gracia si uno falla).
 2. Rankea candidatos (score compuesto: fit con filtros duros + business
    quality + sentiment + fit de cartera).
-3. **Paso de verificación** (nuevo en v0.2): antes de redactar, chequea que
-   cada afirmación cuantitativa tenga un campo estructurado de origen
-   (Agente 1/4) y que cada afirmación cualitativa tenga ≥2 fuentes o esté
-   marcada como no confirmada. Esto es viable precisamente porque no hay
-   presión de tiempo — es la razón de ser de cobrar por generación en vez
-   de por cuota.
-4. Redacta el resumen ejecutivo vía LLM citando sólo lo verificado.
+3. Redacta un **borrador** del resumen ejecutivo vía LLM, citando los datos
+   estructurados de los Agentes 1–5 — el Compiler ya no verifica su propio
+   trabajo; ese paso ahora es un agente aparte con más independencia de
+   criterio (§3.7).
+4. Entrega el borrador al QA Agent.
+
+Una vez que el borrador pasa verificación (§3.7):
+
 5. Persiste el informe y **registra cada candidato recomendado** en
-   `recommendation_outcomes` para que el Agente 6 lo siga en el tiempo
-   (ver §3.7) — esto ocurre siempre, incluso si el usuario nunca vuelve a
+   `recommendation_outcomes` para que el Agente 7 lo siga en el tiempo
+   (ver §3.8) — esto ocurre siempre, incluso si el usuario nunca vuelve a
    abrir el informe.
 6. Dispara la notificación (push/email) de "tu informe está listo".
 
-### 3.7 Agente 6 — Recommendation Tracking Agent (nuevo)
+### 3.7 Agente 6 — QA / Verification Loop Agent (nuevo en v0.3)
 
-Este agente no corre dentro del job síncrono del informe — corre **después**,
-en un cron periódico, y es el que convierte el producto de "una opinión de
-IA" en "un historial verificable".
+Corre **dentro del mismo job**, después del borrador del Compiler y antes
+de que exista un informe final — es un segundo agente independiente que
+audita el trabajo de los Agentes 1–5, no una relectura del propio Compiler
+sobre sí mismo.
 
-- **Qué persiste el Compiler al terminar cada run**: por cada candidato
-  recomendado — ticker, fecha y precio al momento de la recomendación,
-  monto sugerido de asignación, si era posición nueva o top-up, y un
-  snapshot corto de la tesis. Se persiste **independientemente de si el
-  usuario terminó invirtiendo o no**.
+- **Qué revisa**: por cada afirmación del borrador, vuelve a la fuente — no
+  al texto del Compiler, al `output_json` estructurado de cada agente en
+  `screening_agent_outputs`:
+  - Afirmación cuantitativa → ¿coincide exactamente con el campo del
+    Agente 1/4 que dice citar? Nada de redondeos que cambien el sentido,
+    nada de números que no estén en ningún output estructurado.
+  - Afirmación cualitativa → ¿tiene ≥2 fuentes independientes del Agente 3,
+    con fecha dentro de la ventana de frescura?
+  - Consistencia entre agentes → ej. si el Agente 4 marcó `topUpExisting`,
+    ¿el ticker efectivamente aparece en el snapshot de cartera que usó?
+- **Veredicto**: `pass` o `fail` con una lista de incidencias, cada una
+  apuntando a **qué agente específico** la originó
+  (`{agentKind, ticker, issue}`) — no "el informe tiene un error", sino
+  "Agente 2 dijo yield 5.8% para XYZ; el dato estructurado del Agente 1
+  dice 4.9%".
+- **Corrección dirigida**: si hay `fail`, se re-invoca **únicamente el/los
+  agente(s) señalados**, con el detalle de la incidencia como contexto
+  adicional. Los agentes que pasaron la verificación **no se vuelven a
+  correr** — sus outputs se reusan tal cual. El Compiler rehace el
+  borrador combinando lo corregido con lo que ya estaba validado.
+- **Loop**: el QA Agent vuelve a verificar el borrador corregido. Se repite
+  hasta `pass` o hasta un **tope de 2 rondas de corrección dirigida**
+  (configurable, ver §8 pregunta abierta) — el loop no es infinito: sigue
+  siendo dinero real por run.
+- **Si se llega al tope sin pasar**: se degrada quitando del informe el
+  candidato puntual que sigue fallando (no todo el informe) — mismo
+  criterio de degradación por fallo de agente ya definido en §5. Si eso
+  deja el informe en 0 candidatos accionables, es un run fallido →
+  reembolso automático (mismo criterio de §5).
+- Corre en el mismo tier de modelo "premium" que el Compiler — necesita
+  buen juicio para detectar contradicciones sutiles entre agentes, no es
+  un chequeo de reglas simple de regex.
+
+### 3.8 Agente 7 — Recommendation Tracking Agent
+
+Este agente no corre dentro del job del informe — corre **después**, en un
+cron periódico, y es el que convierte el producto de "una opinión de IA
+verificada" en "un historial verificable".
+
+- **Qué persiste el Compiler al terminar cada run** (una vez que el QA
+  Agent dio `pass`): por cada candidato recomendado — ticker, fecha y
+  precio al momento de la recomendación, monto sugerido de asignación, si
+  era posición nueva o top-up, y un snapshot corto de la tesis. Se
+  persiste **independientemente de si el usuario terminó invirtiendo o
+  no**.
 - **Qué hace el cron** (reusa el patrón `withCronLogging` /
   `verifyCronAuth` de los crons existentes, ej.
   `src/app/api/cron/portfolio-recommendations`): con una cadencia periódica
@@ -278,7 +339,7 @@ IA" en "un historial verificable".
 - Este track record (agregado y anonimizado) es también material de
   marketing/onboarding — "así de bien le fue a nuestras recomendaciones en
   los últimos 12 meses" — pero eso es explícitamente fuera de alcance de
-  v1 (ver §8).
+  v1 (ver §9).
 
 ## 4. Modelo de datos
 
@@ -288,11 +349,18 @@ IA" en "un historial verificable".
   latency_ms, cost_estimate) — para debuggear qué agente falló/tardó;
   `latency_ms` se guarda para observabilidad interna, no como SLA hacia el
   usuario.
+- **`screening_qa_rounds`** (id, run_id, round_number, verdict
+  `pass|fail`, flagged_agent_kinds json, issue_summary, created_at) —
+  nueva en v0.3: una fila por ronda del QA Agent (§3.7). Permite auditar
+  cuántas veces se corrigió un run, y agregada a lo largo del tiempo dice
+  qué agente falla más seguido (señal de calidad interna por agente, no
+  sólo del producto final).
 - **`screening_reports`** (run_id, summary_json, candidates_json).
 - **`recommendation_outcomes`** (id, run_id, report_id, ticker,
   recommended_at, recommended_price, suggested_alloc_eur, position_kind
   `new|topup`, thesis_snapshot, status `active|closed`) — una fila por
-  candidato recomendado, se crea siempre al finalizar el run.
+  candidato recomendado, se crea siempre al finalizar el run (después de
+  que el QA Agent dio `pass`).
 - **`recommendation_valuations`** (id, recommendation_id, as_of_date, price,
   hypothetical_value_eur, hypothetical_return_pct, benchmark_symbol,
   benchmark_return_pct, alpha_pct, user_acted boolean, actual_return_pct
@@ -313,22 +381,24 @@ IA" en "un historial verificable".
   brief** (después de que Intake Agent resolvió ambigüedades), no al
   entregar — pero con reembolso automático si el run falla o degrada.
 - **Reembolso automático**: si el run termina con 0 candidatos accionables,
-  o si ≥2 de los 5 agentes de research fallaron, se reembolsa
+  o si ≥2 de los 5 agentes de research fallaron, o si el QA Agent llega al
+  tope de rondas sin poder validar ningún candidato, se reembolsa
   automáticamente y se notifica al usuario — extiende el patrón que ya
   existe (`refundFeatureQuota` en `company-analysis`) a un reembolso de
-  dinero real en vez de cuota. Cobrar por una generación vacía rompe
-  confianza en un producto de pago-por-uso más rápido que en uno de cuota
-  mensual.
+  dinero real en vez de cuota. Cobrar por una generación vacía o no
+  verificada rompe confianza en un producto de pago-por-uso más rápido que
+  en uno de cuota mensual.
 - **Presupuesto de costo por run** (no de tiempo): cap de tokens LLM +
-  llamadas FMP/WebSearch por run — si se acerca al techo, el Compiler
-  prioriza terminar de investigar los candidatos con mejor score antes de
-  seguir bajando en la lista de Agente 1, en vez de cortar todo de golpe.
+  llamadas FMP/WebSearch por run, incluyendo las rondas del QA Agent — si
+  se acerca al techo, el Compiler prioriza terminar de investigar los
+  candidatos con mejor score antes de seguir bajando en la lista de
+  Agente 1, en vez de cortar todo de golpe.
 - **Teaser gratuito**: dado que ahora no hay "sección parcial" de un run
   pago que blurear, el hook gratuito es la detección de sobre-exposición
   (ya cubierta por una versión generalizada de `findPrimarySectorGap`, sin
   research) con un CTA a "generar informe completo" — el usuario ve *que*
   hay un problema gratis, paga para ver *qué hacer* al respecto.
-- El seguimiento de recomendaciones (§3.7) es parte del precio ya pagado —
+- El seguimiento de recomendaciones (§3.8) es parte del precio ya pagado —
   no es un cobro adicional; es lo que sostiene la percepción de valor de
   compras futuras.
 
@@ -336,28 +406,32 @@ IA" en "un historial verificable".
 
 Números de referencia (no un compromiso de proveedor — el gateway de
 modelo ya está abstraído en `run-turn.ts`, y el proveedor de búsqueda
-queda como decisión de Sprint 0 §8). Sirven para validar que el precio por
+queda como decisión de Sprint 0 §9). Sirven para validar que el precio por
 generación tiene margen incluso en el peor caso, que es la pregunta
-abierta #1.
+abierta #1. Incluye el costo del loop de verificación de §3.7.
 
 | Componente | Costo estimado / run | Base del cálculo |
 |---|---|---|
 | LLM — Agentes 1–5 (research, modelo económico) | **$0.05 – $0.10** | ~134K tokens input + ~15K output a precio tipo GPT-4.1 mini ($0.40 / $1.60 por M tokens) |
-| LLM — Compiler (verificación + redacción, modelo premium) | **$0.10 – $0.15** | ~50K tokens input + ~4K output a precio tipo GPT-4.1 ($2 / $8 por M tokens) — necesita más calidad de razonamiento que los sub-agentes |
-| Web Search API (Agente 3, cross-verificación 2 fuentes + Agente 2 fallback) | **$0.15 – $0.35** | ~20–40 búsquedas por run a precio tipo Tavily ($0.008/crédito búsqueda básica, $0.016 avanzada) |
+| LLM — Compiler (ranking + borrador, modelo premium) | **$0.06 – $0.10** | ~35K tokens input + ~3K output a precio tipo GPT-4.1 ($2 / $8 por M tokens) |
+| LLM — QA / Verification Loop Agent (1–3 rondas + reintentos dirigidos) | **$0.08 – $0.35** | Cada ronda revisa el borrador contra los outputs estructurados (~40K tokens) a precio premium (~$0.09/ronda); reintentos dirigidos sólo re-corren el agente señalado en tier económico (~$0.02–0.03 c/u) — típico 1 ronda sin fallas, hasta 3 en el peor caso |
+| Web Search API (Agente 3, cross-verificación 2 fuentes + Agente 2 fallback) | **$0.15 – $0.35** | ~20–40 búsquedas por run a precio tipo Tavily ($0.008/crédito básico, $0.016 avanzado) |
 | FMP (datos duros, Agentes 1 y 4) | **~$0 marginal** | Plan mensual fijo (Starter/Premium, ~$99+/mes) ya compartido con el resto de Trefolio — no es costo por-run salvo que el volumen de este feature fuerce upgrade de tier (riesgo a vigilar, no un costo directo) |
-| Vercel — compute del job async (Fluid compute, Active CPU) | **$0.005 – $0.01** | $0.128/hora CPU activa + $0.0106/GB·hora memoria provisionada; el job es mayormente espera de I/O (LLM streaming, APIs externas), y Active CPU sólo cobra el cómputo real, no el tiempo de espera — el diseño async de §2 no sólo habilita exhaustividad, también mantiene este costo marginal |
+| Vercel — compute del job async (Fluid compute, Active CPU) | **$0.005 – $0.015** | $0.128/hora CPU activa + $0.0106/GB·hora memoria provisionada; el job es mayormente espera de I/O (LLM streaming, APIs externas), y Active CPU sólo cobra el cómputo real, no el tiempo de espera — el diseño async de §2 no sólo habilita exhaustividad, también mantiene este costo marginal aun con el loop de QA |
 | Notificación (push / email) | **~$0** | Infra ya existente (`web-push.ts`, proveedor de email transaccional) |
-| **Total estimado por generación** | **$0.35 – $0.60** (caso típico) · hasta **~$1.00** en el peor caso (universo grande sin hits de caché, retries, brief con más de 10 candidatos investigados en profundidad) | |
+| **Total estimado por generación** | **$0.35 – $0.65** (caso típico, QA pasa en la primera ronda) · hasta **~$1.20** en el peor caso (universo grande sin hits de caché, QA llega al tope de 3 rondas con reintentos) | |
 
-**Lectura para el precio**: incluso en el peor caso (~$1.00), un precio
+**Lectura para el precio**: incluso en el peor caso (~$1.20), un precio
 por generación en el rango de referencia habitual de este tipo de
 producto (informe de research puntual) deja margen bruto amplio. El
-componente que más pesa es LLM + Search (~85–90% del costo variable); el
-compute de Vercel es marginal. La caché de research compartida entre
-usuarios (§4) baja el costo de Agentes 2/3 en generaciones repetidas sobre
-tickers populares, mejorando el margen con el tiempo sin cambiar el
-precio.
+componente que más pesa es LLM (research + Compiler + QA) + Search
+(~90% del costo variable); el compute de Vercel es marginal. La caché de
+research compartida entre usuarios (§4) baja el costo de Agentes 2/3 en
+generaciones repetidas sobre tickers populares, mejorando el margen con
+el tiempo sin cambiar el precio. Si la tasa de corrección del QA Agent
+(§2) resulta consistentemente alta en producción, es señal de que algún
+agente de research necesita mejor prompt/modelo — no de que el loop en sí
+sea el problema.
 
 **Fuentes de referencia** (pricing público, sujeto a cambio — validar en
 Sprint 0 antes de fijar el precio final):
@@ -371,20 +445,21 @@ Sprint 0 antes de fijar el precio final):
 | Riesgo | Mitigación |
 |---|---|
 | Esto se puede leer como asesoramiento financiero regulado | Disclaimer obligatorio en cada informe (no personalizado, "no es asesoramiento de inversión"), copy revisado por legal antes de GA |
-| Alucinación de datos (precios, ratios inventados) | Números SIEMPRE vienen de Agente 1/4 (tool calls estructurados); Agente 3 exige 2 fuentes por claim relevante; paso de verificación del Compiler antes de redactar |
-| Cobrar por un run vacío o de baja calidad rompe confianza | Reembolso automático si 0 candidatos o ≥2 agentes fallidos (§5); nunca cobrar antes de que Intake resuelva ambigüedad |
-| Costo real por run no cubierto por el precio | Estimado en $0.35–$0.60 típico / ~$1.00 peor caso (§5.1); presupuesto duro de $ por run + caché de research compartida entre usuarios; monitoreo de margen por run como KPI (§2) |
+| Alucinación de datos (precios, ratios inventados) | Números SIEMPRE vienen de Agente 1/4 (tool calls estructurados); Agente 3 exige 2 fuentes por claim; el QA Agent (§3.7) audita cada afirmación contra la fuente estructurada antes de entregar, con corrección dirigida si encuentra un error |
+| Loop de verificación no converge (el mismo agente sigue fallando) | Tope de 2 rondas de corrección dirigida (§3.7); si no pasa, se degrada el candidato puntual o se reembolsa si el informe queda vacío (§5) |
+| Cobrar por un run vacío o de baja calidad rompe confianza | Reembolso automático si 0 candidatos, ≥2 agentes fallidos, o QA sin validar nada tras el tope (§5); nunca cobrar antes de que Intake resuelva ambigüedad |
+| Costo real por run no cubierto por el precio | Estimado en $0.35–$0.65 típico / ~$1.20 peor caso, incluye el loop de QA (§5.1); presupuesto duro de $ por run + caché de research compartida entre usuarios; monitoreo de margen por run como KPI (§2) |
 | Datos stale (noticias/insider viejos) | TTL corto en caché de Agente 3 (días, no semanas), mostrar fecha de cada fuente en el UI |
 | Cron de tracking falla silenciosamente (precios no se actualizan, recomendaciones quedan "congeladas") | Reusa `withCronLogging` (alerting ya existente en `monitoring/`); backfill si se detecta un gap de días sin valuación |
 | Metodología de benchmark cuestionable (¿qué índice/ETF comparar?) | Metodología fija y documentada por sector, mostrada de forma transparente en el UI del track record — no se elige post-hoc para favorecer el resultado |
-| Sobre-alcance de scope (6 agentes → mantenimiento) | v1 = 4 agentes de research + compiler + tracking; Risk Agent (5) puede lanzarse en fase 1.5 si el timeline aprieta sin bloquear el resto |
+| Sobre-alcance de scope (7 agentes → mantenimiento) | v1 = 4 agentes de research + compiler + QA + tracking; Risk Agent (5) puede lanzarse en fase 1.5 si el timeline aprieta sin bloquear el resto |
 
 ## 7. Plan de sprints (2 semanas c/u, salvo Sprint 0)
 
 ### Sprint 0 — Discovery & contratos (1 semana)
 - Definir `ScreeningBrief`, el shape de output de cada agente, y el shape de
-  `recommendation_outcomes`/`recommendation_valuations` (TypeScript types +
-  zod schemas), sin implementación aún.
+  `recommendation_outcomes`/`recommendation_valuations`/`screening_qa_rounds`
+  (TypeScript types + zod schemas), sin implementación aún.
 - Validar con legal/compliance el copy de disclaimer y qué se puede/no se
   puede afirmar.
 - Definir el punto de precio por generación y la política de reembolso
@@ -392,9 +467,9 @@ Sprint 0 antes de fijar el precio final):
   §5.1 contra proveedores reales (LLM gateway, proveedor de búsqueda web).
 - Elegir proveedor de búsqueda web para el Agente 3 (Tavily vs.
   alternativas) — cotizar volumen real esperado, no sólo precio de lista.
-- Definir la metodología de benchmark por sector (qué ETF/índice se usa
-  para calcular alfa) — debe quedar fija antes de que exista el primer
-  track record real.
+- Definir el tope de rondas del QA Agent y la metodología de benchmark por
+  sector — deben quedar fijos antes de implementar el loop y antes de que
+  exista el primer track record real.
 - **Salida**: este PRD aprobado + `types.ts` de contratos + ADR sobre modelo
   de datos.
 
@@ -426,17 +501,22 @@ Sprint 0 antes de fijar el precio final):
 - **Salida**: candidatos enriquecidos con narrativa de negocio + señales
   cualitativas citadas y cross-verificadas.
 
-### Sprint 4 — Risk Agent + Compiler con paso de verificación
+### Sprint 4 — Risk Agent + Compiler + QA Verification Loop Agent
 - Agente 5: sizing sugerido, concentración, fit con `riskProfile`.
-- Compiler: ranking, paso de verificación (cita estructurada obligatoria),
-  redacción LLM, disclaimer inyectado, persistencia de `screening_reports`
-  **y** de `recommendation_outcomes` por candidato.
-- **Salida**: pipeline end-to-end produce un informe ejecutivo completo y
-  dejа sembradas las recomendaciones para tracking (aún sin cobro/UI real).
+- Compiler: ranking + borrador (ya no verifica su propio trabajo).
+- **QA Agent (6)**: verificación contra outputs estructurados, veredicto
+  con agente señalado, corrección dirigida (re-invoca sólo ese agente),
+  loop con tope de 2 rondas, degradación puntual si no converge.
+- Persistencia de `screening_reports`, `screening_qa_rounds` y
+  `recommendation_outcomes` por candidato.
+- **Salida**: pipeline end-to-end produce un informe verificado y deja
+  sembradas las recomendaciones para tracking (aún sin cobro/UI real).
+  Demo interna: forzar un error deliberado en un agente y confirmar que
+  el loop lo detecta, corrige sólo ese agente, y re-verifica.
 
 ### Sprint 5 — Cobro por generación + UI real (reemplaza el mockup)
 - Integración de Stripe one-time payment (capacidad nueva) + reembolso
-  automático en runs vacíos/degradados.
+  automático en runs vacíos/degradados/no verificados.
 - Conectar UI real sobre `mockup-rebalancing-tool.html` (sección "Industry
   Screener Pro") a los endpoints reales, con el flujo async (pedir →
   pagar → notificación → ver informe).
@@ -444,7 +524,7 @@ Sprint 0 antes de fijar el precio final):
 - **Salida**: feature usable end-to-end por un beta tester real, con cobro
   real y reembolso automático funcionando.
 
-### Sprint 6 — Recommendation Tracking Agent + cron
+### Sprint 6 — Recommendation Tracking Agent (7) + cron
 - Tablas `recommendation_valuations` + migración.
 - Cron de tracking (reusa `withCronLogging`/`verifyCronAuth`): revalúa
   precio, calcula retorno hipotético, compara contra benchmark, cruza
@@ -455,15 +535,18 @@ Sprint 0 antes de fijar el precio final):
 ### Sprint 7 — Track record / scorecard UI
 - Superficie nueva: historial de recomendaciones del usuario con estado,
   retorno hipotético vs. benchmark, si actuó o no.
-- Agregados a nivel producto (hit rate, alfa promedio) para uso interno
-  (dashboard de producto) — exposición pública/marketing queda fuera de
-  v1 (ver §8).
+- Agregados a nivel producto (hit rate, alfa promedio, tasa de corrección
+  del QA Agent por agente) para uso interno (dashboard de producto) —
+  exposición pública/marketing queda fuera de v1 (ver §9).
 - **Salida**: el usuario puede ver, para cualquier informe pasado, "así te
   hubiera ido".
 
 ### Sprint 8 — Hardening, observabilidad, beta cerrada
 - Monitoreo de costo real por run vs. precio cobrado (margen), alertas de
   Grafana/Prometheus (reusa `monitoring/` existente).
+- Ajustar el tope de rondas del QA Agent con datos reales de beta (si casi
+  nunca hace falta una 2ª ronda, bajarlo; si el costo de retries es alto,
+  revisar qué agente falla más).
 - Alerting sobre el cron de tracking (gaps de valuación, fallos
   silenciosos).
 - Manejo de fallos parciales del job async, reintentos.
@@ -474,27 +557,54 @@ Sprint 0 antes de fijar el precio final):
 - Fixes de beta, ajuste de prompts según feedback real, GA rollout
   progresivo.
 
-## 8. Preguntas abiertas
+## 8. Tecnologías de implementación
+
+No se introduce un framework nuevo — el feature se implementa sobre la
+misma pila que ya corre en producción para Warren, Clara y Will.
+
+| Pieza | Tecnología | Notas |
+|---|---|---|
+| Runtime / app | Next.js (App Router) + TypeScript, sobre Vercel | Mismo repo, mismos API routes (`src/app/api/*`) que el resto de Trefolio |
+| Orquestación de agentes | Patrón **Agent Office** (`src/lib/ai/office/orchestrator.ts`, `dispatch-step.ts`) | Se reusa la composición de agentes; el disparo pasa a ser asíncrono en vez de un turno de chat |
+| Definición de agentes / tool calls | **Vercel AI SDK** (`ai`, `@ai-sdk/openai`) con `tool({ description, inputSchema: zod, execute })` | Mismo patrón que `sister-agent-tools.ts` / `warren/tools.ts` — cada agente es un tool tipado, no un prompt suelto |
+| Selección de modelo por agente | Gateway de modelo abstraído (`provider.chat(gatewayModelId)` en `run-turn.ts`) | Permite tier económico para Agentes 1–5 y tier premium para Compiler/QA sin acoplar el código a un proveedor. Proveedor final (OpenAI, u otro vía el mismo gateway) es decisión de Sprint 0 |
+| Validación de outputs estructurados | **Zod** | `ScreeningBrief`, el output de cada agente, y el veredicto del QA Agent son schemas Zod — es lo que hace posible que el QA Agent compare "afirmación vs. campo estructurado" en vez de comparar texto contra texto |
+| Ejecución en background | `deferTask` / `submitJob` (`src/lib/task-runner.ts`) | En Vercel usa `waitUntil` (`@vercel/functions`) para mantener el job vivo después de responder al cliente; en local corre en el proceso Node de larga duración |
+| Compute / hosting | **Vercel Fluid compute** (Active CPU pricing) | Ver desglose de costo en §5.1 — el mismo mecanismo que habilita "sin límite de tiempo" en §2 |
+| Base de datos | **Turso (libSQL)**, vía `@libsql/client` (`src/lib/db`) | Mismo cliente y patrón `ensureInitialized()` / `client.execute({ sql, args })` que el resto de las tablas de Trefolio |
+| Datos duros (mercado) | **FMP** (Financial Modeling Prep) vía `resolveFundamentalsProvider`/`resolvePremiumStockDataProvider`, con **Yahoo Finance** como fallback | Mismos providers que ya usa `company-analysis` |
+| Búsqueda web (Agente 3) | API de búsqueda orientada a agentes (Tavily como referencia de costo en §5.1; alternativas en evaluación — pregunta abierta) | Necesita extracción de contenido, no sólo links — de ahí la preferencia por APIs "agent-native" sobre un SERP crudo |
+| Cron / scheduling | **Vercel Cron** (`vercel.json`) + patrón `withCronLogging` / `verifyCronAuth` ya existente en `src/app/api/cron/*` | Mismo mecanismo que `portfolio-recommendations`, `screener-sync`, etc. |
+| Pagos | **Stripe** (`src/lib/stripe.ts`), extendido a PaymentIntent/Checkout one-time | Hoy sólo maneja suscripciones — el cobro por generación es una capacidad nueva sobre el mismo proveedor |
+| Notificaciones | **Web Push** (VAPID, `web-push.ts`) + email transaccional (**Resend**) | Mismos canales que ya usa el resto del producto |
+| Observabilidad | **Prometheus + Grafana** (`monitoring/`) | Dashboards de margen por run, tasa de corrección del QA Agent, gaps del cron de tracking |
+| Tests | **Vitest** (unit/integration) + **Playwright** (e2e) | Mismos frameworks que el resto del repo (`vitest.config.ts`, `playwright.config.ts`) — el loop de QA en sí se testea con casos que fuerzan un error deliberado en un agente para confirmar que la corrección dirigida funciona (ver Sprint 4) |
+
+## 9. Preguntas abiertas
 
 1. ¿Cuál es el punto de precio por generación? La estimación de §5.1
-   ($0.35–$0.60 típico, ~$1.00 peor caso) da margen amplio en casi
+   ($0.35–$0.65 típico, ~$1.20 peor caso) da margen amplio en casi
    cualquier precio razonable, pero falta validarla contra proveedores
    reales antes de fijar el precio.
 2. ¿Qué proveedor de búsqueda web se usa para el Agente 3 (Tavily fue la
    referencia de costo en §5.1; evaluar alternativas como Exa, Serper o
    Brave Search API por precio/calidad de resultado financiero)? Afecta
    Sprint 3 y el costo real de §5.1.
-3. ¿El trigger "Warren detecta sobre-exposición en conversación" dispara el
+3. ¿Cuál es el tope correcto de rondas de corrección dirigida del QA Agent
+   (§3.7)? 2 es un punto de partida razonable — debe ajustarse con datos
+   reales de beta (Sprint 8) según cuánto realmente ayuda cada ronda
+   adicional vs. cuánto cuesta.
+4. ¿El trigger "Warren detecta sobre-exposición en conversación" dispara el
    flujo de pago automáticamente o solo lo sugiere? Recomendación: sugerir
    siempre, nunca cobrar sin confirmación explícita del usuario.
-4. ¿Qué canal de notificación es el principal cuando el informe está listo
+5. ¿Qué canal de notificación es el principal cuando el informe está listo
    — push, email, o ambos? Afecta Sprint 1.
-5. ¿Qué benchmark se usa por sector para calcular alfa en el tracking?
+6. ¿Qué benchmark se usa por sector para calcular alfa en el tracking?
    Debe cerrarse en Sprint 0, antes de que exista el primer track record.
-6. ¿El track record agregado/anonimizado se usa como material de
+7. ¿El track record agregado/anonimizado se usa como material de
    marketing en v1, o queda estrictamente para fase 2? Afecta el alcance
    de Sprint 7.
-7. ¿Cobertura de mercados fuera de US/EU large-mid cap es un requisito de
+8. ¿Cobertura de mercados fuera de US/EU large-mid cap es un requisito de
    v1 o puede quedar fuera dado el tier de FMP actual?
-8. ¿Quién aprueba el copy de disclaimer legal y la política de reembolso
+9. ¿Quién aprueba el copy de disclaimer legal y la política de reembolso
    antes de Sprint 5 (cobro real)?
