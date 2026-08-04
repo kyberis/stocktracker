@@ -264,11 +264,17 @@ IA" en "un historial verificable".
      compara el retorno hipotético contra el real (mismo cálculo, dos
      escenarios); si no, el hipotético queda como el único dato, y es
      igual de válido para evaluar la calidad de la recomendación.
-- **Output al usuario**: un "track record" — historial de recomendaciones
-  con estado (activa / cerrada), retorno hipotético vs. benchmark, y si el
-  usuario actuó o no. Esto es visible **incluso si el usuario nunca
-  invirtió** — es el mecanismo de confianza del producto: no depende de
-  que el usuario haya seguido el consejo para poder evaluarlo.
+- **Dónde lo ve el usuario**: las recomendaciones se guardan en la base de
+  datos **junto al informe que las generó** (`recommendation_outcomes` /
+  `recommendation_valuations` cuelgan de `report_id`) — no es una sección
+  aparte y desconectada. El usuario entra al informe guardado (desde su
+  historial) y ahí mismo ve, candidato por candidato, el resultado
+  actualizado: "así te hubiera ido". Un listado agregado de todos los
+  informes con su resultado (el "track record" en sí) es la vista de
+  conjunto sobre esos mismos datos, no una fuente distinta.
+- Esto es visible **incluso si el usuario nunca invirtió** — es el
+  mecanismo de confianza del producto: no depende de que el usuario haya
+  seguido el consejo para poder evaluarlo.
 - Este track record (agregado y anonimizado) es también material de
   marketing/onboarding — "así de bien le fue a nuestras recomendaciones en
   los últimos 12 meses" — pero eso es explícitamente fuera de alcance de
@@ -326,6 +332,40 @@ IA" en "un historial verificable".
   no es un cobro adicional; es lo que sostiene la percepción de valor de
   compras futuras.
 
+### 5.1 Estimación de costo por generación
+
+Números de referencia (no un compromiso de proveedor — el gateway de
+modelo ya está abstraído en `run-turn.ts`, y el proveedor de búsqueda
+queda como decisión de Sprint 0 §8). Sirven para validar que el precio por
+generación tiene margen incluso en el peor caso, que es la pregunta
+abierta #1.
+
+| Componente | Costo estimado / run | Base del cálculo |
+|---|---|---|
+| LLM — Agentes 1–5 (research, modelo económico) | **$0.05 – $0.10** | ~134K tokens input + ~15K output a precio tipo GPT-4.1 mini ($0.40 / $1.60 por M tokens) |
+| LLM — Compiler (verificación + redacción, modelo premium) | **$0.10 – $0.15** | ~50K tokens input + ~4K output a precio tipo GPT-4.1 ($2 / $8 por M tokens) — necesita más calidad de razonamiento que los sub-agentes |
+| Web Search API (Agente 3, cross-verificación 2 fuentes + Agente 2 fallback) | **$0.15 – $0.35** | ~20–40 búsquedas por run a precio tipo Tavily ($0.008/crédito búsqueda básica, $0.016 avanzada) |
+| FMP (datos duros, Agentes 1 y 4) | **~$0 marginal** | Plan mensual fijo (Starter/Premium, ~$99+/mes) ya compartido con el resto de Trefolio — no es costo por-run salvo que el volumen de este feature fuerce upgrade de tier (riesgo a vigilar, no un costo directo) |
+| Vercel — compute del job async (Fluid compute, Active CPU) | **$0.005 – $0.01** | $0.128/hora CPU activa + $0.0106/GB·hora memoria provisionada; el job es mayormente espera de I/O (LLM streaming, APIs externas), y Active CPU sólo cobra el cómputo real, no el tiempo de espera — el diseño async de §2 no sólo habilita exhaustividad, también mantiene este costo marginal |
+| Notificación (push / email) | **~$0** | Infra ya existente (`web-push.ts`, proveedor de email transaccional) |
+| **Total estimado por generación** | **$0.35 – $0.60** (caso típico) · hasta **~$1.00** en el peor caso (universo grande sin hits de caché, retries, brief con más de 10 candidatos investigados en profundidad) | |
+
+**Lectura para el precio**: incluso en el peor caso (~$1.00), un precio
+por generación en el rango de referencia habitual de este tipo de
+producto (informe de research puntual) deja margen bruto amplio. El
+componente que más pesa es LLM + Search (~85–90% del costo variable); el
+compute de Vercel es marginal. La caché de research compartida entre
+usuarios (§4) baja el costo de Agentes 2/3 en generaciones repetidas sobre
+tickers populares, mejorando el margen con el tiempo sin cambiar el
+precio.
+
+**Fuentes de referencia** (pricing público, sujeto a cambio — validar en
+Sprint 0 antes de fijar el precio final):
+- Vercel Fluid compute / Active CPU pricing — [vercel.com/docs/functions/usage-and-pricing](https://vercel.com/docs/functions/usage-and-pricing), [vercel.com/blog/introducing-active-cpu-pricing-for-fluid-compute](https://vercel.com/blog/introducing-active-cpu-pricing-for-fluid-compute)
+- Tavily API pricing — [tavily.com](https://tavily.com) (vía comparativas de pricing 2026)
+- OpenAI API pricing (GPT-4.1 / GPT-4.1 mini) — [openai.com/api/pricing](https://openai.com/api/pricing) (vía comparativas de pricing 2026)
+- FMP planes — [site.financialmodelingprep.com/pricing-plans](https://site.financialmodelingprep.com/pricing-plans)
+
 ## 6. Riesgos y mitigaciones
 
 | Riesgo | Mitigación |
@@ -333,7 +373,7 @@ IA" en "un historial verificable".
 | Esto se puede leer como asesoramiento financiero regulado | Disclaimer obligatorio en cada informe (no personalizado, "no es asesoramiento de inversión"), copy revisado por legal antes de GA |
 | Alucinación de datos (precios, ratios inventados) | Números SIEMPRE vienen de Agente 1/4 (tool calls estructurados); Agente 3 exige 2 fuentes por claim relevante; paso de verificación del Compiler antes de redactar |
 | Cobrar por un run vacío o de baja calidad rompe confianza | Reembolso automático si 0 candidatos o ≥2 agentes fallidos (§5); nunca cobrar antes de que Intake resuelva ambigüedad |
-| Costo real por run no cubierto por el precio | Presupuesto duro de $ por run + caché de research compartida entre usuarios; monitoreo de margen por run como KPI (§2) |
+| Costo real por run no cubierto por el precio | Estimado en $0.35–$0.60 típico / ~$1.00 peor caso (§5.1); presupuesto duro de $ por run + caché de research compartida entre usuarios; monitoreo de margen por run como KPI (§2) |
 | Datos stale (noticias/insider viejos) | TTL corto en caché de Agente 3 (días, no semanas), mostrar fecha de cada fuente en el UI |
 | Cron de tracking falla silenciosamente (precios no se actualizan, recomendaciones quedan "congeladas") | Reusa `withCronLogging` (alerting ya existente en `monitoring/`); backfill si se detecta un gap de días sin valuación |
 | Metodología de benchmark cuestionable (¿qué índice/ETF comparar?) | Metodología fija y documentada por sector, mostrada de forma transparente en el UI del track record — no se elige post-hoc para favorecer el resultado |
@@ -348,7 +388,10 @@ IA" en "un historial verificable".
 - Validar con legal/compliance el copy de disclaimer y qué se puede/no se
   puede afirmar.
 - Definir el punto de precio por generación y la política de reembolso
-  automático con negocio/finanzas.
+  automático con negocio/finanzas, validando la estimación de costo de
+  §5.1 contra proveedores reales (LLM gateway, proveedor de búsqueda web).
+- Elegir proveedor de búsqueda web para el Agente 3 (Tavily vs.
+  alternativas) — cotizar volumen real esperado, no sólo precio de lista.
 - Definir la metodología de benchmark por sector (qué ETF/índice se usa
   para calcular alfa) — debe quedar fija antes de que exista el primer
   track record real.
@@ -433,20 +476,25 @@ IA" en "un historial verificable".
 
 ## 8. Preguntas abiertas
 
-1. ¿Cuál es el punto de precio por generación? ¿Cubre el costo real
-   (LLM + FMP + WebSearch) con margen suficiente incluso en el peor caso
-   (universo grande, sin hits de caché)?
-2. ¿El trigger "Warren detecta sobre-exposición en conversación" dispara el
+1. ¿Cuál es el punto de precio por generación? La estimación de §5.1
+   ($0.35–$0.60 típico, ~$1.00 peor caso) da margen amplio en casi
+   cualquier precio razonable, pero falta validarla contra proveedores
+   reales antes de fijar el precio.
+2. ¿Qué proveedor de búsqueda web se usa para el Agente 3 (Tavily fue la
+   referencia de costo en §5.1; evaluar alternativas como Exa, Serper o
+   Brave Search API por precio/calidad de resultado financiero)? Afecta
+   Sprint 3 y el costo real de §5.1.
+3. ¿El trigger "Warren detecta sobre-exposición en conversación" dispara el
    flujo de pago automáticamente o solo lo sugiere? Recomendación: sugerir
    siempre, nunca cobrar sin confirmación explícita del usuario.
-3. ¿Qué canal de notificación es el principal cuando el informe está listo
+4. ¿Qué canal de notificación es el principal cuando el informe está listo
    — push, email, o ambos? Afecta Sprint 1.
-4. ¿Qué benchmark se usa por sector para calcular alfa en el tracking?
+5. ¿Qué benchmark se usa por sector para calcular alfa en el tracking?
    Debe cerrarse en Sprint 0, antes de que exista el primer track record.
-5. ¿El track record agregado/anonimizado se usa como material de
+6. ¿El track record agregado/anonimizado se usa como material de
    marketing en v1, o queda estrictamente para fase 2? Afecta el alcance
    de Sprint 7.
-6. ¿Cobertura de mercados fuera de US/EU large-mid cap es un requisito de
+7. ¿Cobertura de mercados fuera de US/EU large-mid cap es un requisito de
    v1 o puede quedar fuera dado el tier de FMP actual?
-7. ¿Quién aprueba el copy de disclaimer legal y la política de reembolso
+8. ¿Quién aprueba el copy de disclaimer legal y la política de reembolso
    antes de Sprint 5 (cobro real)?
