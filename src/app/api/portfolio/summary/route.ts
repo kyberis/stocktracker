@@ -3,14 +3,14 @@ import { getSessionFromRequest } from "@/lib/auth/session";
 import { findUserByWidgetToken, findUserByDevicePasskey, markDeviceLinked, findUserById, listHoldings, listCashEntries } from "@/lib/db";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { investmentCashEntries } from "@/lib/portfolio-summary-cash";
-import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
 import { checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
 import { deviceApiCalls } from "@/lib/metrics";
 import { json401 } from "@/lib/log-unauthorized";
-import type { ExchangeRates, QuoteData } from "@/lib/types";
+import type { ExchangeRates } from "@/lib/types";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
-import { marketDataSymbolForHolding } from "@/lib/market-symbol";
+import { fetchQuoteMapForHoldings } from "@/lib/holding-quotes";
+import { getRatesWithCache } from "@/lib/quote-cache";
 
 type AuthMethod = "session" | "widget_token" | "device_passkey";
 
@@ -110,39 +110,11 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     });
   }
 
-  const yahoo = new YahooProvider();
-
-  // Fetch via Yahoo-compatible symbols (HK padding, exchange collisions, crypto),
-  // but key the map by holding.ticker so calculatePortfolioTotals matches the web.
-  const requestByTicker = new Map(
-    holdings.map((h) => [h.ticker, marketDataSymbolForHolding(h)] as const),
-  );
-  const uniqueSymbols = [...new Set(requestByTicker.values())];
-  const quotesBySymbol: Record<string, QuoteData> = {};
-
-  const quoteChunks: string[][] = [];
-  for (let i = 0; i < uniqueSymbols.length; i += 10) {
-    quoteChunks.push(uniqueSymbols.slice(i, i + 10));
-  }
-  for (const chunk of quoteChunks) {
-    const results = await Promise.allSettled(
-      chunk.map(async (symbol) => {
-        const q = await yahoo.getQuote(symbol);
-        return { symbol, quote: q };
-      }),
-    );
-    for (const r of results) {
-      if (r.status === "fulfilled") {
-        quotesBySymbol[r.value.symbol] = r.value.quote;
-      }
-    }
-  }
-
-  const quotes: Record<string, QuoteData> = {};
-  for (const [ticker, symbol] of requestByTicker) {
-    const q = quotesBySymbol[symbol] ?? quotesBySymbol[ticker];
-    if (q) quotes[ticker] = q;
-  }
+  // Same resolution path + shared cache as the dashboard/AID routes (ISIN
+  // resolve, HK padding, DE/PA exchange fallbacks, Yahoo aliases), instead of
+  // a bare per-symbol getQuote call that silently drops unresolved holdings
+  // to stale valueInEUR and samples FX independently of the web.
+  const quotes = await fetchQuoteMapForHoldings(holdings);
 
   // Resolve portfolio currency for base-currency conversion
   let portfolioCurrency = "EUR";
@@ -162,19 +134,10 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     ...Object.values(quotes).map((q) => q.currency),
     portfolioCurrency,
   ]);
+  const fetchedRates = await getRatesWithCache(fxPairs);
   const exchangeRates: ExchangeRates = {};
-  const rateResults = await Promise.allSettled(
-    fxPairs.map(async (pair) => {
-      const from = pair.substring(0, 3);
-      const to = pair.substring(3);
-      const rate = await yahoo.getExchangeRate(from, to);
-      return { pair, rate };
-    })
-  );
-  for (const r of rateResults) {
-    if (r.status === "fulfilled" && r.value.rate > 0) {
-      exchangeRates[r.value.pair] = r.value.rate;
-    }
+  for (const [pair, rate] of Object.entries(fetchedRates)) {
+    if (rate > 0) exchangeRates[pair] = rate;
   }
 
   const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, portfolioCurrency);
