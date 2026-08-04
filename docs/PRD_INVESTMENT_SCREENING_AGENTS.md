@@ -85,15 +85,40 @@ nadie.
 - **% de recomendaciones con alpha positivo vs. benchmark** a 90 días / 1
   año, medido por el Agente 7 de seguimiento — es la métrica de verdad del
   producto, no un proxy
-- **Tasa de corrección del QA Agent** (% de runs que necesitaron ≥1 ronda de
-  corrección dirigida) y **tasa de agente responsable** (qué agente falla
-  más seguido) — señal de calidad interna por agente, no sólo del producto
-  final
 - Tasa de reembolso automático (runs vacíos o degradados) — debe ser baja;
   cada reembolso es señal de una generación que no debió cobrarse
   (ver §5)
 - Tasa de recompra: % de usuarios que piden un segundo informe en 90 días
 - Margen por run: precio cobrado − costo real (LLM + FMP + WebSearch)
+
+Estas son métricas de negocio/producto. La calidad del *proceso de
+generación en sí* — cuánto hay que corregir, dónde alucina cada agente —
+se mide aparte, ver la siguiente sección.
+
+### Métricas de calidad del informe
+
+Miden el pipeline, no el negocio: cuánta corrección hace falta antes de
+entregar, y dónde. Son internas (dashboard de producto, §8) — el usuario
+no ve estos números crudos, ve el resultado en el track record (§3.8).
+Todas se calculan a partir de `screening_qa_rounds` (§4), que registra
+cada ronda del QA Agent (§3.7) con el tipo de incidencia encontrada.
+
+| Métrica | Qué mide | Cómo se calcula | Objetivo |
+|---|---|---|---|
+| **Rondas de QA por run** | Cuánta corrección dirigida hizo falta antes de pasar | Distribución del `round_number` final por run (0 = pasó a la primera) | Mayoría en 0–1; una cola larga en 2 es señal de escalar |
+| **Tasa de alucinación de datos** | % de afirmaciones cuantitativas del borrador que NO coincidían con el campo estructurado que decían citar | incidencias `issue_type = quant_mismatch` / total de claims cuantitativos verificados por el QA Agent | &lt;5% — si es mayor, el problema está en el prompt/modelo del agente de research, no en subir el tope de rondas |
+| **Tasa de fuente no confirmada** | % de afirmaciones cualitativas sin 2 fuentes independientes | incidencias `issue_type = unconfirmed_source` / total de claims cualitativos verificados | &lt;10% |
+| **Tasa de inconsistencia entre agentes** | % de incidencias por contradicción entre dos agentes (ej. Agente 4 dice `topUpExisting` de un ticker que no está en el snapshot) | incidencias `issue_type = cross_agent_inconsistency` / total de incidencias | Debería ser la categoría más chica — si crece, hay un problema de contrato entre agentes, no de un agente puntual |
+| **Tasa de corrección por agente** | Qué agente específico falla más seguido | count(`flagged_agent_kinds` incluye X) / veces que X corrió, por agente | Identifica qué agente necesita mejor prompt, más fuentes, o cambio de modelo |
+| **Tasa de degradación de candidato** | % de candidatos investigados que se cayeron del informe por no pasar el tope de rondas (§3.7) | candidatos con `recommendation_outcomes.status` nunca creado por degradación / candidatos investigados en `screening_agent_outputs` | &lt;5% — distinto del reembolso total: acá el run sí se entregó, sólo con menos candidatos |
+
+**Cómo se usan**: no son un checkbox de calidad, son la señal para saber
+*qué* mejorar y *dónde*. Si la tasa de alucinación sube consistentemente
+en un agente puntual (ej. Agente 3), la respuesta es mejorar su prompt,
+cambiar de proveedor de búsqueda, o subir de tier de modelo — no subir el
+tope de rondas del QA Agent, que sólo trata el síntoma y sube el costo
+por run (§5.1). Se revisan explícitamente en Sprint 8 al ajustar el tope
+de rondas con datos reales de beta (§7, §9 pregunta 3).
 
 ### Fuera de alcance (v1)
 - Ejecución de órdenes / trading automático
@@ -350,11 +375,14 @@ verificada" en "un historial verificable".
   `latency_ms` se guarda para observabilidad interna, no como SLA hacia el
   usuario.
 - **`screening_qa_rounds`** (id, run_id, round_number, verdict
-  `pass|fail`, flagged_agent_kinds json, issue_summary, created_at) —
-  nueva en v0.3: una fila por ronda del QA Agent (§3.7). Permite auditar
-  cuántas veces se corrigió un run, y agregada a lo largo del tiempo dice
-  qué agente falla más seguido (señal de calidad interna por agente, no
-  sólo del producto final).
+  `pass|fail`, flagged_agent_kinds json, issue_type
+  `quant_mismatch|unconfirmed_source|cross_agent_inconsistency`,
+  issue_summary, created_at) — nueva en v0.3: una fila por incidencia
+  detectada en cada ronda del QA Agent (§3.7). `issue_type` es lo que
+  hace posible calcular la tasa de alucinación de datos y las demás
+  métricas de calidad del informe (§2) sin tener que parsear texto
+  libre — cada incidencia ya viene clasificada por el propio QA Agent
+  al emitir su veredicto.
 - **`screening_reports`** (run_id, summary_json, candidates_json).
 - **`recommendation_outcomes`** (id, run_id, report_id, ticker,
   recommended_at, recommended_price, suggested_alloc_eur, position_kind
@@ -544,9 +572,13 @@ Sprint 0 antes de fijar el precio final):
 ### Sprint 8 — Hardening, observabilidad, beta cerrada
 - Monitoreo de costo real por run vs. precio cobrado (margen), alertas de
   Grafana/Prometheus (reusa `monitoring/` existente).
-- Ajustar el tope de rondas del QA Agent con datos reales de beta (si casi
-  nunca hace falta una 2ª ronda, bajarlo; si el costo de retries es alto,
-  revisar qué agente falla más).
+- Dashboard de métricas de calidad del informe (§2): rondas de QA por run,
+  tasa de alucinación de datos, tasa de fuente no confirmada, tasa de
+  corrección por agente, tasa de degradación de candidato.
+- Ajustar el tope de rondas del QA Agent con datos reales de beta usando
+  ese dashboard (si casi nunca hace falta una 2ª ronda, bajarlo; si un
+  agente concentra la mayoría de las incidencias, priorizar arreglar su
+  prompt/modelo antes que subir el tope).
 - Alerting sobre el cron de tracking (gaps de valuación, fallos
   silenciosos).
 - Manejo de fallos parciales del job async, reintentos.
@@ -577,7 +609,7 @@ misma pila que ya corre en producción para Warren, Clara y Will.
 | Cron / scheduling | **Vercel Cron** (`vercel.json`) + patrón `withCronLogging` / `verifyCronAuth` ya existente en `src/app/api/cron/*` | Mismo mecanismo que `portfolio-recommendations`, `screener-sync`, etc. |
 | Pagos | **Stripe** (`src/lib/stripe.ts`), extendido a PaymentIntent/Checkout one-time | Hoy sólo maneja suscripciones — el cobro por generación es una capacidad nueva sobre el mismo proveedor |
 | Notificaciones | **Web Push** (VAPID, `web-push.ts`) + email transaccional (**Resend**) | Mismos canales que ya usa el resto del producto |
-| Observabilidad | **Prometheus + Grafana** (`monitoring/`) | Dashboards de margen por run, tasa de corrección del QA Agent, gaps del cron de tracking |
+| Observabilidad | **Prometheus + Grafana** (`monitoring/`) | Dashboards de margen por run y de métricas de calidad del informe (§2): rondas de QA, tasa de alucinación de datos, tasa de corrección por agente, gaps del cron de tracking |
 | Tests | **Vitest** (unit/integration) + **Playwright** (e2e) | Mismos frameworks que el resto del repo (`vitest.config.ts`, `playwright.config.ts`) — el loop de QA en sí se testea con casos que fuerzan un error deliberado en un agente para confirmar que la corrección dirigida funciona (ver Sprint 4) |
 
 ## 9. Preguntas abiertas
