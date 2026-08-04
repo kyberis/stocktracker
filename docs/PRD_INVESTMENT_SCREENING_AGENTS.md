@@ -1,6 +1,6 @@
 # PRD — Investment Screening & Recommendation Agents (pay-per-generation)
 
-Owner: TBD · Status: Draft v0.3 · Target: Warren Pro / Trefolio Plus
+Owner: TBD · Status: Draft v0.4 · Target: Warren Pro / Trefolio Plus
 
 **Cambios v0.2**: el modelo de negocio pasa de "cuota mensual" a **pago por
 generación** — cada informe es una compra individual. Esto invierte la
@@ -16,7 +16,17 @@ sólo se re-invoca el agente responsable, no todo el pipeline, y se vuelve a
 verificar hasta que pasa o se llega a un tope de rondas. Esto corre el
 número del agente de seguimiento (antes "Agente 6") a **Agente 7** (§3.8).
 Se agrega además §8, una descripción de las tecnologías con las que se
-implementa cada pieza.
+implementa cada pieza, y una sección de **métricas de calidad del
+informe** (rondas de QA, tasa de alucinación de datos, etc.) separada de
+las métricas de negocio.
+
+**Cambios v0.4**: el Intake Agent suma un **chequeo de viabilidad** antes
+de cobrar (§3.0) — un brief puede estar bien formado y aun así no poder
+devolver resultados (ej. `peMax: 1`, un P/E casi inalcanzable en el
+mercado real). Se valida con límites de sensatez por campo más un conteo
+rápido contra el universo real, y si da 0 el brief se rechaza **sin
+cobrar**, en vez de dejar que corra un pipeline completo para terminar en
+reembolso.
 
 ## 1. Problema y caso de uso
 
@@ -88,6 +98,11 @@ nadie.
 - Tasa de reembolso automático (runs vacíos o degradados) — debe ser baja;
   cada reembolso es señal de una generación que no debió cobrarse
   (ver §5)
+- **Tasa de rechazo por inviabilidad** (`rejected_infeasible` / total de
+  briefs) — a diferencia del reembolso, esto nunca llegó a cobrarse; una
+  tasa alta y estable no es un problema del pipeline, es señal de que la
+  UI de armado de filtros necesita mejores defaults o validación en el
+  cliente (ver §3.0)
 - Tasa de recompra: % de usuarios que piden un segundo informe en 90 días
 - Margen por run: precio cobrado − costo real (LLM + FMP + WebSearch)
 
@@ -190,6 +205,32 @@ Reutiliza `wantsMoatScreenerIntent` / `extractPeMaxFromMessage` como base de
 parsing y los extiende. Si el brief es ambiguo, el Intake Agent pregunta
 **antes de cobrar** — nunca se cobra un run que arrancó con un brief
 adivinado a medias.
+
+**Chequeo de viabilidad (nuevo en v0.4)**: un brief bien formado puede
+seguir siendo inviable — un filtro que no va a devolver resultados. El
+Intake Agent lo valida **antes de crear el cobro**, en dos capas:
+
+1. **Límites de sensatez por campo** (instantáneo, sin llamar a ninguna
+   API): rangos de referencia por filtro — ej. P/E realista ≈ 3–60x,
+   dividend yield realista ≈ 0–12% — contra los que se valida cada valor
+   del brief. `peMax: 1` cae fuera de cualquier rango plausible: casi
+   ninguna empresa cotiza sosteniblemente a P/E 1x. Se lo señala al
+   usuario de inmediato, con una sugerencia (ej. "P/E ≤1x no es
+   realista, ¿quisiste decir ≤10x?").
+2. **Conteo rápido contra el universo real** (una llamada barata, no el
+   screening completo): usa la misma query que el Agente 1, pero pide
+   sólo un conteo, no el research. Filtros individualmente razonables
+   pueden combinarse en una intersección vacía (ej. un sector + rango de
+   P/E + market cap que no se solapan en ningún ticker real) — el chequeo
+   de rangos por campo no detecta esto solo, hace falta preguntarle al
+   universo real. Si el conteo estimado es 0 (o por debajo de un mínimo,
+   ver §9 pregunta abierta), el brief se marca inviable.
+
+Si el brief no pasa este chequeo, el Intake Agent **nunca crea el
+cobro** — vuelve al usuario con la razón concreta y una sugerencia de
+ajuste, igual que con un brief ambiguo. Se persiste en `screening_runs`
+con `status = rejected_infeasible` y `charge_id = null` (§4) — no es un
+run fallido que hay que reembolsar, es uno que nunca llegó a cobrarse.
 
 ### 3.1 Agente 1 — Hard Data / Screener Agent
 
@@ -370,6 +411,10 @@ verificada" en "un historial verificable".
 
 - **`screening_runs`** (id, user_id, portfolio_id, brief_json, status,
   charge_id, created_at) — `charge_id` referencia el cobro (ver §5).
+  `status` incluye `rejected_infeasible` (nuevo en v0.4): el chequeo de
+  viabilidad del Intake Agent (§3.0) rechazó el brief antes de cobrar —
+  `charge_id` queda `null`. Se persiste igual para poder medir qué tan
+  seguido pasa (métrica de producto, no sólo de calidad del informe).
 - **`screening_agent_outputs`** (run_id, agent_kind, status, output_json,
   latency_ms, cost_estimate) — para debuggear qué agente falló/tardó;
   `latency_ms` se guarda para observabilidad interna, no como SLA hacia el
@@ -406,8 +451,9 @@ verificada" en "un historial verificable".
 - **Modelo**: cada informe es un cobro individual (Stripe PaymentIntent /
   checkout one-time — capacidad nueva, hoy `src/lib/stripe.ts` sólo
   soporta suscripciones, no cobros puntuales). Se cobra **al confirmar el
-  brief** (después de que Intake Agent resolvió ambigüedades), no al
-  entregar — pero con reembolso automático si el run falla o degrada.
+  brief**, después de que el Intake Agent resolvió ambigüedades **y**
+  confirmó que el brief es viable (§3.0) — no al entregar — pero con
+  reembolso automático si el run igual falla o degrada una vez en curso.
 - **Reembolso automático**: si el run termina con 0 candidatos accionables,
   o si ≥2 de los 5 agentes de research fallaron, o si el QA Agent llega al
   tope de rondas sin poder validar ningún candidato, se reembolsa
@@ -476,6 +522,7 @@ Sprint 0 antes de fijar el precio final):
 | Alucinación de datos (precios, ratios inventados) | Números SIEMPRE vienen de Agente 1/4 (tool calls estructurados); Agente 3 exige 2 fuentes por claim; el QA Agent (§3.7) audita cada afirmación contra la fuente estructurada antes de entregar, con corrección dirigida si encuentra un error |
 | Loop de verificación no converge (el mismo agente sigue fallando) | Tope de 2 rondas de corrección dirigida (§3.7); si no pasa, se degrada el candidato puntual o se reembolsa si el informe queda vacío (§5) |
 | Cobrar por un run vacío o de baja calidad rompe confianza | Reembolso automático si 0 candidatos, ≥2 agentes fallidos, o QA sin validar nada tras el tope (§5); nunca cobrar antes de que Intake resuelva ambigüedad |
+| Usuario arma un filtro que no puede dar resultados (ej. P/E ≤1x, o una combinación de sector/P/E/market cap sin intersección real) y paga por un run que iba a salir vacío desde el inicio | Chequeo de viabilidad del Intake Agent **antes de cobrar** (§3.0): límites de sensatez por campo + conteo rápido contra el universo real; el brief se rechaza sin cargo, no se reembolsa después |
 | Costo real por run no cubierto por el precio | Estimado en $0.35–$0.65 típico / ~$1.20 peor caso, incluye el loop de QA (§5.1); presupuesto duro de $ por run + caché de research compartida entre usuarios; monitoreo de margen por run como KPI (§2) |
 | Datos stale (noticias/insider viejos) | TTL corto en caché de Agente 3 (días, no semanas), mostrar fecha de cada fuente en el UI |
 | Cron de tracking falla silenciosamente (precios no se actualizan, recomendaciones quedan "congeladas") | Reusa `withCronLogging` (alerting ya existente en `monitoring/`); backfill si se detecta un gap de días sin valuación |
@@ -506,11 +553,15 @@ Sprint 0 antes de fijar el precio final):
 - Wiring del job en background (`submitJob`/`deferTask`) + notificación
   push/email al terminar — reemplaza el modelo síncrono de chat.
 - Intake Agent: parsing de brief, detección de ambigüedad → pregunta antes
-  de cobrar.
+  de cobrar. **Chequeo de viabilidad** (§3.0): límites de sensatez por
+  campo (instantáneo) + conteo rápido reusando la query del Hard Data
+  Agent (sin el research completo) → `rejected_infeasible` si da 0.
 - Hard Data Agent: screener FMP + fallback Yahoo sobre universo amplio
   (sin techo artificial), reusando `resolveFundamentalsProvider`.
 - **Salida**: dado un brief, obtener un universo rankeado de candidatos con
-  métricas duras. Demo interna vía endpoint de debug (sin cobro real aún).
+  métricas duras, y rechazar en el acto un brief tipo "P/E ≤1x" antes de
+  que llegue a cobro. Demo interna vía endpoint de debug (sin cobro real
+  aún).
 
 ### Sprint 2 — Portfolio Context Agent + generalización de sector-gap
 - Generalizar `findPrimarySectorGap` a N sectores dinámicos desde el
@@ -626,17 +677,21 @@ misma pila que ya corre en producción para Warren, Clara y Will.
    (§3.7)? 2 es un punto de partida razonable — debe ajustarse con datos
    reales de beta (Sprint 8) según cuánto realmente ayuda cada ronda
    adicional vs. cuánto cuesta.
-4. ¿El trigger "Warren detecta sobre-exposición en conversación" dispara el
+4. ¿Cuál es el mínimo de candidatos estimados para considerar viable un
+   brief en el chequeo de §3.0 — 1, 3, 5? Y ¿quién define y actualiza los
+   límites de sensatez por campo (P/E, yield, market cap...) a medida que
+   cambian las condiciones de mercado? Afecta Sprint 1.
+5. ¿El trigger "Warren detecta sobre-exposición en conversación" dispara el
    flujo de pago automáticamente o solo lo sugiere? Recomendación: sugerir
    siempre, nunca cobrar sin confirmación explícita del usuario.
-5. ¿Qué canal de notificación es el principal cuando el informe está listo
+6. ¿Qué canal de notificación es el principal cuando el informe está listo
    — push, email, o ambos? Afecta Sprint 1.
-6. ¿Qué benchmark se usa por sector para calcular alfa en el tracking?
+7. ¿Qué benchmark se usa por sector para calcular alfa en el tracking?
    Debe cerrarse en Sprint 0, antes de que exista el primer track record.
-7. ¿El track record agregado/anonimizado se usa como material de
+8. ¿El track record agregado/anonimizado se usa como material de
    marketing en v1, o queda estrictamente para fase 2? Afecta el alcance
    de Sprint 7.
-8. ¿Cobertura de mercados fuera de US/EU large-mid cap es un requisito de
+9. ¿Cobertura de mercados fuera de US/EU large-mid cap es un requisito de
    v1 o puede quedar fuera dado el tier de FMP actual?
-9. ¿Quién aprueba el copy de disclaimer legal y la política de reembolso
-   antes de Sprint 5 (cobro real)?
+10. ¿Quién aprueba el copy de disclaimer legal y la política de reembolso
+    antes de Sprint 5 (cobro real)?
