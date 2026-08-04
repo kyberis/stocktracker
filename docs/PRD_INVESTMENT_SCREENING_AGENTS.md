@@ -1,6 +1,6 @@
 # PRD — Investment Screening & Recommendation Agents (pay-per-generation)
 
-Owner: TBD · Status: Draft v0.4 · Target: Warren Pro / Trefolio Plus
+Owner: TBD · Status: Draft v0.5 · Target: Warren Pro / Trefolio Plus
 
 **Cambios v0.2**: el modelo de negocio pasa de "cuota mensual" a **pago por
 generación** — cada informe es una compra individual. Esto invierte la
@@ -27,6 +27,17 @@ mercado real). Se valida con límites de sensatez por campo más un conteo
 rápido contra el universo real, y si da 0 el brief se rechaza **sin
 cobrar**, en vez de dejar que corra un pipeline completo para terminar en
 reembolso.
+
+**Cambios v0.5**: se agrega §9, un relevamiento de qué integraciones de
+datos subirían más la calidad del informe por menos esfuerzo — no es
+alcance de v1, es roadmap priorizado. El hallazgo principal: buena parte
+del salto de calidad no requiere un proveedor nuevo — el plan de FMP ya
+incluido en Trefolio trae 13F institucional, trading de congresistas,
+ESG ratings y estimados de analistas que el diseño actual todavía no usa.
+La integración nueva de mayor impacto es **SEC EDGAR** (oficial, gratis):
+le da al QA Agent (§3.7) una tercera fuente independiente contra la cual
+verificar, más fuerte que la que ya usa, porque es el filing regulatorio
+original, no un dato ya parseado por un proveedor.
 
 ## 1. Problema y caso de uso
 
@@ -663,7 +674,65 @@ misma pila que ya corre en producción para Warren, Clara y Will.
 | Observabilidad | **Prometheus + Grafana** (`monitoring/`) | Dashboards de margen por run y de métricas de calidad del informe (§2): rondas de QA, tasa de alucinación de datos, tasa de corrección por agente, gaps del cron de tracking |
 | Tests | **Vitest** (unit/integration) + **Playwright** (e2e) | Mismos frameworks que el resto del repo (`vitest.config.ts`, `playwright.config.ts`) — el loop de QA en sí se testea con casos que fuerzan un error deliberado en un agente para confirmar que la corrección dirigida funciona (ver Sprint 4) |
 
-## 9. Preguntas abiertas
+## 9. Integraciones que elevarían la calidad (roadmap)
+
+No son parte del alcance de v1 (§7) — es investigación de qué integraciones
+suben más la calidad por menos esfuerzo, para priorizar fase 1.5/2. El
+hallazgo más importante: **buena parte de esto ya está pago y sin usar**,
+porque el plan de FMP que Trefolio ya tiene incluye endpoints que el
+diseño actual (§3) no toca todavía.
+
+### Nivel 0 — Ya está pago, sólo falta cablearlo (FMP)
+
+FMP incluye 13F institucional, trading de congresistas/senadores, ESG
+ratings y estimados de analistas (vía partnership con TipRanks) en el
+mismo plan que ya se usa para Agentes 1 y 4. No es una integración nueva,
+es dejar de dejar datos arriba de la mesa.
+
+| Dato | Qué agrega | A quién mejora | Prioridad |
+|---|---|---|---|
+| **13F institucional** | Tendencia de holdings institucionales trimestre a trimestre — ¿el "smart money" está entrando o saliendo? | Agente 3 (Web & Sentiment) | Alta |
+| **Analyst estimates & price targets** (TipRanks) | Consenso de precio objetivo, cantidad de analistas, revisiones recientes al alza/baja | Agente 1, Agente 7 (tracking — "el mercado re-rateó esto o no") | Alta |
+| **Senate/Congress trading** | Señal alternativa difícil de fabricar — compras/ventas de legisladores con acceso a información sectorial | Agente 3 | Media |
+| **ESG ratings** | Desbloquea el ESG/Exclusions Agent que hoy está en backlog fase 2 (§3.5) sin tener que licenciar MSCI/Sustainalytics — ver nota abajo | Agente 5, o un futuro agente ESG dedicado | Media — sube de prioridad respecto al PRD original |
+
+### Nivel 1 — Integraciones nuevas, oficiales y gratis
+
+| Fuente | Qué agrega | A quién mejora | Costo |
+|---|---|---|---|
+| **SEC EDGAR full-text search + XBRL** (`data.sec.gov`, oficial) | Fuente de verdad regulatoria: el **QA Agent (6) puede verificar un claim contra el 10-K/10-Q real**, no sólo contra el dato ya parseado de FMP — es una tercera fuente independiente de la misma que generó el research. Agente 2 puede citar directo de "Item 1A Risk Factors" en vez de depender de que el research lo mencione | **QA Agent (6)** — reduce la tasa de alucinación de datos de §2 en la fuente, no sólo la detecta; Agente 2 | Gratis, sin API key |
+| **FRED** (Federal Reserve Economic Data, oficial) | Contexto macro (tasas, inflación, curva) para sizing — ej. "small caps con deuda variable en el entorno de tasas actual" | Agente 5 (Risk & Suitability) | Gratis |
+
+### Nivel 2 — Alternative data paga, barata, evaluar por señal específica
+
+| Fuente | Qué agrega | A quién mejora | Costo de referencia |
+|---|---|---|---|
+| **Short interest** (FINRA gratis quincenal, u Ortex pago diario) | Señal de riesgo de squeeze / posicionamiento bajista extremo antes de recomendar sizing | Agente 5 | Gratis (FINRA) o desde $39/mes (Ortex) |
+| **Quiver Quant** (lobbying, contratos de gobierno, patentes — más allá de lo que ya da FMP en congress trading) | Señales únicas de más difícil acceso, pero se solapan parcialmente con lo que FMP ya cubre en Nivel 0 | Agente 3 | Desde ~$10–75/mes según tier |
+
+### Explícitamente no recomendado para v1
+
+**ESG enterprise (MSCI, Sustainalytics directo)**: en 2025 los proveedores
+grandes discontinuaron sus bases públicas de scores y pasaron todo a
+licenciamiento comercial — caro y con fricción de contrato desproporcionada
+para lo que aporta sobre el ESG que ya viene incluido en FMP (Nivel 0).
+Reevaluar sólo si el ESG/Exclusions Agent pasa de backlog a roadmap real
+y FMP resulta insuficiente en cobertura.
+
+**Opciones/unusual activity** (estilo Unusual Whales): señal de trading de
+corto plazo, poco alineada con el caso de uso de rebalanceo de cartera de
+largo plazo de este producto — no vale la complejidad/costo para v1.
+
+### Cómo priorizar esto en la práctica
+
+El orden natural es Nivel 0 primero (costo marginal ~$0, ya pago) →
+SEC EDGAR (gratis, y el que más pega directo en la métrica de calidad que
+más importa: alucinación de datos) → recién después evaluar Nivel 2 con
+datos reales de qué tan seguido el research se queda corto sin esas
+señales. Ninguno de estos bloquea el roadmap de v1 (§7) — son candidatos
+para las fases 1.5/2 una vez que el pipeline base esté en producción.
+
+## 10. Preguntas abiertas
 
 1. ¿Cuál es el punto de precio por generación? La estimación de §5.1
    ($0.35–$0.65 típico, ~$1.20 peor caso) da margen amplio en casi
@@ -695,3 +764,6 @@ misma pila que ya corre en producción para Warren, Clara y Will.
    v1 o puede quedar fuera dado el tier de FMP actual?
 10. ¿Quién aprueba el copy de disclaimer legal y la política de reembolso
     antes de Sprint 5 (cobro real)?
+11. ¿Alguna integración de §9 debería entrar en v1 en vez de fase 1.5,
+    particularmente SEC EDGAR — es gratis y mejora directo la tasa de
+    alucinación de datos, la métrica de calidad más crítica del producto?
