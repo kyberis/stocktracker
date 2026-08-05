@@ -1,6 +1,6 @@
 # PRD — Investment Screening & Recommendation Agents (pay-per-generation)
 
-Owner: TBD · Status: Draft v0.6 · Target: Warren Pro / Trefolio Plus
+Owner: TBD · Status: Draft v0.7 · Target: Warren Pro / Trefolio Plus
 
 **Cambios v0.2**: el modelo de negocio pasa de "cuota mensual" a **pago por
 generación** — cada informe es una compra individual. Esto invierte la
@@ -53,6 +53,20 @@ importante: por el volumen de llamadas (~2.600–5.000 por corrida) y la
 necesidad de filesystem real para el Excel, **este modo no corre en
 Vercel** — corre como un job programado aparte (§3.9.5).
 
+**Cambios v0.7**: se revierte la decisión de v0.6 de sacar el Modo
+Cribado de Vercel. Los dos obstáculos originales ya tenían resuelta media
+solución en v0.6: `exceljs` reemplaza a LibreOffice (estaba planteado
+como alternativa, ahora es la única ruta), y **Vercel Blob** reemplaza al
+filesystem real para el Excel persistente y los artifacts de PDF/JSON. El
+obstáculo que quedaba —~2.600–5.000 llamadas por corrida excediendo
+cualquier timeout de función serverless— se resuelve partiendo la
+corrida en **lotes acotados en el tiempo y reanudables**: cada lote
+persiste un checkpoint en `screening_runs` (Turso) y dispara el
+siguiente, ya sea por auto-invocación (`waitUntil`) o por un segundo
+Vercel Cron que tickea cada minuto y continúa cualquier corrida en curso
+— mismo patrón de cron que ya usa el resto de Trefolio, sin
+infraestructura nueva. **GitHub Actions deja de ser necesario** (§3.9.5).
+
 ## 1. Problema y caso de uso
 
 El usuario tiene una cartera con sobre-exposición a un sector (o quiere buscar
@@ -98,7 +112,11 @@ Como el usuario paga por generación y no está esperando en un chat en vivo,
 el pipeline corre **asíncrono en background** (no bloquea una request HTTP
 ni compite contra un timeout de UI) y notifica cuando termina — reusa
 `deferTask`/`submitJob` (`src/lib/task-runner.ts`) y el sistema de push
-(`web-push.ts`) / email transaccional ya existentes. Esto habilita:
+(`web-push.ts`) / email transaccional ya existentes. "Asíncrono" no
+significa "caja negra": cada paso del pipeline emite eventos y el
+usuario puede abrir la vista del informe mientras corre para ver el
+progreso en vivo, agente por agente (nuevo en v0.7, ver §3.10). Esto
+habilita:
 - Universo de screening más amplio en Agente 1 (no cortar a 10–20 por costo
   de tiempo de UI — cortar solo cuando ya no aporta señal).
 - Múltiples rondas de research en Agentes 2/3 (cross-verificar un hecho
@@ -566,35 +584,83 @@ clasificó como coyuntural sin justificación de que no es deterioro
 real", y la corrección dirigida (§3.7) se le pide al agente dueño de esa
 regla en la tabla de arriba.
 
-#### 3.9.5 Por qué esto no corre en Vercel
+#### 3.9.5 Cómo corre en Vercel (rediseñado en v0.7)
 
 El documento fuente asume un entorno con filesystem real: escribe un
 Excel que nunca se sobreescribe (busca la primera fila vacía, copia
 estilo de la última fila, recalcula fórmulas con
 `soffice --headless` y verifica con `openpyxl` que ninguna celda quedó
-en `#ERROR`), y hace ~2.600–5.000 llamadas HTTP por corrida. Ninguna de
-las dos cosas encaja con Vercel Fluid compute (§8): las funciones no
-tienen filesystem persistente entre invocaciones, no hay LibreOffice
-disponible, y una corrida de esa duración excede cómodamente cualquier
-timeout razonable de función serverless.
+en `#ERROR`), y hace ~2.600–5.000 llamadas HTTP por corrida. Tomados
+literalmente, ninguno de los dos requisitos encaja con una función
+serverless: no hay filesystem persistente entre invocaciones, no hay
+LibreOffice disponible, y una corrida de ese volumen excede el límite de
+duración de cualquier función. v0.6 resolvía esto sacando el Modo
+Cribado de Vercel (GitHub Actions). v0.7 lo resuelve sin salir de la
+plataforma, sustituyendo cada requisito por su equivalente nativo de
+Vercel:
 
-**Decisión**: el Modo Cribado corre como un **job programado fuera de
-Vercel** — un workflow de GitHub Actions con cron diario (runners con
-`apt-get`, puede instalar LibreOffice, sube el PDF/Excel como artifact,
-y al final hace una llamada a la API de Trefolio para persistir el
-resultado en Turso). La lógica de los Agentes 1–3/QA/Compiler se
-implementa como **módulos TypeScript puros** (sin acoplarse a Next.js ni
-a una request HTTP), reusables desde:
-- El API route de Vercel (Modo Informe, síncrono al request vía
-  `submitJob`).
-- El script de GitHub Actions (Modo Cribado, corrida larga con
-  filesystem real).
+| Requisito del documento fuente | Por qué no encaja tal cual | Reemplazo nativo de Vercel |
+|---|---|---|
+| Filesystem real para el Excel persistente | Sin disco entre invocaciones | **Vercel Blob** (`@vercel/blob`): el `.xlsx` vive como un objeto con pathname fijo; cada corrida hace `get` → edita en memoria con `exceljs` → `put` con `allowOverwrite: true` |
+| `soffice --headless` recalcula fórmulas | No hay binarios del sistema en el runtime | `exceljs` escribe valores ya calculados, no fórmulas vivas (mismo trade-off que ya se había planteado en v0.6) |
+| Una corrida continua de ~2.600–5.000 llamadas | Excede el `maxDuration` de cualquier función, incluso con Fluid compute | La corrida se parte en **lotes acotados en el tiempo y reanudables** (detalle abajo) |
 
-Alternativa más simple si se prefiere no salir de Vercel: reemplazar
-LibreOffice por **`exceljs`** (Node) escribiendo valores ya calculados
-en vez de fórmulas vivas — se pierde la recalculación automática que
-pide A79, pero se gana correr todo en un solo runtime. Queda como
-pregunta abierta (§11) cuál de las dos rutas se prioriza.
+**Diseño de lotes reanudables.** `screening_runs` (§4) suma `stage` y
+`cursor_json`: un checkpoint que dice exactamente dónde quedó la corrida
+("Etapa A completa; Etapa B en el símbolo 340/520"). El flujo:
+
+1. Un Vercel Cron diario (`screening-daily-kickoff`, ~06:00 UTC) crea la
+   fila de `screening_runs` (`mode = daily_screen`, `stage = universe_a`)
+   y procesa el primer lote.
+2. Cada invocación procesa tantos símbolos/llamadas como entren en un
+   presupuesto de tiempo con margen de seguridad bajo su `maxDuration`
+   (ej. detenerse ~30s antes del límite), escribe el checkpoint
+   actualizado en Turso, y si la corrida no terminó, dispara el
+   siguiente lote — por auto-invocación (`fetch` a sí misma dentro de
+   `waitUntil`) o dejándoselo al siguiente tick de un segundo cron.
+3. Un segundo Vercel Cron (`screening-tick`, cada 1 minuto — el mínimo
+   que soporta Vercel Cron) llama a un endpoint que revisa si hay una
+   corrida `daily_screen` en curso; si no hay ninguna, no hace nada (una
+   sola lectura a Turso, costo marginal); si hay una, la continúa por
+   otro lote. Esto actúa como red de seguridad si la auto-invocación
+   falla, y como mecanismo principal si se prefiere no depender de
+   `waitUntil` para encadenar.
+4. Dentro de cada lote, las llamadas a FMP corren con **concurrencia
+   acotada** (ej. `p-limit` a 5–10 en paralelo) en vez del loop
+   puramente serial que sugiere "lotes de 20–50" — reduce el tiempo de
+   pared necesario para agotar el presupuesto de ~2.600–5.000 llamadas,
+   respetando el mismo backoff exponencial ante HTTP 429 (§3.9.3).
+5. El checkpoint sólo se escribe **después** de terminar de procesar una
+   unidad completa (un símbolo, un lote), nunca a mitad — así un tick
+   que se cae a mitad de trabajo deja la corrida en un estado
+   consistente y el siguiente tick puede retomarla sin duplicar ni
+   perder trabajo. `screening_runs.status = 'running'` actúa como lock
+   simple: un tick que encuentra la corrida ya `running` con
+   `updated_at` reciente no la toca; si `updated_at` es viejo (tick
+   anterior murió sin actualizar), la retoma.
+
+Con esto, una corrida diaria completa deja de ser una ráfaga continua y
+pasa a completarse en varios ticks a lo largo de un rato (minutos, no
+milisegundos) — se pierde algo de latencia de punta a punta, pero se
+gana correr todo en la misma plataforma, sin CI/CD separado ni artifacts
+que subir y volver a bajar.
+
+La lógica de los Agentes 1–3/QA/Compiler sigue implementada como
+**módulos TypeScript puros** (sin acoplarse a una request HTTP
+específica), reusables desde el mismo API route tanto para Modo Informe
+(síncrono al request vía `submitJob`) como para los lotes de Modo
+Cribado (invocados por cron/auto-invocación) — la extracción a módulos
+puros que v0.6 justificaba por "correr en dos runtimes distintos" ahora
+se justifica por "correr en dos *rutas* distintas dentro del mismo
+runtime", pero sigue siendo la misma separación de código.
+
+**Alternativa si el patrón de cron-cada-minuto resulta demasiado
+grosero**: reemplazar el encadenado manual por **Upstash QStash** (cola
+HTTP que integra nativamente con Vercel, con backoff/retry incorporado)
+— cada lote, en vez de tickear un cron o auto-invocarse, publica el
+siguiente lote a QStash con el delay que corresponda. Es una
+dependencia nueva, así que queda como pregunta abierta (§11) si vale la
+pena frente al cron cada minuto que no agrega infraestructura.
 
 #### 3.9.6 Salidas y modelo de datos (extiende §4)
 
@@ -602,30 +668,109 @@ pregunta abierta (§11) cuál de las dos rutas se prioriza.
   (skill `pdf` de este workspace) en vez de una librería nueva — 5
   secciones fijas (portada, resumen ejecutivo con orden de prioridad
   justificado, tabla comparativa, 5 fichas, disclaimer), como especifica
-  el documento fuente.
+  el documento fuente. Se persiste como objeto en **Vercel Blob**
+  (`screening/<fecha>.pdf`) al terminar la corrida — no hay filesystem
+  local donde dejarlo.
 - **Excel**: `exceljs` para leer/escribir sin tocar filas existentes,
   copiar estilo de la última fila, y validar post-escritura que ninguna
-  celda rota empiece con `#`.
+  celda rota empiece con `#`. El workbook persistente vive como un único
+  objeto de **Vercel Blob** con pathname fijo (`screening/universo-
+  evaluado.xlsx`): cada corrida hace `get` → edita en memoria → `put` con
+  `allowOverwrite: true` (§3.9.5) — es el equivalente de "nunca
+  sobreescribir filas existentes" cuando el archivo no vive en disco.
 - **JSON + registro de 90 días**: se recomienda mover
   `registro_empresas_evaluadas.json` a una tabla Turso
   (`screening_universe_registry`, §4) en vez de un archivo JSON como
   fuente de verdad — un archivo compartido entre corridas concurrentes es
   frágil (escritura parcial, sin locking); la tabla se puede *exportar*
-  a JSON para mantener compatibilidad con el formato del documento
-  fuente, pero el dato vive en la base ya existente.
+  a un objeto JSON en Blob (`screening/<fecha>.json`) para mantener
+  compatibilidad con el formato del documento fuente, pero el dato vive
+  en la base ya existente.
+
+### 3.10 Orquestación event-driven + progreso en vivo (nuevo en v0.7)
+
+Hasta v0.6 el orquestador (`orchestrator.ts`) llamaba a cada agente de
+forma imperativa y el usuario sólo se enteraba del resultado al final
+(notificación push/email, §3 fin del diagrama). v0.7 agrega una capa de
+**eventos** entre pasos: cada transición del pipeline —se despacha un
+agente, un agente termina o falla, arranca una ronda de QA, el QA emite
+veredicto, cambia de etapa— se registra como una fila en una tabla de
+eventos append-only (`screening_run_events`, §4), en vez de vivir sólo
+como efecto de lado dentro de una función. Esto es "event-driven" en el
+sentido arquitectónico correcto para Vercel: no hay un broker de
+mensajes separado orquestando quién llama a quién (eso seguiría siendo
+el orquestador o el cron-tick de §3.9.5), pero sí hay un **stream de
+eventos desacoplado** del que cualquier consumidor puede leer sin que el
+productor sepa quién está mirando — la UI de progreso, un dashboard de
+ops, o una automatización futura.
+
+- **Por qué no un broker de mensajes real** (Vercel Queues, un
+  Redis/Kafka propio): agregaría infraestructura nueva para un problema
+  que Turso ya resuelve — el volumen de eventos por corrida es bajo
+  (decenas, no miles) y el consumidor principal (la UI de un usuario
+  mirando su propio informe) no necesita garantías de entrega
+  distribuida. Si en el futuro hace falta desacoplar de verdad (otro
+  servicio reaccionando a estos eventos sin acoplarse a Trefolio), migrar
+  de "tabla + polling" a un broker es un cambio localizado porque los
+  productores de eventos (los agentes) no cambian, sólo el transporte.
+- **Progreso en vivo para el usuario** (Modo Informe): mientras el
+  informe corre en background (§2), el usuario puede abrir la vista del
+  informe y ver el estado en tiempo real — qué agente está corriendo,
+  cuáles terminaron, y si el QA Agent está en una ronda de corrección
+  ("Agente 3 — corrigiendo, ronda 2 de 2"). Se implementa con un
+  endpoint de **polling** (`GET /api/screening/runs/:id/events?since=
+  <cursor>`, cada 2–3s desde el cliente) en vez de WebSockets/SSE: es el
+  patrón más simple sobre funciones serverless, no mantiene conexiones
+  abiertas, y con decenas de eventos por corrida el costo marginal de
+  pollear es despreciable. Si el volumen o la latencia percibida lo
+  justifican más adelante, migrar el mismo endpoint a Server-Sent Events
+  es un cambio incremental (§11 pregunta abierta).
+- **Progreso en vivo para Modo Cribado** (uso interno): el mismo stream
+  de eventos es lo que hace observable el diseño de lotes reanudables de
+  §3.9.5 — cada tick que avanza la corrida emite sus propios eventos
+  (`stage_transition`, `agent_dispatched`...), así que un dashboard de
+  ops puede ver una corrida diaria avanzar tick a tick de la misma forma
+  que un usuario ve avanzar su informe, útil para debuggear si una
+  corrida queda trabada.
+- **Relación con `screening_runs.cursor_json`** (§3.9.5, §4): el
+  checkpoint y el stream de eventos son complementarios, no lo mismo —
+  `cursor_json` es el puntero compacto que necesita el *siguiente tick*
+  para saber por dónde seguir; `screening_run_events` es el historial
+  completo que necesita la *UI* para mostrar qué pasó. Se podría derivar
+  uno del otro, pero mantenerlos separados evita que la UI tenga que
+  parsear la estructura interna del cursor de reanudación.
 
 ## 4. Modelo de datos
 
 - **`screening_runs`** (id, `mode` `user_report|daily_screen` (nuevo en
-  v0.6), user_id **nullable**, portfolio_id, brief_json, status,
-  charge_id, created_at) — `charge_id` referencia el cobro (ver §5),
-  siempre `null` cuando `mode = daily_screen` (§3.9, no hay cobro).
-  `user_id` es nullable por la misma razón: un `daily_screen` no
-  pertenece a un usuario. `status` incluye `rejected_infeasible` (nuevo
-  en v0.4): el chequeo de viabilidad del Intake Agent (§3.0) rechazó el
-  brief antes de cobrar — `charge_id` queda `null`. Se persiste igual
-  para poder medir qué tan seguido pasa (métrica de producto, no sólo de
-  calidad del informe).
+  v0.6), user_id **nullable**, portfolio_id, brief_json, status, `stage`
+  (nuevo en v0.7: `universe_a|universe_b|universe_c|research|compile|
+  qa|done|failed`), `cursor_json` (nuevo en v0.7, checkpoint opaco de
+  reanudación, ver §3.9.5), charge_id, created_at, updated_at (nuevo en
+  v0.7, usado como lock de tick: una corrida `running` con `updated_at`
+  reciente no se toca; si quedó vieja, el próximo tick la retoma)) —
+  `charge_id` referencia el cobro (ver §5), siempre `null` cuando
+  `mode = daily_screen` (§3.9, no hay cobro). `user_id` es nullable por
+  la misma razón: un `daily_screen` no pertenece a un usuario. `status`
+  incluye `rejected_infeasible` (nuevo en v0.4): el chequeo de viabilidad
+  del Intake Agent (§3.0) rechazó el brief antes de cobrar — `charge_id`
+  queda `null`. Se persiste igual para poder medir qué tan seguido pasa
+  (métrica de producto, no sólo de calidad del informe). `stage` y
+  `cursor_json` sólo se usan en `mode = daily_screen` — un `user_report`
+  corre de punta a punta en una sola invocación (§2) y no necesita
+  reanudarse.
+- **`screening_run_events`** (id, run_id, event_type
+  `run_started|agent_dispatched|agent_completed|agent_failed|
+  qa_round_started|qa_verdict|stage_transition|run_completed|
+  run_failed`, agent_kind nullable, payload_json, created_at) — nueva en
+  v0.7: stream append-only de todo lo que pasa durante una corrida
+  (§3.10). Es lo que consume la UI de progreso en vivo (polling por
+  `created_at`/id) y, en Modo Cribado, lo que hace observable cada tick
+  de una corrida reanudable. No reemplaza a `screening_agent_outputs`
+  (que guarda el output final de cada agente) ni a `screening_qa_rounds`
+  (que guarda el detalle de cada incidencia) — este stream es el
+  historial de *qué pasó y cuándo*, más granular y pensado para
+  consumirse en vivo, no para analizarse después.
 - **`screening_universe_registry`** (ticker, last_evaluated_at,
   last_price, alias_group nullable) — nueva en v0.6: el registro de
   cooldown de 90 días del Modo Cribado (§3.9.3.1). `alias_group` agrupa
@@ -748,9 +893,11 @@ Sprint 0 antes de fijar el precio final):
 | Cron de tracking falla silenciosamente (precios no se actualizan, recomendaciones quedan "congeladas") | Reusa `withCronLogging` (alerting ya existente en `monitoring/`); backfill si se detecta un gap de días sin valuación |
 | Metodología de benchmark cuestionable (¿qué índice/ETF comparar?) | Metodología fija y documentada por sector, mostrada de forma transparente en el UI del track record — no se elige post-hoc para favorecer el resultado |
 | Sobre-alcance de scope (7 agentes → mantenimiento) | v1 = 4 agentes de research + compiler + QA + tracking; Risk Agent (5) puede lanzarse en fase 1.5 si el timeline aprieta sin bloquear el resto |
-| Modo Cribado excede rate limits de FMP (~2.600–5.000 llamadas/corrida) o corre en un entorno sin filesystem real | Corre fuera de Vercel (GitHub Actions programado, §3.9.5), no en Fluid compute; caché de 24h/30 días + backoff exponencial ante 429 (§3.9.3) |
-| Excel del Modo Cribado se corrompe (fórmula rota, fila sobreescrita, celda `#ERROR`) | `exceljs` con verificación post-escritura obligatoria antes de reemplazar el archivo (§3.9.6); nunca sobreescribir filas existentes |
+| Modo Cribado excede rate limits de FMP (~2.600–5.000 llamadas/corrida) frente al `maxDuration` de una función serverless | Corre en lotes acotados en el tiempo y reanudables vía checkpoint en Turso (`screening_runs.stage`/`cursor_json`), encadenados por auto-invocación o cron cada minuto (§3.9.5); caché de 24h/30 días + backoff exponencial ante 429 (§3.9.3) |
+| Un tick del Modo Cribado se cae a mitad de lote y la corrida queda en estado inconsistente o duplicando trabajo | Checkpoint se escribe sólo después de terminar una unidad completa (§3.9.5); `updated_at` actúa como lock — un tick sólo retoma una corrida `running` si quedó vieja |
+| Excel del Modo Cribado se corrompe (fórmula rota, fila sobreescrita, celda `#ERROR`) | `exceljs` con verificación post-escritura obligatoria antes de reemplazar el objeto en Vercel Blob (§3.9.6); `allowOverwrite` sólo tras verificar, nunca sobreescribir filas existentes |
 | Modo Cribado no tiene monetización clara (nadie lo pidió, no aplica pago por generación) | Recomendación: arranca como herramienta interna (alimenta caché de moat-screener, da datos reales al Agente 7 antes de exponerlo) y sólo después se evalúa como beneficio de suscripción Pro, no a la carta (§11 pregunta abierta) |
+| Polling de la UI de progreso en vivo (§3.10) agrega carga innecesaria si el usuario deja la pestaña abierta sin mirar | Intervalo de 2–3s sólo mientras la pestaña tiene foco (`visibilitychange`); se detiene solo al llegar `run_completed`/`run_failed` |
 
 ## 7. Plan de sprints (2 semanas c/u, salvo Sprint 0)
 
@@ -822,9 +969,12 @@ Sprint 0 antes de fijar el precio final):
 - Conectar UI real sobre `mockup-rebalancing-tool.html` (sección "Industry
   Screener Pro") a los endpoints reales, con el flujo async (pedir →
   pagar → notificación → ver informe).
+- Tabla `screening_run_events` + endpoint de polling (§3.10) y la vista
+  de progreso en vivo (qué agente corre, rondas de QA en curso) —
+  reemplaza el placeholder estático "tu informe se está generando".
 - Feedback simple 👍/👎 por candidato.
 - **Salida**: feature usable end-to-end por un beta tester real, con cobro
-  real y reembolso automático funcionando.
+  real, reembolso automático, y progreso en vivo funcionando.
 
 ### Sprint 6 — Recommendation Tracking Agent (7) + cron
 - Tablas `recommendation_valuations` + migración.
@@ -870,20 +1020,25 @@ Sprint 4), porque los reusa tal cual — no es un pipeline nuevo, es un
 segundo trigger sobre el mismo código.
 
 - Extraer los Agentes 1–3/QA a módulos TypeScript puros, sin acoplar a
-  Next.js, para que los importe tanto el API route (Modo Informe) como
-  el script de GitHub Actions (Modo Cribado).
+  Next.js, para que los importe tanto el API route de Modo Informe como
+  las rutas de cron/lote de Modo Cribado.
 - Implementar el embudo de 3 etapas exacto (§3.9.3): umbrales, medianas,
-  ranking, caché de 24h/30 días, backoff ante 429.
+  ranking, caché de 24h/30 días, backoff ante 429, con concurrencia
+  acotada dentro de cada lote.
+- `screening_runs.stage`/`cursor_json` + los dos crons (`screening-
+  daily-kickoff`, `screening-tick`) del diseño de lotes reanudables
+  (§3.9.5).
 - Tabla `screening_universe_registry` + lógica de cooldown de 90 días
   (§3.9.3.1).
-- Generación de PDF (reusa el pipeline HTML→Chromium de este PRD) +
-  Excel (`exceljs`, append-only, verificación anti-`#ERROR`) + export
-  JSON de compatibilidad.
-- Workflow de GitHub Actions con cron diario + upload de artifacts +
-  llamada de persistencia a la API de Trefolio.
-- **Salida**: una corrida diaria real produce 1 PDF + 5 filas Excel + 5
-  entradas JSON sin intervención manual, con las 9 reglas (R1–R10)
-  auditadas por el QA Agent.
+- Generación de PDF/Excel/JSON contra **Vercel Blob** (`exceljs`,
+  append-only, verificación anti-`#ERROR` antes de `allowOverwrite`,
+  §3.9.6).
+- Reusar `screening_run_events` (Sprint 5, §3.10) para hacer observable
+  cada tick de una corrida — mismo mecanismo que la UI de progreso del
+  Modo Informe, acá consumido por un dashboard de ops.
+- **Salida**: una corrida diaria real, corriendo enteramente en Vercel,
+  produce 1 PDF + 5 filas Excel + 5 entradas JSON sin intervención
+  manual, con las 9 reglas (R1–R10) auditadas por el QA Agent.
 - Antes de exponerlo a usuarios: decidir el modelo de distribución
   (interno vs. beneficio Pro) — ver §11 pregunta abierta.
 
@@ -904,13 +1059,15 @@ misma pila que ya corre en producción para Warren, Clara y Will.
 | Base de datos | **Turso (libSQL)**, vía `@libsql/client` (`src/lib/db`) | Mismo cliente y patrón `ensureInitialized()` / `client.execute({ sql, args })` que el resto de las tablas de Trefolio |
 | Datos duros (mercado) | **FMP** (Financial Modeling Prep) vía `resolveFundamentalsProvider`/`resolvePremiumStockDataProvider`, con **Yahoo Finance** como fallback | Mismos providers que ya usa `company-analysis` |
 | Búsqueda web (Agente 3) | API de búsqueda orientada a agentes (Tavily como referencia de costo en §5.1; alternativas en evaluación — pregunta abierta) | Necesita extracción de contenido, no sólo links — de ahí la preferencia por APIs "agent-native" sobre un SERP crudo |
-| Cron / scheduling | **Vercel Cron** (`vercel.json`) + patrón `withCronLogging` / `verifyCronAuth` ya existente en `src/app/api/cron/*` | Mismo mecanismo que `portfolio-recommendations`, `screener-sync`, etc. |
+| Cron / scheduling | **Vercel Cron** (`vercel.json`) + patrón `withCronLogging` / `verifyCronAuth` ya existente en `src/app/api/cron/*` | Mismo mecanismo que `portfolio-recommendations`, `screener-sync`, etc.; en v0.7 también dispara y tickea el Modo Cribado (§3.9.5), sin infra nueva |
 | Pagos | **Stripe** (`src/lib/stripe.ts`), extendido a PaymentIntent/Checkout one-time | Hoy sólo maneja suscripciones — el cobro por generación es una capacidad nueva sobre el mismo proveedor |
 | Notificaciones | **Web Push** (VAPID, `web-push.ts`) + email transaccional (**Resend**) | Mismos canales que ya usa el resto del producto |
 | Observabilidad | **Prometheus + Grafana** (`monitoring/`) | Dashboards de margen por run y de métricas de calidad del informe (§2): rondas de QA, tasa de alucinación de datos, tasa de corrección por agente, gaps del cron de tracking |
 | Tests | **Vitest** (unit/integration) + **Playwright** (e2e) | Mismos frameworks que el resto del repo (`vitest.config.ts`, `playwright.config.ts`) — el loop de QA en sí se testea con casos que fuerzan un error deliberado en un agente para confirmar que la corrección dirigida funciona (ver Sprint 4) |
-| Ejecución del Modo Cribado (§3.9) | **GitHub Actions** (cron diario) en vez de Vercel Fluid compute | Necesita filesystem real y una corrida de varios minutos — ninguna de las dos cosas encaja en una función serverless (§3.9.5) |
-| Generación de Excel (Modo Cribado) | **`exceljs`** | Lee/escribe sin tocar filas existentes, copia estilo; reemplaza el `openpyxl` + `soffice --headless` del documento fuente para poder correr en Node |
+| Ejecución del Modo Cribado (§3.9) | **Vercel Cron + auto-invocación (`waitUntil`)**, lotes reanudables vía checkpoint en Turso | Reemplaza la decisión de v0.6 (GitHub Actions) — corre enteramente en Vercel (§3.9.5). Alternativa evaluada: Upstash QStash (pregunta abierta, §11) |
+| Storage persistente (Excel/PDF/JSON del Modo Cribado) | **Vercel Blob** (`@vercel/blob`) | Objeto con pathname fijo para el Excel append-only, objetos por fecha para PDF/JSON — reemplaza al filesystem real que asume el documento fuente (§3.9.5, §3.9.6) |
+| Generación de Excel (Modo Cribado) | **`exceljs`** | Lee/escribe sin tocar filas existentes, copia estilo; reemplaza el `openpyxl` + `soffice --headless` del documento fuente — valores ya calculados, sin fórmulas vivas |
+| Progreso en vivo (§3.10) | Tabla `screening_run_events` + endpoint de **polling** (`GET .../events?since=`) | Sin WebSockets/SSE en v1 — decenas de eventos por corrida, polling cada 2–3s alcanza; upgrade a SSE es un cambio incremental si hace falta (pregunta abierta, §11) |
 
 ## 9. Integraciones que elevarían la calidad (roadmap)
 
@@ -1009,11 +1166,19 @@ para las fases 1.5/2 una vez que el pipeline base esté en producción.
     beneficio de suscripción Pro (digest diario), o eventualmente su
     propio cobro — afecta si necesita UI de cara al usuario en Fase 1.5
     o alcanza con el PDF/Excel/JSON como hoy.
-13. ¿GitHub Actions + `exceljs` (§3.9.5) o vale la pena el entorno con
-    LibreOffice real del documento fuente para tener recalculación de
-    fórmulas en vivo? Afecta el alcance de Fase 1.5.
-14. ¿El registro de 90 días (`screening_universe_registry`, §3.9.3.1)
+13. ¿El registro de 90 días (`screening_universe_registry`, §3.9.3.1)
     debería compartirse entre Modo Cribado y Modo Informe — si un
     usuario pide un informe sobre un ticker que el cribado de ayer ya
     evaluó a fondo, ¿el Agente 1 del Modo Informe puede reusar ese
     resultado en vez de recalcularlo?
+14. ¿Cron cada minuto + auto-invocación alcanza para encadenar los lotes
+    del Modo Cribado (§3.9.5), o conviene sumar **Upstash QStash** desde
+    el arranque para tener backoff/retry nativo en vez de manejarlo a
+    mano? Afecta el alcance de Fase 1.5.
+15. ¿El polling de la UI de progreso en vivo (§3.10) alcanza para v1, o
+    la latencia percibida (2–3s) amerita migrar directo a Server-Sent
+    Events? Afecta Sprint 5.
+16. ¿Cuánto tiempo se retienen las filas de `screening_run_events`
+    (§3.10, §4)? Es un log de auditoría de corto plazo pensado para
+    consumirse en vivo, no un historial permanente — falta definir una
+    política de limpieza (ej. purgar eventos de runs con más de N días).
