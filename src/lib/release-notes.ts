@@ -75,9 +75,9 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "fix",
-        text: "Screening Intake now runs on gpt-4o-mini with strict JSON, plus a plain-prose retry if the gateway rejects json_object — every free-text follow-up no longer errors out with “could not read my own reply”.",
+        text: "Screening Intake now uses OpenAI tool calling (submit_brief function) so the model returns a validated JSON payload every turn — no more “could not read my own reply” after the first message.",
         translations: {
-          es: "El Intake de cribado usa ahora gpt-4o-mini con JSON estricto y reintenta en modo texto si el gateway rechaza json_object; los mensajes libres ya no fallan con “no pude leer mi respuesta”.",
+          es: "El Intake de cribado usa ahora tool calling de OpenAI (función submit_brief); el modelo devuelve JSON validado en cada turno, así que ya no aparece “no pude leer mi respuesta” tras el primer mensaje.",
         },
       },
     ],

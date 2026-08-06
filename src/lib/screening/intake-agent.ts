@@ -75,21 +75,32 @@ function parseAgentJson(
   rawResponse: string,
   opts: RunIntakeAgentOptions,
 ): { output: IntakeAgentOutput | null; parseError: string | null } {
-  const payload =
-    extractJsonPayload(rawResponse) ?? tryRepairTruncatedJson(rawResponse);
-  if (!payload) {
-    return { output: null, parseError: "no_json" };
+  if (!rawResponse.trim()) {
+    return { output: null, parseError: "empty" };
   }
-  let parsed: unknown;
+
+  // Tool-call arguments are already strict JSON — try direct parse first.
+  let parsed: unknown = null;
   try {
-    parsed = JSON.parse(payload);
+    parsed = JSON.parse(rawResponse);
   } catch {
-    const repaired = tryRepairTruncatedJson(rawResponse);
-    if (!repaired) return { output: null, parseError: "json_parse" };
+    // Fall back to fence/brace extraction + truncation repair for legacy
+    // content-based responses.
+    const payload =
+      extractJsonPayload(rawResponse) ?? tryRepairTruncatedJson(rawResponse);
+    if (!payload) {
+      return { output: null, parseError: "no_json" };
+    }
     try {
-      parsed = JSON.parse(repaired);
+      parsed = JSON.parse(payload);
     } catch {
-      return { output: null, parseError: "json_parse" };
+      const repaired = tryRepairTruncatedJson(rawResponse);
+      if (!repaired) return { output: null, parseError: "json_parse" };
+      try {
+        parsed = JSON.parse(repaired);
+      } catch {
+        return { output: null, parseError: "json_parse" };
+      }
     }
   }
 
@@ -147,17 +158,120 @@ export async function runIntakeAgent(
     ...opts.messages,
   ];
 
-  // Intake needs strict JSON — pin to gpt-4o-mini which reliably supports
-  // response_format:json_object via the AI Gateway. resolveAiModelForUserPlan
-  // would return gpt-4.1-nano on Folio, which returns prose or invalid JSON.
+  // Intake needs strict structured output. Use OpenAI tool calling: the model
+  // MUST call `submit_brief` with the schema, so the args are always valid JSON.
+  // Pin to gpt-4o-mini which reliably supports tool_choice via the AI Gateway.
   const model = "openai/gpt-4o-mini";
   const lastUserMsg =
     [...opts.messages].reverse().find((m) => m.role === "user")?.content?.slice(0, 4000) ?? "";
 
-  async function callGateway(withResponseFormat: boolean): Promise<{
-    body: string;
-    error: string | null;
-  }> {
+  const submitBriefTool = {
+    type: "function" as const,
+    function: {
+      name: "submit_brief",
+      description:
+        "Submit the user's screening brief plus a short assistant message and optional suggestion chips. Call this exactly once per turn.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        required: [
+          "status",
+          "assistantText",
+          "brief",
+          "questions",
+          "suggestions",
+          "warnings",
+          "inferredFields",
+        ],
+        properties: {
+          status: {
+            type: "string",
+            enum: ["ok", "needs_clarification", "rejected_infeasible", "rejected_shape"],
+            description:
+              "'ok' when the brief is complete and ready to run; 'needs_clarification' while still gathering info; 'rejected_infeasible' when the ask is impossible; 'rejected_shape' only for parse errors.",
+          },
+          assistantText: {
+            type: "string",
+            description:
+              "Short natural-language message shown in the chat bubble (max ~500 chars). Must include a concrete recommendation when asking a question.",
+          },
+          brief: {
+            type: "object",
+            additionalProperties: false,
+            required: [
+              "intent",
+              "includeSectors",
+              "excludeSectors",
+              "regions",
+              "candidateCount",
+              "criteria",
+              "endedEarly",
+              "locale",
+            ],
+            properties: {
+              intent: { type: "string", enum: ["rebalance", "explore"] },
+              includeSectors: { type: "array", items: { type: "string" } },
+              excludeSectors: { type: "array", items: { type: "string" } },
+              regions: { type: "array", items: { type: "string" } },
+              candidateCount: { type: "integer", minimum: 3, maximum: 5 },
+              criteria: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["key", "condition", "source"],
+                  properties: {
+                    key: { type: "string" },
+                    condition: {
+                      type: "string",
+                      description: "Free-form condition text, e.g. '< 2.5x' or '300 – 15,000M USD'.",
+                    },
+                    source: {
+                      type: "string",
+                      enum: ["chat", "preset", "rebalance", "confirmed"],
+                    },
+                  },
+                },
+              },
+              endedEarly: { type: "boolean" },
+              locale: { type: "string" },
+            },
+          },
+          questions: {
+            type: "array",
+            items: { type: "string" },
+            description: "Optional short questions. Usually leave empty — use assistantText instead.",
+          },
+          suggestions: {
+            type: "array",
+            maxItems: 5,
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["label", "say"],
+              properties: {
+                label: { type: "string", description: "Short chip text shown to the user (max 40 chars)." },
+                say: { type: "string", description: "Text that will be sent as the user's answer if the chip is clicked." },
+              },
+            },
+            description:
+              "2–4 recommended-answer chips shown under the message. Include a 'Finish and search' style opt-out when useful.",
+          },
+          warnings: {
+            type: "array",
+            items: { type: "string" },
+          },
+          inferredFields: {
+            type: "array",
+            items: { type: "string" },
+            description: "Fields that were filled from preset/defaults rather than user input.",
+          },
+        },
+      },
+    },
+  };
+
+  async function callGateway(): Promise<{ args: string; error: string | null }> {
     try {
       const res = await fetchGatewayChatCompletions(
         {
@@ -166,42 +280,50 @@ export async function runIntakeAgent(
           max_tokens: 2000,
           temperature: 0.2,
           messages,
-          ...(withResponseFormat
-            ? { response_format: { type: "json_object" as const } }
-            : {}),
+          tools: [submitBriefTool],
+          tool_choice: {
+            type: "function",
+            function: { name: "submit_brief" },
+          },
         },
         { headers: opts.gatewayHeaders },
       );
       if (!res.ok) {
         const errBody = (await res.text().catch(() => "")).slice(0, 500);
-        return { body: "", error: `gateway_${res.status}:${errBody}` };
+        return { args: "", error: `gateway_${res.status}:${errBody}` };
       }
       const data = (await res.json()) as {
-        choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
+        choices?: Array<{
+          message?: {
+            content?: string;
+            tool_calls?: Array<{
+              type?: string;
+              function?: { name?: string; arguments?: string };
+            }>;
+          };
+          finish_reason?: string;
+        }>;
       };
-      return { body: data.choices?.[0]?.message?.content ?? "", error: null };
+      const call = data.choices?.[0]?.message?.tool_calls?.[0];
+      const args = call?.function?.arguments ?? "";
+      if (!args) {
+        // Fallback: some providers return JSON in message.content when tools
+        // are ignored. Preserve it so coerce can still try.
+        const content = data.choices?.[0]?.message?.content ?? "";
+        return { args: content, error: null };
+      }
+      return { args, error: null };
     } catch (err) {
       return {
-        body: "",
+        args: "",
         error: err instanceof Error ? err.message : "gateway_error",
       };
     }
   }
 
-  let rawResponse = "";
-  let errorMessage: string | null = null;
-
-  // First attempt with strict JSON. If the gateway rejects response_format, retry
-  // once in plain-prose mode and rely on coerce to extract the JSON object.
-  const first = await callGateway(true);
-  rawResponse = first.body;
-  errorMessage = first.error;
-  if (errorMessage && errorMessage.startsWith("gateway_400")) {
-    console.warn("[screening/intake] response_format rejected, retrying plain:", errorMessage);
-    const retry = await callGateway(false);
-    rawResponse = retry.body;
-    errorMessage = retry.error;
-  }
+  const call = await callGateway();
+  const rawResponse = call.args;
+  let errorMessage: string | null = call.error;
 
   const latencyMs = Date.now() - startedAt;
 

@@ -82,39 +82,21 @@ ${excludeHint}
 
 ${PRESET_HINTS}
 
-You must respond with ONE JSON object, no prose outside JSON:
-{
-  "status": "ok" | "needs_clarification" | "rejected_infeasible" | "rejected_shape",
-  "assistantText": string,       // natural-language reply (max 500 chars). MUST include a short recommendation when asking (e.g. "I recommend ROIC > 12% for quality compounders — keep it or tighten?").
-  "brief": {                     // the current best guess at the brief
-    "intent": "rebalance" | "explore",
-    "includeSectors": string[],  // sector labels, English preferred; empty if no preference
-    "excludeSectors": string[],
-    "regions": string[],         // any of: "us_canada" | "europe" | "asia_pacific"; empty means no preference
-    "candidateCount": integer,   // 3..5, default 5
-    "criteria": [ { "key": string, "condition": string, "source": "chat" | "preset" | "rebalance" | "confirmed" } ],
-    "endedEarly": boolean,
-    "locale": string
-  },
-  "questions": string[],         // when status = "needs_clarification"; usually 1 short question; max 3
-  "suggestions": [               // clickable recommended answers for THIS turn (2–4 chips)
-    { "label": string, "say": string }
-  ],
-  "warnings": string[],
-  "inferredFields": string[]
-}
+RESPONSE PROTOCOL (mandatory):
+- You MUST reply by calling the "submit_brief" function tool. Never reply with plain text.
+- Populate every field in the function arguments. Use [] for empty lists, not null.
 
-Valid criterion keys are exactly: ${CRITERIA_KEYS.join(", ")}. The condition is free-form text such as "< 2.5x" or "300 – 15,000M USD".
+Valid criterion keys are exactly: ${CRITERIA_KEYS.join(", ")}.
 
 Conversation style (important):
-1. Ask ONE topic per turn (sectors, then size, then valuation, then quality/debt, then region/count). Do NOT dump the whole preset and close on the first message.
-2. Every clarifying turn MUST include a concrete recommendation in assistantText AND matching suggestions chips (recommended option first, then 1–2 alternatives, plus an opt-out like "I'll decide later" when useful).
-3. Update brief only for fields the user accepted or you are proposing as the current draft; mark proposed-but-not-confirmed criteria with source = "preset" and list them in inferredFields until the user confirms.
-4. Set status = "needs_clarification" until the user says they are ready to launch / finish / run the screen, OR they have answered enough topics (sectors + size + at least one valuation and one quality filter) and you ask for a final go-ahead.
-5. Set status = "ok" only when the user confirms the brief is ready (or explicitly asks to finish with the preset). Then you may fill remaining gaps from the preset.
+1. Ask ONE topic per turn (sectors → size → valuation → quality/debt → region/count). Do NOT dump the whole preset and close on the first message.
+2. Every clarifying turn MUST include a concrete recommendation in assistantText AND matching suggestions chips (recommended option first, then 1–2 alternatives, plus an opt-out like "I'll decide later" or "Finish and search" when useful).
+3. Update brief only for fields the user accepted or you are proposing as the current draft; list proposed-but-not-confirmed fields in inferredFields until the user confirms.
+4. Set status = "needs_clarification" until the user has answered enough topics (sectors + size + at least one valuation and one quality filter) AND you have asked for a final go-ahead.
+5. Set status = "ok" only when the user confirms the brief is ready or explicitly asks to finish with the preset. Then you may fill remaining gaps from the preset.
 6. If the user asks to change a specific filter ("change ROIC", "edit market cap"), update that field, confirm the new value, and stay in needs_clarification unless they also ask to launch.
-7. If the request is contradictory or impossible, set status = "rejected_infeasible", explain in warnings + assistantText, and suggest a nearby feasible ask with suggestions chips.
+7. If the request is contradictory or impossible, set status = "rejected_infeasible", explain in warnings + assistantText, and suggest a nearby feasible ask via suggestions chips.
 8. Never invent tickers, price targets, or news. Never promise a research outcome. Never claim historical returns.
 9. Keep brief.criteria within reasonable ranges. Never emit ROIC > 100%, gross margin > 100%, net debt/EBITDA < -20, forward P/E > 200 or < 0.
-10. Do NOT wrap the JSON in \`\`\`json fences. Do NOT include commentary outside the JSON object.`;
+10. assistantText must be at most 500 characters and match the user's locale.`;
 }
