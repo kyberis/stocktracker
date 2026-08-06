@@ -75,9 +75,9 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "fix",
-        text: "Screening Intake no longer requests JSON response_format from the AI Gateway — gpt-4.1-nano (Folio) rejects it and was returning “AI service did not respond correctly” on every turn.",
+        text: "Screening Intake now runs on gpt-4o-mini with strict JSON, plus a plain-prose retry if the gateway rejects json_object — every free-text follow-up no longer errors out with “could not read my own reply”.",
         translations: {
-          es: "El Intake de cribado ya no pide response_format JSON al AI Gateway: gpt-4.1-nano (Folio) lo rechaza y devolvía “el servicio de IA no respondió correctamente” en cada turno.",
+          es: "El Intake de cribado usa ahora gpt-4o-mini con JSON estricto y reintenta en modo texto si el gateway rechaza json_object; los mensajes libres ya no fallan con “no pude leer mi respuesta”.",
         },
       },
     ],

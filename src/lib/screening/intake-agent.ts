@@ -2,7 +2,7 @@ import {
   fetchGatewayChatCompletions,
   resolveGatewayApiKey,
 } from "@/lib/ai/gateway";
-import { insertAiLog, resolveAiModelForUserPlan } from "@/lib/db";
+import { insertAiLog } from "@/lib/db";
 import type { SubscriptionPlan } from "@/lib/types";
 import { runSanityLimits } from "./rules/sanity-limits";
 import { buildIntakePrompt } from "./prompts/intake";
@@ -147,39 +147,60 @@ export async function runIntakeAgent(
     ...opts.messages,
   ];
 
-  const model = await resolveAiModelForUserPlan("portfolio_chat", opts.plan);
+  // Intake needs strict JSON — pin to gpt-4o-mini which reliably supports
+  // response_format:json_object via the AI Gateway. resolveAiModelForUserPlan
+  // would return gpt-4.1-nano on Folio, which returns prose or invalid JSON.
+  const model = "openai/gpt-4o-mini";
   const lastUserMsg =
     [...opts.messages].reverse().find((m) => m.role === "user")?.content?.slice(0, 4000) ?? "";
+
+  async function callGateway(withResponseFormat: boolean): Promise<{
+    body: string;
+    error: string | null;
+  }> {
+    try {
+      const res = await fetchGatewayChatCompletions(
+        {
+          model,
+          stream: false,
+          max_tokens: 2000,
+          temperature: 0.2,
+          messages,
+          ...(withResponseFormat
+            ? { response_format: { type: "json_object" as const } }
+            : {}),
+        },
+        { headers: opts.gatewayHeaders },
+      );
+      if (!res.ok) {
+        const errBody = (await res.text().catch(() => "")).slice(0, 500);
+        return { body: "", error: `gateway_${res.status}:${errBody}` };
+      }
+      const data = (await res.json()) as {
+        choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
+      };
+      return { body: data.choices?.[0]?.message?.content ?? "", error: null };
+    } catch (err) {
+      return {
+        body: "",
+        error: err instanceof Error ? err.message : "gateway_error",
+      };
+    }
+  }
 
   let rawResponse = "";
   let errorMessage: string | null = null;
 
-  try {
-    const res = await fetchGatewayChatCompletions(
-      {
-        model,
-        stream: false,
-        // Brief + suggestions + criteria can be long; 900 truncated mid-JSON often.
-        max_tokens: 2000,
-        temperature: 0.2,
-        messages,
-        // Do NOT send response_format:json_object — Folio uses gpt-4.1-nano which
-        // rejects it via the AI Gateway (same fix as company-analysis/narrative).
-        // Prompt asks for JSON; coerceIntakeAgentPayload extracts it.
-      },
-      { headers: opts.gatewayHeaders },
-    );
-    if (!res.ok) {
-      const errBody = (await res.text().catch(() => "")).slice(0, 500);
-      errorMessage = `gateway_${res.status}${errBody ? `:${errBody}` : ""}`;
-    } else {
-      const data = (await res.json()) as {
-        choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
-      };
-      rawResponse = data.choices?.[0]?.message?.content ?? "";
-    }
-  } catch (err) {
-    errorMessage = err instanceof Error ? err.message : "gateway_error";
+  // First attempt with strict JSON. If the gateway rejects response_format, retry
+  // once in plain-prose mode and rely on coerce to extract the JSON object.
+  const first = await callGateway(true);
+  rawResponse = first.body;
+  errorMessage = first.error;
+  if (errorMessage && errorMessage.startsWith("gateway_400")) {
+    console.warn("[screening/intake] response_format rejected, retrying plain:", errorMessage);
+    const retry = await callGateway(false);
+    rawResponse = retry.body;
+    errorMessage = retry.error;
   }
 
   const latencyMs = Date.now() - startedAt;
@@ -191,6 +212,11 @@ export async function runIntakeAgent(
     const parsed = parseAgentJson(rawResponse, opts);
     output = parsed.output;
     parseError = parsed.parseError;
+    if (parseError) {
+      console.warn("[screening/intake] parse failed", parseError, {
+        preview: rawResponse.slice(0, 500),
+      });
+    }
   } else if (rawResponse) {
     // Gateway said error but we somehow have body — still try.
     const parsed = parseAgentJson(rawResponse, opts);
@@ -200,6 +226,8 @@ export async function runIntakeAgent(
     } else {
       parseError = parsed.parseError;
     }
+  } else {
+    console.warn("[screening/intake] gateway failure with empty body", errorMessage);
   }
 
   if (output) {
