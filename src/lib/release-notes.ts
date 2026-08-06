@@ -66,6 +66,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Volver desde el run/informe de cribado regresa al agente Intake (con el mismo intent y sectores). El intake deja el chat abierto para editar cualquier fila del brief, y el agente recomienda valores con chips mientras pregunta.",
         },
       },
+      {
+        type: "fix",
+        text: "Fixed screening Intake parse failures (“could not parse the agent's response”): coerce messy LLM JSON, repair truncated replies, raise max tokens, and use a single system message.",
+        translations: {
+          es: "Corregidos los fallos de parseo del Intake de cribado (“no pude leer la respuesta”): se toleran JSON imperfectos del modelo, se reparan respuestas truncadas, más tokens y un solo mensaje de sistema.",
+        },
+      },
     ],
   },
   {

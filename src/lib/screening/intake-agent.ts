@@ -7,13 +7,18 @@ import type { SubscriptionPlan } from "@/lib/types";
 import { runSanityLimits } from "./rules/sanity-limits";
 import { buildIntakePrompt } from "./prompts/intake";
 import {
-  intakeAgentOutputSchema,
+  coerceIntakeAgentPayload,
+  extractJsonPayload,
+  tryRepairTruncatedJson,
+} from "./parse-intake-output";
+import {
   screeningBriefSchema,
   type IntakeAgentOutput,
   type IntakeAgentStatus,
   type ScreeningBrief,
   type ScreeningIntent,
 } from "./schemas";
+import { intakeAgentOutputSchema } from "./schemas";
 
 export interface RunIntakeAgentOptions {
   userId: string;
@@ -66,19 +71,37 @@ function buildFallbackOutput(opts: RunIntakeAgentOptions): IntakeAgentOutput {
   });
 }
 
-function extractJsonPayload(raw: string): string | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  // response_format json_object should already give us clean JSON, but LLMs
-  // occasionally wrap it in fences or preamble text.
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenced) return fenced[1].trim();
-  const first = trimmed.indexOf("{");
-  const last = trimmed.lastIndexOf("}");
-  if (first !== -1 && last !== -1 && last > first) {
-    return trimmed.slice(first, last + 1);
+function parseAgentJson(
+  rawResponse: string,
+  opts: RunIntakeAgentOptions,
+): { output: IntakeAgentOutput | null; parseError: string | null } {
+  const payload =
+    extractJsonPayload(rawResponse) ?? tryRepairTruncatedJson(rawResponse);
+  if (!payload) {
+    return { output: null, parseError: "no_json" };
   }
-  return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(payload);
+  } catch {
+    const repaired = tryRepairTruncatedJson(rawResponse);
+    if (!repaired) return { output: null, parseError: "json_parse" };
+    try {
+      parsed = JSON.parse(repaired);
+    } catch {
+      return { output: null, parseError: "json_parse" };
+    }
+  }
+
+  const coerced = coerceIntakeAgentPayload(parsed, {
+    intent: opts.intent,
+    locale: opts.locale,
+    currentBrief: opts.currentBrief,
+  });
+  if (!coerced) {
+    return { output: null, parseError: "coerce_failed" };
+  }
+  return { output: coerced, parseError: null };
 }
 
 /**
@@ -115,11 +138,11 @@ export async function runIntakeAgent(
     suggestedExclude: opts.suggestedExclude,
   };
 
+  // Single system message — some gateway providers reject multiple system roles.
   const messages = [
-    { role: "system" as const, content: systemPrompt },
     {
       role: "system" as const,
-      content: `Context seed (JSON):\n${JSON.stringify(seed)}`,
+      content: `${systemPrompt}\n\nContext seed (JSON):\n${JSON.stringify(seed)}`,
     },
     ...opts.messages,
   ];
@@ -136,7 +159,8 @@ export async function runIntakeAgent(
       {
         model,
         stream: false,
-        max_tokens: 900,
+        // Brief + suggestions + criteria can be long; 900 truncated mid-JSON often.
+        max_tokens: 2000,
         temperature: 0.2,
         messages,
         response_format: { type: "json_object" },
@@ -144,10 +168,11 @@ export async function runIntakeAgent(
       { headers: opts.gatewayHeaders },
     );
     if (!res.ok) {
-      errorMessage = `gateway_${res.status}`;
+      const errBody = (await res.text().catch(() => "")).slice(0, 500);
+      errorMessage = `gateway_${res.status}${errBody ? `:${errBody}` : ""}`;
     } else {
       const data = (await res.json()) as {
-        choices?: Array<{ message?: { content?: string } }>;
+        choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
       };
       rawResponse = data.choices?.[0]?.message?.content ?? "";
     }
@@ -161,25 +186,23 @@ export async function runIntakeAgent(
   let parseError: string | null = null;
 
   if (!errorMessage) {
-    const payload = extractJsonPayload(rawResponse);
-    if (!payload) {
-      parseError = "no_json";
+    const parsed = parseAgentJson(rawResponse, opts);
+    output = parsed.output;
+    parseError = parsed.parseError;
+  } else if (rawResponse) {
+    // Gateway said error but we somehow have body — still try.
+    const parsed = parseAgentJson(rawResponse, opts);
+    if (parsed.output) {
+      output = parsed.output;
+      errorMessage = null;
     } else {
-      try {
-        const parsed = JSON.parse(payload) as unknown;
-        output = intakeAgentOutputSchema.parse(parsed);
-      } catch (err) {
-        parseError = err instanceof Error ? err.message : "parse_error";
-      }
+      parseError = parsed.parseError;
     }
   }
 
   if (output) {
-    // Locale is always echoed to the caller's locale to prevent drift.
     output.brief.locale = opts.locale;
     output.brief.intent = opts.intent;
-    // Sanity limits: if the LLM produced impossible ranges we downgrade the
-    // status to `rejected_infeasible` and surface the reasons.
     const sanity = runSanityLimits(output.brief);
     if (!sanity.ok) {
       output = {
@@ -192,8 +215,6 @@ export async function runIntakeAgent(
       };
     }
   } else {
-    // Structural failure — surface a shape rejection instead of masking the
-    // failure as a generic clarification.
     const fallbackBrief = screeningBriefSchema.parse({
       intent: opts.intent,
       includeSectors: opts.currentBrief?.includeSectors ?? opts.suggestedInclude,
@@ -204,14 +225,17 @@ export async function runIntakeAgent(
       endedEarly: opts.currentBrief?.endedEarly ?? false,
       locale: opts.locale,
     });
+    const reason = errorMessage ?? parseError ?? "unknown";
+    const userFacing = errorMessage?.startsWith("gateway_")
+      ? "The AI service did not respond correctly. Please try again in a moment."
+      : "I could not read my own reply. Please try again — a shorter answer usually helps.";
     output = {
       status: "rejected_shape",
-      assistantText:
-        "I could not parse the agent's response. Try again or rephrase your last message.",
+      assistantText: userFacing,
       brief: fallbackBrief,
       questions: [],
       suggestions: [],
-      warnings: [errorMessage ?? parseError ?? "unknown"],
+      warnings: [reason.slice(0, 300)],
       inferredFields: [],
     };
   }
@@ -230,8 +254,6 @@ export async function runIntakeAgent(
       errorMessage: (errorMessage || parseError || "").slice(0, 2000),
     });
   } catch {
-    // AI log persistence is best-effort — do not fail the turn if the DB is
-    // down.
     aiLogId = null;
   }
 
