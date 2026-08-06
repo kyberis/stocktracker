@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { ScreeningBrief, ScreeningReport, ScreeningRun, ScreeningRunStep } from "@/lib/screening/schemas";
+import {
+  buildIntakeHrefFromBrief,
+  SCREENING_INTAKE_RETURN_KEY,
+} from "@/lib/screening/intake-href";
 import { MockNotice, ScreeningDisclaimer } from "./ScreeningNotices";
 import { ScreeningReportView } from "./ScreeningReportView";
 import { useScreeningCopy } from "./use-screening-copy";
@@ -17,6 +21,16 @@ function readStoredBrief(runId: string): ScreeningBrief | null {
   } catch {
     return null;
   }
+}
+
+function readIntakeReturn(runId: string, brief: ScreeningBrief | null): string {
+  try {
+    const stored = sessionStorage.getItem(SCREENING_INTAKE_RETURN_KEY(runId));
+    if (stored && stored.startsWith("/screening/intake")) return stored;
+  } catch {
+    // ignore
+  }
+  return buildIntakeHrefFromBrief(brief);
 }
 
 function StepRow({ step, label }: { step: ScreeningRunStep; label: string }) {
@@ -70,9 +84,12 @@ export function RunProgress({ runId }: { runId: string }) {
   const [error, setError] = useState<string | null>(null);
   const pollsRef = useRef(0);
   const briefRef = useRef<ScreeningBrief | null>(null);
+  const [backHref, setBackHref] = useState("/screening/intake");
 
   useEffect(() => {
-    briefRef.current = readStoredBrief(runId);
+    const brief = readStoredBrief(runId);
+    briefRef.current = brief;
+    setBackHref(readIntakeReturn(runId, brief));
   }, [runId]);
 
   const loadReport = useCallback(async () => {
@@ -138,7 +155,7 @@ export function RunProgress({ runId }: { runId: string }) {
         <ScreeningReportView report={report} mocked={run?.mocked ?? true} />
         <div className="mt-5 flex flex-wrap gap-2">
           <Link
-            href="/screening"
+            href={backHref}
             className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
           >
             {copy.common.back}
@@ -196,7 +213,7 @@ export function RunProgress({ runId }: { runId: string }) {
 
       <div className="mt-5 flex flex-wrap gap-2">
         <Link
-          href="/screening"
+          href={backHref}
           className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
         >
           {copy.common.back}

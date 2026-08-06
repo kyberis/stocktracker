@@ -73,6 +73,16 @@ export const intakeAgentOutputSchema = z.object({
   assistantText: z.string().min(1).max(2000),
   brief: screeningBriefSchema,
   questions: z.array(z.string().min(1).max(300)).max(3).default([]),
+  /** Recommended answers shown as chips. Prefer these over silent preset fills. */
+  suggestions: z
+    .array(
+      z.object({
+        label: z.string().min(1).max(80),
+        say: z.string().min(1).max(200),
+      }),
+    )
+    .max(5)
+    .default([]),
   warnings: z.array(z.string().min(1).max(300)).max(10).default([]),
   inferredFields: z.array(z.string().min(1).max(64)).max(20).default([]),
 });

@@ -170,6 +170,10 @@ const en = {
     clarificationTitle: "The agent needs a bit more",
     rejectedTitle: "That brief will not work as-is",
     turnError: "The agent did not respond. Try again in a moment.",
+    editRowHint: "Edit {label}",
+    editRowPrompt: "I want to change {label}. It is currently “{condition}”. What do you recommend?",
+    suggestionsLabel: "Recommended answers",
+    readyToLaunch: "Brief looks ready — review below or keep adjusting in the chat.",
     sourceLabels: {
       chat: "you",
       preset: "preset",
@@ -627,6 +631,10 @@ const es: ScreeningCopy = {
     clarificationTitle: "El agente necesita un poco más",
     rejectedTitle: "Ese brief no funcionará tal cual",
     turnError: "El agente no respondió. Vuelve a intentarlo en un momento.",
+    editRowHint: "Editar {label}",
+    editRowPrompt: "Quiero cambiar {label}. Ahora mismo es “{condition}”. ¿Qué me recomiendas?",
+    suggestionsLabel: "Respuestas recomendadas",
+    readyToLaunch: "El brief parece listo — revísalo abajo o sigue ajustando en el chat.",
     sourceLabels: {
       chat: "tú",
       preset: "preset",

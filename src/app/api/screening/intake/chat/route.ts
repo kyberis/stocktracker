@@ -76,6 +76,7 @@ export const POST = withMetrics(
       agent: {
         status: result.output.status,
         questions: result.output.questions,
+        suggestions: result.output.suggestions,
         warnings: result.output.warnings,
         inferredFields: result.output.inferredFields,
       },

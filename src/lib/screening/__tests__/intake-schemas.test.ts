@@ -65,6 +65,29 @@ describe("intakeAgentOutputSchema", () => {
     });
     expect(res.success).toBe(false);
   });
+
+  it("parses suggestions chips", () => {
+    const parsed = intakeAgentOutputSchema.parse({
+      status: "needs_clarification",
+      assistantText: "I recommend ROIC > 12%. Keep it?",
+      brief: {
+        intent: "explore",
+        includeSectors: [],
+        excludeSectors: [],
+        regions: [],
+        candidateCount: 5,
+        criteria: [],
+        endedEarly: false,
+        locale: "en",
+      },
+      suggestions: [
+        { label: "Keep > 12%", say: "Keep ROIC > 12%." },
+        { label: "Tighten > 15%", say: "Use ROIC > 15%." },
+      ],
+    });
+    expect(parsed.suggestions).toHaveLength(2);
+    expect(parsed.suggestions[0]?.label).toBe("Keep > 12%");
+  });
 });
 
 describe("intakeChatRequestSchema", () => {

@@ -59,6 +59,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Corregido el falso mensaje “el agente no respondió” en el chat de intake: los chips ya no inyectan la siguiente pregunta del script tras un turno del LLM (falle o no).",
         },
       },
+      {
+        type: "improvement",
+        text: "Screening run/report Back returns to the Intake agent (with the same intent and sectors). Intake keeps the chat open to edit any brief row, and the agent recommends defaults with suggestion chips while asking.",
+        translations: {
+          es: "Volver desde el run/informe de cribado regresa al agente Intake (con el mismo intent y sectores). El intake deja el chat abierto para editar cualquier fila del brief, y el agente recomienda valores con chips mientras pregunta.",
+        },
+      },
     ],
   },
   {

@@ -54,6 +54,7 @@ function goodAgentOutput(overrides: Partial<IntakeAgentOutput> = {}): IntakeAgen
       locale: "en",
     },
     questions: [],
+    suggestions: [],
     warnings: [],
     inferredFields: [],
     ...overrides,

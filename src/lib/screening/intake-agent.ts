@@ -60,6 +60,7 @@ function buildFallbackOutput(opts: RunIntakeAgentOptions): IntakeAgentOutput {
       "AI Gateway is not configured yet, so I cannot parse your answer in real time. Ask your admin to set the AI_GATEWAY_API_KEY.",
     brief,
     questions: [],
+    suggestions: [],
     warnings: ["gateway_not_configured"],
     inferredFields: [],
   });
@@ -209,6 +210,7 @@ export async function runIntakeAgent(
         "I could not parse the agent's response. Try again or rephrase your last message.",
       brief: fallbackBrief,
       questions: [],
+      suggestions: [],
       warnings: [errorMessage ?? parseError ?? "unknown"],
       inferredFields: [],
     };
