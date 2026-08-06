@@ -18,6 +18,7 @@ import {
 } from "@/lib/screening/brief-state";
 import { buildIntakeHref, SCREENING_INTAKE_RETURN_KEY } from "@/lib/screening/intake-href";
 import { buildIntakeScript, type BriefPatch, type ExplainEntry } from "@/lib/screening/intake-script";
+import { pickGlossaryFor } from "@/lib/screening/intake-glossary";
 import {
   SCREENING_INTENTS,
   type IntakeAgentStatus,
@@ -194,7 +195,11 @@ export function IntakeChat() {
         setAgentSuggestions(data.agent.suggestions ?? []);
         setAgentWarnings(data.agent.warnings ?? []);
 
-        pushBubble({ role: "agent", text: data.assistantText });
+        pushBubble({
+          role: "agent",
+          text: data.assistantText,
+          explain: pickGlossaryFor(data.assistantText, copy),
+        });
         setTranscript((prev) => [...prev, { role: "assistant", content: data.assistantText }]);
 
         track("screening_intake_turn", {
@@ -225,7 +230,7 @@ export function IntakeChat() {
     [
       agentPending,
       brief,
-      copy.intake.turnError,
+      copy,
       intent,
       language,
       pushBubble,

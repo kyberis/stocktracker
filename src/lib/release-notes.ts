@@ -74,6 +74,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "improvement",
+        text: "Screening Intake chat now shows a “What do these terms mean?” disclosure on every agent bubble that mentions financial metrics (Market cap, ROIC, ndEbitda, Forward P/E, and more) — click to reveal a short definition.",
+        translations: {
+          es: "El chat del Intake muestra un desplegable “¿Qué significan estos términos?” en cada mensaje del agente que menciona métricas financieras (Capitalización, ROIC, ndEbitda, PER forward, etc.); pulsa para ver una definición breve.",
+        },
+      },
+      {
         type: "fix",
         text: "Screening Intake now uses OpenAI tool calling (submit_brief function) so the model returns a validated JSON payload every turn — no more “could not read my own reply” after the first message.",
         translations: {
