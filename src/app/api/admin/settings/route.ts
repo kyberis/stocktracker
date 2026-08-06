@@ -50,6 +50,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "tool_tax_reports_enabled",
   "tool_simulator_enabled",
   "tool_planning_enabled",
+  "investment_screening_enabled",
 ];
 
 export const dynamic = "force-dynamic";

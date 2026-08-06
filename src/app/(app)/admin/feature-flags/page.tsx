@@ -84,6 +84,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     description: "FIRE / multi-goal planner at /tools/planning. Off by default while the tool is incomplete.",
     group: "Tools",
   },
+  investment_screening_enabled: {
+    label: "Investment screening (E0 mock)",
+    description:
+      "Screening flow at /screening: sector exposure entry, intake chat, brief, run progress, and HTML report. Stage E0 — the report comes from a typed fixture, no agents or market data yet. Off by default.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

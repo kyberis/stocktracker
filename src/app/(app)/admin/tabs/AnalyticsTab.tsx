@@ -644,6 +644,51 @@ export default function AnalyticsTab() {
       {/* Conversion Funnel */}
       {data.funnel && <ConversionFunnel stages={data.funnel} />}
 
+      {/* Screening entry funnel */}
+      {data.screeningEntry &&
+        (data.screeningEntry.live.some((s) => s.count > 0) ||
+          data.screeningEntry.fixture.some((s) => s.count > 0)) && (
+        <div className="mt-8">
+          <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">
+            Screening entry
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
+            First-screen funnel for /screening. Live uses real portfolio state; fixture is
+            design-preview traffic (?scenario=).
+          </p>
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Live</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            {data.screeningEntry.live.map((stage) => (
+              <StatCard key={`live-${stage.stage}`} label={stage.stage} value={stage.count} />
+            ))}
+          </div>
+          {data.screeningEntry.fixture.some((s) => s.count > 0) && (
+            <>
+              <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-300 mb-3">
+                Fixture preview
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                {data.screeningEntry.fixture.map((stage) => (
+                  <StatCard key={`fixture-${stage.stage}`} label={stage.stage} value={stage.count} />
+                ))}
+              </div>
+            </>
+          )}
+          {data.screeningEntry.byVariantLive.length > 0 && (
+            <div className="card p-4 mt-2">
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                Entry views by variant (live)
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {data.screeningEntry.byVariantLive.map((row) => (
+                  <StatCard key={row.variant} label={row.variant} value={row.views} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Landing Page Analytics */}
       {data.landing && (data.landing.totalPageViews > 0 || data.landing.totalCtaClicks > 0) && (
         <>

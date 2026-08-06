@@ -1,8 +1,8 @@
 # HLD — Investment Screening Agents
 
-Status: **v1.0** · Companion PRD: [`PRD_INVESTMENT_SCREENING_AGENTS_FEASIBLE.md`](./PRD_INVESTMENT_SCREENING_AGENTS_FEASIBLE.md)  
-Domain: **AI Intelligence** + **Tools** + **Billing**  
-Pattern: **Event-driven orchestration** con steps durables, outbox para side effects, observabilidad Prometheus/Grafana.
+Status: **v1.6** · Companion PRD: [`PRD_INVESTMENT_SCREENING_AGENTS_FEASIBLE.md`](./PRD_INVESTMENT_SCREENING_AGENTS_FEASIBLE.md) (**Feasible v1.6**)  
+Domain: **AI Intelligence** + **Tools** (+ **Billing** solo en iteración créditos)  
+Pattern: **Feature-flagged** · **incremental** · **app-triggered only** · fan-out **1 ticker/step** · **informe HTML in-app** (sin PDF) · **ficha tipada + tesis corta** · Dev Lab · outbox notify · Prometheus. Every step: **`user_id` + `job_id`**. Blob opcional solo para exports ops (Excel).
 
 ---
 
@@ -10,27 +10,26 @@ Pattern: **Event-driven orchestration** con steps durables, outbox para side eff
 
 ```mermaid
 flowchart TB
-    user["Usuario Trefolio<br/>Pide informe sobre su cartera"]
-    ops["Staff / Ops<br/>Monitorea cribado y métricas"]
+    user["Usuario Trefolio<br/>Pide informe (flag on)"]
+    ops["Staff / Ops<br/>Admin cribado + métricas"]
 
-    trefolio["Trefolio App<br/>Next.js en Vercel + Turso"]
+    trefolio["Trefolio App<br/>Next.js + Vercel Fluid + Turso"]
 
-    stripe["Stripe<br/>Cobro one-time y reembolsos"]
-    fmp["FMP API<br/>Mercado y fundamentales"]
-    search["Web Search API<br/>Tavily / Exa"]
-    llm["LLM Gateway<br/>OpenAI vía AI SDK"]
-    gha["GitHub Actions<br/>Worker Modo Cribado diario"]
-    sec["SEC EDGAR<br/>Fase 1.5 — verificación"]
+    fmp["FMP API"]
+    search["Web Search API"]
+    llm["LLM Gateway"]
+    blob["Vercel Blob<br/>Excel ops opcional"]
+    sec["SEC EDGAR<br/>Fase 1.5"]
+    stripeFuture["Stripe / créditos<br/>Iteración aparte"]
 
-    user -->|"Brief, pago, informe, track record"| trefolio
-    ops -->|"Admin dashboards, artifacts GHA"| trefolio
-    trefolio -->|"Checkout + refund"| stripe
-    trefolio -->|"Screener, ratios, insider"| fmp
-    trefolio -->|"Búsqueda agent-native"| search
-    trefolio -->|"Research, Compiler, QA"| llm
-    trefolio -.->|"Opcional fase 1.5"| sec
-    gha -->|"Ingest cribado vía API interna"| trefolio
-    gha -->|"2.6k–5k calls/día"| fmp
+    user -->|"Brief, informe, track record"| trefolio
+    ops -->|"Admin trigger cribado, Dev Lab"| trefolio
+    trefolio --> fmp
+    trefolio --> search
+    trefolio --> llm
+    trefolio -.->|"exports ops opcionales"| blob
+    trefolio -.-> sec
+    trefolio -.-> stripeFuture
 ```
 
 ---
@@ -39,51 +38,39 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph Vercel["Vercel — Trefolio"]
-        UI["(app) UI<br/>Industry Screener Pro"]
-        API["API Routes<br/>/api/screening/*"]
-        WRK["Internal Worker<br/>/api/internal/screening/worker"]
-        CRON["Crons<br/>screening-recover<br/>screening-tracking"]
-        LIB["src/lib/screening/*<br/>pure TS domain"]
+    subgraph Vercel["Vercel — Trefolio (único runtime)"]
+        UI["UI Screening + Dev Lab + Admin"]
+        API["/api/screening/*"]
+        WRK["/api/internal/screening/worker"]
+        CRON["/api/cron/screening-*"]
+        LIB["src/lib/screening/*"]
     end
 
-    subgraph Data["Turso libSQL"]
-        RUNS[(screening_runs)]
-        STEPS[(screening_run_steps)]
-        EVENTS[(screening_run_events)]
-        OUTBOX[(screening_outbox)]
-        OUTS[(screening_agent_outputs)]
-        QA[(screening_qa_rounds)]
-        REP[(screening_reports)]
-        REC[(recommendation_outcomes / valuations)]
-        CACHE[(screening_research_cache)]
-        REG[(screening_universe_registry)]
-    end
-
-    subgraph GHA["GitHub Actions"]
-        SCRIPT["run-daily-cribado.ts"]
-        ART["Artifacts PDF/Excel"]
+    subgraph Data["Persistencia"]
+        TURSO[(Turso — runs/steps/outputs/reports)]
+        BLOB[(Vercel Blob — Excel ops opcional)]
     end
 
     UI --> API
     API --> LIB
     WRK --> LIB
     CRON --> LIB
-    LIB --> Data
-    SCRIPT --> LIB
-    SCRIPT --> API
-    API --> OUTBOX
-    CRON --> OUTBOX
+    CRON -->|"crea job daily_screen"| API
+    LIB --> TURSO
+    LIB -.->|"opcional put Excel"| BLOB
 ```
 
 | Contenedor | Responsabilidad | Runtime |
 |---|---|---|
-| UI | Formulario brief, checkout, historial informes, track record | Browser + Next.js RSC |
-| API pública | Auth, validación Zod, Stripe session, status polling | Vercel Function ≤60s |
-| Worker interno | Ejecuta **un step** por invocación | Vercel Function ≤120–300s |
-| Crons | Recover zombie, dispatch outbox, tracking valuations | `maxDuration=300` |
-| `src/lib/screening` | Lógica pura — importable desde API y GHA | Node 22 |
-| GHA cribado | Pipeline largo + filesystem Excel | `ubuntu-latest` cron |
+| UI | Brief, progreso, **informe HTML**, Dev Lab, admin cribado | Browser |
+| API pública | Flag, Zod, authorizeRun, resume/rerun, status, report JSON | Fluid ≤60s |
+| Worker | Un step por invocación (1 ticker si research) | Fluid ≤300s |
+| Vercel Cron | recover, tracking, screening-cribado | App routes |
+| Blob | **Opcional** — Excel staff cribado | `@vercel/blob` private |
+| `src/lib/screening` | Dominio puro | Node 22 |
+
+**Entrega del informe:** React/HTML desde `screening_reports` — **no PDF**.  
+**No hay** GitHub Actions, runners externos, ni pipeline Chromium→PDF.
 
 ---
 
@@ -95,6 +82,7 @@ Alineado con [`ARCHITECTURE.md`](../ARCHITECTURE.md) — nuevo subdominio dentro
 src/lib/screening/
 ├── domain/
 │   ├── brief.ts              # ScreeningBrief Zod
+│   ├── job-context.ts        # JobContext { userId, jobId, agentKind, ticker? }
 │   ├── events.ts             # ScreeningRunCreated, StepCompleted, ...
 │   ├── steps.ts              # enum StepKind
 │   └── outputs.ts            # per-agent output schemas
@@ -113,12 +101,15 @@ src/lib/screening/
 ├── data/
 │   ├── fmp-screening.ts      # screener, ratios, growth (rate-limited)
 │   ├── fmp-research.ts       # transcripts, insider, 13F
-│   ├── research-cache.ts     # TTL global
+│   ├── research-cache.ts     # TTL global por ticker
 │   └── yahoo-fallback.ts
 ├── rules/
 │   ├── sanity-limits.ts      # peMax, yield ranges (Intake)
 │   ├── cribado-funnel.ts     # etapas A/B/C determinísticas
 │   └── rigor-r1-r10.ts       # reglas auditables
+├── access/
+│   ├── port.ts               # ScreeningAccessPort (PRD §5.4)
+│   └── stub-allow-if-flagged.ts
 ├── informe/
 │   ├── agents/
 │   │   ├── hard-data.ts
@@ -139,25 +130,30 @@ src/lib/screening/
 │   └── loop.ts               # corrección dirigida
 ├── workers/
 │   ├── lease.ts              # acquire/release step lease
-│   ├── dispatch.ts           # enqueue next step
+│   ├── dispatch.ts           # fan-out + aggregate barriers + resume/rerun
 │   └── handlers/             # one file per StepKind
 ├── outbox/
-│   └── dispatcher.ts         # push, email, stripe refund
+│   └── dispatcher.ts         # push, email (notify only — no stripe_refund en v1)
 └── metrics.ts                # Prometheus counters/histograms
 
 src/lib/db/screening.ts         # DAL Turso
-src/app/api/screening/          # rutas públicas
-src/app/api/internal/screening/ # worker + ingest cribado
-src/app/api/cron/screening-*/   # recover, tracking, outbox
+src/app/api/screening/          # rutas públicas (flag-gated)
+src/app/api/internal/screening/ # worker
+src/app/api/admin/screening/    # trigger cribado
+src/app/api/cron/screening-*/   # recover, tracking, cribado, outbox
 ```
 
-**Regla de dependencia**: `workers/` → `informe|cribado|qa` → `data|rules` → `domain`. Nada en `screening/` importa `src/app/*`.
+**Regla de dependencia**: `workers/` → `informe|cribado|qa|access` → `data|rules` → `domain`. Nada en `screening/` importa `src/app/*`.
+
+**Feature flag (PRD §1):** `investment_screening_enabled` — primer entregable; default off. Dev Lab: `screening_dev_lab_enabled` o `NODE_ENV=development`.
 
 ---
 
 ## 4. Flujo event-driven — Modo Informe
 
-### 4.1 Diagrama de secuencia — creación y cobro
+### 4.1 Diagrama de secuencia — creación de job (sin cobro)
+
+Alineado a PRD: flag → Intake → `authorizeRun` stub → `job_id`+`user_id` → worker. **Sin Stripe** en esta iteración.
 
 ```mermaid
 sequenceDiagram
@@ -165,31 +161,36 @@ sequenceDiagram
     participant U as Usuario
     participant UI as UI
     participant API as POST /api/screening/runs
+    participant FF as Feature flag
+    participant AUTH as authorizeRun stub
     participant DB as Turso
-    participant ST as Stripe
     participant W as Worker
 
-    U->>UI: Arma brief / Warren sugiere
+    U->>UI: Arma brief / Warren sugiere CTA
     UI->>API: POST brief (draft)
-    API->>DB: INSERT run status=draft
-    API->>API: Intake — sanity + count FMP
-    alt brief inviable
-        API->>DB: status=rejected_infeasible
-        API-->>UI: 422 + sugerencia ajuste
-    else ambiguo
-        API-->>UI: 409 + preguntas
-    else OK
-        API->>ST: Create Checkout Session (metadata run_id)
-        API->>DB: status=pending_payment
-        API-->>UI: checkout URL
+    API->>FF: investment_screening_enabled?
+    alt flag off
+        API-->>UI: 403
+    else flag on
+        API->>DB: INSERT run status=draft user_id job_id
+        API->>API: Intake — sanity + count FMP
+        alt brief inviable
+            API->>DB: status=rejected_infeasible
+            API-->>UI: 422 + sugerencia ajuste
+        else ambiguo
+            API-->>UI: 409 + preguntas
+        else OK
+            API->>AUTH: authorizeRun(userId, jobId)
+            alt deny
+                API-->>UI: 402/403 reason
+            else ok
+                API->>DB: status=authorized
+                API->>DB: INSERT step hard_data pending
+                API->>W: POST /internal/screening/worker
+                API-->>UI: jobId + status
+            end
+        end
     end
-
-    U->>ST: Paga
-    ST->>API: webhook checkout.session.completed
-    API->>DB: charge_id, status=paid
-    API->>DB: INSERT event ScreeningRunPaid
-    API->>DB: INSERT step hard_data pending
-    API->>W: POST /internal/screening/worker (fire-and-forget)
 ```
 
 ### 4.2 Diagrama de secuencia — ejecución por steps
@@ -203,16 +204,21 @@ sequenceDiagram
     participant FMP as FMP
     participant LLM as LLM
 
-    W->>DB: SELECT step FOR UPDATE lease
+    W->>DB: SELECT pending step WHERE job_id/user_id valid FOR lease
     alt lease adquirido
         W->>DB: status=running, lease_expires=now+90s
-        W->>H: execute(step_kind, run context)
+        W->>H: execute(JobContext)
+        Note over H: 1 ticker si research; null si step global
         H->>FMP: fetch según agente
         H->>LLM: si aplica
-        H->>DB: UPSERT screening_agent_outputs
+        H->>DB: UPSERT screening_agent_outputs (job_id, agent_kind, ticker)
         W->>DB: step status=done
         W->>DB: INSERT event StepCompleted
-        W->>DB: INSERT next step pending
+        alt more tickers same agent_kind
+            W->>DB: next pending sibling already enqueued
+        else agent_kind complete
+            W->>DB: INSERT aggregate_* or next phase pending
+        end
         W->>W: self-invoke worker (defer)
     else lease ocupado
         W-->>W: exit 204
@@ -224,27 +230,39 @@ sequenceDiagram
 ```mermaid
 stateDiagram-v2
     [*] --> hard_data
-    hard_data --> ir_business: tickers batch 1
-    ir_business --> web_sentiment
-    web_sentiment --> portfolio_context
+    hard_data --> fan_out_ir_web: N steps · 1 ticker each
+    fan_out_ir_web --> aggregate_ir_web
+    aggregate_ir_web --> portfolio_context
     portfolio_context --> risk_suitability
     risk_suitability --> compile_draft
     compile_draft --> qa_round
 
     qa_round --> compile_draft: fail — recompile only
-    qa_round --> ir_business: fail agent 2
-    qa_round --> web_sentiment: fail agent 3
+    qa_round --> fan_out_ir_web: fail agent+ticker directed retry
     qa_round --> hard_data: fail agent 1
     qa_round --> finalize: pass OR max rounds
 
     finalize --> notify_outbox
     notify_outbox --> [*]
 
-    qa_round --> refund_outbox: 0 candidates valid
-    refund_outbox --> [*]
+    qa_round --> settle_failed: 0 candidates valid
+    settle_failed --> [*]
 ```
 
-**Batching Agente 2/3**: para 8–12 tickers, un step procesa **hasta 3 tickers** para mantenerse <120s; el worker encadena `ir_business_batch_2` automáticamente.
+**One company per research step**: Agentes IR / Web / checklist cribado ejecutan **exactamente un `ticker` por invocación**. El orchestrator hace fan-out de N steps con el mismo `user_id` + `job_id`, y un barrier de agregación junta los `screening_agent_outputs` de ese `agent_kind` antes de la siguiente fase. QA dirigida re-encola solo `(agent_kind, ticker)`.
+
+**Job context obligatorio** en cada handler:
+
+```ts
+type JobContext = {
+  userId: string | null; // null solo daily_screen
+  jobId: string;         // screening_runs.id
+  agentKind: string;
+  ticker: string | null; // null = step global del job
+};
+```
+
+El worker valida que `step.user_id` / `step.job_id` coinciden con el run antes de ejecutar.
 
 ### 4.4 QA híbrido — diseño
 
@@ -297,6 +315,8 @@ Hard rules:
 4. Do not mention that you are an AI model unless asked by the orchestrator schema.
 5. Do not give tax, legal, or regulated advice. Flag tax/legal topics as "out_of_scope" when relevant.
 6. Internal working language is English even if the end-user locale is not English.
+7. Every invocation receives JobContext { userId, jobId, agentKind, ticker }.
+   Research agents with a non-null ticker MUST analyze that company only.
 ```
 
 #### Agent 0 — Intake (brief parsing + ambiguity)
@@ -364,9 +384,12 @@ Return JSON:
 ```text
 {{SHARED_PREAMBLE}}
 
-You are the Investor Relations / Business Agent. For each assigned ticker, explain WHAT the
-business does and WHAT management recently signaled, using earnings transcripts, press releases,
-and IR materials from tools (and WebFetch only as fallback when FMP lacks coverage).
+You are the Investor Relations / Business Agent. You research EXACTLY ONE ticker
+provided in the JobContext. Do not mention or analyze any other company.
+
+JobContext (required): userId, jobId, agentKind=ir_business, ticker=<ONE symbol>.
+Explain WHAT the business does and WHAT management recently signaled, using earnings
+transcripts, press releases, and IR materials from tools (WebFetch only as fallback).
 
 Tasks:
 1. One-sentence business description.
@@ -376,7 +399,7 @@ Tasks:
 5. When ambiguous, request a second source before concluding (multi-pass). If still ambiguous,
    mark confidence="low".
 
-Return JSON per ticker:
+Return JSON for the single ticker in JobContext:
 {
   "ticker": string,
   "businessOneLiner": string,
@@ -395,9 +418,10 @@ Return JSON per ticker:
 ```text
 {{SHARED_PREAMBLE}}
 
-You are the Web & Sentiment Agent. Gather qualitative market signals for each ticker:
-news (last 30–90 days), analyst tone, insider activity (from structured FMP insider tools),
-and optional institutional/congress signals when available.
+You are the Web & Sentiment Agent. You research EXACTLY ONE ticker in JobContext
+(userId, jobId, agentKind=web_sentiment, ticker). Do not analyze other companies in this call.
+Gather qualitative market signals: news (last 30–90 days), analyst tone, insider activity
+(from structured FMP insider tools), and optional institutional/congress signals when available.
 
 Cross-verification rule (mandatory):
 - Any claim that can affect inclusion in the report MUST have ≥2 independent sources,
@@ -410,7 +434,7 @@ Tasks:
 3. Never treat a single analyst house as strong consensus (rigor R10).
 4. Attach publishedAt dates; reject undated claims.
 
-Return JSON per ticker:
+Return JSON for the single ticker in JobContext:
 {
   "ticker": string,
   "signals": [{
@@ -494,7 +518,7 @@ Return JSON:
 {{SHARED_PREAMBLE}}
 
 You are the Executive Summary Compiler. Merge structured outputs from Agents 1–5 into a draft
-research report. You do NOT verify your own work (QA Agent does that next).
+for an in-app HTML research report (no PDF). You do NOT verify your own work (QA Agent does that next).
 
 Tasks:
 1. Rank 3–5 candidates with a composite score (hard data + business + sentiment + portfolio fit).
@@ -505,6 +529,7 @@ Tasks:
    Forbidden: "buy now", "guaranteed", "you should invest", "financial advice".
 5. Include a short disclaimer block (AI-generated research; not investment advice; past performance
    ≠ future results).
+6. Structure content for web sections (summary, ranked table, per-candidate cards) — not a print layout.
 
 Return JSON:
 {
@@ -521,6 +546,9 @@ Return JSON:
   "disclaimer": string,
   "locale": string
 }
+
+After QA pass, the persist step merges this draft with Hard Data / checklist skeletons into
+the full ScreeningReport card schema (§5.3) — numbers from code, prose from this draft.
 ```
 
 #### Agent 6 — QA Layer B (qualitative judge only)
@@ -589,36 +617,226 @@ Return JSON: { "ticker": string, "locale": string, "summary": string }
 
 ## 5. Flujo Modo Cribado
 
+Todo el cribado corre **dentro de la app**: mismo worker/steps que Modo Informe. Triggers:
+
+1. **Admin UI** — “Run daily screen now”
+2. **`POST /api/admin/screening/cribado`** (auth admin)
+3. **Vercel Cron** `GET/POST /api/cron/screening-cribado` (`vercel.json` + `cron-registry.ts`) — solo crea/encola un `screening_runs` `mode=daily_screen`; el worker hace el resto
+
 ### 5.1 Topología
 
 ```mermaid
 flowchart LR
-    CRON_GHA["GHA cron 06:00 UTC"] --> RUN["run-daily-cribado.ts"]
-    RUN --> FMP["FMP 2.6k–5k calls<br/>cache + backoff"]
-    RUN --> PIPE["cribado/pipeline.ts"]
-    PIPE --> QA["qa/ deterministic R1-R10"]
-    QA --> OUT["PDF + exceljs + JSON"]
-    OUT --> ART["GHA artifact 30d"]
-    OUT --> INGEST["POST /internal/screening/cribado/ingest"]
-    INGEST --> DB[(Turso)]
-    INGEST --> REG[(screening_universe_registry)]
+    TRIG["UI admin / Vercel Cron"] --> API["POST crea job daily_screen"]
+    API --> WRK["Worker steps chunked"]
+    WRK --> FMP["FMP + cache + backoff"]
+    WRK --> PIPE["cribado/pipeline.ts"]
+    PIPE --> QA["qa R1-R10"]
+    QA --> REP["Persist screening_reports JSON"]
+    REP --> WEB["UI HTML /tools/screening/reports/:id"]
+    QA -.->|"opcional"| XLS["exceljs Buffer → Blob"]
+    REP --> TURSO["Turso registry 90d"]
 ```
 
-### 5.2 Step graph Cribado (en GHA — un proceso, checkpoints opcionales)
+### 5.2 Step graph Cribado (mismo worker — sin GHA)
 
 | Fase | Step | Tipo | LLM |
 |---|---|---|---|
 | A | `cribado_universe_a` | código | no |
-| B | `cribado_prefilter_b` | código | no |
-| C | `cribado_valuation_c` | código | peer ambiguo only |
-| D | `cribado_checklist` | mixto ×5 tickers | ~30 calls total |
-| E | `cribado_compile` | fórmula + LLM tesis | sí |
+| B | `cribado_prefilter_b` | código (chunked) | no |
+| C | `cribado_valuation_c` | código (chunked) | peer ambiguo only |
+| D | `cribado_checklist_*` | **1 ticker / step** ×5 | ~30 LLM calls |
+| E | `cribado_compile` | fórmula + LLM tesis → **summary_json** | sí |
 | F | `cribado_qa` | híbrido R1–R10 | mínimo |
-| G | `cribado_export` | PDF + Excel + JSON | no |
+| G | `cribado_persist` | escribe `screening_reports` (+ Excel Blob **opcional**) | no |
 
-Checkpoints en disco `/tmp/cribado-{date}/` por si GHA timeout (job máx 6h); reanudación con input `RESUME_FROM=step`.
+Checkpoints = filas en `screening_run_steps`. **No** PDF, **no** `/tmp`, **no** CI artifacts.
 
-### 5.3 Rate limiting FMP
+### 5.3 Informe HTML — schema de delivery (ficha enriquecida)
+
+El Compiler (Informe y Cribado) **no** inventa números en prosa: ensambla un `ScreeningReport` tipado. La UI renderiza:
+
+- `/tools/screening/reports/[id]` — resumen → tabla → fichas → disclaimer
+- Parcial en etapas intermedias (agentes pending marcados)
+- Notify push/email = deep link a esa ruta
+
+**No hay** step HTML→Chromium→PDF.
+
+#### Principio: tipado vs tesis
+
+| Código / checklist (campos) | LLM Compiler (prosa) |
+|---|---|
+| Score, veredicto, pasos pass/fail, múltiplos, flags, catalizador fechado, sources | `executiveBlurb`, `thesis` (~120–180 palabras), `priorityReason`, `risks[]` narrativos |
+| Tabla comparativa 100% determinística | Orden de prioridad puede reordenar empatados explicando *por qué* |
+
+#### Tipo Zod (conceptual) — `screening_reports.report_json`
+
+```typescript
+type SourceRef = { url: string; asOf: string; field: string; label?: string };
+
+type ScreeningCandidateCard = {
+  ticker: string;
+  companyName: string;
+  sector: string;
+  country: string;
+  /** Contexto de negocio. Links = campos de proveedor; summary = prosa LLM acotada. */
+  business: {
+    summary: string;              // 1–3 frases: qué hace y cómo gana dinero. Sin cifras.
+    employees: number | null;     // provider
+    listedSince: number | null;   // provider (año de salida a bolsa)
+    website: string | null;       // provider (FMP profile.website) — nunca inventado por el LLM
+    irUrl: string | null;         // provider o resolver IR (ver abajo)
+    filings: { label: string; url: string } | null; // regulador / bolsa
+  } | null;
+  mktCapUsd: number | null;
+  currency: string;
+  price: number;
+  priceAsOf: string;
+  targetPrice: number | null;
+  upsidePct: number | null;
+  /** Cribado: 0–8. Informe usuario: score compuesto normalizado o null */
+  score: number | null;
+  verdict: "fuerte" | "watch" | "pass" | "fail" | null;
+  /** ids de SCREENING_CRITERIA (ver abajo). Nunca se muestran como números crudos. */
+  stepsPassed: number[];
+  stepsFailed: number[];
+  catalyst: string | null;
+  catalystDate: string | null; // ISO date if known
+  multiples: {
+    fwdPe: number | null;
+    ownHistPe: number | null;   // mediana / rango propio
+    peerPe: number | null;
+    evEbitda: number | null;
+    ndEbitda: number | null;
+    growthNote: string | null;  // e.g. "H1 sales +22%" — short, from code
+  };
+  flags: {
+    netCash: boolean | null;
+    buyback: boolean | null;
+    dividendYield: number | null;
+    moatScore: number | null;   // trefolio MOAT if available
+  };
+  /** Narrativa — cita paths en citedFields; no volcar ratios extra */
+  thesis: string;
+  risks: string[];
+  priorityReason: string;
+  citedFields: string[];        // e.g. "multiples.fwdPe", "flags.netCash"
+  sources: SourceRef[];
+  // Solo Modo Informe:
+  illustrativeAllocation?: string;
+  positionKind?: "new_position" | "top_up_existing";
+};
+
+type ScreeningReport = {
+  jobId: string;
+  mode: "user_report" | "daily_screen";
+  locale: string;
+  generatedAt: string;
+  methodologyNote: string;      // filtros / límites de datos (código + template)
+  executiveSummary: string;     // Compiler — párrafo de conclusión
+  priorityOrder: string[];      // tickers ordenados
+  comparisonRows: Array<{       // 100% código
+    ticker: string;
+    companyName: string;
+    valuationNote: string;      // "4.69x fwd vs ~8-12x own"
+    growthNote: string;
+    score: number | null;
+    verdict: string | null;
+  }>;
+  cards: ScreeningCandidateCard[]; // exactamente 5 en cribado; 3–5 en informe
+  disclaimer: string;
+  partial: boolean;             // true si faltan agent_kinds
+  pendingAgentKinds: string[];
+};
+```
+
+#### Contexto de negocio y enlaces externos — `card.business`
+
+Sin esto la ficha es una tabla de múltiplos sobre un ticker que el usuario no conoce. Reglas de procedencia:
+
+| Campo | Origen | Regla |
+|---|---|---|
+| `summary` | LLM (Compiler) | 1–3 frases sobre modelo de negocio a partir de `profile.description` del proveedor. **Sin cifras, sin juicio de valor** (esos van en `thesis`). Se valida longitud, no contenido numérico porque no lleva. |
+| `employees`, `listedSince` | Proveedor (`profile`) | Nullable; se omite en UI si falta. |
+| `website` | Proveedor (`profile.website`) | **Nunca** generado por el LLM: un enlace alucinado es riesgo de phishing. Si el proveedor no lo trae → `null`, no se muestra chip. |
+| `irUrl` | Resolver determinístico | Se prueban rutas conocidas sobre el dominio de `website` (`/investors`, `/investor-relations`, `/ir`) y se guarda la primera que responda `200` en build/fetch del run. Si ninguna responde → `null`. |
+| `filings` | Tabla estática por bolsa | Mapa `exchange → { label, urlTemplate }` (LSE/RNS, HKEX, PSE Edge, IDX, SEC EDGAR…). Determinístico. |
+
+Render: bloque “A qué se dedica” con el resumen, una línea de hechos (`empleados · cotiza desde`) y chips de enlace — externos con `target="_blank" rel="noopener noreferrer"` y marca `↗`, más un enlace interno a `/stock/{ticker}` (ficha de trefolio). Los chips respetan el mínimo táctil de 32–44 px.
+
+#### Registro canónico de criterios — `SCREENING_CRITERIA`
+
+`report_json` guarda **ids numéricos** (compactos, estables, no traducibles). La UI resuelve etiqueta + explicación desde este registro vía `src/locales/*`. **Nunca** renderizar los números pelados: siempre nombre + qué mide + estado.
+
+| id | Criterio | Pilar | Puntúa |
+|---|---|---|---|
+| 1 | Valoración relativa | Valoración | sí |
+| 2 | Divergencia precio–fundamentales | Divergencia | sí |
+| 3 | Catalizador fechado | Divergencia | sí |
+| 4 | Resiliencia en crisis | Calidad | sí |
+| 5 | Calidad de balance | Solidez financiera | sí |
+| 6 | Alineación de insiders | Alineación | sí |
+| 7 | Estructura competitiva | Calidad | sí |
+| 8 | Contexto macro | — (shared) | **no** |
+| 9 | Señal de mercado | Alineación | sí |
+
+Score máximo = **8** (el criterio 8 es contexto compartido del run, no puntúa). Estados de render: `pass` ✓ · `fail` ✕ · `not_scored` – · `unknown` ? (sin datos suficientes — se muestra explícito, no como fallo).
+
+#### Compiler Cribado — prompt (reemplaza el thin schema)
+
+```text
+{{SHARED_PREAMBLE}}
+
+You receive, for exactly 5 tickers, a code-built ScreeningCandidateCard skeleton
+(score, verdict, steps, multiples, flags, catalyst, sources) plus checklist notes.
+You MUST NOT invent or alter numeric fields. You only write:
+- executiveSummary
+- per card: thesis (120–180 words), risks[], priorityReason
+- per card: business.summary (1–3 sentences, plain language: what the company
+  does and how it makes money, condensed from the provider description.
+  No figures, no valuation judgement, no URLs — links come from provider fields)
+- priorityOrder (may break score ties with an explicit reason)
+
+Thesis rules:
+- Explain the checklist pattern (e.g. price down / fundamentals up) citing citedFields paths.
+- Do not dump extra ratios that are not in the skeleton.
+- Research framing only — not advice. Locale from payload.
+
+Return JSON matching ScreeningReport prose fields; keep all numeric skeleton fields unchanged.
+```
+
+UI mapping:
+
+| Sección HTML | Campo |
+|---|---|
+| Cabecera / metodología | `methodologyNote` |
+| Resumen + ranking | `executiveSummary` + `priorityOrder` + `cards[].priorityReason` |
+| Tabla | `comparisonRows` |
+| Ficha cabecera | precio, score, veredicto, catalizador, múltiplos, flags |
+| Ficha contexto | `business.summary` + hechos + chips a web oficial / IR / filings / `/stock/{ticker}` |
+| Ficha criterios | `stepsPassed` / `stepsFailed` → lista **con nombre y explicación** (`SCREENING_CRITERIA`) + contador “X de 8” + leyenda |
+| Ficha cuerpo | `thesis` + `risks[]` |
+| Pie | `disclaimer` + `sources` (expandible) |
+
+### 5.4 Excel ops (opcional)
+
+Solo si staff quiere archivo append-only fuera de la UI:
+
+```typescript
+import { put } from "@vercel/blob";
+import ExcelJS from "exceljs";
+
+const buf = Buffer.from(await workbook.xlsx.writeBuffer());
+await put(`screening/cribado/${jobId}/daily.xlsx`, buf, {
+  access: "private",
+  contentType:
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+});
+```
+
+No bloquea el informe HTML.
+
+### 5.5 Rate limiting FMP
 
 ```typescript
 // Pseudocódigo — src/lib/screening/data/fmp-screening.ts
@@ -630,7 +848,7 @@ await withFmpRateLimit(CRIBADO_BUCKET, () => fmpFetch(...));
 
 Backoff: 1s → 2s → 4s → 8s → 16s; máx 5; métrica `screening_fmp_429_total`.
 
-### 5.4 Cribado — LLM judgment prompts (English)
+### 5.6 Cribado — LLM judgment prompts (English)
 
 Embudo A/B/C y la mayoría del checklist son **código**. El LLM solo entra en puntos de juicio.
 Todos los prompts usan `{{SHARED_PREAMBLE}}` de §4.5 y salen en JSON Zod.
@@ -730,21 +948,7 @@ Return JSON:
 
 #### Cribado Compiler — thesis for exactly 5 names
 
-```text
-{{SHARED_PREAMBLE}}
-
-You receive a fixed score 0–8 from code for exactly 5 tickers plus checklist notes.
-Write a short thesis, risks, and priority order for the executive PDF summary.
-Locale from payload. Research framing only — not advice. Numbers only from inputs.
-
-Return JSON:
-{
-  "locale": string,
-  "priorityOrder": string[],
-  "cards": [{ "ticker": string, "thesis": string, "risks": string[], "priorityReason": string }],
-  "disclaimer": string
-}
-```
+Ver §5.3 (schema `ScreeningReport` + reglas tipado vs tesis). El prompt thin anterior queda **reemplazado** por el de §5.3.
 
 ---
 
@@ -755,9 +959,12 @@ Return JSON:
 | Método | Ruta | Descripción |
 |---|---|---|
 | `POST` | `/api/screening/runs` | Crear draft / validar brief |
-| `POST` | `/api/screening/runs/:id/checkout` | Crear Stripe session |
+| `POST` | `/api/screening/runs/:id/checkout` | **Fuera de este PRD** — iteración créditos |
+| `POST` | `/api/screening/jobs/:jobId/resume` | Reanudar desde siguiente agente (o `fromAgentKind`) |
+| `POST` | `/api/screening/jobs/:jobId/rerun` | Re-ejecutar `agentKind` (+ opcional `ticker`) |
 | `GET` | `/api/screening/runs/:id` | Status + progreso steps |
-| `GET` | `/api/screening/reports/:id` | Informe completo |
+| `GET` | `/api/screening/runs/:id/outputs` | Outputs por agente/ticker (Dev Lab) |
+| `GET` | `/api/screening/reports/:id` | JSON tipado → **render HTML** (completo o parcial) |
 | `GET` | `/api/screening/reports` | Historial usuario |
 | `POST` | `/api/screening/feedback` | 👍/👎 por candidato |
 
@@ -766,17 +973,21 @@ Return JSON:
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
 | `POST` | `/api/internal/screening/worker` | `CRON_SECRET` | Procesa 1 step |
-| `POST` | `/api/internal/screening/cribado/ingest` | `CRON_SECRET` + HMAC body | Persiste corrida diaria |
-| `POST` | `/api/webhooks/stripe` | Stripe sig | Existente — extender eventos `checkout.session.completed` screening |
+| `POST` | `/api/admin/screening/cribado` | admin session | Crea job `daily_screen` + encola |
+| `GET/POST` | `/api/cron/screening-cribado` | `verifyCronAuth` | Schedule diario — mismo efecto que admin |
+| `GET` | `/api/admin/screening/exports/:jobId` | admin session | Excel Blob opcional (staff) |
+
+> No hay ingest HMAC desde GitHub. No hay workflow externo.
 
 ### 6.3 Crons (registrar en `cron-registry.ts` + `vercel.json`)
 
 | Cron | Schedule | Función |
 |---|---|---|
 | `screening-recover` | `*/5 * * * *` | Reencola steps lease expirado; runs zombie |
-| `screening-outbox` | `*/2 * * * *` | Dispatch notify/refund |
+| `screening-outbox` | `*/2 * * * *` | Dispatch notify push/email |
 | `screening-tracking` | `0 7 * * *` | Agente 7 valuations diarias |
 | `screening-tracking-summary` | `0 8 * * 1` | Resumen semanal push/email |
+| `screening-cribado` | `0 6 * * *` | Crea job `daily_screen` (app-triggered) |
 
 ---
 
@@ -786,21 +997,20 @@ Return JSON:
 
 ```sql
 CREATE TABLE screening_runs (
-  id TEXT PRIMARY KEY,
+  id TEXT PRIMARY KEY,                 -- job_id
   mode TEXT NOT NULL CHECK (mode IN ('user_report', 'daily_screen')),
-  user_id TEXT REFERENCES users(id),
+  user_id TEXT REFERENCES users(id),   -- null solo daily_screen
   portfolio_id TEXT,
   brief_json TEXT NOT NULL,
-  status TEXT NOT NULL,
-  charge_id TEXT,
-  stripe_session_id TEXT,
-  cost_estimate_usd REAL DEFAULT 0,
+  status TEXT NOT NULL,                -- draft|rejected_infeasible|authorized|running|completed|failed
+  access_ref TEXT,                     -- hook futuro créditos; null en v1
+  cost_estimate_usd REAL DEFAULT 0,    -- costo interno ops
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   completed_at TEXT
 );
 CREATE INDEX idx_screening_runs_user ON screening_runs(user_id, created_at DESC);
-CREATE INDEX idx_screening_runs_status ON screening_runs(status) WHERE status IN ('running','paid');
+CREATE INDEX idx_screening_runs_status ON screening_runs(status) WHERE status IN ('running','authorized');
 ```
 
 ### 7.2 `screening_run_steps`
@@ -808,9 +1018,10 @@ CREATE INDEX idx_screening_runs_status ON screening_runs(status) WHERE status IN
 ```sql
 CREATE TABLE screening_run_steps (
   id TEXT PRIMARY KEY,
-  run_id TEXT NOT NULL REFERENCES screening_runs(id),
+  job_id TEXT NOT NULL REFERENCES screening_runs(id),
+  user_id TEXT,                         -- denormalized; null only for daily_screen
   step_kind TEXT NOT NULL,
-  batch_index INTEGER DEFAULT 0,
+  ticker TEXT,                          -- NULL = job-global step
   status TEXT NOT NULL DEFAULT 'pending',
   lease_owner TEXT,
   lease_expires_at TEXT,
@@ -820,8 +1031,11 @@ CREATE TABLE screening_run_steps (
   error_message TEXT,
   started_at TEXT,
   finished_at TEXT,
-  UNIQUE(run_id, step_kind, batch_index, attempt)
+  UNIQUE(job_id, step_kind, ticker, attempt)
 );
+CREATE INDEX idx_screening_steps_queue
+  ON screening_run_steps(status, lease_expires_at)
+  WHERE status IN ('pending','running');
 ```
 
 ### 7.3 `screening_run_events` (event store lite)
@@ -829,15 +1043,16 @@ CREATE TABLE screening_run_steps (
 ```sql
 CREATE TABLE screening_run_events (
   id TEXT PRIMARY KEY,
-  run_id TEXT NOT NULL,
+  job_id TEXT NOT NULL,
+  user_id TEXT,
   event_type TEXT NOT NULL,
   payload_json TEXT,
   created_at TEXT NOT NULL
 );
 -- event_type ejemplos:
--- ScreeningRunCreated, BriefRejected, PaymentReceived,
--- StepStarted, StepCompleted, StepFailed,
--- QARoundCompleted, ReportPublished, RefundIssued
+-- ScreeningRunCreated, BriefRejected, RunAuthorized,
+-- StepStarted, StepCompleted, StepFailed, AgentAggregated,
+-- QARoundCompleted, ReportPublished, RunSettled
 ```
 
 ### 7.4 Outbox
@@ -845,8 +1060,9 @@ CREATE TABLE screening_run_events (
 ```sql
 CREATE TABLE screening_outbox (
   id TEXT PRIMARY KEY,
-  run_id TEXT NOT NULL,
-  kind TEXT NOT NULL,
+  job_id TEXT NOT NULL,
+  user_id TEXT,
+  kind TEXT NOT NULL,                  -- notify_push | notify_email
   payload_json TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending',
   attempts INTEGER DEFAULT 0,
@@ -860,11 +1076,51 @@ Patrón dispatch (igual espíritu `enqueueProdOps*`):
 
 ```typescript
 export async function enqueueScreeningOutbox(
-  runId: string,
-  kind: "notify_push" | "notify_email" | "stripe_refund",
+  jobId: string,
+  userId: string | null,
+  kind: "notify_push" | "notify_email",
   payload: Record<string, unknown>,
 ): Promise<void> { /* INSERT */ }
 ```
+
+### 7.5 `screening_agent_outputs`
+
+```sql
+CREATE TABLE screening_agent_outputs (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  user_id TEXT,
+  agent_kind TEXT NOT NULL,
+  ticker TEXT,                         -- NULL solo steps globales
+  status TEXT NOT NULL,
+  output_json TEXT NOT NULL,
+  latency_ms INTEGER,
+  cost_estimate REAL,
+  created_at TEXT NOT NULL,
+  UNIQUE(job_id, agent_kind, ticker)
+);
+```
+
+### 7.6 `screening_reports`
+
+```sql
+CREATE TABLE screening_reports (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL UNIQUE REFERENCES screening_runs(id),
+  user_id TEXT,                          -- null solo daily_screen
+  mode TEXT NOT NULL CHECK (mode IN ('user_report', 'daily_screen')),
+  locale TEXT NOT NULL,
+  report_json TEXT NOT NULL,             -- ScreeningReport (§5.3)
+  partial INTEGER NOT NULL DEFAULT 0,    -- 0/1
+  published_at TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX idx_screening_reports_user
+  ON screening_reports(user_id, published_at DESC);
+```
+
+`report_json` = schema §5.3. QA Layer A puede validar `citedFields` ↔ paths en la card antes de `ReportPublished`.
 
 ---
 
@@ -899,7 +1155,7 @@ Tras completar un step, el handler invoca:
 await fetch(`${baseUrl}/api/internal/screening/worker`, {
   method: "POST",
   headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
-  body: JSON.stringify({ runId }),
+  body: JSON.stringify({ jobId, userId }), // never omit — worker claims next step for this job or any pending
 });
 ```
 
@@ -909,38 +1165,35 @@ Si falla el fetch, el cron `screening-recover` retoma en ≤5 min.
 
 | Ruta | `maxDuration` | Razón |
 |---|---|---|
-| `POST /api/screening/runs` | 60 | Solo validación + Stripe session |
-| `POST /internal/screening/worker` | 300 | Step más pesado (web sentiment batch) |
-| `screening-recover` cron | 120 | Solo DB + reenqueue |
-| GHA script | N/A (6h job limit) | Cribado completo |
+| `POST /api/screening/runs` | 60 | Flag + Intake + authorizeRun stub |
+| `POST /api/screening/jobs/:id/resume` | 30 | Encola steps; no corre research inline |
+| `POST /internal/screening/worker` | 300 | Step research 1-ticker / cribado chunk |
+| `screening-recover` / `screening-cribado` cron | 120 | Encola jobs/steps; no pipeline completo inline |
 
 ---
 
 ## 9. Integraciones
 
-### 9.1 Stripe (nuevo — one-time)
+### 9.1 Acceso / créditos (stub — PRD §5.4 / §9)
 
 ```typescript
-// src/lib/stripe-screening.ts
-export async function createScreeningCheckoutSession(input: {
-  runId: string;
-  userId: string;
-  priceId: string; // Stripe Price one-time
-  successUrl: string;
-  cancelUrl: string;
-}): Promise<string> {
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    line_items: [{ price: input.priceId, quantity: 1 }],
-    metadata: { run_id: input.runId, user_id: input.userId, product: "screening_report" },
-    success_url: input.successUrl,
-    cancel_url: input.cancelUrl,
-  });
-  return session.url!;
+// src/lib/screening/access/port.ts
+export interface ScreeningAccessPort {
+  authorizeRun(userId: string, jobId: string): Promise<
+    { ok: true } | { ok: false; reason: "flag_off" | "insufficient_credits" | "other"; message?: string }
+  >;
+  settleRun(
+    userId: string,
+    jobId: string,
+    outcome: "completed" | "failed_empty" | "rejected",
+  ): Promise<void>;
 }
+
+// stub-allow-if-flagged.ts — v1
+// authorizeRun → ok si investment_screening_enabled; settleRun → no-op
 ```
 
-Webhook handler extiende `checkout.session.completed` → marca `paid` → encola `hard_data`.
+**Stripe one-time / ledger de créditos:** fuera de este HLD — iteración EC (PRD §13).
 
 ### 9.2 Notificaciones
 
@@ -962,22 +1215,26 @@ Reusa sin cambio:
 
 | Ruta | Componente base | Fuente |
 |---|---|---|
-| `/tools/screening` | Industry Screener Pro | Evolución `mockup-rebalancing-tool.html` |
-| `/tools/screening/runs/:id` | Progress + step timeline | Poll `GET /runs/:id` cada 5s |
-| `/tools/screening/reports/:id` | Informe + track record embebido | `screening_reports` + `recommendation_valuations` |
+| `/tools/screening` | Industry Screener Pro | Evolución mockup; E0 con fixtures |
+| `/tools/screening/runs/:id` | Progress + step timeline | Poll `GET /runs/:id` |
+| `/tools/screening/jobs/:jobId` | **Dev Lab** (dev/staging) | Timeline + JSON por agente + Resume/Re-run |
+| `/tools/screening/reports/:id` | **Informe HTML** (resumen → tabla → fichas tipadas → disclaimer) | `screening_reports.report_json` (§5.3) |
 
 ### 10.2 Estados UI
 
 ```mermaid
 stateDiagram-v2
     [*] --> Draft
-    Draft --> Rejected: inviable
-    Draft --> Checkout: viable
-    Checkout --> Running: paid
+    Draft --> Rejected: inviable / ambiguo
+    Draft --> Authorized: flag+authorizeRun ok
+    Authorized --> Running: worker
     Running --> Ready: completed
-    Running --> Refunded: failed
+    Running --> Failed: empty/degraded
     Ready --> [*]
+    Failed --> [*]
 ```
+
+Progreso usuario (prod): labels por fase (“Datos duros…”, “Negocio…”) **sin** JSON. Dev Lab (§17.1 / PRD §13.3): JSON + Resume/Re-run.
 
 ---
 
@@ -1006,15 +1263,16 @@ Push vía patrón existente `monitoring/` → Grafana.
 ### 11.2 Logs estructurados
 
 Cada evento en `screening_run_events` + `console.info` con:
-`{ runId, stepKind, eventType, durationMs, fmpCalls, llmTokens, costUsd }`
+`{ userId, jobId, stepKind, ticker, eventType, durationMs, fmpCalls, llmTokens, costUsd }`
 
 ### 11.3 Dashboards (paneles mínimos)
 
-1. **Runs overview**: total/día por status, refund rate
+1. **Runs overview**: total/día por status (sin margen/reembolso hasta EC)
 2. **Pipeline health**: p50/p95 step duration, QA rounds distribution
-3. **Cost**: $/run trend, LLM vs FMP vs search
-4. **Cribado**: GHA duration, FMP 429, candidates/sector diversity
+3. **Cost ops**: $/job interno, LLM vs FMP vs search
+4. **Cribado**: duración job app, FMP 429, candidates/sector, blob upload success
 5. **Tracking**: cron gaps, valuations lag
+6. **Per agent_kind**: latency, gap rate, QA issues (para etapas E2–E9)
 
 ---
 
@@ -1023,7 +1281,8 @@ Cada evento en `screening_run_events` + `console.info` con:
 | Vector | Mitigación |
 |---|---|
 | Worker abuse | `CRON_SECRET` + IP allowlist Vercel internal |
-| Ingest cribado | HMAC-SHA256 body con `SCREENING_INGEST_SECRET` |
+| Ingest cribado externo | **N/A** — no hay GHA; solo admin/cron de la app |
+| Blob leak | Solo exports opcionales; private + route admin |
 | IDOR informes | `user_id` en run; guard `requireSession` |
 | Prompt injection web | Agente 3 sanitiza; QA descarta claims sin fuente |
 | FMP key leak | Solo server-side; rate limit por bucket |
@@ -1037,10 +1296,12 @@ Cada evento en `screening_run_events` + `console.info` con:
 | Unit | `rules/`, `qa/deterministic`, funnel cribado | Vitest |
 | Integration | worker lease + step chain con Turso test | Vitest + `data/trefolio.db` |
 | Contract | Zod round-trip outputs agentes | Vitest |
-| E2E | brief → mock Stripe → informe | Playwright + fixture |
+| E2E | brief → informe (mock pipeline E0 / real flagged) | Playwright + fixture |
 | Chaos | FMP 429, step timeout, recover cron | Vitest mock |
 
-**Caso obligatorio Sprint 4**: forzar `quant_mismatch` → QA fail → re-run solo Agente 1 → pass.
+**Caso obligatorio E9**: forzar `quant_mismatch` → QA fail → re-run solo `(agent, ticker)` → pass.
+
+**Caso obligatorio E4+**: resume job con Hard Data done → solo encola IR/Web; upstream frozen.
 
 ---
 
@@ -1049,43 +1310,31 @@ Cada evento en `screening_run_events` + `console.info` con:
 ### 14.1 Variables de entorno nuevas
 
 ```bash
-STRIPE_SCREENING_PRICE_ID=price_...
-SCREENING_INGEST_SECRET=...
-# FMP cribado — opcional key dedicada
-FMP_CRIBADO_API_KEY=...
+FMP_CRIBADO_API_KEY=...          # opcional key / bucket rate-limit dedicado
+# BLOB_READ_WRITE_TOKEN=...      # solo si se habilita Excel ops opcional
+
+# Stripe screening — NO en esta iteración (EC)
+# STRIPE_SCREENING_PRICE_ID=price_...
 ```
 
-### 14.2 GitHub Actions workflow
+### 14.2 Triggers cribado (app only)
 
-```yaml
-# .github/workflows/screening-daily-cribado.yml
-on:
-  schedule: [{ cron: "0 6 * * *" }]
-  workflow_dispatch:
-jobs:
-  cribado:
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: "22" }
-      - run: npm ci
-      - run: npx tsx scripts/screening/run-daily-cribado.ts
-        env:
-          FMP_API_KEY: ${{ secrets.FMP_CRIBADO_API_KEY }}
-          SCREENING_INGEST_SECRET: ${{ secrets.SCREENING_INGEST_SECRET }}
-          TREFOLIO_INGEST_URL: https://trefolio.com/api/internal/screening/cribado/ingest
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cribado-${{ github.run_id }}
-          path: output/cribado/*
-          retention-days: 30
+Registrar en `vercel.json` + `cron-registry.ts`:
+
+```json
+{ "path": "/api/cron/screening-cribado", "schedule": "0 6 * * *" }
 ```
 
-### 14.3 Feature flag
+El cron inserta `screening_runs(mode=daily_screen)` y encola steps; el worker persiste el informe en Turso para la UI HTML. Excel→Blob es opt-in, no requerido.
 
-`feature_flags`: `screening_agents` — gate UI + API hasta beta cerrada.
+### 14.3 Feature flags (PRD §1)
+
+| Flag | Default | Uso |
+|---|---|---|
+| `investment_screening_enabled` | **off** | Gate UI + API + workers — **primer entregable** |
+| `screening_dev_lab_enabled` | off (on implícito en `development`) | Dev Lab JSON / Resume UI |
+
+Registrar vía skill `engineer-feature-flags` antes de mergear cualquier ruta `/tools/screening`.
 
 ---
 
@@ -1093,12 +1342,13 @@ jobs:
 
 | Existente | Uso en screening |
 |---|---|
-| `task-runner.ts` | **No** para pipeline — solo notificaciones fire-and-forget opcionales |
-| `orchestrator.ts` / Agent Office | Patrón de composición; screening tiene su propio orchestrator |
+| `task-runner.ts` | **No** para pipeline — solo fire-and-forget opcional |
+| `orchestrator.ts` / Agent Office | Patrón de composición; screening tiene su orchestrator |
 | `company-analysis/cache.ts` | Patrón TTL → `screening_research_cache` |
-| `refundFeatureQuota` | Inspiración lógica; screening usa Stripe refund real |
+| `refundFeatureQuota` | Inspiración para `settleRun(failed_empty)` en iteración créditos — **no** Stripe refund aquí |
 | `withCronLogging` | Todos los crons screening |
 | `resolveFundamentalsProvider` | Agente 1 data layer |
+| Feature flags (`isFeatureEnabledForUser`) | Gate §1 |
 
 ---
 
@@ -1106,39 +1356,57 @@ jobs:
 
 | ID | Decisión | Alternativa rechazada |
 |---|---|---|
+| ADR-0 | Feature flag first (`investment_screening_enabled`) | Ship UI/API sin gate |
 | ADR-1 | Steps durables en Turso | `submitJob` in-memory |
 | ADR-2 | Self-chain worker + recover cron | Un solo job 15 min en `waitUntil` |
 | ADR-3 | QA determinístico primero | QA 100% LLM |
-| ADR-4 | GHA para cribado | Vercel 300s + exceljs sin FS |
-| ADR-5 | Outbox side effects | Refund/notify inline en step |
-| ADR-6 | Kernel TS compartido API+GHA | Dos codebases |
+| ADR-4 | Informe **HTML in-app**; ficha tipada + tesis corta; Blob solo Excel ops | PDF/Chromium; tesis = muro de ratios; GHA |
+| ADR-4b | Números del informe = código/checklist; LLM solo prosa (`thesis`, ranking ties) | Compiler inventa múltiplos en prosa |
+| ADR-5 | Outbox notify only | Refund/notify inline; stripe_refund en v1 |
+| ADR-6 | Un solo kernel en el deploy Trefolio | Codebase/script externo |
+| ADR-7 | 1 ticker / research step + aggregate | Batch multi-ticker por LLM call |
+| ADR-8 | `ScreeningAccessPort` stub; créditos fuera | Stripe one-time en v1 |
+| ADR-9 | Plan incremental E0 UX → un agente/etapa + Dev Lab | Big-bang pipeline |
+| ADR-10 | Triggers solo app (UI/API/Vercel Cron) | Orquestadores externos |
 
 ---
 
 ## 17. Estimación de esfuerzo por componente
 
-| Componente | Complejidad | Sprint |
+Alineado al plan incremental del PRD §13 (E0 → E11). No big-bang.
+
+| Etapa | Componente | Complejidad |
 |---|---|---|
-| DB + DAL + events | M | 1 |
-| Worker lease + dispatch | M | 1 |
-| Hard Data + Intake | M | 1 |
-| Portfolio Context | S | 2 |
-| IR + Web agents | L | 3 |
-| Compiler + QA híbrido | L | 4 |
-| Stripe + outbox refund | M | 5 |
-| UI informe | M | 5 |
-| Tracking cron | S | 6 |
-| Track record UI | M | 7 |
-| Métricas + beta | M | 8 |
-| Cribado GHA + ingest | L | 1.5 |
+| E0 | UX shell + mocks + flag | M |
+| E1 | Job shell + worker stub + Dev Lab vacío | M |
+| E2 | Intake | S |
+| E3 | Hard Data + fan-out | M |
+| E4 | IR Agent + aggregate + resume | L |
+| E5 | Web/Sentiment | L |
+| E6 | Portfolio Context | M |
+| E7 | Risk | S |
+| E8 | Compiler | M |
+| E9 | QA híbrido | L |
+| E10 | Tracking + notify | M |
+| E11 | Cribado + informe HTML (+ Excel opcional) | M |
+| transversal | Resume/Re-run API + Dev Lab panels | M |
+
+### 17.1 Dev Lab & resume (HLD)
+
+- Rutas: `POST .../resume`, `POST .../rerun` (PRD §13.3).
+- UI: `/tools/screening/jobs/[jobId]` con panel **Dev** si `process.env.NODE_ENV === "development"` o flag `screening_dev_lab_enabled`.
+- Cada card de agente: descripción, status, latency, `output_json`, botón Re-run.
+- El Compiler en etapas intermedias publica un **informe HTML parcial** (`partial: true`) con cards solo para `agent_kind` ya `done`; skeleton tipado puede existir sin `thesis` aún.
 
 ---
 
 ## 18. Referencias
 
-- PRD factible: [`PRD_INVESTMENT_SCREENING_AGENTS_FEASIBLE.md`](./PRD_INVESTMENT_SCREENING_AGENTS_FEASIBLE.md)
+- PRD factible: [`PRD_INVESTMENT_SCREENING_AGENTS_FEASIBLE.md`](./PRD_INVESTMENT_SCREENING_AGENTS_FEASIBLE.md) (**v1.6**)
 - PRD original: [`PRD_INVESTMENT_SCREENING_AGENTS.md`](./PRD_INVESTMENT_SCREENING_AGENTS.md)
-- Agent prompts: §4.5 (Modo Informe) + §5.4 (juicios Modo Cribado) — **English only**
+- Agent prompts: §4.5 + §5.3 / §5.6 — **English only**
+- Feature flags: `.cursor/skills/engineer-feature-flags/SKILL.md`
 - ProdOps outbox: `src/lib/prodops.ts`
 - Cron registry: `src/lib/cron-registry.ts`
 - FMP provider: `src/lib/api-providers/fmp.ts`
+- Metodología trefolio (5 pilares del score 0–8): PRD §5.2.1

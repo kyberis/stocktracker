@@ -125,6 +125,11 @@ export interface AnalyticsSummary {
     topReferrers: { userId: string; displayName: string; email: string; count: number; rewardDays: number }[];
     rejectionReasons: { reason: string; count: number }[];
   };
+  screeningEntry?: {
+    live: FunnelStage[];
+    fixture: FunnelStage[];
+    byVariantLive: { variant: string; views: number }[];
+  };
   conversionParity?: {
     overallMatchRate: number;
     byEvent: {

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
+import { ScreeningEntryCta } from "@/components/screening/ScreeningEntryCta";
 
 type Candidate = {
   ticker: string;
@@ -159,6 +160,8 @@ export default function DiversifyResearchPage() {
           ))}
         </div>
       )}
+
+      <ScreeningEntryCta className="mt-6" />
 
       <div className="mt-6 flex flex-wrap gap-2">
         <button

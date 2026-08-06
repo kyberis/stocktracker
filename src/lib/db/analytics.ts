@@ -56,6 +56,14 @@ export interface AttributionMediumStats {
   conversionRate: number;
 }
 
+export interface ScreeningEntryAnalytics {
+  /** Counts for live portfolio views (excludes design-preview fixtures). */
+  live: FunnelStage[];
+  /** Fixture/scenario-preview traffic, kept separate so design review does not pollute live funnel. */
+  fixture: FunnelStage[];
+  byVariantLive: { variant: string; views: number }[];
+}
+
 export interface AnalyticsSummary {
   totalUsers: number;
   activeUsers7d: number;
@@ -67,6 +75,7 @@ export interface AnalyticsSummary {
   signupsByDay: { date: string; count: number }[];
   landing: LandingAnalytics;
   funnel: FunnelStage[];
+  screeningEntry: ScreeningEntryAnalytics;
   notificationStats: NotificationUserStats[];
   attributionBySource: AttributionSourceStats[];
   attributionByMedium: AttributionMediumStats[];
@@ -166,10 +175,18 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
 
   const daysArg = `-${days} days`;
 
+  const screeningEntryEvents = [
+    "screening_discovery_opened",
+    "screening_entry_viewed",
+    "screening_entry_cta_clicked",
+    "screening_entry_back_home",
+  ] as const;
+
   const [
     usersResult, activeUsers, totalEvents, eventsByType, topStocks, dailyActivity, signupsByDay,
     landingCounts, landingEventsByType, landingCtaBreakdown, landingDailyViews,
     funnelResult, attributionBySource, attributionByMedium, internalConversions, adDispatchedConversions,
+    screeningEntryByPreview, screeningEntryVariantsLive,
   ] = await Promise.all([
       client.execute("SELECT COUNT(*) as cnt FROM users"),
       client.execute({
@@ -300,6 +317,29 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
               GROUP BY json_extract(metadata, '$.event')`,
         args: [daysArg],
       }),
+      client.execute({
+        sql: `SELECT
+                event,
+                COALESCE(json_extract(metadata, '$.preview'), 'live') AS preview,
+                COUNT(*) AS cnt
+              FROM analytics_events
+              WHERE event IN (${screeningEntryEvents.map(() => "?").join(", ")})
+                AND created_at >= datetime('now', ?)
+              GROUP BY event, preview`,
+        args: [...screeningEntryEvents, daysArg],
+      }),
+      client.execute({
+        sql: `SELECT
+                COALESCE(json_extract(metadata, '$.variant'), 'unknown') AS variant,
+                COUNT(*) AS cnt
+              FROM analytics_events
+              WHERE event = 'screening_entry_viewed'
+                AND COALESCE(json_extract(metadata, '$.preview'), 'live') = 'live'
+                AND created_at >= datetime('now', ?)
+              GROUP BY variant
+              ORDER BY cnt DESC`,
+        args: [daysArg],
+      }),
     ]);
 
   const notifResult = await client.execute({
@@ -326,6 +366,25 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
   for (const r of funnelResult.rows) {
     funnelMap.set(str(r.event), num(r.cnt));
   }
+
+  const screeningLiveMap = new Map<string, number>();
+  const screeningFixtureMap = new Map<string, number>();
+  for (const r of screeningEntryByPreview.rows) {
+    const event = str(r.event);
+    const preview = str(r.preview) === "fixture" ? "fixture" : "live";
+    const map = preview === "fixture" ? screeningFixtureMap : screeningLiveMap;
+    map.set(event, (map.get(event) ?? 0) + num(r.cnt));
+  }
+
+  function screeningStages(map: Map<string, number>): FunnelStage[] {
+    return [
+      { stage: "Discovery opened", count: map.get("screening_discovery_opened") ?? 0 },
+      { stage: "Entry viewed", count: map.get("screening_entry_viewed") ?? 0 },
+      { stage: "CTA clicked", count: map.get("screening_entry_cta_clicked") ?? 0 },
+      { stage: "Back home", count: map.get("screening_entry_back_home") ?? 0 },
+    ];
+  }
+
   const internalMap = new Map<string, number>();
   for (const r of internalConversions.rows) {
     internalMap.set(str(r.event), num(r.cnt));
@@ -381,6 +440,14 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       { stage: "Account Delete Started", count: funnelMap.get("account_delete_started") ?? 0 },
       { stage: "Account Deleted", count: funnelMap.get("account_deleted") ?? 0 },
     ],
+    screeningEntry: {
+      live: screeningStages(screeningLiveMap),
+      fixture: screeningStages(screeningFixtureMap),
+      byVariantLive: screeningEntryVariantsLive.rows.map((r) => ({
+        variant: str(r.variant),
+        views: num(r.cnt),
+      })),
+    },
     notificationStats: notifResult.rows.map((r) => ({
       userId: str(r.user_id),
       username: str(r.username),

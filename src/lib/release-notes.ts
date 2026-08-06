@@ -17,6 +17,51 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.89",
+    date: "2026-08-06",
+    title: "Investment screening flow (beta, mock data)",
+    titleTranslations: {
+      es: "Flujo de cribado de inversiones (beta, datos de ejemplo)",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "New screening flow at /screening behind the investment_screening_enabled flag: sector entry from your real portfolio (overexposed vs balanced messaging), a scripted intake chat that explains every metric, a brief you confirm before running, run progress per agent step, and an HTML research report with named methodology criteria, business context and sourced links.",
+        translations: {
+          es: "Nuevo flujo de cribado en /screening detrás del flag investment_screening_enabled: entrada por sectores de tu cartera real (mensaje de sobreexposición o cartera equilibrada), chat de intake que explica cada métrica, brief que confirmas antes de ejecutar, progreso por paso de agente e informe HTML con los criterios de la metodología nombrados, contexto de negocio y enlaces con fuente.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "When no sector is overexposed, the screening entry screen says the portfolio looks balanced and leads with exploration instead of rebalance.",
+        translations: {
+          es: "Cuando ningún sector está sobreexpuesto, la pantalla de entrada del cribado dice que la cartera está equilibrada y prioriza la exploración frente al rebalanceo.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Screening entry analytics: Google Analytics plus first-party events and Prometheus counters for discovery opens, entry views (empty / overexposed / balanced), CTA clicks, and back-home — visible in Admin → Analytics.",
+        translations: {
+          es: "Analytics de la entrada de cribado: Google Analytics más eventos first-party y contadores Prometheus para discovery, vistas (vacío / sobreexpuesto / equilibrado), clics en CTA y volver al inicio — visibles en Admin → Analytics.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "The report shows methodology criteria by name with what each one measures and a score counter, instead of numbered steps that meant nothing to the reader.",
+        translations: {
+          es: "El informe muestra los criterios de la metodología con nombre, qué mide cada uno y un contador de score, en lugar de pasos numerados que no decían nada.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "The candidates, report content and run progress come from a typed fixture in this stage, and every screen says so — real market data and agents arrive one at a time in the next stages.",
+        translations: {
+          es: "Los candidatos, el contenido del informe y el progreso vienen de un fixture tipado en esta etapa, y todas las pantallas lo indican — los datos reales y los agentes llegan uno a uno en las siguientes etapas.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.88",
     date: "2026-08-03",
     title: "Quote resolution for European & HK tickers",

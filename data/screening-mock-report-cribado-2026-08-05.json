@@ -1,0 +1,312 @@
+{
+  "jobId": "mock-cribado-2026-08-05",
+  "mode": "daily_screen",
+  "locale": "es",
+  "generatedAt": "2026-08-05T18:00:00.000Z",
+  "methodologyNote": "Metodología trefolio: cribado sistemático en cinco pilares — calidad del negocio (ROIC y márgenes), solidez financiera (deuda neta/EBITDA, liquidez, apalancamiento), valoración relativa (múltiplos frente al histórico propio y frente a comparables), divergencia precio–fundamentales con catalizador fechado, y alineación de intereses (insiders y señal de mercado). Cada empresa recibe un score de 0 a 8 y un veredicto. Los números los calcula código determinístico; el modelo solo redacta la narrativa citando esos campos. Se excluyen tickers evaluados en los últimos 90 días. Puntuación conservadora: el pilar de insiders solo puntúa con compra discrecional documentada; el de sentimiento no puntuó por falta de señal verificable.",
+  "executiveSummary": "La candidata que más merece profundizar es Central Asia Metals (CAML): combina calidad y valoración con catalizador fechado, caja neta y un motivo de caída identificable (cargo contable sin salida de caja). Zinzino queda segunda a vigilar; Newborn Town, DigiPlus y TIMAH se mantienen en Watch.",
+  "priorityOrder": ["CAML.L", "ZZ-B.ST", "9911.HK", "PLUS.PS", "TINS.JK"],
+  "comparisonRows": [
+    {
+      "ticker": "CAML.L",
+      "companyName": "Central Asia Metals plc",
+      "valuationNote": "4,69x fwd FY26 vs ~8–12x propio y ~10–14x peers",
+      "growthNote": "Ventas CAGR FY23–26 +14,5%; Cu +40% y Zn +19% H1-26",
+      "score": 6,
+      "verdict": "fuerte"
+    },
+    {
+      "ticker": "ZZ-B.ST",
+      "companyName": "Zinzino AB (publ)",
+      "valuationNote": "12,71x fwd vs mediana propia 10a 35,2x; peers 8–12x",
+      "growthNote": "Ventas Q2-26 +17%, H1-26 +22%, FY25 +51%",
+      "score": 6,
+      "verdict": "fuerte"
+    },
+    {
+      "ticker": "9911.HK",
+      "companyName": "Newborn Town Inc.",
+      "valuationNote": "8,07x fwd (~10,9x otras fuentes) vs ~15–25x propio",
+      "growthNote": "Ingresos H1-26 +34–39%; BPA FY25 +73%",
+      "score": 5,
+      "verdict": "watch"
+    },
+    {
+      "ticker": "PLUS.PS",
+      "companyName": "DigiPlus Interactive Corp.",
+      "valuationNote": "3,59x fwd vs ~15–25x propio 2024 y ~18,4x sector",
+      "growthNote": "CAGR FY23–26 +43%, pero TTM ingresos −7,4% y BPA −22%",
+      "score": 4,
+      "verdict": "watch"
+    },
+    {
+      "ticker": "TINS.JK",
+      "companyName": "PT TIMAH Tbk",
+      "valuationNote": "5,58x fwd; hist. propio no significativo; peers 8–12x",
+      "growthNote": "Ingresos H1-26 +247%; beneficio 169% del objetivo anual",
+      "score": 4,
+      "verdict": "watch"
+    }
+  ],
+  "cards": [
+    {
+      "ticker": "CAML.L",
+      "companyName": "Central Asia Metals plc",
+      "sector": "Materiales básicos (cobre, zinc, plomo, plata)",
+      "country": "Reino Unido (AIM) · activos KZ / MK",
+      "business": {
+        "summary": "Minera de bajo coste con dos activos: cátodos de cobre en Kounrad (Kazajistán), extraídos de residuos de lixiviación ya apilados, y concentrado de zinc, plomo y plata en la mina Sasa (Macedonia del Norte). Vende metal a traders y reparte la mayor parte del flujo de caja en dividendo.",
+        "employees": 1100,
+        "listedSince": 2010,
+        "website": "https://www.centralasiametals.com",
+        "irUrl": "https://www.centralasiametals.com/investors/",
+        "filings": { "label": "Comunicados RNS (LSE)", "url": "https://www.londonstockexchange.com/stock/CAML/central-asia-metals-plc/company-page" }
+      },
+      "mktCapUsd": 339000000,
+      "currency": "GBP",
+      "price": 1.501,
+      "priceAsOf": "2026-08-05",
+      "targetPrice": 1.85,
+      "upsidePct": 23,
+      "score": 6,
+      "verdict": "fuerte",
+      "stepsPassed": [1, 2, 3, 4, 5, 7],
+      "stepsFailed": [6, 9],
+      "catalyst": "Resultados H1-2026 en septiembre; recompra activa; dividendo ~8%",
+      "catalystDate": "2026-09-01",
+      "multiples": {
+        "fwdPe": 4.69,
+        "ownHistPe": 10,
+        "peerPe": 12,
+        "evEbitda": 1.72,
+        "ndEbitda": -0.82,
+        "growthNote": "Cu +40% / Zn +19% H1-26"
+      },
+      "flags": {
+        "netCash": true,
+        "buyback": true,
+        "dividendYield": 0.08,
+        "moatScore": 58.3
+      },
+      "thesis": "Cumple los criterios centrales del checklist: valoración relativa fuerte (4,69x fwd y 1,72x EV/EBITDA frente a su rango histórico y a peers), con divergencia precio–fundamentales verificable — la acción cayó ~38% desde máximos mientras el cobre y el zinc subían. El deterioro de 117,5 M USD en Sasa no implicó salida de caja (FCF 2025 positivo). Balance con caja neta y resiliencia de beneficios en 2020/2022. MOAT trefolio 58,3/100 (ventaja moderada).",
+      "risks": [
+        "Sin compras discrecionales de insiders documentadas (criterio: alineación de insiders).",
+        "El acortamiento de vida de mina en Sasa puede ser estructural — hay que dimensionarlo.",
+        "Dividendo recortado de 18p a 12p; tomadora de precios de materias primas; riesgo geopolítico en activos."
+      ],
+      "priorityReason": "Mejor relación riesgo–recompensa del grupo: score 6/8, catalizador fechado y motivo de caída no estructural en caja.",
+      "citedFields": ["multiples.fwdPe", "multiples.evEbitda", "flags.netCash", "flags.moatScore", "catalyst"],
+      "sources": [
+        { "url": "https://example.com/caml-h1", "asOf": "2026-08-05", "field": "price", "label": "Cotización" },
+        { "url": "https://example.com/caml-sasa", "asOf": "2026-07-15", "field": "thesis", "label": "Impairment Sasa" }
+      ]
+    },
+    {
+      "ticker": "ZZ-B.ST",
+      "companyName": "Zinzino AB (publ)",
+      "sector": "Consumo — nutrición y venta directa",
+      "country": "Suecia",
+      "business": {
+        "summary": "Vende suplementos nutricionales y test de sangre (línea BalanceOil) mediante venta directa: una red de distribuidores independientes en más de 100 países cobra comisión por lo que vende. Crece comprando marcas del sector (It Works!, Xelliss) y metiéndolas en su propia logística.",
+        "employees": 500,
+        "listedSince": 2013,
+        "website": "https://www.zinzino.com",
+        "irUrl": "https://www.zinzino.com/investor-relations",
+        "filings": null
+      },
+      "mktCapUsd": 526000000,
+      "currency": "SEK",
+      "price": 134.1,
+      "priceAsOf": "2026-08-05",
+      "targetPrice": null,
+      "upsidePct": null,
+      "score": 6,
+      "verdict": "fuerte",
+      "stepsPassed": [2, 3, 4, 5, 6, 7],
+      "stepsFailed": [1, 9],
+      "catalyst": "Integración It Works! (+60 M USD ingresos guiados 2026)",
+      "catalystDate": "2026-01-15",
+      "multiples": {
+        "fwdPe": 12.71,
+        "ownHistPe": 35.2,
+        "peerPe": 10,
+        "evEbitda": null,
+        "ndEbitda": -1.63,
+        "growthNote": "H1-26 ventas +22%"
+      },
+      "flags": {
+        "netCash": true,
+        "buyback": false,
+        "dividendYield": null,
+        "moatScore": null
+      },
+      "thesis": "Caso puro de valoración vs historia propia: 12,71x fwd frente a mediana a 10 años de 35,2x (−62%), con crecimiento de ingresos del 22% en H1 y ROIC 37,8%. Insiders poseen ~46% del capital. Encaja en patrón roll-up (It Works!, Xelliss, Enhanzz). La valoración relativa no aprueba en sentido estricto frente a peers de venta directa a 8–12x.",
+      "risks": [
+        "Frente a peers de venta directa no está barata (criterio: valoración relativa).",
+        "Venta del CEO cerca de máximos (286 SEK) con cotización actual 134 SEK.",
+        "Crecimiento se desacelera; dilución por pago en acciones; riesgo regulatorio MLM."
+      ],
+      "priorityReason": "Mismo score que CAML, pero falla valoración relativa en sentido estricto y la señal de insider es una venta reciente.",
+      "citedFields": ["multiples.fwdPe", "multiples.ownHistPe", "multiples.ndEbitda", "flags.netCash"],
+      "sources": [
+        { "url": "https://example.com/zinzino", "asOf": "2026-08-05", "field": "price", "label": "Cotización" }
+      ]
+    },
+    {
+      "ticker": "9911.HK",
+      "companyName": "Newborn Town Inc.",
+      "sector": "Tecnología — apps y redes sociales",
+      "country": "Hong Kong / China (ops MENA)",
+      "business": {
+        "summary": "Opera apps sociales de audio y vídeo en directo — MICO y TopTop, fuertes en Oriente Medio y Norte de África — y la app de citas Blued. Casi todo el ingreso viene de regalos virtuales y suscripciones que los usuarios pagan dentro de la app.",
+        "employees": 1500,
+        "listedSince": 2019,
+        "website": "https://www.newborntown.com",
+        "irUrl": "https://www.newborntown.com/en/investor",
+        "filings": { "label": "Filings HKEX", "url": "https://www.hkexnews.hk/" }
+      },
+      "mktCapUsd": 1517000000,
+      "currency": "HKD",
+      "price": 8.56,
+      "priceAsOf": "2026-08-05",
+      "targetPrice": 14.01,
+      "upsidePct": 62,
+      "score": 5,
+      "verdict": "watch",
+      "stepsPassed": [1, 2, 3, 5, 7],
+      "stepsFailed": [4, 6, 9],
+      "catalyst": "Resultados H1-2026 el 25 de agosto; recompras en curso",
+      "catalystDate": "2026-08-25",
+      "multiples": {
+        "fwdPe": 8.07,
+        "ownHistPe": 20,
+        "peerPe": 12.5,
+        "evEbitda": null,
+        "ndEbitda": -2.65,
+        "growthNote": "H1-26 ingresos +34–39%"
+      },
+      "flags": {
+        "netCash": true,
+        "buyback": true,
+        "dividendYield": null,
+        "moatScore": null
+      },
+      "thesis": "Divergencia precio–negocio más nítida del cribado: crecimiento de ingresos ~35% y BPA FY25 casi duplicado, mientras la acción cae a 12m/6m. Valoración relativa aprueba vs historia y peers (JOYY ~16x). Caja neta y ROIC ~34%. Liderazgo de nicho en MENA (MICO, TopTop) y Blued.",
+      "risks": [
+        "Negocio actual sin historial de crisis (criterio: resiliencia en crisis).",
+        "Participación del fundador no verificada en fuente primaria (criterio: alineación de insiders).",
+        "Crecimiento de usuarios frenado; descuento de gobernanza HK/CN; exposición regulatoria LGBTQ+/MENA."
+      ],
+      "priorityReason": "Divergencia fuerte, pero Watch por historial corto y alineación de insiders no verificable.",
+      "citedFields": ["multiples.fwdPe", "multiples.peerPe", "upsidePct", "catalystDate"],
+      "sources": [
+        { "url": "https://example.com/9911", "asOf": "2026-07-13", "field": "multiples.fwdPe", "label": "Fundamentales (corte julio)" }
+      ]
+    },
+    {
+      "ticker": "PLUS.PS",
+      "companyName": "DigiPlus Interactive Corp.",
+      "sector": "Consumo discrecional — iGaming",
+      "country": "Filipinas",
+      "business": {
+        "summary": "Operador filipino de juego online con licencia PAGCOR: bingo, casino y apuestas deportivas bajo las marcas BingoPlus, ArenaPlus y GameZone, más salas físicas. Gana con el margen de las apuestas y depende de que el regulador mantenga la licencia.",
+        "employees": 3000,
+        "listedSince": 1994,
+        "website": "https://www.digiplus.com.ph",
+        "irUrl": "https://www.digiplus.com.ph/investor-relations",
+        "filings": { "label": "Filings PSE Edge", "url": "https://edge.pse.com.ph/" }
+      },
+      "mktCapUsd": 730000000,
+      "currency": "PHP",
+      "price": 9.8,
+      "priceAsOf": "2026-07-31",
+      "targetPrice": 29.58,
+      "upsidePct": 218,
+      "score": 4,
+      "verdict": "watch",
+      "stepsPassed": [1, 3, 5, 6],
+      "stepsFailed": [2, 4, 7, 9],
+      "catalyst": "Relanzamiento BingoPlus en Brasil; migración a plataforma propia",
+      "catalystDate": null,
+      "multiples": {
+        "fwdPe": 3.59,
+        "ownHistPe": 20,
+        "peerPe": 18.4,
+        "evEbitda": null,
+        "ndEbitda": -0.82,
+        "growthNote": "TTM ingresos −7,4%; BPA −22%"
+      },
+      "flags": {
+        "netCash": true,
+        "buyback": true,
+        "dividendYield": 0.073,
+        "moatScore": null
+      },
+      "thesis": "Descuento extremo (3,59x fwd) y la señal de insiders más clara del día: compra discrecional del presidente Tanco (1.040 M PHP). Balance sólido. Aun así baja en prioridad porque los fundamentales se deterioran de verdad (ingresos y beneficio en caída; consenso recortando) por presión regulatoria potencialmente existencial.",
+      "risks": [
+        "Deterioro real de fundamentales, no solo sentimiento (criterio: divergencia precio–fundamentales).",
+        "Riesgo regulatorio: desconexión de monederos, impuestos, posible prohibición online.",
+        "Moat = licencia PAGCOR; recompra ejecutada muy por encima del precio actual."
+      ],
+      "priorityReason": "Mayor descuento óptico, pero deterioro fundamental y riesgo existencial regulatorio.",
+      "citedFields": ["multiples.fwdPe", "flags.netCash", "upsidePct"],
+      "sources": [
+        { "url": "https://example.com/plus", "asOf": "2026-05-15", "field": "multiples.fwdPe", "label": "Fundamentales (corte mayo)" }
+      ]
+    },
+    {
+      "ticker": "TINS.JK",
+      "companyName": "PT TIMAH Tbk",
+      "sector": "Materiales — estaño",
+      "country": "Indonesia (MIND ID 65%)",
+      "business": {
+        "summary": "Minera y fundidora estatal de estaño: extrae mineral en tierra y mar en las islas Bangka-Belitung y lo refina en lingote para exportación. El precio del estaño manda en los resultados, y el Estado controla el 65% a través del holding MIND ID.",
+        "employees": 4400,
+        "listedSince": 1995,
+        "website": "https://www.timah.com",
+        "irUrl": "https://www.timah.com/en/investor-relation",
+        "filings": { "label": "Filings IDX", "url": "https://www.idx.co.id/en/listed-companies/company-profiles" }
+      },
+      "mktCapUsd": 1577000000,
+      "currency": "IDR",
+      "price": 3890,
+      "priceAsOf": "2026-08-05",
+      "targetPrice": 4500,
+      "upsidePct": 16,
+      "score": 4,
+      "verdict": "watch",
+      "stepsPassed": [1, 3, 5, 7],
+      "stepsFailed": [2, 4, 6, 9],
+      "catalyst": "Traspaso de seis fundiciones confiscadas (~7 Bn IDR)",
+      "catalystDate": null,
+      "multiples": {
+        "fwdPe": 5.58,
+        "ownHistPe": null,
+        "peerPe": 10,
+        "evEbitda": 3.4,
+        "ndEbitda": -0.58,
+        "growthNote": "H1 beneficio 169% del objetivo anual"
+      },
+      "flags": {
+        "netCash": true,
+        "buyback": false,
+        "dividendYield": null,
+        "moatScore": null
+      },
+      "thesis": "Momento operativo excepcional (+247% ingresos H1; beneficio ya por encima del objetivo anual) y catalizador estructural de capacidad. Valoración vs peers aprueba. El problema es de timing: la acción ya subió ~295% desde mínimos; el re-rating está hecho y el upside a consenso es limitado.",
+      "risks": [
+        "Sin divergencia a favor del comprador — precio ya re-rateado (criterio: divergencia precio–fundamentales).",
+        "Ciclicidad extrema (pérdidas 2023–24); beneficios de pico de estaño.",
+        "Control estatal 65%; riesgo de política de exportación (precedente níquel)."
+      ],
+      "priorityReason": "Operativa fuerte pero timing tardío y ciclicidad — Watch, no prioridad de profundizar.",
+      "citedFields": ["multiples.fwdPe", "upsidePct", "flags.netCash"],
+      "sources": [
+        { "url": "https://example.com/tins", "asOf": "2026-08-05", "field": "price", "label": "Cotización" }
+      ]
+    }
+  ],
+  "disclaimer": "Informe de investigación automatizada (mock E0). No es asesoramiento financiero ni recomendación de compra o venta. Contrasta cifras con fuentes primarias. Varias métricas tienen distinta fecha de corte. Los enlaces a sitios de las compañías y de reguladores se abren fuera de trefolio: no controlamos ni respaldamos su contenido. trefolio no es una entidad regulada MiFID.",
+  "partial": false,
+  "pendingAgentKinds": []
+}

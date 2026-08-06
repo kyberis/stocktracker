@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-280 routes.
+283 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -250,6 +250,9 @@
 | `/api/reset-portfolio` | POST | [`src/app/api/reset-portfolio/route.ts`](../../src/app/api/reset-portfolio/route.ts) |
 | `/api/satisfaction` | GET, POST, PUT | [`src/app/api/satisfaction/route.ts`](../../src/app/api/satisfaction/route.ts) |
 | `/api/screener` | GET | [`src/app/api/screener/route.ts`](../../src/app/api/screener/route.ts) |
+| `/api/screening/reports/[reportId]` | GET | [`src/app/api/screening/reports/[reportId]/route.ts`](../../src/app/api/screening/reports/[reportId]/route.ts) |
+| `/api/screening/runs` | POST | [`src/app/api/screening/runs/route.ts`](../../src/app/api/screening/runs/route.ts) |
+| `/api/screening/runs/[runId]` | GET | [`src/app/api/screening/runs/[runId]/route.ts`](../../src/app/api/screening/runs/[runId]/route.ts) |
 | `/api/search` | GET | [`src/app/api/search/route.ts`](../../src/app/api/search/route.ts) |
 | `/api/snaptrade` | POST | [`src/app/api/snaptrade/route.ts`](../../src/app/api/snaptrade/route.ts) |
 | `/api/social/connections` | GET, POST | [`src/app/api/social/connections/route.ts`](../../src/app/api/social/connections/route.ts) |

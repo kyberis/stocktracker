@@ -12,12 +12,16 @@ const globalForMetrics = globalThis as typeof globalThis & {
   __metricsInitialized?: boolean;
 };
 
-function getRegistry(): Registry {
+export function getMetricsRegistry(): Registry {
   if (!globalForMetrics.__metricsRegistry) {
     globalForMetrics.__metricsRegistry = new Registry();
     globalForMetrics.__metricsRegistry.setDefaultLabels({ app: "trefolio" });
   }
   return globalForMetrics.__metricsRegistry;
+}
+
+function getRegistry(): Registry {
+  return getMetricsRegistry();
 }
 
 function ensureDefaults() {
@@ -26,11 +30,17 @@ function ensureDefaults() {
   globalForMetrics.__metricsInitialized = true;
 }
 
-function getOrCreate<T>(name: string, factory: () => T): T {
+/** Shared registry helper for domain metric modules (e.g. screening). */
+export function getOrCreateMetric<T>(name: string, factory: () => T): T {
+  ensureDefaults();
   const registry = getRegistry();
   const existing = registry.getSingleMetric(name);
   if (existing) return existing as unknown as T;
   return factory();
+}
+
+function getOrCreate<T>(name: string, factory: () => T): T {
+  return getOrCreateMetric(name, factory);
 }
 
 /* ── HTTP Metrics ──────────────────────────────────────────── */

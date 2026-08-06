@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>trefolio — Screening report mock (E0)</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #07111d;
+      --bg1: #0b1627;
+      --fg: #edf4ff;
+      --muted: #8ea1bf;
+      --border: rgba(154, 174, 209, 0.14);
+      --card: rgba(10, 16, 26, 0.92);
+      --soft: rgba(255, 255, 255, 0.03);
+      --accent: #1dd1a1;
+      --accent-dim: rgba(29, 209, 161, 0.14);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --red: #f87171;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: linear-gradient(180deg, var(--bg0), var(--bg1) 50%, var(--bg0));
+      color: var(--fg);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 20px 16px 72px; }
+    .banner {
+      margin-bottom: 16px; padding: 12px 14px;
+      border: 1px dashed rgba(29, 209, 161, 0.35);
+      border-radius: 12px; background: var(--accent-dim);
+      font-size: 12px; color: var(--muted);
+    }
+    .banner strong { color: var(--accent); }
+    .hero {
+      padding: 28px 0 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #2dd4bf; margin-bottom: 10px;
+    }
+    .hero h1 {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 400; line-height: 1.15; margin-bottom: 10px;
+    }
+    .hero .meta { font-size: 13px; color: var(--muted); }
+    .section { margin-top: 28px; }
+    .section h2 {
+      font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+    }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 18px 16px;
+    }
+    .prose { font-size: 14px; color: var(--muted); }
+    .prose strong { color: var(--fg); font-weight: 600; }
+    .rank-list { list-style: none; display: grid; gap: 10px; margin-top: 14px; }
+    .rank-item {
+      display: grid; grid-template-columns: 36px 1fr; gap: 12px;
+      padding: 12px; border-radius: 14px; background: var(--soft);
+      border: 1px solid var(--border);
+    }
+    .rank-num {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: grid; place-items: center;
+      background: var(--accent-dim); color: var(--accent);
+      font-weight: 700; font-size: 14px;
+    }
+    .rank-item h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .rank-item p { font-size: 13px; color: var(--muted); }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600; padding: 3px 8px;
+      border-radius: 999px; border: 1px solid transparent;
+      vertical-align: middle; margin-left: 6px;
+    }
+    .badge.fuerte {
+      background: var(--accent-dim); color: var(--accent);
+      border-color: rgba(29, 209, 161, 0.3);
+    }
+    .badge.watch {
+      background: var(--amber-dim); color: var(--amber);
+      border-color: rgba(251, 191, 36, 0.3);
+    }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px;
+    }
+    th, td {
+      text-align: left; padding: 10px 12px;
+      border-bottom: 1px solid var(--border); vertical-align: top;
+    }
+    th {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--muted); font-weight: 600;
+    }
+    td.ticker { font-weight: 700; color: var(--accent); white-space: nowrap; }
+    .ficha { margin-top: 14px; }
+    .ficha-head {
+      display: flex; flex-wrap: wrap; justify-content: space-between;
+      gap: 10px; align-items: flex-start; margin-bottom: 14px;
+    }
+    .ficha-head h3 {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: 24px; font-weight: 400;
+    }
+    .ficha-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .grid-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px; margin-bottom: 14px;
+    }
+    .meta-cell {
+      padding: 10px 12px; border-radius: 12px;
+      background: var(--soft); border: 1px solid var(--border);
+    }
+    .meta-cell .label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--muted); margin-bottom: 4px;
+    }
+    .meta-cell .value { font-size: 13px; font-weight: 600; }
+    .business { margin: 0 0 14px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--soft); }
+    .business-text { font-size: 13.5px; color: var(--fg); margin-bottom: 8px; }
+    .business-facts { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .business-links { display: flex; flex-wrap: wrap; gap: 8px; }
+    .business-links a { font-size: 12px; text-decoration: none; color: #2dd4bf; border: 1px solid rgba(45, 212, 191, 0.28); background: rgba(45, 212, 191, 0.08); padding: 6px 10px; border-radius: 999px; min-height: 32px; display: inline-flex; align-items: center; }
+    .business-links a:hover { background: rgba(45, 212, 191, 0.16); }
+    .criteria-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+    .criteria-head .count { font-size: 12px; color: var(--muted); }
+    .criteria { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; margin-bottom: 10px; }
+    .criteria li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: start; font-size: 12.5px; padding: 7px 9px; border-radius: 10px; border: 1px solid var(--border); background: var(--soft); }
+    .criteria .mark { width: 18px; height: 18px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+    .criteria li.pass .mark { background: var(--accent-dim); color: var(--accent); }
+    .criteria li.fail .mark { background: rgba(248, 113, 113, 0.12); color: var(--red); }
+    .criteria li.na { opacity: .7; }
+    .criteria li.na .mark { background: rgba(255, 255, 255, 0.06); color: var(--muted); }
+    .criteria li.fail .name { color: var(--muted); }
+    .criteria .note { display: block; font-size: 11px; color: var(--muted); }
+    .legend { font-size: 11px; color: var(--muted); margin-bottom: 14px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .thesis { font-size: 14px; color: var(--fg); margin-bottom: 12px; }
+    .risks { list-style: none; display: grid; gap: 8px; }
+    .risks li {
+      font-size: 13px; color: var(--muted);
+      padding-left: 14px; position: relative;
+    }
+    .risks li::before {
+      content: ""; position: absolute; left: 0; top: 7px;
+      width: 6px; height: 6px; border-radius: 50%; background: var(--amber);
+    }
+    .disclaimer {
+      margin-top: 32px; padding: 14px 16px;
+      border-radius: 12px; border: 1px solid var(--border);
+      background: var(--soft); font-size: 12px; color: var(--muted);
+    }
+    .sources {
+      margin-top: 10px; font-size: 11px; color: var(--muted);
+    }
+    .sources summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+    .nav-mock {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .nav-mock a, .nav-mock span {
+      font-size: 12px; padding: 8px 12px; min-height: 40px;
+      display: inline-flex; align-items: center; border-radius: 999px;
+      border: 1px solid var(--border); color: var(--muted); text-decoration: none;
+    }
+    .nav-mock .active {
+      background: var(--accent-dim); color: var(--accent);
+      border-color: rgba(29, 209, 161, 0.35);
+    }
+    .err { color: var(--red); padding: 24px; }
+    @media (max-width: 520px) {
+      .rank-item { grid-template-columns: 32px 1fr; }
+      .ficha-head h3 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="banner">
+      <strong>E0 mock · pre-E1</strong> — Informe HTML de cribado (fixture tipado §5.3).
+      Sin API / agents. Ruta futura: <code>/tools/screening/reports/:id</code>
+    </div>
+
+    <nav class="nav-mock" aria-label="Flujo screening (mock)">
+      <span>Brief</span>
+      <span>Generando</span>
+      <span class="active" aria-current="page">Informe</span>
+      <span>Historial</span>
+      <span>Track record</span>
+    </nav>
+
+    <div id="app"><p class="prose">Cargando fixture…</p></div>
+  </div>
+
+  <script>
+    const fmtCap = (n) => {
+      if (n == null) return "—";
+      if (n >= 1e9) return (n / 1e9).toFixed(2) + " B USD";
+      if (n >= 1e6) return (n / 1e6).toFixed(0) + " M USD";
+      return String(n);
+    };
+    const fmtPrice = (p, ccy) => {
+      if (p == null) return "—";
+      const map = { GBP: "p", SEK: " SEK", HKD: " HKD", PHP: " PHP", IDR: " IDR" };
+      if (ccy === "GBP") return (p * 100).toFixed(1) + "p";
+      return p.toLocaleString("es-ES") + (map[ccy] || " " + ccy);
+    };
+    const fmtPct = (n) => (n == null ? "—" : (n > 0 ? "+" : "") + n + "%");
+    const fmtMult = (n) => (n == null ? "—" : n.toFixed(2) + "x");
+    const fmtYield = (n) => (n == null ? "—" : (n * 100).toFixed(1) + "%");
+
+    function badge(verdict) {
+      if (!verdict) return "";
+      const v = verdict === "fuerte" ? "fuerte" : "watch";
+      const label = verdict === "fuerte" ? "Candidato fuerte" : "Watch";
+      return `<span class="badge ${v}">${label}</span>`;
+    }
+
+    function businessBlock(c) {
+      const b = c.business;
+      if (!b) return "";
+      const facts = [
+        b.employees != null ? `${b.employees.toLocaleString("es-ES")} empleados` : null,
+        b.listedSince != null ? `cotiza desde ${b.listedSince}` : null,
+      ].filter(Boolean).join(" · ");
+      const links = [
+        b.website ? { label: "Web oficial", url: b.website } : null,
+        b.irUrl ? { label: "Relación con inversores", url: b.irUrl } : null,
+        b.filings ? { label: b.filings.label, url: b.filings.url } : null,
+        { label: "Ficha en trefolio", url: `/stock/${encodeURIComponent(c.ticker)}`, internal: true },
+      ].filter(Boolean);
+      return `<div class="business">
+        <p class="eyebrow" style="margin-bottom:6px">A qué se dedica</p>
+        <p class="business-text">${b.summary}</p>
+        ${facts ? `<p class="business-facts">${facts}</p>` : ""}
+        <p class="business-links">${links.map((l) =>
+          `<a href="${l.url}"${l.internal ? "" : ' target="_blank" rel="noopener noreferrer"'}>${l.label}${l.internal ? "" : " ↗"}</a>`
+        ).join("")}</p>
+      </div>`;
+    }
+
+    /* Registro canónico de criterios (metodología trefolio).
+       El informe persiste ids numéricos; la etiqueta se localiza en la UI. */
+    const CRITERIA = [
+      { id: 1, label: "Valoración relativa", hint: "Barata frente a su propia historia y a comparables" },
+      { id: 2, label: "Divergencia precio–fundamentales", hint: "El precio cae mientras el negocio mejora" },
+      { id: 3, label: "Catalizador fechado", hint: "Evento con fecha que puede cerrar la brecha" },
+      { id: 4, label: "Resiliencia en crisis", hint: "El beneficio aguantó ciclos anteriores" },
+      { id: 5, label: "Calidad de balance", hint: "Deuda, liquidez y caja bajo control" },
+      { id: 6, label: "Alineación de insiders", hint: "Compra discrecional documentada o fundador con peso" },
+      { id: 7, label: "Estructura competitiva", hint: "Ventaja defendible o nicho difícil de replicar" },
+      { id: 8, label: "Contexto macro", hint: "Contexto del sector — informativo", notScored: true },
+      { id: 9, label: "Señal de mercado", hint: "Sentimiento o superinversores verificables" },
+    ];
+
+    function criteriaList(passed, failed, score) {
+      const items = CRITERIA.map((c) => {
+        const isPass = (passed || []).includes(c.id);
+        const isFail = (failed || []).includes(c.id);
+        const cls = c.notScored ? "na" : isPass ? "pass" : isFail ? "fail" : "na";
+        const mark = c.notScored ? "–" : isPass ? "✓" : isFail ? "✕" : "?";
+        const note = c.notScored
+          ? "No puntúa · " + c.hint
+          : isPass || isFail ? c.hint : "Sin datos suficientes";
+        return `<li class="${cls}">
+          <span class="mark" aria-hidden="true">${mark}</span>
+          <span><span class="name">${c.label}</span><span class="note">${note}</span></span>
+        </li>`;
+      }).join("");
+      const scored = CRITERIA.filter((c) => !c.notScored).length;
+      return `<div class="criteria-head">
+          <p class="eyebrow">Criterios de la metodología trefolio</p>
+          <span class="count">${score} de ${scored} cumplidos</span>
+        </div>
+        <ul class="criteria">${items}</ul>
+        <p class="legend">
+          <span><b style="color:var(--accent)">✓</b> cumple</span>
+          <span><b style="color:var(--red)">✕</b> no cumple</span>
+          <span><b>–</b> no puntúa</span>
+        </p>`;
+    }
+
+    function render(report) {
+      const rankItems = report.priorityOrder.map((t, i) => {
+        const card = report.cards.find((c) => c.ticker === t);
+        return `
+          <li class="rank-item">
+            <div class="rank-num">${i + 1}</div>
+            <div>
+              <h3>${t} — ${card?.companyName || ""}${badge(card?.verdict)} · ${card?.score ?? "—"}/8</h3>
+              <p>${card?.priorityReason || ""}</p>
+            </div>
+          </li>`;
+      }).join("");
+
+      const rows = report.comparisonRows.map((r) => `
+        <tr>
+          <td class="ticker">${r.ticker}</td>
+          <td>${r.companyName}</td>
+          <td>${r.valuationNote}</td>
+          <td>${r.growthNote}</td>
+          <td>${r.score ?? "—"}</td>
+          <td>${r.verdict || "—"}</td>
+        </tr>`).join("");
+
+      const fichas = report.cards.map((c) => `
+        <article class="card ficha" id="card-${c.ticker.replace(/[^a-z0-9]/gi, "-")}">
+          <div class="ficha-head">
+            <div>
+              <h3>${c.ticker} — ${c.companyName}</h3>
+              <p class="ficha-sub">${c.sector} · ${c.country} · Cap. ${fmtCap(c.mktCapUsd)}</p>
+            </div>
+            <div>${badge(c.verdict)} <span class="badge fuerte" style="margin-left:0">${c.score}/8</span></div>
+          </div>
+          ${businessBlock(c)}
+          <div class="grid-meta">
+            <div class="meta-cell"><div class="label">Precio</div><div class="value">${fmtPrice(c.price, c.currency)}</div></div>
+            <div class="meta-cell"><div class="label">Objetivo</div><div class="value">${c.targetPrice != null ? fmtPrice(c.targetPrice, c.currency) : "—"} (${fmtPct(c.upsidePct)})</div></div>
+            <div class="meta-cell"><div class="label">PER fwd</div><div class="value">${fmtMult(c.multiples.fwdPe)}</div></div>
+            <div class="meta-cell"><div class="label">EV/EBITDA</div><div class="value">${fmtMult(c.multiples.evEbitda)}</div></div>
+            <div class="meta-cell"><div class="label">ND/EBITDA</div><div class="value">${fmtMult(c.multiples.ndEbitda)}</div></div>
+            <div class="meta-cell"><div class="label">Dividendo</div><div class="value">${fmtYield(c.flags.dividendYield)}</div></div>
+            <div class="meta-cell"><div class="label">Caja neta</div><div class="value">${c.flags.netCash ? "Sí" : c.flags.netCash === false ? "No" : "—"}</div></div>
+            <div class="meta-cell"><div class="label">MOAT</div><div class="value">${c.flags.moatScore != null ? c.flags.moatScore.toFixed(1) : "—"}</div></div>
+          </div>
+          <p class="ficha-sub" style="margin-bottom:8px"><strong style="color:var(--fg)">Catalizador:</strong> ${c.catalyst || "—"} ${c.catalystDate ? `(${c.catalystDate})` : ""}</p>
+          ${criteriaList(c.stepsPassed, c.stepsFailed, c.score)}
+          <p class="eyebrow" style="margin-bottom:6px">Tesis</p>
+          <p class="thesis">${c.thesis}</p>
+          <p class="eyebrow" style="margin-bottom:8px">Riesgos</p>
+          <ul class="risks">${c.risks.map((r) => `<li>${r}</li>`).join("")}</ul>
+          <details class="sources">
+            <summary>Fuentes (${c.sources.length})</summary>
+            <ul style="margin-top:6px;padding-left:16px">
+              ${c.sources.map((s) => `<li>${s.label || s.field} · asOf ${s.asOf}</li>`).join("")}
+            </ul>
+          </details>
+        </article>`).join("");
+
+      return `
+        <header class="hero">
+          <p class="eyebrow">Cribado diario · research automatizado</p>
+          <h1>Cribado de empresas cotizadas</h1>
+          <p class="meta">Job <code>${report.jobId}</code> · ${report.generatedAt.slice(0, 10)} · locale ${report.locale}</p>
+        </header>
+
+        <section class="section">
+          <h2>Metodología</h2>
+          <div class="card prose">${report.methodologyNote}</div>
+        </section>
+
+        <section class="section">
+          <h2>Resumen ejecutivo</h2>
+          <div class="card">
+            <p class="prose" style="color:var(--fg)">${report.executiveSummary}</p>
+            <ol class="rank-list">${rankItems}</ol>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Tabla comparativa</h2>
+          <div class="card table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ticker</th><th>Empresa</th><th>Valoración</th>
+                  <th>Crecimiento</th><th>Score</th><th>Veredicto</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Fichas detalladas</h2>
+          ${fichas}
+        </section>
+
+        <aside class="disclaimer" role="note">
+          ${report.disclaimer}
+        </aside>
+      `;
+    }
+
+    fetch("./screening-report-fixture.json")
+      .then((r) => {
+        if (!r.ok) throw new Error(r.statusText);
+        return r.json();
+      })
+      .then((data) => {
+        document.getElementById("app").innerHTML = render(data);
+      })
+      .catch((e) => {
+        document.getElementById("app").innerHTML =
+          `<p class="err">No se pudo cargar el fixture: ${e.message}. Sirve esta carpeta con un http server (no file://).</p>`;
+      });
+  </script>
+</body>
+</html>

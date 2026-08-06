@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>trefolio — Screening end-to-end (mock E0)</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0:#07111d; --bg1:#0b1627; --fg:#edf4ff; --muted:#8ea1bf;
+      --border:rgba(154,174,209,.14); --card:rgba(10,16,26,.92); --soft:rgba(255,255,255,.03);
+      --accent:#1dd1a1; --accent-dim:rgba(29,209,161,.14);
+      --amber:#fbbf24; --amber-dim:rgba(251,191,36,.12);
+      --red:#f87171; --red-dim:rgba(248,113,113,.12);
+      --blue:#60a5fa; --radius:18px;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      font-family:"DM Sans",system-ui,sans-serif;
+      background:linear-gradient(180deg,var(--bg0),var(--bg1) 50%,var(--bg0));
+      color:var(--fg); min-height:100vh; line-height:1.5;
+    }
+    .wrap { max-width:960px; margin:0 auto; padding:20px 16px 80px; }
+    code { font-size:.92em; color:var(--accent); }
+    .banner {
+      margin-bottom:14px; padding:12px 14px; border:1px dashed rgba(29,209,161,.35);
+      border-radius:12px; background:var(--accent-dim); font-size:12px; color:var(--muted);
+    }
+    .banner strong { color:var(--accent); }
+    .stepper { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; }
+    .stepper button {
+      font:inherit; font-size:12px; min-height:40px; padding:0 12px; cursor:pointer;
+      display:inline-flex; align-items:center; gap:6px; border-radius:999px;
+      border:1px solid var(--border); background:transparent; color:var(--muted);
+    }
+    .stepper button.active { background:var(--accent-dim); color:var(--accent); border-color:rgba(29,209,161,.35); }
+    .stepper .n {
+      width:18px; height:18px; border-radius:50%; display:grid; place-items:center;
+      font-size:10px; font-weight:700; background:rgba(255,255,255,.07);
+    }
+    .stepper button.active .n { background:rgba(29,209,161,.25); }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px; }
+    .card + .card { margin-top:14px; }
+    .eyebrow { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#2dd4bf; }
+    h1.hero-title { font-family:"Instrument Serif",Georgia,serif; font-size:clamp(26px,4.6vw,36px); font-weight:400; margin:10px 0 8px; }
+    h2.sec { font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:26px 0 12px; }
+    h3 { font-size:15px; font-weight:600; }
+    p.prose, .prose { font-size:14px; color:var(--muted); }
+    .prose strong { color:var(--fg); font-weight:600; }
+    .badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:3px 8px; border-radius:999px; border:1px solid transparent; }
+    .badge.ok { background:var(--accent-dim); color:var(--accent); border-color:rgba(29,209,161,.3); }
+    .badge.warn { background:var(--amber-dim); color:var(--amber); border-color:rgba(251,191,36,.3); }
+    .badge.bad { background:var(--red-dim); color:var(--red); border-color:rgba(248,113,113,.28); }
+    .badge.info { background:rgba(96,165,250,.12); color:var(--blue); border-color:rgba(96,165,250,.28); }
+    .btn { min-height:44px; padding:0 16px; border-radius:14px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; border:1px solid var(--border); }
+    .btn-primary { background:var(--accent); color:#042f24; border-color:transparent; }
+    .btn-secondary { background:var(--soft); color:var(--fg); }
+    .btn-ghost { background:transparent; color:var(--muted); }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+
+    /* Screen 1 — exposure */
+    .expo-row { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
+    .expo-row:last-child { border-bottom:0; }
+    .expo-name { display:flex; align-items:center; gap:8px; font-size:14px; }
+    .bar { height:8px; border-radius:999px; background:rgba(255,255,255,.06); overflow:hidden; margin-top:6px; }
+    .bar > span { display:block; height:100%; border-radius:999px; }
+    .expo-nums { font-size:13px; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .expo-nums .drift { display:block; font-size:11px; }
+    .drift-over { color:var(--red); }
+    .drift-under { color:var(--blue); }
+    .drift-ok { color:var(--muted); }
+    .pillars { margin:12px 0 0 18px; display:grid; gap:8px; font-size:13.5px; color:var(--muted); }
+    .pillars strong { color:var(--fg); }
+    .options { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
+    .option { background:var(--soft); border:1px solid var(--border); border-radius:16px; padding:16px; display:flex; flex-direction:column; }
+    .option h3 { margin:8px 0 6px; }
+    .option p { flex:1; }
+    .chips { display:flex; gap:6px; flex-wrap:wrap; margin:10px 0 0; }
+
+    /* Screen 2 — chat */
+    .chat-layout { display:grid; gap:14px; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); align-items:start; }
+    @media (max-width:820px) { .chat-layout { grid-template-columns:1fr; } }
+    .thread { display:flex; flex-direction:column; gap:12px; max-height:420px; overflow-y:auto; padding-right:4px; }
+    .msg { display:flex; gap:10px; }
+    .msg .av { width:28px; height:28px; border-radius:9px; display:grid; place-items:center; font-size:11px; font-weight:700; flex-shrink:0; }
+    .msg.agent .av { background:var(--accent-dim); color:var(--accent); }
+    .msg.user { flex-direction:row-reverse; }
+    .msg.user .av { background:rgba(96,165,250,.14); color:var(--blue); }
+    .bubble { font-size:14px; padding:10px 13px; border-radius:14px; background:var(--soft); border:1px solid var(--border); max-width:88%; }
+    .msg.user .bubble { background:rgba(96,165,250,.09); border-color:rgba(96,165,250,.2); }
+    .msg.sys .bubble { font-size:12px; color:var(--muted); background:transparent; border-style:dashed; }
+    .replies { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
+    .reply { font:inherit; font-size:13px; min-height:40px; padding:0 12px; border-radius:999px; cursor:pointer; background:var(--soft); border:1px solid var(--border); color:var(--fg); }
+    .reply:hover { border-color:rgba(29,209,161,.4); color:var(--accent); }
+    .reply.finish { margin-left:auto; color:var(--accent); border-color:rgba(29,209,161,.35); background:var(--accent-dim); font-weight:600; }
+    .explain { font-size:12.5px; }
+    .explain summary { cursor:pointer; color:var(--accent); font-weight:600; font-size:12px; }
+    .explain dl { display:grid; gap:8px; margin-top:10px; }
+    .explain dt { font-weight:600; font-size:12.5px; }
+    .explain dd { color:var(--muted); font-size:12.5px; margin-left:0; }
+    .brief-panel { position:sticky; top:16px; }
+    .brief-list { list-style:none; display:grid; gap:8px; margin-top:12px; }
+    .brief-list li { display:grid; grid-template-columns:1fr auto; gap:8px; font-size:12.5px; padding:8px 10px; border-radius:10px; background:var(--soft); border:1px solid var(--border); }
+    .brief-list li.pending { opacity:.45; }
+    .brief-list .k { color:var(--muted); }
+    .brief-list .v { font-weight:600; text-align:right; }
+
+    /* Screen 3 — brief */
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:520px; }
+    th, td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+    th { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600; }
+    td.k { color:var(--muted); }
+    td.v { font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    td.ticker { font-weight:700; color:var(--accent); white-space:nowrap; }
+
+    /* Screen 4 — progress */
+    .steps-list { list-style:none; display:grid; gap:8px; margin-top:14px; }
+    .steps-list li { display:grid; grid-template-columns:26px 1fr auto; gap:10px; align-items:center; padding:10px 12px; border-radius:12px; background:var(--soft); border:1px solid var(--border); font-size:13.5px; }
+    .dot { width:20px; height:20px; border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:700; background:rgba(255,255,255,.06); color:var(--muted); }
+    .dot.done { background:var(--accent-dim); color:var(--accent); }
+    .dot.run { background:rgba(96,165,250,.16); color:var(--blue); }
+    .steps-list .t { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; }
+    .steps-list li.pending { opacity:.5; }
+
+    /* Screen 5 — report */
+    .rank-list { list-style:none; display:grid; gap:10px; margin-top:14px; }
+    .rank-item { display:grid; grid-template-columns:36px 1fr; gap:12px; padding:12px; border-radius:14px; background:var(--soft); border:1px solid var(--border); }
+    .rank-num { width:36px; height:36px; border-radius:10px; display:grid; place-items:center; background:var(--accent-dim); color:var(--accent); font-weight:700; font-size:14px; }
+    .rank-item h3 { font-size:14px; margin-bottom:4px; }
+    .rank-item p { font-size:13px; color:var(--muted); }
+    .ficha-head { display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:14px; }
+    .ficha-head h3 { font-family:"Instrument Serif",Georgia,serif; font-size:23px; font-weight:400; }
+    .ficha-sub { font-size:13px; color:var(--muted); margin-top:4px; }
+    .grid-meta { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-bottom:14px; }
+    .meta-cell { padding:10px 12px; border-radius:12px; background:var(--soft); border:1px solid var(--border); }
+    .meta-cell .label { font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:4px; }
+    .meta-cell .value { font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; }
+    .business { margin:0 0 14px; padding:12px 14px; border-radius:12px; border:1px solid var(--border); background:var(--soft); }
+    .business-text { font-size:13.5px; color:var(--fg); margin-bottom:8px; }
+    .business-facts { font-size:12px; color:var(--muted); margin-bottom:8px; }
+    .business-links { display:flex; flex-wrap:wrap; gap:8px; }
+    .business-links a { font-size:12px; text-decoration:none; color:#2dd4bf; border:1px solid rgba(45,212,191,.28); background:rgba(45,212,191,.08); padding:6px 10px; border-radius:999px; min-height:32px; display:inline-flex; align-items:center; }
+    .business-links a:hover { background:rgba(45,212,191,.16); }
+    .criteria-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+    .criteria-head .count { font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+    .criteria { list-style:none; display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:6px; margin-bottom:10px; }
+    .criteria li { display:grid; grid-template-columns:18px 1fr; gap:8px; align-items:start; font-size:12.5px; padding:7px 9px; border-radius:10px; border:1px solid var(--border); background:var(--soft); }
+    .criteria .mark { width:18px; height:18px; border-radius:6px; display:grid; place-items:center; font-size:11px; font-weight:700; }
+    .criteria li.pass .mark { background:var(--accent-dim); color:var(--accent); }
+    .criteria li.fail .mark { background:var(--red-dim); color:var(--red); }
+    .criteria li.na .mark { background:rgba(255,255,255,.06); color:var(--muted); }
+    .criteria li.fail .name { color:var(--muted); }
+    .criteria li.na { opacity:.7; }
+    .criteria .note { display:block; font-size:11px; color:var(--muted); }
+    .legend { font-size:11px; color:var(--muted); margin-bottom:14px; display:flex; gap:12px; flex-wrap:wrap; }
+    .legend b { font-weight:700; }
+    .thesis { font-size:14px; margin-bottom:12px; }
+    .risks { list-style:none; display:grid; gap:8px; }
+    .risks li { font-size:13px; color:var(--muted); padding-left:14px; position:relative; }
+    .risks li::before { content:""; position:absolute; left:0; top:7px; width:6px; height:6px; border-radius:50%; background:var(--amber); }
+    .disclaimer { margin-top:26px; padding:14px 16px; border-radius:12px; border:1px solid var(--border); background:var(--soft); font-size:12px; color:var(--muted); }
+    .sources { margin-top:10px; font-size:11px; color:var(--muted); }
+    .sources summary { cursor:pointer; color:var(--accent); font-weight:600; }
+    .hidden { display:none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="banner">
+      <strong>E0 mock end-to-end</strong> — Cartera → intención → chat de intake → brief → generación → informe HTML.
+      Sin API ni agentes: todo es fixture tipado (§5.3 del HLD). Rutas futuras <code>/tools/screening/*</code>.
+    </div>
+
+    <nav class="stepper" id="stepper" aria-label="Pasos del flujo">
+      <button type="button" data-screen="exposure" class="active"><span class="n">1</span>Cartera</button>
+      <button type="button" data-screen="chat"><span class="n">2</span>Intake chat</button>
+      <button type="button" data-screen="brief"><span class="n">3</span>Brief</button>
+      <button type="button" data-screen="progress"><span class="n">4</span>Generando</button>
+      <button type="button" data-screen="report"><span class="n">5</span>Informe</button>
+    </nav>
+
+    <!-- ============ 1. EXPOSICIÓN ============ -->
+    <section id="screen-exposure">
+      <header>
+        <p class="eyebrow">Tu cartera hoy</p>
+        <h1 class="hero-title">Estás sobreexpuesto a Technology</h1>
+        <p class="prose">Technology pesa <strong>42,4%</strong> frente a tu objetivo del 25%. En una cartera diversificada
+        ningún grupo debería superar el 30%. Healthcare y Utilities están casi sin exposición.</p>
+      </header>
+
+      <h2 class="sec">Distribución por sector</h2>
+      <div class="card" id="expoTable"></div>
+
+      <h2 class="sec">¿Qué quieres hacer?</h2>
+      <div class="options">
+        <article class="option">
+          <p class="eyebrow">Opción A · rebalanceo</p>
+          <h3>Buscar alternativas para compensar la cartera</h3>
+          <p class="prose">El agente arranca sabiendo qué sectores te faltan y cuál evitar. Buscará candidatos
+          en Healthcare y Utilities y excluirá Technology.</p>
+          <div class="chips">
+            <span class="badge ok">Incluir Healthcare</span>
+            <span class="badge ok">Incluir Utilities</span>
+            <span class="badge bad">Excluir Technology</span>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-primary" data-intent="rebalance">Compensar cartera →</button>
+          </div>
+        </article>
+
+        <article class="option">
+          <p class="eyebrow">Opción B · exploración</p>
+          <h3>Screener de nuevas oportunidades</h3>
+          <p class="prose">Sin restricción sectorial. El agente pregunta todo desde cero: tamaño, valoración,
+          calidad de balance, crecimiento y región.</p>
+          <div class="chips">
+            <span class="badge info">Sin sesgo de sector</span>
+            <span class="badge info">Preset “Mi cribado” disponible</span>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" data-intent="explore">Buscar oportunidades →</button>
+          </div>
+        </article>
+      </div>
+      <h2 class="sec">Metodología trefolio</h2>
+      <div class="card">
+        <p class="prose">Toda búsqueda usa el mismo marco: <strong>cinco pilares</strong> que se puntúan de forma
+        determinística (0–8) antes de que ningún modelo escriba una línea.</p>
+        <ol class="pillars">
+          <li><strong>Calidad del negocio</strong> — ¿gana bien con el capital que emplea? ROIC, margen bruto y margen EBIT.</li>
+          <li><strong>Solidez financiera</strong> — ¿aguanta un año malo? Deuda neta/EBITDA, ratio corriente, deuda sobre fondos propios.</li>
+          <li><strong>Valoración relativa</strong> — ¿está barata contra su propia historia y contra sus comparables? PER forward, TEV/EBITDA, P/FCF, TEV/Ventas.</li>
+          <li><strong>Divergencia y catalizador</strong> — ¿el precio cae mientras el negocio mejora, y hay un evento con fecha que pueda cerrar esa brecha?</li>
+          <li><strong>Alineación de intereses</strong> — ¿compran los directivos con su dinero? ¿Hay señal de mercado verificable?</li>
+        </ol>
+        <p class="prose" style="margin-top:12px">Los números salen de código, no del modelo. El modelo solo redacta la tesis
+        citando los campos calculados, y una capa de verificación revisa cada afirmación antes de publicar.</p>
+      </div>
+
+      <p class="disclaimer">Informativo. No es asesoramiento financiero ni recomendación personalizada de inversión.</p>
+    </section>
+
+    <!-- ============ 2. CHAT INTAKE ============ -->
+    <section id="screen-chat" class="hidden">
+      <header>
+        <p class="eyebrow">Agente de intake</p>
+        <h1 class="hero-title">Definamos qué buscas</h1>
+        <p class="prose" id="chatIntentLine"></p>
+      </header>
+
+      <div class="chat-layout" style="margin-top:18px">
+        <div class="card">
+          <div class="thread" id="thread" aria-live="polite"></div>
+          <div class="replies" id="replies"></div>
+        </div>
+
+        <aside class="card brief-panel">
+          <p class="eyebrow">Brief en construcción</p>
+          <ul class="brief-list" id="briefLive"></ul>
+          <div class="actions">
+            <button type="button" class="btn btn-primary" id="chatFinish">Terminar y buscar</button>
+            <button type="button" class="btn btn-ghost" id="chatRestart">Reiniciar chat</button>
+          </div>
+          <p class="prose" style="margin-top:10px;font-size:12px">Si cortas ahora, completo lo que falte con tu preset “Mi cribado”.</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ 3. BRIEF ============ -->
+    <section id="screen-brief" class="hidden">
+      <header>
+        <p class="eyebrow">Confirmación</p>
+        <h1 class="hero-title">Brief listo para ejecutar</h1>
+        <p class="prose" id="briefIntentLine"></p>
+      </header>
+
+      <h2 class="sec">Filtros del cribado</h2>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Filtro</th><th>Condición</th><th>Origen</th></tr></thead>
+          <tbody id="briefTable"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <p class="eyebrow">Coste y expectativa</p>
+        <p class="prose" style="margin-top:8px">Un informe consume <strong>1 crédito</strong> (mecánica de créditos fuera de alcance en esta iteración).
+        Duración estimada <strong>8–15 min</strong>: ocho pasos de agente, la investigación cualitativa va empresa por empresa, y una capa de verificación revisa las cifras antes de publicar.</p>
+        <div class="actions">
+          <button type="button" class="btn btn-primary" id="runBtn">Generar informe</button>
+          <button type="button" class="btn btn-secondary" data-goto="chat">Ajustar en el chat</button>
+        </div>
+      </div>
+      <p class="disclaimer">El informe es investigación automatizada. No es asesoramiento financiero.</p>
+    </section>
+
+    <!-- ============ 4. PROGRESO ============ -->
+    <section id="screen-progress" class="hidden">
+      <header>
+        <p class="eyebrow">Ejecución</p>
+        <h1 class="hero-title">Generando tu informe</h1>
+        <p class="prose">Cada agente es un step reanudable. Puedes cerrar la página: te avisamos al terminar.</p>
+      </header>
+      <div class="card" style="margin-top:16px">
+        <ul class="steps-list" id="progressList"></ul>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" id="skipBtn">Ver informe ahora (mock)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. INFORME ============ -->
+    <section id="screen-report" class="hidden">
+      <div id="reportRoot"><p class="prose">Cargando fixture…</p></div>
+    </section>
+  </div>
+
+  <script>
+    /* ---------------- datos mock ---------------- */
+    const SECTORS = [
+      { label:"Technology", actual:42.4, target:25 },
+      { label:"Financials", actual:18.1, target:15 },
+      { label:"Consumer Discretionary", actual:14.2, target:12 },
+      { label:"Industrials", actual:11.6, target:14 },
+      { label:"Energy", actual:8.7, target:9 },
+      { label:"Healthcare", actual:2.0, target:13 },
+      { label:"Utilities", actual:0.0, target:6 },
+      { label:"Materials", actual:3.0, target:6 },
+    ];
+
+    /* Preset del cribado personal del usuario */
+    const PRESET = {
+      marketCap:      { label:"Capitalización",              value:"300 – 15.000 M USD", src:"preset" },
+      ndEbitda:       { label:"Deuda neta / EBITDA (LTM)",   value:"< 2,5x",             src:"preset" },
+      currentRatio:   { label:"Ratio corriente (LTM)",       value:"> 1,5x",             src:"preset" },
+      roic:           { label:"ROIC (LTM)",                  value:"> 12%",              src:"preset" },
+      grossMargin:    { label:"Margen bruto (FY26 consenso)",value:"> 30%",              src:"preset" },
+      ebitMargin:     { label:"Margen EBIT (LTM)",           value:"> 12%",              src:"preset" },
+      fwdPe:          { label:"PER fwd normalizado (FY26)",  value:"< 15x",              src:"preset" },
+      tevEbitda:      { label:"TEV/EBITDA fwd (FY26)",       value:"< 10x",              src:"preset" },
+      pFcf:           { label:"Precio / FCF por acción (LTM)",value:"< 15x",             src:"preset" },
+      tevSales:       { label:"TEV / Ventas (LTM)",          value:"< 8x",               src:"preset" },
+      debtEquity:     { label:"Deuda total / fondos propios",value:"< 100%",             src:"preset" },
+      revenueCagr:    { label:"CAGR ingresos FY23→FY26",     value:"> 5%",               src:"preset" },
+      region:         { label:"Región",                      value:"EE.UU./Canadá · Europa · Asia-Pacífico", src:"preset" },
+    };
+
+    const state = {
+      screen: "exposure",
+      intent: null,            // "rebalance" | "explore"
+      brief: {},               // key -> { label, value, src }
+      qIndex: 0,
+      chatDone: false,
+    };
+
+    /* ---------------- preguntas del agente ---------------- */
+    /* Cada paso: qué pregunta, qué explica y qué claves del brief fija cada respuesta. */
+    const QUESTIONS = [
+      {
+        id:"sectors",
+        explain:[
+          ["Sector", "Actividad económica de la empresa. Repartir entre sectores reduce el golpe cuando uno entra en un ciclo malo."],
+          ["Infraponderado", "Sector donde pesas menos de lo que te habías marcado como objetivo. Comprar ahí equilibra sin vender lo que ya tienes."],
+        ],
+        ask:(s) => s.intent === "rebalance"
+          ? "Vengo del rebalanceo, así que ya sé lo importante: buscamos en <strong>Healthcare</strong> y <strong>Utilities</strong> y excluimos <strong>Technology</strong>. ¿Lo dejamos así o lo ajustamos?"
+          : "¿Quieres restringir por sector o miro todo el universo?",
+        options:(s) => s.intent === "rebalance"
+          ? [
+              { label:"Déjalo así", set:{ sectorsInclude:{ label:"Sectores incluidos", value:"Healthcare, Utilities", src:"rebalance" }, sectorsExclude:{ label:"Sectores excluidos", value:"Technology", src:"rebalance" } }, say:"Déjalo así." },
+              { label:"Añade Materials", set:{ sectorsInclude:{ label:"Sectores incluidos", value:"Healthcare, Utilities, Materials", src:"usuario" }, sectorsExclude:{ label:"Sectores excluidos", value:"Technology", src:"rebalance" } }, say:"Añade también Materials." },
+              { label:"Quita la exclusión de Tech", set:{ sectorsInclude:{ label:"Sectores incluidos", value:"Healthcare, Utilities", src:"rebalance" }, sectorsExclude:{ label:"Sectores excluidos", value:"—", src:"usuario" } }, say:"No excluyas Technology." },
+            ]
+          : [
+              { label:"Todo el universo", set:{ sectorsInclude:{ label:"Sectores incluidos", value:"Todos", src:"usuario" }, sectorsExclude:{ label:"Sectores excluidos", value:"—", src:"usuario" } }, say:"Todo el universo." },
+              { label:"Evita Technology", set:{ sectorsInclude:{ label:"Sectores incluidos", value:"Todos menos Tech", src:"usuario" }, sectorsExclude:{ label:"Sectores excluidos", value:"Technology", src:"usuario" } }, say:"Evita Technology." },
+              { label:"Solo Healthcare", set:{ sectorsInclude:{ label:"Sectores incluidos", value:"Healthcare", src:"usuario" }, sectorsExclude:{ label:"Sectores excluidos", value:"—", src:"usuario" } }, say:"Solo Healthcare." },
+            ],
+      },
+      {
+        id:"preset",
+        explain:[
+          ["Preset", "Un conjunto de filtros guardado. “Mi cribado” son tus 13 umbrales habituales de calidad, deuda, valoración y crecimiento."],
+          ["Filtro", "Una condición numérica que la empresa debe cumplir para entrar en el análisis. Si falla, no gasta tiempo de investigación."],
+        ],
+        ask:() => "¿Aplico tu preset <strong>“Mi cribado”</strong> (13 filtros de calidad y valoración) o lo montamos filtro a filtro?",
+        options:() => [
+          { label:"Aplica Mi cribado", set:"PRESET_ALL", say:"Aplica Mi cribado." },
+          { label:"Filtro a filtro", set:"PRESET_NONE", say:"Prefiero ir filtro a filtro." },
+        ],
+      },
+      {
+        id:"size",
+        explain:[
+          ["Capitalización de mercado", "Precio de la acción × número de acciones: lo que cuesta la empresa entera en bolsa."],
+          ["Por qué 300–15.000 M USD", "Rango small/mid cap. Menos analistas la siguen, así que hay más margen para que el precio se despegue del negocio. A cambio: más volatilidad y menos liquidez."],
+        ],
+        ask:() => "Tamaño de empresa. Tu preset usa 300–15.000 M USD (small/mid cap). ¿Lo mantengo?",
+        options:() => [
+          { label:"300 – 15.000 M USD", set:{ marketCap:{ ...PRESET.marketCap, src:"confirmado" } }, say:"Mantén 300–15.000 M USD." },
+          { label:"Solo > 5.000 M", set:{ marketCap:{ label:"Capitalización", value:"5.000 – 15.000 M USD", src:"usuario" } }, say:"Solo por encima de 5.000 M." },
+          { label:"Sin límite de tamaño", set:{ marketCap:{ label:"Capitalización", value:"Sin límite", src:"usuario" } }, say:"Sin límite de tamaño." },
+        ],
+      },
+      {
+        id:"valuation",
+        explain:[
+          ["PER forward", "Precio dividido entre el beneficio por acción esperado del próximo ejercicio. 15x significa pagar 15 años de ese beneficio. Cuanto más bajo, más barata — salvo que el beneficio se esté hundiendo."],
+          ["TEV/EBITDA", "Valor total de la empresa (bolsa + deuda − caja) entre su beneficio operativo antes de amortizaciones. Compara empresas con deudas distintas, algo que el PER no hace."],
+          ["Precio / FCF", "Precio entre el flujo de caja libre por acción: el dinero que sobra de verdad tras invertir. Más difícil de maquillar que el beneficio contable."],
+          ["TEV/Ventas", "Valor de la empresa entre sus ingresos. Útil cuando el margen está temporalmente hundido y el PER no dice nada."],
+        ],
+        ask:() => "Valoración. Preset: PER fwd < 15x, TEV/EBITDA < 10x, P/FCF < 15x, TEV/Ventas < 8x.",
+        options:() => [
+          { label:"Mantener los cuatro", set:{ fwdPe:{...PRESET.fwdPe,src:"confirmado"}, tevEbitda:{...PRESET.tevEbitda,src:"confirmado"}, pFcf:{...PRESET.pFcf,src:"confirmado"}, tevSales:{...PRESET.tevSales,src:"confirmado"} }, say:"Mantén los cuatro múltiplos." },
+          { label:"Más estricto: PER < 12x", set:{ fwdPe:{ label:"PER fwd normalizado (FY26)", value:"< 12x", src:"usuario" }, tevEbitda:{...PRESET.tevEbitda,src:"confirmado"}, pFcf:{...PRESET.pFcf,src:"confirmado"}, tevSales:{...PRESET.tevSales,src:"confirmado"} }, say:"Bájame el PER a 12x." },
+          { label:"Solo PER y P/FCF", set:{ fwdPe:{...PRESET.fwdPe,src:"confirmado"}, pFcf:{...PRESET.pFcf,src:"confirmado"}, tevEbitda:{ label:"TEV/EBITDA fwd (FY26)", value:"—", src:"usuario" }, tevSales:{ label:"TEV / Ventas (LTM)", value:"—", src:"usuario" } }, say:"Con PER y P/FCF me vale." },
+        ],
+      },
+      {
+        id:"quality",
+        explain:[
+          ["ROIC", "Retorno sobre el capital invertido: cuánto gana la empresa por cada euro que emplea en el negocio. Por encima del 12% sostenido suele indicar una ventaja competitiva real."],
+          ["Margen bruto", "Lo que queda de cada venta tras el coste directo del producto. Un margen alto sugiere poder para subir precios."],
+          ["Margen EBIT", "Beneficio operativo sobre ventas, ya con los gastos de estructura. Mide eficiencia, no solo precio."],
+          ["Deuda neta / EBITDA", "Años de beneficio operativo que harían falta para devolver la deuda menos la caja. Por debajo de 2,5x es prudente; negativo significa caja neta."],
+          ["Ratio corriente", "Activo corriente entre pasivo corriente. Por encima de 1,5x hay colchón para pagar lo que vence en doce meses."],
+          ["Deuda / fondos propios", "Cuánta deuda hay por cada euro de capital propio. Por debajo del 100% el riesgo financiero es contenido."],
+        ],
+        ask:() => "Calidad y balance. Preset: ROIC > 12%, margen bruto > 30%, margen EBIT > 12%, ND/EBITDA < 2,5x, ratio corriente > 1,5x, deuda/fondos propios < 100%.",
+        options:() => [
+          { label:"Mantener todo", set:{ roic:{...PRESET.roic,src:"confirmado"}, grossMargin:{...PRESET.grossMargin,src:"confirmado"}, ebitMargin:{...PRESET.ebitMargin,src:"confirmado"}, ndEbitda:{...PRESET.ndEbitda,src:"confirmado"}, currentRatio:{...PRESET.currentRatio,src:"confirmado"}, debtEquity:{...PRESET.debtEquity,src:"confirmado"} }, say:"Mantén los filtros de calidad." },
+          { label:"Exige caja neta", set:{ roic:{...PRESET.roic,src:"confirmado"}, grossMargin:{...PRESET.grossMargin,src:"confirmado"}, ebitMargin:{...PRESET.ebitMargin,src:"confirmado"}, ndEbitda:{ label:"Deuda neta / EBITDA (LTM)", value:"< 0x (caja neta)", src:"usuario" }, currentRatio:{...PRESET.currentRatio,src:"confirmado"}, debtEquity:{...PRESET.debtEquity,src:"confirmado"} }, say:"Solo empresas con caja neta." },
+          { label:"ROIC > 15%", set:{ roic:{ label:"ROIC (LTM)", value:"> 15%", src:"usuario" }, grossMargin:{...PRESET.grossMargin,src:"confirmado"}, ebitMargin:{...PRESET.ebitMargin,src:"confirmado"}, ndEbitda:{...PRESET.ndEbitda,src:"confirmado"}, currentRatio:{...PRESET.currentRatio,src:"confirmado"}, debtEquity:{...PRESET.debtEquity,src:"confirmado"} }, say:"Súbeme el ROIC a 15%." },
+        ],
+      },
+      {
+        id:"growth",
+        explain:[
+          ["CAGR de ingresos", "Tasa de crecimiento anual compuesta: el ritmo medio al que crecen las ventas entre dos ejercicios, ya suavizado."],
+          ["Por qué > 5%", "Filtra empresas baratas porque el negocio se está encogiendo. Barato y decreciente rara vez acaba bien."],
+        ],
+        ask:() => "Crecimiento. Preset: CAGR de ingresos FY23→FY26 > 5%.",
+        options:() => [
+          { label:"> 5% (preset)", set:{ revenueCagr:{...PRESET.revenueCagr,src:"confirmado"} }, say:"CAGR > 5% está bien." },
+          { label:"> 10%", set:{ revenueCagr:{ label:"CAGR ingresos FY23→FY26", value:"> 10%", src:"usuario" } }, say:"Quiero > 10%." },
+        ],
+      },
+      {
+        id:"region",
+        explain:[
+          ["Región", "Dónde cotiza la empresa. Afecta a divisa, fiscalidad de dividendos y horario de mercado."],
+          ["Cobertura de datos", "Fuera de EE.UU. los fundamentales llegan con más retraso o incompletos. Cuando pasa, el informe lo dice en la ficha con la fecha de corte."],
+        ],
+        ask:() => "Región. Preset: EE.UU./Canadá, Europa y Asia-Pacífico. Ten en cuenta que la cobertura de datos fuera de EE.UU. puede ser parcial.",
+        options:() => [
+          { label:"Las tres regiones", set:{ region:{...PRESET.region,src:"confirmado"} }, say:"Las tres regiones." },
+          { label:"Solo Europa", set:{ region:{ label:"Región", value:"Europa", src:"usuario" } }, say:"Solo Europa." },
+          { label:"EE.UU. + Europa", set:{ region:{ label:"Región", value:"EE.UU./Canadá · Europa", src:"usuario" } }, say:"EE.UU. y Europa." },
+        ],
+      },
+      {
+        id:"count",
+        explain:[
+          ["Nº de candidatos", "Cuántas empresas llegan a ficha completa. Cada una consume investigación real, así que más candidatos alarga la ejecución."],
+        ],
+        ask:() => "Último punto: ¿cuántos candidatos quieres en el informe?",
+        options:() => [
+          { label:"5 candidatos", set:{ candidates:{ label:"Nº de candidatos", value:"5", src:"usuario" } }, say:"Cinco." },
+          { label:"3 candidatos", set:{ candidates:{ label:"Nº de candidatos", value:"3", src:"usuario" } }, say:"Tres me vale." },
+        ],
+      },
+    ];
+
+    const BRIEF_ORDER = [
+      "sectorsInclude","sectorsExclude","marketCap","ndEbitda","currentRatio","roic",
+      "grossMargin","ebitMargin","fwdPe","tevEbitda","pFcf","tevSales","debtEquity",
+      "revenueCagr","region","candidates",
+    ];
+    const BRIEF_LABELS = Object.fromEntries(
+      Object.entries(PRESET).map(([k, v]) => [k, v.label]).concat([
+        ["sectorsInclude","Sectores incluidos"],
+        ["sectorsExclude","Sectores excluidos"],
+        ["candidates","Nº de candidatos"],
+      ])
+    );
+
+    const AGENT_STEPS = [
+      { name:"Intake — valida el brief", ms:700 },
+      { name:"Hard Data — universo y múltiplos (código)", ms:1300 },
+      { name:"IR / Negocio — 1 empresa por invocación", ms:1600 },
+      { name:"Web & Sentimiento — fuentes con fecha", ms:1400 },
+      { name:"Contexto de cartera — encaje y solapamiento", ms:900 },
+      { name:"Riesgo — idoneidad y concentración", ms:800 },
+      { name:"Compiler — ranking y tesis", ms:1200 },
+      { name:"QA — reglas R1–R10 + citas", ms:1100 },
+    ];
+
+    /* ---------------- helpers ---------------- */
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
+
+    function show(screen) {
+      state.screen = screen;
+      ["exposure","chat","brief","progress","report"].forEach((s) => {
+        $("screen-" + s).classList.toggle("hidden", s !== screen);
+      });
+      $("stepper").querySelectorAll("button").forEach((b) => {
+        b.classList.toggle("active", b.dataset.screen === screen);
+      });
+      window.scrollTo({ top:0, behavior:"smooth" });
+      if (screen === "brief") renderBrief();
+      if (screen === "progress") runProgress();
+      if (screen === "report") loadReport();
+    }
+
+    /* ---------------- 1. exposición ---------------- */
+    function renderExposure() {
+      $("expoTable").innerHTML = SECTORS.map((s) => {
+        const drift = s.actual - s.target;
+        const tone = drift > 5 ? "over" : drift < -5 ? "under" : "ok";
+        const color = tone === "over" ? "var(--red)" : tone === "under" ? "var(--blue)" : "var(--accent)";
+        const badge = s.actual > 30
+          ? '<span class="badge bad">Sobreexpuesto</span>'
+          : s.actual < 3 ? '<span class="badge info">Sin exposición</span>' : "";
+        return `
+          <div class="expo-row">
+            <div>
+              <div class="expo-name">${esc(s.label)} ${badge}</div>
+              <div class="bar"><span style="width:${Math.max(s.actual, 1.2)}%;background:${color}"></span></div>
+            </div>
+            <div class="expo-nums">
+              ${s.actual.toFixed(1)}%
+              <span class="drift drift-${tone}">${drift > 0 ? "+" : ""}${drift.toFixed(1)}% vs ${s.target}%</span>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    /* ---------------- 2. chat ---------------- */
+    function startChat(intent) {
+      state.intent = intent;
+      state.brief = {};
+      state.qIndex = 0;
+      state.chatDone = false;
+      $("thread").innerHTML = "";
+      $("chatIntentLine").innerHTML = intent === "rebalance"
+        ? "Contexto heredado del rebalanceo: el agente ya sabe qué sectores compensar y cuál evitar."
+        : "Exploración libre: el agente pregunta desde cero, con tu preset disponible.";
+
+      pushMsg("sys", intent === "rebalance"
+        ? "Contexto recibido — intención: compensar cartera · Technology 42,4% (sobreexpuesto) · Healthcare 2% · Utilities 0%."
+        : "Contexto recibido — intención: explorar nuevas oportunidades. Sin restricción sectorial.");
+      pushMsg("agent", "Soy el agente de screening. Uso la <strong>metodología trefolio</strong>: calidad del negocio, solidez financiera, valoración relativa, divergencia precio–fundamentales con catalizador, y alineación de intereses. Te explico cada métrica al preguntarla — y puedes cortar cuando quieras con <strong>Terminar y buscar</strong>: completo el resto con tu preset.");
+      askCurrent();
+      renderBriefLive();
+    }
+
+    function pushMsg(kind, html) {
+      const av = kind === "agent" ? "AI" : kind === "user" ? "Tú" : "·";
+      const el = document.createElement("div");
+      el.className = "msg " + kind;
+      el.innerHTML = `<div class="av">${av}</div><div class="bubble">${html}</div>`;
+      $("thread").appendChild(el);
+      $("thread").scrollTop = $("thread").scrollHeight;
+    }
+
+    function explainHtml(pairs) {
+      return `<details class="explain" open>
+        <summary>Qué mide esto</summary>
+        <dl>${pairs.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+      </details>`;
+    }
+
+    function askCurrent() {
+      const q = QUESTIONS[state.qIndex];
+      if (!q) return finishChat();
+      pushMsg("agent", q.ask(state));
+      if (q.explain) pushMsg("agent", explainHtml(q.explain));
+      const opts = q.options(state);
+      $("replies").innerHTML = opts.map((o, i) =>
+        `<button type="button" class="reply" data-i="${i}">${esc(o.label)}</button>`
+      ).join("") + `<button type="button" class="reply finish" data-finish="1">Terminar y buscar →</button>`;
+      $("replies").querySelectorAll("button").forEach((b) => {
+        b.onclick = b.dataset.finish
+          ? () => finishEarly()
+          : () => answer(opts[Number(b.dataset.i)]);
+      });
+    }
+
+    /* Salida anticipada: el usuario corta el chat y lanza la búsqueda ya. */
+    function finishEarly() {
+      pushMsg("user", "Termina el chat y empieza a buscar.");
+      const filled = [];
+      Object.entries(PRESET).forEach(([k, v]) => {
+        if (!state.brief[k]) { state.brief[k] = { ...v, src:"preset" }; filled.push(v.label); }
+      });
+      if (!state.brief.sectorsInclude) {
+        const isRebalance = state.intent === "rebalance";
+        const src = isRebalance ? "rebalance" : "preset";
+        state.brief.sectorsInclude = { label:"Sectores incluidos", value: isRebalance ? "Healthcare, Utilities" : "Todos", src };
+        state.brief.sectorsExclude = { label:"Sectores excluidos", value: isRebalance ? "Technology" : "—", src };
+        filled.push("Sectores");
+      }
+      if (!state.brief.candidates) {
+        state.brief.candidates = { label:"Nº de candidatos", value:"5", src:"preset" };
+        filled.push("Nº de candidatos (5)");
+      }
+      renderBriefLive();
+      pushMsg("agent", filled.length
+        ? `Cerrado. Completé con tu preset: <strong>${filled.length} criterios</strong> (${esc(filled.slice(0, 3).join(", "))}${filled.length > 3 ? "…" : ""}). Arranco la búsqueda; puedes revisar el brief cuando quieras.`
+        : "Cerrado. Ya tenías todo definido — arranco la búsqueda.");
+      $("replies").innerHTML = "";
+      state.chatDone = true;
+      setTimeout(() => show("progress"), 700);
+    }
+
+    function answer(opt) {
+      pushMsg("user", esc(opt.say));
+      if (opt.set === "PRESET_ALL") {
+        Object.entries(PRESET).forEach(([k, v]) => { state.brief[k] = { ...v, src:"preset" }; });
+        pushMsg("agent", "Preset aplicado: 13 filtros cargados. Repaso solo los que suelen cambiar.");
+        state.qIndex = QUESTIONS.findIndex((q) => q.id === "size");
+      } else if (opt.set === "PRESET_NONE") {
+        pushMsg("agent", "Vale, vamos filtro a filtro.");
+        state.qIndex += 1;
+      } else {
+        Object.entries(opt.set).forEach(([k, v]) => { state.brief[k] = v; });
+        state.qIndex += 1;
+      }
+      renderBriefLive();
+      setTimeout(askCurrent, 220);
+    }
+
+    function finishChat() {
+      state.chatDone = true;
+      const n = Object.values(state.brief).filter((v) => v.value !== "—").length;
+      pushMsg("agent", `Brief cerrado con <strong>${n} criterios</strong>. Es viable: el universo tras el prefiltro deja suficientes candidatas. ¿Lo ejecutamos?`);
+      $("replies").innerHTML =
+        `<button type="button" class="reply" id="toBrief">Revisar y generar →</button>` +
+        `<button type="button" class="reply" id="redoChat">Cambiar algo</button>`;
+      $("toBrief").onclick = () => show("brief");
+      $("redoChat").onclick = () => startChat(state.intent);
+    }
+
+    function renderBriefLive() {
+      const keys = BRIEF_ORDER.filter((k) => state.brief[k]);
+      const pendingCount = BRIEF_ORDER.length - keys.length;
+      $("briefLive").innerHTML = keys.map((k) => {
+        const v = state.brief[k];
+        return `<li><span class="k">${esc(BRIEF_LABELS[k] || k)}</span><span class="v">${esc(v.value)}</span></li>`;
+      }).join("") + (pendingCount
+        ? `<li class="pending"><span class="k">${pendingCount} ${pendingCount === 1 ? "criterio" : "criterios"} por definir</span><span class="v">…</span></li>`
+        : "");
+    }
+
+    /* ---------------- 3. brief ---------------- */
+    function renderBrief() {
+      $("briefIntentLine").innerHTML = state.intent === "rebalance"
+        ? "Origen: <strong>rebalanceo</strong>. Los sectores vienen del análisis de exposición; el resto lo confirmaste en el chat."
+        : "Origen: <strong>exploración</strong>. Todos los criterios salen del chat de intake.";
+      const keys = BRIEF_ORDER.filter((k) => state.brief[k]);
+      $("briefTable").innerHTML = keys.length
+        ? keys.map((k) => {
+            const v = state.brief[k];
+            const srcBadge = v.src === "rebalance" ? '<span class="badge info">rebalanceo</span>'
+              : v.src === "preset" ? '<span class="badge ok">preset</span>'
+              : v.src === "confirmado" ? '<span class="badge ok">confirmado</span>'
+              : '<span class="badge warn">chat</span>';
+            return `<tr><td class="k">${esc(BRIEF_LABELS[k] || k)}</td><td class="v">${esc(v.value)}</td><td>${srcBadge}</td></tr>`;
+          }).join("")
+        : `<tr><td colspan="3" class="k">Sin criterios todavía — completa el chat de intake.</td></tr>`;
+    }
+
+    /* ---------------- 4. progreso ---------------- */
+    let progressTimers = [];
+    function runProgress() {
+      progressTimers.forEach(clearTimeout);
+      progressTimers = [];
+      let done = 0;
+      const paint = (runningIdx) => {
+        $("progressList").innerHTML = AGENT_STEPS.map((s, i) => {
+          const cls = i < done ? "done" : i === runningIdx ? "run" : "";
+          const mark = i < done ? "✓" : i === runningIdx ? "•" : i + 1;
+          const t = i < done ? `${(s.ms / 1000).toFixed(1)}s` : i === runningIdx ? "en curso" : "pendiente";
+          return `<li class="${i > runningIdx ? "pending" : ""}">
+            <span class="dot ${cls}">${mark}</span>
+            <span>${esc(s.name)}</span>
+            <span class="t">${t}</span>
+          </li>`;
+        }).join("");
+      };
+      paint(0);
+      let acc = 0;
+      AGENT_STEPS.forEach((s, i) => {
+        acc += s.ms;
+        progressTimers.push(setTimeout(() => {
+          done = i + 1;
+          paint(Math.min(done, AGENT_STEPS.length - 1));
+          if (done === AGENT_STEPS.length) {
+            progressTimers.push(setTimeout(() => show("report"), 600));
+          }
+        }, acc));
+      });
+    }
+
+    /* ---------------- 5. informe ---------------- */
+    let reportCache = null;
+    function fmtCap(n) {
+      if (n == null) return "—";
+      return n >= 1e9 ? (n / 1e9).toFixed(2) + " B USD" : (n / 1e6).toFixed(0) + " M USD";
+    }
+    function fmtPrice(p, ccy) {
+      if (p == null) return "—";
+      if (ccy === "GBP") return (p * 100).toFixed(1) + "p";
+      return p.toLocaleString("es-ES") + " " + ccy;
+    }
+    const fmtPct = (n) => (n == null ? "—" : (n > 0 ? "+" : "") + n + "%");
+    const fmtMult = (n) => (n == null ? "—" : n.toFixed(2) + "x");
+    const fmtYield = (n) => (n == null ? "—" : (n * 100).toFixed(1) + "%");
+    function verdictBadge(v) {
+      if (!v) return "";
+      return v === "fuerte"
+        ? '<span class="badge ok">Candidato fuerte</span>'
+        : '<span class="badge warn">Watch</span>';
+    }
+    function businessBlock(c) {
+      const b = c.business;
+      if (!b) return "";
+      const facts = [
+        b.employees != null ? `${b.employees.toLocaleString("es-ES")} empleados` : null,
+        b.listedSince != null ? `cotiza desde ${b.listedSince}` : null,
+      ].filter(Boolean).join(" · ");
+      const links = [
+        b.website ? { label: "Web oficial", url: b.website } : null,
+        b.irUrl ? { label: "Relación con inversores", url: b.irUrl } : null,
+        b.filings ? { label: b.filings.label, url: b.filings.url } : null,
+        { label: "Ficha en trefolio", url: `/stock/${encodeURIComponent(c.ticker)}`, internal: true },
+      ].filter(Boolean);
+      return `<div class="business">
+        <p class="eyebrow" style="margin-bottom:6px">A qué se dedica</p>
+        <p class="business-text">${esc(b.summary)}</p>
+        ${facts ? `<p class="business-facts">${esc(facts)}</p>` : ""}
+        <p class="business-links">${links.map((l) =>
+          `<a href="${l.url}"${l.internal ? "" : ' target="_blank" rel="noopener noreferrer"'}>${esc(l.label)}${l.internal ? "" : " ↗"}</a>`
+        ).join("")}</p>
+      </div>`;
+    }
+
+    /* Registro canónico de criterios de la metodología trefolio.
+       El informe guarda números (ids estables); la etiqueta se traduce en la UI. */
+    const CRITERIA = [
+      { id:1, label:"Valoración relativa",            hint:"Barata frente a su propia historia y a comparables" },
+      { id:2, label:"Divergencia precio–fundamentales", hint:"El precio cae mientras el negocio mejora" },
+      { id:3, label:"Catalizador fechado",             hint:"Evento con fecha que puede cerrar la brecha" },
+      { id:4, label:"Resiliencia en crisis",           hint:"El beneficio aguantó ciclos anteriores" },
+      { id:5, label:"Calidad de balance",              hint:"Deuda, liquidez y caja bajo control" },
+      { id:6, label:"Alineación de insiders",          hint:"Compra discrecional documentada o fundador con peso" },
+      { id:7, label:"Estructura competitiva",          hint:"Ventaja defendible o nicho difícil de replicar" },
+      { id:8, label:"Contexto macro",                  hint:"Contexto del sector — informativo", notScored:true },
+      { id:9, label:"Señal de mercado",                hint:"Sentimiento o superinversores verificables" },
+    ];
+
+    function criteriaList(passed, failed, score) {
+      const items = CRITERIA.map((c) => {
+        const isPass = passed.includes(c.id);
+        const isFail = failed.includes(c.id);
+        const cls = c.notScored ? "na" : isPass ? "pass" : isFail ? "fail" : "na";
+        const mark = c.notScored ? "–" : isPass ? "✓" : isFail ? "✕" : "?";
+        const note = c.notScored ? "No puntúa · " + c.hint
+          : isPass || isFail ? c.hint
+          : "Sin datos suficientes";
+        return `<li class="${cls}">
+          <span class="mark" aria-hidden="true">${mark}</span>
+          <span><span class="name">${esc(c.label)}</span><span class="note">${esc(note)}</span></span>
+        </li>`;
+      }).join("");
+      const scored = CRITERIA.filter((c) => !c.notScored).length;
+      return `<div class="criteria-head">
+          <p class="eyebrow">Criterios de la metodología trefolio</p>
+          <span class="count">${score} de ${scored} cumplidos</span>
+        </div>
+        <ul class="criteria">${items}</ul>
+        <p class="legend">
+          <span><b style="color:var(--accent)">✓</b> cumple</span>
+          <span><b style="color:var(--red)">✕</b> no cumple</span>
+          <span><b>–</b> no puntúa</span>
+        </p>`;
+    }
+
+    function renderReport(r) {
+      const nCards = Number(state.brief.candidates?.value) || r.cards.length;
+      const cards = r.cards.slice(0, nCards);
+      const order = r.priorityOrder.filter((t) => cards.some((c) => c.ticker === t));
+
+      const rank = order.map((t, i) => {
+        const c = cards.find((x) => x.ticker === t);
+        return `<li class="rank-item">
+          <div class="rank-num">${i + 1}</div>
+          <div>
+            <h3>${esc(t)} — ${esc(c.companyName)} ${verdictBadge(c.verdict)} · ${c.score}/8</h3>
+            <p>${esc(c.priorityReason)}</p>
+          </div>
+        </li>`;
+      }).join("");
+
+      const rows = r.comparisonRows
+        .filter((x) => cards.some((c) => c.ticker === x.ticker))
+        .map((x) => `<tr>
+          <td class="ticker">${esc(x.ticker)}</td>
+          <td>${esc(x.companyName)}</td>
+          <td>${esc(x.valuationNote)}</td>
+          <td>${esc(x.growthNote)}</td>
+          <td class="v">${x.score ?? "—"}</td>
+          <td>${esc(x.verdict || "—")}</td>
+        </tr>`).join("");
+
+      const fichas = cards.map((c) => `
+        <article class="card">
+          <div class="ficha-head">
+            <div>
+              <h3>${esc(c.ticker)} — ${esc(c.companyName)}</h3>
+              <p class="ficha-sub">${esc(c.sector)} · ${esc(c.country)} · Cap. ${fmtCap(c.mktCapUsd)}</p>
+            </div>
+            <div>${verdictBadge(c.verdict)} <span class="badge ok">${c.score}/8</span></div>
+          </div>
+          ${businessBlock(c)}
+          <div class="grid-meta">
+            <div class="meta-cell"><div class="label">Precio</div><div class="value">${fmtPrice(c.price, c.currency)}</div></div>
+            <div class="meta-cell"><div class="label">Objetivo</div><div class="value">${c.targetPrice != null ? fmtPrice(c.targetPrice, c.currency) : "—"} (${fmtPct(c.upsidePct)})</div></div>
+            <div class="meta-cell"><div class="label">PER fwd</div><div class="value">${fmtMult(c.multiples.fwdPe)}</div></div>
+            <div class="meta-cell"><div class="label">EV/EBITDA</div><div class="value">${fmtMult(c.multiples.evEbitda)}</div></div>
+            <div class="meta-cell"><div class="label">ND/EBITDA</div><div class="value">${fmtMult(c.multiples.ndEbitda)}</div></div>
+            <div class="meta-cell"><div class="label">Dividendo</div><div class="value">${fmtYield(c.flags.dividendYield)}</div></div>
+            <div class="meta-cell"><div class="label">Caja neta</div><div class="value">${c.flags.netCash ? "Sí" : c.flags.netCash === false ? "No" : "—"}</div></div>
+            <div class="meta-cell"><div class="label">MOAT</div><div class="value">${c.flags.moatScore != null ? c.flags.moatScore.toFixed(1) : "—"}</div></div>
+          </div>
+          <p class="ficha-sub" style="margin-bottom:8px"><strong style="color:var(--fg)">Catalizador:</strong> ${esc(c.catalyst || "—")}${c.catalystDate ? " (" + c.catalystDate + ")" : ""}</p>
+          ${criteriaList(c.stepsPassed, c.stepsFailed, c.score)}
+          <p class="eyebrow" style="margin-bottom:6px">Tesis</p>
+          <p class="thesis">${esc(c.thesis)}</p>
+          <p class="eyebrow" style="margin-bottom:8px">Riesgos</p>
+          <ul class="risks">${c.risks.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+          <details class="sources">
+            <summary>Fuentes (${c.sources.length})</summary>
+            <ul style="margin-top:6px;padding-left:16px">
+              ${c.sources.map((s) => `<li>${esc(s.label || s.field)} · asOf ${s.asOf}</li>`).join("")}
+            </ul>
+          </details>
+        </article>`).join("");
+
+      const originLine = state.intent === "rebalance"
+        ? "Generado desde el flujo de <strong>rebalanceo</strong>: sectores infraponderados priorizados, Technology excluido."
+        : state.intent === "explore"
+          ? "Generado desde el <strong>screener libre</strong> con tu preset de cribado."
+          : "Vista directa del informe (sin pasar por el intake).";
+
+      return `
+        <header>
+          <p class="eyebrow">Informe de investigación · automatizado</p>
+          <h1 class="hero-title">Candidatos para tu cartera</h1>
+          <p class="prose">${originLine}</p>
+          <p class="prose" style="margin-top:6px">Job <code>${esc(r.jobId)}</code> · ${r.generatedAt.slice(0,10)} · ${cards.length} candidatos</p>
+        </header>
+
+        <h2 class="sec">Metodología</h2>
+        <div class="card prose">${esc(r.methodologyNote)}</div>
+
+        <h2 class="sec">Resumen ejecutivo</h2>
+        <div class="card">
+          <p class="prose" style="color:var(--fg)">${esc(r.executiveSummary)}</p>
+          <ol class="rank-list">${rank}</ol>
+        </div>
+
+        <h2 class="sec">Tabla comparativa</h2>
+        <div class="card table-wrap">
+          <table>
+            <thead><tr><th>Ticker</th><th>Empresa</th><th>Valoración</th><th>Crecimiento</th><th>Score</th><th>Veredicto</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+
+        <h2 class="sec">Fichas detalladas</h2>
+        ${fichas}
+
+        <div class="card" style="margin-top:14px">
+          <p class="eyebrow">Siguiente paso</p>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" data-goto="exposure">Volver a mi cartera</button>
+            <button type="button" class="btn btn-ghost" data-goto="chat">Nuevo cribado</button>
+          </div>
+        </div>
+
+        <aside class="disclaimer" role="note">${esc(r.disclaimer)}</aside>
+      `;
+    }
+
+    function loadReport() {
+      if (reportCache) {
+        $("reportRoot").innerHTML = renderReport(reportCache);
+        return;
+      }
+      fetch("./screening-report-fixture.json")
+        .then((res) => { if (!res.ok) throw new Error(res.statusText); return res.json(); })
+        .then((data) => { reportCache = data; $("reportRoot").innerHTML = renderReport(data); })
+        .catch((e) => {
+          $("reportRoot").innerHTML = `<div class="card prose" style="color:var(--red)">
+            No se pudo cargar el fixture (${esc(e.message)}). Sirve esta carpeta por HTTP, no con file://.</div>`;
+        });
+    }
+
+    /* ---------------- eventos globales ---------------- */
+    $("stepper").addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      if (b.dataset.screen === "chat" && !state.intent) startChat("explore");
+      show(b.dataset.screen);
+    });
+    document.addEventListener("click", (e) => {
+      const intentBtn = e.target.closest("[data-intent]");
+      if (intentBtn) { startChat(intentBtn.dataset.intent); show("chat"); return; }
+      const goto = e.target.closest("[data-goto]");
+      if (goto) {
+        if (goto.dataset.goto === "chat") startChat(state.intent || "explore");
+        show(goto.dataset.goto);
+      }
+    });
+    $("runBtn").onclick = () => show("progress");
+    $("skipBtn").onclick = () => show("report");
+    $("chatRestart").onclick = () => startChat(state.intent || "explore");
+    $("chatFinish").onclick = () => { if (!state.chatDone) finishEarly(); else show("progress"); };
+
+    renderExposure();
+    show("exposure");
+  </script>
+</body>
+</html>

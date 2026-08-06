@@ -1,0 +1,167 @@
+import type { ScreeningCopy } from "./copy";
+import {
+  BRIEF_CRITERION_ORDER,
+  briefRowLabel,
+  presetBrief,
+  type BriefPatch,
+} from "./intake-script";
+import type { BriefCriterion, ScreeningBrief, ScreeningIntent } from "./schemas";
+
+/**
+ * The brief the user builds during intake. Kept in component state (and, for the
+ * run page, sessionStorage) — stage E0 does not persist screening criteria
+ * against the account, so there is no new personal data at rest.
+ */
+export type BriefState = {
+  intent: ScreeningIntent;
+  /** null = the user has not decided yet; [] = explicitly no restriction. */
+  includeSectors: string[] | null;
+  excludeSectors: string[] | null;
+  regions: string[];
+  candidateCount: number | null;
+  criteria: Record<string, BriefCriterion>;
+  endedEarly: boolean;
+};
+
+export function emptyBrief(intent: ScreeningIntent): BriefState {
+  return {
+    intent,
+    includeSectors: null,
+    excludeSectors: null,
+    regions: [],
+    candidateCount: null,
+    criteria: {},
+    endedEarly: false,
+  };
+}
+
+export function applyPatch(state: BriefState, patch: BriefPatch): BriefState {
+  const criteria = { ...state.criteria };
+  for (const criterion of patch.criteria ?? []) {
+    criteria[criterion.key] = criterion;
+  }
+  return {
+    ...state,
+    criteria,
+    includeSectors: patch.includeSectors ?? state.includeSectors,
+    excludeSectors: patch.excludeSectors ?? state.excludeSectors,
+    regions: patch.regions ?? state.regions,
+    candidateCount: patch.candidateCount ?? state.candidateCount,
+  };
+}
+
+/**
+ * Fills whatever the user never answered with the saved preset, and reports what
+ * was assumed so the chat can say it out loud instead of silently deciding.
+ */
+export function fillFromPreset(
+  state: BriefState,
+  copy: ScreeningCopy,
+  defaults: { includeSectors: string[]; excludeSectors: string[]; candidateCount: number },
+): { state: BriefState; filledLabels: string[] } {
+  const patch = presetBrief(copy);
+  const criteria = { ...state.criteria };
+  const filledLabels: string[] = [];
+
+  for (const criterion of patch.criteria ?? []) {
+    if (!criteria[criterion.key]) {
+      criteria[criterion.key] = criterion;
+      filledLabels.push(briefRowLabel(copy, criterion.key));
+    }
+  }
+
+  const next: BriefState = {
+    ...state,
+    criteria,
+    regions: state.regions.length ? state.regions : (patch.regions ?? []),
+    endedEarly: true,
+    includeSectors: state.includeSectors,
+    excludeSectors: state.excludeSectors,
+    candidateCount: state.candidateCount,
+  };
+
+  if (next.includeSectors === null) {
+    next.includeSectors = defaults.includeSectors;
+    filledLabels.push(copy.intake.fields.includeSectors);
+  }
+  if (next.excludeSectors === null) {
+    next.excludeSectors = defaults.excludeSectors;
+    filledLabels.push(copy.intake.fields.excludeSectors);
+  }
+  if (next.candidateCount === null) {
+    next.candidateCount = defaults.candidateCount;
+    filledLabels.push(copy.intake.fields.candidateCount);
+  }
+
+  return { state: next, filledLabels };
+}
+
+export type BriefRow = {
+  key: string;
+  label: string;
+  condition: string;
+  source: BriefCriterion["source"];
+};
+
+/** Rows in a stable order so the brief always reads the same way. */
+export function buildBriefRows(state: BriefState, copy: ScreeningCopy): BriefRow[] {
+  const rows: BriefRow[] = [];
+  const sectorSource = state.intent === "rebalance" ? "rebalance" : "chat";
+
+  if (state.includeSectors !== null) {
+    rows.push({
+      key: "includeSectors",
+      label: copy.intake.fields.includeSectors,
+      condition: state.includeSectors.length
+        ? state.includeSectors.join(", ")
+        : copy.intake.values.allSectors,
+      source: sectorSource,
+    });
+  }
+  if (state.excludeSectors !== null) {
+    rows.push({
+      key: "excludeSectors",
+      label: copy.intake.fields.excludeSectors,
+      condition: state.excludeSectors.length
+        ? state.excludeSectors.join(", ")
+        : copy.intake.values.none,
+      source: sectorSource,
+    });
+  }
+
+  for (const key of BRIEF_CRITERION_ORDER) {
+    const criterion = state.criteria[key];
+    if (!criterion) continue;
+    rows.push({
+      key,
+      label: briefRowLabel(copy, key),
+      condition: criterion.condition,
+      source: criterion.source,
+    });
+  }
+
+  if (state.candidateCount !== null) {
+    rows.push({
+      key: "candidateCount",
+      label: copy.intake.fields.candidateCount,
+      condition: String(state.candidateCount),
+      source: "chat",
+    });
+  }
+
+  return rows;
+}
+
+/** Payload for POST /api/screening/runs. */
+export function toScreeningBrief(state: BriefState, locale: string): ScreeningBrief {
+  return {
+    intent: state.intent,
+    includeSectors: state.includeSectors ?? [],
+    excludeSectors: state.excludeSectors ?? [],
+    regions: state.regions,
+    candidateCount: state.candidateCount ?? 5,
+    criteria: Object.values(state.criteria),
+    endedEarly: state.endedEarly,
+    locale,
+  };
+}
