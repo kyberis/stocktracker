@@ -142,10 +142,10 @@ describe("POST /api/screening/intake/chat", () => {
     expect(mockedMetric).toHaveBeenCalledWith("ok", "explore", 42);
   });
 
-  it("returns 502 on shape rejection so the client can retry", async () => {
+  it("returns the envelope on shape rejection so the UI can retry without a hard error", async () => {
     mockedAccess.mockResolvedValue(authorizedSession);
     mockedAgent.mockResolvedValue({
-      output: goodAgentOutput({ status: "rejected_shape" }),
+      output: goodAgentOutput({ status: "rejected_shape", assistantText: "Could not parse." }),
       latencyMs: 10,
       logJson: "{}",
       aiLogId: null,
@@ -163,8 +163,13 @@ describe("POST /api/screening/intake/chat", () => {
         }),
       }),
     );
-    expect(res.status).toBe(502);
-    // Metric and persistence still fire, so we can see the failure in Admin.
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      agent: { status: string };
+      assistantText: string;
+    };
+    expect(body.agent.status).toBe("rejected_shape");
+    expect(body.assistantText).toContain("Could not parse");
     expect(mockedInsert).toHaveBeenCalledTimes(1);
     expect(mockedMetric).toHaveBeenCalledWith("rejected_shape", "explore", 10);
   });

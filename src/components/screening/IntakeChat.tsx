@@ -112,8 +112,8 @@ export function IntakeChat() {
   const pendingQuestions = Math.max(0, script.length - questionIndex - (phase === "chat" ? 1 : 0));
 
   const sendTurn = useCallback(
-    async (userText: string, chipPatch?: IntakeOption["patch"]) => {
-      if (!userText.trim() || agentPending) return;
+    async (userText: string, chipPatch?: IntakeOption["patch"]): Promise<boolean> => {
+      if (!userText.trim() || agentPending) return false;
 
       pushBubble({ role: "user", text: userText });
       const nextTranscript: Turn[] = [...transcript, { role: "user", content: userText }];
@@ -144,7 +144,7 @@ export function IntakeChat() {
         });
         if (!res.ok) {
           setTurnError(copy.intake.turnError);
-          return;
+          return false;
         }
         const data = (await res.json()) as {
           assistantText: string;
@@ -172,13 +172,16 @@ export function IntakeChat() {
         });
 
         if (data.agent.status === "ok") {
-          // Advance the local script pointer so the "ended early" hint stays honest.
+          // Advance chip shortcuts; the LLM reply is the only agent bubble for this turn.
           setQuestionIndex((prev) => Math.min(prev + 1, script.length));
+          setPhase("confirm");
         } else if (data.agent.status === "rejected_infeasible") {
           track("screening_intake_rejected", { intent });
         }
+        return true;
       } catch {
         setTurnError(copy.intake.turnError);
+        return false;
       } finally {
         setAgentPending(false);
       }
@@ -199,19 +202,10 @@ export function IntakeChat() {
   );
 
   async function chooseOption(option: IntakeOption) {
+    // Chips are shortcuts into the LLM — do not also inject the next scripted
+    // ask. That used to run even when the API failed, so users saw turnError
+    // plus a new agent bubble and thought the flow both failed and worked.
     await sendTurn(option.say, option.patch);
-    const nextIndex = questionIndex + 1;
-    if (nextIndex >= script.length) {
-      // Script exhausted — the confirm button is ready when the agent status is ok.
-      setPhase((prev) => (agentStatus === "rejected_infeasible" ? prev : "confirm"));
-    } else {
-      setQuestionIndex(nextIndex);
-      const next = script[nextIndex];
-      if (next) {
-        pushBubble({ role: "agent", text: next.ask, explain: next.explain });
-        setTranscript((prev) => [...prev, { role: "assistant", content: next.ask }]);
-      }
-    }
   }
 
   async function submitInput(e: React.FormEvent<HTMLFormElement>) {

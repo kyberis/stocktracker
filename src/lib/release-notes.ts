@@ -52,6 +52,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "La entrada y el intake del cribado dejan de mostrar el banner de 'datos de ejemplo': ambas pantallas ya usan datos reales; el banner sigue en la pantalla de progreso y en el informe hasta que la investigación también sea real.",
         },
       },
+      {
+        type: "fix",
+        text: "Fixed a false “agent did not respond” message on the screening intake chat: chip shortcuts no longer inject the next scripted question after a failed or successful LLM turn.",
+        translations: {
+          es: "Corregido el falso mensaje “el agente no respondió” en el chat de intake: los chips ya no inyectan la siguiente pregunta del script tras un turno del LLM (falle o no).",
+        },
+      },
     ],
   },
   {

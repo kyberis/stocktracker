@@ -3,7 +3,7 @@ export const maxDuration = 60;
 
 import type { NextRequest } from "next/server";
 import { withMetrics } from "@/lib/with-metrics";
-import { err, ok, parseBody } from "@/lib/api-response";
+import { ok, parseBody } from "@/lib/api-response";
 import { requireScreeningAccess } from "@/lib/screening/guard";
 import { runIntakeAgent } from "@/lib/screening/intake-agent";
 import { insertScreeningAgentOutput, findUserById } from "@/lib/db";
@@ -65,8 +65,10 @@ export const POST = withMetrics(
     }
 
     if (result.output.status === "rejected_shape") {
-      // Bad LLM output — return 502 so the UI can retry with a clear signal.
-      return err("intake_agent_shape", 502);
+      // Still return 200 with the envelope so the UI can show the agent message
+      // and warnings. A 502 was wrongly treated as a hard failure while the
+      // optimistic chip patch already updated the brief — users saw both
+      // "agent did not respond" and a working conversation.
     }
 
     return ok({
