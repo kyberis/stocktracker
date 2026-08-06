@@ -73,8 +73,9 @@ the feature is not discoverable before launch.
 - Sector weights reuse `computeSectorPercentsForRecommendations` and
   `pickUnderweightSectors` from
   [`src/lib/homepage/build-portfolio-recommendations.ts`](../../src/lib/homepage/build-portfolio-recommendations.ts).
-  The overexposure threshold is `REC_THRESHOLDS.topSectorPct`, shared with the home
-  recommendations so both surfaces agree on what "overexposed" means.
+  The overexposure threshold is `REC_THRESHOLDS.topSectorPct` (25%, same healthy
+  ceiling as Portfolio Score), shared with home recommendations so those surfaces
+  agree on what "overexposed" means.
 - [`criteria.ts`](../../src/lib/screening/criteria.ts) — canonical registry of the nine
   methodology criteria. Reports persist numeric ids; the UI always resolves them to a
   name plus what the criterion measures. `macroContext` is informative, which is why

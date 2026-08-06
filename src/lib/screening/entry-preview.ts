@@ -21,7 +21,7 @@ export const PREVIEW_OVEREXPOSED_SECTORS: SectorPercent[] = [
   { label: "Utilities", percent: 2.6 },
 ];
 
-/** No sector ≥ 35% — balanced path with exploration as primary CTA. */
+/** No sector ≥ topSectorPct — balanced path with exploration as primary CTA. */
 export const PREVIEW_BALANCED_SECTORS: SectorPercent[] = [
   { label: "Technology", percent: 22.0 },
   { label: "Healthcare", percent: 18.4 },

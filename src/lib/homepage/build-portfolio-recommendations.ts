@@ -39,7 +39,11 @@ export interface BuildRecommendationsInput {
 export const REC_THRESHOLDS = {
   minDistinctSectors: 5,
   hhiMax: 0.22,
-  topSectorPct: 35,
+  /**
+   * Sector weight that counts as overexposed. Aligned with Portfolio Score’s
+   * healthy 20–25% sector ceiling and AI diversification guidance (no bucket >25%).
+   */
+  topSectorPct: 25,
   /** High missing classification is itself a diversification gap. */
   unclassifiedMaxPct: 15,
   singleHoldingPct: 15,

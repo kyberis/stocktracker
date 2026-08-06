@@ -46,6 +46,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "fix",
+        text: "Sector overexposure for screening and home recommendations now triggers at 25% (was 35%), matching Portfolio Score’s healthy sector ceiling — e.g. Technology at ~30% is treated as overexposed.",
+        translations: {
+          es: "La sobreexposición sectorial en cribado y recomendaciones del home se dispara al 25% (antes 35%), alineada con el techo sano del Portfolio Score — p. ej. Technology al ~30% se trata como sobreexpuesto.",
+        },
+      },
+      {
         type: "improvement",
         text: "The report shows methodology criteria by name with what each one measures and a score counter, instead of numbered steps that meant nothing to the reader.",
         translations: {
