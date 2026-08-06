@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-283 routes.
+286 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -250,6 +250,9 @@
 | `/api/reset-portfolio` | POST | [`src/app/api/reset-portfolio/route.ts`](../../src/app/api/reset-portfolio/route.ts) |
 | `/api/satisfaction` | GET, POST, PUT | [`src/app/api/satisfaction/route.ts`](../../src/app/api/satisfaction/route.ts) |
 | `/api/screener` | GET | [`src/app/api/screener/route.ts`](../../src/app/api/screener/route.ts) |
+| `/api/screening/dev/outputs` | GET | [`src/app/api/screening/dev/outputs/route.ts`](../../src/app/api/screening/dev/outputs/route.ts) |
+| `/api/screening/entry-events` | POST | [`src/app/api/screening/entry-events/route.ts`](../../src/app/api/screening/entry-events/route.ts) |
+| `/api/screening/intake/chat` | POST | [`src/app/api/screening/intake/chat/route.ts`](../../src/app/api/screening/intake/chat/route.ts) |
 | `/api/screening/reports/[reportId]` | GET | [`src/app/api/screening/reports/[reportId]/route.ts`](../../src/app/api/screening/reports/[reportId]/route.ts) |
 | `/api/screening/runs` | POST | [`src/app/api/screening/runs/route.ts`](../../src/app/api/screening/runs/route.ts) |
 | `/api/screening/runs/[runId]` | GET | [`src/app/api/screening/runs/[runId]/route.ts`](../../src/app/api/screening/runs/[runId]/route.ts) |

@@ -24,7 +24,7 @@ import {
   postScreeningEntryEvent,
 } from "@/lib/screening/track-entry";
 import { useTrack } from "@/lib/use-track";
-import { MockNotice, ScreeningDisclaimer } from "./ScreeningNotices";
+import { ScreeningDisclaimer } from "./ScreeningNotices";
 import { useScreeningCopy } from "./use-screening-copy";
 
 const OVEREXPOSURE_PCT = REC_THRESHOLDS.topSectorPct;
@@ -356,8 +356,6 @@ export function ExposureEntry() {
       </header>
 
       <ScenarioSwitcher mode={previewMode} onChange={setPreviewMode} entry={copy.entry} />
-
-      <MockNotice className="mt-4" />
 
       {waitingOnLive ? (
         <div

@@ -63,7 +63,7 @@ describe("POST /api/screening/entry-events", () => {
 
   it("rejects unknown events", async () => {
     mockedAccess.mockResolvedValue({
-      session: { userId: "u1" },
+      session: { userId: "u1", role: "user" },
       error: null,
     });
 
@@ -81,7 +81,7 @@ describe("POST /api/screening/entry-events", () => {
 
   it("persists allow-listed events and bumps metrics", async () => {
     mockedAccess.mockResolvedValue({
-      session: { userId: "u1" },
+      session: { userId: "u1", role: "user" },
       error: null,
     });
 

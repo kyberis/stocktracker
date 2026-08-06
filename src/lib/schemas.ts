@@ -518,6 +518,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "tool_simulator_enabled",
   "tool_planning_enabled",
   "investment_screening_enabled",
+  "screening_dev_lab_enabled",
 ]);
 
 export const featureFlagSchema = z.object({

@@ -17,6 +17,44 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.90",
+    date: "2026-08-06",
+    title: "Screening Intake agent (real LLM) with Dev log",
+    titleTranslations: {
+      es: "Agente Intake de cribado (LLM real) con log de dev",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The screening intake chat at /screening/intake now runs a real Intake agent through the AI Gateway: free-text input, sanity checks on impossible ranges, and a merged brief bubble that reflects what the agent actually parsed instead of a scripted patch.",
+        translations: {
+          es: "El chat de intake de cribado en /screening/intake ahora usa un agente Intake real vía el AI Gateway: entrada libre, control de rangos imposibles y un brief que refleja lo que el agente ha entendido, no un patch guionizado.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Every launched screening now persists the brief in screening_runs (mocked_pipeline=1) and every Intake turn is stored in screening_agent_outputs for audit and future replay.",
+        translations: {
+          es: "Cada cribado lanzado guarda el brief en screening_runs (mocked_pipeline=1) y cada turno del Intake se registra en screening_agent_outputs para auditoría y replay futuro.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Temporary Dev button on /screening/intake for admins, dev environments, or users with screening_dev_lab_enabled, showing the last 20 Intake agent outputs with latency and raw JSON.",
+        translations: {
+          es: "Botón Dev temporal en /screening/intake para admins, entornos de desarrollo o usuarios con screening_dev_lab_enabled, que muestra las últimas 20 salidas del agente Intake con latencia y JSON crudo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "The screening entry and intake screens no longer show the 'mock data' banner — those two screens work with real portfolio weights and a real agent; the banner stays on the run progress and report until the research pipeline is real too.",
+        translations: {
+          es: "La entrada y el intake del cribado dejan de mostrar el banner de 'datos de ejemplo': ambas pantallas ya usan datos reales; el banner sigue en la pantalla de progreso y en el informe hasta que la investigación también sea real.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.89",
     date: "2026-08-06",
     title: "Investment screening flow (beta, mock data)",

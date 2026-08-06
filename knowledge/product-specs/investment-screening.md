@@ -32,32 +32,48 @@ arrive stage by stage per
 
 ## 4. Data model
 
-**No tables yet.** Stage E0 stores nothing:
+**E1-thin persistence (migration 129):**
 
-- Run identity is encoded in the run id (`mock-<base36 createdAt>-<random>`), so
-  `GET` derives step progress from elapsed time.
-- The brief lives in component state and, for the run page, `sessionStorage`
-  (`trefolio-screening-brief-<runId>`). No screening criteria are persisted against
-  the account, so the feature adds no new personal data at rest.
+- `screening_runs` — one row per user launch attempt. Fields: `id`, `user_id`
+  (`ON DELETE CASCADE`), `status` (`draft | needs_clarification | rejected_infeasible | authorized | running | completed`),
+  `intent` (`rebalance | explore`), `brief_json` (the confirmed `ScreeningBrief`),
+  `mocked_pipeline` (1 while the research pipeline is fixture), `created_at`,
+  `updated_at`.
+- `screening_agent_outputs` — one row per agent turn (only `intake` for now).
+  Fields: `id`, `run_id` nullable (Intake turns happen before Launch), `user_id`,
+  `agent_kind`, `output_json` (raw + parsed agent envelope for the Dev log),
+  `latency_ms`, `created_at`.
 
-Planned tables (`screening_runs`, `screening_run_steps`, `screening_reports`) are
-specified in [`docs/HLD_INVESTMENT_SCREENING_AGENTS.md`](../../docs/HLD_INVESTMENT_SCREENING_AGENTS.md) §7.
+Run progress is still derived from the mock id (`mock-<base36 createdAt>-<random>`)
+because the research pipeline is not yet real; the persisted run rows are the
+audit trail. Session-scoped `sessionStorage` (`trefolio-screening-brief-<runId>`)
+is still written so the run page can echo the brief without an extra fetch.
+
+DAL: [`src/lib/db/screening.ts`](../../src/lib/db/screening.ts) —
+`createScreeningRun`, `updateScreeningRunStatus`, `getScreeningRun`,
+`insertScreeningAgentOutput`, `listScreeningAgentOutputsByUser`,
+`listScreeningAgentOutputsByRun`.
 
 Types: [`src/lib/screening/schemas.ts`](../../src/lib/screening/schemas.ts) — `ScreeningBrief`,
-`ScreeningRun`, `ScreeningReport`, `ScreeningCandidateCard`. These mirror HLD §5.3 so
-the agent pipeline can replace the fixture without changing the UI contract.
+`ScreeningRun`, `ScreeningReport`, `ScreeningCandidateCard`, plus
+`IntakeAgentOutput` and `IntakeChatRequest`. These mirror HLD §5.3 so
+the research pipeline can replace the fixture without changing the UI contract.
 
 ## 5. API surface
 
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
-| POST | `/api/screening/runs` | user + flag | — | Validates the brief with `screeningBriefSchema`, returns a run |
+| POST | `/api/screening/intake/chat` | user + flag | — | One Intake agent turn; returns `{ assistantText, agent, brief }` |
+| POST | `/api/screening/runs` | user + flag | — | Validates + persists the brief, returns a mock run |
 | GET | `/api/screening/runs/[runId]` | user + flag | — | Status, 8 steps, `progressPct`, `reportReady` |
 | GET | `/api/screening/reports/[reportId]?candidates=N` | user + flag | — | Report JSON; 409 while the run is not finished |
+| POST | `/api/screening/entry-events` | user + flag | — | Dual-write analytics for the entry funnel |
+| GET | `/api/screening/dev/outputs?limit=N` | user + flag + (admin OR dev-env OR `screening_dev_lab_enabled`) | — | Last N Intake outputs for the caller; powers the temporary Dev log button |
 
-All three go through [`requireScreeningAccess`](../../src/lib/screening/guard.ts):
+Regular routes go through [`requireScreeningAccess`](../../src/lib/screening/guard.ts):
 session required, then per-user flag. A disabled flag returns **404**, not 403, so
-the feature is not discoverable before launch.
+the feature is not discoverable before launch. The Dev outputs route adds
+`requireScreeningDevAccess` on top.
 
 ## 6. UI surface
 
@@ -90,7 +106,17 @@ the feature is not discoverable before launch.
 
 ## 8. External dependencies
 
-None. No provider calls, no LLM calls, no env vars in this stage.
+- **Vercel AI Gateway** — the Intake agent uses the same
+  `fetchGatewayChatCompletions` path Warren does. Model resolved via
+  `resolveAiModelForUserPlan("portfolio_chat", plan)`. Prompt lives in
+  [`src/lib/screening/prompts/intake.ts`](../../src/lib/screening/prompts/intake.ts).
+  Post-parse sanity limits in
+  [`src/lib/screening/rules/sanity-limits.ts`](../../src/lib/screening/rules/sanity-limits.ts)
+  reject nonsense ranges even if the model returns valid JSON. No market data
+  provider is called in this slice — feasibility count via FMP is deferred until
+  a stable `data/fmp-screening.ts` exists.
+- Every AI turn writes an `ai_logs` row (`source = "screening_intake"`) plus a
+  row in `screening_agent_outputs`.
 
 ## 9. Currency / FX / tax implications
 
@@ -130,8 +156,14 @@ Dual-write on the entry screen (`/screening`) and diversify discovery CTA:
 - **Admin:** Screening entry block in analytics (live vs fixture).
 
 Later funnel (intake): `screening_intake_ended_early` (`intent`, `filled`),
+`screening_intake_turn` (`intent`, `status`, `fromChip`),
+`screening_intake_rejected` (`intent`),
 `screening_run_created` (`intent`, `endedEarly`) — GA only today.
-API routes wrapped in `withMetrics`.
+API routes wrapped in `withMetrics`. Prometheus adds
+`screening_intake_turns_total{status,intent}`,
+`screening_intake_latency_ms{status}`, and
+`screening_runs_created_total{intent,mocked}` via
+[`src/lib/screening/metrics.ts`](../../src/lib/screening/metrics.ts).
 
 ## 13. Edge cases & gotchas
 
@@ -168,12 +200,19 @@ API routes wrapped in `withMetrics`.
 
 ## 16. Open questions / planned work
 
-- **E1** — real `screening_runs` / `screening_run_steps` tables plus a worker stub;
-  drop `mock-pipeline.ts` progress derivation.
-- **E2+** — one agent per stage behind the same endpoints.
-- Legal: when briefs start being persisted, the Privacy Policy needs a "screening
-  criteria" data category. Nothing to change while state stays client-side.
+- **E1** — `screening_runs` + `screening_agent_outputs` shipped (migration 129);
+  research pipeline is still fixture-driven (`mocked_pipeline=1`). Next: a worker
+  stub that consumes the run row and drops `mock-pipeline.ts` progress derivation.
+- **E2+** — one agent per stage behind the same endpoints; Intake is real, the
+  other five agents (Hard Data, IR, Web, Portfolio Context, QA) are still mocked.
+- Legal: briefs are now persisted (`brief_json`). Same OpenAI dependency as
+  Warren, already disclosed in Privacy Policy §5 — no new data category surfaces
+  outside trefolio. If the feature reaches GA, add a dedicated "screening
+  criteria" line to the Privacy Policy data table.
 - Discoverability beyond `/recommendations/diversify` (tools hub entry needs locale
   keys in all 35 files).
 - Report history (`GET /api/screening/reports`) and feedback endpoints from HLD §6.1
   are not built yet.
+- **Temporary:** the `Dev — agent log` floating button on `/screening/intake`
+  ships behind admin role / dev env / `screening_dev_lab_enabled`. Remove when
+  the Dev Lab at `/tools/screening/jobs/...` (E1 formal) lands.

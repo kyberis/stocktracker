@@ -164,6 +164,12 @@ const en = {
     earlyFilled:
       "Closed. I filled {n} criteria from your preset ({list}). You can review the brief before launching.",
     earlyNothingMissing: "Closed. You had already defined everything, so nothing was assumed.",
+    inputPlaceholder: "Write to the agent…",
+    sendLabel: "Send",
+    thinking: "Thinking…",
+    clarificationTitle: "The agent needs a bit more",
+    rejectedTitle: "That brief will not work as-is",
+    turnError: "The agent did not respond. Try again in a moment.",
     sourceLabels: {
       chat: "you",
       preset: "preset",
@@ -615,6 +621,12 @@ const es: ScreeningCopy = {
     earlyFilled:
       "Cerrado. Completé {n} criterios con tu preset ({list}). Puedes revisar el brief antes de lanzar.",
     earlyNothingMissing: "Cerrado. Ya tenías todo definido, así que no he supuesto nada.",
+    inputPlaceholder: "Escríbele al agente…",
+    sendLabel: "Enviar",
+    thinking: "Pensando…",
+    clarificationTitle: "El agente necesita un poco más",
+    rejectedTitle: "Ese brief no funcionará tal cual",
+    turnError: "El agente no respondió. Vuelve a intentarlo en un momento.",
     sourceLabels: {
       chat: "tú",
       preset: "preset",

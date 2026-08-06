@@ -59,6 +59,40 @@ export const screeningBriefSchema = z.object({
 });
 export type ScreeningBrief = z.infer<typeof screeningBriefSchema>;
 
+/** Intake agent turn output. Never trusted directly — always parsed with this. */
+export const INTAKE_AGENT_STATUSES = [
+  "ok",
+  "needs_clarification",
+  "rejected_infeasible",
+  "rejected_shape",
+] as const;
+export type IntakeAgentStatus = (typeof INTAKE_AGENT_STATUSES)[number];
+
+export const intakeAgentOutputSchema = z.object({
+  status: z.enum(INTAKE_AGENT_STATUSES),
+  assistantText: z.string().min(1).max(2000),
+  brief: screeningBriefSchema,
+  questions: z.array(z.string().min(1).max(300)).max(3).default([]),
+  warnings: z.array(z.string().min(1).max(300)).max(10).default([]),
+  inferredFields: z.array(z.string().min(1).max(64)).max(20).default([]),
+});
+export type IntakeAgentOutput = z.infer<typeof intakeAgentOutputSchema>;
+
+/** Body accepted by POST /api/screening/intake/chat. */
+export const intakeChatMessageSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string().min(1).max(4000),
+});
+export const intakeChatRequestSchema = z.object({
+  intent: z.enum(SCREENING_INTENTS),
+  locale: z.string().min(2).max(10).default("es"),
+  messages: z.array(intakeChatMessageSchema).min(1).max(40),
+  brief: screeningBriefSchema.partial().optional(),
+  suggestedInclude: z.array(z.string().min(1).max(64)).max(10).default([]),
+  suggestedExclude: z.array(z.string().min(1).max(64)).max(10).default([]),
+});
+export type IntakeChatRequest = z.infer<typeof intakeChatRequestSchema>;
+
 export const SCREENING_RUN_STATUSES = [
   "queued",
   "running",

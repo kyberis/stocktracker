@@ -165,3 +165,24 @@ export function toScreeningBrief(state: BriefState, locale: string): ScreeningBr
     locale,
   };
 }
+
+/**
+ * Rebuild the client `BriefState` from a server-authoritative `ScreeningBrief`.
+ * The Intake agent may explicitly return empty arrays for sector fields to
+ * mean "no preference" — we preserve that instead of collapsing back to null.
+ */
+export function fromScreeningBrief(brief: ScreeningBrief): BriefState {
+  const criteria: Record<string, BriefCriterion> = {};
+  for (const c of brief.criteria) {
+    criteria[c.key] = c;
+  }
+  return {
+    intent: brief.intent,
+    includeSectors: brief.includeSectors,
+    excludeSectors: brief.excludeSectors,
+    regions: brief.regions,
+    candidateCount: brief.candidateCount,
+    criteria,
+    endedEarly: brief.endedEarly,
+  };
+}

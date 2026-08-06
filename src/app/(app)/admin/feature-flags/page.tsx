@@ -90,6 +90,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "Screening flow at /screening: sector exposure entry, intake chat, brief, run progress, and HTML report. Stage E0 — the report comes from a typed fixture, no agents or market data yet. Off by default.",
     group: "Features",
   },
+  screening_dev_lab_enabled: {
+    label: "Screening Dev log",
+    description:
+      "Floating Dev button on /screening/intake showing raw Intake agent outputs (JSON + latency). Admins and dev-mode users always see it; this flag opens it for a specific non-admin user. Off by default.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

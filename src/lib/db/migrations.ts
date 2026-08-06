@@ -3732,6 +3732,52 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 129,
+    description: "Investment screening runs and per-agent output logs",
+    up: async (client: Client) => {
+      // screening_runs holds the brief the Intake agent produced and — for the
+      // mock pipeline slice — a flag so the runs list can filter out fixture
+      // rows before the research agents are real.
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS screening_runs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN (
+            'draft',
+            'needs_clarification',
+            'rejected_infeasible',
+            'authorized',
+            'running',
+            'completed'
+          )),
+          intent TEXT NOT NULL DEFAULT 'explore' CHECK(intent IN ('rebalance', 'explore')),
+          brief_json TEXT NOT NULL DEFAULT '',
+          mocked_pipeline INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_screening_runs_user_created
+          ON screening_runs(user_id, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS screening_agent_outputs (
+          id TEXT PRIMARY KEY,
+          run_id TEXT,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          agent_kind TEXT NOT NULL,
+          output_json TEXT NOT NULL DEFAULT '',
+          latency_ms INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_screening_outputs_user_created
+          ON screening_agent_outputs(user_id, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_screening_outputs_run
+          ON screening_agent_outputs(run_id, created_at DESC);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

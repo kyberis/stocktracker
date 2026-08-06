@@ -2,7 +2,7 @@
  * Screening observability (HLD §11). Entry-funnel counters ship with E0;
  * step histograms / QA counters land with later agent stages.
  */
-import { Counter } from "prom-client";
+import { Counter, Histogram } from "prom-client";
 import { getMetricsRegistry, getOrCreateMetric } from "@/lib/metrics";
 
 export const screeningEntryViewsTotal = getOrCreateMetric(
@@ -48,6 +48,73 @@ export const screeningEntryBackHomeTotal = getOrCreateMetric(
       registers: [getMetricsRegistry()],
     }),
 );
+
+export const screeningIntakeTurnsTotal = getOrCreateMetric(
+  "screening_intake_turns_total",
+  () =>
+    new Counter({
+      name: "screening_intake_turns_total",
+      help: "Investment screening intake agent turns by outcome",
+      labelNames: ["status", "intent"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningIntakeLatencyMs = getOrCreateMetric(
+  "screening_intake_latency_ms",
+  () =>
+    new Histogram({
+      name: "screening_intake_latency_ms",
+      help: "Latency of a screening intake agent turn in milliseconds",
+      labelNames: ["status"] as const,
+      buckets: [250, 500, 1000, 2000, 4000, 8000, 16000, 30000, 60000],
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningRunsCreatedTotal = getOrCreateMetric(
+  "screening_runs_created_total",
+  () =>
+    new Counter({
+      name: "screening_runs_created_total",
+      help: "Screening runs persisted (mock or real pipeline)",
+      labelNames: ["intent", "mocked"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export function recordScreeningIntakeTurn(
+  status: string,
+  intent: string,
+  latencyMs: number,
+): void {
+  try {
+    screeningIntakeTurnsTotal.inc({
+      status: status || "unknown",
+      intent: intent || "unknown",
+    });
+    screeningIntakeLatencyMs.observe({ status: status || "unknown" }, Math.max(0, latencyMs));
+  } catch (err) {
+    console.error(
+      "Failed to record screening intake metric:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
+
+export function recordScreeningRunCreated(intent: string, mocked: boolean): void {
+  try {
+    screeningRunsCreatedTotal.inc({
+      intent: intent || "unknown",
+      mocked: mocked ? "true" : "false",
+    });
+  } catch (err) {
+    console.error(
+      "Failed to record screening run metric:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
 
 function labelOrUnknown(value: string | undefined, fallback = "unknown"): string {
   return value && value.length > 0 ? value : fallback;

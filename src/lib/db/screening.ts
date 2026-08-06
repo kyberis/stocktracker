@@ -1,0 +1,210 @@
+import { randomUUID } from "crypto";
+import { ensureInitialized } from "./client";
+import { num, str } from "./helpers";
+
+/**
+ * Investment screening persistence (v129).
+ *
+ * Two tables:
+ *   - `screening_runs`      — one row per user launch attempt. Holds the brief
+ *                              the Intake agent produced. `mocked_pipeline=1`
+ *                              means the research pipeline that generated the
+ *                              report is still the fixture.
+ *   - `screening_agent_outputs` — one row per agent turn (Intake for now).
+ *                              `run_id` is nullable so we can log the Intake
+ *                              chat before the user has committed to a run.
+ *
+ * Everything here is user-scoped; there is no shared/global row.
+ */
+
+export type ScreeningRunStatus =
+  | "draft"
+  | "needs_clarification"
+  | "rejected_infeasible"
+  | "authorized"
+  | "running"
+  | "completed";
+
+export type ScreeningRunIntent = "rebalance" | "explore";
+
+export interface ScreeningRunRow {
+  id: string;
+  userId: string;
+  status: ScreeningRunStatus;
+  intent: ScreeningRunIntent;
+  briefJson: string;
+  mockedPipeline: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScreeningAgentOutputRow {
+  id: string;
+  runId: string | null;
+  userId: string;
+  agentKind: string;
+  outputJson: string;
+  latencyMs: number;
+  createdAt: string;
+}
+
+function readRun(row: Record<string, unknown>): ScreeningRunRow {
+  return {
+    id: str(row.id),
+    userId: str(row.user_id),
+    status: str(row.status) as ScreeningRunStatus,
+    intent: str(row.intent) as ScreeningRunIntent,
+    briefJson: str(row.brief_json),
+    mockedPipeline: num(row.mocked_pipeline) === 1,
+    createdAt: str(row.created_at),
+    updatedAt: str(row.updated_at),
+  };
+}
+
+function readOutput(row: Record<string, unknown>): ScreeningAgentOutputRow {
+  const rawRun = row.run_id;
+  return {
+    id: str(row.id),
+    runId: rawRun == null || rawRun === "" ? null : str(rawRun),
+    userId: str(row.user_id),
+    agentKind: str(row.agent_kind),
+    outputJson: str(row.output_json),
+    latencyMs: num(row.latency_ms),
+    createdAt: str(row.created_at),
+  };
+}
+
+export interface CreateScreeningRunParams {
+  userId: string;
+  status: ScreeningRunStatus;
+  intent: ScreeningRunIntent;
+  briefJson: string;
+  mockedPipeline: boolean;
+}
+
+export async function createScreeningRun(
+  params: CreateScreeningRunParams,
+): Promise<ScreeningRunRow> {
+  const client = await ensureInitialized();
+  const id = randomUUID();
+  const now = new Date().toISOString();
+  await client.execute({
+    sql: `INSERT INTO screening_runs
+            (id, user_id, status, intent, brief_json, mocked_pipeline, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      id,
+      params.userId,
+      params.status,
+      params.intent,
+      params.briefJson.slice(0, 50_000),
+      params.mockedPipeline ? 1 : 0,
+      now,
+      now,
+    ],
+  });
+  return {
+    id,
+    userId: params.userId,
+    status: params.status,
+    intent: params.intent,
+    briefJson: params.briefJson,
+    mockedPipeline: params.mockedPipeline,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+export async function updateScreeningRunStatus(
+  runId: string,
+  userId: string,
+  status: ScreeningRunStatus,
+): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `UPDATE screening_runs SET status = ?, updated_at = ? WHERE id = ? AND user_id = ?`,
+    args: [status, new Date().toISOString(), runId, userId],
+  });
+}
+
+export async function getScreeningRun(
+  runId: string,
+  userId: string,
+): Promise<ScreeningRunRow | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT * FROM screening_runs WHERE id = ? AND user_id = ?`,
+    args: [runId, userId],
+  });
+  const row = result.rows[0];
+  return row ? readRun(row as unknown as Record<string, unknown>) : null;
+}
+
+export interface InsertScreeningAgentOutputParams {
+  userId: string;
+  runId?: string | null;
+  agentKind: string;
+  outputJson: string;
+  latencyMs: number;
+}
+
+export async function insertScreeningAgentOutput(
+  params: InsertScreeningAgentOutputParams,
+): Promise<ScreeningAgentOutputRow> {
+  const client = await ensureInitialized();
+  const id = randomUUID();
+  const now = new Date().toISOString();
+  await client.execute({
+    sql: `INSERT INTO screening_agent_outputs
+            (id, run_id, user_id, agent_kind, output_json, latency_ms, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      id,
+      params.runId ?? null,
+      params.userId,
+      params.agentKind,
+      params.outputJson.slice(0, 50_000),
+      Math.max(0, Math.round(params.latencyMs)),
+      now,
+    ],
+  });
+  return {
+    id,
+    runId: params.runId ?? null,
+    userId: params.userId,
+    agentKind: params.agentKind,
+    outputJson: params.outputJson,
+    latencyMs: params.latencyMs,
+    createdAt: now,
+  };
+}
+
+export async function listScreeningAgentOutputsByUser(
+  userId: string,
+  limit = 20,
+): Promise<ScreeningAgentOutputRow[]> {
+  const client = await ensureInitialized();
+  const capped = Math.min(Math.max(1, limit), 100);
+  const result = await client.execute({
+    sql: `SELECT * FROM screening_agent_outputs
+          WHERE user_id = ?
+          ORDER BY created_at DESC
+          LIMIT ?`,
+    args: [userId, capped],
+  });
+  return result.rows.map((r) => readOutput(r as unknown as Record<string, unknown>));
+}
+
+export async function listScreeningAgentOutputsByRun(
+  runId: string,
+  userId: string,
+): Promise<ScreeningAgentOutputRow[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT * FROM screening_agent_outputs
+          WHERE run_id = ? AND user_id = ?
+          ORDER BY created_at ASC`,
+    args: [runId, userId],
+  });
+  return result.rows.map((r) => readOutput(r as unknown as Record<string, unknown>));
+}
