@@ -73,6 +73,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Corregidos los fallos de parseo del Intake de cribado (“no pude leer la respuesta”): se toleran JSON imperfectos del modelo, se reparan respuestas truncadas, más tokens y un solo mensaje de sistema.",
         },
       },
+      {
+        type: "fix",
+        text: "Screening Intake no longer requests JSON response_format from the AI Gateway — gpt-4.1-nano (Folio) rejects it and was returning “AI service did not respond correctly” on every turn.",
+        translations: {
+          es: "El Intake de cribado ya no pide response_format JSON al AI Gateway: gpt-4.1-nano (Folio) lo rechaza y devolvía “el servicio de IA no respondió correctamente” en cada turno.",
+        },
+      },
     ],
   },
   {

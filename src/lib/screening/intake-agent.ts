@@ -163,7 +163,9 @@ export async function runIntakeAgent(
         max_tokens: 2000,
         temperature: 0.2,
         messages,
-        response_format: { type: "json_object" },
+        // Do NOT send response_format:json_object — Folio uses gpt-4.1-nano which
+        // rejects it via the AI Gateway (same fix as company-analysis/narrative).
+        // Prompt asks for JSON; coerceIntakeAgentPayload extracts it.
       },
       { headers: opts.gatewayHeaders },
     );
