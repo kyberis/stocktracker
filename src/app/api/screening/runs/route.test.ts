@@ -26,8 +26,9 @@ vi.mock("@/lib/screening/metrics", () => ({
   recordScreeningRunCreated: vi.fn(),
 }));
 
-vi.mock("@/lib/screening/orchestrator/kick-worker", () => ({
-  kickScreeningWorker: vi.fn().mockResolvedValue({ ok: true }),
+vi.mock("@/lib/screening/orchestrator/drain-run", () => ({
+  drainScreeningRun: vi.fn().mockResolvedValue({ processed: 1, moreWork: false }),
+  continueScreeningRunInBackground: vi.fn(),
 }));
 
 vi.mock("@/lib/http/request-public-origin", () => ({
@@ -41,7 +42,10 @@ import {
   insertSteps,
   linkPendingAgentOutputToRun,
 } from "@/lib/db";
-import { kickScreeningWorker } from "@/lib/screening/orchestrator/kick-worker";
+import {
+  continueScreeningRunInBackground,
+  drainScreeningRun,
+} from "@/lib/screening/orchestrator/drain-run";
 
 const validBrief = {
   intent: "explore",
@@ -104,7 +108,7 @@ describe("POST /api/screening/runs", () => {
     expect(body.run.runId).toMatch(/^mock-/);
     expect(body.run.mocked).toBe(true);
     expect(insertSteps).not.toHaveBeenCalled();
-    expect(kickScreeningWorker).not.toHaveBeenCalled();
+    expect(drainScreeningRun).not.toHaveBeenCalled();
   });
 
   it("creates real steps and fires the worker when the flag is on", async () => {
@@ -144,12 +148,43 @@ describe("POST /api/screening/runs", () => {
         }),
       ]),
     );
-    expect(kickScreeningWorker).toHaveBeenCalledWith(
-      expect.objectContaining({ runId: "real-run-1", mode: "await" }),
+    expect(drainScreeningRun).toHaveBeenCalledWith(
+      expect.objectContaining({ runId: "real-run-1" }),
     );
     expect(linkPendingAgentOutputToRun).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "user-1", agentKind: "intake", runId: "real-run-1" }),
     );
+  });
+
+  it("continues the run in the background when more work remains", async () => {
+    vi.mocked(isFeatureEnabledForUser).mockResolvedValue(true);
+    vi.mocked(createScreeningRun).mockResolvedValue({
+      id: "real-run-2",
+      userId: "user-1",
+      status: "authorized",
+      intent: "explore",
+      briefJson: JSON.stringify(validBrief),
+      mockedPipeline: false,
+      createdAt: "2026-08-07T00:00:00.000Z",
+      updatedAt: "2026-08-07T00:00:00.000Z",
+    });
+    vi.mocked(insertSteps).mockResolvedValue([]);
+    vi.mocked(linkPendingAgentOutputToRun).mockResolvedValue(1);
+    vi.mocked(drainScreeningRun).mockResolvedValueOnce({
+      processed: 1,
+      moreWork: true,
+    });
+
+    const { POST } = await import("./route");
+    const res = await POST(
+      new NextRequest("http://localhost/api/screening/runs", {
+        method: "POST",
+        body: JSON.stringify(validBrief),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    expect(res.status).toBe(201);
+    expect(continueScreeningRunInBackground).toHaveBeenCalledWith("real-run-2");
   });
 
   it("returns 422 when the brief violates sanity limits", async () => {

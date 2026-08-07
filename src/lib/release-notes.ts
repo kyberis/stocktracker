@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.94",
+    date: "2026-08-07",
+    title: "Screening starts in-process + Dev log on all screens",
+    titleTranslations: {
+      es: "Cribado arranca en proceso + log Dev en todas las pantallas",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Launching a screen now runs Hard Data in-process (no HTTP self-call to the worker), so agent steps stop getting stuck on “pending”. The temporary Dev agent-log button is available on every /screening page.",
+        translations: {
+          es: "Al lanzar un cribado, Hard Data corre en proceso (sin auto-llamada HTTP al worker), así que los agentes dejan de quedarse en “pendiente”. El botón temporal Dev del log de agentes está en todas las páginas de /screening.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.93",
     date: "2026-08-07",
     title: "Screening worker kick reliability",

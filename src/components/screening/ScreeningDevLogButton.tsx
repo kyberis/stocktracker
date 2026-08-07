@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 /**
- * Temporary Dev button (bottom-right) that opens a modal with the raw Intake
+ * Temporary Dev button (bottom-right) that opens a modal with raw screening
  * agent outputs for the current user. The endpoint itself gates access to
  * admins / dev env / `screening_dev_lab_enabled`, so we only need to fail
  * silently on 404 to hide the button for regular users.
@@ -109,7 +109,7 @@ export function ScreeningDevLogButton() {
                   id="screening-dev-log-title"
                   className="text-sm font-semibold text-[color:var(--foreground)]"
                 >
-                  Last 20 Intake outputs
+                  Last 20 agent outputs
                 </h2>
               </div>
               <div className="flex gap-2">
