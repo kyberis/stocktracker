@@ -12,6 +12,7 @@ vi.mock("@/lib/screening/data/fmp-fundamentals", () => ({
     dividendYield: 0.02,
     targetPrice: 120,
     netCash: false,
+    revenueGrowthPct: 8.5,
     description: "Test co",
     errors: [],
   })),

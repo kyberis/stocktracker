@@ -143,7 +143,13 @@ export function CandidateCard({
           ? "—"
           : `${price(card.targetPrice, card.currency)} (${pct(card.upsidePct)})`,
     },
-    { label: copy.report.metaFwdPe, value: mult(card.multiples.fwdPe) },
+    {
+      label:
+        card.multiples.fwdPe != null
+          ? copy.report.metaFwdPe
+          : copy.report.metaPe,
+      value: mult(card.multiples.fwdPe ?? card.multiples.ownHistPe),
+    },
     { label: copy.report.metaEvEbitda, value: mult(card.multiples.evEbitda) },
     { label: copy.report.metaNdEbitda, value: mult(card.multiples.ndEbitda) },
     { label: copy.report.metaDividend, value: yieldPct(card.flags.dividendYield) },

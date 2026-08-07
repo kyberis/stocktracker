@@ -9,12 +9,15 @@ import {
 } from "@/lib/screening/mock-pipeline";
 import {
   getScreeningRun,
+  insertScreeningAgentOutput,
   listScreeningAgentOutputsByRun,
   listStepsForRun,
 } from "@/lib/db";
+import { backfillHardDataOutputJson } from "@/lib/screening/data/enrich-candidates";
 import { composeScreeningReport } from "@/lib/screening/pipeline/build-report";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 /**
  * GET /api/screening/reports/[reportId] — typed report rendered as HTML by the UI.
@@ -76,7 +79,7 @@ export const GET = withMetrics(
         latestByKind.set(o.agentKind, o);
       }
     }
-    const hardDataRow = latestByKind.get("hard_data");
+    let hardDataRow = latestByKind.get("hard_data");
     const compilerRow = latestByKind.get("compiler");
     const irAggregateRow = latestByKind.get("aggregate_ir_business") ?? null;
     const webAggregateRow = latestByKind.get("aggregate_web_sentiment") ?? null;
@@ -87,6 +90,26 @@ export const GET = withMetrics(
         { error: "Report not ready", pendingAgentKinds: ["compiler"] },
         { status: 409 },
       );
+    }
+
+    // Older runs may have Hard Data enriched with outdated FMP field names
+    // (PE / EV null while ND/EBITDA was filled). Re-enrich at read time.
+    try {
+      const backfilledJson = await backfillHardDataOutputJson(
+        hardDataRow.outputJson,
+      );
+      if (backfilledJson) {
+        const persisted = await insertScreeningAgentOutput({
+          runId: row.id,
+          userId: session.userId,
+          agentKind: "hard_data",
+          outputJson: backfilledJson,
+          latencyMs: 0,
+        });
+        hardDataRow = persisted;
+      }
+    } catch (err) {
+      console.error("[screening/report] hard_data backfill failed", err);
     }
 
     const pending = [

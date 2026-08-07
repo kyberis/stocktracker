@@ -3,8 +3,45 @@ import {
   loadTrefolioSignalsForTickers,
   type TrefolioTickerSignals,
 } from "@/lib/screening/data/trefolio-signals";
-import type { HardDataCandidate } from "@/lib/screening/schemas";
+import {
+  hardDataOutputSchema,
+  type HardDataCandidate,
+} from "@/lib/screening/schemas";
 import { SCREENING_MAX_SCORE } from "@/lib/screening/criteria";
+
+/**
+ * True when most candidates lack PE / EV multiples — usually because they were
+ * enriched against outdated FMP field names. Report GET re-runs enrichment.
+ */
+export function hardDataNeedsFundamentalsBackfill(
+  candidates: HardDataCandidate[],
+): boolean {
+  if (candidates.length === 0) return false;
+  const sparse = candidates.filter(
+    (c) => c.ownHistPe == null && c.fwdPe == null && c.evEbitda == null,
+  );
+  return sparse.length >= Math.ceil(candidates.length / 2);
+}
+
+/**
+ * Re-enrich a persisted Hard Data `output_json` when multiples are sparse.
+ * Returns null when no backfill is needed or JSON is invalid.
+ */
+export async function backfillHardDataOutputJson(
+  outputJson: string,
+): Promise<string | null> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(outputJson);
+  } catch {
+    return null;
+  }
+  const hd = hardDataOutputSchema.safeParse(parsed);
+  if (!hd.success) return null;
+  if (!hardDataNeedsFundamentalsBackfill(hd.data.candidates)) return null;
+  const enriched = await enrichHardDataCandidates(hd.data.candidates);
+  return JSON.stringify({ ...hd.data, candidates: enriched });
+}
 
 /**
  * Enrich ranked Hard Data candidates with FMP multiples + trefolio MOAT /
@@ -52,9 +89,10 @@ function mergeCandidate(
     upsidePct = ((targetPrice - price) / price) * 100;
   }
 
+  const revYoy = sig?.revenueYoyPct ?? fund.revenueGrowthPct;
   const growthNote =
-    sig?.revenueYoyPct != null
-      ? `Rev YoY ${sig.revenueYoyPct >= 0 ? "+" : ""}${sig.revenueYoyPct.toFixed(1)}%`
+    revYoy != null
+      ? `Rev YoY ${revYoy >= 0 ? "+" : ""}${revYoy.toFixed(1)}%`
       : null;
 
   const valuationNote =
@@ -67,6 +105,7 @@ function mergeCandidate(
   const { score, stepsPassed, stepsFailed, verdict } = scoreCandidate({
     rankScore: c.rankScore,
     fwdPe: fund.fwdPe,
+    ownHistPe: fund.ownHistPe,
     ndEbitda: fund.ndEbitda,
     netCash: fund.netCash,
     moatScorePct: sig?.moatScorePct ?? null,
@@ -102,6 +141,7 @@ function mergeCandidate(
 function scoreCandidate(input: {
   rankScore: number;
   fwdPe: number | null;
+  ownHistPe: number | null;
   ndEbitda: number | null;
   netCash: boolean | null;
   moatScorePct: number | null;
@@ -117,9 +157,10 @@ function scoreCandidate(input: {
   const passed: number[] = [];
   const failed: number[] = [];
 
-  // 1 relativeValuation — prefer fwd PE under ~18 when known
-  if (input.fwdPe != null) {
-    if (input.fwdPe > 0 && input.fwdPe < 18) passed.push(1);
+  // 1 relativeValuation — prefer forward PE; fall back to TTM when FMP has no fwd
+  const pe = input.fwdPe ?? input.ownHistPe;
+  if (pe != null) {
+    if (pe > 0 && pe < 18) passed.push(1);
     else failed.push(1);
   }
 

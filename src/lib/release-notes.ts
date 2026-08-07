@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.101",
+    date: "2026-08-08",
+    title: "Screening: restore PE, EV/EBITDA and growth on reports",
+    titleTranslations: {
+      es: "Cribado: restaurar PER, EV/EBITDA y crecimiento en informes",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Screening report multiples map FMP’s current stable field names (TTM P/E, EV/EBITDA), pull revenue growth and price targets when available, and re-enrich older Hard Data rows so valuation/growth columns are no longer blank dashes.",
+        translations: {
+          es: "Los múltiplos del informe de cribado usan los nombres actuales de FMP stable (PER TTM, EV/EBITDA), obtienen crecimiento de ingresos y objetivos de precio cuando existen, y re-enriquecen filas Hard Data antiguas para que valoración/crecimiento dejen de ser guiones.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.100",
     date: "2026-08-08",
     title: "Screening: fix report load when IR one-liner is missing",
