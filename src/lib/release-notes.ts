@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.102",
+    date: "2026-08-08",
+    title: "Screening: stop stalling before Risk / Compiler",
+    titleTranslations: {
+      es: "Cribado: evitar bloqueo antes de Riesgo / Compiler",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "The screening worker now drains more steps inline and awaits the next worker hop instead of relying on waitUntil, so runs no longer stall with Risk still pending after Portfolio Context.",
+        translations: {
+          es: "El worker de cribado drena más pasos en la misma petición y espera el siguiente hop en lugar de depender de waitUntil, para que los runs no se queden con Riesgo pendiente tras Contexto de cartera.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.101",
     date: "2026-08-08",
     title: "Screening: restore PE, EV/EBITDA and growth on reports",

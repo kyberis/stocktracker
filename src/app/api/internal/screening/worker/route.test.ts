@@ -16,7 +16,7 @@ vi.mock("@/lib/screening/orchestrator/runner", () => ({
 }));
 
 vi.mock("@/lib/screening/orchestrator/kick-worker", () => ({
-  kickScreeningWorker: vi.fn(),
+  kickScreeningWorker: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
 describe("POST /api/internal/screening/worker", () => {
@@ -85,13 +85,13 @@ describe("POST /api/internal/screening/worker", () => {
       }),
     );
 
-    // Drains MAX_STEPS_PER_REQUEST (2) then deferred-kicks for the rest.
-    expect(processOneStep).toHaveBeenCalledTimes(2);
+    // Drains MAX_STEPS_PER_REQUEST (4) then awaited-kicks for the rest.
+    expect(processOneStep).toHaveBeenCalledTimes(4);
     expect(kickScreeningWorker).toHaveBeenCalledWith(
       expect.objectContaining({
         runId: "run-42",
         authorization: "Bearer test",
-        mode: "defer",
+        mode: "await",
       }),
     );
   });
