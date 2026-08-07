@@ -4,20 +4,27 @@ import {
   hardDataOutputSchema,
   compilerReportDraftSchema,
   aggregateIrBusinessOutputSchema,
+  aggregateWebSentimentOutputSchema,
+  portfolioContextOutputSchema,
+  riskOutputSchema,
   screeningBriefSchema,
   screeningReportSchema,
   type ScreeningReport,
   type HardDataOutput,
   type CompilerReportDraft,
   type AggregateIrBusinessOutput,
+  type AggregateWebSentimentOutput,
+  type PortfolioContextOutput,
+  type RiskOutput,
   type ScreeningBrief,
   type ScreeningCandidateCard,
   type IrBusinessOutput,
+  type WebSentimentOutput,
 } from "@/lib/screening/schemas";
 
 /**
- * Compose the ScreeningReport from Hard Data + Compiler (+ optional IR
- * aggregate) outputs the orchestrator persisted (HLD §5.3).
+ * Compose the ScreeningReport from Hard Data + Compiler (+ optional IR / Web /
+ * Portfolio Context / Risk) outputs the orchestrator persisted (HLD §5.3).
  */
 export interface ComposeReportInput {
   run: ScreeningRunRow;
@@ -25,6 +32,9 @@ export interface ComposeReportInput {
   compilerRow: ScreeningAgentOutputRow;
   /** Optional IR aggregate from Agent 2 (E4). */
   irAggregateRow?: ScreeningAgentOutputRow | null;
+  webAggregateRow?: ScreeningAgentOutputRow | null;
+  portfolioContextRow?: ScreeningAgentOutputRow | null;
+  riskRow?: ScreeningAgentOutputRow | null;
   /** Which agent kinds are still pending — surfaced as `partial=true` in UI. */
   pendingAgentKinds?: string[];
   /** How many candidates the caller asked for (defaults to all). */
@@ -74,6 +84,41 @@ function mapIrSources(
   return out.slice(0, 12);
 }
 
+function mapWebSources(
+  web: WebSentimentOutput,
+): ScreeningCandidateCard["sources"] {
+  const out: ScreeningCandidateCard["sources"] = [];
+  for (const signal of web.signals) {
+    for (const s of signal.sources) {
+      if (!s.url || !s.url.startsWith("http")) continue;
+      try {
+        out.push({
+          url: s.url,
+          asOf: s.asOf || new Date().toISOString().slice(0, 10),
+          field: "sentiment",
+          label: s.label ?? signal.kind,
+        });
+      } catch {
+        // skip
+      }
+    }
+  }
+  for (const s of web.insiderSummary.sources) {
+    if (!s.url || !s.url.startsWith("http")) continue;
+    try {
+      out.push({
+        url: s.url,
+        asOf: s.asOf || new Date().toISOString().slice(0, 10),
+        field: "insider",
+        label: s.label,
+      });
+    } catch {
+      // skip
+    }
+  }
+  return out.slice(0, 12);
+}
+
 export function composeScreeningReport(
   input: ComposeReportInput,
 ): ScreeningReport | null {
@@ -93,8 +138,6 @@ export function composeScreeningReport(
     draftParsed && draftParsed.success ? draftParsed.data : null;
 
   if (!hardData || !draft) return null;
-  // Empty Hard Data is a valid terminal outcome (brief too tight). Still compose
-  // a report so the UI can show the Compiler's empty message instead of a 500.
 
   let irAggregate: AggregateIrBusinessOutput | null = null;
   if (input.irAggregateRow) {
@@ -107,8 +150,51 @@ export function composeScreeningReport(
     if (irParsed && irParsed.success) irAggregate = irParsed.data;
   }
 
+  let webAggregate: AggregateWebSentimentOutput | null = null;
+  if (input.webAggregateRow) {
+    const webRaw = safeParseJson<Record<string, unknown>>(
+      input.webAggregateRow.outputJson,
+    );
+    const webParsed = webRaw
+      ? aggregateWebSentimentOutputSchema.safeParse(webRaw)
+      : null;
+    if (webParsed && webParsed.success) webAggregate = webParsed.data;
+  }
+
+  let portfolioContext: PortfolioContextOutput | null = null;
+  if (input.portfolioContextRow) {
+    const pcRaw = safeParseJson<Record<string, unknown>>(
+      input.portfolioContextRow.outputJson,
+    );
+    const pcParsed = pcRaw
+      ? portfolioContextOutputSchema.safeParse(pcRaw)
+      : null;
+    if (pcParsed && pcParsed.success) portfolioContext = pcParsed.data;
+  }
+
+  let risk: RiskOutput | null = null;
+  if (input.riskRow) {
+    const riskRaw = safeParseJson<Record<string, unknown>>(
+      input.riskRow.outputJson,
+    );
+    const riskParsed = riskRaw ? riskOutputSchema.safeParse(riskRaw) : null;
+    if (riskParsed && riskParsed.success) risk = riskParsed.data;
+  }
+
   const irByTicker = new Map(
     (irAggregate?.tickers ?? []).map((t) => [t.ticker.toUpperCase(), t]),
+  );
+  const webByTicker = new Map(
+    (webAggregate?.tickers ?? []).map((t) => [t.ticker.toUpperCase(), t]),
+  );
+  const pcByTicker = new Map(
+    (portfolioContext?.perCandidate ?? []).map((c) => [
+      c.ticker.toUpperCase(),
+      c,
+    ]),
+  );
+  const riskByTicker = new Map(
+    (risk?.perCandidate ?? []).map((c) => [c.ticker.toUpperCase(), c]),
   );
 
   const requestedCount =
@@ -126,7 +212,21 @@ export function composeScreeningReport(
   const cards: ScreeningCandidateCard[] = candidates.map((c) => {
     const bullet = bulletByTicker.get(c.ticker.toUpperCase());
     const ir = irByTicker.get(c.ticker.toUpperCase());
+    const web = webByTicker.get(c.ticker.toUpperCase());
+    const pc = pcByTicker.get(c.ticker.toUpperCase());
+    const riskRow = riskByTicker.get(c.ticker.toUpperCase());
     const primaryCatalyst = ir?.catalysts[0] ?? null;
+    const sources = [
+      ...(ir ? mapIrSources(ir) : []),
+      ...(web ? mapWebSources(web) : []),
+    ].slice(0, 12);
+
+    const risks = [
+      ...(ir?.gaps ?? []),
+      ...(riskRow?.riskFlags ?? []),
+      ...(web?.gaps ?? []),
+    ].slice(0, 8);
+
     return {
       ticker: c.ticker,
       companyName: c.name || c.ticker,
@@ -181,10 +281,32 @@ export function composeScreeningReport(
         moatScore: null,
       },
       thesis: bullet?.bullet ?? c.rankReason,
-      risks: ir?.gaps ?? [],
+      risks,
       priorityReason: bullet?.headline ?? c.rankReason.slice(0, 120),
-      citedFields: ir ? ["businessOneLiner", "guidance"] : [],
-      sources: ir ? mapIrSources(ir) : [],
+      citedFields: [
+        ...(ir ? ["businessOneLiner", "guidance"] : []),
+        ...(web ? ["sentimentSummary"] : []),
+        ...(pc ? ["positionKind"] : []),
+        ...(riskRow ? ["suitability"] : []),
+      ],
+      sources,
+      positionKind: pc?.positionKind,
+      topUpTicker: pc?.topUpTicker ?? null,
+      illustrativeAllocationEur: pc?.illustrativeAllocationEur ?? null,
+      illustrativeAllocation: pc
+        ? `€${Math.round(pc.illustrativeAllocationEur.min)}–€${Math.round(pc.illustrativeAllocationEur.max)}`
+        : undefined,
+      sentimentSummary: web?.sentimentSummary,
+      webSignals: web?.signals.slice(0, 3).map((s) => ({
+        kind: s.kind,
+        claim: s.claim,
+        confirmation: s.confirmation,
+      })),
+      insiderBias: web?.insiderSummary.netBias,
+      riskFlags: riskRow?.riskFlags,
+      suitability: riskRow?.suitability ?? null,
+      illustrativeWeightPct: riskRow?.illustrativeWeightPct ?? null,
+      concentrationImpact: riskRow?.concentrationImpact ?? null,
     };
   });
 
@@ -199,17 +321,28 @@ export function composeScreeningReport(
 
   const locale = parsedBrief?.locale ?? draft.locale ?? "en";
   const hasIr = Boolean(irAggregate && irAggregate.tickers.length > 0);
-  const methodologyNote = locale.startsWith("es")
-    ? hasIr
-      ? "Cribado con datos de FMP filtrados por brief, ranking Hard Data + investigación IR por ticker, resumen del Compiler."
-      : "Cribado inicial con datos de FMP filtrados por brief, ranking por LLM. Los agentes de Web/Riesgo/QA llegan en próximas iteraciones."
-    : hasIr
-      ? "Screen from FMP data filtered by the brief, Hard Data ranking + per-ticker IR research, Compiler summary."
-      : "Initial screen from FMP data filtered by the brief, ranked by an LLM. Web/Risk/QA agents come in later iterations.";
+  const hasWeb = Boolean(webAggregate && webAggregate.tickers.length > 0);
+  const hasPc = Boolean(portfolioContext);
+  const hasRisk = Boolean(risk);
 
-  const defaultPending = hasIr
-    ? ["web_sentiment", "portfolio_context", "risk", "qa"]
-    : ["ir_business", "web_sentiment", "portfolio_context", "risk", "qa"];
+  const methodologyNote = locale.startsWith("es")
+    ? hasWeb || hasPc || hasRisk
+      ? "Cribado FMP + ranking Hard Data, IR y Web/Sentimiento por ticker, contexto de cartera y riesgo, resumen del Compiler."
+      : hasIr
+        ? "Cribado con datos de FMP filtrados por brief, ranking Hard Data + investigación IR por ticker, resumen del Compiler."
+        : "Cribado inicial con datos de FMP filtrados por brief, ranking por LLM. Los agentes de Web/Riesgo/QA llegan en próximas iteraciones."
+    : hasWeb || hasPc || hasRisk
+      ? "Screen from FMP data, Hard Data ranking, per-ticker IR + Web/Sentiment, portfolio fit and risk checks, Compiler summary."
+      : hasIr
+        ? "Screen from FMP data filtered by the brief, Hard Data ranking + per-ticker IR research, Compiler summary."
+        : "Initial screen from FMP data filtered by the brief, ranked by an LLM. Web/Risk/QA agents come in later iterations.";
+
+  const defaultPending: string[] = [];
+  if (!hasIr) defaultPending.push("ir_business");
+  if (!hasWeb) defaultPending.push("web_sentiment");
+  if (!hasPc) defaultPending.push("portfolio_context");
+  if (!hasRisk) defaultPending.push("risk");
+  defaultPending.push("qa");
 
   const pending =
     input.pendingAgentKinds && input.pendingAgentKinds.length > 0

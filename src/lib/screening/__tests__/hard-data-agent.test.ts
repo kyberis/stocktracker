@@ -10,10 +10,41 @@ vi.mock("@/lib/ai/gateway", () => ({
   resolveGatewayApiKey: mockResolveKey,
 }));
 
+const {
+  mockInsertSteps,
+  mockFindStep,
+  mockUpdateDependsOn,
+  mockIsFeatureEnabled,
+  mockFetchFmp,
+} = vi.hoisted(() => ({
+  mockInsertSteps: vi.fn(),
+  mockFindStep: vi.fn(),
+  mockUpdateDependsOn: vi.fn(),
+  mockIsFeatureEnabled: vi.fn(),
+  mockFetchFmp: vi.fn(),
+}));
+
 vi.mock("@/lib/db", () => ({
   insertAiLog: vi.fn().mockResolvedValue("log-1"),
   insertScreeningAgentOutput: vi.fn().mockResolvedValue({}),
+  insertSteps: mockInsertSteps,
+  findStepByAgentKind: mockFindStep,
+  updateStepDependsOn: mockUpdateDependsOn,
 }));
+
+vi.mock("@/lib/db/settings", () => ({
+  isFeatureEnabledForUser: mockIsFeatureEnabled,
+}));
+
+vi.mock("@/lib/screening/data/fmp-screening", async () => {
+  const actual = await vi.importActual<
+    typeof import("../data/fmp-screening")
+  >("../data/fmp-screening");
+  return {
+    ...actual,
+    fetchFmpScreener: mockFetchFmp,
+  };
+});
 
 const brief = {
   intent: "explore" as const,
@@ -230,5 +261,114 @@ describe("runHardDataAgent", () => {
     const res = await runHardDataAgent({ brief, universe });
     expect(res.output.candidates).toHaveLength(3);
     expect(res.errorMessage).toContain("gateway_400");
+  });
+});
+
+describe("runHardDataStep v2 fan-out", () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+    mockResolveKey.mockReset();
+    mockInsertSteps.mockReset();
+    mockFindStep.mockReset();
+    mockUpdateDependsOn.mockReset();
+    mockIsFeatureEnabled.mockReset();
+    mockFetchFmp.mockReset();
+    mockResolveKey.mockResolvedValue(null);
+    mockFetchFmp.mockResolvedValue({
+      candidates: universe,
+      errors: [],
+    });
+    mockInsertSteps.mockResolvedValue([]);
+    mockFindStep.mockResolvedValue({
+      id: "compiler-step-1",
+      status: "pending",
+    });
+    mockUpdateDependsOn.mockResolvedValue(undefined);
+  });
+
+  it("inserts IR + Web + PC + Risk and rewires compiler when v2 is on", async () => {
+    mockIsFeatureEnabled.mockImplementation(async (flag: string) => {
+      return (
+        flag === "screening_agents_v2_enabled" ||
+        flag === "screening_ir_agent_enabled"
+      );
+    });
+    const { runHardDataStep } = await import("../agents/hard-data");
+    const res = await runHardDataStep({
+      runId: "run-v2",
+      userId: "user-1",
+      briefJson: JSON.stringify(brief),
+      step: {
+        id: "hd-1",
+        runId: "run-v2",
+        agentKind: "hard_data",
+        ticker: null,
+        status: "running",
+        attempts: 1,
+        leaseOwner: null,
+        leaseExpiresAt: null,
+        dependsOn: [],
+        errorMessage: null,
+        startedAt: "2026-08-07T12:00:00.000Z",
+        completedAt: null,
+        createdAt: "2026-08-07T12:00:00.000Z",
+        updatedAt: "2026-08-07T12:00:00.000Z",
+      },
+    });
+    expect(res.status).toBe("ok");
+    expect(res.payload?.webFanout).toBeGreaterThan(0);
+    expect(res.payload?.irFanout).toBeGreaterThan(0);
+    const inserted = mockInsertSteps.mock.calls[0]?.[1] as Array<{
+      agentKind: string;
+      ticker?: string;
+      dependsOn?: string[];
+    }>;
+    const kinds = inserted.map((s) => s.agentKind);
+    expect(kinds).toContain("ir_business");
+    expect(kinds).toContain("web_sentiment");
+    expect(kinds).toContain("aggregate_ir_business");
+    expect(kinds).toContain("aggregate_web_sentiment");
+    expect(kinds).toContain("portfolio_context");
+    expect(kinds).toContain("risk");
+    expect(mockUpdateDependsOn).toHaveBeenCalled();
+    const compilerDeps = mockUpdateDependsOn.mock.calls[0]?.[1] as string[];
+    expect(compilerDeps).toHaveLength(1);
+  });
+
+  it("keeps E4 shape (IR only) when v2 is off and IR is on", async () => {
+    mockIsFeatureEnabled.mockImplementation(async (flag: string) => {
+      return flag === "screening_ir_agent_enabled";
+    });
+    const { runHardDataStep } = await import("../agents/hard-data");
+    const res = await runHardDataStep({
+      runId: "run-e4",
+      userId: "user-1",
+      briefJson: JSON.stringify(brief),
+      step: {
+        id: "hd-1",
+        runId: "run-e4",
+        agentKind: "hard_data",
+        ticker: null,
+        status: "running",
+        attempts: 1,
+        leaseOwner: null,
+        leaseExpiresAt: null,
+        dependsOn: [],
+        errorMessage: null,
+        startedAt: "2026-08-07T12:00:00.000Z",
+        completedAt: null,
+        createdAt: "2026-08-07T12:00:00.000Z",
+        updatedAt: "2026-08-07T12:00:00.000Z",
+      },
+    });
+    expect(res.status).toBe("ok");
+    expect(res.payload?.webFanout).toBe(0);
+    const inserted = mockInsertSteps.mock.calls[0]?.[1] as Array<{
+      agentKind: string;
+    }>;
+    const kinds = inserted.map((s) => s.agentKind);
+    expect(kinds).toContain("ir_business");
+    expect(kinds).not.toContain("web_sentiment");
+    expect(kinds).not.toContain("risk");
   });
 });

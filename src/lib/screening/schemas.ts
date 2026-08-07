@@ -45,6 +45,13 @@ export const briefCriterionSchema = z.object({
 });
 export type BriefCriterion = z.infer<typeof briefCriterionSchema>;
 
+export const SCREENING_RISK_PROFILES = [
+  "conservative",
+  "balanced",
+  "aggressive",
+] as const;
+export type ScreeningRiskProfile = (typeof SCREENING_RISK_PROFILES)[number];
+
 export const screeningBriefSchema = z.object({
   intent: z.enum(SCREENING_INTENTS),
   /** Sectors to look for. Empty = no sector preference. */
@@ -56,6 +63,11 @@ export const screeningBriefSchema = z.object({
   /** True when the user cut the chat short and presets filled the gaps. */
   endedEarly: z.boolean().default(false),
   locale: z.string().min(2).max(10).default("es"),
+  /**
+   * Risk / suitability profile for Agent 5. Null until the user answers
+   * (or early-exit fills "balanced").
+   */
+  riskProfile: z.enum(SCREENING_RISK_PROFILES).nullable().default(null),
 });
 export type ScreeningBrief = z.infer<typeof screeningBriefSchema>;
 
@@ -248,6 +260,33 @@ export const screeningCandidateCardSchema = z.object({
   sources: z.array(sourceRefSchema),
   illustrativeAllocation: z.string().optional(),
   positionKind: z.enum(["new_position", "top_up_existing"]).optional(),
+  /** Web & Sentiment (E5). */
+  sentimentSummary: z.string().max(500).optional(),
+  webSignals: z
+    .array(
+      z.object({
+        kind: z.enum(["tailwind", "headwind", "neutral", "noise"]),
+        claim: z.string().max(280),
+        confirmation: z.enum(["confirmed", "single_source_unconfirmed"]),
+      }),
+    )
+    .max(3)
+    .optional(),
+  insiderBias: z.enum(["buying", "selling", "mixed", "none"]).optional(),
+  /** Portfolio Context (E6). */
+  topUpTicker: z.string().max(20).nullable().optional(),
+  illustrativeAllocationEur: z
+    .object({
+      min: z.number().finite(),
+      max: z.number().finite(),
+    })
+    .nullable()
+    .optional(),
+  /** Risk & Suitability (E7). */
+  riskFlags: z.array(z.string().max(200)).max(8).optional(),
+  suitability: z.enum(["fit", "stretch", "poor_fit"]).nullable().optional(),
+  illustrativeWeightPct: z.number().finite().nullable().optional(),
+  concentrationImpact: z.string().max(400).nullable().optional(),
 });
 export type ScreeningCandidateCard = z.infer<typeof screeningCandidateCardSchema>;
 
@@ -376,3 +415,88 @@ export const aggregateIrBusinessOutputSchema = z.object({
 export type AggregateIrBusinessOutput = z.infer<
   typeof aggregateIrBusinessOutputSchema
 >;
+
+/* ── Web & Sentiment agent (HLD §4.5, Agent 3) ───────────────────────── */
+
+export const webSignalSchema = z.object({
+  kind: z.enum(["tailwind", "headwind", "neutral", "noise"]),
+  claim: z.string().min(1).max(280),
+  confirmation: z.enum(["confirmed", "single_source_unconfirmed"]),
+  sources: z.array(irSourceSchema).max(6).default([]),
+});
+export type WebSignal = z.infer<typeof webSignalSchema>;
+
+export const webInsiderSummarySchema = z.object({
+  netBias: z.enum(["buying", "selling", "mixed", "none"]),
+  notes: z.string().min(1).max(500),
+  sources: z.array(irSourceSchema).max(6).default([]),
+});
+export type WebInsiderSummary = z.infer<typeof webInsiderSummarySchema>;
+
+export const webSentimentOutputSchema = z.object({
+  ticker: z.string().min(1).max(20),
+  signals: z.array(webSignalSchema).max(12).default([]),
+  insiderSummary: webInsiderSummarySchema,
+  sentimentSummary: z.string().min(1).max(500),
+  gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
+});
+export type WebSentimentOutput = z.infer<typeof webSentimentOutputSchema>;
+
+export const aggregateWebSentimentOutputSchema = z.object({
+  tickers: z.array(webSentimentOutputSchema).max(15),
+  generatedAt: z.string().min(1),
+});
+export type AggregateWebSentimentOutput = z.infer<
+  typeof aggregateWebSentimentOutputSchema
+>;
+
+/* ── Portfolio Context agent (HLD §4.5, Agent 4) ─────────────────────── */
+
+export const portfolioSectorGapSchema = z.object({
+  sector: z.string().min(1).max(80),
+  currentPct: z.number().finite(),
+  targetPct: z.number().finite().nullable(),
+  gapPct: z.number().finite(),
+});
+export type PortfolioSectorGap = z.infer<typeof portfolioSectorGapSchema>;
+
+export const portfolioPerCandidateSchema = z.object({
+  ticker: z.string().min(1).max(20),
+  positionKind: z.enum(["new_position", "top_up_existing"]),
+  topUpTicker: z.string().max(20).nullable().default(null),
+  overlapNotes: z.string().max(400).default(""),
+  illustrativeAllocationEur: z.object({
+    min: z.number().finite().nonnegative(),
+    max: z.number().finite().nonnegative(),
+  }),
+  rationale: z.string().min(1).max(400),
+});
+export type PortfolioPerCandidate = z.infer<typeof portfolioPerCandidateSchema>;
+
+export const portfolioContextOutputSchema = z.object({
+  sectorGaps: z.array(portfolioSectorGapSchema).max(12).default([]),
+  perCandidate: z.array(portfolioPerCandidateSchema).max(10).default([]),
+  cashAvailableEur: z.number().finite().nonnegative().default(0),
+  gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
+});
+export type PortfolioContextOutput = z.infer<typeof portfolioContextOutputSchema>;
+
+/* ── Risk & Suitability agent (HLD §4.5, Agent 5) ────────────────────── */
+
+export const riskPerCandidateSchema = z.object({
+  ticker: z.string().min(1).max(20),
+  illustrativeWeightPct: z.number().finite().min(0).max(100),
+  concentrationImpact: z.string().min(1).max(400),
+  riskFlags: z.array(z.string().min(1).max(200)).max(8).default([]),
+  suitability: z.enum(["fit", "stretch", "poor_fit"]),
+  rationale: z.string().min(1).max(400),
+});
+export type RiskPerCandidate = z.infer<typeof riskPerCandidateSchema>;
+
+export const riskOutputSchema = z.object({
+  assumedProfile: z.boolean().default(false),
+  perCandidate: z.array(riskPerCandidateSchema).max(10).default([]),
+  portfolioLevelFlags: z.array(z.string().min(1).max(200)).max(10).default([]),
+  gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
+});
+export type RiskOutput = z.infer<typeof riskOutputSchema>;

@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.96",
+    date: "2026-08-07",
+    title: "Screening: Web, portfolio fit, and risk agents",
+    titleTranslations: {
+      es: "Cribado: agentes web, encaje de cartera y riesgo",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Investment Screening can run Web & Sentiment, Portfolio Context, and Risk agents (flag `screening_agents_v2_enabled`). Intake asks for a risk profile; report cards can show sentiment, fit, and suitability when those agents finish.",
+        translations: {
+          es: "El cribado de inversiones puede ejecutar los agentes Web y sentimiento, Contexto de cartera y Riesgo (flag `screening_agents_v2_enabled`). El intake pregunta el perfil de riesgo; las tarjetas pueden mostrar sentimiento, encaje y idoneidad cuando esos agentes terminan.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Web research uses FMP news/insiders plus optional Tavily search (ticker and company name only). Missing Tavily keys fall back to FMP-only evidence.",
+        translations: {
+          es: "La investigación web usa noticias e insiders de FMP más búsqueda opcional en Tavily (solo ticker y nombre). Sin clave de Tavily se usa solo evidencia FMP.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.95",
     date: "2026-08-07",
     title: "Screening: watch agents, then open the report",

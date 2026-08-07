@@ -37,6 +37,10 @@ export const IR_FANOUT_MAX = 4;
 /** Kind strings kept local to avoid circular imports with agent modules. */
 const IR_KIND = "ir_business";
 const AGGREGATE_IR_KIND = "aggregate_ir_business";
+const WEB_KIND = "web_sentiment";
+const AGGREGATE_WEB_KIND = "aggregate_web_sentiment";
+const PORTFOLIO_CONTEXT_KIND = "portfolio_context";
+const RISK_KIND = "risk";
 const COMPILER_KIND = "compiler";
 
 interface FmpUniverseSummary {
@@ -433,19 +437,30 @@ export const runHardDataStep: StepHandler = async (
     // best-effort
   }
 
-  // E4 fan-out: when IR agent is enabled, insert N ir_business steps + an
-  // aggregate barrier, then rewire the Compiler to wait on the aggregate.
+  // Fan-out after Hard Data:
+  //  - E4 (screening_ir_agent_enabled): N ir_business + aggregate_ir → compiler
+  //  - E5–E7 (screening_agents_v2_enabled): also N web_sentiment + aggregates +
+  //    portfolio_context + risk → compiler (v2 implies IR for coherence)
   let irFanout = 0;
+  let webFanout = 0;
   try {
-    const irEnabled = await isFeatureEnabledForUser(
-      "screening_ir_agent_enabled",
-      ctx.userId,
-    );
+    const [irFlag, v2Flag] = await Promise.all([
+      isFeatureEnabledForUser("screening_ir_agent_enabled", ctx.userId),
+      isFeatureEnabledForUser("screening_agents_v2_enabled", ctx.userId),
+    ]);
+    const v2Enabled = v2Flag;
+    const irEnabled = irFlag || v2Enabled;
     const candidates = runnerResult.output.candidates.slice(0, IR_FANOUT_MAX);
+
     if (irEnabled && candidates.length > 0) {
       const irStepIds = candidates.map(() => crypto.randomUUID());
-      const aggregateId = crypto.randomUUID();
-      await insertSteps(ctx.runId, [
+      const aggregateIrId = crypto.randomUUID();
+      const stepsToInsert: Array<{
+        id?: string;
+        agentKind: string;
+        ticker?: string;
+        dependsOn?: string[];
+      }> = [
         ...candidates.map((c, i) => ({
           id: irStepIds[i],
           agentKind: IR_KIND,
@@ -453,23 +468,59 @@ export const runHardDataStep: StepHandler = async (
           dependsOn: [] as string[],
         })),
         {
-          id: aggregateId,
+          id: aggregateIrId,
           agentKind: AGGREGATE_IR_KIND,
           dependsOn: irStepIds,
         },
-      ]);
+      ];
+
+      let compilerDependsOn = [aggregateIrId];
+
+      if (v2Enabled) {
+        const webStepIds = candidates.map(() => crypto.randomUUID());
+        const aggregateWebId = crypto.randomUUID();
+        const portfolioContextId = crypto.randomUUID();
+        const riskId = crypto.randomUUID();
+        stepsToInsert.push(
+          ...candidates.map((c, i) => ({
+            id: webStepIds[i],
+            agentKind: WEB_KIND,
+            ticker: c.ticker,
+            dependsOn: [] as string[],
+          })),
+          {
+            id: aggregateWebId,
+            agentKind: AGGREGATE_WEB_KIND,
+            dependsOn: webStepIds,
+          },
+          {
+            id: portfolioContextId,
+            agentKind: PORTFOLIO_CONTEXT_KIND,
+            dependsOn: [aggregateIrId, aggregateWebId],
+          },
+          {
+            id: riskId,
+            agentKind: RISK_KIND,
+            dependsOn: [portfolioContextId],
+          },
+        );
+        compilerDependsOn = [riskId];
+        webFanout = candidates.length;
+      }
+
+      await insertSteps(ctx.runId, stepsToInsert);
       const compilerStep = await findStepByAgentKind(
         ctx.runId,
         COMPILER_KIND,
       );
       if (compilerStep && compilerStep.status === "pending") {
-        await updateStepDependsOn(compilerStep.id, [aggregateId]);
+        await updateStepDependsOn(compilerStep.id, compilerDependsOn);
       }
       irFanout = candidates.length;
     }
   } catch (err) {
     console.error(
-      "[screening/hard-data] IR fan-out failed",
+      "[screening/hard-data] research fan-out failed",
       err instanceof Error ? err.message : err,
     );
   }
@@ -483,6 +534,7 @@ export const runHardDataStep: StepHandler = async (
       fmpErrors: screenerResult.errors.length,
       llmError: runnerResult.errorMessage,
       irFanout,
+      webFanout,
       totalDurationMs: totalDuration,
     },
   };

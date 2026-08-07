@@ -5,7 +5,12 @@ import {
   presetBrief,
   type BriefPatch,
 } from "./intake-script";
-import type { BriefCriterion, ScreeningBrief, ScreeningIntent } from "./schemas";
+import type {
+  BriefCriterion,
+  ScreeningBrief,
+  ScreeningIntent,
+  ScreeningRiskProfile,
+} from "./schemas";
 
 /**
  * The brief the user builds during intake. Kept in component state (and, for the
@@ -21,6 +26,8 @@ export type BriefState = {
   candidateCount: number | null;
   criteria: Record<string, BriefCriterion>;
   endedEarly: boolean;
+  /** null until answered; early exit defaults to "balanced". */
+  riskProfile: ScreeningRiskProfile | null;
 };
 
 export function emptyBrief(intent: ScreeningIntent): BriefState {
@@ -32,6 +39,7 @@ export function emptyBrief(intent: ScreeningIntent): BriefState {
     candidateCount: null,
     criteria: {},
     endedEarly: false,
+    riskProfile: null,
   };
 }
 
@@ -47,6 +55,7 @@ export function applyPatch(state: BriefState, patch: BriefPatch): BriefState {
     excludeSectors: patch.excludeSectors ?? state.excludeSectors,
     regions: patch.regions ?? state.regions,
     candidateCount: patch.candidateCount ?? state.candidateCount,
+    riskProfile: patch.riskProfile ?? state.riskProfile,
   };
 }
 
@@ -78,6 +87,7 @@ export function fillFromPreset(
     includeSectors: state.includeSectors,
     excludeSectors: state.excludeSectors,
     candidateCount: state.candidateCount,
+    riskProfile: state.riskProfile,
   };
 
   if (next.includeSectors === null) {
@@ -92,6 +102,10 @@ export function fillFromPreset(
     next.candidateCount = defaults.candidateCount;
     filledLabels.push(copy.intake.fields.candidateCount);
   }
+  if (next.riskProfile === null) {
+    next.riskProfile = "balanced";
+    filledLabels.push(copy.intake.fields.riskProfile);
+  }
 
   return { state: next, filledLabels };
 }
@@ -102,6 +116,12 @@ export type BriefRow = {
   condition: string;
   source: BriefCriterion["source"];
 };
+
+function riskProfileLabel(copy: ScreeningCopy, profile: ScreeningRiskProfile): string {
+  if (profile === "conservative") return copy.intake.values.riskConservative;
+  if (profile === "aggressive") return copy.intake.values.riskAggressive;
+  return copy.intake.values.riskBalanced;
+}
 
 /** Rows in a stable order so the brief always reads the same way. */
 export function buildBriefRows(state: BriefState, copy: ScreeningCopy): BriefRow[] {
@@ -149,6 +169,15 @@ export function buildBriefRows(state: BriefState, copy: ScreeningCopy): BriefRow
     });
   }
 
+  if (state.riskProfile !== null) {
+    rows.push({
+      key: "riskProfile",
+      label: copy.intake.fields.riskProfile,
+      condition: riskProfileLabel(copy, state.riskProfile),
+      source: state.endedEarly && state.riskProfile === "balanced" ? "preset" : "chat",
+    });
+  }
+
   return rows;
 }
 
@@ -163,6 +192,7 @@ export function toScreeningBrief(state: BriefState, locale: string): ScreeningBr
     criteria: Object.values(state.criteria),
     endedEarly: state.endedEarly,
     locale,
+    riskProfile: state.riskProfile,
   };
 }
 
@@ -184,5 +214,6 @@ export function fromScreeningBrief(brief: ScreeningBrief): BriefState {
     candidateCount: brief.candidateCount,
     criteria,
     endedEarly: brief.endedEarly,
+    riskProfile: brief.riskProfile ?? null,
   };
 }

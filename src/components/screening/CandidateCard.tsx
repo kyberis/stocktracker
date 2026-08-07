@@ -144,6 +144,93 @@ export function CandidateCard({ card }: { card: ScreeningCandidateCard }) {
 
       <BusinessBlock card={card} />
 
+      {(card.sentimentSummary ||
+        card.insiderBias ||
+        (card.webSignals && card.webSignals.length > 0)) && (
+        <div className="mt-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
+            {copy.report.sentimentTitle}
+          </p>
+          {card.sentimentSummary ? (
+            <p className="mt-1.5 text-[13.5px] leading-relaxed text-[color:var(--foreground)]">
+              {card.sentimentSummary}
+            </p>
+          ) : null}
+          {card.insiderBias ? (
+            <p className="mt-1.5 text-[12px] text-[color:var(--muted)]">
+              {card.insiderBias === "buying"
+                ? copy.report.insiderBuying
+                : card.insiderBias === "selling"
+                  ? copy.report.insiderSelling
+                  : card.insiderBias === "mixed"
+                    ? copy.report.insiderMixed
+                    : copy.report.insiderNone}
+            </p>
+          ) : null}
+          {card.webSignals && card.webSignals.length > 0 ? (
+            <ul className="mt-2 list-disc space-y-1 pl-4 text-[12.5px] text-[color:var(--muted)]">
+              {card.webSignals.map((s) => (
+                <li key={`${s.kind}-${s.claim.slice(0, 40)}`}>
+                  <span className="font-semibold text-[color:var(--foreground)]">
+                    {s.kind}
+                  </span>
+                  {s.confirmation === "single_source_unconfirmed" ? " · ?" : ""}
+                  : {s.claim}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      )}
+
+      {(card.positionKind ||
+        card.suitability ||
+        card.illustrativeAllocationEur ||
+        card.illustrativeWeightPct != null) && (
+        <div className="mt-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
+            {copy.report.fitRiskTitle}
+          </p>
+          <ul className="mt-1.5 list-none space-y-1 p-0 text-[13px] text-[color:var(--foreground)]">
+            {card.positionKind ? (
+              <li>
+                {card.positionKind === "top_up_existing"
+                  ? copy.report.positionTopUp
+                  : copy.report.positionNew}
+                {card.topUpTicker ? ` (${card.topUpTicker})` : ""}
+              </li>
+            ) : null}
+            {card.illustrativeAllocationEur ? (
+              <li className="text-[color:var(--muted)]">
+                {fill(copy.report.illustrativeAllocation, {
+                  min: Math.round(card.illustrativeAllocationEur.min),
+                  max: Math.round(card.illustrativeAllocationEur.max),
+                })}
+              </li>
+            ) : null}
+            {card.suitability ? (
+              <li>
+                {card.suitability === "fit"
+                  ? copy.report.suitabilityFit
+                  : card.suitability === "poor_fit"
+                    ? copy.report.suitabilityPoor
+                    : copy.report.suitabilityStretch}
+                {card.illustrativeWeightPct != null
+                  ? ` · ${fill(copy.report.illustrativeWeight, {
+                      pct: Math.round(card.illustrativeWeightPct),
+                    })}`
+                  : ""}
+              </li>
+            ) : null}
+            {card.concentrationImpact ? (
+              <li className="text-[12.5px] text-[color:var(--muted)]">
+                {card.concentrationImpact}
+              </li>
+            ) : null}
+          </ul>
+        </div>
+      )}
+
       <dl className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {meta.map((item) => (
           <div

@@ -50,7 +50,8 @@ export const MAX_STEP_ATTEMPTS = 3;
  * Cap concurrent running steps per run so fan-out (IR × N tickers) does not
  * stampede FMP / the AI gateway. Matches PRD §13 "3–5 steps a la vez por job".
  */
-export const MAX_RUNNING_PER_RUN = 3;
+/** Cap concurrent running steps per run so IR + Web fan-out can parallelise. */
+export const MAX_RUNNING_PER_RUN = 4;
 
 function readStep(row: Record<string, unknown>): ScreeningStepRow {
   let dependsOn: string[] = [];

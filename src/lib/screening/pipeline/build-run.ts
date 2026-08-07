@@ -78,16 +78,25 @@ function synthesiseFanOutStep(
   };
 }
 
+const CORE_PENDING_KINDS = new Set([
+  "hard_data",
+  "ir_business",
+  "web_sentiment",
+  "portfolio_context",
+  "risk",
+  "compiler",
+]);
+
 /**
  * Placeholder timeline shown before the first poll returns — Intake done,
- * Hard Data / IR / Compiler pending, later agents "coming soon".
+ * research agents + Compiler pending, QA "coming soon".
  */
 export function buildOptimisticRun(runId: string): ScreeningRun {
   const steps: ScreeningRunStep[] = UI_STEP_ORDER.map((kind): ScreeningRunStep => {
     if (kind === "intake") {
       return { agentKind: kind, status: "done", elapsedSeconds: 0 };
     }
-    if (kind === "hard_data" || kind === "ir_business" || kind === "compiler") {
+    if (CORE_PENDING_KINDS.has(kind)) {
       return { agentKind: kind, status: "pending", elapsedSeconds: null };
     }
     return { agentKind: kind, status: "skipped", elapsedSeconds: null };
@@ -119,7 +128,12 @@ export function buildRunResponse(
 ): ScreeningRun {
   const byKind = new Map<string, ScreeningStepRow[]>();
   for (const s of dbSteps) {
-    if (s.agentKind === "aggregate_ir_business") continue;
+    if (
+      s.agentKind === "aggregate_ir_business" ||
+      s.agentKind === "aggregate_web_sentiment"
+    ) {
+      continue;
+    }
     const list = byKind.get(s.agentKind) ?? [];
     list.push(s);
     byKind.set(s.agentKind, list);
@@ -133,24 +147,36 @@ export function buildRunResponse(
       hardDataStatus === "running" ||
       hardDataRows.length === 0);
 
+  // Once v2 fan-out inserts rows, those kinds appear in byKind. While Hard Data
+  // is still active (before fan-out), show research agents as pending.
+  const v2KindsPendingWhileHardData = [
+    "web_sentiment",
+    "portfolio_context",
+    "risk",
+  ] as const;
+
   const steps: ScreeningRunStep[] = UI_STEP_ORDER.map((kind): ScreeningRunStep => {
     const rows = byKind.get(kind) ?? [];
     if (rows.length === 0) {
       if (kind === "intake") {
         return { agentKind: kind, status: "done", elapsedSeconds: 0 };
       }
-      // Real pipeline: IR is expected after Hard Data (flag may still skip
-      // fan-out on empty). Show pending while Hard Data is in flight so the
-      // progress list is not a wall of "coming soon".
+      // Real pipeline: IR / Compiler expected after Hard Data.
       if (kind === "ir_business" && hardDataActive) {
         return { agentKind: kind, status: "pending", elapsedSeconds: null };
       }
       if (kind === "compiler" && hardDataActive) {
         return { agentKind: kind, status: "pending", elapsedSeconds: null };
       }
+      if (
+        hardDataActive &&
+        (v2KindsPendingWhileHardData as readonly string[]).includes(kind)
+      ) {
+        return { agentKind: kind, status: "pending", elapsedSeconds: null };
+      }
       return { agentKind: kind, status: "skipped", elapsedSeconds: null };
     }
-    if (kind === "ir_business" || rows.length > 1) {
+    if (kind === "ir_business" || kind === "web_sentiment" || rows.length > 1) {
       return synthesiseFanOutStep(kind, rows);
     }
     const dbStep = rows[0];

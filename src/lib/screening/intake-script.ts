@@ -1,6 +1,10 @@
 import type { ScreeningCopy } from "./copy";
 import { fill } from "./copy";
-import type { BriefCriterion, ScreeningIntent } from "./schemas";
+import type {
+  BriefCriterion,
+  ScreeningIntent,
+  ScreeningRiskProfile,
+} from "./schemas";
 
 /**
  * Scripted intake. No model runs here: the agent's questions, the options and
@@ -16,6 +20,7 @@ export type BriefPatch = {
   excludeSectors?: string[];
   regions?: string[];
   candidateCount?: number;
+  riskProfile?: ScreeningRiskProfile;
 };
 
 export type IntakeOption = {
@@ -383,6 +388,31 @@ export function buildIntakeScript(copy: ScreeningCopy, ctx: IntakeContext): Inta
           label: q.count.options.three.label,
           say: q.count.options.three.say,
           patch: { candidateCount: 3 },
+        },
+      ],
+    },
+    {
+      id: "riskProfile",
+      ask: q.riskProfile.ask,
+      explain: q.riskProfile.explain,
+      options: [
+        {
+          id: "conservative",
+          label: q.riskProfile.options.conservative.label,
+          say: q.riskProfile.options.conservative.say,
+          patch: { riskProfile: "conservative" },
+        },
+        {
+          id: "balanced",
+          label: q.riskProfile.options.balanced.label,
+          say: q.riskProfile.options.balanced.say,
+          patch: { riskProfile: "balanced" },
+        },
+        {
+          id: "aggressive",
+          label: q.riskProfile.options.aggressive.label,
+          say: q.riskProfile.options.aggressive.say,
+          patch: { riskProfile: "aggressive" },
         },
       ],
     },

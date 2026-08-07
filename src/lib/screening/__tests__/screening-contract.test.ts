@@ -119,9 +119,10 @@ describe("brief state", () => {
       candidateCount: 5,
     });
     expect(state.endedEarly).toBe(true);
-    // 13 preset criteria + include + exclude + candidate count.
-    expect(filledLabels).toHaveLength(BRIEF_CRITERION_ORDER.length + 3);
+    // 13 preset criteria + include + exclude + candidate count + risk profile.
+    expect(filledLabels).toHaveLength(BRIEF_CRITERION_ORDER.length + 4);
     expect(state.candidateCount).toBe(5);
+    expect(state.riskProfile).toBe("balanced");
   });
 
   it("does not overwrite answers the user already gave", () => {

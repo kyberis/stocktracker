@@ -2,11 +2,13 @@ import {
   BRIEF_SOURCES,
   INTAKE_AGENT_STATUSES,
   SCREENING_INTENTS,
+  SCREENING_RISK_PROFILES,
   intakeAgentOutputSchema,
   screeningBriefSchema,
   type IntakeAgentOutput,
   type ScreeningBrief,
   type ScreeningIntent,
+  type ScreeningRiskProfile,
 } from "./schemas";
 
 /**
@@ -18,6 +20,7 @@ import {
 const ALLOWED_SOURCES = new Set<string>(BRIEF_SOURCES);
 const ALLOWED_STATUSES = new Set<string>(INTAKE_AGENT_STATUSES);
 const ALLOWED_INTENTS = new Set<string>(SCREENING_INTENTS);
+const ALLOWED_RISK_PROFILES = new Set<string>(SCREENING_RISK_PROFILES);
 
 function asString(value: unknown, fallback = ""): string {
   if (typeof value === "string") return value;
@@ -127,6 +130,15 @@ export function coerceIntakeAgentPayload(
     ? (briefIntentRaw as ScreeningIntent)
     : opts.intent;
 
+  const riskRaw =
+    briefRaw.riskProfile === null
+      ? null
+      : asString(briefRaw.riskProfile, base.riskProfile ?? "");
+  const riskProfile: ScreeningRiskProfile | null =
+    riskRaw && ALLOWED_RISK_PROFILES.has(riskRaw)
+      ? (riskRaw as ScreeningRiskProfile)
+      : (base.riskProfile ?? null);
+
   const briefCandidate = {
     intent: briefIntent,
     includeSectors:
@@ -144,6 +156,7 @@ export function coerceIntakeAgentPayload(
       briefRaw.criteria != null ? coerceCriteria(briefRaw.criteria) : (base.criteria ?? []),
     endedEarly: Boolean(briefRaw.endedEarly ?? base.endedEarly ?? false),
     locale: opts.locale,
+    riskProfile,
   };
 
   const brief = screeningBriefSchema.parse(briefCandidate);

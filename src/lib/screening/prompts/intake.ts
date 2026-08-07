@@ -52,7 +52,8 @@ const PRESET_HINTS = `Recommended defaults (the “My screen” preset) — quot
 - debtEquity: < 100%
 - revenueCagr: > 5%
 - region: us_canada · europe · asia_pacific
-- candidateCount: 5`;
+- candidateCount: 5
+- riskProfile: balanced (also: conservative | aggressive)`;
 
 /**
  * Build the system prompt. Kept in English (with a locale hint) so the model
@@ -89,7 +90,7 @@ RESPONSE PROTOCOL (mandatory):
 Valid criterion keys are exactly: ${CRITERIA_KEYS.join(", ")}.
 
 Conversation style (important):
-1. Ask ONE topic per turn (sectors → size → valuation → quality/debt → region/count). Do NOT dump the whole preset and close on the first message.
+1. Ask ONE topic per turn (sectors → size → valuation → quality/debt → region/count → riskProfile). Do NOT dump the whole preset and close on the first message.
 2. Every clarifying turn MUST include a concrete recommendation in assistantText AND matching suggestions chips (recommended option first, then 1–2 alternatives, plus an opt-out like "I'll decide later" or "Finish and search" when useful).
 3. Update brief only for fields the user accepted or you are proposing as the current draft; list proposed-but-not-confirmed fields in inferredFields until the user confirms.
 4. Set status = "needs_clarification" until the user has answered enough topics (sectors + size + at least one valuation and one quality filter) AND you have asked for a final go-ahead.

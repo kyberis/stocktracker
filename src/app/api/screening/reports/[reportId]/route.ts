@@ -79,6 +79,9 @@ export const GET = withMetrics(
     const hardDataRow = latestByKind.get("hard_data");
     const compilerRow = latestByKind.get("compiler");
     const irAggregateRow = latestByKind.get("aggregate_ir_business") ?? null;
+    const webAggregateRow = latestByKind.get("aggregate_web_sentiment") ?? null;
+    const portfolioContextRow = latestByKind.get("portfolio_context") ?? null;
+    const riskRow = latestByKind.get("risk") ?? null;
     if (!hardDataRow || !compilerRow) {
       return NextResponse.json(
         { error: "Report not ready", pendingAgentKinds: ["compiler"] },
@@ -93,7 +96,8 @@ export const GET = withMetrics(
             (s) =>
               s.status !== "done" &&
               s.status !== "skipped" &&
-              s.agentKind !== "aggregate_ir_business",
+              s.agentKind !== "aggregate_ir_business" &&
+              s.agentKind !== "aggregate_web_sentiment",
           )
           .map((s) => s.agentKind),
       ),
@@ -104,6 +108,9 @@ export const GET = withMetrics(
       hardDataRow,
       compilerRow,
       irAggregateRow,
+      webAggregateRow,
+      portfolioContextRow,
+      riskRow,
       pendingAgentKinds: pending,
       candidateLimit,
     });

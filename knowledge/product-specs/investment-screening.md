@@ -18,7 +18,9 @@ arrive stage by stage per
   - `investment_screening_enabled` (off by default) — gates UI/API
   - `screening_pipeline_real_enabled` — Hard Data + Compiler on durable queue
   - `screening_ir_agent_enabled` — Agent 2 IR/Business fan-out (E4)
-- **Health:** yellow — Intake + Hard Data + IR (opt-in) + Compiler stub; Web/Risk/QA pending
+  - `screening_agents_v2_enabled` — umbrella for E5–E7 (Web & Sentiment, Portfolio Context, Risk); implies IR fan-out for DAG coherence
+  - `screening_dev_lab_enabled` — Dev agent-log button for non-admins
+- **Health:** yellow — Intake + Hard Data + IR (opt-in) + Web/PC/Risk (v2 opt-in) + Compiler; QA still pending
 - **Owning skill:** [`.cursor/skills/engineer-tools/SKILL.md`](../../.cursor/skills/engineer-tools/SKILL.md)
 
 ## 3. Entry points
@@ -58,9 +60,23 @@ DAL: [`src/lib/db/screening.ts`](../../src/lib/db/screening.ts) +
 [`src/lib/db/screening-steps.ts`](../../src/lib/db/screening-steps.ts).
 
 Types: [`src/lib/screening/schemas.ts`](../../src/lib/screening/schemas.ts) —
-`ScreeningBrief`, `ScreeningRun`, `ScreeningReport`, `ScreeningCandidateCard`,
-`HardDataOutput`, `IrBusinessOutput`, `AggregateIrBusinessOutput`,
-`IntakeAgentOutput`. Mirror HLD §5.3.
+`ScreeningBrief` (includes optional `riskProfile`), `ScreeningRun`,
+`ScreeningReport`, `ScreeningCandidateCard` (optional sentiment / fit / risk
+fields), `HardDataOutput`, `IrBusinessOutput`, `AggregateIrBusinessOutput`,
+`WebSentimentOutput`, `AggregateWebSentimentOutput`, `PortfolioContextOutput`,
+`RiskOutput`, `IntakeAgentOutput`. Mirror HLD §5.3.
+
+### Pipeline DAG
+
+When `screening_agents_v2_enabled` is on:
+
+`hard_data` → parallel `ir_business×N` + `web_sentiment×N` →
+`aggregate_ir_business` + `aggregate_web_sentiment` → `portfolio_context` →
+`risk` → `compiler`.
+
+When v2 is off but `screening_ir_agent_enabled` is on (E4):
+
+`hard_data` → `ir_business×N` → `aggregate_ir_business` → `compiler`.
 
 ## 5. API surface
 
@@ -110,17 +126,19 @@ the feature is not discoverable before launch. The Dev outputs route adds
 
 ## 8. External dependencies
 
-- **Vercel AI Gateway** — the Intake agent uses the same
-  `fetchGatewayChatCompletions` path Warren does. Model resolved via
-  `resolveAiModelForUserPlan("portfolio_chat", plan)`. Prompt lives in
-  [`src/lib/screening/prompts/intake.ts`](../../src/lib/screening/prompts/intake.ts).
+- **Vercel AI Gateway** — Intake + research agents use
+  `fetchGatewayChatCompletions`. Prompts live under
+  [`src/lib/screening/prompts/`](../../src/lib/screening/prompts/).
   Post-parse sanity limits in
   [`src/lib/screening/rules/sanity-limits.ts`](../../src/lib/screening/rules/sanity-limits.ts)
-  reject nonsense ranges even if the model returns valid JSON. No market data
-  provider is called in this slice — feasibility count via FMP is deferred until
-  a stable `data/fmp-screening.ts` exists.
-- Every AI turn writes an `ai_logs` row (`source = "screening_intake"`) plus a
-  row in `screening_agent_outputs`.
+  reject nonsense ranges even if the model returns valid JSON.
+- **FMP** — Hard Data universe + IR/Web evidence bundles (`FMP_API_KEY`).
+- **Tavily** — Web & Sentiment agent search (`TAVILY_API_KEY`). If unset, the
+  agent continues with FMP-only evidence (no hard failure). Queries send ticker
+  + company name only.
+- Every AI turn writes an `ai_logs` row (sources such as `screening_intake`,
+  `screening_hard_data`, `screening_web_sentiment`, …) plus a row in
+  `screening_agent_outputs`.
 
 ## 9. Currency / FX / tax implications
 
@@ -204,19 +222,15 @@ API routes wrapped in `withMetrics`. Prometheus adds
 
 ## 16. Open questions / planned work
 
-- **E1** — `screening_runs` + `screening_agent_outputs` shipped (migration 129);
-  research pipeline is still fixture-driven (`mocked_pipeline=1`). Next: a worker
-  stub that consumes the run row and drops `mock-pipeline.ts` progress derivation.
-- **E2+** — one agent per stage behind the same endpoints; Intake is real, the
-  other five agents (Hard Data, IR, Web, Portfolio Context, QA) are still mocked.
-- Legal: briefs are now persisted (`brief_json`). Same OpenAI dependency as
-  Warren, already disclosed in Privacy Policy §5 — no new data category surfaces
-  outside trefolio. If the feature reaches GA, add a dedicated "screening
-  criteria" line to the Privacy Policy data table.
+- **E5–E7 shipped (flag-gated)** — Web & Sentiment (FMP + Tavily), Portfolio
+  Context, and Risk & Suitability behind `screening_agents_v2_enabled`. Intake
+  collects optional `riskProfile` (defaults to balanced on early exit).
+- **QA agent** — still not implemented; Compiler remains the terminal research
+  stage for v2.
 - Discoverability beyond `/recommendations/diversify` (tools hub entry needs locale
   keys in all 35 files).
 - Report history (`GET /api/screening/reports`) and feedback endpoints from HLD §6.1
   are not built yet.
-- **Temporary:** the `Dev — agent log` floating button on `/screening/intake`
+- **Temporary:** the `Dev — agent log` floating button on `/screening`
   ships behind admin role / dev env / `screening_dev_lab_enabled`. Remove when
   the Dev Lab at `/tools/screening/jobs/...` (E1 formal) lands.

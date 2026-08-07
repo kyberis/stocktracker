@@ -58,6 +58,7 @@ function buildFallbackOutput(opts: RunIntakeAgentOptions): IntakeAgentOutput {
     criteria: opts.currentBrief?.criteria ?? [],
     endedEarly: opts.currentBrief?.endedEarly ?? false,
     locale: opts.locale,
+    riskProfile: opts.currentBrief?.riskProfile ?? null,
   });
   return intakeAgentOutputSchema.parse({
     status: "needs_clarification" satisfies IntakeAgentStatus,
@@ -207,6 +208,7 @@ export async function runIntakeAgent(
               "criteria",
               "endedEarly",
               "locale",
+              "riskProfile",
             ],
             properties: {
               intent: { type: "string", enum: ["rebalance", "explore"] },
@@ -235,6 +237,12 @@ export async function runIntakeAgent(
               },
               endedEarly: { type: "boolean" },
               locale: { type: "string" },
+              riskProfile: {
+                type: ["string", "null"],
+                enum: ["conservative", "balanced", "aggressive", null],
+                description:
+                  "Risk profile for sizing/concentration. null until the user answers.",
+              },
             },
           },
           questions: {
@@ -376,6 +384,7 @@ export async function runIntakeAgent(
       criteria: opts.currentBrief?.criteria ?? [],
       endedEarly: opts.currentBrief?.endedEarly ?? false,
       locale: opts.locale,
+      riskProfile: opts.currentBrief?.riskProfile ?? null,
     });
     const reason = errorMessage ?? parseError ?? "unknown";
     const userFacing = errorMessage?.startsWith("gateway_")

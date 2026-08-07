@@ -284,6 +284,161 @@ export function recordFmpIrRequest(
   }
 }
 
+/* ── Web / Portfolio Context / Risk (E5–E7) ───────────────────────────── */
+
+export const screeningTavilyRequestsTotal = getOrCreateMetric(
+  "screening_tavily_requests_total",
+  () =>
+    new Counter({
+      name: "screening_tavily_requests_total",
+      help: "Tavily search requests issued by the Web & Sentiment agent",
+      labelNames: ["status"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningWebTickerDurationMs = getOrCreateMetric(
+  "screening_web_ticker_duration_ms",
+  () =>
+    new Histogram({
+      name: "screening_web_ticker_duration_ms",
+      help: "Duration of one Web & Sentiment per-ticker step in milliseconds",
+      labelNames: ["outcome"] as const,
+      buckets: [500, 1000, 2000, 5000, 10_000, 20_000, 40_000, 60_000, 120_000],
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningWebUnconfirmedTotal = getOrCreateMetric(
+  "screening_web_unconfirmed_total",
+  () =>
+    new Counter({
+      name: "screening_web_unconfirmed_total",
+      help: "Web signals labeled single_source_unconfirmed",
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningWebSignalsTotal = getOrCreateMetric(
+  "screening_web_signals_total",
+  () =>
+    new Counter({
+      name: "screening_web_signals_total",
+      help: "Web signals by kind",
+      labelNames: ["kind"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningPortfolioContextDurationMs = getOrCreateMetric(
+  "screening_portfolio_context_duration_ms",
+  () =>
+    new Histogram({
+      name: "screening_portfolio_context_duration_ms",
+      help: "Duration of the Portfolio Context agent step",
+      buckets: [500, 1000, 2000, 5000, 10_000, 20_000, 40_000, 60_000],
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningTopupTotal = getOrCreateMetric(
+  "screening_topup_total",
+  () =>
+    new Counter({
+      name: "screening_topup_total",
+      help: "Portfolio Context positionKind counts",
+      labelNames: ["kind"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningRiskDurationMs = getOrCreateMetric(
+  "screening_risk_duration_ms",
+  () =>
+    new Histogram({
+      name: "screening_risk_duration_ms",
+      help: "Duration of the Risk & Suitability agent step",
+      buckets: [500, 1000, 2000, 5000, 10_000, 20_000, 40_000, 60_000],
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningRiskSuitabilityTotal = getOrCreateMetric(
+  "screening_risk_suitability_total",
+  () =>
+    new Counter({
+      name: "screening_risk_suitability_total",
+      help: "Risk agent suitability distribution",
+      labelNames: ["suitability"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export function recordTavilyScreeningRequest(
+  status: "ok" | "error" | "rate_limited" | "empty",
+): void {
+  try {
+    screeningTavilyRequestsTotal.inc({ status });
+  } catch {
+    // metrics are best-effort
+  }
+}
+
+export function recordWebTickerStep(
+  outcome: "ok" | "error" | "empty",
+  durationMs: number,
+  opts?: { unconfirmed?: number; signalsByKind?: Record<string, number> },
+): void {
+  try {
+    screeningWebTickerDurationMs.observe(
+      { outcome },
+      Math.max(0, durationMs),
+    );
+    if (opts?.unconfirmed && opts.unconfirmed > 0) {
+      screeningWebUnconfirmedTotal.inc(opts.unconfirmed);
+    }
+    if (opts?.signalsByKind) {
+      for (const [kind, count] of Object.entries(opts.signalsByKind)) {
+        if (count > 0) screeningWebSignalsTotal.inc({ kind }, count);
+      }
+    }
+  } catch {
+    // metrics are best-effort
+  }
+}
+
+export function recordPortfolioContextStep(
+  durationMs: number,
+  perCandidate: Array<{ positionKind: string }>,
+): void {
+  try {
+    screeningPortfolioContextDurationMs.observe(Math.max(0, durationMs));
+    for (const c of perCandidate) {
+      screeningTopupTotal.inc({
+        kind: c.positionKind === "top_up_existing" ? "top_up" : "new",
+      });
+    }
+  } catch {
+    // metrics are best-effort
+  }
+}
+
+export function recordRiskStep(
+  durationMs: number,
+  perCandidate: Array<{ suitability: string }>,
+): void {
+  try {
+    screeningRiskDurationMs.observe(Math.max(0, durationMs));
+    for (const c of perCandidate) {
+      screeningRiskSuitabilityTotal.inc({
+        suitability: c.suitability || "unknown",
+      });
+    }
+  } catch {
+    // metrics are best-effort
+  }
+}
+
 function labelOrUnknown(value: string | undefined, fallback = "unknown"): string {
   return value && value.length > 0 ? value : fallback;
 }

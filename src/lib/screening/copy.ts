@@ -212,6 +212,7 @@ const en = {
       includeSectors: "Sectors included",
       excludeSectors: "Sectors excluded",
       candidateCount: "Number of candidates",
+      riskProfile: "Risk profile",
     },
     values: {
       none: "—",
@@ -225,6 +226,9 @@ const en = {
       revenueCagrHigh: "> 10%",
       regionEurope: "Europe",
       regionUsEurope: "US/Canada · Europe",
+      riskConservative: "Conservative",
+      riskBalanced: "Balanced",
+      riskAggressive: "Aggressive",
     },
     questions: {
       sectors: {
@@ -384,7 +388,7 @@ const en = {
         },
       },
       count: {
-        ask: "Last thing: how many candidates do you want in the report?",
+        ask: "How many candidates do you want in the report?",
         explain: [
           {
             term: "Number of candidates",
@@ -394,6 +398,20 @@ const en = {
         options: {
           five: { label: "5 candidates", say: "Five." },
           three: { label: "3 candidates", say: "Three is enough." },
+        },
+      },
+      riskProfile: {
+        ask: "Last thing: which risk profile should guide sizing and concentration checks?",
+        explain: [
+          {
+            term: "Risk profile",
+            def: "Shapes illustrative allocation bands and concentration caps. Conservative keeps single-name weight low; aggressive allows larger illustrative sizes. This is research framing, not advice.",
+          },
+        ],
+        options: {
+          conservative: { label: "Conservative", say: "Conservative." },
+          balanced: { label: "Balanced", say: "Balanced." },
+          aggressive: { label: "Aggressive", say: "Aggressive." },
         },
       },
     },
@@ -486,6 +504,19 @@ const en = {
     loadError: "The report could not be loaded.",
     emptyCandidates:
       "No candidates matched this brief. Broaden sectors, market-cap, or valuation filters and try again.",
+    sentimentTitle: "Sentiment",
+    fitRiskTitle: "Fit & risk",
+    positionNew: "New position",
+    positionTopUp: "Top-up existing",
+    suitabilityFit: "Fit",
+    suitabilityStretch: "Stretch",
+    suitabilityPoor: "Poor fit",
+    illustrativeWeight: "Illustrative weight {pct}%",
+    illustrativeAllocation: "Illustrative allocation €{min}–€{max}",
+    insiderBuying: "Insiders: buying bias",
+    insiderSelling: "Insiders: selling bias",
+    insiderMixed: "Insiders: mixed",
+    insiderNone: "Insiders: no clear bias",
   },
 };
 
@@ -695,6 +726,7 @@ const es: ScreeningCopy = {
       includeSectors: "Sectores incluidos",
       excludeSectors: "Sectores excluidos",
       candidateCount: "Nº de candidatos",
+      riskProfile: "Perfil de riesgo",
     },
     values: {
       none: "—",
@@ -708,6 +740,9 @@ const es: ScreeningCopy = {
       revenueCagrHigh: "> 10%",
       regionEurope: "Europa",
       regionUsEurope: "EE.UU./Canadá · Europa",
+      riskConservative: "Conservador",
+      riskBalanced: "Equilibrado",
+      riskAggressive: "Agresivo",
     },
     questions: {
       sectors: {
@@ -864,7 +899,7 @@ const es: ScreeningCopy = {
         },
       },
       count: {
-        ask: "Último punto: ¿cuántos candidatos quieres en el informe?",
+        ask: "¿Cuántos candidatos quieres en el informe?",
         explain: [
           {
             term: "Nº de candidatos",
@@ -874,6 +909,20 @@ const es: ScreeningCopy = {
         options: {
           five: { label: "5 candidatos", say: "Cinco." },
           three: { label: "3 candidatos", say: "Tres me vale." },
+        },
+      },
+      riskProfile: {
+        ask: "Último punto: ¿qué perfil de riesgo debe guiar el sizing y la concentración?",
+        explain: [
+          {
+            term: "Perfil de riesgo",
+            def: "Define bandas ilustrativas de asignación y topes de concentración. Conservador mantiene poco peso por nombre; agresivo permite tamaños ilustrativos mayores. Es marco de investigación, no consejo.",
+          },
+        ],
+        options: {
+          conservative: { label: "Conservador", say: "Conservador." },
+          balanced: { label: "Equilibrado", say: "Equilibrado." },
+          aggressive: { label: "Agresivo", say: "Agresivo." },
         },
       },
     },
@@ -966,6 +1015,19 @@ const es: ScreeningCopy = {
     loadError: "No se pudo cargar el informe.",
     emptyCandidates:
       "Ningún candidato encajó con este brief. Amplía sectores, capitalización o valoración e inténtalo de nuevo.",
+    sentimentTitle: "Sentimiento",
+    fitRiskTitle: "Encaje y riesgo",
+    positionNew: "Posición nueva",
+    positionTopUp: "Ampliar existente",
+    suitabilityFit: "Encaja",
+    suitabilityStretch: "Estira",
+    suitabilityPoor: "Mal encaje",
+    illustrativeWeight: "Peso ilustrativo {pct}%",
+    illustrativeAllocation: "Asignación ilustrativa €{min}–€{max}",
+    insiderBuying: "Insiders: sesgo comprador",
+    insiderSelling: "Insiders: sesgo vendedor",
+    insiderMixed: "Insiders: mixto",
+    insiderNone: "Insiders: sin sesgo claro",
   },
 };
 

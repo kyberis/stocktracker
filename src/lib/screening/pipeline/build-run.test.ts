@@ -12,6 +12,9 @@ describe("buildOptimisticRun", () => {
     expect(byKind.intake).toBe("done");
     expect(byKind.hard_data).toBe("pending");
     expect(byKind.ir_business).toBe("pending");
+    expect(byKind.web_sentiment).toBe("pending");
+    expect(byKind.portfolio_context).toBe("pending");
+    expect(byKind.risk).toBe("pending");
     expect(byKind.compiler).toBe("pending");
     expect(byKind.qa).toBe("skipped");
   });
@@ -92,5 +95,36 @@ describe("buildRunResponse IR fan-out", () => {
     expect(ir!.subStepsDone).toBe(2);
     expect(run.reportReady).toBe(true);
     expect(run.status).toBe("completed");
+  });
+
+  it("shows web/portfolio/risk as pending while hard data is active", () => {
+    const steps = [
+      step({ id: "hd", agentKind: "hard_data", status: "running" }),
+      step({ id: "cmp", agentKind: "compiler", status: "pending" }),
+    ];
+    const run = buildRunResponse(runRow(), steps);
+    const byKind = Object.fromEntries(run.steps.map((s) => [s.agentKind, s.status]));
+    expect(byKind.web_sentiment).toBe("pending");
+    expect(byKind.portfolio_context).toBe("pending");
+    expect(byKind.risk).toBe("pending");
+  });
+
+  it("synthesises web_sentiment fan-out and hides aggregate barrier", () => {
+    const steps = [
+      step({ id: "hd", agentKind: "hard_data", status: "done" }),
+      step({ id: "w1", agentKind: "web_sentiment", ticker: "AAPL", status: "done" }),
+      step({ id: "w2", agentKind: "web_sentiment", ticker: "MSFT", status: "running" }),
+      step({ id: "aw", agentKind: "aggregate_web_sentiment", status: "pending" }),
+      step({ id: "pc", agentKind: "portfolio_context", status: "pending" }),
+      step({ id: "rk", agentKind: "risk", status: "pending" }),
+      step({ id: "cmp", agentKind: "compiler", status: "pending" }),
+    ];
+    const run = buildRunResponse(runRow(), steps);
+    const web = run.steps.find((s) => s.agentKind === "web_sentiment");
+    expect(web!.status).toBe("running");
+    expect(web!.subStepsTotal).toBe(2);
+    expect(run.steps.some((s) => s.agentKind === "aggregate_web_sentiment")).toBe(
+      false,
+    );
   });
 });

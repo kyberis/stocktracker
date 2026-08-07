@@ -102,6 +102,18 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "Switches POST /api/screening/runs from the mock pipeline to the event-driven orchestrator. Hard Data agent screens FMP live and Compiler agent writes the executive summary. Report skeleton is real; IR/Web/Risk/QA agents come later. Off by default — enable only for admins first.",
     group: "Features",
   },
+  screening_ir_agent_enabled: {
+    label: "Screening Agent 2: IR / Business",
+    description:
+      "After Hard Data, fan out one IR/Business step per ticker (FMP transcript/news/insider + LLM). Requires screening_pipeline_real_enabled. Off by default.",
+    group: "Features",
+  },
+  screening_agents_v2_enabled: {
+    label: "Screening agents E5–E7 (Web, Portfolio Context, Risk)",
+    description:
+      "Umbrella flag: after Hard Data, also fan out Web & Sentiment (FMP + Tavily), then Portfolio Context and Risk & Suitability before the Compiler. Implies IR fan-out for pipeline coherence. Requires screening_pipeline_real_enabled. Off by default.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

@@ -16,18 +16,27 @@ import {
 import { buildCompilerPrompt } from "@/lib/screening/prompts/compiler";
 import {
   aggregateIrBusinessOutputSchema,
+  aggregateWebSentimentOutputSchema,
   compilerReportDraftSchema,
   hardDataOutputSchema,
+  portfolioContextOutputSchema,
+  riskOutputSchema,
   screeningBriefSchema,
   type AggregateIrBusinessOutput,
+  type AggregateWebSentimentOutput,
   type CompilerBullet,
   type CompilerReportDraft,
   type HardDataOutput,
+  type PortfolioContextOutput,
+  type RiskOutput,
   type ScreeningBrief,
 } from "@/lib/screening/schemas";
 export const COMPILER_AGENT_KIND = "compiler";
 export const COMPILER_MODEL = "openai/gpt-4o-mini";
 const AGGREGATE_IR_KIND = "aggregate_ir_business";
+const AGGREGATE_WEB_KIND = "aggregate_web_sentiment";
+const PORTFOLIO_CONTEXT_KIND = "portfolio_context";
+const RISK_KIND = "risk";
 
 const DEFAULT_DISCLAIMER =
   "This is a research aid, not investment advice. All investments carry risk.";
@@ -55,6 +64,33 @@ function parseHardData(json: string): HardDataOutput | null {
 function parseIrAggregate(json: string): AggregateIrBusinessOutput | null {
   try {
     const res = aggregateIrBusinessOutputSchema.safeParse(JSON.parse(json));
+    return res.success ? res.data : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseWebAggregate(json: string): AggregateWebSentimentOutput | null {
+  try {
+    const res = aggregateWebSentimentOutputSchema.safeParse(JSON.parse(json));
+    return res.success ? res.data : null;
+  } catch {
+    return null;
+  }
+}
+
+function parsePortfolioContext(json: string): PortfolioContextOutput | null {
+  try {
+    const res = portfolioContextOutputSchema.safeParse(JSON.parse(json));
+    return res.success ? res.data : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseRisk(json: string): RiskOutput | null {
+  try {
+    const res = riskOutputSchema.safeParse(JSON.parse(json));
     return res.success ? res.data : null;
   } catch {
     return null;
@@ -117,6 +153,9 @@ export interface RunCompilerAgentOptions {
   brief: ScreeningBrief;
   hardData: HardDataOutput;
   irAggregate?: AggregateIrBusinessOutput | null;
+  webAggregate?: AggregateWebSentimentOutput | null;
+  portfolioContext?: PortfolioContextOutput | null;
+  risk?: RiskOutput | null;
   gatewayHeaders?: Headers;
 }
 
@@ -163,6 +202,9 @@ export async function runCompilerAgent(
     brief: opts.brief,
     hardData: opts.hardData,
     irAggregate: opts.irAggregate ?? null,
+    webAggregate: opts.webAggregate ?? null,
+    portfolioContext: opts.portfolioContext ?? null,
+    risk: opts.risk ?? null,
     locale: opts.brief.locale,
   });
 
@@ -230,11 +272,44 @@ export async function runCompilerAgent(
         })}`
       : "";
 
+  const webBlock =
+    opts.webAggregate && opts.webAggregate.tickers.length > 0
+      ? `\n\nWEB_CONTEXT_JSON:\n${JSON.stringify({
+          tickers: opts.webAggregate.tickers.map((t) => ({
+            ticker: t.ticker,
+            sentimentSummary: t.sentimentSummary,
+            insiderBias: t.insiderSummary.netBias,
+            signals: t.signals.slice(0, 6).map((s) => ({
+              kind: s.kind,
+              claim: s.claim,
+              confirmation: s.confirmation,
+            })),
+            gaps: t.gaps,
+          })),
+        })}`
+      : "";
+
+  const pcBlock = opts.portfolioContext
+    ? `\n\nPORTFOLIO_CONTEXT_JSON:\n${JSON.stringify({
+        cashAvailableEur: opts.portfolioContext.cashAvailableEur,
+        perCandidate: opts.portfolioContext.perCandidate,
+        sectorGaps: opts.portfolioContext.sectorGaps.slice(0, 6),
+      })}`
+    : "";
+
+  const riskBlock = opts.risk
+    ? `\n\nRISK_CONTEXT_JSON:\n${JSON.stringify({
+        assumedProfile: opts.risk.assumedProfile,
+        perCandidate: opts.risk.perCandidate,
+        portfolioLevelFlags: opts.risk.portfolioLevelFlags,
+      })}`
+    : "";
+
   const messages = [
     { role: "system" as const, content: systemPrompt },
     {
       role: "user" as const,
-      content: `Hard-data ranking (JSON):\n${JSON.stringify(compactHardData)}${irBlock}\n\nPlease call submit_report_draft.`,
+      content: `Hard-data ranking (JSON):\n${JSON.stringify(compactHardData)}${irBlock}${webBlock}${pcBlock}${riskBlock}\n\nPlease call submit_report_draft.`,
     },
   ];
 
@@ -342,13 +417,27 @@ export const runCompilerStep: StepHandler = async (
     return { status: "error", errorMessage: "hard_data_output_invalid" };
   }
 
-  const irRow = await getLatestScreeningAgentOutputUnscoped(
-    ctx.runId,
-    AGGREGATE_IR_KIND,
-  );
+  const [irRow, webRow, pcRow, riskRow] = await Promise.all([
+    getLatestScreeningAgentOutputUnscoped(ctx.runId, AGGREGATE_IR_KIND),
+    getLatestScreeningAgentOutputUnscoped(ctx.runId, AGGREGATE_WEB_KIND),
+    getLatestScreeningAgentOutputUnscoped(ctx.runId, PORTFOLIO_CONTEXT_KIND),
+    getLatestScreeningAgentOutputUnscoped(ctx.runId, RISK_KIND),
+  ]);
   const irAggregate = irRow ? parseIrAggregate(irRow.outputJson) : null;
+  const webAggregate = webRow ? parseWebAggregate(webRow.outputJson) : null;
+  const portfolioContext = pcRow
+    ? parsePortfolioContext(pcRow.outputJson)
+    : null;
+  const risk = riskRow ? parseRisk(riskRow.outputJson) : null;
 
-  const result = await runCompilerAgent({ brief, hardData, irAggregate });
+  const result = await runCompilerAgent({
+    brief,
+    hardData,
+    irAggregate,
+    webAggregate,
+    portfolioContext,
+    risk,
+  });
 
   try {
     await insertScreeningAgentOutput({

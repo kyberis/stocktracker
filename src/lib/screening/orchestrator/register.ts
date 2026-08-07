@@ -10,4 +10,8 @@
 import "@/lib/screening/agents/hard-data";
 import "@/lib/screening/agents/ir-business";
 import "@/lib/screening/agents/aggregate-ir";
+import "@/lib/screening/agents/web-sentiment";
+import "@/lib/screening/agents/aggregate-web";
+import "@/lib/screening/agents/portfolio-context";
+import "@/lib/screening/agents/risk";
 import "@/lib/screening/agents/compiler";
