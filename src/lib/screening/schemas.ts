@@ -269,7 +269,7 @@ export const screeningReportSchema = z.object({
       verdict: z.string().nullable(),
     }),
   ),
-  cards: z.array(screeningCandidateCardSchema).min(1).max(5),
+  cards: z.array(screeningCandidateCardSchema).min(0).max(5),
   disclaimer: z.string().min(1),
   partial: z.boolean(),
   pendingAgentKinds: z.array(z.string()),

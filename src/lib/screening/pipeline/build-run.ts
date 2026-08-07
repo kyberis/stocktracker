@@ -82,6 +82,10 @@ function synthesiseFanOutStep(
  * Compose the ScreeningRun shape the UI already renders. Steps not present in
  * DB are surfaced as `skipped` so the E3/E4 slice does not orphan the timeline.
  * Multiple `ir_business` rows are synthesised into one UI step with sub-counts.
+ *
+ * For real (non-mocked) runs, IR is shown as `pending` while Hard Data is still
+ * active — otherwise the UI falsely says "coming soon" before fan-out inserts
+ * the per-ticker rows.
  */
 export function buildRunResponse(
   row: ScreeningRunRow,
@@ -95,11 +99,28 @@ export function buildRunResponse(
     byKind.set(s.agentKind, list);
   }
 
+  const hardDataRows = byKind.get("hard_data") ?? [];
+  const hardDataStatus = hardDataRows[0]?.status;
+  const hardDataActive =
+    !row.mockedPipeline &&
+    (hardDataStatus === "pending" ||
+      hardDataStatus === "running" ||
+      hardDataRows.length === 0);
+
   const steps: ScreeningRunStep[] = UI_STEP_ORDER.map((kind): ScreeningRunStep => {
     const rows = byKind.get(kind) ?? [];
     if (rows.length === 0) {
       if (kind === "intake") {
         return { agentKind: kind, status: "done", elapsedSeconds: 0 };
+      }
+      // Real pipeline: IR is expected after Hard Data (flag may still skip
+      // fan-out on empty). Show pending while Hard Data is in flight so the
+      // progress list is not a wall of "coming soon".
+      if (kind === "ir_business" && hardDataActive) {
+        return { agentKind: kind, status: "pending", elapsedSeconds: null };
+      }
+      if (kind === "compiler" && hardDataActive) {
+        return { agentKind: kind, status: "pending", elapsedSeconds: null };
       }
       return { agentKind: kind, status: "skipped", elapsedSeconds: null };
     }
@@ -136,8 +157,6 @@ export function buildRunResponse(
     status = "queued";
   }
 
-  // Report is ready when the Compiler step is done (its output row is what the
-  // GET /reports route reads). Hard Data alone is not enough.
   const compilerDone = active.find((s) => s.agentKind === "compiler")?.status === "done";
 
   return {

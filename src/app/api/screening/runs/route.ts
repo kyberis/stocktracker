@@ -154,9 +154,25 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
 
   recordScreeningRunCreated(parsed.data.intent, false);
 
-  // Kick via waitUntil so Hard Data starts even if the browser navigates away.
-  kickScreeningWorker({ runId: runRow.id, req });
+  // Await the first worker hop so Hard Data is leased before we return.
+  // waitUntil-only kicks have been observed to drop on Vercel, leaving the
+  // UI stuck on "pending" forever until the recover cron (or a manual kick).
+  const kick = await kickScreeningWorker({
+    runId: runRow.id,
+    req,
+    mode: "await",
+    timeoutMs: 55_000,
+  });
+  if (!kick.ok) {
+    console.error(
+      "[screening/runs] awaited worker kick failed",
+      kick.status ?? kick.error,
+    );
+    // Still return 201 — recover cron will pick the pending steps up.
+  }
 
-  const run = buildRunResponse(runRow, []);
+  // Re-read steps so the response reflects any progress the kick made.
+  const steps = await listStepsForRun(runRow.id).catch(() => []);
+  const run = buildRunResponse(runRow, steps);
   return NextResponse.json({ run }, { status: 201 });
 });

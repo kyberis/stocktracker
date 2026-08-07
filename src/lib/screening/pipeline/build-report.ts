@@ -93,7 +93,8 @@ export function composeScreeningReport(
     draftParsed && draftParsed.success ? draftParsed.data : null;
 
   if (!hardData || !draft) return null;
-  if (hardData.candidates.length === 0) return null;
+  // Empty Hard Data is a valid terminal outcome (brief too tight). Still compose
+  // a report so the UI can show the Compiler's empty message instead of a 500.
 
   let irAggregate: AggregateIrBusinessOutput | null = null;
   if (input.irAggregateRow) {
@@ -113,7 +114,7 @@ export function composeScreeningReport(
   const requestedCount =
     input.candidateLimit && input.candidateLimit > 0
       ? Math.min(5, input.candidateLimit)
-      : Math.min(5, hardData.candidates.length);
+      : Math.min(5, Math.max(0, hardData.candidates.length));
 
   const candidates = hardData.candidates.slice(0, requestedCount);
   const priorityOrder = candidates.map((c) => c.ticker);

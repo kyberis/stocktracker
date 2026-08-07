@@ -60,9 +60,9 @@ describe("POST /api/internal/screening/worker", () => {
     expect(processOneStep).toHaveBeenCalledWith({ runId: "run-42" });
   });
 
-  it("self-invokes when moreWork is true", async () => {
+  it("self-invokes when moreWork remains after the inline drain cap", async () => {
     const { processOneStep } = await import("@/lib/screening/orchestrator/runner");
-    vi.mocked(processOneStep).mockResolvedValueOnce({
+    vi.mocked(processOneStep).mockResolvedValue({
       processed: 1,
       status: "processed",
       stepId: "step-2",
@@ -85,15 +85,26 @@ describe("POST /api/internal/screening/worker", () => {
       }),
     );
 
+    // Drains MAX_STEPS_PER_REQUEST (3) then deferred-kicks for the rest.
+    expect(processOneStep).toHaveBeenCalledTimes(3);
     expect(kickScreeningWorker).toHaveBeenCalledWith(
       expect.objectContaining({
         runId: "run-42",
         authorization: "Bearer test",
+        mode: "defer",
       }),
     );
   });
 
   it("does not self-invoke when there is no more work", async () => {
+    const { processOneStep } = await import("@/lib/screening/orchestrator/runner");
+    vi.mocked(processOneStep).mockResolvedValue({
+      processed: 1,
+      status: "processed",
+      stepId: "step-1",
+      agentKind: "hard_data",
+      moreWork: false,
+    });
     const { kickScreeningWorker } = await import(
       "@/lib/screening/orchestrator/kick-worker"
     );

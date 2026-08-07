@@ -15,8 +15,16 @@ vi.mock("@/lib/db", () => ({
   countPendingSteps: vi.fn().mockResolvedValue(0),
 }));
 
+vi.mock("@/lib/screening/orchestrator/runner", () => ({
+  processOneStep: vi.fn().mockResolvedValue({
+    processed: 0,
+    status: "no_work",
+    moreWork: false,
+  }),
+}));
+
 vi.mock("@/lib/screening/orchestrator/kick-worker", () => ({
-  kickScreeningWorker: vi.fn(),
+  kickScreeningWorker: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
 describe("GET /api/cron/screening-recover", () => {
@@ -52,15 +60,66 @@ describe("GET /api/cron/screening-recover", () => {
     expect(body).toMatchObject({
       requeued: 0,
       failed: 0,
-      pending: 0,
+      pendingBefore: 0,
+      inlineProcessed: 0,
       workerKicked: false,
     });
     expect(kickScreeningWorker).not.toHaveBeenCalled();
   });
 
-  it("kicks the worker when leases were requeued", async () => {
-    const { recoverExpiredLeases } = await import("@/lib/db");
+  it("processes steps inline when leases were requeued", async () => {
+    const { recoverExpiredLeases, countPendingSteps } = await import("@/lib/db");
     vi.mocked(recoverExpiredLeases).mockResolvedValueOnce({ requeued: 2, failed: 0 });
+    vi.mocked(countPendingSteps)
+      .mockResolvedValueOnce(2) // pendingBefore
+      .mockResolvedValueOnce(0) // pendingAfter after inline
+      .mockResolvedValueOnce(0); // final pendingAfter
+    const { processOneStep } = await import(
+      "@/lib/screening/orchestrator/runner"
+    );
+    vi.mocked(processOneStep)
+      .mockResolvedValueOnce({
+        processed: 1,
+        status: "processed",
+        moreWork: true,
+      })
+      .mockResolvedValueOnce({
+        processed: 1,
+        status: "processed",
+        moreWork: false,
+      });
+    const { kickScreeningWorker } = await import(
+      "@/lib/screening/orchestrator/kick-worker"
+    );
+    const { GET } = await import("./route");
+
+    const res = await GET(
+      new NextRequest("http://localhost/api/cron/screening-recover", {
+        headers: { Authorization: "Bearer test" },
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.inlineProcessed).toBe(2);
+    expect(body.workerKicked).toBe(false);
+    expect(kickScreeningWorker).not.toHaveBeenCalled();
+  });
+
+  it("awaits a worker kick when orphaned pending steps remain after inline drain", async () => {
+    const { countPendingSteps } = await import("@/lib/db");
+    vi.mocked(countPendingSteps)
+      .mockResolvedValueOnce(3) // pendingBefore
+      .mockResolvedValueOnce(1) // pendingAfter inline
+      .mockResolvedValueOnce(1); // final
+    const { processOneStep } = await import(
+      "@/lib/screening/orchestrator/runner"
+    );
+    vi.mocked(processOneStep).mockResolvedValue({
+      processed: 0,
+      status: "no_work",
+      moreWork: false,
+    });
     const { kickScreeningWorker } = await import(
       "@/lib/screening/orchestrator/kick-worker"
     );
@@ -75,26 +134,8 @@ describe("GET /api/cron/screening-recover", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.workerKicked).toBe(true);
-    expect(kickScreeningWorker).toHaveBeenCalledTimes(1);
-  });
-
-  it("kicks the worker when orphaned pending steps exist (no expired leases)", async () => {
-    const { countPendingSteps } = await import("@/lib/db");
-    vi.mocked(countPendingSteps).mockResolvedValueOnce(3);
-    const { kickScreeningWorker } = await import(
-      "@/lib/screening/orchestrator/kick-worker"
+    expect(kickScreeningWorker).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: "await" }),
     );
-    const { GET } = await import("./route");
-
-    const res = await GET(
-      new NextRequest("http://localhost/api/cron/screening-recover", {
-        headers: { Authorization: "Bearer test" },
-      }),
-    );
-
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body).toMatchObject({ pending: 3, workerKicked: true });
-    expect(kickScreeningWorker).toHaveBeenCalledTimes(1);
   });
 });

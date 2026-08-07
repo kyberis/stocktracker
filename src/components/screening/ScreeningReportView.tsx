@@ -70,6 +70,12 @@ export function ScreeningReportView({
           {report.executiveSummary}
         </p>
 
+        {ranked.length === 0 && (
+          <p className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] px-3 py-2 text-[13px] text-[color:var(--foreground)]">
+            {copy.report.emptyCandidates}
+          </p>
+        )}
+
         {ranked.length > 0 && (
           <>
             <h3 className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">

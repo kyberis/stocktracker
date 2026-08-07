@@ -18,6 +18,8 @@ vi.mock("@/lib/db", () => ({
   insertSteps: vi.fn(),
   linkPendingAgentOutputToRun: vi.fn(),
   appendEvent: vi.fn(),
+  listStepsForRun: vi.fn().mockResolvedValue([]),
+  listScreeningRunsByUser: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@/lib/screening/metrics", () => ({
@@ -25,7 +27,7 @@ vi.mock("@/lib/screening/metrics", () => ({
 }));
 
 vi.mock("@/lib/screening/orchestrator/kick-worker", () => ({
-  kickScreeningWorker: vi.fn(),
+  kickScreeningWorker: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
 vi.mock("@/lib/http/request-public-origin", () => ({
@@ -143,7 +145,7 @@ describe("POST /api/screening/runs", () => {
       ]),
     );
     expect(kickScreeningWorker).toHaveBeenCalledWith(
-      expect.objectContaining({ runId: "real-run-1" }),
+      expect.objectContaining({ runId: "real-run-1", mode: "await" }),
     );
     expect(linkPendingAgentOutputToRun).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "user-1", agentKind: "intake", runId: "real-run-1" }),

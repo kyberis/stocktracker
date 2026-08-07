@@ -21,16 +21,70 @@ export function resolveScreeningWorkerOrigin(req?: NextRequest): string {
   return "https://trefolio.com";
 }
 
-/**
- * Fire-and-forget kick of the internal screening worker. Auth uses CRON_SECRET
- * (same Bearer as Vercel Cron). Never throws to the caller.
- */
-export function kickScreeningWorker(opts: {
+export interface KickScreeningWorkerOpts {
   runId?: string | null;
   req?: NextRequest;
   /** Override Authorization header (e.g. forward the cron Bearer). */
   authorization?: string;
-}): void {
+  /**
+   * `await` — block until the worker HTTP call returns (reliable; preferred
+   * from POST /runs and the recover cron). `defer` — fire-and-forget via
+   * waitUntil (used for self-chaining after a step finishes).
+   */
+  mode?: "await" | "defer";
+  /** Abort the awaited fetch after this many ms (default 50s). */
+  timeoutMs?: number;
+}
+
+export interface KickScreeningWorkerResult {
+  ok: boolean;
+  status?: number;
+  body?: string;
+  error?: string;
+}
+
+async function postWorker(
+  origin: string,
+  auth: string,
+  body: string,
+  timeoutMs: number,
+): Promise<KickScreeningWorkerResult> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${origin}/api/internal/screening/worker`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: auth,
+      },
+      body,
+      signal: controller.signal,
+    });
+    const text = (await res.text().catch(() => "")).slice(0, 500);
+    if (!res.ok) {
+      console.error(
+        `[screening/worker-kick] ${res.status} from ${origin}: ${text}`,
+      );
+      return { ok: false, status: res.status, body: text };
+    }
+    return { ok: true, status: res.status, body: text };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[screening/worker-kick] fetch failed", message);
+    return { ok: false, error: message };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Kick the internal screening worker. Prefer `mode: "await"` from request
+ * handlers so a dropped waitUntil cannot leave Hard Data pending forever.
+ */
+export async function kickScreeningWorker(
+  opts: KickScreeningWorkerOpts,
+): Promise<KickScreeningWorkerResult> {
   const cronSecret = process.env.CRON_SECRET?.trim();
   const auth =
     opts.authorization?.trim() ||
@@ -39,34 +93,19 @@ export function kickScreeningWorker(opts: {
     console.warn(
       "[screening/worker-kick] CRON_SECRET not set — worker not kicked",
     );
-    return;
+    return { ok: false, error: "missing_cron_secret" };
   }
   const origin = resolveScreeningWorkerOrigin(opts.req);
-  const body = JSON.stringify(
-    opts.runId ? { runId: opts.runId } : {},
-  );
+  const body = JSON.stringify(opts.runId ? { runId: opts.runId } : {});
+  const timeoutMs = Math.max(5_000, opts.timeoutMs ?? 50_000);
+  const mode = opts.mode ?? "defer";
+
+  if (mode === "await") {
+    return postWorker(origin, auth, body, timeoutMs);
+  }
 
   deferTask(async () => {
-    try {
-      const res = await fetch(`${origin}/api/internal/screening/worker`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: auth,
-        },
-        body,
-      });
-      if (!res.ok) {
-        const text = (await res.text().catch(() => "")).slice(0, 300);
-        console.error(
-          `[screening/worker-kick] ${res.status} from ${origin}: ${text}`,
-        );
-      }
-    } catch (err) {
-      console.error(
-        "[screening/worker-kick] fetch failed",
-        err instanceof Error ? err.message : err,
-      );
-    }
+    await postWorker(origin, auth, body, timeoutMs);
   });
+  return { ok: true };
 }

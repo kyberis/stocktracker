@@ -479,6 +479,8 @@ const en = {
     externalLinksNote:
       "Company and regulator links open outside trefolio. We do not control or endorse their content.",
     loadError: "The report could not be loaded.",
+    emptyCandidates:
+      "No candidates matched this brief. Broaden sectors, market-cap, or valuation filters and try again.",
   },
 };
 
@@ -952,6 +954,8 @@ const es: ScreeningCopy = {
     externalLinksNote:
       "Los enlaces a las compañías y a reguladores se abren fuera de trefolio. No controlamos ni respaldamos su contenido.",
     loadError: "No se pudo cargar el informe.",
+    emptyCandidates:
+      "Ningún candidato encajó con este brief. Amplía sectores, capitalización o valoración e inténtalo de nuevo.",
   },
 };
 

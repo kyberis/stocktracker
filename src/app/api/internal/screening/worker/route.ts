@@ -7,13 +7,17 @@ import { processOneStep } from "@/lib/screening/orchestrator/runner";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+/** Max steps to drain in one worker invocation before returning. */
+const MAX_STEPS_PER_REQUEST = 3;
+
 /**
- * Internal worker for the screening orchestrator (HLD ADR-2). One HTTP request
- * = one leased step. On success (or handler-missing), the worker self-invokes
- * so the next pending step advances without needing Vercel Queues.
+ * Internal worker for the screening orchestrator (HLD ADR-2).
  *
- * Auth: shares CRON_SECRET with the cron routes. The `screening-recover` cron
- * and the `POST /api/screening/runs` route both call this endpoint directly.
+ * One HTTP request drains up to {@link MAX_STEPS_PER_REQUEST} steps so a
+ * dropped waitUntil self-chain cannot strand the queue after Hard Data.
+ * If work remains, we still fire a deferred kick as a belt-and-suspenders.
+ *
+ * Auth: shares CRON_SECRET with the cron routes.
  */
 export async function POST(req: NextRequest) {
   const denied = verifyCronAuth("screening-worker", req);
@@ -31,17 +35,29 @@ export async function POST(req: NextRequest) {
     // ignore — no-body invocations are allowed
   }
 
-  const result = await processOneStep({ runId: bodyRunId ?? undefined });
+  let processed = 0;
+  let last = await processOneStep({ runId: bodyRunId ?? undefined });
+  if (last.processed > 0) processed += last.processed;
 
-  // Self-invoke when the run still has work. Lease atomicity prevents double
-  // processing if two kicks overlap.
-  if (result.moreWork) {
-    kickScreeningWorker({
+  while (last.moreWork && processed < MAX_STEPS_PER_REQUEST) {
+    last = await processOneStep({ runId: bodyRunId ?? undefined });
+    if (last.processed === 0) break;
+    processed += last.processed;
+  }
+
+  if (last.moreWork) {
+    // Deferred chain for remaining work (IR fan-out can be >3 steps).
+    void kickScreeningWorker({
       runId: bodyRunId,
       req,
       authorization: req.headers.get("authorization") ?? undefined,
+      mode: "defer",
     });
   }
 
-  return NextResponse.json(result);
+  return NextResponse.json({
+    ...last,
+    processed,
+    moreWork: last.moreWork,
+  });
 }

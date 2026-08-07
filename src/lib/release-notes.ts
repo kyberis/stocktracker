@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.93",
+    date: "2026-08-07",
+    title: "Screening worker kick reliability",
+    titleTranslations: {
+      es: "Fiabilidad del arranque del worker de cribado",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Screening runs no longer stick on Hard Data “pending”: launching a run now awaits the first worker hop, the worker drains up to 3 steps per request, and the recover cron processes orphaned steps inline instead of relying on waitUntil alone. Empty briefs show a clear “no candidates” report instead of a load error, and IR shows as pending (not “coming soon”) while Hard Data is still running.",
+        translations: {
+          es: "Los cribados ya no se quedan en Hard Data “pendiente”: al lanzar un run se espera el primer hop del worker, el worker drena hasta 3 pasos por request, y el cron de recuperación procesa steps huérfanos en línea en lugar de depender solo de waitUntil. Los briefs vacíos muestran un informe claro de “sin candidatos” en vez de un error de carga, y IR aparece como pendiente (no “próximamente”) mientras Hard Data sigue en curso.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.92",
     date: "2026-08-07",
     title: "Screening IR agent + recent screens history",
