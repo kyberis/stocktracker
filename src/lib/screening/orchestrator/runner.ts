@@ -18,7 +18,8 @@ import {
 import { recordScreeningStep } from "@/lib/screening/metrics";
 
 /** Default lease horizon per step. Handlers must finish inside this window. */
-export const DEFAULT_LEASE_MS = 55_000;
+/** Web/IR steps fetch FMP + Tavily + LLM; 55s was too short and left orphans. */
+export const DEFAULT_LEASE_MS = 180_000;
 
 export interface RunnerOptions {
   /** Restrict work to one run (used by the immediate post-launch dispatch). */

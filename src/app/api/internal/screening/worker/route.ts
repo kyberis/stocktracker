@@ -5,10 +5,11 @@ import { kickScreeningWorker } from "@/lib/screening/orchestrator/kick-worker";
 import { processOneStep } from "@/lib/screening/orchestrator/runner";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+/** Web/IR steps can take >60s (FMP + Tavily + LLM); killing mid-step left orphans. */
+export const maxDuration = 300;
 
 /** Max steps to drain in one worker invocation before returning. */
-const MAX_STEPS_PER_REQUEST = 3;
+const MAX_STEPS_PER_REQUEST = 2;
 
 /**
  * Internal worker for the screening orchestrator (HLD ADR-2).

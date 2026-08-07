@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.99",
+    date: "2026-08-08",
+    title: "Screening: show step errors on the agent timeline",
+    titleTranslations: {
+      es: "Cribado: errores de paso en la línea de agentes",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Failed screening runs keep the agent timeline visible and mark the failed step with ✕ and its error message, instead of replacing the whole page with a generic failure notice.",
+        translations: {
+          es: "Si un cribado falla, la línea de agentes sigue visible y el paso fallido se marca con ✕ y su mensaje de error, en lugar de sustituir toda la página por un aviso genérico.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Screening worker timeout and step leases are longer so Web & Sentiment steps are less likely to get stuck mid-run after a Vercel function kill.",
+        translations: {
+          es: "El timeout del worker de cribado y los leases de los pasos son más largos para que Web & Sentimiento no se queden a medias tras un kill de la función en Vercel.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.98",
     date: "2026-08-08",
     title: "Screening report blur preview toggle",

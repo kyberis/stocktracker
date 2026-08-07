@@ -7,13 +7,15 @@ import {
   buildIntakeHrefFromBrief,
   SCREENING_INTAKE_RETURN_KEY,
 } from "@/lib/screening/intake-href";
+import { fill } from "@/lib/screening/copy";
 import { buildOptimisticRun } from "@/lib/screening/pipeline/build-run";
 import { MockNotice, ScreeningDisclaimer } from "./ScreeningNotices";
 import { ScreeningReportView } from "./ScreeningReportView";
 import { useScreeningCopy } from "./use-screening-copy";
 
 const POLL_MS = 1200;
-const MAX_POLLS = 120;
+/** ~6 min — v2 fan-out (IR + Web × N) can exceed the old 2.4 min budget. */
+const MAX_POLLS = 300;
 
 function readStoredBrief(runId: string): ScreeningBrief | null {
   try {
@@ -72,11 +74,22 @@ function StepRow({ step, label }: { step: ScreeningRunStep; label: string }) {
           .replace("{total}", String(step.subStepsTotal))
       : null;
 
+  const errorDetail =
+    step.status === "failed" && step.errorMessage
+      ? fill(copy.progress.failedStepDetail, { message: step.errorMessage })
+      : null;
+
   return (
-    <li className="flex items-center gap-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2">
+    <li
+      className={`flex items-start gap-3 rounded-xl border px-3 py-2 ${
+        step.status === "failed"
+          ? "border-red-500/35 bg-red-500/[0.06]"
+          : "border-[color:var(--border)] bg-[color:var(--surface-soft)]"
+      }`}
+    >
       <span
         aria-hidden="true"
-        className={`grid h-6 w-6 shrink-0 place-items-center rounded-lg text-xs font-bold ${markTone}`}
+        className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg text-xs font-bold ${markTone}`}
       >
         {mark}
       </span>
@@ -93,6 +106,11 @@ function StepRow({ step, label }: { step: ScreeningRunStep; label: string }) {
             {subtext}
           </span>
         ) : null}
+        {errorDetail ? (
+          <span className="mt-0.5 block text-[11px] text-red-600 dark:text-red-400" role="alert">
+            {errorDetail}
+          </span>
+        ) : null}
       </span>
       <span className="shrink-0 text-[11px] tabular-nums text-[color:var(--muted)]">
         {step.elapsedSeconds != null ? `${step.elapsedSeconds.toFixed(1)}s` : statusLabel}
@@ -107,7 +125,8 @@ export function RunProgress({ runId }: { runId: string }) {
   const [report, setReport] = useState<ScreeningReport | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  /** Fatal load errors (404 / network) — not step failures. */
+  const [loadError, setLoadError] = useState<string | null>(null);
   const pollsRef = useRef(0);
   const briefRef = useRef<ScreeningBrief | null>(null);
   const [backHref, setBackHref] = useState("/screening/intake");
@@ -119,13 +138,13 @@ export function RunProgress({ runId }: { runId: string }) {
     setRun(buildOptimisticRun(runId));
     setReport(null);
     setShowReport(false);
-    setError(null);
+    setLoadError(null);
     pollsRef.current = 0;
   }, [runId]);
 
   const loadReport = useCallback(async () => {
     setLoadingReport(true);
-    setError(null);
+    setLoadError(null);
     try {
       const count = briefRef.current?.candidateCount;
       const qs = count ? `?candidates=${count}` : "";
@@ -133,7 +152,7 @@ export function RunProgress({ runId }: { runId: string }) {
         cache: "no-store",
       });
       if (!res.ok) {
-        setError(copy.report.loadError);
+        setLoadError(copy.report.loadError);
         return;
       }
       const data = (await res.json()) as { report?: ScreeningReport };
@@ -141,10 +160,10 @@ export function RunProgress({ runId }: { runId: string }) {
         setReport(data.report);
         setShowReport(true);
       } else {
-        setError(copy.report.loadError);
+        setLoadError(copy.report.loadError);
       }
     } catch {
-      setError(copy.report.loadError);
+      setLoadError(copy.report.loadError);
     } finally {
       setLoadingReport(false);
     }
@@ -162,24 +181,28 @@ export function RunProgress({ runId }: { runId: string }) {
           cache: "no-store",
         });
         if (!res.ok) {
-          setError(res.status === 404 ? copy.report.loadError : copy.progress.failed);
+          if (!cancelled) {
+            setLoadError(
+              res.status === 404 ? copy.report.loadError : copy.progress.failed,
+            );
+          }
           return;
         }
         const data = (await res.json()) as { run?: ScreeningRun };
         if (!data.run || cancelled) return;
         setRun(data.run);
+        setLoadError(null);
 
+        // Keep the timeline visible on failure — do not replace the page.
         if (data.run.status === "failed") {
-          setError(copy.progress.failed);
           return;
         }
-        // Stay on the agent timeline until the user opens the report.
         if (data.run.reportReady) return;
         if (pollsRef.current < MAX_POLLS) {
           timer = setTimeout(() => void poll(), POLL_MS);
         }
       } catch {
-        if (!cancelled) setError(copy.report.loadError);
+        if (!cancelled) setLoadError(copy.report.loadError);
       }
     }
 
@@ -214,6 +237,8 @@ export function RunProgress({ runId }: { runId: string }) {
   }
 
   const reportReady = Boolean(run?.reportReady);
+  const runFailed = run?.status === "failed";
+  const failedStep = run?.steps.find((s) => s.status === "failed");
 
   return (
     <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-4">
@@ -221,47 +246,72 @@ export function RunProgress({ runId }: { runId: string }) {
         {copy.progress.eyebrow}
       </p>
       <h1 className="mt-1 text-xl font-bold text-[color:var(--foreground)] sm:text-2xl">
-        {reportReady ? copy.progress.readyTitle : copy.progress.title}
+        {runFailed
+          ? copy.progress.title
+          : reportReady
+            ? copy.progress.readyTitle
+            : copy.progress.title}
       </h1>
       <p className="mt-2 text-sm text-[color:var(--muted)]">
-        {reportReady ? copy.progress.readyBody : copy.progress.body}
+        {runFailed
+          ? copy.progress.failedBanner
+          : reportReady
+            ? copy.progress.readyBody
+            : copy.progress.body}
       </p>
 
       {(run?.mocked ?? false) ? <MockNotice className="mt-4" /> : null}
 
-      {error ? (
-        <p className="card mt-5 rounded-[20px] p-4 text-sm text-red-600 dark:text-red-400" role="alert">
-          {error}
+      {loadError ? (
+        <p
+          className="card mt-5 rounded-[20px] border border-red-500/30 p-4 text-sm text-red-600 dark:text-red-400"
+          role="alert"
+        >
+          {loadError}
         </p>
-      ) : (
-        <section className="card mt-5 rounded-[20px] border border-[color:var(--border)] p-4 sm:p-5">
-          <div
-            className="h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--surface-soft)]"
-            role="progressbar"
-            aria-valuenow={run?.progressPct ?? 0}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className="h-full rounded-full bg-teal-500/70 transition-[width] duration-500"
-              style={{ width: `${run?.progressPct ?? 0}%` }}
-            />
-          </div>
+      ) : null}
 
-          <ul className="mt-4 list-none space-y-2 p-0">
-            {(run?.steps ?? []).map((step) => (
-              <StepRow
-                key={step.agentKind}
-                step={step}
-                label={
-                  copy.progress.steps[step.agentKind as keyof typeof copy.progress.steps] ??
-                  step.agentKind
-                }
-              />
-            ))}
-          </ul>
-        </section>
-      )}
+      {runFailed && !loadError ? (
+        <p
+          className="mt-5 rounded-xl border border-red-500/35 bg-red-500/[0.07] px-3 py-2 text-sm text-red-700 dark:text-red-300"
+          role="alert"
+        >
+          {copy.progress.failedBanner}
+          {failedStep?.errorMessage
+            ? ` (${failedStep.agentKind}: ${failedStep.errorMessage})`
+            : ""}
+        </p>
+      ) : null}
+
+      <section className="card mt-5 rounded-[20px] border border-[color:var(--border)] p-4 sm:p-5">
+        <div
+          className="h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--surface-soft)]"
+          role="progressbar"
+          aria-valuenow={run?.progressPct ?? 0}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className={`h-full rounded-full transition-[width] duration-500 ${
+              runFailed ? "bg-red-500/70" : "bg-teal-500/70"
+            }`}
+            style={{ width: `${run?.progressPct ?? 0}%` }}
+          />
+        </div>
+
+        <ul className="mt-4 list-none space-y-2 p-0">
+          {(run?.steps ?? []).map((step) => (
+            <StepRow
+              key={step.agentKind}
+              step={step}
+              label={
+                copy.progress.steps[step.agentKind as keyof typeof copy.progress.steps] ??
+                step.agentKind
+              }
+            />
+          ))}
+        </ul>
+      </section>
 
       <div className="mt-5 flex flex-wrap gap-2">
         {reportReady ? (

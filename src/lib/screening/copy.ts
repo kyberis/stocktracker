@@ -445,6 +445,9 @@ const en = {
     statusFailed: "failed",
     statusSkipped: "coming soon",
     failed: "The run failed. Nothing was charged.",
+    failedBanner:
+      "A step failed — see the agent marked ✕ below. Nothing was charged.",
+    failedStepDetail: "Error: {message}",
     irSubtext: "{done}/{total} tickers",
     steps: {
       intake: "Intake — validates the brief",
@@ -962,6 +965,9 @@ const es: ScreeningCopy = {
     statusFailed: "falló",
     statusSkipped: "próximamente",
     failed: "La ejecución falló. No se ha cobrado nada.",
+    failedBanner:
+      "Un paso falló — mira el agente marcado con ✕ abajo. No se ha cobrado nada.",
+    failedStepDetail: "Error: {message}",
     irSubtext: "{done}/{total} tickers",
     steps: {
       intake: "Intake — valida el brief",

@@ -141,6 +141,8 @@ export const screeningRunStepSchema = z.object({
   /** For fan-out kinds (IR × N tickers): total sub-steps and how many are done. */
   subStepsTotal: z.number().int().nonnegative().optional(),
   subStepsDone: z.number().int().nonnegative().optional(),
+  /** Present when the step (or a fan-out sibling) failed. */
+  errorMessage: z.string().max(500).nullable().optional(),
 });
 export type ScreeningRunStep = z.infer<typeof screeningRunStepSchema>;
 

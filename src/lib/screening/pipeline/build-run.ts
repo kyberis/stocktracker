@@ -69,12 +69,16 @@ function synthesiseFanOutStep(
       ? completedAts.reduce((a, b) => (a > b ? a : b))
       : null;
 
+  const failedMsg = rows.find((s) => s.status === "failed" && s.errorMessage)
+    ?.errorMessage;
+
   return {
     agentKind: kind,
     status,
     elapsedSeconds: elapsedFromDates(earliestStart, latestEnd),
     subStepsTotal: total,
     subStepsDone: doneCount,
+    errorMessage: failedMsg ?? null,
   };
 }
 
@@ -185,6 +189,7 @@ export function buildRunResponse(
       agentKind: dbStep.agentKind,
       status: dbStep.status,
       elapsedSeconds: elapsed,
+      errorMessage: dbStep.errorMessage ?? null,
     };
   });
 

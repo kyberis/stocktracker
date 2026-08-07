@@ -85,8 +85,8 @@ describe("POST /api/internal/screening/worker", () => {
       }),
     );
 
-    // Drains MAX_STEPS_PER_REQUEST (3) then deferred-kicks for the rest.
-    expect(processOneStep).toHaveBeenCalledTimes(3);
+    // Drains MAX_STEPS_PER_REQUEST (2) then deferred-kicks for the rest.
+    expect(processOneStep).toHaveBeenCalledTimes(2);
     expect(kickScreeningWorker).toHaveBeenCalledWith(
       expect.objectContaining({
         runId: "run-42",

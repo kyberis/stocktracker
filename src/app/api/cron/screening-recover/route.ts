@@ -6,7 +6,7 @@ import { processOneStep } from "@/lib/screening/orchestrator/runner";
 import { kickScreeningWorker } from "@/lib/screening/orchestrator/kick-worker";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /** Drain this many orphaned steps inline so recover does not rely on waitUntil. */
 const MAX_INLINE_STEPS = 8;
