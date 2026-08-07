@@ -529,6 +529,7 @@ export type { MoatCacheEntry, MoatCacheRow, MoatScreenerFilters, MoatScreenerRes
 export {
   upsertMoatCache,
   getMoatCache,
+  getMoatCacheForSymbols,
   queryMoatCache,
   getMoatCacheMeta,
   getStaleMoatSymbols,

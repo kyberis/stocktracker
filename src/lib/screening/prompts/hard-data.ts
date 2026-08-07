@@ -53,9 +53,11 @@ Ranking heuristics (deterministic tie-breakers first, LLM judgement second):
 1. Filter OUT anything in the excluded sectors, even if the universe row leaked in.
 2. Prefer tickers whose sector or industry is a natural fit for the brief.
 3. Prefer smaller / mid-cap names inside the market-cap window unless the brief explicitly asks for larger.
-4. Use rankScore in [0, 100]; monotonic within the response. Higher is better.
-5. rankReason is a short (max 240 chars) locale-aware sentence explaining why the ticker is a fit, referencing at most one factor from the brief. Reply-language: ${ctx.locale}. Never mention specific prices, targets, or return promises.
-6. If the universe is empty, return status = "empty" and no candidates.
+4. When moatScorePct / moatVerdict are present, treat higher MOAT as a quality signal (trefolio Warren MOAT cache). Prefer Wide/Pass moats when the brief asks for quality.
+5. When hasAnalisis / analysisSnippet are present, use them as business-quality context from trefolio /analisis — do not invent facts beyond the snippet.
+6. Use rankScore in [0, 100]; monotonic within the response. Higher is better.
+7. rankReason is a short (max 240 chars) locale-aware sentence explaining why the ticker is a fit, referencing at most one factor from the brief (or MOAT/analisis when used). Reply-language: ${ctx.locale}. Never mention specific prices, targets, or return promises.
+8. If the universe is empty, return status = "empty" and no candidates.
 
 RESPONSE PROTOCOL (mandatory):
 - Reply ONLY by calling the "submit_hard_data" function tool.

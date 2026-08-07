@@ -132,7 +132,10 @@ the feature is not discoverable before launch. The Dev outputs route adds
   Post-parse sanity limits in
   [`src/lib/screening/rules/sanity-limits.ts`](../../src/lib/screening/rules/sanity-limits.ts)
   reject nonsense ranges even if the model returns valid JSON.
-- **FMP** — Hard Data universe + IR/Web evidence bundles (`FMP_API_KEY`).
+- **FMP** — Hard Data universe + ratios-ttm/profile enrichment for card multiples
+  + IR/Web evidence bundles (`FMP_API_KEY`).
+- **trefolio MOAT cache + /analisis cache** — Hard Data ranking context and
+  `flags.moatScore` / business summary on cards (cache-only; no fresh quota).
 - **Tavily** — Web & Sentiment agent search (`TAVILY_API_KEY`). If unset, the
   agent continues with FMP-only evidence (no hard failure). Queries send ticker
   + company name only.

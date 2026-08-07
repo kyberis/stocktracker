@@ -137,21 +137,7 @@ export async function upsertMoatCache(evaluation: MoatEvaluation): Promise<void>
   });
 }
 
-export async function getMoatCache(
-  symbol: string,
-  maxAgeDays = 7,
-): Promise<MoatCacheEntry | null> {
-  const client = await ensureInitialized();
-  const result = await client.execute({
-    sql: `SELECT symbol, company_name, sector, industry, evaluation_json,
-            total_score, max_score, score_pct, verdict, passed_count, criteria_count,
-            pe_ratio, updated_at
-          FROM moat_cache
-          WHERE symbol = ? AND updated_at >= datetime('now', ? || ' days')`,
-    args: [symbol, `-${maxAgeDays}`],
-  });
-  const row = result.rows[0];
-  if (!row) return null;
+function mapMoatCacheRow(row: Record<string, unknown>): MoatCacheEntry {
   return {
     symbol: str(row.symbol),
     companyName: str(row.company_name),
@@ -167,6 +153,56 @@ export async function getMoatCache(
     peRatio: row.pe_ratio != null ? Number(row.pe_ratio) : null,
     updatedAt: str(row.updated_at),
   };
+}
+
+export async function getMoatCache(
+  symbol: string,
+  maxAgeDays = 7,
+): Promise<MoatCacheEntry | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT symbol, company_name, sector, industry, evaluation_json,
+            total_score, max_score, score_pct, verdict, passed_count, criteria_count,
+            pe_ratio, updated_at
+          FROM moat_cache
+          WHERE symbol = ? AND updated_at >= datetime('now', ? || ' days')`,
+    args: [symbol.toUpperCase(), `-${maxAgeDays}`],
+  });
+  const row = result.rows[0];
+  if (!row) return null;
+  return mapMoatCacheRow(row as Record<string, unknown>);
+}
+
+/** Batch moat lookup for screening Hard Data (cache-only, no quota). */
+export async function getMoatCacheForSymbols(
+  symbols: readonly string[],
+  maxAgeDays = 30,
+): Promise<Map<string, MoatCacheEntry>> {
+  const out = new Map<string, MoatCacheEntry>();
+  const unique = [...new Set(symbols.map((s) => s.toUpperCase().trim()).filter(Boolean))];
+  if (unique.length === 0) return out;
+
+  const client = await ensureInitialized();
+  // Chunk to keep SQLite variable limits comfortable.
+  const CHUNK = 80;
+  for (let i = 0; i < unique.length; i += CHUNK) {
+    const chunk = unique.slice(i, i + CHUNK);
+    const placeholders = chunk.map(() => "?").join(",");
+    const result = await client.execute({
+      sql: `SELECT symbol, company_name, sector, industry, evaluation_json,
+              total_score, max_score, score_pct, verdict, passed_count, criteria_count,
+              pe_ratio, updated_at
+            FROM moat_cache
+            WHERE symbol IN (${placeholders})
+              AND updated_at >= datetime('now', ? || ' days')`,
+      args: [...chunk, `-${maxAgeDays}`],
+    });
+    for (const row of result.rows) {
+      const entry = mapMoatCacheRow(row as Record<string, unknown>);
+      out.set(entry.symbol.toUpperCase(), entry);
+    }
+  }
+  return out;
 }
 
 const VALID_SORT_COLUMNS: Record<string, string> = {

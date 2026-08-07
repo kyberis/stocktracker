@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.97",
+    date: "2026-08-08",
+    title: "Screening reports fill valuation metrics and MOAT",
+    titleTranslations: {
+      es: "Informes de cribado con métricas de valoración y MOAT",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Screening candidate cards and the comparison table now fill forward P/E, EV/EBITDA, ND/EBITDA, dividend, target/upside, net cash, score, and verdict from FMP fundamentals instead of leaving dashes.",
+        translations: {
+          es: "Las fichas del cribado y la tabla comparativa rellenan PER forward, EV/EBITDA, ND/EBITDA, dividendo, objetivo/upside, caja neta, score y veredicto con fundamentales FMP en lugar de dejar guiones.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Hard Data ranking now uses cached trefolio MOAT scores and /analisis summaries when available, and report cards surface moatScore from that cache.",
+        translations: {
+          es: "El ranking de Hard Data usa puntuaciones MOAT y resúmenes de /analisis en caché de trefolio cuando existen, y las fichas muestran moatScore desde esa caché.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.96",
     date: "2026-08-07",
     title: "Screening: Web, portfolio fit, and risk agents",

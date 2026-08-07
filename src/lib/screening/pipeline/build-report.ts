@@ -232,29 +232,31 @@ export function composeScreeningReport(
       companyName: c.name || c.ticker,
       sector: c.sector || "—",
       country: c.country || "—",
-      business: ir
-        ? {
-            summary: ir.businessOneLiner,
-            employees: null,
-            listedSince: null,
-            website: null,
-            irUrl: null,
-            filings: null,
-          }
-        : null,
+      business: (() => {
+        const summary = (ir?.businessOneLiner ?? c.analysisSummary ?? "").trim();
+        if (!summary) return null;
+        return {
+          summary,
+          employees: null,
+          listedSince: null,
+          website: null,
+          irUrl: null,
+          filings: null,
+        };
+      })(),
       mktCapUsd: c.marketCapUsd ?? null,
-      currency: "USD",
+      currency: c.currency || "USD",
       price: c.price ?? 0,
       priceAsOf: input.run.updatedAt,
-      targetPrice: null,
-      upsidePct: null,
-      score: c.rankScore ?? null,
-      verdict: null,
-      stepsPassed: [],
-      stepsFailed: [],
+      targetPrice: c.targetPrice ?? null,
+      upsidePct: c.upsidePct ?? null,
+      score: c.checklistScore ?? Math.min(8, Math.round((c.rankScore ?? 0) / 12.5)),
+      verdict: c.reportVerdict ?? null,
+      stepsPassed: c.stepsPassed ?? [],
+      stepsFailed: c.stepsFailed ?? [],
       catalyst: primaryCatalyst?.label ?? null,
       catalystDate: ir?.guidance.asOf ?? null,
-      businessOneLiner: ir?.businessOneLiner,
+      businessOneLiner: ir?.businessOneLiner ?? c.analysisSummary ?? undefined,
       guidance: ir
         ? {
             summary: ir.guidance.summary,
@@ -267,24 +269,29 @@ export function composeScreeningReport(
         evidence: cat.evidence,
       })),
       multiples: {
-        fwdPe: null,
-        ownHistPe: null,
+        fwdPe: c.fwdPe ?? null,
+        ownHistPe: c.ownHistPe ?? null,
         peerPe: null,
-        evEbitda: null,
-        ndEbitda: null,
-        growthNote: null,
+        evEbitda: c.evEbitda ?? null,
+        ndEbitda: c.ndEbitda ?? null,
+        growthNote: c.growthNote ?? null,
       },
       flags: {
-        netCash: null,
+        netCash: c.netCash ?? null,
         buyback: null,
-        dividendYield: null,
-        moatScore: null,
+        dividendYield: c.dividendYield ?? null,
+        moatScore: c.moatScore ?? null,
       },
       thesis: bullet?.bullet ?? c.rankReason,
       risks,
       priorityReason: bullet?.headline ?? c.rankReason.slice(0, 120),
       citedFields: [
+        ...(c.fwdPe != null ? ["multiples.fwdPe"] : []),
+        ...(c.evEbitda != null ? ["multiples.evEbitda"] : []),
+        ...(c.moatScore != null ? ["flags.moatScore"] : []),
+        ...(c.targetPrice != null ? ["targetPrice"] : []),
         ...(ir ? ["businessOneLiner", "guidance"] : []),
+        ...(c.analysisSummary && !ir ? ["analysisSummary"] : []),
         ...(web ? ["sentimentSummary"] : []),
         ...(pc ? ["positionKind"] : []),
         ...(riskRow ? ["suitability"] : []),
@@ -310,14 +317,21 @@ export function composeScreeningReport(
     };
   });
 
-  const comparisonRows = cards.map((card) => ({
-    ticker: card.ticker,
-    companyName: card.companyName,
-    valuationNote: "—",
-    growthNote: "—",
-    score: card.score,
-    verdict: card.verdict,
-  }));
+  const comparisonRows = cards.map((card, i) => {
+    const hd = candidates[i];
+    return {
+      ticker: card.ticker,
+      companyName: card.companyName,
+      valuationNote:
+        hd?.valuationNote ??
+        (card.multiples.fwdPe != null
+          ? `Fwd P/E ${card.multiples.fwdPe.toFixed(1)}x`
+          : "—"),
+      growthNote: hd?.growthNote ?? card.multiples.growthNote ?? "—",
+      score: card.score,
+      verdict: card.verdict,
+    };
+  });
 
   const locale = parsedBrief?.locale ?? draft.locale ?? "en";
   const hasIr = Boolean(irAggregate && irAggregate.tickers.length > 0);

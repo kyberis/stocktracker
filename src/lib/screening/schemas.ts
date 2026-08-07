@@ -329,6 +329,26 @@ export const hardDataCandidateSchema = z.object({
   rankScore: z.number().min(0).max(100),
   /** Short locale-aware sentence, no prices or targets. */
   rankReason: z.string().min(1).max(280),
+  /** Optional report enrichment (FMP + trefolio MOAT /analisis). */
+  currency: z.string().max(8).nullable().optional(),
+  fwdPe: z.number().finite().nullable().optional(),
+  ownHistPe: z.number().finite().nullable().optional(),
+  evEbitda: z.number().finite().nullable().optional(),
+  ndEbitda: z.number().finite().nullable().optional(),
+  dividendYield: z.number().finite().nullable().optional(),
+  netCash: z.boolean().nullable().optional(),
+  targetPrice: z.number().finite().nullable().optional(),
+  upsidePct: z.number().finite().nullable().optional(),
+  moatScore: z.number().finite().nullable().optional(),
+  moatVerdict: z.string().max(40).nullable().optional(),
+  analysisSummary: z.string().max(400).nullable().optional(),
+  growthNote: z.string().max(120).nullable().optional(),
+  valuationNote: z.string().max(120).nullable().optional(),
+  /** Deterministic checklist score 0–8 after enrichment. */
+  checklistScore: z.number().int().min(0).max(8).nullable().optional(),
+  stepsPassed: z.array(z.number().int()).max(9).optional(),
+  stepsFailed: z.array(z.number().int()).max(9).optional(),
+  reportVerdict: z.enum(["fuerte", "watch", "pass", "fail"]).nullable().optional(),
 });
 export type HardDataCandidate = z.infer<typeof hardDataCandidateSchema>;
 

@@ -21,6 +21,14 @@ import {
   marketCapRangeFromCondition,
   type FmpScreenerCandidate,
 } from "@/lib/screening/data/fmp-screening";
+import {
+  enrichHardDataCandidates,
+  summariseUniverseWithSignals,
+} from "@/lib/screening/data/enrich-candidates";
+import {
+  loadTrefolioSignalsForTickers,
+  type TrefolioTickerSignals,
+} from "@/lib/screening/data/trefolio-signals";
 import { buildHardDataPrompt } from "@/lib/screening/prompts/hard-data";
 import {
   hardDataOutputSchema,
@@ -43,16 +51,6 @@ const PORTFOLIO_CONTEXT_KIND = "portfolio_context";
 const RISK_KIND = "risk";
 const COMPILER_KIND = "compiler";
 
-interface FmpUniverseSummary {
-  ticker: string;
-  name: string;
-  sector: string | null;
-  industry: string | null;
-  country: string | null;
-  marketCapUsd: number | null;
-  price: number | null;
-}
-
 function parseBrief(briefJson: string): ScreeningBrief | null {
   if (!briefJson) return null;
   try {
@@ -62,18 +60,6 @@ function parseBrief(briefJson: string): ScreeningBrief | null {
   } catch {
     return null;
   }
-}
-
-function summariseUniverse(rows: FmpScreenerCandidate[]): FmpUniverseSummary[] {
-  return rows.slice(0, MAX_UNIVERSE_FOR_LLM).map((r) => ({
-    ticker: r.ticker,
-    name: r.name,
-    sector: r.sector,
-    industry: r.industry,
-    country: r.country,
-    marketCapUsd: r.marketCapUsd,
-    price: r.price,
-  }));
 }
 
 function coerceCandidates(
@@ -207,6 +193,25 @@ export async function runHardDataAgent(
     universeSize: opts.universe.length,
   });
 
+  // Prefetch trefolio MOAT + /analisis cache for ranking context (DB only).
+  const universeSlice = opts.universe.slice(0, MAX_UNIVERSE_FOR_LLM);
+  let signals = new Map<string, TrefolioTickerSignals>();
+  try {
+    signals = await loadTrefolioSignalsForTickers(
+      universeSlice.map((r) => r.ticker),
+    );
+  } catch (err) {
+    console.warn(
+      "[screening/hard-data] trefolio signals prefetch failed",
+      err instanceof Error ? err.message : err,
+    );
+  }
+  const universeForLlm = summariseUniverseWithSignals(
+    universeSlice,
+    signals,
+    MAX_UNIVERSE_FOR_LLM,
+  );
+
   const messages = [
     {
       role: "system" as const,
@@ -214,7 +219,7 @@ export async function runHardDataAgent(
     },
     {
       role: "user" as const,
-      content: `Universe (JSON, ${opts.universe.length} rows total, showing top ${Math.min(opts.universe.length, MAX_UNIVERSE_FOR_LLM)}):\n${JSON.stringify(summariseUniverse(opts.universe))}\n\nPlease call submit_hard_data with your ranking.`,
+      content: `Universe (JSON, ${opts.universe.length} rows total, showing top ${universeForLlm.length}). Fields moatScorePct/moatVerdict/hasAnalisis/analysisSnippet come from trefolio caches when available:\n${JSON.stringify(universeForLlm)}\n\nPlease call submit_hard_data with your ranking.`,
     },
   ];
 
@@ -404,6 +409,38 @@ export const runHardDataStep: StepHandler = async (
     universe: screenerResult.candidates,
   });
 
+  // Enrich shortlist with FMP multiples + MOAT /analisis for the report skeleton.
+  let enrichedOutput = runnerResult.output;
+  try {
+    if (runnerResult.output.candidates.length > 0) {
+      const enriched = await enrichHardDataCandidates(
+        runnerResult.output.candidates,
+      );
+      enrichedOutput = hardDataOutputSchema.parse({
+        ...runnerResult.output,
+        candidates: enriched,
+        sources: [
+          ...(runnerResult.output.sources ?? []),
+          {
+            label: "FMP ratios-ttm + profile",
+            url: "https://financialmodelingprep.com/stable/ratios-ttm",
+            asOf: new Date().toISOString().slice(0, 10),
+          },
+          {
+            label: "trefolio MOAT + /analisis cache",
+            url: "/tools/moat-evaluation",
+            asOf: new Date().toISOString().slice(0, 10),
+          },
+        ],
+      });
+    }
+  } catch (err) {
+    console.warn(
+      "[screening/hard-data] candidate enrichment failed",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
   // Persist output + AI log. Both are best-effort — the step still succeeds
   // even if the sidecar writes fail so we don't block the pipeline on logging.
   try {
@@ -411,7 +448,7 @@ export const runHardDataStep: StepHandler = async (
       userId: ctx.userId,
       runId: ctx.runId,
       agentKind: HARD_DATA_AGENT_KIND,
-      outputJson: JSON.stringify(runnerResult.output),
+      outputJson: JSON.stringify(enrichedOutput),
       latencyMs: runnerResult.latencyMs,
     });
   } catch (err) {
@@ -450,7 +487,7 @@ export const runHardDataStep: StepHandler = async (
     ]);
     const v2Enabled = v2Flag;
     const irEnabled = irFlag || v2Enabled;
-    const candidates = runnerResult.output.candidates.slice(0, IR_FANOUT_MAX);
+    const candidates = enrichedOutput.candidates.slice(0, IR_FANOUT_MAX);
 
     if (irEnabled && candidates.length > 0) {
       const irStepIds = candidates.map(() => crypto.randomUUID());
@@ -530,7 +567,7 @@ export const runHardDataStep: StepHandler = async (
     status: "ok",
     payload: {
       universeSize: screenerResult.candidates.length,
-      candidateCount: runnerResult.output.candidates.length,
+      candidateCount: enrichedOutput.candidates.length,
       fmpErrors: screenerResult.errors.length,
       llmError: runnerResult.errorMessage,
       irFanout,

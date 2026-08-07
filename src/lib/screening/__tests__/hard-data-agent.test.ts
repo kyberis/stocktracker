@@ -46,6 +46,20 @@ vi.mock("@/lib/screening/data/fmp-screening", async () => {
   };
 });
 
+vi.mock("@/lib/screening/data/trefolio-signals", () => ({
+  loadTrefolioSignalsForTickers: vi.fn(async () => new Map()),
+}));
+
+vi.mock("@/lib/screening/data/enrich-candidates", async () => {
+  const actual = await vi.importActual<
+    typeof import("../data/enrich-candidates")
+  >("../data/enrich-candidates");
+  return {
+    ...actual,
+    enrichHardDataCandidates: vi.fn(async (cands: unknown[]) => cands),
+  };
+});
+
 const brief = {
   intent: "explore" as const,
   includeSectors: ["Technology"],
