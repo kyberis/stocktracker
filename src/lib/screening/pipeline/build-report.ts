@@ -49,6 +49,14 @@ function safeParseJson<T>(raw: string): T | null {
   }
 }
 
+/** Clip optional prose to schema max lengths (Hard Data analysisSummary is 400; card one-liner is 280). */
+function clip(value: string | null | undefined, max: number): string | undefined {
+  if (value == null) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
+}
+
 function mapIrSources(
   ir: IrBusinessOutput,
 ): ScreeningCandidateCard["sources"] {
@@ -233,7 +241,10 @@ export function composeScreeningReport(
       sector: c.sector || "—",
       country: c.country || "—",
       business: (() => {
-        const summary = (ir?.businessOneLiner ?? c.analysisSummary ?? "").trim();
+        const summary = clip(
+          ir?.businessOneLiner ?? c.analysisSummary,
+          2000,
+        );
         if (!summary) return null;
         return {
           summary,
@@ -256,7 +267,10 @@ export function composeScreeningReport(
       stepsFailed: c.stepsFailed ?? [],
       catalyst: primaryCatalyst?.label ?? null,
       catalystDate: ir?.guidance.asOf ?? null,
-      businessOneLiner: ir?.businessOneLiner ?? c.analysisSummary ?? undefined,
+      businessOneLiner: clip(
+        ir?.businessOneLiner ?? c.analysisSummary,
+        280,
+      ),
       guidance: ir
         ? {
             summary: ir.guidance.summary,
@@ -303,10 +317,10 @@ export function composeScreeningReport(
       illustrativeAllocation: pc
         ? `€${Math.round(pc.illustrativeAllocationEur.min)}–€${Math.round(pc.illustrativeAllocationEur.max)}`
         : undefined,
-      sentimentSummary: web?.sentimentSummary,
+      sentimentSummary: clip(web?.sentimentSummary, 500),
       webSignals: web?.signals.slice(0, 3).map((s) => ({
         kind: s.kind,
-        claim: s.claim,
+        claim: s.claim.trim().slice(0, 280),
         confirmation: s.confirmation,
       })),
       insiderBias: web?.insiderSummary.netBias,
@@ -379,6 +393,12 @@ export function composeScreeningReport(
   };
 
   const validated = screeningReportSchema.safeParse(raw);
-  if (!validated.success) return null;
+  if (!validated.success) {
+    console.error(
+      "[screening] composeScreeningReport schema failed",
+      validated.error.issues.slice(0, 12),
+    );
+    return null;
+  }
   return validated.data;
 }

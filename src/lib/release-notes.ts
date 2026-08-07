@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.100",
+    date: "2026-08-08",
+    title: "Screening: fix report load when IR one-liner is missing",
+    titleTranslations: {
+      es: "Cribado: corregir carga del informe sin one-liner de IR",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Screening reports load again when a candidate has no IR business one-liner: the Hard Data analysis summary is clipped to the card schema limit instead of failing the whole report.",
+        translations: {
+          es: "Los informes de cribado vuelven a cargar cuando un candidato no tiene one-liner de IR: el resumen de Hard Data se recorta al límite del esquema de la ficha en lugar de fallar todo el informe.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.99",
     date: "2026-08-08",
     title: "Screening: show step errors on the agent timeline",
