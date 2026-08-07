@@ -140,6 +140,23 @@ export async function getScreeningRun(
   return row ? readRun(row as unknown as Record<string, unknown>) : null;
 }
 
+/**
+ * Unscoped variant for the internal worker: the step row does not carry
+ * `user_id`, so the orchestrator loads the run by id only. Never expose this
+ * on a user-facing route.
+ */
+export async function getScreeningRunUnscoped(
+  runId: string,
+): Promise<ScreeningRunRow | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT * FROM screening_runs WHERE id = ?`,
+    args: [runId],
+  });
+  const row = result.rows[0];
+  return row ? readRun(row as unknown as Record<string, unknown>) : null;
+}
+
 export interface InsertScreeningAgentOutputParams {
   userId: string;
   runId?: string | null;
@@ -207,4 +224,57 @@ export async function listScreeningAgentOutputsByRun(
     args: [runId, userId],
   });
   return result.rows.map((r) => readOutput(r as unknown as Record<string, unknown>));
+}
+
+/**
+ * Unscoped variant used by the worker's Compiler step. Returns the most recent
+ * output of a given agent kind for a run. Never expose on a user route — this
+ * skips the user_id scope.
+ */
+export async function getLatestScreeningAgentOutputUnscoped(
+  runId: string,
+  agentKind: string,
+): Promise<ScreeningAgentOutputRow | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT * FROM screening_agent_outputs
+          WHERE run_id = ? AND agent_kind = ?
+          ORDER BY created_at DESC
+          LIMIT 1`,
+    args: [runId, agentKind],
+  });
+  const row = result.rows[0];
+  return row ? readOutput(row as unknown as Record<string, unknown>) : null;
+}
+
+/**
+ * Link an unassigned agent output (typically an Intake row logged before the
+ * user pressed "Launch") to a newly created run. Returns the number of rows
+ * updated. User-scoped for safety.
+ */
+export async function linkPendingAgentOutputToRun(opts: {
+  userId: string;
+  agentKind: string;
+  runId: string;
+  /** Only rows created within the last N minutes are eligible. */
+  withinMinutes?: number;
+}): Promise<number> {
+  const client = await ensureInitialized();
+  const within = Math.max(1, Math.min(1440, opts.withinMinutes ?? 60));
+  // libSQL/SQLite doesn't have `INTERVAL`; use datetime('now', '-Xminutes').
+  const result = await client.execute({
+    sql: `UPDATE screening_agent_outputs
+             SET run_id = ?
+           WHERE id = (
+             SELECT id FROM screening_agent_outputs
+              WHERE user_id = ?
+                AND agent_kind = ?
+                AND (run_id IS NULL OR run_id = '')
+                AND created_at >= datetime('now', ?)
+              ORDER BY created_at DESC
+              LIMIT 1
+           )`,
+    args: [opts.runId, opts.userId, opts.agentKind, `-${within} minutes`],
+  });
+  return result.rowsAffected ?? 0;
 }

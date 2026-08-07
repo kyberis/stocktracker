@@ -96,6 +96,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "Floating Dev button on /screening/intake showing raw Intake agent outputs (JSON + latency). Admins and dev-mode users always see it; this flag opens it for a specific non-admin user. Off by default.",
     group: "Features",
   },
+  screening_pipeline_real_enabled: {
+    label: "Screening pipeline: real agents (Hard Data + Compiler)",
+    description:
+      "Switches POST /api/screening/runs from the mock pipeline to the event-driven orchestrator. Hard Data agent screens FMP live and Compiler agent writes the executive summary. Report skeleton is real; IR/Web/Risk/QA agents come later. Off by default — enable only for admins first.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

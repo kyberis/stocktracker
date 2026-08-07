@@ -72,6 +72,8 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `schema_version` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `screener_cache` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `screening_agent_outputs` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `screening_run_events` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `screening_run_steps` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `screening_runs` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `snaptrade_api_logs` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `snaptrade_broker_portfolio_map` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |

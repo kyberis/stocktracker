@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.91",
+    date: "2026-08-07",
+    title: "Screening pipeline goes live (Hard Data + Compiler, beta)",
+    titleTranslations: {
+      es: "Pipeline de cribado real (Hard Data + Compiler, beta)",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Screening reports now run on the real event-driven pipeline (opt-in via screening_pipeline_real_enabled): a Hard Data agent screens the FMP universe against your brief, then a Compiler agent writes the executive summary. Steps live in a durable queue with a worker + recovery cron, and the run id stops being a fixture.",
+        translations: {
+          es: "Los informes de cribado corren ahora sobre el pipeline real dirigido por eventos (opt-in con screening_pipeline_real_enabled): un agente Hard Data filtra el universo de FMP con tu brief y un Compiler redacta el resumen ejecutivo. Los pasos viven en una cola durable con un worker + cron de recuperación, y el runId deja de ser fixture.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Run progress now surfaces IR / Web / Portfolio Context / Risk / QA agents as 'coming soon' skipped steps so the timeline stays honest while those agents ship. Mock notice hides automatically when the run is real.",
+        translations: {
+          es: "El progreso de la ejecución muestra IR / Web / Contexto de cartera / Riesgo / QA como pasos 'próximamente' saltados, para que la línea de tiempo sea honesta mientras esos agentes llegan. El aviso de mock se oculta automáticamente cuando la ejecución es real.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "New Prometheus metrics for the screening pipeline: screening_step_duration_ms, screening_step_failures_total, screening_fmp_requests_total, screening_hard_data_universe_size.",
+        translations: {
+          es: "Nuevas métricas Prometheus para el pipeline de cribado: screening_step_duration_ms, screening_step_failures_total, screening_fmp_requests_total y screening_hard_data_universe_size.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.90",
     date: "2026-08-06",
     title: "Screening Intake agent (real LLM) with Dev log",

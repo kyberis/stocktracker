@@ -52,6 +52,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "tool_planning_enabled",
   "investment_screening_enabled",
   "screening_dev_lab_enabled",
+  "screening_pipeline_real_enabled",
 ];
 
 export const dynamic = "force-dynamic";

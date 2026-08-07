@@ -40,10 +40,19 @@ function StepRow({ step, label }: { step: ScreeningRunStep; label: string }) {
     running: copy.progress.statusRunning,
     done: copy.progress.statusDone,
     failed: copy.progress.statusFailed,
+    skipped: copy.progress.statusSkipped,
   }[step.status];
 
   const mark =
-    step.status === "done" ? "✓" : step.status === "running" ? "•" : step.status === "failed" ? "✕" : "";
+    step.status === "done"
+      ? "✓"
+      : step.status === "running"
+        ? "•"
+        : step.status === "failed"
+          ? "✕"
+          : step.status === "skipped"
+            ? "–"
+            : "";
   const markTone =
     step.status === "done"
       ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
@@ -51,7 +60,9 @@ function StepRow({ step, label }: { step: ScreeningRunStep; label: string }) {
         ? "bg-teal-500/15 text-teal-600 dark:text-teal-300 animate-pulse"
         : step.status === "failed"
           ? "bg-red-500/12 text-red-600 dark:text-red-400"
-          : "bg-white/5 text-[color:var(--muted)]";
+          : step.status === "skipped"
+            ? "bg-[color:var(--muted)]/10 text-[color:var(--muted)] opacity-70"
+            : "bg-white/5 text-[color:var(--muted)]";
 
   return (
     <li className="flex items-center gap-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2">
@@ -63,7 +74,7 @@ function StepRow({ step, label }: { step: ScreeningRunStep; label: string }) {
       </span>
       <span
         className={`min-w-0 flex-1 text-[13px] ${
-          step.status === "pending"
+          step.status === "pending" || step.status === "skipped"
             ? "text-[color:var(--muted)]"
             : "text-[color:var(--foreground)]"
         }`}
@@ -175,7 +186,7 @@ export function RunProgress({ runId }: { runId: string }) {
       </h1>
       <p className="mt-2 text-sm text-[color:var(--muted)]">{copy.progress.body}</p>
 
-      <MockNotice className="mt-4" />
+      {(run?.mocked ?? true) ? <MockNotice className="mt-4" /> : null}
 
       {error ? (
         <p className="card mt-5 rounded-[20px] p-4 text-sm text-red-600 dark:text-red-400" role="alert">

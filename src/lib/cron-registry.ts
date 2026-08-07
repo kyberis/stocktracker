@@ -156,4 +156,11 @@ export const CRON_REGISTRY: CronJob[] = [
     schedule: "15 2 * * *",
     description: "Overnight scan: flag holdings that lost Yahoo/alias quote coverage (TRF-104)",
   },
+  {
+    name: "screening-recover",
+    path: "/api/cron/screening-recover",
+    schedule: "*/5 * * * *",
+    description:
+      "Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain",
+  },
 ];

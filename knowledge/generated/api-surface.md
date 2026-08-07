@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-286 routes.
+288 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -154,6 +154,7 @@
 | `/api/cron/push-gauges` | GET | [`src/app/api/cron/push-gauges/route.ts`](../../src/app/api/cron/push-gauges/route.ts) |
 | `/api/cron/refresh-holdings` | GET | [`src/app/api/cron/refresh-holdings/route.ts`](../../src/app/api/cron/refresh-holdings/route.ts) |
 | `/api/cron/screener-sync` | GET | [`src/app/api/cron/screener-sync/route.ts`](../../src/app/api/cron/screener-sync/route.ts) |
+| `/api/cron/screening-recover` | GET | [`src/app/api/cron/screening-recover/route.ts`](../../src/app/api/cron/screening-recover/route.ts) |
 | `/api/cron/snaptrade-cleanup` | GET, POST | [`src/app/api/cron/snaptrade-cleanup/route.ts`](../../src/app/api/cron/snaptrade-cleanup/route.ts) |
 | `/api/cron/snaptrade-sync` | GET | [`src/app/api/cron/snaptrade-sync/route.ts`](../../src/app/api/cron/snaptrade-sync/route.ts) |
 | `/api/cron/tax-rules-review` | GET | [`src/app/api/cron/tax-rules-review/route.ts`](../../src/app/api/cron/tax-rules-review/route.ts) |
@@ -203,6 +204,7 @@
 | `/api/internal/account-deleted` | POST | [`src/app/api/internal/account-deleted/route.ts`](../../src/app/api/internal/account-deleted/route.ts) |
 | `/api/internal/ops-metrics` | GET | [`src/app/api/internal/ops-metrics/route.ts`](../../src/app/api/internal/ops-metrics/route.ts) |
 | `/api/internal/prodops-query` | POST | [`src/app/api/internal/prodops-query/route.ts`](../../src/app/api/internal/prodops-query/route.ts) |
+| `/api/internal/screening/worker` | POST | [`src/app/api/internal/screening/worker/route.ts`](../../src/app/api/internal/screening/worker/route.ts) |
 | `/api/internal/telegram-link-status` | GET | [`src/app/api/internal/telegram-link-status/route.ts`](../../src/app/api/internal/telegram-link-status/route.ts) |
 | `/api/market-insights` | GET | [`src/app/api/market-insights/route.ts`](../../src/app/api/market-insights/route.ts) |
 | `/api/mcp/analytics/event` | POST | [`src/app/api/mcp/analytics/event/route.ts`](../../src/app/api/mcp/analytics/event/route.ts) |

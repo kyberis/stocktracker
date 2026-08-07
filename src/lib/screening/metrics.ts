@@ -116,6 +116,97 @@ export function recordScreeningRunCreated(intent: string, mocked: boolean): void
   }
 }
 
+/**
+ * Pipeline-side metrics (HLD §11). Registered on demand so tests don't have to
+ * import the whole runtime.
+ */
+export const screeningStepDurationMs = getOrCreateMetric(
+  "screening_step_duration_ms",
+  () =>
+    new Histogram({
+      name: "screening_step_duration_ms",
+      help: "Duration of a screening pipeline step (single agent turn) in milliseconds",
+      labelNames: ["agent_kind", "status"] as const,
+      buckets: [500, 1000, 2000, 5000, 10_000, 20_000, 40_000, 60_000, 120_000],
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningStepFailuresTotal = getOrCreateMetric(
+  "screening_step_failures_total",
+  () =>
+    new Counter({
+      name: "screening_step_failures_total",
+      help: "Screening pipeline step failures by agent and reason",
+      labelNames: ["agent_kind", "reason"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningFmpRequestsTotal = getOrCreateMetric(
+  "screening_fmp_requests_total",
+  () =>
+    new Counter({
+      name: "screening_fmp_requests_total",
+      help: "FMP screener requests issued by the Hard Data agent",
+      labelNames: ["status"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningHardDataUniverseSize = getOrCreateMetric(
+  "screening_hard_data_universe_size",
+  () =>
+    new Histogram({
+      name: "screening_hard_data_universe_size",
+      help: "Number of tickers returned by the FMP screener before ranking",
+      buckets: [0, 5, 10, 20, 40, 80, 160, 320, 640, 1000],
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export function recordScreeningStep(opts: {
+  agentKind: string;
+  status: "done" | "failed" | "skipped";
+  durationMs: number;
+  reason?: string;
+}): void {
+  const agentKind = opts.agentKind || "unknown";
+  try {
+    screeningStepDurationMs.observe(
+      { agent_kind: agentKind, status: opts.status },
+      Math.max(0, opts.durationMs),
+    );
+    if (opts.status === "failed") {
+      screeningStepFailuresTotal.inc({
+        agent_kind: agentKind,
+        reason: opts.reason?.slice(0, 40) || "unknown",
+      });
+    }
+  } catch (err) {
+    console.error(
+      "Failed to record screening step metric:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
+
+export function recordFmpScreenerRequest(status: "ok" | "error" | "rate_limited"): void {
+  try {
+    screeningFmpRequestsTotal.inc({ status });
+  } catch {
+    // metrics are best-effort
+  }
+}
+
+export function recordHardDataUniverseSize(size: number): void {
+  try {
+    screeningHardDataUniverseSize.observe(Math.max(0, size));
+  } catch {
+    // metrics are best-effort
+  }
+}
+
 function labelOrUnknown(value: string | undefined, fallback = "unknown"): string {
   return value && value.length > 0 ? value : fallback;
 }

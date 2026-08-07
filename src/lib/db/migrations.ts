@@ -3778,6 +3778,59 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 130,
+    description: "Investment screening event-driven orchestrator (step queue + events)",
+    up: async (client: Client) => {
+      // screening_run_steps is the durable queue the worker leases against.
+      // depends_on holds a JSON array of step ids that must be 'done' before
+      // this step can be leased — fan-out (IR/Web per ticker) piggybacks on
+      // the same table by inserting one row per (agent_kind, ticker).
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS screening_run_steps (
+          id TEXT PRIMARY KEY,
+          run_id TEXT NOT NULL REFERENCES screening_runs(id) ON DELETE CASCADE,
+          agent_kind TEXT NOT NULL,
+          ticker TEXT,
+          status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN (
+            'pending',
+            'running',
+            'done',
+            'failed',
+            'skipped'
+          )),
+          attempts INTEGER NOT NULL DEFAULT 0,
+          lease_owner TEXT,
+          lease_expires_at TEXT,
+          depends_on TEXT NOT NULL DEFAULT '[]',
+          error_message TEXT,
+          started_at TEXT,
+          completed_at TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_screening_run_steps_run_status
+          ON screening_run_steps(run_id, status);
+        CREATE INDEX IF NOT EXISTS idx_screening_run_steps_status_lease
+          ON screening_run_steps(status, lease_expires_at);
+
+        -- append-only event store for audit + replay. Keep payloads small; the
+        -- authoritative agent output stays in screening_agent_outputs.
+        CREATE TABLE IF NOT EXISTS screening_run_events (
+          id TEXT PRIMARY KEY,
+          run_id TEXT NOT NULL REFERENCES screening_runs(id) ON DELETE CASCADE,
+          step_id TEXT,
+          event_type TEXT NOT NULL,
+          payload_json TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_screening_run_events_run_created
+          ON screening_run_events(run_id, created_at);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -111,7 +111,13 @@ export const SCREENING_RUN_STATUSES = [
 ] as const;
 export type ScreeningRunStatus = (typeof SCREENING_RUN_STATUSES)[number];
 
-export const SCREENING_STEP_STATUSES = ["pending", "running", "done", "failed"] as const;
+export const SCREENING_STEP_STATUSES = [
+  "pending",
+  "running",
+  "done",
+  "failed",
+  "skipped",
+] as const;
 export type ScreeningStepStatus = (typeof SCREENING_STEP_STATUSES)[number];
 
 export const screeningRunStepSchema = z.object({
@@ -226,3 +232,50 @@ export const screeningReportSchema = z.object({
   pendingAgentKinds: z.array(z.string()),
 });
 export type ScreeningReport = z.infer<typeof screeningReportSchema>;
+
+/* ── Hard Data agent (HLD §4.5, Agent 1) ──────────────────────────────── */
+
+export const hardDataCandidateSchema = z.object({
+  ticker: z.string().min(1).max(20),
+  name: z.string().max(200).default(""),
+  sector: z.string().max(120).nullable().default(null),
+  industry: z.string().max(120).nullable().default(null),
+  country: z.string().max(10).nullable().default(null),
+  marketCapUsd: z.number().finite().nullable().default(null),
+  price: z.number().finite().nullable().default(null),
+  /** 0..100, higher is a stronger fit. */
+  rankScore: z.number().min(0).max(100),
+  /** Short locale-aware sentence, no prices or targets. */
+  rankReason: z.string().min(1).max(280),
+});
+export type HardDataCandidate = z.infer<typeof hardDataCandidateSchema>;
+
+export const HARD_DATA_STATUSES = ["ok", "empty"] as const;
+export type HardDataStatus = (typeof HARD_DATA_STATUSES)[number];
+
+export const hardDataOutputSchema = z.object({
+  status: z.enum(HARD_DATA_STATUSES),
+  universeSize: z.number().int().min(0),
+  candidates: z.array(hardDataCandidateSchema).max(15),
+  deferredTickers: z.array(z.string().min(1).max(20)).max(20).default([]),
+  gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
+  locale: z.string().min(2).max(10),
+});
+export type HardDataOutput = z.infer<typeof hardDataOutputSchema>;
+
+/* ── Compiler agent (HLD §4.5, Agent 6 / Compiler) ────────────────────── */
+
+export const compilerBulletSchema = z.object({
+  ticker: z.string().min(1).max(20),
+  headline: z.string().min(1).max(120),
+  bullet: z.string().min(1).max(320),
+});
+export type CompilerBullet = z.infer<typeof compilerBulletSchema>;
+
+export const compilerReportDraftSchema = z.object({
+  summary: z.string().min(1).max(2000),
+  candidateBullets: z.array(compilerBulletSchema).max(10),
+  disclaimer: z.string().min(1).max(500),
+  locale: z.string().min(2).max(10),
+});
+export type CompilerReportDraft = z.infer<typeof compilerReportDraftSchema>;

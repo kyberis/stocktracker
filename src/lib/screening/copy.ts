@@ -407,6 +407,7 @@ const en = {
     statusRunning: "running",
     statusDone: "done",
     statusFailed: "failed",
+    statusSkipped: "coming soon",
     failed: "The run failed. Nothing was charged.",
     steps: {
       intake: "Intake — validates the brief",
@@ -865,6 +866,7 @@ const es: ScreeningCopy = {
     statusRunning: "en curso",
     statusDone: "hecho",
     statusFailed: "falló",
+    statusSkipped: "próximamente",
     failed: "La ejecución falló. No se ha cobrado nada.",
     steps: {
       intake: "Intake — valida el brief",

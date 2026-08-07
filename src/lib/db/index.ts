@@ -803,7 +803,31 @@ export {
   createScreeningRun,
   updateScreeningRunStatus,
   getScreeningRun,
+  getScreeningRunUnscoped,
   insertScreeningAgentOutput,
   listScreeningAgentOutputsByUser,
   listScreeningAgentOutputsByRun,
+  getLatestScreeningAgentOutputUnscoped,
+  linkPendingAgentOutputToRun,
 } from "./screening";
+
+export type {
+  ScreeningStepStatus,
+  ScreeningStepRow,
+  ScreeningRunEventRow,
+  InsertStepInput,
+  AppendEventParams,
+} from "./screening-steps";
+export {
+  MAX_STEP_ATTEMPTS,
+  insertSteps,
+  leasePendingStep,
+  completeStep,
+  failStep,
+  recoverExpiredLeases,
+  listStepsForRun,
+  getStepById,
+  countPendingStepsForRun,
+  appendEvent,
+  listEventsForRun,
+} from "./screening-steps";
