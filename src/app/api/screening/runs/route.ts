@@ -16,12 +16,11 @@ import {
   linkPendingAgentOutputToRun,
 } from "@/lib/db";
 import { recordScreeningRunCreated } from "@/lib/screening/metrics";
-import { getRequestPublicOrigin } from "@/lib/http/request-public-origin";
-import { deferTask } from "@/lib/task-runner";
 import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import { buildRunResponse } from "@/lib/screening/pipeline/build-run";
 import { HARD_DATA_AGENT_KIND } from "@/lib/screening/agents/hard-data";
 import { COMPILER_AGENT_KIND } from "@/lib/screening/agents/compiler";
+import { kickScreeningWorker } from "@/lib/screening/orchestrator/kick-worker";
 
 /**
  * Create a screening run.
@@ -54,7 +53,6 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
   );
 
   if (!realPipeline) {
-    // Legacy mock path — unchanged.
     const runId = createMockRunId();
     const run = buildMockRun(runId);
     if (!run) {
@@ -78,7 +76,6 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
     return NextResponse.json({ run }, { status: 201 });
   }
 
-  // Real pipeline path.
   let runRow;
   try {
     runRow = await createScreeningRun({
@@ -96,7 +93,6 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
     return NextResponse.json({ error: "Could not create run" }, { status: 500 });
   }
 
-  // Insert steps: hard_data first, compiler depends on it.
   try {
     const hardDataStepId = crypto.randomUUID();
     await insertSteps(runRow.id, [
@@ -121,8 +117,6 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
     // best-effort
   }
 
-  // Link the most recent Intake output for this user (within the last hour)
-  // to the newly created run. Best-effort — the worker doesn't depend on it.
   try {
     await linkPendingAgentOutputToRun({
       userId: session.userId,
@@ -139,32 +133,8 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
 
   recordScreeningRunCreated(parsed.data.intent, false);
 
-  // Fire the worker without blocking the response.
-  const origin = getRequestPublicOrigin(req);
-  const cronSecret = process.env.CRON_SECRET?.trim();
-  if (cronSecret) {
-    deferTask(async () => {
-      try {
-        await fetch(`${origin}/api/internal/screening/worker`, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            authorization: `Bearer ${cronSecret}`,
-          },
-          body: JSON.stringify({ runId: runRow.id }),
-        });
-      } catch (err) {
-        console.error(
-          "[screening/runs] worker kick failed",
-          err instanceof Error ? err.message : err,
-        );
-      }
-    });
-  } else {
-    console.warn(
-      "[screening/runs] CRON_SECRET not set — worker not kicked, relying on cron recover",
-    );
-  }
+  // Kick via waitUntil so Hard Data starts even if the browser navigates away.
+  kickScreeningWorker({ runId: runRow.id, req });
 
   const run = buildRunResponse(runRow, []);
   return NextResponse.json({ run }, { status: 201 });

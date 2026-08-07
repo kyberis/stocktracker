@@ -1,54 +1,37 @@
 import { NextRequest } from "next/server";
 
 import { verifyCronAuth, withCronLogging } from "@/lib/cron-logging";
-import { recoverExpiredLeases } from "@/lib/db";
-import { getRequestPublicOrigin } from "@/lib/http/request-public-origin";
-import { deferTask } from "@/lib/task-runner";
+import { countPendingSteps, recoverExpiredLeases } from "@/lib/db";
+import { kickScreeningWorker } from "@/lib/screening/orchestrator/kick-worker";
 
 /**
  * Screening pipeline recovery. Every 5 minutes:
- *  1. Reset expired leases (worker crashed, step is stuck in `running`).
- *  2. Fire the worker once so any `pending` steps make forward progress even
- *     when the previous run finished without self-invoking (rare, but keeps the
- *     pipeline resilient to lost `waitUntil` promises).
+ *  1. Reset expired leases (worker crashed, step stuck in `running`).
+ *  2. Fire the worker when anything is still pending/running — including
+ *     never-leased steps whose original waitUntil kick was dropped.
  *
- * The recover pass is a no-op if nothing is stuck.
+ * Without (2), a missed kick leaves the UI polling forever with Hard Data
+ * stuck on "pending".
  */
 async function runScreeningRecover(req: NextRequest): Promise<{
   requeued: number;
   failed: number;
+  pending: number;
   workerKicked: boolean;
 }> {
   const result = await recoverExpiredLeases(new Date());
+  const pending = await countPendingSteps();
 
-  // Best-effort kick — if leases were requeued OR if any pending steps exist,
-  // we ping the worker without a runId scope. Keeping the trigger simple avoids
-  // extra queries on the happy path.
   let workerKicked = false;
-  if (result.requeued > 0) {
+  if (result.requeued > 0 || pending > 0) {
     workerKicked = true;
-    const origin = getRequestPublicOrigin(req);
-    const authHeader = req.headers.get("authorization") ?? "";
-    deferTask(async () => {
-      try {
-        await fetch(`${origin}/api/internal/screening/worker`, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            authorization: authHeader,
-          },
-          body: JSON.stringify({}),
-        });
-      } catch (err) {
-        console.error(
-          "[screening-recover] worker kick failed",
-          err instanceof Error ? err.message : err,
-        );
-      }
+    kickScreeningWorker({
+      req,
+      authorization: req.headers.get("authorization") ?? undefined,
     });
   }
 
-  return { ...result, workerKicked };
+  return { ...result, pending, workerKicked };
 }
 
 export async function GET(req: NextRequest) {

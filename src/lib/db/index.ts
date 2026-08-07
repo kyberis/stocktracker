@@ -828,6 +828,7 @@ export {
   listStepsForRun,
   getStepById,
   countPendingStepsForRun,
+  countPendingSteps,
   appendEvent,
   listEventsForRun,
 } from "./screening-steps";

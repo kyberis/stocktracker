@@ -13,12 +13,40 @@ function isVercel(): boolean {
   return !!process.env.VERCEL;
 }
 
+/**
+ * Keep a deferred promise alive past the HTTP response on Vercel.
+ *
+ * Prefer a synchronous require of `@vercel/functions` when available so we
+ * register `waitUntil` *before* the isolate can freeze. The previous dynamic
+ * `import().then(...)` raced the response and silently dropped screening
+ * worker kicks (steps stayed pending forever).
+ */
 function schedulePromise(promise: Promise<unknown>): void {
-  if (isVercel()) {
-    // Dynamic import so the module loads cleanly outside Vercel
-    import("@vercel/functions").then(({ waitUntil }) => waitUntil(promise));
+  if (!isVercel()) {
+    // Locally the promise already runs in the long-lived Node process.
+    return;
   }
-  // Locally the promise already runs in the long-lived Node process — nothing else needed.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { waitUntil } = require("@vercel/functions") as {
+      waitUntil: (p: Promise<unknown>) => void;
+    };
+    waitUntil(promise);
+  } catch (err) {
+    // Fallback: dynamic import (still better than dropping the work).
+    console.warn(
+      "[task-runner] sync waitUntil unavailable, falling back to dynamic import",
+      err instanceof Error ? err.message : err,
+    );
+    import("@vercel/functions")
+      .then(({ waitUntil }) => waitUntil(promise))
+      .catch((importErr) =>
+        console.error(
+          "[task-runner] waitUntil import failed",
+          importErr instanceof Error ? importErr.message : importErr,
+        ),
+      );
+  }
 }
 
 function evictStale(): void {

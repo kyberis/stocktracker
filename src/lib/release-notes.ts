@@ -45,6 +45,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Nuevas métricas Prometheus para el pipeline de cribado: screening_step_duration_ms, screening_step_failures_total, screening_fmp_requests_total y screening_hard_data_universe_size.",
         },
       },
+      {
+        type: "fix",
+        text: "Screening Hard Data no longer sticks on “pending”: the worker kick now survives the HTTP response (waitUntil), screening-recover is reachable by Vercel Cron, and the recover job also wakes orphaned pending steps — not only expired leases.",
+        translations: {
+          es: "Hard Data de cribado ya no se queda en “pendiente”: el kick del worker sobrevive a la respuesta HTTP (waitUntil), screening-recover es alcanzable por Vercel Cron, y el recover también despierta pasos pending huérfanos — no solo leases expirados.",
+        },
+      },
     ],
   },
   {

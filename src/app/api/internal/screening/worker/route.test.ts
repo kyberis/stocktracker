@@ -15,8 +15,8 @@ vi.mock("@/lib/screening/orchestrator/runner", () => ({
   }),
 }));
 
-vi.mock("@/lib/task-runner", () => ({
-  deferTask: vi.fn(),
+vi.mock("@/lib/screening/orchestrator/kick-worker", () => ({
+  kickScreeningWorker: vi.fn(),
 }));
 
 describe("POST /api/internal/screening/worker", () => {
@@ -69,7 +69,9 @@ describe("POST /api/internal/screening/worker", () => {
       agentKind: "hard_data",
       moreWork: true,
     });
-    const { deferTask } = await import("@/lib/task-runner");
+    const { kickScreeningWorker } = await import(
+      "@/lib/screening/orchestrator/kick-worker"
+    );
     const { POST } = await import("./route");
 
     await POST(
@@ -83,11 +85,18 @@ describe("POST /api/internal/screening/worker", () => {
       }),
     );
 
-    expect(deferTask).toHaveBeenCalledTimes(1);
+    expect(kickScreeningWorker).toHaveBeenCalledWith(
+      expect.objectContaining({
+        runId: "run-42",
+        authorization: "Bearer test",
+      }),
+    );
   });
 
   it("does not self-invoke when there is no more work", async () => {
-    const { deferTask } = await import("@/lib/task-runner");
+    const { kickScreeningWorker } = await import(
+      "@/lib/screening/orchestrator/kick-worker"
+    );
     const { POST } = await import("./route");
 
     await POST(
@@ -101,6 +110,6 @@ describe("POST /api/internal/screening/worker", () => {
       }),
     );
 
-    expect(deferTask).not.toHaveBeenCalled();
+    expect(kickScreeningWorker).not.toHaveBeenCalled();
   });
 });

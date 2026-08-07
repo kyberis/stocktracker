@@ -443,6 +443,17 @@ export async function countPendingStepsForRun(runId: string): Promise<number> {
   return num((result.rows[0] as unknown as Record<string, unknown>).c);
 }
 
+/** Global pending/running count used by the recover cron to decide whether to kick. */
+export async function countPendingSteps(): Promise<number> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT COUNT(*) AS c FROM screening_run_steps
+           WHERE status IN ('pending', 'running')`,
+    args: [],
+  });
+  return num((result.rows[0] as unknown as Record<string, unknown>).c);
+}
+
 export interface AppendEventParams {
   runId: string;
   stepId?: string | null;

@@ -20,12 +20,12 @@ vi.mock("@/lib/db", () => ({
   appendEvent: vi.fn(),
 }));
 
-vi.mock("@/lib/task-runner", () => ({
-  deferTask: vi.fn(),
-}));
-
 vi.mock("@/lib/screening/metrics", () => ({
   recordScreeningRunCreated: vi.fn(),
+}));
+
+vi.mock("@/lib/screening/orchestrator/kick-worker", () => ({
+  kickScreeningWorker: vi.fn(),
 }));
 
 vi.mock("@/lib/http/request-public-origin", () => ({
@@ -39,7 +39,7 @@ import {
   insertSteps,
   linkPendingAgentOutputToRun,
 } from "@/lib/db";
-import { deferTask } from "@/lib/task-runner";
+import { kickScreeningWorker } from "@/lib/screening/orchestrator/kick-worker";
 
 const validBrief = {
   intent: "explore",
@@ -102,7 +102,7 @@ describe("POST /api/screening/runs", () => {
     expect(body.run.runId).toMatch(/^mock-/);
     expect(body.run.mocked).toBe(true);
     expect(insertSteps).not.toHaveBeenCalled();
-    expect(deferTask).not.toHaveBeenCalled();
+    expect(kickScreeningWorker).not.toHaveBeenCalled();
   });
 
   it("creates real steps and fires the worker when the flag is on", async () => {
@@ -142,7 +142,9 @@ describe("POST /api/screening/runs", () => {
         }),
       ]),
     );
-    expect(deferTask).toHaveBeenCalledTimes(1);
+    expect(kickScreeningWorker).toHaveBeenCalledWith(
+      expect.objectContaining({ runId: "real-run-1" }),
+    );
     expect(linkPendingAgentOutputToRun).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "user-1", agentKind: "intake", runId: "real-run-1" }),
     );
