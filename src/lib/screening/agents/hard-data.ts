@@ -142,6 +142,12 @@ export async function runHardDataAgent(
   const brief = opts.brief;
   const universeMap = new Map(opts.universe.map((c) => [c.ticker, c]));
 
+  const fmpSource = {
+    label: "FMP company-screener",
+    url: "https://financialmodelingprep.com/stable/company-screener",
+    asOf: new Date().toISOString().slice(0, 10),
+  };
+
   if (opts.universe.length === 0) {
     return {
       output: hardDataOutputSchema.parse({
@@ -151,6 +157,7 @@ export async function runHardDataAgent(
         deferredTickers: [],
         gaps: ["universe_empty"],
         locale: brief.locale,
+        sources: [fmpSource],
       }),
       latencyMs: Date.now() - startedAt,
       rawResponse: "",
@@ -182,6 +189,7 @@ export async function runHardDataAgent(
         deferredTickers: [],
         gaps: ["gateway_not_configured"],
         locale: brief.locale,
+        sources: [fmpSource],
       }),
       latencyMs: Date.now() - startedAt,
       rawResponse: "",
@@ -293,19 +301,26 @@ export async function runHardDataAgent(
     try {
       const parsed = JSON.parse(rawResponse) as Record<string, unknown>;
       const candidates = coerceCandidates(parsed.candidates, universeMap);
-      const status = candidates.length === 0 ? "empty" : "ok";
-      const built = hardDataOutputSchema.safeParse({
-        status,
-        universeSize: opts.universe.length,
-        candidates: candidates.slice(0, brief.candidateCount),
-        deferredTickers: coerceStringList(parsed.deferredTickers, 20, 20),
-        gaps: coerceStringList(parsed.gaps, 200, 8),
-        locale: brief.locale,
-      });
-      if (built.success) {
-        output = built.data;
+      // LLM often returns status=empty even when the FMP universe is usable —
+      // treat that as a soft failure and fall back to market-cap ranking.
+      if (candidates.length === 0 && opts.universe.length > 0) {
+        errorMessage = "llm_returned_empty";
       } else {
-        errorMessage = `parse_failed:${built.error.issues[0]?.message ?? "unknown"}`;
+        const status = candidates.length === 0 ? "empty" : "ok";
+        const built = hardDataOutputSchema.safeParse({
+          status,
+          universeSize: opts.universe.length,
+          candidates: candidates.slice(0, brief.candidateCount),
+          deferredTickers: coerceStringList(parsed.deferredTickers, 20, 20),
+          gaps: coerceStringList(parsed.gaps, 200, 8),
+          locale: brief.locale,
+          sources: [fmpSource],
+        });
+        if (built.success) {
+          output = built.data;
+        } else {
+          errorMessage = `parse_failed:${built.error.issues[0]?.message ?? "unknown"}`;
+        }
       }
     } catch (err) {
       errorMessage = `json_parse:${err instanceof Error ? err.message : "unknown"}`;
@@ -328,7 +343,10 @@ export async function runHardDataAgent(
         marketCapUsd: c.marketCapUsd,
         price: c.price,
         rankScore: 60 - i * 5,
-        rankReason: "Ranked by market cap (LLM output not usable).",
+        rankReason:
+          errorMessage === "llm_returned_empty"
+            ? "Ranked by market cap (model returned no tickers)."
+            : "Ranked by market cap (LLM output not usable).",
       }),
     );
     output = hardDataOutputSchema.parse({
@@ -338,6 +356,7 @@ export async function runHardDataAgent(
       deferredTickers: [],
       gaps: [errorMessage ?? "llm_no_output"],
       locale: brief.locale,
+      sources: [fmpSource],
     });
   }
 

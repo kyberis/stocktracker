@@ -23,13 +23,10 @@ import { buildRunResponse } from "@/lib/screening/pipeline/build-run";
 import { toScreeningRunListItem } from "@/lib/screening/pipeline/build-run-list-item";
 import { HARD_DATA_AGENT_KIND } from "@/lib/screening/agents/hard-data";
 import { COMPILER_AGENT_KIND } from "@/lib/screening/agents/compiler";
-import {
-  continueScreeningRunInBackground,
-  drainScreeningRun,
-} from "@/lib/screening/orchestrator/drain-run";
+import { continueScreeningRunInBackground } from "@/lib/screening/orchestrator/drain-run";
 
 export const dynamic = "force-dynamic";
-/** Hard Data + first IR hops can take a while; keep the isolate warm. */
+/** Background drain may need the isolate briefly after the response. */
 export const maxDuration = 60;
 
 /**
@@ -55,10 +52,9 @@ export const GET = withMetrics("/api/screening/runs", async (req: NextRequest) =
  * Two paths, gated by `screening_pipeline_real_enabled`:
  *  1. **Mock (default):** persist the brief and return a `mock-*` id whose
  *     progress derives from the id timestamp. Same as before.
- *  2. **Real (flag on):** persist the run and step queue in Turso, run the
- *     first step(s) **in-process** (no HTTP self-call), then continue via
- *     waitUntil. Self-fetch to the internal worker proved unreliable on
- *     Vercel and left Hard Data at attempts=0.
+ *  2. **Real (flag on):** persist the run and step queue in Turso, return
+ *     immediately with pending steps so the UI can show agents at once, then
+ *     drain **in-process** via waitUntil (no HTTP self-call).
  */
 export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) => {
   const { session, error } = await requireScreeningAccess(req);
@@ -162,21 +158,9 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
 
   recordScreeningRunCreated(parsed.data.intent, false);
 
-  // In-process drain: run Hard Data (and early IR if fan-out is fast) before
-  // returning so the UI never opens on a wall of "pending" with attempts=0.
-  try {
-    const drained = await drainScreeningRun({ runId: runRow.id, maxSteps: 2 });
-    if (drained.moreWork) {
-      continueScreeningRunInBackground(runRow.id);
-    }
-  } catch (err) {
-    console.error(
-      "[screening/runs] in-process drain failed",
-      err instanceof Error ? err.message : err,
-    );
-    // Fallback: still schedule background work.
-    continueScreeningRunInBackground(runRow.id);
-  }
+  // Return ASAP so Intake → run page shows the agent list immediately.
+  // Drain in-process after the response (waitUntil); recover cron is backup.
+  continueScreeningRunInBackground(runRow.id);
 
   const steps = await listStepsForRun(runRow.id).catch(() => []);
   const run = buildRunResponse(runRow, steps);

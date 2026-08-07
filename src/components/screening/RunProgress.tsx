@@ -7,6 +7,7 @@ import {
   buildIntakeHrefFromBrief,
   SCREENING_INTAKE_RETURN_KEY,
 } from "@/lib/screening/intake-href";
+import { buildOptimisticRun } from "@/lib/screening/pipeline/build-run";
 import { MockNotice, ScreeningDisclaimer } from "./ScreeningNotices";
 import { ScreeningReportView } from "./ScreeningReportView";
 import { useScreeningCopy } from "./use-screening-copy";
@@ -102,8 +103,10 @@ function StepRow({ step, label }: { step: ScreeningRunStep; label: string }) {
 
 export function RunProgress({ runId }: { runId: string }) {
   const { copy } = useScreeningCopy();
-  const [run, setRun] = useState<ScreeningRun | null>(null);
+  const [run, setRun] = useState<ScreeningRun | null>(() => buildOptimisticRun(runId));
   const [report, setReport] = useState<ScreeningReport | null>(null);
+  const [showReport, setShowReport] = useState(false);
+  const [loadingReport, setLoadingReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollsRef = useRef(0);
   const briefRef = useRef<ScreeningBrief | null>(null);
@@ -113,21 +116,38 @@ export function RunProgress({ runId }: { runId: string }) {
     const brief = readStoredBrief(runId);
     briefRef.current = brief;
     setBackHref(readIntakeReturn(runId, brief));
+    setRun(buildOptimisticRun(runId));
+    setReport(null);
+    setShowReport(false);
+    setError(null);
+    pollsRef.current = 0;
   }, [runId]);
 
   const loadReport = useCallback(async () => {
-    const count = briefRef.current?.candidateCount;
-    const qs = count ? `?candidates=${count}` : "";
-    const res = await fetch(`/api/screening/reports/${encodeURIComponent(runId)}${qs}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) {
+    setLoadingReport(true);
+    setError(null);
+    try {
+      const count = briefRef.current?.candidateCount;
+      const qs = count ? `?candidates=${count}` : "";
+      const res = await fetch(`/api/screening/reports/${encodeURIComponent(runId)}${qs}`, {
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        setError(copy.report.loadError);
+        return;
+      }
+      const data = (await res.json()) as { report?: ScreeningReport };
+      if (data.report) {
+        setReport(data.report);
+        setShowReport(true);
+      } else {
+        setError(copy.report.loadError);
+      }
+    } catch {
       setError(copy.report.loadError);
-      return;
+    } finally {
+      setLoadingReport(false);
     }
-    const data = (await res.json()) as { report?: ScreeningReport };
-    if (data.report) setReport(data.report);
-    else setError(copy.report.loadError);
   }, [runId, copy.report.loadError]);
 
   useEffect(() => {
@@ -149,14 +169,12 @@ export function RunProgress({ runId }: { runId: string }) {
         if (!data.run || cancelled) return;
         setRun(data.run);
 
-        if (data.run.reportReady) {
-          await loadReport();
-          return;
-        }
         if (data.run.status === "failed") {
           setError(copy.progress.failed);
           return;
         }
+        // Stay on the agent timeline until the user opens the report.
+        if (data.run.reportReady) return;
         if (pollsRef.current < MAX_POLLS) {
           timer = setTimeout(() => void poll(), POLL_MS);
         }
@@ -170,13 +188,20 @@ export function RunProgress({ runId }: { runId: string }) {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [runId, loadReport, copy.progress.failed, copy.report.loadError]);
+  }, [runId, copy.progress.failed, copy.report.loadError]);
 
-  if (report) {
+  if (showReport && report) {
     return (
       <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-4">
         <ScreeningReportView report={report} mocked={run?.mocked ?? true} />
         <div className="mt-5 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setShowReport(false)}
+            className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+          >
+            {copy.progress.backToAgents}
+          </button>
           <Link
             href={backHref}
             className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
@@ -188,17 +213,21 @@ export function RunProgress({ runId }: { runId: string }) {
     );
   }
 
+  const reportReady = Boolean(run?.reportReady);
+
   return (
     <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-4">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
         {copy.progress.eyebrow}
       </p>
       <h1 className="mt-1 text-xl font-bold text-[color:var(--foreground)] sm:text-2xl">
-        {copy.progress.title}
+        {reportReady ? copy.progress.readyTitle : copy.progress.title}
       </h1>
-      <p className="mt-2 text-sm text-[color:var(--muted)]">{copy.progress.body}</p>
+      <p className="mt-2 text-sm text-[color:var(--muted)]">
+        {reportReady ? copy.progress.readyBody : copy.progress.body}
+      </p>
 
-      {(run?.mocked ?? true) ? <MockNotice className="mt-4" /> : null}
+      {(run?.mocked ?? false) ? <MockNotice className="mt-4" /> : null}
 
       {error ? (
         <p className="card mt-5 rounded-[20px] p-4 text-sm text-red-600 dark:text-red-400" role="alert">
@@ -235,6 +264,16 @@ export function RunProgress({ runId }: { runId: string }) {
       )}
 
       <div className="mt-5 flex flex-wrap gap-2">
+        {reportReady ? (
+          <button
+            type="button"
+            onClick={() => void loadReport()}
+            disabled={loadingReport}
+            className="btn-primary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold disabled:opacity-60"
+          >
+            {loadingReport ? copy.progress.loadingReport : copy.progress.seeReportCta}
+          </button>
+        ) : null}
         <Link
           href={backHref}
           className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"

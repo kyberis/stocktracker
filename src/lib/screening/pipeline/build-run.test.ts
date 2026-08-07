@@ -1,7 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { buildRunResponse } from "./build-run";
+import { buildOptimisticRun, buildRunResponse } from "./build-run";
 import type { ScreeningRunRow } from "@/lib/db/screening";
 import type { ScreeningStepRow } from "@/lib/db";
+
+describe("buildOptimisticRun", () => {
+  it("shows intake done and core agents pending before the first poll", () => {
+    const run = buildOptimisticRun("run-xyz");
+    expect(run.runId).toBe("run-xyz");
+    expect(run.reportReady).toBe(false);
+    const byKind = Object.fromEntries(run.steps.map((s) => [s.agentKind, s.status]));
+    expect(byKind.intake).toBe("done");
+    expect(byKind.hard_data).toBe("pending");
+    expect(byKind.ir_business).toBe("pending");
+    expect(byKind.compiler).toBe("pending");
+    expect(byKind.qa).toBe("skipped");
+  });
+});
 
 function runRow(overrides: Partial<ScreeningRunRow> = {}): ScreeningRunRow {
   return {

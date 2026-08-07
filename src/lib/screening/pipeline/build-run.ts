@@ -79,6 +79,32 @@ function synthesiseFanOutStep(
 }
 
 /**
+ * Placeholder timeline shown before the first poll returns — Intake done,
+ * Hard Data / IR / Compiler pending, later agents "coming soon".
+ */
+export function buildOptimisticRun(runId: string): ScreeningRun {
+  const steps: ScreeningRunStep[] = UI_STEP_ORDER.map((kind): ScreeningRunStep => {
+    if (kind === "intake") {
+      return { agentKind: kind, status: "done", elapsedSeconds: 0 };
+    }
+    if (kind === "hard_data" || kind === "ir_business" || kind === "compiler") {
+      return { agentKind: kind, status: "pending", elapsedSeconds: null };
+    }
+    return { agentKind: kind, status: "skipped", elapsedSeconds: null };
+  });
+  return {
+    runId,
+    mode: "user_report",
+    status: "queued",
+    createdAt: new Date().toISOString(),
+    steps,
+    progressPct: 0,
+    mocked: false,
+    reportReady: false,
+  };
+}
+
+/**
  * Compose the ScreeningRun shape the UI already renders. Steps not present in
  * DB are surfaced as `skipped` so the E3/E4 slice does not orphan the timeline.
  * Multiple `ir_business` rows are synthesised into one UI step with sub-counts.

@@ -27,7 +27,7 @@ arrive stage by stage per
 |------|------|-------|
 | Page | `src/app/(app)/screening/page.tsx` | Sector exposure + two CTAs + recent runs list |
 | Page | `src/app/(app)/screening/intake/page.tsx` | Scripted chat + brief confirmation |
-| Page | `src/app/(app)/screening/runs/[runId]/page.tsx` | Run progress, then the report |
+| Page | `src/app/(app)/screening/runs/[runId]/page.tsx` | Agent timeline; user opens the report via “See report” when ready |
 | API | `src/app/api/screening/runs/route.ts` | `GET` list + `POST` create run |
 | API | `src/app/api/screening/runs/[runId]/route.ts` | `GET` — status + step progress |
 | API | `src/app/api/screening/reports/[reportId]/route.ts` | `GET` — typed report JSON |
@@ -72,7 +72,7 @@ Types: [`src/lib/screening/schemas.ts`](../../src/lib/screening/schemas.ts) —
 | GET | `/api/screening/runs/[runId]` | user + flag | — | Status, steps (IR fan-out synthesised), `progressPct`, `reportReady` |
 | GET | `/api/screening/reports/[reportId]?candidates=N` | user + flag | — | Report JSON; 409 while the run is not finished |
 | POST | `/api/screening/entry-events` | user + flag | — | Dual-write analytics for the entry funnel |
-| GET | `/api/screening/dev/outputs?limit=N` | user + flag + (admin OR dev-env OR `screening_dev_lab_enabled`) | — | Last N agent outputs for the caller; powers the temporary Dev log button |
+| GET | `/api/screening/dev/outputs?limit=N&runId=` | user + flag + (admin OR dev-env OR `screening_dev_lab_enabled`) | — | Last N agent outputs (optional `runId` scope); Dev log shows sources + per-agent JSON |
 
 Regular routes go through [`requireScreeningAccess`](../../src/lib/screening/guard.ts):
 session required, then per-user flag. A disabled flag returns **404**, not 403, so

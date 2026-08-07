@@ -151,6 +151,46 @@ describe("runHardDataAgent", () => {
     expect(res.output.gaps.length).toBeGreaterThan(0);
   });
 
+  it("falls back to market-cap ranking when the LLM returns zero candidates", async () => {
+    mockResolveKey.mockResolvedValue("ag-test");
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    function: {
+                      arguments: JSON.stringify({
+                        status: "empty",
+                        candidates: [],
+                        deferredTickers: [],
+                        gaps: ["No candidates met the specified criteria"],
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+      text: () => Promise.resolve(""),
+    });
+    const { runHardDataAgent } = await import("../agents/hard-data");
+    const res = await runHardDataAgent({ brief, universe });
+    expect(res.output.status).toBe("ok");
+    expect(res.output.candidates.map((c) => c.ticker)).toEqual([
+      "AAPL",
+      "SHOP",
+      "SNOW",
+    ]);
+    expect(res.output.gaps).toContain("llm_returned_empty");
+    expect(res.output.sources?.some((s) => s.label.includes("FMP"))).toBe(true);
+  });
+
   it("falls back when the LLM returns unparseable content", async () => {
     mockResolveKey.mockResolvedValue("ag-test");
     mockFetch.mockResolvedValueOnce({

@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.95",
+    date: "2026-08-07",
+    title: "Screening: watch agents, then open the report",
+    titleTranslations: {
+      es: "Cribado: ver agentes y luego abrir el informe",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Launching a screen opens the agent timeline immediately. When the run finishes you choose “See report” instead of jumping straight to the report. The Dev agent log on a run page shows sources consulted and each agent’s result.",
+        translations: {
+          es: "Al lanzar un cribado se abre de inmediato la línea de agentes. Cuando termina eliges “Ver informe” en lugar de saltar al informe. El log Dev en la página del run muestra las fuentes consultadas y el resultado de cada agente.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Hard Data no longer returns an empty shortlist when the model declines every ticker — it falls back to a market-cap ranking from the FMP universe so IR and the report still have candidates.",
+        translations: {
+          es: "Hard Data ya no deja la shortlist vacía si el modelo rechaza todos los tickers: hace fallback a un ranking por capitalización del universo FMP para que IR y el informe sigan teniendo candidatos.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.94",
     date: "2026-08-07",
     title: "Screening starts in-process + Dev log on all screens",

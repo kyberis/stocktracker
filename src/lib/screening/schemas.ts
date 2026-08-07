@@ -296,6 +296,13 @@ export type HardDataCandidate = z.infer<typeof hardDataCandidateSchema>;
 export const HARD_DATA_STATUSES = ["ok", "empty"] as const;
 export type HardDataStatus = (typeof HARD_DATA_STATUSES)[number];
 
+export const hardDataSourceSchema = z.object({
+  label: z.string().min(1).max(120),
+  url: z.string().max(500).optional().default(""),
+  asOf: z.string().max(40).optional().default(""),
+});
+export type HardDataSource = z.infer<typeof hardDataSourceSchema>;
+
 export const hardDataOutputSchema = z.object({
   status: z.enum(HARD_DATA_STATUSES),
   universeSize: z.number().int().min(0),
@@ -303,6 +310,8 @@ export const hardDataOutputSchema = z.object({
   deferredTickers: z.array(z.string().min(1).max(20)).max(20).default([]),
   gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
   locale: z.string().min(2).max(10),
+  /** Data providers consulted (Dev log + QA citations). */
+  sources: z.array(hardDataSourceSchema).max(12).default([]),
 });
 export type HardDataOutput = z.infer<typeof hardDataOutputSchema>;
 
