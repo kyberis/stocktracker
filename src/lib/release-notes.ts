@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.98",
+    date: "2026-08-08",
+    title: "Screening report blur preview toggle",
+    titleTranslations: {
+      es: "Toggle de vista bloqueada en el informe de cribado",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Screening reports have a temporary “Preview locked” toggle that blurs tickers #2–N and actionable research (thesis, multiples, fit/risk) so we can validate the paywall teaser before credits.",
+        translations: {
+          es: "Los informes de cribado tienen un toggle temporal “Vista previa bloqueada” que difumina tickers #2–N y la investigación accionable (tesis, múltiplos, encaje/riesgo) para validar el teaser de paywall antes de los créditos.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.97",
     date: "2026-08-08",
     title: "Screening reports fill valuation metrics and MOAT",

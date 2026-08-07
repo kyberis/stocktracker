@@ -517,6 +517,12 @@ const en = {
     insiderSelling: "Insiders: selling bias",
     insiderMixed: "Insiders: mixed",
     insiderNone: "Insiders: no clear bias",
+    blurToggleLock: "Preview locked",
+    blurToggleUnlock: "Unlock preview",
+    blurToggleHint: "Temporary teaser toggle — later tied to credits.",
+    unlockReportChip: "Unlock report",
+    lockedCandidate: "Candidate {n}",
+    lockedCell: "••••",
   },
 };
 
@@ -1028,6 +1034,12 @@ const es: ScreeningCopy = {
     insiderSelling: "Insiders: sesgo vendedor",
     insiderMixed: "Insiders: mixto",
     insiderNone: "Insiders: sin sesgo claro",
+    blurToggleLock: "Vista previa bloqueada",
+    blurToggleUnlock: "Desbloquear vista",
+    blurToggleHint: "Toggle temporal del teaser — luego irá ligado a créditos.",
+    unlockReportChip: "Desbloquear informe",
+    lockedCandidate: "Candidato {n}",
+    lockedCell: "••••",
   },
 };
 
