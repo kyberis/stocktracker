@@ -3,25 +3,28 @@ import type { ScreeningRunRow } from "@/lib/db/screening";
 import {
   hardDataOutputSchema,
   compilerReportDraftSchema,
+  aggregateIrBusinessOutputSchema,
   screeningBriefSchema,
   screeningReportSchema,
   type ScreeningReport,
   type HardDataOutput,
   type CompilerReportDraft,
+  type AggregateIrBusinessOutput,
   type ScreeningBrief,
   type ScreeningCandidateCard,
+  type IrBusinessOutput,
 } from "@/lib/screening/schemas";
 
 /**
- * Compose the ScreeningReport from the Hard Data + Compiler outputs the
- * orchestrator persisted (HLD §5.3). We fill only the fields the UI actually
- * renders in this slice; the rest of the report contract is null / empty so
- * the shape stays parseable by `screeningReportSchema`.
+ * Compose the ScreeningReport from Hard Data + Compiler (+ optional IR
+ * aggregate) outputs the orchestrator persisted (HLD §5.3).
  */
 export interface ComposeReportInput {
   run: ScreeningRunRow;
   hardDataRow: ScreeningAgentOutputRow;
   compilerRow: ScreeningAgentOutputRow;
+  /** Optional IR aggregate from Agent 2 (E4). */
+  irAggregateRow?: ScreeningAgentOutputRow | null;
   /** Which agent kinds are still pending — surfaced as `partial=true` in UI. */
   pendingAgentKinds?: string[];
   /** How many candidates the caller asked for (defaults to all). */
@@ -34,6 +37,41 @@ function safeParseJson<T>(raw: string): T | null {
   } catch {
     return null;
   }
+}
+
+function mapIrSources(
+  ir: IrBusinessOutput,
+): ScreeningCandidateCard["sources"] {
+  const out: ScreeningCandidateCard["sources"] = [];
+  for (const s of ir.guidance.sources) {
+    if (!s.url || !s.url.startsWith("http")) continue;
+    try {
+      out.push({
+        url: s.url,
+        asOf: s.asOf || ir.guidance.asOf,
+        field: "guidance",
+        label: s.label,
+      });
+    } catch {
+      // skip invalid urls
+    }
+  }
+  for (const c of ir.catalysts) {
+    for (const s of c.sources) {
+      if (!s.url || !s.url.startsWith("http")) continue;
+      try {
+        out.push({
+          url: s.url,
+          asOf: s.asOf || ir.guidance.asOf,
+          field: "catalyst",
+          label: s.label ?? c.label,
+        });
+      } catch {
+        // skip
+      }
+    }
+  }
+  return out.slice(0, 12);
 }
 
 export function composeScreeningReport(
@@ -57,6 +95,21 @@ export function composeScreeningReport(
   if (!hardData || !draft) return null;
   if (hardData.candidates.length === 0) return null;
 
+  let irAggregate: AggregateIrBusinessOutput | null = null;
+  if (input.irAggregateRow) {
+    const irRaw = safeParseJson<Record<string, unknown>>(
+      input.irAggregateRow.outputJson,
+    );
+    const irParsed = irRaw
+      ? aggregateIrBusinessOutputSchema.safeParse(irRaw)
+      : null;
+    if (irParsed && irParsed.success) irAggregate = irParsed.data;
+  }
+
+  const irByTicker = new Map(
+    (irAggregate?.tickers ?? []).map((t) => [t.ticker.toUpperCase(), t]),
+  );
+
   const requestedCount =
     input.candidateLimit && input.candidateLimit > 0
       ? Math.min(5, input.candidateLimit)
@@ -71,12 +124,23 @@ export function composeScreeningReport(
 
   const cards: ScreeningCandidateCard[] = candidates.map((c) => {
     const bullet = bulletByTicker.get(c.ticker.toUpperCase());
+    const ir = irByTicker.get(c.ticker.toUpperCase());
+    const primaryCatalyst = ir?.catalysts[0] ?? null;
     return {
       ticker: c.ticker,
       companyName: c.name || c.ticker,
       sector: c.sector || "—",
       country: c.country || "—",
-      business: null,
+      business: ir
+        ? {
+            summary: ir.businessOneLiner,
+            employees: null,
+            listedSince: null,
+            website: null,
+            irUrl: null,
+            filings: null,
+          }
+        : null,
       mktCapUsd: c.marketCapUsd ?? null,
       currency: "USD",
       price: c.price ?? 0,
@@ -87,8 +151,20 @@ export function composeScreeningReport(
       verdict: null,
       stepsPassed: [],
       stepsFailed: [],
-      catalyst: null,
-      catalystDate: null,
+      catalyst: primaryCatalyst?.label ?? null,
+      catalystDate: ir?.guidance.asOf ?? null,
+      businessOneLiner: ir?.businessOneLiner,
+      guidance: ir
+        ? {
+            summary: ir.guidance.summary,
+            direction: ir.guidance.direction,
+            asOf: ir.guidance.asOf,
+          }
+        : null,
+      catalystsList: ir?.catalysts.map((cat) => ({
+        label: cat.label,
+        evidence: cat.evidence,
+      })),
       multiples: {
         fwdPe: null,
         ownHistPe: null,
@@ -104,10 +180,10 @@ export function composeScreeningReport(
         moatScore: null,
       },
       thesis: bullet?.bullet ?? c.rankReason,
-      risks: [],
+      risks: ir?.gaps ?? [],
       priorityReason: bullet?.headline ?? c.rankReason.slice(0, 120),
-      citedFields: [],
-      sources: [],
+      citedFields: ir ? ["businessOneLiner", "guidance"] : [],
+      sources: ir ? mapIrSources(ir) : [],
     };
   });
 
@@ -121,14 +197,23 @@ export function composeScreeningReport(
   }));
 
   const locale = parsedBrief?.locale ?? draft.locale ?? "en";
-  const methodologyNote =
-    locale.startsWith("es")
-      ? "Cribado inicial con datos de FMP filtrados por brief, ranking por LLM. Los agentes de IR/Web/Riesgo/QA llegan en próximas iteraciones."
-      : "Initial screen from FMP data filtered by the brief, ranked by an LLM. IR/Web/Risk/QA agents come in later iterations.";
+  const hasIr = Boolean(irAggregate && irAggregate.tickers.length > 0);
+  const methodologyNote = locale.startsWith("es")
+    ? hasIr
+      ? "Cribado con datos de FMP filtrados por brief, ranking Hard Data + investigación IR por ticker, resumen del Compiler."
+      : "Cribado inicial con datos de FMP filtrados por brief, ranking por LLM. Los agentes de Web/Riesgo/QA llegan en próximas iteraciones."
+    : hasIr
+      ? "Screen from FMP data filtered by the brief, Hard Data ranking + per-ticker IR research, Compiler summary."
+      : "Initial screen from FMP data filtered by the brief, ranked by an LLM. Web/Risk/QA agents come in later iterations.";
 
-  const pending = input.pendingAgentKinds && input.pendingAgentKinds.length > 0
-    ? input.pendingAgentKinds
+  const defaultPending = hasIr
+    ? ["web_sentiment", "portfolio_context", "risk", "qa"]
     : ["ir_business", "web_sentiment", "portfolio_context", "risk", "qa"];
+
+  const pending =
+    input.pendingAgentKinds && input.pendingAgentKinds.length > 0
+      ? input.pendingAgentKinds
+      : defaultPending;
 
   const raw = {
     jobId: input.run.id,

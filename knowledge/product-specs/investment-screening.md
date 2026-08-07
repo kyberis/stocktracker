@@ -14,61 +14,65 @@ arrive stage by stage per
 ## 2. Status
 
 - **Tier:** Experimental (no tier gating yet — flag only)
-- **Feature flag:** `investment_screening_enabled` (off by default)
-- **Health:** yellow — UI complete, pipeline mocked
+- **Feature flags:**
+  - `investment_screening_enabled` (off by default) — gates UI/API
+  - `screening_pipeline_real_enabled` — Hard Data + Compiler on durable queue
+  - `screening_ir_agent_enabled` — Agent 2 IR/Business fan-out (E4)
+- **Health:** yellow — Intake + Hard Data + IR (opt-in) + Compiler stub; Web/Risk/QA pending
 - **Owning skill:** [`.cursor/skills/engineer-tools/SKILL.md`](../../.cursor/skills/engineer-tools/SKILL.md)
 
 ## 3. Entry points
 
 | Type | Path | Notes |
 |------|------|-------|
-| Page | `src/app/(app)/screening/page.tsx` | Sector exposure + two CTAs |
+| Page | `src/app/(app)/screening/page.tsx` | Sector exposure + two CTAs + recent runs list |
 | Page | `src/app/(app)/screening/intake/page.tsx` | Scripted chat + brief confirmation |
 | Page | `src/app/(app)/screening/runs/[runId]/page.tsx` | Run progress, then the report |
-| API | `src/app/api/screening/runs/route.ts` | `POST` — validate brief, create run |
+| API | `src/app/api/screening/runs/route.ts` | `GET` list + `POST` create run |
 | API | `src/app/api/screening/runs/[runId]/route.ts` | `GET` — status + step progress |
 | API | `src/app/api/screening/reports/[reportId]/route.ts` | `GET` — typed report JSON |
 | Component | `src/components/screening/ScreeningEntryCta.tsx` | Discovery card on `/recommendations/diversify`; renders nothing when the flag is off |
 
 ## 4. Data model
 
-**E1-thin persistence (migration 129):**
+**Persistence (migrations 129–131):**
 
 - `screening_runs` — one row per user launch attempt. Fields: `id`, `user_id`
   (`ON DELETE CASCADE`), `status` (`draft | needs_clarification | rejected_infeasible | authorized | running | completed`),
   `intent` (`rebalance | explore`), `brief_json` (the confirmed `ScreeningBrief`),
   `mocked_pipeline` (1 while the research pipeline is fixture), `created_at`,
   `updated_at`.
-- `screening_agent_outputs` — one row per agent turn (only `intake` for now).
-  Fields: `id`, `run_id` nullable (Intake turns happen before Launch), `user_id`,
-  `agent_kind`, `output_json` (raw + parsed agent envelope for the Dev log),
-  `latency_ms`, `created_at`.
+- `screening_agent_outputs` — one row per agent turn. Fields: `id`, `run_id`
+  nullable (Intake turns happen before Launch), `user_id`, `agent_kind`,
+  `ticker` (nullable; set for IR fan-out), `agent_index` (nullable),
+  `output_json`, `latency_ms`, `created_at`.
+- `screening_run_steps` / `screening_run_events` — durable queue + event log
+  (migration 130). IR fan-out inserts one step per `(agent_kind, ticker)`.
 
-Run progress is still derived from the mock id (`mock-<base36 createdAt>-<random>`)
-because the research pipeline is not yet real; the persisted run rows are the
-audit trail. Session-scoped `sessionStorage` (`trefolio-screening-brief-<runId>`)
-is still written so the run page can echo the brief without an extra fetch.
+When `screening_pipeline_real_enabled` is on, run progress comes from DB steps.
+Mock ids (`mock-*`) are still persisted as the PK so history deep-links work.
+Session-scoped `sessionStorage` (`trefolio-screening-brief-<runId>`) echoes the
+brief on the run page.
 
-DAL: [`src/lib/db/screening.ts`](../../src/lib/db/screening.ts) —
-`createScreeningRun`, `updateScreeningRunStatus`, `getScreeningRun`,
-`insertScreeningAgentOutput`, `listScreeningAgentOutputsByUser`,
-`listScreeningAgentOutputsByRun`.
+DAL: [`src/lib/db/screening.ts`](../../src/lib/db/screening.ts) +
+[`src/lib/db/screening-steps.ts`](../../src/lib/db/screening-steps.ts).
 
-Types: [`src/lib/screening/schemas.ts`](../../src/lib/screening/schemas.ts) — `ScreeningBrief`,
-`ScreeningRun`, `ScreeningReport`, `ScreeningCandidateCard`, plus
-`IntakeAgentOutput` and `IntakeChatRequest`. These mirror HLD §5.3 so
-the research pipeline can replace the fixture without changing the UI contract.
+Types: [`src/lib/screening/schemas.ts`](../../src/lib/screening/schemas.ts) —
+`ScreeningBrief`, `ScreeningRun`, `ScreeningReport`, `ScreeningCandidateCard`,
+`HardDataOutput`, `IrBusinessOutput`, `AggregateIrBusinessOutput`,
+`IntakeAgentOutput`. Mirror HLD §5.3.
 
 ## 5. API surface
 
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
 | POST | `/api/screening/intake/chat` | user + flag | — | One Intake agent turn; returns `{ assistantText, agent, brief }` |
-| POST | `/api/screening/runs` | user + flag | — | Validates + persists the brief, returns a mock run |
-| GET | `/api/screening/runs/[runId]` | user + flag | — | Status, 8 steps, `progressPct`, `reportReady` |
+| GET | `/api/screening/runs` | user + flag | — | Recent runs for the entry-page history list |
+| POST | `/api/screening/runs` | user + flag | — | Validates + persists the brief; mock or real pipeline |
+| GET | `/api/screening/runs/[runId]` | user + flag | — | Status, steps (IR fan-out synthesised), `progressPct`, `reportReady` |
 | GET | `/api/screening/reports/[reportId]?candidates=N` | user + flag | — | Report JSON; 409 while the run is not finished |
 | POST | `/api/screening/entry-events` | user + flag | — | Dual-write analytics for the entry funnel |
-| GET | `/api/screening/dev/outputs?limit=N` | user + flag + (admin OR dev-env OR `screening_dev_lab_enabled`) | — | Last N Intake outputs for the caller; powers the temporary Dev log button |
+| GET | `/api/screening/dev/outputs?limit=N` | user + flag + (admin OR dev-env OR `screening_dev_lab_enabled`) | — | Last N agent outputs for the caller; powers the temporary Dev log button |
 
 Regular routes go through [`requireScreeningAccess`](../../src/lib/screening/guard.ts):
 session required, then per-user flag. A disabled flag returns **404**, not 403, so
@@ -78,9 +82,9 @@ the feature is not discoverable before launch. The Dev outputs route adds
 ## 6. UI surface
 
 - Pages: `src/app/(app)/screening/**`
-- Components: `src/components/screening/` — `ExposureEntry`, `IntakeChat`, `BriefTable`,
-  `RunProgress`, `ScreeningReportView`, `CandidateCard`, `CriteriaList`, `ScreeningNotices`,
-  `ScreeningGate`, `ScreeningEntryCta`
+- Components: `src/components/screening/` — `ExposureEntry`, `RecentScreensList`,
+  `IntakeChat`, `BriefTable`, `RunProgress`, `ScreeningReportView`, `CandidateCard`,
+  `CriteriaList`, `ScreeningNotices`, `ScreeningGate`, `ScreeningEntryCta`
 - Context consumers: `FeatureFlagProvider` (gate), `PortfolioProvider` (real sector
   weights on the entry page), `I18nProvider` (language selection for screening copy)
 

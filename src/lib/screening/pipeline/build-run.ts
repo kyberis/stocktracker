@@ -4,9 +4,12 @@ import type { ScreeningRun, ScreeningRunStep, ScreeningRunStatus } from "@/lib/s
 
 /**
  * All agent kinds the UI expects to see in the progress timeline. Any kind not
- * present in `steps` (e.g. IR/Web/Portfolio Context/Risk/QA in this slice)
+ * present in `steps` (e.g. Web/Portfolio Context/Risk/QA in this slice)
  * is rendered as `skipped` so the timeline stays complete even when the
  * pipeline is intentionally partial.
+ *
+ * Note: `aggregate_ir_business` is an internal barrier and is NOT shown —
+ * its progress is folded into the synthesised `ir_business` row.
  */
 export const UI_STEP_ORDER: readonly string[] = [
   "intake",
@@ -28,26 +31,82 @@ function elapsedFromDates(startedAt: string | null, endedAt: string | null): num
   return Math.max(0, Math.round(((end - start) / 1000) * 10) / 10);
 }
 
+function synthesiseFanOutStep(
+  kind: string,
+  rows: ScreeningStepRow[],
+): ScreeningRunStep {
+  const total = rows.length;
+  const doneCount = rows.filter(
+    (s) => s.status === "done" || s.status === "skipped",
+  ).length;
+  const anyFailed = rows.some((s) => s.status === "failed");
+  const anyRunning = rows.some((s) => s.status === "running");
+  const anyPending = rows.some((s) => s.status === "pending");
+
+  let status: ScreeningRunStep["status"] = "pending";
+  if (anyFailed && doneCount + rows.filter((s) => s.status === "failed").length === total) {
+    status = "failed";
+  } else if (doneCount === total && total > 0) {
+    status = "done";
+  } else if (anyRunning || (anyPending && doneCount > 0)) {
+    status = "running";
+  } else if (anyFailed) {
+    status = "running"; // still progressing / retrying siblings
+  }
+
+  const startedAts = rows
+    .map((s) => s.startedAt)
+    .filter((v): v is string => Boolean(v));
+  const completedAts = rows
+    .map((s) => s.completedAt)
+    .filter((v): v is string => Boolean(v));
+  const earliestStart =
+    startedAts.length > 0
+      ? startedAts.reduce((a, b) => (a < b ? a : b))
+      : null;
+  const latestEnd =
+    status === "done" && completedAts.length > 0
+      ? completedAts.reduce((a, b) => (a > b ? a : b))
+      : null;
+
+  return {
+    agentKind: kind,
+    status,
+    elapsedSeconds: elapsedFromDates(earliestStart, latestEnd),
+    subStepsTotal: total,
+    subStepsDone: doneCount,
+  };
+}
+
 /**
  * Compose the ScreeningRun shape the UI already renders. Steps not present in
- * DB are surfaced as `skipped` so the E3 slice does not orphan the timeline.
+ * DB are surfaced as `skipped` so the E3/E4 slice does not orphan the timeline.
+ * Multiple `ir_business` rows are synthesised into one UI step with sub-counts.
  */
 export function buildRunResponse(
   row: ScreeningRunRow,
   dbSteps: ScreeningStepRow[],
 ): ScreeningRun {
-  const byKind = new Map<string, ScreeningStepRow>();
-  for (const s of dbSteps) byKind.set(s.agentKind, s);
+  const byKind = new Map<string, ScreeningStepRow[]>();
+  for (const s of dbSteps) {
+    if (s.agentKind === "aggregate_ir_business") continue;
+    const list = byKind.get(s.agentKind) ?? [];
+    list.push(s);
+    byKind.set(s.agentKind, list);
+  }
 
-  // Consider "intake" as done because the brief already exists.
   const steps: ScreeningRunStep[] = UI_STEP_ORDER.map((kind): ScreeningRunStep => {
-    const dbStep = byKind.get(kind);
-    if (!dbStep) {
+    const rows = byKind.get(kind) ?? [];
+    if (rows.length === 0) {
       if (kind === "intake") {
         return { agentKind: kind, status: "done", elapsedSeconds: 0 };
       }
       return { agentKind: kind, status: "skipped", elapsedSeconds: null };
     }
+    if (kind === "ir_business" || rows.length > 1) {
+      return synthesiseFanOutStep(kind, rows);
+    }
+    const dbStep = rows[0];
     const elapsed = elapsedFromDates(dbStep.startedAt, dbStep.completedAt);
     return {
       agentKind: dbStep.agentKind,

@@ -804,9 +804,11 @@ export {
   updateScreeningRunStatus,
   getScreeningRun,
   getScreeningRunUnscoped,
+  listScreeningRunsByUser,
   insertScreeningAgentOutput,
   listScreeningAgentOutputsByUser,
   listScreeningAgentOutputsByRun,
+  listScreeningAgentOutputsByRunAndKind,
   getLatestScreeningAgentOutputUnscoped,
   linkPendingAgentOutputToRun,
 } from "./screening";
@@ -820,6 +822,7 @@ export type {
 } from "./screening-steps";
 export {
   MAX_STEP_ATTEMPTS,
+  MAX_RUNNING_PER_RUN,
   insertSteps,
   leasePendingStep,
   completeStep,
@@ -827,6 +830,8 @@ export {
   recoverExpiredLeases,
   listStepsForRun,
   getStepById,
+  findStepByAgentKind,
+  updateStepDependsOn,
   countPendingStepsForRun,
   countPendingSteps,
   appendEvent,

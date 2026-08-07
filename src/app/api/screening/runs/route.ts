@@ -14,13 +14,33 @@ import {
   createScreeningRun,
   insertSteps,
   linkPendingAgentOutputToRun,
+  listScreeningRunsByUser,
+  listStepsForRun,
 } from "@/lib/db";
 import { recordScreeningRunCreated } from "@/lib/screening/metrics";
 import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import { buildRunResponse } from "@/lib/screening/pipeline/build-run";
+import { toScreeningRunListItem } from "@/lib/screening/pipeline/build-run-list-item";
 import { HARD_DATA_AGENT_KIND } from "@/lib/screening/agents/hard-data";
 import { COMPILER_AGENT_KIND } from "@/lib/screening/agents/compiler";
 import { kickScreeningWorker } from "@/lib/screening/orchestrator/kick-worker";
+
+/**
+ * List recent screening runs for the authenticated user (entry-page history).
+ */
+export const GET = withMetrics("/api/screening/runs", async (req: NextRequest) => {
+  const { session, error } = await requireScreeningAccess(req);
+  if (error || !session) return error;
+
+  const rows = await listScreeningRunsByUser(session.userId, 20);
+  const runs = await Promise.all(
+    rows.map(async (row) => {
+      const steps = row.mockedPipeline ? [] : await listStepsForRun(row.id);
+      return toScreeningRunListItem(row, steps);
+    }),
+  );
+  return NextResponse.json({ runs });
+});
 
 /**
  * Create a screening run.
@@ -60,6 +80,7 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
     }
     try {
       await createScreeningRun({
+        id: runId,
         userId: session.userId,
         status: "authorized",
         intent: parsed.data.intent,

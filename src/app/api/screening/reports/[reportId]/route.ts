@@ -78,6 +78,7 @@ export const GET = withMetrics(
     }
     const hardDataRow = latestByKind.get("hard_data");
     const compilerRow = latestByKind.get("compiler");
+    const irAggregateRow = latestByKind.get("aggregate_ir_business") ?? null;
     if (!hardDataRow || !compilerRow) {
       return NextResponse.json(
         { error: "Report not ready", pendingAgentKinds: ["compiler"] },
@@ -85,14 +86,24 @@ export const GET = withMetrics(
       );
     }
 
-    const pending = steps
-      .filter((s) => s.status !== "done" && s.status !== "skipped")
-      .map((s) => s.agentKind);
+    const pending = [
+      ...new Set(
+        steps
+          .filter(
+            (s) =>
+              s.status !== "done" &&
+              s.status !== "skipped" &&
+              s.agentKind !== "aggregate_ir_business",
+          )
+          .map((s) => s.agentKind),
+      ),
+    ];
 
     const report = composeScreeningReport({
       run: row,
       hardDataRow,
       compilerRow,
+      irAggregateRow,
       pendingAgentKinds: pending,
       candidateLimit,
     });

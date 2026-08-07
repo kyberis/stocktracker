@@ -56,7 +56,8 @@ export type PlatformFeature =
   | "tool_planning_enabled"
   | "investment_screening_enabled"
   | "screening_dev_lab_enabled"
-  | "screening_pipeline_real_enabled";
+  | "screening_pipeline_real_enabled"
+  | "screening_ir_agent_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_enabled",
@@ -474,6 +475,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "investment_screening_enabled",
   "screening_dev_lab_enabled",
   "screening_pipeline_real_enabled",
+  "screening_ir_agent_enabled",
 ];
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {

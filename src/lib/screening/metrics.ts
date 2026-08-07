@@ -207,6 +207,83 @@ export function recordHardDataUniverseSize(size: number): void {
   }
 }
 
+/* ── IR / Business (E4) ──────────────────────────────────────────────── */
+
+export const screeningIrTickerDurationMs = getOrCreateMetric(
+  "screening_ir_ticker_duration_ms",
+  () =>
+    new Histogram({
+      name: "screening_ir_ticker_duration_ms",
+      help: "Duration of one IR/Business per-ticker step in milliseconds",
+      labelNames: ["outcome"] as const,
+      buckets: [500, 1000, 2000, 5000, 10_000, 20_000, 40_000, 60_000, 120_000],
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningIrGapsTotal = getOrCreateMetric(
+  "screening_ir_gaps_total",
+  () =>
+    new Counter({
+      name: "screening_ir_gaps_total",
+      help: "Gaps reported by the IR/Business agent",
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningIrContradictionsTotal = getOrCreateMetric(
+  "screening_ir_contradictions_total",
+  () =>
+    new Counter({
+      name: "screening_ir_contradictions_total",
+      help: "IR outputs that mark contradictionWithHardData=true",
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningFmpIrRequestsTotal = getOrCreateMetric(
+  "screening_fmp_ir_requests_total",
+  () =>
+    new Counter({
+      name: "screening_fmp_ir_requests_total",
+      help: "FMP IR data requests (transcript / news / insider)",
+      labelNames: ["endpoint", "result"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export function recordIrTickerStep(
+  outcome: "ok" | "error" | "empty",
+  durationMs: number,
+  opts?: { gaps?: number; contradiction?: boolean },
+): void {
+  try {
+    screeningIrTickerDurationMs.observe(
+      { outcome },
+      Math.max(0, durationMs),
+    );
+    if (opts?.gaps && opts.gaps > 0) {
+      screeningIrGapsTotal.inc(opts.gaps);
+    }
+    if (opts?.contradiction) {
+      screeningIrContradictionsTotal.inc();
+    }
+  } catch {
+    // metrics are best-effort
+  }
+}
+
+export function recordFmpIrRequest(
+  endpoint: "earning-call-transcript" | "news/stock" | "insider-trading/search",
+  result: "ok" | "error" | "rate_limited" | "empty",
+): void {
+  try {
+    screeningFmpIrRequestsTotal.inc({ endpoint, result });
+  } catch {
+    // metrics are best-effort
+  }
+}
+
 function labelOrUnknown(value: string | undefined, fallback = "unknown"): string {
   return value && value.length > 0 ? value : fallback;
 }

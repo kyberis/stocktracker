@@ -3831,6 +3831,22 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 131,
+    description:
+      "Screening agent outputs: per-ticker columns for IR fan-out (E4)",
+    up: async (client: Client) => {
+      // IR / Web agents produce one output row per ticker. ticker + agent_index
+      // keep them addressable; index supports list-by-(run, kind, ticker).
+      await client.executeMultiple(`
+        ALTER TABLE screening_agent_outputs ADD COLUMN ticker TEXT;
+        ALTER TABLE screening_agent_outputs ADD COLUMN agent_index INTEGER;
+
+        CREATE INDEX IF NOT EXISTS idx_screening_outputs_run_kind_ticker
+          ON screening_agent_outputs(run_id, agent_kind, ticker);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

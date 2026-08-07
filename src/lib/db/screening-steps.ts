@@ -46,6 +46,12 @@ export interface ScreeningRunEventRow {
 /** Max attempts before a step is permanently marked as `failed`. */
 export const MAX_STEP_ATTEMPTS = 3;
 
+/**
+ * Cap concurrent running steps per run so fan-out (IR × N tickers) does not
+ * stampede FMP / the AI gateway. Matches PRD §13 "3–5 steps a la vez por job".
+ */
+export const MAX_RUNNING_PER_RUN = 3;
+
 function readStep(row: Record<string, unknown>): ScreeningStepRow {
   let dependsOn: string[] = [];
   const rawDeps = str(row.depends_on);
@@ -235,6 +241,19 @@ export async function leasePendingStep(opts: {
             str((r as unknown as Record<string, unknown>).status) === "done",
         );
       if (!allDone) continue;
+    }
+
+    // Cap concurrent running steps per run (fan-out throttle).
+    const runningCount = await client.execute({
+      sql: `SELECT COUNT(*) AS c FROM screening_run_steps
+             WHERE run_id = ? AND status = 'running'`,
+      args: [candidateRunId],
+    });
+    const running = num(
+      (runningCount.rows[0] as unknown as Record<string, unknown>).c,
+    );
+    if (running >= MAX_RUNNING_PER_RUN) {
+      continue;
     }
 
     // Race-safe UPDATE: only wins if the row is still pending.
@@ -428,6 +447,42 @@ export async function getStepById(
   const result = await client.execute({
     sql: `SELECT * FROM screening_run_steps WHERE id = ?`,
     args: [stepId],
+  });
+  const row = result.rows[0];
+  return row ? readStep(row as unknown as Record<string, unknown>) : null;
+}
+
+/**
+ * Rewire `depends_on` for an existing step (e.g. Hard Data inserts IR fan-out
+ * and moves the Compiler barrier to depend on the aggregate step).
+ */
+export async function updateStepDependsOn(
+  stepId: string,
+  dependsOn: string[],
+): Promise<boolean> {
+  const client = await ensureInitialized();
+  const now = new Date().toISOString();
+  const result = await client.execute({
+    sql: `UPDATE screening_run_steps
+             SET depends_on = ?, updated_at = ?
+           WHERE id = ? AND status = 'pending'`,
+    args: [JSON.stringify(dependsOn), now, stepId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
+/** First step of a given agent_kind for a run (e.g. the Compiler barrier). */
+export async function findStepByAgentKind(
+  runId: string,
+  agentKind: string,
+): Promise<ScreeningStepRow | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT * FROM screening_run_steps
+           WHERE run_id = ? AND agent_kind = ?
+           ORDER BY created_at ASC
+           LIMIT 1`,
+    args: [runId, agentKind],
   });
   const row = result.rows[0];
   return row ? readStep(row as unknown as Record<string, unknown>) : null;

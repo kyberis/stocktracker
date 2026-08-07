@@ -8,4 +8,6 @@
  */
 
 import "@/lib/screening/agents/hard-data";
+import "@/lib/screening/agents/ir-business";
+import "@/lib/screening/agents/aggregate-ir";
 import "@/lib/screening/agents/compiler";

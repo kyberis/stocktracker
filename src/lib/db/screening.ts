@@ -43,6 +43,9 @@ export interface ScreeningAgentOutputRow {
   runId: string | null;
   userId: string;
   agentKind: string;
+  /** Set for per-ticker agents (IR, Web, …). Null for global steps. */
+  ticker: string | null;
+  agentIndex: number | null;
   outputJson: string;
   latencyMs: number;
   createdAt: string;
@@ -63,11 +66,20 @@ function readRun(row: Record<string, unknown>): ScreeningRunRow {
 
 function readOutput(row: Record<string, unknown>): ScreeningAgentOutputRow {
   const rawRun = row.run_id;
+  const rawTicker = row.ticker;
+  const rawIndex = row.agent_index;
   return {
     id: str(row.id),
     runId: rawRun == null || rawRun === "" ? null : str(rawRun),
     userId: str(row.user_id),
     agentKind: str(row.agent_kind),
+    ticker: rawTicker == null || rawTicker === "" ? null : str(rawTicker),
+    agentIndex:
+      rawIndex == null || rawIndex === ""
+        ? null
+        : Number.isFinite(num(rawIndex))
+          ? num(rawIndex)
+          : null,
     outputJson: str(row.output_json),
     latencyMs: num(row.latency_ms),
     createdAt: str(row.created_at),
@@ -80,13 +92,15 @@ export interface CreateScreeningRunParams {
   intent: ScreeningRunIntent;
   briefJson: string;
   mockedPipeline: boolean;
+  /** Optional fixed id (e.g. mock run id) so the UI deep-link matches the row. */
+  id?: string;
 }
 
 export async function createScreeningRun(
   params: CreateScreeningRunParams,
 ): Promise<ScreeningRunRow> {
   const client = await ensureInitialized();
-  const id = randomUUID();
+  const id = params.id ?? randomUUID();
   const now = new Date().toISOString();
   await client.execute({
     sql: `INSERT INTO screening_runs
@@ -141,6 +155,26 @@ export async function getScreeningRun(
 }
 
 /**
+ * Recent runs for the entry-page history list. Ordered newest first.
+ * Caps at 50 to keep the entry page snappy.
+ */
+export async function listScreeningRunsByUser(
+  userId: string,
+  limit = 20,
+): Promise<ScreeningRunRow[]> {
+  const client = await ensureInitialized();
+  const capped = Math.min(Math.max(1, limit), 50);
+  const result = await client.execute({
+    sql: `SELECT * FROM screening_runs
+          WHERE user_id = ?
+          ORDER BY created_at DESC
+          LIMIT ?`,
+    args: [userId, capped],
+  });
+  return result.rows.map((r) => readRun(r as unknown as Record<string, unknown>));
+}
+
+/**
  * Unscoped variant for the internal worker: the step row does not carry
  * `user_id`, so the orchestrator loads the run by id only. Never expose this
  * on a user-facing route.
@@ -163,6 +197,9 @@ export interface InsertScreeningAgentOutputParams {
   agentKind: string;
   outputJson: string;
   latencyMs: number;
+  /** Per-ticker agents (IR / Web) set this; global steps leave it null. */
+  ticker?: string | null;
+  agentIndex?: number | null;
 }
 
 export async function insertScreeningAgentOutput(
@@ -171,15 +208,25 @@ export async function insertScreeningAgentOutput(
   const client = await ensureInitialized();
   const id = randomUUID();
   const now = new Date().toISOString();
+  const ticker =
+    params.ticker == null || params.ticker === ""
+      ? null
+      : params.ticker.toUpperCase().slice(0, 20);
+  const agentIndex =
+    params.agentIndex == null || !Number.isFinite(params.agentIndex)
+      ? null
+      : Math.round(params.agentIndex);
   await client.execute({
     sql: `INSERT INTO screening_agent_outputs
-            (id, run_id, user_id, agent_kind, output_json, latency_ms, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            (id, run_id, user_id, agent_kind, ticker, agent_index, output_json, latency_ms, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       params.runId ?? null,
       params.userId,
       params.agentKind,
+      ticker,
+      agentIndex,
       params.outputJson.slice(0, 50_000),
       Math.max(0, Math.round(params.latencyMs)),
       now,
@@ -190,10 +237,30 @@ export async function insertScreeningAgentOutput(
     runId: params.runId ?? null,
     userId: params.userId,
     agentKind: params.agentKind,
+    ticker,
+    agentIndex,
     outputJson: params.outputJson,
     latencyMs: params.latencyMs,
     createdAt: now,
   };
+}
+
+/**
+ * Unscoped list of all outputs of a given agent kind for a run. Used by the
+ * aggregate barrier and the Compiler. Never expose on a user-facing route.
+ */
+export async function listScreeningAgentOutputsByRunAndKind(
+  runId: string,
+  agentKind: string,
+): Promise<ScreeningAgentOutputRow[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT * FROM screening_agent_outputs
+          WHERE run_id = ? AND agent_kind = ?
+          ORDER BY COALESCE(agent_index, 0) ASC, created_at ASC`,
+    args: [runId, agentKind],
+  });
+  return result.rows.map((r) => readOutput(r as unknown as Record<string, unknown>));
 }
 
 export async function listScreeningAgentOutputsByUser(

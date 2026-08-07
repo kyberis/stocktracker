@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.92",
+    date: "2026-08-07",
+    title: "Screening IR agent + recent screens history",
+    titleTranslations: {
+      es: "Agente IR de cribado + historial de screens",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Investment screening Agent 2 (IR / Business) researches each Hard Data candidate one ticker at a time (opt-in via screening_ir_agent_enabled): FMP transcript/news/insider evidence, LLM structured output, aggregate barrier, then Compiler. Run progress shows “X/N tickers”.",
+        translations: {
+          es: "El Agente 2 de cribado (IR / Negocio) investiga cada candidato de Hard Data un ticker a la vez (opt-in con screening_ir_agent_enabled): evidencia FMP (transcript/noticias/insiders), salida estructurada del LLM, barrera de agregación y luego el Compiler. El progreso muestra “X/N tickers”.",
+        },
+      },
+      {
+        type: "feature",
+        text: "The /screening entry page now lists every screen you started, with status and deep links into progress or the finished report.",
+        translations: {
+          es: "La página de entrada /screening ahora lista todos los cribados que empezaste, con estado y enlaces al progreso o al informe terminado.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "New Prometheus metrics for IR: screening_ir_ticker_duration_ms, screening_ir_gaps_total, screening_ir_contradictions_total, screening_fmp_ir_requests_total. Per-run concurrency capped at 3 running steps.",
+        translations: {
+          es: "Nuevas métricas Prometheus para IR: screening_ir_ticker_duration_ms, screening_ir_gaps_total, screening_ir_contradictions_total, screening_fmp_ir_requests_total. Concurrencia por run limitada a 3 steps en ejecución.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.91",
     date: "2026-08-07",
     title: "Screening pipeline goes live (Hard Data + Compiler, beta)",

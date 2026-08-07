@@ -126,6 +126,9 @@ export const screeningRunStepSchema = z.object({
   status: z.enum(SCREENING_STEP_STATUSES),
   /** Seconds; null while pending. */
   elapsedSeconds: z.number().nonnegative().nullable(),
+  /** For fan-out kinds (IR × N tickers): total sub-steps and how many are done. */
+  subStepsTotal: z.number().int().nonnegative().optional(),
+  subStepsDone: z.number().int().nonnegative().optional(),
 });
 export type ScreeningRunStep = z.infer<typeof screeningRunStepSchema>;
 
@@ -142,6 +145,25 @@ export const screeningRunSchema = z.object({
   reportReady: z.boolean(),
 });
 export type ScreeningRun = z.infer<typeof screeningRunSchema>;
+
+/** Compact row for the entry-page history list. */
+export const screeningRunListItemSchema = z.object({
+  runId: z.string().min(1),
+  intent: z.enum(SCREENING_INTENTS),
+  status: z.enum(SCREENING_RUN_STATUSES),
+  createdAt: z.string().min(1),
+  mocked: z.boolean(),
+  /** Short label derived from the brief (sectors / region). */
+  summary: z.string().max(160),
+  candidateCount: z.number().int().min(0).max(5).nullable(),
+  reportReady: z.boolean(),
+});
+export type ScreeningRunListItem = z.infer<typeof screeningRunListItemSchema>;
+
+export const screeningRunListResponseSchema = z.object({
+  runs: z.array(screeningRunListItemSchema),
+});
+export type ScreeningRunListResponse = z.infer<typeof screeningRunListResponseSchema>;
 
 export const sourceRefSchema = z.object({
   url: z.string().url(),
@@ -184,6 +206,27 @@ export const screeningCandidateCardSchema = z.object({
   stepsFailed: z.array(z.number().int()),
   catalyst: z.string().nullable(),
   catalystDate: z.string().nullable(),
+  /** IR Agent 2 one-liner (HLD §4.5). Optional until E4+. */
+  businessOneLiner: z.string().max(280).optional(),
+  /** IR guidance block. Optional until E4+. */
+  guidance: z
+    .object({
+      summary: z.string().max(500),
+      direction: z.enum(["up", "flat", "down", "unclear"]),
+      asOf: z.string().max(40),
+    })
+    .nullable()
+    .optional(),
+  /** IR catalysts list (plural). Coexists with singular `catalyst` for compat. */
+  catalystsList: z
+    .array(
+      z.object({
+        label: z.string().max(120),
+        evidence: z.string().max(400),
+      }),
+    )
+    .max(8)
+    .optional(),
   multiples: z.object({
     fwdPe: z.number().nullable(),
     ownHistPe: z.number().nullable(),
@@ -279,3 +322,48 @@ export const compilerReportDraftSchema = z.object({
   locale: z.string().min(2).max(10),
 });
 export type CompilerReportDraft = z.infer<typeof compilerReportDraftSchema>;
+
+/* ── IR / Business agent (HLD §4.5, Agent 2) ─────────────────────────── */
+
+export const irSourceSchema = z.object({
+  url: z.string().max(500).default(""),
+  asOf: z.string().max(40).default(""),
+  label: z.string().max(120).optional(),
+});
+export type IrSource = z.infer<typeof irSourceSchema>;
+
+export const irGuidanceSchema = z.object({
+  summary: z.string().min(1).max(500),
+  direction: z.enum(["up", "flat", "down", "unclear"]),
+  asOf: z.string().min(1).max(40),
+  sources: z.array(irSourceSchema).max(6).default([]),
+});
+export type IrGuidance = z.infer<typeof irGuidanceSchema>;
+
+export const irCatalystSchema = z.object({
+  label: z.string().min(1).max(120),
+  evidence: z.string().min(1).max(400),
+  sources: z.array(irSourceSchema).max(4).default([]),
+});
+export type IrCatalyst = z.infer<typeof irCatalystSchema>;
+
+export const irBusinessOutputSchema = z.object({
+  ticker: z.string().min(1).max(20),
+  businessOneLiner: z.string().min(1).max(280),
+  guidance: irGuidanceSchema,
+  catalysts: z.array(irCatalystSchema).max(8).default([]),
+  segments: z.array(z.string().min(1).max(80)).max(12).default([]),
+  contradictionWithHardData: z.boolean().default(false),
+  confidence: z.enum(["high", "medium", "low"]).default("medium"),
+  bullets: z.array(z.string().min(1).max(280)).min(1).max(5),
+  gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
+});
+export type IrBusinessOutput = z.infer<typeof irBusinessOutputSchema>;
+
+export const aggregateIrBusinessOutputSchema = z.object({
+  tickers: z.array(irBusinessOutputSchema).max(15),
+  generatedAt: z.string().min(1),
+});
+export type AggregateIrBusinessOutput = z.infer<
+  typeof aggregateIrBusinessOutputSchema
+>;

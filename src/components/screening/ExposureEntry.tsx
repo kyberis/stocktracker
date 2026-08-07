@@ -24,6 +24,7 @@ import {
   postScreeningEntryEvent,
 } from "@/lib/screening/track-entry";
 import { useTrack } from "@/lib/use-track";
+import { RecentScreensList } from "./RecentScreensList";
 import { ScreeningDisclaimer } from "./ScreeningNotices";
 import { useScreeningCopy } from "./use-screening-copy";
 
@@ -475,6 +476,8 @@ export function ExposureEntry() {
           </>
         )}
       </div>
+
+      <RecentScreensList />
 
       <section className="card mt-6 rounded-[20px] border border-[color:var(--border)] p-4 sm:p-5">
         <h2 className="text-base font-bold text-[color:var(--foreground)]">

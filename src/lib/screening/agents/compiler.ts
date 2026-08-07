@@ -15,17 +15,19 @@ import {
 } from "@/lib/screening/orchestrator/handlers";
 import { buildCompilerPrompt } from "@/lib/screening/prompts/compiler";
 import {
+  aggregateIrBusinessOutputSchema,
   compilerReportDraftSchema,
   hardDataOutputSchema,
   screeningBriefSchema,
+  type AggregateIrBusinessOutput,
   type CompilerBullet,
   type CompilerReportDraft,
   type HardDataOutput,
   type ScreeningBrief,
 } from "@/lib/screening/schemas";
-
 export const COMPILER_AGENT_KIND = "compiler";
 export const COMPILER_MODEL = "openai/gpt-4o-mini";
+const AGGREGATE_IR_KIND = "aggregate_ir_business";
 
 const DEFAULT_DISCLAIMER =
   "This is a research aid, not investment advice. All investments carry risk.";
@@ -44,6 +46,15 @@ function parseBrief(json: string): ScreeningBrief | null {
 function parseHardData(json: string): HardDataOutput | null {
   try {
     const res = hardDataOutputSchema.safeParse(JSON.parse(json));
+    return res.success ? res.data : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseIrAggregate(json: string): AggregateIrBusinessOutput | null {
+  try {
+    const res = aggregateIrBusinessOutputSchema.safeParse(JSON.parse(json));
     return res.success ? res.data : null;
   } catch {
     return null;
@@ -105,6 +116,7 @@ function fallbackFromHardData(
 export interface RunCompilerAgentOptions {
   brief: ScreeningBrief;
   hardData: HardDataOutput;
+  irAggregate?: AggregateIrBusinessOutput | null;
   gatewayHeaders?: Headers;
 }
 
@@ -150,6 +162,7 @@ export async function runCompilerAgent(
   const systemPrompt = buildCompilerPrompt({
     brief: opts.brief,
     hardData: opts.hardData,
+    irAggregate: opts.irAggregate ?? null,
     locale: opts.brief.locale,
   });
 
@@ -198,11 +211,30 @@ export async function runCompilerAgent(
     gaps: opts.hardData.gaps,
   };
 
+  const irBlock =
+    opts.irAggregate && opts.irAggregate.tickers.length > 0
+      ? `\n\nIR_CONTEXT_JSON:\n${JSON.stringify({
+          tickers: opts.irAggregate.tickers.map((t) => ({
+            ticker: t.ticker,
+            businessOneLiner: t.businessOneLiner,
+            guidance: t.guidance,
+            catalysts: t.catalysts.map((c) => ({
+              label: c.label,
+              evidence: c.evidence,
+            })),
+            contradictionWithHardData: t.contradictionWithHardData,
+            confidence: t.confidence,
+            bullets: t.bullets,
+            gaps: t.gaps,
+          })),
+        })}`
+      : "";
+
   const messages = [
     { role: "system" as const, content: systemPrompt },
     {
       role: "user" as const,
-      content: `Hard-data ranking (JSON):\n${JSON.stringify(compactHardData)}\n\nPlease call submit_report_draft.`,
+      content: `Hard-data ranking (JSON):\n${JSON.stringify(compactHardData)}${irBlock}\n\nPlease call submit_report_draft.`,
     },
   ];
 
@@ -310,7 +342,13 @@ export const runCompilerStep: StepHandler = async (
     return { status: "error", errorMessage: "hard_data_output_invalid" };
   }
 
-  const result = await runCompilerAgent({ brief, hardData });
+  const irRow = await getLatestScreeningAgentOutputUnscoped(
+    ctx.runId,
+    AGGREGATE_IR_KIND,
+  );
+  const irAggregate = irRow ? parseIrAggregate(irRow.outputJson) : null;
+
+  const result = await runCompilerAgent({ brief, hardData, irAggregate });
 
   try {
     await insertScreeningAgentOutput({

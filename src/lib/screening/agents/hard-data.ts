@@ -2,7 +2,14 @@ import {
   fetchGatewayChatCompletions,
   resolveGatewayApiKey,
 } from "@/lib/ai/gateway";
-import { insertAiLog, insertScreeningAgentOutput } from "@/lib/db";
+import {
+  findStepByAgentKind,
+  insertAiLog,
+  insertScreeningAgentOutput,
+  insertSteps,
+  updateStepDependsOn,
+} from "@/lib/db";
+import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import {
   registerHandler,
   type HandlerContext,
@@ -22,10 +29,15 @@ import {
   type HardDataOutput,
   type ScreeningBrief,
 } from "@/lib/screening/schemas";
-
 export const HARD_DATA_AGENT_KIND = "hard_data";
 export const HARD_DATA_MODEL = "openai/gpt-4o-mini";
 const MAX_UNIVERSE_FOR_LLM = 60;
+/** Max per-ticker IR steps fan-out after Hard Data (PRD §13 E4). */
+export const IR_FANOUT_MAX = 4;
+/** Kind strings kept local to avoid circular imports with agent modules. */
+const IR_KIND = "ir_business";
+const AGGREGATE_IR_KIND = "aggregate_ir_business";
+const COMPILER_KIND = "compiler";
 
 interface FmpUniverseSummary {
   ticker: string;
@@ -402,6 +414,47 @@ export const runHardDataStep: StepHandler = async (
     // best-effort
   }
 
+  // E4 fan-out: when IR agent is enabled, insert N ir_business steps + an
+  // aggregate barrier, then rewire the Compiler to wait on the aggregate.
+  let irFanout = 0;
+  try {
+    const irEnabled = await isFeatureEnabledForUser(
+      "screening_ir_agent_enabled",
+      ctx.userId,
+    );
+    const candidates = runnerResult.output.candidates.slice(0, IR_FANOUT_MAX);
+    if (irEnabled && candidates.length > 0) {
+      const irStepIds = candidates.map(() => crypto.randomUUID());
+      const aggregateId = crypto.randomUUID();
+      await insertSteps(ctx.runId, [
+        ...candidates.map((c, i) => ({
+          id: irStepIds[i],
+          agentKind: IR_KIND,
+          ticker: c.ticker,
+          dependsOn: [] as string[],
+        })),
+        {
+          id: aggregateId,
+          agentKind: AGGREGATE_IR_KIND,
+          dependsOn: irStepIds,
+        },
+      ]);
+      const compilerStep = await findStepByAgentKind(
+        ctx.runId,
+        COMPILER_KIND,
+      );
+      if (compilerStep && compilerStep.status === "pending") {
+        await updateStepDependsOn(compilerStep.id, [aggregateId]);
+      }
+      irFanout = candidates.length;
+    }
+  } catch (err) {
+    console.error(
+      "[screening/hard-data] IR fan-out failed",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
   const totalDuration = Date.now() - started;
   return {
     status: "ok",
@@ -410,6 +463,7 @@ export const runHardDataStep: StepHandler = async (
       candidateCount: runnerResult.output.candidates.length,
       fmpErrors: screenerResult.errors.length,
       llmError: runnerResult.errorMessage,
+      irFanout,
       totalDurationMs: totalDuration,
     },
   };

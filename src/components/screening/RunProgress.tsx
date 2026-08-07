@@ -64,6 +64,13 @@ function StepRow({ step, label }: { step: ScreeningRunStep; label: string }) {
             ? "bg-[color:var(--muted)]/10 text-[color:var(--muted)] opacity-70"
             : "bg-white/5 text-[color:var(--muted)]";
 
+  const subtext =
+    step.subStepsTotal != null && step.subStepsTotal > 1
+      ? (copy.progress.irSubtext ?? "{done}/{total} tickers")
+          .replace("{done}", String(step.subStepsDone ?? 0))
+          .replace("{total}", String(step.subStepsTotal))
+      : null;
+
   return (
     <li className="flex items-center gap-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2">
       <span
@@ -79,7 +86,12 @@ function StepRow({ step, label }: { step: ScreeningRunStep; label: string }) {
             : "text-[color:var(--foreground)]"
         }`}
       >
-        {label}
+        <span className="block">{label}</span>
+        {subtext ? (
+          <span className="mt-0.5 block text-[11px] text-[color:var(--muted)]">
+            {subtext}
+          </span>
+        ) : null}
       </span>
       <span className="shrink-0 text-[11px] tabular-nums text-[color:var(--muted)]">
         {step.elapsedSeconds != null ? `${step.elapsedSeconds.toFixed(1)}s` : statusLabel}
