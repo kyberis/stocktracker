@@ -249,7 +249,7 @@ export async function getLatestQaIssuesForAgentTicker(
   ticker: string | null,
 ): Promise<QaIssueRow[]> {
   const client = await ensureInitialized();
-  const args: unknown[] = [runId, agentKind];
+  const args: Array<string | number | null> = [runId, agentKind];
   let tickerClause = "AND ticker IS NULL";
   if (ticker) {
     tickerClause = "AND ticker = ?";
