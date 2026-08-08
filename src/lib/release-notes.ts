@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.119",
+    date: "2026-08-09",
+    title: "Screening: keep research moving after Hard Data",
+    titleTranslations: {
+      es: "Cribado: seguir investigando tras Hard Data",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "After Hard Data fans out research steps, a sibling worker keeps IR/Web/Technicals moving if one step hangs. Progress credits in-flight agents so the bar no longer looks stuck at ~11%, and stuck detection resumes sooner.",
+        translations: {
+          es: "Tras el fan-out de Hard Data, un worker hermano sigue con IR/Web/Técnico si un paso se cuelga. El progreso cuenta agentes en curso para no quedarse en ~11%, y la detección de atasco reanuda antes.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.118",
     date: "2026-08-08",
     title: "Screening: analyze one company",

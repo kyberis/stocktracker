@@ -740,6 +740,16 @@ export const runHardDataStep: StepHandler = async (
         }
       }
       irFanout = candidates.length;
+      // Parent drain may be about to lease IR and hang for minutes. Kick a
+      // sibling drain so web/technicals (no deps) can progress in parallel.
+      // Dynamic import avoids a hard-data ↔ runner circular dependency.
+      if (irFanout > 0) {
+        void import("@/lib/screening/orchestrator/drain-run").then(
+          ({ continueScreeningRunInBackground }) => {
+            continueScreeningRunInBackground(ctx.runId);
+          },
+        );
+      }
     } else if (researchEnabled || qaEnabled) {
       // No IR/Web fan-out but research/QA on: attach after the compiler.
       const compilerStep = await findStepByAgentKind(ctx.runId, COMPILER_KIND);

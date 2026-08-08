@@ -230,9 +230,9 @@ export const screeningRunSchema = z.object({
 export type ScreeningRun = z.infer<typeof screeningRunSchema>;
 
 /** No step updates for this long → "still working, but quiet". */
-export const SCREENING_STALE_MS = 90_000;
+export const SCREENING_STALE_MS = 60_000;
 /** No step updates for this long → treat as stuck and offer resume. */
-export const SCREENING_STUCK_MS = 4 * 60_000;
+export const SCREENING_STUCK_MS = 2 * 60_000 + 30_000;
 
 /** Compact row for the entry-page history list. */
 export const screeningRunListItemSchema = z.object({

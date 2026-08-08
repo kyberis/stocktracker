@@ -337,6 +337,12 @@ export function RunProgress({ runId }: { runId: string }) {
   const stallState = inFlight ? run?.stallState : undefined;
   const showResume =
     inFlight && (stallState === "stuck" || stallState === "stale" || pollTimedOut);
+  const runningStep = run?.steps.find((s) => s.status === "running");
+  const runningLabel = runningStep
+    ? copy.progress.steps[
+        runningStep.agentKind as keyof typeof copy.progress.steps
+      ] ?? runningStep.agentKind
+    : null;
 
   return (
     <main className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-2xl flex-col px-3 pb-6 pt-8 sm:px-4">
@@ -359,6 +365,7 @@ export function RunProgress({ runId }: { runId: string }) {
           <p className="mt-1.5 text-xs text-[color:var(--muted)]" aria-live="polite">
             {lastUpdateLine}
             {typeof run?.progressPct === "number" ? ` · ${run.progressPct}%` : null}
+            {runningLabel ? ` · ${runningLabel}` : null}
           </p>
         ) : null}
       </header>

@@ -278,13 +278,27 @@ export function buildRunResponse(
   const active = steps.filter(
     (s) => s.status !== "skipped" && s.agentKind !== "intake",
   );
-  const doneOrTerminal = active.filter(
-    (s) => s.status === "done" || s.status === "failed",
-  );
-  const total = Math.max(1, active.length);
+  // Partial credit for in-flight steps so the bar moves after Hard Data and
+  // does not look frozen at ~11% while IR/Web/Technicals research runs.
+  let progressUnits = 0;
+  for (const s of active) {
+    if (s.status === "done" || s.status === "failed") {
+      progressUnits += 1;
+      continue;
+    }
+    if (s.status === "running") {
+      const total = s.subStepsTotal ?? 0;
+      const done = s.subStepsDone ?? 0;
+      if (total > 0) {
+        progressUnits += Math.min(1, (done + 0.35) / total);
+      } else {
+        progressUnits += 0.4;
+      }
+    }
+  }
   const progressPct = Math.min(
     100,
-    Math.round((doneOrTerminal.length / total) * 100),
+    Math.round((progressUnits / Math.max(1, active.length)) * 100),
   );
 
   const hasFailed = active.some((s) => s.status === "failed");
