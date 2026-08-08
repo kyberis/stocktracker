@@ -1,6 +1,8 @@
 "use client";
 
 import type { BriefRow } from "@/lib/screening/brief-state";
+import type { ScreeningCopy } from "@/lib/screening/copy";
+import { MetricHelpTip } from "./MetricHelpTip";
 import { useScreeningCopy } from "./use-screening-copy";
 
 const SOURCE_TONE: Record<BriefRow["source"], string> = {
@@ -21,6 +23,14 @@ export function SourceBadge({ source }: { source: BriefRow["source"] }) {
   );
 }
 
+function rowHelpFor(key: string, copy: ScreeningCopy) {
+  return copy.intake.rowHelp[key as keyof typeof copy.intake.rowHelp];
+}
+
+function fillEditHint(template: string, label: string): string {
+  return template.replace("{label}", label);
+}
+
 /** Compact list used in the chat side panel. Rows are clickable to edit. */
 export function BriefList({
   rows,
@@ -37,43 +47,51 @@ export function BriefList({
   return (
     <ul className="list-none space-y-1.5 p-0">
       {rows.map((row) => {
-        const content = (
-          <>
-            <span className="min-w-0 truncate text-[12px] text-[color:var(--muted)]">{row.label}</span>
-            <span className="shrink-0 text-[12px] font-semibold tabular-nums text-[color:var(--foreground)]">
-              {row.condition}
-            </span>
-          </>
+        const help = rowHelpFor(row.key, copy);
+        const label = (
+          <MetricHelpTip
+            label={row.label}
+            help={help}
+            className="text-[12px] text-[color:var(--muted)]"
+          />
         );
+        const condition = (
+          <span className="shrink-0 text-[12px] font-semibold tabular-nums text-[color:var(--foreground)]">
+            {row.condition}
+          </span>
+        );
+
         if (!onEditRow) {
           return (
             <li
               key={row.key}
               className="flex items-center justify-between gap-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2.5 py-1.5"
             >
-              {content}
+              {label}
+              {condition}
             </li>
           );
         }
+
         return (
-          <li key={row.key}>
+          <li
+            key={row.key}
+            className="flex items-center justify-between gap-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2.5 py-1.5"
+          >
+            {label}
             <button
               type="button"
               onClick={() => onEditRow(row)}
-              className="flex w-full items-center justify-between gap-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2.5 py-1.5 text-left transition-colors hover:border-teal-500/40 hover:bg-teal-500/[0.06]"
+              className="shrink-0 text-[12px] font-semibold tabular-nums text-[color:var(--foreground)] underline decoration-dotted underline-offset-2 transition-colors hover:text-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:hover:text-teal-300"
               title={fillEditHint(copy.intake.editRowHint, row.label)}
             >
-              {content}
+              {row.condition}
             </button>
           </li>
         );
       })}
     </ul>
   );
-}
-
-function fillEditHint(template: string, label: string): string {
-  return template.replace("{label}", label);
 }
 
 /** Full table used on the confirmation step, where provenance matters. */
@@ -107,13 +125,15 @@ export function BriefTable({
         <tbody>
           {rows.map((row) => (
             <tr key={row.key} className="border-b border-[color:var(--border)]">
-              <td className="px-3 py-2 text-[13px] text-[color:var(--muted)]">{row.label}</td>
+              <td className="px-3 py-2 text-[13px] text-[color:var(--muted)]">
+                <MetricHelpTip label={row.label} help={rowHelpFor(row.key, copy)} />
+              </td>
               <td className="px-3 py-2 text-[13px] font-semibold tabular-nums text-[color:var(--foreground)]">
                 {onEditRow ? (
                   <button
                     type="button"
                     onClick={() => onEditRow(row)}
-                    className="underline decoration-dotted underline-offset-2 hover:text-teal-700 dark:hover:text-teal-300"
+                    className="underline decoration-dotted underline-offset-2 hover:text-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:hover:text-teal-300"
                     title={fillEditHint(copy.intake.editRowHint, row.label)}
                   >
                     {row.condition}

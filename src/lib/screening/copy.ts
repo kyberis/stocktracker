@@ -174,6 +174,12 @@ const en = {
     pendingOne: "{n} criterion still open",
     pendingMany: "{n} criteria still open",
     explainToggle: "What do these terms mean?",
+    guideTitle: "Metric guide",
+    guideBody: "Tap ⓘ on a filter to see what it means and whether higher or lower is usually stricter.",
+    guideHigher: "Higher",
+    guideLower: "Lower",
+    guideEmpty: "As you answer, your filters show up here with a short tip to help you choose.",
+    rowHelpAria: "What does {label} mean?",
     doneTitle: "Brief ready",
     doneBody: "I have what I need. Review it and launch the search.",
     earlyFilled:
@@ -223,6 +229,83 @@ const en = {
       excludeSectors: "Sectors excluded",
       candidateCount: "Number of candidates",
       riskProfile: "Risk profile",
+    },
+    /** Short tips for brief rows — what the metric is and how higher/lower reads when choosing. */
+    rowHelp: {
+      includeSectors: {
+        what: "Industries you want in the search. Narrower lists find fewer names but stay closer to a theme.",
+      },
+      excludeSectors: {
+        what: "Industries to skip. Useful when one sector already dominates your portfolio.",
+      },
+      marketCap: {
+        what: "Company size on the market (share price × shares). Small/mid caps are less covered by analysts.",
+        higher: "Larger firms tend to be more liquid and less volatile, with less room for mispricing.",
+        lower: "Smaller firms can move more vs. the business — and swing harder.",
+      },
+      ndEbitda: {
+        what: "Years of operating profit needed to clear net debt. A leverage comfort check.",
+        higher: "More leverage — harder to weather a bad year.",
+        lower: "Safer balance sheet; below 0 means net cash.",
+      },
+      currentRatio: {
+        what: "Current assets ÷ current liabilities — near-term ability to pay bills.",
+        higher: "More short-term liquidity cushion.",
+        lower: "Tighter liquidity; under ~1x can signal stress.",
+      },
+      roic: {
+        what: "Return on invested capital: profit per euro employed in the business.",
+        higher: "Usually a stronger competitive advantage (stricter quality bar).",
+        lower: "Weaker capital efficiency — easier to pass, lower quality bar.",
+      },
+      grossMargin: {
+        what: "Sales minus cost of goods, as a % of sales — pricing power before operating costs.",
+        higher: "More room for profit after making/selling the product.",
+        lower: "Thinner product economics.",
+      },
+      ebitMargin: {
+        what: "Operating profit as a % of sales — after running the business.",
+        higher: "More profitable operations.",
+        lower: "Thinner operating profit.",
+      },
+      fwdPe: {
+        what: "Price ÷ next year's expected earnings. How many years of those earnings you pay for.",
+        higher: "More expensive (or more growth priced in).",
+        lower: "Usually cheaper — unless earnings are collapsing. Stricter screens use a lower ceiling.",
+      },
+      tevEbitda: {
+        what: "Enterprise value ÷ EBITDA — valuation including net debt.",
+        higher: "Richer valuation.",
+        lower: "Cheaper on an EV basis; stricter screens use a lower ceiling.",
+      },
+      pFcf: {
+        what: "Price ÷ free cash flow per share — what you pay for cash the business actually generates.",
+        higher: "More expensive vs. cash generation.",
+        lower: "Cheaper vs. free cash flow.",
+      },
+      tevSales: {
+        what: "Enterprise value ÷ sales — useful when earnings are still thin.",
+        higher: "Paying more per euro of sales.",
+        lower: "Cheaper vs. revenue.",
+      },
+      debtEquity: {
+        what: "Total debt ÷ equity — how much the balance sheet leans on lenders.",
+        higher: "More equity leverage risk.",
+        lower: "More equity-funded; stricter screens use a lower ceiling.",
+      },
+      revenueCagr: {
+        what: "Average annual sales growth between two fiscal years (compounded).",
+        higher: "Faster growth bar — fewer names, more demanding.",
+        lower: "Allows slower growers; may include shrinking businesses if too loose.",
+      },
+      region: {
+        what: "Where the company is listed. Affects currency, dividend tax and data coverage.",
+      },
+      riskProfile: {
+        what: "Shapes illustrative position size and concentration caps in the report — research framing, not advice.",
+        higher: "Aggressive allows larger illustrative single-name weights.",
+        lower: "Conservative keeps single-name weight low.",
+      },
     },
     values: {
       none: "—",
@@ -290,6 +373,8 @@ const en = {
           {
             term: "Market cap",
             def: "Share price × number of shares: what the whole company costs on the market.",
+            higher: "Larger firms — more liquidity, usually less mispricing room.",
+            lower: "Smaller firms — more room for price to drift, more volatility.",
           },
           {
             term: "Why 300–15,000M USD",
@@ -307,7 +392,9 @@ const en = {
         explain: [
           {
             term: "Forward P/E",
-            def: "Price divided by next year's expected earnings per share. 15x means paying 15 years of those earnings. Lower is cheaper — unless earnings are collapsing.",
+            def: "Price divided by next year's expected earnings per share. 15x means paying 15 years of those earnings.",
+            higher: "More expensive (or more growth already priced in).",
+            lower: "Usually cheaper — unless earnings are collapsing. A lower ceiling is a stricter screen.",
           },
         ],
         options: {
@@ -322,10 +409,14 @@ const en = {
           {
             term: "ROIC",
             def: "Return on invested capital: how much the company earns per euro employed in the business. Sustained above 12% usually points to a real competitive advantage.",
+            higher: "Stricter quality bar — fewer names, stronger businesses.",
+            lower: "Easier to pass — includes weaker capital returns.",
           },
           {
             term: "Net debt / EBITDA",
             def: "How many years of operating profit it would take to clear net debt. Below 2.5x is a common comfort band.",
+            higher: "More leverage — riskier in a downturn.",
+            lower: "Safer balance sheet; below 0 means net cash. A lower ceiling is stricter.",
           },
         ],
         options: {
@@ -340,6 +431,8 @@ const en = {
           {
             term: "Revenue CAGR",
             def: "Compound annual growth rate: the average pace at which sales grow between two years, already smoothed.",
+            higher: "Faster growth required — fewer candidates.",
+            lower: "Allows slower growers; too low may let shrinking businesses through.",
           },
         ],
         options: {
@@ -383,7 +476,9 @@ const en = {
         explain: [
           {
             term: "Risk profile",
-            def: "Shapes illustrative allocation bands and concentration caps. Conservative keeps single-name weight low; aggressive allows larger illustrative sizes. This is research framing, not advice.",
+            def: "Shapes illustrative allocation bands and concentration caps. This is research framing, not advice.",
+            higher: "Aggressive allows larger illustrative single-name sizes.",
+            lower: "Conservative keeps single-name weight low.",
           },
         ],
         options: {
@@ -738,6 +833,12 @@ const es: ScreeningCopy = {
     pendingOne: "{n} criterio por definir",
     pendingMany: "{n} criterios por definir",
     explainToggle: "¿Qué significan estos términos?",
+    guideTitle: "Guía de métricas",
+    guideBody: "Pulsa ⓘ en un filtro para ver qué significa y si más alto o más bajo suele ser más estricto.",
+    guideHigher: "Más alto",
+    guideLower: "Más bajo",
+    guideEmpty: "Conforme respondes, tus filtros aparecen aquí con una pista corta para ayudarte a elegir.",
+    rowHelpAria: "¿Qué significa {label}?",
     doneTitle: "Brief listo",
     doneBody: "Tengo lo que necesito. Revísalo y lanza la búsqueda.",
     earlyFilled:
@@ -788,6 +889,82 @@ const es: ScreeningCopy = {
       excludeSectors: "Sectores excluidos",
       candidateCount: "Nº de candidatos",
       riskProfile: "Perfil de riesgo",
+    },
+    rowHelp: {
+      includeSectors: {
+        what: "Industrias que quieres en la búsqueda. Listas más estrechas encuentran menos nombres pero se acercan más a un tema.",
+      },
+      excludeSectors: {
+        what: "Industrias a omitir. Útil cuando un sector ya domina tu cartera.",
+      },
+      marketCap: {
+        what: "Tamaño de la empresa en bolsa (precio × acciones). Las small/mid cap tienen menos cobertura de analistas.",
+        higher: "Empresas más grandes: más liquidez y menos volatilidad, con menos margen de desajuste de precio.",
+        lower: "Empresas más pequeñas: el precio puede desviarse más del negocio — y oscilar más.",
+      },
+      ndEbitda: {
+        what: "Años de beneficio operativo para devolver la deuda neta. Comprueba el apalancamiento.",
+        higher: "Más apalancamiento — más difícil aguantar un mal año.",
+        lower: "Balance más sano; por debajo de 0 es caja neta.",
+      },
+      currentRatio: {
+        what: "Activo corriente ÷ pasivo corriente — capacidad de pagar facturas a corto plazo.",
+        higher: "Más colchón de liquidez a corto plazo.",
+        lower: "Liquidez más justa; por debajo de ~1x puede indicar tensión.",
+      },
+      roic: {
+        what: "Retorno sobre el capital invertido: beneficio por euro empleado en el negocio.",
+        higher: "Suele indicar ventaja competitiva más fuerte (filtro de calidad más estricto).",
+        lower: "Menor eficiencia de capital — más fácil de pasar, listón de calidad más bajo.",
+      },
+      grossMargin: {
+        what: "Ventas menos coste de producto, en % de ventas — poder de precio antes de costes operativos.",
+        higher: "Más margen para beneficio tras fabricar/vender.",
+        lower: "Economía de producto más fina.",
+      },
+      ebitMargin: {
+        what: "Beneficio operativo en % de ventas — después de gestionar el negocio.",
+        higher: "Operaciones más rentables.",
+        lower: "Beneficio operativo más fino.",
+      },
+      fwdPe: {
+        what: "Precio ÷ beneficio esperado del próximo ejercicio. Cuántos años de ese beneficio pagas.",
+        higher: "Más cara (o más crecimiento ya descontado).",
+        lower: "Suele ser más barata — salvo que el beneficio se hunda. Un techo más bajo es un cribado más estricto.",
+      },
+      tevEbitda: {
+        what: "Valor de empresa ÷ EBITDA — valoración incluyendo deuda neta.",
+        higher: "Valoración más rica.",
+        lower: "Más barata en base EV; un techo más bajo es más estricto.",
+      },
+      pFcf: {
+        what: "Precio ÷ flujo de caja libre por acción — lo que pagas por la caja que genera el negocio.",
+        higher: "Más cara frente a la generación de caja.",
+        lower: "Más barata frente al flujo de caja libre.",
+      },
+      tevSales: {
+        what: "Valor de empresa ÷ ventas — útil cuando el beneficio aún es fino.",
+        higher: "Pagas más por cada euro de ventas.",
+        lower: "Más barata frente a ingresos.",
+      },
+      debtEquity: {
+        what: "Deuda total ÷ fondos propios — cuánto se apoya el balance en prestamistas.",
+        higher: "Más riesgo de apalancamiento sobre el equity.",
+        lower: "Más financiada con equity; un techo más bajo es más estricto.",
+      },
+      revenueCagr: {
+        what: "Crecimiento medio anual de ventas entre dos ejercicios (compuesto).",
+        higher: "Listón de crecimiento más alto — menos nombres, más exigente.",
+        lower: "Permite crecimientos más lentos; si es demasiado laxo puede colar negocios que se encogen.",
+      },
+      region: {
+        what: "Dónde cotiza la empresa. Afecta a divisa, fiscalidad de dividendos y cobertura de datos.",
+      },
+      riskProfile: {
+        what: "Define bandas ilustrativas de tamaño y topes de concentración en el informe — marco de investigación, no consejo.",
+        higher: "Agresivo permite pesos ilustrativos mayores por nombre.",
+        lower: "Conservador mantiene poco peso por nombre.",
+      },
     },
     values: {
       none: "—",
@@ -852,6 +1029,8 @@ const es: ScreeningCopy = {
           {
             term: "Capitalización de mercado",
             def: "Precio de la acción × número de acciones: lo que cuesta la empresa entera en bolsa.",
+            higher: "Empresas más grandes — más liquidez, suele haber menos margen de desajuste.",
+            lower: "Empresas más pequeñas — más margen para que el precio se despegue, más volatilidad.",
           },
           {
             term: "Por qué 300–15.000 M USD",
@@ -869,7 +1048,9 @@ const es: ScreeningCopy = {
         explain: [
           {
             term: "PER forward",
-            def: "Precio dividido entre el beneficio por acción esperado del próximo ejercicio. 15x significa pagar 15 años de ese beneficio. Cuanto más bajo, más barata — salvo que el beneficio se esté hundiendo.",
+            def: "Precio dividido entre el beneficio por acción esperado del próximo ejercicio. 15x significa pagar 15 años de ese beneficio.",
+            higher: "Más cara (o más crecimiento ya descontado).",
+            lower: "Suele ser más barata — salvo que el beneficio se hunda. Un techo más bajo es un cribado más estricto.",
           },
         ],
         options: {
@@ -884,10 +1065,14 @@ const es: ScreeningCopy = {
           {
             term: "ROIC",
             def: "Retorno sobre el capital invertido: cuánto gana la empresa por cada euro que emplea en el negocio. Por encima del 12% sostenido suele indicar una ventaja competitiva real.",
+            higher: "Listón de calidad más estricto — menos nombres, negocios más fuertes.",
+            lower: "Más fácil de pasar — incluye retornos de capital más débiles.",
           },
           {
             term: "Deuda neta / EBITDA",
             def: "Años de beneficio operativo para devolver la deuda menos la caja. Por debajo de 2,5x es una banda habitual de confort.",
+            higher: "Más apalancamiento — más riesgo en una caída.",
+            lower: "Balance más sano; por debajo de 0 es caja neta. Un techo más bajo es más estricto.",
           },
         ],
         options: {
@@ -902,10 +1087,8 @@ const es: ScreeningCopy = {
           {
             term: "CAGR de ingresos",
             def: "Tasa de crecimiento anual compuesta: el ritmo medio al que crecen las ventas entre dos ejercicios, ya suavizado.",
-          },
-          {
-            term: "Por qué > 5%",
-            def: "Filtra empresas baratas porque el negocio se está encogiendo. Barato y decreciente rara vez acaba bien.",
+            higher: "Exige más crecimiento — menos candidatos.",
+            lower: "Permite crecimientos más lentos; demasiado bajo puede colar negocios que se encogen.",
           },
         ],
         options: {
@@ -949,7 +1132,9 @@ const es: ScreeningCopy = {
         explain: [
           {
             term: "Perfil de riesgo",
-            def: "Define bandas ilustrativas de asignación y topes de concentración. Conservador mantiene poco peso por nombre; agresivo permite tamaños ilustrativos mayores. Es marco de investigación, no consejo.",
+            def: "Define bandas ilustrativas de asignación y topes de concentración. Es marco de investigación, no consejo.",
+            higher: "Agresivo permite tamaños ilustrativos mayores por nombre.",
+            lower: "Conservador mantiene poco peso por nombre.",
           },
         ],
         options: {

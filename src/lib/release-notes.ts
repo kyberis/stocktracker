@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.116",
+    date: "2026-08-08",
+    title: "Screening intake: metric guide",
+    titleTranslations: {
+      es: "Cribado intake: guía de métricas",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Intake chat shows a left-hand metric guide and ⓘ tips on each brief filter — what the number means and whether higher or lower is usually stricter — so it is easier to choose.",
+        translations: {
+          es: "El chat de intake muestra una guía de métricas a la izquierda y tips ⓘ en cada filtro del brief — qué significa el dato y si más alto o más bajo suele ser más estricto — para elegir con más claridad.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.115",
     date: "2026-08-08",
     title: "Screening: company research + per-report cost",

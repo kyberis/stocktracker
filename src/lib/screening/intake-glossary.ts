@@ -4,17 +4,13 @@ import type { ExplainEntry } from "./intake-script";
 /**
  * Given the assistant's chat message, return the ExplainEntry rows that
  * clarify the financial terms mentioned in it. Terms come from the same
- * copy used by the scripted questions, so the definitions stay consistent
- * across the flow. Case-insensitive matches, dedup by term, max 4 entries.
+ * copy used by the scripted questions and brief row tips, so the definitions
+ * stay consistent across the flow. Case-insensitive matches, dedup by term,
+ * max 4 entries.
  */
 type Trigger = {
   /** Regex(es) that trigger this glossary entry when they appear in the text. */
   patterns: RegExp[];
-  /**
-   * Pick the entry from the copy. Both the English and Spanish
-   * `q.*.explain` arrays are indexed by term, so we grab by index in each
-   * question and let the localized string carry through.
-   */
   pick: (copy: ScreeningCopy) => ExplainEntry | undefined;
 };
 
@@ -23,6 +19,20 @@ function at(
   index: number,
 ): ExplainEntry | undefined {
   return entries?.[index];
+}
+
+function fromRowHelp(
+  copy: ScreeningCopy,
+  key: keyof ScreeningCopy["intake"]["rowHelp"],
+  term: string,
+): ExplainEntry {
+  const help = copy.intake.rowHelp[key];
+  return {
+    term,
+    def: help.what,
+    ...("higher" in help && help.higher ? { higher: help.higher } : {}),
+    ...("lower" in help && help.lower ? { lower: help.lower } : {}),
+  };
 }
 
 const TRIGGERS: Trigger[] = [
@@ -42,7 +52,7 @@ const TRIGGERS: Trigger[] = [
       /\bcapitalización(?:\s+de\s+mercado)?\b/i,
       /\bmarketcap\b/i,
     ],
-    pick: (c) => at(c.intake.questions.size.explain, 0),
+    pick: (c) => at(c.intake.questions.size.explain, 0) ?? fromRowHelp(c, "marketCap", c.intake.presets.marketCap.label),
   },
   // Valuation family
   {
@@ -53,7 +63,7 @@ const TRIGGERS: Trigger[] = [
       /\bper\s+forward\b/i,
       /\bp\/e\b/i,
     ],
-    pick: (c) => at(c.intake.questions.valuation.explain, 0),
+    pick: (c) => at(c.intake.questions.valuation.explain, 0) ?? fromRowHelp(c, "fwdPe", c.intake.presets.fwdPe.label),
   },
   {
     patterns: [
@@ -63,28 +73,28 @@ const TRIGGERS: Trigger[] = [
       /\btevebitda\b/i,
       /\btev\s*ebitda\b/i,
     ],
-    pick: (c) => at(c.intake.questions.valuation.explain, 1),
+    pick: (c) => fromRowHelp(c, "tevEbitda", c.intake.presets.tevEbitda.label),
   },
   {
     patterns: [/\bp\s*\/\s*fcf\b/i, /\bpfcf\b/i, /\bprice\s*to\s*free\s*cash\s*flow\b/i],
-    pick: (c) => at(c.intake.questions.valuation.explain, 2),
+    pick: (c) => fromRowHelp(c, "pFcf", c.intake.presets.pFcf.label),
   },
   {
     patterns: [/\btev\s*\/\s*sales\b/i, /\bev\s*\/\s*sales\b/i, /\btev\s*sales\b/i],
-    pick: (c) => at(c.intake.questions.valuation.explain, 3),
+    pick: (c) => fromRowHelp(c, "tevSales", c.intake.presets.tevSales.label),
   },
   // Quality / balance sheet family
   {
     patterns: [/\broic\b/i, /\breturn\s+on\s+invested\s+capital\b/i],
-    pick: (c) => at(c.intake.questions.quality.explain, 0),
+    pick: (c) => at(c.intake.questions.quality.explain, 0) ?? fromRowHelp(c, "roic", c.intake.presets.roic.label),
   },
   {
     patterns: [/\bgross\s+margin\b/i, /\bmargen\s+bruto\b/i],
-    pick: (c) => at(c.intake.questions.quality.explain, 1),
+    pick: (c) => fromRowHelp(c, "grossMargin", c.intake.presets.grossMargin.label),
   },
   {
     patterns: [/\bebit\s+margin\b/i, /\bmargen\s+ebit\b/i],
-    pick: (c) => at(c.intake.questions.quality.explain, 2),
+    pick: (c) => fromRowHelp(c, "ebitMargin", c.intake.presets.ebitMargin.label),
   },
   {
     patterns: [
@@ -93,7 +103,7 @@ const TRIGGERS: Trigger[] = [
       /\bnet\s*debt\s*\/?\s*ebitda\b/i,
       /\bdeuda\s+neta\s*\/?\s*ebitda\b/i,
     ],
-    pick: (c) => at(c.intake.questions.quality.explain, 3),
+    pick: (c) => at(c.intake.questions.quality.explain, 1) ?? fromRowHelp(c, "ndEbitda", c.intake.presets.ndEbitda.label),
   },
   {
     patterns: [
@@ -102,7 +112,7 @@ const TRIGGERS: Trigger[] = [
       /\brazón\s+corriente\b/i,
       /\bratio\s+corriente\b/i,
     ],
-    pick: (c) => at(c.intake.questions.quality.explain, 4),
+    pick: (c) => fromRowHelp(c, "currentRatio", c.intake.presets.currentRatio.label),
   },
   {
     patterns: [
@@ -110,7 +120,7 @@ const TRIGGERS: Trigger[] = [
       /\bdebtequity\b/i,
       /\bdeuda\s*\/?\s*patrimonio\b/i,
     ],
-    pick: (c) => at(c.intake.questions.quality.explain, 5),
+    pick: (c) => fromRowHelp(c, "debtEquity", c.intake.presets.debtEquity.label),
   },
   // Growth
   {
@@ -121,7 +131,7 @@ const TRIGGERS: Trigger[] = [
       /\bcagr\s+de\s+ventas\b/i,
       /\bcagr\b/i,
     ],
-    pick: (c) => at(c.intake.questions.growth.explain, 0),
+    pick: (c) => at(c.intake.questions.growth.explain, 0) ?? fromRowHelp(c, "revenueCagr", c.intake.presets.revenueCagr.label),
   },
   // Region
   {

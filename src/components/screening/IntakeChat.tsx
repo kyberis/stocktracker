@@ -27,6 +27,7 @@ import {
   type ScreeningIntent,
 } from "@/lib/screening/schemas";
 import { BriefList, BriefTable } from "./BriefTable";
+import { ExplainHelpList } from "./MetricHelpTip";
 import { ScreeningDisclaimer } from "./ScreeningNotices";
 import { useScreeningCopy } from "./use-screening-copy";
 
@@ -163,6 +164,16 @@ export function IntakeChat() {
     }
     return [];
   }, [agentSuggestions, currentQuestion]);
+
+  const latestExplain = useMemo(() => {
+    for (let i = bubbles.length - 1; i >= 0; i--) {
+      const bubble = bubbles[i];
+      if (bubble?.role === "agent" && bubble.explain && bubble.explain.length > 0) {
+        return bubble.explain;
+      }
+    }
+    return [];
+  }, [bubbles]);
 
   const sendTurn = useCallback(
     async (userText: string, chipPatch?: BriefPatch): Promise<{ ok: boolean; status: IntakeAgentStatus | null }> => {
@@ -408,7 +419,7 @@ export function IntakeChat() {
   const canLaunch = showLaunchPanel && agentStatus !== "rejected_infeasible" && rows.length > 0;
 
   return (
-    <main className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-xl flex-col px-3 pb-6 pt-8 sm:px-4">
+    <main className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-5xl flex-col px-3 pb-6 pt-8 sm:px-4">
       <header className="shrink-0 text-center">
         <h1 className="text-2xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-3xl">
           {showLaunchPanel ? copy.brief.title : copy.intake.title}
@@ -439,9 +450,45 @@ export function IntakeChat() {
         ) : null}
       </header>
 
+      <div className="mt-6 flex min-h-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-[minmax(240px,300px)_minmax(0,1fr)] lg:items-stretch lg:gap-6">
+        {!showLaunchPanel ? (
+          <aside
+            className="hidden min-h-0 lg:flex lg:flex-col lg:gap-3"
+            aria-label={copy.intake.guideTitle}
+          >
+            <div className="card sticky top-4 rounded-[20px] border border-[color:var(--border)] p-3.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-300">
+                {copy.intake.guideTitle}
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-[color:var(--muted)]">
+                {copy.intake.guideBody}
+              </p>
+              {latestExplain.length > 0 ? (
+                <div className="mt-3 border-t border-[color:var(--border)] pt-3">
+                  <ExplainHelpList entries={latestExplain} />
+                </div>
+              ) : null}
+              <div className="mt-3 border-t border-[color:var(--border)] pt-3">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
+                  {copy.intake.briefTitle}
+                </p>
+                {rows.length > 0 ? (
+                  <BriefList rows={rows} onEditRow={editBriefRow} />
+                ) : (
+                  <p className="text-[12px] leading-relaxed text-[color:var(--muted)]">
+                    {copy.intake.guideEmpty}
+                  </p>
+                )}
+              </div>
+            </div>
+          </aside>
+        ) : (
+          <div className="hidden lg:block" aria-hidden="true" />
+        )}
+
       <section
         ref={chatScrollRef}
-        className="mt-6 flex min-h-0 flex-1 flex-col overflow-y-auto"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto"
         aria-label={copy.intake.agentName}
       >
         {/* Equal flex spacers center the chat+composer when short; they
@@ -449,7 +496,7 @@ export function IntakeChat() {
             starts from the top and the latest turn stays reachable. */}
         <div className="min-h-0 flex-1" aria-hidden="true" />
 
-        <div className="shrink-0">
+        <div className="mx-auto w-full max-w-xl shrink-0">
           <ul className="flex list-none flex-col gap-3 px-0.5 pb-4">
             {bubbles.map((bubble) => (
               <li
@@ -472,22 +519,13 @@ export function IntakeChat() {
                     {bubble.text}
                   </p>
                   {bubble.explain && bubble.explain.length > 0 && (
-                    <details className="mt-2">
+                    <details className="mt-2 lg:hidden">
                       <summary className="cursor-pointer text-[12px] font-semibold text-teal-700 dark:text-teal-300">
                         {copy.intake.explainToggle}
                       </summary>
-                      <dl className="mt-1.5 space-y-1.5">
-                        {bubble.explain.map((entry) => (
-                          <div key={entry.term}>
-                            <dt className="text-[12px] font-semibold text-[color:var(--foreground)]">
-                              {entry.term}
-                            </dt>
-                            <dd className="text-[12px] leading-relaxed text-[color:var(--muted)]">
-                              {entry.def}
-                            </dd>
-                          </div>
-                        ))}
-                      </dl>
+                      <div className="mt-1.5">
+                        <ExplainHelpList entries={bubble.explain} />
+                      </div>
                     </details>
                   )}
                 </div>
@@ -540,7 +578,7 @@ export function IntakeChat() {
           )}
 
           {!showLaunchPanel && rows.length > 0 ? (
-            <details className="mb-3 border-t border-[color:var(--border)] pt-3">
+            <details className="mb-3 border-t border-[color:var(--border)] pt-3 lg:hidden">
               <summary className="cursor-pointer text-[12px] font-semibold text-[color:var(--muted)]">
                 {copy.intake.briefToggle}
                 {pendingQuestions > 0
@@ -611,9 +649,10 @@ export function IntakeChat() {
 
         <div className="min-h-0 flex-1" aria-hidden="true" />
       </section>
+      </div>
 
       {showLaunchPanel && (
-        <section className="mt-4 shrink-0 text-center">
+        <section className="mx-auto mt-4 w-full max-w-xl shrink-0 text-center">
           <p className="text-sm text-[color:var(--muted)]">{copy.intake.readyToLaunch}</p>
           <div className="mt-4 text-left">
             <BriefTable rows={rows} onEditRow={editBriefRow} />

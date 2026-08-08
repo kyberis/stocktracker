@@ -12,7 +12,14 @@ import type {
  * swap in a real Intake agent behind the same brief shape.
  */
 
-export type ExplainEntry = { term: string; def: string };
+export type ExplainEntry = {
+  term: string;
+  def: string;
+  /** Plain-language tip: what a higher reading usually implies when choosing. */
+  higher?: string;
+  /** Plain-language tip: what a lower reading usually implies when choosing. */
+  lower?: string;
+};
 
 export type BriefPatch = {
   criteria?: BriefCriterion[];

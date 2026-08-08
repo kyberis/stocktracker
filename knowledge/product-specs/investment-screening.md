@@ -120,7 +120,10 @@ the feature is not discoverable before launch. The Dev outputs route adds
   name plus what the criterion measures. `macroContext` is informative, which is why
   the score denominator is 8.
 - [`intake-script.ts`](../../src/lib/screening/intake-script.ts) — deterministic question
-  script; each option declares the brief patch it applies.
+  script; each option declares the brief patch it applies. Explain entries may include
+  optional `higher` / `lower` tips. Brief row tips live in `copy.intake.rowHelp` and power
+  the left-hand metric guide + ⓘ tooltips on `/screening/intake` (desktop aside; mobile
+  keeps the collapsible explain/brief).
 - [`brief-state.ts`](../../src/lib/screening/brief-state.ts) — patch application, preset
   fill on early exit (returns what it assumed so the chat can say it), row ordering,
   and the POST payload.

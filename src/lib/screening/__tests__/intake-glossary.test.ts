@@ -32,7 +32,7 @@ describe("pickGlossaryFor", () => {
       copyEn,
     );
     const terms = entries.map((e) => e.term.toLowerCase());
-    expect(terms.some((t) => t.includes("p/e"))).toBe(true);
+    expect(terms.some((t) => t.includes("p/e") || t.includes("per"))).toBe(true);
     expect(terms.some((t) => t.includes("ebitda"))).toBe(true);
   });
 

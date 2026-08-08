@@ -223,4 +223,33 @@ describe("screening copy", () => {
       }
     }
   });
+
+  it("explains every brief row key with higher/lower guidance where numeric", () => {
+    const numericKeys = new Set([
+      "marketCap",
+      "ndEbitda",
+      "currentRatio",
+      "roic",
+      "grossMargin",
+      "ebitMargin",
+      "fwdPe",
+      "tevEbitda",
+      "pFcf",
+      "tevSales",
+      "debtEquity",
+      "revenueCagr",
+      "riskProfile",
+    ]);
+    for (const language of ["es", "en"]) {
+      const help = getScreeningCopy(language).intake.rowHelp;
+      for (const key of [...BRIEF_CRITERION_ORDER, "includeSectors", "excludeSectors", "riskProfile"] as const) {
+        const entry = help[key as keyof typeof help];
+        expect(entry?.what, `${language}/${key}`).toBeTruthy();
+        if (numericKeys.has(key)) {
+          expect(entry && "higher" in entry && entry.higher, `${language}/${key}.higher`).toBeTruthy();
+          expect(entry && "lower" in entry && entry.lower, `${language}/${key}.lower`).toBeTruthy();
+        }
+      }
+    }
+  });
 });
