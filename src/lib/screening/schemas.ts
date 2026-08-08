@@ -424,8 +424,9 @@ export const screeningReportSchema = z.object({
   pendingAgentKinds: z.array(z.string()),
   /**
    * QA verification summary. Present after QA has run; null when QA is
-   * disabled or still pending. `degradedTickers[]` lists tickers removed
-   * from `cards` after directed retry could not resolve blocking issues.
+   * disabled or still pending. `degradedTickers[]` lists tickers that still
+   * had blocking issues after directed retry — usually omitted from `cards`,
+   * but kept when omitting them would leave an empty report (e.g. analyze).
    */
   verification: z
     .object({

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.120",
+    date: "2026-08-09",
+    title: "Screening: show report when QA flags the only name",
+    titleTranslations: {
+      es: "Cribado: mostrar informe si QA marca el único nombre",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Analyze (and other) reports no longer fail to open when verification flags every candidate — the card stays with caveats instead of an empty-report error.",
+        translations: {
+          es: "Los informes de Analizar (y otros) ya no fallan al abrir si la verificación marca todos los candidatos: la ficha se muestra con reservas en lugar de un error de informe vacío.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.119",
     date: "2026-08-09",
     title: "Screening: keep research moving after Hard Data",

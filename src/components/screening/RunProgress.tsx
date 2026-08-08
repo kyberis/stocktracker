@@ -187,7 +187,17 @@ export function RunProgress({ runId }: { runId: string }) {
         cache: "no-store",
       });
       if (!res.ok) {
-        setLoadError(copy.report.loadError);
+        let detail: { error?: string } | null = null;
+        try {
+          detail = (await res.json()) as { error?: string };
+        } catch {
+          detail = null;
+        }
+        setLoadError(
+          detail?.error === "verified_no_candidates"
+            ? copy.report.verifiedEmptyError
+            : copy.report.loadError,
+        );
         return;
       }
       const data = (await res.json()) as { report?: ScreeningReport };
@@ -202,7 +212,7 @@ export function RunProgress({ runId }: { runId: string }) {
     } finally {
       setLoadingReport(false);
     }
-  }, [runId, copy.report.loadError]);
+  }, [runId, copy.report.loadError, copy.report.verifiedEmptyError]);
 
   const resumeRun = useCallback(async () => {
     setResuming(true);

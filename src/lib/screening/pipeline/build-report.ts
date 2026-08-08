@@ -271,9 +271,10 @@ export function composeScreeningReport(
       : Math.min(5, Math.max(0, hardData.candidates.length));
 
   // When QA finishes with degraded tickers (round cap hit and some tickers
-  // still had blocking issues), drop them from the report so users never see
-  // unverified prose. Compose returns null when 0 candidates survive so the
-  // API can surface a refund/failure state.
+  // still had blocking issues), prefer dropping them so users don't see
+  // unverified prose. If that would empty the report (e.g. analyze intent
+  // with one name, or every shortlist name degraded), keep the degraded
+  // cards and rely on `verification` + per-card QA notes instead of a 422.
   const degradedSet = new Set<string>(
     (qa?.degradedTickers ?? []).map((t) => t.toUpperCase()),
   );
@@ -282,23 +283,32 @@ export function composeScreeningReport(
   );
   // Prefer Compiler shortlist order (late selection). Fall back to Hard Data
   // rank when the draft has no usable bullets.
-  const bulletOrder = draft.candidateBullets
+  const bulletOrderClean = draft.candidateBullets
     .map((b) => b.ticker.toUpperCase())
     .filter((t) => hardByTicker.has(t) && !degradedSet.has(t));
-  const survivors =
-    bulletOrder.length > 0
-      ? bulletOrder
+  let survivors =
+    bulletOrderClean.length > 0
+      ? bulletOrderClean
           .map((t) => hardByTicker.get(t)!)
           .concat(
             hardData.candidates.filter(
               (c) =>
                 !degradedSet.has(c.ticker.toUpperCase()) &&
-                !bulletOrder.includes(c.ticker.toUpperCase()),
+                !bulletOrderClean.includes(c.ticker.toUpperCase()),
             ),
           )
       : hardData.candidates.filter(
           (c) => !degradedSet.has(c.ticker.toUpperCase()),
         );
+  if (survivors.length === 0 && hardData.candidates.length > 0) {
+    const bulletOrderAll = draft.candidateBullets
+      .map((b) => b.ticker.toUpperCase())
+      .filter((t) => hardByTicker.has(t));
+    survivors =
+      bulletOrderAll.length > 0
+        ? bulletOrderAll.map((t) => hardByTicker.get(t)!)
+        : [...hardData.candidates];
+  }
   const candidates = survivors.slice(0, requestedCount);
   const priorityOrder = candidates.map((c) => c.ticker);
 

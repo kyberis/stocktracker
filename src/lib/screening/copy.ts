@@ -660,6 +660,8 @@ const en = {
     externalLinksNote:
       "Company and regulator links open outside trefolio. We do not control or endorse their content.",
     loadError: "The report could not be loaded.",
+    verifiedEmptyError:
+      "Verification could not confirm enough claims for any candidate. Try again or request a refund from Profile.",
     emptyCandidates:
       "No candidates matched this brief. Broaden sectors, market-cap, or valuation filters and try again.",
     sentimentTitle: "Sentiment",
@@ -685,7 +687,7 @@ const en = {
     verificationFlagged:
       "{count} claim(s) flagged for review — see per-candidate notes below.",
     verificationDegraded:
-      "Verified · some names were removed after review.",
+      "Verified with caveats · some claims could not be confirmed. Review flagged notes on each card.",
     verificationExpand: "Show flagged claims",
     verificationCollapse: "Hide flagged claims",
     verificationTitle: "Verification",
@@ -1365,6 +1367,8 @@ const es: ScreeningCopy = {
     externalLinksNote:
       "Los enlaces a las compañías y a reguladores se abren fuera de trefolio. No controlamos ni respaldamos su contenido.",
     loadError: "No se pudo cargar el informe.",
+    verifiedEmptyError:
+      "La verificación no pudo confirmar suficientes afirmaciones de ningún candidato. Inténtalo de nuevo o pide un reembolso desde Perfil.",
     emptyCandidates:
       "Ningún candidato encajó con este brief. Amplía sectores, capitalización o valoración e inténtalo de nuevo.",
     sentimentTitle: "Sentimiento",
@@ -1390,7 +1394,7 @@ const es: ScreeningCopy = {
     verificationFlagged:
       "{count} afirmación/es marcada/s para revisión — ver notas por candidato.",
     verificationDegraded:
-      "Verificado · algunos nombres se eliminaron tras la revisión.",
+      "Verificado con reservas · algunas afirmaciones no se pudieron confirmar. Revisa las notas marcadas en cada ficha.",
     verificationExpand: "Ver afirmaciones marcadas",
     verificationCollapse: "Ocultar afirmaciones marcadas",
     verificationTitle: "Verificación",
