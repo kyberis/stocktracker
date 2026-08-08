@@ -20,6 +20,15 @@ const prodOpsQuerySchema = z.object({
   ]),
 });
 
+/** Lets operators verify the route exists before debugging ProdOps HMAC config. */
+export async function GET() {
+  return NextResponse.json({
+    ok: true,
+    endpoint: "prodops-query",
+    methods: ["POST"],
+  });
+}
+
 export const POST = withMetrics("/api/internal/prodops-query", async (req: NextRequest) => {
   const secret = await getProdOpsSharedSecret();
   if (!secret.trim()) {

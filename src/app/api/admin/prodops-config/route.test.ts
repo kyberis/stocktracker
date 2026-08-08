@@ -41,19 +41,26 @@ describe("admin prodops config route", () => {
     const response = await GET(new NextRequest("http://localhost/api/admin/prodops-config"));
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({
-      config: {
-        enabled: true,
-        baseUrl: "https://ops.trefolio.com",
-        botUsername: "trefolio_prodops_bot",
-        enabledEventTypes: ["user_registered"],
-        recipient: null,
-        pendingLink: null,
-      },
-      hasSharedSecret: true,
-      maskedSharedSecret: "shar...cret",
-      secretSource: "database",
-    });
+    expect(await response.json()).toEqual(
+      expect.objectContaining({
+        config: {
+          enabled: true,
+          baseUrl: "https://ops.trefolio.com",
+          botUsername: "trefolio_prodops_bot",
+          enabledEventTypes: ["user_registered"],
+          recipient: null,
+          pendingLink: null,
+        },
+        hasSharedSecret: true,
+        maskedSharedSecret: "shar...cret",
+        secretSource: "database",
+        trefolioAppBaseUrl: expect.any(String),
+        prodopsQueryEndpointUrl: expect.stringContaining("/api/internal/prodops-query"),
+        prodopsEnvHint: expect.objectContaining({
+          variable: "TREFOLIO_BASE_URL",
+        }),
+      }),
+    );
   });
 
   it("persists config and rotates shared secret on PUT", async () => {

@@ -21,9 +21,20 @@ vi.mock("@/lib/with-metrics", () => ({
   withMetrics: (_name: string, handler: (req: NextRequest) => Promise<Response>) => handler,
 }));
 
-describe("POST /api/internal/prodops-query", () => {
+describe("/api/internal/prodops-query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("GET returns a health probe without auth", async () => {
+    const { GET } = await import("./route");
+    const response = await GET();
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      endpoint: "prodops-query",
+      methods: ["POST"],
+    });
   });
 
   it("returns the latest created user for the linked recipient", async () => {

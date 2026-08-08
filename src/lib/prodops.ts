@@ -44,11 +44,20 @@ export interface ProdOpsEnvelope {
   destinations: ProdOpsDispatchDestination[];
 }
 
-function getAppBaseUrl(): string {
+/** Canonical Warren app origin — ProdOps must use this as TREFOLIO_BASE_URL (not user.trefolio.com). */
+export function getTrefolioAppBaseUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_BASE_URL?.trim();
   if (fromEnv) return fromEnv.replace(/\/+$/, "");
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`.replace(/\/+$/, "");
   return "https://trefolio.com";
+}
+
+function getAppBaseUrl(): string {
+  return getTrefolioAppBaseUrl();
+}
+
+export function getProdOpsQueryEndpointUrl(): string {
+  return `${getTrefolioAppBaseUrl()}/api/internal/prodops-query`;
 }
 
 export function buildProdOpsAdminUrl(path: string): string {

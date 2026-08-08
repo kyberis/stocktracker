@@ -8,6 +8,7 @@ import {
   setProdOpsConfig,
   setProdOpsSharedSecret,
 } from "@/lib/db";
+import { getProdOpsQueryEndpointUrl, getTrefolioAppBaseUrl } from "@/lib/prodops";
 import { withMetrics } from "@/lib/with-metrics";
 
 function parseEventTypes(value: unknown): ProdOpsConfig["enabledEventTypes"] | undefined {
@@ -37,6 +38,14 @@ export const GET = withMetrics("/api/admin/prodops-config", async (req: NextRequ
     hasSharedSecret: secretMeta.hasSecret,
     maskedSharedSecret: secretMeta.maskedSecret,
     secretSource: secretMeta.source,
+    trefolioAppBaseUrl: getTrefolioAppBaseUrl(),
+    prodopsEnvHint: {
+      vercelProject: "trefolio-prodops (ops.trefolio.com)",
+      variable: "TREFOLIO_BASE_URL",
+      value: getTrefolioAppBaseUrl(),
+      mustNotUse: ["https://user.trefolio.com", "https://ops.trefolio.com"],
+    },
+    prodopsQueryEndpointUrl: getProdOpsQueryEndpointUrl(),
   });
 });
 
@@ -106,5 +115,13 @@ export const PUT = withMetrics("/api/admin/prodops-config", async (req: NextRequ
     hasSharedSecret: secretMeta.hasSecret,
     maskedSharedSecret: secretMeta.maskedSecret,
     secretSource: secretMeta.source,
+    trefolioAppBaseUrl: getTrefolioAppBaseUrl(),
+    prodopsEnvHint: {
+      vercelProject: "trefolio-prodops (ops.trefolio.com)",
+      variable: "TREFOLIO_BASE_URL",
+      value: getTrefolioAppBaseUrl(),
+      mustNotUse: ["https://user.trefolio.com", "https://ops.trefolio.com"],
+    },
+    prodopsQueryEndpointUrl: getProdOpsQueryEndpointUrl(),
   });
 });

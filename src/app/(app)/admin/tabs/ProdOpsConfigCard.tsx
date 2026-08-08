@@ -10,6 +10,8 @@ type ProdOpsBatchData = {
   hasSharedSecret: boolean;
   maskedSharedSecret: string;
   secretSource: "env" | "database" | "none";
+  trefolioAppBaseUrl?: string;
+  prodopsQueryEndpointUrl?: string;
 };
 
 const EVENT_TYPES: ProdOpsEventType[] = [
@@ -90,12 +92,20 @@ export default function ProdOpsConfigCard({
   const [cachedDeepLink, setCachedDeepLink] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [trefolioAppBaseUrl, setTrefolioAppBaseUrl] = useState(
+    initialData?.trefolioAppBaseUrl || "https://trefolio.com",
+  );
+  const [prodopsQueryEndpointUrl, setProdopsQueryEndpointUrl] = useState(
+    initialData?.prodopsQueryEndpointUrl || "",
+  );
 
   const hydrate = useCallback((data: ProdOpsBatchData) => {
     setConfig(data.config || DEFAULT_CONFIG);
     setHasSharedSecret(Boolean(data.hasSharedSecret));
     setMaskedSharedSecret(data.maskedSharedSecret || "");
     setSecretSource(data.secretSource || "none");
+    if (data.trefolioAppBaseUrl) setTrefolioAppBaseUrl(data.trefolioAppBaseUrl);
+    if (data.prodopsQueryEndpointUrl) setProdopsQueryEndpointUrl(data.prodopsQueryEndpointUrl);
   }, []);
 
   const fetchConfig = useCallback(
@@ -357,6 +367,26 @@ export default function ProdOpsConfigCard({
               <p className="text-xs text-gray-500 dark:text-slate-400">
                 Local dev example: <code>http://localhost:3400</code>
               </p>
+            </div>
+
+            <div className="space-y-2 lg:col-span-2">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+                <p className="font-medium">ProdOps Vercel env (ops.trefolio.com)</p>
+                <p className="mt-1 text-amber-900/90 dark:text-amber-100/90">
+                  Staff Telegram queries call back into trefolio. On the{" "}
+                  <strong>trefolio-prodops</strong> project set:
+                </p>
+                <p className="mt-2 font-mono text-[11px] break-all">
+                  TREFOLIO_BASE_URL={trefolioAppBaseUrl}
+                </p>
+                <p className="mt-2 text-amber-900/80 dark:text-amber-100/80">
+                  Do <strong>not</strong> use <code>user.trefolio.com</code> (IdP) or{" "}
+                  <code>ops.trefolio.com</code> — both return 404 for staff queries. After changing
+                  the env var, redeploy ProdOps. Probe:{" "}
+                  <code>GET {prodopsQueryEndpointUrl || `${trefolioAppBaseUrl}/api/internal/prodops-query`}</code>{" "}
+                  should return JSON <code>{`{"ok":true}`}</code>.
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">
