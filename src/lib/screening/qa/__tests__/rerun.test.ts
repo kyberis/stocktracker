@@ -121,4 +121,44 @@ describe("planReruns", () => {
     // But compiler + qa still queued so the LLM can rewrite with the hint.
     expect(kinds).toEqual(["compiler", "qa"]);
   });
+
+  it("maps Layer B aliases ir/web onto ir_business/web_sentiment for retries", () => {
+    const plan = planReruns({
+      qaOutput: makeQa({
+        issues: [
+          {
+            issueType: "unconfirmed_source",
+            ruleId: "R6",
+            agentKind: "ir",
+            ticker: "RPM",
+            claimPath: "guidance.asOf",
+            expectedValue: null,
+            actualValue: null,
+            summary: "stale",
+            blocking: true,
+          },
+          {
+            issueType: "rule_violation",
+            ruleId: "R3",
+            agentKind: "web",
+            ticker: "RPM",
+            claimPath: "insiderBias",
+            expectedValue: null,
+            actualValue: null,
+            summary: "bias",
+            blocking: true,
+          },
+        ],
+      }),
+      priorRounds: 1,
+    });
+    expect(plan.canRun).toBe(true);
+    const kinds = plan.steps.map((s) => s.agentKind);
+    expect(kinds).toContain("ir_business");
+    expect(kinds).toContain("web_sentiment");
+    expect(kinds).toContain("aggregate_ir_business");
+    expect(kinds).toContain("aggregate_web_sentiment");
+    expect(plan.targetsByAgent.get("ir_business")).toEqual(["RPM"]);
+    expect(plan.targetsByAgent.get("web_sentiment")).toEqual(["RPM"]);
+  });
 });

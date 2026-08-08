@@ -14,6 +14,44 @@ const PER_TICKER_KINDS = new Set([
   "hard_data",
 ]);
 
+/**
+ * Layer B often emits short aliases (`ir`, `web`). Map them onto the
+ * orchestrator step kinds so directed retries actually re-run the right agents.
+ */
+export function normalizeQaAgentKind(kind: string | null | undefined): string | null {
+  if (!kind) return null;
+  const k = kind.trim().toLowerCase();
+  if (!k) return null;
+  switch (k) {
+    case "ir":
+    case "ir_business":
+    case "aggregate_ir_business":
+      return "ir_business";
+    case "web":
+    case "web_sentiment":
+    case "aggregate_web_sentiment":
+      return "web_sentiment";
+    case "tech":
+    case "technicals":
+    case "aggregate_technicals":
+      return "technicals";
+    case "hard":
+    case "hard_data":
+      return "hard_data";
+    case "pc":
+    case "portfolio_context":
+      return "portfolio_context";
+    case "risk":
+      return "risk";
+    case "compiler":
+      return "compiler";
+    case "qa":
+      return "qa";
+    default:
+      return kind.trim();
+  }
+}
+
 /** Aggregators paired with each per-ticker agent. */
 const AGGREGATE_FOR: Record<string, string> = {
   ir_business: "aggregate_ir_business",
@@ -132,9 +170,9 @@ export function planReruns(input: {
 function groupTargets(issues: QaIssue[]): Map<string, string[]> {
   const out = new Map<string, Set<string>>();
   for (const i of issues) {
-    if (!i.agentKind || !i.ticker) continue;
-    const kind = i.agentKind;
-    if (!PER_TICKER_KINDS.has(kind)) continue;
+    if (!i.ticker) continue;
+    const kind = normalizeQaAgentKind(i.agentKind);
+    if (!kind || !PER_TICKER_KINDS.has(kind)) continue;
     const set = out.get(kind) ?? new Set<string>();
     set.add(i.ticker.toUpperCase());
     out.set(kind, set);

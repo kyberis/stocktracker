@@ -20,8 +20,8 @@ export function buildQaQualitativePrompt(
   ctx: QaQualitativePromptContext,
 ): string {
   const rulesGuidance = [
-    "R3 — Insider directional context: check that insiderBias narratives match the transaction direction (open-market buys imply 'buying'; sales imply 'selling').",
-    "R6 — Guidance freshness: guidance.asOf must be within the last 12 months; older data should be flagged as `unconfirmed_source`.",
+    "R3 — Insider directional context: check that insiderBias narratives match the transaction direction (open-market buys imply 'buying'; sales imply 'selling'). Only flag when the report/card actually exposes an insiderBias field that contradicts confirmed insider signals.",
+    "R6 — Guidance freshness is primarily Layer A (deterministic). Only add an R6 issue if Layer A missed an obviously stale (>12 months) or future asOf; never flag a recent past date as 'future'.",
     "R7 — Price-drop causality: if the compiler summary attributes a price move to a cause, the underlying agent output must contain that cause.",
     "R8 — M&A vs organic growth: growth claims must not attribute inorganic (M&A) contribution to organic growth.",
   ].join("\n- ");
@@ -45,6 +45,12 @@ Focus areas:
 
 Also flag any hallucinated numbers, unattributed claims, or cross-agent contradictions not already listed in the Layer A findings below.
 
+Date rules (critical — do not invent calendar bugs):
+- Today is the evaluation date in the raw context. A guidance.asOf a few weeks or months ago is VALID.
+- Only flag R6 when asOf is older than 12 months OR clearly in the future relative to today.
+- Do not claim a past date in the current year is "in the future".
+- Prefer not to re-emit R6 when Layer A already covered it.
+
 Layer A findings (already flagged; do not repeat unless you can add material colour):
 ${layerASummary}
 
@@ -56,7 +62,7 @@ RESPONSE PROTOCOL (mandatory):
 - issues[]: 0 to 15 entries. Each entry describes ONE distinct concern with:
     - issueType: quant_mismatch | unconfirmed_source | cross_agent_inconsistency | rule_violation | other
     - ruleId: one of R3, R6, R7, R8 (or null when no rule maps)
-    - agentKind: which agent produced the offending output (e.g. ir_business, web_sentiment, compiler) or null
+    - agentKind: MUST be a pipeline step kind — use ir_business, web_sentiment, technicals, hard_data, compiler (never short aliases like "ir" or "web")
     - ticker: uppercase ticker or null for report-level
     - claimPath: dotted path pointing to the offending field, best-effort
     - expectedValue / actualValue: brief strings, may be null

@@ -3,6 +3,7 @@ import { r1InsiderClassification } from "./rules/r1-insider-classification";
 import { r2SentimentNoise } from "./rules/r2-sentiment-noise";
 import { r4PeHistory } from "./rules/r4-pe-history";
 import { r5SourceConflict } from "./rules/r5-source-conflict";
+import { r6GuidanceFreshnessRule } from "./rules/r6-guidance-freshness";
 import { r9PeerFiltering } from "./rules/r9-peer-filtering";
 import { r10AnalystCount } from "./rules/r10-analyst-count";
 import { quantMismatch } from "./rules/quant-mismatch";
@@ -13,6 +14,7 @@ const ALL_RULES: QaRule[] = [
   r2SentimentNoise,
   r4PeHistory,
   r5SourceConflict,
+  r6GuidanceFreshnessRule,
   r9PeerFiltering,
   r10AnalystCount,
   quantMismatch,

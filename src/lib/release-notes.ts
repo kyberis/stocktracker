@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.109",
+    date: "2026-08-08",
+    title: "Screening QA: fix directed retries and guidance freshness",
+    titleTranslations: {
+      es: "QA de cribado: corrige reintentos dirigidos y frescura de guidance",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "QA Layer B aliases like ir/web now map to ir_business/web_sentiment so failed verification actually re-runs the flagged agents instead of skipping straight to ticker degradation. Guidance freshness (R6) is checked deterministically so recent past dates are not treated as “future”.",
+        translations: {
+          es: "Los alias de QA Layer B (ir/web) se mapean a ir_business/web_sentiment para que la verificación fallida reintente de verdad los agentes marcados en lugar de degradar tickers. La frescura de guidance (R6) se valida de forma determinista para no tratar fechas recientes como “futuro”.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.108",
     date: "2026-08-08",
     title: "Screening intake: sample conversation pilot",

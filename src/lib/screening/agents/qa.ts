@@ -12,7 +12,7 @@ import {
   insertSteps,
   type ScreeningAgentOutputRow,
 } from "@/lib/db";
-import { MAX_QA_ROUNDS, planReruns } from "@/lib/screening/qa/rerun";
+import { MAX_QA_ROUNDS, normalizeQaAgentKind, planReruns } from "@/lib/screening/qa/rerun";
 import { recordQaRound } from "@/lib/screening/metrics";
 import {
   registerHandler,
@@ -471,7 +471,7 @@ async function callQaQualitativeJudge(input: {
       parsedIssues = parsed.data.issues.map((i) => ({
         issueType: i.issueType,
         ruleId: i.ruleId ?? null,
-        agentKind: i.agentKind ?? null,
+        agentKind: normalizeQaAgentKind(i.agentKind ?? null),
         ticker: i.ticker ?? null,
         claimPath: i.claimPath ?? null,
         expectedValue: i.expectedValue ?? null,
