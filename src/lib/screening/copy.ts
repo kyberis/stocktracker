@@ -429,8 +429,22 @@ const en = {
       "A step failed — see the agent marked ✕ below. Nothing was charged.",
     failedStepDetail: "Error: {message}",
     irSubtext: "{done}/{total} tickers",
-    irInvestigating: "Investigating {total} tickers…",
-    qaVerifyingRound: "Verifying report… (round {round} of {max})",
+    irInvestigating: "Investigating names that match your brief…",
+    qaVerifyingRound: "Checking claims and citations…",
+    activity: {
+      intake: "Brief confirmed and handed to the research pipeline.",
+      hard_data:
+        "Pulling the equity universe and ranking names against your brief.",
+      ir_business:
+        "Reading filings and business context — one company at a time.",
+      web_sentiment:
+        "Gathering dated news and sentiment signals for each name.",
+      technicals: "Checking price levels, trend and distance to highs/lows.",
+      portfolio_context: "Comparing candidates to your current holdings and cash.",
+      risk: "Scoring suitability and concentration for your risk profile.",
+      compiler: "Choosing the best fits and writing the shortlist thesis.",
+      qa: "Verifying numbers, citations and cross-agent consistency.",
+    },
     steps: {
       intake: "Intake",
       hard_data: "Hard data",
@@ -446,7 +460,7 @@ const en = {
   report: {
     eyebrow: "Research report · automated",
     title: "Candidates for your portfolio",
-    metaLine: "Job {jobId} · {date} · {count} candidates",
+    metaLine: "Job {jobId} · {date}",
     methodologyTitle: "Methodology",
     summaryTitle: "Executive summary",
     priorityTitle: "Priority order",
@@ -527,7 +541,7 @@ const en = {
     verificationFlagged:
       "{count} claim(s) flagged for review — see per-candidate notes below.",
     verificationDegraded:
-      "Verified · {count} ticker(s) removed after review.",
+      "Verified · some names were removed after review.",
     verificationExpand: "Show flagged claims",
     verificationCollapse: "Hide flagged claims",
     verificationTitle: "Verification",
@@ -981,8 +995,22 @@ const es: ScreeningCopy = {
       "Un paso falló — mira el agente marcado con ✕ abajo. No se ha cobrado nada.",
     failedStepDetail: "Error: {message}",
     irSubtext: "{done}/{total} tickers",
-    irInvestigating: "Investigando {total} tickers…",
-    qaVerifyingRound: "Verificando el informe… (ronda {round} de {max})",
+    irInvestigating: "Investigando nombres que encajan con tu brief…",
+    qaVerifyingRound: "Revisando afirmaciones y citas…",
+    activity: {
+      intake: "Brief confirmado y pasado al pipeline de investigación.",
+      hard_data:
+        "Cargando el universo de acciones y rankeándolas frente a tu brief.",
+      ir_business:
+        "Leyendo filings y contexto de negocio — empresa a empresa.",
+      web_sentiment:
+        "Recopilando noticias y señales de sentimiento con fecha.",
+      technicals: "Revisando niveles de precio, tendencia y distancia a máximos/mínimos.",
+      portfolio_context: "Comparando candidatos con tu cartera y caja actuales.",
+      risk: "Valorando idoneidad y concentración según tu perfil de riesgo.",
+      compiler: "Eligiendo los mejores encajes y redactando la shortlist.",
+      qa: "Verificando números, citas y coherencia entre agentes.",
+    },
     steps: {
       intake: "Intake",
       hard_data: "Hard data",
@@ -998,7 +1026,7 @@ const es: ScreeningCopy = {
   report: {
     eyebrow: "Informe de investigación · automatizado",
     title: "Candidatos para tu cartera",
-    metaLine: "Job {jobId} · {date} · {count} candidatos",
+    metaLine: "Job {jobId} · {date}",
     methodologyTitle: "Metodología",
     summaryTitle: "Resumen ejecutivo",
     priorityTitle: "Orden de prioridad",
@@ -1079,7 +1107,7 @@ const es: ScreeningCopy = {
     verificationFlagged:
       "{count} afirmación/es marcada/s para revisión — ver notas por candidato.",
     verificationDegraded:
-      "Verificado · {count} ticker(s) eliminado(s) tras la revisión.",
+      "Verificado · algunos nombres se eliminaron tras la revisión.",
     verificationExpand: "Ver afirmaciones marcadas",
     verificationCollapse: "Ocultar afirmaciones marcadas",
     verificationTitle: "Verificación",

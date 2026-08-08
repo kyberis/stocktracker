@@ -36,18 +36,20 @@ function readIntakeReturn(runId: string, brief: ScreeningBrief | null): string {
   return buildIntakeHrefFromBrief(brief);
 }
 
-function fanOutSubtext(
+function activityForStep(
   step: ScreeningRunStep,
   copy: ReturnType<typeof useScreeningCopy>["copy"],
+  qaLine?: string | null,
 ): string | null {
-  if (step.subStepsTotal == null || step.subStepsTotal <= 1) return null;
-  const done = step.subStepsDone ?? 0;
-  if (done <= 0) {
-    return fill(copy.progress.irInvestigating, { total: step.subStepsTotal });
+  const kind = step.agentKind as keyof typeof copy.progress.activity;
+  const body = copy.progress.activity[kind] ?? null;
+  if (step.status === "running") {
+    if (step.agentKind === "qa" && qaLine) return qaLine;
+    return body ?? copy.progress.statusRunningLine;
   }
-  return (copy.progress.irSubtext ?? "{done}/{total} tickers")
-    .replace("{done}", String(done))
-    .replace("{total}", String(step.subStepsTotal));
+  if (step.status === "done") return body;
+  if (step.status === "failed") return copy.progress.statusFailed;
+  return null;
 }
 
 function AgentFeedItem({
@@ -60,15 +62,7 @@ function AgentFeedItem({
   qaLine?: string | null;
 }) {
   const { copy } = useScreeningCopy();
-  const subtext = fanOutSubtext(step, copy);
-  const statusLine =
-    step.status === "running"
-      ? qaLine || copy.progress.statusRunningLine
-      : step.status === "done"
-        ? copy.progress.statusDoneLine
-        : step.status === "failed"
-          ? copy.progress.statusFailed
-          : null;
+  const activity = activityForStep(step, copy, qaLine);
   const errorDetail =
     step.status === "failed" && step.errorMessage
       ? fill(copy.progress.failedStepDetail, { message: step.errorMessage })
@@ -76,46 +70,36 @@ function AgentFeedItem({
 
   return (
     <li
-      className={`animate-in fade-in slide-in-from-bottom-1 duration-300 ${
-        step.status === "failed" ? "text-red-700 dark:text-red-300" : ""
+      className={`animate-in fade-in slide-in-from-bottom-1 duration-300 border-l-2 pl-4 ${
+        step.status === "running"
+          ? "border-teal-500/70"
+          : step.status === "failed"
+            ? "border-red-500/60"
+            : "border-[color:var(--border)]"
       }`}
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <h2
-          className={`text-[15px] font-semibold tracking-tight ${
-            step.status === "running"
-              ? "text-[color:var(--foreground)]"
-              : step.status === "done"
-                ? "text-[color:var(--foreground)]"
-                : "text-[color:var(--muted)]"
-          }`}
-        >
-          {label}
-        </h2>
-        <span className="shrink-0 text-[11px] tabular-nums text-[color:var(--muted)]">
-          {step.elapsedSeconds != null
-            ? `${step.elapsedSeconds.toFixed(1)}s`
-            : step.status === "running"
-              ? "…"
-              : ""}
-        </span>
-      </div>
-      {statusLine ? (
+      <h2
+        className={`text-[15px] font-semibold tracking-tight ${
+          step.status === "failed"
+            ? "text-red-700 dark:text-red-300"
+            : "text-[color:var(--foreground)]"
+        }`}
+      >
+        {label}
+      </h2>
+      {activity ? (
         <p
-          className={`mt-0.5 text-[13px] ${
+          className={`mt-1.5 max-w-prose text-[14px] leading-relaxed ${
             step.status === "running"
-              ? "animate-pulse text-teal-700 dark:text-teal-300"
+              ? "animate-pulse text-[color:var(--foreground)]"
               : "text-[color:var(--muted)]"
           }`}
         >
-          {statusLine}
+          {activity}
         </p>
       ) : null}
-      {subtext ? (
-        <p className="mt-0.5 text-[12px] text-[color:var(--muted)]">{subtext}</p>
-      ) : null}
       {errorDetail ? (
-        <p className="mt-0.5 text-[12px] text-red-600 dark:text-red-400" role="alert">
+        <p className="mt-1 text-[12px] text-red-600 dark:text-red-400" role="alert">
           {errorDetail}
         </p>
       ) : null}
@@ -228,7 +212,7 @@ export function RunProgress({ runId }: { runId: string }) {
 
   if (showReport && report) {
     return (
-      <main className="mx-auto w-full max-w-xl px-3 py-6 sm:px-4">
+      <main className="mx-auto w-full max-w-7xl px-3 py-6 sm:px-4 lg:px-6">
         <ScreeningReportView report={report} mocked={run?.mocked ?? true} />
         <div className="mt-5 flex flex-wrap gap-2">
           <button
@@ -260,16 +244,11 @@ export function RunProgress({ runId }: { runId: string }) {
       ? Math.min(qaContext.maxRounds, qaContext.roundsCompleted + 1)
       : null;
   const qaVerifyingLine =
-    qaContext && qaRoundInFlight
-      ? fill(copy.progress.qaVerifyingRound, {
-          round: qaRoundInFlight,
-          max: qaContext.maxRounds,
-        })
-      : null;
+    qaContext && qaRoundInFlight ? copy.progress.qaVerifyingRound : null;
 
   return (
-    <main className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-xl flex-col px-3 pb-6 pt-8 sm:px-4">
-      <header className="shrink-0 text-center">
+    <main className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-2xl flex-col px-3 pb-6 pt-8 sm:px-4">
+      <header className="shrink-0">
         <h1 className="text-2xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-3xl">
           {runFailed
             ? copy.progress.title
@@ -318,7 +297,7 @@ export function RunProgress({ runId }: { runId: string }) {
         />
       </div>
 
-      <ul className="mt-8 list-none space-y-5 p-0" aria-live="polite">
+      <ul className="mt-8 list-none space-y-6 p-0" aria-live="polite">
         {visibleSteps.map((step) => (
           <AgentFeedItem
             key={step.agentKind}
@@ -333,7 +312,7 @@ export function RunProgress({ runId }: { runId: string }) {
         <div ref={feedEndRef} />
       </ul>
 
-      <div className="mt-8 flex flex-wrap justify-center gap-2">
+      <div className="mt-8 flex flex-wrap gap-2">
         {reportReady ? (
           <button
             type="button"
@@ -352,7 +331,7 @@ export function RunProgress({ runId }: { runId: string }) {
         </Link>
       </div>
 
-      <ScreeningDisclaimer className="mt-auto pt-6 text-center" />
+      <ScreeningDisclaimer className="mt-auto pt-6" />
     </main>
   );
 }

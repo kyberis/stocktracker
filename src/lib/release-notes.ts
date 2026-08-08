@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.112",
+    date: "2026-08-08",
+    title: "Screening: quieter progress feed and wider report",
+    titleTranslations: {
+      es: "Cribado: feed de progreso más limpio e informe más ancho",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Run progress now shows Claude-style activity paragraphs without ticker counts. The research report uses the full home-page width with a clearer layout, and candidate/removal counts are hidden from the header and verification banner.",
+        translations: {
+          es: "El progreso del run muestra párrafos de actividad estilo Claude sin conteos de tickers. El informe usa el ancho completo de la home con mejor distribución, y se ocultan los conteos de candidatos/eliminados en cabecera y verificación.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.111",
     date: "2026-08-08",
     title: "Screening: centered intake, agent feed, late top-5 selection",
