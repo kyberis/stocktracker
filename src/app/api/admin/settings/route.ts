@@ -55,6 +55,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "screening_pipeline_real_enabled",
   "screening_ir_agent_enabled",
   "screening_agents_v2_enabled",
+  "screening_qa_enabled",
 ];
 
 export const dynamic = "force-dynamic";

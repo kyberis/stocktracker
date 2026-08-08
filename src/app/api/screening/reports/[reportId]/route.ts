@@ -8,13 +8,18 @@ import {
   parseMockRunId,
 } from "@/lib/screening/mock-pipeline";
 import {
+  countQaRoundsForRun,
+  getLatestQaVerdictForRun,
   getScreeningRun,
   insertScreeningAgentOutput,
   listScreeningAgentOutputsByRun,
   listStepsForRun,
 } from "@/lib/db";
+import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import { backfillHardDataOutputJson } from "@/lib/screening/data/enrich-candidates";
+import { backfillTechnicalsAggregateOutputJson } from "@/lib/screening/data/backfill-technicals";
 import { composeScreeningReport } from "@/lib/screening/pipeline/build-report";
+import { MAX_QA_ROUNDS } from "@/lib/screening/qa/rerun";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -83,13 +88,47 @@ export const GET = withMetrics(
     const compilerRow = latestByKind.get("compiler");
     const irAggregateRow = latestByKind.get("aggregate_ir_business") ?? null;
     const webAggregateRow = latestByKind.get("aggregate_web_sentiment") ?? null;
+    let technicalsAggregateRow =
+      latestByKind.get("aggregate_technicals") ?? null;
     const portfolioContextRow = latestByKind.get("portfolio_context") ?? null;
     const riskRow = latestByKind.get("risk") ?? null;
+    const qaRow = latestByKind.get("qa") ?? null;
     if (!hardDataRow || !compilerRow) {
       return NextResponse.json(
         { error: "Report not ready", pendingAgentKinds: ["compiler"] },
         { status: 409 },
       );
+    }
+
+    const qaGating = await isFeatureEnabledForUser(
+      "screening_qa_enabled",
+      session.userId,
+    );
+    if (qaGating) {
+      const [verdictRow, roundsCount] = await Promise.all([
+        getLatestQaVerdictForRun(row.id),
+        countQaRoundsForRun(row.id),
+      ]);
+      const verdict = verdictRow?.verdict ?? null;
+      const passed =
+        verdict === "pass" || verdict === "pass_with_degradation";
+      if (!passed) {
+        // Still verifying, or fail with rounds remaining -> keep the client
+        // polling. Round cap is enforced by the QA agent, which flips the
+        // verdict to `pass_with_degradation` once retries are exhausted.
+        const roundsRemaining =
+          verdict === "fail" && roundsCount < MAX_QA_ROUNDS;
+        return NextResponse.json(
+          {
+            error: "Report not ready",
+            pendingAgentKinds: ["qa"],
+            qaVerdict: verdict,
+            qaRoundsCompleted: roundsCount,
+            roundsRemaining,
+          },
+          { status: 409 },
+        );
+      }
     }
 
     // Older runs may have Hard Data enriched with outdated FMP field names
@@ -112,6 +151,28 @@ export const GET = withMetrics(
       console.error("[screening/report] hard_data backfill failed", err);
     }
 
+    // Backfill technicals aggregate for older runs where the technicals agent
+    // never ran (pre-Phase 2). Best-effort: fetches FMP OHLC once per candidate.
+    try {
+      const tickers = extractTickersFromHardData(hardDataRow.outputJson);
+      const backfilledTechJson = await backfillTechnicalsAggregateOutputJson({
+        existingOutputJson: technicalsAggregateRow?.outputJson ?? null,
+        tickers,
+      });
+      if (backfilledTechJson) {
+        const persisted = await insertScreeningAgentOutput({
+          runId: row.id,
+          userId: session.userId,
+          agentKind: "aggregate_technicals",
+          outputJson: backfilledTechJson,
+          latencyMs: 0,
+        });
+        technicalsAggregateRow = persisted;
+      }
+    } catch (err) {
+      console.error("[screening/report] technicals backfill failed", err);
+    }
+
     const pending = [
       ...new Set(
         steps
@@ -120,7 +181,11 @@ export const GET = withMetrics(
               s.status !== "done" &&
               s.status !== "skipped" &&
               s.agentKind !== "aggregate_ir_business" &&
-              s.agentKind !== "aggregate_web_sentiment",
+              s.agentKind !== "aggregate_web_sentiment" &&
+              s.agentKind !== "aggregate_technicals" &&
+              // Phase 1 shadow mode: QA is non-blocking, don't surface it as
+              // pending. Phase 3 will gate the endpoint on QA verdict instead.
+              s.agentKind !== "qa",
           )
           .map((s) => s.agentKind),
       ),
@@ -132,8 +197,10 @@ export const GET = withMetrics(
       compilerRow,
       irAggregateRow,
       webAggregateRow,
+      technicalsAggregateRow,
       portfolioContextRow,
       riskRow,
+      qaRow,
       pendingAgentKinds: pending,
       candidateLimit,
     });
@@ -144,6 +211,38 @@ export const GET = withMetrics(
       );
     }
 
+    // If QA degraded every candidate, surface a refund-eligible error so the
+    // UI can point users to /profile/refund. We keep the run row in
+    // `completed` (there is no `failed` status in the DB); the client
+    // distinguishes via `error: verified_no_candidates` + `refundEligible`.
+    if (report.cards.length === 0) {
+      return NextResponse.json(
+        {
+          error: "verified_no_candidates",
+          refundEligible: true,
+          verification: report.verification,
+        },
+        { status: 422 },
+      );
+    }
+
     return NextResponse.json({ report, mocked: false });
   },
 );
+
+function extractTickersFromHardData(outputJson: string): string[] {
+  try {
+    const parsed = JSON.parse(outputJson) as {
+      candidates?: Array<{ ticker?: unknown }>;
+    };
+    const list: string[] = [];
+    for (const c of parsed.candidates ?? []) {
+      if (typeof c?.ticker === "string" && c.ticker.trim().length > 0) {
+        list.push(c.ticker.trim().toUpperCase());
+      }
+    }
+    return list.slice(0, 5);
+  } catch {
+    return [];
+  }
+}

@@ -838,3 +838,18 @@ export {
   appendEvent,
   listEventsForRun,
 } from "./screening-steps";
+
+export type {
+  QaVerdict,
+  QaIssueType,
+  QaIssueRow,
+  InsertQaIssueInput,
+  InsertQaRoundInput,
+} from "./screening-qa";
+export {
+  insertQaRoundIssues,
+  listQaRoundsByRun,
+  countQaRoundsForRun,
+  getLatestQaVerdictForRun,
+  getLatestQaIssuesForAgentTicker,
+} from "./screening-qa";

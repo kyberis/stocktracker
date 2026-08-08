@@ -1687,6 +1687,8 @@ const en: TranslationStrings = {
   landingCardTaxDesc: "Country-specific tax summaries for Germany, France, Spain, Netherlands, and Italy with AI Tax Assistant",
   landingCardScreenerTitle: "Stock Screener",
   landingCardScreenerDesc: "Filter 680+ stocks by dividend yield, P/E, sector, market cap, and more with preset strategies",
+  landingCardVerifiedTitle: "Verified screening reports",
+  landingCardVerifiedDesc: "AI screening with a QA pass that checks claims against Hard Data, IR and sources before the report unlocks",
   landingCardMoatTitle: "Moat Screener",
   landingCardMoatDesc: "680+ stocks scored on 8 Buffett-style criteria — earnings consistency, margins, ROE, debt, and more. Pre-evaluated and searchable.",
   landingCardNetWorthTitle: "Net Worth Tracking",

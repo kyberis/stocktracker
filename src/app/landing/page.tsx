@@ -141,6 +141,22 @@ function getHeroFeatures(t: T): HeroFeature[] {
         "Replies in your language (35 supported); commands /help, /portfolios, /news, /alerts",
       ],
     },
+    {
+      tag: "AI Screening",
+      tagBadge: "Trefolio",
+      title: "Verified investment screening reports",
+      description:
+        "Ask for candidates that fit your portfolio gaps. Agents pull Hard Data, IR, sentiment and technicals, then a QA pass checks claims against the raw evidence before the report unlocks — retries flagged agents when something doesn't line up. Research aid only, not financial advice.",
+      screenshot: "/screenshots/verified-reports.svg",
+      points: [
+        "Methodology checklist scored from multiples, catalysts, insiders and trend",
+        "Technicals block: 52w range, MA200, support/resistance, 3m/1y return",
+        "QA verifies numbers and sources; stubborn tickers are dropped after 2 rounds",
+        "Verified / Flagged banner so you know what was checked",
+      ],
+      ctaHref: "/screening",
+      ctaLabel: "Open screening",
+    },
   ];
 }
 
@@ -150,6 +166,7 @@ function getFeatureCards(t: T) {
   return [
     { icon: "shield", title: t("landingCardTaxTitle"), desc: t("landingCardTaxDesc") },
     { icon: "search", title: t("landingCardScreenerTitle"), desc: t("landingCardScreenerDesc") },
+    { icon: "shield", title: t("landingCardVerifiedTitle"), desc: t("landingCardVerifiedDesc"), badge: "Trefolio" },
     { icon: "castle", title: t("landingCardMoatTitle"), desc: t("landingCardMoatDesc") },
     { icon: "wallet", title: t("landingCardNetWorthTitle"), desc: t("landingCardNetWorthDesc") },
     { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc") },

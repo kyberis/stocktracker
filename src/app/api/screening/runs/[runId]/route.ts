@@ -3,7 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { withMetrics } from "@/lib/with-metrics";
 import { requireScreeningAccess } from "@/lib/screening/guard";
 import { buildMockRun, parseMockRunId } from "@/lib/screening/mock-pipeline";
-import { getScreeningRun, listStepsForRun } from "@/lib/db";
+import {
+  countQaRoundsForRun,
+  getLatestQaVerdictForRun,
+  getScreeningRun,
+  listStepsForRun,
+} from "@/lib/db";
+import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import { buildRunResponse } from "@/lib/screening/pipeline/build-run";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +37,19 @@ export const GET = withMetrics("/api/screening/runs/[runId]", async (req: NextRe
   if (!row) {
     return NextResponse.json({ error: "Run not found" }, { status: 404 });
   }
-  const steps = await listStepsForRun(row.id);
-  const run = buildRunResponse(row, steps);
+  const qaGating = await isFeatureEnabledForUser(
+    "screening_qa_enabled",
+    session.userId,
+  );
+  const [steps, qaVerdictRow, qaRoundsCompleted] = await Promise.all([
+    listStepsForRun(row.id),
+    qaGating ? getLatestQaVerdictForRun(row.id) : Promise.resolve(null),
+    qaGating ? countQaRoundsForRun(row.id) : Promise.resolve(0),
+  ]);
+  const run = buildRunResponse(row, steps, {
+    qaGating,
+    qaVerdict: qaVerdictRow?.verdict ?? null,
+    qaRoundsCompleted,
+  });
   return NextResponse.json({ run });
 });

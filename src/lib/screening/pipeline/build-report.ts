@@ -5,7 +5,9 @@ import {
   compilerReportDraftSchema,
   aggregateIrBusinessOutputSchema,
   aggregateWebSentimentOutputSchema,
+  aggregateTechnicalsOutputSchema,
   portfolioContextOutputSchema,
+  qaOutputSchema,
   riskOutputSchema,
   screeningBriefSchema,
   screeningReportSchema,
@@ -14,13 +16,16 @@ import {
   type CompilerReportDraft,
   type AggregateIrBusinessOutput,
   type AggregateWebSentimentOutput,
+  type AggregateTechnicalsOutput,
   type PortfolioContextOutput,
+  type QaOutput,
   type RiskOutput,
   type ScreeningBrief,
   type ScreeningCandidateCard,
   type IrBusinessOutput,
   type WebSentimentOutput,
 } from "@/lib/screening/schemas";
+import { scoreChecklist } from "@/lib/screening/scoring/checklist";
 
 /**
  * Compose the ScreeningReport from Hard Data + Compiler (+ optional IR / Web /
@@ -33,8 +38,11 @@ export interface ComposeReportInput {
   /** Optional IR aggregate from Agent 2 (E4). */
   irAggregateRow?: ScreeningAgentOutputRow | null;
   webAggregateRow?: ScreeningAgentOutputRow | null;
+  technicalsAggregateRow?: ScreeningAgentOutputRow | null;
   portfolioContextRow?: ScreeningAgentOutputRow | null;
   riskRow?: ScreeningAgentOutputRow | null;
+  /** Latest QA output row (agent_kind='qa'). Populates report.verification. */
+  qaRow?: ScreeningAgentOutputRow | null;
   /** Which agent kinds are still pending — surfaced as `partial=true` in UI. */
   pendingAgentKinds?: string[];
   /** How many candidates the caller asked for (defaults to all). */
@@ -169,6 +177,17 @@ export function composeScreeningReport(
     if (webParsed && webParsed.success) webAggregate = webParsed.data;
   }
 
+  let technicalsAggregate: AggregateTechnicalsOutput | null = null;
+  if (input.technicalsAggregateRow) {
+    const techRaw = safeParseJson<Record<string, unknown>>(
+      input.technicalsAggregateRow.outputJson,
+    );
+    const techParsed = techRaw
+      ? aggregateTechnicalsOutputSchema.safeParse(techRaw)
+      : null;
+    if (techParsed && techParsed.success) technicalsAggregate = techParsed.data;
+  }
+
   let portfolioContext: PortfolioContextOutput | null = null;
   if (input.portfolioContextRow) {
     const pcRaw = safeParseJson<Record<string, unknown>>(
@@ -189,11 +208,32 @@ export function composeScreeningReport(
     if (riskParsed && riskParsed.success) risk = riskParsed.data;
   }
 
+  let qa: QaOutput | null = null;
+  if (input.qaRow) {
+    const qaRaw = safeParseJson<Record<string, unknown>>(input.qaRow.outputJson);
+    const qaParsed = qaRaw ? qaOutputSchema.safeParse(qaRaw) : null;
+    if (qaParsed && qaParsed.success) qa = qaParsed.data;
+  }
+
+  const qaIssuesByTicker = new Map<string, string[]>();
+  if (qa) {
+    for (const issue of qa.issues) {
+      if (!issue.ticker) continue;
+      const key = issue.ticker.toUpperCase();
+      const list = qaIssuesByTicker.get(key) ?? [];
+      if (list.length < 8) list.push(issue.summary.slice(0, 400));
+      qaIssuesByTicker.set(key, list);
+    }
+  }
+
   const irByTicker = new Map(
     (irAggregate?.tickers ?? []).map((t) => [t.ticker.toUpperCase(), t]),
   );
   const webByTicker = new Map(
     (webAggregate?.tickers ?? []).map((t) => [t.ticker.toUpperCase(), t]),
+  );
+  const techByTicker = new Map(
+    (technicalsAggregate?.tickers ?? []).map((t) => [t.ticker.toUpperCase(), t]),
   );
   const pcByTicker = new Map(
     (portfolioContext?.perCandidate ?? []).map((c) => [
@@ -210,7 +250,17 @@ export function composeScreeningReport(
       ? Math.min(5, input.candidateLimit)
       : Math.min(5, Math.max(0, hardData.candidates.length));
 
-  const candidates = hardData.candidates.slice(0, requestedCount);
+  // When QA finishes with degraded tickers (round cap hit and some tickers
+  // still had blocking issues), drop them from the report so users never see
+  // unverified prose. Compose returns null when 0 candidates survive so the
+  // API can surface a refund/failure state.
+  const degradedSet = new Set<string>(
+    (qa?.degradedTickers ?? []).map((t) => t.toUpperCase()),
+  );
+  const survivors = hardData.candidates.filter(
+    (c) => !degradedSet.has(c.ticker.toUpperCase()),
+  );
+  const candidates = survivors.slice(0, requestedCount);
   const priorityOrder = candidates.map((c) => c.ticker);
 
   const bulletByTicker = new Map(
@@ -221,6 +271,7 @@ export function composeScreeningReport(
     const bullet = bulletByTicker.get(c.ticker.toUpperCase());
     const ir = irByTicker.get(c.ticker.toUpperCase());
     const web = webByTicker.get(c.ticker.toUpperCase());
+    const tech = techByTicker.get(c.ticker.toUpperCase()) ?? null;
     const pc = pcByTicker.get(c.ticker.toUpperCase());
     const riskRow = riskByTicker.get(c.ticker.toUpperCase());
     const primaryCatalyst = ir?.catalysts[0] ?? null;
@@ -234,6 +285,25 @@ export function composeScreeningReport(
       ...(riskRow?.riskFlags ?? []),
       ...(web?.gaps ?? []),
     ].slice(0, 8);
+
+    // Re-score at compose time so criteria 3 / 4 / 6 (and 9 in Phase 2) leave
+    // "Not enough data" when the IR / Web / Technicals agents produced signal.
+    const datedCatalystCount =
+      ir?.catalysts.filter((cat) => cat.evidence.trim().length > 0).length ?? null;
+    const rescored = scoreChecklist({
+      rankScore: c.rankScore,
+      fwdPe: c.fwdPe ?? null,
+      ownHistPe: c.ownHistPe ?? null,
+      ndEbitda: c.ndEbitda ?? null,
+      netCash: c.netCash ?? null,
+      moatScorePct: c.moatScore ?? null,
+      upsidePct: c.upsidePct ?? null,
+      datedCatalystCount,
+      insiderBias: web?.insiderSummary.netBias ?? null,
+      revenueGrowthHistoryPct: c.revenueGrowthHistoryPct ?? null,
+      aboveMa200: tech?.aboveMa200 ?? null,
+      return1yPct: tech?.return1yPct ?? null,
+    });
 
     return {
       ticker: c.ticker,
@@ -261,10 +331,10 @@ export function composeScreeningReport(
       priceAsOf: input.run.updatedAt,
       targetPrice: c.targetPrice ?? null,
       upsidePct: c.upsidePct ?? null,
-      score: c.checklistScore ?? Math.min(8, Math.round((c.rankScore ?? 0) / 12.5)),
-      verdict: c.reportVerdict ?? null,
-      stepsPassed: c.stepsPassed ?? [],
-      stepsFailed: c.stepsFailed ?? [],
+      score: rescored.score,
+      verdict: rescored.verdict,
+      stepsPassed: rescored.stepsPassed,
+      stepsFailed: rescored.stepsFailed,
       catalyst: primaryCatalyst?.label ?? null,
       catalystDate: ir?.guidance.asOf ?? null,
       businessOneLiner: clip(
@@ -328,6 +398,27 @@ export function composeScreeningReport(
       suitability: riskRow?.suitability ?? null,
       illustrativeWeightPct: riskRow?.illustrativeWeightPct ?? null,
       concentrationImpact: riskRow?.concentrationImpact ?? null,
+      technicals: tech
+        ? {
+            distanceTo52wHighPct: tech.distanceTo52wHighPct,
+            distanceTo52wLowPct: tech.distanceTo52wLowPct,
+            ma50: tech.ma50,
+            ma200: tech.ma200,
+            aboveMa200: tech.aboveMa200,
+            support: tech.support,
+            resistance: tech.resistance,
+            return3mPct: tech.return3mPct,
+            return1yPct: tech.return1yPct,
+            volatilityAnnPct: tech.volatilityAnnPct,
+            nearHigh: tech.nearHigh,
+          }
+        : null,
+      qa: qa
+        ? {
+            verified: !qaIssuesByTicker.has(c.ticker.toUpperCase()),
+            unsupportedClaims: qaIssuesByTicker.get(c.ticker.toUpperCase()) ?? [],
+          }
+        : null,
     };
   });
 
@@ -370,12 +461,22 @@ export function composeScreeningReport(
   if (!hasWeb) defaultPending.push("web_sentiment");
   if (!hasPc) defaultPending.push("portfolio_context");
   if (!hasRisk) defaultPending.push("risk");
-  defaultPending.push("qa");
+  if (!qa) defaultPending.push("qa");
 
   const pending =
     input.pendingAgentKinds && input.pendingAgentKinds.length > 0
       ? input.pendingAgentKinds
       : defaultPending;
+
+  const verification = qa
+    ? {
+        verdict: qa.verdict,
+        roundNumber: qa.roundNumber,
+        issueCount: qa.issues.length,
+        blockingIssueCount: qa.issues.filter((i) => i.blocking).length,
+        degradedTickers: qa.degradedTickers,
+      }
+    : null;
 
   const raw = {
     jobId: input.run.id,
@@ -390,6 +491,7 @@ export function composeScreeningReport(
     disclaimer: draft.disclaimer,
     partial: pending.length > 0,
     pendingAgentKinds: pending,
+    verification,
   };
 
   const validated = screeningReportSchema.safeParse(raw);

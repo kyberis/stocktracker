@@ -1,6 +1,6 @@
 /**
- * Screening observability (HLD §11). Entry-funnel counters ship with E0;
- * step histograms / QA counters land with later agent stages.
+ * Screening observability (HLD §11). Entry-funnel, pipeline step, FMP/IR/Web,
+ * and QA round counters.
  */
 import { Counter, Histogram } from "prom-client";
 import { getMetricsRegistry, getOrCreateMetric } from "@/lib/metrics";
@@ -432,6 +432,49 @@ export function recordRiskStep(
     for (const c of perCandidate) {
       screeningRiskSuitabilityTotal.inc({
         suitability: c.suitability || "unknown",
+      });
+    }
+  } catch {
+    // metrics are best-effort
+  }
+}
+
+/* ── QA (Agent 6) ─────────────────────────────────────────────────────── */
+
+export const screeningQaRoundsTotal = getOrCreateMetric(
+  "screening_qa_rounds_total",
+  () =>
+    new Counter({
+      name: "screening_qa_rounds_total",
+      help: "QA verification rounds by verdict",
+      labelNames: ["verdict"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningQaIssuesTotal = getOrCreateMetric(
+  "screening_qa_issues_total",
+  () =>
+    new Counter({
+      name: "screening_qa_issues_total",
+      help: "QA issues by type and rule",
+      labelNames: ["issue_type", "rule_id"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export function recordQaRound(opts: {
+  verdict: string;
+  issues?: Array<{ issueType?: string | null; ruleId?: string | null }>;
+}): void {
+  try {
+    screeningQaRoundsTotal.inc({
+      verdict: opts.verdict || "unknown",
+    });
+    for (const issue of opts.issues ?? []) {
+      screeningQaIssuesTotal.inc({
+        issue_type: issue.issueType || "unknown",
+        rule_id: issue.ruleId || "none",
       });
     }
   } catch {

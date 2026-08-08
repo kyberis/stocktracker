@@ -17,6 +17,91 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.107",
+    date: "2026-08-08",
+    title: "Screening: verified reports gate delivery and retry flagged agents",
+    titleTranslations: {
+      es: "Cribado: informes verificados bloquean la entrega y reintentan agentes marcados",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "When Screening QA is enabled, reports only unlock after a passing verification. On fail the pipeline re-runs only the flagged agents (up to 2 rounds) with a correction hint; stubborn tickers are dropped from the report. Verified / Flagged banners and Prometheus QA counters ship with this release.",
+        translations: {
+          es: "Con el QA de cribado activado, los informes solo se desbloquean tras una verificación aprobada. Si falla, el pipeline reintenta solo los agentes marcados (hasta 2 rondas) con una pista de corrección; los tickers que siguen fallando se eliminan del informe. Incluye banners Verificado/Marcado y contadores Prometheus de QA.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.106",
+    date: "2026-08-08",
+    title: "Screening: QA agent qualitative judge",
+    titleTranslations: {
+      es: "Cribado: juez cualitativo del agente QA",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The QA agent now runs an LLM qualitative judge (Layer B) on top of the deterministic rules, catching R3 (insider directional context), R6 (guidance freshness), R7 (price-drop causality) and R8 (M&A vs organic growth) — still shadow-mode until Phase 3 gates delivery on the verdict.",
+        translations: {
+          es: "El agente QA ejecuta ahora un juez cualitativo LLM (capa B) por encima de las reglas deterministas, cubriendo R3 (contexto direccional de insiders), R6 (frescura de guidance), R7 (causalidad de caídas de precio) y R8 (M&A vs crecimiento orgánico) — todavía en modo sombra hasta que la fase 3 bloquee la entrega según el veredicto.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.105",
+    date: "2026-08-08",
+    title: "Screening: QA agent shadow mode",
+    titleTranslations: {
+      es: "Cribado: agente QA en modo sombra",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Screening runs can now enable a QA agent that runs deterministic verification (R1/R2/R4/R5/R9/R10) over the compiled report. In this phase the verdict is shown as a Verified/Flagged banner without blocking delivery, so we can measure false positives before gating reports.",
+        translations: {
+          es: "Las corridas de cribado pueden habilitar un agente QA que ejecuta verificación determinista (R1/R2/R4/R5/R9/R10) sobre el informe compilado. En esta fase el veredicto se muestra como un banner Verificado/Marcado sin bloquear la entrega, para medir falsos positivos antes de exigir aprobación.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.104",
+    date: "2026-08-08",
+    title: "Screening: technicals block on every candidate card",
+    titleTranslations: {
+      es: "Cribado: bloque técnico en cada ficha de candidato",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Screening reports now show a Technicals section per candidate — distance from 52w highs and lows, 200-day moving average trend, support/resistance, 3m/1y return and annualised volatility — derived from real FMP price history, and criterion 9 (market signal) now uses these when available. Older runs backfill on first read.",
+        translations: {
+          es: "Los informes de cribado ahora muestran un bloque Técnico por candidato — distancia a máximos y mínimos de 52 semanas, tendencia frente a la MM200, soporte/resistencia, rentabilidad 3m/1a y volatilidad anualizada — desde el histórico real de FMP, y el criterio 9 (señal de mercado) los usa cuando existen. Los runs antiguos se completan al abrir el informe.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.103",
+    date: "2026-08-08",
+    title: "Screening: score more methodology criteria from hard data",
+    titleTranslations: {
+      es: "Cribado: puntuar más criterios de metodología con datos duros",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Screening reports now score criterion 3 (dated catalyst) from the IR agent, criterion 6 (insider alignment) from the Web/Sentiment agent, and criterion 4 (earnings resilience) from 5 years of revenue growth — no more “Not enough data” placeholders when the evidence is already in the run.",
+        translations: {
+          es: "Los informes de cribado ahora puntúan el criterio 3 (catalizador con fecha) desde el agente de IR, el criterio 6 (alineación de insiders) desde el agente Web/Sentimiento, y el criterio 4 (resiliencia de beneficios) desde 5 años de crecimiento de ingresos — se acabó el “Datos insuficientes” cuando la evidencia ya está en el run.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.102",
     date: "2026-08-08",
     title: "Screening: stop stalling before Risk / Compiler",

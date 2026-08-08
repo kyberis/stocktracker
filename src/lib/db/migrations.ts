@@ -3847,6 +3847,44 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 132,
+    description:
+      "Screening QA (Agent 6): per-issue verification rounds table",
+    up: async (client: Client) => {
+      // One row per QA issue so we can query issues by (run, round) or by
+      // (run, agent_kind, ticker) when a rerun handler injects correction
+      // hints. The aggregate verdict + issue list is also persisted to
+      // screening_agent_outputs under agent_kind='qa' for compose-time reads.
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS screening_qa_rounds (
+          id TEXT PRIMARY KEY,
+          run_id TEXT NOT NULL REFERENCES screening_runs(id) ON DELETE CASCADE,
+          round_number INTEGER NOT NULL,
+          verdict TEXT NOT NULL CHECK(verdict IN ('pass','fail','pass_with_degradation')),
+          flagged_agent_kinds TEXT NOT NULL DEFAULT '[]',
+          degraded_tickers TEXT NOT NULL DEFAULT '[]',
+          issue_type TEXT,
+          rule_id TEXT,
+          agent_kind TEXT,
+          ticker TEXT,
+          claim_path TEXT,
+          expected_value TEXT,
+          actual_value TEXT,
+          issue_summary TEXT,
+          blocking INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_screening_qa_run_round
+          ON screening_qa_rounds(run_id, round_number);
+        CREATE INDEX IF NOT EXISTS idx_screening_qa_run_created
+          ON screening_qa_rounds(run_id, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_screening_qa_run_kind_ticker
+          ON screening_qa_rounds(run_id, agent_kind, ticker);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

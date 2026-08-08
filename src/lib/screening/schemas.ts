@@ -157,6 +157,22 @@ export const screeningRunSchema = z.object({
   /** True while the pipeline is mocked — the UI must say so out loud. */
   mocked: z.boolean(),
   reportReady: z.boolean(),
+  /**
+   * QA round context. Present only when QA gating is on for the user. Lets the
+   * progress UI show "Verifying (round N of 2)" while QA is running or between
+   * rounds. `roundsCompleted` counts persisted `screening_qa_rounds` rows.
+   */
+  qa: z
+    .object({
+      gating: z.boolean(),
+      verdict: z
+        .enum(["pass", "fail", "pass_with_degradation"])
+        .nullable(),
+      roundsCompleted: z.number().int().min(0),
+      maxRounds: z.number().int().min(1),
+    })
+    .nullable()
+    .optional(),
 });
 export type ScreeningRun = z.infer<typeof screeningRunSchema>;
 
@@ -289,6 +305,35 @@ export const screeningCandidateCardSchema = z.object({
   suitability: z.enum(["fit", "stretch", "poor_fit"]).nullable().optional(),
   illustrativeWeightPct: z.number().finite().nullable().optional(),
   concentrationImpact: z.string().max(400).nullable().optional(),
+  /** Technicals (Phase 2). Deterministic; absent when FMP OHLC is missing. */
+  technicals: z
+    .object({
+      distanceTo52wHighPct: z.number().finite().nullable(),
+      distanceTo52wLowPct: z.number().finite().nullable(),
+      ma50: z.number().finite().nullable(),
+      ma200: z.number().finite().nullable(),
+      aboveMa200: z.boolean().nullable(),
+      support: z.number().finite().nullable(),
+      resistance: z.number().finite().nullable(),
+      return3mPct: z.number().finite().nullable(),
+      return1yPct: z.number().finite().nullable(),
+      volatilityAnnPct: z.number().finite().nullable(),
+      nearHigh: z.boolean().nullable(),
+    })
+    .nullable()
+    .optional(),
+  /**
+   * QA verification (Agent 6). Absent when QA hasn't run for this ticker or
+   * when the flag is off. `unsupportedClaims[]` lists short human-readable
+   * summaries of issues flagged for this specific ticker.
+   */
+  qa: z
+    .object({
+      verified: z.boolean(),
+      unsupportedClaims: z.array(z.string().max(400)).max(8),
+    })
+    .nullable()
+    .optional(),
 });
 export type ScreeningCandidateCard = z.infer<typeof screeningCandidateCardSchema>;
 
@@ -314,6 +359,21 @@ export const screeningReportSchema = z.object({
   disclaimer: z.string().min(1),
   partial: z.boolean(),
   pendingAgentKinds: z.array(z.string()),
+  /**
+   * QA verification summary. Present after QA has run; null when QA is
+   * disabled or still pending. `degradedTickers[]` lists tickers removed
+   * from `cards` after directed retry could not resolve blocking issues.
+   */
+  verification: z
+    .object({
+      verdict: z.enum(["pass", "fail", "pass_with_degradation"]),
+      roundNumber: z.number().int().min(1).max(3),
+      issueCount: z.number().int().min(0).max(200),
+      blockingIssueCount: z.number().int().min(0).max(200),
+      degradedTickers: z.array(z.string().max(20)).max(15),
+    })
+    .nullable()
+    .optional(),
 });
 export type ScreeningReport = z.infer<typeof screeningReportSchema>;
 
@@ -346,6 +406,20 @@ export const hardDataCandidateSchema = z.object({
   analysisSummary: z.string().max(400).nullable().optional(),
   growthNote: z.string().max(120).nullable().optional(),
   valuationNote: z.string().max(120).nullable().optional(),
+  /**
+   * Last 5y annual revenue growth (percent points, most recent first). Used to
+   * score criterion 4 (earnings resilience) deterministically at compose time.
+   */
+  revenueGrowthHistoryPct: z
+    .array(z.number().finite())
+    .max(10)
+    .nullable()
+    .optional(),
+  /**
+   * Deterministic earnings-resilience verdict: `true` when no year in the last
+   * 5 had revenue growth < -10% AND the mean is non-negative.
+   */
+  earningsResilient: z.boolean().nullable().optional(),
   /** Deterministic checklist score 0–8 after enrichment. */
   checklistScore: z.number().int().min(0).max(8).nullable().optional(),
   stepsPassed: z.array(z.number().int()).max(9).optional(),
@@ -522,3 +596,131 @@ export const riskOutputSchema = z.object({
   gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
 });
 export type RiskOutput = z.infer<typeof riskOutputSchema>;
+
+/* ── Technicals agent (Phase 2) ──────────────────────────────────────── */
+
+/**
+ * Deterministic price-level snapshot per ticker. All values come from FMP
+ * `historical-price-eod/full` (1y). Missing values stay null — never guessed.
+ */
+export const technicalsOutputSchema = z.object({
+  ticker: z.string().min(1).max(20),
+  price: z.number().finite().nullable(),
+  currency: z.string().max(8).nullable(),
+  closeHigh12m: z.number().finite().nullable(),
+  closeHigh12mDate: z.string().max(40).nullable(),
+  closeLow12m: z.number().finite().nullable(),
+  closeLow12mDate: z.string().max(40).nullable(),
+  distanceTo52wHighPct: z.number().finite().nullable(),
+  distanceTo52wLowPct: z.number().finite().nullable(),
+  ma50: z.number().finite().nullable(),
+  ma200: z.number().finite().nullable(),
+  aboveMa200: z.boolean().nullable(),
+  support: z.number().finite().nullable(),
+  resistance: z.number().finite().nullable(),
+  return3mPct: z.number().finite().nullable(),
+  return1yPct: z.number().finite().nullable(),
+  volatilityAnnPct: z.number().finite().nullable(),
+  nearHigh: z.boolean().nullable(),
+  asOf: z.string().min(1).max(40),
+  gaps: z.array(z.string().min(1).max(200)).max(4).default([]),
+});
+export type TechnicalsOutput = z.infer<typeof technicalsOutputSchema>;
+
+export const aggregateTechnicalsOutputSchema = z.object({
+  tickers: z.array(technicalsOutputSchema).max(15),
+  generatedAt: z.string().min(1),
+});
+export type AggregateTechnicalsOutput = z.infer<
+  typeof aggregateTechnicalsOutputSchema
+>;
+
+/* ── QA agent (HLD §4.5, Agent 6) ─────────────────────────────────────── */
+
+export const qaIssueTypeSchema = z.enum([
+  "quant_mismatch",
+  "unconfirmed_source",
+  "cross_agent_inconsistency",
+  "rule_violation",
+  "other",
+]);
+export type QaIssueTypeSchema = z.infer<typeof qaIssueTypeSchema>;
+
+export const qaRuleIdSchema = z.enum([
+  "R1",
+  "R2",
+  "R3",
+  "R4",
+  "R5",
+  "R6",
+  "R7",
+  "R8",
+  "R9",
+  "R10",
+]);
+export type QaRuleIdSchema = z.infer<typeof qaRuleIdSchema>;
+
+export const qaVerdictSchema = z.enum([
+  "pass",
+  "fail",
+  "pass_with_degradation",
+]);
+export type QaVerdictSchema = z.infer<typeof qaVerdictSchema>;
+
+export const qaIssueSchema = z.object({
+  issueType: qaIssueTypeSchema,
+  ruleId: qaRuleIdSchema.nullable(),
+  /** Agent whose output the issue lives in (null for compiler-only issues). */
+  agentKind: z.string().max(40).nullable(),
+  /** Ticker the issue applies to; null for run-level issues. */
+  ticker: z.string().max(20).nullable(),
+  /** JSON-path style location of the offending claim (e.g. `cards[0].multiples.fwdPe`). */
+  claimPath: z.string().max(500).nullable(),
+  expectedValue: z.string().max(1000).nullable(),
+  actualValue: z.string().max(1000).nullable(),
+  summary: z.string().min(1).max(1000),
+  /** Blocking issues fail the round; non-blocking ones are warnings. */
+  blocking: z.boolean().default(true),
+});
+export type QaIssue = z.infer<typeof qaIssueSchema>;
+
+/**
+ * The verdict a single QA round emits. Persisted both as one row per issue
+ * in `screening_qa_rounds` (audit trail) and mirrored to
+ * `screening_agent_outputs` for compose-time reads.
+ */
+export const qaOutputSchema = z.object({
+  verdict: qaVerdictSchema,
+  roundNumber: z.number().int().min(1).max(3),
+  issues: z.array(qaIssueSchema).max(50).default([]),
+  flaggedAgentKinds: z.array(z.string().max(40)).max(10).default([]),
+  degradedTickers: z.array(z.string().max(20)).max(15).default([]),
+  generatedAt: z.string().min(1).max(40),
+});
+export type QaOutput = z.infer<typeof qaOutputSchema>;
+
+/**
+ * Tool-call payload accepted from the Layer B LLM. Kept close to
+ * `qaOutputSchema.issues` so the two layers merge cleanly. The final round
+ * verdict is recomputed by `runQaStep` after merging Layer A + Layer B.
+ */
+export const qaLlmOutputSchema = z.object({
+  verdict: z.enum(["pass", "fail"]),
+  issues: z
+    .array(
+      z.object({
+        issueType: qaIssueTypeSchema,
+        ruleId: qaRuleIdSchema.nullable().optional(),
+        agentKind: z.string().max(40).nullable().optional(),
+        ticker: z.string().max(20).nullable().optional(),
+        claimPath: z.string().max(500).nullable().optional(),
+        expectedValue: z.string().max(1000).nullable().optional(),
+        actualValue: z.string().max(1000).nullable().optional(),
+        summary: z.string().min(1).max(1000),
+        blocking: z.boolean().default(true),
+      }),
+    )
+    .max(15)
+    .default([]),
+});
+export type QaLlmOutput = z.infer<typeof qaLlmOutputSchema>;

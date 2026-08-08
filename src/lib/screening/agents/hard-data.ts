@@ -30,6 +30,7 @@ import {
   type TrefolioTickerSignals,
 } from "@/lib/screening/data/trefolio-signals";
 import { buildHardDataPrompt } from "@/lib/screening/prompts/hard-data";
+import { buildQaHintBlock } from "@/lib/screening/qa/hint";
 import {
   hardDataOutputSchema,
   screeningBriefSchema,
@@ -47,9 +48,12 @@ const IR_KIND = "ir_business";
 const AGGREGATE_IR_KIND = "aggregate_ir_business";
 const WEB_KIND = "web_sentiment";
 const AGGREGATE_WEB_KIND = "aggregate_web_sentiment";
+const TECHNICALS_KIND = "technicals";
+const AGGREGATE_TECHNICALS_KIND = "aggregate_technicals";
 const PORTFOLIO_CONTEXT_KIND = "portfolio_context";
 const RISK_KIND = "risk";
 const COMPILER_KIND = "compiler";
+const QA_KIND = "qa";
 
 function parseBrief(briefJson: string): ScreeningBrief | null {
   if (!briefJson) return null;
@@ -115,6 +119,8 @@ export interface RunHardDataAgentOptions {
   brief: ScreeningBrief;
   universe: FmpScreenerCandidate[];
   gatewayHeaders?: Headers;
+  /** QA correction hint appended to the user prompt on reruns. */
+  qaHint?: string;
 }
 
 export interface RunHardDataAgentResult {
@@ -219,7 +225,7 @@ export async function runHardDataAgent(
     },
     {
       role: "user" as const,
-      content: `Universe (JSON, ${opts.universe.length} rows total, showing top ${universeForLlm.length}). Fields moatScorePct/moatVerdict/hasAnalisis/analysisSnippet come from trefolio caches when available:\n${JSON.stringify(universeForLlm)}\n\nPlease call submit_hard_data with your ranking.`,
+      content: `Universe (JSON, ${opts.universe.length} rows total, showing top ${universeForLlm.length}). Fields moatScorePct/moatVerdict/hasAnalisis/analysisSnippet come from trefolio caches when available:\n${JSON.stringify(universeForLlm)}${opts.qaHint ?? ""}\n\nPlease call submit_hard_data with your ranking.`,
     },
   ];
 
@@ -404,9 +410,16 @@ export const runHardDataStep: StepHandler = async (
     limit: 200,
   });
 
+  const qaHint = await buildQaHintBlock(
+    ctx.runId,
+    HARD_DATA_AGENT_KIND,
+    null,
+  );
+
   const runnerResult = await runHardDataAgent({
     brief,
     universe: screenerResult.candidates,
+    qaHint,
   });
 
   // Enrich shortlist with FMP multiples + MOAT /analisis for the report skeleton.
@@ -481,12 +494,14 @@ export const runHardDataStep: StepHandler = async (
   let irFanout = 0;
   let webFanout = 0;
   try {
-    const [irFlag, v2Flag] = await Promise.all([
+    const [irFlag, v2Flag, qaFlag] = await Promise.all([
       isFeatureEnabledForUser("screening_ir_agent_enabled", ctx.userId),
       isFeatureEnabledForUser("screening_agents_v2_enabled", ctx.userId),
+      isFeatureEnabledForUser("screening_qa_enabled", ctx.userId),
     ]);
     const v2Enabled = v2Flag;
     const irEnabled = irFlag || v2Enabled;
+    const qaEnabled = qaFlag;
     const candidates = enrichedOutput.candidates.slice(0, IR_FANOUT_MAX);
 
     if (irEnabled && candidates.length > 0) {
@@ -515,7 +530,9 @@ export const runHardDataStep: StepHandler = async (
 
       if (v2Enabled) {
         const webStepIds = candidates.map(() => crypto.randomUUID());
+        const techStepIds = candidates.map(() => crypto.randomUUID());
         const aggregateWebId = crypto.randomUUID();
+        const aggregateTechId = crypto.randomUUID();
         const portfolioContextId = crypto.randomUUID();
         const riskId = crypto.randomUUID();
         stepsToInsert.push(
@@ -530,10 +547,21 @@ export const runHardDataStep: StepHandler = async (
             agentKind: AGGREGATE_WEB_KIND,
             dependsOn: webStepIds,
           },
+          ...candidates.map((c, i) => ({
+            id: techStepIds[i],
+            agentKind: TECHNICALS_KIND,
+            ticker: c.ticker,
+            dependsOn: [] as string[],
+          })),
+          {
+            id: aggregateTechId,
+            agentKind: AGGREGATE_TECHNICALS_KIND,
+            dependsOn: techStepIds,
+          },
           {
             id: portfolioContextId,
             agentKind: PORTFOLIO_CONTEXT_KIND,
-            dependsOn: [aggregateIrId, aggregateWebId],
+            dependsOn: [aggregateIrId, aggregateWebId, aggregateTechId],
           },
           {
             id: riskId,
@@ -553,7 +581,29 @@ export const runHardDataStep: StepHandler = async (
       if (compilerStep && compilerStep.status === "pending") {
         await updateStepDependsOn(compilerStep.id, compilerDependsOn);
       }
+      // QA becomes the new terminal step when the flag is on. Depends on the
+      // just-scheduled compiler (or the existing pending compiler row). With
+      // gating on, reportReady waits for a passing QA verdict.
+      if (qaEnabled && compilerStep) {
+        await insertSteps(ctx.runId, [
+          {
+            agentKind: QA_KIND,
+            dependsOn: [compilerStep.id],
+          },
+        ]);
+      }
       irFanout = candidates.length;
+    } else if (qaEnabled) {
+      // No IR/Web fan-out but flag on: still attach QA after the compiler.
+      const compilerStep = await findStepByAgentKind(ctx.runId, COMPILER_KIND);
+      if (compilerStep) {
+        await insertSteps(ctx.runId, [
+          {
+            agentKind: QA_KIND,
+            dependsOn: [compilerStep.id],
+          },
+        ]);
+      }
     }
   } catch (err) {
     console.error(

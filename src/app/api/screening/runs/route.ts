@@ -12,6 +12,7 @@ import { runSanityLimits } from "@/lib/screening/rules/sanity-limits";
 import {
   appendEvent,
   createScreeningRun,
+  getLatestQaVerdictForRun,
   insertSteps,
   linkPendingAgentOutputToRun,
   listScreeningRunsByUser,
@@ -37,10 +38,21 @@ export const GET = withMetrics("/api/screening/runs", async (req: NextRequest) =
   if (error || !session) return error;
 
   const rows = await listScreeningRunsByUser(session.userId, 20);
+  const qaGating = await isFeatureEnabledForUser(
+    "screening_qa_enabled",
+    session.userId,
+  );
   const runs = await Promise.all(
     rows.map(async (row) => {
       const steps = row.mockedPipeline ? [] : await listStepsForRun(row.id);
-      return toScreeningRunListItem(row, steps);
+      const qaVerdictRow =
+        qaGating && !row.mockedPipeline
+          ? await getLatestQaVerdictForRun(row.id).catch(() => null)
+          : null;
+      return toScreeningRunListItem(row, steps, {
+        qaGating,
+        qaVerdict: qaVerdictRow?.verdict ?? null,
+      });
     }),
   );
   return NextResponse.json({ runs });

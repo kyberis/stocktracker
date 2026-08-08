@@ -30,6 +30,7 @@ vi.mock("@/lib/db", () => ({
   insertSteps: mockInsertSteps,
   findStepByAgentKind: mockFindStep,
   updateStepDependsOn: mockUpdateDependsOn,
+  getLatestQaIssuesForAgentTicker: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@/lib/db/settings", () => ({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { fill } from "@/lib/screening/copy";
+import { fill, type ScreeningCopy } from "@/lib/screening/copy";
 import type { ScreeningReport } from "@/lib/screening/schemas";
 import {
   BlurredValue,
@@ -85,6 +85,14 @@ export function ScreeningReportView({
         <p className="rounded-xl border border-amber-500/30 bg-amber-500/[0.07] px-3 py-2 text-xs text-[color:var(--foreground)]">
           {fill(copy.report.partialNotice, { agents: report.pendingAgentKinds.join(", ") })}
         </p>
+      )}
+
+      {report.verification && (
+        <VerificationBanner
+          verification={report.verification}
+          issuesByTicker={collectQaIssues(report)}
+          copy={copy.report}
+        />
       )}
 
       <section className="card rounded-[20px] border border-[color:var(--border)] p-4 sm:p-5">
@@ -295,5 +303,113 @@ export function ScreeningReportView({
         <ScreeningDisclaimer className="mt-1.5" />
       </aside>
     </div>
+  );
+}
+
+function collectQaIssues(
+  report: ScreeningReport,
+): Array<{ ticker: string; claims: string[] }> {
+  const out: Array<{ ticker: string; claims: string[] }> = [];
+  for (const card of report.cards) {
+    const claims = card.qa?.unsupportedClaims ?? [];
+    if (claims.length > 0) {
+      out.push({ ticker: card.ticker, claims: [...claims] });
+    }
+  }
+  return out;
+}
+
+function VerificationBanner({
+  verification,
+  issuesByTicker,
+  copy,
+}: {
+  verification: NonNullable<ScreeningReport["verification"]>;
+  issuesByTicker: Array<{ ticker: string; claims: string[] }>;
+  copy: ScreeningCopy["report"];
+}) {
+  const [open, setOpen] = useState(false);
+  const isDegraded = verification.verdict === "pass_with_degradation";
+  const isFail = verification.verdict === "fail";
+  const passClean =
+    verification.verdict === "pass" && verification.blockingIssueCount === 0;
+
+  let message: string;
+  let tone: string;
+  let icon: string;
+  if (isDegraded) {
+    message = fill(copy.verificationDegraded, {
+      count: verification.degradedTickers.length,
+    });
+    tone = "border-amber-500/40 bg-amber-500/[0.08] text-amber-900 dark:text-amber-100";
+    icon = "!";
+  } else if (isFail || verification.blockingIssueCount > 0) {
+    message = fill(copy.verificationFlagged, {
+      count: verification.blockingIssueCount || verification.issueCount,
+    });
+    tone = "border-rose-500/40 bg-rose-500/[0.08] text-rose-900 dark:text-rose-100";
+    icon = "×";
+  } else if (passClean) {
+    message = copy.verificationVerified;
+    tone =
+      "border-emerald-500/40 bg-emerald-500/[0.08] text-emerald-900 dark:text-emerald-100";
+    icon = "✓";
+  } else {
+    // pass but with non-blocking warnings
+    message = fill(copy.verificationFlagged, {
+      count: verification.issueCount,
+    });
+    tone =
+      "border-teal-500/40 bg-teal-500/[0.08] text-teal-900 dark:text-teal-100";
+    icon = "✓";
+  }
+
+  const hasFlagged = issuesByTicker.length > 0;
+
+  return (
+    <section
+      className={`rounded-xl border px-3 py-2 text-xs ${tone}`}
+      aria-live="polite"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-current text-[11px] font-bold"
+          aria-hidden="true"
+        >
+          {icon}
+        </span>
+        <span className="font-semibold">{copy.verificationTitle}</span>
+        <span aria-hidden="true">·</span>
+        <span>{message}</span>
+        <span className="ml-auto text-[11px] opacity-70">
+          {fill(copy.verificationRoundLabel, { n: verification.roundNumber })}
+        </span>
+      </div>
+      {hasFlagged && (
+        <div className="mt-1.5">
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="text-[11px] font-semibold underline decoration-dotted underline-offset-2 hover:opacity-80"
+          >
+            {open ? copy.verificationCollapse : copy.verificationExpand}
+          </button>
+          {open && (
+            <ul className="mt-2 flex flex-col gap-1.5">
+              {issuesByTicker.map((entry) => (
+                <li key={entry.ticker} className="rounded-lg bg-white/40 px-2 py-1.5 dark:bg-black/20">
+                  <div className="text-[11px] font-semibold">{entry.ticker}</div>
+                  <ul className="mt-0.5 list-disc pl-4 text-[11px]">
+                    {entry.claims.map((claim, i) => (
+                      <li key={i}>{claim}</li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </section>
   );
 }

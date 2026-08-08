@@ -128,3 +128,59 @@ describe("buildRunResponse IR fan-out", () => {
     );
   });
 });
+
+describe("buildRunResponse QA gating", () => {
+  const doneSteps = [
+    step({ id: "hd", agentKind: "hard_data", status: "done" }),
+    step({ id: "cmp", agentKind: "compiler", status: "done" }),
+  ];
+
+  it("keeps compiler-only readiness when qaGating is off", () => {
+    const run = buildRunResponse(runRow(), doneSteps);
+    expect(run.reportReady).toBe(true);
+    expect(run.qa).toBeFalsy();
+  });
+
+  it("blocks reportReady when qaGating is on and verdict is null", () => {
+    const run = buildRunResponse(runRow(), doneSteps, {
+      qaGating: true,
+      qaVerdict: null,
+      qaRoundsCompleted: 0,
+    });
+    expect(run.reportReady).toBe(false);
+    expect(run.qa).toEqual({
+      gating: true,
+      verdict: null,
+      roundsCompleted: 0,
+      maxRounds: 2,
+    });
+  });
+
+  it("allows reportReady when verdict is pass", () => {
+    const run = buildRunResponse(runRow(), doneSteps, {
+      qaGating: true,
+      qaVerdict: "pass",
+      qaRoundsCompleted: 1,
+    });
+    expect(run.reportReady).toBe(true);
+    expect(run.qa?.verdict).toBe("pass");
+  });
+
+  it("allows reportReady when verdict is pass_with_degradation", () => {
+    const run = buildRunResponse(runRow(), doneSteps, {
+      qaGating: true,
+      qaVerdict: "pass_with_degradation",
+      qaRoundsCompleted: 2,
+    });
+    expect(run.reportReady).toBe(true);
+  });
+
+  it("blocks reportReady when verdict is fail", () => {
+    const run = buildRunResponse(runRow(), doneSteps, {
+      qaGating: true,
+      qaVerdict: "fail",
+      qaRoundsCompleted: 1,
+    });
+    expect(run.reportReady).toBe(false);
+  });
+});

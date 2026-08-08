@@ -13,6 +13,7 @@ vi.mock("@/lib/screening/data/fmp-fundamentals", () => ({
     targetPrice: 120,
     netCash: false,
     revenueGrowthPct: 8.5,
+    revenueGrowthHistoryPct: [8.5, 6.2, 12.1, 4.8, 9.4],
     description: "Test co",
     errors: [],
   })),
@@ -61,5 +62,8 @@ describe("enrichHardDataCandidates", () => {
     expect(row.valuationNote).toMatch(/P\/E/);
     expect(row.growthNote).toMatch(/YoY/);
     expect(row.analysisSummary).toMatch(/Apple/);
+    // Earnings resilience: 5y history with no year below −10% and positive mean.
+    expect(row.earningsResilient).toBe(true);
+    expect(row.stepsPassed).toContain(4);
   });
 });

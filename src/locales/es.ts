@@ -1689,6 +1689,8 @@ const es: TranslationStrings = {
   landingCardTaxDesc: "Resúmenes fiscales por país para Alemania, Francia, España, Países Bajos e Italia con asistente fiscal IA",
   landingCardScreenerTitle: "Filtro de acciones",
   landingCardScreenerDesc: "Filtra más de 680 acciones por dividendo, P/E, sector, capitalización y más con estrategias predefinidas",
+  landingCardVerifiedTitle: "Informes de cribado verificados",
+  landingCardVerifiedDesc: "Cribado con IA y un paso de QA que comprueba las afirmaciones frente a Hard Data, IR y fuentes antes de desbloquear el informe",
   landingCardMoatTitle: "Screener de Moat",
   landingCardMoatDesc: "Más de 680 acciones puntuadas en 8 criterios estilo Buffett — consistencia de beneficios, márgenes, ROE, deuda y más. Pre-evaluadas y con búsqueda.",
   landingCardNetWorthTitle: "Seguimiento del patrimonio neto",

@@ -114,6 +114,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "Umbrella flag: after Hard Data, also fan out Web & Sentiment (FMP + Tavily), then Portfolio Context and Risk & Suitability before the Compiler. Implies IR fan-out for pipeline coherence. Requires screening_pipeline_real_enabled. Off by default.",
     group: "Features",
   },
+  screening_qa_enabled: {
+    label: "Screening Agent 6: QA / Verified reports",
+    description:
+      "After the Compiler, run the QA agent to verify report claims against the raw agent outputs (deterministic R1/R2/R4/R5/R9/R10 + LLM R3/R6/R7/R8). Gates reportReady on pass; on fail retries flagged agents up to 2 rounds, then degrades stubborn tickers. Requires screening_pipeline_real_enabled. Off by default.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

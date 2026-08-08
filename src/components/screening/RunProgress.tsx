@@ -239,6 +239,21 @@ export function RunProgress({ runId }: { runId: string }) {
   const reportReady = Boolean(run?.reportReady);
   const runFailed = run?.status === "failed";
   const failedStep = run?.steps.find((s) => s.status === "failed");
+  const qaStep = run?.steps.find((s) => s.agentKind === "qa");
+  const qaRunning = qaStep?.status === "running";
+  const qaContext = run?.qa ?? null;
+  // While QA is running (round N in flight), show N = roundsCompleted + 1.
+  const qaRoundInFlight =
+    qaContext && qaRunning
+      ? Math.min(qaContext.maxRounds, qaContext.roundsCompleted + 1)
+      : null;
+  const qaVerifyingLine =
+    qaContext && qaRoundInFlight
+      ? fill(copy.progress.qaVerifyingRound, {
+          round: qaRoundInFlight,
+          max: qaContext.maxRounds,
+        })
+      : null;
 
   return (
     <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-4">
@@ -280,6 +295,15 @@ export function RunProgress({ runId }: { runId: string }) {
           {failedStep?.errorMessage
             ? ` (${failedStep.agentKind}: ${failedStep.errorMessage})`
             : ""}
+        </p>
+      ) : null}
+
+      {qaVerifyingLine && !runFailed ? (
+        <p
+          className="mt-5 rounded-xl border border-teal-500/30 bg-teal-500/[0.06] px-3 py-2 text-sm text-teal-700 dark:text-teal-300"
+          role="status"
+        >
+          {qaVerifyingLine}
         </p>
       ) : null}
 

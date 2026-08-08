@@ -16,6 +16,7 @@ export const UI_STEP_ORDER: readonly string[] = [
   "hard_data",
   "ir_business",
   "web_sentiment",
+  "technicals",
   "portfolio_context",
   "risk",
   "compiler",
@@ -86,6 +87,7 @@ const CORE_PENDING_KINDS = new Set([
   "hard_data",
   "ir_business",
   "web_sentiment",
+  "technicals",
   "portfolio_context",
   "risk",
   "compiler",
@@ -126,15 +128,41 @@ export function buildOptimisticRun(runId: string): ScreeningRun {
  * active — otherwise the UI falsely says "coming soon" before fan-out inserts
  * the per-ticker rows.
  */
+export interface BuildRunOptions {
+  /**
+   * When true, `reportReady` requires both the compiler to be done AND the
+   * latest QA step to have completed. When QA is completed but blocking, this
+   * still returns `reportReady=true` after the round cap (verdict is
+   * `pass_with_degradation`); the report reader is responsible for filtering
+   * degraded tickers and possibly returning HTTP 409 mid-run.
+   */
+  qaGating?: boolean;
+  /**
+   * Latest QA verdict for the run, when available. Only used when
+   * `qaGating=true`. `null` means QA has not completed yet — report is not
+   * ready under gating.
+   */
+  qaVerdict?: "pass" | "fail" | "pass_with_degradation" | null;
+  /**
+   * How many QA rounds have completed (rows in `screening_qa_rounds`).
+   * Optional. Only relevant when `qaGating=true`.
+   */
+  qaRoundsCompleted?: number;
+  /** Round cap (defaults to 2). Only relevant when `qaGating=true`. */
+  qaMaxRounds?: number;
+}
+
 export function buildRunResponse(
   row: ScreeningRunRow,
   dbSteps: ScreeningStepRow[],
+  options: BuildRunOptions = {},
 ): ScreeningRun {
   const byKind = new Map<string, ScreeningStepRow[]>();
   for (const s of dbSteps) {
     if (
       s.agentKind === "aggregate_ir_business" ||
-      s.agentKind === "aggregate_web_sentiment"
+      s.agentKind === "aggregate_web_sentiment" ||
+      s.agentKind === "aggregate_technicals"
     ) {
       continue;
     }
@@ -155,6 +183,7 @@ export function buildRunResponse(
   // is still active (before fan-out), show research agents as pending.
   const v2KindsPendingWhileHardData = [
     "web_sentiment",
+    "technicals",
     "portfolio_context",
     "risk",
   ] as const;
@@ -180,7 +209,12 @@ export function buildRunResponse(
       }
       return { agentKind: kind, status: "skipped", elapsedSeconds: null };
     }
-    if (kind === "ir_business" || kind === "web_sentiment" || rows.length > 1) {
+    if (
+      kind === "ir_business" ||
+      kind === "web_sentiment" ||
+      kind === "technicals" ||
+      rows.length > 1
+    ) {
       return synthesiseFanOutStep(kind, rows);
     }
     const dbStep = rows[0];
@@ -216,6 +250,17 @@ export function buildRunResponse(
 
   const compilerDone = active.find((s) => s.agentKind === "compiler")?.status === "done";
 
+  let reportReady = compilerDone;
+  if (options.qaGating) {
+    // QA-gated: report is ready only when the latest verdict passes (or
+    // pass_with_degradation after the round cap). null verdict means still
+    // running -> not ready.
+    reportReady =
+      compilerDone &&
+      (options.qaVerdict === "pass" ||
+        options.qaVerdict === "pass_with_degradation");
+  }
+
   return {
     runId: row.id,
     mode: "user_report",
@@ -224,6 +269,14 @@ export function buildRunResponse(
     steps,
     progressPct,
     mocked: row.mockedPipeline,
-    reportReady: compilerDone,
+    reportReady,
+    qa: options.qaGating
+      ? {
+          gating: true,
+          verdict: options.qaVerdict ?? null,
+          roundsCompleted: options.qaRoundsCompleted ?? 0,
+          maxRounds: options.qaMaxRounds ?? 2,
+        }
+      : null,
   };
 }

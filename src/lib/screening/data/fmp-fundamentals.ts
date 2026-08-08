@@ -94,8 +94,13 @@ export interface FmpFundamentalsBundle {
   dividendYield: number | null;
   targetPrice: number | null;
   netCash: boolean | null;
-  /** Annual revenue growth as percent points (e.g. 6.4 for +6.4%). */
+  /** Latest fiscal year revenue growth as percent points (e.g. 6.4 for +6.4%). */
   revenueGrowthPct: number | null;
+  /**
+   * Historical revenue growth, most recent first, as percent points.
+   * Used to score earnings resilience (no year of severe decline over cycle).
+   */
+  revenueGrowthHistoryPct: number[];
   description: string | null;
   errors: string[];
 }
@@ -161,7 +166,8 @@ export async function fetchFmpFundamentals(
       fetchJson("key-metrics-ttm", symbol, doFetch),
       fetchJson("profile", symbol, doFetch),
       fetchJson("price-target-consensus", symbol, doFetch),
-      fetchJson("financial-growth", symbol, doFetch, { limit: "1" }),
+      // 5y of annual revenue growth so we can score earnings resilience.
+      fetchJson("financial-growth", symbol, doFetch, { limit: "5" }),
     ]);
 
   if (!ratiosRes.ok && ratiosRes.error) errors.push(ratiosRes.error);
@@ -174,7 +180,11 @@ export async function fetchFmpFundamentals(
   const metricsRaw = firstRow(metricsRes.data);
   const profileRaw = firstRow(profileRes.data);
   const targetRaw = firstRow(targetRes.data);
-  const growthRaw = firstRow(growthRes.data);
+  const growthRows = Array.isArray(growthRes.data)
+    ? (growthRes.data as unknown[])
+    : growthRes.data && typeof growthRes.data === "object"
+      ? [growthRes.data as unknown]
+      : [];
 
   const ratios = ratiosRaw ? ratiosTtmSchema.safeParse(ratiosRaw) : null;
   const metrics = metricsRaw ? keyMetricsTtmSchema.safeParse(metricsRaw) : null;
@@ -182,13 +192,16 @@ export async function fetchFmpFundamentals(
   const target = targetRaw
     ? priceTargetConsensusSchema.safeParse(targetRaw)
     : null;
-  const growth = growthRaw ? financialGrowthSchema.safeParse(growthRaw) : null;
+  const growthParsed = growthRows
+    .map((row) => financialGrowthSchema.safeParse(row))
+    .filter((r) => r.success)
+    .map((r) => r.data);
+  const g = growthParsed[0] ?? null;
 
   const r = ratios?.success ? ratios.data : null;
   const m = metrics?.success ? metrics.data : null;
   const p = profile?.success ? profile.data : null;
   const t = target?.success ? target.data : null;
-  const g = growth?.success ? growth.data : null;
 
   // Stable API rarely exposes true forward PE on ratios-ttm; keep legacy keys.
   const fwdPe =
@@ -228,6 +241,11 @@ export async function fetchFmpFundamentals(
   const revenueGrowthPct =
     growthFraction == null ? null : growthFraction * 100;
 
+  const revenueGrowthHistoryPct = growthParsed
+    .map((row) => toNum(row.revenueGrowth) ?? toNum(row.growthRevenue))
+    .filter((n): n is number => n != null && Number.isFinite(n))
+    .map((f) => f * 100);
+
   const netCash = ndEbitda == null ? null : ndEbitda < 0;
 
   const targetPrice =
@@ -248,6 +266,7 @@ export async function fetchFmpFundamentals(
     targetPrice,
     netCash,
     revenueGrowthPct,
+    revenueGrowthHistoryPct,
     description: p?.description
       ? String(p.description).trim().slice(0, 400)
       : null,

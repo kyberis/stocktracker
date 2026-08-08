@@ -28,6 +28,130 @@ function yieldPct(value: number | null): string {
   return value == null ? "—" : `${(value * 100).toFixed(1)}%`;
 }
 
+function toneClass(value: number | null): string {
+  if (value == null) return "text-[color:var(--foreground)]";
+  if (value > 0) return "text-emerald-700 dark:text-emerald-300";
+  if (value < 0) return "text-rose-700 dark:text-rose-300";
+  return "text-[color:var(--foreground)]";
+}
+
+function TechnicalsBlock({
+  card,
+  locked,
+}: {
+  card: ScreeningCandidateCard;
+  locked: boolean;
+}) {
+  const { copy } = useScreeningCopy();
+  const t = card.technicals;
+  if (!t) return null;
+
+  const hasAny =
+    t.distanceTo52wHighPct != null ||
+    t.distanceTo52wLowPct != null ||
+    t.aboveMa200 != null ||
+    t.support != null ||
+    t.resistance != null ||
+    t.return1yPct != null ||
+    t.return3mPct != null;
+  if (!hasAny) return null;
+
+  const trendLabel =
+    t.aboveMa200 == null
+      ? "—"
+      : t.aboveMa200
+        ? copy.report.metaTrendAboveMa200
+        : copy.report.metaTrendBelowMa200;
+  const trendTone =
+    t.aboveMa200 == null
+      ? "text-[color:var(--foreground)]"
+      : t.aboveMa200
+        ? "text-emerald-700 dark:text-emerald-300"
+        : "text-rose-700 dark:text-rose-300";
+
+  const rows: Array<{
+    label: string;
+    value: string;
+    tone?: string;
+  }> = [
+    {
+      label: copy.report.metaFromHigh,
+      value: pct(t.distanceTo52wHighPct),
+      tone: toneClass(t.distanceTo52wHighPct),
+    },
+    {
+      label: copy.report.metaFromLow,
+      value: pct(t.distanceTo52wLowPct),
+      tone: toneClass(t.distanceTo52wLowPct),
+    },
+    {
+      label: copy.report.metaTrend,
+      value: trendLabel,
+      tone: trendTone,
+    },
+    {
+      label: copy.report.metaReturn1y,
+      value: pct(t.return1yPct),
+      tone: toneClass(t.return1yPct),
+    },
+    {
+      label: copy.report.metaReturn3m,
+      value: pct(t.return3mPct),
+      tone: toneClass(t.return3mPct),
+    },
+    {
+      label: copy.report.metaSupport,
+      value: price(t.support, card.currency),
+    },
+    {
+      label: copy.report.metaResistance,
+      value: price(t.resistance, card.currency),
+    },
+    {
+      label: copy.report.metaVolatility,
+      value:
+        t.volatilityAnnPct == null
+          ? "—"
+          : `${t.volatilityAnnPct.toFixed(0)}%`,
+    },
+  ];
+
+  return (
+    <BlurredValue
+      locked={locked}
+      as="div"
+      className="mt-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-3"
+    >
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
+        {copy.report.technicalsTitle}
+      </p>
+      {locked ? (
+        <p className="mt-1.5 text-[13px] text-[color:var(--muted)]">
+          {copy.report.lockedCell.repeat(10)}
+        </p>
+      ) : (
+        <dl className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+          {rows.map((row) => (
+            <div
+              key={row.label}
+              className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1.5"
+            >
+              <dt className="text-[10px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
+                {row.label}
+              </dt>
+              <dd
+                className={`mt-0.5 text-[13px] font-semibold tabular-nums ${row.tone ?? "text-[color:var(--foreground)]"}`}
+              >
+                {row.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </BlurredValue>
+  );
+}
+
 function BusinessBlock({
   card,
   locked,
@@ -254,6 +378,8 @@ export function CandidateCard({
           )}
         </BlurredValue>
       )}
+
+      <TechnicalsBlock card={card} locked={blurResearch} />
 
       {(card.positionKind ||
         card.suitability ||

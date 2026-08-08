@@ -7,11 +7,13 @@ import {
   hardDataOutputSchema,
   type HardDataCandidate,
 } from "@/lib/screening/schemas";
-import { SCREENING_MAX_SCORE } from "@/lib/screening/criteria";
+import { scoreChecklist } from "@/lib/screening/scoring/checklist";
 
 /**
  * True when most candidates lack PE / EV multiples — usually because they were
- * enriched against outdated FMP field names. Report GET re-runs enrichment.
+ * enriched against outdated FMP field names — OR when we haven't yet stored
+ * multi-year revenue history (introduced with the checklist scoring upgrade).
+ * Report GET re-runs enrichment when this returns true.
  */
 export function hardDataNeedsFundamentalsBackfill(
   candidates: HardDataCandidate[],
@@ -20,7 +22,12 @@ export function hardDataNeedsFundamentalsBackfill(
   const sparse = candidates.filter(
     (c) => c.ownHistPe == null && c.fwdPe == null && c.evEbitda == null,
   );
-  return sparse.length >= Math.ceil(candidates.length / 2);
+  if (sparse.length >= Math.ceil(candidates.length / 2)) return true;
+  // Backfill 5y history for older runs so criterion 4 leaves "unknown".
+  const missingHistory = candidates.filter(
+    (c) => !c.revenueGrowthHistoryPct || c.revenueGrowthHistoryPct.length === 0,
+  );
+  return missingHistory.length >= Math.ceil(candidates.length / 2);
 }
 
 /**
@@ -102,7 +109,15 @@ function mergeCandidate(
         ? `P/E ${fund.ownHistPe.toFixed(1)}x`
         : null;
 
-  const { score, stepsPassed, stepsFailed, verdict } = scoreCandidate({
+  // Deterministic scoring using everything Hard Data has. Compose can later
+  // re-score with IR / Web / Technicals to fill criteria 3, 4, 6 and refine 9.
+  const {
+    score,
+    stepsPassed,
+    stepsFailed,
+    verdict,
+    earningsResilient,
+  } = scoreChecklist({
     rankScore: c.rankScore,
     fwdPe: fund.fwdPe,
     ownHistPe: fund.ownHistPe,
@@ -110,8 +125,7 @@ function mergeCandidate(
     netCash: fund.netCash,
     moatScorePct: sig?.moatScorePct ?? null,
     upsidePct,
-    hasCatalystHint: false,
-    hasAnalysis: Boolean(sig?.hasAnalysisCache || sig?.analysisSummary),
+    revenueGrowthHistoryPct: fund.revenueGrowthHistoryPct,
   });
 
   return {
@@ -131,78 +145,16 @@ function mergeCandidate(
     analysisSummary: sig?.analysisSummary ?? fund.description,
     growthNote,
     valuationNote,
+    revenueGrowthHistoryPct:
+      fund.revenueGrowthHistoryPct.length > 0
+        ? fund.revenueGrowthHistoryPct
+        : null,
+    earningsResilient,
     checklistScore: score,
     stepsPassed,
     stepsFailed,
     reportVerdict: verdict,
   };
-}
-
-function scoreCandidate(input: {
-  rankScore: number;
-  fwdPe: number | null;
-  ownHistPe: number | null;
-  ndEbitda: number | null;
-  netCash: boolean | null;
-  moatScorePct: number | null;
-  upsidePct: number | null;
-  hasCatalystHint: boolean;
-  hasAnalysis: boolean;
-}): {
-  score: number;
-  stepsPassed: number[];
-  stepsFailed: number[];
-  verdict: "fuerte" | "watch" | null;
-} {
-  const passed: number[] = [];
-  const failed: number[] = [];
-
-  // 1 relativeValuation — prefer forward PE; fall back to TTM when FMP has no fwd
-  const pe = input.fwdPe ?? input.ownHistPe;
-  if (pe != null) {
-    if (pe > 0 && pe < 18) passed.push(1);
-    else failed.push(1);
-  }
-
-  // 2 price/fundamentals divergence — upside vs consensus
-  if (input.upsidePct != null) {
-    if (input.upsidePct >= 10) passed.push(2);
-    else if (input.upsidePct < -5) failed.push(2);
-  }
-
-  // 5 balance sheet — net cash or modest ND/EBITDA
-  if (input.netCash === true || (input.ndEbitda != null && input.ndEbitda < 2)) {
-    passed.push(5);
-  } else if (input.ndEbitda != null && input.ndEbitda >= 4) {
-    failed.push(5);
-  }
-
-  // 7 competitive structure — trefolio MOAT
-  if (input.moatScorePct != null) {
-    if (input.moatScorePct >= 55) passed.push(7);
-    else if (input.moatScorePct < 40) failed.push(7);
-  }
-
-  // 9 market signal — hard-data rank confidence
-  if (input.rankScore >= 70) passed.push(9);
-  else if (input.rankScore < 45) failed.push(9);
-
-  // Soft pass for analysis presence (helps competitive/context narrative)
-  if (input.hasAnalysis && !passed.includes(7) && input.moatScorePct == null) {
-    // leave 7 unknown — analysis alone is not a moat pass
-  }
-
-  const score = Math.min(SCREENING_MAX_SCORE, passed.length);
-  const verdict: "fuerte" | "watch" | null =
-    score >= 5 && (input.moatScorePct == null || input.moatScorePct >= 50)
-      ? "fuerte"
-      : score >= 3
-        ? "watch"
-        : score > 0
-          ? "watch"
-          : null;
-
-  return { score, stepsPassed: passed, stepsFailed: failed, verdict };
 }
 
 /** Compact rows for the Hard Data LLM universe (ranking context). */

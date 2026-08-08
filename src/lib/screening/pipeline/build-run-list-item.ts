@@ -1,6 +1,11 @@
 import type { ScreeningRunRow } from "@/lib/db/screening";
-import type { ScreeningStepRow } from "@/lib/db";
+import type { QaVerdict, ScreeningStepRow } from "@/lib/db";
 import type { ScreeningRunListItem, ScreeningRunStatus } from "@/lib/screening/schemas";
+
+export interface ToListItemOptions {
+  qaGating?: boolean;
+  qaVerdict?: QaVerdict | null;
+}
 
 /**
  * Map a DB run (+ optional steps) to the compact list card shown on /screening.
@@ -8,6 +13,7 @@ import type { ScreeningRunListItem, ScreeningRunStatus } from "@/lib/screening/s
 export function toScreeningRunListItem(
   row: ScreeningRunRow,
   steps: ScreeningStepRow[] = [],
+  options: ToListItemOptions = {},
 ): ScreeningRunListItem {
   let summary = "";
   let candidateCount: number | null = null;
@@ -56,8 +62,16 @@ export function toScreeningRunListItem(
 
   // Mock fixture runs without a step queue are treated as completed so the
   // history card deep-links into the mock progress/report path.
-  const reportReady =
+  const baseReportReady =
     compilerDone || (row.mockedPipeline && status === "completed");
+
+  // When QA gating is on, we also require a passing verdict. Mock rows keep
+  // their pre-QA readiness (no QA step ever runs on the fixture).
+  const reportReady = options.qaGating && !row.mockedPipeline
+    ? baseReportReady &&
+      (options.qaVerdict === "pass" ||
+        options.qaVerdict === "pass_with_degradation")
+    : baseReportReady;
 
   if (row.mockedPipeline && steps.length === 0) {
     status = "completed";

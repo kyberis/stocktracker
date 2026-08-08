@@ -19,6 +19,7 @@ import {
 } from "@/lib/screening/data/fmp-ir";
 import { recordIrTickerStep } from "@/lib/screening/metrics";
 import { buildIrBusinessPrompt } from "@/lib/screening/prompts/ir-business";
+import { buildQaHintBlock } from "@/lib/screening/qa/hint";
 import {
   hardDataOutputSchema,
   irBusinessOutputSchema,
@@ -196,6 +197,8 @@ export interface RunIrBusinessAgentOptions {
   hardDataCandidate: HardDataCandidate | null;
   evidence: Record<string, unknown>;
   gatewayHeaders?: Headers;
+  /** QA correction hint appended to the user prompt on reruns. */
+  qaHint?: string;
 }
 
 export interface RunIrBusinessAgentResult {
@@ -300,11 +303,12 @@ export async function runIrBusinessAgent(
     },
   };
 
+  const qaHint = opts.qaHint ?? "";
   const messages = [
     { role: "system" as const, content: systemPrompt },
     {
       role: "user" as const,
-      content: `Evidence bundle for ${ticker} (JSON):\n${JSON.stringify(opts.evidence)}\n\nPlease call submit_ir_business for ticker ${ticker} only.`,
+      content: `Evidence bundle for ${ticker} (JSON):\n${JSON.stringify(opts.evidence)}${qaHint}\n\nPlease call submit_ir_business for ticker ${ticker} only.`,
     },
   ];
 
@@ -403,12 +407,14 @@ export const runIrBusinessStep: StepHandler = async (
   const started = Date.now();
   const bundle = await fetchFmpIrBundle({ ticker });
   const evidence = summariseIrBundleForLlm(bundle);
+  const qaHint = await buildQaHintBlock(ctx.runId, IR_BUSINESS_AGENT_KIND, ticker);
 
   const result = await runIrBusinessAgent({
     ticker,
     brief,
     hardDataCandidate,
     evidence,
+    qaHint,
   });
 
   try {

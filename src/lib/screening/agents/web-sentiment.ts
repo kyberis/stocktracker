@@ -20,6 +20,7 @@ import {
 import { fetchTavilySearch } from "@/lib/screening/data/tavily";
 import { recordWebTickerStep } from "@/lib/screening/metrics";
 import { buildWebSentimentPrompt } from "@/lib/screening/prompts/web-sentiment";
+import { buildQaHintBlock } from "@/lib/screening/qa/hint";
 import {
   hardDataOutputSchema,
   webSentimentOutputSchema,
@@ -165,6 +166,8 @@ export interface RunWebSentimentAgentOptions {
   hardDataCandidate: HardDataCandidate | null;
   evidence: Record<string, unknown>;
   gatewayHeaders?: Headers;
+  /** QA correction hint appended to the user prompt on reruns. */
+  qaHint?: string;
 }
 
 export interface RunWebSentimentAgentResult {
@@ -256,7 +259,7 @@ export async function runWebSentimentAgent(
     { role: "system" as const, content: systemPrompt },
     {
       role: "user" as const,
-      content: `Evidence bundle for ${ticker} (JSON):\n${JSON.stringify(opts.evidence)}\n\nPlease call submit_web_sentiment for ticker ${ticker} only.`,
+      content: `Evidence bundle for ${ticker} (JSON):\n${JSON.stringify(opts.evidence)}${opts.qaHint ?? ""}\n\nPlease call submit_web_sentiment for ticker ${ticker} only.`,
     },
   ];
 
@@ -370,11 +373,18 @@ export const runWebSentimentStep: StepHandler = async (
     },
   };
 
+  const qaHint = await buildQaHintBlock(
+    ctx.runId,
+    WEB_SENTIMENT_AGENT_KIND,
+    ticker,
+  );
+
   const result = await runWebSentimentAgent({
     ticker,
     brief,
     hardDataCandidate,
     evidence,
+    qaHint,
   });
 
   try {

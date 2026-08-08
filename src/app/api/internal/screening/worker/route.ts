@@ -11,9 +11,10 @@ export const maxDuration = 300;
 /**
  * Max steps to drain inline before chaining. Keep modest so one request stays
  * under maxDuration, but high enough that the sequential tail
- * (portfolio_context → risk → compiler) rarely depends on a second hop.
+ * (portfolio_context → risk → compiler → qa) and a short QA directed-retry
+ * hop rarely depend on a second request.
  */
-const MAX_STEPS_PER_REQUEST = 4;
+const MAX_STEPS_PER_REQUEST = 6;
 
 /**
  * Internal worker for the screening orchestrator (HLD ADR-2).

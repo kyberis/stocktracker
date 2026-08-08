@@ -55,7 +55,13 @@ describe("fetchFmpFundamentals", () => {
       if (u.includes("financial-growth")) {
         return {
           ok: true,
-          json: async () => [{ revenueGrowth: 0.064 }],
+          json: async () => [
+            { revenueGrowth: 0.064 },
+            { revenueGrowth: 0.08 },
+            { revenueGrowth: 0.11 },
+            { revenueGrowth: -0.03 },
+            { revenueGrowth: 0.05 },
+          ],
         };
       }
       return {
@@ -80,6 +86,9 @@ describe("fetchFmpFundamentals", () => {
     expect(res.netCash).toBe(true);
     expect(res.targetPrice).toBe(240);
     expect(res.revenueGrowthPct).toBeCloseTo(6.4, 5);
+    expect(res.revenueGrowthHistoryPct).toHaveLength(5);
+    expect(res.revenueGrowthHistoryPct[0]).toBeCloseTo(6.4, 5);
+    expect(res.revenueGrowthHistoryPct[3]).toBeCloseTo(-3, 5);
     expect(res.currency).toBe("USD");
   });
 
