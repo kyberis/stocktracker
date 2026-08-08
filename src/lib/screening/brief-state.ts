@@ -5,6 +5,7 @@ import {
   presetBrief,
   type BriefPatch,
 } from "./intake-script";
+import { SCREENING_MAX_CANDIDATES } from "./constants";
 import type {
   BriefCriterion,
   ScreeningBrief,
@@ -99,8 +100,8 @@ export function fillFromPreset(
     filledLabels.push(copy.intake.fields.excludeSectors);
   }
   if (next.candidateCount === null) {
-    next.candidateCount = defaults.candidateCount;
-    filledLabels.push(copy.intake.fields.candidateCount);
+    next.candidateCount = SCREENING_MAX_CANDIDATES;
+    // Not listed in filledLabels — count is always fixed at 5, never a user choice.
   }
   if (next.riskProfile === null) {
     next.riskProfile = "balanced";
@@ -160,14 +161,7 @@ export function buildBriefRows(state: BriefState, copy: ScreeningCopy): BriefRow
     });
   }
 
-  if (state.candidateCount !== null) {
-    rows.push({
-      key: "candidateCount",
-      label: copy.intake.fields.candidateCount,
-      condition: String(state.candidateCount),
-      source: "chat",
-    });
-  }
+  // candidateCount is fixed at SCREENING_MAX_CANDIDATES — not shown as a user filter.
 
   if (state.riskProfile !== null) {
     rows.push({
@@ -188,7 +182,7 @@ export function toScreeningBrief(state: BriefState, locale: string): ScreeningBr
     includeSectors: state.includeSectors ?? [],
     excludeSectors: state.excludeSectors ?? [],
     regions: state.regions,
-    candidateCount: state.candidateCount ?? 5,
+    candidateCount: SCREENING_MAX_CANDIDATES,
     criteria: Object.values(state.criteria),
     endedEarly: state.endedEarly,
     locale,

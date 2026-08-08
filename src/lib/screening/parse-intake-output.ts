@@ -120,10 +120,7 @@ export function coerceIntakeAgentPayload(
       : {};
 
   const base = opts.currentBrief ?? {};
-  const candidateCount = Math.min(
-    5,
-    Math.max(3, asInt(briefRaw.candidateCount ?? base.candidateCount, 5)),
-  );
+  const candidateCount = 5;
 
   const briefIntentRaw = asString(briefRaw.intent, opts.intent);
   const briefIntent = ALLOWED_INTENTS.has(briefIntentRaw)

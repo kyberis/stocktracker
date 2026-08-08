@@ -61,7 +61,7 @@ describe("coerceIntakeAgentPayload", () => {
     );
     expect(out?.assistantText).toBe("Ready to launch.");
     expect(out?.brief.locale).toBe("es");
-    expect(out?.brief.candidateCount).toBe(4);
+    expect(out?.brief.candidateCount).toBe(5);
   });
 });
 

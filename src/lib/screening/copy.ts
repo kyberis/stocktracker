@@ -266,24 +266,24 @@ const en = {
         },
       },
       preset: {
-        ask: "Should I apply your “My screen” preset (13 quality and valuation filters) or build it filter by filter?",
+        ask: "Should I apply the recommended core filters (size, P/E, ROIC, leverage, region) or set them one by one?",
         explain: [
           {
-            term: "Preset",
-            def: "A saved set of filters. “My screen” holds your usual 13 thresholds for quality, debt, valuation and growth.",
+            term: "Core filters",
+            def: "A short set of the most important screens — market cap, forward P/E, ROIC and net debt / EBITDA — so we still find companies.",
           },
           {
             term: "Filter",
-            def: "A numeric condition a company must meet to enter the analysis. If it fails, it does not consume research time.",
+            def: "A condition a company should meet. We prefer names that meet most of them; misses are called out in the report.",
           },
         ],
         options: {
-          applyAll: { label: "Apply My screen", say: "Apply My screen." },
-          oneByOne: { label: "Filter by filter", say: "I'd rather go filter by filter." },
+          applyAll: { label: "Apply core filters", say: "Apply the core filters." },
+          oneByOne: { label: "Set them myself", say: "I'd rather set the main filters myself." },
         },
       },
       size: {
-        ask: "Company size. Your preset uses 300–15,000M USD (small/mid cap). Keep it?",
+        ask: "Company size. Recommended: 300–15,000M USD (small/mid cap). Keep it?",
         explain: [
           {
             term: "Market cap",
@@ -301,63 +301,35 @@ const en = {
         },
       },
       valuation: {
-        ask: "Valuation. Preset: forward P/E < 15x, EV/EBITDA < 10x, P/FCF < 15x, EV/Sales < 8x.",
+        ask: "Valuation — we keep this simple. Recommended: forward P/E under 15x.",
         explain: [
           {
             term: "Forward P/E",
             def: "Price divided by next year's expected earnings per share. 15x means paying 15 years of those earnings. Lower is cheaper — unless earnings are collapsing.",
           },
-          {
-            term: "EV/EBITDA",
-            def: "Enterprise value (market cap + debt − cash) over operating profit before depreciation. It compares companies with different debt loads, which P/E does not.",
-          },
-          {
-            term: "Price / FCF",
-            def: "Price over free cash flow per share: the money actually left after investment. Harder to dress up than accounting profit.",
-          },
-          {
-            term: "EV/Sales",
-            def: "Enterprise value over revenue. Useful when margins are temporarily crushed and P/E says nothing.",
-          },
         ],
         options: {
-          keepAll: { label: "Keep all four", say: "Keep the four multiples." },
+          keepAll: { label: "P/E < 15x", say: "Keep forward P/E under 15x." },
           stricter: { label: "Stricter: P/E < 12x", say: "Bring the P/E down to 12x." },
-          onlyTwo: { label: "Only P/E and P/FCF", say: "P/E and P/FCF are enough." },
+          onlyTwo: { label: "No P/E filter", say: "Skip the P/E filter." },
         },
       },
       quality: {
-        ask: "Quality and balance sheet. Preset: ROIC > 12%, gross margin > 30%, EBIT margin > 12%, ND/EBITDA < 2.5x, current ratio > 1.5x, debt/equity < 100%.",
+        ask: "Quality — keep it to ROIC and leverage. Recommended: ROIC > 12% and net debt / EBITDA < 2.5x.",
         explain: [
           {
             term: "ROIC",
             def: "Return on invested capital: how much the company earns per euro employed in the business. Sustained above 12% usually points to a real competitive advantage.",
           },
           {
-            term: "Gross margin",
-            def: "What is left of each sale after the direct cost of the product. A high margin suggests pricing power.",
-          },
-          {
-            term: "EBIT margin",
-            def: "Operating profit over sales, structure costs included. It measures efficiency, not just price.",
-          },
-          {
             term: "Net debt / EBITDA",
-            def: "Years of operating profit needed to repay debt minus cash. Below 2.5x is prudent; negative means net cash.",
-          },
-          {
-            term: "Current ratio",
-            def: "Current assets over current liabilities. Above 1.5x there is a cushion for what falls due within twelve months.",
-          },
-          {
-            term: "Debt / equity",
-            def: "How much debt there is per euro of own capital. Below 100% financial risk stays contained.",
+            def: "How many years of operating profit it would take to clear net debt. Below 2.5x is a common comfort band.",
           },
         ],
         options: {
-          keepAll: { label: "Keep everything", say: "Keep the quality filters." },
-          netCash: { label: "Require net cash", say: "Only companies with net cash." },
-          highRoic: { label: "ROIC > 15%", say: "Raise ROIC to 15%." },
+          keepAll: { label: "ROIC + leverage", say: "Keep ROIC and leverage filters." },
+          netCash: { label: "Prefer net cash", say: "Prefer net cash (ND/EBITDA < 0)." },
+          highRoic: { label: "Higher ROIC > 15%", say: "Raise ROIC to 15%." },
         },
       },
       growth: {
@@ -366,10 +338,6 @@ const en = {
           {
             term: "Revenue CAGR",
             def: "Compound annual growth rate: the average pace at which sales grow between two years, already smoothed.",
-          },
-          {
-            term: "Why above 5%",
-            def: "It filters out companies that are cheap because the business is shrinking. Cheap and shrinking rarely ends well.",
           },
         ],
         options: {
@@ -400,7 +368,7 @@ const en = {
         explain: [
           {
             term: "Number of candidates",
-            def: "How many companies get a full card. Each one consumes real research, so more candidates means a longer run.",
+            def: "Unused — the report always targets up to five companies.",
           },
         ],
         options: {
@@ -493,6 +461,8 @@ const en = {
     linkTrefolio: "trefolio page",
     catalyst: "Catalyst",
     thesisTitle: "Thesis",
+    unmetBriefTitle: "Brief expectations not met",
+    unmetBriefHint: "This name met {met} of {total} evaluable filters — missing:",
     risksTitle: "Risks",
     sourcesToggle: "Sources ({n})",
     metaPrice: "Price",
@@ -839,24 +809,24 @@ const es: ScreeningCopy = {
         },
       },
       preset: {
-        ask: "¿Aplico tu preset “Mi cribado” (13 filtros de calidad y valoración) o lo montamos filtro a filtro?",
+        ask: "¿Aplico los filtros clave recomendados (tamaño, PER, ROIC, apalancamiento, región) o los fijamos uno a uno?",
         explain: [
           {
-            term: "Preset",
-            def: "Un conjunto de filtros guardado. “Mi cribado” son tus 13 umbrales habituales de calidad, deuda, valoración y crecimiento.",
+            term: "Filtros clave",
+            def: "Un set corto de lo más importante — capitalización, PER forward, ROIC y deuda neta / EBITDA — para seguir encontrando empresas.",
           },
           {
             term: "Filtro",
-            def: "Una condición numérica que la empresa debe cumplir para entrar en el análisis. Si falla, no gasta tiempo de investigación.",
+            def: "Una condición que la empresa debería cumplir. Preferimos las que cumplen la mayoría; los fallos se indican en el informe.",
           },
         ],
         options: {
-          applyAll: { label: "Aplica Mi cribado", say: "Aplica Mi cribado." },
-          oneByOne: { label: "Filtro a filtro", say: "Prefiero ir filtro a filtro." },
+          applyAll: { label: "Aplicar filtros clave", say: "Aplica los filtros clave." },
+          oneByOne: { label: "Los elijo yo", say: "Prefiero fijar los filtros principales yo." },
         },
       },
       size: {
-        ask: "Tamaño de empresa. Tu preset usa 300–15.000 M USD (small/mid cap). ¿Lo mantengo?",
+        ask: "Tamaño de empresa. Recomendado: 300–15.000 M USD (small/mid cap). ¿Lo mantengo?",
         explain: [
           {
             term: "Capitalización de mercado",
@@ -874,63 +844,35 @@ const es: ScreeningCopy = {
         },
       },
       valuation: {
-        ask: "Valoración. Preset: PER fwd < 15x, TEV/EBITDA < 10x, P/FCF < 15x, TEV/Ventas < 8x.",
+        ask: "Valoración — lo dejamos simple. Recomendado: PER forward por debajo de 15x.",
         explain: [
           {
             term: "PER forward",
             def: "Precio dividido entre el beneficio por acción esperado del próximo ejercicio. 15x significa pagar 15 años de ese beneficio. Cuanto más bajo, más barata — salvo que el beneficio se esté hundiendo.",
           },
-          {
-            term: "TEV/EBITDA",
-            def: "Valor total de la empresa (bolsa + deuda − caja) entre su beneficio operativo antes de amortizaciones. Compara empresas con deudas distintas, algo que el PER no hace.",
-          },
-          {
-            term: "Precio / FCF",
-            def: "Precio entre el flujo de caja libre por acción: el dinero que sobra de verdad tras invertir. Más difícil de maquillar que el beneficio contable.",
-          },
-          {
-            term: "TEV/Ventas",
-            def: "Valor de la empresa entre sus ingresos. Útil cuando el margen está temporalmente hundido y el PER no dice nada.",
-          },
         ],
         options: {
-          keepAll: { label: "Mantener los cuatro", say: "Mantén los cuatro múltiplos." },
+          keepAll: { label: "PER < 15x", say: "Mantén PER forward bajo 15x." },
           stricter: { label: "Más estricto: PER < 12x", say: "Bájame el PER a 12x." },
-          onlyTwo: { label: "Solo PER y P/FCF", say: "Con PER y P/FCF me vale." },
+          onlyTwo: { label: "Sin filtro de PER", say: "Sin filtro de PER." },
         },
       },
       quality: {
-        ask: "Calidad y balance. Preset: ROIC > 12%, margen bruto > 30%, margen EBIT > 12%, ND/EBITDA < 2,5x, ratio corriente > 1,5x, deuda/fondos propios < 100%.",
+        ask: "Calidad — nos quedamos con ROIC y apalancamiento. Recomendado: ROIC > 12% y deuda neta / EBITDA < 2,5x.",
         explain: [
           {
             term: "ROIC",
             def: "Retorno sobre el capital invertido: cuánto gana la empresa por cada euro que emplea en el negocio. Por encima del 12% sostenido suele indicar una ventaja competitiva real.",
           },
           {
-            term: "Margen bruto",
-            def: "Lo que queda de cada venta tras el coste directo del producto. Un margen alto sugiere poder para subir precios.",
-          },
-          {
-            term: "Margen EBIT",
-            def: "Beneficio operativo sobre ventas, ya con los gastos de estructura. Mide eficiencia, no solo precio.",
-          },
-          {
             term: "Deuda neta / EBITDA",
-            def: "Años de beneficio operativo que harían falta para devolver la deuda menos la caja. Por debajo de 2,5x es prudente; negativo significa caja neta.",
-          },
-          {
-            term: "Ratio corriente",
-            def: "Activo corriente entre pasivo corriente. Por encima de 1,5x hay colchón para pagar lo que vence en doce meses.",
-          },
-          {
-            term: "Deuda / fondos propios",
-            def: "Cuánta deuda hay por cada euro de capital propio. Por debajo del 100% el riesgo financiero es contenido.",
+            def: "Años de beneficio operativo para devolver la deuda menos la caja. Por debajo de 2,5x es una banda habitual de confort.",
           },
         ],
         options: {
-          keepAll: { label: "Mantener todo", say: "Mantén los filtros de calidad." },
-          netCash: { label: "Exige caja neta", say: "Solo empresas con caja neta." },
-          highRoic: { label: "ROIC > 15%", say: "Súbeme el ROIC a 15%." },
+          keepAll: { label: "ROIC + apalancamiento", say: "Mantén ROIC y apalancamiento." },
+          netCash: { label: "Preferir caja neta", say: "Preferir caja neta (ND/EBITDA < 0)." },
+          highRoic: { label: "ROIC más alto > 15%", say: "Sube el ROIC a 15%." },
         },
       },
       growth: {
@@ -1066,6 +1008,8 @@ const es: ScreeningCopy = {
     linkTrefolio: "Ficha en trefolio",
     catalyst: "Catalizador",
     thesisTitle: "Tesis",
+    unmetBriefTitle: "Expectativas del brief no cumplidas",
+    unmetBriefHint: "Esta empresa cumplió {met} de {total} filtros evaluables — faltan:",
     risksTitle: "Riesgos",
     sourcesToggle: "Fuentes ({n})",
     metaPrice: "Precio",

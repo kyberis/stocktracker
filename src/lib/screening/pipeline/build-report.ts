@@ -369,6 +369,10 @@ export function composeScreeningReport(
       thesis: bullet?.bullet ?? c.rankReason,
       risks,
       priorityReason: bullet?.headline ?? c.rankReason.slice(0, 120),
+      unmetBriefCriteria: c.unmetBriefCriteria,
+      meetsMajorityBrief: c.meetsMajorityBrief,
+      briefCriteriaMet: c.briefCriteriaMet,
+      briefCriteriaTotal: c.briefCriteriaTotal,
       citedFields: [
         ...(c.fwdPe != null ? ["multiples.fwdPe"] : []),
         ...(c.evEbitda != null ? ["multiples.evEbitda"] : []),

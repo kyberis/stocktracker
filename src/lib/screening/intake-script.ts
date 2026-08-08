@@ -67,14 +67,17 @@ function preset(copy: ScreeningCopy, key: PresetKey, source: BriefCriterion["sou
   return { key, condition: copy.intake.presets[key].condition, source };
 }
 
-function presetAll(copy: ScreeningCopy, source: BriefCriterion["source"]): BriefCriterion[] {
-  return BRIEF_CRITERION_ORDER.map((key) => preset(copy, key, source));
-}
-
-/** Full preset used both by the "apply my screen" option and by the early exit. */
+/** Full preset used both by the "apply my screen" option and by the early exit.
+ * Intentionally coarse: size, PE, ROIC, leverage, region — not a 13-filter wall. */
 export function presetBrief(copy: ScreeningCopy): BriefPatch {
   return {
-    criteria: presetAll(copy, "preset"),
+    criteria: [
+      preset(copy, "marketCap", "preset"),
+      preset(copy, "fwdPe", "preset"),
+      preset(copy, "roic", "preset"),
+      preset(copy, "ndEbitda", "preset"),
+      preset(copy, "region", "preset"),
+    ],
     regions: [...REGION_CODES.allThree],
   };
 }
@@ -229,12 +232,7 @@ export function buildIntakeScript(copy: ScreeningCopy, ctx: IntakeContext): Inta
           label: q.valuation.options.keepAll.label,
           say: q.valuation.options.keepAll.say,
           patch: {
-            criteria: [
-              preset(copy, "fwdPe", "confirmed"),
-              preset(copy, "tevEbitda", "confirmed"),
-              preset(copy, "pFcf", "confirmed"),
-              preset(copy, "tevSales", "confirmed"),
-            ],
+            criteria: [preset(copy, "fwdPe", "confirmed")],
           },
         },
         {
@@ -242,12 +240,7 @@ export function buildIntakeScript(copy: ScreeningCopy, ctx: IntakeContext): Inta
           label: q.valuation.options.stricter.label,
           say: q.valuation.options.stricter.say,
           patch: {
-            criteria: [
-              { key: "fwdPe", condition: v.fwdPeStrict, source: "chat" },
-              preset(copy, "tevEbitda", "confirmed"),
-              preset(copy, "pFcf", "confirmed"),
-              preset(copy, "tevSales", "confirmed"),
-            ],
+            criteria: [{ key: "fwdPe", condition: v.fwdPeStrict, source: "chat" }],
           },
         },
         {
@@ -255,12 +248,7 @@ export function buildIntakeScript(copy: ScreeningCopy, ctx: IntakeContext): Inta
           label: q.valuation.options.onlyTwo.label,
           say: q.valuation.options.onlyTwo.say,
           patch: {
-            criteria: [
-              preset(copy, "fwdPe", "confirmed"),
-              preset(copy, "pFcf", "confirmed"),
-              { key: "tevEbitda", condition: v.none, source: "chat" },
-              { key: "tevSales", condition: v.none, source: "chat" },
-            ],
+            criteria: [{ key: "fwdPe", condition: v.none, source: "chat" }],
           },
         },
       ],
@@ -277,11 +265,7 @@ export function buildIntakeScript(copy: ScreeningCopy, ctx: IntakeContext): Inta
           patch: {
             criteria: [
               preset(copy, "roic", "confirmed"),
-              preset(copy, "grossMargin", "confirmed"),
-              preset(copy, "ebitMargin", "confirmed"),
               preset(copy, "ndEbitda", "confirmed"),
-              preset(copy, "currentRatio", "confirmed"),
-              preset(copy, "debtEquity", "confirmed"),
             ],
           },
         },
@@ -292,11 +276,7 @@ export function buildIntakeScript(copy: ScreeningCopy, ctx: IntakeContext): Inta
           patch: {
             criteria: [
               preset(copy, "roic", "confirmed"),
-              preset(copy, "grossMargin", "confirmed"),
-              preset(copy, "ebitMargin", "confirmed"),
               { key: "ndEbitda", condition: v.netCashOnly, source: "chat" },
-              preset(copy, "currentRatio", "confirmed"),
-              preset(copy, "debtEquity", "confirmed"),
             ],
           },
         },
@@ -307,33 +287,8 @@ export function buildIntakeScript(copy: ScreeningCopy, ctx: IntakeContext): Inta
           patch: {
             criteria: [
               { key: "roic", condition: v.roicHigh, source: "chat" },
-              preset(copy, "grossMargin", "confirmed"),
-              preset(copy, "ebitMargin", "confirmed"),
               preset(copy, "ndEbitda", "confirmed"),
-              preset(copy, "currentRatio", "confirmed"),
-              preset(copy, "debtEquity", "confirmed"),
             ],
-          },
-        },
-      ],
-    },
-    {
-      id: "growth",
-      ask: q.growth.ask,
-      explain: q.growth.explain,
-      options: [
-        {
-          id: "keepPreset",
-          label: q.growth.options.keepPreset.label,
-          say: q.growth.options.keepPreset.say,
-          patch: { criteria: [preset(copy, "revenueCagr", "confirmed")] },
-        },
-        {
-          id: "higher",
-          label: q.growth.options.higher.label,
-          say: q.growth.options.higher.say,
-          patch: {
-            criteria: [{ key: "revenueCagr", condition: v.revenueCagrHigh, source: "chat" }],
           },
         },
       ],
@@ -369,25 +324,6 @@ export function buildIntakeScript(copy: ScreeningCopy, ctx: IntakeContext): Inta
             criteria: [{ key: "region", condition: v.regionUsEurope, source: "chat" }],
             regions: [...REGION_CODES.usEurope],
           },
-        },
-      ],
-    },
-    {
-      id: "count",
-      ask: q.count.ask,
-      explain: q.count.explain,
-      options: [
-        {
-          id: "five",
-          label: q.count.options.five.label,
-          say: q.count.options.five.say,
-          patch: { candidateCount: 5 },
-        },
-        {
-          id: "three",
-          label: q.count.options.three.label,
-          say: q.count.options.three.say,
-          patch: { candidateCount: 3 },
         },
       ],
     },

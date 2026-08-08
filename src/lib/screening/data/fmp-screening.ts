@@ -114,6 +114,15 @@ function normaliseSector(value: string | null | undefined): string {
   return (value ?? "").trim().toLowerCase();
 }
 
+function looksLikeFundOrEtf(name: string, exchange: string | null | undefined): boolean {
+  const n = name.toLowerCase();
+  if (/\b(etf|fund|portfolio|trust|index)\b/.test(n)) return true;
+  if (/\b(mutual fund|money market|bond fund)\b/.test(n)) return true;
+  const ex = (exchange ?? "").toUpperCase();
+  if (ex === "MUTUAL_FUND" || ex === "ETF") return true;
+  return false;
+}
+
 /**
  * Build a single FMP screener request per country (FMP's `country` filter is
  * single-value on the stable endpoint). We de-dup by symbol after fanning out.
@@ -185,6 +194,7 @@ export async function fetchFmpScreener(
         }
         const key = row.symbol.toUpperCase();
         if (merged.has(key)) continue;
+        if (looksLikeFundOrEtf(row.companyName || key, row.exchangeShortName)) continue;
         merged.set(key, {
           ticker: key,
           name: row.companyName || key,

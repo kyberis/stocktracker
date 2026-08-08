@@ -490,6 +490,30 @@ export function CandidateCard({
         )}
       </BlurredValue>
 
+      {!blurResearch &&
+        card.meetsMajorityBrief === false &&
+        (card.unmetBriefCriteria?.length ?? 0) > 0 && (
+          <div
+            className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] px-3 py-2"
+            role="status"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+              {copy.report.unmetBriefTitle}
+            </p>
+            <p className="mt-1 text-[12.5px] text-[color:var(--muted)]">
+              {fill(copy.report.unmetBriefHint, {
+                met: card.briefCriteriaMet ?? 0,
+                total: card.briefCriteriaTotal ?? 0,
+              })}
+            </p>
+            <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-[12.5px] text-[color:var(--foreground)]">
+              {card.unmetBriefCriteria!.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
           {copy.report.thesisTitle}

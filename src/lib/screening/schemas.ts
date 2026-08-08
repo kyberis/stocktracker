@@ -334,6 +334,11 @@ export const screeningCandidateCardSchema = z.object({
     })
     .nullable()
     .optional(),
+  /** Brief expectations this ticker missed (shown when it misses the majority). */
+  unmetBriefCriteria: z.array(z.string().max(200)).max(12).optional(),
+  meetsMajorityBrief: z.boolean().optional(),
+  briefCriteriaMet: z.number().int().min(0).max(20).optional(),
+  briefCriteriaTotal: z.number().int().min(0).max(20).optional(),
 });
 export type ScreeningCandidateCard = z.infer<typeof screeningCandidateCardSchema>;
 
@@ -425,6 +430,14 @@ export const hardDataCandidateSchema = z.object({
   stepsPassed: z.array(z.number().int()).max(9).optional(),
   stepsFailed: z.array(z.number().int()).max(9).optional(),
   reportVerdict: z.enum(["fuerte", "watch", "pass", "fail"]).nullable().optional(),
+  /** How many brief criteria we could evaluate numerically. */
+  briefCriteriaTotal: z.number().int().min(0).max(20).optional(),
+  /** How many of those evaluated criteria the ticker met. */
+  briefCriteriaMet: z.number().int().min(0).max(20).optional(),
+  /** True when metCount >= ceil(total/2). */
+  meetsMajorityBrief: z.boolean().optional(),
+  /** Human-readable brief expectations this ticker missed. */
+  unmetBriefCriteria: z.array(z.string().max(200)).max(12).optional(),
 });
 export type HardDataCandidate = z.infer<typeof hardDataCandidateSchema>;
 

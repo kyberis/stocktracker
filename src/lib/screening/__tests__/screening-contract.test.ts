@@ -109,7 +109,9 @@ describe("brief state", () => {
 
     const parsed = screeningBriefSchema.safeParse(toScreeningBrief(state, "es"));
     expect(parsed.success).toBe(true);
-    expect(parsed.success && parsed.data.criteria).toHaveLength(BRIEF_CRITERION_ORDER.length);
+    // Core preset is intentionally coarse (5 criteria), not the full 13-key wall.
+    expect(parsed.success && parsed.data.criteria).toHaveLength(5);
+    expect(parsed.success && parsed.data.candidateCount).toBe(5);
   });
 
   it("reports exactly what the preset assumed on an early exit", () => {
@@ -119,8 +121,8 @@ describe("brief state", () => {
       candidateCount: 5,
     });
     expect(state.endedEarly).toBe(true);
-    // 13 preset criteria + include + exclude + candidate count + risk profile.
-    expect(filledLabels).toHaveLength(BRIEF_CRITERION_ORDER.length + 4);
+    // 5 core criteria + include + exclude + risk profile (candidate count is fixed, not labelled).
+    expect(filledLabels).toHaveLength(5 + 3);
     expect(state.candidateCount).toBe(5);
     expect(state.riskProfile).toBe("balanced");
   });
@@ -140,19 +142,25 @@ describe("brief state", () => {
     expect(filled.criteria.roic.source).toBe("chat");
     expect(filled.candidateCount).toBe(3);
     expect(filledLabels).not.toContain(copy.intake.fields.candidateCount);
+    expect(toScreeningBrief(filled, "en").candidateCount).toBe(5);
   });
 
   it("orders brief rows the same way regardless of answer order", () => {
     let state = emptyBrief("explore");
-    state = applyPatch(state, { candidateCount: 5 });
+    state = applyPatch(state, { candidateCount: 5, riskProfile: "balanced" });
     state = applyPatch(state, { includeSectors: [], excludeSectors: [] });
     state = applyPatch(state, presetBrief(copy));
 
     const rows = buildBriefRows(state, copy).map((r) => r.key);
     expect(rows[0]).toBe("includeSectors");
-    expect(rows.at(-1)).toBe("candidateCount");
+    expect(rows.at(-1)).toBe("riskProfile");
+    expect(rows).not.toContain("candidateCount");
     expect(rows.filter((k) => (BRIEF_CRITERION_ORDER as readonly string[]).includes(k))).toEqual([
-      ...BRIEF_CRITERION_ORDER,
+      "marketCap",
+      "ndEbitda",
+      "roic",
+      "fwdPe",
+      "region",
     ]);
   });
 });

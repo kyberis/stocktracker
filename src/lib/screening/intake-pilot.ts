@@ -11,9 +11,7 @@ export const INTAKE_PILOT_PREFERRED_OPTION_IDS: Record<string, string[]> = {
   size: ["keepPreset"],
   valuation: ["keepAll"],
   quality: ["keepAll"],
-  growth: ["keepPreset"],
   region: ["allThree"],
-  count: ["five"],
   riskProfile: ["balanced"],
 };
 

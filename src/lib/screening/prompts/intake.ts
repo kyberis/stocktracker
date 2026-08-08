@@ -38,22 +38,15 @@ const CRITERIA_KEYS = [
   "region",
 ] as const;
 
-const PRESET_HINTS = `Recommended defaults (the “My screen” preset) — quote these as your recommendation when asking:
+const PRESET_HINTS = `Recommended core defaults (keep the brief coarse so we find companies):
 - marketCap: 300 – 15,000M USD (small/mid cap)
-- ndEbitda: < 2.5x
-- currentRatio: > 1.5x
-- roic: > 12%
-- grossMargin: > 30%
-- ebitMargin: > 12%
 - fwdPe: < 15x
-- tevEbitda: < 10x
-- pFcf: < 15x
-- tevSales: < 8x
-- debtEquity: < 100%
-- revenueCagr: > 5%
+- roic: > 12%
+- ndEbitda: < 2.5x
 - region: us_canada · europe · asia_pacific
-- candidateCount: 5
-- riskProfile: balanced (also: conservative | aggressive)`;
+- candidateCount: always 5 (do not ask the user; Hard Data ranks ~20 equities and shortlists at most 5)
+- riskProfile: balanced (also: conservative | aggressive)
+Prefer these five filters over piling on gross margin, EV/Sales, current ratio, etc.`;
 
 /**
  * Build the system prompt. Kept in English (with a locale hint) so the model
@@ -87,17 +80,18 @@ RESPONSE PROTOCOL (mandatory):
 - You MUST reply by calling the "submit_brief" function tool. Never reply with plain text.
 - Populate every field in the function arguments. Use [] for empty lists, not null.
 
-Valid criterion keys are exactly: ${CRITERIA_KEYS.join(", ")}.
+Valid criterion keys are exactly: ${CRITERIA_KEYS.join(", ")}. Prefer a short subset (marketCap, fwdPe, roic, ndEbitda, region).
 
 Conversation style (important):
-1. Ask ONE topic per turn (sectors → size → valuation → quality/debt → region/count → riskProfile). Do NOT dump the whole preset and close on the first message.
+1. Ask ONE topic per turn (sectors → size → P/E → ROIC/leverage → region → riskProfile). Do NOT dump every multiple and close on the first message. Never ask how many candidates — always 5.
 2. Every clarifying turn MUST include a concrete recommendation in assistantText AND matching suggestions chips (recommended option first, then 1–2 alternatives, plus an opt-out like "I'll decide later" or "Finish and search" when useful).
 3. Update brief only for fields the user accepted or you are proposing as the current draft; list proposed-but-not-confirmed fields in inferredFields until the user confirms.
 4. Set status = "needs_clarification" until the user has answered enough topics (sectors + size + at least one valuation and one quality filter) AND you have asked for a final go-ahead.
-5. Set status = "ok" only when the user confirms the brief is ready or explicitly asks to finish with the preset. Then you may fill remaining gaps from the preset.
+5. Set status = "ok" only when the user confirms the brief is ready or explicitly asks to finish with the preset. Then you may fill remaining gaps from the core defaults.
 6. If the user asks to change a specific filter ("change ROIC", "edit market cap"), update that field, confirm the new value, and stay in needs_clarification unless they also ask to launch.
 7. If the request is contradictory or impossible, set status = "rejected_infeasible", explain in warnings + assistantText, and suggest a nearby feasible ask via suggestions chips.
 8. Never invent tickers, price targets, or news. Never promise a research outcome. Never claim historical returns.
 9. Keep brief.criteria within reasonable ranges. Never emit ROIC > 100%, gross margin > 100%, net debt/EBITDA < -20, forward P/E > 200 or < 0.
-10. assistantText must be at most 500 characters and match the user's locale.`;
+10. Always set candidateCount = 5.
+11. assistantText must be at most 500 characters and match the user's locale.`;
 }

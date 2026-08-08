@@ -38,11 +38,18 @@ import {
   type HardDataOutput,
   type ScreeningBrief,
 } from "@/lib/screening/schemas";
+import {
+  HARD_DATA_FMP_FETCH_LIMIT,
+  HARD_DATA_RANK_UNIVERSE,
+  IR_FANOUT_MAX,
+  SCREENING_MAX_CANDIDATES,
+} from "@/lib/screening/constants";
+import { applyBriefFitToCandidates } from "@/lib/screening/brief-fit";
 export const HARD_DATA_AGENT_KIND = "hard_data";
 export const HARD_DATA_MODEL = "openai/gpt-4o-mini";
-const MAX_UNIVERSE_FOR_LLM = 60;
+const MAX_UNIVERSE_FOR_LLM = HARD_DATA_RANK_UNIVERSE;
 /** Max per-ticker IR steps fan-out after Hard Data (PRD §13 E4). */
-export const IR_FANOUT_MAX = 4;
+export { IR_FANOUT_MAX };
 /** Kind strings kept local to avoid circular imports with agent modules. */
 const IR_KIND = "ir_business";
 const AGGREGATE_IR_KIND = "aggregate_ir_business";
@@ -115,6 +122,37 @@ function coerceStringList(raw: unknown, maxLen: number, maxItems: number): strin
   return out;
 }
 
+/**
+ * Pick ~N names for the ranking LLM from a wider FMP pool.
+ * Prefer actively trading equities (funds already filtered) and a mid-cap bias
+ * by taking every other name from the market-cap-sorted list when oversupplied.
+ */
+export function selectRankUniverse(
+  candidates: FmpScreenerCandidate[],
+  limit: number = HARD_DATA_RANK_UNIVERSE,
+): FmpScreenerCandidate[] {
+  if (candidates.length <= limit) return candidates;
+  // Market-cap sorted desc from FMP helper. Sample across the band so we don't
+  // only feed mega-caps at the top of a wide window.
+  const step = Math.max(1, Math.floor(candidates.length / limit));
+  const picked: FmpScreenerCandidate[] = [];
+  const seen = new Set<string>();
+  for (let i = 0; i < candidates.length && picked.length < limit; i += step) {
+    const row = candidates[i];
+    if (!row || seen.has(row.ticker)) continue;
+    seen.add(row.ticker);
+    picked.push(row);
+  }
+  // Fill gaps from the front if step skipped too many.
+  for (const row of candidates) {
+    if (picked.length >= limit) break;
+    if (seen.has(row.ticker)) continue;
+    seen.add(row.ticker);
+    picked.push(row);
+  }
+  return picked;
+}
+
 export interface RunHardDataAgentOptions {
   brief: ScreeningBrief;
   universe: FmpScreenerCandidate[];
@@ -135,7 +173,10 @@ export async function runHardDataAgent(
   opts: RunHardDataAgentOptions,
 ): Promise<RunHardDataAgentResult> {
   const startedAt = Date.now();
-  const brief = opts.brief;
+  const brief: ScreeningBrief = {
+    ...opts.brief,
+    candidateCount: SCREENING_MAX_CANDIDATES,
+  };
   const universeMap = new Map(opts.universe.map((c) => [c.ticker, c]));
 
   const fmpSource = {
@@ -407,8 +448,11 @@ export const runHardDataStep: StepHandler = async (
     includeSectors: brief.includeSectors,
     excludeSectors: brief.excludeSectors,
     regions: brief.regions,
-    limit: 200,
+    limit: HARD_DATA_FMP_FETCH_LIMIT,
   });
+
+  // Compact ranking universe: prefer mid-cap names inside the band, drop funds/ETFs.
+  const rankUniverse = selectRankUniverse(screenerResult.candidates, HARD_DATA_RANK_UNIVERSE);
 
   const qaHint = await buildQaHintBlock(
     ctx.runId,
@@ -417,8 +461,8 @@ export const runHardDataStep: StepHandler = async (
   );
 
   const runnerResult = await runHardDataAgent({
-    brief,
-    universe: screenerResult.candidates,
+    brief: { ...brief, candidateCount: SCREENING_MAX_CANDIDATES },
+    universe: rankUniverse,
     qaHint,
   });
 
@@ -427,11 +471,13 @@ export const runHardDataStep: StepHandler = async (
   try {
     if (runnerResult.output.candidates.length > 0) {
       const enriched = await enrichHardDataCandidates(
-        runnerResult.output.candidates,
+        runnerResult.output.candidates.slice(0, SCREENING_MAX_CANDIDATES),
       );
+      const withFit = applyBriefFitToCandidates(brief, enriched);
       enrichedOutput = hardDataOutputSchema.parse({
         ...runnerResult.output,
-        candidates: enriched,
+        universeSize: rankUniverse.length,
+        candidates: withFit,
         sources: [
           ...(runnerResult.output.sources ?? []),
           {

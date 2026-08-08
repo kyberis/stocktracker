@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.110",
+    date: "2026-08-08",
+    title: "Screening: rank ~20 equities, shortlist 5, coarser filters",
+    titleTranslations: {
+      es: "Cribado: rankea ~20 empresas, shortlist de 5, filtros menos granulares",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Hard Data now ranks about 20 equities (funds filtered out) and always shortlists up to 5 — no candidate-count question. Intake focuses on sector, size, P/E, ROIC/leverage and region. Cards that miss the majority of brief filters list the unmet expectations.",
+        translations: {
+          es: "Hard Data ahora rankea unas 20 acciones (sin fondos) y siempre deja como máximo 5 — ya no se pregunta cuántos candidatos. El intake se centra en sector, tamaño, PER, ROIC/apalancamiento y región. Las tarjetas que no cumplen la mayoría de filtros del brief listan las expectativas no cumplidas.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.109",
     date: "2026-08-08",
     title: "Screening QA: fix directed retries and guidance freshness",
