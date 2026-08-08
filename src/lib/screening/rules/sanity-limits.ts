@@ -84,7 +84,20 @@ function checkCriterion(c: BriefCriterion): SanityIssue | null {
 export function runSanityLimits(brief: ScreeningBrief): SanityResult {
   const issues: SanityIssue[] = [];
 
-  if (brief.candidateCount < 3 || brief.candidateCount > 5) {
+  if (brief.intent === "analyze") {
+    if (!brief.focusTicker?.trim()) {
+      issues.push({
+        key: "focusTicker",
+        reason: "analyze intent requires a resolved focusTicker",
+      });
+    }
+    if (brief.candidateCount !== 1) {
+      issues.push({
+        key: "candidateCount",
+        reason: `analyze candidateCount ${brief.candidateCount} must be 1`,
+      });
+    }
+  } else if (brief.candidateCount < 3 || brief.candidateCount > 5) {
     issues.push({
       key: "candidateCount",
       reason: `candidateCount ${brief.candidateCount} must be between 3 and 5`,

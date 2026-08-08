@@ -58,10 +58,17 @@ const en = {
     exploreCta: "Find opportunities",
     exploreChipNeutral: "No sector bias",
     exploreChipPreset: "“My screen” preset available",
+    analyzeEyebrow: "Option C · analyze",
+    analyzeTitle: "Deep-dive one company",
+    analyzeBody:
+      "Type a ticker or company name. We resolve the listing (and exchange) first, then run the research agents on that name alone.",
+    analyzeCta: "Analyze a company",
+    analyzeChipSearch: "Ticker or name",
+    analyzeChipExchange: "Exchange confirmed",
     discoveryEyebrow: "Investment screening",
     discoveryTitle: "Screen candidates for your portfolio",
     discoveryBody:
-      "Start from your sector mix: rebalance if something is heavy, or explore freely when the portfolio looks balanced.",
+      "Start from your sector mix: rebalance if something is heavy, explore freely, or deep-dive a single company.",
     discoveryCta: "Open screening",
     scenarioPreviewLabel: "Preview entry states",
     scenarioPreviewHint:
@@ -81,6 +88,7 @@ const en = {
       viewProgress: "View progress",
       intentRebalance: "Rebalance",
       intentExplore: "Explore",
+      intentAnalyze: "Analyze",
       mockedBadge: "Demo",
     },
   },
@@ -229,6 +237,21 @@ const en = {
       excludeSectors: "Sectors excluded",
       candidateCount: "Number of candidates",
       riskProfile: "Risk profile",
+      focusCompany: "Company",
+      focusTicker: "Ticker",
+      focusExchange: "Exchange",
+    },
+    analyze: {
+      askCompany:
+        "Which company should we analyze? Type a ticker (e.g. SAP.DE) or the company name.",
+      searchPlaceholder: "Ticker or company name",
+      searching: "Searching listings…",
+      noResults: "No listings matched. Try another ticker or a fuller company name.",
+      pickListing: "I found several listings — pick the right exchange:",
+      confirmSelected: "Got it: {name} · {ticker} ({exchange}).",
+      confirmSelectedNoExchange: "Got it: {name} · {ticker}.",
+      changeCompany: "Change company",
+      needCompany: "Choose a company and exchange before running the analysis.",
     },
     /** Short tips for brief rows — what the metric is and how higher/lower reads when choosing. */
     rowHelp: {
@@ -237,6 +260,15 @@ const en = {
       },
       excludeSectors: {
         what: "Industries to skip. Useful when one sector already dominates your portfolio.",
+      },
+      focusCompany: {
+        what: "The company you asked to analyze. Confirmed before research starts.",
+      },
+      focusTicker: {
+        what: "Market symbol for that listing (Yahoo/FMP format).",
+      },
+      focusExchange: {
+        what: "Where the shares trade. Needed when the same name lists on more than one venue.",
       },
       marketCap: {
         what: "Company size on the market (share price × shares). Small/mid caps are less covered by analysts.",
@@ -499,7 +531,10 @@ const en = {
     costTitle: "Cost and expectations",
     costBody:
       "Estimated run time is several minutes: Hard Data ranks ~20 equities, research agents investigate each one, then the Compiler picks the best 5 and verification checks the claims.",
+    costBodyAnalyze:
+      "Estimated run time is a few minutes: we research this one listing (business, news, technicals), then write a single-company report and verify the claims.",
     runCta: "Run the screen",
+    runCtaAnalyze: "Run the analysis",
     editCta: "Adjust in the chat",
     empty: "The brief is empty. Go back to the chat to define your criteria.",
   },
@@ -731,10 +766,17 @@ const es: ScreeningCopy = {
     exploreCta: "Buscar oportunidades",
     exploreChipNeutral: "Sin sesgo de sector",
     exploreChipPreset: "Preset «Mi cribado» disponible",
+    analyzeEyebrow: "Opción C · analizar",
+    analyzeTitle: "Profundizar en una empresa",
+    analyzeBody:
+      "Escribe un ticker o el nombre. Primero resolvemos la cotización (y el exchange) y luego los agentes investigan solo ese nombre.",
+    analyzeCta: "Analizar una empresa",
+    analyzeChipSearch: "Ticker o nombre",
+    analyzeChipExchange: "Exchange confirmado",
     discoveryEyebrow: "Cribado de inversión",
     discoveryTitle: "Criba candidatos para tu cartera",
     discoveryBody:
-      "Parte de tu mezcla por sectores: rebalancea si algo pesa de más, o explora libremente cuando la cartera está equilibrada.",
+      "Parte de tu mezcla por sectores: rebalancea si algo pesa de más, explora libremente, o profundiza en una sola empresa.",
     discoveryCta: "Abrir cribado",
     scenarioPreviewLabel: "Vista previa de estados",
     scenarioPreviewHint:
@@ -754,6 +796,7 @@ const es: ScreeningCopy = {
       viewProgress: "Ver progreso",
       intentRebalance: "Rebalanceo",
       intentExplore: "Exploración",
+      intentAnalyze: "Analizar",
       mockedBadge: "Demo",
     },
   },
@@ -903,6 +946,21 @@ const es: ScreeningCopy = {
       excludeSectors: "Sectores excluidos",
       candidateCount: "Nº de candidatos",
       riskProfile: "Perfil de riesgo",
+      focusCompany: "Empresa",
+      focusTicker: "Ticker",
+      focusExchange: "Exchange",
+    },
+    analyze: {
+      askCompany:
+        "¿Qué empresa quieres analizar? Escribe un ticker (p. ej. SAP.DE) o el nombre de la compañía.",
+      searchPlaceholder: "Ticker o nombre de empresa",
+      searching: "Buscando cotizaciones…",
+      noResults: "No hay coincidencias. Prueba otro ticker o el nombre completo.",
+      pickListing: "Hay varias cotizaciones — elige el exchange correcto:",
+      confirmSelected: "Perfecto: {name} · {ticker} ({exchange}).",
+      confirmSelectedNoExchange: "Perfecto: {name} · {ticker}.",
+      changeCompany: "Cambiar empresa",
+      needCompany: "Elige empresa y exchange antes de lanzar el análisis.",
     },
     rowHelp: {
       includeSectors: {
@@ -910,6 +968,15 @@ const es: ScreeningCopy = {
       },
       excludeSectors: {
         what: "Industrias a omitir. Útil cuando un sector ya domina tu cartera.",
+      },
+      focusCompany: {
+        what: "La empresa que pediste analizar. Se confirma antes de investigar.",
+      },
+      focusTicker: {
+        what: "Símbolo de mercado de esa cotización (formato Yahoo/FMP).",
+      },
+      focusExchange: {
+        what: "Dónde cotiza. Necesario cuando el mismo nombre aparece en más de un mercado.",
       },
       marketCap: {
         what: "Tamaño de la empresa en bolsa (precio × acciones). Las small/mid cap tienen menos cobertura de analistas.",
@@ -1169,7 +1236,10 @@ const es: ScreeningCopy = {
     costTitle: "Coste y expectativa",
     costBody:
       "La ejecución estimada son varios minutos: Hard Data rankea ~20 acciones, los agentes investigan cada una, el Compiler elige las 5 mejores y la verificación revisa las afirmaciones.",
+    costBodyAnalyze:
+      "La ejecución estimada son unos minutos: investigamos esta cotización (negocio, noticias, técnico), redactamos un informe de una empresa y verificamos las afirmaciones.",
     runCta: "Ejecutar el cribado",
+    runCtaAnalyze: "Ejecutar el análisis",
     editCta: "Ajustar en el chat",
     empty: "El brief está vacío. Vuelve al chat para definir tus criterios.",
   },

@@ -23,16 +23,29 @@ export function toScreeningRunListItem(
       excludeSectors?: string[];
       regions?: string[];
       candidateCount?: number;
+      focusTicker?: string | null;
+      focusCompanyName?: string | null;
+      focusExchange?: string | null;
     };
     const parts: string[] = [];
-    if (brief.includeSectors?.length) {
-      parts.push(brief.includeSectors.slice(0, 3).join(", "));
-    }
-    if (brief.excludeSectors?.length) {
-      parts.push(`excl. ${brief.excludeSectors.slice(0, 2).join(", ")}`);
-    }
-    if (brief.regions?.length) {
-      parts.push(brief.regions.slice(0, 2).join(" · "));
+    if (brief.focusTicker || brief.focusCompanyName) {
+      const name = brief.focusCompanyName?.trim();
+      const ticker = brief.focusTicker?.trim();
+      const exchange = brief.focusExchange?.trim();
+      if (name && ticker) parts.push(`${name} (${ticker})`);
+      else if (ticker) parts.push(ticker);
+      else if (name) parts.push(name);
+      if (exchange) parts.push(exchange);
+    } else {
+      if (brief.includeSectors?.length) {
+        parts.push(brief.includeSectors.slice(0, 3).join(", "));
+      }
+      if (brief.excludeSectors?.length) {
+        parts.push(`excl. ${brief.excludeSectors.slice(0, 2).join(", ")}`);
+      }
+      if (brief.regions?.length) {
+        parts.push(brief.regions.slice(0, 2).join(" · "));
+      }
     }
     summary = parts.join(" · ").slice(0, 160);
     if (

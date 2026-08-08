@@ -3913,6 +3913,53 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 134,
+    description: "Screening runs: allow analyze intent (single-company)",
+    up: async (client: Client) => {
+      // SQLite cannot ALTER a CHECK constraint — recreate the table.
+      await client.executeMultiple(`
+        PRAGMA foreign_keys = OFF;
+
+        CREATE TABLE screening_runs_new (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN (
+            'draft',
+            'needs_clarification',
+            'rejected_infeasible',
+            'authorized',
+            'running',
+            'completed'
+          )),
+          intent TEXT NOT NULL DEFAULT 'explore' CHECK(intent IN ('rebalance', 'explore', 'analyze')),
+          brief_json TEXT NOT NULL DEFAULT '',
+          mocked_pipeline INTEGER NOT NULL DEFAULT 1,
+          cost_usd REAL NOT NULL DEFAULT 0,
+          cost_json TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        INSERT INTO screening_runs_new (
+          id, user_id, status, intent, brief_json, mocked_pipeline,
+          cost_usd, cost_json, created_at, updated_at
+        )
+        SELECT
+          id, user_id, status, intent, brief_json, mocked_pipeline,
+          COALESCE(cost_usd, 0), COALESCE(cost_json, ''), created_at, updated_at
+        FROM screening_runs;
+
+        DROP TABLE screening_runs;
+        ALTER TABLE screening_runs_new RENAME TO screening_runs;
+
+        CREATE INDEX IF NOT EXISTS idx_screening_runs_user_created
+          ON screening_runs(user_id, created_at DESC);
+
+        PRAGMA foreign_keys = ON;
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

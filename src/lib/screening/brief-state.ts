@@ -29,18 +29,24 @@ export type BriefState = {
   endedEarly: boolean;
   /** null until answered; early exit defaults to "balanced". */
   riskProfile: ScreeningRiskProfile | null;
+  focusTicker: string | null;
+  focusExchange: string | null;
+  focusCompanyName: string | null;
 };
 
 export function emptyBrief(intent: ScreeningIntent): BriefState {
   return {
     intent,
-    includeSectors: null,
-    excludeSectors: null,
+    includeSectors: intent === "analyze" ? [] : null,
+    excludeSectors: intent === "analyze" ? [] : null,
     regions: [],
-    candidateCount: null,
+    candidateCount: intent === "analyze" ? 1 : null,
     criteria: {},
     endedEarly: false,
     riskProfile: null,
+    focusTicker: null,
+    focusExchange: null,
+    focusCompanyName: null,
   };
 }
 
@@ -57,6 +63,16 @@ export function applyPatch(state: BriefState, patch: BriefPatch): BriefState {
     regions: patch.regions ?? state.regions,
     candidateCount: patch.candidateCount ?? state.candidateCount,
     riskProfile: patch.riskProfile ?? state.riskProfile,
+    focusTicker:
+      patch.focusTicker !== undefined ? patch.focusTicker : state.focusTicker,
+    focusExchange:
+      patch.focusExchange !== undefined
+        ? patch.focusExchange
+        : state.focusExchange,
+    focusCompanyName:
+      patch.focusCompanyName !== undefined
+        ? patch.focusCompanyName
+        : state.focusCompanyName,
   };
 }
 
@@ -69,6 +85,22 @@ export function fillFromPreset(
   copy: ScreeningCopy,
   defaults: { includeSectors: string[]; excludeSectors: string[]; candidateCount: number },
 ): { state: BriefState; filledLabels: string[] } {
+  if (state.intent === "analyze") {
+    const next: BriefState = {
+      ...state,
+      includeSectors: state.includeSectors ?? [],
+      excludeSectors: state.excludeSectors ?? [],
+      candidateCount: 1,
+      endedEarly: true,
+      riskProfile: state.riskProfile ?? "balanced",
+    };
+    const filledLabels: string[] = [];
+    if (state.riskProfile === null) {
+      filledLabels.push(copy.intake.fields.riskProfile);
+    }
+    return { state: next, filledLabels };
+  }
+
   const patch = presetBrief(copy);
   const criteria = { ...state.criteria };
   const filledLabels: string[] = [];
@@ -127,6 +159,43 @@ function riskProfileLabel(copy: ScreeningCopy, profile: ScreeningRiskProfile): s
 /** Rows in a stable order so the brief always reads the same way. */
 export function buildBriefRows(state: BriefState, copy: ScreeningCopy): BriefRow[] {
   const rows: BriefRow[] = [];
+
+  if (state.intent === "analyze") {
+    if (state.focusCompanyName || state.focusTicker) {
+      rows.push({
+        key: "focusCompany",
+        label: copy.intake.fields.focusCompany,
+        condition: state.focusCompanyName || state.focusTicker || "—",
+        source: "confirmed",
+      });
+    }
+    if (state.focusTicker) {
+      rows.push({
+        key: "focusTicker",
+        label: copy.intake.fields.focusTicker,
+        condition: state.focusTicker,
+        source: "confirmed",
+      });
+    }
+    if (state.focusExchange) {
+      rows.push({
+        key: "focusExchange",
+        label: copy.intake.fields.focusExchange,
+        condition: state.focusExchange,
+        source: "confirmed",
+      });
+    }
+    if (state.riskProfile !== null) {
+      rows.push({
+        key: "riskProfile",
+        label: copy.intake.fields.riskProfile,
+        condition: riskProfileLabel(copy, state.riskProfile),
+        source: state.endedEarly && state.riskProfile === "balanced" ? "preset" : "chat",
+      });
+    }
+    return rows;
+  }
+
   const sectorSource = state.intent === "rebalance" ? "rebalance" : "chat";
 
   if (state.includeSectors !== null) {
@@ -177,6 +246,22 @@ export function buildBriefRows(state: BriefState, copy: ScreeningCopy): BriefRow
 
 /** Payload for POST /api/screening/runs. */
 export function toScreeningBrief(state: BriefState, locale: string): ScreeningBrief {
+  if (state.intent === "analyze") {
+    return {
+      intent: "analyze",
+      includeSectors: [],
+      excludeSectors: [],
+      regions: [],
+      candidateCount: 1,
+      criteria: [],
+      endedEarly: state.endedEarly,
+      locale,
+      riskProfile: state.riskProfile,
+      focusTicker: state.focusTicker,
+      focusExchange: state.focusExchange,
+      focusCompanyName: state.focusCompanyName,
+    };
+  }
   return {
     intent: state.intent,
     includeSectors: state.includeSectors ?? [],
@@ -187,6 +272,9 @@ export function toScreeningBrief(state: BriefState, locale: string): ScreeningBr
     endedEarly: state.endedEarly,
     locale,
     riskProfile: state.riskProfile,
+    focusTicker: null,
+    focusExchange: null,
+    focusCompanyName: null,
   };
 }
 
@@ -209,5 +297,8 @@ export function fromScreeningBrief(brief: ScreeningBrief): BriefState {
     criteria,
     endedEarly: brief.endedEarly,
     riskProfile: brief.riskProfile ?? null,
+    focusTicker: brief.focusTicker ?? null,
+    focusExchange: brief.focusExchange ?? null,
+    focusCompanyName: brief.focusCompanyName ?? null,
   };
 }

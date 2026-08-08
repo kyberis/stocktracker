@@ -58,6 +58,31 @@ describe("runSanityLimits", () => {
     expect(result.issues[0]?.key).toBe("candidateCount");
   });
 
+  it("accepts analyze with focusTicker and candidateCount 1", () => {
+    const result = runSanityLimits(
+      brief({
+        intent: "analyze",
+        candidateCount: 1,
+        focusTicker: "SAP.DE",
+        focusExchange: "GER",
+        focusCompanyName: "SAP SE",
+      }),
+    );
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejects analyze without focusTicker", () => {
+    const raw = brief({
+      intent: "analyze",
+      candidateCount: 1,
+      focusTicker: "SAP.DE",
+    });
+    const tampered = { ...raw, focusTicker: null } as ScreeningBrief;
+    const result = runSanityLimits(tampered);
+    expect(result.ok).toBe(false);
+    expect(result.issues.some((i) => i.key === "focusTicker")).toBe(true);
+  });
+
   it("rejects a sector that is both included and excluded", () => {
     const result = runSanityLimits(
       brief({

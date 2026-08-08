@@ -90,7 +90,9 @@ export function RecentScreensList() {
                       <span className="text-[13px] font-semibold text-[color:var(--foreground)]">
                         {run.intent === "rebalance"
                           ? rs.intentRebalance
-                          : rs.intentExplore}
+                          : run.intent === "analyze"
+                            ? rs.intentAnalyze
+                            : rs.intentExplore}
                       </span>
                       <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[color:var(--muted)]">
                         {statusLabel(run.status)}

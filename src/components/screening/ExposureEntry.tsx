@@ -34,7 +34,7 @@ type EntryCopy = ScreeningCopy["entry"];
 type PreviewMode = ScreeningEntryScenario | "live";
 
 function intakeHref(params: {
-  intent: "rebalance" | "explore";
+  intent: "rebalance" | "explore" | "analyze";
   include?: string[];
   exclude?: string[];
 }): string {
@@ -42,6 +42,51 @@ function intakeHref(params: {
   if (params.include?.length) search.set("include", params.include.join(","));
   if (params.exclude?.length) search.set("exclude", params.exclude.join(","));
   return `/screening/intake?${search.toString()}`;
+}
+
+function AnalyzeOptionCard({
+  entry,
+  variant,
+  preview,
+  track,
+}: {
+  entry: EntryCopy;
+  variant: ScreeningEntryVariant;
+  preview: "live" | "fixture";
+  track: TrackEntryFn;
+}) {
+  const meta = buildEntryCtaMetadata({
+    intent: "analyze",
+    variant,
+    preview,
+    primary: false,
+  });
+
+  return (
+    <section className="card flex flex-col rounded-[20px] border border-[color:var(--border)] p-4 sm:col-span-2">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
+        {entry.analyzeEyebrow}
+      </p>
+      <h3 className="mt-1 text-[15px] font-bold text-[color:var(--foreground)]">
+        {entry.analyzeTitle}
+      </h3>
+      <p className="mt-1.5 flex-1 text-[13px] text-[color:var(--muted)]">{entry.analyzeBody}</p>
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
+        <Chip tone="info">{entry.analyzeChipSearch}</Chip>
+        <Chip tone="info">{entry.analyzeChipExchange}</Chip>
+      </div>
+      <Link
+        href={intakeHref({ intent: "analyze" })}
+        className="btn-secondary mt-3 inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+        onClick={() => {
+          track("screening_entry_cta_clicked", meta);
+          void postScreeningEntryEvent("screening_entry_cta_clicked", meta);
+        }}
+      >
+        {entry.analyzeCta}
+      </Link>
+    </section>
+  );
 }
 
 function Chip({
@@ -475,6 +520,12 @@ export function ExposureEntry() {
             />
           </>
         )}
+        <AnalyzeOptionCard
+          entry={copy.entry}
+          variant={variant}
+          preview={preview}
+          track={track}
+        />
       </div>
 
       <RecentScreensList />

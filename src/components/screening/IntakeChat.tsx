@@ -26,6 +26,7 @@ import {
   type ScreeningBrief,
   type ScreeningIntent,
 } from "@/lib/screening/schemas";
+import { AnalyzeCompanyPicker, type FocusListing } from "./AnalyzeCompanyPicker";
 import { BriefList, BriefTable } from "./BriefTable";
 import { ExplainHelpList } from "./MetricHelpTip";
 import { ScreeningDisclaimer } from "./ScreeningNotices";
@@ -96,6 +97,8 @@ export function IntakeChat() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pilotActive, setPilotActive] = useState(false);
+  /** Analyze intent: company+exchange must be resolved before the risk script. */
+  const [companyResolved, setCompanyResolved] = useState(intent !== "analyze");
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const chatScrollRef = useRef<HTMLElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -104,6 +107,7 @@ export function IntakeChat() {
   const briefRef = useRef<BriefState>(emptyBrief(intent));
   const pilotAbortRef = useRef(false);
   const agentPendingRef = useRef(false);
+  const isAnalyze = intent === "analyze";
 
   const pushBubble = useCallback((bubble: Omit<Bubble, "id">) => {
     setBubbles((prev) => {
@@ -114,28 +118,41 @@ export function IntakeChat() {
 
   // Seed the first scripted question (with explainers). Re-runs on language/intent change.
   useEffect(() => {
-    const first = script[0];
-    if (!first) return;
     pilotAbortRef.current = true;
     setPilotActive(false);
     nextIdRef.current = 0;
     const seedBrief = emptyBrief(intent);
-    const seedTranscript: Turn[] = [{ role: "assistant", content: first.ask }];
     briefRef.current = seedBrief;
-    transcriptRef.current = seedTranscript;
-    setBubbles([{ id: `${nextIdRef.current++}-agent`, role: "agent", text: first.ask, explain: first.explain }]);
-    setTranscript(seedTranscript);
-    setQuestionIndex(0);
-    setShowLaunchPanel(false);
     setBrief(seedBrief);
+    setShowLaunchPanel(false);
     setAgentStatus(null);
     setAgentQuestions([]);
+    setAgentWarnings([]);
+    setTurnError(null);
+    setQuestionIndex(0);
+
+    if (intent === "analyze") {
+      setCompanyResolved(false);
+      const ask = copy.intake.analyze.askCompany;
+      const seedTranscript: Turn[] = [{ role: "assistant", content: ask }];
+      transcriptRef.current = seedTranscript;
+      setTranscript(seedTranscript);
+      setBubbles([{ id: `${nextIdRef.current++}-agent`, role: "agent", text: ask }]);
+      setAgentSuggestions([]);
+      return;
+    }
+
+    const first = script[0];
+    if (!first) return;
+    setCompanyResolved(true);
+    const seedTranscript: Turn[] = [{ role: "assistant", content: first.ask }];
+    transcriptRef.current = seedTranscript;
+    setTranscript(seedTranscript);
+    setBubbles([{ id: `${nextIdRef.current++}-agent`, role: "agent", text: first.ask, explain: first.explain }]);
     setAgentSuggestions(
       first.options.slice(0, 4).map((o) => ({ label: o.label, say: o.say })),
     );
-    setAgentWarnings([]);
-    setTurnError(null);
-  }, [script, intent]);
+  }, [script, intent, copy.intake.analyze.askCompany]);
 
   useEffect(() => {
     const end = transcriptEndRef.current;
@@ -150,12 +167,86 @@ export function IntakeChat() {
     }
   }, [bubbles.length, showLaunchPanel, agentPending]);
 
-  const currentQuestion = !showLaunchPanel ? script[questionIndex] : undefined;
+  const currentQuestion =
+    !showLaunchPanel && companyResolved ? script[questionIndex] : undefined;
   const rows = useMemo(() => buildBriefRows(brief, copy), [brief, copy]);
   const pendingQuestions = Math.max(
     0,
     script.length - questionIndex - (showLaunchPanel ? 0 : 1),
   );
+
+  function confirmFocusListing(listing: FocusListing) {
+    const patch: BriefPatch = {
+      focusTicker: listing.ticker,
+      focusExchange: listing.exchange,
+      focusCompanyName: listing.companyName,
+      candidateCount: 1,
+      includeSectors: [],
+      excludeSectors: [],
+    };
+    const next = applyPatch(briefRef.current, patch);
+    briefRef.current = next;
+    setBrief(next);
+    setCompanyResolved(true);
+
+    const confirmText = listing.exchange
+      ? fill(copy.intake.analyze.confirmSelected, {
+          name: listing.companyName,
+          ticker: listing.ticker,
+          exchange: listing.exchange,
+        })
+      : fill(copy.intake.analyze.confirmSelectedNoExchange, {
+          name: listing.companyName,
+          ticker: listing.ticker,
+        });
+    pushBubble({
+      role: "user",
+      text: `${listing.companyName} (${listing.ticker})`,
+    });
+    pushBubble({ role: "agent", text: confirmText });
+
+    const riskQ = script[0];
+    if (riskQ) {
+      pushBubble({
+        role: "agent",
+        text: riskQ.ask,
+        explain: riskQ.explain,
+      });
+      setQuestionIndex(0);
+      setAgentSuggestions(
+        riskQ.options.slice(0, 4).map((o) => ({ label: o.label, say: o.say })),
+      );
+      const withRisk: Turn[] = [
+        ...transcriptRef.current,
+        { role: "user", content: `${listing.companyName} (${listing.ticker})` },
+        { role: "assistant", content: confirmText },
+        { role: "assistant", content: riskQ.ask },
+      ];
+      transcriptRef.current = withRisk;
+      setTranscript(withRisk);
+    }
+    track("screening_intake_focus_selected", {
+      intent,
+      ticker: listing.ticker,
+      exchange: listing.exchange ?? "",
+    });
+  }
+
+  /** Analyze risk chips complete locally — no LLM intake for this short path. */
+  function completeAnalyzeRisk(suggestion: AgentSuggestion) {
+    const matching = script[0]?.options.find(
+      (o) => o.say === suggestion.say || o.label === suggestion.label,
+    );
+    pushBubble({ role: "user", text: suggestion.say });
+    const next = applyPatch(briefRef.current, matching?.patch ?? {});
+    briefRef.current = next;
+    setBrief(next);
+    setAgentStatus("ok");
+    setAgentSuggestions([]);
+    setShowLaunchPanel(true);
+    setQuestionIndex(1);
+    track("screening_intake_turn", { intent, status: "ok", fromChip: "1" });
+  }
 
   const suggestionChips = useMemo(() => {
     if (agentSuggestions.length > 0) return agentSuggestions;
@@ -285,6 +376,10 @@ export function IntakeChat() {
 
   async function chooseSuggestion(suggestion: AgentSuggestion) {
     if (pilotActive) return;
+    if (isAnalyze && companyResolved && !showLaunchPanel) {
+      completeAnalyzeRisk(suggestion);
+      return;
+    }
     const matching = currentQuestion?.options.find(
       (o) => o.say === suggestion.say || o.label === suggestion.label,
     );
@@ -297,15 +392,40 @@ export function IntakeChat() {
     const text = inputValue.trim();
     if (!text) return;
     setInputValue("");
+    // Analyze company phase uses the search picker, not free-text LLM turns.
+    if (isAnalyze && !companyResolved) return;
+    if (isAnalyze && companyResolved) {
+      // Allow typing a risk answer as free text → map to closest chip or default balanced.
+      const match = script[0]?.options.find(
+        (o) =>
+          o.say.toLowerCase().includes(text.toLowerCase()) ||
+          o.label.toLowerCase() === text.toLowerCase(),
+      );
+      completeAnalyzeRisk(
+        match
+          ? { label: match.label, say: match.say }
+          : { label: text, say: text },
+      );
+      if (!match) {
+        const next = applyPatch(briefRef.current, { riskProfile: "balanced" });
+        briefRef.current = next;
+        setBrief(next);
+      }
+      return;
+    }
     await sendTurn(text);
   }
 
   function finishEarly() {
     if (pilotActive) return;
+    if (isAnalyze && !briefRef.current.focusTicker) {
+      setTurnError(copy.intake.analyze.needCompany);
+      return;
+    }
     const { state, filledLabels } = fillFromPreset(briefRef.current, copy, {
       includeSectors: suggestedInclude,
       excludeSectors: suggestedExclude,
-      candidateCount: 5,
+      candidateCount: isAnalyze ? 1 : 5,
     });
     briefRef.current = state;
     setBrief(state);
@@ -330,6 +450,7 @@ export function IntakeChat() {
   }
 
   async function startPilot() {
+    if (isAnalyze) return; // sample pilot is for screen briefs, not single-company
     if (pilotActive || agentPendingRef.current) return;
     pilotAbortRef.current = false;
     setPilotActive(true);
@@ -382,6 +503,10 @@ export function IntakeChat() {
 
   async function launchRun() {
     if (submitting || pilotActive) return;
+    if (isAnalyze && !briefRef.current.focusTicker) {
+      setSubmitError(copy.intake.analyze.needCompany);
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -416,7 +541,11 @@ export function IntakeChat() {
     }
   }
 
-  const canLaunch = showLaunchPanel && agentStatus !== "rejected_infeasible" && rows.length > 0;
+  const canLaunch =
+    showLaunchPanel &&
+    agentStatus !== "rejected_infeasible" &&
+    rows.length > 0 &&
+    (!isAnalyze || Boolean(brief.focusTicker));
 
   return (
     <main className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-5xl flex-col px-3 pb-6 pt-8 sm:px-4">
@@ -424,7 +553,7 @@ export function IntakeChat() {
         <h1 className="text-2xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-3xl">
           {showLaunchPanel ? copy.brief.title : copy.intake.title}
         </h1>
-        {!showLaunchPanel && !pilotActive ? (
+        {!showLaunchPanel && !pilotActive && !isAnalyze ? (
           <button
             type="button"
             onClick={() => void startPilot()}
@@ -597,7 +726,15 @@ export function IntakeChat() {
             </details>
           ) : null}
 
-          {suggestionChips.length > 0 && !agentPending && !pilotActive && !showLaunchPanel && (
+          {isAnalyze && !companyResolved && !showLaunchPanel ? (
+            <AnalyzeCompanyPicker onSelect={confirmFocusListing} disabled={agentPending} />
+          ) : null}
+
+          {suggestionChips.length > 0 &&
+            !agentPending &&
+            !pilotActive &&
+            !showLaunchPanel &&
+            companyResolved && (
             <div className="mb-3 flex flex-wrap justify-center gap-2">
               {suggestionChips.map((option) => (
                 <button
@@ -621,7 +758,7 @@ export function IntakeChat() {
             </div>
           )}
 
-          {!showLaunchPanel ? (
+          {!showLaunchPanel && !(isAnalyze && !companyResolved) ? (
             <form
               onSubmit={submitInput}
               className="-mx-1 flex gap-2 px-1 py-3"
@@ -657,7 +794,9 @@ export function IntakeChat() {
           <div className="mt-4 text-left">
             <BriefTable rows={rows} onEditRow={editBriefRow} />
           </div>
-          <p className="mt-4 text-[13px] text-[color:var(--muted)]">{copy.brief.costBody}</p>
+          <p className="mt-4 text-[13px] text-[color:var(--muted)]">
+            {isAnalyze ? copy.brief.costBodyAnalyze : copy.brief.costBody}
+          </p>
 
           {submitError && (
             <p className="mt-3 text-[13px] text-red-600 dark:text-red-400" role="alert">
@@ -672,7 +811,7 @@ export function IntakeChat() {
               disabled={submitting || !canLaunch || pilotActive}
               className="btn-primary inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold disabled:opacity-60"
             >
-              {copy.brief.runCta}
+              {isAnalyze ? copy.brief.runCtaAnalyze : copy.brief.runCta}
             </button>
             <button
               type="button"

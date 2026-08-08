@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-288 routes.
+289 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -258,6 +258,7 @@
 | `/api/screening/reports/[reportId]` | GET | [`src/app/api/screening/reports/[reportId]/route.ts`](../../src/app/api/screening/reports/[reportId]/route.ts) |
 | `/api/screening/runs` | GET, POST | [`src/app/api/screening/runs/route.ts`](../../src/app/api/screening/runs/route.ts) |
 | `/api/screening/runs/[runId]` | GET | [`src/app/api/screening/runs/[runId]/route.ts`](../../src/app/api/screening/runs/[runId]/route.ts) |
+| `/api/screening/runs/[runId]/resume` | POST | [`src/app/api/screening/runs/[runId]/resume/route.ts`](../../src/app/api/screening/runs/[runId]/resume/route.ts) |
 | `/api/search` | GET | [`src/app/api/search/route.ts`](../../src/app/api/search/route.ts) |
 | `/api/snaptrade` | POST | [`src/app/api/snaptrade/route.ts`](../../src/app/api/snaptrade/route.ts) |
 | `/api/social/connections` | GET, POST | [`src/app/api/social/connections/route.ts`](../../src/app/api/social/connections/route.ts) |

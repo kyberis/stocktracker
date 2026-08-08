@@ -19,6 +19,12 @@ describe("buildIntakeHref", () => {
     expect(buildIntakeHref({})).toBe("/screening/intake?intent=explore");
   });
 
+  it("supports analyze intent", () => {
+    expect(buildIntakeHref({ intent: "analyze" })).toBe(
+      "/screening/intake?intent=analyze",
+    );
+  });
+
   it("rebuilds from a brief", () => {
     const brief = screeningBriefSchema.parse({
       intent: "explore",

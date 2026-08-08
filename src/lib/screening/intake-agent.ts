@@ -211,7 +211,7 @@ export async function runIntakeAgent(
               "riskProfile",
             ],
             properties: {
-              intent: { type: "string", enum: ["rebalance", "explore"] },
+              intent: { type: "string", enum: ["rebalance", "explore", "analyze"] },
               includeSectors: { type: "array", items: { type: "string" } },
               excludeSectors: { type: "array", items: { type: "string" } },
               regions: { type: "array", items: { type: "string" } },

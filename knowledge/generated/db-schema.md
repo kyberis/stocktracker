@@ -73,6 +73,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `screener_cache` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `screening_agent_outputs` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `screening_qa_rounds` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `screening_research_cache` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `screening_run_events` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `screening_run_steps` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `screening_runs` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |

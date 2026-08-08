@@ -25,7 +25,7 @@ export type ScreeningRunStatus =
   | "running"
   | "completed";
 
-export type ScreeningRunIntent = "rebalance" | "explore";
+export type ScreeningRunIntent = "rebalance" | "explore" | "analyze";
 
 export interface ScreeningRunRow {
   id: string;

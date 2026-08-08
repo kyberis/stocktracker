@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.118",
+    date: "2026-08-08",
+    title: "Screening: analyze one company",
+    titleTranslations: {
+      es: "Cribado: analizar una empresa",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "New Analyze intent: type a ticker or company name, confirm the listing/exchange when needed, then run the research pipeline on that single name.",
+        translations: {
+          es: "Nuevo modo Analizar: escribe un ticker o nombre, confirma la cotización/exchange si hace falta, y el pipeline investiga solo esa empresa.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.117",
     date: "2026-08-08",
     title: "Screening progress: liveness + resume",

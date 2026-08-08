@@ -8,7 +8,7 @@ import { z } from "zod";
  * UI reads must be declared here first.
  */
 
-export const SCREENING_INTENTS = ["rebalance", "explore"] as const;
+export const SCREENING_INTENTS = ["rebalance", "explore", "analyze"] as const;
 export type ScreeningIntent = (typeof SCREENING_INTENTS)[number];
 
 /** First-screen product analytics (entry + discovery). Dual-written to GA + DB. */
@@ -52,13 +52,18 @@ export const SCREENING_RISK_PROFILES = [
 ] as const;
 export type ScreeningRiskProfile = (typeof SCREENING_RISK_PROFILES)[number];
 
-export const screeningBriefSchema = z.object({
+/** Base brief object — use `.partial()` on this for intake drafts. */
+export const screeningBriefObjectSchema = z.object({
   intent: z.enum(SCREENING_INTENTS),
   /** Sectors to look for. Empty = no sector preference. */
   includeSectors: z.array(z.string().min(1).max(64)).max(20).default([]),
   excludeSectors: z.array(z.string().min(1).max(64)).max(20).default([]),
   regions: z.array(z.string().min(1).max(64)).max(20).default([]),
-  candidateCount: z.number().int().min(3).max(5).default(5),
+  /**
+   * Final shortlist size. Explore/rebalance: 3–5 (product always uses 5).
+   * Analyze (single company): always 1.
+   */
+  candidateCount: z.number().int().min(1).max(5).default(5),
   criteria: z.array(briefCriterionSchema).max(30).default([]),
   /** True when the user cut the chat short and presets filled the gaps. */
   endedEarly: z.boolean().default(false),
@@ -68,7 +73,43 @@ export const screeningBriefSchema = z.object({
    * (or early-exit fills "balanced").
    */
   riskProfile: z.enum(SCREENING_RISK_PROFILES).nullable().default(null),
+  /**
+   * Single-company analyze intent: resolved listing. Null for screen intents.
+   * Symbol is the Yahoo/FMP ticker (e.g. SAP.DE); exchange is a short label
+   * shown in the UI (e.g. XETRA / GER).
+   */
+  focusTicker: z.string().min(1).max(20).nullable().optional(),
+  focusExchange: z.string().min(1).max(40).nullable().optional(),
+  focusCompanyName: z.string().min(1).max(200).nullable().optional(),
 });
+
+/** Fully validated brief ready to authorize a run. */
+export const screeningBriefSchema = screeningBriefObjectSchema.superRefine(
+  (brief, ctx) => {
+    if (brief.intent === "analyze") {
+      if (!brief.focusTicker) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["focusTicker"],
+          message: "analyze intent requires focusTicker",
+        });
+      }
+      if (brief.candidateCount !== 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["candidateCount"],
+          message: "analyze intent requires candidateCount = 1",
+        });
+      }
+    } else if (brief.candidateCount < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["candidateCount"],
+        message: "screen intents require candidateCount between 3 and 5",
+      });
+    }
+  },
+);
 export type ScreeningBrief = z.infer<typeof screeningBriefSchema>;
 
 /** Intake agent turn output. Never trusted directly — always parsed with this. */
@@ -109,7 +150,7 @@ export const intakeChatRequestSchema = z.object({
   intent: z.enum(SCREENING_INTENTS),
   locale: z.string().min(2).max(10).default("es"),
   messages: z.array(intakeChatMessageSchema).min(1).max(40),
-  brief: screeningBriefSchema.partial().optional(),
+  brief: screeningBriefObjectSchema.partial().optional(),
   suggestedInclude: z.array(z.string().min(1).max(64)).max(10).default([]),
   suggestedExclude: z.array(z.string().min(1).max(64)).max(10).default([]),
 });

@@ -11,6 +11,10 @@ Hard Data ranks ~20 equities for deep research (IR / Web / Technicals); the Comp
 selects the final ≤5 with full evidence. Cards that miss the majority of brief filters
 list the unmet expectations.
 
+Alternatively, **Analyze** resolves a single ticker/company (+ exchange when
+ambiguous) via search, then runs the same research agents on that one listing
+(`candidateCount = 1`, Hard Data skips the FMP screener).
+
 ## 2. Status
 
 - **Tier:** Experimental (no tier gating yet — flag only)
@@ -43,7 +47,7 @@ list the unmet expectations.
 
 - `screening_runs` — one row per user launch attempt. Fields: `id`, `user_id`
   (`ON DELETE CASCADE`), `status` (`draft | needs_clarification | rejected_infeasible | authorized | running | completed`),
-  `intent` (`rebalance | explore`), `brief_json` (the confirmed `ScreeningBrief`),
+  `intent` (`rebalance | explore | analyze`), `brief_json` (the confirmed `ScreeningBrief`),
   `mocked_pipeline` (1 while the research pipeline is fixture), `created_at`,
   `updated_at`.
 - `screening_agent_outputs` — one row per agent turn. Fields: `id`, `run_id`

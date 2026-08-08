@@ -11,7 +11,11 @@ export function buildIntakeHref(opts: {
 }): string {
   const search = new URLSearchParams();
   const intent =
-    opts.intent === "rebalance" || opts.intent === "explore" ? opts.intent : "explore";
+    opts.intent === "rebalance" ||
+    opts.intent === "explore" ||
+    opts.intent === "analyze"
+      ? opts.intent
+      : "explore";
   search.set("intent", intent);
   const include = (opts.includeSectors ?? []).filter(Boolean).slice(0, 5);
   const exclude = (opts.excludeSectors ?? []).filter(Boolean).slice(0, 5);

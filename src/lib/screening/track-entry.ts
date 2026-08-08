@@ -31,7 +31,7 @@ export function buildEntryViewMetadata(params: {
 }
 
 export function buildEntryCtaMetadata(params: {
-  intent: "explore" | "rebalance";
+  intent: "explore" | "rebalance" | "analyze";
   variant: ScreeningEntryVariant;
   preview: ScreeningEntryPreviewMode;
   primary: boolean;

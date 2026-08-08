@@ -28,6 +28,9 @@ export type BriefPatch = {
   regions?: string[];
   candidateCount?: number;
   riskProfile?: ScreeningRiskProfile;
+  focusTicker?: string | null;
+  focusExchange?: string | null;
+  focusCompanyName?: string | null;
 };
 
 export type IntakeOption = {
@@ -112,6 +115,37 @@ export function buildIntakeScript(copy: ScreeningCopy, ctx: IntakeContext): Inta
   const v = copy.intake.values;
   const include = ctx.suggestedInclude.join(", ");
   const exclude = ctx.suggestedExclude.join(", ");
+
+  // Analyze: company+exchange are resolved in the UI before this script; only risk remains.
+  if (ctx.intent === "analyze") {
+    return [
+      {
+        id: "riskProfile",
+        ask: q.riskProfile.ask,
+        explain: q.riskProfile.explain,
+        options: [
+          {
+            id: "conservative",
+            label: q.riskProfile.options.conservative.label,
+            say: q.riskProfile.options.conservative.say,
+            patch: { riskProfile: "conservative" },
+          },
+          {
+            id: "balanced",
+            label: q.riskProfile.options.balanced.label,
+            say: q.riskProfile.options.balanced.say,
+            patch: { riskProfile: "balanced" },
+          },
+          {
+            id: "aggressive",
+            label: q.riskProfile.options.aggressive.label,
+            say: q.riskProfile.options.aggressive.say,
+            patch: { riskProfile: "aggressive" },
+          },
+        ],
+      },
+    ];
+  }
 
   const sectorsQuestion: IntakeQuestion =
     ctx.intent === "rebalance"

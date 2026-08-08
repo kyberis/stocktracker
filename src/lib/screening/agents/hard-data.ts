@@ -21,6 +21,7 @@ import {
   marketCapRangeFromCondition,
   type FmpScreenerCandidate,
 } from "@/lib/screening/data/fmp-screening";
+import { seedFocusCandidate } from "@/lib/screening/data/seed-focus-candidate";
 import {
   enrichHardDataCandidates,
   summariseUniverseWithSignals,
@@ -439,68 +440,144 @@ export const runHardDataStep: StepHandler = async (
     return { status: "error", errorMessage: "brief_unavailable", fatal: true };
   }
 
-  const mcapCriterion = brief.criteria.find((c) => c.key === "marketCap");
-  const range = mcapCriterion
-    ? marketCapRangeFromCondition(mcapCriterion.condition)
-    : { min: null, max: null };
-
   const started = Date.now();
-  const screenerResult = await fetchFmpScreener({
-    marketCapMin: range.min,
-    marketCapMax: range.max,
-    includeSectors: brief.includeSectors,
-    excludeSectors: brief.excludeSectors,
-    regions: brief.regions,
-    limit: HARD_DATA_FMP_FETCH_LIMIT,
-  });
+  let enrichedOutput: HardDataOutput;
+  let runnerLatencyMs = 0;
+  let runnerRawResponse = "";
+  let runnerErrorMessage: string | undefined;
+  let universeSizeForLog = 0;
 
-  // Compact ranking universe: prefer mid-cap names inside the band, drop funds/ETFs.
-  const rankUniverse = selectRankUniverse(screenerResult.candidates, HARD_DATA_RANK_UNIVERSE);
-
-  const qaHint = await buildQaHintBlock(
-    ctx.runId,
-    HARD_DATA_AGENT_KIND,
-    null,
-  );
-
-  const runnerResult = await runHardDataAgent({
-    brief: { ...brief, candidateCount: SCREENING_MAX_CANDIDATES },
-    universe: rankUniverse,
-    qaHint,
-  });
-
-  // Enrich the full research universe with FMP multiples + MOAT /analisis.
-  let enrichedOutput = runnerResult.output;
-  try {
-    if (runnerResult.output.candidates.length > 0) {
-      const enriched = await enrichHardDataCandidates(
-        runnerResult.output.candidates.slice(0, IR_FANOUT_MAX),
-      );
-      const withFit = applyBriefFitToCandidates(brief, enriched);
-      enrichedOutput = hardDataOutputSchema.parse({
-        ...runnerResult.output,
-        universeSize: rankUniverse.length,
-        candidates: withFit,
-        sources: [
-          ...(runnerResult.output.sources ?? []),
-          {
-            label: "FMP ratios-ttm + profile",
-            url: "https://financialmodelingprep.com/stable/ratios-ttm",
-            asOf: new Date().toISOString().slice(0, 10),
-          },
-          {
-            label: "trefolio MOAT + /analisis cache",
-            url: "/tools/moat-evaluation",
-            asOf: new Date().toISOString().slice(0, 10),
-          },
-        ],
-      });
+  if (brief.intent === "analyze" && brief.focusTicker) {
+    const seed = await seedFocusCandidate(brief.focusTicker);
+    if (!seed) {
+      return {
+        status: "error",
+        errorMessage: "focus_ticker_unresolved",
+        fatal: true,
+      };
     }
-  } catch (err) {
-    console.warn(
-      "[screening/hard-data] candidate enrichment failed",
-      err instanceof Error ? err.message : err,
+    const asOf = new Date().toISOString().slice(0, 10);
+    const seededCandidate: HardDataCandidate = {
+      ticker: seed.ticker,
+      name: brief.focusCompanyName?.trim() || seed.name,
+      sector: seed.sector,
+      industry: seed.industry,
+      country: seed.country,
+      marketCapUsd: seed.marketCapUsd,
+      price: seed.price,
+      rankScore: 100,
+      rankReason: `Single-company analysis of ${seed.ticker}${
+        brief.focusExchange ? ` (${brief.focusExchange})` : ""
+      }.`,
+    };
+    let candidates = [seededCandidate];
+    try {
+      const enriched = await enrichHardDataCandidates(candidates);
+      candidates = applyBriefFitToCandidates(brief, enriched);
+    } catch (err) {
+      console.warn(
+        "[screening/hard-data] analyze enrichment failed",
+        err instanceof Error ? err.message : err,
+      );
+    }
+    enrichedOutput = hardDataOutputSchema.parse({
+      status: "ok",
+      universeSize: 1,
+      candidates,
+      deferredTickers: [],
+      gaps: [],
+      locale: brief.locale,
+      sources: [
+        {
+          label: "FMP profile (focus ticker)",
+          url: "https://financialmodelingprep.com/stable/profile",
+          asOf,
+        },
+        {
+          label: "FMP ratios-ttm + profile",
+          url: "https://financialmodelingprep.com/stable/ratios-ttm",
+          asOf,
+        },
+        {
+          label: "trefolio MOAT + /analisis cache",
+          url: "/tools/moat-evaluation",
+          asOf,
+        },
+      ],
+    });
+    runnerLatencyMs = Date.now() - started;
+    runnerRawResponse = JSON.stringify({ mode: "analyze", ticker: seed.ticker });
+    universeSizeForLog = 1;
+  } else {
+    const mcapCriterion = brief.criteria.find((c) => c.key === "marketCap");
+    const range = mcapCriterion
+      ? marketCapRangeFromCondition(mcapCriterion.condition)
+      : { min: null, max: null };
+
+    const screenerResult = await fetchFmpScreener({
+      marketCapMin: range.min,
+      marketCapMax: range.max,
+      includeSectors: brief.includeSectors,
+      excludeSectors: brief.excludeSectors,
+      regions: brief.regions,
+      limit: HARD_DATA_FMP_FETCH_LIMIT,
+    });
+
+    // Compact ranking universe: prefer mid-cap names inside the band, drop funds/ETFs.
+    const rankUniverse = selectRankUniverse(
+      screenerResult.candidates,
+      HARD_DATA_RANK_UNIVERSE,
     );
+    universeSizeForLog = screenerResult.candidates.length;
+
+    const qaHint = await buildQaHintBlock(
+      ctx.runId,
+      HARD_DATA_AGENT_KIND,
+      null,
+    );
+
+    const runnerResult = await runHardDataAgent({
+      brief: { ...brief, candidateCount: SCREENING_MAX_CANDIDATES },
+      universe: rankUniverse,
+      qaHint,
+    });
+    runnerLatencyMs = runnerResult.latencyMs;
+    runnerRawResponse = runnerResult.rawResponse;
+    runnerErrorMessage = runnerResult.errorMessage ?? undefined;
+
+    // Enrich the full research universe with FMP multiples + MOAT /analisis.
+    enrichedOutput = runnerResult.output;
+    try {
+      if (runnerResult.output.candidates.length > 0) {
+        const enriched = await enrichHardDataCandidates(
+          runnerResult.output.candidates.slice(0, IR_FANOUT_MAX),
+        );
+        const withFit = applyBriefFitToCandidates(brief, enriched);
+        enrichedOutput = hardDataOutputSchema.parse({
+          ...runnerResult.output,
+          universeSize: rankUniverse.length,
+          candidates: withFit,
+          sources: [
+            ...(runnerResult.output.sources ?? []),
+            {
+              label: "FMP ratios-ttm + profile",
+              url: "https://financialmodelingprep.com/stable/ratios-ttm",
+              asOf: new Date().toISOString().slice(0, 10),
+            },
+            {
+              label: "trefolio MOAT + /analisis cache",
+              url: "/tools/moat-evaluation",
+              asOf: new Date().toISOString().slice(0, 10),
+            },
+          ],
+        });
+      }
+    } catch (err) {
+      console.warn(
+        "[screening/hard-data] candidate enrichment failed",
+        err instanceof Error ? err.message : err,
+      );
+    }
   }
 
   // Persist output + AI log. Both are best-effort — the step still succeeds
@@ -511,7 +588,7 @@ export const runHardDataStep: StepHandler = async (
       runId: ctx.runId,
       agentKind: HARD_DATA_AGENT_KIND,
       outputJson: JSON.stringify(enrichedOutput),
-      latencyMs: runnerResult.latencyMs,
+      latencyMs: runnerLatencyMs,
     });
   } catch (err) {
     console.error(
@@ -526,11 +603,11 @@ export const runHardDataStep: StepHandler = async (
       source: "screening_hard_data",
       model: HARD_DATA_MODEL,
       promptSystem: "hard_data_system_prompt",
-      promptUser: `universe=${screenerResult.candidates.length}`,
-      response: runnerResult.rawResponse.slice(0, 20_000),
-      durationMs: runnerResult.latencyMs,
-      status: runnerResult.errorMessage ? "error" : "success",
-      errorMessage: runnerResult.errorMessage?.slice(0, 2000) ?? "",
+      promptUser: `universe=${universeSizeForLog}`,
+      response: runnerRawResponse.slice(0, 20_000),
+      durationMs: runnerLatencyMs,
+      status: runnerErrorMessage ? "error" : "success",
+      errorMessage: runnerErrorMessage?.slice(0, 2000) ?? "",
     });
   } catch {
     // best-effort
@@ -700,13 +777,13 @@ export const runHardDataStep: StepHandler = async (
   return {
     status: "ok",
     payload: {
-      universeSize: screenerResult.candidates.length,
+      universeSize: universeSizeForLog,
       candidateCount: enrichedOutput.candidates.length,
-      fmpErrors: screenerResult.errors.length,
-      llmError: runnerResult.errorMessage,
+      llmError: runnerErrorMessage ?? null,
       irFanout,
       webFanout,
       totalDurationMs: totalDuration,
+      mode: brief.intent === "analyze" ? "analyze" : "screen",
     },
   };
 };
