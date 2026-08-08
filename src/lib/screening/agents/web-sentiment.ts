@@ -7,6 +7,8 @@ import {
   insertAiLog,
   insertScreeningAgentOutput,
 } from "@/lib/db";
+import { hasFreshScreeningResearchCache } from "@/lib/db/screening-research-cache";
+import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import {
   registerHandler,
   type HandlerContext,
@@ -18,6 +20,8 @@ import {
   summariseIrBundleForLlm,
 } from "@/lib/screening/data/fmp-ir";
 import { fetchTavilySearch } from "@/lib/screening/data/tavily";
+import { accrueScreeningLlmCost } from "@/lib/screening/cost";
+import { extractLlmUsage } from "@/lib/screening/llm-usage";
 import { recordWebTickerStep } from "@/lib/screening/metrics";
 import { buildWebSentimentPrompt } from "@/lib/screening/prompts/web-sentiment";
 import { buildQaHintBlock } from "@/lib/screening/qa/hint";
@@ -175,6 +179,8 @@ export interface RunWebSentimentAgentResult {
   latencyMs: number;
   rawResponse: string;
   errorMessage: string | null;
+  tokensInput: number;
+  tokensOutput: number;
 }
 
 export async function runWebSentimentAgent(
@@ -190,6 +196,8 @@ export async function runWebSentimentAgent(
       latencyMs: Date.now() - startedAt,
       rawResponse: "",
       errorMessage: "gateway_not_configured",
+      tokensInput: 0,
+      tokensOutput: 0,
     };
   }
 
@@ -265,6 +273,8 @@ export async function runWebSentimentAgent(
 
   let rawResponse = "";
   let errorMessage: string | null = null;
+  let tokensInput = 0;
+  let tokensOutput = 0;
   try {
     const res = await fetchGatewayChatCompletions(
       {
@@ -293,6 +303,9 @@ export async function runWebSentimentAgent(
           };
         }>;
       };
+      const usage = extractLlmUsage(data);
+      tokensInput = usage.tokensInput;
+      tokensOutput = usage.tokensOutput;
       const call = data.choices?.[0]?.message?.tool_calls?.[0];
       rawResponse =
         call?.function?.arguments ?? data.choices?.[0]?.message?.content ?? "";
@@ -322,6 +335,8 @@ export async function runWebSentimentAgent(
     latencyMs: Date.now() - startedAt,
     rawResponse,
     errorMessage,
+    tokensInput,
+    tokensOutput,
   };
 }
 
@@ -350,18 +365,29 @@ export const runWebSentimentStep: StepHandler = async (
     null;
 
   const started = Date.now();
+  const researchEnabled = await isFeatureEnabledForUser(
+    "screening_tavily_research_enabled",
+    ctx.userId,
+  );
+  const skipAnalystSearch =
+    researchEnabled && (await hasFreshScreeningResearchCache(ticker));
+
   const [bundle, tavilyNews, tavilyAnalyst] = await Promise.all([
     fetchFmpIrBundle({ ticker }),
     fetchTavilySearch({
       query: `${hardDataCandidate?.name || ticker} (${ticker}) news`,
       maxResults: 5,
       daysBack: 90,
+      runId: ctx.runId,
     }),
-    fetchTavilySearch({
-      query: `${ticker} analyst rating`,
-      maxResults: 4,
-      daysBack: 90,
-    }),
+    skipAnalystSearch
+      ? Promise.resolve({ results: [], errors: [] as string[] })
+      : fetchTavilySearch({
+          query: `${ticker} analyst rating`,
+          maxResults: 4,
+          daysBack: 90,
+          runId: ctx.runId,
+        }),
   ]);
 
   const evidence = {
@@ -369,6 +395,7 @@ export const runWebSentimentStep: StepHandler = async (
     tavily: {
       news: tavilyNews.results,
       analyst: tavilyAnalyst.results,
+      analystSkippedDueToResearchCache: skipAnalystSearch,
       errors: [...tavilyNews.errors, ...tavilyAnalyst.errors],
     },
   };
@@ -385,6 +412,13 @@ export const runWebSentimentStep: StepHandler = async (
     hardDataCandidate,
     evidence,
     qaHint,
+  });
+
+  await accrueScreeningLlmCost({
+    runId: ctx.runId,
+    model: WEB_SENTIMENT_MODEL,
+    tokensInput: result.tokensInput,
+    tokensOutput: result.tokensOutput,
   });
 
   try {
@@ -422,6 +456,8 @@ export const runWebSentimentStep: StepHandler = async (
       durationMs: result.latencyMs,
       status: result.errorMessage ? "error" : "success",
       errorMessage: result.errorMessage?.slice(0, 2000) ?? "",
+      tokensInput: result.tokensInput,
+      tokensOutput: result.tokensOutput,
     });
   } catch {
     // best-effort
@@ -453,6 +489,7 @@ export const runWebSentimentStep: StepHandler = async (
       unconfirmed,
       fmpErrors: bundle.errors.length,
       tavilyErrors: [...tavilyNews.errors, ...tavilyAnalyst.errors].length,
+      analystSearchSkipped: skipAnalystSearch,
       llmError: result.errorMessage,
     },
   };

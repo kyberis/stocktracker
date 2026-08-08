@@ -20,8 +20,9 @@ list the unmet expectations.
   - `screening_ir_agent_enabled` — Agent 2 IR/Business fan-out (E4)
   - `screening_agents_v2_enabled` — umbrella for E5–E7 (Web & Sentiment, Portfolio Context, Risk); implies IR fan-out for DAG coherence
   - `screening_qa_enabled` — Agent 6 QA / verified reports; gates `reportReady` when on
+  - `screening_tavily_research_enabled` — Tavily Research API for IR gap-fill, shortlist deep-dive, shared ticker research cache (7d), slim analyst Search; off by default
   - `screening_dev_lab_enabled` — Dev agent-log button for non-admins
-- **Health:** green — Intake (+ sample-conversation pilot) + Hard Data + IR/Web/PC/Risk/Technicals (v2) + Compiler + QA (flag on in prod)
+- **Health:** green — Intake (+ sample-conversation pilot) + Hard Data + IR/Web/PC/Risk/Technicals (v2) + optional shortlist Research + Compiler + QA (flag on in prod) + per-run variable cost ledger
 - **Owning skill:** [`.cursor/skills/engineer-tools/SKILL.md`](../../.cursor/skills/engineer-tools/SKILL.md)
 
 ## 3. Entry points
@@ -71,9 +72,10 @@ fields), `HardDataOutput`, `IrBusinessOutput`, `AggregateIrBusinessOutput`,
 
 When `screening_agents_v2_enabled` is on:
 
-`hard_data` → parallel `ir_business×N` + `web_sentiment×N` →
-`aggregate_ir_business` + `aggregate_web_sentiment` → `portfolio_context` →
-`risk` → `compiler`.
+`hard_data` → parallel `ir_business×N` + `web_sentiment×N` + `technicals×N` →
+aggregates → `portfolio_context` → `risk` → `compiler` →
+optional `shortlist_research` (if `screening_tavily_research_enabled`) →
+optional `qa`.
 
 When v2 is off but `screening_ir_agent_enabled` is on (E4):
 
@@ -137,9 +139,18 @@ the feature is not discoverable before launch. The Dev outputs route adds
   + IR/Web evidence bundles (`FMP_API_KEY`).
 - **trefolio MOAT cache + /analisis cache** — Hard Data ranking context and
   `flags.moatScore` / business summary on cards (cache-only; no fresh quota).
-- **Tavily** — Web & Sentiment agent search (`TAVILY_API_KEY`). If unset, the
+- **Tavily Search** — Web & Sentiment agent (`TAVILY_API_KEY`). If unset, the
   agent continues with FMP-only evidence (no hard failure). Queries send ticker
-  + company name only.
+  + company name only. Accrues into per-run `cost_usd` (1 credit basic / 2 advanced).
+- **Tavily Research** — optional (`screening_tavily_research_enabled`): company
+  diligence via `POST /research` for IR gap-fill when FMP evidence is thin, and
+  post-Compiler shortlist deep-dive (≤5). Results cached in
+  `screening_research_cache` (TTL 7d, cross-user). When a fresh cache hit exists,
+  Web & Sentiment skips the `analyst rating` Search. Same API key; fail-open.
+- **Per-report variable cost** — `screening_runs.cost_usd` + `cost_json` breakdown
+  (LLM tokens + Tavily Search/Research only; **FMP excluded** as fixed plan cost).
+  Exposed on `GET /api/screening/reports/[reportId]` as `cost` (ops-facing). Soft
+  budget alert at `$1.20` via `screening_cost_budget_exceeded_total`.
 - Every AI turn writes an `ai_logs` row (sources such as `screening_intake`,
   `screening_hard_data`, `screening_web_sentiment`, …) plus a row in
   `screening_agent_outputs`.

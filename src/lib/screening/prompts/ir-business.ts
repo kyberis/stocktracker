@@ -23,7 +23,7 @@ export function buildIrBusinessPrompt(ctx: IrBusinessPromptContext): string {
 JobContext (required): agentKind=ir_business, ticker=${ctx.ticker}.
 You research EXACTLY ONE ticker provided in the JobContext. Do not mention or analyze any other company.
 
-Explain WHAT the business does and WHAT management recently signaled, using the earnings transcripts, news, and insider materials supplied in the user message (WebFetch only as fallback — you do not have live browsing here; stay grounded in the provided evidence).
+Explain WHAT the business does and WHAT management recently signaled, using the earnings transcripts, news, insider materials, and optional Tavily company-research block supplied in the user message. Stay grounded in the provided evidence — you do not have live browsing.
 
 Brief intent: ${b.intent}. Locale for prose fields: ${ctx.locale}.
 ${hardLine}

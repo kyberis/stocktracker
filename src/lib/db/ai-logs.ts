@@ -12,8 +12,21 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
 };
 
 function calcCost(model: string, inputTokens: number, outputTokens: number): number {
-  const pricing = MODEL_PRICING[model] ?? MODEL_PRICING["gpt-4o-mini"];
+  const bare = model.includes("/") ? model.split("/").pop()! : model;
+  const pricing =
+    MODEL_PRICING[model] ??
+    MODEL_PRICING[bare] ??
+    MODEL_PRICING["gpt-4o-mini"];
   return inputTokens * pricing.input + outputTokens * pricing.output;
+}
+
+/** Public wrapper for screening (and other) per-run cost ledgers. */
+export function calcAiLogCost(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+): number {
+  return calcCost(model, inputTokens, outputTokens);
 }
 
 export interface AiLogEntry {

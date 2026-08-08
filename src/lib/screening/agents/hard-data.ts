@@ -61,6 +61,7 @@ const PORTFOLIO_CONTEXT_KIND = "portfolio_context";
 const RISK_KIND = "risk";
 const COMPILER_KIND = "compiler";
 const QA_KIND = "qa";
+const SHORTLIST_RESEARCH_KIND = "shortlist_research";
 
 function parseBrief(briefJson: string): ScreeningBrief | null {
   if (!briefJson) return null;
@@ -542,14 +543,16 @@ export const runHardDataStep: StepHandler = async (
   let irFanout = 0;
   let webFanout = 0;
   try {
-    const [irFlag, v2Flag, qaFlag] = await Promise.all([
+    const [irFlag, v2Flag, qaFlag, researchFlag] = await Promise.all([
       isFeatureEnabledForUser("screening_ir_agent_enabled", ctx.userId),
       isFeatureEnabledForUser("screening_agents_v2_enabled", ctx.userId),
       isFeatureEnabledForUser("screening_qa_enabled", ctx.userId),
+      isFeatureEnabledForUser("screening_tavily_research_enabled", ctx.userId),
     ]);
     const v2Enabled = v2Flag;
     const irEnabled = irFlag || v2Enabled;
     const qaEnabled = qaFlag;
+    const researchEnabled = researchFlag;
     const candidates = enrichedOutput.candidates.slice(0, IR_FANOUT_MAX);
 
     if (irEnabled && candidates.length > 0) {
@@ -629,28 +632,61 @@ export const runHardDataStep: StepHandler = async (
       if (compilerStep && compilerStep.status === "pending") {
         await updateStepDependsOn(compilerStep.id, compilerDependsOn);
       }
-      // QA becomes the new terminal step when the flag is on. Depends on the
-      // just-scheduled compiler (or the existing pending compiler row). With
-      // gating on, reportReady waits for a passing QA verdict.
-      if (qaEnabled && compilerStep) {
-        await insertSteps(ctx.runId, [
-          {
-            agentKind: QA_KIND,
-            dependsOn: [compilerStep.id],
-          },
-        ]);
+      // QA becomes the new terminal step when the flag is on. When Tavily
+      // Research is on, shortlist_research runs after Compiler and QA depends
+      // on it so report cards can use deep-dive enrichment.
+      if (compilerStep) {
+        if (researchEnabled) {
+          const shortlistId = crypto.randomUUID();
+          await insertSteps(ctx.runId, [
+            {
+              id: shortlistId,
+              agentKind: SHORTLIST_RESEARCH_KIND,
+              dependsOn: [compilerStep.id],
+            },
+            ...(qaEnabled
+              ? [
+                  {
+                    agentKind: QA_KIND,
+                    dependsOn: [shortlistId],
+                  },
+                ]
+              : []),
+          ]);
+        } else if (qaEnabled) {
+          await insertSteps(ctx.runId, [
+            {
+              agentKind: QA_KIND,
+              dependsOn: [compilerStep.id],
+            },
+          ]);
+        }
       }
       irFanout = candidates.length;
-    } else if (qaEnabled) {
-      // No IR/Web fan-out but flag on: still attach QA after the compiler.
+    } else if (researchEnabled || qaEnabled) {
+      // No IR/Web fan-out but research/QA on: attach after the compiler.
       const compilerStep = await findStepByAgentKind(ctx.runId, COMPILER_KIND);
       if (compilerStep) {
-        await insertSteps(ctx.runId, [
-          {
-            agentKind: QA_KIND,
-            dependsOn: [compilerStep.id],
-          },
-        ]);
+        if (researchEnabled) {
+          const shortlistId = crypto.randomUUID();
+          await insertSteps(ctx.runId, [
+            {
+              id: shortlistId,
+              agentKind: SHORTLIST_RESEARCH_KIND,
+              dependsOn: [compilerStep.id],
+            },
+            ...(qaEnabled
+              ? [{ agentKind: QA_KIND, dependsOn: [shortlistId] }]
+              : []),
+          ]);
+        } else if (qaEnabled) {
+          await insertSteps(ctx.runId, [
+            {
+              agentKind: QA_KIND,
+              dependsOn: [compilerStep.id],
+            },
+          ]);
+        }
       }
     }
   } catch (err) {

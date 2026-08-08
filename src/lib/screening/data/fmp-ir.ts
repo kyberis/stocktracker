@@ -370,3 +370,11 @@ export function summariseIrBundleForLlm(
     })),
   };
 }
+
+/** True when FMP IR evidence is too thin for a confident IR card (triggers Research gap-fill). */
+export function isFmpIrThin(bundle: FetchFmpIrBundleResult): boolean {
+  const excerpt = bundle.transcript?.excerpt?.trim() ?? "";
+  const transcriptThin = excerpt.length < 200;
+  const newsThin = bundle.news.length === 0;
+  return transcriptThin || newsThin;
+}

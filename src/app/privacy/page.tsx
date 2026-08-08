@@ -385,7 +385,7 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Tavily</td>
-                    <td className="py-3 pr-6">Web search for Investor Briefing earnings-day news digests, FinPulse X post discovery (beta, optional), company analysis (/analisis) enrichment, and Investment Screening Web &amp; Sentiment research (experimental, flag-gated)</td>
+                    <td className="py-3 pr-6">Web search for Investor Briefing earnings-day news digests, FinPulse X post discovery (beta, optional), company analysis (/analisis) enrichment, and Investment Screening Web &amp; Sentiment plus optional Company Research (experimental, flag-gated)</td>
                     <td className="py-3">Stock ticker symbols, company names, curated X handles, and search queries; for screening, only ticker and company name are sent — no account email or name</td>
                   </tr>
                   <tr>

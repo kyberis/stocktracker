@@ -179,6 +179,8 @@ export interface RunCompilerAgentResult {
   latencyMs: number;
   rawResponse: string;
   errorMessage: string | null;
+  tokensInput: number;
+  tokensOutput: number;
 }
 
 export async function runCompilerAgent(
@@ -200,6 +202,8 @@ export async function runCompilerAgent(
       latencyMs: Date.now() - startedAt,
       rawResponse: "",
       errorMessage: null,
+      tokensInput: 0,
+      tokensOutput: 0,
     };
   }
 
@@ -210,6 +214,8 @@ export async function runCompilerAgent(
       latencyMs: Date.now() - startedAt,
       rawResponse: "",
       errorMessage: "gateway_not_configured",
+      tokensInput: 0,
+      tokensOutput: 0,
     };
   }
 
@@ -356,6 +362,8 @@ export async function runCompilerAgent(
 
   let rawResponse = "";
   let errorMessage: string | null = null;
+  let tokensInput = 0;
+  let tokensOutput = 0;
   try {
     const res = await fetchGatewayChatCompletions(
       {
@@ -384,6 +392,10 @@ export async function runCompilerAgent(
           };
         }>;
       };
+      const { extractLlmUsage } = await import("@/lib/screening/llm-usage");
+      const usage = extractLlmUsage(data);
+      tokensInput = usage.tokensInput;
+      tokensOutput = usage.tokensOutput;
       const call = data.choices?.[0]?.message?.tool_calls?.[0];
       rawResponse =
         call?.function?.arguments ?? data.choices?.[0]?.message?.content ?? "";
@@ -435,6 +447,8 @@ export async function runCompilerAgent(
     latencyMs: Date.now() - startedAt,
     rawResponse,
     errorMessage,
+    tokensInput,
+    tokensOutput,
   };
 }
 
@@ -485,6 +499,14 @@ export const runCompilerStep: StepHandler = async (
     risk,
   });
 
+  const { accrueScreeningLlmCost } = await import("@/lib/screening/cost");
+  await accrueScreeningLlmCost({
+    runId: ctx.runId,
+    model: COMPILER_MODEL,
+    tokensInput: result.tokensInput,
+    tokensOutput: result.tokensOutput,
+  });
+
   try {
     await insertScreeningAgentOutput({
       userId: ctx.userId,
@@ -511,6 +533,8 @@ export const runCompilerStep: StepHandler = async (
       durationMs: result.latencyMs,
       status: result.errorMessage ? "error" : "success",
       errorMessage: result.errorMessage?.slice(0, 2000) ?? "",
+      tokensInput: result.tokensInput,
+      tokensOutput: result.tokensOutput,
     });
   } catch {
     // best-effort

@@ -93,6 +93,7 @@ export const GET = withMetrics(
     const portfolioContextRow = latestByKind.get("portfolio_context") ?? null;
     const riskRow = latestByKind.get("risk") ?? null;
     const qaRow = latestByKind.get("qa") ?? null;
+    const shortlistResearchRow = latestByKind.get("shortlist_research") ?? null;
     if (!hardDataRow || !compilerRow) {
       return NextResponse.json(
         { error: "Report not ready", pendingAgentKinds: ["compiler"] },
@@ -201,6 +202,7 @@ export const GET = withMetrics(
       portfolioContextRow,
       riskRow,
       qaRow,
+      shortlistResearchRow,
       pendingAgentKinds: pending,
       candidateLimit,
     });
@@ -226,7 +228,14 @@ export const GET = withMetrics(
       );
     }
 
-    return NextResponse.json({ report, mocked: false });
+    return NextResponse.json({
+      report,
+      mocked: false,
+      cost: {
+        costUsd: row.costUsd,
+        breakdown: row.costBreakdown,
+      },
+    });
   },
 );
 

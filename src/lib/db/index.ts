@@ -803,6 +803,7 @@ export type {
 export {
   createScreeningRun,
   updateScreeningRunStatus,
+  updateScreeningRunCost,
   getScreeningRun,
   getScreeningRunUnscoped,
   listScreeningRunsByUser,
@@ -813,6 +814,16 @@ export {
   getLatestScreeningAgentOutputUnscoped,
   linkPendingAgentOutputToRun,
 } from "./screening";
+
+export {
+  getScreeningResearchCache,
+  hasFreshScreeningResearchCache,
+  upsertScreeningResearchCache,
+  screeningResearchCacheKey,
+  SCREENING_RESEARCH_SCHEMA_VERSION,
+  SCREENING_RESEARCH_TTL_MS,
+} from "./screening-research-cache";
+export type { ScreeningResearchCacheRow } from "./screening-research-cache";
 
 export type {
   ScreeningStepStatus,

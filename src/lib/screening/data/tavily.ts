@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { recordTavilyScreeningRequest } from "@/lib/screening/metrics";
+import { accrueScreeningTavilySearchCost } from "@/lib/screening/cost";
 
 /**
  * Screening-scoped Tavily search. Reuses the same TAVILY_API_KEY as AID /
@@ -30,6 +31,10 @@ export interface FetchTavilySearchOptions {
   maxResults?: number;
   /** Prefer recent results (Tavily `days` when supported). */
   daysBack?: number;
+  /** basic=1 credit, advanced=2 credits. */
+  searchDepth?: "basic" | "advanced";
+  /** Accrue variable Search cost on this screening run. */
+  runId?: string | null;
   fetchImpl?: typeof fetch;
 }
 
@@ -56,10 +61,11 @@ export async function fetchTavilySearch(
 
   const fetchImpl = opts.fetchImpl ?? fetch;
   const maxResults = Math.min(Math.max(1, opts.maxResults ?? 5), 10);
+  const searchDepth = opts.searchDepth ?? "basic";
   const body: Record<string, unknown> = {
     api_key: apiKey,
     query: opts.query.slice(0, 400),
-    search_depth: "basic",
+    search_depth: searchDepth,
     max_results: maxResults,
     include_answer: false,
   };
@@ -107,6 +113,10 @@ export async function fetchTavilySearch(
       });
     }
     recordTavilyScreeningRequest(results.length > 0 ? "ok" : "empty");
+    await accrueScreeningTavilySearchCost({
+      runId: opts.runId,
+      credits: searchDepth === "advanced" ? 2 : 1,
+    });
     return { results, errors: [] };
   } catch (err) {
     recordTavilyScreeningRequest("error");

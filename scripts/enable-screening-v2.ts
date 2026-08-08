@@ -39,6 +39,8 @@ const FLAGS = [
   "screening_pipeline_real_enabled",
   "screening_ir_agent_enabled",
   "screening_agents_v2_enabled",
+  "screening_qa_enabled",
+  "screening_tavily_research_enabled",
 ] as const;
 
 async function main() {

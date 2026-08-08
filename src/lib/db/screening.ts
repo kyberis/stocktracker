@@ -34,8 +34,14 @@ export interface ScreeningRunRow {
   intent: ScreeningRunIntent;
   briefJson: string;
   mockedPipeline: boolean;
+  /** Variable ops cost (LLM + Tavily). FMP excluded. */
+  costUsd: number;
+  /** JSON breakdown — see screeningCostBreakdownSchema. */
+  costJson: string;
   createdAt: string;
   updatedAt: string;
+  /** Parsed cost breakdown (empty when costJson blank). */
+  costBreakdown: import("@/lib/screening/cost").ScreeningCostBreakdown;
 }
 
 export interface ScreeningAgentOutputRow {
@@ -52,6 +58,35 @@ export interface ScreeningAgentOutputRow {
 }
 
 function readRun(row: Record<string, unknown>): ScreeningRunRow {
+  const costJson = str(row.cost_json ?? "");
+  // Lazy import avoided — parse inline to keep DAL free of circular deps at module load.
+  let costBreakdown: import("@/lib/screening/cost").ScreeningCostBreakdown = {
+    currency: "USD",
+    llmUsd: 0,
+    tavilySearchUsd: 0,
+    tavilyResearchUsd: 0,
+    tavilySearchCredits: 0,
+    tavilyResearchCredits: 0,
+    llmTokensIn: 0,
+    llmTokensOut: 0,
+  };
+  if (costJson.trim()) {
+    try {
+      const parsed = JSON.parse(costJson) as Record<string, unknown>;
+      costBreakdown = {
+        currency: "USD",
+        llmUsd: Number(parsed.llmUsd) || 0,
+        tavilySearchUsd: Number(parsed.tavilySearchUsd) || 0,
+        tavilyResearchUsd: Number(parsed.tavilyResearchUsd) || 0,
+        tavilySearchCredits: Number(parsed.tavilySearchCredits) || 0,
+        tavilyResearchCredits: Number(parsed.tavilyResearchCredits) || 0,
+        llmTokensIn: Number(parsed.llmTokensIn) || 0,
+        llmTokensOut: Number(parsed.llmTokensOut) || 0,
+      };
+    } catch {
+      // keep empty
+    }
+  }
   return {
     id: str(row.id),
     userId: str(row.user_id),
@@ -59,6 +94,9 @@ function readRun(row: Record<string, unknown>): ScreeningRunRow {
     intent: str(row.intent) as ScreeningRunIntent,
     briefJson: str(row.brief_json),
     mockedPipeline: num(row.mocked_pipeline) === 1,
+    costUsd: Number(row.cost_usd) || 0,
+    costJson,
+    costBreakdown,
     createdAt: str(row.created_at),
     updatedAt: str(row.updated_at),
   };
@@ -124,6 +162,18 @@ export async function createScreeningRun(
     intent: params.intent,
     briefJson: params.briefJson,
     mockedPipeline: params.mockedPipeline,
+    costUsd: 0,
+    costJson: "",
+    costBreakdown: {
+      currency: "USD",
+      llmUsd: 0,
+      tavilySearchUsd: 0,
+      tavilyResearchUsd: 0,
+      tavilySearchCredits: 0,
+      tavilyResearchCredits: 0,
+      llmTokensIn: 0,
+      llmTokensOut: 0,
+    },
     createdAt: now,
     updatedAt: now,
   };
@@ -138,6 +188,31 @@ export async function updateScreeningRunStatus(
   await client.execute({
     sql: `UPDATE screening_runs SET status = ?, updated_at = ? WHERE id = ? AND user_id = ?`,
     args: [status, new Date().toISOString(), runId, userId],
+  });
+}
+
+/**
+ * Persist variable ops cost for a run (LLM + Tavily). Caller must pass the
+ * full merged breakdown — see accrueScreeningRunCost.
+ */
+export async function updateScreeningRunCost(
+  runId: string,
+  userId: string,
+  costUsd: number,
+  breakdown: Record<string, unknown>,
+): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `UPDATE screening_runs
+             SET cost_usd = ?, cost_json = ?, updated_at = ?
+           WHERE id = ? AND user_id = ?`,
+    args: [
+      Math.max(0, costUsd),
+      JSON.stringify(breakdown).slice(0, 20_000),
+      new Date().toISOString(),
+      runId,
+      userId,
+    ],
   });
 }
 

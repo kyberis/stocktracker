@@ -297,6 +297,56 @@ export const screeningTavilyRequestsTotal = getOrCreateMetric(
     }),
 );
 
+export const screeningTavilyResearchRequestsTotal = getOrCreateMetric(
+  "screening_tavily_research_requests_total",
+  () =>
+    new Counter({
+      name: "screening_tavily_research_requests_total",
+      help: "Tavily Research API requests for screening company diligence",
+      labelNames: ["status"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export const screeningCostBudgetExceededTotal = getOrCreateMetric(
+  "screening_cost_budget_exceeded_total",
+  () =>
+    new Counter({
+      name: "screening_cost_budget_exceeded_total",
+      help: "Screening runs whose variable cost exceeded SCREENING_COST_BUDGET_USD",
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export function recordTavilyResearchRequest(
+  status:
+    | "ok"
+    | "error"
+    | "rate_limited"
+    | "missing_key"
+    | "timeout"
+    | "bad_shape"
+    | "unauthorized"
+    | "empty",
+): void {
+  try {
+    screeningTavilyResearchRequestsTotal.inc({ status });
+  } catch {
+    // metrics are best-effort
+  }
+}
+
+export function recordScreeningCostBudgetExceeded(totalUsd: number): void {
+  try {
+    screeningCostBudgetExceededTotal.inc();
+    console.warn(
+      `[screening/cost] budget exceeded: $${totalUsd.toFixed(4)} > budget`,
+    );
+  } catch {
+    // metrics are best-effort
+  }
+}
+
 export const screeningWebTickerDurationMs = getOrCreateMetric(
   "screening_web_ticker_duration_ms",
   () =>

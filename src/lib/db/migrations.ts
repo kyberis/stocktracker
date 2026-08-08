@@ -3885,6 +3885,34 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 133,
+    description:
+      "Screening run variable cost ledger + shared ticker research cache",
+    up: async (client: Client) => {
+      // Variable ops cost only (LLM + Tavily). FMP is a fixed plan cost and is
+      // intentionally not allocated per report.
+      await client.executeMultiple(`
+        ALTER TABLE screening_runs ADD COLUMN cost_usd REAL NOT NULL DEFAULT 0;
+        ALTER TABLE screening_runs ADD COLUMN cost_json TEXT NOT NULL DEFAULT '';
+
+        CREATE TABLE IF NOT EXISTS screening_research_cache (
+          cache_key TEXT PRIMARY KEY,
+          ticker TEXT NOT NULL,
+          schema_version TEXT NOT NULL DEFAULT 'v1',
+          payload_json TEXT NOT NULL DEFAULT '',
+          model TEXT NOT NULL DEFAULT 'mini',
+          credits_used REAL NOT NULL DEFAULT 0,
+          generated_at TEXT NOT NULL,
+          expires_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_screening_research_cache_ticker
+          ON screening_research_cache(ticker, expires_at);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

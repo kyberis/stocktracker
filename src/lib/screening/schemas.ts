@@ -737,3 +737,53 @@ export const qaLlmOutputSchema = z.object({
     .default([]),
 });
 export type QaLlmOutput = z.infer<typeof qaLlmOutputSchema>;
+
+/* ── Shortlist company research (Tavily Research post-Compiler) ──────── */
+
+export const shortlistResearchTickerSchema = z.object({
+  ticker: z.string().min(1).max(20),
+  businessOneLiner: z.string().max(500).default(""),
+  segments: z.array(z.string().max(120)).max(20).default([]),
+  catalysts: z.array(z.string().max(400)).max(12).default([]),
+  guidanceSummary: z.string().max(1200).default(""),
+  competitors: z.array(z.string().max(120)).max(20).default([]),
+  sources: z
+    .array(
+      z.object({
+        title: z.string().max(200),
+        url: z.string().max(500),
+      }),
+    )
+    .max(20)
+    .default([]),
+  fromCache: z.boolean().default(false),
+  creditsUsed: z.number().nonnegative().default(0),
+  errors: z.array(z.string().max(200)).max(8).default([]),
+});
+export type ShortlistResearchTicker = z.infer<
+  typeof shortlistResearchTickerSchema
+>;
+
+export const shortlistResearchOutputSchema = z.object({
+  tickers: z.array(shortlistResearchTickerSchema).max(5),
+  generatedAt: z.string().min(1),
+});
+export type ShortlistResearchOutput = z.infer<
+  typeof shortlistResearchOutputSchema
+>;
+
+/** Ops-facing variable cost attached to report responses (not user billing). */
+export const screeningReportCostSchema = z.object({
+  costUsd: z.number().nonnegative(),
+  breakdown: z.object({
+    currency: z.literal("USD"),
+    llmUsd: z.number().nonnegative(),
+    tavilySearchUsd: z.number().nonnegative(),
+    tavilyResearchUsd: z.number().nonnegative(),
+    tavilySearchCredits: z.number().nonnegative(),
+    tavilyResearchCredits: z.number().nonnegative(),
+    llmTokensIn: z.number().nonnegative(),
+    llmTokensOut: z.number().nonnegative(),
+  }),
+});
+export type ScreeningReportCost = z.infer<typeof screeningReportCostSchema>;

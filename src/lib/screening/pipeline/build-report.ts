@@ -11,6 +11,7 @@ import {
   riskOutputSchema,
   screeningBriefSchema,
   screeningReportSchema,
+  shortlistResearchOutputSchema,
   type ScreeningReport,
   type HardDataOutput,
   type CompilerReportDraft,
@@ -24,6 +25,8 @@ import {
   type ScreeningCandidateCard,
   type IrBusinessOutput,
   type WebSentimentOutput,
+  type ShortlistResearchOutput,
+  type ShortlistResearchTicker,
 } from "@/lib/screening/schemas";
 import { scoreChecklist } from "@/lib/screening/scoring/checklist";
 import { buildEducationalThesis } from "@/lib/screening/thesis";
@@ -44,6 +47,8 @@ export interface ComposeReportInput {
   riskRow?: ScreeningAgentOutputRow | null;
   /** Latest QA output row (agent_kind='qa'). Populates report.verification. */
   qaRow?: ScreeningAgentOutputRow | null;
+  /** Post-Compiler Tavily Research deep-dive (≤5 shortlist). */
+  shortlistResearchRow?: ScreeningAgentOutputRow | null;
   /** Which agent kinds are still pending — surfaced as `partial=true` in UI. */
   pendingAgentKinds?: string[];
   /** How many candidates the caller asked for (defaults to all). */
@@ -216,6 +221,17 @@ export function composeScreeningReport(
     if (qaParsed && qaParsed.success) qa = qaParsed.data;
   }
 
+  let shortlistResearch: ShortlistResearchOutput | null = null;
+  if (input.shortlistResearchRow) {
+    const srRaw = safeParseJson<Record<string, unknown>>(
+      input.shortlistResearchRow.outputJson,
+    );
+    const srParsed = srRaw
+      ? shortlistResearchOutputSchema.safeParse(srRaw)
+      : null;
+    if (srParsed && srParsed.success) shortlistResearch = srParsed.data;
+  }
+
   const qaIssuesByTicker = new Map<string, string[]>();
   if (qa) {
     for (const issue of qa.issues) {
@@ -244,6 +260,9 @@ export function composeScreeningReport(
   );
   const riskByTicker = new Map(
     (risk?.perCandidate ?? []).map((c) => [c.ticker.toUpperCase(), c]),
+  );
+  const researchByTicker = new Map<string, ShortlistResearchTicker>(
+    (shortlistResearch?.tickers ?? []).map((t) => [t.ticker.toUpperCase(), t]),
   );
 
   const requestedCount =
@@ -294,10 +313,27 @@ export function composeScreeningReport(
     const tech = techByTicker.get(c.ticker.toUpperCase()) ?? null;
     const pc = pcByTicker.get(c.ticker.toUpperCase());
     const riskRow = riskByTicker.get(c.ticker.toUpperCase());
-    const primaryCatalyst = ir?.catalysts[0] ?? null;
+    const research = researchByTicker.get(c.ticker.toUpperCase());
+    const primaryCatalyst =
+      ir?.catalysts[0] ??
+      (research?.catalysts[0]
+        ? { label: research.catalysts[0].slice(0, 120), evidence: research.catalysts[0] }
+        : null);
+    const researchSources: ScreeningCandidateCard["sources"] = (
+      research?.sources ?? []
+    )
+      .filter((s) => s.url.startsWith("http"))
+      .slice(0, 6)
+      .map((s) => ({
+        url: s.url,
+        asOf: research ? new Date().toISOString().slice(0, 10) : "",
+        field: "company_research",
+        label: s.title,
+      }));
     const sources = [
       ...(ir ? mapIrSources(ir) : []),
       ...(web ? mapWebSources(web) : []),
+      ...researchSources,
     ].slice(0, 12);
 
     const risks = [
@@ -309,7 +345,13 @@ export function composeScreeningReport(
     // Re-score at compose time so criteria 3 / 4 / 6 (and 9 in Phase 2) leave
     // "Not enough data" when the IR / Web / Technicals agents produced signal.
     const datedCatalystCount =
-      ir?.catalysts.filter((cat) => cat.evidence.trim().length > 0).length ?? null;
+      ir?.catalysts.filter((cat) => cat.evidence.trim().length > 0).length ??
+      (research && research.catalysts.length > 0 ? research.catalysts.length : null);
+    const oneLiner =
+      ir?.businessOneLiner ||
+      research?.businessOneLiner ||
+      c.analysisSummary ||
+      null;
     const rescored = scoreChecklist({
       rankScore: c.rankScore,
       fwdPe: c.fwdPe ?? null,
@@ -331,10 +373,7 @@ export function composeScreeningReport(
       sector: c.sector || "—",
       country: c.country || "—",
       business: (() => {
-        const summary = clip(
-          ir?.businessOneLiner ?? c.analysisSummary,
-          2000,
-        );
+        const summary = clip(oneLiner, 2000);
         if (!summary) return null;
         return {
           summary,
@@ -357,21 +396,29 @@ export function composeScreeningReport(
       stepsFailed: rescored.stepsFailed,
       catalyst: primaryCatalyst?.label ?? null,
       catalystDate: ir?.guidance.asOf ?? null,
-      businessOneLiner: clip(
-        ir?.businessOneLiner ?? c.analysisSummary,
-        280,
-      ),
+      businessOneLiner: clip(oneLiner, 280),
       guidance: ir
         ? {
             summary: ir.guidance.summary,
             direction: ir.guidance.direction,
             asOf: ir.guidance.asOf,
           }
-        : null,
-      catalystsList: ir?.catalysts.map((cat) => ({
-        label: cat.label,
-        evidence: cat.evidence,
-      })),
+        : research?.guidanceSummary
+          ? {
+              summary: research.guidanceSummary.slice(0, 500),
+              direction: "unclear" as const,
+              asOf: new Date().toISOString().slice(0, 10),
+            }
+          : null,
+      catalystsList:
+        ir?.catalysts.map((cat) => ({
+          label: cat.label,
+          evidence: cat.evidence,
+        })) ??
+        research?.catalysts.slice(0, 8).map((cat) => ({
+          label: cat.slice(0, 120),
+          evidence: cat.slice(0, 400),
+        })),
       multiples: {
         fwdPe: c.fwdPe ?? null,
         ownHistPe: c.ownHistPe ?? null,

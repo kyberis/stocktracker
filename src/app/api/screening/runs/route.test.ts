@@ -116,6 +116,18 @@ describe("POST /api/screening/runs", () => {
       intent: "explore",
       briefJson: JSON.stringify(validBrief),
       mockedPipeline: false,
+      costUsd: 0,
+      costJson: "",
+      costBreakdown: {
+        currency: "USD",
+        llmUsd: 0,
+        tavilySearchUsd: 0,
+        tavilyResearchUsd: 0,
+        tavilySearchCredits: 0,
+        tavilyResearchCredits: 0,
+        llmTokensIn: 0,
+        llmTokensOut: 0,
+      },
       createdAt: "2026-08-07T00:00:00.000Z",
       updatedAt: "2026-08-07T00:00:00.000Z",
     });

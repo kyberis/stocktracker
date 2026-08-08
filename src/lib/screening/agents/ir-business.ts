@@ -7,16 +7,21 @@ import {
   insertAiLog,
   insertScreeningAgentOutput,
 } from "@/lib/db";
+import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import {
   registerHandler,
   type HandlerContext,
   type HandlerResult,
   type StepHandler,
 } from "@/lib/screening/orchestrator/handlers";
+import { getOrFetchCompanyResearch } from "@/lib/screening/data/company-research";
 import {
   fetchFmpIrBundle,
+  isFmpIrThin,
   summariseIrBundleForLlm,
 } from "@/lib/screening/data/fmp-ir";
+import { accrueScreeningLlmCost } from "@/lib/screening/cost";
+import { extractLlmUsage } from "@/lib/screening/llm-usage";
 import { recordIrTickerStep } from "@/lib/screening/metrics";
 import { buildIrBusinessPrompt } from "@/lib/screening/prompts/ir-business";
 import { buildQaHintBlock } from "@/lib/screening/qa/hint";
@@ -206,6 +211,8 @@ export interface RunIrBusinessAgentResult {
   latencyMs: number;
   rawResponse: string;
   errorMessage: string | null;
+  tokensInput: number;
+  tokensOutput: number;
 }
 
 export async function runIrBusinessAgent(
@@ -221,6 +228,8 @@ export async function runIrBusinessAgent(
       latencyMs: Date.now() - startedAt,
       rawResponse: "",
       errorMessage: "gateway_not_configured",
+      tokensInput: 0,
+      tokensOutput: 0,
     };
   }
 
@@ -314,6 +323,8 @@ export async function runIrBusinessAgent(
 
   let rawResponse = "";
   let errorMessage: string | null = null;
+  let tokensInput = 0;
+  let tokensOutput = 0;
   try {
     const res = await fetchGatewayChatCompletions(
       {
@@ -341,7 +352,11 @@ export async function runIrBusinessAgent(
             content?: string;
           };
         }>;
+        usage?: unknown;
       };
+      const usage = extractLlmUsage(data);
+      tokensInput = usage.tokensInput;
+      tokensOutput = usage.tokensOutput;
       const call = data.choices?.[0]?.message?.tool_calls?.[0];
       rawResponse =
         call?.function?.arguments ?? data.choices?.[0]?.message?.content ?? "";
@@ -377,6 +392,8 @@ export async function runIrBusinessAgent(
     latencyMs: Date.now() - startedAt,
     rawResponse,
     errorMessage,
+    tokensInput,
+    tokensOutput,
   };
 }
 
@@ -406,7 +423,39 @@ export const runIrBusinessStep: StepHandler = async (
 
   const started = Date.now();
   const bundle = await fetchFmpIrBundle({ ticker });
-  const evidence = summariseIrBundleForLlm(bundle);
+  const evidence: Record<string, unknown> = summariseIrBundleForLlm(bundle);
+
+  const researchEnabled = await isFeatureEnabledForUser(
+    "screening_tavily_research_enabled",
+    ctx.userId,
+  );
+  let researchUsed = false;
+  if (researchEnabled && isFmpIrThin(bundle)) {
+    const research = await getOrFetchCompanyResearch({
+      ticker,
+      companyName: hardDataCandidate?.name ?? ticker,
+      runId: ctx.runId,
+      model: "mini",
+    });
+    if (
+      research.businessOneLiner ||
+      research.rawContent ||
+      research.sources.length > 0
+    ) {
+      researchUsed = true;
+      evidence.tavilyCompanyResearch = {
+        businessOneLiner: research.businessOneLiner,
+        segments: research.segments,
+        catalysts: research.catalysts,
+        guidanceSummary: research.guidanceSummary,
+        competitors: research.competitors,
+        sources: research.sources,
+        fromCache: research.fromCache,
+        errors: research.errors,
+      };
+    }
+  }
+
   const qaHint = await buildQaHintBlock(ctx.runId, IR_BUSINESS_AGENT_KIND, ticker);
 
   const result = await runIrBusinessAgent({
@@ -415,6 +464,13 @@ export const runIrBusinessStep: StepHandler = async (
     hardDataCandidate,
     evidence,
     qaHint,
+  });
+
+  await accrueScreeningLlmCost({
+    runId: ctx.runId,
+    model: IR_BUSINESS_MODEL,
+    tokensInput: result.tokensInput,
+    tokensOutput: result.tokensOutput,
   });
 
   try {
@@ -452,6 +508,8 @@ export const runIrBusinessStep: StepHandler = async (
       durationMs: result.latencyMs,
       status: result.errorMessage ? "error" : "success",
       errorMessage: result.errorMessage?.slice(0, 2000) ?? "",
+      tokensInput: result.tokensInput,
+      tokensOutput: result.tokensOutput,
     });
   } catch {
     // best-effort
@@ -476,6 +534,7 @@ export const runIrBusinessStep: StepHandler = async (
       gaps: result.output.gaps.length,
       contradiction: result.output.contradictionWithHardData,
       fmpErrors: bundle.errors.length,
+      researchUsed,
       llmError: result.errorMessage,
     },
   };

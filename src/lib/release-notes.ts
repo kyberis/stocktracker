@@ -17,6 +17,47 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.115",
+    date: "2026-08-08",
+    title: "Screening: company research + per-report cost",
+    titleTranslations: {
+      es: "Cribado: research de compañía y coste por informe",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Optional Tavily Company Research enriches thin IR evidence and deep-dives the shortlist after the Compiler, with a shared 7-day ticker cache reused by /analisis. Web Search still covers news sentiment; analyst Search is skipped when research is already cached.",
+        translations: {
+          es: "El research opcional de Tavily refuerza el IR cuando FMP va corto y profundiza la shortlist tras el Compiler, con caché de ticker compartida (7 días) reutilizada por /analisis. La búsqueda web sigue cubriendo el sentimiento de noticias; se omite la búsqueda de ratings si ya hay research en caché.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Each screening report now carries a variable ops cost (LLM tokens + Tavily Search/Research). FMP is excluded as a fixed plan cost. Cost breakdown is returned on the report API for ops.",
+        translations: {
+          es: "Cada informe de cribado incluye un coste variable de ops (tokens LLM + búsquedas/research de Tavily). FMP no se imputa (coste fijo del plan). El desglose se expone en la API del informe para ops.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.114",
+    date: "2026-08-08",
+    title: "Screening intake: centered composer",
+    titleTranslations: {
+      es: "Cribado intake: compositor centrado",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "On /screening/intake, the reply field sits with the conversation in the vertical center and eases downward as turns arrive, keeping the latest message visible.",
+        translations: {
+          es: "En /screening/intake, el campo de respuesta queda con la conversación en el centro vertical y baja conforme llegan turnos, manteniendo visible el último mensaje.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.113",
     date: "2026-08-08",
     title: "Screening: educational candidate theses",

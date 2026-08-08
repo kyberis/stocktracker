@@ -59,7 +59,8 @@ export type PlatformFeature =
   | "screening_pipeline_real_enabled"
   | "screening_ir_agent_enabled"
   | "screening_agents_v2_enabled"
-  | "screening_qa_enabled";
+  | "screening_qa_enabled"
+  | "screening_tavily_research_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_enabled",
@@ -480,6 +481,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "screening_ir_agent_enabled",
   "screening_agents_v2_enabled",
   "screening_qa_enabled",
+  "screening_tavily_research_enabled",
 ];
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {

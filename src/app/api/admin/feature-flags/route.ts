@@ -40,6 +40,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "screening_ir_agent_enabled",
   "screening_agents_v2_enabled",
   "screening_qa_enabled",
+  "screening_tavily_research_enabled",
 ];
 
 export const GET = withMetrics("/api/admin/feature-flags", async (req: NextRequest) => {
