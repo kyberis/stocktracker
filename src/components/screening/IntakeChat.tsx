@@ -17,6 +17,7 @@ import {
   type BriefState,
 } from "@/lib/screening/brief-state";
 import { buildIntakeHref, SCREENING_INTAKE_RETURN_KEY } from "@/lib/screening/intake-href";
+import { buildIntakePilotPlan, sleep } from "@/lib/screening/intake-pilot";
 import { buildIntakeScript, type BriefPatch, type ExplainEntry } from "@/lib/screening/intake-script";
 import { pickGlossaryFor } from "@/lib/screening/intake-glossary";
 import {
@@ -93,9 +94,14 @@ export function IntakeChat() {
   const [turnError, setTurnError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [pilotActive, setPilotActive] = useState(false);
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const nextIdRef = useRef(0);
+  const transcriptRef = useRef<Turn[]>([]);
+  const briefRef = useRef<BriefState>(emptyBrief(intent));
+  const pilotAbortRef = useRef(false);
+  const agentPendingRef = useRef(false);
 
   const pushBubble = useCallback((bubble: Omit<Bubble, "id">) => {
     setBubbles((prev) => {
@@ -108,12 +114,18 @@ export function IntakeChat() {
   useEffect(() => {
     const first = script[0];
     if (!first) return;
+    pilotAbortRef.current = true;
+    setPilotActive(false);
     nextIdRef.current = 0;
+    const seedBrief = emptyBrief(intent);
+    const seedTranscript: Turn[] = [{ role: "assistant", content: first.ask }];
+    briefRef.current = seedBrief;
+    transcriptRef.current = seedTranscript;
     setBubbles([{ id: `${nextIdRef.current++}-agent`, role: "agent", text: first.ask, explain: first.explain }]);
-    setTranscript([{ role: "assistant", content: first.ask }]);
+    setTranscript(seedTranscript);
     setQuestionIndex(0);
     setShowLaunchPanel(false);
-    setBrief(emptyBrief(intent));
+    setBrief(seedBrief);
     setAgentStatus(null);
     setAgentQuestions([]);
     setAgentSuggestions(
@@ -143,21 +155,24 @@ export function IntakeChat() {
   }, [agentSuggestions, currentQuestion]);
 
   const sendTurn = useCallback(
-    async (userText: string, chipPatch?: BriefPatch): Promise<boolean> => {
-      if (!userText.trim() || agentPending) return false;
+    async (userText: string, chipPatch?: BriefPatch): Promise<{ ok: boolean; status: IntakeAgentStatus | null }> => {
+      if (!userText.trim() || agentPendingRef.current) return { ok: false, status: null };
 
       pushBubble({ role: "user", text: userText });
-      const nextTranscript: Turn[] = [...transcript, { role: "user", content: userText }];
+      const nextTranscript: Turn[] = [...transcriptRef.current, { role: "user", content: userText }];
+      transcriptRef.current = nextTranscript;
       setTranscript(nextTranscript);
       setTurnError(null);
       setAgentSuggestions([]);
 
-      let optimisticBrief = brief;
+      let optimisticBrief = briefRef.current;
       if (chipPatch) {
-        optimisticBrief = applyPatch(brief, chipPatch);
+        optimisticBrief = applyPatch(briefRef.current, chipPatch);
+        briefRef.current = optimisticBrief;
         setBrief(optimisticBrief);
       }
 
+      agentPendingRef.current = true;
       setAgentPending(true);
       try {
         const payload: ScreeningBrief = toScreeningBrief(optimisticBrief, language || "en");
@@ -175,7 +190,7 @@ export function IntakeChat() {
         });
         if (!res.ok) {
           setTurnError(copy.intake.turnError);
-          return false;
+          return { ok: false, status: null };
         }
         const data = (await res.json()) as {
           assistantText: string;
@@ -189,7 +204,9 @@ export function IntakeChat() {
           brief: ScreeningBrief;
         };
 
-        setBrief(fromScreeningBrief(data.brief));
+        const nextBrief = fromScreeningBrief(data.brief);
+        briefRef.current = nextBrief;
+        setBrief(nextBrief);
         setAgentStatus(data.agent.status);
         setAgentQuestions(data.agent.questions ?? []);
         setAgentSuggestions(data.agent.suggestions ?? []);
@@ -200,7 +217,12 @@ export function IntakeChat() {
           text: data.assistantText,
           explain: pickGlossaryFor(data.assistantText, copy),
         });
-        setTranscript((prev) => [...prev, { role: "assistant", content: data.assistantText }]);
+        const withAssistant: Turn[] = [
+          ...nextTranscript,
+          { role: "assistant", content: data.assistantText },
+        ];
+        transcriptRef.current = withAssistant;
+        setTranscript(withAssistant);
 
         track("screening_intake_turn", {
           intent,
@@ -219,17 +241,16 @@ export function IntakeChat() {
           setQuestionIndex((prev) => Math.min(prev + 1, script.length));
           setShowLaunchPanel(false);
         }
-        return true;
+        return { ok: true, status: data.agent.status };
       } catch {
         setTurnError(copy.intake.turnError);
-        return false;
+        return { ok: false, status: null };
       } finally {
+        agentPendingRef.current = false;
         setAgentPending(false);
       }
     },
     [
-      agentPending,
-      brief,
       copy,
       intent,
       language,
@@ -238,11 +259,11 @@ export function IntakeChat() {
       suggestedExclude,
       suggestedInclude,
       track,
-      transcript,
     ],
   );
 
   async function chooseSuggestion(suggestion: AgentSuggestion) {
+    if (pilotActive) return;
     const matching = currentQuestion?.options.find(
       (o) => o.say === suggestion.say || o.label === suggestion.label,
     );
@@ -251,6 +272,7 @@ export function IntakeChat() {
 
   async function submitInput(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (pilotActive) return;
     const text = inputValue.trim();
     if (!text) return;
     setInputValue("");
@@ -258,11 +280,13 @@ export function IntakeChat() {
   }
 
   function finishEarly() {
-    const { state, filledLabels } = fillFromPreset(brief, copy, {
+    if (pilotActive) return;
+    const { state, filledLabels } = fillFromPreset(briefRef.current, copy, {
       includeSectors: suggestedInclude,
       excludeSectors: suggestedExclude,
       candidateCount: 5,
     });
+    briefRef.current = state;
     setBrief(state);
     setShowLaunchPanel(true);
     setAgentStatus("ok");
@@ -277,6 +301,45 @@ export function IntakeChat() {
         : copy.intake.earlyNothingMissing,
     });
     track("screening_intake_ended_early", { intent, filled: String(filledLabels.length) });
+  }
+
+  function stopPilot() {
+    pilotAbortRef.current = true;
+    setPilotActive(false);
+  }
+
+  async function startPilot() {
+    if (pilotActive || agentPendingRef.current) return;
+    pilotAbortRef.current = false;
+    setPilotActive(true);
+    setTurnError(null);
+    setSubmitError(null);
+    pushBubble({ role: "agent", text: copy.intake.pilotIntro });
+    track("screening_intake_pilot_start", { intent });
+
+    const plan = buildIntakePilotPlan(script);
+    let finishedOk = false;
+
+    for (const step of plan) {
+      if (pilotAbortRef.current) break;
+      await sleep(450);
+      if (pilotAbortRef.current) break;
+      const result = await sendTurn(step.option.say, step.option.patch);
+      if (!result.ok) break;
+      if (result.status === "ok" || result.status === "rejected_infeasible") {
+        finishedOk = result.status === "ok";
+        break;
+      }
+    }
+
+    if (pilotAbortRef.current) {
+      pushBubble({ role: "agent", text: copy.intake.pilotStopped });
+      track("screening_intake_pilot_stop", { intent });
+    } else if (finishedOk) {
+      pushBubble({ role: "agent", text: copy.intake.pilotDone });
+      track("screening_intake_pilot_done", { intent });
+    }
+    setPilotActive(false);
   }
 
   function resumeChat() {
@@ -297,11 +360,11 @@ export function IntakeChat() {
   }
 
   async function launchRun() {
-    if (submitting) return;
+    if (submitting || pilotActive) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const payload = toScreeningBrief(brief, language || "en");
+      const payload = toScreeningBrief(briefRef.current, language || "en");
       const res = await fetch("/api/screening/runs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -342,6 +405,37 @@ export function IntakeChat() {
       <h1 className="mt-1 text-xl font-bold text-[color:var(--foreground)] sm:text-2xl">
         {showLaunchPanel ? copy.brief.title : copy.intake.title}
       </h1>
+
+      {!showLaunchPanel && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {pilotActive ? (
+            <>
+              <span
+                className="text-[12.5px] text-[color:var(--muted)]"
+                aria-live="polite"
+              >
+                {copy.intake.pilotCtaRunning}
+              </span>
+              <button
+                type="button"
+                onClick={stopPilot}
+                className="inline-flex min-h-10 items-center justify-center rounded-full border border-dashed border-[color:var(--border)] px-3.5 text-[13px] font-semibold text-[color:var(--muted)]"
+              >
+                {copy.intake.pilotStop}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void startPilot()}
+              disabled={agentPending}
+              className="btn-secondary inline-flex min-h-10 items-center justify-center rounded-full px-3.5 text-[13px] font-semibold disabled:opacity-60"
+            >
+              {copy.intake.pilotCta}
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_260px]">
         <section
@@ -439,7 +533,7 @@ export function IntakeChat() {
             </p>
           )}
 
-          {suggestionChips.length > 0 && !agentPending && (
+          {suggestionChips.length > 0 && !agentPending && !pilotActive && (
             <div className="mt-3 border-t border-[color:var(--border)] pt-3">
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
                 {copy.intake.suggestionsLabel}
@@ -450,7 +544,7 @@ export function IntakeChat() {
                     key={`${option.label}-${option.say}`}
                     type="button"
                     onClick={() => void chooseSuggestion(option)}
-                    disabled={agentPending}
+                    disabled={agentPending || pilotActive}
                     className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-full px-3.5 text-[13px] font-semibold disabled:opacity-60"
                   >
                     {option.label}
@@ -459,7 +553,7 @@ export function IntakeChat() {
                 <button
                   type="button"
                   onClick={finishEarly}
-                  disabled={agentPending}
+                  disabled={agentPending || pilotActive}
                   className="inline-flex min-h-11 items-center justify-center rounded-full border border-dashed border-[color:var(--border)] px-3.5 text-[13px] font-semibold text-[color:var(--muted)] disabled:opacity-60"
                 >
                   {copy.intake.finishEarly}
@@ -478,13 +572,13 @@ export function IntakeChat() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={copy.intake.inputPlaceholder}
-              disabled={agentPending}
+              disabled={agentPending || pilotActive}
               className="min-h-11 flex-1 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 text-[13.5px] text-[color:var(--foreground)] placeholder:text-[color:var(--muted)] focus:border-teal-500 focus:outline-none disabled:opacity-60"
               aria-label={copy.intake.inputPlaceholder}
             />
             <button
               type="submit"
-              disabled={agentPending || !inputValue.trim()}
+              disabled={agentPending || pilotActive || !inputValue.trim()}
               className="btn-primary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold disabled:opacity-60"
             >
               {copy.intake.sendLabel}
@@ -536,7 +630,7 @@ export function IntakeChat() {
             <button
               type="button"
               onClick={() => void launchRun()}
-              disabled={submitting || !canLaunch}
+              disabled={submitting || !canLaunch || pilotActive}
               className="btn-primary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold disabled:opacity-60"
             >
               {copy.brief.runCta}

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.108",
+    date: "2026-08-08",
+    title: "Screening intake: sample conversation pilot",
+    titleTranslations: {
+      es: "Intake de cribado: piloto de conversación de ejemplo",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "On /screening/intake, “Watch a sample conversation” plays curated user replies through the real Intake agent so you can see the brief fill in; when it finishes you review and press Run the screen yourself.",
+        translations: {
+          es: "En /screening/intake, “Ver una conversación de ejemplo” envía respuestas curadas al agente de Intake real para ver cómo se arma el brief; al terminar tú revisas y pulsas Ejecutar el cribado.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.107",
     date: "2026-08-08",
     title: "Screening: verified reports gate delivery and retry flagged agents",

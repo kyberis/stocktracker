@@ -19,8 +19,9 @@ arrive stage by stage per
   - `screening_pipeline_real_enabled` — Hard Data + Compiler on durable queue
   - `screening_ir_agent_enabled` — Agent 2 IR/Business fan-out (E4)
   - `screening_agents_v2_enabled` — umbrella for E5–E7 (Web & Sentiment, Portfolio Context, Risk); implies IR fan-out for DAG coherence
+  - `screening_qa_enabled` — Agent 6 QA / verified reports; gates `reportReady` when on
   - `screening_dev_lab_enabled` — Dev agent-log button for non-admins
-- **Health:** yellow — Intake + Hard Data + IR (opt-in) + Web/PC/Risk (v2 opt-in) + Compiler; QA still pending
+- **Health:** green — Intake (+ sample-conversation pilot) + Hard Data + IR/Web/PC/Risk/Technicals (v2) + Compiler + QA (flag on in prod)
 - **Owning skill:** [`.cursor/skills/engineer-tools/SKILL.md`](../../.cursor/skills/engineer-tools/SKILL.md)
 
 ## 3. Entry points
@@ -228,8 +229,11 @@ API routes wrapped in `withMetrics`. Prometheus adds
 - **E5–E7 shipped (flag-gated)** — Web & Sentiment (FMP + Tavily), Portfolio
   Context, and Risk & Suitability behind `screening_agents_v2_enabled`. Intake
   collects optional `riskProfile` (defaults to balanced on early exit).
-- **QA agent** — still not implemented; Compiler remains the terminal research
-  stage for v2.
+- **QA agent** — shipped behind `screening_qa_enabled` (on in prod). After Compiler,
+  Layer A + Layer B verify the report; `reportReady` waits for pass /
+  `pass_with_degradation`. Retries flagged agents up to 2 rounds.
+- **Intake sample pilot** — CTA on `/screening/intake` sends curated user replies
+  through the real Intake agent; the user still confirms and presses Run.
 - Discoverability beyond `/recommendations/diversify` (tools hub entry needs locale
   keys in all 35 files).
 - Report history (`GET /api/screening/reports`) and feedback endpoints from HLD §6.1

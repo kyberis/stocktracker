@@ -187,6 +187,14 @@ const en = {
     editRowPrompt: "I want to change {label}. It is currently “{condition}”. What do you recommend?",
     suggestionsLabel: "Recommended answers",
     readyToLaunch: "Brief looks ready — review below or keep adjusting in the chat.",
+    pilotCta: "Watch a sample conversation",
+    pilotCtaRunning: "Answering as a sample investor…",
+    pilotStop: "Stop",
+    pilotIntro:
+      "I'll answer as a typical investor so you can see how the brief fills in. When I'm done, review it and press Run the screen.",
+    pilotDone:
+      "Sample answers are in. Review the brief and press Run the screen when you're ready.",
+    pilotStopped: "Stopped the sample. You can keep answering yourself or launch if the brief looks ready.",
     sourceLabels: {
       chat: "you",
       preset: "preset",
@@ -754,6 +762,15 @@ const es: ScreeningCopy = {
     editRowPrompt: "Quiero cambiar {label}. Ahora mismo es “{condition}”. ¿Qué me recomiendas?",
     suggestionsLabel: "Respuestas recomendadas",
     readyToLaunch: "El brief parece listo — revísalo abajo o sigue ajustando en el chat.",
+    pilotCta: "Ver una conversación de ejemplo",
+    pilotCtaRunning: "Respondiendo como inversor de ejemplo…",
+    pilotStop: "Parar",
+    pilotIntro:
+      "Voy a responder como un inversor típico para que veas cómo se arma el brief. Cuando termine, revísalo y pulsa Ejecutar el cribado.",
+    pilotDone:
+      "Ya están las respuestas de ejemplo. Revisa el brief y pulsa Ejecutar el cribado cuando quieras.",
+    pilotStopped:
+      "Paré el ejemplo. Puedes seguir respondiendo tú o lanzar si el brief ya está listo.",
     sourceLabels: {
       chat: "tú",
       preset: "preset",
