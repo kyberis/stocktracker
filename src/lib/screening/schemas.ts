@@ -454,7 +454,7 @@ export type HardDataSource = z.infer<typeof hardDataSourceSchema>;
 export const hardDataOutputSchema = z.object({
   status: z.enum(HARD_DATA_STATUSES),
   universeSize: z.number().int().min(0),
-  candidates: z.array(hardDataCandidateSchema).max(15),
+  candidates: z.array(hardDataCandidateSchema).max(20),
   deferredTickers: z.array(z.string().min(1).max(20)).max(20).default([]),
   gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
   locale: z.string().min(2).max(10),
@@ -518,7 +518,7 @@ export const irBusinessOutputSchema = z.object({
 export type IrBusinessOutput = z.infer<typeof irBusinessOutputSchema>;
 
 export const aggregateIrBusinessOutputSchema = z.object({
-  tickers: z.array(irBusinessOutputSchema).max(15),
+  tickers: z.array(irBusinessOutputSchema).max(20),
   generatedAt: z.string().min(1),
 });
 export type AggregateIrBusinessOutput = z.infer<
@@ -552,7 +552,7 @@ export const webSentimentOutputSchema = z.object({
 export type WebSentimentOutput = z.infer<typeof webSentimentOutputSchema>;
 
 export const aggregateWebSentimentOutputSchema = z.object({
-  tickers: z.array(webSentimentOutputSchema).max(15),
+  tickers: z.array(webSentimentOutputSchema).max(20),
   generatedAt: z.string().min(1),
 });
 export type AggregateWebSentimentOutput = z.infer<
@@ -584,7 +584,7 @@ export type PortfolioPerCandidate = z.infer<typeof portfolioPerCandidateSchema>;
 
 export const portfolioContextOutputSchema = z.object({
   sectorGaps: z.array(portfolioSectorGapSchema).max(12).default([]),
-  perCandidate: z.array(portfolioPerCandidateSchema).max(10).default([]),
+  perCandidate: z.array(portfolioPerCandidateSchema).max(20).default([]),
   cashAvailableEur: z.number().finite().nonnegative().default(0),
   gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
 });
@@ -604,7 +604,7 @@ export type RiskPerCandidate = z.infer<typeof riskPerCandidateSchema>;
 
 export const riskOutputSchema = z.object({
   assumedProfile: z.boolean().default(false),
-  perCandidate: z.array(riskPerCandidateSchema).max(10).default([]),
+  perCandidate: z.array(riskPerCandidateSchema).max(20).default([]),
   portfolioLevelFlags: z.array(z.string().min(1).max(200)).max(10).default([]),
   gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
 });
@@ -641,7 +641,7 @@ export const technicalsOutputSchema = z.object({
 export type TechnicalsOutput = z.infer<typeof technicalsOutputSchema>;
 
 export const aggregateTechnicalsOutputSchema = z.object({
-  tickers: z.array(technicalsOutputSchema).max(15),
+  tickers: z.array(technicalsOutputSchema).max(20),
   generatedAt: z.string().min(1),
 });
 export type AggregateTechnicalsOutput = z.infer<

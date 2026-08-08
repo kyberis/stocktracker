@@ -257,9 +257,28 @@ export function composeScreeningReport(
   const degradedSet = new Set<string>(
     (qa?.degradedTickers ?? []).map((t) => t.toUpperCase()),
   );
-  const survivors = hardData.candidates.filter(
-    (c) => !degradedSet.has(c.ticker.toUpperCase()),
+  const hardByTicker = new Map(
+    hardData.candidates.map((c) => [c.ticker.toUpperCase(), c]),
   );
+  // Prefer Compiler shortlist order (late selection). Fall back to Hard Data
+  // rank when the draft has no usable bullets.
+  const bulletOrder = draft.candidateBullets
+    .map((b) => b.ticker.toUpperCase())
+    .filter((t) => hardByTicker.has(t) && !degradedSet.has(t));
+  const survivors =
+    bulletOrder.length > 0
+      ? bulletOrder
+          .map((t) => hardByTicker.get(t)!)
+          .concat(
+            hardData.candidates.filter(
+              (c) =>
+                !degradedSet.has(c.ticker.toUpperCase()) &&
+                !bulletOrder.includes(c.ticker.toUpperCase()),
+            ),
+          )
+      : hardData.candidates.filter(
+          (c) => !degradedSet.has(c.ticker.toUpperCase()),
+        );
   const candidates = survivors.slice(0, requestedCount);
   const priorityOrder = candidates.map((c) => c.ticker);
 

@@ -398,173 +398,178 @@ export function IntakeChat() {
   const canLaunch = showLaunchPanel && agentStatus !== "rejected_infeasible" && rows.length > 0;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
-        {showLaunchPanel ? copy.brief.eyebrow : copy.intake.eyebrow}
-      </p>
-      <h1 className="mt-1 text-xl font-bold text-[color:var(--foreground)] sm:text-2xl">
-        {showLaunchPanel ? copy.brief.title : copy.intake.title}
-      </h1>
-
-      {!showLaunchPanel && (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {pilotActive ? (
-            <>
-              <span
-                className="text-[12.5px] text-[color:var(--muted)]"
-                aria-live="polite"
-              >
-                {copy.intake.pilotCtaRunning}
-              </span>
-              <button
-                type="button"
-                onClick={stopPilot}
-                className="inline-flex min-h-10 items-center justify-center rounded-full border border-dashed border-[color:var(--border)] px-3.5 text-[13px] font-semibold text-[color:var(--muted)]"
-              >
-                {copy.intake.pilotStop}
-              </button>
-            </>
-          ) : (
+    <main className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-xl flex-col px-3 pb-6 pt-8 sm:px-4">
+      <header className="shrink-0 text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-3xl">
+          {showLaunchPanel ? copy.brief.title : copy.intake.title}
+        </h1>
+        {!showLaunchPanel && !pilotActive ? (
+          <button
+            type="button"
+            onClick={() => void startPilot()}
+            disabled={agentPending}
+            className="mt-3 text-[12.5px] font-medium text-[color:var(--muted)] underline-offset-2 hover:underline disabled:opacity-60"
+          >
+            {copy.intake.pilotCta}
+          </button>
+        ) : null}
+        {pilotActive ? (
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <span className="text-[12.5px] text-[color:var(--muted)]" aria-live="polite">
+              {copy.intake.pilotCtaRunning}
+            </span>
             <button
               type="button"
-              onClick={() => void startPilot()}
-              disabled={agentPending}
-              className="btn-secondary inline-flex min-h-10 items-center justify-center rounded-full px-3.5 text-[13px] font-semibold disabled:opacity-60"
+              onClick={stopPilot}
+              className="text-[12.5px] font-semibold text-[color:var(--muted)] underline-offset-2 hover:underline"
             >
-              {copy.intake.pilotCta}
+              {copy.intake.pilotStop}
             </button>
-          )}
-        </div>
-      )}
+          </div>
+        ) : null}
+      </header>
 
-      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_260px]">
-        <section
-          className="card rounded-[20px] border border-[color:var(--border)] p-3 sm:p-4"
-          aria-label={copy.intake.agentName}
-        >
-          <ul className="flex max-h-[420px] list-none flex-col gap-2.5 overflow-y-auto p-0">
-            {bubbles.map((bubble) => (
-              <li
-                key={bubble.id}
-                className={bubble.role === "user" ? "flex justify-end" : "flex justify-start"}
+      <section
+        className="mt-6 flex min-h-0 flex-1 flex-col"
+        aria-label={copy.intake.agentName}
+      >
+        <ul className="flex min-h-0 flex-1 list-none flex-col gap-3 overflow-y-auto px-0.5 pb-4">
+          {bubbles.map((bubble) => (
+            <li
+              key={bubble.id}
+              className={bubble.role === "user" ? "flex justify-end" : "flex justify-start"}
+            >
+              <div
+                className={
+                  bubble.role === "user"
+                    ? "max-w-[85%] rounded-2xl rounded-br-md bg-teal-500/15 px-3.5 py-2.5 text-[14px] leading-relaxed text-[color:var(--foreground)]"
+                    : "max-w-[90%] text-[14px] leading-relaxed text-[color:var(--foreground)]"
+                }
               >
-                <div
-                  className={
-                    bubble.role === "user"
-                      ? "max-w-[85%] rounded-2xl rounded-br-sm bg-teal-500/15 px-3 py-2 text-[13.5px] text-[color:var(--foreground)]"
-                      : "max-w-[88%] rounded-2xl rounded-bl-sm border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-[13.5px] text-[color:var(--foreground)]"
-                  }
-                >
-                  <p>
-                    {bubble.role === "agent" && (
-                      <span className="mr-1.5 text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
-                        {copy.intake.agentName}
-                      </span>
-                    )}
-                    {bubble.text}
-                  </p>
-                  {bubble.explain && bubble.explain.length > 0 && (
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-[12px] font-semibold text-teal-700 dark:text-teal-300">
-                        {copy.intake.explainToggle}
-                      </summary>
-                      <dl className="mt-1.5 space-y-1.5">
-                        {bubble.explain.map((entry) => (
-                          <div key={entry.term}>
-                            <dt className="text-[12px] font-semibold text-[color:var(--foreground)]">
-                              {entry.term}
-                            </dt>
-                            <dd className="text-[12px] leading-relaxed text-[color:var(--muted)]">
-                              {entry.def}
-                            </dd>
-                          </div>
-                        ))}
-                      </dl>
-                    </details>
+                <p>
+                  {bubble.role === "agent" && (
+                    <span className="mr-1.5 text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
+                      {copy.intake.agentName}
+                    </span>
                   )}
-                </div>
-              </li>
-            ))}
-            {agentPending && (
-              <li className="flex justify-start" aria-live="polite">
-                <div className="max-w-[70%] rounded-2xl rounded-bl-sm border border-dashed border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-[13.5px] text-[color:var(--muted)]">
-                  {copy.intake.thinking}
-                </div>
-              </li>
-            )}
-            <div ref={transcriptEndRef} />
-          </ul>
-
-          {agentStatus === "needs_clarification" && agentQuestions.length > 0 && (
-            <div
-              className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] px-3 py-2"
-              role="status"
-            >
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-300">
-                {copy.intake.clarificationTitle}
-              </p>
-              <ul className="mt-1 list-disc space-y-1 pl-4 text-[12.5px] text-[color:var(--foreground)]">
-                {agentQuestions.map((q) => (
-                  <li key={q}>{q}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {agentStatus === "rejected_infeasible" && agentWarnings.length > 0 && (
-            <div
-              className="mt-3 rounded-xl border border-red-500/30 bg-red-500/[0.07] px-3 py-2"
-              role="alert"
-            >
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-300">
-                {copy.intake.rejectedTitle}
-              </p>
-              <ul className="mt-1 list-disc space-y-1 pl-4 text-[12.5px] text-[color:var(--foreground)]">
-                {agentWarnings.map((w) => (
-                  <li key={w}>{w}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {turnError && (
-            <p className="mt-3 text-[12.5px] text-red-600 dark:text-red-400" role="alert">
-              {turnError}
-            </p>
-          )}
-
-          {suggestionChips.length > 0 && !agentPending && !pilotActive && (
-            <div className="mt-3 border-t border-[color:var(--border)] pt-3">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
-                {copy.intake.suggestionsLabel}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {suggestionChips.map((option) => (
-                  <button
-                    key={`${option.label}-${option.say}`}
-                    type="button"
-                    onClick={() => void chooseSuggestion(option)}
-                    disabled={agentPending || pilotActive}
-                    className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-full px-3.5 text-[13px] font-semibold disabled:opacity-60"
-                  >
-                    {option.label}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={finishEarly}
-                  disabled={agentPending || pilotActive}
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-dashed border-[color:var(--border)] px-3.5 text-[13px] font-semibold text-[color:var(--muted)] disabled:opacity-60"
-                >
-                  {copy.intake.finishEarly}
-                </button>
+                  {bubble.text}
+                </p>
+                {bubble.explain && bubble.explain.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-[12px] font-semibold text-teal-700 dark:text-teal-300">
+                      {copy.intake.explainToggle}
+                    </summary>
+                    <dl className="mt-1.5 space-y-1.5">
+                      {bubble.explain.map((entry) => (
+                        <div key={entry.term}>
+                          <dt className="text-[12px] font-semibold text-[color:var(--foreground)]">
+                            {entry.term}
+                          </dt>
+                          <dd className="text-[12px] leading-relaxed text-[color:var(--muted)]">
+                            {entry.def}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </details>
+                )}
               </div>
-            </div>
+            </li>
+          ))}
+          {agentPending && (
+            <li className="flex justify-start" aria-live="polite">
+              <p className="text-[14px] text-[color:var(--muted)]">{copy.intake.thinking}</p>
+            </li>
           )}
+          <div ref={transcriptEndRef} />
+        </ul>
 
+        {agentStatus === "needs_clarification" && agentQuestions.length > 0 && (
+          <div
+            className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] px-3 py-2"
+            role="status"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-300">
+              {copy.intake.clarificationTitle}
+            </p>
+            <ul className="mt-1 list-disc space-y-1 pl-4 text-[12.5px] text-[color:var(--foreground)]">
+              {agentQuestions.map((q) => (
+                <li key={q}>{q}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {agentStatus === "rejected_infeasible" && agentWarnings.length > 0 && (
+          <div
+            className="mb-3 rounded-xl border border-red-500/30 bg-red-500/[0.07] px-3 py-2"
+            role="alert"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-300">
+              {copy.intake.rejectedTitle}
+            </p>
+            <ul className="mt-1 list-disc space-y-1 pl-4 text-[12.5px] text-[color:var(--foreground)]">
+              {agentWarnings.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {turnError && (
+          <p className="mb-3 text-[12.5px] text-red-600 dark:text-red-400" role="alert">
+            {turnError}
+          </p>
+        )}
+
+        {!showLaunchPanel && rows.length > 0 ? (
+          <details className="mb-3 border-t border-[color:var(--border)] pt-3">
+            <summary className="cursor-pointer text-[12px] font-semibold text-[color:var(--muted)]">
+              {copy.intake.briefToggle}
+              {pendingQuestions > 0
+                ? ` · ${fill(
+                    pendingQuestions === 1 ? copy.intake.pendingOne : copy.intake.pendingMany,
+                    { n: pendingQuestions },
+                  )}`
+                : ""}
+            </summary>
+            <div className="mt-2">
+              <BriefList rows={rows} onEditRow={editBriefRow} />
+            </div>
+            <p className="mt-2 text-[11px] text-[color:var(--muted)]">
+              {copy.intake.briefEarlyHint}
+            </p>
+          </details>
+        ) : null}
+
+        {suggestionChips.length > 0 && !agentPending && !pilotActive && !showLaunchPanel && (
+          <div className="mb-3 flex flex-wrap justify-center gap-2">
+            {suggestionChips.map((option) => (
+              <button
+                key={`${option.label}-${option.say}`}
+                type="button"
+                onClick={() => void chooseSuggestion(option)}
+                disabled={agentPending || pilotActive}
+                className="btn-secondary inline-flex min-h-10 items-center justify-center rounded-full px-3.5 text-[13px] font-semibold disabled:opacity-60"
+              >
+                {option.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={finishEarly}
+              disabled={agentPending || pilotActive}
+              className="inline-flex min-h-10 items-center justify-center rounded-full border border-dashed border-[color:var(--border)] px-3.5 text-[13px] font-semibold text-[color:var(--muted)] disabled:opacity-60"
+            >
+              {copy.intake.finishEarly}
+            </button>
+          </div>
+        )}
+
+        {!showLaunchPanel ? (
           <form
             onSubmit={submitInput}
-            className="mt-3 flex gap-2 border-t border-[color:var(--border)] pt-3"
+            className="sticky bottom-0 z-10 -mx-1 flex gap-2 bg-[color:var(--background)]/95 px-1 py-3 backdrop-blur"
           >
             <input
               ref={inputRef}
@@ -573,52 +578,27 @@ export function IntakeChat() {
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={copy.intake.inputPlaceholder}
               disabled={agentPending || pilotActive}
-              className="min-h-11 flex-1 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 text-[13.5px] text-[color:var(--foreground)] placeholder:text-[color:var(--muted)] focus:border-teal-500 focus:outline-none disabled:opacity-60"
+              className="min-h-12 flex-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-4 text-[14px] text-[color:var(--foreground)] placeholder:text-[color:var(--muted)] focus:border-teal-500 focus:outline-none disabled:opacity-60"
               aria-label={copy.intake.inputPlaceholder}
             />
             <button
               type="submit"
               disabled={agentPending || pilotActive || !inputValue.trim()}
-              className="btn-primary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold disabled:opacity-60"
+              className="btn-primary inline-flex min-h-12 min-w-12 items-center justify-center rounded-full px-4 text-sm font-semibold disabled:opacity-60"
             >
               {copy.intake.sendLabel}
             </button>
           </form>
-        </section>
-
-        <aside className="card h-fit rounded-[20px] border border-[color:var(--border)] p-3 sm:p-4">
-          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
-            {showLaunchPanel ? copy.intake.doneTitle : copy.intake.briefTitle}
-          </h2>
-          <div className="mt-2.5">
-            <BriefList rows={rows} onEditRow={editBriefRow} />
-          </div>
-          <p className="mt-2.5 text-[11px] text-[color:var(--muted)]">
-            {showLaunchPanel
-              ? copy.intake.readyToLaunch
-              : pendingQuestions > 0
-                ? fill(
-                    pendingQuestions === 1 ? copy.intake.pendingOne : copy.intake.pendingMany,
-                    { n: pendingQuestions },
-                  )
-                : copy.intake.briefEarlyHint}
-          </p>
-        </aside>
-      </div>
+        ) : null}
+      </section>
 
       {showLaunchPanel && (
-        <section className="card mt-4 rounded-[20px] border border-[color:var(--border)] p-4 sm:p-5">
-          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
-            {copy.brief.filtersTitle}
-          </h2>
-          <div className="mt-2.5">
+        <section className="mt-4 text-center">
+          <p className="text-sm text-[color:var(--muted)]">{copy.intake.readyToLaunch}</p>
+          <div className="mt-4 text-left">
             <BriefTable rows={rows} onEditRow={editBriefRow} />
           </div>
-
-          <h3 className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
-            {copy.brief.costTitle}
-          </h3>
-          <p className="mt-1.5 text-[13px] text-[color:var(--muted)]">{copy.brief.costBody}</p>
+          <p className="mt-4 text-[13px] text-[color:var(--muted)]">{copy.brief.costBody}</p>
 
           {submitError && (
             <p className="mt-3 text-[13px] text-red-600 dark:text-red-400" role="alert">
@@ -626,25 +606,25 @@ export function IntakeChat() {
             </p>
           )}
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
             <button
               type="button"
               onClick={() => void launchRun()}
               disabled={submitting || !canLaunch || pilotActive}
-              className="btn-primary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold disabled:opacity-60"
+              className="btn-primary inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold disabled:opacity-60"
             >
               {copy.brief.runCta}
             </button>
             <button
               type="button"
               onClick={resumeChat}
-              className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+              className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold"
             >
               {copy.brief.editCta}
             </button>
             <Link
               href="/screening"
-              className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+              className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold"
             >
               {copy.common.back}
             </Link>
@@ -652,7 +632,7 @@ export function IntakeChat() {
         </section>
       )}
 
-      <ScreeningDisclaimer className="mt-4" />
+      <ScreeningDisclaimer className="mt-auto pt-6 text-center" />
     </main>
   );
 }

@@ -7,8 +7,9 @@
 A user who is overexposed to one sector (or who just wants new ideas) opens `/screening`,
 answers a short scripted chat about sector, size, P/E, ROIC/leverage and region,
 confirms the brief, and gets an HTML research report with up to 5 candidate cards.
-Hard Data ranks ~20 equities then shortlists at most 5; cards that miss the majority
-of brief filters list the unmet expectations.
+Hard Data ranks ~20 equities for deep research (IR / Web / Technicals); the Compiler
+selects the final ≤5 with full evidence. Cards that miss the majority of brief filters
+list the unmet expectations.
 
 ## 2. Status
 

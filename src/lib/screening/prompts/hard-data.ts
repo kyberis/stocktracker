@@ -1,4 +1,8 @@
 import type { ScreeningBrief } from "../schemas";
+import {
+  HARD_DATA_RANK_UNIVERSE,
+  SCREENING_MAX_CANDIDATES,
+} from "../constants";
 
 /**
  * System prompt for the Hard Data agent (HLD §4.5, Agent 1).
@@ -12,6 +16,9 @@ import type { ScreeningBrief } from "../schemas";
  * The agent MUST reply by calling the `submit_hard_data` function tool. No
  * prose replies. The tool schema mirrors the Zod contract so the runner does
  * not need to coerce the output shape.
+ *
+ * It ranks up to `researchCount` equities for deep research. The final
+ * shortlist of SCREENING_MAX_CANDIDATES is the Compiler's job later.
  */
 export interface HardDataPromptContext {
   brief: ScreeningBrief;
@@ -19,6 +26,8 @@ export interface HardDataPromptContext {
   locale: string;
   /** Size of the universe passed to the model, for the "gap" description. */
   universeSize: number;
+  /** How many names to return for IR/Web/Technicals fan-out. */
+  researchCount: number;
 }
 
 export function buildHardDataPrompt(ctx: HardDataPromptContext): string {
@@ -35,18 +44,22 @@ export function buildHardDataPrompt(ctx: HardDataPromptContext): string {
       ? b.excludeSectors.join(", ")
       : "no exclusions";
   const regions = b.regions.length > 0 ? b.regions.join(", ") : "any region";
-  const topN = b.candidateCount;
+  const researchN = ctx.researchCount;
+  const finalN = b.candidateCount || SCREENING_MAX_CANDIDATES;
 
   return `You are the Hard Data agent of the trefolio investment screening pipeline.
 
-Your ONLY job is to rank a universe of ${ctx.universeSize} candidate equities against the user's brief and return the best ${topN} (never more). Prefer names that meet the majority of brief criteria; when a strong name misses some filters, still include it if it is among the best fits and note the miss in rankReason. You do not fetch external data, propose price targets, or write narrative prose.
+Your ONLY job is to rank a universe of ${ctx.universeSize} candidate equities against the user's brief and return up to ${researchN} names for deep research (never more). Prefer names that meet the majority of brief criteria; when a strong name misses some filters, still include it if it is among the best fits and note the miss in rankReason. You do not fetch external data, propose price targets, or write narrative prose.
+
+The final user-facing shortlist of ${finalN} is chosen later by the Compiler with IR / Web / Technicals / portfolio / risk evidence — do NOT cut to ${finalN} here.
 
 Brief summary:
 - intent: ${b.intent}
 - include sectors: ${include}
 - exclude sectors: ${exclude}
 - regions: ${regions}
-- shortlist size (fixed): ${topN}
+- research universe size (fixed): ${researchN} (cap ${HARD_DATA_RANK_UNIVERSE})
+- final report shortlist (Compiler later): ${finalN}
 - criteria (keep these coarse — do not invent extra filters):
 ${criteriaLines || "(none — free ranking based on defaults)"}
 
@@ -65,6 +78,6 @@ RESPONSE PROTOCOL (mandatory):
 - Reply ONLY by calling the "submit_hard_data" function tool.
 - Populate every field. Use [] for empty lists.
 - Do not fabricate metrics that were not present in the input universe row. Return null when uncertain.
-- Cap candidates at ${topN}. Any additional runner-up you would consider goes in deferredTickers (max 10).
+- Cap candidates at ${researchN}. Any additional runner-up you would consider goes in deferredTickers (max 10).
 - Note structural limitations (e.g. "few names available in Europe for this sector") in gaps (max 5 items).`;
 }

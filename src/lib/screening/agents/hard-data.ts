@@ -177,6 +177,7 @@ export async function runHardDataAgent(
     ...opts.brief,
     candidateCount: SCREENING_MAX_CANDIDATES,
   };
+  const researchCount = Math.min(IR_FANOUT_MAX, opts.universe.length);
   const universeMap = new Map(opts.universe.map((c) => [c.ticker, c]));
 
   const fmpSource = {
@@ -204,8 +205,8 @@ export async function runHardDataAgent(
 
   const gatewayConfigured = await resolveGatewayApiKey(opts.gatewayHeaders);
   if (!gatewayConfigured) {
-    // Fallback: return top-N by market cap so the pipeline still moves forward.
-    const fallback = opts.universe.slice(0, brief.candidateCount).map(
+    // Fallback: return research universe by market cap so the pipeline still moves forward.
+    const fallback = opts.universe.slice(0, researchCount).map(
       (c, i): HardDataCandidate => ({
         ticker: c.ticker,
         name: c.name,
@@ -238,6 +239,7 @@ export async function runHardDataAgent(
     brief,
     locale: brief.locale,
     universeSize: opts.universe.length,
+    researchCount,
   });
 
   // Prefetch trefolio MOAT + /analisis cache for ranking context (DB only).
@@ -298,7 +300,7 @@ export async function runHardDataAgent(
                 },
               },
             },
-            maxItems: 15,
+            maxItems: IR_FANOUT_MAX,
           },
           deferredTickers: {
             type: "array",
@@ -319,7 +321,7 @@ export async function runHardDataAgent(
       {
         model: HARD_DATA_MODEL,
         stream: false,
-        max_tokens: 2000,
+        max_tokens: 3500,
         temperature: 0.2,
         messages,
         tools: [submitHardDataTool],
@@ -366,7 +368,7 @@ export async function runHardDataAgent(
         const built = hardDataOutputSchema.safeParse({
           status,
           universeSize: opts.universe.length,
-          candidates: candidates.slice(0, brief.candidateCount),
+          candidates: candidates.slice(0, researchCount),
           deferredTickers: coerceStringList(parsed.deferredTickers, 20, 20),
           gaps: coerceStringList(parsed.gaps, 200, 8),
           locale: brief.locale,
@@ -389,7 +391,7 @@ export async function runHardDataAgent(
       errorMessage,
       { preview: rawResponse.slice(0, 200) },
     );
-    const fallback = opts.universe.slice(0, brief.candidateCount).map(
+    const fallback = opts.universe.slice(0, researchCount).map(
       (c, i): HardDataCandidate => ({
         ticker: c.ticker,
         name: c.name,
@@ -466,12 +468,12 @@ export const runHardDataStep: StepHandler = async (
     qaHint,
   });
 
-  // Enrich shortlist with FMP multiples + MOAT /analisis for the report skeleton.
+  // Enrich the full research universe with FMP multiples + MOAT /analisis.
   let enrichedOutput = runnerResult.output;
   try {
     if (runnerResult.output.candidates.length > 0) {
       const enriched = await enrichHardDataCandidates(
-        runnerResult.output.candidates.slice(0, SCREENING_MAX_CANDIDATES),
+        runnerResult.output.candidates.slice(0, IR_FANOUT_MAX),
       );
       const withFit = applyBriefFitToCandidates(brief, enriched);
       enrichedOutput = hardDataOutputSchema.parse({

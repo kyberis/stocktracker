@@ -14,8 +14,8 @@ import { ScreeningReportView } from "./ScreeningReportView";
 import { useScreeningCopy } from "./use-screening-copy";
 
 const POLL_MS = 1200;
-/** ~6 min — v2 fan-out (IR + Web × N) can exceed the old 2.4 min budget. */
-const MAX_POLLS = 300;
+/** ~12 min — research fan-out over ~20 tickers (IR + Web + Tech) can be long. */
+const MAX_POLLS = 600;
 
 function readStoredBrief(runId: string): ScreeningBrief | null {
   try {
@@ -36,44 +36,39 @@ function readIntakeReturn(runId: string, brief: ScreeningBrief | null): string {
   return buildIntakeHrefFromBrief(brief);
 }
 
-function StepRow({ step, label }: { step: ScreeningRunStep; label: string }) {
+function fanOutSubtext(
+  step: ScreeningRunStep,
+  copy: ReturnType<typeof useScreeningCopy>["copy"],
+): string | null {
+  if (step.subStepsTotal == null || step.subStepsTotal <= 1) return null;
+  const done = step.subStepsDone ?? 0;
+  if (done <= 0) {
+    return fill(copy.progress.irInvestigating, { total: step.subStepsTotal });
+  }
+  return (copy.progress.irSubtext ?? "{done}/{total} tickers")
+    .replace("{done}", String(done))
+    .replace("{total}", String(step.subStepsTotal));
+}
+
+function AgentFeedItem({
+  step,
+  label,
+  qaLine,
+}: {
+  step: ScreeningRunStep;
+  label: string;
+  qaLine?: string | null;
+}) {
   const { copy } = useScreeningCopy();
-  const statusLabel = {
-    pending: copy.progress.statusPending,
-    running: copy.progress.statusRunning,
-    done: copy.progress.statusDone,
-    failed: copy.progress.statusFailed,
-    skipped: copy.progress.statusSkipped,
-  }[step.status];
-
-  const mark =
-    step.status === "done"
-      ? "✓"
-      : step.status === "running"
-        ? "•"
+  const subtext = fanOutSubtext(step, copy);
+  const statusLine =
+    step.status === "running"
+      ? qaLine || copy.progress.statusRunningLine
+      : step.status === "done"
+        ? copy.progress.statusDoneLine
         : step.status === "failed"
-          ? "✕"
-          : step.status === "skipped"
-            ? "–"
-            : "";
-  const markTone =
-    step.status === "done"
-      ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-      : step.status === "running"
-        ? "bg-teal-500/15 text-teal-600 dark:text-teal-300 animate-pulse"
-        : step.status === "failed"
-          ? "bg-red-500/12 text-red-600 dark:text-red-400"
-          : step.status === "skipped"
-            ? "bg-[color:var(--muted)]/10 text-[color:var(--muted)] opacity-70"
-            : "bg-white/5 text-[color:var(--muted)]";
-
-  const subtext =
-    step.subStepsTotal != null && step.subStepsTotal > 1
-      ? (copy.progress.irSubtext ?? "{done}/{total} tickers")
-          .replace("{done}", String(step.subStepsDone ?? 0))
-          .replace("{total}", String(step.subStepsTotal))
-      : null;
-
+          ? copy.progress.statusFailed
+          : null;
   const errorDetail =
     step.status === "failed" && step.errorMessage
       ? fill(copy.progress.failedStepDetail, { message: step.errorMessage })
@@ -81,40 +76,49 @@ function StepRow({ step, label }: { step: ScreeningRunStep; label: string }) {
 
   return (
     <li
-      className={`flex items-start gap-3 rounded-xl border px-3 py-2 ${
-        step.status === "failed"
-          ? "border-red-500/35 bg-red-500/[0.06]"
-          : "border-[color:var(--border)] bg-[color:var(--surface-soft)]"
+      className={`animate-in fade-in slide-in-from-bottom-1 duration-300 ${
+        step.status === "failed" ? "text-red-700 dark:text-red-300" : ""
       }`}
     >
-      <span
-        aria-hidden="true"
-        className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg text-xs font-bold ${markTone}`}
-      >
-        {mark}
-      </span>
-      <span
-        className={`min-w-0 flex-1 text-[13px] ${
-          step.status === "pending" || step.status === "skipped"
-            ? "text-[color:var(--muted)]"
-            : "text-[color:var(--foreground)]"
-        }`}
-      >
-        <span className="block">{label}</span>
-        {subtext ? (
-          <span className="mt-0.5 block text-[11px] text-[color:var(--muted)]">
-            {subtext}
-          </span>
-        ) : null}
-        {errorDetail ? (
-          <span className="mt-0.5 block text-[11px] text-red-600 dark:text-red-400" role="alert">
-            {errorDetail}
-          </span>
-        ) : null}
-      </span>
-      <span className="shrink-0 text-[11px] tabular-nums text-[color:var(--muted)]">
-        {step.elapsedSeconds != null ? `${step.elapsedSeconds.toFixed(1)}s` : statusLabel}
-      </span>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2
+          className={`text-[15px] font-semibold tracking-tight ${
+            step.status === "running"
+              ? "text-[color:var(--foreground)]"
+              : step.status === "done"
+                ? "text-[color:var(--foreground)]"
+                : "text-[color:var(--muted)]"
+          }`}
+        >
+          {label}
+        </h2>
+        <span className="shrink-0 text-[11px] tabular-nums text-[color:var(--muted)]">
+          {step.elapsedSeconds != null
+            ? `${step.elapsedSeconds.toFixed(1)}s`
+            : step.status === "running"
+              ? "…"
+              : ""}
+        </span>
+      </div>
+      {statusLine ? (
+        <p
+          className={`mt-0.5 text-[13px] ${
+            step.status === "running"
+              ? "animate-pulse text-teal-700 dark:text-teal-300"
+              : "text-[color:var(--muted)]"
+          }`}
+        >
+          {statusLine}
+        </p>
+      ) : null}
+      {subtext ? (
+        <p className="mt-0.5 text-[12px] text-[color:var(--muted)]">{subtext}</p>
+      ) : null}
+      {errorDetail ? (
+        <p className="mt-0.5 text-[12px] text-red-600 dark:text-red-400" role="alert">
+          {errorDetail}
+        </p>
+      ) : null}
     </li>
   );
 }
@@ -130,6 +134,7 @@ export function RunProgress({ runId }: { runId: string }) {
   const pollsRef = useRef(0);
   const briefRef = useRef<ScreeningBrief | null>(null);
   const [backHref, setBackHref] = useState("/screening/intake");
+  const feedEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const brief = readStoredBrief(runId);
@@ -213,21 +218,29 @@ export function RunProgress({ runId }: { runId: string }) {
     };
   }, [runId, copy.progress.failed, copy.report.loadError]);
 
+  const visibleSteps = (run?.steps ?? []).filter(
+    (s) => s.status !== "pending" && s.status !== "skipped",
+  );
+
+  useEffect(() => {
+    feedEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [visibleSteps.length, run?.progressPct]);
+
   if (showReport && report) {
     return (
-      <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-4">
+      <main className="mx-auto w-full max-w-xl px-3 py-6 sm:px-4">
         <ScreeningReportView report={report} mocked={run?.mocked ?? true} />
         <div className="mt-5 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setShowReport(false)}
-            className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+            className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-semibold"
           >
             {copy.progress.backToAgents}
           </button>
           <Link
             href={backHref}
-            className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+            className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-semibold"
           >
             {copy.common.back}
           </Link>
@@ -242,7 +255,6 @@ export function RunProgress({ runId }: { runId: string }) {
   const qaStep = run?.steps.find((s) => s.agentKind === "qa");
   const qaRunning = qaStep?.status === "running";
   const qaContext = run?.qa ?? null;
-  // While QA is running (round N in flight), show N = roundsCompleted + 1.
   const qaRoundInFlight =
     qaContext && qaRunning
       ? Math.min(qaContext.maxRounds, qaContext.roundsCompleted + 1)
@@ -256,41 +268,34 @@ export function RunProgress({ runId }: { runId: string }) {
       : null;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
-        {copy.progress.eyebrow}
-      </p>
-      <h1 className="mt-1 text-xl font-bold text-[color:var(--foreground)] sm:text-2xl">
-        {runFailed
-          ? copy.progress.title
-          : reportReady
-            ? copy.progress.readyTitle
-            : copy.progress.title}
-      </h1>
-      <p className="mt-2 text-sm text-[color:var(--muted)]">
-        {runFailed
-          ? copy.progress.failedBanner
-          : reportReady
-            ? copy.progress.readyBody
-            : copy.progress.body}
-      </p>
+    <main className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-xl flex-col px-3 pb-6 pt-8 sm:px-4">
+      <header className="shrink-0 text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-3xl">
+          {runFailed
+            ? copy.progress.title
+            : reportReady
+              ? copy.progress.readyTitle
+              : copy.progress.title}
+        </h1>
+        <p className="mt-2 text-sm text-[color:var(--muted)]">
+          {runFailed
+            ? copy.progress.failedBanner
+            : reportReady
+              ? copy.progress.readyBody
+              : copy.progress.body}
+        </p>
+      </header>
 
       {(run?.mocked ?? false) ? <MockNotice className="mt-4" /> : null}
 
       {loadError ? (
-        <p
-          className="card mt-5 rounded-[20px] border border-red-500/30 p-4 text-sm text-red-600 dark:text-red-400"
-          role="alert"
-        >
+        <p className="mt-5 text-sm text-red-600 dark:text-red-400" role="alert">
           {loadError}
         </p>
       ) : null}
 
       {runFailed && !loadError ? (
-        <p
-          className="mt-5 rounded-xl border border-red-500/35 bg-red-500/[0.07] px-3 py-2 text-sm text-red-700 dark:text-red-300"
-          role="alert"
-        >
+        <p className="mt-5 text-sm text-red-700 dark:text-red-300" role="alert">
           {copy.progress.failedBanner}
           {failedStep?.errorMessage
             ? ` (${failedStep.agentKind}: ${failedStep.errorMessage})`
@@ -298,65 +303,56 @@ export function RunProgress({ runId }: { runId: string }) {
         </p>
       ) : null}
 
-      {qaVerifyingLine && !runFailed ? (
-        <p
-          className="mt-5 rounded-xl border border-teal-500/30 bg-teal-500/[0.06] px-3 py-2 text-sm text-teal-700 dark:text-teal-300"
-          role="status"
-        >
-          {qaVerifyingLine}
-        </p>
-      ) : null}
-
-      <section className="card mt-5 rounded-[20px] border border-[color:var(--border)] p-4 sm:p-5">
+      <div
+        className="mt-6 h-1 w-full overflow-hidden rounded-full bg-[color:var(--surface-soft)]"
+        role="progressbar"
+        aria-valuenow={run?.progressPct ?? 0}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
         <div
-          className="h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--surface-soft)]"
-          role="progressbar"
-          aria-valuenow={run?.progressPct ?? 0}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <div
-            className={`h-full rounded-full transition-[width] duration-500 ${
-              runFailed ? "bg-red-500/70" : "bg-teal-500/70"
-            }`}
-            style={{ width: `${run?.progressPct ?? 0}%` }}
+          className={`h-full rounded-full transition-[width] duration-500 ${
+            runFailed ? "bg-red-500/70" : "bg-teal-500/70"
+          }`}
+          style={{ width: `${run?.progressPct ?? 0}%` }}
+        />
+      </div>
+
+      <ul className="mt-8 list-none space-y-5 p-0" aria-live="polite">
+        {visibleSteps.map((step) => (
+          <AgentFeedItem
+            key={step.agentKind}
+            step={step}
+            label={
+              copy.progress.steps[step.agentKind as keyof typeof copy.progress.steps] ??
+              step.agentKind
+            }
+            qaLine={step.agentKind === "qa" && qaRunning ? qaVerifyingLine : null}
           />
-        </div>
+        ))}
+        <div ref={feedEndRef} />
+      </ul>
 
-        <ul className="mt-4 list-none space-y-2 p-0">
-          {(run?.steps ?? []).map((step) => (
-            <StepRow
-              key={step.agentKind}
-              step={step}
-              label={
-                copy.progress.steps[step.agentKind as keyof typeof copy.progress.steps] ??
-                step.agentKind
-              }
-            />
-          ))}
-        </ul>
-      </section>
-
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="mt-8 flex flex-wrap justify-center gap-2">
         {reportReady ? (
           <button
             type="button"
             onClick={() => void loadReport()}
             disabled={loadingReport}
-            className="btn-primary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold disabled:opacity-60"
+            className="btn-primary inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold disabled:opacity-60"
           >
             {loadingReport ? copy.progress.loadingReport : copy.progress.seeReportCta}
           </button>
         ) : null}
         <Link
           href={backHref}
-          className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+          className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold"
         >
           {copy.common.back}
         </Link>
       </div>
 
-      <ScreeningDisclaimer className="mt-4" />
+      <ScreeningDisclaimer className="mt-auto pt-6 text-center" />
     </main>
   );
 }

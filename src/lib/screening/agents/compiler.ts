@@ -358,7 +358,7 @@ export async function runCompilerAgent(
       const bullets = coerceBullets(
         parsed.candidateBullets,
         opts.hardData.candidates.map((c) => c.ticker),
-      );
+      ).slice(0, opts.brief.candidateCount || 5);
       const built = compilerReportDraftSchema.safeParse({
         summary: String(parsed.summary ?? "").trim().slice(0, 2000),
         candidateBullets: bullets,

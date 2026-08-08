@@ -44,7 +44,7 @@ const PRESET_HINTS = `Recommended core defaults (keep the brief coarse so we fin
 - roic: > 12%
 - ndEbitda: < 2.5x
 - region: us_canada · europe · asia_pacific
-- candidateCount: always 5 (do not ask the user; Hard Data ranks ~20 equities and shortlists at most 5)
+- candidateCount: always 5 (do not ask the user; Hard Data ranks ~20 equities for research, Compiler shortlists 5 at the end)
 - riskProfile: balanced (also: conservative | aggressive)
 Prefer these five filters over piling on gross margin, EV/Sales, current ratio, etc.`;
 

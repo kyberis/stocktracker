@@ -91,11 +91,12 @@ const CORE_PENDING_KINDS = new Set([
   "portfolio_context",
   "risk",
   "compiler",
+  "qa",
 ]);
 
 /**
  * Placeholder timeline shown before the first poll returns — Intake done,
- * research agents + Compiler pending, QA "coming soon".
+ * research agents + Compiler + QA pending.
  */
 export function buildOptimisticRun(runId: string): ScreeningRun {
   const steps: ScreeningRunStep[] = UI_STEP_ORDER.map((kind): ScreeningRunStep => {
@@ -205,6 +206,11 @@ export function buildRunResponse(
         hardDataActive &&
         (v2KindsPendingWhileHardData as readonly string[]).includes(kind)
       ) {
+        return { agentKind: kind, status: "pending", elapsedSeconds: null };
+      }
+      // QA gating on: keep QA visible as pending until the step row exists
+      // (inserted after Compiler), instead of "coming soon" / skipped.
+      if (kind === "qa" && options.qaGating && !row.mockedPipeline) {
         return { agentKind: kind, status: "pending", elapsedSeconds: null };
       }
       return { agentKind: kind, status: "skipped", elapsedSeconds: null };

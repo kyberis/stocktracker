@@ -16,7 +16,7 @@ describe("buildOptimisticRun", () => {
     expect(byKind.portfolio_context).toBe("pending");
     expect(byKind.risk).toBe("pending");
     expect(byKind.compiler).toBe("pending");
-    expect(byKind.qa).toBe("skipped");
+    expect(byKind.qa).toBe("pending");
   });
 });
 
@@ -182,5 +182,20 @@ describe("buildRunResponse QA gating", () => {
       qaRoundsCompleted: 1,
     });
     expect(run.reportReady).toBe(false);
+  });
+
+  it("shows QA as pending (not skipped) when gating is on and no QA row yet", () => {
+    const run = buildRunResponse(runRow(), doneSteps, {
+      qaGating: true,
+      qaVerdict: null,
+    });
+    const qa = run.steps.find((s) => s.agentKind === "qa");
+    expect(qa?.status).toBe("pending");
+  });
+
+  it("keeps QA skipped when gating is off and no QA row", () => {
+    const run = buildRunResponse(runRow(), doneSteps);
+    const qa = run.steps.find((s) => s.agentKind === "qa");
+    expect(qa?.status).toBe("skipped");
   });
 });

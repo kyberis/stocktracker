@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.111",
+    date: "2026-08-08",
+    title: "Screening: centered intake, agent feed, late top-5 selection",
+    titleTranslations: {
+      es: "Cribado: intake centrado, feed de agentes y selección final de 5",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Intake is a centered chat; run progress reveals agent titles as each step starts. Research fans out over ~20 equities and the Compiler selects the final 5 with full evidence. QA no longer shows as “coming soon”, and ticker substeps say “Investigating N…” instead of “0/N”.",
+        translations: {
+          es: "El intake es un chat centrado; el progreso del run revela títulos de agentes al arrancar. La investigación se hace sobre ~20 acciones y el Compiler elige las 5 finales con toda la evidencia. QA ya no aparece como “próximamente”, y los subpasos dicen “Investigando N…” en lugar de “0/N”.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.110",
     date: "2026-08-08",
     title: "Screening: rank ~20 equities, shortlist 5, coarser filters",

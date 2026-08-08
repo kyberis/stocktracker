@@ -122,7 +122,7 @@ function coercePortfolioContext(
   const known = new Set(candidateTickers.map((t) => t.toUpperCase()));
   const perRaw = Array.isArray(raw.perCandidate) ? raw.perCandidate : [];
   const perCandidate = [];
-  for (const item of perRaw.slice(0, 10)) {
+  for (const item of perRaw.slice(0, 20)) {
     if (!item || typeof item !== "object") continue;
     const row = item as Record<string, unknown>;
     const ticker = String(row.ticker ?? "").toUpperCase().trim();
