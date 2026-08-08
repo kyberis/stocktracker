@@ -522,8 +522,8 @@ export function CandidateCard({
       </div>
       <BlurredValue
         locked={blurResearch}
-        as="p"
-        className="mt-1.5 text-sm leading-relaxed text-[color:var(--foreground)]"
+        as="div"
+        className="mt-1.5 text-sm leading-relaxed text-[color:var(--foreground)] whitespace-pre-line"
       >
         {blurResearch ? copy.report.lockedCell.repeat(20) : card.thesis}
       </BlurredValue>

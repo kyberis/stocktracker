@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.113",
+    date: "2026-08-08",
+    title: "Screening: educational candidate theses",
+    titleTranslations: {
+      es: "Cribado: tesis educativas por candidato",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Candidate theses now explain valuation, technicals, catalysts, fit and checklist scores in plain language for beginners and experienced readers. The Compiler also drafts richer multi-paragraph theses using full research context including technicals.",
+        translations: {
+          es: "Las tesis por candidato ahora explican valoración, técnico, catalizadores, encaje y checklist en lenguaje claro para principiantes y expertos. El Compiler también redacta tesis multipárrafo más ricas usando todo el contexto de investigación, incluido el técnico.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.112",
     date: "2026-08-08",
     title: "Screening: quieter progress feed and wider report",

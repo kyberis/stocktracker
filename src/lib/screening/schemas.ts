@@ -271,7 +271,7 @@ export const screeningCandidateCardSchema = z.object({
     dividendYield: z.number().nullable(),
     moatScore: z.number().nullable(),
   }),
-  thesis: z.string().min(1),
+  thesis: z.string().min(1).max(4000),
   risks: z.array(z.string()),
   priorityReason: z.string(),
   citedFields: z.array(z.string()),
@@ -468,7 +468,7 @@ export type HardDataOutput = z.infer<typeof hardDataOutputSchema>;
 export const compilerBulletSchema = z.object({
   ticker: z.string().min(1).max(20),
   headline: z.string().min(1).max(120),
-  bullet: z.string().min(1).max(320),
+  bullet: z.string().min(1).max(4000),
 });
 export type CompilerBullet = z.infer<typeof compilerBulletSchema>;
 

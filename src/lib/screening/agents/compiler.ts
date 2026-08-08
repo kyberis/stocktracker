@@ -16,6 +16,7 @@ import {
 import { buildCompilerPrompt } from "@/lib/screening/prompts/compiler";
 import {
   aggregateIrBusinessOutputSchema,
+  aggregateTechnicalsOutputSchema,
   aggregateWebSentimentOutputSchema,
   compilerReportDraftSchema,
   hardDataOutputSchema,
@@ -23,6 +24,7 @@ import {
   riskOutputSchema,
   screeningBriefSchema,
   type AggregateIrBusinessOutput,
+  type AggregateTechnicalsOutput,
   type AggregateWebSentimentOutput,
   type CompilerBullet,
   type CompilerReportDraft,
@@ -35,6 +37,7 @@ export const COMPILER_AGENT_KIND = "compiler";
 export const COMPILER_MODEL = "openai/gpt-4o-mini";
 const AGGREGATE_IR_KIND = "aggregate_ir_business";
 const AGGREGATE_WEB_KIND = "aggregate_web_sentiment";
+const AGGREGATE_TECHNICALS_KIND = "aggregate_technicals";
 const PORTFOLIO_CONTEXT_KIND = "portfolio_context";
 const RISK_KIND = "risk";
 
@@ -97,6 +100,17 @@ function parseRisk(json: string): RiskOutput | null {
   }
 }
 
+function parseTechnicalsAggregate(
+  json: string,
+): AggregateTechnicalsOutput | null {
+  try {
+    const res = aggregateTechnicalsOutputSchema.safeParse(JSON.parse(json));
+    return res.success ? res.data : null;
+  } catch {
+    return null;
+  }
+}
+
 function coerceBullets(
   raw: unknown,
   candidateTickers: string[],
@@ -111,7 +125,7 @@ function coerceBullets(
     const ticker = String(row.ticker ?? "").toUpperCase().trim();
     if (!ticker || seen.has(ticker) || !knownTickers.has(ticker)) continue;
     const headline = String(row.headline ?? "").trim().slice(0, 120);
-    const bullet = String(row.bullet ?? "").trim().slice(0, 320);
+    const bullet = String(row.bullet ?? "").trim().slice(0, 4000);
     if (!headline || !bullet) continue;
     seen.add(ticker);
     out.push({ ticker, headline, bullet });
@@ -154,6 +168,7 @@ export interface RunCompilerAgentOptions {
   hardData: HardDataOutput;
   irAggregate?: AggregateIrBusinessOutput | null;
   webAggregate?: AggregateWebSentimentOutput | null;
+  technicalsAggregate?: AggregateTechnicalsOutput | null;
   portfolioContext?: PortfolioContextOutput | null;
   risk?: RiskOutput | null;
   gatewayHeaders?: Headers;
@@ -203,6 +218,7 @@ export async function runCompilerAgent(
     hardData: opts.hardData,
     irAggregate: opts.irAggregate ?? null,
     webAggregate: opts.webAggregate ?? null,
+    technicalsAggregate: opts.technicalsAggregate ?? null,
     portfolioContext: opts.portfolioContext ?? null,
     risk: opts.risk ?? null,
     locale: opts.brief.locale,
@@ -249,6 +265,16 @@ export async function runCompilerAgent(
       industry: c.industry,
       rankScore: c.rankScore,
       rankReason: c.rankReason,
+      fwdPe: c.fwdPe ?? null,
+      ownHistPe: c.ownHistPe ?? null,
+      evEbitda: c.evEbitda ?? null,
+      ndEbitda: c.ndEbitda ?? null,
+      netCash: c.netCash ?? null,
+      dividendYield: c.dividendYield ?? null,
+      upsidePct: c.upsidePct ?? null,
+      moatScore: c.moatScore ?? null,
+      growthNote: c.growthNote ?? null,
+      unmetBriefCriteria: c.unmetBriefCriteria,
     })),
     gaps: opts.hardData.gaps,
   };
@@ -289,6 +315,21 @@ export async function runCompilerAgent(
         })}`
       : "";
 
+  const techBlock =
+    opts.technicalsAggregate && opts.technicalsAggregate.tickers.length > 0
+      ? `\n\nTECHNICALS_CONTEXT_JSON:\n${JSON.stringify({
+          tickers: opts.technicalsAggregate.tickers.map((t) => ({
+            ticker: t.ticker,
+            distanceTo52wHighPct: t.distanceTo52wHighPct,
+            distanceTo52wLowPct: t.distanceTo52wLowPct,
+            aboveMa200: t.aboveMa200,
+            return1yPct: t.return1yPct,
+            return3mPct: t.return3mPct,
+            volatilityAnnPct: t.volatilityAnnPct,
+          })),
+        })}`
+      : "";
+
   const pcBlock = opts.portfolioContext
     ? `\n\nPORTFOLIO_CONTEXT_JSON:\n${JSON.stringify({
         cashAvailableEur: opts.portfolioContext.cashAvailableEur,
@@ -309,7 +350,7 @@ export async function runCompilerAgent(
     { role: "system" as const, content: systemPrompt },
     {
       role: "user" as const,
-      content: `Hard-data ranking (JSON):\n${JSON.stringify(compactHardData)}${irBlock}${webBlock}${pcBlock}${riskBlock}\n\nPlease call submit_report_draft.`,
+      content: `Hard-data ranking (JSON):\n${JSON.stringify(compactHardData)}${irBlock}${webBlock}${techBlock}${pcBlock}${riskBlock}\n\nPlease call submit_report_draft.`,
     },
   ];
 
@@ -320,7 +361,7 @@ export async function runCompilerAgent(
       {
         model: COMPILER_MODEL,
         stream: false,
-        max_tokens: 1800,
+        max_tokens: 4500,
         temperature: 0.35,
         messages,
         tools: [submitReportDraftTool],
@@ -417,14 +458,18 @@ export const runCompilerStep: StepHandler = async (
     return { status: "error", errorMessage: "hard_data_output_invalid" };
   }
 
-  const [irRow, webRow, pcRow, riskRow] = await Promise.all([
+  const [irRow, webRow, techRow, pcRow, riskRow] = await Promise.all([
     getLatestScreeningAgentOutputUnscoped(ctx.runId, AGGREGATE_IR_KIND),
     getLatestScreeningAgentOutputUnscoped(ctx.runId, AGGREGATE_WEB_KIND),
+    getLatestScreeningAgentOutputUnscoped(ctx.runId, AGGREGATE_TECHNICALS_KIND),
     getLatestScreeningAgentOutputUnscoped(ctx.runId, PORTFOLIO_CONTEXT_KIND),
     getLatestScreeningAgentOutputUnscoped(ctx.runId, RISK_KIND),
   ]);
   const irAggregate = irRow ? parseIrAggregate(irRow.outputJson) : null;
   const webAggregate = webRow ? parseWebAggregate(webRow.outputJson) : null;
+  const technicalsAggregate = techRow
+    ? parseTechnicalsAggregate(techRow.outputJson)
+    : null;
   const portfolioContext = pcRow
     ? parsePortfolioContext(pcRow.outputJson)
     : null;
@@ -435,6 +480,7 @@ export const runCompilerStep: StepHandler = async (
     hardData,
     irAggregate,
     webAggregate,
+    technicalsAggregate,
     portfolioContext,
     risk,
   });

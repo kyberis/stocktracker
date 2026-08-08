@@ -26,6 +26,7 @@ import {
   type WebSentimentOutput,
 } from "@/lib/screening/schemas";
 import { scoreChecklist } from "@/lib/screening/scoring/checklist";
+import { buildEducationalThesis } from "@/lib/screening/thesis";
 
 /**
  * Compose the ScreeningReport from Hard Data + Compiler (+ optional IR / Web /
@@ -385,7 +386,42 @@ export function composeScreeningReport(
         dividendYield: c.dividendYield ?? null,
         moatScore: c.moatScore ?? null,
       },
-      thesis: bullet?.bullet ?? c.rankReason,
+      thesis: buildEducationalThesis({
+        locale: draft.locale || hardData.locale || "en",
+        companyName: c.name || c.ticker,
+        ticker: c.ticker,
+        lead: bullet?.bullet ?? c.rankReason,
+        businessOneLiner: ir?.businessOneLiner ?? c.analysisSummary,
+        catalyst: primaryCatalyst?.label ?? null,
+        catalystDate: ir?.guidance.asOf ?? null,
+        fwdPe: c.fwdPe ?? null,
+        ownHistPe: c.ownHistPe ?? null,
+        evEbitda: c.evEbitda ?? null,
+        ndEbitda: c.ndEbitda ?? null,
+        dividendYield: c.dividendYield ?? null,
+        netCash: c.netCash ?? null,
+        upsidePct: c.upsidePct ?? null,
+        moatScore: c.moatScore ?? null,
+        growthNote: c.growthNote ?? null,
+        sentimentSummary: web?.sentimentSummary ?? null,
+        insiderBias: web?.insiderSummary.netBias ?? null,
+        positionKind: pc?.positionKind ?? null,
+        suitability: riskRow?.suitability ?? null,
+        concentrationImpact: riskRow?.concentrationImpact ?? null,
+        score: rescored.score,
+        stepsPassed: rescored.stepsPassed,
+        stepsFailed: rescored.stepsFailed,
+        technicals: tech
+          ? {
+              distanceTo52wHighPct: tech.distanceTo52wHighPct,
+              distanceTo52wLowPct: tech.distanceTo52wLowPct,
+              aboveMa200: tech.aboveMa200,
+              return1yPct: tech.return1yPct,
+              return3mPct: tech.return3mPct,
+              volatilityAnnPct: tech.volatilityAnnPct,
+            }
+          : null,
+      }),
       risks,
       priorityReason: bullet?.headline ?? c.rankReason.slice(0, 120),
       unmetBriefCriteria: c.unmetBriefCriteria,
