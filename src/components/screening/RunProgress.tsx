@@ -36,6 +36,23 @@ function readIntakeReturn(runId: string, brief: ScreeningBrief | null): string {
   return buildIntakeHrefFromBrief(brief);
 }
 
+function formatLastUpdate(
+  iso: string | null | undefined,
+  copy: ReturnType<typeof useScreeningCopy>["copy"],
+): string | null {
+  if (!iso) return null;
+  const ms = Date.parse(iso);
+  if (!Number.isFinite(ms)) return null;
+  const ageSec = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (ageSec < 15) return copy.progress.lastUpdateJustNow;
+  if (ageSec < 90) {
+    return fill(copy.progress.lastUpdateSeconds, { n: ageSec });
+  }
+  return fill(copy.progress.lastUpdateMinutes, {
+    n: Math.max(1, Math.round(ageSec / 60)),
+  });
+}
+
 function activityForStep(
   step: ScreeningRunStep,
   copy: ReturnType<typeof useScreeningCopy>["copy"],
@@ -67,6 +84,13 @@ function AgentFeedItem({
     step.status === "failed" && step.errorMessage
       ? fill(copy.progress.failedStepDetail, { message: step.errorMessage })
       : null;
+  const subCount =
+    typeof step.subStepsTotal === "number" && step.subStepsTotal > 0
+      ? fill(copy.progress.irSubtext, {
+          done: step.subStepsDone ?? 0,
+          total: step.subStepsTotal,
+        })
+      : null;
 
   return (
     <li
@@ -86,6 +110,11 @@ function AgentFeedItem({
         }`}
       >
         {label}
+        {subCount ? (
+          <span className="ml-2 text-[13px] font-medium text-[color:var(--muted)]">
+            {subCount}
+          </span>
+        ) : null}
       </h2>
       {activity ? (
         <p
@@ -115,10 +144,15 @@ export function RunProgress({ runId }: { runId: string }) {
   const [loadingReport, setLoadingReport] = useState(false);
   /** Fatal load errors (404 / network) — not step failures. */
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [pollTimedOut, setPollTimedOut] = useState(false);
+  const [resuming, setResuming] = useState(false);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const [nowTick, setNowTick] = useState(0);
   const pollsRef = useRef(0);
   const briefRef = useRef<ScreeningBrief | null>(null);
   const [backHref, setBackHref] = useState("/screening/intake");
   const feedEndRef = useRef<HTMLDivElement | null>(null);
+  const autoResumeAttemptedRef = useRef(false);
 
   useEffect(() => {
     const brief = readStoredBrief(runId);
@@ -128,8 +162,20 @@ export function RunProgress({ runId }: { runId: string }) {
     setReport(null);
     setShowReport(false);
     setLoadError(null);
+    setPollTimedOut(false);
+    setResumeError(null);
     pollsRef.current = 0;
+    autoResumeAttemptedRef.current = false;
   }, [runId]);
+
+  // Refresh relative "last update" copy while the run is in flight.
+  useEffect(() => {
+    if (!run || run.reportReady || run.status === "failed" || run.status === "completed") {
+      return;
+    }
+    const id = setInterval(() => setNowTick((n) => n + 1), 15_000);
+    return () => clearInterval(id);
+  }, [run?.reportReady, run?.status, run]);
 
   const loadReport = useCallback(async () => {
     setLoadingReport(true);
@@ -157,6 +203,31 @@ export function RunProgress({ runId }: { runId: string }) {
       setLoadingReport(false);
     }
   }, [runId, copy.report.loadError]);
+
+  const resumeRun = useCallback(async () => {
+    setResuming(true);
+    setResumeError(null);
+    try {
+      const res = await fetch(
+        `/api/screening/runs/${encodeURIComponent(runId)}/resume`,
+        { method: "POST", cache: "no-store" },
+      );
+      if (!res.ok) {
+        setResumeError(copy.progress.resumeFailed);
+        return;
+      }
+      const data = (await res.json()) as { run?: ScreeningRun };
+      if (data.run) {
+        setRun(data.run);
+        setPollTimedOut(false);
+        pollsRef.current = 0;
+      }
+    } catch {
+      setResumeError(copy.progress.resumeFailed);
+    } finally {
+      setResuming(false);
+    }
+  }, [runId, copy.progress.resumeFailed]);
 
   useEffect(() => {
     let cancelled = false;
@@ -189,6 +260,8 @@ export function RunProgress({ runId }: { runId: string }) {
         if (data.run.reportReady) return;
         if (pollsRef.current < MAX_POLLS) {
           timer = setTimeout(() => void poll(), POLL_MS);
+        } else if (!cancelled) {
+          setPollTimedOut(true);
         }
       } catch {
         if (!cancelled) setLoadError(copy.report.loadError);
@@ -201,6 +274,17 @@ export function RunProgress({ runId }: { runId: string }) {
       if (timer) clearTimeout(timer);
     };
   }, [runId, copy.progress.failed, copy.report.loadError]);
+
+  // Auto-resume once when the server marks the run stuck.
+  useEffect(() => {
+    if (!run || run.reportReady || run.status === "failed" || run.status === "completed") {
+      return;
+    }
+    if (run.stallState !== "stuck") return;
+    if (autoResumeAttemptedRef.current || resuming) return;
+    autoResumeAttemptedRef.current = true;
+    void resumeRun();
+  }, [run, resuming, resumeRun]);
 
   const visibleSteps = (run?.steps ?? []).filter(
     (s) => s.status !== "pending" && s.status !== "skipped",
@@ -245,6 +329,14 @@ export function RunProgress({ runId }: { runId: string }) {
       : null;
   const qaVerifyingLine =
     qaContext && qaRoundInFlight ? copy.progress.qaVerifyingRound : null;
+  const inFlight = Boolean(run && !reportReady && !runFailed && run.status !== "completed");
+  const lastUpdateLine =
+    inFlight ? formatLastUpdate(run?.lastActivityAt, copy) : null;
+  // nowTick keeps the relative clock fresh
+  void nowTick;
+  const stallState = inFlight ? run?.stallState : undefined;
+  const showResume =
+    inFlight && (stallState === "stuck" || stallState === "stale" || pollTimedOut);
 
   return (
     <main className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-2xl flex-col px-3 pb-6 pt-8 sm:px-4">
@@ -263,6 +355,12 @@ export function RunProgress({ runId }: { runId: string }) {
               ? copy.progress.readyBody
               : copy.progress.body}
         </p>
+        {lastUpdateLine ? (
+          <p className="mt-1.5 text-xs text-[color:var(--muted)]" aria-live="polite">
+            {lastUpdateLine}
+            {typeof run?.progressPct === "number" ? ` · ${run.progressPct}%` : null}
+          </p>
+        ) : null}
       </header>
 
       {(run?.mocked ?? false) ? <MockNotice className="mt-4" /> : null}
@@ -282,6 +380,30 @@ export function RunProgress({ runId }: { runId: string }) {
         </p>
       ) : null}
 
+      {stallState === "stale" && inFlight ? (
+        <p className="mt-5 text-sm text-amber-800 dark:text-amber-200" role="status">
+          {copy.progress.stallStale}
+        </p>
+      ) : null}
+
+      {stallState === "stuck" && inFlight ? (
+        <p className="mt-5 text-sm text-red-700 dark:text-red-300" role="alert">
+          {copy.progress.stallStuck}
+        </p>
+      ) : null}
+
+      {pollTimedOut && inFlight ? (
+        <p className="mt-5 text-sm text-amber-800 dark:text-amber-200" role="status">
+          {copy.progress.pollTimeout}
+        </p>
+      ) : null}
+
+      {resumeError ? (
+        <p className="mt-3 text-sm text-red-600 dark:text-red-400" role="alert">
+          {resumeError}
+        </p>
+      ) : null}
+
       <div
         className="mt-6 h-1 w-full overflow-hidden rounded-full bg-[color:var(--surface-soft)]"
         role="progressbar"
@@ -291,7 +413,7 @@ export function RunProgress({ runId }: { runId: string }) {
       >
         <div
           className={`h-full rounded-full transition-[width] duration-500 ${
-            runFailed ? "bg-red-500/70" : "bg-teal-500/70"
+            runFailed || stallState === "stuck" ? "bg-red-500/70" : "bg-teal-500/70"
           }`}
           style={{ width: `${run?.progressPct ?? 0}%` }}
         />
@@ -313,6 +435,16 @@ export function RunProgress({ runId }: { runId: string }) {
       </ul>
 
       <div className="mt-8 flex flex-wrap gap-2">
+        {showResume ? (
+          <button
+            type="button"
+            onClick={() => void resumeRun()}
+            disabled={resuming}
+            className="btn-primary inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold disabled:opacity-60"
+          >
+            {resuming ? copy.progress.resumeWorking : copy.progress.resumeCta}
+          </button>
+        ) : null}
         {reportReady ? (
           <button
             type="button"

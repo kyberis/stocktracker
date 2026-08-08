@@ -158,6 +158,18 @@ export const screeningRunSchema = z.object({
   mocked: z.boolean(),
   reportReady: z.boolean(),
   /**
+   * Latest step/run update timestamp (ISO). Used by the progress UI to prove
+   * the pipeline is alive and to detect stalls.
+   */
+  lastActivityAt: z.string().min(1).nullable().optional(),
+  /**
+   * Server-side liveness hint while the run is still in progress.
+   * - ok: recent activity
+   * - stale: no updates for a while (still may recover)
+   * - stuck: no updates long enough that the UI should offer resume / error
+   */
+  stallState: z.enum(["ok", "stale", "stuck"]).optional(),
+  /**
    * QA round context. Present only when QA gating is on for the user. Lets the
    * progress UI show "Verifying (round N of 2)" while QA is running or between
    * rounds. `roundsCompleted` counts persisted `screening_qa_rounds` rows.
@@ -175,6 +187,11 @@ export const screeningRunSchema = z.object({
     .optional(),
 });
 export type ScreeningRun = z.infer<typeof screeningRunSchema>;
+
+/** No step updates for this long → "still working, but quiet". */
+export const SCREENING_STALE_MS = 90_000;
+/** No step updates for this long → treat as stuck and offer resume. */
+export const SCREENING_STUCK_MS = 4 * 60_000;
 
 /** Compact row for the entry-page history list. */
 export const screeningRunListItemSchema = z.object({

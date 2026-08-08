@@ -1,6 +1,12 @@
 import type { ScreeningStepRow } from "@/lib/db";
 import type { ScreeningRunRow } from "@/lib/db/screening";
-import type { ScreeningRun, ScreeningRunStep, ScreeningRunStatus } from "@/lib/screening/schemas";
+import {
+  SCREENING_STALE_MS,
+  SCREENING_STUCK_MS,
+  type ScreeningRun,
+  type ScreeningRunStep,
+  type ScreeningRunStatus,
+} from "@/lib/screening/schemas";
 
 /**
  * All agent kinds the UI expects to see in the progress timeline. Any kind not
@@ -8,8 +14,8 @@ import type { ScreeningRun, ScreeningRunStep, ScreeningRunStatus } from "@/lib/s
  * is rendered as `skipped` so the timeline stays complete even when the
  * pipeline is intentionally partial.
  *
- * Note: `aggregate_ir_business` is an internal barrier and is NOT shown —
- * its progress is folded into the synthesised `ir_business` row.
+ * Note: `aggregate_*` barriers are internal and are NOT shown — progress is
+ * folded into the synthesised per-ticker rows.
  */
 export const UI_STEP_ORDER: readonly string[] = [
   "intake",
@@ -20,6 +26,7 @@ export const UI_STEP_ORDER: readonly string[] = [
   "portfolio_context",
   "risk",
   "compiler",
+  "shortlist_research",
   "qa",
 ];
 
@@ -49,10 +56,11 @@ function synthesiseFanOutStep(
     status = "failed";
   } else if (doneCount === total && total > 0) {
     status = "done";
-  } else if (anyRunning || (anyPending && doneCount > 0)) {
+  } else if (anyRunning || anyPending || anyFailed) {
+    // Fan-out rows already exist: show as running (with N/M) so the UI proves
+    // work is queued even before a lease is claimed. Otherwise all-pending
+    // technicals vanish from the feed and the run looks frozen.
     status = "running";
-  } else if (anyFailed) {
-    status = "running"; // still progressing / retrying siblings
   }
 
   const startedAts = rows
@@ -91,6 +99,7 @@ const CORE_PENDING_KINDS = new Set([
   "portfolio_context",
   "risk",
   "compiler",
+  "shortlist_research",
   "qa",
 ]);
 
@@ -108,16 +117,49 @@ export function buildOptimisticRun(runId: string): ScreeningRun {
     }
     return { agentKind: kind, status: "skipped", elapsedSeconds: null };
   });
+  const now = new Date().toISOString();
   return {
     runId,
     mode: "user_report",
     status: "queued",
-    createdAt: new Date().toISOString(),
+    createdAt: now,
     steps,
     progressPct: 0,
     mocked: false,
     reportReady: false,
+    lastActivityAt: now,
+    stallState: "ok",
   };
+}
+
+function maxIsoTimestamp(...candidates: Array<string | null | undefined>): string | null {
+  let best: string | null = null;
+  let bestMs = -Infinity;
+  for (const c of candidates) {
+    if (!c) continue;
+    const ms = Date.parse(c);
+    if (!Number.isFinite(ms)) continue;
+    if (ms >= bestMs) {
+      bestMs = ms;
+      best = c;
+    }
+  }
+  return best;
+}
+
+function stallStateForActivity(
+  status: ScreeningRunStatus,
+  lastActivityAt: string | null,
+  nowMs: number = Date.now(),
+): ScreeningRun["stallState"] {
+  if (status === "completed" || status === "failed") return "ok";
+  if (!lastActivityAt) return "stuck";
+  const activityMs = Date.parse(lastActivityAt);
+  if (!Number.isFinite(activityMs)) return "stuck";
+  const age = nowMs - activityMs;
+  if (age >= SCREENING_STUCK_MS) return "stuck";
+  if (age >= SCREENING_STALE_MS) return "stale";
+  return "ok";
 }
 
 /**
@@ -267,6 +309,13 @@ export function buildRunResponse(
         options.qaVerdict === "pass_with_degradation");
   }
 
+  const lastActivityAt = maxIsoTimestamp(
+    row.updatedAt,
+    ...dbSteps.map((s) => s.updatedAt),
+    ...dbSteps.map((s) => s.completedAt),
+    ...dbSteps.map((s) => s.startedAt),
+  );
+
   return {
     runId: row.id,
     mode: "user_report",
@@ -276,6 +325,8 @@ export function buildRunResponse(
     progressPct,
     mocked: row.mockedPipeline,
     reportReady,
+    lastActivityAt,
+    stallState: stallStateForActivity(status, lastActivityAt),
     qa: options.qaGating
       ? {
           gating: true,

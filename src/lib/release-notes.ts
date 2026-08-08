@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.117",
+    date: "2026-08-08",
+    title: "Screening progress: liveness + resume",
+    titleTranslations: {
+      es: "Progreso de cribado: actividad y reanudar",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Screening run progress shows ticker sub-counts, last activity time, and stale/stuck warnings when the worker goes quiet — with a Resume action (and one automatic kick when stuck).",
+        translations: {
+          es: "El progreso del cribado muestra contadores por ticker, la última actividad y avisos si el worker se queda en silencio — con acción Reanudar (y un reintento automático si está atascado).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.116",
     date: "2026-08-08",
     title: "Screening intake: metric guide",

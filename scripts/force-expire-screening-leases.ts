@@ -27,7 +27,7 @@ function loadDotEnv(path: string): Record<string, string> {
 async function main() {
   const runId = process.argv[2]?.trim();
   if (!runId) {
-    console.error("Usage: npx tsx scripts/inspect-screening-run.ts <runId>");
+    console.error("Usage: npx tsx scripts/force-expire-screening-leases.ts <runId>");
     process.exit(1);
   }
 
@@ -45,29 +45,13 @@ async function main() {
 
   const { ensureInitialized } = await import("../src/lib/db/client");
   const db = await ensureInitialized();
-  const run = await db.execute({
-    sql: "select id, status, updated_at, cost_usd from screening_runs where id = ?",
-    args: [runId],
+  const result = await db.execute({
+    sql: `UPDATE screening_run_steps
+           SET lease_expires_at = ?
+           WHERE run_id = ? AND status = 'running'`,
+    args: ["2020-01-01T00:00:00.000Z", runId],
   });
-  console.log("run", run.rows[0]);
-  const steps = await db.execute({
-    sql: `select agent_kind, status, count(*) as n, max(updated_at) as last
-          from screening_run_steps where run_id = ?
-          group by agent_kind, status
-          order by agent_kind, status`,
-    args: [runId],
-  });
-  console.log("steps", steps.rows);
-  const pending = await db.execute({
-    sql: `select id, agent_kind, ticker, status, attempts, lease_owner, lease_expires_at, depends_on, error_message, updated_at
-          from screening_run_steps
-          where run_id = ? and status in ('pending','running','failed')
-          order by updated_at desc
-          limit 40`,
-    args: [runId],
-  });
-  console.log("open", pending.rows);
-  console.log("now", new Date().toISOString());
+  console.log("force-expired", result.rowsAffected);
   process.exit(0);
 }
 

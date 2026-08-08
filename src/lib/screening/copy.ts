@@ -526,6 +526,18 @@ const en = {
     irSubtext: "{done}/{total} tickers",
     irInvestigating: "Investigating names that match your brief…",
     qaVerifyingRound: "Checking claims and citations…",
+    lastUpdateJustNow: "Last update just now",
+    lastUpdateSeconds: "Last update {n}s ago",
+    lastUpdateMinutes: "Last update {n} min ago",
+    stallStale:
+      "No updates for a bit — the pipeline may still be working on a long research step.",
+    stallStuck:
+      "This run looks stuck (no progress for several minutes). You can try to resume it.",
+    resumeCta: "Resume run",
+    resumeWorking: "Resuming…",
+    resumeFailed: "Could not resume the run. Try again in a moment.",
+    pollTimeout:
+      "We stopped auto-refreshing after a long wait. Resume the run or reload this page to check again.",
     activity: {
       intake: "Brief confirmed and handed to the research pipeline.",
       hard_data:
@@ -538,6 +550,7 @@ const en = {
       portfolio_context: "Comparing candidates to your current holdings and cash.",
       risk: "Scoring suitability and concentration for your risk profile.",
       compiler: "Choosing the best fits and writing the shortlist thesis.",
+      shortlist_research: "Deep-diving the shortlist with company research.",
       qa: "Verifying numbers, citations and cross-agent consistency.",
     },
     steps: {
@@ -549,6 +562,7 @@ const en = {
       portfolio_context: "Portfolio fit",
       risk: "Risk",
       compiler: "Selecting top candidates",
+      shortlist_research: "Shortlist research",
       qa: "Verification",
     },
   },
@@ -1182,6 +1196,18 @@ const es: ScreeningCopy = {
     irSubtext: "{done}/{total} tickers",
     irInvestigating: "Investigando nombres que encajan con tu brief…",
     qaVerifyingRound: "Revisando afirmaciones y citas…",
+    lastUpdateJustNow: "Última actualización ahora mismo",
+    lastUpdateSeconds: "Última actualización hace {n}s",
+    lastUpdateMinutes: "Última actualización hace {n} min",
+    stallStale:
+      "Sin actualizaciones desde hace un rato — el pipeline puede seguir en un paso largo de research.",
+    stallStuck:
+      "Este cribado parece parado (sin progreso en varios minutos). Puedes intentar reanudarlo.",
+    resumeCta: "Reanudar",
+    resumeWorking: "Reanudando…",
+    resumeFailed: "No se pudo reanudar. Inténtalo de nuevo en un momento.",
+    pollTimeout:
+      "Dejamos de refrescar tras una espera larga. Reanuda el cribado o recarga la página para comprobar.",
     activity: {
       intake: "Brief confirmado y pasado al pipeline de investigación.",
       hard_data:
@@ -1194,6 +1220,7 @@ const es: ScreeningCopy = {
       portfolio_context: "Comparando candidatos con tu cartera y caja actuales.",
       risk: "Valorando idoneidad y concentración según tu perfil de riesgo.",
       compiler: "Eligiendo los mejores encajes y redactando la shortlist.",
+      shortlist_research: "Profundizando la shortlist con research de compañía.",
       qa: "Verificando números, citas y coherencia entre agentes.",
     },
     steps: {
@@ -1205,6 +1232,7 @@ const es: ScreeningCopy = {
       portfolio_context: "Encaje de cartera",
       risk: "Riesgo",
       compiler: "Selección de candidatos",
+      shortlist_research: "Research de shortlist",
       qa: "Verificación",
     },
   },

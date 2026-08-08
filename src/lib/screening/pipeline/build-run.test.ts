@@ -16,6 +16,7 @@ describe("buildOptimisticRun", () => {
     expect(byKind.portfolio_context).toBe("pending");
     expect(byKind.risk).toBe("pending");
     expect(byKind.compiler).toBe("pending");
+    expect(byKind.shortlist_research).toBe("pending");
     expect(byKind.qa).toBe("pending");
   });
 });
