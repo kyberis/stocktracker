@@ -69,6 +69,7 @@ const hardData = {
   deferredTickers: [],
   gaps: [],
   locale: "en",
+  sources: [],
 };
 
 const snapshot = {

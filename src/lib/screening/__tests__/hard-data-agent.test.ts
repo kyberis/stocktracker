@@ -77,6 +77,7 @@ const brief = {
   ],
   endedEarly: false,
   locale: "en",
+  riskProfile: null,
 };
 
 const universe = [
@@ -336,6 +337,7 @@ describe("runHardDataStep v2 fan-out", () => {
       },
     });
     expect(res.status).toBe("ok");
+    if (res.status !== "ok") throw new Error("expected ok");
     expect(res.payload?.webFanout).toBeGreaterThan(0);
     expect(res.payload?.irFanout).toBeGreaterThan(0);
     const inserted = mockInsertSteps.mock.calls[0]?.[1] as Array<{
@@ -382,6 +384,7 @@ describe("runHardDataStep v2 fan-out", () => {
       },
     });
     expect(res.status).toBe("ok");
+    if (res.status !== "ok") throw new Error("expected ok");
     expect(res.payload?.webFanout).toBe(0);
     const inserted = mockInsertSteps.mock.calls[0]?.[1] as Array<{
       agentKind: string;

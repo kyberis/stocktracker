@@ -280,6 +280,7 @@ describe("runIrBusinessStep IR site docs", () => {
     });
 
     expect(result.status).toBe("ok");
+    if (result.status !== "ok") throw new Error("expected ok");
     expect(mockGetResearch).toHaveBeenCalled();
     expect(result.payload).toMatchObject({ researchUsed: true });
   });

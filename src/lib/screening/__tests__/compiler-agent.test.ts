@@ -30,6 +30,7 @@ const brief = {
   criteria: [],
   endedEarly: false,
   locale: "en",
+  riskProfile: null,
 };
 
 const hardData = {
@@ -62,6 +63,7 @@ const hardData = {
   deferredTickers: [],
   gaps: [],
   locale: "en",
+  sources: [],
 };
 
 describe("runCompilerAgent", () => {
