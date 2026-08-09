@@ -14,6 +14,7 @@ import {
   type StepHandler,
 } from "@/lib/screening/orchestrator/handlers";
 import { buildCompilerPrompt } from "@/lib/screening/prompts/compiler";
+import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 import {
   aggregateIrBusinessOutputSchema,
   aggregateTechnicalsOutputSchema,
@@ -34,7 +35,9 @@ import {
   type ScreeningBrief,
 } from "@/lib/screening/schemas";
 export const COMPILER_AGENT_KIND = "compiler";
-export const COMPILER_MODEL = "openai/gpt-4o-mini";
+/** @deprecated Prefer resolveScreeningGatewayModel("screening_compiler"). */
+export const COMPILER_MODEL = "openai/gpt-4.1";
+
 const AGGREGATE_IR_KIND = "aggregate_ir_business";
 const AGGREGATE_WEB_KIND = "aggregate_web_sentiment";
 const AGGREGATE_TECHNICALS_KIND = "aggregate_technicals";
@@ -181,12 +184,16 @@ export interface RunCompilerAgentResult {
   errorMessage: string | null;
   tokensInput: number;
   tokensOutput: number;
+  /** Gateway model id actually used (from admin config). */
+  model: string;
 }
 
 export async function runCompilerAgent(
   opts: RunCompilerAgentOptions,
 ): Promise<RunCompilerAgentResult> {
   const startedAt = Date.now();
+
+  const model = await resolveScreeningGatewayModel("screening_compiler");
 
   if (opts.hardData.candidates.length === 0) {
     const isEs = opts.brief.locale.startsWith("es");
@@ -204,6 +211,7 @@ export async function runCompilerAgent(
       errorMessage: null,
       tokensInput: 0,
       tokensOutput: 0,
+      model,
     };
   }
 
@@ -216,6 +224,7 @@ export async function runCompilerAgent(
       errorMessage: "gateway_not_configured",
       tokensInput: 0,
       tokensOutput: 0,
+      model,
     };
   }
 
@@ -367,7 +376,7 @@ export async function runCompilerAgent(
   try {
     const res = await fetchGatewayChatCompletions(
       {
-        model: COMPILER_MODEL,
+        model,
         stream: false,
         max_tokens: 4500,
         temperature: 0.35,
@@ -449,6 +458,7 @@ export async function runCompilerAgent(
     errorMessage,
     tokensInput,
     tokensOutput,
+    model,
   };
 }
 
@@ -502,7 +512,7 @@ export const runCompilerStep: StepHandler = async (
   const { accrueScreeningLlmCost } = await import("@/lib/screening/cost");
   await accrueScreeningLlmCost({
     runId: ctx.runId,
-    model: COMPILER_MODEL,
+    model: result.model,
     tokensInput: result.tokensInput,
     tokensOutput: result.tokensOutput,
   });
@@ -526,7 +536,7 @@ export const runCompilerStep: StepHandler = async (
     await insertAiLog({
       userId: ctx.userId,
       source: "screening_compiler",
-      model: COMPILER_MODEL,
+      model: result.model,
       promptSystem: "compiler_system_prompt",
       promptUser: `candidates=${hardData.candidates.length}`,
       response: result.rawResponse.slice(0, 20_000),

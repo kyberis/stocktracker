@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.121",
+    date: "2026-08-09",
+    title: "Screening: admin-configurable agent models",
+    titleTranslations: {
+      es: "Cribado: modelos de agentes configurables en admin",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Investment screening LLM agents (Intake through QA) are selectable in Admin → Settings → AI Model Configuration. Compiler and QA default to GPT-4.1; other agents default to GPT-4o Mini.",
+        translations: {
+          es: "Los agentes LLM del cribado (desde Intake hasta QA) se eligen en Admin → Ajustes → Configuración de modelos IA. Compiler y QA usan GPT-4.1 por defecto; el resto, GPT-4o Mini.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.120",
     date: "2026-08-09",
     title: "Screening: show report when QA flags the only name",

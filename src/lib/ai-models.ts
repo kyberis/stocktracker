@@ -31,6 +31,14 @@ export const AI_FLOW_KEYS = [
   "digest_x_post",
   "news_article_summary",
   "holding_classification",
+  "screening_intake",
+  "screening_hard_data",
+  "screening_ir_business",
+  "screening_web_sentiment",
+  "screening_portfolio_context",
+  "screening_risk",
+  "screening_compiler",
+  "screening_qa",
 ] as const;
 
 export type AiFlowKey = (typeof AI_FLOW_KEYS)[number];
@@ -130,6 +138,54 @@ export const AI_FLOW_META: Record<AiFlowKey, AiFlowMeta> = {
     maxTokens: 200,
     temperature: 0.1,
   },
+  screening_intake: {
+    label: "Screening · Intake",
+    description: "Investment screening brief chat (structured tool call)",
+    maxTokens: 2000,
+    temperature: 0.3,
+  },
+  screening_hard_data: {
+    label: "Screening · Hard Data",
+    description: "Rank FMP universe into shortlist candidates",
+    maxTokens: 3000,
+    temperature: 0.2,
+  },
+  screening_ir_business: {
+    label: "Screening · IR / Business",
+    description: "Per-ticker IR and business narrative",
+    maxTokens: 2000,
+    temperature: 0.3,
+  },
+  screening_web_sentiment: {
+    label: "Screening · Web / Sentiment",
+    description: "Per-ticker news and insider sentiment",
+    maxTokens: 2000,
+    temperature: 0.3,
+  },
+  screening_portfolio_context: {
+    label: "Screening · Portfolio Context",
+    description: "Fit candidates to the user's portfolio",
+    maxTokens: 2000,
+    temperature: 0.3,
+  },
+  screening_risk: {
+    label: "Screening · Risk",
+    description: "Suitability and concentration flags",
+    maxTokens: 2000,
+    temperature: 0.2,
+  },
+  screening_compiler: {
+    label: "Screening · Compiler",
+    description: "Draft executive summary and candidate theses",
+    maxTokens: 4500,
+    temperature: 0.35,
+  },
+  screening_qa: {
+    label: "Screening · QA",
+    description: "Qualitative verification judge (Layer B)",
+    maxTokens: 1500,
+    temperature: 0.15,
+  },
 };
 
 export const DEFAULT_AI_MODEL: AllowedAiModel = "gpt-4o-mini";
@@ -140,10 +196,16 @@ export const AI_FLOWS_ALWAYS_PREMIUM_MODEL = new Set<AiFlowKey>(["portfolio_scor
 /** Folio-tier conversational model (cheap); quality-critical flows ignore this. */
 export const FREE_TIER_CONVERSATIONAL_MODEL: AllowedAiModel = "gpt-4.1-nano";
 
+/** Flows where screening quality matters most — default to a strong model. */
+const SCREENING_PREMIUM_DEFAULTS: Partial<Record<AiFlowKey, AllowedAiModel>> = {
+  screening_compiler: "gpt-4.1",
+  screening_qa: "gpt-4.1",
+};
+
 export function getDefaultAiModelConfig(): Record<AiFlowKey, AllowedAiModel> {
   const config = {} as Record<AiFlowKey, AllowedAiModel>;
   for (const key of AI_FLOW_KEYS) {
-    config[key] = DEFAULT_AI_MODEL;
+    config[key] = SCREENING_PREMIUM_DEFAULTS[key] ?? DEFAULT_AI_MODEL;
   }
   return config;
 }

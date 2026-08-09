@@ -46,7 +46,9 @@ import {
   SCREENING_MAX_CANDIDATES,
 } from "@/lib/screening/constants";
 import { applyBriefFitToCandidates } from "@/lib/screening/brief-fit";
+import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 export const HARD_DATA_AGENT_KIND = "hard_data";
+/** @deprecated Prefer resolveScreeningGatewayModel("screening_hard_data"). */
 export const HARD_DATA_MODEL = "openai/gpt-4o-mini";
 const MAX_UNIVERSE_FOR_LLM = HARD_DATA_RANK_UNIVERSE;
 /** Max per-ticker IR steps fan-out after Hard Data (PRD §13 E4). */
@@ -317,11 +319,12 @@ export async function runHardDataAgent(
 
   let rawResponse = "";
   let errorMessage: string | null = null;
+  const model = await resolveScreeningGatewayModel("screening_hard_data");
 
   try {
     const res = await fetchGatewayChatCompletions(
       {
-        model: HARD_DATA_MODEL,
+        model,
         stream: false,
         max_tokens: 3500,
         temperature: 0.2,
@@ -601,7 +604,7 @@ export const runHardDataStep: StepHandler = async (
     await insertAiLog({
       userId: ctx.userId,
       source: "screening_hard_data",
-      model: HARD_DATA_MODEL,
+      model: await resolveScreeningGatewayModel("screening_hard_data"),
       promptSystem: "hard_data_system_prompt",
       promptUser: `universe=${universeSizeForLog}`,
       response: runnerRawResponse.slice(0, 20_000),

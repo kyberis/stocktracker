@@ -34,8 +34,10 @@ import {
   type IrBusinessOutput,
   type ScreeningBrief,
 } from "@/lib/screening/schemas";
+import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 
 export const IR_BUSINESS_AGENT_KIND = "ir_business";
+/** @deprecated Prefer resolveScreeningGatewayModel("screening_ir_business"). */
 export const IR_BUSINESS_MODEL = "openai/gpt-4o-mini";
 
 function parseBrief(json: string): ScreeningBrief | null {
@@ -325,10 +327,11 @@ export async function runIrBusinessAgent(
   let errorMessage: string | null = null;
   let tokensInput = 0;
   let tokensOutput = 0;
+  const model = await resolveScreeningGatewayModel("screening_ir_business");
   try {
     const res = await fetchGatewayChatCompletions(
       {
-        model: IR_BUSINESS_MODEL,
+        model,
         stream: false,
         max_tokens: 2200,
         temperature: 0.25,
@@ -466,9 +469,10 @@ export const runIrBusinessStep: StepHandler = async (
     qaHint,
   });
 
+  const model = await resolveScreeningGatewayModel("screening_ir_business");
   await accrueScreeningLlmCost({
     runId: ctx.runId,
-    model: IR_BUSINESS_MODEL,
+    model,
     tokensInput: result.tokensInput,
     tokensOutput: result.tokensOutput,
   });
@@ -501,7 +505,7 @@ export const runIrBusinessStep: StepHandler = async (
     await insertAiLog({
       userId: ctx.userId,
       source: "screening_ir_business",
-      model: IR_BUSINESS_MODEL,
+      model,
       promptSystem: "ir_business_system_prompt",
       promptUser: `ticker=${ticker}`,
       response: result.rawResponse.slice(0, 20_000),

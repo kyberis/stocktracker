@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  AI_FLOW_KEYS,
+  ALLOWED_AI_MODELS,
+  type AiFlowKey,
+  type AllowedAiModel,
+} from "@/lib/ai-models";
 import type { ToolTabId } from "@/lib/tools-registry";
 import { TOOLS_CATALOG } from "@/lib/tools-registry";
 
@@ -620,15 +626,13 @@ export const satisfactionDismissSchema = z.object({
 
 /* ── AI Model Config (Admin) ───────────────────────────────── */
 
-const AI_FLOW_KEY_ENUM = z.enum([
-  "ai_analysis", "portfolio_chat", "chart_chat", "portfolio_review",
-  "portfolio_score", "import_portfolio", "device_summary", "support_chat",
-  "weekly_digest", "weekly_digest_admin", "digest_email",
-]);
+const AI_FLOW_KEY_ENUM = z.enum(
+  AI_FLOW_KEYS as unknown as [AiFlowKey, ...AiFlowKey[]],
+);
 
-const ALLOWED_MODEL_ENUM = z.enum([
-  "gpt-4o-mini", "gpt-4o", "gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1", "o4-mini",
-]);
+const ALLOWED_MODEL_ENUM = z.enum(
+  ALLOWED_AI_MODELS as unknown as [AllowedAiModel, ...AllowedAiModel[]],
+);
 
 export const aiModelConfigSchema = z.record(AI_FLOW_KEY_ENUM, ALLOWED_MODEL_ENUM);
 

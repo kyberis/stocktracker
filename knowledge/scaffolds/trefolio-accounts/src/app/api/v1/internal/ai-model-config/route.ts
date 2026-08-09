@@ -19,6 +19,16 @@ const FLOW_KEYS = [
   "weekly_digest_admin",
   "digest_email",
   "digest_x_post",
+  "news_article_summary",
+  "holding_classification",
+  "screening_intake",
+  "screening_hard_data",
+  "screening_ir_business",
+  "screening_web_sentiment",
+  "screening_portfolio_context",
+  "screening_risk",
+  "screening_compiler",
+  "screening_qa",
 ] as const;
 
 const ALLOWED_MODELS = [

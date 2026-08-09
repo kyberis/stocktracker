@@ -10,6 +10,11 @@ vi.mock("@/lib/ai/gateway", () => ({
   resolveGatewayApiKey: mockResolveKey,
 }));
 
+vi.mock("@/lib/screening/resolve-model", () => ({
+  resolveScreeningGatewayModel: vi.fn().mockResolvedValue("openai/gpt-4o-mini"),
+  resolveScreeningModel: vi.fn().mockResolvedValue("gpt-4o-mini"),
+}));
+
 vi.mock("@/lib/db", () => ({
   insertAiLog: vi.fn().mockResolvedValue("log-1"),
   insertScreeningAgentOutput: vi.fn().mockResolvedValue({}),

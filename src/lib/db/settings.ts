@@ -1219,37 +1219,43 @@ const AI_MODEL_CACHE_TTL_MS = 5 * 60 * 1000;
 
 const AI_MODEL_CONFIG_KEY = "ai_model_config";
 
+async function readTursoAiModelConfigPartial(): Promise<Record<string, string>> {
+  const raw = await getPlatformSetting(AI_MODEL_CONFIG_KEY);
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as Record<string, string>;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 export async function getAiModelConfig(): Promise<Record<AiFlowKey, AllowedAiModel>> {
   if (_aiModelCache && Date.now() - _aiModelCache.ts < AI_MODEL_CACHE_TTL_MS) {
     return _aiModelCache.config;
   }
 
   const defaults = getDefaultAiModelConfig();
+  const fromTurso = await readTursoAiModelConfigPartial();
 
+  // IdP is canonical for keys it knows; Turso fills gaps when the IdP
+  // allowlist lags (e.g. new screening_* flows) so admin saves still apply.
   if (isIdpAiModelConfigFetchEnabled()) {
     const fromIdp = await fetchAiModelConfigFromIdp();
     if (fromIdp) {
-      _aiModelCache = { config: fromIdp, ts: Date.now() };
-      return fromIdp;
+      const config = normalizeAiModelConfigRecord({
+        ...defaults,
+        ...fromTurso,
+        ...fromIdp,
+      });
+      _aiModelCache = { config, ts: Date.now() };
+      return config;
     }
   }
 
-  const raw = await getPlatformSetting(AI_MODEL_CONFIG_KEY);
-
-  if (!raw) {
-    _aiModelCache = { config: defaults, ts: Date.now() };
-    return defaults;
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Record<string, string>;
-    const config = normalizeAiModelConfigRecord(parsed);
-    _aiModelCache = { config, ts: Date.now() };
-    return config;
-  } catch {
-    _aiModelCache = { config: defaults, ts: Date.now() };
-    return defaults;
-  }
+  const config = normalizeAiModelConfigRecord({ ...defaults, ...fromTurso });
+  _aiModelCache = { config, ts: Date.now() };
+  return config;
 }
 
 export async function setAiModelConfig(config: Record<string, string>): Promise<

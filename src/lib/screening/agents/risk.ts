@@ -27,8 +27,10 @@ import {
   type ScreeningRiskProfile,
 } from "@/lib/screening/schemas";
 import { PORTFOLIO_CONTEXT_AGENT_KIND } from "@/lib/screening/agents/portfolio-context";
+import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 
 export const RISK_AGENT_KIND = "risk";
+/** @deprecated Prefer resolveScreeningGatewayModel("screening_risk"). */
 export const RISK_MODEL = "openai/gpt-4o-mini";
 
 function parseBrief(json: string): ScreeningBrief | null {
@@ -227,10 +229,11 @@ export async function runRiskAgent(opts: {
 
   let rawResponse = "";
   let errorMessage: string | null = null;
+  const model = await resolveScreeningGatewayModel("screening_risk");
   try {
     const res = await fetchGatewayChatCompletions(
       {
-        model: RISK_MODEL,
+        model,
         stream: false,
         max_tokens: 2000,
         temperature: 0.2,
@@ -339,7 +342,7 @@ export const runRiskStep: StepHandler = async (
     await insertAiLog({
       userId: ctx.userId,
       source: "screening_risk",
-      model: RISK_MODEL,
+      model: await resolveScreeningGatewayModel("screening_risk"),
       promptSystem: "risk_system_prompt",
       promptUser: `candidates=${hardData.candidates.length}`,
       response: result.rawResponse.slice(0, 20_000),

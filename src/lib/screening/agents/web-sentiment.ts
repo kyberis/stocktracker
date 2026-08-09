@@ -34,8 +34,10 @@ import {
   type ScreeningBrief,
   type WebSentimentOutput,
 } from "@/lib/screening/schemas";
+import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 
 export const WEB_SENTIMENT_AGENT_KIND = "web_sentiment";
+/** @deprecated Prefer resolveScreeningGatewayModel("screening_web_sentiment"). */
 export const WEB_SENTIMENT_MODEL = "openai/gpt-4o-mini";
 
 function parseBrief(json: string): ScreeningBrief | null {
@@ -275,10 +277,11 @@ export async function runWebSentimentAgent(
   let errorMessage: string | null = null;
   let tokensInput = 0;
   let tokensOutput = 0;
+  const model = await resolveScreeningGatewayModel("screening_web_sentiment");
   try {
     const res = await fetchGatewayChatCompletions(
       {
-        model: WEB_SENTIMENT_MODEL,
+        model,
         stream: false,
         max_tokens: 2200,
         temperature: 0.25,
@@ -414,9 +417,10 @@ export const runWebSentimentStep: StepHandler = async (
     qaHint,
   });
 
+  const model = await resolveScreeningGatewayModel("screening_web_sentiment");
   await accrueScreeningLlmCost({
     runId: ctx.runId,
-    model: WEB_SENTIMENT_MODEL,
+    model,
     tokensInput: result.tokensInput,
     tokensOutput: result.tokensOutput,
   });
@@ -449,7 +453,7 @@ export const runWebSentimentStep: StepHandler = async (
     await insertAiLog({
       userId: ctx.userId,
       source: "screening_web_sentiment",
-      model: WEB_SENTIMENT_MODEL,
+      model,
       promptSystem: "web_sentiment_system_prompt",
       promptUser: `ticker=${ticker}`,
       response: result.rawResponse.slice(0, 20_000),

@@ -4,6 +4,7 @@ import {
 } from "@/lib/ai/gateway";
 import { insertAiLog } from "@/lib/db";
 import type { SubscriptionPlan } from "@/lib/types";
+import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 import { runSanityLimits } from "./rules/sanity-limits";
 import { buildIntakePrompt } from "./prompts/intake";
 import {
@@ -161,8 +162,8 @@ export async function runIntakeAgent(
 
   // Intake needs strict structured output. Use OpenAI tool calling: the model
   // MUST call `submit_brief` with the schema, so the args are always valid JSON.
-  // Pin to gpt-4o-mini which reliably supports tool_choice via the AI Gateway.
-  const model = "openai/gpt-4o-mini";
+  // Default is gpt-4o-mini (admin: Screening · Intake); keep tool_choice models.
+  const model = await resolveScreeningGatewayModel("screening_intake");
   const lastUserMsg =
     [...opts.messages].reverse().find((m) => m.role === "user")?.content?.slice(0, 4000) ?? "";
 

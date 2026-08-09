@@ -43,9 +43,12 @@ import {
   type RiskOutput,
   type ScreeningReport,
 } from "@/lib/screening/schemas";
+import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 
 export const QA_AGENT_KIND = "qa";
-export const QA_MODEL = "openai/gpt-4o-mini";
+/** @deprecated Prefer resolveScreeningGatewayModel("screening_qa"). */
+export const QA_MODEL = "openai/gpt-4.1";
+
 
 function safeParse<T>(
   row: ScreeningAgentOutputRow | null,
@@ -169,6 +172,7 @@ export const runQaStep: StepHandler = async (
   let layerBRaw = "";
   let layerBError: string | null = null;
   let layerBDurationMs = 0;
+  let layerBModel = QA_MODEL;
   if (inYellowZone && report && compilerDraft) {
     const before = Date.now();
     const gatewayReady = await resolveGatewayApiKey();
@@ -189,6 +193,7 @@ export const runQaStep: StepHandler = async (
       layerBIssues = runResult.issues;
       layerBRaw = runResult.rawResponse;
       layerBError = runResult.errorMessage;
+      layerBModel = runResult.model;
     } else {
       layerBError = "gateway_not_configured";
     }
@@ -296,7 +301,7 @@ export const runQaStep: StepHandler = async (
       await insertAiLog({
         userId: ctx.userId,
         source: "screening_qa",
-        model: QA_MODEL,
+        model: layerBModel,
         promptSystem: "qa_qualitative_system_prompt",
         promptUser: `round=${roundNumber} layerA_issues=${layerAIssues.length}`,
         response: layerBRaw.slice(0, 20_000),
@@ -339,6 +344,7 @@ async function callQaQualitativeJudge(input: {
   issues: QaIssue[];
   rawResponse: string;
   errorMessage: string | null;
+  model: string;
 }> {
   const systemPrompt = buildQaQualitativePrompt({
     report: input.report,
@@ -424,9 +430,10 @@ async function callQaQualitativeJudge(input: {
 
   let rawResponse = "";
   let errorMessage: string | null = null;
+  const model = await resolveScreeningGatewayModel("screening_qa");
   try {
     const res = await fetchGatewayChatCompletions({
-      model: QA_MODEL,
+      model,
       stream: false,
       max_tokens: 1500,
       temperature: 0.15,
@@ -461,7 +468,12 @@ async function callQaQualitativeJudge(input: {
   }
 
   if (errorMessage || !rawResponse) {
-    return { issues: [], rawResponse, errorMessage: errorMessage ?? "no_response" };
+    return {
+      issues: [],
+      rawResponse,
+      errorMessage: errorMessage ?? "no_response",
+      model,
+    };
   }
 
   let parsedIssues: QaIssue[] = [];
@@ -486,7 +498,7 @@ async function callQaQualitativeJudge(input: {
     errorMessage = `json_parse:${err instanceof Error ? err.message : "unknown"}`;
   }
 
-  return { issues: parsedIssues, rawResponse, errorMessage };
+  return { issues: parsedIssues, rawResponse, errorMessage, model };
 }
 
 function buildRawContextForQa(inputs: {

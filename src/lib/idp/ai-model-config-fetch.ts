@@ -7,12 +7,7 @@
  */
 
 import { getIdpBaseUrl } from "@/lib/idp/config";
-import {
-  AI_FLOW_KEYS,
-  type AiFlowKey,
-  type AllowedAiModel,
-  normalizeAiModelConfigRecord,
-} from "@/lib/ai-models";
+import { AI_FLOW_KEYS } from "@/lib/ai-models";
 
 const INTERNAL_PATH = "/api/v1/internal/ai-model-config";
 
@@ -28,7 +23,12 @@ export function isIdpAiModelConfigFetchEnabled(): boolean {
   return !!(getIdpBaseUrl() && internalBearer());
 }
 
-export async function fetchAiModelConfigFromIdp(): Promise<Record<AiFlowKey, AllowedAiModel> | null> {
+/**
+ * Raw per-flow map from the IdP — only keys the IdP actually stored.
+ * Callers merge with Turso + code defaults so a lagging IdP allowlist does not
+ * wipe newer flows (e.g. `screening_*`).
+ */
+export async function fetchAiModelConfigFromIdp(): Promise<Record<string, string> | null> {
   const base = getIdpBaseUrl();
   const token = internalBearer();
   if (!base || !token) return null;
@@ -65,12 +65,12 @@ export async function fetchAiModelConfigFromIdp(): Promise<Record<AiFlowKey, All
   const config = (body as { config?: Record<string, string> }).config;
   if (!config || typeof config !== "object") return null;
 
-  const parsed: Record<string, string | undefined> = {};
-  for (const key of AI_FLOW_KEYS) {
-    const v = config[key];
-    if (typeof v === "string") parsed[key] = v;
+  const parsed: Record<string, string> = {};
+  const allowed = new Set<string>(AI_FLOW_KEYS);
+  for (const [key, v] of Object.entries(config)) {
+    if (allowed.has(key) && typeof v === "string") parsed[key] = v;
   }
-  return normalizeAiModelConfigRecord(parsed);
+  return parsed;
 }
 
 export async function putAiModelConfigToIdp(

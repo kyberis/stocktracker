@@ -27,8 +27,10 @@ import {
   type PortfolioContextOutput,
   type ScreeningBrief,
 } from "@/lib/screening/schemas";
+import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 
 export const PORTFOLIO_CONTEXT_AGENT_KIND = "portfolio_context";
+/** @deprecated Prefer resolveScreeningGatewayModel("screening_portfolio_context"). */
 export const PORTFOLIO_CONTEXT_MODEL = "openai/gpt-4o-mini";
 
 function parseBrief(json: string): ScreeningBrief | null {
@@ -264,10 +266,11 @@ export async function runPortfolioContextAgent(opts: {
 
   let rawResponse = "";
   let errorMessage: string | null = null;
+  const model = await resolveScreeningGatewayModel("screening_portfolio_context");
   try {
     const res = await fetchGatewayChatCompletions(
       {
-        model: PORTFOLIO_CONTEXT_MODEL,
+        model,
         stream: false,
         max_tokens: 2000,
         temperature: 0.25,
@@ -369,7 +372,7 @@ export const runPortfolioContextStep: StepHandler = async (
     await insertAiLog({
       userId: ctx.userId,
       source: "screening_portfolio_context",
-      model: PORTFOLIO_CONTEXT_MODEL,
+      model: await resolveScreeningGatewayModel("screening_portfolio_context"),
       promptSystem: "portfolio_context_system_prompt",
       promptUser: `candidates=${hardData.candidates.length}`,
       response: result.rawResponse.slice(0, 20_000),
