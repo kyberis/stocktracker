@@ -149,10 +149,10 @@ export function ScreeningReportView({
                 {[
                   copy.report.colTicker,
                   copy.report.colCompany,
-                  copy.report.colValuation,
+                  copy.report.colCheap,
+                  copy.report.colFit,
+                  copy.report.colSolidity,
                   copy.report.colGrowth,
-                  copy.report.colScore,
-                  copy.report.colVerdict,
                 ].map((heading) => (
                   <th
                     key={heading}
@@ -165,27 +165,36 @@ export function ScreeningReportView({
             </thead>
             <tbody>
               {report.comparisonRows.map((row) => {
-                const verdict = row.verdict
-                  ? (copy.report.verdicts[
-                      row.verdict as keyof typeof copy.report.verdicts
-                    ] ?? row.verdict)
-                  : "—";
+                const cheap =
+                  row.cheapLabel != null
+                    ? copy.report.cheapLabels[row.cheapLabel]
+                    : "—";
+                const fit =
+                  row.fitLabel != null
+                    ? copy.report.fitLabels[row.fitLabel]
+                    : "—";
+                const solidity =
+                  row.solidityLabel != null
+                    ? copy.report.solidityLabels[row.solidityLabel]
+                    : "—";
                 return (
                   <tr key={row.ticker} className="border-b border-[color:var(--border)]">
                     <td className="whitespace-nowrap px-3 py-2 font-semibold text-teal-700 dark:text-teal-300">
                       {row.ticker}
                     </td>
                     <td className="px-3 py-2 text-[color:var(--foreground)]">{row.companyName}</td>
-                    <td className="px-3 py-2 text-[13px] text-[color:var(--muted)]">
-                      {row.valuationNote}
+                    <td className="px-3 py-2 text-[13px] text-[color:var(--foreground)]">
+                      {cheap}
+                    </td>
+                    <td className="px-3 py-2 text-[13px] text-[color:var(--foreground)]">
+                      {fit}
+                    </td>
+                    <td className="px-3 py-2 text-[13px] text-[color:var(--foreground)]">
+                      {solidity}
                     </td>
                     <td className="px-3 py-2 text-[13px] text-[color:var(--muted)]">
                       {row.growthNote}
                     </td>
-                    <td className="px-3 py-2 text-[color:var(--foreground)]">
-                      {row.score ?? "—"}
-                    </td>
-                    <td className="px-3 py-2 text-[13px] text-[color:var(--muted)]">{verdict}</td>
                   </tr>
                 );
               })}

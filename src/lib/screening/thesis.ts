@@ -17,6 +17,7 @@ export interface ThesisBuilderInput {
   catalystDate?: string | null;
   fwdPe?: number | null;
   ownHistPe?: number | null;
+  histPeAvg?: number | null;
   evEbitda?: number | null;
   ndEbitda?: number | null;
   dividendYield?: number | null;
@@ -29,7 +30,20 @@ export interface ThesisBuilderInput {
   positionKind?: "new_position" | "top_up_existing" | null;
   suitability?: "fit" | "stretch" | "poor_fit" | null;
   concentrationImpact?: string | null;
+  /** @deprecated Prefer `categories`. */
   score?: number | null;
+  categories?: {
+    cheap: {
+      label: "cheap" | "fair" | "expensive" | "unknown";
+      currentPe: number | null;
+      histPe: number | null;
+    };
+    fit: { label: "fit" | "stretch" | "poor_fit" | "unknown" };
+    solidity: {
+      label: "solid" | "moderate" | "weak" | "unknown";
+      moatScore: number | null;
+    };
+  } | null;
   stepsPassed?: number[] | null;
   stepsFailed?: number[] | null;
   technicals?: {
@@ -103,10 +117,40 @@ export function buildEducationalThesis(input: ThesisBuilderInput): string {
     );
   }
 
-  // Valuation
-  const pe = input.fwdPe ?? input.ownHistPe;
+  // Valuation / cheap category
+  const pe =
+    input.categories?.cheap.currentPe ?? input.fwdPe ?? input.ownHistPe;
+  const histPe = input.categories?.cheap.histPe ?? input.histPeAvg ?? input.ownHistPe;
   const valBits: string[] = [];
-  if (pe != null && pe > 0) {
+  if (input.categories?.cheap.label && input.categories.cheap.label !== "unknown") {
+    const cheapEs =
+      input.categories.cheap.label === "cheap"
+        ? "barata"
+        : input.categories.cheap.label === "fair"
+          ? "a precio justo"
+          : "cara";
+    const cheapEn =
+      input.categories.cheap.label === "cheap"
+        ? "cheap"
+        : input.categories.cheap.label === "fair"
+          ? "fairly priced"
+          : "expensive";
+    const peCompare =
+      pe != null && histPe != null
+        ? es
+          ? ` PER actual ${fmtMult(pe)} frente a histórico ${fmtMult(histPe)}.`
+          : ` Current P/E ${fmtMult(pe)} vs historical ${fmtMult(histPe)}.`
+        : pe != null
+          ? es
+            ? ` PER ${fmtMult(pe)}.`
+            : ` P/E ${fmtMult(pe)}.`
+          : "";
+    valBits.push(
+      es
+        ? `En valoración la lectura es ${cheapEs}.${peCompare} Eso no es una recomendación: indica si el múltiplo deja margen de seguridad frente a su propia historia.`
+        : `On valuation the read is ${cheapEn}.${peCompare} That is not a recommendation — it only says whether the multiple leaves a margin of safety versus its own history.`,
+    );
+  } else if (pe != null && pe > 0) {
     valBits.push(
       es
         ? `El PER (precio / beneficio) está en ${fmtMult(pe)}. En lenguaje sencillo: cuántos años de beneficios “paga” el precio actual; un PER más bajo suele verse como más barato, aunque depende del sector y del crecimiento — y de si el beneficio es recurrente o incluye extraordinarios.`
@@ -303,13 +347,35 @@ export function buildEducationalThesis(input: ThesisBuilderInput): string {
   }
   if (fitBits.length > 0) paras.push(fitBits.join(" "));
 
-  // Methodology score
-  if (input.score != null) {
-    const passed = input.stepsPassed?.length ?? 0;
+  // Category summary (replaces single methodology score)
+  if (input.categories) {
+    const sol = input.categories.solidity;
+    const solEs =
+      sol.label === "solid"
+        ? "sólida"
+        : sol.label === "moderate"
+          ? "de solidez moderada"
+          : sol.label === "weak"
+            ? "con solidez débil"
+            : "sin lectura clara de solidez";
+    const solEn =
+      sol.label === "solid"
+        ? "solid"
+        : sol.label === "moderate"
+          ? "moderately solid"
+          : sol.label === "weak"
+            ? "weak on solidity"
+            : "without a clear solidity read";
+    const moatBit =
+      sol.moatScore != null
+        ? es
+          ? ` (MOAT trefolio ${sol.moatScore.toFixed(0)}/100)`
+          : ` (trefolio MOAT ${sol.moatScore.toFixed(0)}/100)`
+        : "";
     paras.push(
       es
-        ? `En la checklist de metodología trefolio suma ${input.score} criterios cumplidos (de los evaluables). Eso ordena la investigación; no es una recomendación de compra ni una nota crediticia.`
-        : `On the trefolio methodology checklist it meets ${input.score} scored criteria (of those that could be evaluated${passed ? `; ${passed} marked as met` : ""}). That ranks research — it is not a buy recommendation or a credit rating.`,
+        ? `Resumen por categorías: valoración, encaje en cartera y solidez se leen por separado — una empresa puede ser ${solEs}${moatBit} y encajar bien sin estar barata. No es un rating único ni una recomendación de compra.`
+        : `Category summary: valuation, portfolio fit and solidity are read separately — a company can be ${solEn}${moatBit} and fit well without being cheap. This is not a single rating or a buy recommendation.`,
     );
   }
 

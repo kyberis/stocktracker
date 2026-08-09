@@ -29,6 +29,7 @@ import {
   type ShortlistResearchTicker,
 } from "@/lib/screening/schemas";
 import { scoreChecklist } from "@/lib/screening/scoring/checklist";
+import { scoreCategories } from "@/lib/screening/scoring/categories";
 import { buildEducationalThesis } from "@/lib/screening/thesis";
 
 /**
@@ -378,6 +379,16 @@ export function composeScreeningReport(
       aboveMa200: tech?.aboveMa200 ?? null,
       return1yPct: tech?.return1yPct ?? null,
     });
+    const categories = scoreCategories({
+      fwdPe: c.fwdPe ?? null,
+      ownHistPe: c.ownHistPe ?? null,
+      normalizedPe: c.normalizedPe ?? null,
+      histPeAvg: c.histPeAvg ?? null,
+      histPeYears: c.histPeYears ?? null,
+      earningsQualitySuspect: c.earningsQualitySuspect ?? null,
+      moatScorePct: c.moatScore ?? null,
+      suitability: riskRow?.suitability ?? null,
+    });
 
     return {
       ticker: c.ticker,
@@ -402,8 +413,10 @@ export function composeScreeningReport(
       priceAsOf: input.run.updatedAt,
       targetPrice: c.targetPrice ?? null,
       upsidePct: c.upsidePct ?? null,
-      score: rescored.score,
-      verdict: rescored.verdict,
+      // Headline rating removed — categories are the product verdict.
+      score: null,
+      verdict: null,
+      categories,
       stepsPassed: rescored.stepsPassed,
       stepsFailed: rescored.stepsFailed,
       catalyst: primaryCatalyst?.label ?? null,
@@ -434,6 +447,8 @@ export function composeScreeningReport(
       multiples: {
         fwdPe: c.fwdPe ?? null,
         ownHistPe: c.ownHistPe ?? null,
+        histPeAvg: c.histPeAvg ?? null,
+        histPeYears: c.histPeYears ?? null,
         peerPe: null,
         evEbitda: c.evEbitda ?? null,
         ndEbitda: c.ndEbitda ?? null,
@@ -455,6 +470,7 @@ export function composeScreeningReport(
         catalystDate: ir?.guidance.asOf ?? null,
         fwdPe: c.fwdPe ?? null,
         ownHistPe: c.ownHistPe ?? null,
+        histPeAvg: c.histPeAvg ?? null,
         evEbitda: c.evEbitda ?? null,
         ndEbitda: c.ndEbitda ?? null,
         dividendYield: c.dividendYield ?? null,
@@ -467,7 +483,7 @@ export function composeScreeningReport(
         positionKind: pc?.positionKind ?? null,
         suitability: riskRow?.suitability ?? null,
         concentrationImpact: riskRow?.concentrationImpact ?? null,
-        score: rescored.score,
+        categories,
         stepsPassed: rescored.stepsPassed,
         stepsFailed: rescored.stepsFailed,
         technicals: tech
@@ -542,6 +558,7 @@ export function composeScreeningReport(
 
   const comparisonRows = cards.map((card, i) => {
     const hd = candidates[i];
+    const cats = card.categories;
     return {
       ticker: card.ticker,
       companyName: card.companyName,
@@ -551,8 +568,11 @@ export function composeScreeningReport(
           ? `Fwd P/E ${card.multiples.fwdPe.toFixed(1)}x`
           : "—"),
       growthNote: hd?.growthNote ?? card.multiples.growthNote ?? "—",
-      score: card.score,
-      verdict: card.verdict,
+      score: null,
+      verdict: null,
+      cheapLabel: cats?.cheap.label ?? null,
+      fitLabel: cats?.fit.label ?? null,
+      solidityLabel: cats?.solidity.label ?? null,
     };
   });
 

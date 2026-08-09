@@ -275,6 +275,24 @@ export const candidateBusinessSchema = z.object({
 });
 export type CandidateBusiness = z.infer<typeof candidateBusinessSchema>;
 
+/** Independent category axes that replace the headline score/verdict. */
+export const screeningCategoriesSchema = z.object({
+  cheap: z.object({
+    label: z.enum(["cheap", "fair", "expensive", "unknown"]),
+    currentPe: z.number().finite().nullable(),
+    histPe: z.number().finite().nullable(),
+    histPeSource: z.enum(["multi_year", "ttm", "none"]),
+  }),
+  fit: z.object({
+    label: z.enum(["fit", "stretch", "poor_fit", "unknown"]),
+  }),
+  solidity: z.object({
+    label: z.enum(["solid", "moderate", "weak", "unknown"]),
+    moatScore: z.number().finite().nullable(),
+  }),
+});
+export type ScreeningCategories = z.infer<typeof screeningCategoriesSchema>;
+
 export const screeningCandidateCardSchema = z.object({
   ticker: z.string().min(1),
   companyName: z.string().min(1),
@@ -287,8 +305,12 @@ export const screeningCandidateCardSchema = z.object({
   priceAsOf: z.string().min(1),
   targetPrice: z.number().nullable(),
   upsidePct: z.number().nullable(),
+  /** @deprecated Headline rating removed — use `categories`. Kept for old reports. */
   score: z.number().nullable(),
+  /** @deprecated Headline rating removed — use `categories`. Kept for old reports. */
   verdict: z.enum(["fuerte", "watch", "pass", "fail"]).nullable(),
+  /** Cheap / portfolio fit / solidity — primary evaluation axes. */
+  categories: screeningCategoriesSchema.optional(),
   /** Ids from SCREENING_CRITERIA — resolved to names by the UI. */
   stepsPassed: z.array(z.number().int()),
   stepsFailed: z.array(z.number().int()),
@@ -318,6 +340,9 @@ export const screeningCandidateCardSchema = z.object({
   multiples: z.object({
     fwdPe: z.number().nullable(),
     ownHistPe: z.number().nullable(),
+    /** Mean annual PE (multi-year) when available. */
+    histPeAvg: z.number().nullable().optional(),
+    histPeYears: z.number().int().min(0).max(20).nullable().optional(),
     peerPe: z.number().nullable(),
     evEbitda: z.number().nullable(),
     ndEbitda: z.number().nullable(),
@@ -414,8 +439,22 @@ export const screeningReportSchema = z.object({
       companyName: z.string().min(1),
       valuationNote: z.string(),
       growthNote: z.string(),
-      score: z.number().nullable(),
-      verdict: z.string().nullable(),
+      /** @deprecated Use category label fields. */
+      score: z.number().nullable().optional(),
+      /** @deprecated Use category label fields. */
+      verdict: z.string().nullable().optional(),
+      cheapLabel: z
+        .enum(["cheap", "fair", "expensive", "unknown"])
+        .nullable()
+        .optional(),
+      fitLabel: z
+        .enum(["fit", "stretch", "poor_fit", "unknown"])
+        .nullable()
+        .optional(),
+      solidityLabel: z
+        .enum(["solid", "moderate", "weak", "unknown"])
+        .nullable()
+        .optional(),
     }),
   ),
   cards: z.array(screeningCandidateCardSchema).min(0).max(5),
@@ -459,6 +498,10 @@ export const hardDataCandidateSchema = z.object({
   currency: z.string().max(8).nullable().optional(),
   fwdPe: z.number().finite().nullable().optional(),
   ownHistPe: z.number().finite().nullable().optional(),
+  /** Mean annual P/E over recent fiscal years. */
+  histPeAvg: z.number().finite().nullable().optional(),
+  /** Observations behind histPeAvg. */
+  histPeYears: z.number().int().min(0).max(20).nullable().optional(),
   /** P/E on latest FY diluted EPS when TTM quality is suspect. */
   normalizedPe: z.number().finite().nullable().optional(),
   /** True when TTM earnings look inflated vs FY (one-offs). */

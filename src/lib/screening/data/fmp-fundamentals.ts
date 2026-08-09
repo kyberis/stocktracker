@@ -94,10 +94,44 @@ const financialGrowthSchema = z
   })
   .passthrough();
 
+const ratiosAnnualSchema = z
+  .object({
+    symbol: z.string().optional(),
+    date: z.string().optional(),
+    calendarYear: z.union([z.number(), z.string()]).optional(),
+    priceToEarningsRatio: num,
+    priceToEarningsDilutedRatio: num,
+    peRatio: num,
+  })
+  .passthrough();
+
 function toNum(v: unknown): number | null {
   if (v == null || v === "") return null;
   const n = typeof v === "number" ? v : Number(v);
   return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Mean of positive annual P/E observations (most recent first in `rows`).
+ * Skips non-positive / non-finite values (losses, bad rows).
+ */
+export function averageAnnualPe(rows: unknown[]): {
+  histPeAvg: number | null;
+  histPeYears: number;
+} {
+  const pes: number[] = [];
+  for (const row of rows) {
+    const parsed = ratiosAnnualSchema.safeParse(row);
+    if (!parsed.success) continue;
+    const pe =
+      toNum(parsed.data.priceToEarningsRatio) ??
+      toNum(parsed.data.priceToEarningsDilutedRatio) ??
+      toNum(parsed.data.peRatio);
+    if (pe != null && pe > 0 && pe < 500) pes.push(pe);
+  }
+  if (pes.length === 0) return { histPeAvg: null, histPeYears: 0 };
+  const sum = pes.reduce((a, b) => a + b, 0);
+  return { histPeAvg: sum / pes.length, histPeYears: pes.length };
 }
 
 export interface FmpFundamentalsBundle {
@@ -106,6 +140,13 @@ export interface FmpFundamentalsBundle {
   price: number | null;
   fwdPe: number | null;
   ownHistPe: number | null;
+  /**
+   * Mean annual P/E over recent fiscal years (FMP `ratios` annual).
+   * Null when the series is missing or empty.
+   */
+  histPeAvg: number | null;
+  /** Count of annual PE observations behind histPeAvg. */
+  histPeYears: number;
   evEbitda: number | null;
   ndEbitda: number | null;
   dividendYield: number | null;
@@ -193,6 +234,7 @@ export async function fetchFmpFundamentals(
     growthRes,
     incomeAnnualRes,
     incomeTtmRes,
+    ratiosAnnualRes,
   ] = await Promise.all([
     fetchJson("ratios-ttm", symbol, doFetch),
     fetchJson("key-metrics-ttm", symbol, doFetch),
@@ -205,6 +247,8 @@ export async function fetchFmpFundamentals(
       limit: "2",
     }),
     fetchJson("income-statement-ttm", symbol, doFetch),
+    // Multi-year annual PE for "cheap vs history" category scoring.
+    fetchJson("ratios", symbol, doFetch, { period: "annual", limit: "5" }),
   ]);
 
   if (!ratiosRes.ok && ratiosRes.error) errors.push(ratiosRes.error);
@@ -216,6 +260,9 @@ export async function fetchFmpFundamentals(
     errors.push(incomeAnnualRes.error);
   }
   if (!incomeTtmRes.ok && incomeTtmRes.error) errors.push(incomeTtmRes.error);
+  if (!ratiosAnnualRes.ok && ratiosAnnualRes.error) {
+    errors.push(ratiosAnnualRes.error);
+  }
 
   const ratiosRaw = firstRow(ratiosRes.data);
   const metricsRaw = firstRow(metricsRes.data);
@@ -232,6 +279,12 @@ export async function fetchFmpFundamentals(
       ? [incomeAnnualRes.data as unknown]
       : [];
   const incomeTtmRaw = firstRow(incomeTtmRes.data);
+  const ratiosAnnualRows = Array.isArray(ratiosAnnualRes.data)
+    ? (ratiosAnnualRes.data as unknown[])
+    : ratiosAnnualRes.data && typeof ratiosAnnualRes.data === "object"
+      ? [ratiosAnnualRes.data as unknown]
+      : [];
+  const { histPeAvg, histPeYears } = averageAnnualPe(ratiosAnnualRows);
 
   const ratios = ratiosRaw ? ratiosTtmSchema.safeParse(ratiosRaw) : null;
   const metrics = metricsRaw ? keyMetricsTtmSchema.safeParse(metricsRaw) : null;
@@ -356,6 +409,8 @@ export async function fetchFmpFundamentals(
     price,
     fwdPe,
     ownHistPe,
+    histPeAvg,
+    histPeYears,
     evEbitda,
     ndEbitda,
     dividendYield,
