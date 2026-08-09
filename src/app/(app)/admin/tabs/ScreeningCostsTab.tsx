@@ -2,7 +2,9 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { SCREENING_COST_BUDGET_USD } from "@/lib/screening/cost";
+
+/** Keep in sync with SCREENING_COST_BUDGET_USD in `@/lib/screening/cost` (client-safe). */
+const SCREENING_COST_BUDGET_USD = 1.2;
 
 interface ScreeningCostRow {
   id: string;

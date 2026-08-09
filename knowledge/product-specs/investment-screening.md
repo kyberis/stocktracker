@@ -41,6 +41,7 @@ ambiguous) via search, then runs the same research agents on that one listing
 | API | `src/app/api/screening/reports/[reportId]/route.ts` | `GET` — typed report JSON |
 | Component | `src/components/screening/ScreeningEntryCta.tsx` | Discovery card on `/recommendations/diversify`; renders nothing when the flag is off |
 | Component | `src/components/screening/ScreeningBetaBanner.tsx` | Home (`/`) beta banner; renders nothing when the flag is off |
+| Page | `src/app/(app)/admin/screening-costs/page.tsx` | Admin cost leaderboard (most → least expensive) |
 
 ## 4. Data model
 

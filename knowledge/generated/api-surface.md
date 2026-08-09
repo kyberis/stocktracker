@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-289 routes.
+290 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -59,6 +59,7 @@
 | `/api/admin/resend-key` | GET, PUT | [`src/app/api/admin/resend-key/route.ts`](../../src/app/api/admin/resend-key/route.ts) |
 | `/api/admin/reset-data` | POST | [`src/app/api/admin/reset-data/route.ts`](../../src/app/api/admin/reset-data/route.ts) |
 | `/api/admin/satisfaction` | GET | [`src/app/api/admin/satisfaction/route.ts`](../../src/app/api/admin/satisfaction/route.ts) |
+| `/api/admin/screening-costs` | GET | [`src/app/api/admin/screening-costs/route.ts`](../../src/app/api/admin/screening-costs/route.ts) |
 | `/api/admin/settings` | GET | [`src/app/api/admin/settings/route.ts`](../../src/app/api/admin/settings/route.ts) |
 | `/api/admin/snaptrade-logs` | GET | [`src/app/api/admin/snaptrade-logs/route.ts`](../../src/app/api/admin/snaptrade-logs/route.ts) |
 | `/api/admin/stripe-prices` | GET, PUT | [`src/app/api/admin/stripe-prices/route.ts`](../../src/app/api/admin/stripe-prices/route.ts) |
