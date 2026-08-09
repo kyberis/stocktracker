@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { fill, type ScreeningCopy } from "@/lib/screening/copy";
+import { ensureReportCategories } from "@/lib/screening/ensure-categories";
 import type {
   ScreeningReport,
   ScreeningReportCost,
@@ -26,8 +27,11 @@ export function ScreeningReportView({
   cost?: ScreeningReportCost | null;
 }) {
   const { copy } = useScreeningCopy();
-  const cardsByTicker = new Map(report.cards.map((card) => [card.ticker, card]));
-  const ranked = report.priorityOrder
+  const normalized = ensureReportCategories(report);
+  const cardsByTicker = new Map(
+    normalized.cards.map((card) => [card.ticker, card]),
+  );
+  const ranked = normalized.priorityOrder
     .map((ticker) => cardsByTicker.get(ticker))
     .filter((card): card is NonNullable<typeof card> => Boolean(card));
   const rankIndexByTicker = new Map(
@@ -45,8 +49,8 @@ export function ScreeningReportView({
         </h1>
         <p className="mt-1 text-xs text-[color:var(--muted)]">
           {fill(copy.report.metaLine, {
-            jobId: report.jobId,
-            date: report.generatedAt.slice(0, 10),
+            jobId: normalized.jobId,
+            date: normalized.generatedAt.slice(0, 10),
           })}
         </p>
         {cost && (
@@ -67,16 +71,18 @@ export function ScreeningReportView({
         )}
       </header>
 
-      {report.partial && report.pendingAgentKinds.length > 0 && (
+      {normalized.partial && normalized.pendingAgentKinds.length > 0 && (
         <p className="rounded-xl border border-amber-500/30 bg-amber-500/[0.07] px-3 py-2 text-xs text-[color:var(--foreground)]">
-          {fill(copy.report.partialNotice, { agents: report.pendingAgentKinds.join(", ") })}
+          {fill(copy.report.partialNotice, {
+            agents: normalized.pendingAgentKinds.join(", "),
+          })}
         </p>
       )}
 
-      {report.verification && (
+      {normalized.verification && (
         <VerificationBanner
-          verification={report.verification}
-          issuesByTicker={collectQaIssues(report)}
+          verification={normalized.verification}
+          issuesByTicker={collectQaIssues(normalized)}
           copy={copy.report}
         />
       )}
@@ -87,7 +93,7 @@ export function ScreeningReportView({
             {copy.report.methodologyTitle}
           </h2>
           <p className="mt-1.5 text-[13px] leading-relaxed text-[color:var(--muted)]">
-            {report.methodologyNote}
+            {normalized.methodologyNote}
           </p>
         </section>
 
@@ -99,7 +105,7 @@ export function ScreeningReportView({
             <AiLabel />
           </div>
           <p className="mt-1.5 text-sm leading-relaxed text-[color:var(--foreground)]">
-            {report.executiveSummary}
+            {normalized.executiveSummary}
           </p>
 
           {ranked.length === 0 && (
@@ -164,7 +170,7 @@ export function ScreeningReportView({
               </tr>
             </thead>
             <tbody>
-              {report.comparisonRows.map((row) => {
+              {normalized.comparisonRows.map((row) => {
                 const cheap =
                   row.cheapLabel != null
                     ? copy.report.cheapLabels[row.cheapLabel]
@@ -208,7 +214,7 @@ export function ScreeningReportView({
           {copy.report.cardsTitle}
         </h2>
         <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {(ranked.length > 0 ? ranked : report.cards).map((card, index) => (
+          {(ranked.length > 0 ? ranked : normalized.cards).map((card, index) => (
             <CandidateCard
               key={card.ticker}
               card={card}
@@ -223,7 +229,9 @@ export function ScreeningReportView({
         className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-3"
         role="note"
       >
-        <p className="text-[11px] leading-relaxed text-[color:var(--muted)]">{report.disclaimer}</p>
+        <p className="text-[11px] leading-relaxed text-[color:var(--muted)]">
+          {normalized.disclaimer}
+        </p>
         <p className="mt-1.5 text-[11px] leading-relaxed text-[color:var(--muted)]">
           {copy.report.externalLinksNote}
         </p>

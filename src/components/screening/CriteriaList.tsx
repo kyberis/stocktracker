@@ -31,9 +31,8 @@ const MARK_TONE: Record<CriterionStatus, string> = {
 };
 
 /**
- * Renders the checklist as named criteria. The report stores numeric ids, but a
- * row of digits is unreadable: the reader needs the name, what it measures, and
- * why the denominator is 8 and not 9.
+ * Supporting methodology checklist (collapsed by default). The product verdict
+ * is the three category axes on the card; this list is evidence detail only.
  */
 export function CriteriaList({
   passed,
@@ -46,19 +45,27 @@ export function CriteriaList({
 }) {
   const { copy } = useScreeningCopy();
   const labels = copy.criteria.labels;
+  const metCount = score ?? passed.length;
 
   return (
-    <div className="mt-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
-          {copy.criteria.title}
-        </p>
-        {score != null && (
-          <span className="text-xs text-[color:var(--muted)]">
-            {fill(copy.criteria.count, { passed: score, max: SCREENING_MAX_SCORE })}
+    <details className="mt-4 group">
+      <summary className="flex cursor-pointer list-none flex-wrap items-baseline justify-between gap-2 rounded-lg px-0.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-teal-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-teal-300 [&::-webkit-details-marker]:hidden">
+        <span>
+          <span className="group-open:hidden">{copy.criteria.showChecklist}</span>
+          <span className="hidden group-open:inline">{copy.criteria.hideChecklist}</span>
+          <span className="ml-2 font-normal normal-case tracking-normal text-[color:var(--muted)]">
+            ({copy.criteria.title})
+          </span>
+        </span>
+        {metCount > 0 && (
+          <span className="text-xs font-normal normal-case tracking-normal text-[color:var(--muted)]">
+            {fill(copy.criteria.count, {
+              passed: metCount,
+              max: SCREENING_MAX_SCORE,
+            })}
           </span>
         )}
-      </div>
+      </summary>
 
       <ul className="mt-2 grid list-none grid-cols-1 gap-1.5 p-0 sm:grid-cols-2 lg:grid-cols-3">
         {SCREENING_CRITERIA.map((criterion) => {
@@ -91,6 +98,17 @@ export function CriteriaList({
                   }`}
                 >
                   {label.name}
+                  <span className="sr-only">
+                    {" "}
+                    —{" "}
+                    {status === "pass"
+                      ? copy.criteria.legendPass
+                      : status === "fail"
+                        ? copy.criteria.legendFail
+                        : status === "unknown"
+                          ? copy.criteria.unknownNote
+                          : copy.criteria.legendNotScored}
+                  </span>
                 </span>
                 <span className="block text-[11px] text-[color:var(--muted)]">{note}</span>
               </span>
@@ -110,6 +128,6 @@ export function CriteriaList({
           <b>–</b> {copy.criteria.legendNotScored}
         </span>
       </p>
-    </div>
+    </details>
   );
 }

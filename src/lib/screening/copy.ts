@@ -122,6 +122,8 @@ const en = {
   criteria: {
     title: "Methodology checklist (supporting detail)",
     count: "{passed} of {max} met",
+    showChecklist: "Show methodology checklist",
+    hideChecklist: "Hide methodology checklist",
     legendPass: "met",
     legendFail: "not met",
     legendNotScored: "not scored",
@@ -856,6 +858,8 @@ const es: ScreeningCopy = {
   criteria: {
     title: "Checklist de metodología (detalle de apoyo)",
     count: "{passed} de {max} cumplidos",
+    showChecklist: "Ver checklist de metodología",
+    hideChecklist: "Ocultar checklist de metodología",
     legendPass: "cumple",
     legendFail: "no cumple",
     legendNotScored: "no puntúa",
