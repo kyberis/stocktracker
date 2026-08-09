@@ -1,3 +1,4 @@
+import { ensureMoatForTickers } from "@/lib/screening/data/ensure-moat";
 import { fetchFmpFundamentals } from "@/lib/screening/data/fmp-fundamentals";
 import {
   loadTrefolioSignalsForTickers,
@@ -63,11 +64,21 @@ export async function backfillHardDataOutputJson(
 /**
  * Enrich ranked Hard Data candidates with FMP multiples + trefolio MOAT /
  * analysis cache. Populates typed report fields (never invents LLM numbers).
+ * MOAT cache misses are filled via evaluateMoat + upsert (ops path, no user quota).
  */
 export async function enrichHardDataCandidates(
   candidates: HardDataCandidate[],
 ): Promise<HardDataCandidate[]> {
   if (candidates.length === 0) return candidates;
+
+  try {
+    await ensureMoatForTickers(candidates.map((c) => c.ticker));
+  } catch (err) {
+    console.warn(
+      "[screening/enrich] ensureMoatForTickers failed",
+      err instanceof Error ? err.message : err,
+    );
+  }
 
   const signals = await loadTrefolioSignalsForTickers(
     candidates.map((c) => c.ticker),

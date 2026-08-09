@@ -25,6 +25,15 @@ vi.mock("@/lib/screening/data/fmp-fundamentals", () => ({
   })),
 }));
 
+vi.mock("@/lib/screening/data/ensure-moat", () => ({
+  ensureMoatForTickers: vi.fn(async () => ({
+    available: ["AAPL"],
+    missing: [],
+    generated: 0,
+    failed: 0,
+  })),
+}));
+
 vi.mock("@/lib/screening/data/trefolio-signals", () => ({
   loadTrefolioSignalsForTickers: vi.fn(async () => {
     const map = new Map();

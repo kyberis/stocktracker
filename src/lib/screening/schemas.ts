@@ -289,6 +289,11 @@ export const screeningCategoriesSchema = z.object({
   solidity: z.object({
     label: z.enum(["solid", "moderate", "weak", "unknown"]),
     moatScore: z.number().finite().nullable(),
+    /** When set, UI shows ND/EBITDA alongside MOAT. */
+    ndEbitda: z.number().finite().nullable().optional(),
+    netCash: z.boolean().nullable().optional(),
+    /** What drove the solidity label. */
+    source: z.enum(["moat", "fundamentals", "none"]).optional(),
   }),
 });
 export type ScreeningCategories = z.infer<typeof screeningCategoriesSchema>;

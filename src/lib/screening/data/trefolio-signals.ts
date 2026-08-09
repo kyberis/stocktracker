@@ -7,8 +7,10 @@ import {
 import type { CompanyAnalysisReport } from "@/lib/company-analysis/types";
 
 /**
- * Cache-only trefolio signals (MOAT + /analisis) for screening Hard Data.
- * Never triggers a fresh moat evaluation or analysis rebuild (no quota).
+ * trefolio signals (MOAT + /analisis) for screening Hard Data.
+ * Reads moat_cache only — callers that need a fill on miss should run
+ * `ensureMoatForTickers` first (ops generation, no user quota).
+ * Analysis remains cache-only (no fresh /analisis rebuild).
  */
 
 export interface TrefolioTickerSignals {

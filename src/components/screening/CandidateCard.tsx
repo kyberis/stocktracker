@@ -283,12 +283,28 @@ export function CandidateCard({
             current: categories.cheap.currentPe.toFixed(1),
           })
         : null;
-  const solidityDetail =
+  const fitDetail =
+    card.riskFlags?.[0]?.trim() ||
+    card.concentrationImpact?.trim() ||
+    null;
+  const solidityMoatLine =
     categories?.solidity.moatScore != null
       ? fill(copy.report.solidityMoatDetail, {
           score: Math.round(categories.solidity.moatScore),
         })
       : null;
+  const nd = categories?.solidity.ndEbitda;
+  const netCash = categories?.solidity.netCash;
+  const solidityFundLine =
+    nd != null && netCash === true
+      ? fill(copy.report.solidityFundDetailNdCash, {
+          nd: nd.toFixed(1),
+        })
+      : nd != null
+        ? fill(copy.report.solidityFundDetailNd, { nd: nd.toFixed(1) })
+        : netCash === true
+          ? copy.report.solidityFundDetailCash
+          : null;
 
   const title = hideIdentity
     ? redactedCandidateLabel(rankIndex + 1, copy.report.lockedCandidate)
@@ -366,6 +382,9 @@ export function CandidateCard({
               {cheapDetail && (
                 <p className="mt-0.5 text-[11px] opacity-80">{cheapDetail}</p>
               )}
+              <p className="mt-1 text-[10px] leading-snug opacity-70">
+                {copy.report.categoryCheapHint}
+              </p>
             </li>
             <li className={`rounded-xl border px-3 py-2 ${fitTone}`}>
               <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
@@ -373,6 +392,14 @@ export function CandidateCard({
               </p>
               <p className="mt-0.5 text-sm font-semibold">
                 {copy.report.fitLabels[categories.fit.label]}
+              </p>
+              {fitDetail && (
+                <p className="mt-0.5 line-clamp-2 text-[11px] opacity-80">
+                  {fitDetail}
+                </p>
+              )}
+              <p className="mt-1 text-[10px] leading-snug opacity-70">
+                {copy.report.categoryFitHint}
               </p>
             </li>
             <li className={`rounded-xl border px-3 py-2 ${solidityTone}`}>
@@ -382,10 +409,16 @@ export function CandidateCard({
               <p className="mt-0.5 text-sm font-semibold">
                 {copy.report.solidityLabels[categories.solidity.label]}
               </p>
-              {solidityDetail && (
-                <p className="mt-0.5 text-[11px] opacity-80">{solidityDetail}</p>
+              {solidityMoatLine && (
+                <p className="mt-0.5 text-[11px] opacity-80">{solidityMoatLine}</p>
               )}
-              {categories.solidity.moatScore != null && !hideIdentity && (
+              {solidityFundLine && (
+                <p className="mt-0.5 text-[11px] opacity-80">{solidityFundLine}</p>
+              )}
+              <p className="mt-1 text-[10px] leading-snug opacity-70">
+                {copy.report.categorySolidityHint}
+              </p>
+              {!hideIdentity && (
                 <Link
                   href={`/analisis/${encodeURIComponent(card.ticker)}?tab=evaluation`}
                   className="mt-1 inline-block rounded-sm text-[11px] font-medium underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"

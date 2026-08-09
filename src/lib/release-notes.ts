@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.128",
+    date: "2026-08-10",
+    title: "Screening: clearer cheap / fit / solidity chips",
+    titleTranslations: {
+      es: "Cribado: fichas barata / fit / solidez más claras",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Detailed cards explain Cheap / Portfolio fit / Solidity with clearer labels and short hints. Solidity uses MOAT when available (generating and caching it on shortlist miss) and always shows ND/EBITDA or net cash alongside. Red on “expensive” means little valuation margin — not a bad business.",
+        translations: {
+          es: "Las fichas detalladas aclaran ¿Barata? / Fit / Solidez con etiquetas más claras y ayudas cortas. Solidez usa MOAT si existe (lo genera y cachea si falta en el shortlist) y siempre muestra ND/EBITDA o caja neta. El rojo en “cara” significa poco margen de valoración — no un mal negocio.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.127",
     date: "2026-08-09",
     title: "Screening: View report opens the report",

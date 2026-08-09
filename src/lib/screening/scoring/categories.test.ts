@@ -16,6 +16,8 @@ const base = {
   earningsQualitySuspect: false as boolean | null,
   moatScorePct: null as number | null,
   suitability: null as "fit" | "stretch" | "poor_fit" | null,
+  ndEbitda: null as number | null,
+  netCash: null as boolean | null,
 };
 
 describe("selectCurrentPe", () => {
@@ -117,18 +119,40 @@ describe("scoreCheap", () => {
 });
 
 describe("scoreFit / scoreSolidity", () => {
-  it("maps suitability and moat bands", () => {
+  it("maps suitability", () => {
     expect(scoreFit("fit").label).toBe("fit");
     expect(scoreFit(null).label).toBe("unknown");
-    expect(scoreSolidity(72).label).toBe("solid");
+  });
+
+  it("maps moat bands and always keeps fundamentals on the result", () => {
+    const solid = scoreSolidity(72, { ndEbitda: 0.4, netCash: true });
+    expect(solid.label).toBe("solid");
+    expect(solid.source).toBe("moat");
+    expect(solid.ndEbitda).toBe(0.4);
+    expect(solid.netCash).toBe(true);
+
     expect(scoreSolidity(55).label).toBe("moderate");
     expect(scoreSolidity(30).label).toBe("weak");
+  });
+
+  it("falls back to fundamentals when MOAT is missing", () => {
+    expect(
+      scoreSolidity(null, { ndEbitda: 0.3, netCash: false }).label,
+    ).toBe("solid");
+    expect(
+      scoreSolidity(null, { ndEbitda: 1.8, netCash: false }).label,
+    ).toBe("moderate");
+    expect(
+      scoreSolidity(null, { ndEbitda: 3.2, netCash: false }).label,
+    ).toBe("weak");
+    expect(scoreSolidity(null, { netCash: true }).label).toBe("solid");
     expect(scoreSolidity(null).label).toBe("unknown");
+    expect(scoreSolidity(null).source).toBe("none");
   });
 });
 
 describe("scoreCategories", () => {
-  it("allows solid + fit + expensive together", () => {
+  it("allows solid + fit + expensive together with fund complement", () => {
     const r = scoreCategories({
       ...base,
       fwdPe: 32,
@@ -136,9 +160,13 @@ describe("scoreCategories", () => {
       histPeYears: 5,
       moatScorePct: 78,
       suitability: "fit",
+      ndEbitda: 0.5,
+      netCash: true,
     });
     expect(r.cheap.label).toBe("expensive");
     expect(r.fit.label).toBe("fit");
     expect(r.solidity.label).toBe("solid");
+    expect(r.solidity.ndEbitda).toBe(0.5);
+    expect(r.solidity.source).toBe("moat");
   });
 });

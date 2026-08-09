@@ -9,6 +9,7 @@ export type CheapLabel = "cheap" | "fair" | "expensive" | "unknown";
 export type FitLabel = "fit" | "stretch" | "poor_fit" | "unknown";
 export type SolidityLabel = "solid" | "moderate" | "weak" | "unknown";
 export type HistPeSource = "multi_year" | "ttm" | "none";
+export type SoliditySource = "moat" | "fundamentals" | "none";
 
 export interface CategoryScoreInputs {
   fwdPe: number | null;
@@ -21,6 +22,8 @@ export interface CategoryScoreInputs {
   earningsQualitySuspect?: boolean | null;
   moatScorePct: number | null;
   suitability?: "fit" | "stretch" | "poor_fit" | null;
+  ndEbitda?: number | null;
+  netCash?: boolean | null;
 }
 
 export interface CheapCategory {
@@ -37,6 +40,9 @@ export interface FitCategory {
 export interface SolidityCategory {
   label: SolidityLabel;
   moatScore: number | null;
+  ndEbitda: number | null;
+  netCash: boolean | null;
+  source: SoliditySource;
 }
 
 export interface CategoryScores {
@@ -146,23 +152,79 @@ export function scoreFit(
   return { label: suitability };
 }
 
-/**
- * Solidity from cached Moat % (same bands as the Moat product verdict).
- * ≥70 solid, ≥50 moderate, else weak when a score exists.
- */
-export function scoreSolidity(moatScorePct: number | null): SolidityCategory {
-  if (moatScorePct == null || !Number.isFinite(moatScorePct)) {
-    return { label: "unknown", moatScore: null };
+function scoreSolidityFromFundamentals(
+  ndEbitda: number | null,
+  netCash: boolean | null,
+): SolidityLabel | null {
+  if (netCash === true) return "solid";
+  if (ndEbitda != null && Number.isFinite(ndEbitda)) {
+    if (ndEbitda < 1) return "solid";
+    if (ndEbitda < 2.5) return "moderate";
+    return "weak";
   }
-  if (moatScorePct >= 70) return { label: "solid", moatScore: moatScorePct };
-  if (moatScorePct >= 50) return { label: "moderate", moatScore: moatScorePct };
-  return { label: "weak", moatScore: moatScorePct };
+  return null;
+}
+
+/**
+ * Solidity from MOAT % when present (same bands as Moat product), else
+ * ND/EBITDA / net cash. Fundamentals are always attached for UI complement.
+ */
+export function scoreSolidity(
+  moatScorePct: number | null,
+  opts: {
+    ndEbitda?: number | null;
+    netCash?: boolean | null;
+  } = {},
+): SolidityCategory {
+  const ndEbitda =
+    opts.ndEbitda != null && Number.isFinite(opts.ndEbitda)
+      ? opts.ndEbitda
+      : null;
+  const netCash = opts.netCash ?? null;
+  const fundLabel = scoreSolidityFromFundamentals(ndEbitda, netCash);
+
+  if (moatScorePct != null && Number.isFinite(moatScorePct)) {
+    const label: SolidityLabel =
+      moatScorePct >= 70
+        ? "solid"
+        : moatScorePct >= 50
+          ? "moderate"
+          : "weak";
+    return {
+      label,
+      moatScore: moatScorePct,
+      ndEbitda,
+      netCash,
+      source: "moat",
+    };
+  }
+
+  if (fundLabel) {
+    return {
+      label: fundLabel,
+      moatScore: null,
+      ndEbitda,
+      netCash,
+      source: "fundamentals",
+    };
+  }
+
+  return {
+    label: "unknown",
+    moatScore: null,
+    ndEbitda,
+    netCash,
+    source: "none",
+  };
 }
 
 export function scoreCategories(input: CategoryScoreInputs): CategoryScores {
   return {
     cheap: scoreCheap(input),
     fit: scoreFit(input.suitability),
-    solidity: scoreSolidity(input.moatScorePct),
+    solidity: scoreSolidity(input.moatScorePct, {
+      ndEbitda: input.ndEbitda,
+      netCash: input.netCash,
+    }),
   };
 }

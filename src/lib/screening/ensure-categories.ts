@@ -22,15 +22,41 @@ export function deriveCategoriesFromCard(
     histPeYears: card.multiples.histPeYears ?? null,
     moatScorePct: card.flags.moatScore ?? null,
     suitability: card.suitability ?? null,
+    ndEbitda: card.multiples.ndEbitda ?? null,
+    netCash: card.flags.netCash ?? null,
   });
 }
 
-/** Attach categories when missing; never overwrite an existing score. */
+/**
+ * Attach categories when missing. Never overwrite labels, but backfill
+ * ND/EBITDA / netCash onto solidity for older reports that predate those fields.
+ */
 export function ensureCardCategories(
   card: ScreeningCandidateCard,
 ): ScreeningCandidateCard {
-  if (card.categories) return card;
-  return { ...card, categories: deriveCategoriesFromCard(card) };
+  if (!card.categories) {
+    return { ...card, categories: deriveCategoriesFromCard(card) };
+  }
+  const s = card.categories.solidity;
+  if (s.ndEbitda != null || s.netCash != null) return card;
+  return {
+    ...card,
+    categories: {
+      ...card.categories,
+      solidity: {
+        ...s,
+        ndEbitda: card.multiples.ndEbitda ?? null,
+        netCash: card.flags.netCash ?? null,
+        source:
+          s.source ??
+          (s.moatScore != null
+            ? "moat"
+            : card.multiples.ndEbitda != null || card.flags.netCash != null
+              ? "fundamentals"
+              : "none"),
+      },
+    },
+  };
 }
 
 /**

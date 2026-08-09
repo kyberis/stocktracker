@@ -389,6 +389,8 @@ export function composeScreeningReport(
       earningsQualitySuspect: c.earningsQualitySuspect ?? null,
       moatScorePct: c.moatScore ?? null,
       suitability: riskRow?.suitability ?? null,
+      ndEbitda: c.ndEbitda ?? null,
+      netCash: c.netCash ?? null,
     });
 
     return {

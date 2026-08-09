@@ -174,8 +174,12 @@ the feature is not discoverable before launch. The Dev outputs route adds
   reject nonsense ranges even if the model returns valid JSON.
 - **FMP** — Hard Data universe + ratios-ttm/profile enrichment for card multiples
   + IR/Web evidence bundles (`FMP_API_KEY`).
-- **trefolio MOAT cache + /analisis cache** — Hard Data ranking context and
-  `flags.moatScore` / business summary on cards (cache-only; no fresh quota).
+- **trefolio MOAT + /analisis cache** — Hard Data ranking context and
+  `flags.moatScore` / business summary on cards. MOAT: read `moat_cache`; on
+  shortlist miss, generate via `evaluateMoat` + `upsertMoatCache` (ops path,
+  no user `stock_evaluation` quota). Analysis summary remains cache-only.
+  Solidity category = MOAT bands when present, else ND/EBITDA / net cash; UI
+  always complements with leverage/cash when available.
 - **Tavily Search** — Web & Sentiment agent + IR hub/doc discovery (`TAVILY_API_KEY`).
   If unset, agents continue with FMP-only evidence (no hard failure). Queries send
   ticker + company name only. Accrues into per-run `cost_usd` (1 credit basic /
