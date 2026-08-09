@@ -1,4 +1,4 @@
 {
-  "notes": "2.5.126: screening category axes (cheap/fit/solidity) refine the beta screening report UX; not a new top-level landing capability — no FEATURES card update. Landing still accurate for portfolio tracking + AI research positioning.",
+  "notes": "2.5.127: fix screening entry “View report” deep-link to open the report (not agents). No landing-page impact.",
   "landingPageReviewed": true
 }
