@@ -30,6 +30,7 @@ import {
 } from "@/lib/screening/schemas";
 import { scoreChecklist } from "@/lib/screening/scoring/checklist";
 import { scoreCategories } from "@/lib/screening/scoring/categories";
+import { ensureReportCategories } from "@/lib/screening/ensure-categories";
 import { buildEducationalThesis } from "@/lib/screening/thesis";
 
 /**
@@ -640,5 +641,7 @@ export function composeScreeningReport(
     );
     return null;
   }
-  return validated.data;
+  // Defensive: always surface category axes even if a future compose path
+  // omits them (legacy clients / partial drafts).
+  return ensureReportCategories(validated.data);
 }

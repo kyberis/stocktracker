@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { formatCompactNumber } from "@/lib/utils";
 import { fill } from "@/lib/screening/copy";
+import { ensureCardCategories } from "@/lib/screening/ensure-categories";
 import type { ScreeningCandidateCard } from "@/lib/screening/schemas";
 import { BlurredValue, redactedCandidateLabel } from "./BlurredValue";
 import { CriteriaList } from "./CriteriaList";
@@ -244,7 +245,8 @@ export function CandidateCard({
   const hideIdentity = locked && rankIndex > 0;
   const blurResearch = locked;
 
-  const categories = card.categories;
+  // Legacy reports (pre-categories) still render the three axes.
+  const categories = ensureCardCategories(card).categories!;
   const cheapTone =
     categories?.cheap.label === "cheap"
       ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
@@ -344,59 +346,57 @@ export function CandidateCard({
         </div>
       </div>
 
-      {categories && (
-        <BlurredValue locked={blurResearch} as="div" className="mt-3">
-          {blurResearch ? (
-            <p className="text-[13px] text-[color:var(--muted)]">
-              {copy.report.lockedCell.repeat(10)}
-            </p>
-          ) : (
-            <div
-              className="grid grid-cols-1 gap-2 sm:grid-cols-3"
-              aria-label={copy.report.categoriesTitle}
-            >
-              <div className={`rounded-xl border px-3 py-2 ${cheapTone}`}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
-                  {copy.report.categoryCheap}
-                </p>
-                <p className="mt-0.5 text-sm font-semibold">
-                  {copy.report.cheapLabels[categories.cheap.label]}
-                </p>
-                {cheapDetail && (
-                  <p className="mt-0.5 text-[11px] opacity-80">{cheapDetail}</p>
-                )}
-              </div>
-              <div className={`rounded-xl border px-3 py-2 ${fitTone}`}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
-                  {copy.report.categoryFit}
-                </p>
-                <p className="mt-0.5 text-sm font-semibold">
-                  {copy.report.fitLabels[categories.fit.label]}
-                </p>
-              </div>
-              <div className={`rounded-xl border px-3 py-2 ${solidityTone}`}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
-                  {copy.report.categorySolidity}
-                </p>
-                <p className="mt-0.5 text-sm font-semibold">
-                  {copy.report.solidityLabels[categories.solidity.label]}
-                </p>
-                {solidityDetail && (
-                  <p className="mt-0.5 text-[11px] opacity-80">{solidityDetail}</p>
-                )}
-                {categories.solidity.moatScore != null && !hideIdentity && (
-                  <Link
-                    href={`/analisis/${encodeURIComponent(card.ticker)}?tab=evaluation`}
-                    className="mt-1 inline-block text-[11px] font-medium underline-offset-2 hover:underline"
-                  >
-                    {copy.report.solidityMoatExplore}
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
-        </BlurredValue>
-      )}
+      <BlurredValue locked={blurResearch} as="div" className="mt-3">
+        {blurResearch ? (
+          <p className="text-[13px] text-[color:var(--muted)]">
+            {copy.report.lockedCell.repeat(10)}
+          </p>
+        ) : (
+          <ul
+            className="m-0 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-3"
+            aria-label={copy.report.categoriesTitle}
+          >
+            <li className={`rounded-xl border px-3 py-2 ${cheapTone}`}>
+              <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
+                {copy.report.categoryCheap}
+              </p>
+              <p className="mt-0.5 text-sm font-semibold">
+                {copy.report.cheapLabels[categories.cheap.label]}
+              </p>
+              {cheapDetail && (
+                <p className="mt-0.5 text-[11px] opacity-80">{cheapDetail}</p>
+              )}
+            </li>
+            <li className={`rounded-xl border px-3 py-2 ${fitTone}`}>
+              <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
+                {copy.report.categoryFit}
+              </p>
+              <p className="mt-0.5 text-sm font-semibold">
+                {copy.report.fitLabels[categories.fit.label]}
+              </p>
+            </li>
+            <li className={`rounded-xl border px-3 py-2 ${solidityTone}`}>
+              <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
+                {copy.report.categorySolidity}
+              </p>
+              <p className="mt-0.5 text-sm font-semibold">
+                {copy.report.solidityLabels[categories.solidity.label]}
+              </p>
+              {solidityDetail && (
+                <p className="mt-0.5 text-[11px] opacity-80">{solidityDetail}</p>
+              )}
+              {categories.solidity.moatScore != null && !hideIdentity && (
+                <Link
+                  href={`/analisis/${encodeURIComponent(card.ticker)}?tab=evaluation`}
+                  className="mt-1 inline-block rounded-sm text-[11px] font-medium underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                >
+                  {copy.report.solidityMoatExplore}
+                </Link>
+              )}
+            </li>
+          </ul>
+        )}
+      </BlurredValue>
 
       {(!hideIdentity || blurResearch) && (
         <BusinessBlock card={card} locked={blurResearch || hideIdentity} />

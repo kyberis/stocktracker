@@ -109,6 +109,11 @@ describe("composeScreeningReport degraded survivors", () => {
     expect(report!.cards[0]!.qa?.verified).toBe(false);
     expect(report!.verification?.verdict).toBe("pass_with_degradation");
     expect(report!.verification?.degradedTickers).toEqual(["NKE"]);
+    // Headline rating removed — categories are always present.
+    expect(report!.cards[0]!.score).toBeNull();
+    expect(report!.cards[0]!.verdict).toBeNull();
+    expect(report!.cards[0]!.categories).toBeDefined();
+    expect(report!.comparisonRows[0]!.cheapLabel).toBeTruthy();
   });
 
   it("still drops degraded names when a clean candidate remains", () => {

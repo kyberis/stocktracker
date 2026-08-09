@@ -149,6 +149,10 @@ the feature is not discoverable before launch. The Dev outputs route adds
     when a score exists. Cards can deep-link to `/analisis/[ticker]?tab=evaluation`.
   - Axes are independent: solid + good fit + expensive is a valid outcome (no
     composite downgrade).
+- [`ensure-categories.ts`](../../src/lib/screening/ensure-categories.ts) —
+  backfills `categories` (+ comparison labels) on report read for legacy cards
+  that still carry score/verdict only. Applied in compose, mock fixture serve,
+  and `ScreeningReportView`.
 - [`intake-script.ts`](../../src/lib/screening/intake-script.ts) — deterministic question
   script; each option declares the brief patch it applies. Explain entries may include
   optional `higher` / `lower` tips. Brief row tips live in `copy.intake.rowHelp` and power

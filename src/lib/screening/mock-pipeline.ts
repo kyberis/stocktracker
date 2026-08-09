@@ -1,4 +1,5 @@
 import rawMockReport from "../../../data/screening-mock-report-cribado-2026-08-05.json";
+import { ensureReportCategories } from "./ensure-categories";
 import {
   screeningReportSchema,
   type ScreeningReport,
@@ -95,15 +96,17 @@ export function getMockScreeningReport(runId: string, candidateLimit?: number): 
     cachedReport = screeningReportSchema.parse(rawMockReport);
   }
   const report: ScreeningReport = { ...cachedReport, jobId: runId };
-  if (!candidateLimit || candidateLimit >= report.cards.length) return report;
+  if (!candidateLimit || candidateLimit >= report.cards.length) {
+    return ensureReportCategories(report);
+  }
 
   // Honour the candidate count the user asked for instead of always showing five.
   const cards = report.cards.slice(0, candidateLimit);
   const kept = new Set(cards.map((c) => c.ticker));
-  return {
+  return ensureReportCategories({
     ...report,
     cards,
     comparisonRows: report.comparisonRows.filter((r) => kept.has(r.ticker)),
     priorityOrder: report.priorityOrder.filter((t) => kept.has(t)),
-  };
+  });
 }
