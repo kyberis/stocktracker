@@ -1668,6 +1668,8 @@ const fr: TranslationStrings = {
   landingCardScreenerDesc: "Filtrez plus de 680 actions par rendement des dividendes, P/E, secteur, capitalisation boursière, et plus avec des stratégies prédéfinies",
   landingCardMoatTitle: "Filtre de fossé",
   landingCardMoatDesc: "Plus de 680 actions notées sur 8 critères de style Buffett — cohérence des bénéfices, marges, ROE, dette, et plus. Pré-évaluées et recherchables.",
+  landingCardVerifiedTitle: "Rapports de screening vérifiés",
+  landingCardVerifiedDesc: "Screening IA avec une passe QA qui vérifie les affirmations contre Hard Data, IR et sources avant le déblocage du rapport",
   landingCardNetWorthTitle: "Suivi de la valeur nette",
   landingCardNetWorthDesc: "Suivez les actifs immobiliers, d'épargne et de retraite aux côtés de vos investissements pour une vue d'ensemble complète",
   landingTestimonialsHeading: "Ce que les investisseurs",

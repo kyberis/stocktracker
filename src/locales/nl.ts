@@ -1667,6 +1667,8 @@ const nl: TranslationStrings = {
   landingCardScreenerDesc: "Filter 680+ aandelen op dividendrendement, P/E, sector, marktkapitalisatie en meer met vooraf ingestelde strategieën",
   landingCardMoatTitle: "Moat Screener",
   landingCardMoatDesc: "680+ aandelen beoordeeld op 8 Buffett-stijl criteria — winstconsistentie, marges, ROE, schulden en meer. Vooraf geëvalueerd en doorzoekbaar.",
+  landingCardVerifiedTitle: "Geverifieerde screeningrapporten",
+  landingCardVerifiedDesc: "AI-screening met een QA-stap die claims controleert tegen Hard Data, IR en bronnen voordat het rapport wordt ontgrendeld",
   landingCardNetWorthTitle: "Netto Vermogens Tracking",
   landingCardNetWorthDesc: "Volg onroerend goed, spaargelden en pensioenactiva naast uw investeringen voor een compleet overzicht",
   landingTestimonialsHeading: "Wat Beleggers",

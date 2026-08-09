@@ -1668,6 +1668,8 @@ const de: TranslationStrings = {
   landingCardScreenerDesc: "Filtern Sie über 680 Aktien nach Dividendenrendite, KGV, Sektor, Marktkapitalisierung und mehr mit vordefinierten Strategien",
   landingCardMoatTitle: "Moat-Screener",
   landingCardMoatDesc: "Über 680 Aktien, die nach 8 Buffett-Stil-Kriterien bewertet wurden – Ertragskonstanz, Margen, ROE, Schulden und mehr. Vorab bewertet und durchsuchbar.",
+  landingCardVerifiedTitle: "Verifizierte Screening-Berichte",
+  landingCardVerifiedDesc: "KI-Screening mit QA-Prüfung, die Aussagen gegen Hard Data, IR und Quellen prüft, bevor der Bericht freigeschaltet wird",
   landingCardNetWorthTitle: "Vermögensverfolgung",
   landingCardNetWorthDesc: "Verfolgen Sie Immobilien, Ersparnisse und Rentenvermögen neben Ihren Investitionen für ein vollständiges Bild",
   landingTestimonialsHeading: "Was Investoren",
