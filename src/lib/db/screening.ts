@@ -64,8 +64,10 @@ function readRun(row: Record<string, unknown>): ScreeningRunRow {
     currency: "USD",
     llmUsd: 0,
     tavilySearchUsd: 0,
+    tavilyExtractUsd: 0,
     tavilyResearchUsd: 0,
     tavilySearchCredits: 0,
+    tavilyExtractCredits: 0,
     tavilyResearchCredits: 0,
     llmTokensIn: 0,
     llmTokensOut: 0,
@@ -77,8 +79,10 @@ function readRun(row: Record<string, unknown>): ScreeningRunRow {
         currency: "USD",
         llmUsd: Number(parsed.llmUsd) || 0,
         tavilySearchUsd: Number(parsed.tavilySearchUsd) || 0,
+        tavilyExtractUsd: Number(parsed.tavilyExtractUsd) || 0,
         tavilyResearchUsd: Number(parsed.tavilyResearchUsd) || 0,
         tavilySearchCredits: Number(parsed.tavilySearchCredits) || 0,
+        tavilyExtractCredits: Number(parsed.tavilyExtractCredits) || 0,
         tavilyResearchCredits: Number(parsed.tavilyResearchCredits) || 0,
         llmTokensIn: Number(parsed.llmTokensIn) || 0,
         llmTokensOut: Number(parsed.llmTokensOut) || 0,
@@ -168,8 +172,10 @@ export async function createScreeningRun(
       currency: "USD",
       llmUsd: 0,
       tavilySearchUsd: 0,
+      tavilyExtractUsd: 0,
       tavilyResearchUsd: 0,
       tavilySearchCredits: 0,
+      tavilyExtractCredits: 0,
       tavilyResearchCredits: 0,
       llmTokensIn: 0,
       llmTokensOut: 0,
@@ -247,6 +253,65 @@ export async function listScreeningRunsByUser(
     args: [userId, capped],
   });
   return result.rows.map((r) => readRun(r as unknown as Record<string, unknown>));
+}
+
+export interface ScreeningRunCostAdminRow extends ScreeningRunRow {
+  username: string;
+  email: string;
+}
+
+/**
+ * Admin ops: all screening runs ranked by variable cost (highest first).
+ * Joins users for display. Never expose on a user-facing route.
+ */
+export async function listScreeningRunsByCostAdmin(
+  opts: { limit?: number; offset?: number; userId?: string } = {},
+): Promise<{ runs: ScreeningRunCostAdminRow[]; total: number; totalCostUsd: number }> {
+  const client = await ensureInitialized();
+  const limit = Math.min(Math.max(1, opts.limit ?? 50), 200);
+  const offset = Math.max(0, opts.offset ?? 0);
+
+  const conditions: string[] = [];
+  const args: (string | number)[] = [];
+  if (opts.userId) {
+    conditions.push("r.user_id = ?");
+    args.push(opts.userId);
+  }
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const [countResult, sumResult, result] = await Promise.all([
+    client.execute({
+      sql: `SELECT COUNT(*) as c FROM screening_runs r ${where}`,
+      args,
+    }),
+    client.execute({
+      sql: `SELECT COALESCE(SUM(r.cost_usd), 0) as s FROM screening_runs r ${where}`,
+      args,
+    }),
+    client.execute({
+      sql: `SELECT r.*, u.username, u.email
+            FROM screening_runs r
+            LEFT JOIN users u ON u.id = r.user_id
+            ${where}
+            ORDER BY r.cost_usd DESC, r.created_at DESC
+            LIMIT ? OFFSET ?`,
+      args: [...args, limit, offset],
+    }),
+  ]);
+
+  return {
+    runs: result.rows.map((raw) => {
+      const row = raw as unknown as Record<string, unknown>;
+      const base = readRun(row);
+      return {
+        ...base,
+        username: str(row.username ?? ""),
+        email: str(row.email ?? ""),
+      };
+    }),
+    total: Number(countResult.rows[0]?.c) || 0,
+    totalCostUsd: Number(sumResult.rows[0]?.s) || 0,
+  };
 }
 
 /**

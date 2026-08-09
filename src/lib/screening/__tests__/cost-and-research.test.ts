@@ -22,9 +22,10 @@ describe("screening cost ledger", () => {
       ...emptyScreeningCostBreakdown(),
       llmUsd: 0.12,
       tavilySearchUsd: 0.32,
+      tavilyExtractUsd: 0.008,
       tavilyResearchUsd: 0.16,
     };
-    expect(totalScreeningCostUsd(b)).toBe(roundUsd(0.6));
+    expect(totalScreeningCostUsd(b)).toBe(roundUsd(0.608));
   });
 
   it("prices openai/ prefixed models", () => {

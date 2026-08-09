@@ -1,7 +1,7 @@
 /**
  * Per-report variable ops cost for investment screening.
  *
- * Included: LLM tokens + Tavily Search / Research credits.
+ * Included: LLM tokens + Tavily Search / Extract / Research credits.
  * Excluded: FMP (fixed monthly plan), Vercel/Turso/etc.
  */
 
@@ -23,8 +23,10 @@ export const screeningCostBreakdownSchema = z.object({
   currency: z.literal("USD").default("USD"),
   llmUsd: z.number().nonnegative().default(0),
   tavilySearchUsd: z.number().nonnegative().default(0),
+  tavilyExtractUsd: z.number().nonnegative().default(0),
   tavilyResearchUsd: z.number().nonnegative().default(0),
   tavilySearchCredits: z.number().nonnegative().default(0),
+  tavilyExtractCredits: z.number().nonnegative().default(0),
   tavilyResearchCredits: z.number().nonnegative().default(0),
   llmTokensIn: z.number().nonnegative().default(0),
   llmTokensOut: z.number().nonnegative().default(0),
@@ -36,8 +38,10 @@ export function emptyScreeningCostBreakdown(): ScreeningCostBreakdown {
     currency: "USD",
     llmUsd: 0,
     tavilySearchUsd: 0,
+    tavilyExtractUsd: 0,
     tavilyResearchUsd: 0,
     tavilySearchCredits: 0,
+    tavilyExtractCredits: 0,
     tavilyResearchCredits: 0,
     llmTokensIn: 0,
     llmTokensOut: 0,
@@ -55,7 +59,9 @@ export function parseScreeningCostJson(raw: string | null | undefined): Screenin
 }
 
 export function totalScreeningCostUsd(b: ScreeningCostBreakdown): number {
-  return roundUsd(b.llmUsd + b.tavilySearchUsd + b.tavilyResearchUsd);
+  return roundUsd(
+    b.llmUsd + b.tavilySearchUsd + b.tavilyExtractUsd + b.tavilyResearchUsd,
+  );
 }
 
 export function tavilyCreditUsd(): number {
@@ -69,6 +75,20 @@ export function roundUsd(n: number): number {
   return Math.round(n * 1_000_000) / 1_000_000;
 }
 
+/**
+ * Tavily Extract pricing: basic = 1 credit / 5 successful URLs,
+ * advanced = 2 credits / 5 successful URLs (ceil).
+ */
+export function tavilyExtractCreditsForUrls(
+  successfulUrls: number,
+  depth: "basic" | "advanced" = "basic",
+): number {
+  const n = Math.max(0, Math.round(successfulUrls));
+  if (n === 0) return 0;
+  const perFive = depth === "advanced" ? 2 : 1;
+  return Math.ceil(n / 5) * perFive;
+}
+
 function mergeBreakdown(
   base: ScreeningCostBreakdown,
   delta: Partial<ScreeningCostBreakdown>,
@@ -77,10 +97,15 @@ function mergeBreakdown(
     currency: "USD",
     llmUsd: roundUsd(base.llmUsd + (delta.llmUsd ?? 0)),
     tavilySearchUsd: roundUsd(base.tavilySearchUsd + (delta.tavilySearchUsd ?? 0)),
+    tavilyExtractUsd: roundUsd(
+      base.tavilyExtractUsd + (delta.tavilyExtractUsd ?? 0),
+    ),
     tavilyResearchUsd: roundUsd(
       base.tavilyResearchUsd + (delta.tavilyResearchUsd ?? 0),
     ),
     tavilySearchCredits: base.tavilySearchCredits + (delta.tavilySearchCredits ?? 0),
+    tavilyExtractCredits:
+      base.tavilyExtractCredits + (delta.tavilyExtractCredits ?? 0),
     tavilyResearchCredits:
       base.tavilyResearchCredits + (delta.tavilyResearchCredits ?? 0),
     llmTokensIn: base.llmTokensIn + (delta.llmTokensIn ?? 0),
@@ -156,5 +181,18 @@ export async function accrueScreeningTavilyResearchCost(opts: {
   await accrueScreeningRunCost(opts.runId, {
     tavilyResearchCredits: credits,
     tavilyResearchUsd: roundUsd(credits * tavilyCreditUsd()),
+  });
+}
+
+export async function accrueScreeningTavilyExtractCost(opts: {
+  runId: string | null | undefined;
+  credits: number;
+}): Promise<void> {
+  if (!opts.runId) return;
+  const credits = Math.max(0, opts.credits);
+  if (credits === 0) return;
+  await accrueScreeningRunCost(opts.runId, {
+    tavilyExtractCredits: credits,
+    tavilyExtractUsd: roundUsd(credits * tavilyCreditUsd()),
   });
 }

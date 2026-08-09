@@ -43,6 +43,7 @@ const TAB_GROUPS: { category: string; tabs: Tab[] }[] = [
       { slug: "mcp-analytics", label: "MCP Analytics" },
       { slug: "ai-logs", label: "AI Logs" },
       { slug: "ai-compare", label: "AI Compare" },
+      { slug: "screening-costs", label: "Screening Costs" },
       { slug: "snaptrade-logs", label: "SnapTrade Logs" },
       { slug: "docs", label: "Docs" },
     ],

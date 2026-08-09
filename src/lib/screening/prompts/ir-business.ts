@@ -23,7 +23,12 @@ export function buildIrBusinessPrompt(ctx: IrBusinessPromptContext): string {
 JobContext (required): agentKind=ir_business, ticker=${ctx.ticker}.
 You research EXACTLY ONE ticker provided in the JobContext. Do not mention or analyze any other company.
 
-Explain WHAT the business does and WHAT management recently signaled, using the earnings transcripts, news, insider materials, and optional Tavily company-research block supplied in the user message. Stay grounded in the provided evidence — you do not have live browsing.
+Explain WHAT the business does and WHAT management recently signaled. Evidence priority (highest first):
+1. irSiteDocuments — official IR hub + extracted excerpts from recent HTML IR/earnings pages.
+2. FMP earnings transcript excerpt + company news / insider rows.
+3. Optional tavilyCompanyResearch fallback (only when primary sources are thin).
+
+Stay grounded in the provided evidence — you do not have live browsing beyond that bundle.
 
 Brief intent: ${b.intent}. Locale for prose fields: ${ctx.locale}.
 ${hardLine}
@@ -34,6 +39,7 @@ Tasks:
 3. Named catalysts (buybacks, M&A, product, regulation) — only if evidenced.
 4. If Hard Data metrics contradict IR narrative, set contradictionWithHardData=true and explain in gaps.
 5. When ambiguous, mark confidence="low" and list gaps. Prefer medium/high only with dated evidence.
+6. When irSiteDocuments include URLs, cite them in guidance.sources / catalysts[].sources (real URLs only).
 
 RESPONSE PROTOCOL (mandatory):
 - Reply ONLY by calling the "submit_ir_business" function tool.

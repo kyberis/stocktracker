@@ -24,7 +24,7 @@ ambiguous) via search, then runs the same research agents on that one listing
   - `screening_ir_agent_enabled` — Agent 2 IR/Business fan-out (E4)
   - `screening_agents_v2_enabled` — umbrella for E5–E7 (Web & Sentiment, Portfolio Context, Risk); implies IR fan-out for DAG coherence
   - `screening_qa_enabled` — Agent 6 QA / verified reports; gates `reportReady` when on
-  - `screening_tavily_research_enabled` — Tavily Research API for IR gap-fill, shortlist deep-dive, shared ticker research cache (7d), slim analyst Search; off by default
+  - `screening_tavily_research_enabled` — Tavily path for IR (Search+Extract official IR pages/docs; Research only as thin-FMP fallback), shortlist deep-dive, shared ticker research cache (7d), slim analyst Search; off by default
   - `screening_dev_lab_enabled` — Dev agent-log button for non-admins
 - **Health:** green — Intake (+ sample-conversation pilot) + Hard Data + IR/Web/PC/Risk/Technicals (v2) + optional shortlist Research + Compiler + QA (flag on in prod) + per-run variable cost ledger
 - **Owning skill:** [`.cursor/skills/engineer-tools/SKILL.md`](../../.cursor/skills/engineer-tools/SKILL.md)
@@ -44,7 +44,7 @@ ambiguous) via search, then runs the same research agents on that one listing
 
 ## 4. Data model
 
-**Persistence (migrations 129–131):**
+**Persistence (migrations 129–135):**
 
 - `screening_runs` — one row per user launch attempt. Fields: `id`, `user_id`
   (`ON DELETE CASCADE`), `status` (`draft | needs_clarification | rejected_infeasible | authorized | running | completed`),
@@ -97,6 +97,7 @@ When v2 is off but `screening_ir_agent_enabled` is on (E4):
 | GET | `/api/screening/reports/[reportId]?candidates=N` | user + flag | — | Report JSON; 409 while the run is not finished |
 | POST | `/api/screening/entry-events` | user + flag | — | Dual-write analytics for the entry funnel |
 | GET | `/api/screening/dev/outputs?limit=N&runId=` | user + flag + (admin OR dev-env OR `screening_dev_lab_enabled`) | — | Last N agent outputs (optional `runId` scope); Dev log shows sources + per-agent JSON |
+| GET | `/api/admin/screening-costs` | admin | — | All screening runs ranked by `cost_usd` DESC (ops cost leaderboard) |
 
 Regular routes go through [`requireScreeningAccess`](../../src/lib/screening/guard.ts):
 session required, then per-user flag. A disabled flag returns **404**, not 403, so
@@ -159,18 +160,27 @@ the feature is not discoverable before launch. The Dev outputs route adds
   + IR/Web evidence bundles (`FMP_API_KEY`).
 - **trefolio MOAT cache + /analisis cache** — Hard Data ranking context and
   `flags.moatScore` / business summary on cards (cache-only; no fresh quota).
-- **Tavily Search** — Web & Sentiment agent (`TAVILY_API_KEY`). If unset, the
-  agent continues with FMP-only evidence (no hard failure). Queries send ticker
-  + company name only. Accrues into per-run `cost_usd` (1 credit basic / 2 advanced).
+- **Tavily Search** — Web & Sentiment agent + IR hub/doc discovery (`TAVILY_API_KEY`).
+  If unset, agents continue with FMP-only evidence (no hard failure). Queries send
+  ticker + company name only. Accrues into per-run `cost_usd` (1 credit basic /
+  2 advanced).
+- **Tavily Extract** — IR / Business agent (`screening_tavily_research_enabled`):
+  after Search finds the official IR hub and recent HTML earnings/IR pages (PDFs
+  skipped in v1), `POST /extract` pulls guidance-relevant excerpts (≤3 URLs,
+  basic depth, query chunks). Primary IR evidence ahead of FMP news/transcript.
 - **Tavily Research** — optional (`screening_tavily_research_enabled`): company
-  diligence via `POST /research` for IR gap-fill when FMP evidence is thin, and
-  post-Compiler shortlist deep-dive (≤5). Results cached in
-  `screening_research_cache` (TTL 7d, cross-user). When a fresh cache hit exists,
-  Web & Sentiment skips the `analyst rating` Search. Same API key; fail-open.
+  diligence via `POST /research` only when FMP IR is thin **and** IR Extract
+  returned no useful content; also post-Compiler shortlist deep-dive (≤5).
+  Results cached in `screening_research_cache` (TTL 7d, cross-user). When a fresh
+  cache hit exists, Web & Sentiment skips the `analyst rating` Search. Same API
+  key; fail-open.
 - **Per-report variable cost** — `screening_runs.cost_usd` + `cost_json` breakdown
-  (LLM tokens + Tavily Search/Research only; **FMP excluded** as fixed plan cost).
-  Exposed on `GET /api/screening/reports/[reportId]` as `cost` (ops-facing). Soft
-  budget alert at `$1.20` via `screening_cost_budget_exceeded_total`.
+  (LLM tokens + Tavily Search/Extract/Research only; **FMP excluded** as fixed
+  plan cost). Exposed on `GET /api/screening/reports/[reportId]` as `cost`
+  (ops-facing; shown on the report UI for admins). Soft budget alert at `$1.20`
+  via `screening_cost_budget_exceeded_total`. Admin leaderboard at
+  `/admin/screening-costs` (`GET /api/admin/screening-costs`) ranks every run
+  from most to least expensive.
 - Every AI turn writes an `ai_logs` row (sources such as `screening_intake`,
   `screening_hard_data`, `screening_web_sentiment`, …) plus a row in
   `screening_agent_outputs`.

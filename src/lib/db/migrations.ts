@@ -3960,6 +3960,16 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 135,
+    description: "Screening runs: index for admin cost ranking",
+    up: async (client: Client) => {
+      await client.execute(
+        `CREATE INDEX IF NOT EXISTS idx_screening_runs_cost_usd
+           ON screening_runs(cost_usd DESC, created_at DESC)`,
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

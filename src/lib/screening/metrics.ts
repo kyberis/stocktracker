@@ -308,6 +308,17 @@ export const screeningTavilyResearchRequestsTotal = getOrCreateMetric(
     }),
 );
 
+export const screeningTavilyExtractRequestsTotal = getOrCreateMetric(
+  "screening_tavily_extract_requests_total",
+  () =>
+    new Counter({
+      name: "screening_tavily_extract_requests_total",
+      help: "Tavily Extract API requests for screening IR document processing",
+      labelNames: ["status"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
 export const screeningCostBudgetExceededTotal = getOrCreateMetric(
   "screening_cost_budget_exceeded_total",
   () =>
@@ -331,6 +342,23 @@ export function recordTavilyResearchRequest(
 ): void {
   try {
     screeningTavilyResearchRequestsTotal.inc({ status });
+  } catch {
+    // metrics are best-effort
+  }
+}
+
+export function recordTavilyExtractRequest(
+  status:
+    | "ok"
+    | "error"
+    | "rate_limited"
+    | "missing_key"
+    | "bad_shape"
+    | "unauthorized"
+    | "empty",
+): void {
+  try {
+    screeningTavilyExtractRequestsTotal.inc({ status });
   } catch {
     // metrics are best-effort
   }

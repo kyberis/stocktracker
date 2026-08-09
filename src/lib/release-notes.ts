@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.125",
+    date: "2026-08-09",
+    title: "Admin: screening cost leaderboard",
+    titleTranslations: {
+      es: "Admin: ranking de coste de cribado",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Admins can open Screening Costs to see every screening report ranked from most to least expensive, with LLM and Tavily breakdown. Ops cost also appears on the report itself for admins.",
+        translations: {
+          es: "Los admins pueden abrir Screening Costs para ver cada informe de cribado ordenado de más a menos costoso, con desglose LLM y Tavily. El coste de ops también aparece en el propio informe para admins.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.124",
+    date: "2026-08-09",
+    title: "Screening IR: official IR pages and documents",
+    titleTranslations: {
+      es: "Cribado IR: páginas y documentos oficiales de IR",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The IR / Business screening agent now finds the company’s Investor Relations page, extracts recent HTML earnings and IR documents, and uses those excerpts as primary evidence. Tavily Research is only a fallback when FMP and IR extract are both thin.",
+        translations: {
+          es: "El agente IR / Negocio del cribado ahora encuentra la página de Investor Relations, extrae comunicados y documentos HTML recientes y los usa como evidencia principal. Tavily Research solo actúa como respaldo si FMP y el extract de IR son insuficientes.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.123",
     date: "2026-08-09",
     title: "Screening beta on home + weekly limit",

@@ -121,9 +121,9 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     group: "Features",
   },
   screening_tavily_research_enabled: {
-    label: "Screening: Tavily Company Research",
+    label: "Screening: Tavily IR docs + Research",
     description:
-      "Uses Tavily Research API for IR gap-fill when FMP evidence is thin, shortlist deep-dive after Compiler, shared ticker research cache (7d), and slim Web Search (skip analyst Search when research is cached). Accrues Research credits into per-report variable cost. Requires screening_pipeline_real_enabled. Off by default.",
+      "IR agent: Tavily Search+Extract for official IR pages and recent HTML docs (primary), Tavily Research only when FMP and extract are both thin; also shortlist deep-dive after Compiler, shared ticker research cache (7d), and slim Web Search (skip analyst Search when research is cached). Accrues Search/Extract/Research credits into per-report variable cost. Requires screening_pipeline_real_enabled. Off by default.",
     group: "Features",
   },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },

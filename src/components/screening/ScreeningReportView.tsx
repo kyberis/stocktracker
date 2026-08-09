@@ -2,12 +2,29 @@
 
 import { useState } from "react";
 import { fill, type ScreeningCopy } from "@/lib/screening/copy";
-import type { ScreeningReport } from "@/lib/screening/schemas";
+import type {
+  ScreeningReport,
+  ScreeningReportCost,
+} from "@/lib/screening/schemas";
 import { CandidateCard } from "./CandidateCard";
 import { AiLabel, ScreeningDisclaimer } from "./ScreeningNotices";
 import { useScreeningCopy } from "./use-screening-copy";
 
-export function ScreeningReportView({ report }: { report: ScreeningReport }) {
+function formatOpsCost(usd: number): string {
+  if (usd === 0) return "$0.00";
+  if (usd < 0.001) return `$${usd.toFixed(6)}`;
+  if (usd < 0.01) return `$${usd.toFixed(4)}`;
+  return `$${usd.toFixed(3)}`;
+}
+
+export function ScreeningReportView({
+  report,
+  /** Ops-facing variable cost — pass only for admins. */
+  cost,
+}: {
+  report: ScreeningReport;
+  cost?: ScreeningReportCost | null;
+}) {
   const { copy } = useScreeningCopy();
   const cardsByTicker = new Map(report.cards.map((card) => [card.ticker, card]));
   const ranked = report.priorityOrder
@@ -32,6 +49,22 @@ export function ScreeningReportView({ report }: { report: ScreeningReport }) {
             date: report.generatedAt.slice(0, 10),
           })}
         </p>
+        {cost && (
+          <p
+            className="mt-2 rounded-xl border border-[color:var(--border)] bg-[color:var(--muted)]/10 px-3 py-2 text-xs text-[color:var(--muted)]"
+            role="note"
+          >
+            Ops cost:{" "}
+            <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+              {formatOpsCost(cost.costUsd)}
+            </span>
+            {" · "}
+            LLM {formatOpsCost(cost.breakdown.llmUsd)} · Tavily search{" "}
+            {formatOpsCost(cost.breakdown.tavilySearchUsd)} · extract{" "}
+            {formatOpsCost(cost.breakdown.tavilyExtractUsd)} · research{" "}
+            {formatOpsCost(cost.breakdown.tavilyResearchUsd)}
+          </p>
+        )}
       </header>
 
       {report.partial && report.pendingAgentKinds.length > 0 && (

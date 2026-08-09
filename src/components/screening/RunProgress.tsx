@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import type { ScreeningBrief, ScreeningReport, ScreeningRun, ScreeningRunStep } from "@/lib/screening/schemas";
+import { useAuth } from "@/lib/auth-context";
+import type {
+  ScreeningBrief,
+  ScreeningReport,
+  ScreeningReportCost,
+  ScreeningRun,
+  ScreeningRunStep,
+} from "@/lib/screening/schemas";
 import {
   buildIntakeHrefFromBrief,
   SCREENING_INTAKE_RETURN_KEY,
@@ -138,8 +145,11 @@ function AgentFeedItem({
 
 export function RunProgress({ runId }: { runId: string }) {
   const { copy } = useScreeningCopy();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [run, setRun] = useState<ScreeningRun | null>(() => buildOptimisticRun(runId));
   const [report, setReport] = useState<ScreeningReport | null>(null);
+  const [reportCost, setReportCost] = useState<ScreeningReportCost | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
   /** Fatal load errors (404 / network) — not step failures. */
@@ -160,6 +170,7 @@ export function RunProgress({ runId }: { runId: string }) {
     setBackHref(readIntakeReturn(runId, brief));
     setRun(buildOptimisticRun(runId));
     setReport(null);
+    setReportCost(null);
     setShowReport(false);
     setLoadError(null);
     setPollTimedOut(false);
@@ -200,9 +211,13 @@ export function RunProgress({ runId }: { runId: string }) {
         );
         return;
       }
-      const data = (await res.json()) as { report?: ScreeningReport };
+      const data = (await res.json()) as {
+        report?: ScreeningReport;
+        cost?: ScreeningReportCost;
+      };
       if (data.report) {
         setReport(data.report);
+        setReportCost(data.cost ?? null);
         setShowReport(true);
       } else {
         setLoadError(copy.report.loadError);
@@ -307,7 +322,10 @@ export function RunProgress({ runId }: { runId: string }) {
   if (showReport && report) {
     return (
       <main className="mx-auto w-full max-w-7xl px-3 py-6 sm:px-4 lg:px-6">
-        <ScreeningReportView report={report} />
+        <ScreeningReportView
+          report={report}
+          cost={isAdmin ? reportCost : null}
+        />
         <div className="mt-5 flex flex-wrap gap-2">
           <button
             type="button"

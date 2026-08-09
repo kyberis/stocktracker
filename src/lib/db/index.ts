@@ -799,6 +799,7 @@ export type {
   ScreeningAgentOutputRow,
   CreateScreeningRunParams,
   InsertScreeningAgentOutputParams,
+  ScreeningRunCostAdminRow,
 } from "./screening";
 export {
   createScreeningRun,
@@ -807,6 +808,7 @@ export {
   getScreeningRun,
   getScreeningRunUnscoped,
   listScreeningRunsByUser,
+  listScreeningRunsByCostAdmin,
   insertScreeningAgentOutput,
   listScreeningAgentOutputsByUser,
   listScreeningAgentOutputsByRun,

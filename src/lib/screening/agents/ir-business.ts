@@ -20,6 +20,7 @@ import {
   isFmpIrThin,
   summariseIrBundleForLlm,
 } from "@/lib/screening/data/fmp-ir";
+import { fetchIrSiteDocuments } from "@/lib/screening/data/ir-site-docs";
 import { accrueScreeningLlmCost } from "@/lib/screening/cost";
 import { extractLlmUsage } from "@/lib/screening/llm-usage";
 import { recordIrTickerStep } from "@/lib/screening/metrics";
@@ -425,15 +426,46 @@ export const runIrBusinessStep: StepHandler = async (
     null;
 
   const started = Date.now();
-  const bundle = await fetchFmpIrBundle({ ticker });
-  const evidence: Record<string, unknown> = summariseIrBundleForLlm(bundle);
-
   const researchEnabled = await isFeatureEnabledForUser(
     "screening_tavily_research_enabled",
     ctx.userId,
   );
+
+  const [bundle, irDocs] = await Promise.all([
+    fetchFmpIrBundle({ ticker }),
+    researchEnabled
+      ? fetchIrSiteDocuments({
+          ticker,
+          companyName: hardDataCandidate?.name ?? ticker,
+          runId: ctx.runId,
+        })
+      : Promise.resolve(null),
+  ]);
+
+  const evidence: Record<string, unknown> = summariseIrBundleForLlm(bundle);
+  let irSiteDocsUsed = false;
+  if (irDocs) {
+    irSiteDocsUsed = irDocs.hasUsefulContent || irDocs.documents.length > 0;
+    evidence.irSiteDocuments = {
+      irPageUrl: irDocs.irPageUrl,
+      documents: irDocs.documents.map((d) => ({
+        url: d.url,
+        title: d.title,
+        asOf: d.asOf,
+        role: d.role,
+        excerpt: d.excerpt,
+      })),
+      hasUsefulContent: irDocs.hasUsefulContent,
+      errors: irDocs.errors,
+    };
+  }
+
   let researchUsed = false;
-  if (researchEnabled && isFmpIrThin(bundle)) {
+  const needResearchFallback =
+    researchEnabled &&
+    isFmpIrThin(bundle) &&
+    !(irDocs?.hasUsefulContent ?? false);
+  if (needResearchFallback) {
     const research = await getOrFetchCompanyResearch({
       ticker,
       companyName: hardDataCandidate?.name ?? ticker,
@@ -538,6 +570,7 @@ export const runIrBusinessStep: StepHandler = async (
       gaps: result.output.gaps.length,
       contradiction: result.output.contradictionWithHardData,
       fmpErrors: bundle.errors.length,
+      irSiteDocsUsed,
       researchUsed,
       llmError: result.errorMessage,
     },
