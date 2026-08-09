@@ -9,6 +9,14 @@ vi.mock("@/lib/screening/guard", () => ({
   requireScreeningAccess: vi.fn(),
 }));
 
+vi.mock("@/lib/auth/guards", () => ({
+  requireFeatureQuota: vi.fn(),
+}));
+
+vi.mock("@/lib/feature-quotas", () => ({
+  refundFeatureQuota: vi.fn(),
+}));
+
 vi.mock("@/lib/db/settings", () => ({
   isFeatureEnabledForUser: vi.fn(),
 }));
@@ -35,6 +43,7 @@ vi.mock("@/lib/http/request-public-origin", () => ({
 }));
 
 import { requireScreeningAccess } from "@/lib/screening/guard";
+import { requireFeatureQuota } from "@/lib/auth/guards";
 import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import {
   createScreeningRun,
@@ -52,6 +61,7 @@ const validBrief = {
   criteria: [
     { key: "marketCap", condition: "300 – 15,000M USD", source: "chat" },
   ],
+  riskProfile: "balanced",
   endedEarly: false,
   locale: "en",
 };
@@ -61,12 +71,30 @@ const okSession = {
   error: null,
 } as const;
 
+const okQuota = {
+  session: okSession.session,
+  error: null,
+  quota: {
+    allowed: true,
+    feature: "investment_screening",
+    plan: "free",
+    used: 1,
+    limit: 3,
+    remaining: 2,
+    resetAt: "2026-08-10T00:00:00.000Z",
+    window: "week",
+  },
+} as const;
+
 describe("POST /api/screening/runs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.CRON_SECRET = "test-secret";
     vi.mocked(requireScreeningAccess).mockResolvedValue(
       okSession as unknown as Awaited<ReturnType<typeof requireScreeningAccess>>,
+    );
+    vi.mocked(requireFeatureQuota).mockResolvedValue(
+      okQuota as unknown as Awaited<ReturnType<typeof requireFeatureQuota>>,
     );
   });
 
@@ -183,5 +211,26 @@ describe("POST /api/screening/runs", () => {
       }),
     );
     expect(res.status).toBe(422);
+    expect(requireFeatureQuota).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 when the weekly screening quota is exhausted", async () => {
+    vi.mocked(requireFeatureQuota).mockResolvedValueOnce({
+      session: null,
+      error: NextResponse.json(
+        { error: "Usage limit reached for this feature", reason: "quota_exceeded" },
+        { status: 429 },
+      ),
+    } as unknown as Awaited<ReturnType<typeof requireFeatureQuota>>);
+    const { POST } = await import("./route");
+    const res = await POST(
+      new NextRequest("http://localhost/api/screening/runs", {
+        method: "POST",
+        body: JSON.stringify(validBrief),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    expect(res.status).toBe(429);
+    expect(createScreeningRun).not.toHaveBeenCalled();
   });
 });
