@@ -123,6 +123,18 @@ the feature is not discoverable before launch. The Dev outputs route adds
   methodology criteria. Reports persist numeric ids; the UI always resolves them to a
   name plus what the criterion measures. `macroContext` is informative, which is why
   the score denominator is 8.
+- [`scoring/checklist.ts`](../../src/lib/screening/scoring/checklist.ts) — deterministic
+  pass/fail for the 8 scored criteria. Key thresholds:
+  - **1 Relative valuation** — usable P/E in `(0, 18)`. Prefer forward P/E; when TTM
+    earnings quality is suspect (EPS/margin jump vs latest FY), score on normalised
+    FY P/E and never pass on a depressed TTM-only multiple.
+  - **2 Price–fundamentals divergence** — consensus upside ≥10% **and** 1y return
+    ≤ −10% **and** latest revenue growth improving (≥3%). Flat/deteriorating
+    fundamentals with a weak price fail (not “cheap vs target” alone).
+  - **5 Balance sheet** — pass if net cash or ND/EBITDA &lt; 2.5; **fail** when
+    ND/EBITDA ≥ 2.5 (unknown only when the ratio is missing).
+  - **Verdict** — `fuerte` / Strong candidate only when **score ≥ 6** and MOAT is
+    missing or ≥50; scores 1–5 are Watch.
 - [`intake-script.ts`](../../src/lib/screening/intake-script.ts) — deterministic question
   script; each option declares the brief patch it applies. Explain entries may include
   optional `higher` / `lower` tips. Brief row tips live in `copy.intake.rowHelp` and power

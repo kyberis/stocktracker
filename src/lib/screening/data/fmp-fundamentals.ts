@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  computeNormalizedPe,
+  evaluateEarningsQuality,
+} from "@/lib/screening/scoring/earnings-quality";
 
 /**
  * Thin FMP client for Hard Data report enrichment (ratios + profile).
@@ -27,6 +31,19 @@ const ratiosTtmSchema = z
     dividendYielPercentageTTM: num,
     dividendYieldTTM: num,
     dividendYieldPercentageTTM: num,
+    netProfitMarginTTM: num,
+    netIncomePerShareTTM: num,
+  })
+  .passthrough();
+
+const incomeStatementSchema = z
+  .object({
+    symbol: z.string().optional(),
+    eps: num,
+    epssdiluted: num,
+    epsDiluted: num,
+    netIncome: num,
+    revenue: num,
   })
   .passthrough();
 
@@ -101,6 +118,14 @@ export interface FmpFundamentalsBundle {
    * Used to score earnings resilience (no year of severe decline over cycle).
    */
   revenueGrowthHistoryPct: number[];
+  /** Diluted EPS TTM (when FMP exposes it). */
+  epsTtm: number | null;
+  /** Diluted EPS, latest completed fiscal year. */
+  epsFy: number | null;
+  /** P/E on FY diluted EPS (price / epsFy). */
+  normalizedPe: number | null;
+  /** True when TTM earnings look inflated vs FY (one-offs). */
+  earningsQualitySuspect: boolean;
   description: string | null;
   errors: string[];
 }
@@ -160,21 +185,37 @@ export async function fetchFmpFundamentals(
   const doFetch = opts?.fetchImpl ?? fetch;
   const errors: string[] = [];
 
-  const [ratiosRes, metricsRes, profileRes, targetRes, growthRes] =
-    await Promise.all([
-      fetchJson("ratios-ttm", symbol, doFetch),
-      fetchJson("key-metrics-ttm", symbol, doFetch),
-      fetchJson("profile", symbol, doFetch),
-      fetchJson("price-target-consensus", symbol, doFetch),
-      // 5y of annual revenue growth so we can score earnings resilience.
-      fetchJson("financial-growth", symbol, doFetch, { limit: "5" }),
-    ]);
+  const [
+    ratiosRes,
+    metricsRes,
+    profileRes,
+    targetRes,
+    growthRes,
+    incomeAnnualRes,
+    incomeTtmRes,
+  ] = await Promise.all([
+    fetchJson("ratios-ttm", symbol, doFetch),
+    fetchJson("key-metrics-ttm", symbol, doFetch),
+    fetchJson("profile", symbol, doFetch),
+    fetchJson("price-target-consensus", symbol, doFetch),
+    // 5y of annual revenue growth so we can score earnings resilience.
+    fetchJson("financial-growth", symbol, doFetch, { limit: "5" }),
+    fetchJson("income-statement", symbol, doFetch, {
+      period: "annual",
+      limit: "2",
+    }),
+    fetchJson("income-statement-ttm", symbol, doFetch),
+  ]);
 
   if (!ratiosRes.ok && ratiosRes.error) errors.push(ratiosRes.error);
   if (!metricsRes.ok && metricsRes.error) errors.push(metricsRes.error);
   if (!profileRes.ok && profileRes.error) errors.push(profileRes.error);
   if (!targetRes.ok && targetRes.error) errors.push(targetRes.error);
   if (!growthRes.ok && growthRes.error) errors.push(growthRes.error);
+  if (!incomeAnnualRes.ok && incomeAnnualRes.error) {
+    errors.push(incomeAnnualRes.error);
+  }
+  if (!incomeTtmRes.ok && incomeTtmRes.error) errors.push(incomeTtmRes.error);
 
   const ratiosRaw = firstRow(ratiosRes.data);
   const metricsRaw = firstRow(metricsRes.data);
@@ -185,6 +226,12 @@ export async function fetchFmpFundamentals(
     : growthRes.data && typeof growthRes.data === "object"
       ? [growthRes.data as unknown]
       : [];
+  const incomeAnnualRows = Array.isArray(incomeAnnualRes.data)
+    ? (incomeAnnualRes.data as unknown[])
+    : incomeAnnualRes.data && typeof incomeAnnualRes.data === "object"
+      ? [incomeAnnualRes.data as unknown]
+      : [];
+  const incomeTtmRaw = firstRow(incomeTtmRes.data);
 
   const ratios = ratiosRaw ? ratiosTtmSchema.safeParse(ratiosRaw) : null;
   const metrics = metricsRaw ? keyMetricsTtmSchema.safeParse(metricsRaw) : null;
@@ -197,11 +244,20 @@ export async function fetchFmpFundamentals(
     .filter((r) => r.success)
     .map((r) => r.data);
   const g = growthParsed[0] ?? null;
+  const incomeFyParsed = incomeAnnualRows
+    .map((row) => incomeStatementSchema.safeParse(row))
+    .filter((row) => row.success)
+    .map((row) => row.data);
+  const incomeTtmParsed = incomeTtmRaw
+    ? incomeStatementSchema.safeParse(incomeTtmRaw)
+    : null;
 
   const r = ratios?.success ? ratios.data : null;
   const m = metrics?.success ? metrics.data : null;
   const p = profile?.success ? profile.data : null;
   const t = target?.success ? target.data : null;
+  const fyIncome = incomeFyParsed[0] ?? null;
+  const ttmIncome = incomeTtmParsed?.success ? incomeTtmParsed.data : null;
 
   // Stable API rarely exposes true forward PE on ratios-ttm; keep legacy keys.
   const fwdPe =
@@ -254,10 +310,50 @@ export async function fetchFmpFundamentals(
     toNum(p?.priceTarget) ??
     null;
 
+  const price = toNum(p?.price);
+  const epsFy =
+    toNum(fyIncome?.epsDiluted) ??
+    toNum(fyIncome?.epssdiluted) ??
+    toNum(fyIncome?.eps) ??
+    null;
+  const epsTtm =
+    toNum(ttmIncome?.epsDiluted) ??
+    toNum(ttmIncome?.epssdiluted) ??
+    toNum(ttmIncome?.eps) ??
+    toNum(r?.netIncomePerShareTTM) ??
+    null;
+
+  const netMarginTtmPct = (() => {
+    const fromRatio = toNum(r?.netProfitMarginTTM);
+    if (fromRatio != null) {
+      // FMP sometimes returns fraction (0.22) and sometimes percent points.
+      return fromRatio > 0 && fromRatio < 1 ? fromRatio * 100 : fromRatio;
+    }
+    const ni = toNum(ttmIncome?.netIncome);
+    const rev = toNum(ttmIncome?.revenue);
+    if (ni != null && rev != null && rev > 0) return (ni / rev) * 100;
+    return null;
+  })();
+
+  const netMarginFyPct = (() => {
+    const ni = toNum(fyIncome?.netIncome);
+    const rev = toNum(fyIncome?.revenue);
+    if (ni != null && rev != null && rev > 0) return (ni / rev) * 100;
+    return null;
+  })();
+
+  const quality = evaluateEarningsQuality({
+    epsTtm,
+    epsFy,
+    netMarginTtmPct,
+    netMarginFyPct,
+  });
+  const normalizedPe = computeNormalizedPe(price, epsFy);
+
   return {
     ticker: symbol,
     currency: p?.currency ? String(p.currency).slice(0, 8) : null,
-    price: toNum(p?.price),
+    price,
     fwdPe,
     ownHistPe,
     evEbitda,
@@ -267,6 +363,10 @@ export async function fetchFmpFundamentals(
     netCash,
     revenueGrowthPct,
     revenueGrowthHistoryPct,
+    epsTtm,
+    epsFy,
+    normalizedPe,
+    earningsQualitySuspect: quality.suspect,
     description: p?.description
       ? String(p.description).trim().slice(0, 400)
       : null,

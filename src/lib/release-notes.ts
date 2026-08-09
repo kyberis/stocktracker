@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.122",
+    date: "2026-08-09",
+    title: "Screening: harder checklist scoring",
+    titleTranslations: {
+      es: "Cribado: checklist de puntuación más exigente",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Screening no longer treats a depressed TTM P/E as cheap when earnings look inflated vs the latest fiscal year, and ND/EBITDA ≥ 2.5x now fails the balance criterion instead of showing “not enough data”.",
+        translations: {
+          es: "El cribado ya no trata un PER TTM deprimido como barato si el beneficio parece inflado frente al último ejercicio, y un ND/EBITDA ≥ 2,5x falla el criterio de balance en vez de mostrar “datos insuficientes”.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Price–fundamentals divergence now requires a weak 1y price plus improving revenue — not consensus upside alone. Strong candidate requires 6/8 (was 5/8). Merger catalysts add an explicit deal-structure risk note in the educational thesis.",
+        translations: {
+          es: "La divergencia precio-fundamentales exige cotización débil a 1 año y ingresos en mejora — no solo el upside de consenso. Candidato fuerte exige 6/8 (antes 5/8). Los catalizadores de fusión añaden una nota explícita de riesgo de estructura del acuerdo en la tesis educativa.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.121",
     date: "2026-08-09",
     title: "Screening: admin-configurable agent models",

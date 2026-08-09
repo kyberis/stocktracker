@@ -27,7 +27,12 @@ export function hardDataNeedsFundamentalsBackfill(
   const missingHistory = candidates.filter(
     (c) => !c.revenueGrowthHistoryPct || c.revenueGrowthHistoryPct.length === 0,
   );
-  return missingHistory.length >= Math.ceil(candidates.length / 2);
+  if (missingHistory.length >= Math.ceil(candidates.length / 2)) return true;
+  // Backfill earnings-quality fields introduced for criterion 1 hardening.
+  const missingQuality = candidates.filter(
+    (c) => c.earningsQualitySuspect == null && c.normalizedPe == null,
+  );
+  return missingQuality.length >= Math.ceil(candidates.length / 2);
 }
 
 /**
@@ -102,12 +107,14 @@ function mergeCandidate(
       ? `Rev YoY ${revYoy >= 0 ? "+" : ""}${revYoy.toFixed(1)}%`
       : null;
 
-  const valuationNote =
-    fund.fwdPe != null
-      ? `Fwd P/E ${fund.fwdPe.toFixed(1)}x`
-      : fund.ownHistPe != null
-        ? `P/E ${fund.ownHistPe.toFixed(1)}x`
-        : null;
+  const valuationNote = (() => {
+    if (fund.earningsQualitySuspect && fund.normalizedPe != null) {
+      return `Norm P/E ${fund.normalizedPe.toFixed(1)}x (TTM quality flag)`;
+    }
+    if (fund.fwdPe != null) return `Fwd P/E ${fund.fwdPe.toFixed(1)}x`;
+    if (fund.ownHistPe != null) return `P/E ${fund.ownHistPe.toFixed(1)}x`;
+    return null;
+  })();
 
   // Deterministic scoring using everything Hard Data has. Compose can later
   // re-score with IR / Web / Technicals to fill criteria 3, 4, 6 and refine 9.
@@ -121,6 +128,8 @@ function mergeCandidate(
     rankScore: c.rankScore,
     fwdPe: fund.fwdPe,
     ownHistPe: fund.ownHistPe,
+    normalizedPe: fund.normalizedPe,
+    earningsQualitySuspect: fund.earningsQualitySuspect,
     ndEbitda: fund.ndEbitda,
     netCash: fund.netCash,
     moatScorePct: sig?.moatScorePct ?? null,
@@ -134,6 +143,8 @@ function mergeCandidate(
     currency: fund.currency ?? c.currency ?? "USD",
     fwdPe: fund.fwdPe,
     ownHistPe: fund.ownHistPe,
+    normalizedPe: fund.normalizedPe,
+    earningsQualitySuspect: fund.earningsQualitySuspect,
     evEbitda: fund.evEbitda,
     ndEbitda: fund.ndEbitda,
     dividendYield: fund.dividendYield,

@@ -459,6 +459,10 @@ export const hardDataCandidateSchema = z.object({
   currency: z.string().max(8).nullable().optional(),
   fwdPe: z.number().finite().nullable().optional(),
   ownHistPe: z.number().finite().nullable().optional(),
+  /** P/E on latest FY diluted EPS when TTM quality is suspect. */
+  normalizedPe: z.number().finite().nullable().optional(),
+  /** True when TTM earnings look inflated vs FY (one-offs). */
+  earningsQualitySuspect: z.boolean().nullable().optional(),
   evEbitda: z.number().finite().nullable().optional(),
   ndEbitda: z.number().finite().nullable().optional(),
   dividendYield: z.number().finite().nullable().optional(),

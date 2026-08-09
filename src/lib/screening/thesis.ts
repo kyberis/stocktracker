@@ -46,6 +46,21 @@ function isEs(locale: string): boolean {
   return locale.toLowerCase().startsWith("es");
 }
 
+/** Heuristic: catalyst text looks like M&A / merger / acquisition. */
+export function isMergerOrAcquisitionCatalyst(catalyst: string): boolean {
+  const t = catalyst.toLowerCase();
+  return (
+    /\bmerg(er|e|ing)\b/.test(t) ||
+    /\bacquisit(ion|ions)\b/.test(t) ||
+    /\bacquire[ds]?\b/.test(t) ||
+    /\btakeover\b/.test(t) ||
+    /\bfusi[oó]n\b/.test(t) ||
+    /\badquisici[oó]n\b/.test(t) ||
+    /\bcombinaci[oó]n\b/.test(t) ||
+    /\bdeal\b/.test(t) && /\b(unilever|buy|sell|stock)\b/.test(t)
+  );
+}
+
 function fmtMult(n: number): string {
   return `${n.toFixed(1)}x`;
 }
@@ -94,8 +109,8 @@ export function buildEducationalThesis(input: ThesisBuilderInput): string {
   if (pe != null && pe > 0) {
     valBits.push(
       es
-        ? `El PER (precio / beneficio) está en ${fmtMult(pe)}. En lenguaje sencillo: cuántos años de beneficios “paga” el precio actual; un PER más bajo suele verse como más barato, aunque depende del sector y del crecimiento.`
-        : `The P/E (price-to-earnings) is ${fmtMult(pe)}. In plain terms: how many years of earnings the current share price is paying for; a lower P/E often reads as cheaper, though it depends on the sector and growth.`,
+        ? `El PER (precio / beneficio) está en ${fmtMult(pe)}. En lenguaje sencillo: cuántos años de beneficios “paga” el precio actual; un PER más bajo suele verse como más barato, aunque depende del sector y del crecimiento — y de si el beneficio es recurrente o incluye extraordinarios.`
+        : `The P/E (price-to-earnings) is ${fmtMult(pe)}. In plain terms: how many years of earnings the current share price is paying for; a lower P/E often reads as cheaper, though it depends on the sector and growth — and on whether earnings are recurring or include one-offs.`,
     );
   }
   if (input.evEbitda != null && input.evEbitda > 0) {
@@ -214,6 +229,13 @@ export function buildEducationalThesis(input: ThesisBuilderInput): string {
         ? `Catalizador señalado por la investigación: ${input.catalyst}${when}. Un catalizador es un evento con fecha que podría cambiar cómo el mercado valora el negocio; hay que contrastarlo con fuentes oficiales.`
         : `Catalyst flagged by research: ${input.catalyst}${when}. A catalyst is a dated event that could change how the market values the business — always check official sources.`,
     );
+    if (isMergerOrAcquisitionCatalyst(input.catalyst)) {
+      paras.push(
+        es
+          ? "Riesgo de estructura del acuerdo (M&A/fusión): una fusión o adquisición grande puede diluir al accionista actual, cambiar el control (p. ej. pasar a minoritario) y añadir apalancamiento al balance combinado. El cierre suele tardar meses; no es una adquisición “simple” hasta verificar términos, canje y calendario en fuentes oficiales."
+          : "Deal-structure risk (M&A/merger): a large merger or acquisition can dilute today’s shareholders, change control (e.g. becoming a minority holder) and add leverage to the combined balance sheet. Closing often takes many months — treat it as a structural event and verify exchange terms, ownership split and timeline in official sources.",
+      );
+    }
   }
 
   // Sentiment

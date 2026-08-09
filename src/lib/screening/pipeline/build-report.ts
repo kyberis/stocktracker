@@ -366,6 +366,8 @@ export function composeScreeningReport(
       rankScore: c.rankScore,
       fwdPe: c.fwdPe ?? null,
       ownHistPe: c.ownHistPe ?? null,
+      normalizedPe: c.normalizedPe ?? null,
+      earningsQualitySuspect: c.earningsQualitySuspect ?? null,
       ndEbitda: c.ndEbitda ?? null,
       netCash: c.netCash ?? null,
       moatScorePct: c.moatScore ?? null,

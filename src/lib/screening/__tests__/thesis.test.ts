@@ -35,6 +35,7 @@ describe("buildEducationalThesis", () => {
     expect(thesis).toContain("Dividend yield");
     expect(thesis).toContain("200-day");
     expect(thesis).toContain("Merger with Unilever");
+    expect(thesis).toMatch(/Deal-structure risk|dilute/i);
     expect(thesis).toContain("not financial advice");
     expect(thesis.split("\n\n").length).toBeGreaterThanOrEqual(4);
   });
