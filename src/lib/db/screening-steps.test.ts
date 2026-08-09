@@ -89,6 +89,10 @@ describe("screening-steps DAL", () => {
       .mockResolvedValueOnce({
         rows: [{ id: "s2", run_id: "r1", depends_on: "[]" }],
       })
+      // concurrent running-count throttle (empty deps still hit this)
+      .mockResolvedValueOnce({
+        rows: [{ c: 0 }],
+      })
       // update RETURNING
       .mockResolvedValueOnce({
         rows: [
@@ -123,8 +127,8 @@ describe("screening-steps DAL", () => {
     expect(leased?.id).toBe("s2");
     expect(leased?.status).toBe("running");
     expect(leased?.attempts).toBe(1);
-    // 3 calls: candidates, lease UPDATE, StepStarted event insert
-    expect(mockExecute).toHaveBeenCalledTimes(3);
+    // 4 calls: candidates, running COUNT, lease UPDATE, StepStarted event insert
+    expect(mockExecute).toHaveBeenCalledTimes(4);
   });
 
   it("completeStep only succeeds when the lease owner matches", async () => {
