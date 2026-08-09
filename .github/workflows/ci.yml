@@ -8,7 +8,8 @@ on:
 
 jobs:
   quality:
-    name: Lint · Typecheck · Test · Build
+    # Job id AND display name must stay "quality" — branch ruleset requires that context.
+    name: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
