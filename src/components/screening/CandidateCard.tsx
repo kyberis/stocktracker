@@ -153,6 +153,111 @@ function TechnicalsBlock({
   );
 }
 
+function EvaluationBlock({
+  card,
+  locked,
+}: {
+  card: ScreeningCandidateCard;
+  locked: boolean;
+}) {
+  const { copy } = useScreeningCopy();
+  const ev = card.evaluation;
+  if (!ev) return null;
+
+  const sections: Array<{ label: string; body: string }> = [
+    { label: copy.report.evaluationBusiness, body: ev.businessThreeSentences },
+    { label: copy.report.evaluationType, body: ev.companyType },
+    { label: copy.report.evaluationMoat, body: ev.moat },
+    { label: copy.report.evaluationManagement, body: ev.management },
+    { label: copy.report.evaluationFinancials, body: ev.financials },
+    { label: copy.report.evaluationGrowth, body: ev.growth },
+    { label: copy.report.evaluationValuation, body: ev.valuation },
+    { label: copy.report.evaluationCatalysts, body: ev.catalysts },
+    { label: copy.report.evaluationRisks, body: ev.risksAndPremortem },
+    { label: copy.report.evaluationInvalidation, body: ev.thesisInvalidation },
+  ];
+
+  const verdictPass = ev.filterVerdict === "PASA";
+  const verdictTone = verdictPass
+    ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+    : "border-rose-500/35 bg-rose-500/10 text-rose-700 dark:text-rose-300";
+
+  return (
+    <BlurredValue
+      locked={locked}
+      as="div"
+      className="mt-4 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-3"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
+          {copy.report.evaluationTitle}
+        </p>
+        <AiLabel />
+      </div>
+      {locked ? (
+        <p className="mt-2 text-[13px] text-[color:var(--muted)]">
+          {copy.report.lockedCell.repeat(16)}
+        </p>
+      ) : (
+        <>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex min-h-8 items-center rounded-full border px-2.5 text-[12px] font-semibold ${verdictTone}`}
+            >
+              {copy.report.evaluationFilter}:{" "}
+              {verdictPass
+                ? copy.report.evaluationPass
+                : copy.report.evaluationDiscard}
+            </span>
+            <span className="text-[12.5px] text-[color:var(--muted)]">
+              {ev.filterReason}
+            </span>
+          </div>
+          <dl className="mt-3 space-y-3">
+            {sections.map((s) => (
+              <div key={s.label}>
+                <dt className="text-[10px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
+                  {s.label}
+                </dt>
+                <dd className="mt-1 whitespace-pre-line text-[13.5px] leading-relaxed text-[color:var(--foreground)]">
+                  {s.body}
+                </dd>
+              </div>
+            ))}
+            {ev.informationGaps.length > 0 ? (
+              <div>
+                <dt className="text-[10px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
+                  {copy.report.evaluationGaps}
+                </dt>
+                <dd className="mt-1">
+                  <ul className="list-disc space-y-1 pl-5 text-[13px] text-[color:var(--muted)]">
+                    {ev.informationGaps.map((g) => (
+                      <li key={g}>{g}</li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            ) : null}
+            <div>
+              <dt className="text-[10px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
+                {copy.report.evaluationConviction}
+              </dt>
+              <dd className="mt-1 text-[13.5px] text-[color:var(--foreground)]">
+                <strong className="uppercase">{ev.conviction}</strong>
+                {" — "}
+                {ev.convictionReason}
+              </dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-[12px] text-[color:var(--muted)]">
+            {ev.disclaimer}
+          </p>
+        </>
+      )}
+    </BlurredValue>
+  );
+}
+
 function BusinessBlock({
   card,
   locked,
@@ -614,19 +719,25 @@ export function CandidateCard({
           </div>
         )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
-          {copy.report.thesisTitle}
-        </p>
-        <AiLabel />
-      </div>
-      <BlurredValue
-        locked={blurResearch}
-        as="div"
-        className="mt-1.5 text-sm leading-relaxed text-[color:var(--foreground)] whitespace-pre-line"
-      >
-        {blurResearch ? copy.report.lockedCell.repeat(20) : card.thesis}
-      </BlurredValue>
+      {card.evaluation ? (
+        <EvaluationBlock card={card} locked={blurResearch} />
+      ) : (
+        <>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
+              {copy.report.thesisTitle}
+            </p>
+            <AiLabel />
+          </div>
+          <BlurredValue
+            locked={blurResearch}
+            as="div"
+            className="mt-1.5 text-sm leading-relaxed text-[color:var(--foreground)] whitespace-pre-line"
+          >
+            {blurResearch ? copy.report.lockedCell.repeat(20) : card.thesis}
+          </BlurredValue>
+        </>
+      )}
 
       {card.risks.length > 0 && (
         <>

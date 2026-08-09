@@ -76,6 +76,32 @@ describe("fetchFmpFundamentals", () => {
           ],
         };
       }
+      if (u.includes("cash-flow-statement")) {
+        return {
+          ok: true,
+          json: async () => [
+            {
+              calendarYear: 2024,
+              operatingCashFlow: 110e9,
+              freeCashFlow: 100e9,
+            },
+            {
+              calendarYear: 2023,
+              operatingCashFlow: 100e9,
+              freeCashFlow: 90e9,
+            },
+          ],
+        };
+      }
+      if (u.includes("key-metrics") && !u.includes("key-metrics-ttm")) {
+        return {
+          ok: true,
+          json: async () => [
+            { calendarYear: 2024, roic: 0.45 },
+            { calendarYear: 2023, roic: 0.42 },
+          ],
+        };
+      }
       if (u.includes("income-statement-ttm")) {
         return {
           ok: true,
@@ -94,10 +120,24 @@ describe("fetchFmpFundamentals", () => {
           ok: true,
           json: async () => [
             {
+              calendarYear: 2024,
               eps: 6.2,
               epsDiluted: 6.1,
               netIncome: 95e9,
               revenue: 390e9,
+              grossProfit: 170e9,
+              operatingIncome: 120e9,
+              weightedAverageShsOutDil: 15e9,
+            },
+            {
+              calendarYear: 2023,
+              eps: 5.8,
+              epsDiluted: 5.7,
+              netIncome: 90e9,
+              revenue: 360e9,
+              grossProfit: 160e9,
+              operatingIncome: 110e9,
+              weightedAverageShsOutDil: 15.5e9,
             },
           ],
         };
@@ -109,6 +149,8 @@ describe("fetchFmpFundamentals", () => {
             symbol: "AAPL",
             currency: "USD",
             price: 200,
+            mktCap: 3e12,
+            averageVolume: 50_000_000,
             description: "Consumer electronics company.",
           },
         ],
@@ -136,6 +178,14 @@ describe("fetchFmpFundamentals", () => {
     expect(res.epsTtm).toBe(6.4);
     expect(res.normalizedPe).toBeCloseTo(200 / 6.1, 5);
     expect(res.earningsQualitySuspect).toBe(false);
+    expect(res.annualSeries.length).toBeGreaterThanOrEqual(2);
+    expect(res.annualSeries[0]?.year).toBe(2024);
+    expect(res.annualSeries[0]?.freeCashFlow).toBe(100e9);
+    expect(res.annualSeries[0]?.roicPct).toBeCloseTo(45, 5);
+    expect(res.buyback).toBe(true);
+    expect(res.severeDilution).toBe(false);
+    expect(res.thinLiquidity).toBe(false);
+    expect(res.fcfYield).toBeCloseTo(100e9 / 3e12, 5);
     expect(
       averageAnnualPe([{ priceToEarningsRatio: 10 }, { peRatio: -2 }]).histPeYears,
     ).toBe(1);

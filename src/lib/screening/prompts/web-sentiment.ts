@@ -26,22 +26,37 @@ Cross-verification rule (mandatory):
 - Attach publishedAt / asOf dates; reject undated claims (put them in gaps).
 - Insider: Form 3 / RSU vesting / scheduled sales are NOT bullish buys.
 - Never treat a single analyst house as strong consensus.
+- Flag auditor qualifications, restatements, and governance scandals as headwinds when evidenced.
 
 Brief intent: ${ctx.brief.intent}. Locale for prose: ${ctx.locale}.
 ${hardLine}
 
 Tasks:
 1. Classify each signal as tailwind | headwind | neutral | noise.
-2. Summarise insider net bias.
-3. Write a short sentimentSummary (2–3 sentences) in ${ctx.locale}.
+2. Set permanentCapitalRisk=true on signals that threaten permanent capital loss (concentration, fraud, existential disruption) — not mere price volatility.
+3. Summarise insider net bias; when Form 4 / trade rows include amounts, list up to 12 transactions24m with side/amountUsd/asOf.
+4. ownershipNotes when evidence mentions founder/insider ownership %.
+5. Write a short sentimentSummary (2–3 sentences) in ${ctx.locale}.
 
 RESPONSE PROTOCOL (mandatory):
 - Reply ONLY by calling the "submit_web_sentiment" function tool.
 - Return JSON for ticker ${ctx.ticker}:
   {
     "ticker": "${ctx.ticker}",
-    "signals": [{ "kind": "tailwind"|"headwind"|"neutral"|"noise", "claim": string, "confirmation": "confirmed"|"single_source_unconfirmed", "sources": Source[] }],
-    "insiderSummary": { "netBias": "buying"|"selling"|"mixed"|"none", "notes": string, "sources": Source[] },
+    "signals": [{
+      "kind": "tailwind"|"headwind"|"neutral"|"noise",
+      "claim": string,
+      "confirmation": "confirmed"|"single_source_unconfirmed",
+      "sources": Source[],
+      "permanentCapitalRisk": boolean (optional)
+    }],
+    "insiderSummary": {
+      "netBias": "buying"|"selling"|"mixed"|"none",
+      "notes": string,
+      "sources": Source[],
+      "transactions24m": [{ "side": "buy"|"sell"|"other", "amountUsd": number|null, "asOf": string, "notes"?: string }],
+      "ownershipNotes": string (optional)
+    },
     "sentimentSummary": string,
     "gaps": string[]
   }

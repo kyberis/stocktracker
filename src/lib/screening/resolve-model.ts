@@ -16,6 +16,7 @@ export type ScreeningLlmFlow = Extract<
   | "screening_portfolio_context"
   | "screening_risk"
   | "screening_compiler"
+  | "screening_compiler_evaluate"
   | "screening_qa"
 >;
 

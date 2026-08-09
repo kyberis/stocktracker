@@ -27,6 +27,7 @@ export const UI_STEP_ORDER: readonly string[] = [
   "risk",
   "compiler",
   "shortlist_research",
+  "compiler_evaluate",
   "qa",
 ];
 
@@ -100,6 +101,7 @@ const CORE_PENDING_KINDS = new Set([
   "risk",
   "compiler",
   "shortlist_research",
+  "compiler_evaluate",
   "qa",
 ]);
 
@@ -311,14 +313,26 @@ export function buildRunResponse(
   }
 
   const compilerDone = active.find((s) => s.agentKind === "compiler")?.status === "done";
+  const evaluateStep = active.find((s) => s.agentKind === "compiler_evaluate");
+  const evaluateDone =
+    !evaluateStep ||
+    evaluateStep.status === "done" ||
+    evaluateStep.status === "failed";
+  const researchStep = active.find((s) => s.agentKind === "shortlist_research");
+  const researchDone =
+    !researchStep ||
+    researchStep.status === "done" ||
+    researchStep.status === "failed";
 
-  let reportReady = compilerDone;
+  let reportReady = compilerDone && researchDone && evaluateDone;
   if (options.qaGating) {
     // QA-gated: report is ready only when the latest verdict passes (or
     // pass_with_degradation after the round cap). null verdict means still
     // running -> not ready.
     reportReady =
       compilerDone &&
+      researchDone &&
+      evaluateDone &&
       (options.qaVerdict === "pass" ||
         options.qaVerdict === "pass_with_degradation");
   }

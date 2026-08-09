@@ -5,7 +5,7 @@ import {
 } from "@/lib/screening/scoring/earnings-quality";
 
 /**
- * Thin FMP client for Hard Data report enrichment (ratios + profile).
+ * Thin FMP client for Hard Data report enrichment (ratios + profile + series).
  * Pattern mirrors `fmp-screening.ts` / `fmp-ir.ts`.
  *
  * FMP `/stable` renamed several TTM keys (2025+): prefer the new names and
@@ -19,44 +19,81 @@ const num = z.union([z.number(), z.string()]).nullable().optional();
 const ratiosTtmSchema = z
   .object({
     symbol: z.string().optional(),
-    // Current stable API
     priceToEarningsRatioTTM: num,
     priceToEarningsDilutedRatioTTM: num,
-    // Legacy aliases
     peRatioTTM: num,
     forwardPE: num,
     forwardPERatioTTM: num,
     enterpriseValueOverEBITDATTM: num,
+    enterpriseValueMultipleTTM: num,
     netDebtToEBITDATTM: num,
     dividendYielPercentageTTM: num,
     dividendYieldTTM: num,
     dividendYieldPercentageTTM: num,
     netProfitMarginTTM: num,
     netIncomePerShareTTM: num,
+    freeCashFlowYieldTTM: num,
+    interestCoverageRatioTTM: num,
+    interestCoverageTTM: num,
+    currentRatioTTM: num,
   })
   .passthrough();
 
 const incomeStatementSchema = z
   .object({
     symbol: z.string().optional(),
+    date: z.string().optional(),
+    calendarYear: z.union([z.number(), z.string()]).optional(),
     eps: num,
     epssdiluted: num,
     epsDiluted: num,
     netIncome: num,
     revenue: num,
+    grossProfit: num,
+    operatingIncome: num,
+    weightedAverageShsOutDil: num,
+    weightedAverageShsOut: num,
+  })
+  .passthrough();
+
+const cashFlowSchema = z
+  .object({
+    symbol: z.string().optional(),
+    date: z.string().optional(),
+    calendarYear: z.union([z.number(), z.string()]).optional(),
+    operatingCashFlow: num,
+    freeCashFlow: num,
+    capitalExpenditure: num,
   })
   .passthrough();
 
 const keyMetricsTtmSchema = z
   .object({
     symbol: z.string().optional(),
-    // Current stable API
     evToEBITDATTM: num,
-    // Legacy aliases
     peRatioTTM: num,
     enterpriseValueOverEBITDATTM: num,
     netDebtToEBITDATTM: num,
     dividendYieldTTM: num,
+    freeCashFlowYieldTTM: num,
+    roicTTM: num,
+    returnOnInvestedCapitalTTM: num,
+    interestCoverageTTM: num,
+    evToEBITTTM: num,
+    enterpriseValueOverEBITTTM: num,
+  })
+  .passthrough();
+
+const keyMetricsAnnualSchema = z
+  .object({
+    symbol: z.string().optional(),
+    date: z.string().optional(),
+    calendarYear: z.union([z.number(), z.string()]).optional(),
+    roic: num,
+    returnOnInvestedCapital: num,
+    freeCashFlowYield: num,
+    enterpriseValueOverEBIT: num,
+    evToEBIT: num,
   })
   .passthrough();
 
@@ -73,6 +110,11 @@ const profileSchema = z
     priceTarget: num,
     description: z.string().optional(),
     beta: num,
+    averageVolume: num,
+    volAvg: num,
+    mktCap: num,
+    industry: z.string().optional(),
+    sector: z.string().optional(),
   })
   .passthrough();
 
@@ -102,6 +144,11 @@ const ratiosAnnualSchema = z
     priceToEarningsRatio: num,
     priceToEarningsDilutedRatio: num,
     peRatio: num,
+    grossProfitMargin: num,
+    operatingProfitMargin: num,
+    netProfitMargin: num,
+    interestCoverageRatio: num,
+    currentRatio: num,
   })
   .passthrough();
 
@@ -109,6 +156,26 @@ function toNum(v: unknown): number | null {
   if (v == null || v === "") return null;
   const n = typeof v === "number" ? v : Number(v);
   return Number.isFinite(n) ? n : null;
+}
+
+function toYear(row: {
+  calendarYear?: number | string | null;
+  date?: string | null;
+}): number | null {
+  const cy = toNum(row.calendarYear);
+  if (cy != null && cy >= 1990 && cy <= 2100) return Math.round(cy);
+  if (row.date && typeof row.date === "string" && row.date.length >= 4) {
+    const y = Number(row.date.slice(0, 4));
+    return Number.isFinite(y) ? y : null;
+  }
+  return null;
+}
+
+/** Normalise margin-like values that may be fraction (0.22) or percent (22). */
+function toPctPoints(v: number | null): number | null {
+  if (v == null) return null;
+  if (Math.abs(v) > 0 && Math.abs(v) < 1) return v * 100;
+  return v;
 }
 
 /**
@@ -134,6 +201,20 @@ export function averageAnnualPe(rows: unknown[]): {
   return { histPeAvg: sum / pes.length, histPeYears: pes.length };
 }
 
+/** One fiscal-year observation for Estebaranz financial-quality tables. */
+export interface AnnualFinancialPoint {
+  year: number | null;
+  revenue: number | null;
+  grossMarginPct: number | null;
+  operatingMarginPct: number | null;
+  netMarginPct: number | null;
+  eps: number | null;
+  operatingCashFlow: number | null;
+  freeCashFlow: number | null;
+  roicPct: number | null;
+  sharesOutstanding: number | null;
+}
+
 export interface FmpFundamentalsBundle {
   ticker: string;
   currency: string | null;
@@ -148,6 +229,8 @@ export interface FmpFundamentalsBundle {
   /** Count of annual PE observations behind histPeAvg. */
   histPeYears: number;
   evEbitda: number | null;
+  /** EV/EBIT when FMP exposes it. */
+  evEbit: number | null;
   ndEbitda: number | null;
   dividendYield: number | null;
   targetPrice: number | null;
@@ -168,6 +251,24 @@ export interface FmpFundamentalsBundle {
   /** True when TTM earnings look inflated vs FY (one-offs). */
   earningsQualitySuspect: boolean;
   description: string | null;
+  /** Multi-year annual fundamentals (most recent first, ≤10). */
+  annualSeries: AnnualFinancialPoint[];
+  /** FCF yield as fraction (e.g. 0.05 = 5%) when available. */
+  fcfYield: number | null;
+  /** Interest coverage (EBIT / interest) TTM or latest annual. */
+  interestCoverage: number | null;
+  /** True when diluted share count fell over the available history. */
+  buyback: boolean | null;
+  /** True when diluted shares rose ≥15% over the history window. */
+  severeDilution: boolean | null;
+  /** Average daily volume from profile when present. */
+  avgVolume: number | null;
+  /** Heuristic: avg volume under 50k (illiquid for meaningful position). */
+  thinLiquidity: boolean | null;
+  /** Peer / industry median P/E — reserved; null until a reliable source exists. */
+  peerPe: number | null;
+  /** Latest ROIC % points from TTM or latest annual. */
+  roicPct: number | null;
   errors: string[];
 }
 
@@ -215,8 +316,113 @@ function firstRow(data: unknown): Record<string, unknown> | null {
   return null;
 }
 
+function asRows(data: unknown): unknown[] {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object") return [data];
+  return [];
+}
+
+function buildAnnualSeries(
+  incomeRows: unknown[],
+  cashRows: unknown[],
+  metricsRows: unknown[],
+  ratiosRows: unknown[],
+): AnnualFinancialPoint[] {
+  const cashByYear = new Map<number, z.infer<typeof cashFlowSchema>>();
+  for (const row of cashRows) {
+    const p = cashFlowSchema.safeParse(row);
+    if (!p.success) continue;
+    const y = toYear(p.data);
+    if (y != null) cashByYear.set(y, p.data);
+  }
+  const metricsByYear = new Map<number, z.infer<typeof keyMetricsAnnualSchema>>();
+  for (const row of metricsRows) {
+    const p = keyMetricsAnnualSchema.safeParse(row);
+    if (!p.success) continue;
+    const y = toYear(p.data);
+    if (y != null) metricsByYear.set(y, p.data);
+  }
+  const ratiosByYear = new Map<number, z.infer<typeof ratiosAnnualSchema>>();
+  for (const row of ratiosRows) {
+    const p = ratiosAnnualSchema.safeParse(row);
+    if (!p.success) continue;
+    const y = toYear(p.data);
+    if (y != null) ratiosByYear.set(y, p.data);
+  }
+
+  const points: AnnualFinancialPoint[] = [];
+  for (const row of incomeRows) {
+    const p = incomeStatementSchema.safeParse(row);
+    if (!p.success) continue;
+    const year = toYear(p.data);
+    const revenue = toNum(p.data.revenue);
+    const grossProfit = toNum(p.data.grossProfit);
+    const operatingIncome = toNum(p.data.operatingIncome);
+    const netIncome = toNum(p.data.netIncome);
+    const ratios = year != null ? ratiosByYear.get(year) : undefined;
+    const cash = year != null ? cashByYear.get(year) : undefined;
+    const metrics = year != null ? metricsByYear.get(year) : undefined;
+
+    const grossFromIncome =
+      revenue != null && revenue !== 0 && grossProfit != null
+        ? (grossProfit / revenue) * 100
+        : null;
+    const opFromIncome =
+      revenue != null && revenue !== 0 && operatingIncome != null
+        ? (operatingIncome / revenue) * 100
+        : null;
+    const netFromIncome =
+      revenue != null && revenue !== 0 && netIncome != null
+        ? (netIncome / revenue) * 100
+        : null;
+
+    points.push({
+      year,
+      revenue,
+      grossMarginPct:
+        toPctPoints(toNum(ratios?.grossProfitMargin)) ?? grossFromIncome,
+      operatingMarginPct:
+        toPctPoints(toNum(ratios?.operatingProfitMargin)) ?? opFromIncome,
+      netMarginPct:
+        toPctPoints(toNum(ratios?.netProfitMargin)) ?? netFromIncome,
+      eps:
+        toNum(p.data.epsDiluted) ??
+        toNum(p.data.epssdiluted) ??
+        toNum(p.data.eps),
+      operatingCashFlow: cash ? toNum(cash.operatingCashFlow) : null,
+      freeCashFlow: cash ? toNum(cash.freeCashFlow) : null,
+      roicPct: toPctPoints(
+        toNum(metrics?.roic) ?? toNum(metrics?.returnOnInvestedCapital),
+      ),
+      sharesOutstanding:
+        toNum(p.data.weightedAverageShsOutDil) ??
+        toNum(p.data.weightedAverageShsOut),
+    });
+    if (points.length >= 10) break;
+  }
+  return points;
+}
+
+function shareCountFlags(series: AnnualFinancialPoint[]): {
+  buyback: boolean | null;
+  severeDilution: boolean | null;
+} {
+  const shares = series
+    .map((p) => p.sharesOutstanding)
+    .filter((n): n is number => n != null && n > 0);
+  if (shares.length < 2) return { buyback: null, severeDilution: null };
+  const latest = shares[0]!;
+  const oldest = shares[shares.length - 1]!;
+  if (oldest <= 0) return { buyback: null, severeDilution: null };
+  const changePct = ((latest - oldest) / oldest) * 100;
+  return {
+    buyback: changePct < -2,
+    severeDilution: changePct >= 15,
+  };
+}
+
 /**
- * Fetch ratios + profile for one ticker. Best-effort; never throws.
+ * Fetch ratios + profile + multi-year series for one ticker. Best-effort; never throws.
  */
 export async function fetchFmpFundamentals(
   ticker: string,
@@ -235,55 +441,55 @@ export async function fetchFmpFundamentals(
     incomeAnnualRes,
     incomeTtmRes,
     ratiosAnnualRes,
+    cashFlowRes,
+    keyMetricsAnnualRes,
   ] = await Promise.all([
     fetchJson("ratios-ttm", symbol, doFetch),
     fetchJson("key-metrics-ttm", symbol, doFetch),
     fetchJson("profile", symbol, doFetch),
     fetchJson("price-target-consensus", symbol, doFetch),
-    // 5y of annual revenue growth so we can score earnings resilience.
-    fetchJson("financial-growth", symbol, doFetch, { limit: "5" }),
+    fetchJson("financial-growth", symbol, doFetch, { limit: "10" }),
     fetchJson("income-statement", symbol, doFetch, {
       period: "annual",
-      limit: "2",
+      limit: "10",
     }),
     fetchJson("income-statement-ttm", symbol, doFetch),
-    // Multi-year annual PE for "cheap vs history" category scoring.
-    fetchJson("ratios", symbol, doFetch, { period: "annual", limit: "5" }),
+    fetchJson("ratios", symbol, doFetch, { period: "annual", limit: "10" }),
+    fetchJson("cash-flow-statement", symbol, doFetch, {
+      period: "annual",
+      limit: "10",
+    }),
+    fetchJson("key-metrics", symbol, doFetch, {
+      period: "annual",
+      limit: "10",
+    }),
   ]);
 
-  if (!ratiosRes.ok && ratiosRes.error) errors.push(ratiosRes.error);
-  if (!metricsRes.ok && metricsRes.error) errors.push(metricsRes.error);
-  if (!profileRes.ok && profileRes.error) errors.push(profileRes.error);
-  if (!targetRes.ok && targetRes.error) errors.push(targetRes.error);
-  if (!growthRes.ok && growthRes.error) errors.push(growthRes.error);
-  if (!incomeAnnualRes.ok && incomeAnnualRes.error) {
-    errors.push(incomeAnnualRes.error);
-  }
-  if (!incomeTtmRes.ok && incomeTtmRes.error) errors.push(incomeTtmRes.error);
-  if (!ratiosAnnualRes.ok && ratiosAnnualRes.error) {
-    errors.push(ratiosAnnualRes.error);
+  for (const res of [
+    ratiosRes,
+    metricsRes,
+    profileRes,
+    targetRes,
+    growthRes,
+    incomeAnnualRes,
+    incomeTtmRes,
+    ratiosAnnualRes,
+    cashFlowRes,
+    keyMetricsAnnualRes,
+  ]) {
+    if (!res.ok && res.error) errors.push(res.error);
   }
 
   const ratiosRaw = firstRow(ratiosRes.data);
   const metricsRaw = firstRow(metricsRes.data);
   const profileRaw = firstRow(profileRes.data);
   const targetRaw = firstRow(targetRes.data);
-  const growthRows = Array.isArray(growthRes.data)
-    ? (growthRes.data as unknown[])
-    : growthRes.data && typeof growthRes.data === "object"
-      ? [growthRes.data as unknown]
-      : [];
-  const incomeAnnualRows = Array.isArray(incomeAnnualRes.data)
-    ? (incomeAnnualRes.data as unknown[])
-    : incomeAnnualRes.data && typeof incomeAnnualRes.data === "object"
-      ? [incomeAnnualRes.data as unknown]
-      : [];
+  const growthRows = asRows(growthRes.data);
+  const incomeAnnualRows = asRows(incomeAnnualRes.data);
   const incomeTtmRaw = firstRow(incomeTtmRes.data);
-  const ratiosAnnualRows = Array.isArray(ratiosAnnualRes.data)
-    ? (ratiosAnnualRes.data as unknown[])
-    : ratiosAnnualRes.data && typeof ratiosAnnualRes.data === "object"
-      ? [ratiosAnnualRes.data as unknown]
-      : [];
+  const ratiosAnnualRows = asRows(ratiosAnnualRes.data);
+  const cashFlowRows = asRows(cashFlowRes.data);
+  const keyMetricsAnnualRows = asRows(keyMetricsAnnualRes.data);
   const { histPeAvg, histPeYears } = averageAnnualPe(ratiosAnnualRows);
 
   const ratios = ratiosRaw ? ratiosTtmSchema.safeParse(ratiosRaw) : null;
@@ -312,7 +518,6 @@ export async function fetchFmpFundamentals(
   const fyIncome = incomeFyParsed[0] ?? null;
   const ttmIncome = incomeTtmParsed?.success ? incomeTtmParsed.data : null;
 
-  // Stable API rarely exposes true forward PE on ratios-ttm; keep legacy keys.
   const fwdPe =
     toNum(r?.forwardPE) ??
     toNum(r?.forwardPERatioTTM) ??
@@ -340,7 +545,6 @@ export async function fetchFmpFundamentals(
     toNum(m?.dividendYieldTTM) ??
     toNum(p?.dividendYield) ??
     null;
-  // Normalise to fraction when providers return percent points (e.g. 2.5 → 0.025).
   if (dividendYield != null && dividendYield > 1) {
     dividendYield = dividendYield / 100;
   }
@@ -379,7 +583,6 @@ export async function fetchFmpFundamentals(
   const netMarginTtmPct = (() => {
     const fromRatio = toNum(r?.netProfitMarginTTM);
     if (fromRatio != null) {
-      // FMP sometimes returns fraction (0.22) and sometimes percent points.
       return fromRatio > 0 && fromRatio < 1 ? fromRatio * 100 : fromRatio;
     }
     const ni = toNum(ttmIncome?.netIncome);
@@ -403,6 +606,60 @@ export async function fetchFmpFundamentals(
   });
   const normalizedPe = computeNormalizedPe(price, epsFy);
 
+  const annualSeries = buildAnnualSeries(
+    incomeAnnualRows,
+    cashFlowRows,
+    keyMetricsAnnualRows,
+    ratiosAnnualRows,
+  );
+  const { buyback, severeDilution } = shareCountFlags(annualSeries);
+
+  let fcfYield =
+    toNum(r?.freeCashFlowYieldTTM) ??
+    toNum(m?.freeCashFlowYieldTTM) ??
+    null;
+  if (fcfYield != null && Math.abs(fcfYield) > 1) {
+    fcfYield = fcfYield / 100;
+  }
+  if (fcfYield == null && annualSeries[0]?.freeCashFlow != null) {
+    const mktCap = toNum(p?.mktCap);
+    const fcf = annualSeries[0].freeCashFlow;
+    if (mktCap != null && mktCap > 0 && fcf != null) {
+      fcfYield = fcf / mktCap;
+    }
+  }
+
+  const interestCoverage =
+    toNum(r?.interestCoverageRatioTTM) ??
+    toNum(r?.interestCoverageTTM) ??
+    toNum(m?.interestCoverageTTM) ??
+    (() => {
+      const latestRatio = ratiosAnnualSchema.safeParse(ratiosAnnualRows[0]);
+      return latestRatio.success
+        ? toNum(latestRatio.data.interestCoverageRatio)
+        : null;
+    })();
+
+  const evEbit =
+    toNum(m?.evToEBITTTM) ??
+    toNum(m?.enterpriseValueOverEBITTTM) ??
+    (() => {
+      const latest = keyMetricsAnnualSchema.safeParse(keyMetricsAnnualRows[0]);
+      return latest.success
+        ? toNum(latest.data.evToEBIT) ??
+            toNum(latest.data.enterpriseValueOverEBIT)
+        : null;
+    })();
+
+  const roicPct =
+    toPctPoints(toNum(m?.roicTTM) ?? toNum(m?.returnOnInvestedCapitalTTM)) ??
+    annualSeries[0]?.roicPct ??
+    null;
+
+  const avgVolume = toNum(p?.averageVolume) ?? toNum(p?.volAvg);
+  const thinLiquidity =
+    avgVolume == null ? null : avgVolume > 0 && avgVolume < 50_000;
+
   return {
     ticker: symbol,
     currency: p?.currency ? String(p.currency).slice(0, 8) : null,
@@ -412,6 +669,7 @@ export async function fetchFmpFundamentals(
     histPeAvg,
     histPeYears,
     evEbitda,
+    evEbit,
     ndEbitda,
     dividendYield,
     targetPrice,
@@ -425,6 +683,15 @@ export async function fetchFmpFundamentals(
     description: p?.description
       ? String(p.description).trim().slice(0, 400)
       : null,
+    annualSeries,
+    fcfYield,
+    interestCoverage,
+    buyback,
+    severeDilution,
+    avgVolume,
+    thinLiquidity,
+    peerPe: null,
+    roicPct,
     errors,
   };
 }

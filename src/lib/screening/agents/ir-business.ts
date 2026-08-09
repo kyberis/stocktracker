@@ -171,6 +171,74 @@ function coerceIrOutput(
     ? (confidenceRaw as "high" | "medium" | "low")
     : "medium";
 
+  const companyTypeRaw = String(raw.companyType ?? "").trim();
+  const companyType = (
+    [
+      "compounder",
+      "growth",
+      "cyclical",
+      "special_situation",
+      "unclear",
+    ] as const
+  ).includes(companyTypeRaw as "compounder")
+    ? (companyTypeRaw as
+        | "compounder"
+        | "growth"
+        | "cyclical"
+        | "special_situation"
+        | "unclear")
+    : undefined;
+
+  const moatRaw =
+    raw.moatHypothesis && typeof raw.moatHypothesis === "object"
+      ? (raw.moatHypothesis as Record<string, unknown>)
+      : null;
+  const moatTypesAllowed = [
+    "brand",
+    "switching_costs",
+    "network_effects",
+    "cost_advantage",
+    "scale",
+    "regulation_license",
+    "unique_asset",
+    "unclear",
+  ] as const;
+  const moatHypothesis = moatRaw
+    ? {
+        types: Array.isArray(moatRaw.types)
+          ? moatRaw.types
+              .map((t) => String(t ?? "").trim())
+              .filter((t): t is (typeof moatTypesAllowed)[number] =>
+                (moatTypesAllowed as readonly string[]).includes(t),
+              )
+              .slice(0, 6)
+          : [],
+        evidence: Array.isArray(moatRaw.evidence)
+          ? moatRaw.evidence
+              .map((s) => String(s ?? "").trim().slice(0, 400))
+              .filter(Boolean)
+              .slice(0, 6)
+          : [],
+        durabilityYears:
+          moatRaw.durabilityYears == null || moatRaw.durabilityYears === ""
+            ? null
+            : Number(moatRaw.durabilityYears),
+        threats: Array.isArray(moatRaw.threats)
+          ? moatRaw.threats
+              .map((s) => String(s ?? "").trim().slice(0, 280))
+              .filter(Boolean)
+              .slice(0, 6)
+          : [],
+      }
+    : undefined;
+
+  const eliminationFlags = Array.isArray(raw.eliminationFlags)
+    ? raw.eliminationFlags
+        .map((s) => String(s ?? "").trim().slice(0, 200))
+        .filter(Boolean)
+        .slice(0, 8)
+    : [];
+
   const built = irBusinessOutputSchema.safeParse({
     ticker,
     businessOneLiner: String(raw.businessOneLiner ?? "")
@@ -195,6 +263,23 @@ function coerceIrOutput(
         ? bullets
         : ["IR summary unavailable; see gaps."],
     gaps,
+    businessThreeSentences: String(raw.businessThreeSentences ?? "")
+      .trim()
+      .slice(0, 900) || undefined,
+    companyType,
+    revenueMix: String(raw.revenueMix ?? "").trim().slice(0, 800) || undefined,
+    recurringVsTransactional:
+      String(raw.recurringVsTransactional ?? "").trim().slice(0, 400) ||
+      undefined,
+    industryStructure:
+      String(raw.industryStructure ?? "").trim().slice(0, 800) || undefined,
+    moatHypothesis,
+    capitalAllocationNotes:
+      String(raw.capitalAllocationNotes ?? "").trim().slice(0, 800) ||
+      undefined,
+    guidanceTrackRecord:
+      String(raw.guidanceTrackRecord ?? "").trim().slice(0, 600) || undefined,
+    eliminationFlags,
   });
   return built.success ? built.data : null;
 }
@@ -303,6 +388,32 @@ export async function runIrBusinessAgent(
             },
           },
           segments: { type: "array", items: { type: "string" } },
+          businessThreeSentences: { type: "string" },
+          companyType: {
+            type: "string",
+            enum: [
+              "compounder",
+              "growth",
+              "cyclical",
+              "special_situation",
+              "unclear",
+            ],
+          },
+          revenueMix: { type: "string" },
+          recurringVsTransactional: { type: "string" },
+          industryStructure: { type: "string" },
+          moatHypothesis: {
+            type: "object",
+            properties: {
+              types: { type: "array", items: { type: "string" } },
+              evidence: { type: "array", items: { type: "string" } },
+              durabilityYears: { type: ["number", "null"] },
+              threats: { type: "array", items: { type: "string" } },
+            },
+          },
+          capitalAllocationNotes: { type: "string" },
+          guidanceTrackRecord: { type: "string" },
+          eliminationFlags: { type: "array", items: { type: "string" } },
           contradictionWithHardData: { type: "boolean" },
           confidence: {
             type: "string",

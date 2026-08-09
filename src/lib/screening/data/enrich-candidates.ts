@@ -38,7 +38,12 @@ export function hardDataNeedsFundamentalsBackfill(
   const missingHistPe = candidates.filter(
     (c) => c.histPeAvg == null && (c.histPeYears == null || c.histPeYears === 0),
   );
-  return missingHistPe.length >= Math.ceil(candidates.length / 2);
+  if (missingHistPe.length >= Math.ceil(candidates.length / 2)) return true;
+  // Backfill Estebaranz annual series (margins / FCF / ROIC / shares).
+  const missingSeries = candidates.filter(
+    (c) => !c.annualSeries || c.annualSeries.length === 0,
+  );
+  return missingSeries.length >= Math.ceil(candidates.length / 2);
 }
 
 /**
@@ -183,6 +188,19 @@ function mergeCandidate(
     stepsPassed,
     stepsFailed,
     reportVerdict: verdict,
+    annualSeries:
+      fund.annualSeries && fund.annualSeries.length > 0
+        ? fund.annualSeries
+        : undefined,
+    fcfYield: fund.fcfYield ?? null,
+    evEbit: fund.evEbit ?? null,
+    interestCoverage: fund.interestCoverage ?? null,
+    buyback: fund.buyback ?? null,
+    severeDilution: fund.severeDilution ?? null,
+    avgVolume: fund.avgVolume ?? null,
+    thinLiquidity: fund.thinLiquidity ?? null,
+    peerPe: fund.peerPe ?? null,
+    roicPct: fund.roicPct ?? null,
   };
 }
 

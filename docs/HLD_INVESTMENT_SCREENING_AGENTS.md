@@ -95,6 +95,7 @@ src/lib/screening/
 │   ├── portfolio-context.ts
 │   ├── risk.ts
 │   ├── compiler.ts
+│   ├── compiler-evaluate.ts  # Estebaranz checklist (post shortlist research)
 │   ├── qa-qualitative.ts
 │   ├── tracking-summary.ts
 │   └── cribado/              # judgment prompts for Pasos 2/3/7/8/9 + cribado compiler

@@ -298,6 +298,54 @@ export const screeningCategoriesSchema = z.object({
 });
 export type ScreeningCategories = z.infer<typeof screeningCategoriesSchema>;
 
+/* ── Compiler evaluate — Estebaranz "Arte de Invertir" (post-research) ─ */
+
+export const artOfInvestingFilterVerdictSchema = z.enum(["PASA", "DESCARTE"]);
+export type ArtOfInvestingFilterVerdict = z.infer<
+  typeof artOfInvestingFilterVerdictSchema
+>;
+
+export const artOfInvestingConvictionSchema = z.enum([
+  "alta",
+  "media",
+  "baja",
+]);
+export type ArtOfInvestingConviction = z.infer<
+  typeof artOfInvestingConvictionSchema
+>;
+
+export const artOfInvestingEvaluationSchema = z.object({
+  ticker: z.string().min(1).max(20),
+  filterVerdict: artOfInvestingFilterVerdictSchema,
+  filterReason: z.string().min(1).max(400),
+  businessThreeSentences: z.string().min(1).max(900),
+  companyType: z.string().min(1).max(80),
+  moat: z.string().min(1).max(1200),
+  management: z.string().min(1).max(1200),
+  financials: z.string().min(1).max(2000),
+  growth: z.string().min(1).max(1200),
+  valuation: z.string().min(1).max(1600),
+  catalysts: z.string().min(1).max(800),
+  risksAndPremortem: z.string().min(1).max(1600),
+  thesisInvalidation: z.string().min(1).max(800),
+  informationGaps: z.array(z.string().max(280)).max(16).default([]),
+  conviction: artOfInvestingConvictionSchema,
+  convictionReason: z.string().min(1).max(400),
+  disclaimer: z.string().min(1).max(400),
+});
+export type ArtOfInvestingEvaluation = z.infer<
+  typeof artOfInvestingEvaluationSchema
+>;
+
+export const compilerEvaluateOutputSchema = z.object({
+  evaluations: z.array(artOfInvestingEvaluationSchema).max(5),
+  locale: z.string().min(2).max(10),
+  generatedAt: z.string().min(1).max(40),
+});
+export type CompilerEvaluateOutput = z.infer<
+  typeof compilerEvaluateOutputSchema
+>;
+
 export const screeningCandidateCardSchema = z.object({
   ticker: z.string().min(1),
   companyName: z.string().min(1),
@@ -366,6 +414,8 @@ export const screeningCandidateCardSchema = z.object({
   sources: z.array(sourceRefSchema),
   illustrativeAllocation: z.string().optional(),
   positionKind: z.enum(["new_position", "top_up_existing"]).optional(),
+  /** Estebaranz structured evaluation (compiler_evaluate). */
+  evaluation: artOfInvestingEvaluationSchema.optional(),
   /** Web & Sentiment (E5). */
   sentimentSummary: z.string().max(500).optional(),
   webSignals: z
@@ -374,6 +424,7 @@ export const screeningCandidateCardSchema = z.object({
         kind: z.enum(["tailwind", "headwind", "neutral", "noise"]),
         claim: z.string().max(280),
         confirmation: z.enum(["confirmed", "single_source_unconfirmed"]),
+        permanentCapitalRisk: z.boolean().optional(),
       }),
     )
     .max(3)
@@ -549,6 +600,33 @@ export const hardDataCandidateSchema = z.object({
   meetsMajorityBrief: z.boolean().optional(),
   /** Human-readable brief expectations this ticker missed. */
   unmetBriefCriteria: z.array(z.string().max(200)).max(12).optional(),
+  /** Multi-year annual fundamentals for Estebaranz evaluation (≤10). */
+  annualSeries: z
+    .array(
+      z.object({
+        year: z.number().int().nullable(),
+        revenue: z.number().finite().nullable(),
+        grossMarginPct: z.number().finite().nullable(),
+        operatingMarginPct: z.number().finite().nullable(),
+        netMarginPct: z.number().finite().nullable(),
+        eps: z.number().finite().nullable(),
+        operatingCashFlow: z.number().finite().nullable(),
+        freeCashFlow: z.number().finite().nullable(),
+        roicPct: z.number().finite().nullable(),
+        sharesOutstanding: z.number().finite().nullable(),
+      }),
+    )
+    .max(10)
+    .optional(),
+  fcfYield: z.number().finite().nullable().optional(),
+  evEbit: z.number().finite().nullable().optional(),
+  interestCoverage: z.number().finite().nullable().optional(),
+  buyback: z.boolean().nullable().optional(),
+  severeDilution: z.boolean().nullable().optional(),
+  avgVolume: z.number().finite().nullable().optional(),
+  thinLiquidity: z.boolean().nullable().optional(),
+  peerPe: z.number().finite().nullable().optional(),
+  roicPct: z.number().finite().nullable().optional(),
 });
 export type HardDataCandidate = z.infer<typeof hardDataCandidateSchema>;
 
@@ -615,6 +693,28 @@ export const irCatalystSchema = z.object({
 });
 export type IrCatalyst = z.infer<typeof irCatalystSchema>;
 
+export const irMoatHypothesisSchema = z.object({
+  types: z
+    .array(
+      z.enum([
+        "brand",
+        "switching_costs",
+        "network_effects",
+        "cost_advantage",
+        "scale",
+        "regulation_license",
+        "unique_asset",
+        "unclear",
+      ]),
+    )
+    .max(6)
+    .default([]),
+  evidence: z.array(z.string().max(400)).max(6).default([]),
+  durabilityYears: z.number().int().min(0).max(50).nullable().optional(),
+  threats: z.array(z.string().max(280)).max(6).default([]),
+});
+export type IrMoatHypothesis = z.infer<typeof irMoatHypothesisSchema>;
+
 export const irBusinessOutputSchema = z.object({
   ticker: z.string().min(1).max(20),
   businessOneLiner: z.string().min(1).max(280),
@@ -625,6 +725,19 @@ export const irBusinessOutputSchema = z.object({
   confidence: z.enum(["high", "medium", "low"]).default("medium"),
   bullets: z.array(z.string().min(1).max(280)).min(1).max(5),
   gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
+  /** Estebaranz Fase 1 — three-sentence business explanation. */
+  businessThreeSentences: z.string().max(900).optional(),
+  companyType: z
+    .enum(["compounder", "growth", "cyclical", "special_situation", "unclear"])
+    .optional(),
+  revenueMix: z.string().max(800).optional(),
+  recurringVsTransactional: z.string().max(400).optional(),
+  industryStructure: z.string().max(800).optional(),
+  moatHypothesis: irMoatHypothesisSchema.optional(),
+  capitalAllocationNotes: z.string().max(800).optional(),
+  guidanceTrackRecord: z.string().max(600).optional(),
+  /** Qualitative Fase-0 eliminators grounded in evidence. */
+  eliminationFlags: z.array(z.string().max(200)).max(8).optional(),
 });
 export type IrBusinessOutput = z.infer<typeof irBusinessOutputSchema>;
 
@@ -643,13 +756,25 @@ export const webSignalSchema = z.object({
   claim: z.string().min(1).max(280),
   confirmation: z.enum(["confirmed", "single_source_unconfirmed"]),
   sources: z.array(irSourceSchema).max(6).default([]),
+  /** True when the claim threatens permanent capital loss (not mere volatility). */
+  permanentCapitalRisk: z.boolean().optional(),
 });
 export type WebSignal = z.infer<typeof webSignalSchema>;
+
+export const webInsiderTransactionSchema = z.object({
+  side: z.enum(["buy", "sell", "other"]),
+  amountUsd: z.number().finite().nullable().optional(),
+  asOf: z.string().max(40).default(""),
+  notes: z.string().max(200).optional(),
+});
+export type WebInsiderTransaction = z.infer<typeof webInsiderTransactionSchema>;
 
 export const webInsiderSummarySchema = z.object({
   netBias: z.enum(["buying", "selling", "mixed", "none"]),
   notes: z.string().min(1).max(500),
   sources: z.array(irSourceSchema).max(6).default([]),
+  transactions24m: z.array(webInsiderTransactionSchema).max(12).optional(),
+  ownershipNotes: z.string().max(400).optional(),
 });
 export type WebInsiderSummary = z.infer<typeof webInsiderSummarySchema>;
 
@@ -870,6 +995,14 @@ export const shortlistResearchTickerSchema = z.object({
   fromCache: z.boolean().default(false),
   creditsUsed: z.number().nonnegative().default(0),
   errors: z.array(z.string().max(200)).max(8).default([]),
+  /** Estebaranz enrichment from Tavily Research (optional / fail-open). */
+  moatEvidence: z.string().max(1200).optional().default(""),
+  capitalAllocation: z.string().max(1200).optional().default(""),
+  growthDrivers: z.string().max(1200).optional().default(""),
+  addressableMarket: z.string().max(800).optional().default(""),
+  keyRisks: z.array(z.string().max(400)).max(12).optional().default([]),
+  analystCoverageNote: z.string().max(400).optional().default(""),
+  pricingPowerEvidence: z.string().max(800).optional().default(""),
 });
 export type ShortlistResearchTicker = z.infer<
   typeof shortlistResearchTickerSchema

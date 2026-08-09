@@ -105,6 +105,13 @@ export const runShortlistResearchStep: StepHandler = async (
       fromCache: bundle.fromCache,
       creditsUsed: bundle.creditsUsed,
       errors: bundle.errors,
+      moatEvidence: bundle.moatEvidence,
+      capitalAllocation: bundle.capitalAllocation,
+      growthDrivers: bundle.growthDrivers,
+      addressableMarket: bundle.addressableMarket,
+      keyRisks: bundle.keyRisks,
+      analystCoverageNote: bundle.analystCoverageNote,
+      pricingPowerEvidence: bundle.pricingPowerEvidence,
     });
   }
 

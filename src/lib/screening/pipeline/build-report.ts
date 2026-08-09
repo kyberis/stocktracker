@@ -3,6 +3,7 @@ import type { ScreeningRunRow } from "@/lib/db/screening";
 import {
   hardDataOutputSchema,
   compilerReportDraftSchema,
+  compilerEvaluateOutputSchema,
   aggregateIrBusinessOutputSchema,
   aggregateWebSentimentOutputSchema,
   aggregateTechnicalsOutputSchema,
@@ -15,6 +16,7 @@ import {
   type ScreeningReport,
   type HardDataOutput,
   type CompilerReportDraft,
+  type CompilerEvaluateOutput,
   type AggregateIrBusinessOutput,
   type AggregateWebSentimentOutput,
   type AggregateTechnicalsOutput,
@@ -27,11 +29,13 @@ import {
   type WebSentimentOutput,
   type ShortlistResearchOutput,
   type ShortlistResearchTicker,
+  type ArtOfInvestingEvaluation,
 } from "@/lib/screening/schemas";
 import { scoreChecklist } from "@/lib/screening/scoring/checklist";
 import { scoreCategories } from "@/lib/screening/scoring/categories";
 import { ensureReportCategories } from "@/lib/screening/ensure-categories";
 import { buildEducationalThesis } from "@/lib/screening/thesis";
+import { renderEvaluationThesis } from "@/lib/screening/evaluation-thesis";
 
 /**
  * Compose the ScreeningReport from Hard Data + Compiler (+ optional IR / Web /
@@ -51,6 +55,8 @@ export interface ComposeReportInput {
   qaRow?: ScreeningAgentOutputRow | null;
   /** Post-Compiler Tavily Research deep-dive (≤5 shortlist). */
   shortlistResearchRow?: ScreeningAgentOutputRow | null;
+  /** Estebaranz evaluation output (compiler_evaluate). */
+  compilerEvaluateRow?: ScreeningAgentOutputRow | null;
   /** Which agent kinds are still pending — surfaced as `partial=true` in UI. */
   pendingAgentKinds?: string[];
   /** How many candidates the caller asked for (defaults to all). */
@@ -234,6 +240,17 @@ export function composeScreeningReport(
     if (srParsed && srParsed.success) shortlistResearch = srParsed.data;
   }
 
+  let compilerEvaluate: CompilerEvaluateOutput | null = null;
+  if (input.compilerEvaluateRow) {
+    const evRaw = safeParseJson<Record<string, unknown>>(
+      input.compilerEvaluateRow.outputJson,
+    );
+    const evParsed = evRaw
+      ? compilerEvaluateOutputSchema.safeParse(evRaw)
+      : null;
+    if (evParsed && evParsed.success) compilerEvaluate = evParsed.data;
+  }
+
   const qaIssuesByTicker = new Map<string, string[]>();
   if (qa) {
     for (const issue of qa.issues) {
@@ -265,6 +282,12 @@ export function composeScreeningReport(
   );
   const researchByTicker = new Map<string, ShortlistResearchTicker>(
     (shortlistResearch?.tickers ?? []).map((t) => [t.ticker.toUpperCase(), t]),
+  );
+  const evaluationByTicker = new Map<string, ArtOfInvestingEvaluation>(
+    (compilerEvaluate?.evaluations ?? []).map((e) => [
+      e.ticker.toUpperCase(),
+      e,
+    ]),
   );
 
   const requestedCount =
@@ -326,6 +349,7 @@ export function composeScreeningReport(
     const pc = pcByTicker.get(c.ticker.toUpperCase());
     const riskRow = riskByTicker.get(c.ticker.toUpperCase());
     const research = researchByTicker.get(c.ticker.toUpperCase());
+    const evaluation = evaluationByTicker.get(c.ticker.toUpperCase());
     const primaryCatalyst =
       ir?.catalysts[0] ??
       (research?.catalysts[0]
@@ -349,9 +373,16 @@ export function composeScreeningReport(
     ].slice(0, 12);
 
     const risks = [
+      ...(evaluation?.risksAndPremortem
+        ? [evaluation.risksAndPremortem.slice(0, 280)]
+        : []),
+      ...(research?.keyRisks ?? []),
       ...(ir?.gaps ?? []),
       ...(riskRow?.riskFlags ?? []),
       ...(web?.gaps ?? []),
+      ...(web?.signals
+        .filter((s) => s.permanentCapitalRisk)
+        .map((s) => s.claim) ?? []),
     ].slice(0, 8);
 
     // Re-score at compose time so criteria 3 / 4 / 6 (and 9 in Phase 2) leave
@@ -452,54 +483,60 @@ export function composeScreeningReport(
         ownHistPe: c.ownHistPe ?? null,
         histPeAvg: c.histPeAvg ?? null,
         histPeYears: c.histPeYears ?? null,
-        peerPe: null,
+        peerPe: c.peerPe ?? null,
         evEbitda: c.evEbitda ?? null,
         ndEbitda: c.ndEbitda ?? null,
         growthNote: c.growthNote ?? null,
       },
       flags: {
         netCash: c.netCash ?? null,
-        buyback: null,
+        buyback: c.buyback ?? null,
         dividendYield: c.dividendYield ?? null,
         moatScore: c.moatScore ?? null,
       },
-      thesis: buildEducationalThesis({
-        locale: draft.locale || hardData.locale || "en",
-        companyName: c.name || c.ticker,
-        ticker: c.ticker,
-        lead: bullet?.bullet ?? c.rankReason,
-        businessOneLiner: ir?.businessOneLiner ?? c.analysisSummary,
-        catalyst: primaryCatalyst?.label ?? null,
-        catalystDate: ir?.guidance.asOf ?? null,
-        fwdPe: c.fwdPe ?? null,
-        ownHistPe: c.ownHistPe ?? null,
-        histPeAvg: c.histPeAvg ?? null,
-        evEbitda: c.evEbitda ?? null,
-        ndEbitda: c.ndEbitda ?? null,
-        dividendYield: c.dividendYield ?? null,
-        netCash: c.netCash ?? null,
-        upsidePct: c.upsidePct ?? null,
-        moatScore: c.moatScore ?? null,
-        growthNote: c.growthNote ?? null,
-        sentimentSummary: web?.sentimentSummary ?? null,
-        insiderBias: web?.insiderSummary.netBias ?? null,
-        positionKind: pc?.positionKind ?? null,
-        suitability: riskRow?.suitability ?? null,
-        concentrationImpact: riskRow?.concentrationImpact ?? null,
-        categories,
-        stepsPassed: rescored.stepsPassed,
-        stepsFailed: rescored.stepsFailed,
-        technicals: tech
-          ? {
-              distanceTo52wHighPct: tech.distanceTo52wHighPct,
-              distanceTo52wLowPct: tech.distanceTo52wLowPct,
-              aboveMa200: tech.aboveMa200,
-              return1yPct: tech.return1yPct,
-              return3mPct: tech.return3mPct,
-              volatilityAnnPct: tech.volatilityAnnPct,
-            }
-          : null,
-      }),
+      thesis: evaluation
+        ? renderEvaluationThesis(evaluation)
+        : buildEducationalThesis({
+            locale: draft.locale || hardData.locale || "en",
+            companyName: c.name || c.ticker,
+            ticker: c.ticker,
+            lead: bullet?.bullet ?? c.rankReason,
+            businessOneLiner:
+              ir?.businessThreeSentences ||
+              ir?.businessOneLiner ||
+              c.analysisSummary,
+            catalyst: primaryCatalyst?.label ?? null,
+            catalystDate: ir?.guidance.asOf ?? null,
+            fwdPe: c.fwdPe ?? null,
+            ownHistPe: c.ownHistPe ?? null,
+            histPeAvg: c.histPeAvg ?? null,
+            evEbitda: c.evEbitda ?? null,
+            ndEbitda: c.ndEbitda ?? null,
+            dividendYield: c.dividendYield ?? null,
+            netCash: c.netCash ?? null,
+            upsidePct: c.upsidePct ?? null,
+            moatScore: c.moatScore ?? null,
+            growthNote: c.growthNote ?? null,
+            sentimentSummary: web?.sentimentSummary ?? null,
+            insiderBias: web?.insiderSummary.netBias ?? null,
+            positionKind: pc?.positionKind ?? null,
+            suitability: riskRow?.suitability ?? null,
+            concentrationImpact: riskRow?.concentrationImpact ?? null,
+            categories,
+            stepsPassed: rescored.stepsPassed,
+            stepsFailed: rescored.stepsFailed,
+            technicals: tech
+              ? {
+                  distanceTo52wHighPct: tech.distanceTo52wHighPct,
+                  distanceTo52wLowPct: tech.distanceTo52wLowPct,
+                  aboveMa200: tech.aboveMa200,
+                  return1yPct: tech.return1yPct,
+                  return3mPct: tech.return3mPct,
+                  volatilityAnnPct: tech.volatilityAnnPct,
+                }
+              : null,
+          }),
+      evaluation,
       risks,
       priorityReason: bullet?.headline ?? c.rankReason.slice(0, 120),
       unmetBriefCriteria: c.unmetBriefCriteria,
@@ -529,6 +566,7 @@ export function composeScreeningReport(
         kind: s.kind,
         claim: s.claim.trim().slice(0, 280),
         confirmation: s.confirmation,
+        permanentCapitalRisk: s.permanentCapitalRisk,
       })),
       insiderBias: web?.insiderSummary.netBias,
       riskFlags: riskRow?.riskFlags,

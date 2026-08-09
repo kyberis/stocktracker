@@ -126,6 +126,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "IR agent: Tavily Search+Extract for official IR pages and recent HTML docs (primary), Tavily Research only when FMP and extract are both thin; also shortlist deep-dive after Compiler, shared ticker research cache (7d), and slim Web Search (skip analyst Search when research is cached). Accrues Search/Extract/Research credits into per-report variable cost. Requires screening_pipeline_real_enabled. Off by default.",
     group: "Features",
   },
+  screening_estebaranz_eval_enabled: {
+    label: "Screening: Estebaranz framework evaluation",
+    description:
+      "After Compiler (and optional shortlist research), run compiler_evaluate to apply the Estebaranz (“Arte de Invertir”) checklist to each shortlisted company. Structured card sections + grounded “data not available” rules. Requires screening_pipeline_real_enabled. On by default.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

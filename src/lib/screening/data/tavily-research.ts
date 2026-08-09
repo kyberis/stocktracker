@@ -34,6 +34,37 @@ const COMPANY_RESEARCH_OUTPUT_SCHEMA = {
       description: "Named competitors or peers",
       items: { type: "string" },
     },
+    moatEvidence: {
+      type: "string",
+      description:
+        "Evidence of competitive advantage (brand, switching costs, network, cost, scale, regulation)",
+    },
+    capitalAllocation: {
+      type: "string",
+      description:
+        "Management capital allocation: buybacks, M&A, dividends, reinvestment track record",
+    },
+    growthDrivers: {
+      type: "string",
+      description: "Organic vs inorganic growth drivers and sustainability",
+    },
+    addressableMarket: {
+      type: "string",
+      description: "Addressable market / runway if evidenced",
+    },
+    keyRisks: {
+      type: "array",
+      description: "Key permanent-capital risks (not mere volatility)",
+      items: { type: "string" },
+    },
+    analystCoverageNote: {
+      type: "string",
+      description: "How many analysts cover the name, if known",
+    },
+    pricingPowerEvidence: {
+      type: "string",
+      description: "Evidence of pricing power vs inflation / volume",
+    },
   },
   required: ["businessOneLiner"],
 } as const;
@@ -45,6 +76,13 @@ const structuredContentSchema = z
     catalysts: z.array(z.string().max(400)).max(12).optional(),
     guidanceSummary: z.string().max(1200).optional(),
     competitors: z.array(z.string().max(120)).max(20).optional(),
+    moatEvidence: z.string().max(1200).optional(),
+    capitalAllocation: z.string().max(1200).optional(),
+    growthDrivers: z.string().max(1200).optional(),
+    addressableMarket: z.string().max(800).optional(),
+    keyRisks: z.array(z.string().max(400)).max(12).optional(),
+    analystCoverageNote: z.string().max(400).optional(),
+    pricingPowerEvidence: z.string().max(800).optional(),
   })
   .passthrough();
 
@@ -57,6 +95,13 @@ export interface TavilyCompanyResearchResult {
   catalysts: string[];
   guidanceSummary: string;
   competitors: string[];
+  moatEvidence: string;
+  capitalAllocation: string;
+  growthDrivers: string;
+  addressableMarket: string;
+  keyRisks: string[];
+  analystCoverageNote: string;
+  pricingPowerEvidence: string;
   sources: Array<{ title: string; url: string }>;
   rawContent: string;
   model: TavilyResearchModel;
@@ -93,14 +138,41 @@ function estimateCredits(model: TavilyResearchModel, reported?: number): number 
   return 20;
 }
 
-function parseStructuredContent(content: unknown): {
+function emptyStructured(rawContent = ""): {
   businessOneLiner: string;
   segments: string[];
   catalysts: string[];
   guidanceSummary: string;
   competitors: string[];
+  moatEvidence: string;
+  capitalAllocation: string;
+  growthDrivers: string;
+  addressableMarket: string;
+  keyRisks: string[];
+  analystCoverageNote: string;
+  pricingPowerEvidence: string;
   rawContent: string;
 } {
+  return {
+    businessOneLiner: "",
+    segments: [],
+    catalysts: [],
+    guidanceSummary: "",
+    competitors: [],
+    moatEvidence: "",
+    capitalAllocation: "",
+    growthDrivers: "",
+    addressableMarket: "",
+    keyRisks: [],
+    analystCoverageNote: "",
+    pricingPowerEvidence: "",
+    rawContent,
+  };
+}
+
+function parseStructuredContent(content: unknown): ReturnType<
+  typeof emptyStructured
+> {
   if (content && typeof content === "object") {
     const parsed = structuredContentSchema.safeParse(content);
     if (parsed.success) {
@@ -110,6 +182,21 @@ function parseStructuredContent(content: unknown): {
         catalysts: (parsed.data.catalysts ?? []).map((s) => s.slice(0, 400)),
         guidanceSummary: (parsed.data.guidanceSummary ?? "").slice(0, 1200),
         competitors: (parsed.data.competitors ?? []).map((s) => s.slice(0, 120)),
+        moatEvidence: (parsed.data.moatEvidence ?? "").slice(0, 1200),
+        capitalAllocation: (parsed.data.capitalAllocation ?? "").slice(0, 1200),
+        growthDrivers: (parsed.data.growthDrivers ?? "").slice(0, 1200),
+        addressableMarket: (parsed.data.addressableMarket ?? "").slice(0, 800),
+        keyRisks: (parsed.data.keyRisks ?? [])
+          .map((s) => s.slice(0, 400))
+          .slice(0, 12),
+        analystCoverageNote: (parsed.data.analystCoverageNote ?? "").slice(
+          0,
+          400,
+        ),
+        pricingPowerEvidence: (parsed.data.pricingPowerEvidence ?? "").slice(
+          0,
+          800,
+        ),
         rawContent: JSON.stringify(content).slice(0, 20_000),
       };
     }
@@ -124,22 +211,11 @@ function parseStructuredContent(content: unknown): {
       // markdown report
     }
     return {
+      ...emptyStructured(content.slice(0, 20_000)),
       businessOneLiner: content.slice(0, 280),
-      segments: [],
-      catalysts: [],
-      guidanceSummary: "",
-      competitors: [],
-      rawContent: content.slice(0, 20_000),
     };
   }
-  return {
-    businessOneLiner: "",
-    segments: [],
-    catalysts: [],
-    guidanceSummary: "",
-    competitors: [],
-    rawContent: "",
-  };
+  return emptyStructured();
 }
 
 export async function fetchTavilyCompanyResearch(
@@ -152,13 +228,8 @@ export async function fetchTavilyCompanyResearch(
     errors: string[],
   ): TavilyCompanyResearchResult => ({
     ticker,
-    businessOneLiner: "",
-    segments: [],
-    catalysts: [],
-    guidanceSummary: "",
-    competitors: [],
+    ...emptyStructured(),
     sources: [],
-    rawContent: "",
     model,
     creditsUsed: 0,
     requestId: null,
@@ -177,7 +248,7 @@ export async function fetchTavilyCompanyResearch(
   const timeoutMs = Math.min(Math.max(opts.timeoutMs ?? 90_000, 10_000), 170_000);
   const pollIntervalMs = Math.min(Math.max(opts.pollIntervalMs ?? 4_000, 1_000), 15_000);
   const name = (opts.companyName || ticker).trim();
-  const input = `Company research for ${name} (ticker ${ticker}): business description, main segments, recent management guidance, near-term catalysts, and named competitors. Prefer SEC filings and official IR sources. Do not invent prices or investment advice.`;
+  const input = `Company research for ${name} (ticker ${ticker}): business description, main segments, recent management guidance, near-term catalysts, named competitors, moat evidence, capital allocation track record, growth drivers, addressable market, key permanent-capital risks, analyst coverage, and pricing-power evidence. Prefer SEC filings and official IR sources. Do not invent prices or investment advice. Mark unknowns briefly rather than guessing.`;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -309,13 +380,8 @@ export async function fetchTavilyCompanyResearch(
 
     return {
       ticker,
-      businessOneLiner: structured.businessOneLiner,
-      segments: structured.segments,
-      catalysts: structured.catalysts,
-      guidanceSummary: structured.guidanceSummary,
-      competitors: structured.competitors,
+      ...structured,
       sources,
-      rawContent: structured.rawContent,
       model,
       creditsUsed,
       requestId,

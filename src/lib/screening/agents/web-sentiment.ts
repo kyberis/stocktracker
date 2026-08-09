@@ -126,6 +126,10 @@ function coerceWebOutput(
         claim,
         confirmation,
         sources: coerceSources(row.sources),
+        permanentCapitalRisk:
+          typeof row.permanentCapitalRisk === "boolean"
+            ? row.permanentCapitalRisk
+            : undefined,
       };
     })
     .filter((s): s is NonNullable<typeof s> => s != null);
@@ -140,6 +144,32 @@ function coerceWebOutput(
   ).includes(biasRaw as "buying")
     ? (biasRaw as "buying" | "selling" | "mixed" | "none")
     : "none";
+
+  const transactions24m = Array.isArray(insiderRaw.transactions24m)
+    ? insiderRaw.transactions24m
+        .slice(0, 12)
+        .map((t) => {
+          if (!t || typeof t !== "object") return null;
+          const row = t as Record<string, unknown>;
+          const sideRaw = String(row.side ?? "other");
+          const side = (["buy", "sell", "other"] as const).includes(
+            sideRaw as "buy",
+          )
+            ? (sideRaw as "buy" | "sell" | "other")
+            : ("other" as const);
+          const amount =
+            row.amountUsd == null || row.amountUsd === ""
+              ? null
+              : Number(row.amountUsd);
+          return {
+            side,
+            amountUsd: Number.isFinite(amount) ? amount : null,
+            asOf: String(row.asOf ?? "").trim().slice(0, 40),
+            notes: String(row.notes ?? "").trim().slice(0, 200) || undefined,
+          };
+        })
+        .filter((t): t is NonNullable<typeof t> => t != null)
+    : [];
 
   const gaps = Array.isArray(raw.gaps)
     ? raw.gaps
@@ -157,6 +187,10 @@ function coerceWebOutput(
         .trim()
         .slice(0, 500) || "No insider summary.",
       sources: coerceSources(insiderRaw.sources),
+      transactions24m,
+      ownershipNotes:
+        String(insiderRaw.ownershipNotes ?? "").trim().slice(0, 400) ||
+        undefined,
     },
     sentimentSummary: String(raw.sentimentSummary ?? "")
       .trim()
@@ -243,6 +277,7 @@ export async function runWebSentimentAgent(
                   enum: ["confirmed", "single_source_unconfirmed"],
                 },
                 sources: { type: "array", items: { type: "object" } },
+                permanentCapitalRisk: { type: "boolean" },
               },
             },
           },
@@ -256,6 +291,19 @@ export async function runWebSentimentAgent(
               },
               notes: { type: "string" },
               sources: { type: "array", items: { type: "object" } },
+              transactions24m: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    side: { type: "string", enum: ["buy", "sell", "other"] },
+                    amountUsd: { type: ["number", "null"] },
+                    asOf: { type: "string" },
+                    notes: { type: "string" },
+                  },
+                },
+              },
+              ownershipNotes: { type: "string" },
             },
           },
           sentimentSummary: { type: "string" },

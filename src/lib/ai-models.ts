@@ -38,6 +38,7 @@ export const AI_FLOW_KEYS = [
   "screening_portfolio_context",
   "screening_risk",
   "screening_compiler",
+  "screening_compiler_evaluate",
   "screening_qa",
 ] as const;
 
@@ -180,6 +181,12 @@ export const AI_FLOW_META: Record<AiFlowKey, AiFlowMeta> = {
     maxTokens: 4500,
     temperature: 0.35,
   },
+  screening_compiler_evaluate: {
+    label: "Screening · Compiler evaluate",
+    description: "Estebaranz framework evaluation per shortlist ticker",
+    maxTokens: 8000,
+    temperature: 0.25,
+  },
   screening_qa: {
     label: "Screening · QA",
     description: "Qualitative verification judge (Layer B)",
@@ -199,6 +206,7 @@ export const FREE_TIER_CONVERSATIONAL_MODEL: AllowedAiModel = "gpt-4.1-nano";
 /** Flows where screening quality matters most — default to a strong model. */
 const SCREENING_PREMIUM_DEFAULTS: Partial<Record<AiFlowKey, AllowedAiModel>> = {
   screening_compiler: "gpt-4.1",
+  screening_compiler_evaluate: "gpt-4.1",
   screening_qa: "gpt-4.1",
 };
 

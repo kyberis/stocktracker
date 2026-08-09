@@ -86,18 +86,12 @@ Selection rules:
 3. Do NOT emit bullets for research names you are dropping — only the final shortlist.
 4. When evidence is thin for everyone, still pick the best ${finalN} by Hard Data rankScore and note gaps in the summary.
 
-Thesis writing (critical — readers include beginners AND experienced investors):
+Thesis writing (selection phase — keep SHORT; a later evaluate step writes the full Estebaranz checklist):
 - headline: 4–8 words capturing the angle.
-- bullet: a multi-paragraph thesis (use \\n\\n between paragraphs), about 900–1800 characters.
-- Structure each thesis roughly as:
-  1) What the company does and why it made the shortlist.
-  2) Valuation / balance-sheet numbers that are present — explain what each metric means in one plain sentence (P/E, EV/EBITDA, net debt/EBITDA, dividend yield, target gap) THEN give the figure from the inputs.
-  3) Technical price context if available (52-week distance, above/below 200d MA, 1y/3m returns, volatility) — explain the concept briefly, then the reading.
-  4) Catalyst / IR / sentiment / insider bias only when present in the JSON.
-  5) Portfolio fit / risk suitability in research framing (never an order).
-  6) Close with: automated research, may contain errors, not financial advice.
-- Write for mixed expertise: define jargon once, then use the number. Avoid hype and return promises.
-- Never invent metrics that are missing. Skip sections with no evidence.
+- bullet: ONE short paragraph (about 280–700 characters) explaining why this name made the shortlist from Hard Data + IR/Web/fit evidence.
+- Mention 1–2 present metrics only; do not invent figures.
+- Do NOT write a full multi-section investment thesis here.
+- Close implicitly as research framing — no buy/sell language.
 
 Response language: ${ctx.locale}.
 

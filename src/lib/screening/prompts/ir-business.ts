@@ -29,17 +29,24 @@ Explain WHAT the business does and WHAT management recently signaled. Evidence p
 3. Optional tavilyCompanyResearch fallback (only when primary sources are thin).
 
 Stay grounded in the provided evidence — you do not have live browsing beyond that bundle.
+Never invent figures. If a qualitative point lacks evidence, omit it or list it in gaps.
 
 Brief intent: ${b.intent}. Locale for prose fields: ${ctx.locale}.
 ${hardLine}
 
 Tasks:
 1. One-sentence business description (businessOneLiner).
-2. Recent guidance / tone (raised, maintained, cut, unclear) with dated source.
-3. Named catalysts (buybacks, M&A, product, regulation) — only if evidenced.
-4. If Hard Data metrics contradict IR narrative, set contradictionWithHardData=true and explain in gaps.
-5. When ambiguous, mark confidence="low" and list gaps. Prefer medium/high only with dated evidence.
-6. When irSiteDocuments include URLs, cite them in guidance.sources / catalysts[].sources (real URLs only).
+2. Prefer also businessThreeSentences: (a) what it sells, (b) to whom, (c) why the customer pays this firm vs alternatives.
+3. companyType when evidence supports it: compounder | growth | cyclical | special_situation | unclear.
+4. revenueMix / recurringVsTransactional / industryStructure when evidenced (segments, geography, customer concentration >10%, barriers).
+5. moatHypothesis: types + short evidence quotes + threats (narrative only — do not invent ROIC/margins).
+6. capitalAllocationNotes and guidanceTrackRecord when transcripts/IR mention buybacks, M&A, dividends, or prior guidance delivery.
+7. Recent guidance / tone (raised, maintained, cut, unclear) with dated source.
+8. Named catalysts (buybacks, M&A, product, regulation) — only if evidenced.
+9. eliminationFlags for Fase-0 qualitative eliminators only when evidenced (e.g. "business_incomprehensible", "structural_decline", "opaque_accounting", "poor_governance").
+10. If Hard Data metrics contradict IR narrative, set contradictionWithHardData=true and explain in gaps.
+11. When ambiguous, mark confidence="low" and list gaps. Prefer medium/high only with dated evidence.
+12. When irSiteDocuments include URLs, cite them in guidance.sources / catalysts[].sources (real URLs only).
 
 RESPONSE PROTOCOL (mandatory):
 - Reply ONLY by calling the "submit_ir_business" function tool.
@@ -47,6 +54,20 @@ RESPONSE PROTOCOL (mandatory):
   {
     "ticker": "${ctx.ticker}",
     "businessOneLiner": string,
+    "businessThreeSentences": string (optional),
+    "companyType": "compounder"|"growth"|"cyclical"|"special_situation"|"unclear" (optional),
+    "revenueMix": string (optional),
+    "recurringVsTransactional": string (optional),
+    "industryStructure": string (optional),
+    "moatHypothesis": {
+      "types": string[],
+      "evidence": string[],
+      "durabilityYears": number|null,
+      "threats": string[]
+    } (optional),
+    "capitalAllocationNotes": string (optional),
+    "guidanceTrackRecord": string (optional),
+    "eliminationFlags": string[],
     "guidance": { "summary": string, "direction": "up"|"flat"|"down"|"unclear", "asOf": string, "sources": Source[] },
     "catalysts": [{ "label": string, "evidence": string, "sources": Source[] }],
     "segments": string[],

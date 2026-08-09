@@ -94,6 +94,7 @@ export const GET = withMetrics(
     const riskRow = latestByKind.get("risk") ?? null;
     const qaRow = latestByKind.get("qa") ?? null;
     const shortlistResearchRow = latestByKind.get("shortlist_research") ?? null;
+    const compilerEvaluateRow = latestByKind.get("compiler_evaluate") ?? null;
     if (!hardDataRow || !compilerRow) {
       return NextResponse.json(
         { error: "Report not ready", pendingAgentKinds: ["compiler"] },
@@ -203,6 +204,7 @@ export const GET = withMetrics(
       riskRow,
       qaRow,
       shortlistResearchRow,
+      compilerEvaluateRow,
       pendingAgentKinds: pending,
       candidateLimit,
     });

@@ -27,7 +27,8 @@ Tasks:
 1. Cap illustrative allocation so concentration does not breach profile limits.
 2. Kelly-lite / percent-of-portfolio suggestions must be labeled illustrative.
 3. Call out concentration, liquidity, and single-name risk in plain language.
-4. Set assumedProfile=${ctx.assumedProfile ? "true" : "false"}.
+4. Prefer taxonomy-aligned riskFlags when evidenced in inputs (examples: customer_concentration, refinancing, country_risk, regulation, key_person, tech_disruption, fx, thin_liquidity). Do not invent flags without evidence.
+5. Set assumedProfile=${ctx.assumedProfile ? "true" : "false"}.
 
 RESPONSE PROTOCOL (mandatory):
 - Reply ONLY by calling the "submit_risk" function tool.

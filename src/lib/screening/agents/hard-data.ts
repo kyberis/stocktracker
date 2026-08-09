@@ -65,6 +65,57 @@ const RISK_KIND = "risk";
 const COMPILER_KIND = "compiler";
 const QA_KIND = "qa";
 const SHORTLIST_RESEARCH_KIND = "shortlist_research";
+const COMPILER_EVALUATE_KIND = "compiler_evaluate";
+
+/**
+ * Attach optional post-Compiler steps:
+ * shortlist_research → compiler_evaluate → qa (each gated by its flag).
+ */
+async function insertPostCompilerSteps(
+  runId: string,
+  compilerStepId: string,
+  flags: {
+    researchEnabled: boolean;
+    evalEnabled: boolean;
+    qaEnabled: boolean;
+  },
+): Promise<void> {
+  const { researchEnabled, evalEnabled, qaEnabled } = flags;
+  if (!researchEnabled && !evalEnabled && !qaEnabled) return;
+
+  let dependsOn = compilerStepId;
+  const steps: Array<{
+    id?: string;
+    agentKind: string;
+    dependsOn: string[];
+  }> = [];
+
+  if (researchEnabled) {
+    const shortlistId = crypto.randomUUID();
+    steps.push({
+      id: shortlistId,
+      agentKind: SHORTLIST_RESEARCH_KIND,
+      dependsOn: [dependsOn],
+    });
+    dependsOn = shortlistId;
+  }
+  if (evalEnabled) {
+    const evalId = crypto.randomUUID();
+    steps.push({
+      id: evalId,
+      agentKind: COMPILER_EVALUATE_KIND,
+      dependsOn: [dependsOn],
+    });
+    dependsOn = evalId;
+  }
+  if (qaEnabled) {
+    steps.push({
+      agentKind: QA_KIND,
+      dependsOn: [dependsOn],
+    });
+  }
+  await insertSteps(runId, steps);
+}
 
 function parseBrief(briefJson: string): ScreeningBrief | null {
   if (!briefJson) return null;
@@ -623,15 +674,20 @@ export const runHardDataStep: StepHandler = async (
   let irFanout = 0;
   let webFanout = 0;
   try {
-    const [irFlag, v2Flag, qaFlag, researchFlag] = await Promise.all([
+    const [irFlag, v2Flag, qaFlag, researchFlag, evalFlag] = await Promise.all([
       isFeatureEnabledForUser("screening_ir_agent_enabled", ctx.userId),
       isFeatureEnabledForUser("screening_agents_v2_enabled", ctx.userId),
       isFeatureEnabledForUser("screening_qa_enabled", ctx.userId),
       isFeatureEnabledForUser("screening_tavily_research_enabled", ctx.userId),
+      isFeatureEnabledForUser(
+        "screening_estebaranz_eval_enabled",
+        ctx.userId,
+      ),
     ]);
     const v2Enabled = v2Flag;
     const irEnabled = irFlag || v2Enabled;
     const qaEnabled = qaFlag;
+    const evalEnabled = evalFlag;
     const researchEnabled = researchFlag;
     const candidates = enrichedOutput.candidates.slice(0, IR_FANOUT_MAX);
 
@@ -712,35 +768,14 @@ export const runHardDataStep: StepHandler = async (
       if (compilerStep && compilerStep.status === "pending") {
         await updateStepDependsOn(compilerStep.id, compilerDependsOn);
       }
-      // QA becomes the new terminal step when the flag is on. When Tavily
-      // Research is on, shortlist_research runs after Compiler and QA depends
-      // on it so report cards can use deep-dive enrichment.
+      // Post-Compiler chain: optional shortlist_research → optional
+      // compiler_evaluate (Estebaranz) → optional QA.
       if (compilerStep) {
-        if (researchEnabled) {
-          const shortlistId = crypto.randomUUID();
-          await insertSteps(ctx.runId, [
-            {
-              id: shortlistId,
-              agentKind: SHORTLIST_RESEARCH_KIND,
-              dependsOn: [compilerStep.id],
-            },
-            ...(qaEnabled
-              ? [
-                  {
-                    agentKind: QA_KIND,
-                    dependsOn: [shortlistId],
-                  },
-                ]
-              : []),
-          ]);
-        } else if (qaEnabled) {
-          await insertSteps(ctx.runId, [
-            {
-              agentKind: QA_KIND,
-              dependsOn: [compilerStep.id],
-            },
-          ]);
-        }
+        await insertPostCompilerSteps(ctx.runId, compilerStep.id, {
+          researchEnabled,
+          evalEnabled,
+          qaEnabled,
+        });
       }
       irFanout = candidates.length;
       // Parent drain may be about to lease IR and hang for minutes. Kick a
@@ -753,30 +788,15 @@ export const runHardDataStep: StepHandler = async (
           },
         );
       }
-    } else if (researchEnabled || qaEnabled) {
-      // No IR/Web fan-out but research/QA on: attach after the compiler.
+    } else if (researchEnabled || evalEnabled || qaEnabled) {
+      // No IR/Web fan-out but research/evaluate/QA on: attach after the compiler.
       const compilerStep = await findStepByAgentKind(ctx.runId, COMPILER_KIND);
       if (compilerStep) {
-        if (researchEnabled) {
-          const shortlistId = crypto.randomUUID();
-          await insertSteps(ctx.runId, [
-            {
-              id: shortlistId,
-              agentKind: SHORTLIST_RESEARCH_KIND,
-              dependsOn: [compilerStep.id],
-            },
-            ...(qaEnabled
-              ? [{ agentKind: QA_KIND, dependsOn: [shortlistId] }]
-              : []),
-          ]);
-        } else if (qaEnabled) {
-          await insertSteps(ctx.runId, [
-            {
-              agentKind: QA_KIND,
-              dependsOn: [compilerStep.id],
-            },
-          ]);
-        }
+        await insertPostCompilerSteps(ctx.runId, compilerStep.id, {
+          researchEnabled,
+          evalEnabled,
+          qaEnabled,
+        });
       }
     }
   } catch (err) {

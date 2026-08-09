@@ -18,4 +18,5 @@ import "@/lib/screening/agents/portfolio-context";
 import "@/lib/screening/agents/risk";
 import "@/lib/screening/agents/compiler";
 import "@/lib/screening/agents/shortlist-research";
+import "@/lib/screening/agents/compiler-evaluate";
 import "@/lib/screening/agents/qa";

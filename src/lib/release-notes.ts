@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.129",
+    date: "2026-08-10",
+    title: "Screening: Estebaranz framework evaluation",
+    titleTranslations: {
+      es: "Cribado: evaluación con marco Estebaranz",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "When `screening_estebaranz_eval_enabled` is on, screening runs a Compiler evaluate step after shortlist research that applies the Estebaranz (“Arte de Invertir”) checklist to each shortlisted company — filter verdict, moat, management, financials, valuation, catalysts, risks/pre-mortem, gaps and conviction — with explicit “data not available” when figures are missing. Upstream Hard Data, IR, Web and Tavily research collect the evidence; cards show the structured evaluation with the usual not-advice disclaimer.",
+        translations: {
+          es: "Con `screening_estebaranz_eval_enabled`, el cribado ejecuta un paso Compiler evaluate tras el research de shortlist que aplica el checklist de Estebaranz (“El Arte de Invertir”) a cada empresa — veredicto de filtro, moat, directiva, números, valoración, catalizadores, riesgos/pre-mortem, lagunas y convicción — marcando “dato no disponible” si falta evidencia. Hard Data, IR, Web y Tavily aportan los datos; las fichas muestran la evaluación estructurada con el disclaimer habitual de no asesoramiento.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.128",
     date: "2026-08-10",
     title: "Screening: clearer cheap / fit / solidity chips",

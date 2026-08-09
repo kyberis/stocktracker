@@ -88,6 +88,8 @@ export const runQaStep: StepHandler = async (
     techRow,
     pcRow,
     riskRow,
+    shortlistResearchRow,
+    compilerEvaluateRow,
   ] = await Promise.all([
     getScreeningRunUnscoped(ctx.runId),
     getLatestScreeningAgentOutputUnscoped(ctx.runId, "hard_data"),
@@ -97,6 +99,8 @@ export const runQaStep: StepHandler = async (
     getLatestScreeningAgentOutputUnscoped(ctx.runId, "aggregate_technicals"),
     getLatestScreeningAgentOutputUnscoped(ctx.runId, "portfolio_context"),
     getLatestScreeningAgentOutputUnscoped(ctx.runId, "risk"),
+    getLatestScreeningAgentOutputUnscoped(ctx.runId, "shortlist_research"),
+    getLatestScreeningAgentOutputUnscoped(ctx.runId, "compiler_evaluate"),
   ]);
 
   const hardData = safeParse<HardDataOutput>(hardDataRow, hardDataOutputSchema);
@@ -134,6 +138,8 @@ export const runQaStep: StepHandler = async (
         technicalsAggregateRow: techRow ?? null,
         portfolioContextRow: pcRow ?? null,
         riskRow: riskRow ?? null,
+        shortlistResearchRow: shortlistResearchRow ?? null,
+        compilerEvaluateRow: compilerEvaluateRow ?? null,
         pendingAgentKinds: [],
       });
     } catch (err) {

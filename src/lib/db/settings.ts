@@ -60,7 +60,8 @@ export type PlatformFeature =
   | "screening_ir_agent_enabled"
   | "screening_agents_v2_enabled"
   | "screening_qa_enabled"
-  | "screening_tavily_research_enabled";
+  | "screening_tavily_research_enabled"
+  | "screening_estebaranz_eval_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_enabled",
@@ -77,6 +78,8 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_bot_enabled",
   // Default authenticated home (morning brief / day-highlights APIs). Classic is opt-in via classic_home.
   "home_v2",
+  // Estebaranz evaluate step after shortlist research (requires pipeline real + screening flags).
+  "screening_estebaranz_eval_enabled",
 ]);
 
 const VALID_THEMES = new Set(["default", "terminal", "canvas", "studio"]);
@@ -482,6 +485,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "screening_agents_v2_enabled",
   "screening_qa_enabled",
   "screening_tavily_research_enabled",
+  "screening_estebaranz_eval_enabled",
 ];
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {
