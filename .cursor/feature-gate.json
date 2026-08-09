@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.54: live MarketTickerBar added to public landing above the nav; /api/ticker-bar is public + cached. Footer retains Yahoo/AV market-data disclaimer."
+  "notes": "2.5.126: screening category axes (cheap/fit/solidity) refine the beta screening report UX; not a new top-level landing capability — no FEATURES card update. Landing still accurate for portfolio tracking + AI research positioning."
 }

@@ -10,7 +10,7 @@ Ship P0–P7: per-report variable cost (LLM + Tavily; no FMP), Tavily Research f
 ## Done
 
 - Migration 133: `screening_runs.cost_usd` / `cost_json` + `screening_research_cache`
-- Cost ledger: [`src/lib/screening/cost.ts`](../../src/lib/screening/cost.ts)
+- Cost ledger: [`src/lib/screening/cost.ts`](../../../src/lib/screening/cost.ts)
 - Research client + cache-first helper
 - Flag `screening_tavily_research_enabled`
 - IR gap-fill, shortlist_research agent, slim analyst Search, web-enrich cache reuse
