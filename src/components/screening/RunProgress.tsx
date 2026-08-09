@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import type {
   ScreeningBrief,
@@ -146,6 +147,8 @@ function AgentFeedItem({
 export function RunProgress({ runId }: { runId: string }) {
   const { copy } = useScreeningCopy();
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const openReportOnReady = searchParams.get("view") === "report";
   const isAdmin = user?.role === "admin";
   const [run, setRun] = useState<ScreeningRun | null>(() => buildOptimisticRun(runId));
   const [report, setReport] = useState<ScreeningReport | null>(null);
@@ -163,6 +166,7 @@ export function RunProgress({ runId }: { runId: string }) {
   const [backHref, setBackHref] = useState("/screening/intake");
   const feedEndRef = useRef<HTMLDivElement | null>(null);
   const autoResumeAttemptedRef = useRef(false);
+  const autoOpenReportAttemptedRef = useRef(false);
 
   useEffect(() => {
     const brief = readStoredBrief(runId);
@@ -177,6 +181,7 @@ export function RunProgress({ runId }: { runId: string }) {
     setResumeError(null);
     pollsRef.current = 0;
     autoResumeAttemptedRef.current = false;
+    autoOpenReportAttemptedRef.current = false;
   }, [runId]);
 
   // Refresh relative "last update" copy while the run is in flight.
@@ -228,6 +233,16 @@ export function RunProgress({ runId }: { runId: string }) {
       setLoadingReport(false);
     }
   }, [runId, copy.report.loadError, copy.report.verifiedEmptyError]);
+
+  // Deep-link from entry/home “View report”: open the report once it is ready.
+  // Completing a run while watching agents still stays on the timeline (no ?view=report).
+  useEffect(() => {
+    if (!openReportOnReady) return;
+    if (!run?.reportReady || showReport || loadingReport) return;
+    if (autoOpenReportAttemptedRef.current) return;
+    autoOpenReportAttemptedRef.current = true;
+    void loadReport();
+  }, [openReportOnReady, run?.reportReady, showReport, loadingReport, loadReport]);
 
   const resumeRun = useCallback(async () => {
     setResuming(true);

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.127",
+    date: "2026-08-09",
+    title: "Screening: View report opens the report",
+    titleTranslations: {
+      es: "Cribado: Ver informe abre el informe",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "From the screening entry list, “View report” now opens the finished report instead of the agent timeline. In-progress screens still open the agents progress view.",
+        translations: {
+          es: "Desde la lista de cribados, “Ver informe” abre el informe terminado en lugar de la línea de agentes. Los cribados en curso siguen abriendo el progreso de agentes.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.126",
     date: "2026-08-09",
     title: "Screening: cheap / fit / solidity categories",

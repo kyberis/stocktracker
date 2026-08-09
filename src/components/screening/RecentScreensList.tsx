@@ -77,7 +77,10 @@ export function RecentScreensList() {
       ) : (
         <ul className="mt-3 list-none space-y-2 p-0">
           {runs.map((run) => {
-            const href = `/screening/runs/${encodeURIComponent(run.runId)}`;
+            // Ready reports open the report view directly; in-flight runs stay on agents.
+            const href = run.reportReady
+              ? `/screening/runs/${encodeURIComponent(run.runId)}?view=report`
+              : `/screening/runs/${encodeURIComponent(run.runId)}`;
             const cta = run.reportReady ? rs.viewReport : rs.viewProgress;
             return (
               <li key={run.runId}>
