@@ -26,9 +26,9 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
-        text: "Investment screening no longer shows a single score/8 or Strong/Watch verdict. Each candidate is assessed on three independent axes: Cheap? (current vs historical P/E), Portfolio fit?, and Solidity (trefolio MOAT). A solid, well-fitting name can still read as expensive with little margin of safety.",
+        text: "Investment screening no longer shows a single score/8 or Strong/Watch verdict. Each candidate is assessed on three independent axes: Cheap? (current vs historical P/E), Portfolio fit?, and Solidity (trefolio MOAT). Legacy reports are backfilled on read; the methodology checklist is collapsed supporting detail. A solid, well-fitting name can still read as expensive with little margin of safety.",
         translations: {
-          es: "El cribado de inversión ya no muestra un score/8 ni el veredicto Strong/Watch. Cada candidato se evalúa en tres ejes independientes: ¿Está barata? (PER actual vs histórico), ¿Fit en portfolio? y Solidez (MOAT de trefolio). Una empresa puede ser sólida y encajar bien y seguir leyéndose como cara, sin margen de seguridad.",
+          es: "El cribado de inversión ya no muestra un score/8 ni el veredicto Strong/Watch. Cada candidato se evalúa en tres ejes independientes: ¿Está barata? (PER actual vs histórico), ¿Fit en portfolio? y Solidez (MOAT de trefolio). Los informes antiguos se completan al leerlos; la checklist de metodología queda como detalle colapsable. Una empresa puede ser sólida y encajar bien y seguir leyéndose como cara, sin margen de seguridad.",
         },
       },
     ],
