@@ -14,7 +14,8 @@ import {
 } from "@/lib/screening/orchestrator/drain-run";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+/** Must cover Tavily shortlist_research + evaluate; 60s left orphans mid-lease. */
+export const maxDuration = 300;
 
 function runIdFromPath(pathname: string): string {
   const match = pathname.match(/\/api\/screening\/runs\/([^/]+)\/resume\/?$/);
@@ -24,8 +25,9 @@ function runIdFromPath(pathname: string): string {
 /**
  * POST /api/screening/runs/[runId]/resume
  *
- * User-facing kick when the progress UI detects a stall. Drains a few steps
- * inline, then continues in-process via waitUntil (same path as create-run).
+ * User-facing kick when the progress UI detects a stall. Reclaims expired
+ * leases, drains one step inline for snappy UI feedback, then continues
+ * in-process via waitUntil (same path as create-run).
  */
 export const POST = withMetrics(
   "/api/screening/runs/[runId]/resume",
@@ -47,23 +49,29 @@ export const POST = withMetrics(
       return NextResponse.json({ error: "Mock runs cannot be resumed" }, { status: 400 });
     }
 
-    // Reclaim orphaned `running` steps before draining — the usual stuck case.
+    // Reclaim orphaned `running` steps before draining — the usual stuck case
+    // (shortlist_research / IR killed mid-lease by a short maxDuration).
     const recovered = await recoverExpiredLeases(new Date());
 
+    // One inline step for immediate feedback; heavy work continues in background
+    // so the HTTP response cannot strand a long Tavily/LLM lease again.
     const { processed, moreWork } = await drainScreeningRun({
       runId: row.id,
-      maxSteps: 4,
+      maxSteps: 1,
     });
-    if (moreWork || recovered.requeued > 0) {
+    const stepsAfter = await listStepsForRun(row.id).catch(() => []);
+    const stillQueued = stepsAfter.some(
+      (s) => s.status === "pending" || s.status === "running",
+    );
+    if (moreWork || recovered.requeued > 0 || stillQueued) {
       continueScreeningRunInBackground(row.id);
     }
 
-    const steps = await listStepsForRun(row.id).catch(() => []);
-    const run = buildRunResponse(row, steps);
+    const run = buildRunResponse(row, stepsAfter);
     return NextResponse.json({
       run,
       processed,
-      moreWork,
+      moreWork: moreWork || stillQueued,
       recovered,
     });
   },

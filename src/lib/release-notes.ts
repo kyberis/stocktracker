@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.130",
+    date: "2026-08-10",
+    title: "Screening: resume no longer strands research",
+    titleTranslations: {
+      es: "Cribado: reanudar ya no deja el research a medias",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Resume now reclaims expired step leases and continues heavy shortlist research in the background with a longer timeout, so a stalled Tavily/LLM step can finish instead of looking permanently stuck.",
+        translations: {
+          es: "Reanudar ahora recupera leases caducados y continúa el research pesado de shortlist en segundo plano con más tiempo, para que un paso Tavily/LLM parado pueda terminar en lugar de quedar bloqueado.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.129",
     date: "2026-08-10",
     title: "Screening: Estebaranz framework evaluation",
