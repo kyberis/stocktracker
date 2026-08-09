@@ -1,6 +1,6 @@
 # Investment screening
 
-> Guided flow that turns a sector overexposure into a shortlist of researched candidates, scored with the trefolio methodology.
+> Guided flow that turns a sector overexposure into a shortlist of researched candidates, assessed on three independent axes (cheap / portfolio fit / solidity) with supporting methodology checklist evidence.
 
 ## 1. Summary
 
@@ -127,7 +127,8 @@ the feature is not discoverable before launch. The Dev outputs route adds
   name plus what the criterion measures. `macroContext` is informative, which is why
   the score denominator is 8.
 - [`scoring/checklist.ts`](../../src/lib/screening/scoring/checklist.ts) — deterministic
-  pass/fail for the 8 scored criteria. Key thresholds:
+  pass/fail for the 8 scored criteria (supporting methodology evidence, not the
+  product headline). Key thresholds:
   - **1 Relative valuation** — usable P/E in `(0, 18)`. Prefer forward P/E; when TTM
     earnings quality is suspect (EPS/margin jump vs latest FY), score on normalised
     FY P/E and never pass on a depressed TTM-only multiple.
@@ -136,8 +137,18 @@ the feature is not discoverable before launch. The Dev outputs route adds
     fundamentals with a weak price fail (not “cheap vs target” alone).
   - **5 Balance sheet** — pass if net cash or ND/EBITDA &lt; 2.5; **fail** when
     ND/EBITDA ≥ 2.5 (unknown only when the ratio is missing).
-  - **Verdict** — `fuerte` / Strong candidate only when **score ≥ 6** and MOAT is
-    missing or ≥50; scores 1–5 are Watch.
+- [`scoring/categories.ts`](../../src/lib/screening/scoring/categories.ts) — **primary
+  card evaluation** (replaces headline score/8 + Strong/Watch):
+  - **Cheap?** — `cheap` / `fair` / `expensive` / `unknown` from current PE
+    (fwd → normalised when quality suspect → TTM) vs multi-year average annual PE
+    from FMP `ratios` (fallback: TTM as hist). Relative ±15% band; absolute
+    &lt;15 / ≥25 extremes. Never label `cheap` on depressed TTM-only when quality
+    is suspect.
+  - **Portfolio fit?** — reuses Risk agent `fit` / `stretch` / `poor_fit`.
+  - **Solidity** — from cached trefolio MOAT %: ≥70 solid, ≥50 moderate, else weak
+    when a score exists. Cards can deep-link to `/analisis/[ticker]?tab=evaluation`.
+  - Axes are independent: solid + good fit + expensive is a valid outcome (no
+    composite downgrade).
 - [`intake-script.ts`](../../src/lib/screening/intake-script.ts) — deterministic question
   script; each option declares the brief patch it applies. Explain entries may include
   optional `higher` / `lower` tips. Brief row tips live in `copy.intake.rowHelp` and power

@@ -32,7 +32,12 @@ export function hardDataNeedsFundamentalsBackfill(
   const missingQuality = candidates.filter(
     (c) => c.earningsQualitySuspect == null && c.normalizedPe == null,
   );
-  return missingQuality.length >= Math.ceil(candidates.length / 2);
+  if (missingQuality.length >= Math.ceil(candidates.length / 2)) return true;
+  // Backfill multi-year PE history for cheap-vs-history category scoring.
+  const missingHistPe = candidates.filter(
+    (c) => c.histPeAvg == null && (c.histPeYears == null || c.histPeYears === 0),
+  );
+  return missingHistPe.length >= Math.ceil(candidates.length / 2);
 }
 
 /**
@@ -143,6 +148,8 @@ function mergeCandidate(
     currency: fund.currency ?? c.currency ?? "USD",
     fwdPe: fund.fwdPe,
     ownHistPe: fund.ownHistPe,
+    histPeAvg: fund.histPeAvg,
+    histPeYears: fund.histPeYears,
     normalizedPe: fund.normalizedPe,
     earningsQualitySuspect: fund.earningsQualitySuspect,
     evEbitda: fund.evEbitda,

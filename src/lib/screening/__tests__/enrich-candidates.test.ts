@@ -7,6 +7,8 @@ vi.mock("@/lib/screening/data/fmp-fundamentals", () => ({
     price: 100,
     fwdPe: 12,
     ownHistPe: 14,
+    histPeAvg: 16.5,
+    histPeYears: 5,
     evEbitda: 9,
     ndEbitda: 0.5,
     dividendYield: 0.02,
@@ -59,6 +61,8 @@ describe("enrichHardDataCandidates", () => {
       },
     ]);
     expect(row.fwdPe).toBe(12);
+    expect(row.histPeAvg).toBe(16.5);
+    expect(row.histPeYears).toBe(5);
     expect(row.moatScore).toBe(72);
     expect(row.upsidePct).toBeCloseTo(20, 0);
     expect(row.checklistScore).toBeGreaterThanOrEqual(3);

@@ -244,11 +244,49 @@ export function CandidateCard({
   const hideIdentity = locked && rankIndex > 0;
   const blurResearch = locked;
 
-  const verdictLabel = card.verdict ? copy.report.verdicts[card.verdict] : null;
-  const verdictTone =
-    card.verdict === "fuerte"
+  const categories = card.categories;
+  const cheapTone =
+    categories?.cheap.label === "cheap"
       ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-      : "border-amber-500/35 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+      : categories?.cheap.label === "expensive"
+        ? "border-rose-500/35 bg-rose-500/10 text-rose-700 dark:text-rose-300"
+        : categories?.cheap.label === "fair"
+          ? "border-amber-500/35 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          : "border-[color:var(--border)] bg-[color:var(--surface-soft)] text-[color:var(--muted)]";
+  const fitTone =
+    categories?.fit.label === "fit"
+      ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+      : categories?.fit.label === "poor_fit"
+        ? "border-rose-500/35 bg-rose-500/10 text-rose-700 dark:text-rose-300"
+        : categories?.fit.label === "stretch"
+          ? "border-amber-500/35 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          : "border-[color:var(--border)] bg-[color:var(--surface-soft)] text-[color:var(--muted)]";
+  const solidityTone =
+    categories?.solidity.label === "solid"
+      ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+      : categories?.solidity.label === "weak"
+        ? "border-rose-500/35 bg-rose-500/10 text-rose-700 dark:text-rose-300"
+        : categories?.solidity.label === "moderate"
+          ? "border-amber-500/35 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          : "border-[color:var(--border)] bg-[color:var(--surface-soft)] text-[color:var(--muted)]";
+
+  const cheapDetail =
+    categories?.cheap.currentPe != null && categories.cheap.histPe != null
+      ? fill(copy.report.cheapPeDetail, {
+          current: categories.cheap.currentPe.toFixed(1),
+          hist: categories.cheap.histPe.toFixed(1),
+        })
+      : categories?.cheap.currentPe != null
+        ? fill(copy.report.cheapPeCurrentOnly, {
+            current: categories.cheap.currentPe.toFixed(1),
+          })
+        : null;
+  const solidityDetail =
+    categories?.solidity.moatScore != null
+      ? fill(copy.report.solidityMoatDetail, {
+          score: Math.round(categories.solidity.moatScore),
+        })
+      : null;
 
   const title = hideIdentity
     ? redactedCandidateLabel(rankIndex + 1, copy.report.lockedCandidate)
@@ -304,25 +342,61 @@ export function CandidateCard({
             {card.mktCapUsd != null && ` · ${formatCompactNumber(card.mktCapUsd)} USD`}
           </p>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-          {verdictLabel && (
-            <BlurredValue locked={blurResearch}>
-              <span
-                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${verdictTone}`}
-              >
-                {blurResearch ? copy.report.lockedCell : verdictLabel}
-              </span>
-            </BlurredValue>
-          )}
-          {card.score != null && (
-            <BlurredValue locked={blurResearch}>
-              <span className="inline-flex items-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2 py-0.5 text-[11px] font-semibold text-[color:var(--foreground)]">
-                {blurResearch ? copy.report.lockedCell : `${card.score}/8`}
-              </span>
-            </BlurredValue>
-          )}
-        </div>
       </div>
+
+      {categories && (
+        <BlurredValue locked={blurResearch} as="div" className="mt-3">
+          {blurResearch ? (
+            <p className="text-[13px] text-[color:var(--muted)]">
+              {copy.report.lockedCell.repeat(10)}
+            </p>
+          ) : (
+            <div
+              className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+              aria-label={copy.report.categoriesTitle}
+            >
+              <div className={`rounded-xl border px-3 py-2 ${cheapTone}`}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
+                  {copy.report.categoryCheap}
+                </p>
+                <p className="mt-0.5 text-sm font-semibold">
+                  {copy.report.cheapLabels[categories.cheap.label]}
+                </p>
+                {cheapDetail && (
+                  <p className="mt-0.5 text-[11px] opacity-80">{cheapDetail}</p>
+                )}
+              </div>
+              <div className={`rounded-xl border px-3 py-2 ${fitTone}`}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
+                  {copy.report.categoryFit}
+                </p>
+                <p className="mt-0.5 text-sm font-semibold">
+                  {copy.report.fitLabels[categories.fit.label]}
+                </p>
+              </div>
+              <div className={`rounded-xl border px-3 py-2 ${solidityTone}`}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
+                  {copy.report.categorySolidity}
+                </p>
+                <p className="mt-0.5 text-sm font-semibold">
+                  {copy.report.solidityLabels[categories.solidity.label]}
+                </p>
+                {solidityDetail && (
+                  <p className="mt-0.5 text-[11px] opacity-80">{solidityDetail}</p>
+                )}
+                {categories.solidity.moatScore != null && !hideIdentity && (
+                  <Link
+                    href={`/analisis/${encodeURIComponent(card.ticker)}?tab=evaluation`}
+                    className="mt-1 inline-block text-[11px] font-medium underline-offset-2 hover:underline"
+                  >
+                    {copy.report.solidityMoatExplore}
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+        </BlurredValue>
+      )}
 
       {(!hideIdentity || blurResearch) && (
         <BusinessBlock card={card} locked={blurResearch || hideIdentity} />
@@ -415,18 +489,11 @@ export function CandidateCard({
                   })}
                 </li>
               ) : null}
-              {card.suitability ? (
+              {card.illustrativeWeightPct != null ? (
                 <li>
-                  {card.suitability === "fit"
-                    ? copy.report.suitabilityFit
-                    : card.suitability === "poor_fit"
-                      ? copy.report.suitabilityPoor
-                      : copy.report.suitabilityStretch}
-                  {card.illustrativeWeightPct != null
-                    ? ` · ${fill(copy.report.illustrativeWeight, {
-                        pct: Math.round(card.illustrativeWeightPct),
-                      })}`
-                    : ""}
+                  {fill(copy.report.illustrativeWeight, {
+                    pct: Math.round(card.illustrativeWeightPct),
+                  })}
                 </li>
               ) : null}
               {card.concentrationImpact ? (

@@ -93,7 +93,7 @@ const en = {
   methodology: {
     title: "trefolio methodology",
     intro:
-      "Every search uses the same frame: five pillars scored deterministically (0–{max}) before any model writes a line.",
+      "Every search assesses candidates on three independent axes — cheap?, portfolio fit?, and solidity — before any model writes a thesis. The checklist below is supporting evidence, not a single rating.",
     pillars: [
       {
         title: "Business quality",
@@ -120,7 +120,7 @@ const en = {
       "The numbers come from code, not from the model. The model only writes the thesis, citing the computed fields.",
   },
   criteria: {
-    title: "trefolio methodology criteria",
+    title: "Methodology checklist (supporting detail)",
     count: "{passed} of {max} met",
     legendPass: "met",
     legendFail: "not met",
@@ -614,6 +614,35 @@ const en = {
     colGrowth: "Growth",
     colScore: "Score",
     colVerdict: "Verdict",
+    colCheap: "Cheap?",
+    colFit: "Portfolio fit",
+    colSolidity: "Solidity",
+    categoriesTitle: "Evaluation",
+    categoryCheap: "Cheap?",
+    categoryFit: "Portfolio fit?",
+    categorySolidity: "Solidity",
+    cheapLabels: {
+      cheap: "Cheap",
+      fair: "Fair price",
+      expensive: "Expensive",
+      unknown: "Unknown",
+    },
+    cheapPeDetail: "P/E {current} vs hist. {hist}",
+    cheapPeCurrentOnly: "P/E {current}",
+    fitLabels: {
+      fit: "Fits",
+      stretch: "Stretch",
+      poor_fit: "Poor fit",
+      unknown: "Unknown",
+    },
+    solidityLabels: {
+      solid: "Solid",
+      moderate: "Moderate",
+      weak: "Weak",
+      unknown: "Unknown",
+    },
+    solidityMoatDetail: "MOAT {score}/100",
+    solidityMoatExplore: "Explore MOAT on trefolio",
     businessTitle: "What it does",
     employees: "{n} employees",
     listedSince: "listed since {year}",
@@ -798,7 +827,7 @@ const es: ScreeningCopy = {
   methodology: {
     title: "Metodología trefolio",
     intro:
-      "Toda búsqueda usa el mismo marco: cinco pilares que se puntúan de forma determinística (0–{max}) antes de que ningún modelo escriba una línea.",
+      "Toda búsqueda evalúa candidatos en tres ejes independientes — ¿está barata?, ¿fit en portfolio? y solidez — antes de que el modelo escriba la tesis. La checklist de abajo es evidencia de apoyo, no un rating único.",
     pillars: [
       {
         title: "Calidad del negocio",
@@ -825,7 +854,7 @@ const es: ScreeningCopy = {
       "Los números salen de código, no del modelo. El modelo solo redacta la tesis citando los campos calculados.",
   },
   criteria: {
-    title: "Criterios de la metodología trefolio",
+    title: "Checklist de metodología (detalle de apoyo)",
     count: "{passed} de {max} cumplidos",
     legendPass: "cumple",
     legendFail: "no cumple",
@@ -1316,6 +1345,35 @@ const es: ScreeningCopy = {
     colGrowth: "Crecimiento",
     colScore: "Score",
     colVerdict: "Veredicto",
+    colCheap: "¿Barata?",
+    colFit: "Fit en portfolio",
+    colSolidity: "Solidez",
+    categoriesTitle: "Evaluación",
+    categoryCheap: "¿Está barata?",
+    categoryFit: "¿Fit en portfolio?",
+    categorySolidity: "Solidez",
+    cheapLabels: {
+      cheap: "Barata",
+      fair: "Precio justo",
+      expensive: "Cara",
+      unknown: "Sin datos",
+    },
+    cheapPeDetail: "PER {current} vs hist. {hist}",
+    cheapPeCurrentOnly: "PER {current}",
+    fitLabels: {
+      fit: "Encaja",
+      stretch: "Estira",
+      poor_fit: "Mal encaje",
+      unknown: "Sin datos",
+    },
+    solidityLabels: {
+      solid: "Sólida",
+      moderate: "Moderada",
+      weak: "Débil",
+      unknown: "Sin datos",
+    },
+    solidityMoatDetail: "MOAT {score}/100",
+    solidityMoatExplore: "Investigar MOAT en trefolio",
     businessTitle: "A qué se dedica",
     employees: "{n} empleados",
     listedSince: "cotiza desde {year}",

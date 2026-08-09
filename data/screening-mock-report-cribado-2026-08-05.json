@@ -3,49 +3,70 @@
   "mode": "daily_screen",
   "locale": "es",
   "generatedAt": "2026-08-05T18:00:00.000Z",
-  "methodologyNote": "Metodología trefolio: cribado sistemático en cinco pilares — calidad del negocio (ROIC y márgenes), solidez financiera (deuda neta/EBITDA, liquidez, apalancamiento), valoración relativa (múltiplos frente al histórico propio y frente a comparables), divergencia precio–fundamentales con catalizador fechado, y alineación de intereses (insiders y señal de mercado). Cada empresa recibe un score de 0 a 8 y un veredicto. Los números los calcula código determinístico; el modelo solo redacta la narrativa citando esos campos. Se excluyen tickers evaluados en los últimos 90 días. Puntuación conservadora: el pilar de insiders solo puntúa con compra discrecional documentada; el de sentimiento no puntuó por falta de señal verificable.",
+  "methodologyNote": "Metodología trefolio: cada candidato se evalúa en tres ejes independientes — ¿está barata? (PER actual vs histórico), ¿fit en portfolio? y solidez (MOAT trefolio). Una empresa puede ser sólida y encajar bien sin estar barata. La checklist de criterios es evidencia de apoyo, no un rating único. Los números los calcula código determinístico; el modelo solo redacta la narrativa citando esos campos.",
   "executiveSummary": "La candidata que más merece profundizar es Central Asia Metals (CAML): combina calidad y valoración con catalizador fechado, caja neta y un motivo de caída identificable (cargo contable sin salida de caja). Zinzino queda segunda a vigilar; Newborn Town, DigiPlus y TIMAH se mantienen en Watch.",
-  "priorityOrder": ["CAML.L", "ZZ-B.ST", "9911.HK", "PLUS.PS", "TINS.JK"],
+  "priorityOrder": [
+    "CAML.L",
+    "ZZ-B.ST",
+    "9911.HK",
+    "PLUS.PS",
+    "TINS.JK"
+  ],
   "comparisonRows": [
     {
       "ticker": "CAML.L",
       "companyName": "Central Asia Metals plc",
       "valuationNote": "4,69x fwd FY26 vs ~8–12x propio y ~10–14x peers",
       "growthNote": "Ventas CAGR FY23–26 +14,5%; Cu +40% y Zn +19% H1-26",
-      "score": 6,
-      "verdict": "fuerte"
+      "score": null,
+      "verdict": null,
+      "cheapLabel": "cheap",
+      "fitLabel": "fit",
+      "solidityLabel": "moderate"
     },
     {
       "ticker": "ZZ-B.ST",
       "companyName": "Zinzino AB (publ)",
       "valuationNote": "12,71x fwd vs mediana propia 10a 35,2x; peers 8–12x",
       "growthNote": "Ventas Q2-26 +17%, H1-26 +22%, FY25 +51%",
-      "score": 6,
-      "verdict": "fuerte"
+      "score": null,
+      "verdict": null,
+      "cheapLabel": "cheap",
+      "fitLabel": "fit",
+      "solidityLabel": "unknown"
     },
     {
       "ticker": "9911.HK",
       "companyName": "Newborn Town Inc.",
       "valuationNote": "8,07x fwd (~10,9x otras fuentes) vs ~15–25x propio",
       "growthNote": "Ingresos H1-26 +34–39%; BPA FY25 +73%",
-      "score": 5,
-      "verdict": "watch"
+      "score": null,
+      "verdict": null,
+      "cheapLabel": "cheap",
+      "fitLabel": "stretch",
+      "solidityLabel": "unknown"
     },
     {
       "ticker": "PLUS.PS",
       "companyName": "DigiPlus Interactive Corp.",
       "valuationNote": "3,59x fwd vs ~15–25x propio 2024 y ~18,4x sector",
       "growthNote": "CAGR FY23–26 +43%, pero TTM ingresos −7,4% y BPA −22%",
-      "score": 4,
-      "verdict": "watch"
+      "score": null,
+      "verdict": null,
+      "cheapLabel": "cheap",
+      "fitLabel": "poor_fit",
+      "solidityLabel": "unknown"
     },
     {
       "ticker": "TINS.JK",
       "companyName": "PT TIMAH Tbk",
       "valuationNote": "5,58x fwd; hist. propio no significativo; peers 8–12x",
       "growthNote": "Ingresos H1-26 +247%; beneficio 169% del objetivo anual",
-      "score": 4,
-      "verdict": "watch"
+      "score": null,
+      "verdict": null,
+      "cheapLabel": "cheap",
+      "fitLabel": "poor_fit",
+      "solidityLabel": "unknown"
     }
   ],
   "cards": [
@@ -60,7 +81,10 @@
         "listedSince": 2010,
         "website": "https://www.centralasiametals.com",
         "irUrl": "https://www.centralasiametals.com/investors/",
-        "filings": { "label": "Comunicados RNS (LSE)", "url": "https://www.londonstockexchange.com/stock/CAML/central-asia-metals-plc/company-page" }
+        "filings": {
+          "label": "Comunicados RNS (LSE)",
+          "url": "https://www.londonstockexchange.com/stock/CAML/central-asia-metals-plc/company-page"
+        }
       },
       "mktCapUsd": 339000000,
       "currency": "GBP",
@@ -68,10 +92,20 @@
       "priceAsOf": "2026-08-05",
       "targetPrice": 1.85,
       "upsidePct": 23,
-      "score": 6,
-      "verdict": "fuerte",
-      "stepsPassed": [1, 2, 3, 4, 5, 7],
-      "stepsFailed": [6, 9],
+      "score": null,
+      "verdict": null,
+      "stepsPassed": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "stepsFailed": [
+        6,
+        9
+      ],
       "catalyst": "Resultados H1-2026 en septiembre; recompra activa; dividendo ~8%",
       "catalystDate": "2026-09-01",
       "multiples": {
@@ -80,7 +114,9 @@
         "peerPe": 12,
         "evEbitda": 1.72,
         "ndEbitda": -0.82,
-        "growthNote": "Cu +40% / Zn +19% H1-26"
+        "growthNote": "Cu +40% / Zn +19% H1-26",
+        "histPeAvg": 10,
+        "histPeYears": 5
       },
       "flags": {
         "netCash": true,
@@ -95,11 +131,42 @@
         "Dividendo recortado de 18p a 12p; tomadora de precios de materias primas; riesgo geopolítico en activos."
       ],
       "priorityReason": "Mejor relación riesgo–recompensa del grupo: score 6/8, catalizador fechado y motivo de caída no estructural en caja.",
-      "citedFields": ["multiples.fwdPe", "multiples.evEbitda", "flags.netCash", "flags.moatScore", "catalyst"],
+      "citedFields": [
+        "multiples.fwdPe",
+        "multiples.evEbitda",
+        "flags.netCash",
+        "flags.moatScore",
+        "catalyst"
+      ],
       "sources": [
-        { "url": "https://example.com/caml-h1", "asOf": "2026-08-05", "field": "price", "label": "Cotización" },
-        { "url": "https://example.com/caml-sasa", "asOf": "2026-07-15", "field": "thesis", "label": "Impairment Sasa" }
-      ]
+        {
+          "url": "https://example.com/caml-h1",
+          "asOf": "2026-08-05",
+          "field": "price",
+          "label": "Cotización"
+        },
+        {
+          "url": "https://example.com/caml-sasa",
+          "asOf": "2026-07-15",
+          "field": "thesis",
+          "label": "Impairment Sasa"
+        }
+      ],
+      "categories": {
+        "cheap": {
+          "label": "cheap",
+          "currentPe": 4.69,
+          "histPe": 10,
+          "histPeSource": "ttm"
+        },
+        "fit": {
+          "label": "fit"
+        },
+        "solidity": {
+          "label": "moderate",
+          "moatScore": 58.3
+        }
+      }
     },
     {
       "ticker": "ZZ-B.ST",
@@ -120,10 +187,20 @@
       "priceAsOf": "2026-08-05",
       "targetPrice": null,
       "upsidePct": null,
-      "score": 6,
-      "verdict": "fuerte",
-      "stepsPassed": [2, 3, 4, 5, 6, 7],
-      "stepsFailed": [1, 9],
+      "score": null,
+      "verdict": null,
+      "stepsPassed": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "stepsFailed": [
+        1,
+        9
+      ],
       "catalyst": "Integración It Works! (+60 M USD ingresos guiados 2026)",
       "catalystDate": "2026-01-15",
       "multiples": {
@@ -132,7 +209,9 @@
         "peerPe": 10,
         "evEbitda": null,
         "ndEbitda": -1.63,
-        "growthNote": "H1-26 ventas +22%"
+        "growthNote": "H1-26 ventas +22%",
+        "histPeAvg": 35.2,
+        "histPeYears": 5
       },
       "flags": {
         "netCash": true,
@@ -147,10 +226,35 @@
         "Crecimiento se desacelera; dilución por pago en acciones; riesgo regulatorio MLM."
       ],
       "priorityReason": "Mismo score que CAML, pero falla valoración relativa en sentido estricto y la señal de insider es una venta reciente.",
-      "citedFields": ["multiples.fwdPe", "multiples.ownHistPe", "multiples.ndEbitda", "flags.netCash"],
+      "citedFields": [
+        "multiples.fwdPe",
+        "multiples.ownHistPe",
+        "multiples.ndEbitda",
+        "flags.netCash"
+      ],
       "sources": [
-        { "url": "https://example.com/zinzino", "asOf": "2026-08-05", "field": "price", "label": "Cotización" }
-      ]
+        {
+          "url": "https://example.com/zinzino",
+          "asOf": "2026-08-05",
+          "field": "price",
+          "label": "Cotización"
+        }
+      ],
+      "categories": {
+        "cheap": {
+          "label": "cheap",
+          "currentPe": 12.71,
+          "histPe": 35.2,
+          "histPeSource": "ttm"
+        },
+        "fit": {
+          "label": "fit"
+        },
+        "solidity": {
+          "label": "unknown",
+          "moatScore": null
+        }
+      }
     },
     {
       "ticker": "9911.HK",
@@ -163,7 +267,10 @@
         "listedSince": 2019,
         "website": "https://www.newborntown.com",
         "irUrl": "https://www.newborntown.com/en/investor",
-        "filings": { "label": "Filings HKEX", "url": "https://www.hkexnews.hk/" }
+        "filings": {
+          "label": "Filings HKEX",
+          "url": "https://www.hkexnews.hk/"
+        }
       },
       "mktCapUsd": 1517000000,
       "currency": "HKD",
@@ -171,10 +278,20 @@
       "priceAsOf": "2026-08-05",
       "targetPrice": 14.01,
       "upsidePct": 62,
-      "score": 5,
-      "verdict": "watch",
-      "stepsPassed": [1, 2, 3, 5, 7],
-      "stepsFailed": [4, 6, 9],
+      "score": null,
+      "verdict": null,
+      "stepsPassed": [
+        1,
+        2,
+        3,
+        5,
+        7
+      ],
+      "stepsFailed": [
+        4,
+        6,
+        9
+      ],
       "catalyst": "Resultados H1-2026 el 25 de agosto; recompras en curso",
       "catalystDate": "2026-08-25",
       "multiples": {
@@ -183,7 +300,9 @@
         "peerPe": 12.5,
         "evEbitda": null,
         "ndEbitda": -2.65,
-        "growthNote": "H1-26 ingresos +34–39%"
+        "growthNote": "H1-26 ingresos +34–39%",
+        "histPeAvg": 20,
+        "histPeYears": 5
       },
       "flags": {
         "netCash": true,
@@ -198,10 +317,35 @@
         "Crecimiento de usuarios frenado; descuento de gobernanza HK/CN; exposición regulatoria LGBTQ+/MENA."
       ],
       "priorityReason": "Divergencia fuerte, pero Watch por historial corto y alineación de insiders no verificable.",
-      "citedFields": ["multiples.fwdPe", "multiples.peerPe", "upsidePct", "catalystDate"],
+      "citedFields": [
+        "multiples.fwdPe",
+        "multiples.peerPe",
+        "upsidePct",
+        "catalystDate"
+      ],
       "sources": [
-        { "url": "https://example.com/9911", "asOf": "2026-07-13", "field": "multiples.fwdPe", "label": "Fundamentales (corte julio)" }
-      ]
+        {
+          "url": "https://example.com/9911",
+          "asOf": "2026-07-13",
+          "field": "multiples.fwdPe",
+          "label": "Fundamentales (corte julio)"
+        }
+      ],
+      "categories": {
+        "cheap": {
+          "label": "cheap",
+          "currentPe": 8.07,
+          "histPe": 20,
+          "histPeSource": "ttm"
+        },
+        "fit": {
+          "label": "stretch"
+        },
+        "solidity": {
+          "label": "unknown",
+          "moatScore": null
+        }
+      }
     },
     {
       "ticker": "PLUS.PS",
@@ -214,7 +358,10 @@
         "listedSince": 1994,
         "website": "https://www.digiplus.com.ph",
         "irUrl": "https://www.digiplus.com.ph/investor-relations",
-        "filings": { "label": "Filings PSE Edge", "url": "https://edge.pse.com.ph/" }
+        "filings": {
+          "label": "Filings PSE Edge",
+          "url": "https://edge.pse.com.ph/"
+        }
       },
       "mktCapUsd": 730000000,
       "currency": "PHP",
@@ -222,10 +369,20 @@
       "priceAsOf": "2026-07-31",
       "targetPrice": 29.58,
       "upsidePct": 218,
-      "score": 4,
-      "verdict": "watch",
-      "stepsPassed": [1, 3, 5, 6],
-      "stepsFailed": [2, 4, 7, 9],
+      "score": null,
+      "verdict": null,
+      "stepsPassed": [
+        1,
+        3,
+        5,
+        6
+      ],
+      "stepsFailed": [
+        2,
+        4,
+        7,
+        9
+      ],
       "catalyst": "Relanzamiento BingoPlus en Brasil; migración a plataforma propia",
       "catalystDate": null,
       "multiples": {
@@ -234,7 +391,9 @@
         "peerPe": 18.4,
         "evEbitda": null,
         "ndEbitda": -0.82,
-        "growthNote": "TTM ingresos −7,4%; BPA −22%"
+        "growthNote": "TTM ingresos −7,4%; BPA −22%",
+        "histPeAvg": 20,
+        "histPeYears": 5
       },
       "flags": {
         "netCash": true,
@@ -249,10 +408,34 @@
         "Moat = licencia PAGCOR; recompra ejecutada muy por encima del precio actual."
       ],
       "priorityReason": "Mayor descuento óptico, pero deterioro fundamental y riesgo existencial regulatorio.",
-      "citedFields": ["multiples.fwdPe", "flags.netCash", "upsidePct"],
+      "citedFields": [
+        "multiples.fwdPe",
+        "flags.netCash",
+        "upsidePct"
+      ],
       "sources": [
-        { "url": "https://example.com/plus", "asOf": "2026-05-15", "field": "multiples.fwdPe", "label": "Fundamentales (corte mayo)" }
-      ]
+        {
+          "url": "https://example.com/plus",
+          "asOf": "2026-05-15",
+          "field": "multiples.fwdPe",
+          "label": "Fundamentales (corte mayo)"
+        }
+      ],
+      "categories": {
+        "cheap": {
+          "label": "cheap",
+          "currentPe": 3.59,
+          "histPe": 20,
+          "histPeSource": "ttm"
+        },
+        "fit": {
+          "label": "poor_fit"
+        },
+        "solidity": {
+          "label": "unknown",
+          "moatScore": null
+        }
+      }
     },
     {
       "ticker": "TINS.JK",
@@ -265,7 +448,10 @@
         "listedSince": 1995,
         "website": "https://www.timah.com",
         "irUrl": "https://www.timah.com/en/investor-relation",
-        "filings": { "label": "Filings IDX", "url": "https://www.idx.co.id/en/listed-companies/company-profiles" }
+        "filings": {
+          "label": "Filings IDX",
+          "url": "https://www.idx.co.id/en/listed-companies/company-profiles"
+        }
       },
       "mktCapUsd": 1577000000,
       "currency": "IDR",
@@ -273,10 +459,20 @@
       "priceAsOf": "2026-08-05",
       "targetPrice": 4500,
       "upsidePct": 16,
-      "score": 4,
-      "verdict": "watch",
-      "stepsPassed": [1, 3, 5, 7],
-      "stepsFailed": [2, 4, 6, 9],
+      "score": null,
+      "verdict": null,
+      "stepsPassed": [
+        1,
+        3,
+        5,
+        7
+      ],
+      "stepsFailed": [
+        2,
+        4,
+        6,
+        9
+      ],
       "catalyst": "Traspaso de seis fundiciones confiscadas (~7 Bn IDR)",
       "catalystDate": null,
       "multiples": {
@@ -285,7 +481,9 @@
         "peerPe": 10,
         "evEbitda": 3.4,
         "ndEbitda": -0.58,
-        "growthNote": "H1 beneficio 169% del objetivo anual"
+        "growthNote": "H1 beneficio 169% del objetivo anual",
+        "histPeAvg": null,
+        "histPeYears": 0
       },
       "flags": {
         "netCash": true,
@@ -300,10 +498,34 @@
         "Control estatal 65%; riesgo de política de exportación (precedente níquel)."
       ],
       "priorityReason": "Operativa fuerte pero timing tardío y ciclicidad — Watch, no prioridad de profundizar.",
-      "citedFields": ["multiples.fwdPe", "upsidePct", "flags.netCash"],
+      "citedFields": [
+        "multiples.fwdPe",
+        "upsidePct",
+        "flags.netCash"
+      ],
       "sources": [
-        { "url": "https://example.com/tins", "asOf": "2026-08-05", "field": "price", "label": "Cotización" }
-      ]
+        {
+          "url": "https://example.com/tins",
+          "asOf": "2026-08-05",
+          "field": "price",
+          "label": "Cotización"
+        }
+      ],
+      "categories": {
+        "cheap": {
+          "label": "cheap",
+          "currentPe": 5.58,
+          "histPe": null,
+          "histPeSource": "none"
+        },
+        "fit": {
+          "label": "poor_fit"
+        },
+        "solidity": {
+          "label": "unknown",
+          "moatScore": null
+        }
+      }
     }
   ],
   "disclaimer": "Informe de investigación automatizada (mock E0). No es asesoramiento financiero ni recomendación de compra o venta. Contrasta cifras con fuentes primarias. Varias métricas tienen distinta fecha de corte. Los enlaces a sitios de las compañías y de reguladores se abren fuera de trefolio: no controlamos ni respaldamos su contenido. trefolio no es una entidad regulada MiFID.",

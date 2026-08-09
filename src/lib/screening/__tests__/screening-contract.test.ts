@@ -48,6 +48,21 @@ describe("mock report fixture", () => {
     }
   });
 
+  it("exposes independent cheap / fit / solidity categories on each card", () => {
+    const report = getMockScreeningReport(RUN_ID);
+    for (const card of report.cards) {
+      expect(card.categories).toBeDefined();
+      expect(card.categories!.cheap.label).toMatch(/cheap|fair|expensive|unknown/);
+      expect(card.categories!.fit.label).toMatch(/fit|stretch|poor_fit|unknown/);
+      expect(card.categories!.solidity.label).toMatch(/solid|moderate|weak|unknown/);
+    }
+    for (const row of report.comparisonRows) {
+      expect(row.cheapLabel).toBeTruthy();
+      expect(row.fitLabel).toBeTruthy();
+      expect(row.solidityLabel).toBeTruthy();
+    }
+  });
+
   it("keeps every card in the comparison table and priority order", () => {
     const report = getMockScreeningReport(RUN_ID);
     const tickers = report.cards.map((c) => c.ticker).sort();

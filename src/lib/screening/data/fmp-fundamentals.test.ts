@@ -30,6 +30,18 @@ describe("fetchFmpFundamentals", () => {
           ],
         };
       }
+      if (u.includes("/ratios?")) {
+        return {
+          ok: true,
+          json: async () => [
+            { priceToEarningsRatio: 22 },
+            { priceToEarningsRatio: 20 },
+            { priceToEarningsRatio: 18 },
+            { priceToEarningsRatio: 16 },
+            { priceToEarningsRatio: 24 },
+          ],
+        };
+      }
       if (u.includes("key-metrics-ttm")) {
         return {
           ok: true,
@@ -103,11 +115,15 @@ describe("fetchFmpFundamentals", () => {
       };
     });
 
-    const { fetchFmpFundamentals } = await import("./fmp-fundamentals");
+    const { fetchFmpFundamentals, averageAnnualPe } = await import(
+      "./fmp-fundamentals"
+    );
     const res = await fetchFmpFundamentals("AAPL", {
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
     expect(res.ownHistPe).toBe(28.5);
+    expect(res.histPeYears).toBe(5);
+    expect(res.histPeAvg).toBeCloseTo(20, 5);
     expect(res.evEbitda).toBe(18.2);
     expect(res.netCash).toBe(true);
     expect(res.targetPrice).toBe(240);
@@ -120,6 +136,9 @@ describe("fetchFmpFundamentals", () => {
     expect(res.epsTtm).toBe(6.4);
     expect(res.normalizedPe).toBeCloseTo(200 / 6.1, 5);
     expect(res.earningsQualitySuspect).toBe(false);
+    expect(
+      averageAnnualPe([{ priceToEarningsRatio: 10 }, { peRatio: -2 }]).histPeYears,
+    ).toBe(1);
   });
 
   it("flags earnings quality when TTM EPS jumps vs FY", async () => {
