@@ -40,6 +40,7 @@ ambiguous) via search, then runs the same research agents on that one listing
 | API | `src/app/api/screening/runs/[runId]/route.ts` | `GET` — status + step progress |
 | API | `src/app/api/screening/reports/[reportId]/route.ts` | `GET` — typed report JSON |
 | Component | `src/components/screening/ScreeningEntryCta.tsx` | Discovery card on `/recommendations/diversify`; renders nothing when the flag is off |
+| Component | `src/components/screening/ScreeningBetaBanner.tsx` | Home (`/`) beta banner; renders nothing when the flag is off |
 
 ## 4. Data model
 
@@ -188,28 +189,32 @@ would need machine translation across 35 locale files to satisfy the parity test
 English is the base, Spanish is complete, every other language falls back to English.
 **Move into `src/locales/` when the flag reaches 100%.**
 
-The fixture report is Spanish; when the UI language differs, the report shows a notice
-saying only the sample content is affected.
+The fixture report remains available when `screening_pipeline_real_enabled` is off
+(dev / flag-off path). Production beta uses the real pipeline; the UI no longer
+surfaces mock badges or entry-state preview switchers.
 
 ## 11. Permissions / tier gating / rate limits
 
-Flag only. No `SubscriptionFeature` key, no rate limit, no credit cost yet — pricing
-is a separate PRD (stage EC).
+- Feature flag `investment_screening_enabled` still gates UI/API access.
+- Per-user quota key `investment_screening` in `FEATURE_QUOTAS`: **3 runs per ISO week**
+  (UTC) for Free and Pro. Consumed on `POST /api/screening/runs`.
+- **Admins** bypass the quota (`requireFeatureQuota` / `session.role === "admin"`).
+- Exhausted quota returns HTTP 429 with `reason: "quota_exceeded"`.
 
 ## 12. Telemetry
 
-Dual-write on the entry screen (`/screening`) and diversify discovery CTA:
+Dual-write on the entry screen (`/screening`), home beta banner, and diversify discovery CTA:
 
 | Event | When | Metadata |
 |-------|------|----------|
-| `screening_discovery_opened` | Diversify CTA click | `source` |
-| `screening_entry_viewed` | Entry ready (once per variant) | `variant`, `preview`, optional `top_sector` / `top_pct` |
-| `screening_entry_cta_clicked` | Explore / Rebalance click | `intent`, `variant`, `preview`, `primary` |
+| `screening_discovery_opened` | Home banner or diversify CTA click | `source` (`home` \| `diversify`) |
+| `screening_entry_viewed` | Entry ready (once per variant) | `variant`, `preview` (`live`), optional `top_sector` / `top_pct` |
+| `screening_entry_cta_clicked` | Explore / Rebalance / Analyze click | `intent`, `variant`, `preview`, `primary` |
 | `screening_entry_back_home` | Back home | `variant`, `preview` |
 
 - **GA4:** `useTrack()` (consent-gated).
 - **First-party:** `POST /api/screening/entry-events` → `trackEvent` → `analytics_events`; Prometheus via `src/lib/screening/metrics.ts`.
-- **Admin:** Screening entry block in analytics (live vs fixture).
+- **Admin:** Screening entry block in analytics.
 
 Later funnel (intake): `screening_intake_ended_early` (`intent`, `filled`),
 `screening_intake_turn` (`intent`, `status`, `fromChip`),

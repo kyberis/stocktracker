@@ -97,11 +97,6 @@ export function RecentScreensList() {
                       <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[color:var(--muted)]">
                         {statusLabel(run.status)}
                       </span>
-                      {run.mocked ? (
-                        <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
-                          {rs.mockedBadge}
-                        </span>
-                      ) : null}
                     </div>
                     <p className="mt-0.5 truncate text-[12px] text-[color:var(--muted)]">
                       {run.summary}

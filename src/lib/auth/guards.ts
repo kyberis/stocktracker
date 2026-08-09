@@ -189,18 +189,23 @@ export async function requireFeatureQuota(
   const commerceEnabled = await isCommerceEnabled();
   const res = NextResponse.json(
     {
-      error: "Monthly limit reached for this feature",
+      error: "Usage limit reached for this feature",
       paywall: true,
       reason: "quota_exceeded",
       feature,
       used: result.used,
       limit: result.limit,
       resetAt: result.resetAt,
+      window: result.window,
       ...(commerceEnabled ? { upgradeUrl: "/billing" } : {}),
     },
     { status: 429 },
   );
-  res.headers.set("Retry-After", "86400");
+  const retryAfterSec = Math.max(
+    1,
+    Math.ceil((Date.parse(result.resetAt) - Date.now()) / 1000) || 86_400,
+  );
+  res.headers.set("Retry-After", String(retryAfterSec));
   return { session: null, error: res, quota: result };
 }
 

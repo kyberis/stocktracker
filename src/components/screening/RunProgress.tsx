@@ -9,7 +9,7 @@ import {
 } from "@/lib/screening/intake-href";
 import { fill } from "@/lib/screening/copy";
 import { buildOptimisticRun } from "@/lib/screening/pipeline/build-run";
-import { MockNotice, ScreeningDisclaimer } from "./ScreeningNotices";
+import { ScreeningDisclaimer } from "./ScreeningNotices";
 import { ScreeningReportView } from "./ScreeningReportView";
 import { useScreeningCopy } from "./use-screening-copy";
 
@@ -307,7 +307,7 @@ export function RunProgress({ runId }: { runId: string }) {
   if (showReport && report) {
     return (
       <main className="mx-auto w-full max-w-7xl px-3 py-6 sm:px-4 lg:px-6">
-        <ScreeningReportView report={report} mocked={run?.mocked ?? true} />
+        <ScreeningReportView report={report} />
         <div className="mt-5 flex flex-wrap gap-2">
           <button
             type="button"
@@ -379,8 +379,6 @@ export function RunProgress({ runId }: { runId: string }) {
           </p>
         ) : null}
       </header>
-
-      {(run?.mocked ?? false) ? <MockNotice className="mt-4" /> : null}
 
       {loadError ? (
         <p className="mt-5 text-sm text-red-600 dark:text-red-400" role="alert">

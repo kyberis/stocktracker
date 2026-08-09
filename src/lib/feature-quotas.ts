@@ -28,8 +28,20 @@ function providerKey(feature: FeatureQuotaKey): string {
   return `${PROVIDER_PREFIX}${feature}`;
 }
 
+/** ISO week key `YYYY-Www` (UTC, weeks start Monday). */
+export function isoWeekWindowKey(now: Date = new Date()): string {
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dayNum = d.getUTCDay() || 7; // Mon=1 … Sun=7
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const isoYear = d.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(isoYear, 0, 1));
+  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86_400_000) + 1) / 7);
+  return `${isoYear}-W${String(weekNo).padStart(2, "0")}`;
+}
+
 export function currentWindowKey(window: QuotaWindow, now: Date = new Date()): string {
   if (window === "year") return String(now.getUTCFullYear());
+  if (window === "week") return isoWeekWindowKey(now);
   if (window === "day") {
     return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(
       now.getUTCDate(),
@@ -41,6 +53,13 @@ export function currentWindowKey(window: QuotaWindow, now: Date = new Date()): s
 export function nextResetAt(window: QuotaWindow, now: Date = new Date()): string {
   if (window === "year") {
     return new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1)).toISOString();
+  }
+  if (window === "week") {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const dayNum = d.getUTCDay() || 7; // Mon=1 … Sun=7
+    const addDays = (8 - dayNum) % 7 || 7;
+    d.setUTCDate(d.getUTCDate() + addDays);
+    return d.toISOString();
   }
   if (window === "day") {
     return new Date(Date.UTC(

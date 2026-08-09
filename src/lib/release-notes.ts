@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.123",
+    date: "2026-08-09",
+    title: "Screening beta on home + weekly limit",
+    titleTranslations: {
+      es: "Cribado beta en inicio + límite semanal",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Home shows a beta banner for investment screening when the feature flag is on.",
+        translations: {
+          es: "La página de inicio muestra un banner beta del cribado de inversión cuando el feature flag está activo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Each user can run up to 3 investment screens per week (admins unlimited). Entry preview switchers and mock/demo badges are removed from the screening UI.",
+        translations: {
+          es: "Cada usuario puede lanzar hasta 3 cribados de inversión por semana (admins ilimitados). Se quitan el selector de estados de vista previa y las etiquetas mock/demo de la UI de cribado.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.122",
     date: "2026-08-09",
     title: "Screening: harder checklist scoring",

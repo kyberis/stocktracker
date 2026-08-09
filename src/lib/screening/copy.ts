@@ -12,13 +12,19 @@ const en = {
   common: {
     disclaimerShort: "Automated research, not financial advice.",
     aiLabel: "AI-generated — may contain errors",
-    mockBadge: "Mock data",
-    mockNotice:
-      "This flow runs on a fixed example report. No market data is fetched and no AI model runs yet, so the candidates are always the same.",
     back: "Back",
     backHome: "Back to home",
-    localeNotice:
-      "The example report is written in Spanish. Only the sample content is affected, not the interface.",
+  },
+  homeBeta: {
+    badge: "Beta",
+    title: "Investment screening",
+    body: "Turn sector mix into a short researched shortlist — up to 3 screens per week while in beta.",
+    cta: "Try screening",
+  },
+  quota: {
+    remaining: "{remaining} of {limit} screens left this week",
+    exhausted:
+      "You have used your 3 screens for this week. Try again when the weekly limit resets.",
   },
   entry: {
     eyebrow: "Your portfolio today",
@@ -70,13 +76,6 @@ const en = {
     discoveryBody:
       "Start from your sector mix: rebalance if something is heavy, explore freely, or deep-dive a single company.",
     discoveryCta: "Open screening",
-    scenarioPreviewLabel: "Preview entry states",
-    scenarioPreviewHint:
-      "Temporary switcher for design review. Uses fixture sector weights — not your real portfolio.",
-    scenarioEmpty: "New / empty",
-    scenarioOverexposed: "Overexposed",
-    scenarioBalanced: "Balanced",
-    scenarioLive: "Live portfolio",
     recentScreens: {
       title: "Your recent screens",
       empty: "No screens yet. Start one above — it will show up here.",
@@ -89,7 +88,6 @@ const en = {
       intentRebalance: "Rebalance",
       intentExplore: "Explore",
       intentAnalyze: "Analyze",
-      mockedBadge: "Demo",
     },
   },
   methodology: {
@@ -677,9 +675,6 @@ const en = {
     insiderSelling: "Insiders: selling bias",
     insiderMixed: "Insiders: mixed",
     insiderNone: "Insiders: no clear bias",
-    blurToggleLock: "Preview locked",
-    blurToggleUnlock: "Unlock preview",
-    blurToggleHint: "Temporary teaser toggle — later tied to credits.",
     unlockReportChip: "Unlock report",
     lockedCandidate: "Candidate {n}",
     lockedCell: "••••",
@@ -722,13 +717,19 @@ const es: ScreeningCopy = {
   common: {
     disclaimerShort: "Investigación automatizada, no asesoramiento financiero.",
     aiLabel: "Generado con IA — puede contener errores",
-    mockBadge: "Datos de ejemplo",
-    mockNotice:
-      "Este flujo funciona con un informe de ejemplo fijo. Todavía no se consultan datos de mercado ni se ejecuta ningún modelo, así que los candidatos son siempre los mismos.",
     back: "Volver",
     backHome: "Volver al inicio",
-    localeNotice:
-      "El informe de ejemplo está redactado en español. Solo afecta al contenido de muestra, no a la interfaz.",
+  },
+  homeBeta: {
+    badge: "Beta",
+    title: "Cribado de inversión",
+    body: "Convierte tu mezcla por sectores en una lista corta investigada — hasta 3 cribados por semana en beta.",
+    cta: "Probar cribado",
+  },
+  quota: {
+    remaining: "Te quedan {remaining} de {limit} cribados esta semana",
+    exhausted:
+      "Has usado tus 3 cribados de esta semana. Vuelve a intentarlo cuando se reinicie el límite semanal.",
   },
   entry: {
     eyebrow: "Tu cartera hoy",
@@ -780,13 +781,6 @@ const es: ScreeningCopy = {
     discoveryBody:
       "Parte de tu mezcla por sectores: rebalancea si algo pesa de más, explora libremente, o profundiza en una sola empresa.",
     discoveryCta: "Abrir cribado",
-    scenarioPreviewLabel: "Vista previa de estados",
-    scenarioPreviewHint:
-      "Selector temporal para revisión de diseño. Usa pesos de ejemplo — no tu cartera real.",
-    scenarioEmpty: "Nuevo / vacío",
-    scenarioOverexposed: "Sobreexpuesto",
-    scenarioBalanced: "Equilibrado",
-    scenarioLive: "Cartera real",
     recentScreens: {
       title: "Tus cribados recientes",
       empty: "Aún no hay cribados. Empieza uno arriba — aparecerá aquí.",
@@ -799,7 +793,6 @@ const es: ScreeningCopy = {
       intentRebalance: "Rebalanceo",
       intentExplore: "Exploración",
       intentAnalyze: "Analizar",
-      mockedBadge: "Demo",
     },
   },
   methodology: {
@@ -1384,9 +1377,6 @@ const es: ScreeningCopy = {
     insiderSelling: "Insiders: sesgo vendedor",
     insiderMixed: "Insiders: mixto",
     insiderNone: "Insiders: sin sesgo claro",
-    blurToggleLock: "Vista previa bloqueada",
-    blurToggleUnlock: "Desbloquear vista",
-    blurToggleHint: "Toggle temporal del teaser — luego irá ligado a créditos.",
     unlockReportChip: "Desbloquear informe",
     lockedCandidate: "Candidato {n}",
     lockedCell: "••••",

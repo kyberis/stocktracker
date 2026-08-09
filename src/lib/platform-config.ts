@@ -107,10 +107,11 @@ export type RateLimitProvider = "alphavantage" | "fmp" | "openai" | "openai_impo
 /**
  * Reset window for a feature quota.
  *  - "month": resets at the start of each calendar month (UTC)
+ *  - "week":  resets at the start of each ISO week (Monday 00:00 UTC)
  *  - "day":   resets at midnight UTC
  *  - "year":  resets at the start of each calendar year (UTC)
  */
-export type QuotaWindow = "month" | "day" | "year";
+export type QuotaWindow = "month" | "week" | "day" | "year";
 
 /**
  * Every cost-bearing capability that has a per-user quota.
@@ -132,6 +133,8 @@ export type FeatureQuotaKey =
   | "intelligence"
   | "economic_indicators"
   | "screener"
+  /** Investment screening runs (beta). Distinct from the classic `screener` filter. */
+  | "investment_screening"
   | "stock_evaluation"
   | "company_analysis"
   | "crypto_pro"
@@ -170,6 +173,12 @@ export const FEATURE_QUOTAS: Record<FeatureQuotaKey, FeatureQuotaConfig> = {
   intelligence: { free: 30, pro: 1_000, window: "month", label: "Stock intelligence lookups" },
   economic_indicators: { free: 20, pro: 500, window: "month", label: "Economic indicator lookups" },
   screener: { free: 10, pro: 200, window: "month", label: "Screener queries" },
+  investment_screening: {
+    free: 3,
+    pro: 3,
+    window: "week",
+    label: "Investment screenings",
+  },
   stock_evaluation: { free: 15, pro: 300, window: "month", label: "Stock evaluations" },
   company_analysis: { free: 5, pro: 200, window: "month", label: "Company analysis reports" },
   crypto_pro: { free: 50, pro: 1_000, window: "month", label: "Crypto premium lookups" },

@@ -42,6 +42,7 @@ describe("screening entry track helpers", () => {
       preview: "live",
     });
     expect(buildDiscoveryOpenedMetadata()).toEqual({ source: "diversify" });
+    expect(buildDiscoveryOpenedMetadata("home")).toEqual({ source: "home" });
   });
 
   it("accepts body schema for all entry events", () => {

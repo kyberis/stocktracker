@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
+import { requireFeatureQuota } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { requireScreeningAccess } from "@/lib/screening/guard";
 import {
   buildMockRun,
@@ -83,6 +85,13 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
     );
   }
 
+  const { error: quotaError, quota } = await requireFeatureQuota(
+    req,
+    "investment_screening",
+  );
+  if (quotaError) return quotaError;
+  const consumedQuota = Boolean(quota);
+
   const realPipeline = await isFeatureEnabledForUser(
     "screening_pipeline_real_enabled",
     session.userId,
@@ -92,6 +101,7 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
     const runId = createMockRunId();
     const run = buildMockRun(runId);
     if (!run) {
+      if (consumedQuota) await refundFeatureQuota(session.userId, "investment_screening");
       return NextResponse.json({ error: "Could not create run" }, { status: 500 });
     }
     try {
@@ -108,6 +118,8 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
         "[screening/runs] persist failed",
         err instanceof Error ? err.message : err,
       );
+      if (consumedQuota) await refundFeatureQuota(session.userId, "investment_screening");
+      return NextResponse.json({ error: "Could not create run" }, { status: 500 });
     }
     recordScreeningRunCreated(parsed.data.intent, true);
     return NextResponse.json({ run }, { status: 201 });
@@ -127,6 +139,7 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
       "[screening/runs] real persist failed",
       err instanceof Error ? err.message : err,
     );
+    if (consumedQuota) await refundFeatureQuota(session.userId, "investment_screening");
     return NextResponse.json({ error: "Could not create run" }, { status: 500 });
   }
 
@@ -141,6 +154,7 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
       "[screening/runs] insertSteps failed",
       err instanceof Error ? err.message : err,
     );
+    if (consumedQuota) await refundFeatureQuota(session.userId, "investment_screening");
     return NextResponse.json({ error: "Could not queue steps" }, { status: 500 });
   }
 

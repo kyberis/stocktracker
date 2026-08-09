@@ -23,6 +23,7 @@ import HomeMcpCta from "./HomeMcpCta";
 import HomeFinPulseTeaser from "./HomeFinPulseTeaser";
 import HomePortfolioTotalCard from "./HomePortfolioTotalCard";
 import HomeRecommendationCard from "./HomeRecommendationCard";
+import ScreeningBetaBanner from "@/components/screening/ScreeningBetaBanner";
 
 type HeroMode = "simple" | "advanced";
 const HERO_MODE_KEY = "home_v2_hero_mode";
@@ -226,6 +227,8 @@ export default function HomeV2Dashboard() {
               />
             )}
           </ErrorBoundary>
+
+          <ScreeningBetaBanner />
 
           <HomeRecommendationCard />
 

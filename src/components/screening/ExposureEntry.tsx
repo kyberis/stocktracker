@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import {
   REC_THRESHOLDS,
@@ -11,11 +11,6 @@ import {
 } from "@/lib/homepage/build-portfolio-recommendations";
 import { SCREENING_MAX_SCORE } from "@/lib/screening/criteria";
 import { fill, type ScreeningCopy } from "@/lib/screening/copy";
-import {
-  isScreeningEntryScenario,
-  resolvePreviewAllocation,
-  type ScreeningEntryScenario,
-} from "@/lib/screening/entry-preview";
 import type { ScreeningEntryVariant } from "@/lib/screening/schemas";
 import {
   buildEntryBackHomeMetadata,
@@ -29,9 +24,9 @@ import { ScreeningDisclaimer } from "./ScreeningNotices";
 import { useScreeningCopy } from "./use-screening-copy";
 
 const OVEREXPOSURE_PCT = REC_THRESHOLDS.topSectorPct;
+const LIVE_PREVIEW = "live" as const;
 
 type EntryCopy = ScreeningCopy["entry"];
-type PreviewMode = ScreeningEntryScenario | "live";
 
 function intakeHref(params: {
   intent: "rebalance" | "explore" | "analyze";
@@ -47,18 +42,16 @@ function intakeHref(params: {
 function AnalyzeOptionCard({
   entry,
   variant,
-  preview,
   track,
 }: {
   entry: EntryCopy;
   variant: ScreeningEntryVariant;
-  preview: "live" | "fixture";
   track: TrackEntryFn;
 }) {
   const meta = buildEntryCtaMetadata({
     intent: "analyze",
     variant,
-    preview,
+    preview: LIVE_PREVIEW,
     primary: false,
   });
 
@@ -118,20 +111,18 @@ function ExploreOptionCard({
   eyebrow,
   primary,
   variant,
-  preview,
   track,
 }: {
   entry: EntryCopy;
   eyebrow: string;
   primary: boolean;
   variant: ScreeningEntryVariant;
-  preview: "live" | "fixture";
   track: TrackEntryFn;
 }) {
   const meta = buildEntryCtaMetadata({
     intent: "explore",
     variant,
-    preview,
+    preview: LIVE_PREVIEW,
     primary,
   });
 
@@ -170,7 +161,6 @@ function RebalanceOptionCard({
   excludeSectors,
   mode,
   variant,
-  preview,
   track,
 }: {
   entry: EntryCopy;
@@ -180,7 +170,6 @@ function RebalanceOptionCard({
   excludeSectors: string[];
   mode: "overexposed" | "balanced";
   variant: ScreeningEntryVariant;
-  preview: "live" | "fixture";
   track: TrackEntryFn;
 }) {
   const body =
@@ -200,7 +189,7 @@ function RebalanceOptionCard({
   const meta = buildEntryCtaMetadata({
     intent: "rebalance",
     variant,
-    preview,
+    preview: LIVE_PREVIEW,
     primary,
   });
 
@@ -245,78 +234,15 @@ function RebalanceOptionCard({
   );
 }
 
-function ScenarioSwitcher({
-  mode,
-  onChange,
-  entry,
-}: {
-  mode: PreviewMode;
-  onChange: (next: PreviewMode) => void;
-  entry: EntryCopy;
-}) {
-  const options: Array<{ id: PreviewMode; label: string }> = [
-    { id: "empty", label: entry.scenarioEmpty },
-    { id: "overexposed", label: entry.scenarioOverexposed },
-    { id: "balanced", label: entry.scenarioBalanced },
-    { id: "live", label: entry.scenarioLive },
-  ];
-
-  return (
-    <section
-      className="mt-4 rounded-xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface-soft)] p-3"
-      aria-label={entry.scenarioPreviewLabel}
-    >
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
-        {entry.scenarioPreviewLabel}
-      </p>
-      <p className="mt-1 text-[12px] text-[color:var(--muted)]">{entry.scenarioPreviewHint}</p>
-      <div className="mt-2.5 flex flex-wrap gap-1.5" role="tablist">
-        {options.map((option) => {
-          const active = mode === option.id;
-          return (
-            <button
-              key={option.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => onChange(option.id)}
-              className={`inline-flex min-h-9 items-center justify-center rounded-full px-3 text-[12px] font-semibold ${
-                active
-                  ? "bg-teal-500/20 text-teal-800 dark:text-teal-200"
-                  : "border border-[color:var(--border)] text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-              }`}
-            >
-              {option.label}
-            </button>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-/**
- * Entry point of the screening flow. Sector weights are real by default
- * (same helper as home recommendations). `?scenario=empty|overexposed|balanced`
- * forces a fixture so all three entry variants can be reviewed without seeding
- * portfolios.
- */
+/** Entry point of the screening flow. Sector weights come from the live portfolio. */
 export function ExposureEntry() {
   const { copy } = useScreeningCopy();
   const track = useTrack();
+  const { user } = useAuth();
   const { holdings, quotes, exchangeRates, isInitializing } = usePortfolio();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
   const viewedKeyRef = useRef<string | null>(null);
 
-  const scenarioParam = searchParams.get("scenario");
-  const previewMode: PreviewMode = isScreeningEntryScenario(scenarioParam)
-    ? scenarioParam
-    : "live";
-  const preview: "live" | "fixture" = previewMode === "live" ? "live" : "fixture";
-
-  const liveAllocation = useMemo(() => {
+  const { sectors, overexposed, underweight } = useMemo(() => {
     const alloc = computeSectorPercentsForRecommendations(
       holdings,
       quotes,
@@ -331,10 +257,7 @@ export function ExposureEntry() {
     };
   }, [holdings, quotes, exchangeRates, copy.entry.unclassified]);
 
-  const { sectors, overexposed, underweight } =
-    previewMode === "live" ? liveAllocation : resolvePreviewAllocation(previewMode);
-
-  const waitingOnLive = previewMode === "live" && isInitializing;
+  const waitingOnLive = isInitializing;
   const thresholdLabel = `${OVEREXPOSURE_PCT}%`;
   const includeSectors = underweight.map((s) => s.label);
   const excludeSectors = overexposed ? [overexposed.label] : [];
@@ -346,20 +269,32 @@ export function ExposureEntry() {
       ? "overexposed"
       : "balanced";
 
+  const screeningQuota = user?.quotas?.investment_screening;
+  const isAdmin = user?.role === "admin";
+  const quotaLine =
+    !isAdmin && screeningQuota
+      ? screeningQuota.remaining <= 0
+        ? copy.quota.exhausted
+        : fill(copy.quota.remaining, {
+            remaining: String(screeningQuota.remaining),
+            limit: String(screeningQuota.limit),
+          })
+      : null;
+
   useEffect(() => {
     if (waitingOnLive) return;
-    const key = `${preview}:${variant}:${overexposed?.label ?? ""}:${overexposed?.percent.toFixed(1) ?? ""}`;
+    const key = `live:${variant}:${overexposed?.label ?? ""}:${overexposed?.percent.toFixed(1) ?? ""}`;
     if (viewedKeyRef.current === key) return;
     viewedKeyRef.current = key;
     const meta = buildEntryViewMetadata({
       variant,
-      preview,
+      preview: LIVE_PREVIEW,
       topSector: overexposed?.label ?? (sectors[0]?.label ?? null),
       topPct: overexposed?.percent ?? (sectors[0]?.percent ?? null),
     });
     track("screening_entry_viewed", meta);
     void postScreeningEntryEvent("screening_entry_viewed", meta);
-  }, [waitingOnLive, preview, variant, overexposed, sectors, track]);
+  }, [waitingOnLive, variant, overexposed, sectors, track]);
 
   const title = isEmpty
     ? copy.entry.discoveryTitle
@@ -378,16 +313,7 @@ export function ExposureEntry() {
       : fill(copy.entry.bodyBalanced, { threshold: thresholdLabel });
 
   const optionsTitle = isBalanced ? copy.entry.optionsTitleBalanced : copy.entry.optionsTitle;
-
-  function setPreviewMode(next: PreviewMode) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (next === "live") params.delete("scenario");
-    else params.set("scenario", next);
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }
-
-  const backMeta = buildEntryBackHomeMetadata({ variant, preview });
+  const backMeta = buildEntryBackHomeMetadata({ variant, preview: LIVE_PREVIEW });
 
   return (
     <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-4">
@@ -399,9 +325,19 @@ export function ExposureEntry() {
           {title}
         </h1>
         <p className="mt-2 text-sm text-[color:var(--muted)]">{body}</p>
+        {quotaLine ? (
+          <p
+            className={`mt-2 text-xs ${
+              screeningQuota && screeningQuota.remaining <= 0
+                ? "text-amber-700 dark:text-amber-300"
+                : "text-[color:var(--muted)]"
+            }`}
+            role="status"
+          >
+            {quotaLine}
+          </p>
+        ) : null}
       </header>
-
-      <ScenarioSwitcher mode={previewMode} onChange={setPreviewMode} entry={copy.entry} />
 
       {waitingOnLive ? (
         <div
@@ -472,7 +408,6 @@ export function ExposureEntry() {
             eyebrow={copy.entry.exploreEyebrowPrimary}
             primary
             variant={variant}
-            preview={preview}
             track={track}
           />
         ) : isBalanced ? (
@@ -482,7 +417,6 @@ export function ExposureEntry() {
               eyebrow={copy.entry.exploreEyebrowPrimary}
               primary
               variant={variant}
-              preview={preview}
               track={track}
             />
             <RebalanceOptionCard
@@ -493,7 +427,6 @@ export function ExposureEntry() {
               excludeSectors={[]}
               mode="balanced"
               variant={variant}
-              preview={preview}
               track={track}
             />
           </>
@@ -507,7 +440,6 @@ export function ExposureEntry() {
               excludeSectors={excludeSectors}
               mode="overexposed"
               variant={variant}
-              preview={preview}
               track={track}
             />
             <ExploreOptionCard
@@ -515,17 +447,11 @@ export function ExposureEntry() {
               eyebrow={copy.entry.exploreEyebrowSecondary}
               primary={false}
               variant={variant}
-              preview={preview}
               track={track}
             />
           </>
         )}
-        <AnalyzeOptionCard
-          entry={copy.entry}
-          variant={variant}
-          preview={preview}
-          track={track}
-        />
+        <AnalyzeOptionCard entry={copy.entry} variant={variant} track={track} />
       </div>
 
       <RecentScreensList />

@@ -15,6 +15,8 @@ import {
   getFeatureQuotaUsage,
   refundFeatureQuota,
   currentWindowKey,
+  isoWeekWindowKey,
+  nextResetAt,
 } from "./feature-quotas";
 import { FEATURE_QUOTAS } from "./platform-config";
 
@@ -24,6 +26,38 @@ beforeEach(() => {
 
 describe("feature-quotas", () => {
   const USER_ID = "user-1";
+
+  describe("week window", () => {
+    it("builds an ISO week key YYYY-Www", () => {
+      // 2026-08-09 is a Sunday → ISO week 32 of 2026
+      const key = isoWeekWindowKey(new Date("2026-08-09T12:00:00.000Z"));
+      expect(key).toBe("2026-W32");
+      expect(currentWindowKey("week", new Date("2026-08-09T12:00:00.000Z"))).toBe(key);
+    });
+
+    it("resets at next Monday 00:00 UTC", () => {
+      const reset = nextResetAt("week", new Date("2026-08-09T12:00:00.000Z"));
+      expect(reset).toBe("2026-08-10T00:00:00.000Z");
+    });
+
+    it("enforces investment_screening weekly limit of 3", async () => {
+      const windowKey = currentWindowKey("week");
+      mockExecute.mockResolvedValueOnce({
+        rows: [{ call_count: 3, window_start: windowKey }],
+      });
+
+      const result = await checkAndIncrementFeatureQuota(
+        USER_ID,
+        "investment_screening",
+        "free",
+      );
+
+      expect(result.allowed).toBe(false);
+      expect(result.limit).toBe(3);
+      expect(FEATURE_QUOTAS.investment_screening.window).toBe("week");
+      expect(FEATURE_QUOTAS.investment_screening.pro).toBe(3);
+    });
+  });
 
   describe("getFeatureQuotaUsage", () => {
     it("returns 0 used when no row exists", async () => {

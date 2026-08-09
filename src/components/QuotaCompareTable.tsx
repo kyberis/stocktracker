@@ -24,8 +24,13 @@ const DEFAULT_FEATURES: FeatureQuotaKey[] = [
   "support_chat",
 ];
 
-function formatLimit(n: number, window: "month" | "day" | "year", t: ReturnType<typeof useI18n>["t"]): string {
+function formatLimit(
+  n: number,
+  window: "month" | "week" | "day" | "year",
+  t: ReturnType<typeof useI18n>["t"],
+): string {
   if (!Number.isFinite(n) || n >= 1_000_000) return t("quotaTableUnlimited");
+  if (window === "week") return `${n.toLocaleString()}/week`;
   const tpl =
     window === "day"
       ? t("quotaTableUnitDay")

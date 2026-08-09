@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { fill } from "@/lib/screening/copy";
@@ -56,8 +57,21 @@ export function IntakeChat() {
   const router = useRouter();
   const track = useTrack();
   const { language } = useI18n();
+  const { user } = useAuth();
   const { copy } = useScreeningCopy();
   const searchParams = useSearchParams();
+
+  const screeningQuota = user?.quotas?.investment_screening;
+  const isAdmin = user?.role === "admin";
+  const quotaLine =
+    !isAdmin && screeningQuota
+      ? screeningQuota.remaining <= 0
+        ? copy.quota.exhausted
+        : fill(copy.quota.remaining, {
+            remaining: String(screeningQuota.remaining),
+            limit: String(screeningQuota.limit),
+          })
+      : null;
 
   const intent: ScreeningIntent = useMemo(() => {
     const raw = searchParams.get("intent");
@@ -517,6 +531,10 @@ export function IntakeChat() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
+        if (res.status === 429) {
+          setSubmitError(copy.quota.exhausted);
+          return;
+        }
         setSubmitError(copy.report.loadError);
         return;
       }
@@ -797,6 +815,18 @@ export function IntakeChat() {
           <p className="mt-4 text-[13px] text-[color:var(--muted)]">
             {isAnalyze ? copy.brief.costBodyAnalyze : copy.brief.costBody}
           </p>
+          {quotaLine ? (
+            <p
+              className={`mt-2 text-xs ${
+                screeningQuota && screeningQuota.remaining <= 0
+                  ? "text-amber-700 dark:text-amber-300"
+                  : "text-[color:var(--muted)]"
+              }`}
+              role="status"
+            >
+              {quotaLine}
+            </p>
+          ) : null}
 
           {submitError && (
             <p className="mt-3 text-[13px] text-red-600 dark:text-red-400" role="alert">
