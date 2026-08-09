@@ -15,6 +15,7 @@ function brief(criteria: ScreeningBrief["criteria"]): ScreeningBrief {
     criteria,
     endedEarly: false,
     locale: "en",
+    riskProfile: null,
   };
 }
 
