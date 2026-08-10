@@ -93,6 +93,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       );
 
       let totalNewTx = 0;
+      let bulkInsertFailed = false;
       const fetchedBrokers: { id: string; name: string }[] = [];
       const seenBrokerIds = new Set<string>();
 
@@ -106,6 +107,9 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
           accountId: acct.id,
           startDate,
         });
+        for (const tx of result.transactions) {
+          tx.brokerName = acct.institution;
+        }
 
         if (!seenBrokerIds.has(acct.brokerageAuthorizationId)) {
           seenBrokerIds.add(acct.brokerageAuthorizationId);
@@ -143,7 +147,8 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
           taxes: 0,
           currency: tx.currency,
           displayCurrency: tx.currency,
-          notes: "Auto-sync",
+          notes: tx.brokerName ? `Auto-sync · ${tx.brokerName}` : "Auto-sync",
+          brokerName: tx.brokerName || "",
           sourceRef: tx.sourceRef || "",
         }));
 
@@ -164,12 +169,18 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
           const bulkUrl = primaryPId
             ? `${baseUrl}/api/transactions/bulk?portfolioId=${encodeURIComponent(primaryPId)}`
             : `${baseUrl}/api/transactions/bulk`;
-          await fetch(bulkUrl, {
+          const bulkRes = await fetch(bulkUrl, {
             method: "POST",
             headers: cronHeaders,
             body: JSON.stringify({ transactions: bulkPayload, finalize: true, skipRebuild: true }),
           });
+          if (!bulkRes.ok) {
+            bulkInsertFailed = true;
+            const body = await bulkRes.text().catch(() => "");
+            console.error(`[snaptrade-sync] Bulk import rejected (${bulkRes.status}) for user ${conn.userId} portfolio ${primaryPId || "default"}: ${body}`);
+          }
         } catch (err) {
+          bulkInsertFailed = true;
           console.error(`[snaptrade-sync] Bulk import failed for user ${conn.userId} portfolio ${primaryPId || "default"}:`, err instanceof Error ? err.message : err);
         }
 
@@ -253,7 +264,10 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
         console.warn(`[snaptrade-sync] Cash update failed for user ${conn.userId}:`, err instanceof Error ? err.message : err);
       }
 
-      if (totalNewTx > 0) {
+      // Only advance the per-broker sync watermark when the bulk insert
+      // actually succeeded — otherwise the next run would skip re-fetching
+      // transactions that were never persisted.
+      if (totalNewTx > 0 && !bulkInsertFailed) {
         for (const broker of fetchedBrokers) {
           await upsertSnapTradeBrokerSync(conn.userId, broker.id, broker.name);
         }

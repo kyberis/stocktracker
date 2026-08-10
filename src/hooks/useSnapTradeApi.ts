@@ -186,13 +186,19 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     return result;
   }, [brokerageConnections, brokerSyncs]);
 
-  const loadConnection = useCallback(async () => {
+  const loadConnection = useCallback(async (isRetry = false): Promise<void> => {
     try {
       const form = new FormData();
       form.append("action", "get-connection");
       const res = await fetch("/api/snaptrade", { method: "POST", body: form });
       if (res.ok) {
         const data = await res.json();
+        // The server couldn't verify live brokerage status this time (transient
+        // SnapTrade API error) — retry once rather than accepting a blank state.
+        if (data.statusCheckFailed && !isRetry) {
+          await new Promise((r) => setTimeout(r, 2000));
+          return loadConnection(true);
+        }
         setConnection(data);
         const disabled: DisabledBrokerageConnection[] = data.disabledConnections || [];
         setDisabledConnections(disabled);
@@ -387,7 +393,8 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     setTransactions([]);
     setImportedCount(0);
     setErrorMsg("");
-    setNeedsReconnect(false);
+    // needsReconnect/disabledConnections reflect live external connection
+    // state, not wizard-step state — only loadConnection() should change them.
     setImportProgress({ current: 0, total: 0, errors: 0 });
     setHoldingsCapped(0);
     setLastFetchSummary(null);

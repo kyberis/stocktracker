@@ -524,9 +524,12 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
 
   let isinMap: Record<string, string>;
   let parsed: ParsedTransaction[];
-  const skipYahoo = action === "parse";
   try {
-    isinMap = await buildIsinMapForBroker(csv, session.userId, parser.extractIsins?.bind(parser), skipYahoo, portfolioId);
+    // Resolve ISINs via Yahoo during preview too (bounded to 50 lookups /
+    // 15s), not just on final import — otherwise unrecognized ISINs resolve
+    // to an empty ticker in the preview and get silently dropped at import
+    // time before ever reaching the server.
+    isinMap = await buildIsinMapForBroker(csv, session.userId, parser.extractIsins?.bind(parser), false, portfolioId);
     parsed = parser.parse(csv, isinMap);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

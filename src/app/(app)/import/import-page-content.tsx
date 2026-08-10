@@ -871,7 +871,7 @@ export default function ImportPageContent() {
       {step === "done" && (
         <div className="animate-slide-up">
           {method === "broker_csv" && brokerCSV.step === "done" && (
-            <DoneCard txCount={brokerCSV.importedTxCount} holdingsCapped={brokerCSV.holdingsCapped} onReset={resetAll} t={t} importMethod="broker_csv" />
+            <DoneCard txCount={brokerCSV.importedTxCount} holdingsCapped={brokerCSV.holdingsCapped} skippedUnresolvedCount={brokerCSV.skippedUnresolvedCount} onReset={resetAll} t={t} importMethod="broker_csv" />
           )}
           {method === "ai_import" && aiImport.step === "done" && (
             <DoneCard txCount={aiImport.importedTxCount} holdingsCapped={aiImport.holdingsCapped} onReset={resetAll} t={t} importMethod="ai_import" />
@@ -1639,7 +1639,7 @@ function ImportingProgress({ progress, t }: { progress: { current: number; total
   );
 }
 
-function DoneCard({ txCount, holdingsCapped, onReset, t, importMethod }: { txCount: number; holdingsCapped: number; onReset: () => void; t: (key: string) => string; importMethod?: string }) {
+function DoneCard({ txCount, holdingsCapped, skippedUnresolvedCount, onReset, t, importMethod }: { txCount: number; holdingsCapped: number; skippedUnresolvedCount?: number; onReset: () => void; t: (key: string) => string; importMethod?: string }) {
   const showUpgradeNudge = importMethod && importMethod !== "broker_csv" && importMethod !== "snaptrade_api";
   return (
     <div className="py-8 text-center space-y-4">
@@ -1667,6 +1667,11 @@ function DoneCard({ txCount, holdingsCapped, onReset, t, importMethod }: { txCou
           </p>
           <ProCompareCard surface="import_holdings_capped" reason="holdings_limit_reached" compact />
         </div>
+      )}
+      {!!skippedUnresolvedCount && skippedUnresolvedCount > 0 && (
+        <p className="text-xs text-amber-700 dark:text-amber-300 font-medium text-center max-w-sm mx-auto">
+          {(t("importUnresolvedTickerSkipped") || "{count} row(s) couldn't be matched to a ticker and were not imported.").replace("{count}", String(skippedUnresolvedCount))}
+        </p>
       )}
       <AdSlot slot="import-done" format="auto" className="max-w-md mx-auto" />
       <div className="flex flex-col items-center gap-2 pt-2">

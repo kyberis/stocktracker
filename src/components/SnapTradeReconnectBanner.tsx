@@ -8,22 +8,24 @@ import type { DisabledBrokerageConnection } from "@/hooks/import-types";
 
 const DISMISS_KEY = "snaptrade_reconnect_dismissed";
 
+// The dismissal is scoped to the specific set of disabled connections the user
+// saw when they dismissed — so a newly-disabled connection (or the same one
+// still disabled after reconnecting and failing again) reopens the banner
+// instead of it staying hidden forever.
+function dismissedIdsKey(connections: DisabledBrokerageConnection[]): string {
+  return connections.map((c) => c.id).sort().join(",");
+}
+
 export default function SnapTradeReconnectBanner() {
   const { t } = useI18n();
   const { demoMode } = usePortfolio();
   const [needsAttention, setNeedsAttention] = useState(false);
   const [disabledConnections, setDisabledConnections] = useState<DisabledBrokerageConnection[]>([]);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissedKey, setDismissedKey] = useState<string | null>(null);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (demoMode) return;
-    try {
-      if (localStorage.getItem(DISMISS_KEY)) {
-        setDismissed(true);
-        return;
-      }
-    } catch { /* private browsing */ }
 
     const form = new FormData();
     form.append("action", "get-connection");
@@ -35,15 +37,20 @@ export default function SnapTradeReconnectBanner() {
           setDisabledConnections(data.disabledConnections || []);
           setLastSyncedAt(data.lastSyncedAt || null);
         }
+        try {
+          setDismissedKey(localStorage.getItem(DISMISS_KEY));
+        } catch { /* private browsing */ }
       })
       .catch(() => {});
   }, [demoMode]);
 
   const dismiss = useCallback(() => {
-    setDismissed(true);
-    try { localStorage.setItem(DISMISS_KEY, "1"); } catch { /* ignore */ }
-  }, []);
+    const key = dismissedIdsKey(disabledConnections);
+    setDismissedKey(key);
+    try { localStorage.setItem(DISMISS_KEY, key); } catch { /* ignore */ }
+  }, [disabledConnections]);
 
+  const dismissed = dismissedKey !== null && dismissedKey === dismissedIdsKey(disabledConnections);
   if (dismissed || !needsAttention) return null;
 
   const brokerNames = disabledConnections.map((c) => c.brokerageName).filter(Boolean);

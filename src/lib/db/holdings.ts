@@ -542,8 +542,12 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     tags: string[];
   }>();
   const prevValueByKey = new Map<string, number>();
-  // Tickers owned by snaptrade positions — transaction-derived holdings for
-  // these tickers are redundant and would cause doubled shares in listHoldings.
+  // Ticker+exchange pairs owned by snaptrade positions — transaction-derived
+  // holdings for these exact pairs are redundant and would cause doubled
+  // shares in listHoldings. Scoped to ticker+exchange (not ticker alone) so a
+  // CSV-imported holding for the same ticker on a different exchange (a
+  // genuinely different position, e.g. a separate non-synced account) isn't
+  // silently excluded.
   const snapTradeTickers = new Set<string>();
   for (const row of metadataRows.rows) {
     const key = `${str(row.ticker).toUpperCase()}|${str(row.exchange).toUpperCase()}`;
@@ -559,7 +563,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     const val = num(row.value_in_eur);
     if (val > 0 && !prevValueByKey.has(key)) prevValueByKey.set(key, val);
     if (str(row.source) === "snaptrade") {
-      snapTradeTickers.add(str(row.ticker).toUpperCase());
+      snapTradeTickers.add(key);
     }
   }
 
@@ -594,10 +598,10 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
   const allDerived = deriveHoldingsFromTransactions(transactions, metadataByKey);
 
   // Skip transaction-derived holdings when a snaptrade position already covers
-  // that ticker — snaptrade positions are the source of truth and including
-  // both would double the shares/value in listHoldings.
+  // that exact ticker+exchange — snaptrade positions are the source of truth
+  // and including both would double the shares/value in listHoldings.
   const derived = snapTradeTickers.size > 0
-    ? allDerived.filter((h) => !snapTradeTickers.has(h.ticker.toUpperCase()))
+    ? allDerived.filter((h) => !snapTradeTickers.has(`${h.ticker.toUpperCase()}|${h.exchange.toUpperCase()}`))
     : allDerived;
 
   await enrichValueInEUR(derived).catch((err) =>

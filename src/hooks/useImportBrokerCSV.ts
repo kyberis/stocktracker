@@ -65,6 +65,7 @@ export interface UseImportBrokerCSVReturn {
   qualityReport: ImportQualityReport | null;
   importProgress: { current: number; total: number; errors: number };
   importedTxCount: number;
+  skippedUnresolvedCount: number;
   errorMsg: string;
   parseFile: (file: File, broker: BrokerFormat, portfolioId?: string | null) => Promise<void>;
   importAll: (broker: BrokerFormat, isImageImport?: boolean, portfolioId?: string | null) => Promise<void>;
@@ -90,6 +91,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     errors: 0,
   });
   const [importedTxCount, setImportedTxCount] = useState(0);
+  const [skippedUnresolvedCount, setSkippedUnresolvedCount] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const rawCsvRef = useRef<string>("");
   const rawFileRef = useRef<File | null>(null);
@@ -105,6 +107,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     setHoldingsLimitInfo(null);
     setImportProgress({ current: 0, total: 0, errors: 0 });
     setImportedTxCount(0);
+    setSkippedUnresolvedCount(0);
     setErrorMsg("");
     rawCsvRef.current = "";
     rawFileRef.current = null;
@@ -267,14 +270,15 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
       const CHUNK_SIZE = 50;
       let limitReached = false;
       let totalHoldingsCapped = 0;
+      let unresolvedTickerCount = 0;
 
       for (let i = 0; i < validTransactions.length; i += CHUNK_SIZE) {
         const chunk = validTransactions.slice(i, i + CHUNK_SIZE);
         const isLastChunk =
           i + CHUNK_SIZE >= validTransactions.length || limitReached;
-        const payload = chunk
-          .filter((tx) => tx.type !== "buy" || !!tx.ticker)
-          .map((tx) => ({
+        const resolvable = chunk.filter((tx) => tx.type !== "buy" || !!tx.ticker);
+        unresolvedTickerCount += chunk.length - resolvable.length;
+        const payload = resolvable.map((tx) => ({
           holdingId: "",
           ticker:
             tx.ticker ||
@@ -337,6 +341,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
       }
 
       setHoldingsCapped(totalHoldingsCapped);
+      setSkippedUnresolvedCount(unresolvedTickerCount);
 
       if (cashBalances.length > 0 && (rawFileRef.current || rawCsvRef.current)) {
         try {
@@ -390,6 +395,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     qualityReport,
     importProgress,
     importedTxCount,
+    skippedUnresolvedCount,
     errorMsg,
     parseFile,
     importAll,
