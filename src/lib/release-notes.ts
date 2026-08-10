@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.132",
+    date: "2026-08-10",
+    title: "Screening: 52-week range on candidate cards",
+    titleTranslations: {
+      es: "Cribado: rango 52 semanas en las fichas de candidatos",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Each screening candidate now shows a DEGIRO-style 52-week range bar — where today’s price sits between the 12-month low and high, with dates and 1-year price change.",
+        translations: {
+          es: "Cada candidato del cribado muestra una barra de rango 52 semanas al estilo DEGIRO: dónde está el precio de hoy entre el mínimo y el máximo de 12 meses, con fechas y la variación a 1 año.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.131",
     date: "2026-08-10",
     title: "Screening: clearer verification notes",

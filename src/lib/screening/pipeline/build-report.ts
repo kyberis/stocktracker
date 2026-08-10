@@ -601,6 +601,10 @@ export function composeScreeningReport(
       concentrationImpact: riskRow?.concentrationImpact ?? null,
       technicals: tech
         ? {
+            closeHigh12m: tech.closeHigh12m,
+            closeHigh12mDate: tech.closeHigh12mDate,
+            closeLow12m: tech.closeLow12m,
+            closeLow12mDate: tech.closeLow12mDate,
             distanceTo52wHighPct: tech.distanceTo52wHighPct,
             distanceTo52wLowPct: tech.distanceTo52wLowPct,
             ma50: tech.ma50,

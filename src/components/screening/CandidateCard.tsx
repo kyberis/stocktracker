@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import FiftyTwoWeekRangeBar from "@/components/FiftyTwoWeekRangeBar";
 import { formatCompactNumber } from "@/lib/utils";
 import { fill } from "@/lib/screening/copy";
 import { ensureCardCategories } from "@/lib/screening/ensure-categories";
@@ -43,11 +44,18 @@ function TechnicalsBlock({
   card: ScreeningCandidateCard;
   locked: boolean;
 }) {
-  const { copy } = useScreeningCopy();
+  const { copy, language } = useScreeningCopy();
   const t = card.technicals;
   if (!t) return null;
 
+  const hasRange =
+    t.closeLow12m != null &&
+    t.closeHigh12m != null &&
+    Number.isFinite(card.price) &&
+    card.price > 0;
+
   const hasAny =
+    hasRange ||
     t.distanceTo52wHighPct != null ||
     t.distanceTo52wLowPct != null ||
     t.aboveMa200 != null ||
@@ -131,23 +139,45 @@ function TechnicalsBlock({
           {copy.report.lockedCell.repeat(10)}
         </p>
       ) : (
-        <dl className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-          {rows.map((row) => (
-            <div
-              key={row.label}
-              className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1.5"
-            >
-              <dt className="text-[10px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
-                {row.label}
-              </dt>
-              <dd
-                className={`mt-0.5 text-[13px] font-semibold tabular-nums ${row.tone ?? "text-[color:var(--foreground)]"}`}
+        <>
+          {hasRange ? (
+            <FiftyTwoWeekRangeBar
+              className="mt-2"
+              low={t.closeLow12m!}
+              high={t.closeHigh12m!}
+              price={card.price}
+              currency={card.currency}
+              lowDate={t.closeLow12mDate}
+              highDate={t.closeHigh12mDate}
+              variationPct={t.return1yPct}
+              locale={language}
+              labels={{
+                low: copy.report.range52wLow,
+                high: copy.report.range52wHigh,
+                rangeTitle: copy.report.range52wTitle,
+                priceChange: copy.report.range52wPriceChange,
+                ariaLabel: copy.report.range52wAria,
+              }}
+            />
+          ) : null}
+          <dl className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+            {rows.map((row) => (
+              <div
+                key={row.label}
+                className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1.5"
               >
-                {row.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
+                <dt className="text-[10px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
+                  {row.label}
+                </dt>
+                <dd
+                  className={`mt-0.5 text-[13px] font-semibold tabular-nums ${row.tone ?? "text-[color:var(--foreground)]"}`}
+                >
+                  {row.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </>
       )}
     </BlurredValue>
   );

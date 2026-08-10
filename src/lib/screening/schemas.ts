@@ -447,6 +447,10 @@ export const screeningCandidateCardSchema = z.object({
   /** Technicals (Phase 2). Deterministic; absent when FMP OHLC is missing. */
   technicals: z
     .object({
+      closeHigh12m: z.number().finite().nullable().optional(),
+      closeHigh12mDate: z.string().max(40).nullable().optional(),
+      closeLow12m: z.number().finite().nullable().optional(),
+      closeLow12mDate: z.string().max(40).nullable().optional(),
       distanceTo52wHighPct: z.number().finite().nullable(),
       distanceTo52wLowPct: z.number().finite().nullable(),
       ma50: z.number().finite().nullable(),
