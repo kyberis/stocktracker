@@ -3,6 +3,15 @@ import { createTestUser, loginViaUI, dismissOverlays } from "./helpers";
 
 const TEST_PASS = "TestPass123!";
 
+/**
+ * These views used to live behind an ARIA tablist on the default post-login
+ * dashboard. Since the April 2026 nav refactor (`?tab=` URLs, tools
+ * registry), the default post-login route is Home v2, which links out to
+ * Diversification/Dividends via /tools/* instead of an in-page tablist —
+ * that ARIA-tab markup now only exists on the opt-in /classic dashboard.
+ * These tests were asserting on markup that no longer renders for ~100% of
+ * users; updated to navigate to the real current routes instead.
+ */
 test.describe("Phase 1 — Diversification, Dividends, Stealth Mode", () => {
   let testEmail: string;
 
@@ -11,31 +20,20 @@ test.describe("Phase 1 — Diversification, Dividends, Stealth Mode", () => {
     testEmail = user.email;
   });
 
-  test("Dashboard tabs include Diversification and Dividends", async ({ page }) => {
+  test("Diversification (/tools/taxonomy) renders the classification breakdown", async ({ page }) => {
     await loginViaUI(page, testEmail, TEST_PASS);
     await dismissOverlays(page);
 
-    const tabs = page.getByRole("tab");
-    await expect(tabs.filter({ hasText: /diversification/i })).toBeVisible();
-    await expect(tabs.filter({ hasText: /dividend/i })).toBeVisible();
+    await page.goto("/tools/taxonomy", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("button", { name: "Sector" })).toBeVisible();
   });
 
-  test("Diversification tab renders tabpanel", async ({ page }) => {
+  test("Dividends (/tools/dividends) renders", async ({ page }) => {
     await loginViaUI(page, testEmail, TEST_PASS);
     await dismissOverlays(page);
 
-    await page.getByRole("tab", { name: /diversification/i }).click();
-    await expect(page.getByRole("tabpanel")).toBeVisible();
-  });
-
-  test("Dividends tab renders tabpanel", async ({ page }) => {
-    await loginViaUI(page, testEmail, TEST_PASS);
-    await dismissOverlays(page);
-
-    const dividendTab = page.getByRole("tab", { name: /dividend/i });
-    await dividendTab.scrollIntoViewIfNeeded();
-    await dividendTab.click();
-    await expect(page.getByRole("tabpanel")).toBeVisible();
+    await page.goto("/tools/dividends", { waitUntil: "domcontentloaded" });
+    await expect(page.getByText("No dividends yet")).toBeVisible();
   });
 
   test("Stealth mode toggle exists in nav with aria-pressed", async ({ page }) => {

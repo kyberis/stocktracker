@@ -74,7 +74,9 @@ export async function insertDigest(params: {
   return id;
 }
 
-export async function getDigestEligibleUsers(): Promise<{ id: string; email: string; displayName: string; defaultPortfolioId: string }[]> {
+export async function getDigestEligibleUsers(
+  opts: { includeFree?: boolean } = {},
+): Promise<{ id: string; email: string; displayName: string; defaultPortfolioId: string }[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
     sql: `SELECT u.id, u.email, u.display_name,
@@ -83,7 +85,7 @@ export async function getDigestEligibleUsers(): Promise<{ id: string; email: str
               (SELECT p.id FROM portfolios p WHERE p.user_id = u.id ORDER BY p.created_at ASC LIMIT 1)
             ) as default_portfolio_id
           FROM users u
-          WHERE u.plan = 'pro'
+          WHERE (u.plan = 'pro' OR (? = 1 AND u.plan = 'free'))
             AND u.weekly_digest_enabled = 1
             AND u.email != ''
             AND u.email_verified = 1
@@ -92,7 +94,7 @@ export async function getDigestEligibleUsers(): Promise<{ id: string; email: str
               WHERE us.user_id = u.id AND us.email_notifications_enabled = 0
             )
             AND EXISTS (SELECT 1 FROM holdings h WHERE h.user_id = u.id)`,
-    args: [],
+    args: [opts.includeFree ? 1 : 0],
   });
   return result.rows.map((row) => ({
     id: str(row.id),

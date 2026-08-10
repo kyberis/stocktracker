@@ -4,6 +4,7 @@ import { str, num, type DbUser, rowToDbUser, mapUser } from "./helpers";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { isBlockedEmailDomain } from "@/lib/schemas";
 import { trackEvent } from "./analytics";
+import { updateUserSubscription } from "./users";
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
 const CODE_LENGTH = 8;
@@ -160,6 +161,39 @@ export async function acceptReferral(refereeId: string): Promise<void> {
   await grantReferralReward(referrerId, str(referral.id));
 }
 
+/**
+ * Pushes a referral-granted Pro entitlement to the IdP so a later
+ * `syncEntitlementsForUser` pull (which runs on every OIDC callback and
+ * session refresh) doesn't overwrite the local grant with the IdP's stale
+ * pre-reward view. Mirrors `syncCommerceComplimentaryToIdp`.
+ */
+export async function syncReferralRewardToIdp(
+  userId: string,
+  email: string,
+  planExpiresAt: string,
+): Promise<void> {
+  const { isIdpEnabled } = await import("@/lib/idp/config");
+  const { importUser } = await import("@/lib/idp/client");
+  const { linkLocalUserToIdpSub } = await import("@/lib/idp/entitlements");
+  if (!isIdpEnabled() || !email.trim()) return;
+
+  try {
+    const imported = await importUser({
+      email: email.trim(),
+      plan: "pro",
+      proUntil: planExpiresAt,
+    });
+    if (imported.sub) {
+      await linkLocalUserToIdpSub({ localUserId: userId, idpSub: imported.sub });
+    }
+  } catch (err) {
+    console.error(
+      "[idp] failed to sync referral reward:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
+
 export async function grantReferralReward(referrerId: string, referralId: string): Promise<void> {
   const client = await ensureInitialized();
   const rewardDays = PLATFORM_LIMITS.REFERRAL_REWARD_DAYS;
@@ -172,26 +206,33 @@ export async function grantReferralReward(referrerId: string, referralId: string
   const currentExpiry = user.plan_expires_at ? new Date(user.plan_expires_at) : null;
   const now = new Date();
 
-  let newExpiry: Date;
+  // Only branches that actually change plan/expiry need pushing to the IdP —
+  // the credit-banking branch below leaves entitlements untouched.
+  let grantedPlanExpiresAt: string | null = null;
+
   if (hasActiveStripeSub && user.plan === "pro") {
-    // Store credit days — they'll be consumed when the Stripe sub ends
+    // Store credit days — they'll be consumed when the Stripe sub ends.
     await client.execute({
       sql: "UPDATE users SET referral_reward_days = referral_reward_days + ? WHERE id = ?",
       args: [rewardDays, referrerId],
     });
   } else if (user.plan === "pro" && currentExpiry && currentExpiry > now) {
-    // Already on referral/gifted Pro — extend
-    newExpiry = new Date(currentExpiry.getTime() + rewardDays * 86400000);
+    // Already on referral/gifted Pro — extend.
+    const newExpiry = new Date(currentExpiry.getTime() + rewardDays * 86400000);
+    grantedPlanExpiresAt = newExpiry.toISOString();
+    await updateUserSubscription(referrerId, { plan: "pro", planExpiresAt: grantedPlanExpiresAt });
     await client.execute({
-      sql: "UPDATE users SET plan_expires_at = ?, referral_reward_days = referral_reward_days + ? WHERE id = ?",
-      args: [newExpiry.toISOString(), rewardDays, referrerId],
+      sql: "UPDATE users SET referral_reward_days = referral_reward_days + ? WHERE id = ?",
+      args: [rewardDays, referrerId],
     });
   } else {
-    // Free or Starter — grant Pro now
-    newExpiry = new Date(now.getTime() + rewardDays * 86400000);
+    // Free or Starter — grant Pro now.
+    const newExpiry = new Date(now.getTime() + rewardDays * 86400000);
+    grantedPlanExpiresAt = newExpiry.toISOString();
+    await updateUserSubscription(referrerId, { plan: "pro", planExpiresAt: grantedPlanExpiresAt });
     await client.execute({
-      sql: "UPDATE users SET plan = 'pro', plan_expires_at = ?, referral_reward_days = referral_reward_days + ? WHERE id = ?",
-      args: [newExpiry.toISOString(), rewardDays, referrerId],
+      sql: "UPDATE users SET referral_reward_days = referral_reward_days + ? WHERE id = ?",
+      args: [rewardDays, referrerId],
     });
   }
 
@@ -200,6 +241,10 @@ export async function grantReferralReward(referrerId: string, referralId: string
     args: [referralId],
   });
   await trackEvent(referrerId, "referral_reward_granted", { days: String(rewardDays) });
+
+  if (grantedPlanExpiresAt && user.email) {
+    await syncReferralRewardToIdp(referrerId, user.email, grantedPlanExpiresAt);
+  }
 }
 
 export async function getReferralStats(userId: string): Promise<ReferralStats> {

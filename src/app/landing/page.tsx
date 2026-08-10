@@ -248,14 +248,6 @@ function getFaqItems(t: T) {
   ];
 }
 
-function getTestimonials(t: T) {
-  return [
-    { quote: t("landingTestimonial1Quote"), name: t("landingTestimonial1Name"), role: t("landingTestimonial1Role"), detail: t("landingTestimonial1Detail") },
-    { quote: t("landingTestimonial2Quote"), name: t("landingTestimonial2Name"), role: t("landingTestimonial2Role"), detail: t("landingTestimonial2Detail") },
-    { quote: t("landingTestimonial3Quote"), name: t("landingTestimonial3Name"), role: t("landingTestimonial3Role"), detail: t("landingTestimonial3Detail") },
-  ];
-}
-
 /**
  * Three-agent ecosystem (Warren / Clara / Will) — one Pro subscription unlocks all three.
  * See knowledge/design-docs/unified-accounts-and-billing.md.
@@ -1089,55 +1081,44 @@ function FeaturesSection() {
   );
 }
 
-/* ─── testimonials / social proof ─── */
+/* ─── social proof (live count) ───
+ * Replaces the old TestimonialsSection, which shipped three placeholder
+ * quotes (fictional names, unconditional 5-star ratings, no verification —
+ * no real review pipeline has ever produced content here; the satisfaction
+ * survey has logged one response in five months). Shows only a real,
+ * live number until the survey → Trustpilot pipeline produces real reviews
+ * to feature. The GDPR/security/data-rights trust content lives in the
+ * existing TrustSection below — this section doesn't duplicate it.
+ */
 
-function TestimonialsSection() {
-  const { t } = useI18n();
-  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "testimonials" }), []);
+function SocialProofSection() {
+  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "social_proof" }), []);
   const sectionRef = useInViewOnce(sectionCb);
-  const testimonials = useMemo(() => getTestimonials(t), [t]);
+  const [userCount, setUserCount] = useState<number | null>(null);
+  const { t } = useI18n();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/landing/stats")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { userCount?: number } | null) => {
+        if (!cancelled && data?.userCount) setUserCount(data.userCount);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (userCount === null || userCount <= 0) return null;
 
   return (
-    <section className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-            {t("landingTestimonialsHeading")}{" "}
-            <span className="text-emerald-500">
-              {t("landingTestimonialsHeadingAccent")}
-            </span>
-          </h2>
-          <p className="text-lg text-slate-500 max-w-xl mx-auto">
-            {t("landingTestimonialsSubtitle")}
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {testimonials.map((tm) => (
-            <div
-              key={tm.name}
-              className="rounded-2xl border border-slate-200 bg-white p-8 hover:border-emerald-200 transition-colors"
-            >
-              <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-slate-600 leading-relaxed mb-6 text-sm">&ldquo;{tm.quote}&rdquo;</p>
-              <div>
-                <div className="text-sm font-semibold text-slate-900">{tm.name}</div>
-                <div className="text-xs text-slate-400">{tm.role}</div>
-                {tm.detail && (
-                  <div className="text-[10px] text-emerald-600/80 mt-1">{tm.detail}</div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+    <div className="py-12 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLDivElement>}>
+      <p className="text-center text-2xl sm:text-3xl font-bold text-slate-900">
+        <span className="text-emerald-500">{userCount}+</span>{" "}
+        <span className="text-slate-400 font-medium text-lg sm:text-xl">{t("landingProofUserCountSuffix")}</span>
+      </p>
+    </div>
   );
 }
 
@@ -2478,7 +2459,7 @@ export default function LandingPage() {
       <ThemesShowcase />
       <ValuePropsSection />
       <WhySection />
-      <TestimonialsSection />
+      <SocialProofSection />
       <TrustSection />
       <GettingStartedSection />
       <MidFunnelCTA />

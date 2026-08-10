@@ -24,6 +24,7 @@ const STATE_COOKIE = "trefolio_oidc_state";
 const VERIFIER_COOKIE = "trefolio_oidc_verifier";
 const NONCE_COOKIE = "trefolio_oidc_nonce";
 const REDIRECT_COOKIE = "trefolio_oidc_redirect";
+const OIDC_REFERRAL_COOKIE = "trefolio_oidc_ref";
 const FLOW_COOKIE_TTL = 60 * 10;
 
 function getCallbackUrl(req: NextRequest): string {
@@ -50,6 +51,8 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const redirectTarget = safeRedirect(url.searchParams.get("redirect"));
   const loginHint = url.searchParams.get("email") || undefined;
+  const rawRef = url.searchParams.get("ref") || "";
+  const refCode = rawRef.trim().length > 0 && rawRef.trim().length <= 16 ? rawRef.trim() : "";
 
   const state = randomBytes(16).toString("hex");
   const nonce = randomBytes(16).toString("hex");
@@ -98,5 +101,8 @@ export async function GET(req: NextRequest) {
   response.cookies.set({ ...cookieBase, name: VERIFIER_COOKIE, value: verifier });
   response.cookies.set({ ...cookieBase, name: NONCE_COOKIE, value: nonce });
   response.cookies.set({ ...cookieBase, name: REDIRECT_COOKIE, value: redirectTarget });
+  if (refCode) {
+    response.cookies.set({ ...cookieBase, name: OIDC_REFERRAL_COOKIE, value: refCode });
+  }
   return response;
 }

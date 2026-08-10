@@ -14,6 +14,8 @@
     { "path": "/api/cron/portfolio-snapshots", "schedule": "*/5 * * * *" },
     { "path": "/api/cron/trial-invitations", "schedule": "0 10 * * *" },
     { "path": "/api/cron/trial-expiration", "schedule": "0 * * * *" },
+    { "path": "/api/cron/lifecycle-activation", "schedule": "30 10 * * *" },
+    { "path": "/api/cron/lifecycle-winback", "schedule": "0 11 * * *" },
     { "path": "/api/cron/commerce-complimentary-renewal", "schedule": "0 2 * * *" },
     { "path": "/api/cron/weekly-digest", "schedule": "0 8 * * 1" },
     { "path": "/api/cron/portfolio-recommendations", "schedule": "0 7 * * 1" },
@@ -24,6 +26,6 @@
     { "path": "/api/cron/aid-digest", "schedule": "0 */6 * * *" },
     { "path": "/api/cron/aid-finpulse", "schedule": "*/30 * * * *" },
     { "path": "/api/cron/coverage-reconcile", "schedule": "15 2 * * *" },
-    { "path": "/api/cron/screening-recover", "schedule": "*/5 * * * *" }
+    { "path": "/api/cron/screening-recover", "schedule": "*/2 * * * *" }
   ]
 }

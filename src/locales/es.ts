@@ -838,6 +838,9 @@ const es: TranslationStrings = {
   etfSectorLookthroughLabel: "Usar desglose sectorial del ETF",
   etfSectorLookthroughHint:
     "Distribuye cada ETF entre sectores según datos del proveedor (puede desactualizarse). Desactiva para una etiqueta de sector por posición.",
+  etfAssetClassLookthroughLabel: "Usar desglose por clase de activo del ETF",
+  etfAssetClassLookthroughHint:
+    "Distribuye cada ETF entre renta variable/bonos/efectivo según datos del proveedor (puede desactualizarse; no hay desglose por región disponible con el proveedor de datos actual). Desactiva para una etiqueta por posición.",
   editClassification: "Editar Clasificación",
   rebalancing: "Rebalanceo",
   targetAllocation: "Asignación Objetivo",
@@ -1689,21 +1692,7 @@ const es: TranslationStrings = {
   landingCardNetWorthTitle: "Seguimiento del patrimonio neto",
   landingCardNetWorthDesc: "Registra inmuebles, ahorros y planes de pensiones junto a tus inversiones para una visión completa",
 
-  landingTestimonialsHeading: "Lo que los inversores",
-  landingTestimonialsHeadingAccent: "valoran de nosotros",
-  landingTestimonialsSubtitle: "Únete a inversores en toda Europa que siguen sus carteras con trefolio.",
-  landingTestimonial1Quote: "Por fin un rastreador de cartera que no cuesta una fortuna. La importación del broker funcionó perfectamente — todas mis transacciones aparecieron en segundos.",
-  landingTestimonial1Name: "Marc R.",
-  landingTestimonial1Role: "Inversor minorista, Países Bajos",
-  landingTestimonial1Detail: "Usuario Trefolio · 6 meses",
-  landingTestimonial2Quote: "El análisis con IA me da insights rápidos sin tener que revisar informes financieros. Vale cada céntimo del plan Trefolio.",
-  landingTestimonial2Name: "Laura S.",
-  landingTestimonial2Role: "Inversora a largo plazo, España",
-  landingTestimonial2Detail: "Usuaria Trefolio · 1 año",
-  landingTestimonial3Quote: "Interfaz limpia, importaciones rápidas y muestra mis retornos reales. Cambié de hojas de cálculo y no volví.",
-  landingTestimonial3Name: "Thomas K.",
-  landingTestimonial3Role: "Inversor en ETFs, Alemania",
-  landingTestimonial3Detail: "Usuario Folio · 3 meses",
+  landingProofUserCountSuffix: "inversores ya siguen sus carteras con trefolio",
 
   landingWhyHeading: "¿Por qué elegir",
   landingWhyHeadingAccent: "trefolio?",

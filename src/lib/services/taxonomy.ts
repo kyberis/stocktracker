@@ -1,4 +1,4 @@
-import type { ExchangeRates, Holding, QuoteData, TaxonomyAllocation, ETFSectorWeight } from "@/lib/types";
+import type { ExchangeRates, Holding, QuoteData, TaxonomyAllocation, ETFSectorWeight, ETFAssetClassWeight } from "@/lib/types";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
 import { normalizeAssetClassLabel, normalizeRegionLabel, normalizeSectorLabel, classificationKey } from "@/lib/classification-normalize";
 import { holdingIsEtfLike } from "./etf-lookthrough";
@@ -113,21 +113,78 @@ export function computeTaxonomyAllocations(
     }));
 }
 
+function addSimpleBucket(buckets: Map<string, number>, label: string, deltaEUR: number): void {
+  buckets.set(label, (buckets.get(label) ?? 0) + deltaEUR);
+}
+
+function computeAssetClassLookthrough(
+  holdings: Holding[],
+  quotes: Record<string, QuoteData>,
+  exchangeRates: ExchangeRates,
+  unclassifiedLabel: string,
+  etfAssetClassWeights: Record<string, ETFAssetClassWeight[] | null | undefined>,
+): TaxonomyAllocation[] {
+  const buckets = new Map<string, number>();
+  let total = 0;
+
+  for (const h of holdings) {
+    const valueEUR = holdingValueEur(h, quotes, exchangeRates);
+    total += valueEUR;
+    const q = quotes[h.ticker];
+    const weights = etfAssetClassWeights[h.ticker.toUpperCase()];
+    const useLookthrough = holdingIsEtfLike(h, q) && weights && weights.length > 0;
+
+    if (useLookthrough && weights) {
+      let sumW = 0;
+      for (const { assetClass, weight } of weights) {
+        if (!assetClass || weight <= 0) continue;
+        sumW += weight;
+        addSimpleBucket(buckets, normalizeAssetClassLabel(assetClass), valueEUR * (weight / 100));
+      }
+      if (sumW < 99.5 && sumW > 0) {
+        addSimpleBucket(buckets, unclassifiedLabel, valueEUR * ((100 - sumW) / 100));
+      }
+      continue;
+    }
+
+    const label = normalizeAssetClassLabel((h.assetClass as string) || unclassifiedLabel) || unclassifiedLabel;
+    addSimpleBucket(buckets, label, valueEUR);
+  }
+
+  return [...buckets.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([label, valueEUR], i) => ({
+      label,
+      valueEUR,
+      percent: total > 0 ? (valueEUR / total) * 100 : 0,
+      color: PIE_COLORS[i % PIE_COLORS.length],
+    }));
+}
+
 /**
- * Sector view only: splits ETF position value across Yahoo fund sector weights when enabled.
- * Falls back to {@link computeTaxonomyAllocations} for non-sector categories or when disabled.
+ * Splits ETF position value across Yahoo fund weights when enabled — sector
+ * weightings for the "sector" category, stock/bond/cash position weightings
+ * for "assetClass". No region weightings are available from the current
+ * data provider (Yahoo's topHoldings/fundProfile modules don't expose
+ * fund-level country/region breakdowns), so "region" always falls back to
+ * {@link computeTaxonomyAllocations}, same as "assetType".
  */
-export function computeTaxonomyAllocationsWithEtfSectorLookthrough(
+export function computeTaxonomyAllocationsWithEtfLookthrough(
   holdings: Holding[],
   quotes: Record<string, QuoteData>,
   exchangeRates: ExchangeRates,
   category: TaxonomyCategory,
   unclassifiedLabel: string,
   etfSectorWeights: Record<string, ETFSectorWeight[] | null | undefined>,
+  etfAssetClassWeights: Record<string, ETFAssetClassWeight[] | null | undefined>,
   etfLookthroughEnabled: boolean,
 ): TaxonomyAllocation[] {
-  if (category !== "sector" || !etfLookthroughEnabled) {
+  if (!etfLookthroughEnabled || (category !== "sector" && category !== "assetClass")) {
     return computeTaxonomyAllocations(holdings, quotes, exchangeRates, category, unclassifiedLabel);
+  }
+
+  if (category === "assetClass") {
+    return computeAssetClassLookthrough(holdings, quotes, exchangeRates, unclassifiedLabel, etfAssetClassWeights);
   }
 
   const buckets = new Map<string, { valueEUR: number; displayLabel: string }>();

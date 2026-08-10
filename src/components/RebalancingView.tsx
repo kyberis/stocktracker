@@ -15,7 +15,7 @@ import type {
   RebalanceMove,
   ETFSectorWeight,
 } from "@/lib/types";
-import { computeTaxonomyAllocationsWithEtfSectorLookthrough } from "@/lib/services/taxonomy";
+import { computeTaxonomyAllocationsWithEtfLookthrough } from "@/lib/services/taxonomy";
 import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
 import {
   normalizeAssetClassLabel,
@@ -139,13 +139,14 @@ export default function RebalancingView() {
 
   const allocations = useMemo((): BucketAlloc[] => {
     if (category === "sector" && etfSectorLookthrough) {
-      const tax = computeTaxonomyAllocationsWithEtfSectorLookthrough(
+      const tax = computeTaxonomyAllocationsWithEtfLookthrough(
         holdings,
         quotes,
         exchangeRates,
         "sector",
         t("unclassified"),
         etfSectorWeights,
+        {},
         true,
       );
       return tax.map((a) => ({

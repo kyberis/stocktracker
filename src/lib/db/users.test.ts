@@ -1037,4 +1037,19 @@ describe("users", () => {
       expect(result).toBe("");
     });
   });
+
+  describe("countVerifiedUsers", () => {
+    it("returns the verified-user count", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ c: 230 }] });
+      const result = await users.countVerifiedUsers();
+      expect(mockExecute).toHaveBeenCalledWith("SELECT COUNT(*) as c FROM users WHERE email_verified = 1");
+      expect(result).toBe(230);
+    });
+
+    it("returns 0 when the query yields no rows", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+      const result = await users.countVerifiedUsers();
+      expect(result).toBe(0);
+    });
+  });
 });

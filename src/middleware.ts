@@ -22,6 +22,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/billing/webhook",
   "/api/billing/portal",
   "/api/analytics/landing",
+  "/api/landing/stats",
   // Public market ticker (landing + demo); cached server-side, no user data
   "/api/ticker-bar",
   "/api/contact",
@@ -38,6 +39,8 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/cron/x-post",
   "/api/cron/trial-invitations",
   "/api/cron/trial-expiration",
+  "/api/cron/lifecycle-activation",
+  "/api/cron/lifecycle-winback",
   "/api/cron/weekly-digest",
   "/api/cron/digest-email",
   "/api/cron/moat-sync",

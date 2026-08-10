@@ -144,8 +144,11 @@ export async function dismissSurvey(userId: string): Promise<void> {
   });
 }
 
-const FIRST_THRESHOLD = 8;
-const REPEAT_THRESHOLD = 15;
+// Lowered from 8/15 — at real usage volume almost no one accumulated enough
+// qualifying interactions to ever get asked (1 survey response in 5 months
+// across 230 users).
+const FIRST_THRESHOLD = 4;
+const REPEAT_THRESHOLD = 10;
 const MAX_DISMISSALS = 3;
 const MIN_ACCOUNT_AGE_DAYS = 3;
 

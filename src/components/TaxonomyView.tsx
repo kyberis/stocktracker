@@ -4,10 +4,10 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { formatCurrency } from "@/lib/utils";
-import type { TaxonomyAllocation, ETFSectorWeight } from "@/lib/types";
+import type { TaxonomyAllocation, ETFSectorWeight, ETFAssetClassWeight } from "@/lib/types";
 import {
   computeTaxonomyAllocations,
-  computeTaxonomyAllocationsWithEtfSectorLookthrough,
+  computeTaxonomyAllocationsWithEtfLookthrough,
 } from "@/lib/services/taxonomy";
 import { computeTagAllocations } from "@/lib/services/tag-allocation";
 import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
@@ -37,6 +37,8 @@ export default function TaxonomyView() {
   const [aiFixError, setAiFixError] = useState<string | null>(null);
   const [etfSectorLookthrough, setEtfSectorLookthrough] = useState(true);
   const [etfSectorWeights, setEtfSectorWeights] = useState<Record<string, ETFSectorWeight[] | null>>({});
+  const [etfAssetClassLookthrough, setEtfAssetClassLookthrough] = useState(true);
+  const [etfAssetClassWeights, setEtfAssetClassWeights] = useState<Record<string, ETFAssetClassWeight[] | null>>({});
   const unifyAttemptedRef = useRef(false);
 
   useEffect(() => {
@@ -74,6 +76,41 @@ export default function TaxonomyView() {
     };
   }, [holdings, quotes, category, etfSectorLookthrough]);
 
+  useEffect(() => {
+    if (category !== "assetClass" || !etfAssetClassLookthrough) return;
+    const tickers = [
+      ...new Set(
+        holdings
+          .filter((h) => holdingIsEtfLike(h, quotes[h.ticker]))
+          .map((h) => h.ticker.toUpperCase()),
+      ),
+    ];
+    let cancelled = false;
+    if (tickers.length === 0) {
+      queueMicrotask(() => {
+        if (!cancelled) setEtfAssetClassWeights({});
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+    fetch("/api/etf/asset-class-weights", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tickers }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data: { byTicker?: Record<string, ETFAssetClassWeight[] | null> }) => {
+        if (!cancelled && data?.byTicker) setEtfAssetClassWeights(data.byTicker);
+      })
+      .catch(() => {
+        if (!cancelled) setEtfAssetClassWeights({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [holdings, quotes, category, etfAssetClassLookthrough]);
+
   const allocations = useMemo((): TaxonomyAllocation[] => {
     const unclassified = t("unclassified");
     if (category === "tags") {
@@ -89,19 +126,35 @@ export default function TaxonomyView() {
         },
       });
     }
-    if (category === "sector" && etfSectorLookthrough) {
-      return computeTaxonomyAllocationsWithEtfSectorLookthrough(
+    if (
+      (category === "sector" && etfSectorLookthrough) ||
+      (category === "assetClass" && etfAssetClassLookthrough)
+    ) {
+      return computeTaxonomyAllocationsWithEtfLookthrough(
         holdings,
         quotes,
         exchangeRates,
         category,
         unclassified,
         etfSectorWeights,
+        etfAssetClassWeights,
         true,
       );
     }
     return computeTaxonomyAllocations(holdings, quotes, exchangeRates, category, unclassified);
-  }, [holdings, cashEntries, quotes, exchangeRates, category, t, etfSectorWeights, etfSectorLookthrough, baseCurrency]);
+  }, [
+    holdings,
+    cashEntries,
+    quotes,
+    exchangeRates,
+    category,
+    t,
+    etfSectorWeights,
+    etfSectorLookthrough,
+    etfAssetClassWeights,
+    etfAssetClassLookthrough,
+    baseCurrency,
+  ]);
 
   const handleSaveClassification = async (holdingId: string) => {
     if (category === "tags") return;
@@ -267,6 +320,20 @@ export default function TaxonomyView() {
               <span>
                 <span className="font-medium text-gray-800 dark:text-slate-200">{t("etfSectorLookthroughLabel")}</span>
                 <span className="block text-gray-500 dark:text-slate-500 mt-0.5">{t("etfSectorLookthroughHint")}</span>
+              </span>
+            </label>
+          )}
+          {category === "assetClass" && (
+            <label className="flex items-center gap-2 text-[10px] text-gray-600 dark:text-slate-400 cursor-pointer max-w-xs text-right">
+              <input
+                type="checkbox"
+                checked={etfAssetClassLookthrough}
+                onChange={(e) => setEtfAssetClassLookthrough(e.target.checked)}
+                className="rounded border-gray-300 dark:border-slate-600"
+              />
+              <span>
+                <span className="font-medium text-gray-800 dark:text-slate-200">{t("etfAssetClassLookthroughLabel")}</span>
+                <span className="block text-gray-500 dark:text-slate-500 mt-0.5">{t("etfAssetClassLookthroughHint")}</span>
               </span>
             </label>
           )}

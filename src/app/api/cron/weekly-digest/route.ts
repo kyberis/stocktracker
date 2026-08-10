@@ -4,6 +4,7 @@ import {
   getDigestBaselineSnapshot,
   hasDigestForWeek,
   insertDigest,
+  isFeatureEnabled,
   isFeatureEnabledForUser,
   listHoldings,
   listCashEntries,
@@ -60,7 +61,10 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
   }
 
   const { weekStart, weekEnd } = getWeekRange();
-  const users = await getDigestEligibleUsers();
+  // Off by default — the habit-loop extension to free-plan users is gated
+  // separately from weekly_digest_enabled so it can stay dark until enabled.
+  const includeFree = await isFeatureEnabled("weekly_digest_free_tier_enabled");
+  const users = await getDigestEligibleUsers({ includeFree });
 
   let skipped = 0;
 

@@ -962,3 +962,10 @@ export async function getLastActive(userId: string): Promise<string> {
   if (result.rows.length === 0) return "";
   return str(result.rows[0].last_active_at);
 }
+
+/** Live count of verified accounts, for real (non-fabricated) landing-page social proof. */
+export async function countVerifiedUsers(): Promise<number> {
+  const client = await ensureInitialized();
+  const result = await client.execute("SELECT COUNT(*) as c FROM users WHERE email_verified = 1");
+  return Number(result.rows[0]?.c) || 0;
+}

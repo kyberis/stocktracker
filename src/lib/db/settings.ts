@@ -45,6 +45,9 @@ export type PlatformFeature =
   | "market_data_alpha_vantage"
   | "mcp_fmp_proxy"
   | "weekly_digest_enabled"
+  | "weekly_digest_free_tier_enabled"
+  | "lifecycle_activation_email_enabled"
+  | "lifecycle_winback_email_enabled"
   | "daily_digests_enabled"
   | "telegram_bot_enabled"
   | "aid_beta"
@@ -78,7 +81,8 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_bot_enabled",
   // Default authenticated home (morning brief / day-highlights APIs). Classic is opt-in via classic_home.
   "home_v2",
-  // Estebaranz evaluate step after shortlist research (requires pipeline real + screening flags).
+  // trefolio evaluate step after shortlist research (requires pipeline real + screening flags).
+  // Flag key kept as screening_estebaranz_eval_enabled for stored settings compatibility.
   "screening_estebaranz_eval_enabled",
 ]);
 
@@ -469,6 +473,9 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "market_data_alpha_vantage",
   "mcp_fmp_proxy",
   "weekly_digest_enabled",
+  "weekly_digest_free_tier_enabled",
+  "lifecycle_activation_email_enabled",
+  "lifecycle_winback_email_enabled",
   "daily_digests_enabled",
   "telegram_bot_enabled",
   "aid_beta",

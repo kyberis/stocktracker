@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
-  computeTaxonomyAllocationsWithEtfSectorLookthrough,
+  computeTaxonomyAllocationsWithEtfLookthrough,
   sectorAggregationKey,
 } from "./taxonomy";
-import type { Holding, QuoteData, ExchangeRates } from "@/lib/types";
+import type { Holding, QuoteData, ExchangeRates, TaxonomyAllocation } from "@/lib/types";
 
 const eurRates: ExchangeRates = { EURUSD: 1.1 };
 
@@ -34,7 +34,7 @@ const quote = (price: number): QuoteData => ({
   fiftyTwoWeekLow: price,
 });
 
-describe("computeTaxonomyAllocationsWithEtfSectorLookthrough", () => {
+describe("computeTaxonomyAllocationsWithEtfLookthrough — sector", () => {
   it("splits ETF value by sector weights", () => {
     const holdings = [
       stockHolding({
@@ -52,17 +52,18 @@ describe("computeTaxonomyAllocationsWithEtfSectorLookthrough", () => {
         { sector: "Healthcare", weight: 40 },
       ],
     };
-    const out = computeTaxonomyAllocationsWithEtfSectorLookthrough(
+    const out = computeTaxonomyAllocationsWithEtfLookthrough(
       holdings,
       quotes,
       eurRates,
       "sector",
       "Unclassified",
       weights,
+      {},
       true,
     );
-    const tech = out.find((x) => x.label === "Technology");
-    const hc = out.find((x) => x.label === "Healthcare");
+    const tech = out.find((x: TaxonomyAllocation) => x.label === "Technology");
+    const hc = out.find((x: TaxonomyAllocation) => x.label === "Healthcare");
     expect(tech?.valueEUR).toBeCloseTo(60, 5);
     expect(hc?.valueEUR).toBeCloseTo(40, 5);
   });
@@ -70,13 +71,14 @@ describe("computeTaxonomyAllocationsWithEtfSectorLookthrough", () => {
   it("falls back to holding sector when no weights", () => {
     const holdings = [stockHolding({ id: "a", ticker: "X", assetType: "etf", sector: "Funds" })];
     const quotes: Record<string, QuoteData> = { X: quote(50) };
-    const out = computeTaxonomyAllocationsWithEtfSectorLookthrough(
+    const out = computeTaxonomyAllocationsWithEtfLookthrough(
       holdings,
       quotes,
       eurRates,
       "sector",
       "Unclassified",
       { X: null },
+      {},
       true,
     );
     expect(out).toHaveLength(1);
@@ -109,16 +111,17 @@ describe("computeTaxonomyAllocationsWithEtfSectorLookthrough", () => {
     const weights = {
       ETF1: [{ sector: "realestate", weight: 100 }],
     };
-    const out = computeTaxonomyAllocationsWithEtfSectorLookthrough(
+    const out = computeTaxonomyAllocationsWithEtfLookthrough(
       holdings,
       quotes,
       eurRates,
       "sector",
       "Unclassified",
       weights,
+      {},
       true,
     );
-    const realEstate = out.filter((x) => sectorAggregationKey(x.label) === "realestate");
+    const realEstate = out.filter((x: TaxonomyAllocation) => sectorAggregationKey(x.label) === "realestate");
     expect(realEstate).toHaveLength(1);
     expect(realEstate[0].label).toBe("Real Estate");
     expect(realEstate[0].valueEUR).toBeCloseTo(200, 5);
@@ -130,18 +133,138 @@ describe("computeTaxonomyAllocationsWithEtfSectorLookthrough", () => {
       stockHolding({ id: "b", ticker: "B", sector: "Technology", shares: 1 }),
     ];
     const quotes: Record<string, QuoteData> = { A: quote(100), B: quote(50) };
-    const out = computeTaxonomyAllocationsWithEtfSectorLookthrough(
+    const out = computeTaxonomyAllocationsWithEtfLookthrough(
       holdings,
       quotes,
       eurRates,
       "sector",
       "Unclassified",
       {},
+      {},
       true,
     );
-    const tech = out.filter((x) => sectorAggregationKey(x.label) === "technology");
+    const tech = out.filter((x: TaxonomyAllocation) => sectorAggregationKey(x.label) === "technology");
     expect(tech).toHaveLength(1);
     expect(tech[0].label).toBe("Technology");
     expect(tech[0].valueEUR).toBeCloseTo(150, 5);
+  });
+});
+
+describe("computeTaxonomyAllocationsWithEtfLookthrough — assetClass", () => {
+  it("splits ETF value by stock/bond/cash position weights", () => {
+    const holdings = [
+      stockHolding({
+        id: "a",
+        ticker: "AGGH",
+        assetType: "etf",
+        assetClass: "Fund",
+        shares: 1,
+      }),
+    ];
+    const quotes: Record<string, QuoteData> = { AGGH: quote(100) };
+    const weights = {
+      AGGH: [
+        { assetClass: "Equity", weight: 70 },
+        { assetClass: "Bond", weight: 25 },
+        { assetClass: "Cash", weight: 5 },
+      ],
+    };
+    const out = computeTaxonomyAllocationsWithEtfLookthrough(
+      holdings,
+      quotes,
+      eurRates,
+      "assetClass",
+      "Unclassified",
+      {},
+      weights,
+      true,
+    );
+    const equity = out.find((x: TaxonomyAllocation) => x.label === "Equity");
+    const bond = out.find((x: TaxonomyAllocation) => x.label === "Bond");
+    const cash = out.find((x: TaxonomyAllocation) => x.label === "Cash");
+    expect(equity?.valueEUR).toBeCloseTo(70, 5);
+    expect(bond?.valueEUR).toBeCloseTo(25, 5);
+    expect(cash?.valueEUR).toBeCloseTo(5, 5);
+  });
+
+  it("buckets leftover preferred/convertible/other weight as Unclassified when it doesn't sum to 100", () => {
+    const holdings = [
+      stockHolding({ id: "a", ticker: "MIX", assetType: "etf", shares: 1 }),
+    ];
+    const quotes: Record<string, QuoteData> = { MIX: quote(100) };
+    const weights = {
+      MIX: [
+        { assetClass: "Equity", weight: 90 },
+      ],
+    };
+    const out = computeTaxonomyAllocationsWithEtfLookthrough(
+      holdings,
+      quotes,
+      eurRates,
+      "assetClass",
+      "Unclassified",
+      {},
+      weights,
+      true,
+    );
+    const unclassified = out.find((x: TaxonomyAllocation) => x.label === "Unclassified");
+    expect(unclassified?.valueEUR).toBeCloseTo(10, 5);
+  });
+
+  it("falls back to the holding's own assetClass field when no ETF weights are available", () => {
+    const holdings = [stockHolding({ id: "a", ticker: "X", assetType: "etf", assetClass: "Bond" })];
+    const quotes: Record<string, QuoteData> = { X: quote(50) };
+    const out = computeTaxonomyAllocationsWithEtfLookthrough(
+      holdings,
+      quotes,
+      eurRates,
+      "assetClass",
+      "Unclassified",
+      {},
+      { X: null },
+      true,
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0].label).toBe("Bond");
+    expect(out[0].valueEUR).toBe(500);
+  });
+
+  it("does not apply asset-class look-through to non-ETF holdings even when weights exist for the ticker", () => {
+    const holdings = [stockHolding({ id: "a", ticker: "AAPL", assetType: "stock", assetClass: "Equity" })];
+    const quotes: Record<string, QuoteData> = { AAPL: quote(10) };
+    const weights = { AAPL: [{ assetClass: "Bond", weight: 100 }] };
+    const out = computeTaxonomyAllocationsWithEtfLookthrough(
+      holdings,
+      quotes,
+      eurRates,
+      "assetClass",
+      "Unclassified",
+      {},
+      weights,
+      true,
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0].label).toBe("Equity");
+  });
+});
+
+describe("computeTaxonomyAllocationsWithEtfLookthrough — region (not supported by the data provider)", () => {
+  it("falls back to plain per-holding allocation for region regardless of lookthrough flag", () => {
+    const holdings = [
+      stockHolding({ id: "a", ticker: "VWCE", assetType: "etf", region: "Global", shares: 1 }),
+    ];
+    const quotes: Record<string, QuoteData> = { VWCE: quote(100) };
+    const out = computeTaxonomyAllocationsWithEtfLookthrough(
+      holdings,
+      quotes,
+      eurRates,
+      "region",
+      "Unclassified",
+      {},
+      {},
+      true,
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0].label).toBe("Global");
   });
 });

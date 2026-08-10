@@ -3,7 +3,10 @@ import {
   ensureDefaultPortfolio,
   findUserByEmail,
   findUserById,
+  findUserByReferralCode,
   createUser,
+  createReferral,
+  acceptReferral,
   trackEvent,
   updateUserProfile,
   type DbUser,
@@ -64,6 +67,7 @@ const STATE_COOKIE = "trefolio_oidc_state";
 const VERIFIER_COOKIE = "trefolio_oidc_verifier";
 const NONCE_COOKIE = "trefolio_oidc_nonce";
 const REDIRECT_COOKIE = "trefolio_oidc_redirect";
+const OIDC_REFERRAL_COOKIE = "trefolio_oidc_ref";
 
 function getCallbackUrl(req: NextRequest): string {
   const base = getRequestPublicOrigin(req);
@@ -72,7 +76,7 @@ function getCallbackUrl(req: NextRequest): string {
 
 function clearFlowCookies(req: NextRequest, res: NextResponse): void {
   const secure = process.env.NODE_ENV === "production" || isRequestPublicHttps(req);
-  for (const name of [STATE_COOKIE, VERIFIER_COOKIE, NONCE_COOKIE, REDIRECT_COOKIE]) {
+  for (const name of [STATE_COOKIE, VERIFIER_COOKIE, NONCE_COOKIE, REDIRECT_COOKIE, OIDC_REFERRAL_COOKIE]) {
     res.cookies.set({
       name,
       value: "",
@@ -243,6 +247,31 @@ export async function GET(req: NextRequest) {
     await ensureDefaultPortfolio(publicUser.id);
     await linkLocalUserToIdpSub({ localUserId: publicUser.id, idpSub: claims.sub });
     await grantCommerceComplimentaryPro(publicUser.id);
+
+    // Referral capture: the code survives the redirect to the IdP as a
+    // short-lived cookie set by /api/auth/oidc/signup-start (query params
+    // don't round-trip through the IdP's own authorize/callback hop).
+    // The IdP has already verified this email as part of its own signup
+    // flow, so accept immediately rather than waiting on a local
+    // verify-email click that will never happen for OIDC users — the
+    // legacy local-password path still relies on that click via
+    // /api/auth/verify-email.
+    const refCode = req.cookies.get(OIDC_REFERRAL_COOKIE)?.value || "";
+    if (refCode) {
+      const referrer = await findUserByReferralCode(refCode);
+      if (referrer && referrer.id !== publicUser.id) {
+        try {
+          await createReferral(referrer.id, publicUser.id);
+          trackEvent(publicUser.id, "referral_signup", { referrerId: referrer.id, method: "oidc" });
+          if (claims.email_verified) {
+            await acceptReferral(publicUser.id);
+          }
+        } catch (err) {
+          console.error("[oidc] referral capture failed", err);
+        }
+      }
+    }
+
     dbUser = (await findLocalUserByIdpSub(claims.sub)) as DbUser;
     if (!dbUser) {
       authProbeWarn(

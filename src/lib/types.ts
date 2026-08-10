@@ -454,9 +454,15 @@ export interface ETFSectorWeight {
   weight: number;
 }
 
+export interface ETFAssetClassWeight {
+  assetClass: string;
+  weight: number;
+}
+
 export interface ETFHoldingsData {
   holdings: ETFHoldingEntry[];
   sectorWeightings: ETFSectorWeight[];
+  assetClassWeightings: ETFAssetClassWeight[];
   category: string;
   fundFamily: string;
   legalType: string;

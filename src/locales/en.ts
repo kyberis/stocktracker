@@ -837,6 +837,9 @@ const en: TranslationStrings = {
   etfSectorLookthroughLabel: "Use ETF sector breakdown",
   etfSectorLookthroughHint:
     "Splits each ETF across underlying sectors from provider data (may lag fund facts). Turn off to use one sector label per position.",
+  etfAssetClassLookthroughLabel: "Use ETF asset-class breakdown",
+  etfAssetClassLookthroughHint:
+    "Splits each ETF into equity/bond/cash from provider data (may lag fund facts; no region breakdown is available from the current data provider). Turn off to use one asset-class label per position.",
   editClassification: "Edit Classification",
   rebalancing: "Rebalancing",
   targetAllocation: "Target Allocation",
@@ -1687,21 +1690,7 @@ const en: TranslationStrings = {
   landingCardNetWorthTitle: "Net Worth Tracking",
   landingCardNetWorthDesc: "Track real estate, savings, and pension assets alongside your investments for a complete picture",
 
-  landingTestimonialsHeading: "What Investors",
-  landingTestimonialsHeadingAccent: "Love About Us",
-  landingTestimonialsSubtitle: "Join investors across Europe who track their portfolios with trefolio.",
-  landingTestimonial1Quote: "Finally a portfolio tracker that doesn't cost a fortune. The broker import worked perfectly — all my transactions appeared in seconds.",
-  landingTestimonial1Name: "Marc R.",
-  landingTestimonial1Role: "Retail Investor, Netherlands",
-  landingTestimonial1Detail: "Trefolio user · 6 months",
-  landingTestimonial2Quote: "The AI analysis gives me quick insights without having to dig through financial reports. Worth every cent of the Trefolio plan.",
-  landingTestimonial2Name: "Laura S.",
-  landingTestimonial2Role: "Long-term Investor, Spain",
-  landingTestimonial2Detail: "Trefolio user · 1 year",
-  landingTestimonial3Quote: "Clean interface, fast imports, and it actually shows my real returns. Switched from spreadsheets and never looked back.",
-  landingTestimonial3Name: "Thomas K.",
-  landingTestimonial3Role: "ETF Investor, Germany",
-  landingTestimonial3Detail: "Folio user · 3 months",
+  landingProofUserCountSuffix: "investors already tracking their portfolios with trefolio",
 
   landingWhyHeading: "Why Choose",
   landingWhyHeadingAccent: "trefolio?",

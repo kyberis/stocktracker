@@ -62,6 +62,7 @@ const WarrenTrigger = dynamic(() => import("@/components/warren/WarrenTrigger"),
 const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
 const StatsGrid = dynamic(() => import("@/components/dashboard-v2/StatsGrid"), { ssr: false });
 const PortfolioNewsFeed = dynamic(() => import("@/components/PortfolioNewsFeed"), { ssr: false });
+const FeedbackModal = dynamic(() => import("@/components/FeedbackModal"), { ssr: false });
 
 export default function HomeV2Dashboard() {
   const { flags, isLoaded } = useFeatureFlagContext();
@@ -76,6 +77,7 @@ export default function HomeV2Dashboard() {
   const [aiOpen, setAiOpen] = useState(false);
   const [warrenPrompt, setWarrenPrompt] = useState<string | undefined>();
   const [heroMode, setHeroMode] = useState<HeroMode>("simple");
+  const [showFeedback, setShowFeedback] = useState(false);
   const pageViewSent = useRef(false);
   const visitMarked = useRef(false);
   const returnTracked = useRef(false);
@@ -313,6 +315,24 @@ export default function HomeV2Dashboard() {
         triggerPrompt={warrenPrompt}
         onTriggerPromptConsumed={() => setWarrenPrompt(undefined)}
       />
+
+      {showFeedback && (
+        <FeedbackModal isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
+      )}
+
+      <div className="fixed bottom-20 sm:bottom-6 right-6 z-30 flex flex-col gap-2 items-end">
+        <button
+          type="button"
+          onClick={() => setShowFeedback(true)}
+          className="glass-overlay flex min-h-11 items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/[0.16] px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-colors hover:bg-emerald-500/[0.24]"
+          title={t("feedback")}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+          <span className="hidden sm:inline">{t("feedback")}</span>
+        </button>
+      </div>
     </main>
   );
 }

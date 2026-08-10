@@ -647,9 +647,26 @@ export class YahooProvider implements StockDataProvider {
         }
       }
 
+      // Asset-class look-through: topHoldings already carries these position
+      // fields (fetched above, previously discarded). Same fraction
+      // convention as sectorWeightings/holdingPercent elsewhere in this
+      // module, so scaled the same way (*100).
+      const assetClassWeightings: ETFHoldingsData["assetClassWeightings"] = [];
+      const addPosition = (weight: number | undefined, assetClass: string) => {
+        if (typeof weight === "number" && weight > 0) {
+          assetClassWeightings.push({ assetClass, weight: weight * 100 });
+        }
+      };
+      addPosition(th?.stockPosition, "Equity");
+      addPosition(th?.bondPosition, "Bond");
+      addPosition(th?.cashPosition, "Cash");
+      const other = (th?.otherPosition ?? 0) + (th?.preferredPosition ?? 0) + (th?.convertiblePosition ?? 0);
+      if (other > 0) assetClassWeightings.push({ assetClass: "Other", weight: other * 100 });
+
       return {
         holdings,
         sectorWeightings: sectorWeightings.sort((a, b) => b.weight - a.weight),
+        assetClassWeightings: assetClassWeightings.sort((a, b) => b.weight - a.weight),
         category: String(fp?.categoryName ?? ""),
         fundFamily: String(fp?.family ?? ""),
         legalType: String(fp?.legalType ?? ""),

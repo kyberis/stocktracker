@@ -44,6 +44,21 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     description: "AI weekly digest card on the home dashboard and Monday digest emails (Pro). When off, the card is hidden and the cron does not generate or send digests.",
     group: "Features",
   },
+  weekly_digest_free_tier_enabled: {
+    label: "Weekly digest — free tier",
+    description: "Extends the weekly digest email to free-plan users (normally Pro-only). Off by default; the existing Pro digest is unaffected either way.",
+    group: "Features",
+  },
+  lifecycle_activation_email_enabled: {
+    label: "Lifecycle: activation email",
+    description: "Sends the welcome-no-stocks email to users with 0 holdings ~48h after signup. Off by default.",
+    group: "Features",
+  },
+  lifecycle_winback_email_enabled: {
+    label: "Lifecycle: win-back email",
+    description: "Sends a re-engagement email to users inactive for 14+ days. Off by default.",
+    group: "Features",
+  },
   daily_digests_enabled: {
     label: "Daily digests",
     description: "Market daily digests at /daily-digests, nav entry, and home teaser card. Off by default while unused.",
@@ -127,9 +142,9 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     group: "Features",
   },
   screening_estebaranz_eval_enabled: {
-    label: "Screening: Estebaranz framework evaluation",
+    label: "Screening: trefolio framework evaluation",
     description:
-      "After Compiler (and optional shortlist research), run compiler_evaluate to apply the Estebaranz (“Arte de Invertir”) checklist to each shortlisted company. Structured card sections + grounded “data not available” rules. Requires screening_pipeline_real_enabled. On by default.",
+      "After Compiler (and optional shortlist research), run compiler_evaluate to apply the trefolio value-investing checklist to each shortlisted company. Structured card sections + grounded “data not available” rules. Requires screening_pipeline_real_enabled. On by default.",
     group: "Features",
   },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
