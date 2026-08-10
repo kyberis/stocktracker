@@ -8,6 +8,7 @@ import {
   updateSnapTradeLastSynced,
   deleteSnapTradeConnection,
   listTransactionSourceRefs,
+  listTransactionTradeFingerprints,
   addCashEntry,
   removeCashEntriesBySourceAndBrokers,
   upsertHoldingsFromPositions,
@@ -15,6 +16,7 @@ import {
   trackEvent,
   getSnapTradeBrokerSyncs,
   upsertSnapTradeBrokerSync,
+  ensureSnapTradeBrokerSyncPlaceholder,
   deleteSnapTradeBrokerSync,
   setSnapTradeNeedsAttention,
   getSnapTradeNeedsAttention,
@@ -30,6 +32,7 @@ import {
   generateConnectionPortalUrl,
   fetchAllHoldings,
   fetchActivities,
+  mergeSnapTradeTransactions,
   listBrokerageConnections,
   listAccounts,
   listBrokerages,
@@ -294,9 +297,12 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       const activeAccounts = allActiveAccounts;
 
       const brokerSyncs = await getSnapTradeBrokerSyncs(session.userId);
+      // Only apply incremental startDate when we previously imported txs for
+      // this authorization (last_imported_at set). Do NOT use JOIN tx counts —
+      // after reconnect, old broker_name rows would incorrectly advance the cursor.
       const syncMap = new Map(
         brokerSyncs
-          .filter((s) => s.transactionCount > 0)
+          .filter((s) => !!s.lastImportedAt)
           .map((s) => [s.brokerageAuthorizationId, s.lastImportedAt]),
       );
 
@@ -350,6 +356,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       // Per-broker refresh: if a broker returned 0 activities across all its
       // accounts and has no sync record yet, trigger a one-time refresh so
       // SnapTrade starts pulling transaction history for that broker.
+      // Do NOT set last_imported_at — that would skip the activity lag window.
       const refreshedBrokerIds: string[] = [];
       const allSyncedIds = new Set(brokerSyncs.map((s) => s.brokerageAuthorizationId));
       const brokersWithActivities = new Set(allTransactions.map((tx) => tx.brokerName));
@@ -358,18 +365,27 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         const brokerInfo = fetchedBrokers.find((b) => b.id === bId);
         if (brokerInfo && brokersWithActivities.has(brokerInfo.name)) continue;
         await refreshBrokerageConnection(conn.snapTradeUserId, userSecret, bId);
-        await upsertSnapTradeBrokerSync(session.userId, bId, brokerInfo?.name || "Unknown");
+        await ensureSnapTradeBrokerSyncPlaceholder(session.userId, bId, brokerInfo?.name || "Unknown");
         refreshedBrokerIds.push(bId);
       }
 
       const existingRefs = await listTransactionSourceRefs(session.userId);
-      const deduped = allTransactions.filter(
-        (tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef),
-      );
+      const existingFingerprints = await listTransactionTradeFingerprints(session.userId);
 
       const allActiveAccountIds = new Set(allActiveAccounts.map((a) => a.id));
       const institutionMap = new Map(allActiveAccounts.map((a) => [a.id, a.institution]));
       const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, allActiveAccountIds, institutionMap);
+
+      // Fill activity lag / empty post-reconnect caches with EXECUTED orders.
+      const mergedTransactions = mergeSnapTradeTransactions(
+        allTransactions,
+        holdingsResult.orderTransactions,
+        { existingFingerprints },
+      );
+
+      const deduped = mergedTransactions.filter(
+        (tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef),
+      );
 
       // Record broker↔portfolio mapping for the current portfolio so
       // future auto-syncs and manual re-syncs update all linked portfolios.

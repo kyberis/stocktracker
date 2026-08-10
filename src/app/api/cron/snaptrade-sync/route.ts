@@ -9,6 +9,7 @@ import {
   setAllDisabledSince,
   clearAllDisabledSince,
   listTransactionSourceRefs,
+  listTransactionTradeFingerprints,
   addCashEntry,
   removeCashEntriesBySourceAndBrokers,
   upsertHoldingsFromPositions,
@@ -21,6 +22,7 @@ import {
   listAccounts,
   fetchActivities,
   fetchAllHoldings,
+  mergeSnapTradeTransactions,
   refreshBrokerageConnection,
 } from "@/lib/snaptrade-client";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
@@ -71,7 +73,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       const brokerSyncs = await getSnapTradeBrokerSyncs(conn.userId);
       const syncMap = new Map(
         brokerSyncs
-          .filter((s) => s.transactionCount > 0)
+          .filter((s) => !!s.lastImportedAt)
           .map((s) => [s.brokerageAuthorizationId, s.lastImportedAt]),
       );
 
@@ -98,7 +100,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       const seenBrokerIds = new Set<string>();
 
       // Collect all new transactions across all accounts
-      const allNewTx: Awaited<ReturnType<typeof fetchActivities>>["transactions"][] = [];
+      const activityTx: Awaited<ReturnType<typeof fetchActivities>>["transactions"] = [];
       for (const acct of activeAccounts) {
         const startDate = syncMap.get(acct.brokerageAuthorizationId) || undefined;
         const result = await fetchActivities({
@@ -116,21 +118,32 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
           fetchedBrokers.push({ id: acct.brokerageAuthorizationId, name: acct.institution });
         }
 
-        const existingRefs = await listTransactionSourceRefs(conn.userId);
-        const newTx = result.transactions.filter(
-          (tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef),
-        );
-        totalNewTx += newTx.length;
-
-        if (newTx.length > 0) {
-          allNewTx.push(newTx);
-        }
+        activityTx.push(...result.transactions);
       }
 
+      // Fetch current positions + cash + recent orders (fills activity lag)
+      const allActiveAccountIds = new Set(activeAccounts.map((a) => a.id));
+      const institutionMap = new Map(activeAccounts.map((a) => [a.id, a.institution]));
+      let holdingsResult: Awaited<ReturnType<typeof fetchAllHoldings>> | null = null;
+      try {
+        holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, allActiveAccountIds, institutionMap);
+      } catch (err) {
+        console.warn(`[snaptrade-sync] Holdings fetch failed for user ${conn.userId}:`, err instanceof Error ? err.message : err);
+      }
+
+      const existingRefs = await listTransactionSourceRefs(conn.userId);
+      const existingFingerprints = await listTransactionTradeFingerprints(conn.userId);
+      const merged = mergeSnapTradeTransactions(
+        activityTx,
+        holdingsResult?.orderTransactions ?? [],
+        { existingFingerprints },
+      );
+      const newTx = merged.filter((tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef));
+      totalNewTx += newTx.length;
+
       // Import transactions to the first portfolio, then map to additional ones
-      if (allNewTx.length > 0) {
-        const flatTx = allNewTx.flat();
-        const bulkPayload = flatTx.map((tx) => ({
+      if (newTx.length > 0) {
+        const bulkPayload = newTx.map((tx) => ({
           holdingId: "",
           ticker: tx.ticker || (tx.type === "fee" ? "FEE" : "UNKNOWN"),
           name: tx.name,
@@ -185,7 +198,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
         }
 
         // Map the imported transactions to additional portfolios
-        const sourceRefs = flatTx.map((tx) => tx.sourceRef || "").filter(Boolean);
+        const sourceRefs = newTx.map((tx) => tx.sourceRef || "").filter(Boolean);
         if (sourceRefs.length > 0) {
           for (const additionalPId of targetPortfolios.slice(1)) {
             if (additionalPId) {
@@ -195,12 +208,11 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
         }
       }
 
-      // Fetch current positions + cash balances
-      const allActiveAccountIds = new Set(activeAccounts.map((a) => a.id));
-      const institutionMap = new Map(activeAccounts.map((a) => [a.id, a.institution]));
-      let holdingsResult: Awaited<ReturnType<typeof fetchAllHoldings>> | null = null;
+      // Upsert holdings / cash from the holdings fetch above
       try {
-        holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, allActiveAccountIds, institutionMap);
+        if (!holdingsResult) {
+          holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, allActiveAccountIds, institutionMap);
+        }
 
         // Upsert holdings to all mapped portfolios.
         // When any connection is disabled, positions data is incomplete — skip

@@ -227,6 +227,28 @@ export async function getSnapTradeBrokerSyncs(userId: string): Promise<SnapTrade
   }));
 }
 
+/**
+ * Ensure a sync row exists for UI/reconnect tracking without advancing the
+ * incremental watermark. Used when activities are still empty after a fresh
+ * connection (SnapTrade daily activity sync has not completed yet).
+ */
+export async function ensureSnapTradeBrokerSyncPlaceholder(
+  userId: string,
+  brokerageAuthorizationId: string,
+  brokerageName: string,
+): Promise<void> {
+  const client = await ensureInitialized();
+  const existing = await client.execute({
+    sql: "SELECT id FROM snaptrade_broker_syncs WHERE user_id = ? AND brokerage_authorization_id = ?",
+    args: [userId, brokerageAuthorizationId],
+  });
+  if (existing.rows.length > 0) return;
+  await client.execute({
+    sql: "INSERT INTO snaptrade_broker_syncs (id, user_id, brokerage_authorization_id, brokerage_name, last_imported_at) VALUES (?, ?, ?, ?, '')",
+    args: [randomUUID(), userId, brokerageAuthorizationId, brokerageName],
+  });
+}
+
 export async function deleteSnapTradeBrokerSync(
   userId: string,
   brokerageAuthorizationId: string,

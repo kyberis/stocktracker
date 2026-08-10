@@ -1,5 +1,11 @@
 import { Snaptrade } from "snaptrade-typescript-sdk";
-import type { AccountHoldings, Brokerage, Position, UniversalActivity } from "snaptrade-typescript-sdk";
+import type {
+  AccountHoldings,
+  AccountOrderRecord,
+  Brokerage,
+  Position,
+  UniversalActivity,
+} from "snaptrade-typescript-sdk";
 import type { ExtractedTransaction, ExtractedHolding, CashBalance } from "@/hooks/import-types";
 import { inferAssetType } from "@/lib/infer-asset-type";
 import { insertSnapTradeLog } from "@/lib/db/snaptrade-logs";
@@ -348,6 +354,126 @@ export interface SnapTradeHoldingsResult {
   holdings: ExtractedHolding[];
   cashBalances: CashBalance[];
   accounts: { id: string; name: string; institution: string }[];
+  /** EXECUTED buy/sell orders from holdings (intraday; fills activity lag). */
+  orderTransactions: ExtractedTransaction[];
+}
+
+/** Content fingerprint for deduping activities vs orders vs existing ledger rows. */
+export function snapTradeTradeFingerprint(tx: {
+  date: string;
+  type: string;
+  ticker: string;
+  shares: number;
+}): string {
+  return `${tx.date}|${tx.type}|${tx.ticker.toUpperCase()}|${Math.round(Math.abs(tx.shares) * 1000)}`;
+}
+
+/**
+ * Merge activity history with recent EXECUTED orders.
+ * Activities win on fingerprint collision (richer fees/amounts); orders fill
+ * the SnapTrade daily activity lag and empty post-reconnect activity caches.
+ *
+ * Orders intentionally ignore startDate — they only cover recent months and
+ * must still surface trades that landed before a bad incremental watermark
+ * (e.g. reconnect that advanced last_imported_at with 0 activities).
+ */
+export function mergeSnapTradeTransactions(
+  activities: ExtractedTransaction[],
+  orders: ExtractedTransaction[],
+  opts?: { existingFingerprints?: Set<string> },
+): ExtractedTransaction[] {
+  const seen = new Set<string>(opts?.existingFingerprints ?? []);
+  const merged: ExtractedTransaction[] = [];
+
+  for (const tx of activities) {
+    const fp = snapTradeTradeFingerprint(tx);
+    seen.add(fp);
+    merged.push(tx);
+  }
+
+  for (const tx of orders) {
+    const fp = snapTradeTradeFingerprint(tx);
+    if (seen.has(fp)) continue;
+    seen.add(fp);
+    merged.push(tx);
+  }
+
+  return merged;
+}
+
+function parseOrderNumber(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+/** Exported for unit tests — DEGIRO often mislabels open limits as EXECUTED. */
+export function snapTradeOrderHasFillEvidence(
+  order: { filled_quantity?: unknown; execution_price?: unknown },
+  type: "buy" | "sell",
+  shares: number,
+  positionUnits: number,
+): boolean {
+  const filled = parseOrderNumber(order.filled_quantity);
+  if (filled > 0 || parseOrderNumber(order.execution_price) > 0) return true;
+  if (type === "sell" && positionUnits + 1e-9 >= shares) return false;
+  if (type === "buy" && positionUnits <= 0) return false;
+  return true;
+}
+
+function orderToTransaction(
+  order: AccountOrderRecord,
+  positionUnitsByTicker: Map<string, number>,
+): ExtractedTransaction | null {
+  const status = String(order.status || "").toUpperCase();
+  if (status !== "EXECUTED" && status !== "PARTIAL") return null;
+
+  const action = String(order.action || "").toUpperCase();
+  let type: ExtractedTransaction["type"] | null = null;
+  if (action === "BUY" || action === "BUY_OPEN" || action === "BUY_COVER") type = "buy";
+  else if (action === "SELL" || action === "SELL_CLOSE" || action === "SELL_SHORT") type = "sell";
+  if (!type) return null;
+
+  const sym = order.universal_symbol;
+  const rawSymbol = sym?.symbol || sym?.raw_symbol || "";
+  if (!rawSymbol) return null;
+
+  const exchangeMic = sym?.exchange?.mic_code || "";
+  const normalized = normalizeSnapTradeTicker(rawSymbol, exchangeMic);
+  const ticker = normalized.ticker || rawSymbol;
+
+  const filled = parseOrderNumber(order.filled_quantity);
+  const total = parseOrderNumber(order.total_quantity);
+  const shares = Math.abs(filled > 0 ? filled : total);
+  if (shares <= 0) return null;
+
+  const posUnits = positionUnitsByTicker.get(ticker.toUpperCase()) ?? 0;
+  if (!snapTradeOrderHasFillEvidence(order, type, shares, posUnits)) return null;
+
+  const price = Math.abs(
+    parseOrderNumber(order.execution_price) || parseOrderNumber(order.limit_price),
+  );
+  const currency = sym?.currency?.code || "USD";
+  const rawDate = order.time_executed || order.time_placed || "";
+  const date = rawDate ? String(rawDate).slice(0, 10) : "";
+  if (!date) return null;
+
+  const orderId = order.brokerage_order_id || "";
+  return {
+    date,
+    type,
+    ticker,
+    name: sym?.description || ticker,
+    shares,
+    pricePerShare: price,
+    totalAmount: +(shares * price).toFixed(2),
+    fees: 0,
+    currency,
+    sourceRef: orderId ? `snaptrade-order:${orderId}` : undefined,
+  };
 }
 
 export async function fetchAllHoldings(
@@ -384,6 +510,7 @@ export async function fetchAllHoldings(
     const holdingsByTicker = new Map<string, ExtractedHolding>();
     const cashBalances: CashBalance[] = [];
     const accounts: { id: string; name: string; institution: string }[] = [];
+    const orderTransactions: ExtractedTransaction[] = [];
 
     for (const acctHoldings of allAccountHoldings) {
       const acct = acctHoldings.account;
@@ -400,6 +527,8 @@ export async function fetchAllHoldings(
         });
       }
 
+      const positionUnitsByTicker = new Map<string, number>();
+
       if (acctHoldings.positions) {
         for (const pos of acctHoldings.positions) {
           if (pos.cash_equivalent) continue;
@@ -407,6 +536,11 @@ export async function fetchAllHoldings(
 
           const holding = positionToHolding(pos);
           if (!holding || holding.shares <= 0) continue;
+
+          positionUnitsByTicker.set(
+            holding.ticker.toUpperCase(),
+            (positionUnitsByTicker.get(holding.ticker.toUpperCase()) ?? 0) + holding.shares,
+          );
 
           const existing = holdingsByTicker.get(holding.ticker);
           if (existing) {
@@ -431,9 +565,25 @@ export async function fetchAllHoldings(
           }
         }
       }
+
+      // Holdings payload includes recent orders (intraday). Activities are daily.
+      const rawOrders = (acctHoldings as AccountHoldings & { orders?: AccountOrderRecord[] | null }).orders;
+      if (rawOrders) {
+        for (const order of rawOrders) {
+          const tx = orderToTransaction(order, positionUnitsByTicker);
+          if (!tx) continue;
+          if (institution) tx.brokerName = institution;
+          orderTransactions.push(tx);
+        }
+      }
     }
 
-    return { holdings: [...holdingsByTicker.values()], cashBalances, accounts };
+    return {
+      holdings: [...holdingsByTicker.values()],
+      cashBalances,
+      accounts,
+      orderTransactions,
+    };
   });
 }
 

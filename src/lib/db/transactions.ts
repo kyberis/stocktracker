@@ -466,6 +466,24 @@ export async function listTransactionSourceRefs(userId: string, portfolioId?: st
   return new Set(result.rows.map((r) => str(r.source_ref)));
 }
 
+/** date|type|TICKER|sharesMillis — used to avoid double-importing SnapTrade orders vs activities. */
+export async function listTransactionTradeFingerprints(userId: string): Promise<Set<string>> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT date, type, ticker, shares FROM transactions WHERE user_id = ? AND type IN ('buy', 'sell')`,
+    args: [userId],
+  });
+  const set = new Set<string>();
+  for (const r of result.rows) {
+    const date = str(r.date);
+    const type = str(r.type);
+    const ticker = str(r.ticker).toUpperCase();
+    const shares = Math.round(Math.abs(num(r.shares)) * 1000);
+    set.add(`${date}|${type}|${ticker}|${shares}`);
+  }
+  return set;
+}
+
 /* ── Transaction ↔ Portfolio mapping (multi-portfolio sync) ── */
 
 export async function mapTransactionsToPortfolio(
