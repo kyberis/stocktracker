@@ -121,10 +121,13 @@ the feature is not discoverable before launch. The Dev outputs route adds
   `CriteriaList`, `ScreeningNotices`, `ScreeningGate`, `ScreeningEntryCta`
 - Candidate technicals include a DEGIRO-style 52-week range bar
   ([`FiftyTwoWeekRangeBar`](../../src/components/FiftyTwoWeekRangeBar.tsx)) when
-  12m close high/low are present: marker = position of `price` in
-  `[closeLow12m, closeHigh12m]`, dates under the ends, footer with 1y return as
-  price variation. Levels come from the Technicals agent and are passed through
-  on `ScreeningCandidateCard.technicals`.
+  12m close high/low are present (or can be reconstructed from distance %):
+  marker = position of `price` in `[low, high]`, dates under the ends when
+  known, footer with 1y return as price variation.
+- Candidate cards also show
+  [`ScreeningPriceChart`](../../src/components/screening/ScreeningPriceChart.tsx):
+  client `/api/historical` fetch (lazy on intersect) with period pills
+  1W / 1M / 3M / 6M / 1Y / 5Y (5Y = `all` sliced to five years).
 - Context consumers: `FeatureFlagProvider` (gate), `PortfolioProvider` (real sector
   weights on the entry page), `I18nProvider` (language selection for screening copy)
 

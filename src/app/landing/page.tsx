@@ -150,7 +150,7 @@ function getHeroFeatures(t: T): HeroFeature[] {
       screenshot: "/screenshots/verified-reports.svg",
       points: [
         "Methodology checklist scored from multiples, catalysts, insiders and trend",
-        "Technicals block: 52w range, MA200, support/resistance, 3m/1y return",
+        "Technicals block: price chart (1W–5Y), 52w range, MA200, support/resistance",
         "QA verifies numbers and sources; stubborn tickers are dropped after 2 rounds",
         "Verified / Flagged banner so you know what was checked",
       ],

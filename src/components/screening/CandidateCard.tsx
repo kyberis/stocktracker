@@ -5,9 +5,11 @@ import FiftyTwoWeekRangeBar from "@/components/FiftyTwoWeekRangeBar";
 import { formatCompactNumber } from "@/lib/utils";
 import { fill } from "@/lib/screening/copy";
 import { ensureCardCategories } from "@/lib/screening/ensure-categories";
+import { levelsFromDistancePct } from "@/lib/screening/fifty-two-week-range";
 import type { ScreeningCandidateCard } from "@/lib/screening/schemas";
 import { BlurredValue, redactedCandidateLabel } from "./BlurredValue";
 import { CriteriaList } from "./CriteriaList";
+import { ScreeningPriceChart } from "./ScreeningPriceChart";
 import { AiLabel } from "./ScreeningNotices";
 import { useScreeningCopy } from "./use-screening-copy";
 
@@ -48,11 +50,14 @@ function TechnicalsBlock({
   const t = card.technicals;
   if (!t) return null;
 
-  const hasRange =
-    t.closeLow12m != null &&
-    t.closeHigh12m != null &&
-    Number.isFinite(card.price) &&
-    card.price > 0;
+  const rangeLevels = levelsFromDistancePct({
+    price: card.price,
+    distanceTo52wHighPct: t.distanceTo52wHighPct,
+    distanceTo52wLowPct: t.distanceTo52wLowPct,
+    closeHigh12m: t.closeHigh12m,
+    closeLow12m: t.closeLow12m,
+  });
+  const hasRange = rangeLevels != null;
 
   const hasAny =
     hasRange ||
@@ -140,11 +145,11 @@ function TechnicalsBlock({
         </p>
       ) : (
         <>
-          {hasRange ? (
+          {hasRange && rangeLevels ? (
             <FiftyTwoWeekRangeBar
               className="mt-2"
-              low={t.closeLow12m!}
-              high={t.closeHigh12m!}
+              low={rangeLevels.low}
+              high={rangeLevels.high}
               price={card.price}
               currency={card.currency}
               lowDate={t.closeLow12mDate}
@@ -622,6 +627,11 @@ export function CandidateCard({
       )}
 
       <TechnicalsBlock card={card} locked={blurResearch} />
+      <ScreeningPriceChart
+        ticker={card.ticker}
+        currency={card.currency}
+        locked={blurResearch || hideIdentity}
+      />
 
       {(card.positionKind ||
         card.suitability ||

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.133",
+    date: "2026-08-10",
+    title: "Screening: price history on candidate cards",
+    titleTranslations: {
+      es: "Cribado: evolución del precio en las fichas",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Screening candidate cards now include an interactive price chart with 1W, 1M, 3M, 6M, 1Y and 5Y ranges. The 52-week range bar also works on older reports that only stored distance percentages.",
+        translations: {
+          es: "Las fichas del cribado incluyen un gráfico de evolución del precio con rangos 1S, 1M, 3M, 6M, 1A y 5A. La barra de rango 52 semanas también funciona en informes antiguos que solo tenían porcentajes de distancia.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.132",
     date: "2026-08-10",
     title: "Screening: 52-week range on candidate cards",

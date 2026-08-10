@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { formatRangeDate, rangePositionPct } from "./fifty-two-week-range";
+import {
+  formatRangeDate,
+  levelsFromDistancePct,
+  rangePositionPct,
+} from "./fifty-two-week-range";
 
 describe("rangePositionPct", () => {
   it("places mid-range price at 50%", () => {
@@ -16,6 +20,31 @@ describe("rangePositionPct", () => {
     expect(rangePositionPct(75, 100, 50)).toBeNull();
     expect(rangePositionPct(75, 50, 50)).toBeNull();
     expect(rangePositionPct(Number.NaN, 50, 100)).toBeNull();
+  });
+});
+
+describe("levelsFromDistancePct", () => {
+  it("prefers absolute high/low when present", () => {
+    expect(
+      levelsFromDistancePct({
+        price: 80,
+        distanceTo52wHighPct: -20,
+        distanceTo52wLowPct: 60,
+        closeHigh12m: 100,
+        closeLow12m: 50,
+      }),
+    ).toEqual({ low: 50, high: 100 });
+  });
+
+  it("reconstructs levels from distance percentages", () => {
+    const levels = levelsFromDistancePct({
+      price: 80,
+      distanceTo52wHighPct: -20,
+      distanceTo52wLowPct: 60,
+    });
+    expect(levels).not.toBeNull();
+    expect(levels!.high).toBeCloseTo(100, 5);
+    expect(levels!.low).toBeCloseTo(50, 5);
   });
 });
 
