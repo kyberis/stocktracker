@@ -21,6 +21,7 @@ import {
   type StepHandler,
 } from "@/lib/screening/orchestrator/handlers";
 import { runDeterministicQa } from "@/lib/screening/qa/deterministic";
+import { filterSpuriousLayerBR6Issues } from "@/lib/screening/qa/filter-layer-b-r6";
 import { composeScreeningReport } from "@/lib/screening/pipeline/build-report";
 import { buildQaQualitativePrompt } from "@/lib/screening/prompts/qa-qualitative";
 import {
@@ -186,6 +187,7 @@ export const runQaStep: StepHandler = async (
       const runResult = await callQaQualitativeJudge({
         report,
         layerAIssues,
+        evaluationDate: new Date().toISOString().slice(0, 10),
         rawContext: buildRawContextForQa({
           hardData,
           irAggregate,
@@ -196,7 +198,11 @@ export const runQaStep: StepHandler = async (
           compilerDraft,
         }),
       });
-      layerBIssues = runResult.issues;
+      layerBIssues = filterSpuriousLayerBR6Issues({
+        layerBIssues: runResult.issues,
+        layerAIssues,
+        irAggregate,
+      });
       layerBRaw = runResult.rawResponse;
       layerBError = runResult.errorMessage;
       layerBModel = runResult.model;
@@ -346,6 +352,7 @@ async function callQaQualitativeJudge(input: {
   report: ScreeningReport;
   layerAIssues: QaIssue[];
   rawContext: string;
+  evaluationDate: string;
 }): Promise<{
   issues: QaIssue[];
   rawResponse: string;
@@ -357,6 +364,7 @@ async function callQaQualitativeJudge(input: {
     layerAIssues: input.layerAIssues,
     rawContext: input.rawContext,
     locale: input.report.locale,
+    evaluationDate: input.evaluationDate,
   });
   const submitTool = {
     type: "function" as const,

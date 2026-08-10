@@ -304,7 +304,10 @@ API routes wrapped in `withMetrics`. Prometheus adds
   collects optional `riskProfile` (defaults to balanced on early exit).
 - **QA agent** — shipped behind `screening_qa_enabled` (on in prod). After Compiler,
   Layer A + Layer B verify the report; `reportReady` waits for pass /
-  `pass_with_degradation`. Retries flagged agents up to 2 rounds.
+  `pass_with_degradation`. Retries flagged agents up to 2 rounds. Layer B R6
+  date claims are filtered when Layer A already covered them or `guidance.asOf`
+  is within the valid window; report UI shows plain-language verification notes
+  (no internal rule codes).
 - **Intake sample pilot** — CTA on `/screening/intake` sends curated user replies
   through the real Intake agent; the user still confirms and presses Run.
 - Discoverability beyond `/recommendations/diversify` (tools hub entry needs locale

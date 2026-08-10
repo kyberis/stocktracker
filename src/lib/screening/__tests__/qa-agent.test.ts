@@ -150,12 +150,12 @@ function mockLayerBFail() {
                     verdict: "fail",
                     issues: [
                       {
-                        issueType: "unconfirmed_source",
-                        ruleId: "R6",
+                        issueType: "cross_agent_inconsistency",
+                        ruleId: "R7",
                         agentKind: "ir_business",
                         ticker: "AAPL",
-                        claimPath: "guidance.asOf",
-                        summary: "Guidance is more than 12 months old.",
+                        claimPath: "catalysts",
+                        summary: "Price-drop cause is not in upstream evidence.",
                         blocking: true,
                       },
                     ],
@@ -216,7 +216,7 @@ describe("runQaStep", () => {
     const insertArgs = mockInsertQaRoundIssues.mock.calls[0][0];
     expect(insertArgs.verdict).toBe("fail");
     expect(
-      insertArgs.issues.some((i: { ruleId: string }) => i.ruleId === "R6"),
+      insertArgs.issues.some((i: { ruleId: string }) => i.ruleId === "R7"),
     ).toBe(true);
     expect(insertArgs.flaggedAgentKinds).toContain("ir_business");
   });

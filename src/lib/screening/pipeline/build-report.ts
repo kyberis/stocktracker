@@ -36,6 +36,8 @@ import { scoreCategories } from "@/lib/screening/scoring/categories";
 import { ensureReportCategories } from "@/lib/screening/ensure-categories";
 import { buildEducationalThesis } from "@/lib/screening/thesis";
 import { renderEvaluationThesis } from "@/lib/screening/evaluation-thesis";
+import { filterSpuriousR6IssuesForDisplay } from "@/lib/screening/qa/filter-layer-b-r6";
+import { formatQaIssueForUser } from "@/lib/screening/qa/format-issue";
 
 /**
  * Compose the ScreeningReport from Hard Data + Compiler (+ optional IR / Web /
@@ -61,6 +63,8 @@ export interface ComposeReportInput {
   pendingAgentKinds?: string[];
   /** How many candidates the caller asked for (defaults to all). */
   candidateLimit?: number;
+  /** Clock override for guidance freshness display filtering (tests). */
+  now?: Date;
 }
 
 function safeParseJson<T>(raw: string): T | null {
@@ -251,15 +255,35 @@ export function composeScreeningReport(
     if (evParsed && evParsed.success) compilerEvaluate = evParsed.data;
   }
 
+  const localeEarly = parsedBrief?.locale ?? draft.locale ?? "en";
+  const clock = input.now ?? new Date();
+  const qaIssuesForDisplay = qa
+    ? filterSpuriousR6IssuesForDisplay({
+        issues: qa.issues,
+        irAggregate,
+        now: clock,
+      })
+    : [];
+  const qaBlockingForDisplay = qaIssuesForDisplay.filter((i) => i.blocking)
+    .length;
+  const qaDisplayVerdict: QaOutput["verdict"] | null = qa
+    ? qaIssuesForDisplay.length === 0
+      ? "pass"
+      : qaBlockingForDisplay === 0 && qa.verdict !== "fail"
+        ? "pass"
+        : qa.verdict
+    : null;
   const qaIssuesByTicker = new Map<string, string[]>();
-  if (qa) {
-    for (const issue of qa.issues) {
-      if (!issue.ticker) continue;
-      const key = issue.ticker.toUpperCase();
-      const list = qaIssuesByTicker.get(key) ?? [];
-      if (list.length < 8) list.push(issue.summary.slice(0, 400));
-      qaIssuesByTicker.set(key, list);
+  for (const issue of qaIssuesForDisplay) {
+    if (!issue.ticker) continue;
+    const key = issue.ticker.toUpperCase();
+    const list = qaIssuesByTicker.get(key) ?? [];
+    if (list.length < 8) {
+      list.push(
+        formatQaIssueForUser(issue, localeEarly, clock).slice(0, 400),
+      );
     }
+    qaIssuesByTicker.set(key, list);
   }
 
   const irByTicker = new Map(
@@ -301,7 +325,9 @@ export function composeScreeningReport(
   // with one name, or every shortlist name degraded), keep the degraded
   // cards and rely on `verification` + per-card QA notes instead of a 422.
   const degradedSet = new Set<string>(
-    (qa?.degradedTickers ?? []).map((t) => t.toUpperCase()),
+    (qaDisplayVerdict === "pass" ? [] : (qa?.degradedTickers ?? [])).map((t) =>
+      t.toUpperCase(),
+    ),
   );
   const hardByTicker = new Map(
     hardData.candidates.map((c) => [c.ticker.toUpperCase(), c]),
@@ -617,7 +643,7 @@ export function composeScreeningReport(
     };
   });
 
-  const locale = parsedBrief?.locale ?? draft.locale ?? "en";
+  const locale = localeEarly;
   const hasIr = Boolean(irAggregate && irAggregate.tickers.length > 0);
   const hasWeb = Boolean(webAggregate && webAggregate.tickers.length > 0);
   const hasPc = Boolean(portfolioContext);
@@ -647,15 +673,17 @@ export function composeScreeningReport(
       ? input.pendingAgentKinds
       : defaultPending;
 
-  const verification = qa
-    ? {
-        verdict: qa.verdict,
-        roundNumber: qa.roundNumber,
-        issueCount: qa.issues.length,
-        blockingIssueCount: qa.issues.filter((i) => i.blocking).length,
-        degradedTickers: qa.degradedTickers,
-      }
-    : null;
+  const verification =
+    qa && qaDisplayVerdict
+      ? {
+          verdict: qaDisplayVerdict,
+          roundNumber: qa.roundNumber,
+          issueCount: qaIssuesForDisplay.length,
+          blockingIssueCount: qaBlockingForDisplay,
+          degradedTickers:
+            qaDisplayVerdict === "pass" ? [] : qa.degradedTickers,
+        }
+      : null;
 
   const raw = {
     jobId: input.run.id,

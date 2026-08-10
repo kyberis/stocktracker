@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.131",
+    date: "2026-08-10",
+    title: "Screening: clearer verification notes",
+    titleTranslations: {
+      es: "Cribado: notas de verificación más claras",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "QA no longer treats a recent guidance date as “in the future”, and verification notes use plain language instead of internal rule codes like R6.",
+        translations: {
+          es: "El QA ya no trata una fecha de guidance reciente como “futura”, y las notas de verificación usan lenguaje claro en lugar de códigos internos como R6.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.130",
     date: "2026-08-10",
     title: "Screening: resume no longer strands research",

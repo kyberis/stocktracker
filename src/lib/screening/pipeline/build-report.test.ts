@@ -201,4 +201,93 @@ describe("composeScreeningReport degraded survivors", () => {
     expect(report).not.toBeNull();
     expect(report!.cards.map((c) => c.ticker)).toEqual(["AAPL"]);
   });
+
+  it("hides spurious R6 future dates and clears degradation for display", () => {
+    const report = composeScreeningReport({
+      now: new Date("2026-08-10T12:00:00.000Z"),
+      run: runRow(),
+      hardDataRow: agentRow("hard_data", {
+        status: "ok",
+        universeSize: 1,
+        candidates: [
+          {
+            ticker: "NKE",
+            name: "Nike",
+            sector: "Consumer Cyclical",
+            industry: null,
+            country: "US",
+            marketCapUsd: 1e11,
+            price: 75,
+            rankScore: 70,
+            rankReason: "Focus ticker for analyze",
+          },
+        ],
+        deferredTickers: [],
+        gaps: [],
+        locale: "en",
+        sources: [],
+      }),
+      compilerRow: agentRow("compiler", {
+        summary: "Nike analysis summary.",
+        candidateBullets: [
+          {
+            ticker: "NKE",
+            headline: "Nike focus name",
+            bullet: "Single-name analyze draft.",
+          },
+        ],
+        disclaimer: "Not advice.",
+        locale: "en",
+      }),
+      irAggregateRow: agentRow("aggregate_ir_business", {
+        tickers: [
+          {
+            ticker: "NKE",
+            businessOneLiner: "Athletic footwear and apparel",
+            guidance: {
+              summary: "Maintained outlook",
+              direction: "flat",
+              asOf: "2026-08-06",
+              sources: [],
+            },
+            catalysts: [],
+            segments: [],
+            contradictionWithHardData: false,
+            confidence: "medium",
+            bullets: ["Brand strength"],
+            gaps: [],
+          },
+        ],
+        generatedAt: "2026-08-10T00:00:00.000Z",
+      }),
+      qaRow: agentRow("qa", {
+        verdict: "pass_with_degradation",
+        roundNumber: 2,
+        issues: [
+          {
+            issueType: "unconfirmed_source",
+            ruleId: "R6",
+            agentKind: "ir_business",
+            ticker: "NKE",
+            claimPath: "guidance.asOf",
+            expectedValue: "not in the future",
+            actualValue: "2026-08-06",
+            summary:
+              "Guidance asOf 2026-08-06 is in the future relative to today.",
+            blocking: true,
+          },
+        ],
+        flaggedAgentKinds: ["ir_business"],
+        degradedTickers: ["NKE"],
+        generatedAt: "2026-08-10T00:00:00.000Z",
+      }),
+    });
+
+    expect(report).not.toBeNull();
+    expect(report!.verification?.verdict).toBe("pass");
+    expect(report!.verification?.issueCount).toBe(0);
+    expect(report!.verification?.degradedTickers).toEqual([]);
+    expect(report!.cards[0]!.qa?.verified).toBe(true);
+    expect(report!.cards[0]!.qa?.unsupportedClaims).toEqual([]);
+  });
 });

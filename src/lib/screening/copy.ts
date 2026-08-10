@@ -741,9 +741,9 @@ const en = {
     verificationFlagged:
       "{count} claim(s) flagged for review — see per-candidate notes below.",
     verificationDegraded:
-      "Verified with caveats · some claims could not be confirmed. Review flagged notes on each card.",
-    verificationExpand: "Show flagged claims",
-    verificationCollapse: "Hide flagged claims",
+      "Some verification notes are still worth a quick check on each card.",
+    verificationExpand: "Show verification notes",
+    verificationCollapse: "Hide verification notes",
     verificationTitle: "Verification",
     verificationRoundLabel: "Round {n}",
     verificationIssueTypes: {
@@ -765,8 +765,28 @@ const en = {
       R9: "R9 — Peer filtering",
       R10: "R10 — Analyst coverage",
     },
+    verificationIssueR6Stale:
+      "The guidance date ({date}) looks older than a year — worth checking the latest company update.",
+    verificationIssueR6Future:
+      "The guidance date ({date}) looks ahead of today — this may be an extraction error.",
+    verificationIssueR6Unparseable:
+      "We could not read the guidance date ({date}).",
+    verificationIssueR6Generic:
+      "Please double-check the guidance date ({date}) against the latest company update.",
+    verificationIssueByRule: {
+      R1: "Insider activity may be misclassified: {detail}",
+      R2: "Sentiment signal looks noisy: {detail}",
+      R3: "Insider narrative may not match the trade direction: {detail}",
+      R4: "P/E history check needs a second look: {detail}",
+      R5: "Sources disagree on a key claim: {detail}",
+      R7: "A price move may be linked to the wrong cause: {detail}",
+      R8: "Growth may mix M&A with organic: {detail}",
+      R9: "Peer comparison may be off: {detail}",
+      R10: "Analyst coverage looks thin or inconsistent: {detail}",
+    } as Record<string, string>,
+    verificationIssueGeneric: "{type}: {detail}",
     candidateVerifiedBadge: "Verified",
-    candidateFlaggedBadge: "Claims flagged",
+    candidateFlaggedBadge: "Notes to review",
   },
 };
 
@@ -1500,18 +1520,18 @@ const es: ScreeningCopy = {
     lockedCell: "••••",
     verificationVerified: "Verificado · sin incidencias",
     verificationFlagged:
-      "{count} afirmación/es marcada/s para revisión — ver notas por candidato.",
+      "{count} nota/s para revisar — ver detalle por candidato.",
     verificationDegraded:
-      "Verificado con reservas · algunas afirmaciones no se pudieron confirmar. Revisa las notas marcadas en cada ficha.",
-    verificationExpand: "Ver afirmaciones marcadas",
-    verificationCollapse: "Ocultar afirmaciones marcadas",
+      "Hay algunas notas de verificación que conviene contrastar en cada ficha.",
+    verificationExpand: "Ver notas de verificación",
+    verificationCollapse: "Ocultar notas de verificación",
     verificationTitle: "Verificación",
     verificationRoundLabel: "Ronda {n}",
     verificationIssueTypes: {
       quant_mismatch: "Desajuste cuantitativo",
       unconfirmed_source: "Fuente sin confirmar",
       cross_agent_inconsistency: "Inconsistencia entre agentes",
-      rule_violation: "Violación de regla",
+      rule_violation: "Regla de verificación",
       other: "Otro",
     },
     verificationRuleLabels: {
@@ -1526,8 +1546,28 @@ const es: ScreeningCopy = {
       R9: "R9 — Filtrado de comparables",
       R10: "R10 — Cobertura de analistas",
     },
+    verificationIssueR6Stale:
+      "La fecha del guidance ({date}) parece de hace más de un año: conviene contrastar con la última actualización de la empresa.",
+    verificationIssueR6Future:
+      "La fecha del guidance ({date}) parece posterior a hoy: puede ser un error de extracción.",
+    verificationIssueR6Unparseable:
+      "No pudimos interpretar la fecha del guidance ({date}).",
+    verificationIssueR6Generic:
+      "Conviene contrastar la fecha del guidance ({date}) con la última actualización de la empresa.",
+    verificationIssueByRule: {
+      R1: "La actividad de insiders puede estar mal clasificada: {detail}",
+      R2: "La señal de sentimiento parece ruidosa: {detail}",
+      R3: "El relato de insiders puede no cuadrar con el sentido de las operaciones: {detail}",
+      R4: "El historial de PER merece una segunda mirada: {detail}",
+      R5: "Las fuentes no coinciden en una afirmación clave: {detail}",
+      R7: "Un movimiento de precio puede estar ligado a una causa incorrecta: {detail}",
+      R8: "El crecimiento puede mezclar M&A con orgánico: {detail}",
+      R9: "La comparación con peers puede fallar: {detail}",
+      R10: "La cobertura de analistas parece incompleta o inconsistente: {detail}",
+    } as Record<string, string>,
+    verificationIssueGeneric: "{type}: {detail}",
     candidateVerifiedBadge: "Verificado",
-    candidateFlaggedBadge: "Afirmaciones marcadas",
+    candidateFlaggedBadge: "Notas a revisar",
   },
 };
 
