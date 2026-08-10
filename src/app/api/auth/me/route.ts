@@ -130,6 +130,7 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       emailVerified: user?.email_verified === 1,
       authProvider: user?.auth_provider || "credentials",
       googleLinked: !!user?.google_id,
+      hasPassword: Boolean(user?.password_hash),
       passkeyCount,
       portfolioReviewCount: user?.portfolio_review_count || 0,
       portfolioReviewResetAt: user?.portfolio_review_reset_at || "",

@@ -8,9 +8,12 @@ import {
   getEmailTemplateBySlug,
   getUserSettings,
   logEmailSend,
+  checkAndIncrementRateLimit,
 } from "@/lib/db";
 
 const VERIFICATION_TOKEN_TTL = 60 * 60 * 24; // 24 hours
+const ACCOUNT_DELETION_TOKEN_TTL = 60 * 15; // 15 minutes — short-lived, destructive action
+const ACCOUNT_DELETION_EMAIL_COOLDOWN_SECONDS = 60 * 5; // 5 minutes between resends per user
 
 const TEST_EMAIL_DOMAINS = ["test.example.com", "example.com"];
 
@@ -219,6 +222,56 @@ export async function verifyVerificationToken(
   }
 }
 
+/**
+ * Deletion-confirmation token for users with no usable password (OAuth/passkey
+ * signups not yet migrated to the IdP). Scoped with its own `purpose` claim so
+ * it can never be replayed against email verification (or vice versa), and a
+ * short TTL since it authorizes a destructive action. No test-email
+ * short-circuit — unlike createVerificationToken, this must never return a
+ * predictable constant.
+ */
+export async function createAccountDeletionToken(userId: string, email: string): Promise<string> {
+  const secret = new TextEncoder().encode(getSessionSecret());
+  return new SignJWT({ userId, email, purpose: "account_deletion" })
+    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .setIssuedAt()
+    .setExpirationTime(`${ACCOUNT_DELETION_TOKEN_TTL}s`)
+    .sign(secret);
+}
+
+export async function verifyAccountDeletionToken(
+  token: string
+): Promise<{ userId: string; email: string } | null> {
+  try {
+    const secret = new TextEncoder().encode(getSessionSecret());
+    const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
+    if (payload.purpose !== "account_deletion") return null;
+    return {
+      userId: String(payload.userId),
+      email: String(payload.email),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Per-user send cooldown backed by the shared `rate_limits` table (Turso), not
+ * in-memory — must hold across serverless instances/cold starts. Returns
+ * false if a deletion-confirmation email was already sent within the last
+ * ACCOUNT_DELETION_EMAIL_COOLDOWN_SECONDS.
+ */
+export async function canSendAccountDeletionEmail(userId: string): Promise<boolean> {
+  const windowKey = String(Math.floor(Date.now() / 1000 / ACCOUNT_DELETION_EMAIL_COOLDOWN_SECONDS));
+  const { allowed } = await checkAndIncrementRateLimit(
+    userId,
+    "account_deletion_email",
+    1,
+    windowKey,
+  );
+  return allowed;
+}
+
 function verificationEmailHtml(verifyUrl: string, locale: EmailLocale = "en"): string {
   const s = verificationStrings[locale] ?? verificationStrings.en;
   return `<!DOCTYPE html>
@@ -281,6 +334,108 @@ export async function sendVerificationEmail(
     internal: true,
   });
   if (!result.success) console.error("Failed to send verification email:", result.error);
+  return result;
+}
+
+interface AccountDeletionStrings {
+  subject: string;
+  heading: string;
+  body: string;
+  ctaLabel: string;
+  fallbackLink: string;
+  expiry: string;
+  ignore: string;
+}
+
+const accountDeletionStrings: Record<string, AccountDeletionStrings> = {
+  en: {
+    subject: "Confirm account deletion — trefolio",
+    heading: "Confirm you want to delete your account",
+    body: "We received a request to permanently delete your trefolio account and all its data. This can't be undone. Click below to confirm.",
+    ctaLabel: "Delete my account",
+    fallbackLink: "Or copy and paste this link into your browser:",
+    expiry: "This link expires in 15 minutes.",
+    ignore: "If you didn't request this, you can safely ignore this email — your account will not be deleted.",
+  },
+  es: {
+    subject: "Confirma la eliminaci&#243;n de tu cuenta — trefolio",
+    heading: "Confirma que quieres eliminar tu cuenta",
+    body: "Hemos recibido una solicitud para eliminar permanentemente tu cuenta de trefolio y todos sus datos. Esta acci&#243;n no se puede deshacer. Haz clic abajo para confirmar.",
+    ctaLabel: "Eliminar mi cuenta",
+    fallbackLink: "O copia y pega este enlace en tu navegador:",
+    expiry: "Este enlace caduca en 15 minutos.",
+    ignore: "Si no has solicitado esto, puedes ignorar este correo sin problema — tu cuenta no ser&#225; eliminada.",
+  },
+};
+
+function accountDeletionEmailHtml(confirmUrl: string, locale: EmailLocale = "en"): string {
+  const s = accountDeletionStrings[locale] ?? accountDeletionStrings.en;
+  return `<!DOCTYPE html>
+<html lang="${locale}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        <tr><td style="background:linear-gradient(135deg,#b91c1c 0%,#ef4444 100%);padding:32px 32px 28px;text-align:center;">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+            <tr>
+              ${emailLogoCell()}
+              <td style="padding-left:10px;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">trefolio</td>
+            </tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:36px 32px 16px;">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">${s.heading}</h1>
+          <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${s.body}</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+            <tr><td align="center">
+              <a href="${confirmUrl}" target="_blank" style="display:inline-block;padding:14px 36px;background-color:#dc2626;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;letter-spacing:0.2px;">${s.ctaLabel}</a>
+            </td></tr>
+          </table>
+          <p style="margin:24px 0 0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">${s.fallbackLink}</p>
+          <p style="margin:6px 0 0;font-size:12px;color:#dc2626;text-align:center;word-break:break-all;line-height:1.5;">
+            <a href="${confirmUrl}" style="color:#dc2626;text-decoration:underline;">${confirmUrl}</a>
+          </p>
+        </td></tr>
+        <tr><td style="padding:0 32px;"><div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div></td></tr>
+        <tr><td style="padding:0 32px 32px;">
+          <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">${s.expiry}</p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">${s.ignore}</p>
+        </td></tr>
+      </table>
+      <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;text-align:center;">
+        &copy; ${new Date().getFullYear()} trefolio
+      </p>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
+ * Sends the deletion-confirmation link for users with no usable password
+ * (see createAccountDeletionToken). Requires clicking through to a page that
+ * requires an explicit button press — never auto-confirms on link open — so
+ * mail-client link-prefetchers can't trigger deletion by themselves.
+ */
+export async function sendAccountDeletionEmail(
+  email: string,
+  token: string,
+  locale: EmailLocale = "en",
+): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
+  const confirmUrl = `${getBaseUrl()}/delete-account/confirm?token=${encodeURIComponent(token)}`;
+  const s = accountDeletionStrings[locale] ?? accountDeletionStrings.en;
+
+  const result = await sendEmail({
+    to: email,
+    subject: s.subject,
+    html: accountDeletionEmailHtml(confirmUrl, locale),
+    internal: true,
+  });
+  if (!result.success) console.error("Failed to send account deletion email:", result.error);
   return result;
 }
 

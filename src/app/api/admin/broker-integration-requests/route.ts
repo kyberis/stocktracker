@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
-import { listBrokerIntegrationRequestsForAdmin } from "@/lib/db";
+import { listBrokerIntegrationRequestsForAdmin, listBrokerIntegrationRequestGroupsForAdmin } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/admin/broker-integration-requests", async (req: NextRequest) => {
@@ -9,6 +9,12 @@ export const GET = withMetrics("/api/admin/broker-integration-requests", async (
 
   const page = Math.max(0, Number(req.nextUrl.searchParams.get("page") || "0"));
   const pageSize = Math.min(100, Math.max(1, Number(req.nextUrl.searchParams.get("pageSize") || "25")));
+
+  if (req.nextUrl.searchParams.get("view") === "grouped") {
+    const data = await listBrokerIntegrationRequestGroupsForAdmin(page, pageSize);
+    return NextResponse.json(data);
+  }
+
   const data = await listBrokerIntegrationRequestsForAdmin(page, pageSize);
   return NextResponse.json(data);
 });

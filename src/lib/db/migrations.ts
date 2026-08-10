@@ -3970,6 +3970,30 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 136,
+    description:
+      "Broker integration requests: add broker_name_normalized for case-insensitive demand grouping",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(broker_integration_requests)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("broker_name_normalized")) {
+        await client.execute(
+          "ALTER TABLE broker_integration_requests ADD COLUMN broker_name_normalized TEXT NOT NULL DEFAULT ''",
+        );
+      }
+      // Backfill. SQLite's LOWER() is ASCII-only — fine for the broker names
+      // seen in production so far (Latin-script brand names).
+      await client.execute(
+        `UPDATE broker_integration_requests
+           SET broker_name_normalized = LOWER(TRIM(broker_name))
+           WHERE broker_name_normalized = ''`,
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_broker_integration_requests_normalized ON broker_integration_requests(broker_name_normalized)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

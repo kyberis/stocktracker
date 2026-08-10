@@ -19,7 +19,7 @@ export const maxDuration = 30;
  * Path 1: Downgraded to Folio (free) — delete connections whose
  *         pending_delete_at has passed (end-of-month scheduling).
  *
- * Path 2: Paid users (Bifolio / Trefolio) with ALL broker connections
+ * Path 2: Paid users (Trefolio) with ALL broker connections
  *         disabled for >24 h — the credentials are stale and will keep
  *         incurring the $2/connected-user/month SnapTrade charge.
  */

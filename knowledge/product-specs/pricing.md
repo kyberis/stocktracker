@@ -3,19 +3,20 @@
 > Pricing section on landing + `/pricing` standalone page.
 
 ## 1. Summary
-Visual pricing cards per tier (Free / Bifolio / Trefolio), including monthly/yearly/lifetime toggles.
+Visual pricing cards, two tiers (Free "Folio" / Trefolio Pro), including monthly/annual toggle. Hidden entirely when the `commerce_enabled` flag is off.
 
 ## 2. Status
 - **Tier:** public
-- **Feature flag:** _none_
+- **Feature flag:** `commerce_enabled` (hides pricing cards, upsell CTAs, and checkout when off)
 - **Health:** green
 - **Owning skill:** [`sales`](../../.cursor/skills/sales/SKILL.md)
 
 ## 3. Entry points
 | Type | Path | Notes |
 |------|------|-------|
-| Component | Pricing cards on landing + `/pricing`. |
-| Library | [`src/lib/pricing.ts`](../../src/lib/pricing.ts) | Price map. |
+| Component | `PricingSection` in [`src/app/landing/page.tsx`](../../src/app/landing/page.tsx) | Landing + `/pricing`. |
+| Library | [`src/lib/platform-config.ts`](../../src/lib/platform-config.ts), [`src/lib/subscription.ts`](../../src/lib/subscription.ts) | Quota + plan source of truth. |
+| Library | [`src/lib/db/settings.ts`](../../src/lib/db/settings.ts) | `StripePriceKey` (`pro_monthly`, `pro_annual`) — Stripe price IDs, never hard-coded. |
 
 ## 4. Data model
 - Prices in code, Stripe price IDs in DB.

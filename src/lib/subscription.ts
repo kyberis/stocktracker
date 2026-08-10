@@ -78,7 +78,7 @@ export function getShareLinkLimit(plan: SubscriptionPlan): number {
   return plan === "pro" ? SOFT_CAPS.shareLinks.pro : SOFT_CAPS.shareLinks.free;
 }
 
-/** Bifolio (starter) and Trefolio (pro) can connect brokers via SnapTrade. */
+/** Free and Pro plans can connect brokers via SnapTrade. */
 export function canUseBrokerSync(
   plan: SubscriptionPlan,
   planExpiresAt: string,

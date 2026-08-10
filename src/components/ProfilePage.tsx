@@ -1076,6 +1076,7 @@ export default function ProfilePage() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [deleteEmailSent, setDeleteEmailSent] = useState(false);
 
   const [verifyingSending, setVerifyingSending] = useState(false);
   const [verifyMsg, setVerifyMsg] = useState("");
@@ -1461,24 +1462,25 @@ export default function ProfilePage() {
     window.location.href = `${user.unifiedAccountUrl}#delete-account`;
   }, [trackAccountDeleteStarted, user?.unifiedAccountUrl]);
 
-  const handleDeleteAccount = async (e: FormEvent) => {
-    e.preventDefault();
+  const submitDeleteAccount = async (password?: string) => {
     setDeleteError("");
-    if (!deletePassword) {
-      setDeleteError(t("deleteAccountPasswordRequired"));
-      return;
-    }
     setDeleting(true);
     trackAccountDeleteStarted("local");
     try {
       const res = await fetch("/api/auth/delete-account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: deletePassword }),
+        body: JSON.stringify(password ? { password } : {}),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         setDeleteError(data?.error || t("deleteAccountError"));
+        setDeleting(false);
+        return;
+      }
+      const data = await res.json().catch(() => null);
+      if (data?.requiresEmailConfirmation) {
+        setDeleteEmailSent(true);
         setDeleting(false);
         return;
       }
@@ -1488,6 +1490,19 @@ export default function ProfilePage() {
       setDeleteError(t("deleteAccountError"));
       setDeleting(false);
     }
+  };
+
+  const handleDeleteAccount = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!deletePassword) {
+      setDeleteError(t("deleteAccountPasswordRequired"));
+      return;
+    }
+    await submitDeleteAccount(deletePassword);
+  };
+
+  const handleDeleteAccountNoPassword = async () => {
+    await submitDeleteAccount();
   };
 
   const initials = (displayName || user?.username || "U")
@@ -1838,8 +1853,8 @@ export default function ProfilePage() {
           {passkeyError && <p className="text-xs text-red-500 dark:text-red-400" role="alert">{passkeyError}</p>}
         </div>
 
-        {/* Change Password -- hidden for Google-only accounts */}
-        {user?.authProvider !== "google" && (
+        {/* Change Password -- hidden for accounts with no usable local password (OAuth/passkey-only) */}
+        {user?.hasPassword !== false && (
           <div className="card p-6 space-y-5">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("changePasswordSection")}</h2>
 
@@ -1957,6 +1972,39 @@ export default function ProfilePage() {
                       {t("cancel")}
                     </button>
                   </div>
+                </div>
+              ) : user?.hasPassword === false ? (
+                <div className="space-y-3">
+                  {deleteEmailSent ? (
+                    <p className="text-sm text-emerald-600 dark:text-emerald-400" role="status">
+                      {t("deleteAccountEmailSentMessage")}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("deleteAccountConfirm")}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{t("deleteAccountEmailConfirmHint")}</p>
+                      {deleteError && (
+                        <p className="text-xs text-red-500 dark:text-red-400" role="alert">{deleteError}</p>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleDeleteAccountNoPassword}
+                          disabled={deleting}
+                          className="btn-danger text-sm disabled:opacity-40"
+                        >
+                          {deleting ? t("deleteAccountDeleting") : t("deleteAccountSendEmailButton")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setShowDeleteConfirm(false); setDeleteError(""); }}
+                          className="btn-secondary text-sm"
+                        >
+                          {t("cancel")}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <form onSubmit={handleDeleteAccount} className="space-y-3">

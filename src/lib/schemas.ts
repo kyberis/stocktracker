@@ -175,7 +175,11 @@ export const changePasswordSchema = z.object({
 });
 
 export const deleteAccountSchema = z.object({
-  password: z.string().min(1, "Password is required"),
+  password: z.string().min(1, "Password is required").optional(),
+});
+
+export const confirmDeleteAccountSchema = z.object({
+  token: z.string().min(1, "Token is required"),
 });
 
 export const profileUpdateSchema = z.object({

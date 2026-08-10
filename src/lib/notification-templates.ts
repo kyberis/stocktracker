@@ -10,16 +10,6 @@ export function welcomeNotification(): CreateNotificationInput {
   };
 }
 
-export function bifolioUpgradeNotification(): CreateNotificationInput {
-  return {
-    type: "upgrade",
-    title: "i18n:notifBifolioUpgradeTitle",
-    message: "i18n:notifBifolioUpgradeMessage",
-    link: "/tools/alerts",
-    linkLabel: "i18n:notifBifolioUpgradeCta",
-  };
-}
-
 export function trefolioUpgradeNotification(): CreateNotificationInput {
   return {
     type: "upgrade",

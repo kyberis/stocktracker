@@ -23,6 +23,16 @@ export const POST = withMetrics("/api/auth/change-password", async (req: NextReq
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
+    if (!user.password_hash) {
+      return NextResponse.json(
+        {
+          error: "This account has no password to change. Sign in with your OAuth provider instead.",
+          code: "no_password_set",
+        },
+        { status: 409 }
+      );
+    }
+
     const valid = await verifyPassword(currentPassword, user.password_hash);
     if (!valid) {
       return json401(req, { source: "api/auth/change-password", reason: "wrong_current_password" }, {

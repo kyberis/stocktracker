@@ -24,12 +24,12 @@ export const POST = withMetrics("/api/cash", async (req: NextRequest) => {
   if (!result.success) return result.error;
   const data = result.data;
 
-  // Net-worth manual assets (savings/pension/real estate) require Bifolio+.
+  // Net-worth manual assets (savings/pension/real estate) require Trefolio (Pro).
   // Fixed-return investments are available on Free within the manual-asset soft cap.
   if (data.type && data.type !== "cash" && data.type !== "fixed_return") {
     const entitlement = canAccessFeature("net-worth", { plan: session.plan, aiCallsThisMonth: 0 });
     if (!entitlement.allowed) {
-      return NextResponse.json({ error: "Upgrade to Bifolio to track net worth assets.", code: "upgrade_required" }, { status: 403 });
+      return NextResponse.json({ error: "Upgrade to Trefolio to track net worth assets.", code: "upgrade_required" }, { status: 403 });
     }
   }
   if (data.type && data.type !== "cash") {

@@ -3,9 +3,10 @@ import { webcrypto } from "crypto";
 
 vi.stubGlobal("crypto", webcrypto);
 
-const { mockSend, mockGetGlobalResendApiKey } = vi.hoisted(() => ({
+const { mockSend, mockGetGlobalResendApiKey, mockCheckAndIncrementRateLimit } = vi.hoisted(() => ({
   mockSend: vi.fn(),
   mockGetGlobalResendApiKey: vi.fn(),
+  mockCheckAndIncrementRateLimit: vi.fn(),
 }));
 
 vi.mock("resend", () => ({
@@ -19,6 +20,7 @@ vi.mock("@/lib/db", async (importOriginal) => {
   return {
     ...actual,
     getGlobalResendApiKey: mockGetGlobalResendApiKey,
+    checkAndIncrementRateLimit: mockCheckAndIncrementRateLimit,
   };
 });
 
@@ -27,6 +29,10 @@ import {
   isTestVerificationToken,
   createVerificationToken,
   verifyVerificationToken,
+  createAccountDeletionToken,
+  verifyAccountDeletionToken,
+  sendAccountDeletionEmail,
+  canSendAccountDeletionEmail,
   sendVerificationEmail,
   sendAlertEmail,
   sendPercentAlertEmail,
@@ -44,6 +50,8 @@ describe("email", () => {
     mockGetGlobalResendApiKey.mockResolvedValue("re_test_key");
     mockSend.mockClear();
     mockSend.mockResolvedValue({ data: { id: "email-1" }, error: null });
+    mockCheckAndIncrementRateLimit.mockReset();
+    mockCheckAndIncrementRateLimit.mockResolvedValue({ allowed: true, remaining: 0, resetAt: "" });
     vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -117,6 +125,100 @@ describe("email", () => {
     it("test token returns null (not a valid JWT)", async () => {
       const result = await verifyVerificationToken(TEST_VERIFICATION_TOKEN);
       expect(result).toBeNull();
+    });
+  });
+
+  describe("createAccountDeletionToken / verifyAccountDeletionToken", () => {
+    it("round-trips { userId, email } for a real signed JWT", async () => {
+      const token = await createAccountDeletionToken("user-del-1", "delete-me@example.com");
+      expect(token.split(".")).toHaveLength(3);
+      const result = await verifyAccountDeletionToken(token);
+      expect(result).toEqual({ userId: "user-del-1", email: "delete-me@example.com" });
+    });
+
+    it("never returns a predictable constant for test/trefolio-test emails (no test short-circuit)", async () => {
+      const token = await createAccountDeletionToken("user-del-2", "test+someone@trefolio.com");
+      expect(token).not.toBe(TEST_VERIFICATION_TOKEN);
+      expect(token.split(".")).toHaveLength(3);
+      const result = await verifyAccountDeletionToken(token);
+      expect(result).toEqual({ userId: "user-del-2", email: "test+someone@trefolio.com" });
+    });
+
+    it("rejects an invalid/malformed token", async () => {
+      const result = await verifyAccountDeletionToken("not-a-jwt");
+      expect(result).toBeNull();
+    });
+
+    it("rejects a tampered signature", async () => {
+      const token = await createAccountDeletionToken("user-del-3", "tamper@example.com");
+      const tampered = token.slice(0, -4) + "abcd";
+      const result = await verifyAccountDeletionToken(tampered);
+      expect(result).toBeNull();
+    });
+
+    it("rejects an expired token", async () => {
+      vi.useFakeTimers();
+      try {
+        const token = await createAccountDeletionToken("user-del-4", "expired@example.com");
+        vi.advanceTimersByTime(16 * 60 * 1000); // past the 15-minute TTL
+        const result = await verifyAccountDeletionToken(token);
+        expect(result).toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("purpose isolation: an email_verification token is rejected by verifyAccountDeletionToken", async () => {
+      const verificationToken = await createVerificationToken("user-del-5", "cross-purpose@example.com");
+      const result = await verifyAccountDeletionToken(verificationToken);
+      expect(result).toBeNull();
+    });
+
+    it("purpose isolation: an account_deletion token is rejected by verifyVerificationToken", async () => {
+      const deletionToken = await createAccountDeletionToken("user-del-6", "cross-purpose-2@example.com");
+      const result = await verifyVerificationToken(deletionToken);
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("sendAccountDeletionEmail", () => {
+    it("returns success for test emails without calling Resend", async () => {
+      const result = await sendAccountDeletionEmail("test+foo@trefolio.com", "some-token");
+      expect(result).toMatchObject({ success: true });
+      expect(mockSend).not.toHaveBeenCalled();
+    });
+
+    it("returns success when sending succeeds", async () => {
+      mockSend.mockResolvedValue({ data: { id: "email-1" }, error: null });
+      const result = await sendAccountDeletionEmail("user@real-domain.com", "token-123");
+      expect(result).toMatchObject({ success: true });
+      expect(mockSend).toHaveBeenCalled();
+    });
+
+    it("returns { success: false, error } when sending fails", async () => {
+      mockSend.mockRejectedValue(new Error("Resend API error"));
+      const result = await sendAccountDeletionEmail("user@real-domain.com", "token-123");
+      expect(result).toEqual({ success: false, error: "Resend API error" });
+    });
+  });
+
+  describe("canSendAccountDeletionEmail", () => {
+    it("allows the first send and is backed by the shared Turso rate_limits table (not in-memory)", async () => {
+      mockCheckAndIncrementRateLimit.mockResolvedValue({ allowed: true, remaining: 0, resetAt: "" });
+      const result = await canSendAccountDeletionEmail("user-cooldown-1");
+      expect(result).toBe(true);
+      expect(mockCheckAndIncrementRateLimit).toHaveBeenCalledWith(
+        "user-cooldown-1",
+        "account_deletion_email",
+        1,
+        expect.any(String),
+      );
+    });
+
+    it("blocks a resend within the cooldown window", async () => {
+      mockCheckAndIncrementRateLimit.mockResolvedValue({ allowed: false, remaining: 0, resetAt: "" });
+      const result = await canSendAccountDeletionEmail("user-cooldown-2");
+      expect(result).toBe(false);
     });
   });
 

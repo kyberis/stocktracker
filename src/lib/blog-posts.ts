@@ -23,7 +23,7 @@ registerPost({
 <h2>The Contenders</h2>
 
 <h3>1. trefolio</h3>
-<p><strong>Price:</strong> Folio (free, 15 holdings) / Bifolio at €2.99/month / Trefolio at €7.99/month</p>
+<p><strong>Price:</strong> Folio (free, 100 holdings) / Trefolio at €7.99/month</p>
 <p><strong>Best for:</strong> European investors who want one-click broker imports and AI analysis</p>
 <p>trefolio is a web-based tracker built specifically for European investors. It supports direct CSV imports from DEGIRO, Interactive Brokers, Trading 212, and Revolut — the four most popular brokers in Europe. The Folio tier includes real-time quotes, charts, and basic AI analysis. Trefolio unlocks unlimited holdings, company fundamentals, news sentiment, and unlimited AI calls.</p>
 <p>Strengths: native European broker imports, 35 languages, multi-currency (EUR, USD, GBP, DKK, CAD), clean UI, AI-powered portfolio review. Available as a PWA with an iOS home screen widget.</p>
@@ -805,7 +805,7 @@ registerPost({
 </ol>
 
 <h2>Get Started</h2>
-<p>Stop checking your portfolio every hour. <a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. The free Folio tier includes 2 price alerts with in-app notifications. Upgrade to Bifolio for 10 alerts with WhatsApp, push, and email. Trefolio unlocks unlimited alerts across all channels.</p>
+<p>Stop checking your portfolio every hour. <a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. The free Folio tier includes 25 price alerts with in-app notifications. Trefolio raises the limit to 500 alerts across WhatsApp, push, and email.</p>
 `,
 });
 
@@ -924,7 +924,7 @@ registerPost({
 <p>Your broker credentials are handled entirely by SnapTrade via OAuth. trefolio never stores your broker username or password. SnapTrade is a regulated financial data provider with bank-grade encryption. Read-only access means trefolio can see your positions but never place trades or move money.</p>
 
 <h2>Get Started</h2>
-<p>Stop exporting CSVs. <a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. Broker sync is available starting on the Bifolio tier (€2.99/month) with one broker connection. Upgrade to Trefolio for multiple broker connections and auto-sync across all your accounts.</p>
+<p>Stop exporting CSVs. <a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. Broker sync is available on every plan — Folio (free) includes 1 broker connection with auto-sync. Upgrade to Trefolio for up to 20 broker connections.</p>
 `,
 });
 
@@ -983,7 +983,7 @@ registerPost({
 </ol>
 
 <h2>Get Started</h2>
-<p>Know what's coming before the market reacts. <a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. The free Folio tier includes earnings dates for your holdings. Upgrade to Bifolio for full market earnings and economic events. Trefolio unlocks the IPO calendar and advanced event filtering.</p>
+<p>Know what's coming before the market reacts. <a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. The free Folio tier includes earnings dates for your holdings. Trefolio unlocks full market earnings, economic events, and the IPO calendar.</p>
 `,
 });
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, deleteUser, trackEvent } from "@/lib/db";
+import { findUserById, deleteUser, trackEvent, getUserSettings } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 import { getExpiredSessionCookieConfig } from "@/lib/auth/session";
 import { getExpiredLayoutThemeCookieConfig } from "@/lib/theme-preferences";
@@ -9,6 +9,12 @@ import { authEventsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { deleteAccountSchema } from "@/lib/schemas";
 import { json401 } from "@/lib/log-unauthorized";
+import {
+  createAccountDeletionToken,
+  sendAccountDeletionEmail,
+  canSendAccountDeletionEmail,
+  getEmailLocale,
+} from "@/lib/email";
 
 export const POST = withMetrics("/api/auth/delete-account", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -31,7 +37,40 @@ export const POST = withMetrics("/api/auth/delete-account", async (req: NextRequ
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    const valid = await verifyPassword(password, user.password_hash);
+    const hasPassword = Boolean(user.password_hash);
+
+    // OAuth/passkey users (no usable local password) can't verify via
+    // password — send a short-lived confirmation link to their verified
+    // email instead. See src/app/api/auth/delete-account/confirm/route.ts.
+    if (!hasPassword) {
+      if (!user.email) {
+        return NextResponse.json(
+          { error: "No email on file to send a confirmation link to. Contact support." },
+          { status: 400 }
+        );
+      }
+
+      const canSend = await canSendAccountDeletionEmail(user.id);
+      if (!canSend) {
+        return NextResponse.json(
+          { error: "A confirmation email was already sent recently. Check your inbox, or try again in a few minutes." },
+          { status: 429 }
+        );
+      }
+
+      const settings = await getUserSettings(user.id);
+      const locale = getEmailLocale(settings.language || "en");
+      const token = await createAccountDeletionToken(user.id, user.email);
+      const emailResult = await sendAccountDeletionEmail(user.email, token, locale);
+      if (!emailResult.success) {
+        return NextResponse.json({ error: "Failed to send confirmation email." }, { status: 500 });
+      }
+
+      await trackEvent(user.id, "account_deletion_email_sent", { source: "local_passwordless" });
+      return NextResponse.json({ ok: true, requiresEmailConfirmation: true });
+    }
+
+    const valid = await verifyPassword(password ?? "", user.password_hash);
     if (!valid) {
       return json401(req, { source: "api/auth/delete-account", reason: "wrong_password" }, { error: "Incorrect password." });
     }

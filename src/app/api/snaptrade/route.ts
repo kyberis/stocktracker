@@ -72,10 +72,17 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
 
     let allBrokerageConnections: { id: string; brokerageName: string; disabled: boolean; disabledDate: string | null }[] = [];
     let disabledConnections: { id: string; brokerageName: string; disabledDate: string | null }[] = [];
+    let statusCheckFailed = false;
     try {
       const userSecret = await getSnapTradeConnectionSecret(session.userId);
       if (userSecret) {
-        const brokerageConns = await listBrokerageConnections(conn.snapTradeUserId, userSecret);
+        // Transient SnapTrade API errors happen — retry once before giving up,
+        // since silently returning empty lists here looks identical to "no
+        // brokerage connections" from the client's perspective.
+        const brokerageConns = await retryAsync(
+          () => listBrokerageConnections(conn.snapTradeUserId, userSecret),
+          { attempts: 2, baseDelayMs: 500 },
+        );
         allBrokerageConnections = brokerageConns.map(({ id, brokerageName, disabled, disabledDate }) => ({
           id, brokerageName, disabled, disabledDate,
         }));
@@ -85,12 +92,20 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       }
     } catch (err) {
       console.warn("[SnapTrade] Failed to check brokerage status during get-connection:", err instanceof Error ? err.message : err);
+      statusCheckFailed = true;
     }
 
     const brokerSyncs = await getSnapTradeBrokerSyncs(session.userId);
 
-    const hasDisabled = disabledConnections.length > 0;
-    await setSnapTradeNeedsAttention(session.userId, hasDisabled);
+    // Only trust this check's result when the live call actually succeeded —
+    // on failure, fall back to the last known persisted value instead of
+    // overwriting it with a false "all clear".
+    const hasDisabled = statusCheckFailed
+      ? await getSnapTradeNeedsAttention(session.userId)
+      : disabledConnections.length > 0;
+    if (!statusCheckFailed) {
+      await setSnapTradeNeedsAttention(session.userId, hasDisabled);
+    }
 
     const userForPlan = await findUserById(session.userId);
     const userPlan = effectivePlan(
@@ -110,6 +125,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       connectionLimit: getSnapTradeConnectionLimit(userPlan),
       needsAttention: hasDisabled,
       activeBrokerCount: allBrokerageConnections.filter((c) => !c.disabled).length,
+      statusCheckFailed,
     });
   }
 
@@ -133,7 +149,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
   const connectionLimit = getSnapTradeConnectionLimit(plan);
   if (connectionLimit === 0) {
     return NextResponse.json(
-      { error: "Broker sync requires a Bifolio or Trefolio subscription.", upgrade: true },
+      { error: "Broker sync requires a Trefolio subscription.", upgrade: true },
       { status: 403 },
     );
   }

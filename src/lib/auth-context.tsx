@@ -40,6 +40,8 @@ interface AuthUser {
   emailVerified: boolean;
   authProvider: AuthProvider;
   googleLinked: boolean;
+  /** False for OAuth/passkey-only signups with no usable local password. */
+  hasPassword: boolean;
   passkeyCount: number;
   portfolioReviewCount: number;
   portfolioReviewResetAt: string;

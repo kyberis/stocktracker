@@ -362,12 +362,15 @@ export type {
   BrokerIntegrationRequest,
   BrokerIntegrationRequestStatus,
   BrokerIntegrationRequestWithUser,
+  BrokerIntegrationRequestGroup,
 } from "./broker-integration-requests";
 export {
   createBrokerIntegrationRequest,
   getBrokerIntegrationRequestById,
   listBrokerIntegrationRequestsForAdmin,
+  listBrokerIntegrationRequestGroupsForAdmin,
   updateBrokerIntegrationRequestStatus,
+  normalizeBrokerName,
 } from "./broker-integration-requests";
 
 export {
