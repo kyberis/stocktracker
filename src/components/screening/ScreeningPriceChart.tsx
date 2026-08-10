@@ -77,10 +77,13 @@ export function ScreeningPriceChart({
   ticker,
   currency,
   locked = false,
+  embedded = false,
 }: {
   ticker: string;
   currency: string;
   locked?: boolean;
+  /** Nested inside Technicals — no outer card chrome. */
+  embedded?: boolean;
 }) {
   const { copy, language } = useScreeningCopy();
   const { getApiHeaders } = useSettings();
@@ -200,12 +203,17 @@ export function ScreeningPriceChart({
           ? "text-rose-700 dark:text-rose-300"
           : "text-[color:var(--muted)]";
 
+  const shellClass = embedded
+    ? "mt-3"
+    : "mt-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-3";
+  const titleClass = embedded
+    ? "text-[10px] font-semibold uppercase tracking-wider text-[color:var(--muted)]"
+    : "text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300";
+
   if (locked) {
     return (
-      <div className="mt-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
-          {copy.report.priceChartTitle}
-        </p>
+      <div className={shellClass}>
+        <p className={titleClass}>{copy.report.priceChartTitle}</p>
         <p className="mt-1.5 text-[13px] text-[color:var(--muted)]">
           {copy.report.lockedCell.repeat(10)}
         </p>
@@ -214,14 +222,9 @@ export function ScreeningPriceChart({
   }
 
   return (
-    <div
-      ref={rootRef}
-      className="mt-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-3"
-    >
+    <div ref={rootRef} className={shellClass}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
-          {copy.report.priceChartTitle}
-        </p>
+        <p className={titleClass}>{copy.report.priceChartTitle}</p>
         {changePct != null && !loading && data.length > 1 ? (
           <p className={`text-[12px] font-semibold tabular-nums ${changeTone}`}>
             {changePct > 0 ? "+" : ""}

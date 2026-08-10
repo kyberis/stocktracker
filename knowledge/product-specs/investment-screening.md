@@ -124,10 +124,11 @@ the feature is not discoverable before launch. The Dev outputs route adds
   12m close high/low are present (or can be reconstructed from distance %):
   marker = position of `price` in `[low, high]`, dates under the ends when
   known, footer with 1y return as price variation.
-- Candidate cards also show
-  [`ScreeningPriceChart`](../../src/components/screening/ScreeningPriceChart.tsx):
-  client `/api/historical` fetch (lazy on intersect) with period pills
-  1W / 1M / 3M / 6M / 1Y / 5Y (5Y = `all` sliced to five years).
+- Inside the Technicals card block,
+  [`ScreeningPriceChart`](../../src/components/screening/ScreeningPriceChart.tsx)
+  fetches `/api/historical` (lazy on intersect) with period pills
+  1W / 1M / 3M / 6M / 1Y / 5Y (5Y = `all` sliced to five years), then the
+  52w range bar and scalar metric grid.
 - Context consumers: `FeatureFlagProvider` (gate), `PortfolioProvider` (real sector
   weights on the entry page), `I18nProvider` (language selection for screening copy)
 

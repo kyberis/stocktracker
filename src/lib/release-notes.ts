@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.134",
+    date: "2026-08-10",
+    title: "Screening: price chart inside Technicals",
+    titleTranslations: {
+      es: "Cribado: gráfico de precio dentro de Técnico",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The screening price history chart now lives inside the Technicals section of each candidate card, not as a separate block below it.",
+        translations: {
+          es: "El gráfico de evolución del precio del cribado queda dentro de la sección Técnico de cada ficha, no como un bloque aparte debajo.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.133",
     date: "2026-08-10",
     title: "Screening: price history on candidate cards",

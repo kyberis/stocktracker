@@ -48,36 +48,26 @@ function TechnicalsBlock({
 }) {
   const { copy, language } = useScreeningCopy();
   const t = card.technicals;
-  if (!t) return null;
 
-  const rangeLevels = levelsFromDistancePct({
-    price: card.price,
-    distanceTo52wHighPct: t.distanceTo52wHighPct,
-    distanceTo52wLowPct: t.distanceTo52wLowPct,
-    closeHigh12m: t.closeHigh12m,
-    closeLow12m: t.closeLow12m,
-  });
+  const rangeLevels = t
+    ? levelsFromDistancePct({
+        price: card.price,
+        distanceTo52wHighPct: t.distanceTo52wHighPct,
+        distanceTo52wLowPct: t.distanceTo52wLowPct,
+        closeHigh12m: t.closeHigh12m,
+        closeLow12m: t.closeLow12m,
+      })
+    : null;
   const hasRange = rangeLevels != null;
 
-  const hasAny =
-    hasRange ||
-    t.distanceTo52wHighPct != null ||
-    t.distanceTo52wLowPct != null ||
-    t.aboveMa200 != null ||
-    t.support != null ||
-    t.resistance != null ||
-    t.return1yPct != null ||
-    t.return3mPct != null;
-  if (!hasAny) return null;
-
   const trendLabel =
-    t.aboveMa200 == null
+    t?.aboveMa200 == null
       ? "—"
       : t.aboveMa200
         ? copy.report.metaTrendAboveMa200
         : copy.report.metaTrendBelowMa200;
   const trendTone =
-    t.aboveMa200 == null
+    t?.aboveMa200 == null
       ? "text-[color:var(--foreground)]"
       : t.aboveMa200
         ? "text-emerald-700 dark:text-emerald-300"
@@ -87,48 +77,50 @@ function TechnicalsBlock({
     label: string;
     value: string;
     tone?: string;
-  }> = [
-    {
-      label: copy.report.metaFromHigh,
-      value: pct(t.distanceTo52wHighPct),
-      tone: toneClass(t.distanceTo52wHighPct),
-    },
-    {
-      label: copy.report.metaFromLow,
-      value: pct(t.distanceTo52wLowPct),
-      tone: toneClass(t.distanceTo52wLowPct),
-    },
-    {
-      label: copy.report.metaTrend,
-      value: trendLabel,
-      tone: trendTone,
-    },
-    {
-      label: copy.report.metaReturn1y,
-      value: pct(t.return1yPct),
-      tone: toneClass(t.return1yPct),
-    },
-    {
-      label: copy.report.metaReturn3m,
-      value: pct(t.return3mPct),
-      tone: toneClass(t.return3mPct),
-    },
-    {
-      label: copy.report.metaSupport,
-      value: price(t.support, card.currency),
-    },
-    {
-      label: copy.report.metaResistance,
-      value: price(t.resistance, card.currency),
-    },
-    {
-      label: copy.report.metaVolatility,
-      value:
-        t.volatilityAnnPct == null
-          ? "—"
-          : `${t.volatilityAnnPct.toFixed(0)}%`,
-    },
-  ];
+  }> | null = t
+    ? [
+        {
+          label: copy.report.metaFromHigh,
+          value: pct(t.distanceTo52wHighPct),
+          tone: toneClass(t.distanceTo52wHighPct),
+        },
+        {
+          label: copy.report.metaFromLow,
+          value: pct(t.distanceTo52wLowPct),
+          tone: toneClass(t.distanceTo52wLowPct),
+        },
+        {
+          label: copy.report.metaTrend,
+          value: trendLabel,
+          tone: trendTone,
+        },
+        {
+          label: copy.report.metaReturn1y,
+          value: pct(t.return1yPct),
+          tone: toneClass(t.return1yPct),
+        },
+        {
+          label: copy.report.metaReturn3m,
+          value: pct(t.return3mPct),
+          tone: toneClass(t.return3mPct),
+        },
+        {
+          label: copy.report.metaSupport,
+          value: price(t.support, card.currency),
+        },
+        {
+          label: copy.report.metaResistance,
+          value: price(t.resistance, card.currency),
+        },
+        {
+          label: copy.report.metaVolatility,
+          value:
+            t.volatilityAnnPct == null
+              ? "—"
+              : `${t.volatilityAnnPct.toFixed(0)}%`,
+        },
+      ]
+    : null;
 
   return (
     <BlurredValue
@@ -145,16 +137,21 @@ function TechnicalsBlock({
         </p>
       ) : (
         <>
+          <ScreeningPriceChart
+            ticker={card.ticker}
+            currency={card.currency}
+            embedded
+          />
           {hasRange && rangeLevels ? (
             <FiftyTwoWeekRangeBar
-              className="mt-2"
+              className="mt-3"
               low={rangeLevels.low}
               high={rangeLevels.high}
               price={card.price}
               currency={card.currency}
-              lowDate={t.closeLow12mDate}
-              highDate={t.closeHigh12mDate}
-              variationPct={t.return1yPct}
+              lowDate={t?.closeLow12mDate}
+              highDate={t?.closeHigh12mDate}
+              variationPct={t?.return1yPct}
               locale={language}
               labels={{
                 low: copy.report.range52wLow,
@@ -165,23 +162,25 @@ function TechnicalsBlock({
               }}
             />
           ) : null}
-          <dl className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-            {rows.map((row) => (
-              <div
-                key={row.label}
-                className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1.5"
-              >
-                <dt className="text-[10px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
-                  {row.label}
-                </dt>
-                <dd
-                  className={`mt-0.5 text-[13px] font-semibold tabular-nums ${row.tone ?? "text-[color:var(--foreground)]"}`}
+          {rows ? (
+            <dl className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+              {rows.map((row) => (
+                <div
+                  key={row.label}
+                  className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1.5"
                 >
-                  {row.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
+                  <dt className="text-[10px] font-semibold uppercase tracking-wider text-[color:var(--muted)]">
+                    {row.label}
+                  </dt>
+                  <dd
+                    className={`mt-0.5 text-[13px] font-semibold tabular-nums ${row.tone ?? "text-[color:var(--foreground)]"}`}
+                  >
+                    {row.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
         </>
       )}
     </BlurredValue>
@@ -627,11 +626,6 @@ export function CandidateCard({
       )}
 
       <TechnicalsBlock card={card} locked={blurResearch} />
-      <ScreeningPriceChart
-        ticker={card.ticker}
-        currency={card.currency}
-        locked={blurResearch || hideIdentity}
-      />
 
       {(card.positionKind ||
         card.suitability ||
