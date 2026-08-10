@@ -769,7 +769,7 @@ export const runHardDataStep: StepHandler = async (
         await updateStepDependsOn(compilerStep.id, compilerDependsOn);
       }
       // Post-Compiler chain: optional shortlist_research → optional
-      // compiler_evaluate (Estebaranz) → optional QA.
+      // compiler_evaluate (trefolio checklist) → optional QA.
       if (compilerStep) {
         await insertPostCompilerSteps(ctx.runId, compilerStep.id, {
           researchEnabled,

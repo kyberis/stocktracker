@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-290 routes.
+291 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -98,6 +98,7 @@
 | `/api/auth/change-password` | POST | [`src/app/api/auth/change-password/route.ts`](../../src/app/api/auth/change-password/route.ts) |
 | `/api/auth/checklist` | GET, POST | [`src/app/api/auth/checklist/route.ts`](../../src/app/api/auth/checklist/route.ts) |
 | `/api/auth/delete-account` | POST | [`src/app/api/auth/delete-account/route.ts`](../../src/app/api/auth/delete-account/route.ts) |
+| `/api/auth/delete-account/confirm` | POST | [`src/app/api/auth/delete-account/confirm/route.ts`](../../src/app/api/auth/delete-account/confirm/route.ts) |
 | `/api/auth/exit-impersonation` | POST | [`src/app/api/auth/exit-impersonation/route.ts`](../../src/app/api/auth/exit-impersonation/route.ts) |
 | `/api/auth/google` | GET | [`src/app/api/auth/google/route.ts`](../../src/app/api/auth/google/route.ts) |
 | `/api/auth/google/callback` | GET | [`src/app/api/auth/google/callback/route.ts`](../../src/app/api/auth/google/callback/route.ts) |

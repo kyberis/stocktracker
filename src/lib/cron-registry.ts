@@ -159,7 +159,7 @@ export const CRON_REGISTRY: CronJob[] = [
   {
     name: "screening-recover",
     path: "/api/cron/screening-recover",
-    schedule: "*/5 * * * *",
+    schedule: "*/2 * * * *",
     description:
       "Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain",
   },

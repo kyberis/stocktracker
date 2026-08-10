@@ -7,7 +7,7 @@ import { num, str } from "./helpers";
  * orchestrator (HLD §7). The worker (`/api/internal/screening/worker`) leases
  * one pending step at a time via `leasePendingStep`, executes the agent, and
  * closes with `completeStep` / `failStep`. A cron (`screening-recover`) resets
- * expired leases every 5 minutes.
+ * expired leases every few minutes.
  */
 
 export type ScreeningStepStatus =
@@ -386,6 +386,52 @@ export async function failStep(opts: {
  * Recover expired leases and mark exhausted retries as failed. Returns the
  * number of steps returned to `pending` (retriable) and permanently failed.
  */
+/**
+ * Touch `updated_at` and push `lease_expires_at` forward while a long step
+ * (e.g. shortlist Tavily research) is still making progress. Keeps the UI
+ * stall detector from marking a live step as stuck, and gives recover a
+ * sharper signal when the worker actually dies.
+ */
+export async function heartbeatStepLease(opts: {
+  stepId: string;
+  ownerId: string;
+  /** How far ahead to set lease_expires_at from now (default 90s). */
+  leaseMs?: number;
+}): Promise<boolean> {
+  const client = await ensureInitialized();
+  const now = new Date();
+  const leaseMs = Math.max(5_000, opts.leaseMs ?? 90_000);
+  const expires = new Date(now.getTime() + leaseMs).toISOString();
+  const result = await client.execute({
+    sql: `UPDATE screening_run_steps
+             SET lease_expires_at = ?,
+                 updated_at = ?
+           WHERE id = ? AND status = 'running' AND lease_owner = ?`,
+    args: [expires, now.toISOString(), opts.stepId, opts.ownerId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
+/**
+ * Force-expire every `running` lease for one run so resume / recover can
+ * reclaim zombie steps whose worker died before `lease_expires_at`.
+ * Does not change status — pair with {@link recoverExpiredLeases}.
+ */
+export async function forceExpireRunningLeasesForRun(
+  runId: string,
+  now = new Date(),
+): Promise<number> {
+  const client = await ensureInitialized();
+  const past = new Date(now.getTime() - 1_000).toISOString();
+  const result = await client.execute({
+    sql: `UPDATE screening_run_steps
+             SET lease_expires_at = ?
+           WHERE run_id = ? AND status = 'running'`,
+    args: [past, runId],
+  });
+  return result.rowsAffected ?? 0;
+}
+
 export async function recoverExpiredLeases(
   now = new Date(),
 ): Promise<{ requeued: number; failed: number }> {

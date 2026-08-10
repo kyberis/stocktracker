@@ -587,7 +587,7 @@ const en = {
       compiler: "Choosing the best fits for the shortlist.",
       shortlist_research: "Deep-diving the shortlist with company research.",
       compiler_evaluate:
-        "Applying the Estebaranz checklist to each shortlisted company.",
+        "Applying the trefolio checklist to each shortlisted company.",
       qa: "Verifying numbers, citations and cross-agent consistency.",
     },
     steps: {
@@ -600,7 +600,7 @@ const en = {
       risk: "Risk",
       compiler: "Selecting top candidates",
       shortlist_research: "Shortlist research",
-      compiler_evaluate: "Framework evaluation",
+      compiler_evaluate: "trefolio evaluation",
       qa: "Verification",
     },
   },
@@ -665,7 +665,7 @@ const en = {
     linkTrefolio: "trefolio page",
     catalyst: "Catalyst",
     thesisTitle: "Thesis",
-    evaluationTitle: "Framework evaluation",
+    evaluationTitle: "trefolio evaluation",
     evaluationFilter: "Filter verdict",
     evaluationBusiness: "Business in 3 sentences",
     evaluationType: "Company type",
@@ -1382,7 +1382,7 @@ const es: ScreeningCopy = {
       compiler: "Eligiendo los mejores encajes para la shortlist.",
       shortlist_research: "Profundizando la shortlist con research de compañía.",
       compiler_evaluate:
-        "Aplicando el checklist de Estebaranz a cada empresa de la shortlist.",
+        "Aplicando el checklist de trefolio a cada empresa de la shortlist.",
       qa: "Verificando números, citas y coherencia entre agentes.",
     },
     steps: {
@@ -1395,7 +1395,7 @@ const es: ScreeningCopy = {
       risk: "Riesgo",
       compiler: "Selección de candidatos",
       shortlist_research: "Research de shortlist",
-      compiler_evaluate: "Evaluación del marco",
+      compiler_evaluate: "Evaluación trefolio",
       qa: "Verificación",
     },
   },
@@ -1460,7 +1460,7 @@ const es: ScreeningCopy = {
     linkTrefolio: "Ficha en trefolio",
     catalyst: "Catalizador",
     thesisTitle: "Tesis",
-    evaluationTitle: "Evaluación del marco",
+    evaluationTitle: "Evaluación trefolio",
     evaluationFilter: "Veredicto del filtro",
     evaluationBusiness: "El negocio en 3 frases",
     evaluationType: "Tipo de empresa",

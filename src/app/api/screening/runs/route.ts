@@ -29,8 +29,12 @@ import { COMPILER_AGENT_KIND } from "@/lib/screening/agents/compiler";
 import { continueScreeningRunInBackground } from "@/lib/screening/orchestrator/drain-run";
 
 export const dynamic = "force-dynamic";
-/** Background drain may need the isolate briefly after the response. */
-export const maxDuration = 60;
+/**
+ * Background drain (waitUntil) must outlive Hard Data + research fan-out +
+ * shortlist Tavily. A 60s cap killed the isolate mid-shortlist_research and
+ * left runs stuck on a zombie `running` lease until recover/resume.
+ */
+export const maxDuration = 300;
 
 /**
  * List recent screening runs for the authenticated user (entry-page history).

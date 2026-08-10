@@ -39,7 +39,7 @@ export function hardDataNeedsFundamentalsBackfill(
     (c) => c.histPeAvg == null && (c.histPeYears == null || c.histPeYears === 0),
   );
   if (missingHistPe.length >= Math.ceil(candidates.length / 2)) return true;
-  // Backfill Estebaranz annual series (margins / FCF / ROIC / shares).
+  // Backfill annual series for evaluation (margins / FCF / ROIC / shares).
   const missingSeries = candidates.filter(
     (c) => !c.annualSeries || c.annualSeries.length === 0,
   );

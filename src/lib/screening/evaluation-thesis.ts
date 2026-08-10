@@ -1,6 +1,6 @@
 import type { ArtOfInvestingEvaluation } from "@/lib/screening/schemas";
 
-/** Render Estebaranz structured evaluation into a readable thesis string. */
+/** Render trefolio structured evaluation into a readable thesis string. */
 export function renderEvaluationThesis(
   evaluation: ArtOfInvestingEvaluation,
 ): string {

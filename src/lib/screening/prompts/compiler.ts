@@ -86,7 +86,7 @@ Selection rules:
 3. Do NOT emit bullets for research names you are dropping — only the final shortlist.
 4. When evidence is thin for everyone, still pick the best ${finalN} by Hard Data rankScore and note gaps in the summary.
 
-Thesis writing (selection phase — keep SHORT; a later evaluate step writes the full Estebaranz checklist):
+Thesis writing (selection phase — keep SHORT; a later evaluate step writes the full trefolio checklist):
 - headline: 4–8 words capturing the angle.
 - bullet: ONE short paragraph (about 280–700 characters) explaining why this name made the shortlist from Hard Data + IR/Web/fit evidence.
 - Mention 1–2 present metrics only; do not invent figures.

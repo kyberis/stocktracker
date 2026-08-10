@@ -344,7 +344,7 @@ export async function runCompilerEvaluateAgent(
     function: {
       name: "submit_evaluations",
       description:
-        "Submit Estebaranz framework evaluations for each shortlist ticker.",
+        "Submit trefolio framework evaluations for each shortlist ticker.",
       parameters: {
         type: "object",
         additionalProperties: false,

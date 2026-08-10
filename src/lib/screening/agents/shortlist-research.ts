@@ -1,5 +1,6 @@
 import {
   getLatestScreeningAgentOutputUnscoped,
+  heartbeatStepLease,
   insertScreeningAgentOutput,
 } from "@/lib/db";
 import { isFeatureEnabledForUser } from "@/lib/db/settings";
@@ -20,9 +21,18 @@ import {
 
 export const SHORTLIST_RESEARCH_AGENT_KIND = "shortlist_research";
 
+/** Leave headroom under the heavy-step lease / function maxDuration. */
+const WALL_BUDGET_MS = 150_000;
+/** Cap each live Tavily Research call so 5 tickers cannot serialize past the budget. */
+const PER_TICKER_TIMEOUT_MS = 55_000;
+const HEARTBEAT_LEASE_MS = 90_000;
+
 /**
  * Post-Compiler deep-dive: Tavily Research (cache-first) for the ≤5 shortlist
  * tickers. Enrichment is consumed at report compose time.
+ *
+ * Bound wall time and heartbeat the lease so a dropped waitUntil / killed
+ * isolate does not leave the UI on a zombie `running` step for minutes.
  */
 export const runShortlistResearchStep: StepHandler = async (
   ctx: HandlerContext,
@@ -47,6 +57,7 @@ export const runShortlistResearchStep: StepHandler = async (
   }
 
   const started = Date.now();
+  const ownerId = ctx.step.leaseOwner;
   const compilerRow = await getLatestScreeningAgentOutputUnscoped(
     ctx.runId,
     "compiler",
@@ -87,12 +98,32 @@ export const runShortlistResearchStep: StepHandler = async (
   }
 
   const researched: ShortlistResearchTicker[] = [];
+  let truncated = false;
   for (const ticker of tickers) {
+    const elapsed = Date.now() - started;
+    const remaining = WALL_BUDGET_MS - elapsed;
+    if (remaining < 8_000) {
+      truncated = true;
+      break;
+    }
+
+    if (ownerId) {
+      await heartbeatStepLease({
+        stepId: ctx.step.id,
+        ownerId,
+        leaseMs: HEARTBEAT_LEASE_MS,
+      }).catch(() => {
+        // best-effort — do not fail the research step on heartbeat errors
+      });
+    }
+
+    const timeoutMs = Math.min(PER_TICKER_TIMEOUT_MS, remaining);
     const bundle = await getOrFetchCompanyResearch({
       ticker,
       companyName: nameByTicker.get(ticker) ?? ticker,
       runId: ctx.runId,
       model: "mini",
+      timeoutMs,
     });
     researched.push({
       ticker,
@@ -113,6 +144,12 @@ export const runShortlistResearchStep: StepHandler = async (
       analystCoverageNote: bundle.analystCoverageNote,
       pricingPowerEvidence: bundle.pricingPowerEvidence,
     });
+  }
+
+  if (truncated && tickers.length > researched.length) {
+    console.warn(
+      `[screening/shortlist-research] wall budget hit run=${ctx.runId} done=${researched.length}/${tickers.length}`,
+    );
   }
 
   const output: ShortlistResearchOutput = {
@@ -143,6 +180,7 @@ export const runShortlistResearchStep: StepHandler = async (
       tickerCount: researched.length,
       cacheHits: researched.filter((t) => t.fromCache).length,
       creditsUsed: researched.reduce((s, t) => s + t.creditsUsed, 0),
+      truncated,
     },
   };
 };

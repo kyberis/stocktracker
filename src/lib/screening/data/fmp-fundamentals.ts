@@ -201,7 +201,7 @@ export function averageAnnualPe(rows: unknown[]): {
   return { histPeAvg: sum / pes.length, histPeYears: pes.length };
 }
 
-/** One fiscal-year observation for Estebaranz financial-quality tables. */
+/** One fiscal-year observation for evaluation financial-quality tables. */
 export interface AnnualFinancialPoint {
   year: number | null;
   revenue: number | null;

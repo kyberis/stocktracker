@@ -19,6 +19,8 @@ export interface GetOrFetchCompanyResearchOpts {
   model?: TavilyResearchModel;
   /** When true, skip live Research and only return cache. */
   cacheOnly?: boolean;
+  /** Forwarded to live Tavily Research (create + poll). */
+  timeoutMs?: number;
   fetchImpl?: typeof fetch;
 }
 
@@ -85,6 +87,7 @@ export async function getOrFetchCompanyResearch(
     companyName: opts.companyName,
     model: opts.model ?? "mini",
     runId: opts.runId,
+    timeoutMs: opts.timeoutMs,
     fetchImpl: opts.fetchImpl,
   });
 

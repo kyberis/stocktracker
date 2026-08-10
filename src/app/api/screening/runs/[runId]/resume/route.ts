@@ -5,6 +5,7 @@ import { requireScreeningAccess } from "@/lib/screening/guard";
 import {
   getScreeningRun,
   listStepsForRun,
+  forceExpireRunningLeasesForRun,
   recoverExpiredLeases,
 } from "@/lib/db";
 import { buildRunResponse } from "@/lib/screening/pipeline/build-run";
@@ -25,9 +26,10 @@ function runIdFromPath(pathname: string): string {
 /**
  * POST /api/screening/runs/[runId]/resume
  *
- * User-facing kick when the progress UI detects a stall. Reclaims expired
- * leases, drains one step inline for snappy UI feedback, then continues
- * in-process via waitUntil (same path as create-run).
+ * User-facing kick when the progress UI detects a stall. Force-expires any
+ * still-running leases for this run (zombie workers die without clearing the
+ * row), reclaims them, drains one step inline for snappy UI feedback, then
+ * continues in-process via waitUntil (same path as create-run).
  */
 export const POST = withMetrics(
   "/api/screening/runs/[runId]/resume",
@@ -49,8 +51,10 @@ export const POST = withMetrics(
       return NextResponse.json({ error: "Mock runs cannot be resumed" }, { status: 400 });
     }
 
-    // Reclaim orphaned `running` steps before draining — the usual stuck case
-    // (shortlist_research / IR killed mid-lease by a short maxDuration).
+    // Force-expire first: UI marks stuck at ~2.5 min while leases last 3 min,
+    // and dead waitUntil workers leave `running` rows that recover would
+    // otherwise ignore until natural expiry.
+    const forceExpired = await forceExpireRunningLeasesForRun(row.id);
     const recovered = await recoverExpiredLeases(new Date());
 
     // One inline step for immediate feedback; heavy work continues in background
@@ -63,7 +67,7 @@ export const POST = withMetrics(
     const stillQueued = stepsAfter.some(
       (s) => s.status === "pending" || s.status === "running",
     );
-    if (moreWork || recovered.requeued > 0 || stillQueued) {
+    if (moreWork || recovered.requeued > 0 || forceExpired > 0 || stillQueued) {
       continueScreeningRunInBackground(row.id);
     }
 
@@ -73,6 +77,7 @@ export const POST = withMetrics(
       processed,
       moreWork: moreWork || stillQueued,
       recovered,
+      forceExpired,
     });
   },
 );

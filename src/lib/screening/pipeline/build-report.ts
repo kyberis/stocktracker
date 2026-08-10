@@ -57,7 +57,7 @@ export interface ComposeReportInput {
   qaRow?: ScreeningAgentOutputRow | null;
   /** Post-Compiler Tavily Research deep-dive (≤5 shortlist). */
   shortlistResearchRow?: ScreeningAgentOutputRow | null;
-  /** Estebaranz evaluation output (compiler_evaluate). */
+  /** trefolio evaluation output (compiler_evaluate). */
   compilerEvaluateRow?: ScreeningAgentOutputRow | null;
   /** Which agent kinds are still pending — surfaced as `partial=true` in UI. */
   pendingAgentKinds?: string[];

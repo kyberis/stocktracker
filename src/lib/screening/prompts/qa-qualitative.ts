@@ -26,7 +26,7 @@ export function buildQaQualitativePrompt(
     "R6 — Guidance freshness is primarily Layer A (deterministic). Only add an R6 issue if Layer A missed an obviously stale (>12 months) or future asOf relative to evaluationDate; never flag a recent past date as 'future'. Do not emit R6 when Layer A already listed one for the same ticker.",
     "R7 — Price-drop causality: if the compiler summary attributes a price move to a cause, the underlying agent output must contain that cause.",
     "R8 — M&A vs organic growth: growth claims must not attribute inorganic (M&A) contribution to organic growth.",
-    "Estebaranz evaluation grounding (issueType=cross_agent_inconsistency or other, ruleId=null): if card.evaluation exists, numbers cited in evaluation.financials / valuation must not invent PE/ND/EBITDA/ROIC that contradict Hard Data on the same card. DESCARTE without a concrete filterReason is a blocking issue. Unsupported claims that lack 'DATO NO DISPONIBLE' when the metric is null on the card are warnings (blocking=false) unless they invent a specific figure.",
+    "trefolio evaluation grounding (issueType=cross_agent_inconsistency or other, ruleId=null): if card.evaluation exists, numbers cited in evaluation.financials / valuation must not invent PE/ND/EBITDA/ROIC that contradict Hard Data on the same card. DESCARTE without a concrete filterReason is a blocking issue. Unsupported claims that lack 'DATO NO DISPONIBLE' when the metric is null on the card are warnings (blocking=false) unless they invent a specific figure.",
   ].join("\n- ");
 
   const layerASummary = ctx.layerAIssues.length
@@ -65,7 +65,7 @@ RESPONSE PROTOCOL (mandatory):
 - verdict: "pass" when you find no additional blocking issues; "fail" when at least one blocking qualitative issue exists.
 - issues[]: 0 to 15 entries. Each entry describes ONE distinct concern with:
     - issueType: quant_mismatch | unconfirmed_source | cross_agent_inconsistency | rule_violation | other
-    - ruleId: one of R3, R6, R7, R8 (or null when no rule maps — use null for Estebaranz grounding issues)
+    - ruleId: one of R3, R6, R7, R8 (or null when no rule maps — use null for evaluation grounding issues)
     - agentKind: MUST be a pipeline step kind — use ir_business, web_sentiment, technicals, hard_data, compiler, compiler_evaluate (never short aliases like "ir" or "web")
     - ticker: uppercase ticker or null for report-level
     - claimPath: dotted path pointing to the offending field, best-effort

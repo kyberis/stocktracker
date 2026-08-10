@@ -25,7 +25,7 @@ ambiguous) via search, then runs the same research agents on that one listing
   - `screening_agents_v2_enabled` — umbrella for E5–E7 (Web & Sentiment, Portfolio Context, Risk); implies IR fan-out for DAG coherence
   - `screening_qa_enabled` — Agent 6 QA / verified reports; gates `reportReady` when on
   - `screening_tavily_research_enabled` — Tavily path for IR (Search+Extract official IR pages/docs; Research only as thin-FMP fallback), shortlist deep-dive, shared ticker research cache (7d), slim analyst Search; off by default
-  - `screening_estebaranz_eval_enabled` — post-shortlist `compiler_evaluate` step applies the Estebaranz (“Arte de Invertir”) checklist to ≤5 shortlist names; on by default (and in prod)
+  - `screening_estebaranz_eval_enabled` — post-shortlist `compiler_evaluate` step applies the trefolio value-investing checklist to ≤5 shortlist names; on by default (and in prod). Flag key is historical; product copy always says trefolio.
   - `screening_dev_lab_enabled` — Dev agent-log button for non-admins
 - **Health:** green — Intake (+ sample-conversation pilot) + Hard Data + IR/Web/PC/Risk/Technicals (v2) + optional shortlist Research + Compiler + QA (flag on in prod) + per-run variable cost ledger
 - **Owning skill:** [`.cursor/skills/engineer-tools/SKILL.md`](../../.cursor/skills/engineer-tools/SKILL.md)
@@ -85,7 +85,7 @@ optional `shortlist_research` (if `screening_tavily_research_enabled`) →
 optional `compiler_evaluate` (if `screening_estebaranz_eval_enabled`) →
 optional `qa`.
 
-`compiler_evaluate` writes a structured Estebaranz evaluation (filter verdict,
+`compiler_evaluate` writes a structured trefolio evaluation (filter verdict,
 business, moat, management, financials, growth, valuation, catalysts, risks /
 pre-mortem, invalidation, gaps, conviction) per shortlist ticker. Cards prefer
 that structured block over the short selection thesis. Hard Data enrichment now

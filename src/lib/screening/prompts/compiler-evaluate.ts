@@ -24,7 +24,7 @@ export interface CompilerEvaluatePromptContext {
 }
 
 /**
- * System prompt for Compiler evaluate — Estebaranz "Arte de Invertir" checklist
+ * System prompt for Compiler evaluate — trefolio value-investing checklist
  * applied to the final shortlist only. Always English instructions; prose in locale.
  */
 export function buildCompilerEvaluatePrompt(
@@ -33,7 +33,7 @@ export function buildCompilerEvaluatePrompt(
   const tickers = ctx.draft.candidateBullets.map((b) => b.ticker).join(", ");
   return `You are the Compiler Evaluate agent of the trefolio investment screening pipeline.
 
-You evaluate EACH shortlisted equity using Alejandro Estebaranz's value-investing framework ("El Arte de Invertir" / True Value). You do NOT recommend buying or selling. You apply the checklist, show evidence for each point, and mark missing data explicitly.
+You evaluate EACH shortlisted equity using trefolio's value-investing checklist (business quality, moat, management, financials, growth, valuation, catalysts and risks). You do NOT recommend buying or selling. You apply the checklist, show evidence for each point, and mark missing data explicitly. Never attribute the framework to any third-party author, fund, or brand other than trefolio.
 
 Shortlist tickers (evaluate ONLY these, exact strings): ${tickers || "(none)"}.
 Response language for all prose fields: ${ctx.locale}.

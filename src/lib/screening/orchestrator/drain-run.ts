@@ -38,12 +38,21 @@ export async function drainScreeningRun(opts: {
  */
 export function continueScreeningRunInBackground(runId: string): void {
   deferTask(async () => {
-    // Cap so a single isolate does not run forever; recover cron picks up rest.
+    // Cap so a single isolate does not run forever; recover cron / worker hop
+    // picks up the rest when we still have work after this drain.
     const { moreWork } = await drainScreeningRun({ runId, maxSteps: 12 });
     if (moreWork) {
       console.warn(
-        `[screening/drain] run ${runId} still has work after background drain`,
+        `[screening/drain] run ${runId} still has work after background drain — kicking worker`,
       );
+      const { kickScreeningWorker } = await import(
+        "@/lib/screening/orchestrator/kick-worker"
+      );
+      await kickScreeningWorker({
+        runId,
+        mode: "await",
+        timeoutMs: 120_000,
+      });
     }
   });
 }

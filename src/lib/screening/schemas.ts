@@ -298,7 +298,7 @@ export const screeningCategoriesSchema = z.object({
 });
 export type ScreeningCategories = z.infer<typeof screeningCategoriesSchema>;
 
-/* ── Compiler evaluate — Estebaranz "Arte de Invertir" (post-research) ─ */
+/* ── Compiler evaluate — trefolio value-investing checklist (post-research) ─ */
 
 export const artOfInvestingFilterVerdictSchema = z.enum(["PASA", "DESCARTE"]);
 export type ArtOfInvestingFilterVerdict = z.infer<
@@ -414,7 +414,7 @@ export const screeningCandidateCardSchema = z.object({
   sources: z.array(sourceRefSchema),
   illustrativeAllocation: z.string().optional(),
   positionKind: z.enum(["new_position", "top_up_existing"]).optional(),
-  /** Estebaranz structured evaluation (compiler_evaluate). */
+  /** trefolio structured evaluation (compiler_evaluate). */
   evaluation: artOfInvestingEvaluationSchema.optional(),
   /** Web & Sentiment (E5). */
   sentimentSummary: z.string().max(500).optional(),
@@ -604,7 +604,7 @@ export const hardDataCandidateSchema = z.object({
   meetsMajorityBrief: z.boolean().optional(),
   /** Human-readable brief expectations this ticker missed. */
   unmetBriefCriteria: z.array(z.string().max(200)).max(12).optional(),
-  /** Multi-year annual fundamentals for Estebaranz evaluation (≤10). */
+  /** Multi-year annual fundamentals for trefolio evaluation (≤10). */
   annualSeries: z
     .array(
       z.object({
@@ -729,7 +729,7 @@ export const irBusinessOutputSchema = z.object({
   confidence: z.enum(["high", "medium", "low"]).default("medium"),
   bullets: z.array(z.string().min(1).max(280)).min(1).max(5),
   gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
-  /** Estebaranz Fase 1 — three-sentence business explanation. */
+  /** Evaluation Fase 1 — three-sentence business explanation. */
   businessThreeSentences: z.string().max(900).optional(),
   companyType: z
     .enum(["compounder", "growth", "cyclical", "special_situation", "unclear"])
@@ -999,7 +999,7 @@ export const shortlistResearchTickerSchema = z.object({
   fromCache: z.boolean().default(false),
   creditsUsed: z.number().nonnegative().default(0),
   errors: z.array(z.string().max(200)).max(8).default([]),
-  /** Estebaranz enrichment from Tavily Research (optional / fail-open). */
+  /** Checklist enrichment from Tavily Research (optional / fail-open). */
   moatEvidence: z.string().max(1200).optional().default(""),
   capitalAllocation: z.string().max(1200).optional().default(""),
   growthDrivers: z.string().max(1200).optional().default(""),

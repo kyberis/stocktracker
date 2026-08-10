@@ -236,6 +236,35 @@ describe("screening-steps DAL", () => {
     expect(res).toEqual({ requeued: 1, failed: 1 });
   });
 
+  it("heartbeatStepLease extends lease for the owning worker only", async () => {
+    mockExecute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
+    const { heartbeatStepLease } = await import("./screening-steps");
+    const ok = await heartbeatStepLease({
+      stepId: "s1",
+      ownerId: "owner-1",
+      leaseMs: 90_000,
+    });
+    expect(ok).toBe(true);
+    const call = mockExecute.mock.calls[0][0];
+    expect(call.sql).toContain("lease_expires_at");
+    expect(call.args[2]).toBe("s1");
+    expect(call.args[3]).toBe("owner-1");
+  });
+
+  it("forceExpireRunningLeasesForRun sets lease_expires_at in the past", async () => {
+    mockExecute.mockResolvedValueOnce({ rows: [], rowsAffected: 2 });
+    const { forceExpireRunningLeasesForRun } = await import("./screening-steps");
+    const n = await forceExpireRunningLeasesForRun(
+      "run-1",
+      new Date("2026-08-10T22:00:00.000Z"),
+    );
+    expect(n).toBe(2);
+    const call = mockExecute.mock.calls[0][0];
+    expect(call.sql).toContain("status = 'running'");
+    expect(call.args[0]).toBe("2026-08-10T21:59:59.000Z");
+    expect(call.args[1]).toBe("run-1");
+  });
+
   it("appendEvent writes with truncated payload", async () => {
     mockExecute.mockResolvedValueOnce({ rows: [] });
     const { appendEvent } = await import("./screening-steps");

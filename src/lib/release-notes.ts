@@ -17,6 +17,57 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.137",
+    date: "2026-08-11",
+    title: "SnapTrade: import recent orders when activities lag",
+    titleTranslations: {
+      es: "SnapTrade: importar órdenes recientes cuando las activities van con retraso",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "After a broker reconnect, SnapTrade activities can be empty for up to a day while positions and EXECUTED orders are already available. Sync now merges those orders into the transaction ledger (with fingerprint dedupe), and no longer advances last_imported_at when the first activity fetch returns nothing — so buys like ZTS and sells like ICGA.DE appear in Transactions instead of only as orphan positions. Open DEGIRO limit orders mislabeled EXECUTED (null fill/price while the position is unchanged) are ignored.",
+        translations: {
+          es: "Tras reconectar un broker, las activities de SnapTrade pueden estar vacías hasta un día mientras posiciones y órdenes EXECUTED ya están disponibles. El sync ahora fusiona esas órdenes en el ledger de transacciones (con dedupe por huella), y ya no avanza last_imported_at cuando el primer fetch de activities no devuelve nada — así compras como ZTS y ventas como ICGA.DE aparecen en Transacciones en lugar de solo como posiciones huérfanas. Se ignoran órdenes límite abiertas de DEGIRO mal etiquetadas como EXECUTED (sin fill/precio y con la posición intacta).",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.136",
+    date: "2026-08-10",
+    title: "Screening: trefolio-only evaluation branding",
+    titleTranslations: {
+      es: "Cribado: evaluación solo con marca trefolio",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Screening evaluation copy, progress labels, and agent prompts now say trefolio only — no third-party author or fund names in the product UI or model instructions.",
+        translations: {
+          es: "El copy de evaluación del cribado, las etiquetas de progreso y los prompts de agentes hablan solo de trefolio — sin nombres de autores o fondos de terceros en la UI ni en las instrucciones del modelo.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.135",
+    date: "2026-08-10",
+    title: "Screening: stop zombie shortlist stalls",
+    titleTranslations: {
+      es: "Cribado: menos bloqueos en research de shortlist",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Screening runs no longer die mid–shortlist research because create-run’s background drain was capped at 60s. Resume now force-expires zombie leases, shortlist research heartbeats and budgets Tavily time, and the recover cron runs every 2 minutes.",
+        translations: {
+          es: "Los cribados ya no mueren a mitad del research de shortlist porque el drain en segundo plano al crear el run estaba limitado a 60s. Reanudar fuerza la caducidad de leases zombie, el research hace heartbeat y limita el tiempo de Tavily, y el cron de recuperación corre cada 2 minutos.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.134",
     date: "2026-08-10",
     title: "Screening: price chart inside Technicals",
@@ -104,16 +155,16 @@ export const releaseNotes: ReleaseEntry[] = [
   {
     version: "2.5.129",
     date: "2026-08-10",
-    title: "Screening: Estebaranz framework evaluation",
+    title: "Screening: trefolio framework evaluation",
     titleTranslations: {
-      es: "Cribado: evaluación con marco Estebaranz",
+      es: "Cribado: evaluación con marco trefolio",
     },
     changes: [
       {
         type: "feature",
-        text: "When `screening_estebaranz_eval_enabled` is on, screening runs a Compiler evaluate step after shortlist research that applies the Estebaranz (“Arte de Invertir”) checklist to each shortlisted company — filter verdict, moat, management, financials, valuation, catalysts, risks/pre-mortem, gaps and conviction — with explicit “data not available” when figures are missing. Upstream Hard Data, IR, Web and Tavily research collect the evidence; cards show the structured evaluation with the usual not-advice disclaimer.",
+        text: "When framework evaluation is enabled, screening runs a Compiler evaluate step after shortlist research that applies the trefolio value-investing checklist to each shortlisted company — filter verdict, moat, management, financials, valuation, catalysts, risks/pre-mortem, gaps and conviction — with explicit “data not available” when figures are missing. Upstream Hard Data, IR, Web and Tavily research collect the evidence; cards show the structured evaluation with the usual not-advice disclaimer.",
         translations: {
-          es: "Con `screening_estebaranz_eval_enabled`, el cribado ejecuta un paso Compiler evaluate tras el research de shortlist que aplica el checklist de Estebaranz (“El Arte de Invertir”) a cada empresa — veredicto de filtro, moat, directiva, números, valoración, catalizadores, riesgos/pre-mortem, lagunas y convicción — marcando “dato no disponible” si falta evidencia. Hard Data, IR, Web y Tavily aportan los datos; las fichas muestran la evaluación estructurada con el disclaimer habitual de no asesoramiento.",
+          es: "Con la evaluación de marco activada, el cribado ejecuta un paso Compiler evaluate tras el research de shortlist que aplica el checklist de inversión de trefolio a cada empresa — veredicto de filtro, moat, directiva, números, valoración, catalizadores, riesgos/pre-mortem, lagunas y convicción — marcando “dato no disponible” si falta evidencia. Hard Data, IR, Web y Tavily aportan los datos; las fichas muestran la evaluación estructurada con el disclaimer habitual de no asesoramiento.",
         },
       },
     ],

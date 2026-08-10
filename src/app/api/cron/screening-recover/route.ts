@@ -12,7 +12,7 @@ export const maxDuration = 300;
 const MAX_INLINE_STEPS = 8;
 
 /**
- * Screening pipeline recovery. Every 5 minutes:
+ * Screening pipeline recovery. Every 2 minutes:
  *  1. Reset expired leases (worker crashed, step stuck in `running`).
  *  2. Process pending steps **inline** (await) — never-leased steps whose
  *     original waitUntil kick was dropped.

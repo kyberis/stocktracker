@@ -6,6 +6,7 @@ import {
   countPendingStepsForRun,
   failStep,
   getScreeningRunUnscoped,
+  heartbeatStepLease,
   leasePendingStep,
   updateScreeningRunStatus,
 } from "@/lib/db";
@@ -20,6 +21,10 @@ import { recordScreeningStep } from "@/lib/screening/metrics";
 /** Default lease horizon per step. Handlers must finish inside this window. */
 /** Web/IR steps fetch FMP + Tavily + LLM; 55s was too short and left orphans. */
 export const DEFAULT_LEASE_MS = 180_000;
+/** shortlist_research can poll Tavily for multiple tickers — keep under maxDuration 300. */
+export const HEAVY_STEP_LEASE_MS = 270_000;
+
+const HEAVY_LEASE_KINDS = new Set(["shortlist_research"]);
 
 export interface RunnerOptions {
   /** Restrict work to one run (used by the immediate post-launch dispatch). */
@@ -54,6 +59,16 @@ export async function processOneStep(opts: RunnerOptions = {}): Promise<RunnerRe
   });
   if (!step) {
     return { processed: 0, status: "no_work", moreWork: false };
+  }
+
+  // Extend lease for heavy kinds after we know which step we won — the initial
+  // lease uses DEFAULT_LEASE_MS because we pick before knowing agent_kind.
+  if (HEAVY_LEASE_KINDS.has(step.agentKind) && leaseMs < HEAVY_STEP_LEASE_MS) {
+    await heartbeatStepLease({
+      stepId: step.id,
+      ownerId,
+      leaseMs: HEAVY_STEP_LEASE_MS,
+    });
   }
 
   const handler = getHandler(step.agentKind);

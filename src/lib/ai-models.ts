@@ -183,7 +183,7 @@ export const AI_FLOW_META: Record<AiFlowKey, AiFlowMeta> = {
   },
   screening_compiler_evaluate: {
     label: "Screening · Compiler evaluate",
-    description: "Estebaranz framework evaluation per shortlist ticker",
+    description: "trefolio framework evaluation per shortlist ticker",
     maxTokens: 8000,
     temperature: 0.25,
   },
