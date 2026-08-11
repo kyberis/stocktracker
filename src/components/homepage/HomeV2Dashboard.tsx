@@ -49,6 +49,10 @@ const PortfolioTable = dynamic(() => import("@/components/PortfolioTable"), {
   ssr: false,
   loading: () => <div className="card h-48 animate-pulse rounded-xl bg-[color:var(--surface-soft)]" />,
 });
+const MarketAndCash = dynamic(() => import("@/components/MarketAndCash"), {
+  ssr: false,
+  loading: () => <div className="card h-48 animate-pulse rounded-xl bg-[color:var(--surface-soft)]" />,
+});
 const PortfolioCards = dynamic(() => import("@/components/mobile/PortfolioCards"), {
   ssr: false,
 });
@@ -98,9 +102,9 @@ export default function HomeV2Dashboard() {
     );
   }
 
-  // Match Classic: empty when there are no stock/ETF/crypto/fund holdings
-  // (cash-only still shows the add/import empty state).
-  const isEmpty = holdings.length === 0;
+  // Empty only when there are no holdings and no cash/manual assets.
+  // Fixed-return (and other Assets & Accounts) must not hide behind EmptyPortfolio.
+  const isEmpty = holdings.length === 0 && cashEntries.length === 0;
 
   useEffect(() => {
     if (!aidEnabled || pageViewSent.current) return;
@@ -263,6 +267,8 @@ export default function HomeV2Dashboard() {
           ) : (
             <PortfolioTable holdings={holdings} onAddStock={openAdd} />
           )}
+
+          <MarketAndCash holdings={holdings} cashEntries={cashEntries} />
 
           <HomeFinPulseTeaser enabled={aidEnabled} />
 

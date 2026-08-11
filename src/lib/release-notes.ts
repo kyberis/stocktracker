@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.145",
+    date: "2026-08-12",
+    title: "Fixed-return assets visible on Home",
+    titleTranslations: {
+      es: "Activos de retorno fijo visibles en Home",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Fixed-return investments (e.g. Civislend) now appear under Assets & Accounts on the home dashboard, and their accrued value uses your local calendar date so they are not stuck at €0 around midnight UTC.",
+        translations: {
+          es: "Las inversiones de retorno fijo (p. ej. Civislend) aparecen en Activos y cuentas en el home, y el valor acumulado usa tu fecha local para no quedar en €0 alrededor de medianoche UTC.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.144",
     date: "2026-08-12",
     title: "Notification panel no longer covered by header",

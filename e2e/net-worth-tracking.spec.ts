@@ -270,7 +270,10 @@ test.describe("Net Worth Tracking — UI", () => {
   }) => {
     test.setTimeout(45_000);
     const creds = await createTestUser(request, false);
-    const startDate = new Date().toISOString().slice(0, 10);
+    const startDate = (() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    })();
 
     const add = await request.post("/api/cash", {
       data: {
@@ -294,5 +297,7 @@ test.describe("Net Worth Tracking — UI", () => {
     });
     await expect(page.getByText("Assets & Accounts")).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText("Civislend")).toBeVisible();
+    // Accrued value on start date = principal (local calendar), not €0 from UTC server enrich
+    await expect(page.getByText(/€1[,.]?500/).first()).toBeVisible({ timeout: 10_000 });
   });
 });

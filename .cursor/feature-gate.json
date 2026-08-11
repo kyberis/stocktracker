@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.144: notification drawer portals above ticker/nav — UI bugfix, no landing-page change."
+  "notes": "2.5.145: Home shows Assets & Accounts for fixed-return; local-date accrual. Bug fix — no landing-page capability."
 }

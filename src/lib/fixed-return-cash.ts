@@ -48,6 +48,23 @@ export function enrichFixedReturnCashEntry(
   return { ...entry, amountEUR };
 }
 
+/** Recompute accrued EUR for every fixed-return row (browser-local "today"). */
+export function enrichCashEntries(
+  entries: CashEntry[],
+  opts?: { asOf?: string; rates?: ExchangeRates },
+): CashEntry[] {
+  return entries.map((e) => enrichFixedReturnCashEntry(e, opts));
+}
+
+/** Current EUR value: schedule accrual for fixed_return, else stored amountEUR. */
+export function cashAmountEUR(
+  entry: CashEntry,
+  opts?: { asOf?: string; rates?: ExchangeRates },
+): number {
+  if (!isFixedReturnCashEntry(entry)) return entry.amountEUR;
+  return enrichFixedReturnCashEntry(entry, opts).amountEUR;
+}
+
 /** Sum of fixed-return accrued values as of a date (EUR when rates provided). */
 export function sumFixedReturnValueAt(entries: CashEntry[], asOf: string, rates?: ExchangeRates): number {
   let sum = 0;

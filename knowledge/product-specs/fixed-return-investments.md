@@ -91,6 +91,8 @@ Before start → 0; on/after maturity → maturityValue.
 - Leap years: progress is day-based between start and maturity.
 - Editing accrued amount in the cash quick-edit UI does not change the schedule; prefer delete/re-add or PUT with schedule fields.
 - Chart overlay is client-side; snapshot cron remains holdings-only.
+- Accrual “as of” must use the **browser local calendar date** (`todayLocal()`), not the Vercel UTC date — otherwise a start date of “today” can show €0 until UTC midnight. Client context + portfolio totals re-enrich on read.
+- Home v2 must render `MarketAndCash` (Assets & Accounts); the holdings table alone never lists fixed-return rows.
 
 ## 14. Tests
 

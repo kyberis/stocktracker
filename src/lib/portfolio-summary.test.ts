@@ -54,7 +54,8 @@ describe("calculatePortfolioTotals", () => {
       cashEntry({
         id: "fr1",
         name: "Civislend",
-        amountEUR: 1687.5,
+        // Stale mid-term amount — must recompute from schedule (matured → 1875)
+        amountEUR: 0,
         type: "fixed_return",
         displayAmount: 1500,
         displayCurrency: "EUR",
@@ -64,9 +65,9 @@ describe("calculatePortfolioTotals", () => {
       }),
     ];
     const totals = calculatePortfolioTotals([], cashEntries, {}, emptyRates);
-    expect(totals.totalCurrentEUR).toBe(1687.5);
+    expect(totals.totalCurrentEUR).toBe(1875);
     expect(totals.totalCostEUR).toBe(1500);
-    expect(totals.totalGainLoss).toBeCloseTo(187.5, 5);
+    expect(totals.totalGainLoss).toBeCloseTo(375, 5);
   });
 
   it("handles GBX holdings when provider labels quote currency as GBP", () => {
@@ -425,11 +426,12 @@ describe("computeAllocationByType", () => {
     expect(result[0].valueEUR).toBe(500);
   });
 
-  it("buckets fixed_return cash entries", () => {
+  it("buckets fixed_return cash entries using schedule accrual", () => {
     const cashEntries: CashEntry[] = [
       cashEntry({
         id: "fr1",
-        amountEUR: 1687.5,
+        // Stale/zero stored amount — valuation must come from the schedule
+        amountEUR: 0,
         type: "fixed_return",
         displayAmount: 1500,
         startDate: "2024-01-01",
@@ -440,7 +442,28 @@ describe("computeAllocationByType", () => {
     const result = computeAllocationByType([], cashEntries, {}, emptyRates);
     expect(result).toHaveLength(1);
     expect(result[0].key).toBe("fixed_return");
-    expect(result[0].valueEUR).toBe(1687.5);
+    // Term ended 2026-01-01 → locked at maturity value 1875
+    expect(result[0].valueEUR).toBe(1875);
+  });
+
+  it("shows fixed_return principal on start date even when amountEUR is stale zero", () => {
+    const today = new Date();
+    const startDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const cashEntries: CashEntry[] = [
+      cashEntry({
+        id: "fr-today",
+        amountEUR: 0,
+        type: "fixed_return",
+        displayAmount: 1500,
+        startDate,
+        termMonths: 24,
+        totalReturnPct: 25,
+      }),
+    ];
+    const result = computeAllocationByType([], cashEntries, {}, emptyRates);
+    expect(result).toHaveLength(1);
+    expect(result[0].key).toBe("fixed_return");
+    expect(result[0].valueEUR).toBe(1500);
   });
 
 

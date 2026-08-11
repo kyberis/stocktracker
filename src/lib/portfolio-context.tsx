@@ -7,6 +7,7 @@ import { useSettings } from "./settings-context";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 import { marketDataSymbolForHolding } from "@/lib/market-symbol";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
+import { enrichCashEntries } from "@/lib/fixed-return-cash";
 
 const QUOTES_CACHE_KEY = "trefolio-quotes-v3";
 const RATES_CACHE_KEY = "trefolio-rates-v1";
@@ -148,7 +149,19 @@ export function PortfolioProvider({
   const { getApiHeaders } = useSettings();
   const hasServerData = !!(initialHoldings || initialCash);
   const [holdings, setHoldings] = useState<Holding[]>(initialHoldings ?? []);
-  const [cashEntries, setCashEntries] = useState<CashEntry[]>(initialCash ?? []);
+  const [cashEntries, setCashEntries] = useState<CashEntry[]>(() =>
+    enrichCashEntries(initialCash ?? []),
+  );
+
+  const setCashEntriesEnriched = useCallback(
+    (update: CashEntry[] | ((prev: CashEntry[]) => CashEntry[])) => {
+      setCashEntries((prev) => {
+        const next = typeof update === "function" ? update(prev) : update;
+        return enrichCashEntries(next);
+      });
+    },
+    [],
+  );
   const [portfolios, setPortfolios] = useState<PortfolioInfo[]>(initialPortfolios ?? []);
   const [activePortfolioId, setActivePortfolioId] = useState<string | null>(null);
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>(initialQuotes ?? {});
@@ -215,7 +228,7 @@ export function PortfolioProvider({
       const res = await fetchWithAuthRedirect(url, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch cash entries");
       const loaded = (await res.json()) as CashEntry[];
-      setCashEntries(loaded);
+      setCashEntriesEnriched(loaded);
       return loaded;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch cash entries");
@@ -266,7 +279,7 @@ export function PortfolioProvider({
         holdingsData = holdingsRes.ok ? await holdingsRes.json() : [];
         const cashData: CashEntry[] = cashRes.ok ? await cashRes.json() : [];
         setHoldings(holdingsData);
-        setCashEntries(cashData);
+        setCashEntriesEnriched(cashData);
       }
 
       const hasServerQuotes = initialQuotes && Object.keys(initialQuotes).length > 0;
@@ -349,7 +362,7 @@ export function PortfolioProvider({
         const cashData: CashEntry[] = cashRes.ok ? await cashRes.json() : [];
 
         setHoldings(holdingsData);
-        setCashEntries(cashData);
+        setCashEntriesEnriched(cashData);
         setHoldingsLastFetchedAt(new Date());
 
         const tickers = [...new Set(holdingsData.map((h) => h.ticker))];
@@ -646,7 +659,7 @@ export function PortfolioProvider({
   const addCashEntry = useCallback(async (entry: Omit<CashEntry, "id">) => {
     const tempId = generateId();
     const optimistic = { ...entry, id: tempId };
-    setCashEntries((prev) => [...prev, optimistic]);
+    setCashEntriesEnriched((prev) => [...prev, optimistic]);
     try {
       const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
       const res = await fetchWithAuthRedirect(`/api/cash${qp}`, {
@@ -665,10 +678,10 @@ export function PortfolioProvider({
         throw new Error(message);
       }
       const created = (await res.json()) as CashEntry;
-      setCashEntries((prev) => prev.map((c) => (c.id === tempId ? created : c)));
+      setCashEntriesEnriched((prev) => prev.map((c) => (c.id === tempId ? created : c)));
       setMutationVersion((v) => v + 1);
     } catch (err) {
-      setCashEntries((prev) => prev.filter((c) => c.id !== tempId));
+      setCashEntriesEnriched((prev) => prev.filter((c) => c.id !== tempId));
       setError(err instanceof Error ? err.message : "Failed to add cash entry");
       throw err;
     }
@@ -676,21 +689,21 @@ export function PortfolioProvider({
 
   const removeCashEntry = useCallback(async (id: string) => {
     const previous = cashEntries;
-    setCashEntries((prev) => prev.filter((c) => c.id !== id));
+    setCashEntriesEnriched((prev) => prev.filter((c) => c.id !== id));
     try {
       const qp = activePortfolioId ? `&portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
       const res = await fetchWithAuthRedirect(`/api/cash?id=${encodeURIComponent(id)}${qp}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to remove cash entry");
       setMutationVersion((v) => v + 1);
     } catch (err) {
-      setCashEntries(previous);
+      setCashEntriesEnriched(previous);
       setError(err instanceof Error ? err.message : "Failed to remove cash entry");
     }
   }, [cashEntries, activePortfolioId]);
 
   const updateCashEntry = useCallback(async (id: string, updates: Partial<CashEntry>) => {
     const previous = cashEntries;
-    setCashEntries((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+    setCashEntriesEnriched((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
     try {
       const res = await fetchWithAuthRedirect("/api/cash", {
         method: "PUT",
@@ -699,9 +712,9 @@ export function PortfolioProvider({
       });
       if (!res.ok) throw new Error("Failed to update cash entry");
       const updated = (await res.json()) as CashEntry;
-      setCashEntries((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      setCashEntriesEnriched((prev) => prev.map((c) => (c.id === id ? updated : c)));
     } catch (err) {
-      setCashEntries(previous);
+      setCashEntriesEnriched(previous);
       setError(err instanceof Error ? err.message : "Failed to update cash entry");
     }
   }, [cashEntries]);

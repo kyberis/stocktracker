@@ -19,6 +19,7 @@ function toBaseCurrency(
   return Number.isFinite(v) ? v : null;
 }
 import {
+  cashAmountEUR,
   dayChangeFixedReturnCash,
   fixedReturnPrincipalEUR,
   isFixedReturnCashEntry,
@@ -99,7 +100,8 @@ export function computeAllocationByType(
 
   for (const c of cashEntries) {
     const assetType: ManualAssetType = c.type ?? "cash";
-    const valueBase = convertCurrency(c.amountEUR, "EUR", baseCurrency, exchangeRates);
+    const amountEUR = cashAmountEUR(c, { rates: exchangeRates });
+    const valueBase = convertCurrency(amountEUR, "EUR", baseCurrency, exchangeRates);
     buckets[assetType] = (buckets[assetType] || 0) + valueBase;
   }
 
@@ -266,7 +268,8 @@ export function calculatePortfolioTotals(
 
   const asOf = todayLocal();
   for (const cash of cashEntries) {
-    const cashBase = toBaseCurrency(cash.amountEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
+    const amountEUR = cashAmountEUR(cash, { asOf, rates: exchangeRates });
+    const cashBase = toBaseCurrency(amountEUR, "EUR", baseCurrency, exchangeRates) ?? 0;
     totalCurrentBase += cashBase;
     if (isFixedReturnCashEntry(cash)) {
       const principalEUR = fixedReturnPrincipalEUR(cash, exchangeRates);
