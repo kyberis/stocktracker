@@ -107,6 +107,27 @@ function resolveColumnIndex(headers: string[], aliases: string[]): number | unde
   return undefined;
 }
 
+/**
+ * MyInvestor's headers are fuzzy Spanish aliases with no fixed column
+ * order, so detection reuses the same precondition parseMyInvestor itself
+ * requires to not throw: a resolvable date column and a resolvable ISIN
+ * or name column. Registered last in the parser list, after DEGIRO's much
+ * stricter exact-column detector, which keeps Spanish DEGIRO exports from
+ * being mis-claimed by this looser check.
+ */
+function detect(csv: string): boolean {
+  const stripped = csv.replace(/^\uFEFF/, "");
+  const lines = stripped.split(/\n/).filter((l) => l.trim());
+  if (lines.length < 2) return false;
+  const delimiter = detectDelimiter(lines[0]);
+  const headers = parseCSVLine(lines[0], delimiter).map((h) => h.trim().replace(/^"|"$/g, ""));
+  const dateIdx = resolveColumnIndex(headers, DATE_ALIASES);
+  const isinIdx = resolveColumnIndex(headers, ISIN_ALIASES);
+  const nameIdx = resolveColumnIndex(headers, NAME_ALIASES);
+  const typeIdx = resolveColumnIndex(headers, TYPE_ALIASES);
+  return dateIdx !== undefined && typeIdx !== undefined && (isinIdx !== undefined || nameIdx !== undefined);
+}
+
 function detectDelimiter(line: string): string {
   const semi = (line.match(/;/g) || []).length;
   const comma = (line.match(/,/g) || []).length;
@@ -266,6 +287,8 @@ export const myinvestorParser: BrokerParser = {
   id: "myinvestor",
   label: "MyInvestor (Inversis)",
   fileHint: "Consulta de operaciones (Excel)",
+
+  detect,
 
   parse(csv: string, isinToTicker: Record<string, string>): ParsedTransaction[] {
     return parseMyInvestor(csv, isinToTicker);

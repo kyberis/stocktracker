@@ -17,7 +17,21 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs, hasExactColumns } from "./utils";
+
+// The "($)" suffixed column names (unique to Fidelity) are what distinguish
+// this from Firstrade/Questrade, which use the same bare names without it.
+const REQUIRED_COLUMNS = ["Action", "Symbol", "Security Description", "Quantity", "Price ($)", "Commission ($)", "Amount ($)"];
+
+function detect(csv: string): boolean {
+  const rawLines = csv.split("\n");
+  for (let i = 0; i < Math.min(rawLines.length, 10); i++) {
+    const l = rawLines[i];
+    if (!((l.includes("Run Date") || l.includes("Trade Date")) && l.includes("Action"))) continue;
+    if (hasExactColumns(parseCSVLine(l).map((h) => h.trim()), REQUIRED_COLUMNS)) return true;
+  }
+  return false;
+}
 
 function detectType(action: string): ParsedTransaction["type"] | null {
   const a = action.toUpperCase();
@@ -119,6 +133,8 @@ export const fidelityParser: BrokerParser = {
   id: "fidelity",
   label: "Fidelity",
   fileHint: "Activity & Orders CSV",
+
+  detect,
 
   parse: parseFidelity,
 };

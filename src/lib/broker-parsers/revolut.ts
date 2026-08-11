@@ -15,7 +15,15 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num, deduplicateSourceRefs } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, deduplicateSourceRefs, hasExactColumns } from "./utils";
+
+const REQUIRED_COLUMNS = ["Trade Date", "Settle Date", "Currency", "Activity Type", "Symbol / Description", "Symbol", "Quantity", "Price", "Amount"];
+
+function detect(csv: string): boolean {
+  const firstLine = csv.split("\n").find((l) => l.trim());
+  if (!firstLine) return false;
+  return hasExactColumns(parseCSVLine(firstLine).map((h) => h.trim()), REQUIRED_COLUMNS);
+}
 
 interface DividendGroup {
   symbol: string;
@@ -150,6 +158,8 @@ export const revolutParser: BrokerParser = {
   id: "revolut",
   label: "Revolut",
   fileHint: "Account statement (Excel/CSV)",
+
+  detect,
 
   parse: parseRevolut,
 };

@@ -246,6 +246,33 @@ function parseFlexQueryCSV(csv: string, isinToTicker: Record<string, string>): P
   return transactions;
 }
 
+/* ── Detection ── */
+
+/**
+ * IBKR's shape is distinctive enough that we can reuse the same structural
+ * checks the parser itself uses to pick a code path: either a Flex Query
+ * table (first cell "ClientAccountID") or an Activity Statement with a
+ * "Trades"/"Dividends"/"Withholding Tax" section header row (second cell
+ * "Header").
+ */
+function detect(csv: string): boolean {
+  const lines = csv.split("\n").filter((l) => l.trim());
+  const firstCells = lines.length > 0 ? parseCSVLine(lines[0]) : [];
+  if (firstCells[0]?.trim() === "ClientAccountID") return true;
+
+  for (const line of lines.slice(0, 50)) {
+    const cells = parseCSVLine(line);
+    const section = cells[0]?.trim();
+    if (
+      cells[1]?.trim() === "Header" &&
+      (section === "Trades" || section === "Dividends" || section === "Withholding Tax")
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /* ── Activity Statement CSV parser ── */
 
 function parseIBKR(csv: string, isinToTicker: Record<string, string>): ParsedTransaction[] {
@@ -375,6 +402,8 @@ export const ibkrParser: BrokerParser = {
   id: "interactive_brokers",
   label: "Interactive Brokers",
   fileHint: "Activity Statement CSV",
+
+  detect,
 
   parse: parseIBKR,
 

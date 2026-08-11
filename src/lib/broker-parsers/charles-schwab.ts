@@ -16,7 +16,16 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs, detectByHeaderColumns } from "./utils";
+
+// "Fees & Comm" (combined column) is the token that distinguishes Schwab
+// from Firstrade/Fidelity/Questrade, which all use separate Commission/Fees
+// columns with different exact names.
+const REQUIRED_COLUMNS = ["Date", "Action", "Symbol", "Description", "Quantity", "Price", "Fees & Comm", "Amount"];
+
+function detect(csv: string): boolean {
+  return detectByHeaderColumns(csv, REQUIRED_COLUMNS);
+}
 
 function detectType(action: string): ParsedTransaction["type"] | null {
   const a = action.toLowerCase();
@@ -108,6 +117,8 @@ export const charlesSchwabParser: BrokerParser = {
   id: "charles_schwab",
   label: "Charles Schwab",
   fileHint: "Brokerage History CSV",
+
+  detect,
 
   parse: parseCharlesSchwab,
 };

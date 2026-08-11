@@ -18,7 +18,15 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs, hasExactColumns } from "./utils";
+
+const REQUIRED_COLUMNS = ["Title", "Type", "Timestamp", "Account Currency", "Total Amount", "Price per Share in Account Currency", "Shares Bought", "Stamp Duty"];
+
+function detect(csv: string): boolean {
+  const firstLine = csv.split("\n").find((l) => l.trim());
+  if (!firstLine) return false;
+  return hasExactColumns(parseCSVLine(firstLine).map((h) => h.trim()), REQUIRED_COLUMNS);
+}
 
 function parseFreetrade(csv: string, isinToTicker: Record<string, string>): ParsedTransaction[] {
   const lines = csv.split("\n").filter((l) => l.trim());
@@ -111,6 +119,8 @@ export const freetradeParser: BrokerParser = {
   id: "freetrade",
   label: "Freetrade",
   fileHint: "Activity CSV export",
+
+  detect,
 
   parse: parseFreetrade,
 

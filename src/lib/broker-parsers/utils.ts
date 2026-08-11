@@ -28,6 +28,37 @@ export function buildColumnMap(headers: string[]): Record<string, number> {
   return map;
 }
 
+/** True if every exact column name in `required` is present in `headers`. */
+export function hasExactColumns(headers: string[], required: string[]): boolean {
+  const set = new Set(headers.map((h) => h.trim()));
+  return required.every((col) => set.has(col));
+}
+
+/**
+ * Scan the first `maxLines` lines of `csv` for a row that, once parsed as
+ * CSV, contains every exact column name in `required` — used for broker
+ * auto-detection. Exact-match (not substring) so similarly-shaped US
+ * brokerage exports (Schwab/Fidelity/Questrade/Firstrade all share
+ * "Date"/"Action"/"Symbol"-ish columns) don't collide with each other.
+ * `maxLines` accommodates exports with preamble/summary rows before the
+ * real header (Schwab, Fidelity, eToro, Questrade, Firstrade).
+ */
+export function detectByHeaderColumns(
+  csv: string,
+  required: string[],
+  maxLines = 10,
+  delimiter = ",",
+): boolean {
+  const lines = csv.split("\n");
+  const scanLimit = Math.min(lines.length, maxLines);
+  for (let i = 0; i < scanLimit; i++) {
+    if (!lines[i].trim()) continue;
+    const headers = parseCSVLine(lines[i], delimiter).map((h) => h.trim());
+    if (hasExactColumns(headers, required)) return true;
+  }
+  return false;
+}
+
 /** Get a trimmed cell value from a row, returning "" if out of bounds. */
 export function cell(row: string[], idx: number | undefined): string {
   if (idx === undefined || idx < 0 || idx >= row.length) return "";

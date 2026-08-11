@@ -5,6 +5,15 @@ import {
   parseCSVLine,
   type DegiroTransaction,
 } from "../degiro-parser";
+import { hasExactColumns } from "./utils";
+
+const REQUIRED_COLUMNS = ["Fecha", "Hora", "Fecha valor", "Producto", "ISIN", "Descripción", "Tipo"];
+
+function detect(csv: string): boolean {
+  const firstLine = csv.split("\n").find((l) => l.trim());
+  if (!firstLine) return false;
+  return hasExactColumns(parseCSVLine(firstLine), REQUIRED_COLUMNS);
+}
 
 function toTransaction(tx: DegiroTransaction): ParsedTransaction {
   return {
@@ -40,6 +49,8 @@ export const degiroParser: BrokerParser = {
   id: "degiro",
   label: "DEGIRO",
   fileHint: "Account.csv",
+
+  detect,
 
   parse(csv: string, isinToTicker: Record<string, string>): ParsedTransaction[] {
     return parseDegiroCSV(csv, isinToTicker).map(toTransaction);

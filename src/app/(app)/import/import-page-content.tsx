@@ -27,7 +27,7 @@ import type { BrokerFormat } from "@/hooks/import-types";
 
 type ImportMethod = "broker_csv" | "snaptrade_api" | "ai_import" | "manual";
 
-type WizardStep = "method" | "broker" | "upload" | "preview" | "backfilling" | "done";
+type WizardStep = "method" | "upload" | "preview" | "backfilling" | "done";
 
 const TX_TYPE_COLORS: Record<string, string> = {
   buy: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
@@ -39,7 +39,6 @@ const TX_TYPE_COLORS: Record<string, string> = {
 const METHOD_CARDS: { key: ImportMethod; icon: string; descKey: TranslationKey; colorClass: string; iconBg: string }[] = [
   { key: "broker_csv", icon: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12", descKey: "importDescBrokerCsv", colorClass: "text-emerald-500", iconBg: "bg-emerald-500/10 dark:bg-emerald-500/15" },
   { key: "snaptrade_api", icon: "M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75", descKey: "importDescBrokerSync", colorClass: "text-blue-500", iconBg: "bg-blue-500/10 dark:bg-blue-500/15" },
-  { key: "ai_import", icon: "M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z", descKey: "importDescAi", colorClass: "text-violet-500", iconBg: "bg-violet-500/10 dark:bg-violet-500/15" },
   { key: "manual", icon: "M12 4v16m8-8H4", descKey: "importDescManual", colorClass: "text-amber-500", iconBg: "bg-amber-500/10 dark:bg-amber-500/15" },
 ];
 
@@ -148,7 +147,6 @@ export default function ImportPageContent() {
   // Wizard state
   const [step, setStep] = useState<WizardStep>("method");
   const [method, setMethod] = useState<ImportMethod>("broker_csv");
-  const [broker, setBroker] = useState<BrokerFormat>("degiro");
   const [isDragOver, setIsDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [showAddStockModal, setShowAddStockModal] = useState(false);
@@ -195,7 +193,7 @@ export default function ImportPageContent() {
   const aiFileRef = useRef<HTMLInputElement>(null);
   const [aiDragOver, setAiDragOver] = useState(false);
 
-  // Restore last used method/broker from localStorage
+  // Restore last used method from localStorage
   useEffect(() => {
     track("import_page_viewed");
 
@@ -205,24 +203,12 @@ export default function ImportPageContent() {
       setMethod(urlMethod);
       if (urlMethod === "manual") {
         setShowAddStockModal(true);
-      } else if (urlMethod === "broker_csv") {
-        const urlBroker = urlParams.get("broker") as BrokerFormat | null;
-        if (urlBroker && BROKER_OPTIONS.some((b) => b.id === urlBroker)) {
-          setBroker(urlBroker);
-          setStep("upload");
-        } else {
-          setStep("broker");
-        }
       } else {
         setStep("upload");
       }
       localStorage.setItem("trefolio_last_import_method", urlMethod);
     }
 
-    const lastBroker = localStorage.getItem("trefolio_last_import_broker") as BrokerFormat | null;
-    if (lastBroker && BROKER_OPTIONS.some((b) => b.id === lastBroker)) {
-      setBroker(lastBroker);
-    }
     snapTradeApi.loadConnection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -246,6 +232,27 @@ export default function ImportPageContent() {
     }
   }, [method, brokerCSV.step, aiImport.step, snapTradeApi.step, snapTradeApi.transactions.length]);
 
+  // The CSV parser couldn't identify (or couldn't usefully parse) the
+  // uploaded file — retry it through AI extraction automatically, with no
+  // extra screen or click.
+  useEffect(() => {
+    if (method !== "broker_csv" || brokerCSV.step !== "fallback_to_ai" || !brokerCSV.rawFile) return;
+    track("import_broker_fallback_to_ai", { reason: brokerCSV.fallbackReason || "no_match" });
+    const file = brokerCSV.rawFile;
+    brokerCSV.reset();
+    setMethod("ai_import");
+    aiImport.processFile(file);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [method, brokerCSV.step, brokerCSV.rawFile, brokerCSV.fallbackReason]);
+
+  // Telemetry for which broker format was silently auto-detected.
+  useEffect(() => {
+    if (brokerCSV.step === "preview" && brokerCSV.detectedBroker) {
+      track("import_broker_auto_detected", { broker: brokerCSV.detectedBroker });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brokerCSV.step, brokerCSV.detectedBroker]);
+
   const handleMethodSelect = (m: ImportMethod) => {
     setMethod(m);
     localStorage.setItem("trefolio_last_import_method", m);
@@ -253,22 +260,9 @@ export default function ImportPageContent() {
 
     if (m === "manual") {
       setShowAddStockModal(true);
-    } else if (m === "broker_csv") {
-      setStep("broker");
     } else {
       setStep("upload");
     }
-  };
-
-  const handleBrokerSelect = (b: BrokerFormat) => {
-    setBroker(b);
-    localStorage.setItem("trefolio_last_import_broker", b);
-    brokerCSV.reset();
-    track("import_method_selected", { method: "broker_csv", broker: b });
-  };
-
-  const handleBrokerContinue = () => {
-    setStep("upload");
   };
 
   const submitMissingBrokerRequest = useCallback(async () => {
@@ -303,16 +297,13 @@ export default function ImportPageContent() {
   }, [missingBrokerName, missingBrokerNote, missingBrokerSubmitting, t, track]);
 
   const goBack = () => {
-    if (step === "broker") {
-      setStep("method");
-    } else if (step === "upload") {
+    if (step === "upload") {
       if (method === "broker_csv") {
-        setStep("broker");
         brokerCSV.reset();
       } else {
-        setStep("method");
         aiImport.reset();
       }
+      setStep("method");
     } else if (step === "preview") {
       setStep("upload");
     } else if (step === "done") {
@@ -327,11 +318,18 @@ export default function ImportPageContent() {
     snapTradeApi.reset();
   };
 
-  // Broker CSV file handling
+  // Broker CSV file handling — images go straight to AI (no deterministic
+  // parser applies to a screenshot); CSV/spreadsheet files go through
+  // auto-detect, which silently falls back to AI itself when needed.
   const handleBrokerFile = useCallback(async (file: File) => {
     track("import_file_uploaded", { method: "broker_csv", fileType: file.type, fileSize: String(file.size) });
-    await brokerCSV.parseFile(file, broker, activePortfolioId);
-  }, [broker, brokerCSV, track, activePortfolioId]);
+    if (file.type.startsWith("image/")) {
+      setMethod("ai_import");
+      await aiImport.processFile(file);
+      return;
+    }
+    await brokerCSV.parseFile(file, undefined, activePortfolioId);
+  }, [brokerCSV, aiImport, track, activePortfolioId]);
 
   const handleBrokerFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -364,8 +362,8 @@ export default function ImportPageContent() {
 
   // Import complete handlers
   const handleBrokerImportAll = async () => {
-    await brokerCSV.importAll(broker, false, activePortfolioId);
-    track("import_completed", { method: "broker_csv", broker, txCount: String(brokerCSV.transactions.length) });
+    await brokerCSV.importAll(undefined, false, activePortfolioId);
+    track("import_completed", { method: "broker_csv", broker: brokerCSV.detectedBroker, txCount: String(brokerCSV.transactions.length) });
     await refreshHoldings();
     refreshQuotes();
   };
@@ -394,13 +392,11 @@ export default function ImportPageContent() {
     return map[key];
   };
 
-  const currentGuide = BROKER_OPTIONS.find((b) => b.id === broker);
-  const guide = currentGuide ? IMPORT_GUIDES.find((g) => g.id === currentGuide.guideId) : undefined;
   const aiGuide = IMPORT_GUIDES.find((g) => g.id === "ai_import");
   const snapTradeGuide = IMPORT_GUIDES.find((g) => g.id === "snaptrade_api");
 
-  const totalSteps = method === "broker_csv" ? 4 : method === "snaptrade_api" ? 3 : method === "ai_import" ? 3 : 2;
-  const currentStepNum = step === "method" ? 1 : step === "broker" ? 2 : step === "upload" ? (method === "broker_csv" ? 3 : 2) : step === "preview" ? (method === "broker_csv" ? 4 : 3) : totalSteps;
+  const totalSteps = 3;
+  const currentStepNum = step === "method" ? 1 : step === "upload" ? 2 : step === "preview" ? 3 : totalSteps;
 
   if (needsPortfolioPick && step === "method") {
     return (
@@ -523,101 +519,19 @@ export default function ImportPageContent() {
         </div>
       )}
 
-      {/* ═══════════ STEP: Select Broker (CSV path) ═══════════ */}
-      {step === "broker" && method === "broker_csv" && (
-        <div className="animate-slide-up">
-          <WizardHeader
-            title={t("importSectionBrokerCsv")}
-            subtitle={t("importDescBrokerCsv")}
-            onBack={() => setStep("method")}
-          />
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {BROKER_OPTIONS.map((b) => (
-              <button
-                key={b.id}
-                onClick={() => handleBrokerSelect(b.id)}
-                className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all min-h-[44px] active:scale-[0.97] ${
-                  broker === b.id
-                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                    : "border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-gray-300 dark:hover:border-slate-500"
-                }`}
-              >
-                <p className="text-xs font-semibold text-gray-900 dark:text-white">{b.label}</p>
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/40 p-3.5 space-y-2.5">
-            <p className="text-xs font-semibold text-gray-800 dark:text-slate-200">
-              {t("importMissingBrokerTitle")}
-            </p>
-            <p className="text-[11px] text-gray-500 dark:text-slate-400">
-              {t("importMissingBrokerDesc")}
-            </p>
-            <input
-              value={missingBrokerName}
-              onChange={(e) => setMissingBrokerName(e.target.value)}
-              placeholder={t("importMissingBrokerNamePlaceholder")}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-              maxLength={100}
-            />
-            <textarea
-              value={missingBrokerNote}
-              onChange={(e) => setMissingBrokerNote(e.target.value)}
-              placeholder={t("importMissingBrokerNotePlaceholder")}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white resize-y"
-              rows={2}
-              maxLength={800}
-            />
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={submitMissingBrokerRequest}
-                disabled={missingBrokerSubmitting || !missingBrokerName.trim()}
-                className="px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 min-h-[44px]"
-              >
-                {missingBrokerSubmitting ? t("loading") : t("importMissingBrokerSubmit")}
-              </button>
-              {missingBrokerMessage && (
-                <span className="text-[11px] text-emerald-600 dark:text-emerald-400">{missingBrokerMessage}</span>
-              )}
-              {missingBrokerError && (
-                <span className="text-[11px] text-red-600 dark:text-red-400">{missingBrokerError}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Fixed bottom CTA */}
-          <div className="mt-6">
-            <button
-              onClick={handleBrokerContinue}
-              className="btn-primary w-full text-sm flex items-center justify-center gap-2 min-h-[48px]"
-            >
-              {t("wizardNext")}
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* ═══════════ STEP: Upload / Act ═══════════ */}
       {step === "upload" && (
         <div className="animate-slide-up">
-          {/* ── Broker CSV upload ── */}
+          {/* ── Broker CSV upload — no broker picker, format is auto-detected ── */}
           {method === "broker_csv" && (
             <div className="space-y-4">
               <WizardHeader
-                title={`${t("importSectionBrokerCsv")} — ${BROKER_OPTIONS.find((b) => b.id === broker)?.label ?? ""}`}
-                subtitle={t("importPageSubtitle")}
-                onBack={() => { setStep("broker"); brokerCSV.reset(); }}
+                title={t("importSectionBrokerCsv")}
+                subtitle={t("importDescBrokerCsv")}
+                onBack={() => { setStep("method"); brokerCSV.reset(); }}
               />
 
-              {guide && <InlineGuide guide={guide} locale={locale} />}
-
-              {broker === "simple" && (
+              {(brokerCSV.step === "idle" || brokerCSV.step === "parsing" || brokerCSV.step === "fallback_to_ai") && (
                 <button
                   type="button"
                   onClick={() => downloadImportTemplate()}
@@ -637,7 +551,7 @@ export default function ImportPageContent() {
                   onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
                   onDragLeave={() => setIsDragOver(false)}
                   onClick={() => fileRef.current?.click()}
-                  accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/png,image/jpeg,image/webp"
                   hint={t("importAccepted")}
                   t={t}
                   inputRef={fileRef}
@@ -645,19 +559,64 @@ export default function ImportPageContent() {
                 />
               )}
 
-              {brokerCSV.step === "parsing" && <LoadingSpinner label={t("importParsingCsv")} />}
+              {(brokerCSV.step === "parsing" || brokerCSV.step === "fallback_to_ai") && (
+                <LoadingSpinner label={t("importParsingCsv")} />
+              )}
 
               {brokerCSV.step === "error" && (
                 <ErrorCard
                   message={brokerCSV.errorMsg}
                   onReset={brokerCSV.reset}
-                  onTryAi={() => { setMethod("ai_import"); setStep("upload"); brokerCSV.reset(); }}
                   onManualAdd={() => setShowAddStockModal(true)}
                   t={t}
                 />
               )}
 
               {brokerCSV.step === "importing" && <ImportingProgress progress={brokerCSV.importProgress} t={t} />}
+
+              {brokerCSV.step === "idle" && (
+                <details className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/40 p-3.5">
+                  <summary className="text-xs font-semibold text-gray-800 dark:text-slate-200 cursor-pointer">
+                    {t("importMissingBrokerTitle")}
+                  </summary>
+                  <div className="mt-2.5 space-y-2.5">
+                    <p className="text-[11px] text-gray-500 dark:text-slate-400">
+                      {t("importMissingBrokerDesc")}
+                    </p>
+                    <input
+                      value={missingBrokerName}
+                      onChange={(e) => setMissingBrokerName(e.target.value)}
+                      placeholder={t("importMissingBrokerNamePlaceholder")}
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                      maxLength={100}
+                    />
+                    <textarea
+                      value={missingBrokerNote}
+                      onChange={(e) => setMissingBrokerNote(e.target.value)}
+                      placeholder={t("importMissingBrokerNotePlaceholder")}
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white resize-y"
+                      rows={2}
+                      maxLength={800}
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={submitMissingBrokerRequest}
+                        disabled={missingBrokerSubmitting || !missingBrokerName.trim()}
+                        className="px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 min-h-[44px]"
+                      >
+                        {missingBrokerSubmitting ? t("loading") : t("importMissingBrokerSubmit")}
+                      </button>
+                      {missingBrokerMessage && (
+                        <span className="text-[11px] text-emerald-600 dark:text-emerald-400">{missingBrokerMessage}</span>
+                      )}
+                      {missingBrokerError && (
+                        <span className="text-[11px] text-red-600 dark:text-red-400">{missingBrokerError}</span>
+                      )}
+                    </div>
+                  </div>
+                </details>
+              )}
             </div>
           )}
 
@@ -754,6 +713,19 @@ export default function ImportPageContent() {
 
           {method === "broker_csv" && brokerCSV.step === "preview" && (
             <>
+              {brokerCSV.detectedBroker && (
+                <div className="flex items-center gap-2 mb-3 text-xs text-gray-600 dark:text-slate-400">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    {(t("importDetectedBroker") || "Detected: {broker}").replace(
+                      "{broker}",
+                      BROKER_OPTIONS.find((b) => b.id === brokerCSV.detectedBroker)?.label ?? brokerCSV.detectedBroker,
+                    )}
+                  </span>
+                </div>
+              )}
               <ImportDataQualityPanel
                 report={brokerCSV.qualityReport}
                 labels={{

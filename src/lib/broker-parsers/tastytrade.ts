@@ -20,7 +20,15 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs, hasExactColumns } from "./utils";
+
+const REQUIRED_COLUMNS = ["Date", "Type", "Sub Type", "Action", "Instrument Type", "Value", "Quantity", "Average Price"];
+
+function detect(csv: string): boolean {
+  const firstLine = csv.split("\n").find((l) => l.trim());
+  if (!firstLine) return false;
+  return hasExactColumns(parseCSVLine(firstLine).map((h) => h.trim()), REQUIRED_COLUMNS);
+}
 
 function detectType(
   txType: string,
@@ -121,6 +129,8 @@ export const tastytradeParser: BrokerParser = {
   id: "tastytrade",
   label: "Tastytrade",
   fileHint: "Transaction History CSV",
+
+  detect,
 
   parse: parseTastytrade,
 };

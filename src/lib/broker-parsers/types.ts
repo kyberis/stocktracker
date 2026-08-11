@@ -24,6 +24,8 @@ export interface BrokerParser {
   id: string;
   label: string;
   fileHint: string;
+  /** True if `csv` looks like this broker's export format — used for auto-detection. */
+  detect(csv: string): boolean;
   parse(csv: string, isinToTicker: Record<string, string>): ParsedTransaction[];
   parseCashBalances?(csv: string): CashBalance[];
   extractIsins?(csv: string): string[];

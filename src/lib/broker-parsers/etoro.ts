@@ -28,7 +28,15 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs, detectByHeaderColumns } from "./utils";
+
+// "Details" + "Units" is the distinctive combo — no other supported format
+// uses either exact column name.
+const REQUIRED_COLUMNS = ["Type", "Details", "Amount", "Units"];
+
+function detect(csv: string): boolean {
+  return detectByHeaderColumns(csv, REQUIRED_COLUMNS);
+}
 
 function detectType(txType: string): ParsedTransaction["type"] | null {
   const t = txType.toLowerCase();
@@ -127,6 +135,8 @@ export const etoroParser: BrokerParser = {
   id: "etoro",
   label: "eToro",
   fileHint: "Account Statement XLS/CSV",
+
+  detect,
 
   parse: parseEtoro,
 };

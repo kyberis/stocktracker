@@ -5,7 +5,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal } from "@/lib/metrics";
 import { buildIsinMap } from "@/lib/degiro-parser";
 import { parseSimpleCSV } from "@/lib/simple-csv-parser";
-import { getBrokerParser, type ParsedTransaction } from "@/lib/broker-parsers";
+import { getBrokerParser, detectBrokerFormat, type ParsedTransaction } from "@/lib/broker-parsers";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
 import { deferTask, submitJob, getJobStatus } from "@/lib/task-runner";
@@ -418,7 +418,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
 
   const formData = await req.formData();
   const action = formData.get("action") as string;
-  const broker = formData.get("broker") as string;
+  let broker = formData.get("broker") as string;
   const portfolioId = (formData.get("portfolioId") as string) || undefined;
 
   /* ── Poll job status ── */
@@ -440,6 +440,18 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session.plan) ?? "free";
+
+  // Auto-detect the broker format when the client didn't send one — the
+  // simplified wizard no longer makes the user pick a broker upfront.
+  // "simple" is never a detection candidate (its columns are too generic).
+  let autoDetected = false;
+  if (!broker) {
+    const detected = detectBrokerFormat(csv);
+    if (detected) {
+      broker = detected;
+      autoDetected = true;
+    }
+  }
 
   /* ── Simple CSV (legacy format) ── */
   if (broker === "simple") {
@@ -482,6 +494,12 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   /* ── Registry-based broker parsers ── */
   const parser = getBrokerParser(broker);
   if (!parser) {
+    // Client omitted a broker (new simplified wizard) and auto-detection
+    // couldn't identify the format — fall back to AI extraction instead of
+    // erroring, since the user never chose a format for us to reject.
+    if (action === "parse" && !formData.get("broker")) {
+      return NextResponse.json({ fallbackToAi: true, reason: "no_match" });
+    }
     return NextResponse.json({ error: "Unsupported broker or action." }, { status: 400 });
   }
 
@@ -537,6 +555,13 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     console.error(`[import-broker] parse error for ${broker}:`, msg);
     portfolioImportsTotal.inc({ source: "broker", status: "error" });
     trackEvent(session.userId, "import_error", { method: "csv", reason: "parse_failed", broker });
+    // Auto-detected format threw while parsing (e.g. a fuzzy match like
+    // MyInvestor's alias-based detector guessed wrong) — fall back to AI
+    // rather than surfacing a raw parser error for a format the user never
+    // chose themselves.
+    if (action === "parse" && autoDetected) {
+      return NextResponse.json({ fallbackToAi: true, reason: "no_match" });
+    }
     return NextResponse.json({ error: `Failed to parse CSV: ${msg}` }, { status: 500 });
   }
 
@@ -598,7 +623,11 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
       ...(holdingsLimitInfo ? { holdingsLimitInfo } : {}),
       ...(qualityReport ? { quality: qualityReport } : {}),
     };
-    return NextResponse.json({ transactions: deduped, summary });
+    return NextResponse.json({
+      transactions: deduped,
+      summary,
+      ...(autoDetected ? { detectedBroker: broker } : {}),
+    });
   }
 
   if (action === "import") {

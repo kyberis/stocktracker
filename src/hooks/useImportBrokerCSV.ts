@@ -56,7 +56,7 @@ export interface HoldingsLimitInfo {
 }
 
 export interface UseImportBrokerCSVReturn {
-  step: "idle" | "parsing" | "preview" | "importing" | "backfilling" | "done" | "error";
+  step: "idle" | "parsing" | "preview" | "importing" | "backfilling" | "done" | "error" | "fallback_to_ai";
   transactions: ExtractedTransaction[];
   holdings: ExtractedHolding[];
   cashBalances: CashBalance[];
@@ -68,8 +68,13 @@ export interface UseImportBrokerCSVReturn {
   importedTxCount: number;
   skippedUnresolvedCount: number;
   errorMsg: string;
-  parseFile: (file: File, broker: BrokerFormat, portfolioId?: string | null) => Promise<void>;
-  importAll: (broker: BrokerFormat, isImageImport?: boolean, portfolioId?: string | null) => Promise<void>;
+  /** Broker format auto-detected from the CSV (or explicitly passed to parseFile). */
+  detectedBroker: BrokerFormat | "";
+  /** The raw file handed to parseFile — reused to auto-retry via AI extraction on fallback_to_ai. */
+  rawFile: File | null;
+  fallbackReason: "no_match" | "empty_result" | "";
+  parseFile: (file: File, broker?: BrokerFormat, portfolioId?: string | null) => Promise<void>;
+  importAll: (broker?: BrokerFormat, isImageImport?: boolean, portfolioId?: string | null) => Promise<void>;
   removeTransaction: (idx: number) => void;
   removeHolding: (idx: number) => void;
   updateHoldingAssetType: (idx: number, assetType: ImportAssetType) => void;
@@ -94,6 +99,9 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
   const [importedTxCount, setImportedTxCount] = useState(0);
   const [skippedUnresolvedCount, setSkippedUnresolvedCount] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
+  const [detectedBroker, setDetectedBroker] = useState<BrokerFormat | "">("");
+  const [rawFile, setRawFile] = useState<File | null>(null);
+  const [fallbackReason, setFallbackReason] = useState<"no_match" | "empty_result" | "">("");
   const rawCsvRef = useRef<string>("");
   const rawFileRef = useRef<File | null>(null);
 
@@ -110,21 +118,26 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     setImportedTxCount(0);
     setSkippedUnresolvedCount(0);
     setErrorMsg("");
+    setDetectedBroker("");
+    setRawFile(null);
+    setFallbackReason("");
     rawCsvRef.current = "";
     rawFileRef.current = null;
   }, []);
 
-  const parseFile = useCallback(async (file: File, broker: BrokerFormat, portfolioId?: string | null) => {
+  const parseFile = useCallback(async (file: File, broker?: BrokerFormat, portfolioId?: string | null) => {
     setStep("parsing");
     setErrorMsg("");
+    setDetectedBroker(broker || "");
 
     try {
       rawFileRef.current = file;
       rawCsvRef.current = "";
+      setRawFile(file);
 
       const parseForm = new FormData();
       parseForm.append("action", "parse");
-      parseForm.append("broker", broker);
+      if (broker) parseForm.append("broker", broker);
       if (portfolioId) parseForm.append("portfolioId", portfolioId);
       parseForm.append("file", file);
 
@@ -157,6 +170,15 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
       }
 
       const data = await parseRes.json();
+
+      // No parser recognized the format — the server didn't even attempt
+      // to parse, so fall back to AI extraction automatically.
+      if (data.fallbackToAi) {
+        setFallbackReason(data.reason || "no_match");
+        setStep("fallback_to_ai");
+        return;
+      }
+
       const parsedTransactions = Array.isArray(data.transactions)
         ? data.transactions
         : [];
@@ -170,6 +192,14 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
       setCashBalances(parsedCash);
 
       if (parsedTransactions.length === 0 && parsedCash.length === 0) {
+        // A format was auto-detected but produced nothing usable (and it
+        // wasn't just because everything's already imported) — this format
+        // was probably a false match, so retry via AI instead of erroring.
+        if (!broker && dupCount === 0) {
+          setFallbackReason("empty_result");
+          setStep("fallback_to_ai");
+          return;
+        }
         if (dupCount > 0) {
           trackImportError("csv", "all_duplicates");
           setErrorMsg(
@@ -186,6 +216,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
         setStep("error");
         return;
       }
+      if (data.detectedBroker) setDetectedBroker(data.detectedBroker);
       setDuplicatesRemoved(dupCount);
       setHoldingsLimitInfo(data.summary?.holdingsLimitInfo ?? null);
       setQualityReport(
@@ -229,7 +260,8 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
   }, []);
 
   const importAll = useCallback(
-    async (broker: BrokerFormat, isImageImport = false, portfolioId?: string | null) => {
+    async (brokerArg?: BrokerFormat, isImageImport = false, portfolioId?: string | null) => {
+      const broker = brokerArg || detectedBroker || "simple";
       const unsorted: ExtractedTransaction[] =
         transactions.length > 0
           ? transactions
@@ -387,7 +419,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
           .finally(() => setStep("done"));
       }
     },
-    [transactions, holdings, cashBalances, holdingsLimitInfo]
+    [transactions, holdings, cashBalances, holdingsLimitInfo, detectedBroker]
   );
 
   return {
@@ -403,6 +435,9 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     importedTxCount,
     skippedUnresolvedCount,
     errorMsg,
+    detectedBroker,
+    rawFile,
+    fallbackReason,
     parseFile,
     importAll,
     removeTransaction,

@@ -17,7 +17,17 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs, detectByHeaderColumns } from "./utils";
+
+// Plain "Date"/"Commission"/"Fees"/"Amount"/"Account" (all separate, exact
+// columns) distinguish this from Schwab ("Fees & Comm" combined), Fidelity
+// ("Commission ($)"/"Fees ($)"/"Amount ($)"), and Questrade ("Transaction
+// Date"/"Gross Amount"/"Net Amount"/"Account #").
+const REQUIRED_COLUMNS = ["Date", "Action", "Symbol", "Description", "Quantity", "Price", "Commission", "Fees", "Amount", "Settlement Date", "Account"];
+
+function detect(csv: string): boolean {
+  return detectByHeaderColumns(csv, REQUIRED_COLUMNS);
+}
 
 function detectType(action: string): ParsedTransaction["type"] | null {
   const a = action.toUpperCase().trim();
@@ -115,6 +125,8 @@ export const firsttradeParser: BrokerParser = {
   id: "firstrade",
   label: "Firstrade",
   fileHint: "Account History CSV",
+
+  detect,
 
   parse: parseFirstrade,
 };

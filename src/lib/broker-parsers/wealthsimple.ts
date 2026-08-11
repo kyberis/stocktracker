@@ -19,7 +19,16 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs, hasExactColumns } from "./utils";
+
+const REQUIRED_COLUMNS = ["account_id", "account_type", "process_date", "activity_type", "symbol", "quantity", "net_amount", "commission"];
+
+function detect(csv: string): boolean {
+  const firstLine = csv.split("\n").find((l) => l.trim());
+  if (!firstLine) return false;
+  const headers = parseCSVLine(firstLine).map((h) => h.trim().toLowerCase());
+  return hasExactColumns(headers, REQUIRED_COLUMNS);
+}
 
 function detectType(activityType: string): ParsedTransaction["type"] | null {
   const a = activityType.toLowerCase().trim();
@@ -95,6 +104,8 @@ export const wealthsimpleParser: BrokerParser = {
   id: "wealthsimple",
   label: "Wealthsimple",
   fileHint: "Activities Export CSV",
+
+  detect,
 
   parse: parseWealthsimple,
 };

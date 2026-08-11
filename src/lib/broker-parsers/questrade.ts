@@ -17,7 +17,15 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, extractDate, deduplicateSourceRefs, detectByHeaderColumns } from "./utils";
+
+// "Transaction Date"/"Gross Amount"/"Net Amount"/"Activity Type" are the
+// tokens that distinguish this from Firstrade (plain "Date"/"Amount").
+const REQUIRED_COLUMNS = ["Transaction Date", "Settlement Date", "Symbol", "Currency", "Gross Amount", "Commission", "Net Amount", "Activity Type"];
+
+function detect(csv: string): boolean {
+  return detectByHeaderColumns(csv, REQUIRED_COLUMNS);
+}
 
 function detectType(action: string): ParsedTransaction["type"] | null {
   const a = action.toUpperCase().trim();
@@ -107,6 +115,8 @@ export const questradeParser: BrokerParser = {
   id: "questrade",
   label: "Questrade",
   fileHint: "Account Activity CSV",
+
+  detect,
 
   parse: parseQuestrade,
 };

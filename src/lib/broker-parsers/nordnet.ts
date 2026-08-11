@@ -25,6 +25,23 @@ const BUY_KEYWORDS = ["köp", "kob", "købt", "osta", "osto", "kjø", "buy"];
 const SELL_KEYWORDS = ["sälj", "salg", "solgt", "myynti", "sell"];
 const DIVIDEND_KEYWORDS = ["utdelning", "udbytte", "osinko", "dividend", "osingon"];
 
+const TX_TYPE_COLUMNS = ["Transaktionstyp", "Transaksjonstype", "Transaktionstype", "Tapahtumatyyppi", "Transaction type"];
+
+/**
+ * Nordnet's semicolon delimiter + a Transaktionstyp-family column name +
+ * an ISIN column is a distinctive enough combo that it doesn't collide
+ * with any other supported format.
+ */
+function detect(csv: string): boolean {
+  const stripped = csv.replace(/^\uFEFF/, "").replace(/^\xFF\xFE/, "");
+  const firstLine = stripped.split("\n").find((l) => l.trim());
+  if (!firstLine || !firstLine.includes(";")) return false;
+  const headers = parseCSVLine(firstLine, ";").map((h) => h.trim().replace(/"/g, ""));
+  const hasIsin = headers.includes("ISIN");
+  const hasTxType = TX_TYPE_COLUMNS.some((c) => headers.includes(c));
+  return hasIsin && hasTxType;
+}
+
 function detectType(txType: string): ParsedTransaction["type"] | null {
   const t = txType.toLowerCase().trim();
   if (BUY_KEYWORDS.some((k) => t.startsWith(k))) return "buy";
@@ -171,6 +188,8 @@ export const nordnetParser: BrokerParser = {
   id: "nordnet",
   label: "Nordnet",
   fileHint: "Transactions CSV export",
+
+  detect,
 
   parse: parseNordnet,
 

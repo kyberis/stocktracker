@@ -14,7 +14,15 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num, deduplicateSourceRefs } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, deduplicateSourceRefs, hasExactColumns } from "./utils";
+
+const REQUIRED_COLUMNS = ["Action", "Time", "ISIN", "Ticker", "Name", "No. of shares", "Price / share"];
+
+function detect(csv: string): boolean {
+  const firstLine = csv.split("\n").find((l) => l.trim());
+  if (!firstLine) return false;
+  return hasExactColumns(parseCSVLine(firstLine).map((h) => h.trim()), REQUIRED_COLUMNS);
+}
 
 const FEE_COLUMN_PATTERNS = [
   "charge amount",
@@ -140,6 +148,8 @@ export const trading212Parser: BrokerParser = {
   id: "trading_212",
   label: "Trading 212",
   fileHint: "History CSV export",
+
+  detect,
 
   parse: parseTrading212,
 

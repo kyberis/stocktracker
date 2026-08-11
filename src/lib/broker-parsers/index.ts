@@ -44,3 +44,20 @@ export function getBrokerParser(id: string): BrokerParser | undefined {
 export function getAllBrokerParsers(): BrokerParser[] {
   return PARSERS;
 }
+
+/**
+ * Try each registered parser's `detect()` in registry order and return the
+ * id of the first match, or null if none recognize the CSV. Order matters:
+ * stricter/more specific detectors (e.g. degiro's exact Spanish header set)
+ * are registered before looser ones (e.g. myinvestor's fuzzy alias match)
+ * so an ambiguous file resolves to the more specific format.
+ */
+export function detectBrokerFormat(csv: string): string | null {
+  const matches = PARSERS.filter((p) => p.detect(csv));
+  if (matches.length > 1) {
+    console.warn(
+      `[broker-parsers] Ambiguous CSV matched multiple formats: ${matches.map((p) => p.id).join(", ")}. Using "${matches[0].id}".`,
+    );
+  }
+  return matches[0]?.id ?? null;
+}
