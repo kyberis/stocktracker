@@ -67,6 +67,7 @@ export interface AddHoldingProposalData {
   shares: number;
   purchasePrice: number;
   displayCurrency: string;
+  purchaseDate?: string;
   portfolioId?: string;
 }
 

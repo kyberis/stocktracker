@@ -18,6 +18,7 @@ import {
   upsertSnapTradeBrokerSync,
   ensureSnapTradeBrokerSyncPlaceholder,
   deleteSnapTradeBrokerSync,
+  linkUnlinkedTransactionsToHoldings,
   setSnapTradeNeedsAttention,
   getSnapTradeNeedsAttention,
   addBrokerPortfolioMapping,
@@ -417,6 +418,9 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
           await upsertHoldingsFromPositions(session.userId, holdingsResult.holdings, targetPId, {
             skipStaleCleanup: disabledConns.length > 0,
           });
+          // Positions may arrive before the user imports txs (manual sync) or
+          // after (cron). Re-link so /analisis can find SnapTrade order fills.
+          await linkUnlinkedTransactionsToHoldings(session.userId, targetPId);
         }
       }
 

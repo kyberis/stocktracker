@@ -126,7 +126,7 @@ describe("transactions", () => {
         args: ["h1", "user-1"],
       });
       expect(mockExecute).toHaveBeenNthCalledWith(2, {
-        sql: expect.stringContaining("holding_id = ? OR (holding_id = '' AND ticker = ?"),
+        sql: expect.stringContaining("holding_id = '' AND UPPER(ticker) = UPPER(?)"),
         args: ["user-1", "portfolio-1", "user-1", "portfolio-1", "h1", "AAPL", "US"],
       });
       expect(result).toHaveLength(2);
@@ -164,8 +164,8 @@ describe("transactions", () => {
       const result = await transactions.listTransactions("user-1", "h1", "portfolio-1");
 
       expect(mockExecute).toHaveBeenNthCalledWith(3, {
-        sql: expect.stringContaining("UPDATE transactions SET holding_id = ? WHERE id IN"),
-        args: ["h1", "tx1", "tx2", "user-1"],
+        sql: expect.stringContaining("UPDATE transactions SET holding_id = ?"),
+        args: ["h1", "", "tx1", "tx2", "user-1"],
       });
       expect(result).toHaveLength(2);
     });
@@ -308,6 +308,8 @@ describe("transactions", () => {
 
     it("calls batch for non-empty array", async () => {
       mockBatch.mockResolvedValueOnce([{ rowsAffected: 1 }, { rowsAffected: 0 }]);
+      // linkUnlinkedTransactionsToHoldings: SELECT holdings (none)
+      mockExecute.mockResolvedValueOnce({ rows: [] });
 
       const result = await transactions.addTransactionsBulk("user-1", [
         { ...buyTx, date: "2024-01-01" },
@@ -324,6 +326,43 @@ describe("transactions", () => {
         "write"
       );
       expect(result).toEqual({ inserted: 1, skipped: 1 });
+    });
+
+    it("links inserted txs to existing holdings and backfills blank exchange", async () => {
+      mockBatch.mockResolvedValueOnce([{ rowsAffected: 1 }]);
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{ id: "hold-zts", ticker: "ZTS", exchange: "NYSE" }],
+        })
+        .mockResolvedValueOnce({ rowsAffected: 1 });
+
+      const result = await transactions.addTransactionsBulk("user-1", [
+        {
+          ...buyTx,
+          ticker: "ZTS",
+          name: "Zoetis Inc.",
+          exchange: "",
+          sourceRef: "snaptrade-order:abc",
+        },
+      ]);
+
+      expect(result).toEqual({ inserted: 1, skipped: 0 });
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("SELECT id, ticker, exchange FROM holdings"),
+        args: ["user-1", "default-portfolio-id"],
+      });
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("UPDATE transactions SET"),
+        args: ["hold-zts", "NYSE", "user-1", "default-portfolio-id", "ZTS", "NYSE"],
+      });
+    });
+  });
+
+  describe("linkUnlinkedTransactionsToHoldings", () => {
+    it("returns 0 when no holdings", async () => {
+      mockExecute.mockResolvedValueOnce({ rows: [] });
+      const n = await transactions.linkUnlinkedTransactionsToHoldings("user-1", "p1");
+      expect(n).toBe(0);
     });
   });
 

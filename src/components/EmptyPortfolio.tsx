@@ -1,10 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
+import WarrenAvatar from "@/components/warren/WarrenAvatar";
 
 /** Classic empty portfolio CTA — shared by Dashboard and Home v2. */
-export default function EmptyPortfolio({ onAddStock }: { onAddStock: () => void }) {
+export default function EmptyPortfolio({
+  onAddStock,
+  onAskWarren,
+}: {
+  onAddStock: () => void;
+  onAskWarren?: (prompt: string) => void;
+}) {
   const { t } = useI18n();
+  const [chatInput, setChatInput] = useState("");
+
+  const submitChat = () => {
+    const trimmed = chatInput.trim();
+    if (!trimmed || !onAskWarren) return;
+    onAskWarren(trimmed);
+    setChatInput("");
+  };
 
   return (
     <div className="space-y-6">
@@ -46,6 +62,45 @@ export default function EmptyPortfolio({ onAddStock }: { onAddStock: () => void 
           <p className="text-xs text-gray-500 dark:text-slate-400">{t("emptyStateAddDesc")}</p>
         </button>
       </div>
+
+      {onAskWarren && (
+        <div className="card border-amber-500/16 bg-amber-500/[0.06] p-3 sm:p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <WarrenAvatar size={28} />
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+              {t("emptyStateWarrenChatTitle") || "Or just tell Warren"}
+            </p>
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitChat();
+            }}
+            className="flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder={
+                t("emptyStateWarrenChatPlaceholder") ||
+                'Try: "I bought 10 AAPL at $150 on 2024-01-15"'
+              }
+              className="flex-1 min-h-[44px] px-3 py-2 text-sm rounded-lg border border-amber-500/20 bg-white dark:bg-slate-800/60 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+            />
+            <button
+              type="submit"
+              disabled={!chatInput.trim()}
+              aria-label={t("send") || "Send"}
+              className="shrink-0 w-11 h-11 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.874L5.999 12zm0 0h7.5" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

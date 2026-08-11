@@ -179,7 +179,13 @@ export default function HomeV2Dashboard() {
       )}
 
       {isEmpty ? (
-        <EmptyPortfolio onAddStock={openAdd} />
+        <EmptyPortfolio
+          onAddStock={openAdd}
+          onAskWarren={(prompt) => {
+            setWarrenPrompt(prompt);
+            setAiOpen(true);
+          }}
+        />
       ) : (
         <>
           <ErrorBoundary>

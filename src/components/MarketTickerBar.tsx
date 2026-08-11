@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useTickerBar, BIG_MOVE_THRESHOLD, type QuoteSnapshot } from "@/lib/hooks/use-ticker-bar";
 import { getTickerMarketStatuses, type TickerMarketStatus } from "@/lib/market-hours";
@@ -139,40 +139,11 @@ export default function MarketTickerBar({ demoMode = false }: Props) {
   const { t } = useI18n();
   const { eurUsd, btcPriceUsd, btcChange24h, gold, silver, sp500, oil, loading } = useTickerBar(demoMode);
   const [markets, setMarkets] = useState<TickerMarketStatus[]>(() => getTickerMarketStatuses());
-  const containerRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLSpanElement>(null);
-  const [needsDuplicate, setNeedsDuplicate] = useState(false);
 
   useEffect(() => {
     const id = window.setInterval(() => setMarkets(getTickerMarketStatuses()), 60_000);
     return () => window.clearInterval(id);
   }, []);
-
-  useLayoutEffect(() => {
-    if (loading) return;
-    const container = containerRef.current;
-    const measure = measureRef.current;
-    if (!container || !measure) return;
-
-    let raf = 0;
-    const update = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        // TRF-023: only duplicate when a single strip overflows the viewport.
-        const next = measure.scrollWidth > container.clientWidth + 4;
-        setNeedsDuplicate((prev) => (prev === next ? prev : next));
-      });
-    };
-    update();
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
-    ro?.observe(container);
-    window.addEventListener("resize", update);
-    return () => {
-      cancelAnimationFrame(raf);
-      ro?.disconnect();
-      window.removeEventListener("resize", update);
-    };
-  }, [loading, eurUsd, btcPriceUsd, gold, silver, sp500, oil, markets]);
 
   // Prefer aria-label over role="marquee" (deprecated / often ignored by AT).
   if (loading) {
@@ -189,24 +160,24 @@ export default function MarketTickerBar({ demoMode = false }: Props) {
 
   const contentProps = { eurUsd, btcPriceUsd, btcChange24h, gold, silver, sp500, oil, markets, t };
 
+  // Always duplicate + animate so the tape scrolls on wide viewports too
+  // (product spec: horizontal auto-scrolling ticker). Pause on hover; CSS
+  // disables motion under prefers-reduced-motion.
   return (
     <div
       className="bg-slate-950 dark:bg-black border-b border-slate-800 overflow-hidden sticky top-0 z-50 safe-area-top"
       aria-label={t("tickerMarketLabel")}
-      ref={containerRef}
     >
-      <div className={`h-7 flex items-center font-mono text-[11px] leading-none ${needsDuplicate ? "ticker-scroll-container" : ""}`}>
-        <div className={`${needsDuplicate ? "ticker-scroll-track" : ""} inline-flex items-center`}>
-          <span ref={measureRef} className="inline-flex items-center">
+      <div className="ticker-scroll-container h-7 flex items-center font-mono text-[11px] leading-none">
+        <div className="ticker-scroll-track inline-flex items-center">
+          <span className="inline-flex items-center">
             <TickerContent {...contentProps} />
           </span>
-          {needsDuplicate && (
-            <span aria-hidden="true" className="inline-flex items-center">
-              <TickerDivider />
-              <TickerContent {...contentProps} />
-              <TickerDivider />
-            </span>
-          )}
+          <span aria-hidden="true" className="inline-flex items-center">
+            <TickerDivider />
+            <TickerContent {...contentProps} />
+            <TickerDivider />
+          </span>
         </div>
       </div>
     </div>

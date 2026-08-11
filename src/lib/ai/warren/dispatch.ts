@@ -21,6 +21,7 @@ export const addHoldingDataSchema = z.object({
   shares: z.number().positive(),
   purchasePrice: z.number().nonnegative(),
   displayCurrency: z.string().min(3).max(4).default("EUR"),
+  purchaseDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   portfolioId: z.string().optional(),
 });
 
@@ -129,7 +130,7 @@ async function runAddHolding(userId: string, raw: unknown): Promise<DispatchResu
       assetType: "stock",
       accountId: "",
       type: "buy",
-      date: new Date().toISOString().slice(0, 10),
+      date: data.purchaseDate || new Date().toISOString().slice(0, 10),
       shares: data.shares,
       pricePerShare: data.purchasePrice,
       totalAmount: data.shares * data.purchasePrice,

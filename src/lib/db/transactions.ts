@@ -27,10 +27,16 @@ export async function listTransactions(userId: string, holdingId?: string, portf
 
   const mapSub = "(SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ? AND portfolio_id = ?)";
 
+  // When filtering by holdingId, also match unlinked transactions by ticker.
+  // Blank exchange on the tx is treated as a wildcard (SnapTrade/order imports
+  // often omit it) so they still appear on /analisis and TransactionHistory.
+  const unlinkedTickerMatch =
+    "(holding_id = '' AND UPPER(ticker) = UPPER(?) AND (UPPER(COALESCE(exchange,'')) = ? OR COALESCE(exchange,'') = ''))";
+
   if (holdingId && portfolioId && holdingTicker) {
     sql = `SELECT * FROM transactions WHERE user_id = ?
            AND (portfolio_id = ? OR id IN ${mapSub})
-           AND (holding_id = ? OR (holding_id = '' AND ticker = ? AND UPPER(COALESCE(exchange,'')) = ?))
+           AND (holding_id = ? OR ${unlinkedTickerMatch})
            ORDER BY date DESC, created_at DESC`;
     args = [userId, portfolioId, userId, portfolioId, holdingId, holdingTicker, (holdingExchange || "").toUpperCase()];
   } else if (holdingId && portfolioId) {
@@ -45,7 +51,7 @@ export async function listTransactions(userId: string, holdingId?: string, portf
     args = [userId, portfolioId, userId, portfolioId];
   } else if (holdingId && holdingTicker) {
     sql = `SELECT * FROM transactions WHERE user_id = ?
-           AND (holding_id = ? OR (holding_id = '' AND ticker = ? AND UPPER(COALESCE(exchange,'')) = ?))
+           AND (holding_id = ? OR ${unlinkedTickerMatch})
            ORDER BY date DESC, created_at DESC`;
     args = [userId, holdingId, holdingTicker, (holdingExchange || "").toUpperCase()];
   } else if (holdingId) {
@@ -57,15 +63,17 @@ export async function listTransactions(userId: string, holdingId?: string, portf
   }
   const result = await client.execute({ sql, args });
 
-  // Self-heal: backfill holding_id on unlinked transactions
+  // Self-heal: backfill holding_id (and blank exchange) on unlinked transactions
   if (holdingId && holdingTicker) {
     const unlinked = result.rows.filter((r) => str(r.holding_id) === "");
     if (unlinked.length > 0) {
       const ids = unlinked.map((r) => str(r.id));
       const placeholders = ids.map(() => "?").join(",");
       await client.execute({
-        sql: `UPDATE transactions SET holding_id = ? WHERE id IN (${placeholders}) AND user_id = ?`,
-        args: [holdingId, ...ids, userId],
+        sql: `UPDATE transactions SET holding_id = ?,
+                exchange = CASE WHEN COALESCE(exchange,'') = '' THEN ? ELSE exchange END
+              WHERE id IN (${placeholders}) AND user_id = ?`,
+        args: [holdingId, holdingExchange || "", ...ids, userId],
       });
     }
   }
@@ -324,7 +332,49 @@ export async function addTransactionsBulk(
     }
   }
 
+  if (inserted > 0) {
+    await linkUnlinkedTransactionsToHoldings(userId, resolved);
+  }
+
   return { inserted, skipped };
+}
+
+/**
+ * Attach unlinked ledger rows to existing holdings by ticker (and exchange when
+ * both sides have one). Also copies the holding exchange onto blank tx.exchange
+ * so /analisis?exchange=… filters work after SnapTrade imports.
+ */
+export async function linkUnlinkedTransactionsToHoldings(
+  userId: string,
+  portfolioId?: string,
+): Promise<number> {
+  const client = await ensureInitialized();
+  const resolved = await resolvePortfolioId(userId, portfolioId);
+  const holdings = await client.execute({
+    sql: `SELECT id, ticker, exchange FROM holdings WHERE user_id = ? AND portfolio_id = ?`,
+    args: [userId, resolved],
+  });
+  if (holdings.rows.length === 0) return 0;
+
+  let linked = 0;
+  for (const h of holdings.rows) {
+    const holdingId = str(h.id);
+    const ticker = str(h.ticker);
+    const exchange = str(h.exchange);
+    const result = await client.execute({
+      sql: `UPDATE transactions SET
+              holding_id = ?,
+              exchange = CASE WHEN COALESCE(exchange, '') = '' THEN ? ELSE exchange END
+            WHERE user_id = ?
+              AND portfolio_id = ?
+              AND holding_id = ''
+              AND UPPER(ticker) = UPPER(?)
+              AND (COALESCE(exchange, '') = '' OR UPPER(exchange) = UPPER(?))`,
+      args: [holdingId, exchange, userId, resolved, ticker, exchange],
+    });
+    linked += Number(result.rowsAffected ?? 0);
+  }
+  return linked;
 }
 
 export async function updateTransaction(

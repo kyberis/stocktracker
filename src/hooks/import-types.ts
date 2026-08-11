@@ -31,6 +31,8 @@ export interface ExtractedTransaction {
   assetType?: ImportAssetType;
   sourceRef?: string;
   brokerName?: string;
+  /** Venue code when known (e.g. NYSE). Blank is ok; listTransactions treats it as wildcard. */
+  exchange?: string;
 }
 
 export interface ExtractedHolding {

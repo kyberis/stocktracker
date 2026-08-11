@@ -70,6 +70,7 @@ A horizontal auto-scrolling ticker at the top of the authenticated app, the inte
 
 - Anonymous landing visitors hit the same public API as logged-in users; do not attach user-identifiable query params.
 - Loading state reserves `h-7` height so fixed landing chrome does not jump.
+- The strip always duplicates content and CSS-scrolls (including on wide viewports). Animation is disabled under `prefers-reduced-motion`.
 
 ## 14. Tests
 

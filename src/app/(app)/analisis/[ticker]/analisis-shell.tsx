@@ -150,6 +150,8 @@ export default function AnalisisShell({
   const name = report?.profile?.name || ticker;
   const priceFormatted = formatAnalysisNumber(report?.quote?.price, language);
   const currency = report?.quote?.currency || "";
+  const sector = report?.profile?.sector?.trim() || holding?.sector?.trim() || "";
+  const industry = report?.profile?.industry?.trim() || "";
 
   return (
     <div className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6">
@@ -200,6 +202,23 @@ export default function AnalisisShell({
               </span>
             )}
           </div>
+          {(sector || industry) && (
+            <p className="text-sm text-[color:var(--muted)]">
+              {sector && (
+                <>
+                  <span className="font-medium text-[color:var(--foreground)]">{t("companyAnalysisSector")}</span>
+                  {`: ${sector}`}
+                </>
+              )}
+              {sector && industry ? " · " : null}
+              {industry && (
+                <>
+                  <span className="font-medium text-[color:var(--foreground)]">{t("companyAnalysisIndustry")}</span>
+                  {`: ${industry}`}
+                </>
+              )}
+            </p>
+          )}
           {data.generatedAt && (
             <p className="text-sm text-[color:var(--muted)]">
               {t("companyAnalysisGeneratedAt")} {data.generatedAt}

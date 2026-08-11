@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.139",
+    date: "2026-08-11",
+    title: "Market ticker: always scroll",
+    titleTranslations: {
+      es: "Ticker de mercado: scroll continuo",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "The header market tape scrolls continuously again on wide screens (it previously stayed still when the strip fit the viewport).",
+        translations: {
+          es: "La cinta de mercado del header vuelve a desplazarse de forma continua en pantallas anchas (antes se quedaba quieta si el contenido cabía en el viewport).",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.138",
+    date: "2026-08-11",
+    title: "Company analysis: show sector in header",
+    titleTranslations: {
+      es: "Análisis: sector visible en la cabecera",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The /analisis page header now shows the stock’s sector and industry under the company name.",
+        translations: {
+          es: "La cabecera de /analisis muestra ahora el sector y la industria de la acción bajo el nombre de la empresa.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.137",
     date: "2026-08-11",
     title: "SnapTrade: import recent orders when activities lag",
@@ -26,9 +60,9 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "fix",
-        text: "After a broker reconnect, SnapTrade activities can be empty for up to a day while positions and EXECUTED orders are already available. Sync now merges those orders into the transaction ledger (with fingerprint dedupe), and no longer advances last_imported_at when the first activity fetch returns nothing — so buys like ZTS and sells like ICGA.DE appear in Transactions instead of only as orphan positions. Open DEGIRO limit orders mislabeled EXECUTED (null fill/price while the position is unchanged) are ignored.",
+        text: "After a broker reconnect, SnapTrade activities can be empty for up to a day while positions and EXECUTED orders are already available. Sync now merges those orders into the transaction ledger (with fingerprint dedupe), and no longer advances last_imported_at when the first activity fetch returns nothing — so buys like ZTS and sells like ICGA.DE appear in Transactions instead of only as orphan positions. Open DEGIRO limit orders mislabeled EXECUTED (null fill/price while the position is unchanged) are ignored. SnapTrade imports now set exchange, link holding_id to existing positions, and blank-exchange txs still match on /analisis.",
         translations: {
-          es: "Tras reconectar un broker, las activities de SnapTrade pueden estar vacías hasta un día mientras posiciones y órdenes EXECUTED ya están disponibles. El sync ahora fusiona esas órdenes en el ledger de transacciones (con dedupe por huella), y ya no avanza last_imported_at cuando el primer fetch de activities no devuelve nada — así compras como ZTS y ventas como ICGA.DE aparecen en Transacciones en lugar de solo como posiciones huérfanas. Se ignoran órdenes límite abiertas de DEGIRO mal etiquetadas como EXECUTED (sin fill/precio y con la posición intacta).",
+          es: "Tras reconectar un broker, las activities de SnapTrade pueden estar vacías hasta un día mientras posiciones y órdenes EXECUTED ya están disponibles. El sync ahora fusiona esas órdenes en el ledger de transacciones (con dedupe por huella), y ya no avanza last_imported_at cuando el primer fetch de activities no devuelve nada — así compras como ZTS y ventas como ICGA.DE aparecen en Transacciones en lugar de solo como posiciones huérfanas. Se ignoran órdenes límite abiertas de DEGIRO mal etiquetadas como EXECUTED (sin fill/precio y con la posición intacta). Los imports de SnapTrade ahora rellenan exchange, enlazan holding_id a la posición existente, y las txs sin exchange siguen emparejando en /analisis.",
         },
       },
     ],

@@ -462,6 +462,8 @@ function orderToTransaction(
   if (!date) return null;
 
   const orderId = order.brokerage_order_id || "";
+  // Prefer normalized venue (XET) over SnapTrade's raw code (XETRA) so txs match holdings.
+  const exchangeCode = String(normalized.exchange || sym?.exchange?.code || "").toUpperCase();
   return {
     date,
     type,
@@ -473,6 +475,7 @@ function orderToTransaction(
     fees: 0,
     currency,
     sourceRef: orderId ? `snaptrade-order:${orderId}` : undefined,
+    ...(exchangeCode ? { exchange: exchangeCode } : {}),
   };
 }
 
@@ -606,10 +609,12 @@ function activityToTransaction(a: UniversalActivity): ExtractedTransaction | nul
   if (!ticker && mappedType === "fee") ticker = "FEE";
   if (!ticker) return null;
 
+  let exchangeCode = "";
   if (ticker !== "FEE") {
     const exchangeMic = a.symbol?.exchange?.mic_code || "";
     const normalized = normalizeSnapTradeTicker(ticker, exchangeMic);
     ticker = normalized.ticker || ticker;
+    exchangeCode = String(normalized.exchange || a.symbol?.exchange?.code || "").toUpperCase();
   }
 
   const units = Math.abs(a.units ?? 0);
@@ -632,6 +637,7 @@ function activityToTransaction(a: UniversalActivity): ExtractedTransaction | nul
     fees: fee,
     currency,
     sourceRef: a.id ? `snaptrade-activity:${a.id}` : undefined,
+    ...(exchangeCode ? { exchange: exchangeCode } : {}),
   };
 }
 

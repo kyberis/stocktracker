@@ -546,6 +546,11 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
         shares: z.number().positive(),
         purchasePrice: z.number().nonnegative(),
         displayCurrency: z.string().min(3).max(4).default("EUR"),
+        purchaseDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe("ISO date (YYYY-MM-DD) the shares were bought, only if the user stated one. Omit to use today's date."),
       }),
       execute: async (input) => {
         if (ctx.isDemo) return demoBlocked("propose new holdings");
@@ -561,6 +566,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
             { label: "Shares", value: String(input.shares) },
             { label: "Price", value: `${input.purchasePrice.toFixed(2)} ${input.displayCurrency}` },
             { label: "Total", value: `${total.toFixed(2)} ${input.displayCurrency}` },
+            { label: "Date", value: input.purchaseDate || "Today" },
           ],
           data: {
             ticker: input.ticker.toUpperCase(),
@@ -568,6 +574,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
             shares: input.shares,
             purchasePrice: input.purchasePrice,
             displayCurrency: input.displayCurrency,
+            purchaseDate: input.purchaseDate,
             portfolioId: ctx.activePortfolioId,
           },
         });

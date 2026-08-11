@@ -16,6 +16,7 @@ import {
   trackEvent,
   getAllBrokerPortfolioMappings,
   mapTransactionsBySourceRef,
+  linkUnlinkedTransactionsToHoldings,
 } from "@/lib/db";
 import {
   listBrokerageConnections,
@@ -147,7 +148,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
           holdingId: "",
           ticker: tx.ticker || (tx.type === "fee" ? "FEE" : "UNKNOWN"),
           name: tx.name,
-          exchange: "",
+          exchange: tx.exchange || "",
           isin: tx.isin || "",
           assetType: inferAssetType({ name: tx.name, brokerType: tx.brokerName }),
           accountId: "",
@@ -222,6 +223,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
             await upsertHoldingsFromPositions(conn.userId, holdingsResult.holdings, targetPId, {
               skipStaleCleanup: disabledConns.length > 0,
             });
+            await linkUnlinkedTransactionsToHoldings(conn.userId, targetPId);
           }
         }
 

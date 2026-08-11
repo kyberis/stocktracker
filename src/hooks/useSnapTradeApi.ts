@@ -423,7 +423,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         holdingId: "",
         ticker: tx.ticker || (tx.type === "fee" ? "FEE" : "UNKNOWN"),
         name: tx.name,
-        exchange: "",
+        exchange: tx.exchange || "",
         isin: tx.isin || "",
         assetType: tx.assetType || inferAssetType({ name: tx.name }),
         accountId: "",
