@@ -93,6 +93,10 @@ const fr: TranslationStrings = {
   emptyStateAddDesc: "Recherchez et ajoutez une action à la fois",
   emptyStateSample: "Essayer des données d'exemple",
   emptyStateSampleDesc: "Explorez avec un portefeuille de démonstration",
+  emptyStateWarrenChatTitle: "Ou dites-le simplement à Warren",
+  emptyStateWarrenChatHint:
+    "Warren ne peut vous aider qu’à ajouter des actions ici — jusqu’à 10 messages, puis une pause de 15 minutes.",
+  emptyStateWarrenChatPlaceholder: 'Essayez : « J’ai acheté 10 AAPL à 150 $ le 2024-01-15 »',
   refreshing: "Actualisation des prix...",
   lastUpdated: "Dernière mise à jour",
   quotesAsOf: "Cours au",
@@ -2781,6 +2785,7 @@ const fr: TranslationStrings = {
   warrenClose: "Fermer Warren",
   warrenSend: "Envoyer",
   warrenConnected: "Connecté à votre portefeuille",
+  warrenConnectedEmptyAdd: "Mode ajout d’actions — portefeuille vide",
   warrenHoldingsLabel: "positions",
   warrenPlaceholder: "Dites à Warren ce que vous voulez faire…",
   warrenDisclaimer:
@@ -2790,10 +2795,15 @@ const fr: TranslationStrings = {
   warrenUpgradeCta: "Comparer les offres et passer à Trefolio",
   warrenGreeting:
     "Heureux de vous voir. J'ai accès à votre portefeuille. Demandez-moi ce que vous voulez ou dites-moi ce que je dois ajouter, retirer ou surveiller. Je vous demanderai toujours confirmation avant de modifier vos données.",
+  warrenGreetingEmptyAdd:
+    "Votre portefeuille est vide. Indiquez une action à ajouter — ticker, quantité et prix d’achat — et je préparerai la confirmation. Je ne peux vous aider qu’à ajouter des actions tant que vous n’avez pas de positions (10 chats, puis 15 minutes de pause).",
   warrenChipSummary: "Résume mon portefeuille",
   warrenChipConcentration: "Suis-je trop concentré ?",
   warrenChipDividends: "Revenu de dividendes estimé ?",
   warrenChipAlertExample: "Alerte-moi si AAPL baisse de 5%",
+  warrenChipAddExample1: "J’ai acheté 10 AAPL à 150 $",
+  warrenChipAddExample2: "Ajoute 5 SAN.MC à 4,20 €",
+  warrenChipAddExample3: "Je possède 2 actions MSFT achetées aujourd’hui",
   warrenAttachAria:
     "Joindre images, PDF, CSV ou audio (5 fichiers max ; des limites s’appliquent selon le type)",
   landingPricingFolioFeature16: "30 messages/day on Clara (personal finance) and Will (smart notes)",

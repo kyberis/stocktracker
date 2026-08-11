@@ -15,6 +15,10 @@ import {
 } from "./tools";
 import type { WarrenPart, WarrenProposal, WarrenStreamFrame } from "./types";
 import type { OfficeIdentity } from "@/lib/ai/office/office-identity";
+import {
+  buildWarrenEmptyAddStockAppendix,
+  pickWarrenEmptyAddTools,
+} from "./empty-add-stock";
 
 export interface RunWarrenTurnOptions {
   userId: string;
@@ -35,6 +39,11 @@ export interface RunWarrenTurnOptions {
   subscriptionPlan: SubscriptionPlan;
   /** Extra system instructions for this turn (e.g. moat screener prefetch). */
   systemAppendix?: string;
+  /**
+   * When true (empty portfolio), restrict tools + prompt to add-stock only.
+   * Callers must also enforce the empty-add burst rate limit.
+   */
+  emptyAddStockOnly?: boolean;
   /** Office-only: emit Clara/Will coordination when sister tools run. */
   onSisterCoordination?: (line: { from: "warren"; to: "clara" | "will"; summary: string }) => void;
   /** Office-only: persist Clara/Will agent bubbles. */
@@ -95,6 +104,7 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
     apiKey,
   });
 
+  const emptyAddAppendix = opts.emptyAddStockOnly ? `\n\n${buildWarrenEmptyAddStockAppendix()}` : "";
   const systemPrompt =
     buildWarrenSystemPrompt({
       language: opts.language,
@@ -104,7 +114,9 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
       isDemoMode: !!opts.isDemo,
       channel,
       subscriptionPlan: opts.subscriptionPlan,
-    }) + (opts.systemAppendix ? `\n\n${opts.systemAppendix}` : "");
+    }) +
+    emptyAddAppendix +
+    (opts.systemAppendix ? `\n\n${opts.systemAppendix}` : "");
 
   const collectedParts: WarrenPart[] = [];
   const collectedProposals: WarrenProposal[] = [];
@@ -121,7 +133,7 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
     baseCurrency: opts.baseCurrency,
     language: opts.language,
     snapshot: opts.snapshot,
-    officeIdentity: opts.officeIdentity,
+    officeIdentity: opts.emptyAddStockOnly ? null : opts.officeIdentity,
     emitPart: (part) => {
       collectedParts.push(part);
       emit({ kind: "part", part });
@@ -131,11 +143,12 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
       emit({ kind: "proposal", proposal });
     },
     emitStep: (label) => emit({ kind: "tool_step", label }),
-    emitSisterCoordination: opts.onSisterCoordination,
-    emitSisterAgentMessage: opts.onSisterAgentMessage,
+    emitSisterCoordination: opts.emptyAddStockOnly ? undefined : opts.onSisterCoordination,
+    emitSisterAgentMessage: opts.emptyAddStockOnly ? undefined : opts.onSisterAgentMessage,
   };
 
-  const tools = buildWarrenTools(ctx);
+  const allTools = buildWarrenTools(ctx);
+  const tools = opts.emptyAddStockOnly ? pickWarrenEmptyAddTools(allTools) : allTools;
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "warren" });
   const startedAt = Date.now();
   const lastUserMsg = serializeWarrenPromptUserLog(opts.messages);

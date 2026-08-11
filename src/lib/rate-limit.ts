@@ -1,6 +1,7 @@
 import { PLATFORM_LIMITS, type RateLimitProvider } from "@/lib/platform-config";
 import {
   checkAndIncrementRateLimit,
+  checkAndIncrementBurstCooldown,
   recordRateLimitUsage,
   getDailyAiUsage,
   getPlatformSetting,
@@ -17,6 +18,7 @@ import {
   publicAnalysisReadRateLimiter,
   publicAnalysisBuildRateLimiter,
 } from "@/lib/upstash";
+import { WARREN_EMPTY_ADD_PROVIDER } from "@/lib/ai/warren/empty-add-stock";
 import type { NextRequest } from "next/server";
 
 export interface RateLimitResult {
@@ -354,4 +356,40 @@ export async function incrementPublicAnalysisBuildGlobalBudget(): Promise<void> 
   const [countStr, storedDay] = raw.split("|");
   const current = storedDay === dayKey ? parseInt(countStr, 10) || 0 : 0;
   await setPlatformSetting(PUBLIC_ANALYSIS_BUILD_GLOBAL_KEY, `${current + 1}|${dayKey}`);
+}
+
+// ── Empty-portfolio Warren (add-stock only) ───────────────────────
+
+export interface BurstCooldownResult extends RateLimitResult {
+  retryAfterSec: number;
+}
+
+/**
+ * Burst of N consults then a cooldown. Used when Warren is helping a
+ * new user add their first stocks (empty portfolio). Admins bypass.
+ */
+export async function checkWarrenEmptyAddRateLimit(
+  userId: string,
+  role?: string,
+  nowMs: number = Date.now(),
+): Promise<BurstCooldownResult> {
+  if (role === "admin") {
+    return {
+      allowed: true,
+      remaining: Infinity,
+      limit: Infinity,
+      resetAt: "",
+      retryAfterSec: 0,
+    };
+  }
+
+  const maxCalls = PLATFORM_LIMITS.WARREN_EMPTY_ADD_MAX_CONSULTS;
+  const cooldownMs = PLATFORM_LIMITS.WARREN_EMPTY_ADD_COOLDOWN_MS;
+  return checkAndIncrementBurstCooldown(
+    userId,
+    WARREN_EMPTY_ADD_PROVIDER,
+    maxCalls,
+    cooldownMs,
+    nowMs,
+  );
 }

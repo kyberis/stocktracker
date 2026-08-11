@@ -2,6 +2,8 @@ import type { ModelMessage } from "ai";
 
 import { requireFeatureQuotaByUserId } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
+import { checkWarrenEmptyAddRateLimit } from "@/lib/rate-limit";
+import { WARREN_EMPTY_ADD_MAX_CONSULTS } from "@/lib/ai/warren/empty-add-stock";
 import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
 import { buildWarrenPrefetchAppendix } from "@/lib/ai/warren/warren-prefetch-appendix";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
@@ -64,6 +66,21 @@ export async function handleGeneralOfficeQuery(
     }),
   ]);
 
+  const emptyAddStockOnly = (snapshot?.holdingsCount ?? 0) === 0;
+  if (emptyAddStockOnly) {
+    const burst = await checkWarrenEmptyAddRateLimit(input.userId);
+    if (!burst.allowed) {
+      await refundFeatureQuota(input.userId, "ai_consult");
+      const minutes = Math.max(1, Math.ceil(burst.retryAfterSec / 60));
+      const msg =
+        locale === "es"
+          ? `Usaste ${WARREN_EMPTY_ADD_MAX_CONSULTS} chats para añadir acciones con Warren. Descansa ${minutes} minutos e inténtalo de nuevo.`
+          : `You've used ${WARREN_EMPTY_ADD_MAX_CONSULTS} add-stock chats with Warren. Take a ${minutes}-minute break and try again.`;
+      await persist(input, "warren", msg, nextTs());
+      return { mission: null };
+    }
+  }
+
   const messages = officeHistoryToModelMessages(history);
   if (messages.length === 0) {
     messages.push({ role: "user", content: input.userMessage });
@@ -72,11 +89,13 @@ export async function handleGeneralOfficeQuery(
   const streamId = `warren-stream-${Date.now()}`;
   let streamed = "";
 
-  const systemAppendix = await buildWarrenPrefetchAppendix(input.userMessage, {
-    userId: input.userId,
-    portfolioId: input.portfolioId,
-    snapshot,
-  });
+  const systemAppendix = emptyAddStockOnly
+    ? null
+    : await buildWarrenPrefetchAppendix(input.userMessage, {
+        userId: input.userId,
+        portfolioId: input.portfolioId,
+        snapshot,
+      });
 
   try {
     const result = await runWarrenTurn({
@@ -87,18 +106,23 @@ export async function handleGeneralOfficeQuery(
       activePortfolioId: input.portfolioId,
       activePortfolioName: input.activePortfolioName,
       snapshot,
-      officeIdentity: input.identity,
+      officeIdentity: emptyAddStockOnly ? null : input.identity,
       messages,
       gatewayHeaders: input.gatewayHeaders,
       subscriptionPlan: (input.subscriptionPlan || "pro") as SubscriptionPlan,
       systemAppendix: systemAppendix ?? undefined,
-      onSisterCoordination: (line) => {
-        coordinationLines.push(line);
-        emitFrame({ kind: "coordination", lines: [...coordinationLines] });
-      },
-      onSisterAgentMessage: async (role, content) => {
-        await persist(input, role, content, nextTs());
-      },
+      emptyAddStockOnly,
+      onSisterCoordination: emptyAddStockOnly
+        ? undefined
+        : (line) => {
+            coordinationLines.push(line);
+            emitFrame({ kind: "coordination", lines: [...coordinationLines] });
+          },
+      onSisterAgentMessage: emptyAddStockOnly
+        ? undefined
+        : async (role, content) => {
+            await persist(input, role, content, nextTs());
+          },
       onFrame: (frame) => {
         if (frame.kind === "text") {
           streamed += frame.delta;

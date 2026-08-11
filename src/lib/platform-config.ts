@@ -72,6 +72,15 @@ export const PLATFORM_LIMITS = {
   SUPPORT_CHAT_FREE_DAILY_DEFAULT: 5,
   SUPPORT_CHAT_PRO_DAILY_DEFAULT: 50,
 
+  /**
+   * Empty-portfolio Warren: max add-stock consults before a cooldown.
+   * Prevents new users from burning AI budget on off-topic chats.
+   */
+  WARREN_EMPTY_ADD_MAX_CONSULTS: 10,
+
+  /** Cooldown after the empty-portfolio Warren burst is exhausted. */
+  WARREN_EMPTY_ADD_COOLDOWN_MS: 15 * 60 * 1000,
+
   /** Max total reward days a single referrer can accumulate (12 months). */
   REFERRAL_MAX_REWARD_DAYS: 365,
 

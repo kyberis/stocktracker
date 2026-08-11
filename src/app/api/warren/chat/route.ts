@@ -16,7 +16,9 @@ import {
   type RawAttachment,
 } from "@/lib/ai/warren/preprocess-attachments";
 import type { WarrenStreamFrame } from "@/lib/ai/warren/types";
-import { listPortfolios, findUserById } from "@/lib/db";
+import { listPortfolios, findUserById, countHoldings } from "@/lib/db";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
+import { checkWarrenEmptyAddRateLimit } from "@/lib/rate-limit";
 import { warrenPortfolioSnapshotSchema } from "@/lib/ai/warren/portfolio-snapshot-zod";
 import { sanitizeWarrenPortfolioLabel } from "@/lib/ai/prompt-safety";
 import type { SubscriptionPlan } from "@/lib/types";
@@ -26,6 +28,9 @@ import {
   type WarrenTextRow,
 } from "@/lib/ai/warren/normalize-chat-messages";
 import { json401 } from "@/lib/log-unauthorized";
+import {
+  WARREN_EMPTY_ADD_MAX_CONSULTS,
+} from "@/lib/ai/warren/empty-add-stock";
 
 const textMessageSchema = z
   .object({
@@ -162,12 +167,41 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
 
   const dbUser = await findUserById(session.userId);
   const subscriptionPlan = (dbUser?.plan || session.plan || "free") as SubscriptionPlan;
-  const officeIdentity = await resolveOfficeIdentity(session.userId);
-  const systemAppendix = await buildWarrenPrefetchAppendix(serializeWarrenPromptUserLog(modelMessages), {
-    userId: session.userId,
-    portfolioId: serverPortfolioId,
-    snapshot: body.portfolioContext,
-  });
+  const holdingsCount = await countHoldings(session.userId, serverPortfolioId);
+  const emptyAddStockOnly = holdingsCount === 0 && !body.isDemo;
+
+  if (emptyAddStockOnly) {
+    const burst = await checkWarrenEmptyAddRateLimit(session.userId, session.role);
+    if (!burst.allowed) {
+      await refundFeatureQuota(session.userId, "ai_consult");
+      const minutes = Math.max(1, Math.ceil(burst.retryAfterSec / 60));
+      return Response.json(
+        {
+          error: `You've used ${WARREN_EMPTY_ADD_MAX_CONSULTS} add-stock chats with Warren. Take a ${minutes}-minute break and try again.`,
+          reason: "warren_empty_add_cooldown",
+          limit: burst.limit,
+          remaining: 0,
+          retryAfter: burst.retryAfterSec,
+          resetAt: burst.resetAt,
+        },
+        {
+          status: 429,
+          headers: { "Retry-After": String(burst.retryAfterSec) },
+        },
+      );
+    }
+  }
+
+  const officeIdentity = emptyAddStockOnly
+    ? null
+    : await resolveOfficeIdentity(session.userId);
+  const systemAppendix = emptyAddStockOnly
+    ? null
+    : await buildWarrenPrefetchAppendix(serializeWarrenPromptUserLog(modelMessages), {
+        userId: session.userId,
+        portfolioId: serverPortfolioId,
+        snapshot: body.portfolioContext,
+      });
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -190,6 +224,7 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
           messages: modelMessages,
           gatewayHeaders: req.headers,
           systemAppendix: systemAppendix ?? undefined,
+          emptyAddStockOnly,
           onFrame: send,
           subscriptionPlan,
         });

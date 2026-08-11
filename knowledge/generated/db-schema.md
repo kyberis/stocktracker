@@ -9,6 +9,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | Table | Data access module |
 |-------|--------------------|
 | `accounts` | [`src/lib/db/accounts.ts`](../../src/lib/db/accounts.ts) |
+| `acquisition_decision_memos` | [`src/lib/db/channel-spend.ts`](../../src/lib/db/channel-spend.ts) |
 | `agent_missions` | [`src/lib/db/agent-office.ts`](../../src/lib/db/agent-office.ts) |
 | `agent_office_messages` | [`src/lib/db/agent-office.ts`](../../src/lib/db/agent-office.ts) |
 | `ai_logs` | [`src/lib/db/ai-logs.ts`](../../src/lib/db/ai-logs.ts) |
@@ -20,6 +21,8 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `cash_entries` | [`src/lib/db/admin-raw-export.ts`](../../src/lib/db/admin-raw-export.ts) |
 | `cash_entries_new` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `cash_entries_v2` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `channel_spend_caps` | [`src/lib/db/channel-spend.ts`](../../src/lib/db/channel-spend.ts) |
+| `channel_spend_entries` | [`src/lib/db/channel-spend.ts`](../../src/lib/db/channel-spend.ts) |
 | `company_analysis_cache` | [`src/lib/db/company-analysis-cache.ts`](../../src/lib/db/company-analysis-cache.ts) |
 | `cron_executions` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `device_interest` | [`src/lib/db/device-interest.ts`](../../src/lib/db/device-interest.ts) |

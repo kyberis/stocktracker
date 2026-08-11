@@ -64,13 +64,17 @@ export default function EmptyPortfolio({
       </div>
 
       {onAskWarren && (
-        <div className="card border-amber-500/16 bg-amber-500/[0.06] p-3 sm:p-4">
-          <div className="flex items-center gap-2 mb-2">
+        <div className="card border-amber-500/16 bg-amber-500/[0.06] p-3 sm:p-4" data-testid="empty-warren-chat">
+          <div className="flex items-center gap-2 mb-1">
             <WarrenAvatar size={28} />
             <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
               {t("emptyStateWarrenChatTitle") || "Or just tell Warren"}
             </p>
           </div>
+          <p className="text-[11px] text-amber-800/80 dark:text-amber-200/70 mb-2 leading-snug">
+            {t("emptyStateWarrenChatHint") ||
+              "Warren can only help add stocks here — up to 10 messages, then a 15-minute break."}
+          </p>
           <form
             onSubmit={(e) => {
               e.preventDefault();

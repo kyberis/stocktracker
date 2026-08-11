@@ -1,4 +1,4 @@
 {
-  "notes": "2.5.127: fix screening entry “View report” deep-link to open the report (not agents). No landing-page impact.",
-  "landingPageReviewed": true
+  "landingPageReviewed": true,
+  "notes": "2.5.140: empty-portfolio Warren is add-stock only with a 10-chat / 15-min cooldown. Onboarding cost control — no new landing-page capability."
 }

@@ -4,12 +4,13 @@
 > Do not edit by hand.
 
 
-291 routes.
+299 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
 | `/api/accounts` | GET, POST, DELETE | [`src/app/api/accounts/route.ts`](../../src/app/api/accounts/route.ts) |
 | `/api/ad-config` | GET | [`src/app/api/ad-config/route.ts`](../../src/app/api/ad-config/route.ts) |
+| `/api/admin/acquisition-memos` | GET, POST | [`src/app/api/admin/acquisition-memos/route.ts`](../../src/app/api/admin/acquisition-memos/route.ts) |
 | `/api/admin/ad-config` | GET, PUT | [`src/app/api/admin/ad-config/route.ts`](../../src/app/api/admin/ad-config/route.ts) |
 | `/api/admin/ai-compare` | POST | [`src/app/api/admin/ai-compare/route.ts`](../../src/app/api/admin/ai-compare/route.ts) |
 | `/api/admin/ai-logs` | GET | [`src/app/api/admin/ai-logs/route.ts`](../../src/app/api/admin/ai-logs/route.ts) |
@@ -19,6 +20,9 @@
 | `/api/admin/backfill-snapshots` | POST | [`src/app/api/admin/backfill-snapshots/route.ts`](../../src/app/api/admin/backfill-snapshots/route.ts) |
 | `/api/admin/broker-integration-requests` | GET | [`src/app/api/admin/broker-integration-requests/route.ts`](../../src/app/api/admin/broker-integration-requests/route.ts) |
 | `/api/admin/broker-integration-requests/[id]` | PUT | [`src/app/api/admin/broker-integration-requests/[id]/route.ts`](../../src/app/api/admin/broker-integration-requests/[id]/route.ts) |
+| `/api/admin/channel-spend/caps` | GET, POST | [`src/app/api/admin/channel-spend/caps/route.ts`](../../src/app/api/admin/channel-spend/caps/route.ts) |
+| `/api/admin/channel-spend/entries` | GET, POST | [`src/app/api/admin/channel-spend/entries/route.ts`](../../src/app/api/admin/channel-spend/entries/route.ts) |
+| `/api/admin/channel-spend/performance` | GET | [`src/app/api/admin/channel-spend/performance/route.ts`](../../src/app/api/admin/channel-spend/performance/route.ts) |
 | `/api/admin/chats` | GET, POST | [`src/app/api/admin/chats/route.ts`](../../src/app/api/admin/chats/route.ts) |
 | `/api/admin/chats/[id]` | DELETE | [`src/app/api/admin/chats/[id]/route.ts`](../../src/app/api/admin/chats/[id]/route.ts) |
 | `/api/admin/chats/[id]/participants` | GET | [`src/app/api/admin/chats/[id]/participants/route.ts`](../../src/app/api/admin/chats/[id]/participants/route.ts) |
@@ -149,6 +153,8 @@
 | `/api/cron/digest-email` | GET | [`src/app/api/cron/digest-email/route.ts`](../../src/app/api/cron/digest-email/route.ts) |
 | `/api/cron/event-sync` | GET | [`src/app/api/cron/event-sync/route.ts`](../../src/app/api/cron/event-sync/route.ts) |
 | `/api/cron/feedback-pipeline` | GET, POST | [`src/app/api/cron/feedback-pipeline/route.ts`](../../src/app/api/cron/feedback-pipeline/route.ts) |
+| `/api/cron/lifecycle-activation` | GET, POST | [`src/app/api/cron/lifecycle-activation/route.ts`](../../src/app/api/cron/lifecycle-activation/route.ts) |
+| `/api/cron/lifecycle-winback` | GET, POST | [`src/app/api/cron/lifecycle-winback/route.ts`](../../src/app/api/cron/lifecycle-winback/route.ts) |
 | `/api/cron/moat-sync` | GET | [`src/app/api/cron/moat-sync/route.ts`](../../src/app/api/cron/moat-sync/route.ts) |
 | `/api/cron/portfolio-recommendations` | GET | [`src/app/api/cron/portfolio-recommendations/route.ts`](../../src/app/api/cron/portfolio-recommendations/route.ts) |
 | `/api/cron/portfolio-snapshots` | GET, POST | [`src/app/api/cron/portfolio-snapshots/route.ts`](../../src/app/api/cron/portfolio-snapshots/route.ts) |
@@ -181,6 +187,7 @@
 | `/api/economic-indicators` | GET | [`src/app/api/economic-indicators/route.ts`](../../src/app/api/economic-indicators/route.ts) |
 | `/api/email/unsubscribe` | GET, POST | [`src/app/api/email/unsubscribe/route.ts`](../../src/app/api/email/unsubscribe/route.ts) |
 | `/api/etf-holdings` | GET | [`src/app/api/etf-holdings/route.ts`](../../src/app/api/etf-holdings/route.ts) |
+| `/api/etf/asset-class-weights` | POST | [`src/app/api/etf/asset-class-weights/route.ts`](../../src/app/api/etf/asset-class-weights/route.ts) |
 | `/api/etf/sector-weights` | POST | [`src/app/api/etf/sector-weights/route.ts`](../../src/app/api/etf/sector-weights/route.ts) |
 | `/api/events` | GET | [`src/app/api/events/route.ts`](../../src/app/api/events/route.ts) |
 | `/api/ex-dividend` | GET | [`src/app/api/ex-dividend/route.ts`](../../src/app/api/ex-dividend/route.ts) |
@@ -208,6 +215,7 @@
 | `/api/internal/prodops-query` | POST | [`src/app/api/internal/prodops-query/route.ts`](../../src/app/api/internal/prodops-query/route.ts) |
 | `/api/internal/screening/worker` | POST | [`src/app/api/internal/screening/worker/route.ts`](../../src/app/api/internal/screening/worker/route.ts) |
 | `/api/internal/telegram-link-status` | GET | [`src/app/api/internal/telegram-link-status/route.ts`](../../src/app/api/internal/telegram-link-status/route.ts) |
+| `/api/landing/stats` | GET | [`src/app/api/landing/stats/route.ts`](../../src/app/api/landing/stats/route.ts) |
 | `/api/market-insights` | GET | [`src/app/api/market-insights/route.ts`](../../src/app/api/market-insights/route.ts) |
 | `/api/mcp/analytics/event` | POST | [`src/app/api/mcp/analytics/event/route.ts`](../../src/app/api/mcp/analytics/event/route.ts) |
 | `/api/mcp/personal-access-tokens` | GET, POST | [`src/app/api/mcp/personal-access-tokens/route.ts`](../../src/app/api/mcp/personal-access-tokens/route.ts) |

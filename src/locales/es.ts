@@ -93,6 +93,10 @@ const es: TranslationStrings = {
   emptyStateAddDesc: "Busca y añade una acción a la vez",
   emptyStateSample: "Probar con Ejemplo",
   emptyStateSampleDesc: "Explora con una cartera de demostración",
+  emptyStateWarrenChatTitle: "O cuéntaselo a Warren",
+  emptyStateWarrenChatHint:
+    "Warren solo puede ayudarte a añadir acciones aquí — hasta 10 mensajes, luego un descanso de 15 minutos.",
+  emptyStateWarrenChatPlaceholder: 'Prueba: "Compré 10 AAPL a 150 $ el 2024-01-15"',
   refreshing: "Actualizando precios...",
   lastUpdated: "Última actualización",
   quotesAsOf: "Cotizaciones a las",
@@ -3006,6 +3010,7 @@ const es: TranslationStrings = {
   warrenClose: "Cerrar Warren",
   warrenSend: "Enviar",
   warrenConnected: "Conectado a tu portafolio",
+  warrenConnectedEmptyAdd: "Modo añadir acciones — cartera vacía",
   warrenHoldingsLabel: "posiciones",
   warrenPlaceholder: "Dile a Warren qué quieres hacer…",
   warrenDisclaimer:
@@ -3015,10 +3020,15 @@ const es: TranslationStrings = {
   warrenUpgradeCta: "Comparar planes y mejorar",
   warrenGreeting:
     "Hola, qué bueno verte. Tengo acceso a tu portafolio. Pregúntame lo que quieras — o pídeme que añada, quite o vigile algo. Siempre te pediré confirmación antes de cambiar tus datos.",
+  warrenGreetingEmptyAdd:
+    "Tu cartera está vacía. Dime una acción para añadir — ticker, número de acciones y precio de compra — y prepararé la confirmación. Solo puedo ayudarte a añadir acciones hasta que tengas posiciones (10 chats, luego 15 minutos de descanso).",
   warrenChipSummary: "Resume mi portafolio",
   warrenChipConcentration: "¿Estoy demasiado concentrado?",
   warrenChipDividends: "¿Cuántos dividendos espero?",
   warrenChipAlertExample: "Avísame si AAPL cae 5%",
+  warrenChipAddExample1: "Compré 10 AAPL a 150 $",
+  warrenChipAddExample2: "Añade 5 SAN.MC a 4,20 €",
+  warrenChipAddExample3: "Tengo 2 acciones de MSFT compradas hoy",
   warrenAttachAria:
     "Adjunta imágenes, PDF, CSV o audio (máx. 5 archivos; hay límites por tipo)",
 
