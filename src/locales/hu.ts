@@ -1100,6 +1100,10 @@ const hu: TranslationStrings = {
   companyAnalysisSources: "Sources consulted:",
   landingCardCompanyAnalysisTitle: "Company analysis",
   landingCardCompanyAnalysisDesc: "Fundamentals, technicals, news, insider Form 4, and US Congress trading in one report",
+  importAddManuallyInstead: "or add your first stock manually",
+  notifFirstSyncTitle: "Your portfolio is ready",
+  notifFirstSyncMessage: "We finished syncing your broker — {0} position(s) are now in trefolio.",
+  notifFirstSyncCta: "View my portfolio",
 };
 
 export default hu;

@@ -89,6 +89,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
 
   const gatewayConfigured = await resolveGatewayApiKey(req.headers);
   if (!gatewayConfigured) {
+    trackEvent(session.userId, "import_error", { method: "ai", reason: "ai_gateway_not_configured" });
     return NextResponse.json(
       { error: "AI Gateway not configured. Ask your admin to set AI_GATEWAY_API_KEY or the Admin panel key." },
       { status: 501 }
@@ -312,6 +313,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
   } catch (err) {
     console.error("Import extraction failed:", err instanceof Error ? err.message : err);
     portfolioImportsTotal.inc({ source: "csv", status: "error" });
+    trackEvent(session.userId, "import_error", { method: "ai", reason: "ai_extraction_failed" });
     return NextResponse.json({ error: "Failed to extract portfolio data." }, { status: 500 });
   }
 });

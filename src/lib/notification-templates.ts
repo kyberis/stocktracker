@@ -43,3 +43,14 @@ export function downgradeNotification(planExpiresAt: string): CreateNotification
     linkLabel: "i18n:notifDowngradeCta",
   };
 }
+
+/** Sent once, the first time a newly-connected broker sync produces holdings. */
+export function firstSyncCompleteNotification(positionCount: number): CreateNotificationInput {
+  return {
+    type: "info",
+    title: "i18n:notifFirstSyncTitle",
+    message: `i18n:notifFirstSyncMessage|${positionCount}`,
+    link: "/",
+    linkLabel: "i18n:notifFirstSyncCta",
+  };
+}

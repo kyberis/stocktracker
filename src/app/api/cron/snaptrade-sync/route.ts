@@ -8,16 +8,19 @@ import {
   setSnapTradeNeedsAttention,
   setAllDisabledSince,
   clearAllDisabledSince,
+  claimFirstSyncNotification,
   listTransactionSourceRefs,
   listTransactionTradeFingerprints,
   addCashEntry,
   removeCashEntriesBySourceAndBrokers,
   upsertHoldingsFromPositions,
+  countHoldings,
   trackEvent,
   getAllBrokerPortfolioMappings,
   mapTransactionsBySourceRef,
   linkUnlinkedTransactionsToHoldings,
 } from "@/lib/db";
+import { shouldNotifyFirstSync, sendFirstSyncCompleteHoldingsNotification } from "@/lib/snaptrade-first-sync";
 import {
   listBrokerageConnections,
   listAccounts,
@@ -44,6 +47,8 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
 
   for (const conn of connections) {
     try {
+      const hadHoldingsBefore = await countHoldings(conn.userId);
+
       const userSecret = await getSnapTradeConnectionSecret(conn.userId);
       if (!userSecret) {
         errors++;
@@ -224,6 +229,18 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
               skipStaleCleanup: disabledConns.length > 0,
             });
             await linkUnlinkedTransactionsToHoldings(conn.userId, targetPId);
+          }
+
+          if (hadHoldingsBefore === 0) {
+            const holdingsAfter = await countHoldings(conn.userId);
+            if (shouldNotifyFirstSync({ hadHoldingsBefore, holdingsAfter })) {
+              const claimed = await claimFirstSyncNotification(conn.userId);
+              if (claimed) {
+                sendFirstSyncCompleteHoldingsNotification(conn.userId).catch((err) =>
+                  console.error(`[snaptrade-sync] first-sync notification failed for user ${conn.userId}:`, err),
+                );
+              }
+            }
           }
         }
 

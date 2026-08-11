@@ -3332,6 +3332,10 @@ const nl: TranslationStrings = {
   alertAlreadyExists: "An identical alert already exists.",
   yieldOutOfRangeTooltip: "Yield above 15% is unreliable (often cross-currency) and is hidden.",
   crossListingMergedTooltip: "Same issuer listings grouped: {tickers}",
+  importAddManuallyInstead: "or add your first stock manually",
+  notifFirstSyncTitle: "Your portfolio is ready",
+  notifFirstSyncMessage: "We finished syncing your broker — {0} position(s) are now in trefolio.",
+  notifFirstSyncCta: "View my portfolio",
 };
 
 export default nl;

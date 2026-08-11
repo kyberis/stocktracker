@@ -652,6 +652,7 @@ export default function ImportPageContent() {
                   message={brokerCSV.errorMsg}
                   onReset={brokerCSV.reset}
                   onTryAi={() => { setMethod("ai_import"); setStep("upload"); brokerCSV.reset(); }}
+                  onManualAdd={() => setShowAddStockModal(true)}
                   t={t}
                 />
               )}
@@ -684,6 +685,7 @@ export default function ImportPageContent() {
                   t={t}
                   onImportAll={handleSnapTradeImportAll}
                   track={track}
+                  onManualAdd={() => setShowAddStockModal(true)}
                 />
               )}
             </div>
@@ -730,7 +732,7 @@ export default function ImportPageContent() {
                   )}
 
                   {aiImport.step === "error" && (
-                    <ErrorCard message={aiImport.errorMsg} onReset={aiImport.reset} t={t} />
+                    <ErrorCard message={aiImport.errorMsg} onReset={aiImport.reset} onManualAdd={() => setShowAddStockModal(true)} t={t} />
                   )}
 
                   {aiImport.step === "importing" && <ImportingProgress progress={aiImport.importProgress} t={t} />}
@@ -1010,6 +1012,7 @@ function SnapTradeContent({
   t,
   onImportAll,
   track,
+  onManualAdd,
 }: {
   snapTradeApi: ReturnType<typeof useSnapTradeApi>;
   snapTradeStartDate: Record<string, string>;
@@ -1020,6 +1023,7 @@ function SnapTradeContent({
   t: (key: string) => string;
   onImportAll: () => Promise<void>;
   track: (event: string, metadata?: Record<string, string>) => void;
+  onManualAdd: () => void;
 }) {
   const commerceEnabled = useCommerceEnabled();
   if (snapTradeApi.step === "connecting") return <LoadingSpinner label={t("brokerSyncConnecting")} />;
@@ -1034,6 +1038,7 @@ function SnapTradeContent({
         needsReconnect={snapTradeApi.needsReconnect}
         disabledConnections={snapTradeApi.disabledConnections}
         onReconnect={(id) => snapTradeApi.reconnect(id)}
+        onManualAdd={onManualAdd}
         t={t}
       />
     );
@@ -1050,7 +1055,10 @@ function SnapTradeContent({
           </div>
           <p className="text-sm font-medium text-gray-700 dark:text-slate-200">{t("brokerSyncDataSyncTriggered") || "Data sync initiated"}</p>
           <p className="text-xs text-gray-500 dark:text-slate-400 max-w-sm mx-auto mt-2">{t("brokerSyncDataSyncTriggeredDesc") || "Your broker's transaction history is being synced for the first time. This usually takes a few minutes. Please try syncing again shortly."}</p>
-          <button onClick={snapTradeApi.reset} className="btn-primary text-sm min-h-[44px]">{t("close") || "Close"}</button>
+          <div className="flex flex-col items-center gap-2">
+            <button onClick={snapTradeApi.reset} className="btn-primary text-sm min-h-[44px]">{t("close") || "Close"}</button>
+            <button onClick={onManualAdd} className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors min-h-[32px]">{t("importAddManuallyInstead") || "or add your first stock manually"}</button>
+          </div>
         </div>
       );
     }
@@ -1361,6 +1369,7 @@ function ErrorCard({
   message,
   onReset,
   onTryAi,
+  onManualAdd,
   needsReconnect,
   disabledConnections,
   onReconnect,
@@ -1369,6 +1378,7 @@ function ErrorCard({
   message: string;
   onReset: () => void;
   onTryAi?: () => void;
+  onManualAdd?: () => void;
   needsReconnect?: boolean;
   disabledConnections?: { id: string; brokerageName: string; disabledDate: string | null }[];
   onReconnect?: (connectionId: string) => void;
@@ -1415,6 +1425,9 @@ function ErrorCard({
           <a href="mailto:support@trefolio.com" className="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors min-h-[32px]">{t("brokerSyncContactSupport") || "Contact Support"}</a>
           {onTryAi && (
             <button onClick={onTryAi} className="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 underline underline-offset-2 transition-colors ml-1 min-h-[32px]">{t("aiImportLabel")}</button>
+          )}
+          {onManualAdd && (
+            <button onClick={onManualAdd} className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 underline underline-offset-2 transition-colors ml-1 min-h-[32px]">{t("importAddManuallyInstead") || "or add your first stock manually"}</button>
           )}
         </div>
       </div>

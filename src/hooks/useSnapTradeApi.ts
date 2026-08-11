@@ -8,6 +8,7 @@ import type {
   ImportAssetType,
 } from "./import-types";
 import { inferAssetType } from "@/lib/infer-asset-type";
+import { trackImportError } from "@/lib/track-import-error";
 
 export type { SnapTradeConnectionInfo, ExtractedTransaction, BrokerSyncInfo };
 
@@ -252,9 +253,10 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         urlData.redirectUrl,
         "snaptrade-connect",
         async () => { await loadConnection(); setStep("idle"); },
-        (msg) => { setErrorMsg(msg); setStep("error"); },
+        (msg) => { trackImportError("broker_sync", "oauth_popup_error"); setErrorMsg(msg); setStep("error"); },
       );
     } catch {
+      trackImportError("broker_sync", "network");
       setErrorMsg("Failed to connect to SnapTrade.");
       setStep("error");
     }
@@ -289,9 +291,10 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         data.redirectUrl,
         "snaptrade-reconnect",
         async () => { await loadConnection(); setStep("idle"); },
-        (msg) => { setErrorMsg(msg); setStep("error"); },
+        (msg) => { trackImportError("broker_sync", "oauth_popup_error"); setErrorMsg(msg); setStep("error"); },
       );
     } catch {
+      trackImportError("broker_sync", "network");
       setErrorMsg("Failed to reconnect to SnapTrade.");
       setStep("error");
     }
@@ -336,6 +339,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       setLastFetchSyncTriggered(!!data.syncTriggered);
       setStep("preview");
     } catch {
+      trackImportError("broker_sync", "network");
       setErrorMsg("Failed to fetch portfolio.");
       setStep("error");
     } finally {
@@ -488,6 +492,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     }
 
     if (errorCount > 0 && txCount === 0) {
+      trackImportError("broker_sync", "bulk_all_failed");
       setErrorMsg("Import failed.");
       setStep("error");
     } else {

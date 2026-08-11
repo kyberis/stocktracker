@@ -3435,6 +3435,10 @@ const es: TranslationStrings = {
   alertAlreadyExists: "Ya existe una alerta idéntica.",
   yieldOutOfRangeTooltip: "Una rentabilidad >15% no es fiable (a menudo por divisas distintas) y se oculta.",
   crossListingMergedTooltip: "Listados del mismo emisor agrupados: {tickers}",
+  importAddManuallyInstead: "or add your first stock manually",
+  notifFirstSyncTitle: "Your portfolio is ready",
+  notifFirstSyncMessage: "We finished syncing your broker — {0} position(s) are now in trefolio.",
+  notifFirstSyncCta: "View my portfolio",
 };
 
 export default es;

@@ -12,6 +12,7 @@ const ALLOWED_EVENTS = new Set([
   "feed_view",
   "onboarding_import_method",
   "account_delete_started",
+  "import_error",
 ]);
 
 const schema = z.object({

@@ -148,6 +148,21 @@ export async function clearAllDisabledSince(userId: string): Promise<void> {
   });
 }
 
+/**
+ * Claims the one-time "first sync complete" notification for a user's
+ * SnapTrade connection. Returns true only for the caller that wins the
+ * race (the WHERE clause makes this an atomic claim-once operation), so
+ * a concurrent or repeated cron run never sends the notification twice.
+ */
+export async function claimFirstSyncNotification(userId: string): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "UPDATE snaptrade_connections SET first_sync_notified_at = datetime('now') WHERE user_id = ? AND first_sync_notified_at = ''",
+    args: [userId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
 export async function getConnectionsAllDisabledOver24h(): Promise<PendingSnapTradeDeletion[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
