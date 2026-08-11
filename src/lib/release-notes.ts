@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "When your portfolio is empty, Warren only helps add stocks (not general chat). After 10 add-stock messages, there is a 15-minute break before you can use him again — so onboarding stays focused and AI costs stay predictable.",
         translations: {
           es: "Cuando tu cartera está vacía, Warren solo ayuda a añadir acciones (no chat general). Tras 10 mensajes para añadir, hay un descanso de 15 minutos antes de poder usarlo de nuevo — así el onboarding sigue enfocado y el coste de IA se mantiene predecible.",
