@@ -6,12 +6,14 @@ import { AuthProvider } from "@/lib/auth-context";
 import { LandingI18nProvider } from "@/lib/i18n";
 import { SettingsProvider } from "@/lib/settings-context";
 import { StealthProvider } from "@/lib/stealth-context";
+import { FeatureFlagProvider } from "@/lib/feature-flag-context";
 import { PortfolioProvider } from "@/lib/portfolio-context";
 import { PortfolioCommandProvider } from "@/contexts/portfolio-command-context";
-import Dashboard from "@/components/Dashboard";
+import HomeV2Dashboard from "@/components/homepage/HomeV2Dashboard";
 import AppNav from "@/components/AppNav";
 import MarketTickerBar from "@/components/MarketTickerBar";
 import MobileTabBar from "@/components/MobileTabBar";
+import { CURRENT_VERSION } from "@/lib/release-version";
 import type { Holding, CashEntry, QuoteData, ExchangeRates, Goal } from "@/lib/types";
 
 interface Props {
@@ -59,32 +61,35 @@ export default function DemoShell({
         <LandingI18nProvider>
           <SettingsProvider demoMode>
             <StealthProvider>
-              <PortfolioProvider
-                initialHoldings={initialHoldings}
-                initialCash={initialCash}
-                demoMode
-                initialQuotes={initialQuotes}
-                initialExchangeRates={initialExchangeRates}
-                initialGoal={DEMO_GOAL}
-              >
-                <PortfolioCommandProvider>
-                  <div
-                    className="min-h-screen pb-14 sm:pb-0"
-                    style={{
-                      background: "var(--shell-background)",
-                      fontFamily: "var(--font-primary, inherit)",
-                    }}
-                  >
-                    <DemoBanner />
-                    <MarketTickerBar demoMode />
-                    <AppNav demoMode />
-                    <main id="main-content">
-                      <Dashboard />
-                    </main>
-                    <MobileTabBar />
-                  </div>
-                </PortfolioCommandProvider>
-              </PortfolioProvider>
+              <FeatureFlagProvider>
+                <PortfolioProvider
+                  initialHoldings={initialHoldings}
+                  initialCash={initialCash}
+                  demoMode
+                  initialQuotes={initialQuotes}
+                  initialExchangeRates={initialExchangeRates}
+                  initialGoal={DEMO_GOAL}
+                >
+                  <PortfolioCommandProvider>
+                    <div
+                      className="min-h-screen pb-14 sm:pb-0"
+                      style={{
+                        background: "var(--shell-background)",
+                        fontFamily: "var(--font-primary, inherit)",
+                      }}
+                    >
+                      <DemoBanner />
+                      <MarketTickerBar demoMode />
+                      <AppNav demoMode />
+                      <main id="main-content">
+                        <HomeV2Dashboard />
+                      </main>
+                      <DemoFooter />
+                      <MobileTabBar />
+                    </div>
+                  </PortfolioCommandProvider>
+                </PortfolioProvider>
+              </FeatureFlagProvider>
             </StealthProvider>
           </SettingsProvider>
         </LandingI18nProvider>
@@ -117,5 +122,25 @@ function DemoBanner() {
         </Link>
       </div>
     </div>
+  );
+}
+
+function DemoFooter() {
+  return (
+    <footer className="hidden sm:flex items-center justify-center gap-3 px-4 py-4 text-[11px] text-[color:var(--muted)]">
+      <span>&copy; {new Date().getFullYear()} trefolio</span>
+      <span className="opacity-40">·</span>
+      <Link href="/releasenotes" className="transition-colors hover:text-[color:var(--foreground)]">
+        v{CURRENT_VERSION} &mdash; What&apos;s New
+      </Link>
+      <span className="opacity-40">·</span>
+      <Link href="/privacy" className="transition-colors hover:text-[color:var(--foreground)]">
+        Privacy
+      </Link>
+      <span className="opacity-40">·</span>
+      <Link href="/terms" className="transition-colors hover:text-[color:var(--foreground)]">
+        Terms
+      </Link>
+    </footer>
   );
 }

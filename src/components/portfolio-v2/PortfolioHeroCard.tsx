@@ -51,7 +51,7 @@ export default function PortfolioHeroCard({
   hideViewChartLink = false,
   cashEntries = [],
 }: Props) {
-  const { activePortfolioCurrency } = usePortfolio();
+  const { activePortfolioCurrency, quotes, refreshingTickers, isRefreshing } = usePortfolio();
   const { stealthMode } = useStealthMode();
   const { t } = useI18n();
 
@@ -61,6 +61,16 @@ export default function PortfolioHeroCard({
   const netWorthValue =
     hasInvestedSplit && cashValue != null ? (headlineValue ?? 0) + cashValue : totalValue;
   const investedEmpty = hasInvestedSplit && (headlineValue ?? 0) <= 0;
+  const awaitingQuotes =
+    holdings.length > 0 &&
+    holdings.some(
+      (h) => refreshingTickers.has(h.ticker) || !quotes[h.ticker]?.regularMarketPrice,
+    );
+  // First stock (or any holdings) with no priced quotes yet — show calculating, not €0.
+  const isCalculatingValue =
+    investedEmpty &&
+    awaitingQuotes &&
+    (refreshingTickers.size > 0 || isRefreshing || holdings.some((h) => !quotes[h.ticker]));
 
   const dayDelta = dayGainLoss ?? 0;
   const dayPct = dayGainLossPercent ?? 0;
@@ -89,14 +99,19 @@ export default function PortfolioHeroCard({
           <div className="flex flex-wrap items-baseline gap-3">
             <h2
               className={`text-[34px] font-semibold leading-none tracking-tight tabular-nums ${
-                investedEmpty ? "text-[color:var(--muted)]" : "text-[color:var(--foreground)]"
+                isCalculatingValue || investedEmpty
+                  ? "text-[color:var(--muted)]"
+                  : "text-[color:var(--foreground)]"
               }`}
+              aria-busy={isCalculatingValue || undefined}
             >
               {stealthMode
                 ? "•••••"
-                : formatCurrency(headlineValue ?? 0, activePortfolioCurrency)}
+                : isCalculatingValue
+                  ? t("calculatingPortfolioValue")
+                  : formatCurrency(headlineValue ?? 0, activePortfolioCurrency)}
             </h2>
-            {!investedEmpty && (
+            {!investedEmpty && !isCalculatingValue && (
               <span className={`inline-flex items-center gap-1 text-xs font-medium tabular-nums ${dayChangeColor}`}>
                 <span className="text-[10px] leading-none" aria-hidden="true">
                   {dayArrow}
@@ -112,7 +127,10 @@ export default function PortfolioHeroCard({
                 <span className="ml-0.5 font-normal text-[color:var(--muted)]">{t("todayLabel")}</span>
               </span>
             )}
-            {investedEmpty && (
+            {isCalculatingValue && (
+              <span className="text-xs text-[color:var(--muted)]">{t("calculatingPortfolioValueHint")}</span>
+            )}
+            {investedEmpty && !isCalculatingValue && (
               <span className="text-xs text-[color:var(--muted)]">{t("noGainsYetInvestedEmpty")}</span>
             )}
           </div>

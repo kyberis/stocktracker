@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.144",
+    date: "2026-08-12",
+    title: "Notification panel no longer covered by header",
+    titleTranslations: {
+      es: "El panel de notificaciones ya no queda tapado por el header",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "The notifications drawer now opens above the market ticker and nav instead of rendering underneath them.",
+        translations: {
+          es: "El panel de notificaciones se abre por encima del ticker y la navegación en lugar de quedar debajo.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.143",
+    date: "2026-08-12",
+    title: "Show Calculating while first quotes load",
+    titleTranslations: {
+      es: "Mostrar Calculando mientras cargan las cotizaciones",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "After you add your first stock, the dashboard shows “Calculating…” instead of €0 while live prices are fetched.",
+        translations: {
+          es: "Al añadir tu primera acción, el dashboard muestra “Calculando…” en lugar de €0 mientras se obtienen los precios en vivo.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.142",
     date: "2026-08-11",
     title: "One portfolio per account",

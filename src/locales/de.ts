@@ -3337,6 +3337,9 @@ const de: TranslationStrings = {
   notifFirstSyncTitle: "Your portfolio is ready",
   notifFirstSyncMessage: "We finished syncing your broker — {0} position(s) are now in trefolio.",
   notifFirstSyncCta: "View my portfolio",
+  importDetectedBroker: "Detected: {broker}",
+  calculatingPortfolioValue: "Calculating\u2026",
+  calculatingPortfolioValueHint: "Fetching live prices for your holdings",
 };
 
 export default de;

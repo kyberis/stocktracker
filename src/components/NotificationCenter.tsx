@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
@@ -136,8 +137,10 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  return (
-    <div className="fixed inset-x-0 top-7 bottom-0 z-[60] flex justify-end">
+  // Portal to body so the drawer escapes AppNav's z-40 stacking context
+  // (MarketTickerBar is sticky z-50 and was covering the panel header).
+  const panel = (
+    <div className="fixed inset-x-0 top-7 bottom-0 z-[100] flex justify-end">
       <div className="absolute inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div
         ref={focusTrapRef}
@@ -276,4 +279,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") return null;
+  return createPortal(panel, document.body);
 }

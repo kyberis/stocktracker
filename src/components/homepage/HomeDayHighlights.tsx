@@ -35,11 +35,16 @@ function reasonLabel(r: HomeDayHighlightReason, t: (k: string) => string): strin
 export default function HomeDayHighlights() {
   const { t } = useI18n();
   const track = useTrack();
-  const { activePortfolioId } = usePortfolio();
+  const { activePortfolioId, demoMode } = usePortfolio();
   const [highlights, setHighlights] = useState<HomeDayHighlight[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!demoMode);
 
   useEffect(() => {
+    if (demoMode) {
+      setHighlights([]);
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     const params = new URLSearchParams();
@@ -58,7 +63,7 @@ export default function HomeDayHighlights() {
     return () => {
       cancelled = true;
     };
-  }, [activePortfolioId]);
+  }, [demoMode, activePortfolioId]);
 
   if (loading) {
     return (

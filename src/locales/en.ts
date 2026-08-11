@@ -2799,6 +2799,8 @@ const en: TranslationStrings = {
   updateCashCtaAria: "Update cash balance",
   addFirstHoldingCta: "Add your first holding",
   noGainsYetInvestedEmpty: "No gains today \u2014 nothing invested yet",
+  calculatingPortfolioValue: "Calculating\u2026",
+  calculatingPortfolioValueHint: "Fetching live prices for your holdings",
   todayLabel: "today",
   sparkline1WLabel: "Past week",
   sparkline1MLabel: "Past month",

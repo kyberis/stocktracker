@@ -20,11 +20,11 @@ export default function HomeCatalystsCard({
   showEmpty?: boolean;
 }) {
   const { t } = useI18n();
-  const { activePortfolioId } = usePortfolio();
+  const { activePortfolioId, demoMode } = usePortfolio();
   const [rows, setRows] = useState<CatalystRow[]>([]);
 
   useEffect(() => {
-    if (holdings.length === 0) {
+    if (demoMode || holdings.length === 0) {
       setRows([]);
       return;
     }
@@ -72,7 +72,7 @@ export default function HomeCatalystsCard({
     return () => {
       cancelled = true;
     };
-  }, [holdings, activePortfolioId, t]);
+  }, [demoMode, holdings, activePortfolioId, t]);
 
   if (rows.length === 0 && !showEmpty) return null;
 

@@ -2796,6 +2796,8 @@ const es: TranslationStrings = {
   updateCashCtaAria: "Actualizar saldo de efectivo",
   addFirstHoldingCta: "Añade tu primera posición",
   noGainsYetInvestedEmpty: "Sin ganancias hoy \u2014 aún no hay nada invertido",
+  calculatingPortfolioValue: "Calculando\u2026",
+  calculatingPortfolioValueHint: "Obteniendo precios en vivo de tus posiciones",
   todayLabel: "hoy",
   sparkline1WLabel: "\u00DAltima semana",
   sparkline1MLabel: "\u00DAltimo mes",
@@ -3439,6 +3441,7 @@ const es: TranslationStrings = {
   notifFirstSyncTitle: "Your portfolio is ready",
   notifFirstSyncMessage: "We finished syncing your broker — {0} position(s) are now in trefolio.",
   notifFirstSyncCta: "View my portfolio",
+  importDetectedBroker: "Detected: {broker}",
 };
 
 export default es;

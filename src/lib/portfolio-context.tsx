@@ -570,6 +570,8 @@ export function PortfolioProvider({
     const tempId = generateId();
     const optimistic = { ...holding, id: tempId };
     setHoldings((prev) => [...prev, optimistic]);
+    // Start quote fetch immediately so the hero can show "Calculating…" instead of €0
+    void fetchQuoteForTicker(holding.ticker);
 
     try {
       const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
@@ -595,12 +597,15 @@ export function PortfolioProvider({
         return prev.map((h) => (h.id === tempId ? created : h));
       });
       setMutationVersion((v) => v + 1);
-      fetchQuoteForTicker(created.ticker);
+      // Refresh quote if the earlier request finished before the holding was saved
+      if (!quotes[created.ticker]?.regularMarketPrice) {
+        void fetchQuoteForTicker(created.ticker);
+      }
     } catch (err) {
       setHoldings((prev) => prev.filter((h) => h.id !== tempId));
       setError(err instanceof Error ? err.message : "Failed to add holding");
     }
-  }, [activePortfolioId, fetchQuoteForTicker]);
+  }, [activePortfolioId, fetchQuoteForTicker, quotes]);
 
   const removeHolding = useCallback(async (id: string) => {
     const previous = holdings;
