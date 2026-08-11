@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import type { TranslationKey } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { usePortfolioCommand, type AddCommandAction } from "@/contexts/portfolio-command-context";
 import { useSettings } from "@/lib/settings-context";
 import { useTrack } from "@/lib/use-track";
 import { useImportBrokerCSV } from "@/hooks/useImportBrokerCSV";
@@ -37,7 +38,7 @@ const TX_TYPE_COLORS: Record<string, string> = {
 };
 
 const METHOD_CARDS: { key: ImportMethod; icon: string; descKey: TranslationKey; colorClass: string; iconBg: string }[] = [
-  { key: "broker_csv", icon: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12", descKey: "importDescBrokerCsv", colorClass: "text-emerald-500", iconBg: "bg-emerald-500/10 dark:bg-emerald-500/15" },
+  { key: "broker_csv", icon: "M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z", descKey: "importDescBrokerCsv", colorClass: "text-violet-500", iconBg: "bg-violet-500/10 dark:bg-violet-500/15" },
   { key: "snaptrade_api", icon: "M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75", descKey: "importDescBrokerSync", colorClass: "text-blue-500", iconBg: "bg-blue-500/10 dark:bg-blue-500/15" },
   { key: "manual", icon: "M12 4v16m8-8H4", descKey: "importDescManual", colorClass: "text-amber-500", iconBg: "bg-amber-500/10 dark:bg-amber-500/15" },
 ];
@@ -129,6 +130,7 @@ export default function ImportPageContent() {
   const { t, language: locale } = useI18n();
   const { user, isLoading: authLoading } = useAuth();
   const { refreshHoldings, refreshQuotes, activePortfolioId, portfolios, setActivePortfolio } = usePortfolio();
+  const { gatedAdd } = usePortfolioCommand();
   const track = useTrack();
   const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
 
@@ -201,11 +203,7 @@ export default function ImportPageContent() {
     const urlMethod = urlParams.get("method") as ImportMethod | null;
     if (urlMethod && METHOD_CARDS.some((m) => m.key === urlMethod)) {
       setMethod(urlMethod);
-      if (urlMethod === "manual") {
-        setShowAddStockModal(true);
-      } else {
-        setStep("upload");
-      }
+      setStep("upload");
       localStorage.setItem("trefolio_last_import_method", urlMethod);
     }
 
@@ -257,12 +255,7 @@ export default function ImportPageContent() {
     setMethod(m);
     localStorage.setItem("trefolio_last_import_method", m);
     track("import_method_selected", { method: m });
-
-    if (m === "manual") {
-      setShowAddStockModal(true);
-    } else {
-      setStep("upload");
-    }
+    setStep("upload");
   };
 
   const submitMissingBrokerRequest = useCallback(async () => {
@@ -441,7 +434,7 @@ export default function ImportPageContent() {
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24 sm:pb-6">
       {/* Progress bar */}
-      {step !== "method" && step !== "done" && (
+      {step !== "method" && step !== "done" && method !== "manual" && (
         <WizardProgress steps={totalSteps} current={currentStepNum} />
       )}
 
@@ -699,6 +692,18 @@ export default function ImportPageContent() {
               )}
             </div>
           )}
+
+          {/* ── Manual Add ── */}
+          {method === "manual" && (
+            <div className="space-y-4">
+              <WizardHeader
+                title={t("importSectionManual")}
+                subtitle={t("importDescManual")}
+                onBack={() => setStep("method")}
+              />
+              <ManualAddChooser gatedAdd={gatedAdd} t={t} />
+            </div>
+          )}
         </div>
       )}
 
@@ -863,6 +868,56 @@ export default function ImportPageContent() {
 }
 
 /* ── Shared sub-components ── */
+
+const MANUAL_ADD_CHOICES: {
+  action: AddCommandAction;
+  labelKey: TranslationKey;
+  icon: "stock" | "fund" | "crypto" | "asset";
+  requiresPro: boolean;
+}[] = [
+  { action: "stock", labelKey: "addStock", icon: "stock", requiresPro: false },
+  { action: "fund", labelKey: "addFund", icon: "fund", requiresPro: false },
+  { action: "crypto", labelKey: "addCrypto", icon: "crypto", requiresPro: true },
+  { action: "asset", labelKey: "addManualAsset", icon: "asset", requiresPro: true },
+];
+
+function ManualAddChooser({ gatedAdd, t }: { gatedAdd: (action: AddCommandAction) => void; t: (key: string) => string }) {
+  return (
+    <div className="space-y-2.5">
+      {MANUAL_ADD_CHOICES.map((choice) => (
+        <button
+          key={choice.action}
+          onClick={() => gatedAdd(choice.action)}
+          className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-gray-300 dark:hover:border-slate-600 active:scale-[0.98] transition-all text-left min-h-[44px]"
+        >
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
+            {choice.icon === "stock" && (
+              <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+              </svg>
+            )}
+            {choice.icon === "fund" && (
+              <svg className="w-5 h-5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+              </svg>
+            )}
+            {choice.icon === "crypto" && (
+              <span className="w-5 h-5 rounded-full bg-[#f7931a] flex items-center justify-center text-white text-[11px] font-bold">₿</span>
+            )}
+            {choice.icon === "asset" && <span className="text-lg leading-none">🏠</span>}
+          </div>
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">{t(choice.labelKey)}</span>
+            {choice.requiresPro && <TierFeatureBadge requiredPlan="pro" size="xs" />}
+          </div>
+          <svg className="w-4 h-4 text-gray-400 dark:text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function UploadZone({
   isDragOver,
