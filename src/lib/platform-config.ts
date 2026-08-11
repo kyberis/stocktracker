@@ -202,7 +202,7 @@ export const FEATURE_QUOTAS: Record<FeatureQuotaKey, FeatureQuotaConfig> = {
  */
 export const SOFT_CAPS = {
   holdings: { free: 100, pro: 5_000 },
-  portfolios: { free: 3, pro: 20 },
+  portfolios: { free: 1, pro: 1 },
   alerts: { free: 25, pro: 500 },
   manualAssets: { free: 10, pro: 500 },
   snaptradeConnections: { free: 1, pro: 20 },

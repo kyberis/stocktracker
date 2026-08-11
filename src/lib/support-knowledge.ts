@@ -25,6 +25,7 @@ There are two tiers: **Folio (free)** and **Trefolio (paid)**. One paid subscrip
 - Higher AI limits than Folio
 - Unlimited or high alert limits with email, push, WhatsApp, and device notifications (subject to fair use)
 - Multiple portfolios (see app for limit)
++ One portfolio (same as Folio)
 - Portfolio sharing, CSV export, performance metrics, full history, economic calendar, net worth tracking
 - AI Support chat (when enabled)
 - Broker Sync via SnapTrade (multiple brokerages, subject to plan limits)

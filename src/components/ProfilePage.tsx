@@ -392,20 +392,11 @@ function PortfolioAlertSection() {
 
 function PortfolioManagementSection() {
   const { t } = useI18n();
-  const { user, refreshUser } = useAuth();
   const [portfolios, setPortfolios] = useState<{ id: string; name: string; isDefault: boolean; currency?: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newCurrency, setNewCurrency] = useState<"EUR" | "USD">("EUR");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [error, setError] = useState("");
-  const [devicePortfolioId, setDevicePortfolioId] = useState(user?.devicePortfolioId || "");
-
-  const isPro = user?.plan === "pro";
-  const limit = isPro ? 3 : 1;
-  const isOverLimit = portfolios.length > limit;
 
   const fetchPortfolios = useCallback(async () => {
     try {
@@ -420,28 +411,6 @@ function PortfolioManagementSection() {
 
   useEffect(() => { fetchPortfolios(); }, [fetchPortfolios]);
 
-  async function handleCreate() {
-    if (!newName.trim()) return;
-    setCreating(true);
-    setError("");
-    try {
-      const res = await fetch("/api/portfolios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim(), currency: newCurrency }),
-      });
-      if (res.ok) {
-        setNewName("");
-        setNewCurrency("EUR");
-        await fetchPortfolios();
-      } else {
-        const data = await res.json().catch(() => null);
-        setError(data?.error || "Failed to create portfolio");
-      }
-    } catch { setError("Failed to create portfolio"); }
-    setCreating(false);
-  }
-
   async function handleRename(id: string) {
     if (!editName.trim()) return;
     try {
@@ -454,184 +423,75 @@ function PortfolioManagementSection() {
         setEditingId(null);
         setEditName("");
         await fetchPortfolios();
+      } else {
+        const data = await res.json().catch(() => null);
+        setError(data?.error || "Failed to rename");
       }
-    } catch { /* ignore */ }
+    } catch { setError("Failed to rename"); }
   }
 
-  async function handleDelete(id: string) {
-    if (
-      !confirm(
-        "Delete this portfolio permanently? All holdings, transactions, cash, chart history, alerts, and goals for this portfolio will be removed. This cannot be undone.",
-      )
-    )
-      return;
-    try {
-      const res = await fetch(`/api/portfolios/${encodeURIComponent(id)}`, { method: "DELETE" });
-      if (res.ok) await fetchPortfolios();
-    } catch { /* ignore */ }
-  }
-
-  async function handleSetDefault(id: string) {
+  async function handleCurrencyChange(id: string, currency: string) {
     try {
       const res = await fetch(`/api/portfolios/${encodeURIComponent(id)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isDefault: true }),
+        body: JSON.stringify({ currency }),
       });
       if (res.ok) await fetchPortfolios();
-    } catch { /* ignore */ }
-  }
-
-  async function handleDevicePortfolioChange(portfolioId: string) {
-    setDevicePortfolioId(portfolioId);
-    try {
-      await fetch("/api/auth/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ devicePortfolioId: portfolioId }),
-      });
-      await refreshUser();
     } catch { /* ignore */ }
   }
 
   if (loading) return <div className="text-sm text-gray-400 dark:text-slate-500">{t("loading")}</div>;
 
+  const primary = portfolios.find((p) => p.isDefault) ?? portfolios[0];
+  if (!primary) {
+    return <p className="text-xs text-[color:var(--muted)]">{t("profilePortfolioLimitBlurb").replace("{limit}", "1")}</p>;
+  }
+
   return (
     <div className="space-y-4">
-      {/* Portfolio list */}
-      <div className="space-y-2">
-        {portfolios.map((p) => (
-          <div key={p.id} className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2">
-            {editingId === p.id ? (
-              <div className="flex items-center gap-2 flex-1">
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleRename(p.id); if (e.key === "Escape") setEditingId(null); }}
-                  className="text-sm flex-1"
-                  autoFocus
-                />
-                <button onClick={() => handleRename(p.id)} className="btn-primary text-xs px-2 py-1">{t("save")}</button>
-                <button onClick={() => setEditingId(null)} className="btn-secondary text-xs px-2 py-1">{t("cancel")}</button>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="truncate text-sm font-medium text-[color:var(--foreground)]">{p.name}</span>
-                  <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-highlight)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--muted)]">
-                    {p.currency ?? "EUR"}
-                  </span>
-                  {p.isDefault && (
-                    <span className="rounded-full border border-emerald-500/16 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300">
-                      Default
-                    </span>
-                  )}
-                  {isOverLimit && !p.isDefault && (
-                    <span className="rounded-full border border-amber-500/16 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
-                      Read-only
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {!(isOverLimit && !p.isDefault) && (
-                    <button
-                      onClick={() => { setEditingId(p.id); setEditName(p.name); }}
-                      className="text-xs text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-                    >
-                      Rename
-                    </button>
-                  )}
-                  {!p.isDefault && (
-                    <>
-                      {!(isOverLimit && !p.isDefault) && (
-                        <button
-                          onClick={() => handleSetDefault(p.id)}
-                          className="text-xs text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-                        >
-                          Set Default
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(p.id)}
-                        className="text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Create new portfolio */}
-      {isPro && portfolios.length < limit && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
+      <p className="text-xs text-[color:var(--muted)]">
+        {t("profilePortfolioLimitBlurb").replace("{limit}", "1")}
+      </p>
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2">
+        {editingId === primary.id ? (
+          <div className="flex items-center gap-2 flex-1">
             <input
               type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
-              placeholder="New portfolio name"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleRename(primary.id); if (e.key === "Escape") setEditingId(null); }}
               className="text-sm flex-1"
-              maxLength={50}
+              autoFocus
             />
-            <div className="flex shrink-0 items-center gap-0 overflow-hidden rounded-xl border border-[color:var(--border)]">
-              {(["EUR", "USD"] as const).map((cur) => (
-                <button
-                  key={cur}
-                  type="button"
-                  onClick={() => setNewCurrency(cur)}
-                  className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-                    newCurrency === cur
-                      ? "bg-blue-500 text-white"
-                      : "bg-[color:var(--surface-soft)] text-[color:var(--muted)] hover:bg-[color:var(--surface-highlight)]"
-                  }`}
-                >
-                  {cur === "EUR" ? "\u20AC EUR" : "$ USD"}
-                </button>
-              ))}
-            </div>
-            <button onClick={handleCreate} disabled={creating || !newName.trim()} className="btn-primary text-sm disabled:opacity-40">
-              {creating ? "Creating..." : "Create"}
-            </button>
+            <button onClick={() => handleRename(primary.id)} className="btn-primary text-xs px-2 py-1">{t("save")}</button>
+            <button onClick={() => setEditingId(null)} className="btn-secondary text-xs px-2 py-1">{t("cancel")}</button>
           </div>
-        </div>
-      )}
-
-      {!isPro && portfolios.length >= limit && (
-        <p className="text-xs text-[color:var(--muted)]">
-          Upgrade to Trefolio to create up to 5 portfolios.
-        </p>
-      )}
-
+        ) : (
+          <>
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="truncate text-sm font-medium text-[color:var(--foreground)]">{primary.name}</span>
+              <select
+                value={primary.currency ?? "EUR"}
+                onChange={(e) => handleCurrencyChange(primary.id, e.target.value)}
+                className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-highlight)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--muted)]"
+                aria-label="Portfolio currency"
+              >
+                {["EUR", "USD", "GBP", "CHF"].map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={() => { setEditingId(primary.id); setEditName(primary.name); }}
+              className="text-xs text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
+            >
+              Rename
+            </button>
+          </>
+        )}
+      </div>
       {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
-
-      {/* Device & Widget portfolio selector */}
-      {portfolios.length > 1 && (
-        <div className="space-y-2 border-t border-[color:var(--border)] pt-3">
-          <label className="text-sm font-medium text-[color:var(--foreground)]">
-            Device & Widget Portfolio
-          </label>
-          <p className="text-xs text-[color:var(--muted)]">
-            Choose which portfolio the home screen widget and trefolio Leaf use. This is separate from the portfolio picker on the dashboard—each place shows totals for its own scope. Leave on &quot;All Portfolios&quot; for a combined view on device and widget.
-          </p>
-          <select
-            value={devicePortfolioId}
-            onChange={(e) => handleDevicePortfolioChange(e.target.value)}
-            className="w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-          >
-            <option value="">All Portfolios</option>
-            {portfolios.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </div>
-      )}
     </div>
   );
 }

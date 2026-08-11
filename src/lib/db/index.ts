@@ -14,9 +14,12 @@ export {
   countPortfolios,
   findPortfolioById,
   moveHoldingToPortfolio,
+  mergePortfolioInto,
+  consolidateUserToSinglePortfolio,
   ensureDefaultPortfolio,
   resolvePortfolioId,
 } from "./portfolios";
+export type { MergePortfolioResult, ConsolidateSinglePortfolioResult } from "./portfolios";
 
 export {
   findUserByUsername,

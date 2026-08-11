@@ -934,7 +934,7 @@ ${FOOTER}`,
             ${feature("&#x1F4CA;", "Advanced Analytics", "Sharpe ratio, max drawdown, volatility, and full growth history")}
             ${feature("&#x1F9E0;", "AI Analysis", "30 calls/day with deep stock insights and portfolio reviews")}
             ${feature("&#x1F4C8;", "Company Fundamentals", "Income statements, balance sheets, insider trades, and institutional holdings")}
-            ${feature("&#x1F514;", "Premium Alerts", "WhatsApp notifications, unlimited alerts, and up to 5 portfolios")}
+            ${feature("&#x1F514;", "Premium Alerts", "WhatsApp notifications and unlimited alerts")}
           </table>
           {{growth_box}}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td style="padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;">
@@ -972,7 +972,7 @@ ${FOOTER}`,
           </div>
         </td></tr>
 ${FOOTER}`,
-    bodyText: "Your Pro trial has ended\n\nHi {{display_name}}, your 7-day Trefolio Pro trial is over.\n\nHere's what you'll miss:\n- Advanced Analytics: Sharpe ratio, max drawdown, volatility\n- AI Analysis: 30 calls/day with deep stock insights\n- Company Fundamentals: income, balance sheets, insider trades\n- Premium Alerts: WhatsApp, unlimited alerts, up to 5 portfolios\n\nPlans start at €4.99/month. Cancel anytime.\n\nSubscribe: {{base_url}}/pricing\n\nI hope the trial gave you a real taste of what trefolio can do. If you have feedback, I'd genuinely love to hear it.\n\nMarcos\nFounder, trefolio",
+    bodyText: "Your Pro trial has ended\n\nHi {{display_name}}, your 7-day Trefolio Pro trial is over.\n\nHere's what you'll miss:\n- Advanced Analytics: Sharpe ratio, max drawdown, volatility\n- AI Analysis: 30 calls/day with deep stock insights\n- Company Fundamentals: income, balance sheets, insider trades\n- Premium Alerts: WhatsApp and unlimited alerts\n\nPlans start at €4.99/month. Cancel anytime.\n\nSubscribe: {{base_url}}/pricing\n\nI hope the trial gave you a real taste of what trefolio can do. If you have feedback, I'd genuinely love to hear it.\n\nMarcos\nFounder, trefolio",
     bodyTextEs: "Tu prueba Pro ha terminado\n\nHola {{display_name}}, tu prueba de 7 días de Trefolio Pro ha terminado.\n\nEsto es lo que echarás de menos:\n- Analítica avanzada: ratio Sharpe, drawdown máximo, volatilidad\n- Análisis IA: 30 consultas/día con insights profundos\n- Fundamentales de empresas: ingresos, balances, insiders\n- Alertas premium: WhatsApp, ilimitadas, hasta 5 carteras\n\nPlanes desde 4,99€/mes. Cancela cuando quieras.\n\nSuscríbete: {{base_url}}/pricing\n\nEspero que la prueba te haya dado una idea real de lo que trefolio puede hacer.\n\nMarcos\nFundador, trefolio",
     category: "lifecycle",
     experienceLevel: "",

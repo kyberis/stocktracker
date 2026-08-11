@@ -20,7 +20,7 @@ export const GET = withMetrics("/api/portfolios", async (req: NextRequest) => {
 });
 
 /**
- * POST /api/portfolios — create a new portfolio (plan-gated)
+ * POST /api/portfolios — create a new portfolio (blocked: single-portfolio product)
  */
 export const POST = withMetrics("/api/portfolios POST", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -32,8 +32,12 @@ export const POST = withMetrics("/api/portfolios POST", async (req: NextRequest)
 
   if (current >= limit) {
     return NextResponse.json(
-      { error: "Portfolio limit reached", limit, current },
-      { status: 403 }
+      {
+        error: "Each account has a single portfolio. Extra portfolios are no longer supported.",
+        limit,
+        current,
+      },
+      { status: 403 },
     );
   }
 

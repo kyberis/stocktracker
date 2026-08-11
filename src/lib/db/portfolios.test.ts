@@ -399,4 +399,117 @@ describe("portfolios", () => {
       expect(result).toBe(false);
     });
   });
+
+  describe("mergePortfolioInto", () => {
+    it("returns merged:false when source is default", async () => {
+      mockExecute.mockResolvedValueOnce({ rows: [{ id: "src", is_default: 1 }] });
+      const result = await portfolios.mergePortfolioInto("user-1", "src", "tgt");
+      expect(result.merged).toBe(false);
+    });
+
+    it("moves unique holding and deletes source portfolio", async () => {
+      mockExecute
+        .mockResolvedValueOnce({ rows: [{ id: "src", is_default: 0 }] }) // check source
+        .mockResolvedValueOnce({ rows: [{ id: "tgt" }] }) // check target
+        .mockResolvedValueOnce({
+          rows: [{ id: "h1", ticker: "BTC", exchange: "CCC", shares: 1, purchase_price: 100, value_in_eur: 100 }],
+        }) // source holdings
+        .mockResolvedValueOnce({ rows: [] }) // no collision
+        .mockResolvedValueOnce({ rowsAffected: 1 }) // reparent holding
+        .mockResolvedValueOnce({ rows: [] }) // source cash empty
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // txs
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // map delete collide
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // map update
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // alerts
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // goals
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // snaptrade delete
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // snaptrade update
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // snapshots
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // shares
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // scores
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // digests
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // rec cache
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // device
+        .mockResolvedValueOnce({ rowsAffected: 0 }) // telegram
+        .mockResolvedValueOnce({ rowsAffected: 1 }); // delete portfolio
+
+      const result = await portfolios.mergePortfolioInto("user-1", "src", "tgt");
+      expect(result).toMatchObject({ merged: true, holdingsMoved: 1, holdingsCombined: 0 });
+      const deletePf = mockExecute.mock.calls.find(
+        (c) => typeof c[0]?.sql === "string" && c[0].sql.includes("DELETE FROM portfolios"),
+      );
+      expect(deletePf).toBeDefined();
+    });
+
+    it("combines colliding holdings with weighted average cost", async () => {
+      mockExecute
+        .mockResolvedValueOnce({ rows: [{ id: "src", is_default: 0 }] })
+        .mockResolvedValueOnce({ rows: [{ id: "tgt" }] })
+        .mockResolvedValueOnce({
+          rows: [{ id: "h-src", ticker: "AAPL", exchange: "XNAS", shares: 2, purchase_price: 100, value_in_eur: 200 }],
+        })
+        .mockResolvedValueOnce({
+          rows: [{ id: "h-tgt", shares: 2, purchase_price: 50, value_in_eur: 100 }],
+        })
+        .mockResolvedValueOnce({ rowsAffected: 1 }) // update tgt
+        .mockResolvedValueOnce({ rowsAffected: 1 }) // delete src holding
+        .mockResolvedValueOnce({ rows: [] }); // cash empty
+      // remaining cleanup calls
+      for (let i = 0; i < 15; i++) mockExecute.mockResolvedValueOnce({ rowsAffected: 0 });
+
+      const result = await portfolios.mergePortfolioInto("user-1", "src", "tgt");
+      expect(result.holdingsCombined).toBe(1);
+      const updateCall = mockExecute.mock.calls.find(
+        (c) =>
+          typeof c[0]?.sql === "string" &&
+          c[0].sql.includes("UPDATE holdings SET shares = ?, purchase_price = ?, value_in_eur = ?"),
+      );
+      expect(updateCall![0].args[0]).toBe(4); // shares
+      expect(updateCall![0].args[1]).toBe(75); // weighted avg (200+100)/4
+      expect(updateCall![0].args[2]).toBe(300); // value
+    });
+  });
+
+  describe("consolidateUserToSinglePortfolio", () => {
+    it("merges content portfolios and deletes empty ones", async () => {
+      // getDefaultPortfolio
+      mockExecute.mockResolvedValueOnce({
+        rows: [portfolioRow({ id: "default", is_default: 1 })],
+      });
+      // listPortfolios
+      mockExecute.mockResolvedValueOnce({
+        rows: [
+          portfolioRow({ id: "default", is_default: 1 }),
+          portfolioRow({ id: "crypto", name: "Crypto", is_default: 0 }),
+          portfolioRow({ id: "empty", name: "Empty", is_default: 0 }),
+        ],
+      });
+      // crypto: has cash
+      mockExecute
+        .mockResolvedValueOnce({ rows: [{ cnt: 0 }] }) // holdings
+        .mockResolvedValueOnce({ rows: [{ cnt: 1 }] }); // cash
+      // mergePortfolioInto for crypto — minimal success path
+      mockExecute
+        .mockResolvedValueOnce({ rows: [{ id: "crypto", is_default: 0 }] })
+        .mockResolvedValueOnce({ rows: [{ id: "default" }] })
+        .mockResolvedValueOnce({ rows: [] }) // holdings
+        .mockResolvedValueOnce({
+          rows: [{ id: "c1", name: "Civislend", source: "manual", amount_eur: 1500, display_amount: 1500 }],
+        })
+        .mockResolvedValueOnce({ rows: [] }) // no cash collision
+        .mockResolvedValueOnce({ rowsAffected: 1 }); // reparent cash
+      for (let i = 0; i < 15; i++) mockExecute.mockResolvedValueOnce({ rowsAffected: 0 });
+
+      // empty: no content
+      mockExecute
+        .mockResolvedValueOnce({ rows: [{ cnt: 0 }] })
+        .mockResolvedValueOnce({ rows: [{ cnt: 0 }] });
+      for (let i = 0; i < 12; i++) mockExecute.mockResolvedValueOnce({ rowsAffected: 0 });
+
+      const result = await portfolios.consolidateUserToSinglePortfolio("user-1");
+      expect(result.principalId).toBe("default");
+      expect(result.merged).toContain("crypto");
+      expect(result.deletedEmpty).toContain("empty");
+    });
+  });
 });

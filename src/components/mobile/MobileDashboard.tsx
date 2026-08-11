@@ -111,7 +111,7 @@ export default function MobileDashboard() {
   const hasMultiplePortfolios = portfolios.length > 1;
   const activeName = activePortfolioId
     ? portfolios.find((p) => p.id === activePortfolioId)?.name ?? t("portfolio")
-    : hasMultiplePortfolios ? t("allPortfolios") : (portfolios[0]?.name ?? t("portfolio"));
+    : (portfolios[0]?.name ?? t("portfolio"));
   const holdingsLimit = getHoldingsLimit(userPlan);
   const holdingsAtLimit = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
   const showHoldingsUsageBanner =
@@ -242,7 +242,7 @@ export default function MobileDashboard() {
       <div className="glass-toolbar z-30 border-b border-[color:var(--border)] px-4 py-3">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => { if (portfolios.length > 0) { hapticImpact("Light"); setShowPortfolioPicker(true); } }}
+            onClick={() => { if (hasMultiplePortfolios) { hapticImpact("Light"); setShowPortfolioPicker(true); } }}
             className="flex items-center gap-1.5 min-w-0"
             disabled={portfolios.length === 0}
           >
@@ -641,39 +641,6 @@ export default function MobileDashboard() {
               <h2 id="mobile-portfolio-picker-title" className="text-base font-bold text-[color:var(--foreground)]">{t("portfolio")}</h2>
             </div>
             <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
-              {hasMultiplePortfolios && (
-                <button
-                  onClick={() => { hapticImpact("Light"); setActivePortfolio(null); setShowPortfolioPicker(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-colors ${
-                    !activePortfolioId
-                      ? "bg-emerald-50 dark:bg-emerald-500/10"
-                      : "active:bg-gray-100 dark:active:bg-slate-800"
-                  }`}
-                >
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                    !activePortfolioId
-                      ? "bg-emerald-500 text-white"
-                      : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400"
-                  }`}>
-                    <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-sm font-medium ${!activePortfolioId ? "text-emerald-700 dark:text-emerald-400" : "text-gray-900 dark:text-white"}`}>
-                      {t("allPortfolios")}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-slate-400">
-                      {t("portfoliosCount").replace("{count}", String(portfolios.length))}
-                    </p>
-                  </div>
-                  {!activePortfolioId && (
-                    <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  )}
-                </button>
-              )}
               {portfolios.map((p) => (
                 <button
                   key={p.id}

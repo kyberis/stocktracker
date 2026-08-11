@@ -1179,7 +1179,7 @@ function trialExpiredHtml(displayName: string, _locale: EmailLocale, growthPct?:
             ${featureRow("&#x1F4CA;", "Advanced Analytics", "Sharpe ratio, max drawdown, volatility, and full growth history")}
             ${featureRow("&#x1F9E0;", "AI Analysis", "30 calls/day with deep stock insights and portfolio reviews")}
             ${featureRow("&#x1F4C8;", "Company Fundamentals", "Income statements, balance sheets, insider trades, and institutional holdings")}
-            ${featureRow("&#x1F514;", "Premium Alerts", "WhatsApp notifications, unlimited alerts, and up to 5 portfolios")}
+            ${featureRow("&#x1F514;", "Premium Alerts", "WhatsApp notifications and unlimited alerts")}
           </table>
           ${growthHtml}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td style="padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;">

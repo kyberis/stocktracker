@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.141: cash-only / fixed-return portfolios render the dashboard instead of the empty state. Bug fix — no new landing-page capability."
+  "notes": "2.5.142: single portfolio for all tiers — pricing copy updated (holdings in one portfolio). No new capability claim beyond simplifying multi-portfolio away."
 }

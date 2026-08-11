@@ -50,10 +50,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
     refreshSingleQuote,
     refreshHoldings,
     alertedTickers,
-    portfolios,
-    activePortfolioId,
     activePortfolioCurrency,
-    moveToPortfolio,
   } = usePortfolio();
   const baseCurrency = activePortfolioCurrency || "EUR";
   const exchangeExtraCodes = useMemo(
@@ -88,33 +85,8 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
   const [reportSent, setReportSent] = useState(false);
   const [reportSending, setReportSending] = useState(false);
   const [showAlertForm, setShowAlertForm] = useState(false);
-  const [showMoveMenu, setShowMoveMenu] = useState(false);
-  const [moveLoading, setMoveLoading] = useState(false);
   const [assetTypeSaving, setAssetTypeSaving] = useState(false);
   const hasAlert = alertedTickers.has(holding.ticker);
-
-  const isPro = user?.plan === "pro";
-  const otherPortfolios = activePortfolioId
-    ? portfolios.filter((p) => p.id !== activePortfolioId)
-    : [];
-  const canMove = isPro && otherPortfolios.length > 0 && !!activePortfolioId;
-
-  const handleMoveToPortfolio = async (toPortfolioId: string) => {
-    if (!activePortfolioId || moveLoading) return;
-    setMoveLoading(true);
-    const ok = await moveToPortfolio({
-      type: "holding",
-      ticker: holding.ticker,
-      exchange: holding.exchange,
-      fromPortfolioId: activePortfolioId,
-      toPortfolioId,
-    });
-    setMoveLoading(false);
-    if (ok) {
-      setShowMoveMenu(false);
-      handleClose();
-    }
-  };
 
   const quote: QuoteData | undefined = quotes[holding.ticker];
   const isCashHolding =
@@ -738,34 +710,6 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
                 >
                   {t("editValues")}
                 </button>
-                {canMove && (
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowMoveMenu((v) => !v)}
-                      disabled={moveLoading}
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-2 py-1.5 flex items-center gap-1 disabled:opacity-50"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                      </svg>
-                      {t("moveToPortfolio")}
-                    </button>
-                    {showMoveMenu && (
-                      <div className="absolute bottom-full right-0 mb-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg py-1 min-w-[180px] z-20">
-                        {otherPortfolios.map((p) => (
-                          <button
-                            key={p.id}
-                            onClick={() => handleMoveToPortfolio(p.id)}
-                            disabled={moveLoading}
-                            className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-                          >
-                            {p.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
                 {showDeleteConfirm ? (
                   <div className="flex items-center gap-1.5">
                     <button onClick={handleDelete} className="btn-danger text-sm px-3 py-1.5">

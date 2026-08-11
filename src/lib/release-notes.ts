@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.142",
+    date: "2026-08-11",
+    title: "One portfolio per account",
+    titleTranslations: {
+      es: "Una sola cartera por cuenta",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "trefolio now uses a single portfolio per account (Free and Pro). Extra portfolios are merged into your main one (holdings and cash kept; empty portfolios removed), and creating or moving between portfolios is disabled.",
+        translations: {
+          es: "trefolio usa ahora una sola cartera por cuenta (Free y Pro). Las carteras extra se fusionan en la principal (se conservan acciones y efectivo; se eliminan las vacías), y ya no se pueden crear ni mover entre carteras.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.141",
     date: "2026-08-11",
     title: "Show cash-only portfolios on the dashboard",

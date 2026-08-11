@@ -49,7 +49,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [manual-assets](manual-assets.md) — non-listed assets (real estate, etc.).
 - [fixed-return-investments](fixed-return-investments.md) — custom fixed-return positions with linear accrual.
 - [portfolio-context-demo-mode](portfolio-context-demo-mode.md) — `PortfolioProvider` and `demoMode`.
-- [portfolios-multi](portfolios-multi.md) — up to 3 portfolios per user.
+- [portfolios-multi](portfolios-multi.md) — retired; single portfolio per user (Free + Pro).
 - [transactions](transactions.md) — transaction ledger and derivation.
 
 ## Snapshots & Math
