@@ -93,6 +93,8 @@ const en: TranslationStrings = {
   emptyStateAddDesc: "Search and add one stock at a time",
   emptyStateSample: "Try Sample Data",
   emptyStateSampleDesc: "Explore with a demo portfolio",
+  emptyStateWarrenChatTitle: "Or just tell Warren",
+  emptyStateWarrenChatPlaceholder: 'Try: "I bought 10 AAPL at $150 on 2024-01-15"',
   refreshing: "Refreshing prices...",
   lastUpdated: "Last updated",
   quotesAsOf: "Quotes as of",

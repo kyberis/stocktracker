@@ -91,7 +91,7 @@ export default function EmptyPortfolio({
             <button
               type="submit"
               disabled={!chatInput.trim()}
-              aria-label={t("send") || "Send"}
+              aria-label={t("warrenSend")}
               className="shrink-0 w-11 h-11 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
