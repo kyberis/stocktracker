@@ -316,19 +316,32 @@ export default function WarrenDrawer({
     refreshAlertedTickers?.();
   }, [refreshHoldings, refreshAlertedTickers]);
 
-  const quickPrompts = suggestionPrompts ?? [
-    t("warrenChipSummary"),
-    t("warrenChipConcentration"),
-    t("warrenChipDividends"),
-    t("warrenChipAlertExample"),
-  ];
+  const quickPrompts = suggestionPrompts ?? (
+    holdings.length === 0
+      ? [
+          t("warrenChipAddExample1"),
+          t("warrenChipAddExample2"),
+          t("warrenChipAddExample3"),
+        ]
+      : [
+          t("warrenChipSummary"),
+          t("warrenChipConcentration"),
+          t("warrenChipDividends"),
+          t("warrenChipAlertExample"),
+        ]
+  );
+
+  const greeting =
+    holdings.length === 0 ? t("warrenGreetingEmptyAdd") || t("warrenGreeting") : t("warrenGreeting");
 
   const contextLine = stealthMode
     ? t("warrenConnected")
-    : `${t("warrenConnected")} — ${holdings.length} ${t("warrenHoldingsLabel")}, ${formatCurrency(
-        totals.totalCurrentEUR,
-        activePortfolioCurrency,
-      )}`;
+    : holdings.length === 0
+      ? t("warrenConnectedEmptyAdd") || t("warrenConnected")
+      : `${t("warrenConnected")} — ${holdings.length} ${t("warrenHoldingsLabel")}, ${formatCurrency(
+          totals.totalCurrentEUR,
+          activePortfolioCurrency,
+        )}`;
 
   const panel = (
       <aside
@@ -397,7 +410,7 @@ export default function WarrenDrawer({
             <div className="flex gap-2 items-start">
               <WarrenAvatar size={28} />
               <div className="text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-amber-500/[0.06] border border-amber-500/15 text-gray-800 dark:text-amber-50 max-w-[82%]">
-                {t("warrenGreeting")}
+                {greeting}
               </div>
             </div>
           )}

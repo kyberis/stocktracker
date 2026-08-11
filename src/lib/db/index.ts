@@ -327,6 +327,7 @@ export {
 
 export {
   checkAndIncrementRateLimit,
+  checkAndIncrementBurstCooldown,
   recordRateLimitUsage,
   getRateLimitStats,
 } from "./rate-limits";

@@ -93,6 +93,10 @@ const de: TranslationStrings = {
   emptyStateAddDesc: "Suchen und fügen Sie eine Aktie nach der anderen hinzu",
   emptyStateSample: "Probieren Sie Beispieldaten aus",
   emptyStateSampleDesc: "Erforschen Sie mit einem Demokonto",
+  emptyStateWarrenChatTitle: "Oder sag es einfach Warren",
+  emptyStateWarrenChatHint:
+    "Warren hilft hier nur beim Hinzufügen von Aktien — bis zu 10 Nachrichten, dann 15 Minuten Pause.",
+  emptyStateWarrenChatPlaceholder: 'Versuch: „Ich habe 10 AAPL zu 150 $ am 2024-01-15 gekauft“',
   refreshing: "Preise werden aktualisiert...",
   lastUpdated: "Zuletzt aktualisiert",
   quotesAsOf: "Kurse vom",
@@ -2781,6 +2785,7 @@ const de: TranslationStrings = {
   warrenClose: "Warren schließen",
   warrenSend: "Senden",
   warrenConnected: "Mit deinem Portfolio verbunden",
+  warrenConnectedEmptyAdd: "Aktien-hinzufügen-Modus — leeres Portfolio",
   warrenHoldingsLabel: "Positionen",
   warrenPlaceholder: "Sag Warren, was du tun möchtest…",
   warrenDisclaimer:
@@ -2790,10 +2795,15 @@ const de: TranslationStrings = {
   warrenUpgradeCta: "Pläne vergleichen & upgraden",
   warrenGreeting:
     "Schön, dich zu sehen. Ich habe Zugriff auf dein Portfolio. Frag mich alles oder sag mir, was ich hinzufügen, entfernen oder beobachten soll. Ich frage immer nach, bevor ich Daten ändere.",
+  warrenGreetingEmptyAdd:
+    "Dein Portfolio ist leer. Nenne mir eine Aktie zum Hinzufügen — Ticker, Stückzahl und Kaufpreis — und ich bereite die Bestätigung vor. Ich kann nur beim Hinzufügen von Aktien helfen, bis du Positionen hast (10 Chats, dann 15 Minuten Pause).",
   warrenChipSummary: "Fasse mein Portfolio zusammen",
   warrenChipConcentration: "Bin ich zu konzentriert?",
   warrenChipDividends: "Erwartete Dividendenerträge?",
   warrenChipAlertExample: "Warne mich, wenn AAPL 5% fällt",
+  warrenChipAddExample1: "Ich habe 10 AAPL zu 150 $ gekauft",
+  warrenChipAddExample2: "Füge 5 SAN.MC zu 4,20 € hinzu",
+  warrenChipAddExample3: "Ich besitze 2 MSFT-Aktien, heute gekauft",
   warrenAttachAria:
     "Bilder, PDF, CSV oder Audio anhängen (max. 5 Dateien; je nach Typ gelten Grenzen)",
   landingPricingFolioFeature16: "30 messages/day on Clara (personal finance) and Will (smart notes)",

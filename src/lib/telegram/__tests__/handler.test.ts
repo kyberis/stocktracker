@@ -26,14 +26,27 @@ const dbMocks = vi.hoisted(() => ({
   listAlerts: vi.fn(),
   listHoldings: vi.fn(),
   listPortfolios: vi.fn(),
+  countHoldings: vi.fn(),
+  checkAndIncrementBurstCooldown: vi.fn(),
 }));
 
 vi.mock("@/lib/db", () => dbMocks);
 
 const guardsMock = vi.hoisted(() => ({
   requireFeatureQuotaByUserId: vi.fn(),
+  requireTrefolioProByUserId: vi.fn(),
 }));
 vi.mock("@/lib/auth/guards", () => guardsMock);
+
+const rateLimitMock = vi.hoisted(() => ({
+  checkWarrenEmptyAddRateLimit: vi.fn(),
+}));
+vi.mock("@/lib/rate-limit", () => rateLimitMock);
+
+const quotasMock = vi.hoisted(() => ({
+  refundFeatureQuota: vi.fn(),
+}));
+vi.mock("@/lib/feature-quotas", () => quotasMock);
 
 const runTurnMock = vi.hoisted(() => ({ runWarrenTurn: vi.fn() }));
 vi.mock("@/lib/ai/warren/run-turn", () => runTurnMock);
@@ -115,9 +128,19 @@ beforeEach(() => {
   dbMocks.listPortfolios.mockResolvedValue([]);
   dbMocks.listHoldings.mockResolvedValue([]);
   dbMocks.listAlerts.mockResolvedValue([]);
+  dbMocks.countHoldings.mockResolvedValue(1);
   dbMocks.getChatLinkByChatId.mockResolvedValue(null);
   dbMocks.getUserSettings.mockResolvedValue({ language: "en" });
   guardsMock.requireFeatureQuotaByUserId.mockResolvedValue({ allowed: true, quota: {} });
+  guardsMock.requireTrefolioProByUserId.mockResolvedValue({ allowed: true });
+  rateLimitMock.checkWarrenEmptyAddRateLimit.mockResolvedValue({
+    allowed: true,
+    remaining: 9,
+    limit: 10,
+    resetAt: "",
+    retryAfterSec: 0,
+  });
+  quotasMock.refundFeatureQuota.mockResolvedValue(undefined);
   runTurnMock.runWarrenTurn.mockResolvedValue({
     text: "Test reply.",
     parts: [],
@@ -417,7 +440,7 @@ describe("telegram/handler · free-form Warren turn", () => {
     snapMock.buildPortfolioSnapshot.mockResolvedValueOnce({
       baseCurrency: "EUR",
       totals: { value: 1, cost: 1, gainLoss: 0, gainLossPct: 0, dayChange: 0 },
-      holdingsCount: 0,
+      holdingsCount: 1,
       topHoldings: [],
       allocation: [],
       cashSummary: {},
@@ -466,7 +489,7 @@ describe("telegram/handler · free-form Warren turn", () => {
     snapMock.buildPortfolioSnapshot.mockResolvedValueOnce({
       baseCurrency: "EUR",
       totals: { value: 1, cost: 1, gainLoss: 0, gainLossPct: 0, dayChange: 0 },
-      holdingsCount: 0,
+      holdingsCount: 3,
       topHoldings: [],
       allocation: [],
       cashSummary: {},

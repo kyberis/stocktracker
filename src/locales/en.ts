@@ -94,6 +94,8 @@ const en: TranslationStrings = {
   emptyStateSample: "Try Sample Data",
   emptyStateSampleDesc: "Explore with a demo portfolio",
   emptyStateWarrenChatTitle: "Or just tell Warren",
+  emptyStateWarrenChatHint:
+    "Warren can only help add stocks here — up to 10 messages, then a 15-minute break.",
   emptyStateWarrenChatPlaceholder: 'Try: "I bought 10 AAPL at $150 on 2024-01-15"',
   refreshing: "Refreshing prices...",
   lastUpdated: "Last updated",
@@ -3011,6 +3013,7 @@ const en: TranslationStrings = {
   warrenClose: "Close Warren",
   warrenSend: "Send",
   warrenConnected: "Connected to your portfolio",
+  warrenConnectedEmptyAdd: "Add-stock mode — empty portfolio",
   warrenHoldingsLabel: "holdings",
   warrenPlaceholder: "Tell Warren what you want to do…",
   warrenDisclaimer:
@@ -3020,10 +3023,15 @@ const en: TranslationStrings = {
   warrenUpgradeCta: "Compare plans & upgrade",
   warrenGreeting:
     "Good to see you. I have access to your portfolio. Ask me anything — or tell me what to add, remove, or watch. I'll always confirm before changing your data.",
+  warrenGreetingEmptyAdd:
+    "Your portfolio is empty. Tell me a stock to add — ticker, shares, and purchase price — and I'll prepare a confirmation. I can only help with adding stocks until you have holdings (10 chats, then a 15-minute break).",
   warrenChipSummary: "Summarise my portfolio",
   warrenChipConcentration: "Am I too concentrated?",
   warrenChipDividends: "Estimated dividend income?",
   warrenChipAlertExample: "Alert me if AAPL drops 5%",
+  warrenChipAddExample1: "I bought 10 AAPL at $150",
+  warrenChipAddExample2: "Add 5 SAN.MC at €4.20",
+  warrenChipAddExample3: "I own 2 shares of MSFT bought today",
   warrenAttachAria:
     "Attach images, PDF, CSV, or audio (max 5 files; limits apply per type)",
 
