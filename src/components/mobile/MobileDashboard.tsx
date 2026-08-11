@@ -107,6 +107,7 @@ export default function MobileDashboard() {
 
   const userPlan = user?.plan ?? "free";
   const holdingsCount = holdings.length;
+  const hasPortfolioContent = holdingsCount > 0 || cashEntries.length > 0;
   const hasMultiplePortfolios = portfolios.length > 1;
   const activeName = activePortfolioId
     ? portfolios.find((p) => p.id === activePortfolioId)?.name ?? t("portfolio")
@@ -325,7 +326,7 @@ export default function MobileDashboard() {
             tabIndex={0}
             className="focus-visible:outline-none space-y-4 animate-tab-fade"
           >
-            {holdingsCount === 0 && !isLoading ? (
+            {!hasPortfolioContent && !isLoading ? (
               <MobileEmptyState onAdd={() => setShowAddModal(true)} />
             ) : (
               <>

@@ -649,13 +649,23 @@ export function PortfolioProvider({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(entry),
       });
-      if (!res.ok) throw new Error("Failed to add cash entry");
+      if (!res.ok) {
+        let message = "Failed to add cash entry";
+        try {
+          const body = (await res.json()) as { error?: string };
+          if (body?.error) message = body.error;
+        } catch {
+          /* ignore parse errors */
+        }
+        throw new Error(message);
+      }
       const created = (await res.json()) as CashEntry;
       setCashEntries((prev) => prev.map((c) => (c.id === tempId ? created : c)));
       setMutationVersion((v) => v + 1);
     } catch (err) {
       setCashEntries((prev) => prev.filter((c) => c.id !== tempId));
       setError(err instanceof Error ? err.message : "Failed to add cash entry");
+      throw err;
     }
   }, [activePortfolioId]);
 

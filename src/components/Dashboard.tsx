@@ -135,6 +135,7 @@ function DesktopDashboard() {
   );
 
   const holdingsCount = holdings.length;
+  const hasPortfolioContent = holdingsCount > 0 || cashEntries.length > 0;
   const holdingsLimit = getHoldingsLimit(user?.plan ?? "free");
   const showHoldingsBanner = !authLoading && holdingsLimit !== Infinity && holdingsCount >= Math.ceil(holdingsLimit / 2) && holdingsCount > 0;
   const holdingsAtLimit = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
@@ -157,7 +158,7 @@ function DesktopDashboard() {
   }
 
   const hasLoadedOnce = useRef(false);
-  if (!isInitializing && (holdingsCount > 0 || cashEntries.length > 0)) {
+  if (!isInitializing && hasPortfolioContent) {
     hasLoadedOnce.current = true;
   }
 
@@ -194,12 +195,12 @@ function DesktopDashboard() {
             tabIndex={0}
             className="focus-visible:outline-none space-y-6 animate-tab-fade"
           >
-            {isInitializing && holdingsCount === 0 ? (
+            {isInitializing && !hasPortfolioContent ? (
               <div className="space-y-6">
                 <HeroSkeleton />
                 <TableSkeleton rows={4} />
               </div>
-            ) : holdingsCount === 0 ? (
+            ) : !hasPortfolioContent ? (
               <EmptyPortfolio
                 onAddStock={() => gatedAdd("stock")}
               />

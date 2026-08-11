@@ -263,4 +263,36 @@ test.describe("Net Worth Tracking — UI", () => {
     await expect(page.getByText("Real Estate").first()).toBeVisible();
     await expect(page.getByText("Savings").first()).toBeVisible();
   });
+
+  test("cash-only fixed_return portfolio shows Assets & Accounts (not empty state)", async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(45_000);
+    const creds = await createTestUser(request, false);
+    const startDate = new Date().toISOString().slice(0, 10);
+
+    const add = await request.post("/api/cash", {
+      data: {
+        name: "Civislend",
+        amountEUR: 1500,
+        type: "fixed_return",
+        displayCurrency: "EUR",
+        displayAmount: 1500,
+        startDate,
+        termMonths: 24,
+        totalReturnPct: 25,
+      },
+    });
+    expect(add.status()).toBe(201);
+
+    await loginViaUI(page, creds.email, creds.password);
+    await dismissOverlays(page);
+
+    await expect(page.getByText("Welcome to trefolio")).toHaveCount(0, {
+      timeout: 15_000,
+    });
+    await expect(page.getByText("Assets & Accounts")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("Civislend")).toBeVisible();
+  });
 });

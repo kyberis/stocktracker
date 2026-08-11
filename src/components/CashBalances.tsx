@@ -18,9 +18,13 @@ export default function CashBalances() {
   const handleAdd = async () => {
     const parsedAmount = parseFloat(amount);
     if (!name.trim() || Number.isNaN(parsedAmount) || parsedAmount < 0) return;
-    await addCashEntry({ name: name.trim(), amountEUR: parsedAmount });
-    setName("");
-    setAmount("");
+    try {
+      await addCashEntry({ name: name.trim(), amountEUR: parsedAmount });
+      setName("");
+      setAmount("");
+    } catch {
+      // Error is surfaced via portfolio context
+    }
   };
 
   const startEdit = (id: string, currentName: string, currentAmount: number) => {

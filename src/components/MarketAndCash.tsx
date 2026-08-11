@@ -215,9 +215,13 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
     const parsed = parseFloat(cashAmount);
     if (!cashName.trim() || Number.isNaN(parsed) || parsed < 0) return;
     track("cash_entry_added");
-    await addCashEntry({ name: cashName.trim(), amountEUR: parsed });
-    setCashName("");
-    setCashAmount("");
+    try {
+      await addCashEntry({ name: cashName.trim(), amountEUR: parsed });
+      setCashName("");
+      setCashAmount("");
+    } catch {
+      // Error is surfaced via portfolio context
+    }
   };
 
   const startEdit = (id: string, name: string, amount: number) => {

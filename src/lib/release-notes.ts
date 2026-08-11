@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.141",
+    date: "2026-08-11",
+    title: "Show cash-only portfolios on the dashboard",
+    titleTranslations: {
+      es: "Mostrar carteras solo con efectivo en el dashboard",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Portfolios that only have cash or fixed-return assets (no stocks) no longer show the empty-portfolio screen — Civislend-style fixed-return positions and other Assets & Accounts entries appear as expected.",
+        translations: {
+          es: "Las carteras que solo tienen efectivo o activos de retorno fijo (sin acciones) ya no muestran la pantalla de cartera vacía — posiciones de retorno fijo tipo Civislend y otros activos de Activos y Cuentas aparecen correctamente.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.140",
     date: "2026-08-11",
     title: "Warren: add-stock only on empty portfolios",
