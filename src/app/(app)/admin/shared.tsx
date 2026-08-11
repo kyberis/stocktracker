@@ -92,12 +92,14 @@ export interface AnalyticsSummary {
   attributionBySource?: {
     source: string;
     signups: number;
+    paywallShown: number;
     paidConversions: number;
     conversionRate: number;
   }[];
   attributionByMedium?: {
     medium: string;
     signups: number;
+    paywallShown: number;
     paidConversions: number;
     conversionRate: number;
   }[];

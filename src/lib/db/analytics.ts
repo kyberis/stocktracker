@@ -45,6 +45,7 @@ export interface NotificationUserStats {
 export interface AttributionSourceStats {
   source: string;
   signups: number;
+  paywallShown: number;
   paidConversions: number;
   conversionRate: number;
 }
@@ -52,6 +53,7 @@ export interface AttributionSourceStats {
 export interface AttributionMediumStats {
   medium: string;
   signups: number;
+  paywallShown: number;
   paidConversions: number;
   conversionRate: number;
 }
@@ -260,7 +262,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       client.execute({
         sql: `SELECT event, COUNT(DISTINCT user_id) as cnt
               FROM analytics_events
-              WHERE event IN ('signup', 'upgrade_compare_shown', 'upgrade_compare_clicked', 'billing_checkout_started', 'billing_checkout_completed', 'onboarding_trial_shown', 'onboarding_trial_activated', 'onboarding_trial_skipped', 'account_delete_started', 'account_deleted')
+              WHERE event IN ('signup', 'paywall_shown', 'upgrade_compare_shown', 'upgrade_compare_clicked', 'billing_checkout_started', 'billing_checkout_completed', 'onboarding_trial_shown', 'onboarding_trial_activated', 'onboarding_trial_skipped', 'account_delete_started', 'account_deleted')
                 AND created_at >= datetime('now', ?)
               GROUP BY event`,
         args: [daysArg],
@@ -272,8 +274,13 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
                   ELSE LOWER(TRIM(u.utm_source))
                 END AS source,
                 COUNT(*) AS signups,
+                COUNT(DISTINCT CASE WHEN pw.user_id IS NOT NULL THEN u.id END) AS paywall_shown,
                 COUNT(DISTINCT CASE WHEN ae.user_id IS NOT NULL THEN u.id END) AS paid_conversions
               FROM users u
+              LEFT JOIN analytics_events pw
+                ON pw.user_id = u.id
+               AND pw.event = 'paywall_shown'
+               AND pw.created_at >= datetime('now', ?)
               LEFT JOIN analytics_events ae
                 ON ae.user_id = u.id
                AND ae.event = 'billing_checkout_completed'
@@ -281,7 +288,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
               WHERE u.created_at >= datetime('now', ?)
               GROUP BY source
               ORDER BY signups DESC, paid_conversions DESC`,
-        args: [daysArg, daysArg],
+        args: [daysArg, daysArg, daysArg],
       }),
       client.execute({
         sql: `SELECT
@@ -290,8 +297,13 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
                   ELSE LOWER(TRIM(u.utm_medium))
                 END AS medium,
                 COUNT(*) AS signups,
+                COUNT(DISTINCT CASE WHEN pw.user_id IS NOT NULL THEN u.id END) AS paywall_shown,
                 COUNT(DISTINCT CASE WHEN ae.user_id IS NOT NULL THEN u.id END) AS paid_conversions
               FROM users u
+              LEFT JOIN analytics_events pw
+                ON pw.user_id = u.id
+               AND pw.event = 'paywall_shown'
+               AND pw.created_at >= datetime('now', ?)
               LEFT JOIN analytics_events ae
                 ON ae.user_id = u.id
                AND ae.event = 'billing_checkout_completed'
@@ -299,7 +311,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
               WHERE u.created_at >= datetime('now', ?)
               GROUP BY medium
               ORDER BY signups DESC, paid_conversions DESC`,
-        args: [daysArg, daysArg],
+        args: [daysArg, daysArg, daysArg],
       }),
       client.execute({
         sql: `SELECT event, COUNT(*) AS cnt
@@ -433,6 +445,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       { stage: "Trial Offer Shown", count: funnelMap.get("onboarding_trial_shown") ?? 0 },
       { stage: "Trial Activated", count: funnelMap.get("onboarding_trial_activated") ?? 0 },
       { stage: "Trial Skipped", count: funnelMap.get("onboarding_trial_skipped") ?? 0 },
+      { stage: "Paywall Shown", count: funnelMap.get("paywall_shown") ?? 0 },
       { stage: "Upsell Shown", count: funnelMap.get("upgrade_compare_shown") ?? 0 },
       { stage: "Upsell Clicked", count: funnelMap.get("upgrade_compare_clicked") ?? 0 },
       { stage: "Checkout Started", count: funnelMap.get("billing_checkout_started") ?? 0 },
@@ -465,6 +478,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       return {
         source: str(r.source),
         signups,
+        paywallShown: num(r.paywall_shown),
         paidConversions,
         conversionRate: signups > 0 ? Number(((paidConversions / signups) * 100).toFixed(1)) : 0,
       };
@@ -475,6 +489,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       return {
         medium: str(r.medium),
         signups,
+        paywallShown: num(r.paywall_shown),
         paidConversions,
         conversionRate: signups > 0 ? Number(((paidConversions / signups) * 100).toFixed(1)) : 0,
       };

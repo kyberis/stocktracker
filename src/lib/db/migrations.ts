@@ -3994,6 +3994,54 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 137,
+    description: "Acquisition tracking: channel spend caps/entries and Gate 4 decision memos",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS channel_spend_caps (
+          id TEXT PRIMARY KEY,
+          channel TEXT NOT NULL,
+          cap_amount_eur REAL NOT NULL,
+          period_start TEXT NOT NULL,
+          period_end TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_channel_spend_caps_channel ON channel_spend_caps(channel, period_start DESC)",
+      );
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS channel_spend_entries (
+          id TEXT PRIMARY KEY,
+          channel TEXT NOT NULL,
+          amount_eur REAL NOT NULL,
+          spent_on TEXT NOT NULL,
+          note TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_channel_spend_entries_channel ON channel_spend_entries(channel, spent_on DESC)",
+      );
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS acquisition_decision_memos (
+          id TEXT PRIMARY KEY,
+          period_start TEXT NOT NULL,
+          period_end TEXT NOT NULL,
+          decision TEXT NOT NULL CHECK(decision IN ('scale', 'iterate', 'stop')),
+          notes TEXT NOT NULL DEFAULT '',
+          next_cycle_kpi_targets TEXT NOT NULL DEFAULT '',
+          budget_reallocation TEXT NOT NULL DEFAULT '',
+          created_by TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_acquisition_decision_memos_period ON acquisition_decision_memos(period_start DESC)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

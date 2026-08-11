@@ -471,6 +471,7 @@ export default function AnalyticsTab() {
                 <tr className="text-left text-gray-500 dark:text-slate-400 border-b border-gray-100 dark:border-slate-700">
                   <th className="px-3 py-2 font-medium">Source</th>
                   <th className="px-3 py-2 font-medium text-right">Signups</th>
+                  <th className="px-3 py-2 font-medium text-right">Paywall Shown</th>
                   <th className="px-3 py-2 font-medium text-right">Paid Conversions</th>
                   <th className="px-3 py-2 font-medium text-right">Conversion Rate</th>
                 </tr>
@@ -480,6 +481,7 @@ export default function AnalyticsTab() {
                   <tr key={row.source} className="border-b border-gray-50 dark:border-slate-700/50">
                     <td className="px-3 py-2.5 font-medium text-gray-900 dark:text-white">{row.source}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.signups}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.paywallShown}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.paidConversions}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums font-semibold text-indigo-600 dark:text-indigo-400">
                       {row.conversionRate.toFixed(1)}%
@@ -502,6 +504,7 @@ export default function AnalyticsTab() {
                 <tr className="text-left text-gray-500 dark:text-slate-400 border-b border-gray-100 dark:border-slate-700">
                   <th className="px-3 py-2 font-medium">Medium</th>
                   <th className="px-3 py-2 font-medium text-right">Signups</th>
+                  <th className="px-3 py-2 font-medium text-right">Paywall Shown</th>
                   <th className="px-3 py-2 font-medium text-right">Paid Conversions</th>
                   <th className="px-3 py-2 font-medium text-right">Conversion Rate</th>
                 </tr>
@@ -511,6 +514,7 @@ export default function AnalyticsTab() {
                   <tr key={row.medium} className="border-b border-gray-50 dark:border-slate-700/50">
                     <td className="px-3 py-2.5 font-medium text-gray-900 dark:text-white">{row.medium}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.signups}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.paywallShown}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.paidConversions}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums font-semibold text-indigo-600 dark:text-indigo-400">
                       {row.conversionRate.toFixed(1)}%

@@ -106,6 +106,7 @@ export {
   listTransactions,
   addTransaction,
   addTransactionsBulk,
+  linkUnlinkedTransactionsToHoldings,
   updateTransaction,
   deleteTransaction,
   deleteTransactionsForPosition,
@@ -249,6 +250,24 @@ export {
   getLatestAnalyticsInteraction,
 } from "./analytics";
 export type { ProdOpsLatestAnalyticsInteraction } from "./analytics";
+
+export type {
+  ChannelSpendCap,
+  ChannelSpendEntry,
+  ChannelSpendSummary,
+  ChannelPerformance,
+  AcquisitionDecisionMemo,
+} from "./channel-spend";
+export {
+  createSpendCap,
+  listSpendCaps,
+  addSpendEntry,
+  listSpendEntries,
+  getSpendSummaryByChannel,
+  getChannelPerformance,
+  createDecisionMemo,
+  listDecisionMemos,
+} from "./channel-spend";
 
 export type {
   McpAnalyticsSummary,
