@@ -4042,6 +4042,27 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 138,
+    description: "SnapTrade connections: add first_sync_notified_at for first-holdings activation email",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(snaptrade_connections)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("first_sync_notified_at")) {
+        await client.execute(
+          "ALTER TABLE snaptrade_connections ADD COLUMN first_sync_notified_at TEXT NOT NULL DEFAULT ''",
+        );
+      }
+      // Backfill: users who already have holdings shouldn't get a stray
+      // "your portfolio is ready" email for data that's been there for months.
+      await client.execute(`
+        UPDATE snaptrade_connections
+           SET first_sync_notified_at = datetime('now')
+         WHERE first_sync_notified_at = ''
+           AND user_id IN (SELECT DISTINCT user_id FROM holdings)
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

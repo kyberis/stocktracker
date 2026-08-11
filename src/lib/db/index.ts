@@ -364,6 +364,7 @@ export {
   listActiveSnapTradeConnections,
   setAllDisabledSince,
   clearAllDisabledSince,
+  claimFirstSyncNotification,
   getConnectionsAllDisabledOver24h,
   addBrokerPortfolioMapping,
   getBrokerPortfolioIds,

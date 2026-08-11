@@ -6,6 +6,7 @@ import type {
 } from "./import-types";
 import { mergeHoldingsIntoTransactions } from "@/lib/merge-ai-import-rows";
 import { inferAssetType } from "@/lib/infer-asset-type";
+import { trackImportError } from "@/lib/track-import-error";
 
 export type { ExtractedTransaction, ExtractedHolding };
 
@@ -111,6 +112,7 @@ export function useImportAI(): UseImportAIReturn {
       const tx = data.transactions || [];
 
       if (h.length === 0 && tx.length === 0) {
+        trackImportError("ai", "ai_no_data");
         setErrorMsg(data.warning || "No data extracted from file.");
         setStep("error");
         return;
@@ -126,6 +128,7 @@ export function useImportAI(): UseImportAIReturn {
       setStep("preview");
     } catch (err) {
       console.error("[useImportAI] processFile failed:", err);
+      trackImportError("ai", "network");
       setErrorMsg(err instanceof Error ? err.message : "Network error.");
       setStep("error");
     }
@@ -239,6 +242,7 @@ export function useImportAI(): UseImportAIReturn {
     setImportedTxCount(txCount);
 
     if (errorCount > 0 && txCount === 0) {
+      trackImportError("ai", "bulk_all_failed");
       setErrorMsg("Import failed.");
       setStep("error");
     } else {

@@ -175,6 +175,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       return NextResponse.json({ registered: true, snapTradeUserId });
     } catch (err) {
       const msg = err instanceof SnapTradeClientError ? err.message : "Failed to register SnapTrade user.";
+      trackEvent(session.userId, "import_error", { method: "broker_sync", reason: "register_failed" });
       return NextResponse.json({ error: msg }, { status: 502 });
     }
   }
@@ -216,6 +217,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       return NextResponse.json({ redirectUrl, sessionId });
     } catch (err) {
       const msg = err instanceof SnapTradeClientError ? err.message : "Failed to generate connection URL.";
+      trackEvent(session.userId, "import_error", { method: "broker_sync", reason: "connect_url_failed" });
       return NextResponse.json({ error: msg }, { status: 502 });
     }
   }
@@ -252,6 +254,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       return NextResponse.json({ redirectUrl, sessionId });
     } catch (err) {
       const msg = err instanceof SnapTradeClientError ? err.message : "Failed to generate reconnect URL.";
+      trackEvent(session.userId, "import_error", { method: "broker_sync", reason: "reconnect_failed" });
       return NextResponse.json({ error: msg }, { status: 502 });
     }
   }
@@ -378,6 +381,10 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, allActiveAccountIds, institutionMap);
 
       // Fill activity lag / empty post-reconnect caches with EXECUTED orders.
+      const mergedFresh = mergeSnapTradeTransactions(
+        allTransactions,
+        holdingsResult.orderTransactions,
+      );
       const mergedTransactions = mergeSnapTradeTransactions(
         allTransactions,
         holdingsResult.orderTransactions,
@@ -432,7 +439,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         fees: deduped.filter((t) => t.type === "fee").length,
         cashBalances: holdingsResult.cashBalances,
         accounts: holdingsResult.accounts,
-        duplicatesRemoved: allTransactions.length - deduped.length,
+        duplicatesRemoved: mergedFresh.length - deduped.length,
         truncatedBrokers,
       };
 
@@ -536,6 +543,11 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       if (disabledConnections.length > 0) {
         await setSnapTradeNeedsAttention(session.userId, true);
       }
+
+      trackEvent(session.userId, "import_error", {
+        method: "broker_sync",
+        reason: disabledConnections.length > 0 ? "needs_reconnect" : "fetch_failed",
+      });
 
       return NextResponse.json(
         { error: msg, needsReconnect: disabledConnections.length > 0, disabledConnections },

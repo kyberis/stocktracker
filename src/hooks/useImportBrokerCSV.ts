@@ -9,6 +9,7 @@ import type {
 } from "./import-types";
 import { inferAssetType } from "@/lib/infer-asset-type";
 import type { ImportQualityReport } from "@/lib/import-quality";
+import { trackImportError } from "@/lib/track-import-error";
 
 export type { ExtractedTransaction, ExtractedHolding, CashBalance, BrokerFormat };
 
@@ -170,10 +171,12 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
 
       if (parsedTransactions.length === 0 && parsedCash.length === 0) {
         if (dupCount > 0) {
+          trackImportError("csv", "all_duplicates");
           setErrorMsg(
             `All ${dupCount} transactions in this file are already in your portfolio.`
           );
         } else {
+          trackImportError("csv", "no_transactions");
           const unmapped = data.summary?.unmapped;
           const hint = unmapped?.length
             ? ` Unmapped ISINs: ${unmapped.join(", ")}`
@@ -199,8 +202,10 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
       setStep("preview");
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
+        trackImportError("csv", "timeout");
         setErrorMsg("Parsing took too long. Try a smaller CSV or check your network.");
       } else {
+        trackImportError("csv", "network");
         setErrorMsg(err instanceof Error ? err.message : "Network error.");
       }
       setStep("error");
@@ -372,6 +377,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
 
       setImportedTxCount(txCount);
       if (errorCount > 0 && txCount === 0) {
+        trackImportError("csv", "bulk_all_failed");
         setErrorMsg("Import failed.");
         setStep("error");
       } else {

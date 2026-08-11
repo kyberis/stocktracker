@@ -480,6 +480,48 @@ export async function sendAlertEmail(
   return result;
 }
 
+/**
+ * One-time activation nudge: the first time a newly-connected broker sync
+ * produces holdings. Sent by the snaptrade-sync cron via
+ * sendFirstSyncCompleteHoldingsNotification, at most once per connection
+ * (see claimFirstSyncNotification). Must stay transactional — this fires
+ * shortly after a user's very first broker connection, and a silent
+ * suppression here would be the worst possible outcome for an
+ * activation-critical email.
+ */
+export async function sendFirstSyncCompleteEmail(
+  email: string,
+  data: { positionCount: number },
+  locale: EmailLocale = "en",
+  userId?: string,
+): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
+  const s = firstSyncCompleteStrings[locale] ?? firstSyncCompleteStrings.en;
+  const dashboardUrl = `${getBaseUrl()}/`;
+  const body = s.bodyTemplate.replace("{{count}}", String(data.positionCount));
+
+  const html = `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
+        <h2 style="color: #10b981;">${s.heading}</h2>
+        <p style="font-size: 16px;">${body}</p>
+        <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">${s.ctaLabel}</a>
+        <p style="margin-top: 16px; font-size: 11px; color: #94a3b8; text-align: center;">
+          <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> from email notifications
+        </p>
+      </div>`;
+
+  const result = await sendEmail({
+    to: email,
+    subject: s.subject,
+    html,
+    userId,
+    transactional: true,
+  });
+  if (!result.success) console.error("Failed to send first-sync-complete email:", result.error);
+  return result;
+}
+
 export async function sendPercentAlertEmail(
   email: string,
   alert: {
@@ -564,6 +606,7 @@ import {
   thresholdAlertStrings,
   percentAlertStrings,
 } from "./email-i18n/alert-strings";
+import { firstSyncCompleteStrings } from "./email-i18n/first-sync-strings";
 import { getMembershipGrantStrings } from "./email-i18n/membership-grant-copy";
 import { resolveIdpMembershipGrantActivateUrl, resolveIdpTrialActivateUrl } from "./idp/config";
 export type { EmailLocale } from "./email-i18n";

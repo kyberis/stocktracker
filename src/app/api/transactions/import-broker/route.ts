@@ -434,6 +434,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   const csv = await resolveCsvFromFormData(formData);
   if (!csv) {
     portfolioImportsTotal.inc({ source: "broker", status: "error" });
+    trackEvent(session.userId, "import_error", { method: "csv", reason: "parse_failed", broker });
     return NextResponse.json({ error: "No CSV data provided." }, { status: 400 });
   }
 
@@ -535,6 +536,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     const msg = e instanceof Error ? e.message : String(e);
     console.error(`[import-broker] parse error for ${broker}:`, msg);
     portfolioImportsTotal.inc({ source: "broker", status: "error" });
+    trackEvent(session.userId, "import_error", { method: "csv", reason: "parse_failed", broker });
     return NextResponse.json({ error: `Failed to parse CSV: ${msg}` }, { status: 500 });
   }
 
