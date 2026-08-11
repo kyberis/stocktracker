@@ -26,6 +26,7 @@ import {
   listAlerts,
   listHoldings,
   listPortfolios,
+  countHoldings,
   listActiveAgentMissions,
   loadChatMessages,
   setChatLanguage,
@@ -37,6 +38,11 @@ import {
   type TelegramChatLink,
 } from "@/lib/db";
 import { requireFeatureQuotaByUserId, requireTrefolioProByUserId } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
+import { checkWarrenEmptyAddRateLimit } from "@/lib/rate-limit";
+import {
+  WARREN_EMPTY_ADD_MAX_CONSULTS,
+} from "@/lib/ai/warren/empty-add-stock";
 import type { ModelMessage, UserContent } from "ai";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
 import { buildWarrenPrefetchAppendix } from "@/lib/ai/warren/warren-prefetch-appendix";
@@ -684,7 +690,41 @@ async function runWarrenForText(
 
   const linkedUser = await Promise.resolve(findUserById(userId)).catch(() => null);
   const subscriptionPlan = (linkedUser?.plan ?? "free") as SubscriptionPlan;
-  const officeIdentity = await resolveOfficeIdentity(userId).catch(() => null);
+
+  const holdingsCount =
+    snapshot?.holdingsCount ??
+    (await countHoldings(userId, activePortfolioId || undefined).catch(() => 0));
+  const emptyAddStockOnly = holdingsCount === 0;
+
+  if (emptyAddStockOnly) {
+    const burst = await checkWarrenEmptyAddRateLimit(userId, linkedUser?.role);
+    if (!burst.allowed) {
+      await refundFeatureQuota(userId, "ai_consult");
+      const minutes = Math.max(1, Math.ceil(burst.retryAfterSec / 60));
+      if (statusMessageId) {
+        await bot
+          .editMessageText(
+            chatId,
+            statusMessageId,
+            `You've used ${WARREN_EMPTY_ADD_MAX_CONSULTS} add-stock chats with Warren. Take a ${minutes}-minute break and try again.`,
+          )
+          .catch(() => {});
+      } else {
+        await sendMd(
+          bot,
+          chatId,
+          escapeMarkdown(
+            `You've used ${WARREN_EMPTY_ADD_MAX_CONSULTS} add-stock chats with Warren. Take a ${minutes}-minute break and try again.`,
+          ),
+        );
+      }
+      return;
+    }
+  }
+
+  const officeIdentity = emptyAddStockOnly
+    ? null
+    : await resolveOfficeIdentity(userId).catch(() => null);
 
   // Load rolling history so multi-turn context survives.
   const history = await loadChatMessages(chatId, 20);
@@ -700,11 +740,13 @@ async function runWarrenForText(
   }
   // The latest user message is already at the end via appendChatMessage above.
 
-  const systemAppendix = await buildWarrenPrefetchAppendix(userText, {
-    userId,
-    portfolioId: activePortfolioId || undefined,
-    snapshot,
-  });
+  const systemAppendix = emptyAddStockOnly
+    ? null
+    : await buildWarrenPrefetchAppendix(userText, {
+        userId,
+        portfolioId: activePortfolioId || undefined,
+        snapshot,
+      });
 
   let result;
   try {
@@ -721,6 +763,7 @@ async function runWarrenForText(
       messages,
       subscriptionPlan,
       systemAppendix: systemAppendix ?? undefined,
+      emptyAddStockOnly,
       onFrame: statusMessageId
         ? (frame) => {
             // Only the per-tool labels drive the visible status. We ignore

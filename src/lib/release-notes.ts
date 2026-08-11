@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.140",
+    date: "2026-08-11",
+    title: "Warren: add-stock only on empty portfolios",
+    titleTranslations: {
+      es: "Warren: solo añadir acciones en carteras vacías",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "When your portfolio is empty, Warren only helps add stocks (not general chat). After 10 add-stock messages, there is a 15-minute break before you can use him again — so onboarding stays focused and AI costs stay predictable.",
+        translations: {
+          es: "Cuando tu cartera está vacía, Warren solo ayuda a añadir acciones (no chat general). Tras 10 mensajes para añadir, hay un descanso de 15 minutos antes de poder usarlo de nuevo — así el onboarding sigue enfocado y el coste de IA se mantiene predecible.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.139",
     date: "2026-08-11",
     title: "Market ticker: always scroll",

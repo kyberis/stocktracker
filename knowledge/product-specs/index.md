@@ -115,6 +115,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [stock-evaluation](stock-evaluation.md) — rules + AI valuation.
 - [company-analysis](company-analysis.md) — `/analisis` multi-section company report (fundamentals, technicals, news, Form 4, Congress).
 - [warren-investing-knowledge](warren-investing-knowledge.md) — curated investing-concepts library exposed to Warren as a tool.
+- [warren-empty-add-stock](warren-empty-add-stock.md) — empty-portfolio Warren: add-stock only + 10-chat / 15-min cooldown.
 - [warren-telegram-bot](warren-telegram-bot.md) — Warren accessible via Telegram (text + voice).
 - [agent-office](agent-office.md) — Pro workspace where Warren, Clara, and Will coordinate missions (`/office`).
 - [investment-screening](investment-screening.md) — `/screening` exposure → intake chat → brief → run → HTML candidate report (flag `investment_screening_enabled`, stage E0 fixture).
