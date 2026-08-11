@@ -93,6 +93,10 @@ const nl: TranslationStrings = {
   emptyStateAddDesc: "Zoek en voeg één aandeel tegelijk toe",
   emptyStateSample: "Probeer Voorbeeldgegevens",
   emptyStateSampleDesc: "Verken met een demo-portefeuille",
+  emptyStateWarrenChatTitle: "Of zeg het gewoon tegen Warren",
+  emptyStateWarrenChatHint:
+    "Warren kan hier alleen helpen aandelen toe te voegen — tot 10 berichten, daarna 15 minuten pauze.",
+  emptyStateWarrenChatPlaceholder: 'Probeer: "Ik kocht 10 AAPL voor $150 op 2024-01-15"',
   refreshing: "Prijzen worden vernieuwd...",
   lastUpdated: "Laatst bijgewerkt",
   quotesAsOf: "Koersen per",
@@ -2780,6 +2784,7 @@ const nl: TranslationStrings = {
   warrenClose: "Warren sluiten",
   warrenSend: "Verzenden",
   warrenConnected: "Verbonden met je portefeuille",
+  warrenConnectedEmptyAdd: "Aandelen-toevoegen-modus — lege portefeuille",
   warrenHoldingsLabel: "posities",
   warrenPlaceholder: "Vertel Warren wat je wilt doen…",
   warrenDisclaimer:
@@ -2789,10 +2794,15 @@ const nl: TranslationStrings = {
   warrenUpgradeCta: "Plannen vergelijken & upgraden",
   warrenGreeting:
     "Fijn je te zien. Ik heb toegang tot je portefeuille. Vraag me alles of vertel me wat ik moet toevoegen, verwijderen of in de gaten houden. Ik vraag altijd om bevestiging voordat ik gegevens wijzig.",
+  warrenGreetingEmptyAdd:
+    "Je portefeuille is leeg. Noem een aandeel om toe te voegen — ticker, aantal en aankoopprijs — en ik bereid de bevestiging voor. Ik kan alleen helpen aandelen toe te voegen tot je posities hebt (10 chats, daarna 15 minuten pauze).",
   warrenChipSummary: "Vat mijn portefeuille samen",
   warrenChipConcentration: "Ben ik te geconcentreerd?",
   warrenChipDividends: "Verwachte dividendinkomsten?",
   warrenChipAlertExample: "Waarschuw me als AAPL 5% daalt",
+  warrenChipAddExample1: "Ik kocht 10 AAPL voor $150",
+  warrenChipAddExample2: "Voeg 5 SAN.MC toe voor €4,20",
+  warrenChipAddExample3: "Ik heb 2 MSFT-aandelen vandaag gekocht",
   warrenAttachAria:
     "Afbeeldingen, PDF, CSV of audio bijvoegen (max. 5 bestanden; limieten gelden per type)",
   landingPricingFolioFeature16: "30 messages/day on Clara (personal finance) and Will (smart notes)",

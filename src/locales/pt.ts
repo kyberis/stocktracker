@@ -93,6 +93,10 @@ const pt: TranslationStrings = {
   emptyStateAddDesc: "Pesquise e adicione uma ação de cada vez",
   emptyStateSample: "Experimente Dados de Exemplo",
   emptyStateSampleDesc: "Explore com um portfólio de demonstração",
+  emptyStateWarrenChatTitle: "Ou diz simplesmente ao Warren",
+  emptyStateWarrenChatHint:
+    "O Warren só pode ajudar a adicionar ações aqui — até 10 mensagens, depois uma pausa de 15 minutos.",
+  emptyStateWarrenChatPlaceholder: 'Experimenta: "Comprei 10 AAPL a 150 $ em 2024-01-15"',
   refreshing: "A atualizar preços...",
   lastUpdated: "Última atualização",
   quotesAsOf: "Cotações a partir de",
@@ -2781,6 +2785,7 @@ const pt: TranslationStrings = {
   warrenClose: "Fechar Warren",
   warrenSend: "Enviar",
   warrenConnected: "Ligado à tua carteira",
+  warrenConnectedEmptyAdd: "Modo adicionar ações — carteira vazia",
   warrenHoldingsLabel: "posições",
   warrenPlaceholder: "Diz ao Warren o que queres fazer…",
   warrenDisclaimer:
@@ -2790,10 +2795,15 @@ const pt: TranslationStrings = {
   warrenUpgradeCta: "Comparar planos e fazer upgrade",
   warrenGreeting:
     "Que bom ver-te. Tenho acesso à tua carteira. Pergunta-me o que quiseres ou diz-me o que adicionar, remover ou vigiar. Vou sempre pedir confirmação antes de alterar dados.",
+  warrenGreetingEmptyAdd:
+    "A tua carteira está vazia. Diz-me uma ação para adicionar — ticker, quantidade e preço de compra — e preparo a confirmação. Só posso ajudar a adicionar ações até teres posições (10 chats, depois 15 minutos de pausa).",
   warrenChipSummary: "Resume a minha carteira",
   warrenChipConcentration: "Estou demasiado concentrado?",
   warrenChipDividends: "Rendimento de dividendos estimado?",
   warrenChipAlertExample: "Avisa-me se a AAPL cair 5%",
+  warrenChipAddExample1: "Comprei 10 AAPL a 150 $",
+  warrenChipAddExample2: "Adiciona 5 SAN.MC a 4,20 €",
+  warrenChipAddExample3: "Tenho 2 ações da MSFT compradas hoje",
   warrenAttachAria:
     "Anexar imagens, PDF, CSV ou áudio (máx. 5 ficheiros; aplicam-se limites por tipo)",
   landingPricingFolioFeature16: "30 messages/day on Clara (personal finance) and Will (smart notes)",
