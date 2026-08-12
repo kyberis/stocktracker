@@ -9,6 +9,9 @@ import { calculatePeriodReturn, windowedNetCashFlow, txAmountToBase } from "@/li
 import { convertCurrency } from "@/lib/utils";
 import type { ExchangeRates, Holding, Transaction } from "@/lib/types";
 
+export const MATRIX_CELL_EXPLAIN_DISCLAIMER =
+  "AI-generated explanation. May be inaccurate. Not investment advice. Period figures are vs a past snapshot, not vs purchase price.";
+
 export interface MatrixCellTxLine {
   id: string;
   date: string;

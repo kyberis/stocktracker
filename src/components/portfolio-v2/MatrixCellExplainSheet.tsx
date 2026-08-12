@@ -8,9 +8,9 @@ import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import {
   buildDeterministicMatrixCellNarrative,
+  MATRIX_CELL_EXPLAIN_DISCLAIMER,
   type MatrixCellBreakdown,
 } from "@/lib/matrix-cell-breakdown";
-import { MATRIX_CELL_EXPLAIN_DISCLAIMER } from "@/lib/matrix-cell-explain";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { MatrixPeriodKey } from "@/lib/portfolio-performance-matrix";
 

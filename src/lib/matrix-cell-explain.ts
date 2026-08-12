@@ -1,14 +1,14 @@
-import { fetchGatewayChatCompletions } from "@/lib/ai/gateway";
 import {
   buildDeterministicMatrixCellNarrative,
+  MATRIX_CELL_EXPLAIN_DISCLAIMER,
   type MatrixCellBreakdown,
 } from "@/lib/matrix-cell-breakdown";
 
-export const MATRIX_CELL_EXPLAIN_DISCLAIMER =
-  "AI-generated explanation. May be inaccurate. Not investment advice. Period figures are vs a past snapshot, not vs purchase price.";
+export { MATRIX_CELL_EXPLAIN_DISCLAIMER };
 
 /**
  * LLM narrative for a matrix cell breakdown. Falls back to deterministic text.
+ * Server-only: dynamically imports the AI gateway so client bundles never pull db/fs.
  */
 export async function explainMatrixCellBreakdown(args: {
   breakdown: MatrixCellBreakdown;
@@ -46,6 +46,7 @@ export async function explainMatrixCellBreakdown(args: {
   };
 
   try {
+    const { fetchGatewayChatCompletions } = await import("@/lib/ai/gateway");
     const res = await fetchGatewayChatCompletions(
       {
         model: "openai/gpt-4o-mini",
