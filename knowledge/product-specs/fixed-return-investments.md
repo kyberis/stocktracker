@@ -94,6 +94,7 @@ Before start → 0; on/after maturity → maturityValue.
 - Chart overlay is client-side; snapshot cron remains holdings-only.
 - Accrual “as of” must use the **browser local calendar date** (`todayLocal()`), not the Vercel UTC date — otherwise a start date of “today” can show €0 until UTC midnight. Client context + portfolio totals re-enrich on read.
 - Home v2 must render `MarketAndCash` (Assets & Accounts); the holdings table alone never lists fixed-return rows.
+- Breakdown strip (`MarketAwareBreakdown`): fixed-return is its own filterable card and is included in **All Assets** value/allocation (not liquid cash).
 
 ## 14. Tests
 

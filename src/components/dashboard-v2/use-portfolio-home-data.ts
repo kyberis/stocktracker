@@ -59,13 +59,17 @@ export function usePortfolioHomeData(
 
   const filteredHoldings = useMemo(() => {
     if (assetFilter === "all") return holdings;
+    if (assetFilter === "fixed_return") return [];
     return holdings.filter((h) => (h.assetType ?? "stock") === assetFilter);
   }, [holdings, assetFilter]);
 
-  const effectiveCash = useMemo<CashEntry[]>(
-    () => (assetFilter === "all" ? cashEntries : []),
-    [assetFilter, cashEntries],
-  );
+  const effectiveCash = useMemo<CashEntry[]>(() => {
+    if (assetFilter === "all") return cashEntries;
+    if (assetFilter === "fixed_return") {
+      return cashEntries.filter((c) => c.type === "fixed_return");
+    }
+    return [];
+  }, [assetFilter, cashEntries]);
 
   const totals = useMemo(
     () => calculatePortfolioTotals(filteredHoldings, effectiveCash, quotes, exchangeRates, baseCurrency),
@@ -85,8 +89,8 @@ export function usePortfolioHomeData(
   const investedValueBase = Math.max(0, totals.totalCurrentEUR - cashValueBase);
 
   const dayChangeByType = useMemo(
-    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency),
-    [holdings, quotes, exchangeRates, baseCurrency],
+    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency, undefined, cashEntries),
+    [holdings, cashEntries, quotes, exchangeRates, baseCurrency],
   );
 
   const dayChangePctByType = dayChangeByType.pct;

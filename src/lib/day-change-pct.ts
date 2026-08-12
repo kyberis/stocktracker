@@ -1,6 +1,11 @@
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
-import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
-import type { ExchangeRates, Holding, QuoteData } from "@/lib/types";
+import { convertCurrency, resolveQuoteCurrency, todayLocal } from "@/lib/utils";
+import {
+  cashAmountEUR,
+  dayChangeFixedReturnCash,
+  isFixedReturnCashEntry,
+} from "@/lib/fixed-return-cash";
+import type { CashEntry, ExchangeRates, Holding, QuoteData } from "@/lib/types";
 
 export interface DayChangeByType {
   pct: Partial<Record<AssetFilter, number>>;
@@ -10,7 +15,31 @@ export interface DayChangeByType {
 
 function groupHoldings(holdings: Holding[], group: AssetFilter): Holding[] {
   if (group === "all") return holdings;
+  if (group === "fixed_return") return [];
   return holdings.filter((h) => (h.assetType ?? "stock") === group);
+}
+
+function fixedReturnDayChange(
+  cashEntries: CashEntry[] | undefined,
+  exchangeRates: ExchangeRates,
+  baseCurrency: string,
+): { dayPL: number; priorValue: number; included: number } {
+  if (!cashEntries?.length) return { dayPL: 0, priorValue: 0, included: 0 };
+  const asOf = todayLocal();
+  let dayPL = 0;
+  let priorValue = 0;
+  let included = 0;
+  for (const entry of cashEntries) {
+    if (!isFixedReturnCashEntry(entry)) continue;
+    const currentEUR = cashAmountEUR(entry, { asOf, rates: exchangeRates });
+    const dayDeltaEUR = dayChangeFixedReturnCash(entry, asOf, exchangeRates);
+    const currentBase = convertCurrency(currentEUR, "EUR", baseCurrency, exchangeRates);
+    const dayDeltaBase = convertCurrency(dayDeltaEUR, "EUR", baseCurrency, exchangeRates);
+    dayPL += dayDeltaBase;
+    priorValue += Math.max(0, currentBase - dayDeltaBase);
+    included += 1;
+  }
+  return { dayPL, priorValue, included };
 }
 
 /**
@@ -19,6 +48,7 @@ function groupHoldings(holdings: Holding[], group: AssetFilter): Holding[] {
  * - Prefer previousClose when present; otherwise derive prior as price − change.
  * - Return % = sum(day Δ) / sum(prior close value) — never mix scopes.
  * - `wasMarketOpenToday` only gates whether abs is labeled "active today"; math always includes quotes.
+ * - Optional `cashEntries`: fixed-return accrual day change is added to `fixed_return` and `all`.
  */
 export function computeDayChangeByType(
   holdings: Holding[],
@@ -26,6 +56,7 @@ export function computeDayChangeByType(
   exchangeRates: ExchangeRates,
   baseCurrency: string,
   _now?: Date,
+  cashEntries?: CashEntry[],
 ): DayChangeByType {
   const pct: Partial<Record<AssetFilter, number>> = {};
   const abs: Partial<Record<AssetFilter, number | undefined>> = {};
@@ -33,7 +64,7 @@ export function computeDayChangeByType(
 
   for (const group of groups) {
     const bucket = groupHoldings(holdings, group);
-    if (bucket.length === 0) continue;
+    if (bucket.length === 0 && group !== "all") continue;
 
     let dayPL = 0;
     let priorValue = 0;
@@ -64,8 +95,22 @@ export function computeDayChangeByType(
       included += 1;
     }
 
+    if (group === "all") {
+      const fr = fixedReturnDayChange(cashEntries, exchangeRates, baseCurrency);
+      dayPL += fr.dayPL;
+      priorValue += fr.priorValue;
+      included += fr.included;
+    }
+
+    if (included === 0 && group !== "all") continue;
     pct[group] = priorValue > 0 ? (dayPL / priorValue) * 100 : 0;
     abs[group] = included > 0 ? dayPL : undefined;
+  }
+
+  const fr = fixedReturnDayChange(cashEntries, exchangeRates, baseCurrency);
+  if (fr.included > 0) {
+    pct.fixed_return = fr.priorValue > 0 ? (fr.dayPL / fr.priorValue) * 100 : 0;
+    abs.fixed_return = fr.dayPL;
   }
 
   return { pct, abs };
@@ -78,7 +123,8 @@ export function computeDayChangeHeadline(
   exchangeRates: ExchangeRates,
   baseCurrency: string,
   now?: Date,
+  cashEntries?: CashEntry[],
 ): { abs: number; pct: number } {
-  const { pct, abs } = computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency, now);
+  const { pct, abs } = computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency, now, cashEntries);
   return { abs: abs.all ?? 0, pct: pct.all ?? 0 };
 }

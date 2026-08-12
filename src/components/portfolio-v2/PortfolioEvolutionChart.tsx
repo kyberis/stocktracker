@@ -94,6 +94,7 @@ const ASSET_FILTER_LINE_COLORS: Record<AssetFilter, string> = {
   etf: "#f59e0b",
   fund: "#14b8a6",
   crypto: "#ec4899",
+  fixed_return: "#0ea5e9",
 };
 
 const BENCHMARK_STORAGE_KEY = "trefolio-benchmark-overlay-v1";

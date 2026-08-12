@@ -169,12 +169,14 @@ export interface AssetTypeTotals {
   etf: PortfolioTotals;
   fund: PortfolioTotals;
   crypto: PortfolioTotals;
-  allocations: Record<HoldingAssetType, number>;
+  fixed_return: PortfolioTotals;
+  allocations: Record<HoldingAssetType | "fixed_return", number>;
 }
 
 /**
  * Compute PortfolioTotals for each asset type independently.
  * Used by breakdown cards and the hero chart filter.
+ * Fixed-return cash entries are an invested bucket (not liquid cash).
  */
 export function calculateTotalsByAssetType(
   holdings: Holding[],
@@ -190,22 +192,30 @@ export function calculateTotalsByAssetType(
   }
 
   const emptyCash: CashEntry[] = [];
+  const fixedReturnCash = cashEntries.filter((c) => c.type === "fixed_return");
   const stock = calculatePortfolioTotals(groups.stock, emptyCash, quotes, exchangeRates, baseCurrency);
   const etf = calculatePortfolioTotals(groups.etf, emptyCash, quotes, exchangeRates, baseCurrency);
   const fund = calculatePortfolioTotals(groups.fund, emptyCash, quotes, exchangeRates, baseCurrency);
   const crypto = calculatePortfolioTotals(groups.crypto, emptyCash, quotes, exchangeRates, baseCurrency);
+  const fixed_return = calculatePortfolioTotals([], fixedReturnCash, quotes, exchangeRates, baseCurrency);
 
-  const allTotals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
-  const total = allTotals.totalCurrentEUR;
+  // Denominator: market holdings + fixed-return (exclude liquid cash / net-worth manuals).
+  const investedTotal =
+    stock.totalCurrentEUR +
+    etf.totalCurrentEUR +
+    fund.totalCurrentEUR +
+    crypto.totalCurrentEUR +
+    fixed_return.totalCurrentEUR;
 
-  const allocations: Record<HoldingAssetType, number> = {
-    stock: total > 0 ? (stock.totalCurrentEUR / total) * 100 : 0,
-    etf: total > 0 ? (etf.totalCurrentEUR / total) * 100 : 0,
-    fund: total > 0 ? (fund.totalCurrentEUR / total) * 100 : 0,
-    crypto: total > 0 ? (crypto.totalCurrentEUR / total) * 100 : 0,
+  const allocations: Record<HoldingAssetType | "fixed_return", number> = {
+    stock: investedTotal > 0 ? (stock.totalCurrentEUR / investedTotal) * 100 : 0,
+    etf: investedTotal > 0 ? (etf.totalCurrentEUR / investedTotal) * 100 : 0,
+    fund: investedTotal > 0 ? (fund.totalCurrentEUR / investedTotal) * 100 : 0,
+    crypto: investedTotal > 0 ? (crypto.totalCurrentEUR / investedTotal) * 100 : 0,
+    fixed_return: investedTotal > 0 ? (fixed_return.totalCurrentEUR / investedTotal) * 100 : 0,
   };
 
-  return { stock, etf, fund, crypto, allocations };
+  return { stock, etf, fund, crypto, fixed_return, allocations };
 }
 
 export interface PortfolioTotals {

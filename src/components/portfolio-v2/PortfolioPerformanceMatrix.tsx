@@ -24,6 +24,7 @@ const ASSET_LABEL_KEYS: Record<AssetFilter, string> = {
   etf: "etfsLabel",
   fund: "fundsLabel",
   crypto: "cryptoLabel",
+  fixed_return: "assetTypeFixedReturn",
 };
 
 const PERIOD_LABEL_KEYS: Record<MatrixPeriodKey, string> = {

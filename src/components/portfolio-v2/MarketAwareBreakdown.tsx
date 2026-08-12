@@ -20,6 +20,7 @@ interface Props {
 
 /**
  * Compact asset-type pills with day change aligned to the performance matrix.
+ * Includes fixed-return investments as an invested asset bucket.
  */
 export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterChange, activeFilter }: Props) {
   const { t } = useI18n();
@@ -34,12 +35,16 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
   );
 
   const dayChange = useMemo(
-    () => computeDayChangeByType(holdings, quotes, exchangeRates, cur),
-    [holdings, quotes, exchangeRates, cur],
+    () => computeDayChangeByType(holdings, quotes, exchangeRates, cur, undefined, cashEntries),
+    [holdings, cashEntries, quotes, exchangeRates, cur],
   );
 
   const investedTotal =
-    byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.fund.totalCurrentEUR + byType.crypto.totalCurrentEUR;
+    byType.stock.totalCurrentEUR +
+    byType.etf.totalCurrentEUR +
+    byType.fund.totalCurrentEUR +
+    byType.crypto.totalCurrentEUR +
+    byType.fixed_return.totalCurrentEUR;
 
   const hasAnyValue = investedTotal > 0;
   if (!hasAnyValue) return null;
@@ -62,7 +67,8 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
     (byType.stock.totalCurrentEUR > 0 ? 1 : 0) +
     (byType.etf.totalCurrentEUR > 0 ? 1 : 0) +
     (byType.fund.totalCurrentEUR > 0 ? 1 : 0) +
-    (byType.crypto.totalCurrentEUR > 0 ? 1 : 0);
+    (byType.crypto.totalCurrentEUR > 0 ? 1 : 0) +
+    (byType.fixed_return.totalCurrentEUR > 0 ? 1 : 0);
   const showAllPill = activeTypeCount > 1;
 
   const entries: Entry[] = [
@@ -107,6 +113,14 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
       alloc: byType.allocations.crypto,
       dayPct: dayChange.pct.crypto ?? 0,
       showDayChange: dayChange.abs.crypto != null,
+    },
+    {
+      key: "fixed_return",
+      label: t("assetTypeFixedReturn"),
+      value: byType.fixed_return.totalCurrentEUR,
+      alloc: byType.allocations.fixed_return,
+      dayPct: dayChange.pct.fixed_return ?? 0,
+      showDayChange: dayChange.abs.fixed_return != null,
     },
   ];
 

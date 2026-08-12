@@ -30,9 +30,17 @@ export default function AssetBreakdownCards({ holdings, cashEntries, onFilterCha
   );
 
   const investedTotal =
-    byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.fund.totalCurrentEUR + byType.crypto.totalCurrentEUR;
+    byType.stock.totalCurrentEUR +
+    byType.etf.totalCurrentEUR +
+    byType.fund.totalCurrentEUR +
+    byType.crypto.totalCurrentEUR +
+    byType.fixed_return.totalCurrentEUR;
   const allDayPL =
-    byType.stock.dayGainLossEUR + byType.etf.dayGainLossEUR + byType.fund.dayGainLossEUR + byType.crypto.dayGainLossEUR;
+    byType.stock.dayGainLossEUR +
+    byType.etf.dayGainLossEUR +
+    byType.fund.dayGainLossEUR +
+    byType.crypto.dayGainLossEUR +
+    byType.fixed_return.dayGainLossEUR;
   const allPriorClose = investedTotal - allDayPL;
   const allDayPct = allPriorClose > 0 ? (allDayPL / allPriorClose) * 100 : 0;
 
@@ -49,15 +57,18 @@ export default function AssetBreakdownCards({ holdings, cashEntries, onFilterCha
     dayPct: number;
   };
 
-  // When the portfolio holds only a single asset type, the "All Assets" pill
-  // would mirror the lone type pill exactly. Suppress it to keep the strip
-  // honest and free up horizontal space.
   const activeTypeCount =
     (byType.stock.totalCurrentEUR > 0 ? 1 : 0) +
     (byType.etf.totalCurrentEUR > 0 ? 1 : 0) +
     (byType.fund.totalCurrentEUR > 0 ? 1 : 0) +
-    (byType.crypto.totalCurrentEUR > 0 ? 1 : 0);
+    (byType.crypto.totalCurrentEUR > 0 ? 1 : 0) +
+    (byType.fixed_return.totalCurrentEUR > 0 ? 1 : 0);
   const showAllPill = activeTypeCount > 1;
+
+  function dayPctFor(totals: { totalCurrentEUR: number; dayGainLossEUR: number }): number {
+    const prior = totals.totalCurrentEUR - totals.dayGainLossEUR;
+    return totals.totalCurrentEUR > 0 && prior > 0 ? (totals.dayGainLossEUR / prior) * 100 : 0;
+  }
 
   const entries: Entry[] = [
     ...(showAllPill
@@ -68,36 +79,35 @@ export default function AssetBreakdownCards({ holdings, cashEntries, onFilterCha
       label: t("stocksLabel"),
       value: byType.stock.totalCurrentEUR,
       alloc: byType.allocations.stock,
-      dayPct: byType.stock.totalCurrentEUR > 0 && (byType.stock.totalCurrentEUR - byType.stock.dayGainLossEUR) > 0
-        ? (byType.stock.dayGainLossEUR / (byType.stock.totalCurrentEUR - byType.stock.dayGainLossEUR)) * 100
-        : 0,
+      dayPct: dayPctFor(byType.stock),
     },
     {
       key: "etf",
       label: t("etfsLabel"),
       value: byType.etf.totalCurrentEUR,
       alloc: byType.allocations.etf,
-      dayPct: byType.etf.totalCurrentEUR > 0 && (byType.etf.totalCurrentEUR - byType.etf.dayGainLossEUR) > 0
-        ? (byType.etf.dayGainLossEUR / (byType.etf.totalCurrentEUR - byType.etf.dayGainLossEUR)) * 100
-        : 0,
+      dayPct: dayPctFor(byType.etf),
     },
     {
       key: "fund",
       label: t("fundsLabel"),
       value: byType.fund.totalCurrentEUR,
       alloc: byType.allocations.fund,
-      dayPct: byType.fund.totalCurrentEUR > 0 && (byType.fund.totalCurrentEUR - byType.fund.dayGainLossEUR) > 0
-        ? (byType.fund.dayGainLossEUR / (byType.fund.totalCurrentEUR - byType.fund.dayGainLossEUR)) * 100
-        : 0,
+      dayPct: dayPctFor(byType.fund),
     },
     {
       key: "crypto",
       label: t("cryptoLabel"),
       value: byType.crypto.totalCurrentEUR,
       alloc: byType.allocations.crypto,
-      dayPct: byType.crypto.totalCurrentEUR > 0 && (byType.crypto.totalCurrentEUR - byType.crypto.dayGainLossEUR) > 0
-        ? (byType.crypto.dayGainLossEUR / (byType.crypto.totalCurrentEUR - byType.crypto.dayGainLossEUR)) * 100
-        : 0,
+      dayPct: dayPctFor(byType.crypto),
+    },
+    {
+      key: "fixed_return",
+      label: t("assetTypeFixedReturn"),
+      value: byType.fixed_return.totalCurrentEUR,
+      alloc: byType.allocations.fixed_return,
+      dayPct: dayPctFor(byType.fixed_return),
     },
   ];
 

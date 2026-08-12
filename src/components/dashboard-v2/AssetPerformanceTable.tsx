@@ -16,12 +16,13 @@ interface Props {
 
 type PerfMode = "total" | "daily";
 
-const ROWS: { key: HoldingAssetType | "all"; labelKey: "allAssets" | "stocksLabel" | "etfsLabel" | "fundsLabel" | "cryptoLabel" }[] = [
+const ROWS: { key: HoldingAssetType | "all" | "fixed_return"; labelKey: "allAssets" | "stocksLabel" | "etfsLabel" | "fundsLabel" | "cryptoLabel" | "assetTypeFixedReturn" }[] = [
   { key: "all", labelKey: "allAssets" },
   { key: "stock", labelKey: "stocksLabel" },
   { key: "etf", labelKey: "etfsLabel" },
   { key: "fund", labelKey: "fundsLabel" },
   { key: "crypto", labelKey: "cryptoLabel" },
+  { key: "fixed_return", labelKey: "assetTypeFixedReturn" },
 ];
 
 export default function AssetPerformanceTable({ holdings, cashEntries }: Props) {
@@ -37,10 +38,10 @@ export default function AssetPerformanceTable({ holdings, cashEntries }: Props) 
     return { byType: bt, allTotals: all };
   }, [holdings, cashEntries, quotes, exchangeRates, cur]);
 
-  const hasMultipleTypes = [byType.stock, byType.etf, byType.fund, byType.crypto].filter(t => t.totalCurrentEUR > 0).length > 1;
+  const hasMultipleTypes = [byType.stock, byType.etf, byType.fund, byType.crypto, byType.fixed_return].filter(t => t.totalCurrentEUR > 0).length > 1;
   if (!hasMultipleTypes) return null;
 
-  function getTotals(key: HoldingAssetType | "all") {
+  function getTotals(key: HoldingAssetType | "all" | "fixed_return") {
     if (key === "all") return allTotals;
     return byType[key];
   }

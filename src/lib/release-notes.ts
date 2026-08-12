@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.148",
+    date: "2026-08-12",
+    title: "Fixed-return in asset breakdown cards",
+    titleTranslations: {
+      es: "Retorno fijo en las tarjetas de desglose",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Fixed-return investments now appear as their own card in the All Assets / Stocks / Crypto breakdown strip (and in All Assets totals), not only under Assets & Accounts.",
+        translations: {
+          es: "Las inversiones de retorno fijo aparecen como tarjeta propia en el desglose Todos los activos / Acciones / Cripto (y en el total de Todos), no solo en Activos y cuentas.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.147",
     date: "2026-08-12",
     title: "Fixed-return counts as invested, not cash",

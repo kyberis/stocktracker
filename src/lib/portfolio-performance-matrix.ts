@@ -138,6 +138,8 @@ export function valueFromSnapshot(point: SnapshotHistoryPoint, assetKey: AssetFi
   if (assetKey === "etf") return etf;
   if (assetKey === "fund") return fund;
   if (assetKey === "crypto") return crypto;
+  // Fixed-return is not persisted in snapshot buckets yet (client overlay only).
+  if (assetKey === "fixed_return") return 0;
   return perTypeSum > 0 ? perTypeSum : point.value;
 }
 
@@ -422,7 +424,7 @@ export function buildMatrixFromHistorical(input: BuildMatrixFromHistoricalInput)
 export function resolveMatrixAssetKeys(
   currentByAsset: Partial<Record<AssetFilter, number>>,
 ): AssetFilter[] {
-  const types: AssetFilter[] = ["stock", "etf", "fund", "crypto"];
+  const types: AssetFilter[] = ["stock", "etf", "fund", "crypto", "fixed_return"];
   const activeTypes = types.filter((k) => (currentByAsset[k] ?? 0) > 0);
   const showAll = activeTypes.length > 1;
   const keys: AssetFilter[] = showAll ? ["all", ...activeTypes] : activeTypes.length > 0 ? activeTypes : ["all"];

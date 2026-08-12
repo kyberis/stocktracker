@@ -49,11 +49,15 @@ export function usePortfolioPerformanceMatrix({
   );
 
   const investedTotal =
-    byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.fund.totalCurrentEUR + byType.crypto.totalCurrentEUR;
+    byType.stock.totalCurrentEUR +
+    byType.etf.totalCurrentEUR +
+    byType.fund.totalCurrentEUR +
+    byType.crypto.totalCurrentEUR +
+    byType.fixed_return.totalCurrentEUR;
 
   const dayChangeComputed = useMemo(
-    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency),
-    [holdings, quotes, exchangeRates, baseCurrency],
+    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency, undefined, cashEntries),
+    [holdings, cashEntries, quotes, exchangeRates, baseCurrency],
   );
 
   const { currentByAsset, dayPctByAsset, dayAbsByAsset } = useMemo(() => {
@@ -63,6 +67,7 @@ export function usePortfolioPerformanceMatrix({
       etf: byType.etf.totalCurrentEUR,
       fund: byType.fund.totalCurrentEUR,
       crypto: byType.crypto.totalCurrentEUR,
+      fixed_return: byType.fixed_return.totalCurrentEUR,
     };
 
     const pct: Partial<Record<AssetFilter, number>> = {
@@ -71,6 +76,7 @@ export function usePortfolioPerformanceMatrix({
       etf: dayChangePctProp?.etf ?? dayChangeComputed.pct.etf,
       fund: dayChangePctProp?.fund ?? dayChangeComputed.pct.fund,
       crypto: dayChangePctProp?.crypto ?? dayChangeComputed.pct.crypto,
+      fixed_return: dayChangePctProp?.fixed_return ?? dayChangeComputed.pct.fixed_return,
     };
 
     return {

@@ -52,10 +52,17 @@ export default function PortfolioPage() {
 
   const filteredHoldings = useMemo(() => {
     if (assetFilter === "all") return holdings;
+    if (assetFilter === "fixed_return") return [];
     return holdings.filter((h) => (h.assetType ?? "stock") === assetFilter);
   }, [holdings, assetFilter]);
 
-  const effectiveCash = assetFilter === "all" ? cashEntries : [];
+  const effectiveCash = useMemo(() => {
+    if (assetFilter === "all") return cashEntries;
+    if (assetFilter === "fixed_return") {
+      return cashEntries.filter((c) => c.type === "fixed_return");
+    }
+    return [];
+  }, [assetFilter, cashEntries]);
 
   const totals = useMemo(
     () => calculatePortfolioTotals(filteredHoldings, effectiveCash, quotes, exchangeRates, baseCurrency),
@@ -74,8 +81,8 @@ export default function PortfolioPage() {
   const investedValueBase = Math.max(0, totals.totalCurrentEUR - cashValueBase);
 
   const dayChangePctByType = useMemo(
-    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency).pct,
-    [holdings, quotes, exchangeRates, baseCurrency],
+    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency, undefined, cashEntries).pct,
+    [holdings, cashEntries, quotes, exchangeRates, baseCurrency],
   );
 
   const { dayGainLoss, dayGainLossPercent } = useMemo(() => {
@@ -84,9 +91,11 @@ export default function PortfolioPage() {
       quotes,
       exchangeRates,
       baseCurrency,
+      undefined,
+      effectiveCash,
     );
     return { dayGainLoss: headline.abs, dayGainLossPercent: headline.pct };
-  }, [filteredHoldings, quotes, exchangeRates, baseCurrency]);
+  }, [filteredHoldings, effectiveCash, quotes, exchangeRates, baseCurrency]);
 
   const handleBackfillComplete = useCallback(() => {
     setRefreshKey((k) => k + 1);

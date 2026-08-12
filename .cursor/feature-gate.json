@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.147: fixed-return is invested capital, not liquid cash. Bug fix — no landing-page capability."
+  "notes": "2.5.148: fixed-return card in asset breakdown strip. Improvement — no landing-page capability."
 }

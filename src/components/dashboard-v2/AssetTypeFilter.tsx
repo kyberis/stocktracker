@@ -3,7 +3,7 @@
 import { useI18n } from "@/lib/i18n";
 import type { HoldingAssetType } from "@/lib/types";
 
-export type AssetFilter = HoldingAssetType | "all";
+export type AssetFilter = HoldingAssetType | "all" | "fixed_return";
 
 const ASSET_COLORS: Record<AssetFilter, string> = {
   all: "var(--gain, #10b981)",
@@ -11,6 +11,7 @@ const ASSET_COLORS: Record<AssetFilter, string> = {
   etf: "#f59e0b",
   fund: "#14b8a6",
   crypto: "#ec4899",
+  fixed_return: "#0ea5e9",
 };
 
 interface Props {
@@ -28,6 +29,7 @@ export default function AssetTypeFilter({ value, onChange, dayChangePct }: Props
     { key: "etf", label: t("etfsLabel") },
     { key: "fund", label: t("fundsLabel") },
     { key: "crypto", label: t("cryptoLabel") },
+    { key: "fixed_return", label: t("assetTypeFixedReturn") },
   ];
 
   return (
