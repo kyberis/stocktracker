@@ -29,6 +29,8 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `device_notifications` | [`src/lib/db/device-notifications.ts`](../../src/lib/db/device-notifications.ts) |
 | `email_sends` | [`src/lib/db/email-templates.ts`](../../src/lib/db/email-templates.ts) |
 | `email_templates` | [`src/lib/db/email-template-seeds.ts`](../../src/lib/db/email-template-seeds.ts) |
+| `experiment_assignments` | [`src/lib/db/experiments.ts`](../../src/lib/db/experiments.ts) |
+| `experiments` | [`src/lib/db/experiments.ts`](../../src/lib/db/experiments.ts) |
 | `feature_flag_overrides` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `feed_items` | [`src/lib/db/feed.ts`](../../src/lib/db/feed.ts) |
 | `feedback` | [`src/lib/db/email-template-seeds.ts`](../../src/lib/db/email-template-seeds.ts) |

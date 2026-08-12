@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-299 routes.
+305 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -35,6 +35,11 @@
 | `/api/admin/email-templates/[id]` | GET, PUT, DELETE | [`src/app/api/admin/email-templates/[id]/route.ts`](../../src/app/api/admin/email-templates/[id]/route.ts) |
 | `/api/admin/email-templates/preview` | GET | [`src/app/api/admin/email-templates/preview/route.ts`](../../src/app/api/admin/email-templates/preview/route.ts) |
 | `/api/admin/email-templates/send` | POST | [`src/app/api/admin/email-templates/send/route.ts`](../../src/app/api/admin/email-templates/send/route.ts) |
+| `/api/admin/experiments` | GET, POST | [`src/app/api/admin/experiments/route.ts`](../../src/app/api/admin/experiments/route.ts) |
+| `/api/admin/experiments/[id]` | GET, PUT | [`src/app/api/admin/experiments/[id]/route.ts`](../../src/app/api/admin/experiments/[id]/route.ts) |
+| `/api/admin/experiments/[id]/reset` | POST | [`src/app/api/admin/experiments/[id]/reset/route.ts`](../../src/app/api/admin/experiments/[id]/reset/route.ts) |
+| `/api/admin/experiments/[id]/stats` | GET | [`src/app/api/admin/experiments/[id]/stats/route.ts`](../../src/app/api/admin/experiments/[id]/stats/route.ts) |
+| `/api/admin/experiments/[id]/status` | POST | [`src/app/api/admin/experiments/[id]/status/route.ts`](../../src/app/api/admin/experiments/[id]/status/route.ts) |
 | `/api/admin/feature-flags` | GET, PUT | [`src/app/api/admin/feature-flags/route.ts`](../../src/app/api/admin/feature-flags/route.ts) |
 | `/api/admin/feature-flags/overrides` | GET, POST, DELETE | [`src/app/api/admin/feature-flags/overrides/route.ts`](../../src/app/api/admin/feature-flags/overrides/route.ts) |
 | `/api/admin/feedback/send-completion` | POST | [`src/app/api/admin/feedback/send-completion/route.ts`](../../src/app/api/admin/feedback/send-completion/route.ts) |
@@ -192,6 +197,7 @@
 | `/api/events` | GET | [`src/app/api/events/route.ts`](../../src/app/api/events/route.ts) |
 | `/api/ex-dividend` | GET | [`src/app/api/ex-dividend/route.ts`](../../src/app/api/ex-dividend/route.ts) |
 | `/api/exchange-rates` | GET | [`src/app/api/exchange-rates/route.ts`](../../src/app/api/exchange-rates/route.ts) |
+| `/api/experiments/[key]` | GET | [`src/app/api/experiments/[key]/route.ts`](../../src/app/api/experiments/[key]/route.ts) |
 | `/api/export/portfolio` | GET | [`src/app/api/export/portfolio/route.ts`](../../src/app/api/export/portfolio/route.ts) |
 | `/api/favorite-tools` | GET, PUT | [`src/app/api/favorite-tools/route.ts`](../../src/app/api/favorite-tools/route.ts) |
 | `/api/feature-flags` | GET | [`src/app/api/feature-flags/route.ts`](../../src/app/api/feature-flags/route.ts) |
