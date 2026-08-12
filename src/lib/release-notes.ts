@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.159",
+    date: "2026-08-12",
+    title: "Matrix period cells no longer blank when Dietz fails",
+    titleTranslations: {
+      es: "La matriz ya no deja en blanco periodos si falla Dietz",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Performance matrix Acciones/1S (and other period cells) fall back to the simple period return when Modified Dietz is unavailable or rejected, and fixed-return rows show 0% instead of “—” when snapshots lack that bucket.",
+        translations: {
+          es: "En la matriz, Acciones/1S (y otras celdas de periodo) usan el retorno simple si Modified Dietz no está disponible o se rechaza, y Retorno fijo muestra 0% en lugar de “—” cuando no hay bucket en el snapshot.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.158",
     date: "2026-08-12",
     title: "One day-change calculator for hero and matrix",

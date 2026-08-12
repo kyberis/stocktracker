@@ -202,6 +202,115 @@ describe("buildMatrixFromSnapshots flow-adjusted return (TRF-028)", () => {
     });
     expect(rows[0].cells.ytd.kind).toBe("empty");
   });
+
+  it("falls back to simple return when Dietz denominator collapses (Acciones 1S guardrail)", () => {
+    // Full sell on the period-start day → weighted denom ≈ 0 → Dietz null.
+    // Without the simple fallback the Acciones 1S cell is "—".
+    const now = new Date("2026-08-12T00:00:00Z");
+    const snapshots: SnapshotHistoryPoint[] = [
+      {
+        date: "2026-08-05",
+        value: 10000,
+        invested: 10000,
+        stockValue: 10000,
+        etfValue: 0,
+        fundValue: 0,
+        cryptoValue: 0,
+      },
+    ];
+    const sellAll: Transaction = {
+      id: "tx-stock-sell",
+      holdingId: "h-stock",
+      ticker: "AAPL",
+      assetType: "stock",
+      type: "sell",
+      date: "2026-08-05",
+      shares: 100,
+      pricePerShare: 100,
+      totalAmount: 10000,
+      fees: 0,
+      taxes: 0,
+      currency: "EUR",
+      notes: "",
+      createdAt: "2026-08-05",
+    };
+
+    const rows = buildMatrixFromSnapshots({
+      snapshots,
+      currentByAsset: { stock: 500 },
+      dayPctByAsset: {},
+      dayAbsByAsset: {},
+      isPro: true,
+      displayMode: "percent",
+      assetKeys: ["stock"],
+      transactions: [sellAll],
+      exchangeRates: {},
+      baseCurrency: "EUR",
+      now,
+    });
+
+    expect(rows[0].cells.oneWeek.kind).toBe("percent");
+    expect(rows[0].cells.oneWeek.value).toBeCloseTo(-95, 0); // simple (500-10000)/10000
+  });
+
+  it("fills stock past from residual when sleeve bucket is zero but All uses total value", () => {
+    const now = new Date("2026-08-12T00:00:00Z");
+    const snapshots: SnapshotHistoryPoint[] = [
+      {
+        date: "2026-08-05",
+        value: 65000,
+        invested: 60000,
+        stockValue: 0,
+        etfValue: 0,
+        fundValue: 0,
+        cryptoValue: 0,
+      },
+    ];
+    const rows = buildMatrixFromSnapshots({
+      snapshots,
+      currentByAsset: { all: 67000, stock: 67000 },
+      dayPctByAsset: {},
+      dayAbsByAsset: {},
+      isPro: true,
+      displayMode: "percent",
+      assetKeys: ["stock"],
+      transactions: [],
+      exchangeRates: {},
+      baseCurrency: "EUR",
+      now,
+    });
+    expect(rows[0].cells.oneWeek.kind).toBe("percent");
+    expect(rows[0].cells.oneWeek.value).toBeCloseTo(((67000 - 65000) / 65000) * 100, 1);
+  });
+
+  it("shows 0% for fixed_return periods (no snapshot bucket)", () => {
+    const now = new Date("2026-08-12T00:00:00Z");
+    const rows = buildMatrixFromSnapshots({
+      snapshots: [
+        {
+          date: "2026-08-01",
+          value: 1000,
+          invested: 1000,
+          stockValue: 1000,
+          etfValue: 0,
+          fundValue: 0,
+          cryptoValue: 0,
+        },
+      ],
+      currentByAsset: { fixed_return: 1500 },
+      dayPctByAsset: { fixed_return: 0 },
+      dayAbsByAsset: { fixed_return: 0 },
+      isPro: true,
+      displayMode: "percent",
+      assetKeys: ["fixed_return"],
+      transactions: [],
+      exchangeRates: {},
+      baseCurrency: "EUR",
+      now,
+    });
+    expect(rows[0].cells.oneWeek.kind).toBe("percent");
+    expect(rows[0].cells.oneWeek.value).toBe(0);
+  });
 });
 
 describe("resolveMatrixAssetKeys", () => {

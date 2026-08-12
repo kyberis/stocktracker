@@ -163,6 +163,49 @@ export function snapshotValueOnOrBefore(
   return result;
 }
 
+const SNAPSHOT_SLEEVES: AssetFilter[] = ["stock", "etf", "fund", "crypto"];
+
+/**
+ * Resolve a usable past value for a matrix period.
+ * Guardrails when the direct sleeve bucket is missing/zero:
+ * - fixed_return is not in snapshots → treat face value as flat (past = current)
+ * - if one active sleeve lacks a bucket but All + siblings do, use residual
+ *   allPast − Σ otherPast so Acciones 1S cannot go blank while Todos has a number
+ */
+export function resolvePeriodPastValue(args: {
+  snapshots: SnapshotHistoryPoint[];
+  anchorDate: string;
+  assetKey: AssetFilter;
+  current: number;
+  currentByAsset: Partial<Record<AssetFilter, number>>;
+}): number | null {
+  const { snapshots, anchorDate, assetKey, current, currentByAsset } = args;
+
+  if (assetKey === "fixed_return") {
+    return current > 0 ? current : null;
+  }
+
+  const direct = snapshotValueOnOrBefore(snapshots, anchorDate, assetKey);
+  if (direct != null && direct > 0) return direct;
+
+  if (assetKey === "all" || !SNAPSHOT_SLEEVES.includes(assetKey)) return direct;
+
+  const allPast = snapshotValueOnOrBefore(snapshots, anchorDate, "all");
+  if (allPast == null || allPast <= 0) return direct;
+
+  let others = 0;
+  for (const k of SNAPSHOT_SLEEVES) {
+    if (k === assetKey) continue;
+    if ((currentByAsset[k] ?? 0) <= 0) continue;
+    const v = snapshotValueOnOrBefore(snapshots, anchorDate, k);
+    if (v == null || v <= 0) return direct;
+    others += v;
+  }
+
+  const residual = allPast - others;
+  return residual > 0 ? residual : direct;
+}
+
 export function firstSnapshotAnchorDate(points: SnapshotHistoryPoint[]): string | null {
   if (points.length === 0) return null;
   const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
@@ -233,19 +276,14 @@ export interface PeriodReturnFlowsContext {
 /**
  * Windowed-return cell for one period (TRF-028).
  *
- * `past` (the value at the period's start anchor) is still required and
- * still comes from a real point-in-time source (a stored snapshot or a
- * current-holdings reconstruction) — that part isn't broken. What's
- * flow-adjusted is the return *between* past and current: a sale within the
- * window is attributed as an outflow from this asset-class bucket via
- * calculateWindowedModifiedDietzReturn, instead of the naive (current -
- * past) / past reading it as a loss.
+ * Prefer flow-adjusted Modified Dietz when it is finite and passes
+ * sanitizeTtwror against the naive (current − past) / past reference.
  *
- * The naive calculatePeriodReturn value is kept only as the reference the
- * Dietz result gets sanity-checked against (sanitizeTtwror) — never shown
- * directly once flows are available. Degrades to "—" when Dietz can't be
- * computed (no past value, or a near-zero weighted denominator) rather than
- * falling back to the un-adjusted number.
+ * Guardrail: if Dietz is unavailable (near-zero weighted denominator) or
+ * rejected by the sanity gate, fall back to the simple period return whenever
+ * a positive past value exists. Showing "—" on Acciones 1S while Todos /
+ * Cripto have numbers is worse than a non-flow-adjusted figure — empty cells
+ * are reserved for truly missing history (no past anchor).
  */
 function periodReturnCell(
   current: number,
@@ -265,7 +303,9 @@ function periodReturnCell(
     flows.exchangeRates,
     flows.baseCurrency,
   );
-  const pct = sanitizeTtwror(dietz, simple);
+  const preferred = sanitizeTtwror(dietz, simple);
+  const pct =
+    preferred ?? (simple != null && Number.isFinite(simple) ? simple : null);
   if (pct == null) return { kind: "empty" };
   return { kind: "percent", value: pct };
 }
@@ -349,7 +389,13 @@ export function buildMatrixFromSnapshots(input: BuildMatrixFromSnapshotsInput): 
     for (const key of MATRIX_PERIOD_KEYS) {
       if (key === "today") continue;
       const anchor = anchorMap[key];
-      const past = snapshotValueOnOrBefore(snapshots, anchor, assetKey);
+      const past = resolvePeriodPastValue({
+        snapshots,
+        anchorDate: anchor,
+        assetKey,
+        current,
+        currentByAsset,
+      });
       let cell = periodReturnCell(current, past, {
         transactions: assetTransactions,
         periodStart: anchor,
@@ -436,16 +482,26 @@ export function buildMatrixFromHistorical(input: BuildMatrixFromHistoricalInput)
 
     for (const key of MATRIX_PERIOD_KEYS) {
       if (key === "today") continue;
-      if (filteredHoldings.length === 0) {
+      if (filteredHoldings.length === 0 && assetKey !== "fixed_return") {
         cells[key] = { kind: "empty" };
         continue;
       }
-      const past = calculatePortfolioValueOnDate(
-        filteredEntries,
-        anchorMap[key],
-        exchangeRates,
-        baseCurrency,
-      );
+      let past =
+        assetKey === "fixed_return"
+          ? current > 0
+            ? current
+            : null
+          : filteredHoldings.length === 0
+            ? null
+            : calculatePortfolioValueOnDate(
+                filteredEntries,
+                anchorMap[key],
+                exchangeRates,
+                baseCurrency,
+              );
+      if ((past == null || past <= 0) && assetKey === "fixed_return" && current > 0) {
+        past = current;
+      }
       let cell = periodReturnCell(current, past, {
         transactions: assetTransactions,
         periodStart: anchorMap[key],
