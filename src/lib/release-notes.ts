@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.157",
+    date: "2026-08-12",
+    title: "All Assets today matches class rows",
+    titleTranslations: {
+      es: "Hoy de Todos los activos coincide con las clases",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "All Assets “today” is now forced to the value-weighted combination of Acciones/Cripto/etc., so it can no longer show a small green gain while stocks are down ~2%.",
+        translations: {
+          es: "El “hoy” de Todos los activos se fuerza a la media ponderada de Acciones/Cripto/etc., así ya no puede mostrar una pequeña subida en verde mientras las acciones caen ~2%.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.156",
     date: "2026-08-12",
     title: "Warren looks up news on price moves",

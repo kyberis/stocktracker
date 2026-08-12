@@ -94,8 +94,7 @@ export function usePortfolioHomeData(
 
   const dayChangePctByType = dayChangeByType.pct;
 
-  // Headline must use the same sleeve numbers as the matrix / pills (including
-  // fixed-return). When a type filter is active, show that sleeve's day move.
+  // Headline uses the same reconciled All Assets / sleeve numbers as the matrix.
   const { dayGainLoss, dayGainLossPercent } = useMemo(() => {
     const key = assetFilter;
     return {

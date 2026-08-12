@@ -125,12 +125,37 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
   ];
 
   const visibleEntries = entries.filter((e) => e.key === "all" || e.value > 0);
+
+  // All Assets day % must be the value-weighted combination of class pills —
+  // never an independent number that can disagree with Acciones/Cripto.
+  const reconciledAll = (() => {
+    const sleeves = visibleEntries.filter((e) => e.key !== "all" && e.showDayChange);
+    if (sleeves.length === 0) return null;
+    let dayPL = 0;
+    let prior = 0;
+    for (const s of sleeves) {
+      const r = s.dayPct / 100;
+      if (1 + r <= 0 || s.value <= 0) continue;
+      const sleevePrior = s.value / (1 + r);
+      dayPL += s.value - sleevePrior;
+      prior += sleevePrior;
+    }
+    if (prior <= 0) return null;
+    return (dayPL / prior) * 100;
+  })();
+
+  const displayEntries =
+    reconciledAll == null
+      ? visibleEntries
+      : visibleEntries.map((e) =>
+          e.key === "all" ? { ...e, dayPct: reconciledAll, showDayChange: true } : e,
+        );
   const colsClass =
-    visibleEntries.length <= 1
+    displayEntries.length <= 1
       ? "grid-cols-1"
-      : visibleEntries.length === 2
+      : displayEntries.length === 2
         ? "grid-cols-2"
-        : visibleEntries.length === 3
+        : displayEntries.length === 3
           ? "grid-cols-3 sm:grid-cols-3"
           : "grid-cols-2 sm:grid-cols-4";
 
@@ -140,7 +165,7 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
       role="group"
       aria-label={t("allAssets")}
     >
-      {visibleEntries.map((e) => {
+      {displayEntries.map((e) => {
         const color = ASSET_COLORS[e.key];
         const isSelected = activeKey === e.key;
         const showDayCell = e.showDayChange;

@@ -70,8 +70,10 @@ export function usePortfolioPerformanceMatrix({
       fixed_return: byType.fixed_return.totalCurrentEUR,
     };
 
+    // Never take All Assets % from a prop that could drift — always the live
+    // reconciled sleeve sum from computeDayChangeByType.
     const pct: Partial<Record<AssetFilter, number>> = {
-      all: dayChangePctProp?.all ?? dayChangeComputed.pct.all,
+      all: dayChangeComputed.pct.all,
       stock: dayChangePctProp?.stock ?? dayChangeComputed.pct.stock,
       etf: dayChangePctProp?.etf ?? dayChangeComputed.pct.etf,
       fund: dayChangePctProp?.fund ?? dayChangeComputed.pct.fund,
@@ -82,7 +84,10 @@ export function usePortfolioPerformanceMatrix({
     return {
       currentByAsset: current,
       dayPctByAsset: pct,
-      dayAbsByAsset: dayChangeComputed.abs,
+      dayAbsByAsset: {
+        ...dayChangeComputed.abs,
+        all: dayChangeComputed.abs.all,
+      },
     };
   }, [byType, investedTotal, dayChangePctProp, dayChangeComputed]);
 

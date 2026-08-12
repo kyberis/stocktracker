@@ -153,4 +153,21 @@ describe("computeDayChangeByType", () => {
     expect(pct.all!).toBeLessThan(-1.5);
     expect(abs.all).toBeCloseTo((abs.stock ?? 0) + (abs.crypto ?? 0), 8);
   });
+
+  it("all assets cannot be green when the dominant stock sleeve is sharply red", () => {
+    // Mirrors the Aug 12 22:46 screenshot shape (~89% stocks −2%, crypto flat).
+    const holdings = [
+      holding("STK", "stock", 100, 712, -14.8, "NMS"),
+      holding("BTC", "crypto", 1, 7255, -6.5, "CRYPTO"),
+    ];
+    const quotes: Record<string, QuoteData> = {
+      STK: quote("STK", 712, -14.8),
+      BTC: quote("BTC", 7255, -6.5),
+    };
+    const { pct, abs } = computeDayChangeByType(holdings, quotes, EUR_RATES, "EUR", MARKET_NOW);
+    expect(pct.stock!).toBeLessThan(-1.5);
+    expect(pct.crypto!).toBeLessThan(0);
+    expect(pct.all!).toBeLessThan(0);
+    expect(abs.all).toBeCloseTo((abs.stock ?? 0) + (abs.crypto ?? 0), 10);
+  });
 });

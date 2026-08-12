@@ -6,6 +6,7 @@ import {
   snapshotValueOnOrBefore,
   valueFromSnapshot,
   resolveMatrixAssetKeys,
+  reconcileAllAssetsToday,
 } from "./portfolio-performance-matrix";
 import type { SnapshotHistoryPoint } from "./portfolio-performance-matrix";
 import type { Transaction } from "./types";
@@ -224,5 +225,47 @@ describe("getMatrixPeriodAnchorDates", () => {
     const d = getMatrixPeriodAnchorDates(new Date("2025-06-15T12:00:00Z"));
     expect(d.ytd).toBe("2025-01-01");
     expect(d.oneYear).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe("reconcileAllAssetsToday", () => {
+  it("forces all today to the weighted combo of class rows (screenshot regression)", () => {
+    const empty = {
+      oneWeek: { kind: "empty" as const },
+      oneMonth: { kind: "empty" as const },
+      ytd: { kind: "empty" as const },
+      oneYear: { kind: "empty" as const },
+      threeYear: { kind: "empty" as const },
+      fiveYear: { kind: "empty" as const },
+      tenYear: { kind: "empty" as const },
+      all: { kind: "empty" as const },
+    };
+    const rows = [
+      {
+        assetKey: "all" as const,
+        currentValue: 74280,
+        cells: { today: { kind: "percent" as const, value: 0.17 }, ...empty },
+      },
+      {
+        assetKey: "stock" as const,
+        currentValue: 66057,
+        cells: { today: { kind: "percent" as const, value: -2.03 }, ...empty },
+      },
+      {
+        assetKey: "crypto" as const,
+        currentValue: 6723,
+        cells: { today: { kind: "percent" as const, value: -0.09 }, ...empty },
+      },
+      {
+        assetKey: "fixed_return" as const,
+        currentValue: 1500,
+        cells: { today: { kind: "percent" as const, value: 0 }, ...empty },
+      },
+    ];
+    const out = reconcileAllAssetsToday(rows);
+    const allToday = out.find((r) => r.assetKey === "all")!.cells.today;
+    expect(allToday.kind).toBe("percent");
+    expect(allToday.value!).toBeLessThan(-1.5);
+    expect(allToday.value!).toBeGreaterThan(-2.2);
   });
 });

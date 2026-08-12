@@ -15,6 +15,8 @@ export interface DayChangeByType {
 
 type Bucket = { dayPL: number; priorValue: number; included: number };
 
+const SLEEVE_KEYS = ["stock", "etf", "fund", "crypto"] as const;
+
 function emptyBucket(): Bucket {
   return { dayPL: 0, priorValue: 0, included: 0 };
 }
@@ -50,13 +52,29 @@ function finalizeBucket(bucket: Bucket): { pct: number; abs: number | undefined 
 }
 
 /**
+ * Rebuild the All Assets day move from sleeve buckets only.
+ * Guarantees the UI invariant: all === value-weighted combination of stock/etf/fund/crypto/fixed_return.
+ */
+export function reconcileAllDayChange(
+  sleeves: Partial<Record<AssetFilter, { dayPL: number; priorValue: number; included: number }>>,
+): Bucket {
+  const all = emptyBucket();
+  for (const key of [...SLEEVE_KEYS, "fixed_return"] as const) {
+    const b = sleeves[key];
+    if (!b || b.included === 0) continue;
+    all.dayPL += b.dayPL;
+    all.priorValue += b.priorValue;
+    all.included += b.included;
+  }
+  return all;
+}
+
+/**
  * Day return (%) and absolute P/L per asset bucket using the same rules everywhere (TRF-003):
- * - Single pass over holdings so "all" is always the exact sum of the class sleeves.
- * - Include every holding with a usable price; exclude from BOTH amount and % when price/FX is missing.
- * - Prefer previousClose when present; otherwise derive prior as price − change.
- * - Day Δ prefers regularMarketChange when present (aligned with portfolio totals); else price − prevClose.
- * - Return % = sum(day Δ) / sum(prior close value) — never mix scopes.
- * - Optional `cashEntries`: fixed-return accrual day change is added to `fixed_return` and `all`.
+ * - Single pass over holdings; All Assets is then forced to the sum of sleeves (never an independent path).
+ * - Day Δ is always price − previousClose (not a possibly-stale regularMarketChange field).
+ * - Return % = sum(day Δ) / sum(prior close value).
+ * - Optional `cashEntries`: fixed-return accrual is its own sleeve and rolls into All Assets.
  */
 export function computeDayChangeByType(
   holdings: Holding[],
@@ -89,30 +107,36 @@ export function computeDayChangeByType(
     if (prevClose == null || prevClose <= 0) continue;
 
     const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
-    const dayDeltaLocal =
-      change != null && Number.isFinite(change)
-        ? h.shares * change
-        : h.shares * (quote.regularMarketPrice - prevClose);
+    // Always mark-to-close: price − previousClose. Avoids stale regularMarketChange
+    // (e.g. after-hours) disagreeing with the close used in the % denominator.
+    const dayDeltaLocal = h.shares * (quote.regularMarketPrice - prevClose);
     const priorLocal = Math.abs(h.shares * prevClose);
     const dayDeltaBase = convertCurrency(dayDeltaLocal, quoteCurrency, baseCurrency, exchangeRates);
     const priorBase = convertCurrency(priorLocal, quoteCurrency, baseCurrency, exchangeRates);
     if (!Number.isFinite(dayDeltaBase) || !Number.isFinite(priorBase) || priorBase <= 0) continue;
 
-    const type: HoldingAssetType = h.assetType ?? "stock";
-    buckets.all.dayPL += dayDeltaBase;
-    buckets.all.priorValue += priorBase;
-    buckets.all.included += 1;
-
+    const type = (h.assetType ?? "stock") as HoldingAssetType;
     const sleeve = buckets[type];
+    // Unknown runtime labels (e.g. legacy "Equity") must not crash or silently
+    // inflate All Assets without a matching class row.
+    if (!sleeve || type === ("all" as HoldingAssetType)) continue;
+
     sleeve.dayPL += dayDeltaBase;
     sleeve.priorValue += priorBase;
     sleeve.included += 1;
   }
 
   const fr = fixedReturnDayChange(cashEntries, exchangeRates, baseCurrency);
-  buckets.all.dayPL += fr.dayPL;
-  buckets.all.priorValue += fr.priorValue;
-  buckets.all.included += fr.included;
+
+  // All Assets is ONLY the sum of sleeves — never a parallel accumulation that can drift.
+  const reconciled = reconcileAllDayChange({
+    stock: buckets.stock,
+    etf: buckets.etf,
+    fund: buckets.fund,
+    crypto: buckets.crypto,
+    fixed_return: fr,
+  });
+  buckets.all = reconciled;
 
   const pct: Partial<Record<AssetFilter, number>> = {};
   const abs: Partial<Record<AssetFilter, number | undefined>> = {};
@@ -120,7 +144,6 @@ export function computeDayChangeByType(
   for (const key of ["all", "stock", "etf", "fund", "crypto"] as const) {
     if (key !== "all" && buckets[key].included === 0) continue;
     const finalized = finalizeBucket(buckets[key]);
-    // Always publish "all" (0 when empty) so headline and matrix share one key.
     if (key === "all" || buckets[key].included > 0) {
       pct[key] = finalized.pct;
       abs[key] = finalized.abs;

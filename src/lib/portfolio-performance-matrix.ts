@@ -169,6 +169,59 @@ export function firstSnapshotAnchorDate(points: SnapshotHistoryPoint[]): string 
   return sorted[0].date.slice(0, 10);
 }
 
+/**
+ * Force the All Assets "today" cell to the value-weighted combination of class rows.
+ * Guards against upstream drift where All Assets can show a small green gain while
+ * stocks (the dominant sleeve) are sharply red.
+ */
+export function reconcileAllAssetsToday(rows: MatrixRow[]): MatrixRow[] {
+  const allIdx = rows.findIndex((r) => r.assetKey === "all");
+  if (allIdx < 0) return rows;
+
+  let dayPL = 0;
+  let prior = 0;
+  let any = false;
+
+  for (const row of rows) {
+    if (row.assetKey === "all") continue;
+    const cell = row.cells.today;
+    if (!cell || (cell.kind !== "percent" && cell.kind !== "currency")) continue;
+    if (cell.value == null || !Number.isFinite(cell.value)) continue;
+    if (row.currentValue <= 0) continue;
+
+    if (cell.kind === "currency") {
+      dayPL += cell.value;
+      prior += Math.max(0, row.currentValue - cell.value);
+      any = true;
+      continue;
+    }
+
+    const r = cell.value / 100;
+    if (1 + r <= 0) continue;
+    const sleevePrior = row.currentValue / (1 + r);
+    dayPL += row.currentValue - sleevePrior;
+    prior += sleevePrior;
+    any = true;
+  }
+
+  if (!any || prior <= 0) return rows;
+
+  const reconciledPct = (dayPL / prior) * 100;
+  const allRow = rows[allIdx]!;
+  const todayKind = allRow.cells.today?.kind === "currency" ? "currency" : "percent";
+  const nextToday: MatrixCell =
+    todayKind === "currency"
+      ? { kind: "currency", value: dayPL }
+      : { kind: "percent", value: reconciledPct };
+
+  const next = rows.slice();
+  next[allIdx] = {
+    ...allRow,
+    cells: { ...allRow.cells, today: nextToday },
+  };
+  return next;
+}
+
 export interface PeriodReturnFlowsContext {
   transactions: Transaction[];
   periodStart: string;
