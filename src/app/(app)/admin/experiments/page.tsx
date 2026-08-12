@@ -1,8 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import ExperimentMetricsCatalogPanel, {
+  appendMetricKey,
+  parseMetricKeys,
+} from "@/components/admin/ExperimentMetricsCatalogPanel";
+import { getExperimentMetric } from "@/lib/experiment-metrics-catalog";
 
 interface ExperimentVariant {
   key: string;
@@ -62,6 +68,7 @@ export default function AdminExperimentsPage() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [showMetricsCatalog, setShowMetricsCatalog] = useState(false);
 
   const [createForm, setCreateForm] = useState({
     key: "",
@@ -271,14 +278,64 @@ export default function AdminExperimentsPage() {
             First-party A/B/C tests with sticky variant assignment and live metrics.
           </p>
         </div>
-        <button
-          type="button"
-          className="btn-primary text-sm"
-          onClick={() => setShowCreate((v) => !v)}
-        >
-          {showCreate ? "Cancel" : "New draft"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/experiments/metrics" className="btn-secondary text-sm">
+            Metrics catalog
+          </Link>
+          <button
+            type="button"
+            className="btn-secondary text-sm"
+            onClick={() => setShowMetricsCatalog((v) => !v)}
+          >
+            {showMetricsCatalog ? "Hide catalog" : "Browse metrics"}
+          </button>
+          <button
+            type="button"
+            className="btn-primary text-sm"
+            onClick={() => setShowCreate((v) => !v)}
+          >
+            {showCreate ? "Cancel" : "New draft"}
+          </button>
+        </div>
       </div>
+
+      {showMetricsCatalog && (
+        <div className="card p-4 space-y-3">
+          <ExperimentMetricsCatalogPanel
+            compact
+            selectedKeys={
+              selected?.status === "draft"
+                ? parseMetricKeys(editMetricsText)
+                : showCreate
+                  ? parseMetricKeys(createForm.metricsText)
+                  : selected?.metrics || []
+            }
+            onAddMetric={
+              selected?.status === "draft"
+                ? (key) => setEditMetricsText((prev) => appendMetricKey(prev, key))
+                : showCreate
+                  ? (key) =>
+                      setCreateForm((f) => ({
+                        ...f,
+                        metricsText: appendMetricKey(f.metricsText, key),
+                      }))
+                  : undefined
+            }
+          />
+          <p className="text-[11px] text-gray-500 dark:text-slate-400">
+            Full page:{" "}
+            <Link
+              href="/admin/experiments/metrics"
+              className="text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
+              /admin/experiments/metrics
+            </Link>
+            {selected?.status === "draft" || showCreate
+              ? " — click Add to append to the draft metrics field."
+              : " — open a draft (or New draft) to add metrics from here."}
+          </p>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
@@ -352,6 +409,29 @@ export default function AdminExperimentsPage() {
                 rows={4}
                 className="w-full font-mono text-xs"
               />
+              <span className="block text-[11px] text-gray-400 dark:text-slate-500">
+                Must match{" "}
+                <code className="font-mono">analytics_events.event</code>. See{" "}
+                <button
+                  type="button"
+                  className="text-indigo-600 dark:text-indigo-400 hover:underline"
+                  onClick={() => setShowMetricsCatalog(true)}
+                >
+                  metrics catalog
+                </button>
+                .
+              </span>
+              <ul className="mt-1 space-y-0.5 text-[11px] text-gray-500 dark:text-slate-400">
+                {parseMetricKeys(createForm.metricsText).map((key) => {
+                  const def = getExperimentMetric(key);
+                  return (
+                    <li key={key}>
+                      <span className="font-mono text-gray-700 dark:text-slate-200">{key}</span>
+                      {def ? ` — ${def.title}` : " — not in catalog (still valid if event exists)"}
+                    </li>
+                  );
+                })}
+              </ul>
             </label>
           </div>
           <button
@@ -509,6 +589,21 @@ export default function AdminExperimentsPage() {
                         rows={4}
                         className="w-full font-mono text-xs"
                       />
+                      <ul className="mt-1 space-y-0.5 text-[11px] text-gray-500 dark:text-slate-400">
+                        {parseMetricKeys(editMetricsText).map((key) => {
+                          const def = getExperimentMetric(key);
+                          return (
+                            <li key={key}>
+                              <span className="font-mono text-gray-700 dark:text-slate-200">
+                                {key}
+                              </span>
+                              {def
+                                ? ` — ${def.title}`
+                                : " — not in catalog (still valid if event exists)"}
+                            </li>
+                          );
+                        })}
+                      </ul>
                     </label>
                   </div>
                   <button
@@ -530,8 +625,16 @@ export default function AdminExperimentsPage() {
                       .join(" · ")}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-slate-400">
-                    Metrics: {selected.metrics.join(", ")} · reset gen{" "}
-                    {selected.resetGeneration}
+                    Metrics:{" "}
+                    {selected.metrics.length === 0
+                      ? "none"
+                      : selected.metrics
+                          .map((m) => {
+                            const def = getExperimentMetric(m);
+                            return def ? `${m} (${def.title})` : m;
+                          })
+                          .join(" · ")}{" "}
+                    · reset gen {selected.resetGeneration}
                     {selected.launchedAt ? ` · launched ${selected.launchedAt}` : ""}
                     {selected.resetAt ? ` · last reset ${selected.resetAt}` : ""}
                   </p>

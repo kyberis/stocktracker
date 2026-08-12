@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.153",
+    date: "2026-08-12",
+    title: "Experiment metrics catalog",
+    titleTranslations: {
+      es: "Catálogo de métricas de experimentos",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Admin Experiments includes a metrics catalog (/admin/experiments/metrics) documenting analytics_events usable as conversion metrics — where they fire, source, and recommended experiments.",
+        translations: {
+          es: "Admin Experiments incluye un catálogo de métricas (/admin/experiments/metrics) que documenta los analytics_events usables como métricas de conversión — dónde se disparan, origen y experimentos recomendados.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.152",
     date: "2026-08-12",
     title: "Empty activation treatments polished",

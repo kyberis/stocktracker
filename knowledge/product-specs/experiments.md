@@ -19,6 +19,8 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 |------|------|-------|
 | Admin page | `src/app/(app)/admin/experiments/page.tsx` | Draft / launch / pause / reset / live table / Preview |
 | Admin preview | `src/app/(app)/admin/experiments/preview/page.tsx` | Force-render treatment UI (client override) |
+| Metrics catalog | `src/app/(app)/admin/experiments/metrics/page.tsx` | Documented events usable as conversion metrics |
+| Metrics definitions | `src/lib/experiment-metrics-catalog.ts` | Source of truth for catalog copy |
 | Preview helper | `src/lib/experiment-preview.ts` | sessionStorage override + URL `exp_preview` sync |
 | User API | `GET /api/experiments/[key]` | Resolve + assign when running |
 | Admin API | `/api/admin/experiments` | CRUD + status + reset + stats |
@@ -46,6 +48,7 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 ## 6. UI surface
 
 - Admin: `/admin/experiments`
+- Admin metrics catalog: `/admin/experiments/metrics` (events that land in `analytics_events`)
 - Admin treatment preview: `/admin/experiments/preview?key=…&variant=…` (client-only; no DB assignment)
 - Product: empty home via `EmptyPortfolio` when holdings empty
 
@@ -85,6 +88,7 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 - Boolean feature flags remain separate
 - Preview overrides are tab-scoped (sessionStorage) and do not change sticky assignments
 - Empty activation moat CTA must link to `/tools/evaluation` (not `/moat`); screener to `/tools/screener`
+- Experiment conversion metrics must be Turso `analytics_events` names — not `useTrack`/GA-only. Catalog: `src/lib/experiment-metrics-catalog.ts`
 
 ## 14. Tests
 

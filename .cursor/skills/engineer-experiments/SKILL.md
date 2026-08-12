@@ -103,6 +103,7 @@ Demo / unauthenticated: pass `forceVariant: "control"` or `enabled: false`.
 | Reset | Delete assignments + bump generation → re-bucket on next visit |
 | Archive | Freeze |
 | Preview | Opens `/admin/experiments/preview?key=&variant=` — client sessionStorage override; no assignment/metrics. Register new surfaces on the preview page when adding consumers. |
+| Metrics catalog | `/admin/experiments/metrics` — curated list of `analytics_events` usable as conversion metrics (see `src/lib/experiment-metrics-catalog.ts`). GA-only `useTrack` events are excluded. |
 
 > When `draft`/`archived`, resolve returns **control**. When `paused`, sticky is kept but new users are not assigned. Launch when ready to measure.
 ## Reference consumer
