@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.156",
+    date: "2026-08-12",
+    title: "Warren looks up news on price moves",
+    titleTranslations: {
+      es: "Warren busca noticias cuando pregunta por caídas",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren now calls getTickerNews (and getQuote) for questions like “why did Uber drop?” instead of giving a generic factor list or asking permission to search; holdings news can refresh a stale cache when a provider is configured.",
+        translations: {
+          es: "Warren ahora usa getTickerNews (y getQuote) ante preguntas como “¿por qué bajó Uber?” en lugar de una lista genérica de factores o pedir permiso para buscar; las noticias de cartera pueden refrescar la caché cuando hay proveedor configurado.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.155",
     date: "2026-08-12",
     title: "All Assets day change matches headline",

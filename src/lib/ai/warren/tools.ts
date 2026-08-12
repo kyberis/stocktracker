@@ -23,12 +23,8 @@ import type {
 import { searchKnowledge } from "./knowledge";
 import type { OfficeIdentity } from "@/lib/ai/office/office-identity";
 import { buildSisterAgentTools, sisterAgentToolsEnabled } from "./sister-agent-tools";
-import { rankPortfolioNewsForTickers } from "@/lib/portfolio-news-rank";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
-import {
-  listPortfolioNewsForTickers,
-  normalizePortfolioNewsSymbol,
-} from "@/lib/db/portfolio-news";
+import { ensureTickerNews } from "@/lib/services/ensure-ticker-news";
 
 export interface PortfolioSnapshot {
   baseCurrency: string;
@@ -171,7 +167,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
 
     getHoldingsNews: tool({
       description:
-        "Load recent news headlines linked to the user's portfolio holdings (same stored feed as Portfolio News in the app). Use when the user asks about news, headlines, what's happening with their stocks, sector stories, or press coverage tied to their positions. Returns titles, sources, dates, short excerpts, and related tickers. After calling, reply with 2-4 short bullet points summarizing themes (not individual article dumps unless asked). Neutral tone; no buy/sell recommendations.",
+        "Load recent news headlines linked to the user's portfolio holdings (same feed as Portfolio News). Use for portfolio-wide news, sector stories across their positions, or 'what's in the press about my stocks'. For a named ticker or 'why did X drop/rise', prefer getTickerNews. Refreshes stale cache when a news provider is configured. After calling, reply with 2-4 short bullet points summarizing themes. Neutral tone; no buy/sell recommendations.",
       inputSchema: z.object({
         maxArticles: z
           .number()
@@ -200,31 +196,50 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
                 : "No suitable equity tickers for news matching (e.g. unsupported symbols).",
           };
         }
-        const norm = tickers.map(normalizePortfolioNewsSymbol);
-        const fromDb = await listPortfolioNewsForTickers(norm, 500);
-        const ranked = rankPortfolioNewsForTickers(fromDb, tickers);
-        const limit = maxArticles ?? 15;
-        const slice = ranked.slice(0, limit);
-        if (slice.length === 0) {
-          return {
-            articles: [] as const,
-            coverageTickers: tickers,
-            note:
-              "No cached headlines yet for these symbols. Opening Portfolio News in the app once refreshes the feed when data providers are configured.",
-          };
-        }
+        // Cap refresh to top holdings by weight order already used for news matching
+        const result = await ensureTickerNews(ctx.userId, tickers.slice(0, 8), {
+          maxArticles: maxArticles ?? 15,
+        });
         return {
-          articles: slice.map((a) => ({
-            title: a.title,
-            source: a.source,
-            publishedAt: a.publishedAt,
-            excerpt: (a.summary || "").slice(0, 400),
-            tickers: [...new Set(a.tickerSentiment.map((t) => t.ticker))].slice(0, 10),
-            sentiment: a.overallSentiment || undefined,
-          })),
-          coverageTickers: tickers,
+          ...result,
           replyHint:
             "Summarize in 2-4 bullet points in the user's language: main themes tied to their holdings; mention tickers only when helpful; not investment advice.",
+        };
+      },
+    }),
+
+    getTickerNews: tool({
+      description:
+        "Load recent news headlines for one or more specific tickers (e.g. UBER, AAPL). ALWAYS call this (and usually getQuote) when the user asks why a stock or sector moved, what happened to a company, catalysts, or recent press about a named ticker — do NOT ask permission and do NOT answer with generic market-factor lists until you have tried this tool. Refreshes stale cache when a provider is configured. Summarize 2-4 themes from the headlines; never invent catalysts not supported by the results.",
+      inputSchema: z.object({
+        tickers: z
+          .array(z.string().min(1).max(20))
+          .min(1)
+          .max(5)
+          .describe("Tickers to fetch news for (e.g. ['UBER'] or ['UBER','META'])."),
+        maxArticles: z
+          .number()
+          .int()
+          .min(3)
+          .max(20)
+          .optional()
+          .describe("Maximum headlines to return (default 12)."),
+      }),
+      execute: async ({ tickers, maxArticles }) => {
+        ctx.emitStep(`Loading news for ${tickers.join(", ")}…`);
+        if (ctx.isDemo) {
+          return {
+            articles: [] as const,
+            note: "Demo mode has no live news cache.",
+          };
+        }
+        const result = await ensureTickerNews(ctx.userId, tickers, {
+          maxArticles: maxArticles ?? 12,
+        });
+        return {
+          ...result,
+          replyHint:
+            "Ground the answer in these headlines + any getQuote day-change data. If empty, say you found no recent headlines — do not invent reasons. Not investment advice.",
         };
       },
     }),

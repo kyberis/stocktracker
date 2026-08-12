@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>trefolio — Company Pitch Deck</title>
+  <style>
+    :root {
+      --bg: #0c1117;
+      --surface: #141b24;
+      --text: #e8eef4;
+      --muted: #8b9aab;
+      --line: #243041;
+      --accent: #76b900; /* NVIDIA green as partner cue */
+      --accent-soft: rgba(118, 185, 0, 0.12);
+      --warn: #f0c14a;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #06090d;
+      color: var(--text);
+      font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    }
+
+    .deck {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .slide {
+      display: none;
+      height: 100vh;
+      padding: 4.5rem 5.5rem 3.5rem;
+      background:
+        radial-gradient(900px 420px at 85% -10%, rgba(118, 185, 0, 0.08), transparent 55%),
+        linear-gradient(180deg, #101720 0%, var(--bg) 55%);
+      position: relative;
+    }
+    .slide.active { display: flex; flex-direction: column; }
+
+    .slide::after {
+      content: attr(data-num);
+      position: absolute;
+      right: 2.5rem;
+      bottom: 1.6rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+    }
+
+    h1 {
+      font-family: "IBM Plex Serif", Georgia, serif;
+      font-weight: 600;
+      font-size: 3.1rem;
+      line-height: 1.12;
+      margin: 0 0 1rem;
+      max-width: 18ch;
+    }
+    h2 {
+      font-family: "IBM Plex Serif", Georgia, serif;
+      font-weight: 600;
+      font-size: 2.35rem;
+      line-height: 1.15;
+      margin: 0 0 1.4rem;
+    }
+    h3 {
+      margin: 0 0 0.45rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    p, li {
+      font-size: 1.12rem;
+      line-height: 1.45;
+      color: var(--text);
+    }
+    .muted { color: var(--muted); }
+    .lead {
+      font-size: 1.35rem;
+      max-width: 42rem;
+      color: #d5dee8;
+      margin: 0 0 1.5rem;
+    }
+    .kicker {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.78rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    .brand {
+      font-family: "IBM Plex Serif", Georgia, serif;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+    .footer-meta {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--line);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      flex: 1;
+      align-content: start;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      flex: 1;
+      align-content: start;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1.15rem 1.25rem;
+    }
+    .card.accent {
+      background: var(--accent-soft);
+      border-color: rgba(118, 185, 0, 0.35);
+    }
+
+    ul.clean {
+      margin: 0;
+      padding-left: 1.15rem;
+    }
+    ul.clean li { margin-bottom: 0.55rem; }
+    ul.clean li::marker { color: var(--accent); }
+
+    .big-stat {
+      font-family: "IBM Plex Serif", Georgia, serif;
+      font-size: 2.4rem;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .hint {
+      font-size: 0.82rem;
+      color: var(--warn);
+      margin-top: 0.35rem;
+    }
+
+    .nav {
+      position: fixed;
+      left: 50%;
+      bottom: 1.1rem;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.5rem;
+      z-index: 20;
+      background: rgba(10, 14, 20, 0.85);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.35rem 0.5rem;
+      backdrop-filter: blur(8px);
+    }
+    .nav button {
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .nav button:hover { background: #1c2633; }
+    .nav .count { color: var(--muted); padding: 0.4rem 0.5rem; font-size: 0.8rem; }
+
+    @media print {
+      .nav { display: none; }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        height: 100vh;
+      }
+      .slide::after { content: none; }
+    }
+
+    @media (max-width: 900px) {
+      .slide { padding: 2rem 1.4rem 4.5rem; }
+      h1 { font-size: 2.1rem; }
+      h2 { font-size: 1.7rem; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="deck" id="deck">
+
+    <!-- 1 -->
+    <section class="slide active" data-num="01 / 06">
+      <div class="kicker">Company pitch · NVIDIA program</div>
+      <h1>trefolio — AI-native portfolio intelligence for Europe</h1>
+      <p class="lead">
+        Portfolio data, tax context and multi-agent company research in one product — not a tracker with a chatbot stuck on top. MCP so investors bring their own model; Leaf device as the subscription hook.
+      </p>
+      <div class="footer-meta">
+        <span class="brand">trefolio</span>
+        <span>Confidential · 2026</span>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide" data-num="02 / 06">
+      <div class="kicker">Problem → solution</div>
+      <h2>Fragmented EU books. Shallow AI. We fix both.</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Problem</h3>
+          <ul class="clean">
+            <li>Holdings split across brokers, currencies and cash</li>
+            <li>US tools ignore EU tax, FX and local brokers</li>
+            <li>Generic AI chat ≠ research on <em>your</em> portfolio</li>
+            <li>Deep company analysis is slow and expensive to repeat</li>
+          </ul>
+        </div>
+        <div class="card accent">
+          <h3>trefolio</h3>
+          <ul class="clean">
+            <li><strong>Portfolio OS</strong> — EUR base, broker import, dividends, EU tax, web + mobile</li>
+            <li><strong>Agents</strong> — Warren / Clara / Will on live holdings</li>
+            <li><strong>Company research</strong> — multi-agent screening + evidence reports</li>
+            <li><strong>MCP</strong> — Claude, Cursor or any client; you pick the model, we supply fresh data</li>
+            <li><strong>Leaf</strong> — desk display: free glance, paid AI unlock</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide" data-num="03 / 06">
+      <div class="kicker">AI-native · where we need NVIDIA</div>
+      <h2>Company analysis is the product — and the cost center</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>What we ship</h3>
+          <ul class="clean">
+            <li>Specialized agents (hard data, IR, web/sentiment, risk, compiler, QA)</li>
+            <li>Holding AI, narratives, screening DAG, Agent Office</li>
+            <li>MCP: live holdings, quotes, dividends, tax, research tools</li>
+            <li>35 languages · EU-first product work</li>
+          </ul>
+        </div>
+        <div class="card accent">
+          <h3>What we need</h3>
+          <p class="muted">Light chat is solved. Institutional-depth company research needs stronger models, longer context and more parallel calls per ticker.</p>
+          <ul class="clean">
+            <li>Today: cloud APIs — growth engine and cost center</li>
+            <li>Ask: NVIDIA GPU / NIM for heavier models, RAG over financial corpora, hybrid self-hosted inference</li>
+            <li>Outcome: deeper research <em>without</em> raising subscription price</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide" data-num="04 / 06">
+      <div class="kicker">Market · moat · business</div>
+      <h2>Affordable AI sub. Device as the wedge.</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Who + where</h3>
+          <p class="muted">EU retail / serious DIY (~30–55), multi-broker. Pays for tax help, research quality, time. US apps under-serve FX + brokers + tax.</p>
+        </div>
+        <div class="card">
+          <h3>Differentiators</h3>
+          <p class="muted"><strong>MCP + portfolio truth</strong> — your model, our live data. <strong>Lean ops</strong> — keep sub low while quality rises. <strong>Leaf</strong> — hardware hook; subscription is the business.</p>
+        </div>
+        <div class="card accent">
+          <h3>Model</h3>
+          <p class="muted"><strong>Folio</strong> free · <strong>Trefolio ~€7.99/mo</strong> full AI · <strong>Leaf ~€149+</strong> desk hook. Flywheel: cheaper inference → affordable sub → more Leaf → more paid seats → more GPU use.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide" data-num="05 / 06">
+      <div class="kicker">Ask · traction</div>
+      <h2>Partner with NVIDIA to scale research depth</h2>
+      <div class="grid-2">
+        <div class="card accent">
+          <h3>Ask</h3>
+          <ul class="clean">
+            <li>Inception / partner access + technical guidance</li>
+            <li>GPU credits for company-analysis model R&amp;D</li>
+            <li>Path to production NIM for screening + narrative agents</li>
+            <li>Edge path: Leaf + future on-device summaries</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Traction <span class="muted" style="font-weight:400;">· prod analytics</span></h3>
+          <div class="grid-3" style="margin-top:0.75rem;">
+            <div>
+              <div class="big-stat">238</div>
+              <h3>Registered users</h3>
+              <p class="muted" style="margin:0;font-size:0.85rem;">+30 signups / 30d</p>
+            </div>
+            <div>
+              <div class="big-stat">45</div>
+              <h3>MAU (30d)</h3>
+              <p class="muted" style="margin:0;font-size:0.85rem;">32 active / 7d</p>
+            </div>
+            <div>
+              <div class="big-stat">619</div>
+              <h3>AI calls / 30d</h3>
+              <p class="muted" style="margin:0;font-size:0.85rem;">Screening + company analysis lead</p>
+            </div>
+          </div>
+          <p class="muted" style="margin-top:0.9rem; margin-bottom:0; font-size:0.9rem;">
+            Also: 66 company-analysis reports cached · 22 screening runs · early Stripe checkout live (14 customers). Monetization still early — AI research volume is the growth signal.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="slide" data-num="06 / 06">
+      <div class="kicker">Close</div>
+      <h1>The research desk European investors deserved</h1>
+      <p class="lead">
+        Agent-driven company analysis on real portfolios · MCP for bring-your-own-model · Leaf locks the habit · NVIDIA keeps the sub affordable as depth grows.
+      </p>
+      <div class="footer-meta">
+        <span>trefolio.com · hello@trefolio.com</span>
+        <span>Thank you</span>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav" aria-label="Slide navigation">
+    <button type="button" id="prev">←</button>
+    <span class="count" id="count">1 / 6</span>
+    <button type="button" id="next">→</button>
+  </div>
+
+  <script>
+    const slides = [...document.querySelectorAll(".slide")];
+    let i = 0;
+    const count = document.getElementById("count");
+
+    function show(n) {
+      i = (n + slides.length) % slides.length;
+      slides.forEach((s, idx) => s.classList.toggle("active", idx === i));
+      count.textContent = `${i + 1} / ${slides.length}`;
+    }
+
+    document.getElementById("prev").onclick = () => show(i - 1);
+    document.getElementById("next").onclick = () => show(i + 1);
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); show(i + 1); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); show(i - 1); }
+    });
+  </script>
+</body>
+</html>

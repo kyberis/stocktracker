@@ -6,6 +6,7 @@ export * from "./transactions-list";
 export * from "./dividend-summary";
 export * from "./screener-query";
 export * from "./portfolio-news";
+export * from "./ensure-ticker-news";
 export * from "./service-result";
 export * from "./tax-report";
 export * from "./portfolio-score-read";

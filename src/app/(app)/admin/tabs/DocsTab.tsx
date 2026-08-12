@@ -107,14 +107,18 @@ function DocsTab() {
 
   const dirLabels: Record<string, string> = {
     docs: "Planning & Strategy",
+    "docs/company": "Company & Pitch",
     public: "Public Assets",
+    "public/docs": "Public Docs",
     "lilygo-t4s3": "Device Mockups",
     root: "Root",
   };
 
   const dirIcons: Record<string, string> = {
     docs: "📊",
+    "docs/company": "🎯",
     public: "🌐",
+    "public/docs": "📄",
     "lilygo-t4s3": "📱",
     root: "📁",
   };
