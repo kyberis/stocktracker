@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.155",
+    date: "2026-08-12",
+    title: "All Assets day change matches headline",
+    titleTranslations: {
+      es: "El cambio diario de Todos los activos coincide con el titular",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "All Assets day % is computed in one pass with each asset class and wired to the invested-assets headline, so the matrix can no longer show a small green gain while the headline shows a large daily loss.",
+        translations: {
+          es: "El % de hoy de Todos los activos se calcula en una sola pasada con cada clase y alimenta el titular de activos invertidos, para que la matriz ya no pueda mostrar una pequeña subida en verde mientras el titular muestra una pérdida fuerte del día.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.154",
     date: "2026-08-12",
     title: "portfolio_first empty state layout fix",
@@ -24,6 +41,13 @@ export const releaseNotes: ReleaseEntry[] = [
       es: "Corrección de layout portfolio_first",
     },
     changes: [
+      {
+        type: "improvement",
+        text: "Admin Docs: NVIDIA company pitch deck available under Company & Pitch (docs/company).",
+        translations: {
+          es: "Admin Docs: pitch deck NVIDIA disponible en Company & Pitch (docs/company).",
+        },
+      },
       {
         type: "fix",
         text: "Empty activation portfolio_first: Import and Add sit in an equal two-column grid again; Import keeps a Recommended badge instead of a full-width + narrow stacked layout.",

@@ -2592,10 +2592,10 @@ const de: TranslationStrings = {
     "Diese Matrix zeigt die Rendite nach Anlageklasse und Zeitraum. Prozentwerte beziehen sich auf den Wert zu Beginn des jeweiligen Zeitraums.",
   matrixExplainerTodayTitle: "Heute",
   matrixExplainerTodayBody:
-    "Die Tagesrendite ist Tages-P/L geteilt durch den Schlusswert von gestern (× 100). Bei Aktien und ETFs zählen nur Positionen, deren Markt heute geöffnet war; Krypto zählt immer.",
+    "Die Tagesrendite ist Tages-P/L geteilt durch den Schlusswert von gestern (× 100). Jede bewertete Position zählt (gleiche Regeln wie die Tagesänderung neben dem investierten Vermögen).",
   matrixExplainerAllAssetsTitle: "Alle Assets vs. einzelne Klassen",
   matrixExplainerAllAssetsBody:
-    "Jede Klassenzeile zeigt die durchschnittliche Rendite dieser Gruppe. Alle Assets kombiniert das gesamte Portfolio: steigt eine Klasse und fällt eine andere, kann das Total nahe 0% liegen.",
+    "Alle Assets ist die wertgewichtete Kombination aller Klassen. Sie muss mit der Tagesänderung in der Kopfzeile übereinstimmen und kann nicht steigen, wenn die dominante Klasse stark fällt.",
   matrixExplainerPeriodsTitle: "Woche, Monat, Jahr und länger",
   matrixExplainerPeriodsBody:
     "Längere Spalten vergleichen den aktuellen Wert mit einem vergangenen Datum anhand täglicher Portfolio-Snapshots oder historischer Kurse. Horizonte 3J, 5J, 10J und Gesamt erfordern Pro.",

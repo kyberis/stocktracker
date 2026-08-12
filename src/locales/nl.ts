@@ -2591,10 +2591,10 @@ const nl: TranslationStrings = {
     "Deze matrix toont rendement per activaklasse en periode. Percentages zijn relatief ten opzichte van de waarde aan het begin van elke periode.",
   matrixExplainerTodayTitle: "Vandaag",
   matrixExplainerTodayBody:
-    "Het dagrendement is dag-P/L gedeeld door de slotwaarde van gisteren (× 100). Voor aandelen en ETF's tellen alleen posities waarvan de markt vandaag open was; crypto telt altijd mee.",
+    "Het dagrendement is dag-P/L gedeeld door de slotwaarde van gisteren (× 100). Elke geprijsde positie telt mee (zelfde regels als de dagverandering naast belegde activa).",
   matrixExplainerAllAssetsTitle: "Alle activa vs. elke klasse",
   matrixExplainerAllAssetsBody:
-    "Elke klassenrij toont het gemiddelde rendement van die groep. Alle activa combineert het hele portfolio: stijgt de ene klasse en daalt de andere, kan het totaal dicht bij 0% liggen.",
+    "Alle activa is de naar waarde gewogen combinatie van alle klassen. Die moet overeenkomen met de dagverandering in de kop; die kan niet stijgen als de dominante klasse sterk daalt.",
   matrixExplainerPeriodsTitle: "Week, maand, jaar en langer",
   matrixExplainerPeriodsBody:
     "Langere kolommen vergelijken de huidige waarde met een datum in het verleden via dagelijkse portfolio-snapshots of historische koersen. Horizonten 3J, 5J, 10J en Totaal vereisen Pro.",

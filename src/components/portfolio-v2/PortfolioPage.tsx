@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
-import { computeDayChangeByType, computeDayChangeHeadline } from "@/lib/day-change-pct";
+import { computeDayChangeByType } from "@/lib/day-change-pct";
 import { convertCurrency } from "@/lib/utils";
 import { cashAmountEUR } from "@/lib/fixed-return-cash";
 import { liquidCashEntries } from "@/lib/portfolio-summary-cash";
@@ -80,22 +80,20 @@ export default function PortfolioPage() {
   );
   const investedValueBase = Math.max(0, totals.totalCurrentEUR - cashValueBase);
 
-  const dayChangePctByType = useMemo(
-    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency, undefined, cashEntries).pct,
+  const dayChangeByType = useMemo(
+    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency, undefined, cashEntries),
     [holdings, cashEntries, quotes, exchangeRates, baseCurrency],
   );
 
+  const dayChangePctByType = dayChangeByType.pct;
+
   const { dayGainLoss, dayGainLossPercent } = useMemo(() => {
-    const headline = computeDayChangeHeadline(
-      filteredHoldings,
-      quotes,
-      exchangeRates,
-      baseCurrency,
-      undefined,
-      effectiveCash,
-    );
-    return { dayGainLoss: headline.abs, dayGainLossPercent: headline.pct };
-  }, [filteredHoldings, effectiveCash, quotes, exchangeRates, baseCurrency]);
+    const key = assetFilter;
+    return {
+      dayGainLoss: dayChangeByType.abs[key] ?? 0,
+      dayGainLossPercent: dayChangePctByType[key] ?? 0,
+    };
+  }, [assetFilter, dayChangeByType, dayChangePctByType]);
 
   const handleBackfillComplete = useCallback(() => {
     setRefreshKey((k) => k + 1);

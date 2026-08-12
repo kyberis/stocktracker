@@ -2789,10 +2789,10 @@ const en: TranslationStrings = {
     "This matrix shows return by asset class and time period. Percentages are relative to the value at the start of each period.",
   matrixExplainerTodayTitle: "Today",
   matrixExplainerTodayBody:
-    "Today's return is day P/L divided by yesterday's closing value (× 100). For stocks and ETFs we only include holdings whose market opened today; crypto always counts.",
+    "Today's return is day P/L divided by yesterday's closing value (× 100). Every priced holding counts (same rules as the headline next to invested assets).",
   matrixExplainerAllAssetsTitle: "All Assets vs. each class",
   matrixExplainerAllAssetsBody:
-    "Each class row shows that bucket's average return. All Assets combines every holding: if one class rises and another falls, the total can be near 0% even when individual classes move.",
+    "All Assets is the value-weighted combination of every class (stocks, ETFs, funds, crypto, fixed return). It must match the headline day change; it cannot be up when the dominant class is sharply down.",
   matrixExplainerPeriodsTitle: "Week, month, year and longer",
   matrixExplainerPeriodsBody:
     "Longer columns compare today's value with a past date using daily portfolio snapshots when available, or historical prices otherwise. Horizons 3Y, 5Y, 10Y and All require Pro.",

@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { computeDayChangeByType } from "@/lib/day-change-pct";
-import { getDayChange } from "@/lib/portfolio/metrics";
 import { convertCurrency } from "@/lib/utils";
 import { cashAmountEUR } from "@/lib/fixed-return-cash";
 import { liquidCashEntries } from "@/lib/portfolio-summary-cash";
@@ -95,15 +94,15 @@ export function usePortfolioHomeData(
 
   const dayChangePctByType = dayChangeByType.pct;
 
+  // Headline must use the same sleeve numbers as the matrix / pills (including
+  // fixed-return). When a type filter is active, show that sleeve's day move.
   const { dayGainLoss, dayGainLossPercent } = useMemo(() => {
-    const headline = getDayChange(
-      filteredHoldings,
-      quotes,
-      exchangeRates,
-      baseCurrency,
-    );
-    return { dayGainLoss: headline.amount, dayGainLossPercent: headline.pct };
-  }, [filteredHoldings, quotes, exchangeRates, baseCurrency]);
+    const key = assetFilter;
+    return {
+      dayGainLoss: dayChangeByType.abs[key] ?? 0,
+      dayGainLossPercent: dayChangePctByType[key] ?? 0,
+    };
+  }, [assetFilter, dayChangeByType, dayChangePctByType]);
 
   const handleBackfillComplete = useCallback(() => {
     setRefreshKey((k) => k + 1);

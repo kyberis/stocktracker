@@ -138,4 +138,19 @@ describe("computeDayChangeByType", () => {
     expect(headline.abs).toBeCloseTo(onlyOk.abs!, 4);
     expect(headline.pct).toBeCloseTo(onlyOk.pct!, 4);
   });
+
+  it("all assets day % stays near the stock-weighted portfolio move (screenshot regression)", () => {
+    const holdings = [
+      holding("STK", "stock", 100, 712, -15.7, "NMS"),
+      holding("BTC", "crypto", 1, 7255, 0.7, "CRYPTO"),
+    ];
+    const quotes: Record<string, QuoteData> = {
+      STK: quote("STK", 712, -15.7),
+      BTC: quote("BTC", 7255, 0.7),
+    };
+    const { pct, abs } = computeDayChangeByType(holdings, quotes, EUR_RATES, "EUR", MARKET_NOW);
+    expect(pct.stock!).toBeLessThan(-2);
+    expect(pct.all!).toBeLessThan(-1.5);
+    expect(abs.all).toBeCloseTo((abs.stock ?? 0) + (abs.crypto ?? 0), 8);
+  });
 });

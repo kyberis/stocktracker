@@ -2580,10 +2580,10 @@ const fr: TranslationStrings = {
     "Ce tableau montre le rendement par classe d'actifs et par période. Les pourcentages sont relatifs à la valeur au début de chaque période.",
   matrixExplainerTodayTitle: "Aujourd'hui",
   matrixExplainerTodayBody:
-    "Le rendement du jour est le P/L du jour divisé par la valeur de clôture d'hier (× 100). Pour les actions et ETF, seules les positions dont le marché a ouvert aujourd'hui comptent ; la crypto compte toujours.",
+    "Le rendement du jour est le P/L du jour divisé par la valeur de clôture d'hier (× 100). Chaque position cotée compte (mêmes règles que le changement du jour à côté des actifs investis).",
   matrixExplainerAllAssetsTitle: "Total vs. chaque classe",
   matrixExplainerAllAssetsBody:
-    "Chaque ligne de classe montre le rendement moyen de ce groupe. Total combine tout le portefeuille : si une classe monte et une autre baisse, le total peut être proche de 0 % même si les classes bougent.",
+    "Total est la combinaison pondérée par valeur de toutes les classes. Il doit correspondre au changement du jour en en-tête ; il ne peut pas monter si la classe dominante baisse fortement.",
   matrixExplainerPeriodsTitle: "Semaine, mois, année et plus",
   matrixExplainerPeriodsBody:
     "Les colonnes longues comparent la valeur actuelle à une date passée via les snapshots quotidiens du portefeuille ou les prix historiques. Les horizons 3A, 5A, 10A et Total nécessitent Pro.",

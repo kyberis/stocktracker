@@ -2592,10 +2592,10 @@ const pt: TranslationStrings = {
     "Esta matriz mostra o retorno por classe de ativos e período. As percentagens são relativas ao valor no início de cada período.",
   matrixExplainerTodayTitle: "Hoje",
   matrixExplainerTodayBody:
-    "O retorno de hoje é P/L do dia dividido pelo valor de fecho de ontem (× 100). Em ações e ETFs só entram posições cujo mercado abriu hoje; cripto conta sempre.",
+    "O retorno de hoje é P/L do dia dividido pelo valor de fecho de ontem (× 100). Todas as posições com preço contam (as mesmas regras que a variação do dia junto aos ativos investidos).",
   matrixExplainerAllAssetsTitle: "Todos os ativos vs. cada classe",
   matrixExplainerAllAssetsBody:
-    "Cada linha de classe mostra o retorno médio desse grupo. Todos os ativos soma todo o portfólio: se uma classe sobe e outra desce, o total pode ficar perto de 0% mesmo com movimento nas classes.",
+    "Todos os ativos é a combinação ponderada por valor de cada classe. Deve coincidir com a variação do dia no cabeçalho; não pode subir se a classe dominante cair com força.",
   matrixExplainerPeriodsTitle: "Semana, mês, ano e mais",
   matrixExplainerPeriodsBody:
     "Colunas longas comparam o valor atual com uma data passada usando snapshots diários do portfólio ou preços históricos. Horizontes 3A, 5A, 10A e Total requerem Pro.",
