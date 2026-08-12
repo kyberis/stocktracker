@@ -2152,6 +2152,7 @@ const es: TranslationStrings = {
   portfolioValue: "Valor del Portafolio",
   totalNetWorth: "Patrimonio Neto Total",
   addManualAsset: "Añadir Activo Manual",
+  editManualAsset: "Editar activo manual",
   manualAssets: "Activos y Cuentas",
   realEstate: "Inmuebles",
   savingsAccounts: "Cuentas de Ahorro",

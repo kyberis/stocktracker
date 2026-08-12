@@ -17,8 +17,8 @@ Users record principal, start date, term (months), and total return %. trefolio 
 
 | Type | Path | Notes |
 |------|------|-------|
-| Modal | [`src/components/AddManualAssetModal.tsx`](../../src/components/AddManualAssetModal.tsx) | Type tile “Fixed return”. |
-| List | [`src/components/MarketAndCash.tsx`](../../src/components/MarketAndCash.tsx) | Progress / matured badge. |
+| Modal | [`src/components/AddManualAssetModal.tsx`](../../src/components/AddManualAssetModal.tsx) | Type tile “Fixed return”; same modal edits via `editEntry`. |
+| List | [`src/components/MarketAndCash.tsx`](../../src/components/MarketAndCash.tsx) | Progress / matured badge; Edit opens schedule modal. |
 | API | [`src/app/api/cash/route.ts`](../../src/app/api/cash/route.ts) | Create/update via cash endpoints. |
 
 ## 4. Data model
@@ -90,7 +90,7 @@ Before start → 0; on/after maturity → maturityValue.
 ## 13. Edge cases & gotchas
 
 - Leap years: progress is day-based between start and maturity.
-- Editing accrued amount in the cash quick-edit UI does not change the schedule; prefer delete/re-add or PUT with schedule fields.
+- Editing accrued amount in the cash quick-edit UI does not change the schedule; use **Edit** on the fixed-return row to open the schedule modal (start date, term, return %, principal).
 - Chart overlay is client-side; snapshot cron remains holdings-only.
 - Accrual “as of” must use the **browser local calendar date** (`todayLocal()`), not the Vercel UTC date — otherwise a start date of “today” can show €0 until UTC midnight. Client context + portfolio totals re-enrich on read.
 - Home v2 must render `MarketAndCash` (Assets & Accounts); the holdings table alone never lists fixed-return rows.

@@ -716,6 +716,7 @@ export function PortfolioProvider({
     } catch (err) {
       setCashEntriesEnriched(previous);
       setError(err instanceof Error ? err.message : "Failed to update cash entry");
+      throw err;
     }
   }, [cashEntries]);
 

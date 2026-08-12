@@ -36,8 +36,12 @@ export default function CashBalances() {
   const saveEdit = async (id: string) => {
     const parsedAmount = parseFloat(editAmount);
     if (!editName.trim() || Number.isNaN(parsedAmount) || parsedAmount < 0) return;
-    await updateCashEntry(id, { name: editName.trim(), amountEUR: parsedAmount });
-    setEditingId(null);
+    try {
+      await updateCashEntry(id, { name: editName.trim(), amountEUR: parsedAmount });
+      setEditingId(null);
+    } catch {
+      // Error is surfaced via portfolio context
+    }
   };
 
   return (

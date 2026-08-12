@@ -1989,6 +1989,7 @@ const fr: TranslationStrings = {
   portfolioValue: "Valeur du portefeuille",
   totalNetWorth: "Valeur nette totale",
   addManualAsset: "Ajouter un actif manuel",
+  editManualAsset: "Modifier l'actif manuel",
   manualAssets: "Actifs et comptes",
   realEstate: "Immobilier",
   savingsAccounts: "Comptes d'épargne",

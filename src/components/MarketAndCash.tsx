@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, memo } from "react";
+import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent, todayLocal } from "@/lib/utils";
@@ -12,6 +13,8 @@ import { useAuth } from "@/lib/auth-context";
 import { useTrack } from "@/lib/use-track";
 import type { Holding, CashEntry, ManualAssetType } from "@/lib/types";
 import { fixedReturnProgress, isFixedReturnMatured, maturityDateFor } from "@/lib/fixed-return";
+
+const AddManualAssetModal = dynamic(() => import("./AddManualAssetModal"), { ssr: false });
 
 interface IndexQuote {
   symbol: string;
@@ -124,6 +127,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editAmount, setEditAmount] = useState("");
+  const [editAssetEntry, setEditAssetEntry] = useState<CashEntry | null>(null);
   const [movingCashId, setMovingCashId] = useState<string | null>(null);
   const [moveCashLoading, setMoveCashLoading] = useState(false);
 
@@ -233,8 +237,12 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
   const saveEdit = async (id: string) => {
     const parsed = parseFloat(editAmount);
     if (!editName.trim() || Number.isNaN(parsed) || parsed < 0) return;
-    await updateCashEntry(id, { name: editName.trim(), amountEUR: parsed });
-    setEditingId(null);
+    try {
+      await updateCashEntry(id, { name: editName.trim(), amountEUR: parsed });
+      setEditingId(null);
+    } catch {
+      // Error is surfaced via portfolio context
+    }
   };
 
   const changeColor = (val: number) =>
@@ -507,7 +515,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                                   if (matured) return t("fixedReturnMatured");
                                   const pct = Math.round(fixedReturnProgress(params, asOf) * 100);
                                   const maturity = maturityDateFor(params);
-                                  return `${pct}% · ${t("fixedReturnMaturityDate")} ${maturity ?? ""}`;
+                                  return `${t("fixedReturnStartDate")} ${entry.startDate} · ${pct}% · ${t("fixedReturnMaturityDate")} ${maturity ?? ""}`;
                                 })()}
                               </span>
                             )}
@@ -519,10 +527,16 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                             <span className="text-sm font-medium tabular-nums text-[color:var(--foreground)]">
                               {formatCurrency(entry.amountEUR, baseCurrency)}
                             </span>
-                            <div className="hidden group-hover:flex items-center gap-1">
+                            <div className="flex items-center gap-1 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                               <button
-                                onClick={() => startEdit(entry.id, entry.name, entry.amountEUR)}
-                                className="rounded p-0.5 text-[color:var(--muted)] transition-colors hover:text-emerald-400"
+                                onClick={() => {
+                                  if (entry.type && entry.type !== "cash") {
+                                    setEditAssetEntry(entry);
+                                    return;
+                                  }
+                                  startEdit(entry.id, entry.name, entry.amountEUR);
+                                }}
+                                className="rounded p-1.5 min-h-9 min-w-9 inline-flex items-center justify-center text-[color:var(--muted)] transition-colors hover:text-emerald-400"
                                 title={t("editValues")}
                                 aria-label={t("editValues")}
                               >
@@ -609,6 +623,13 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
           </div>
         </div>
       </div>
+      {editAssetEntry && (
+        <AddManualAssetModal
+          isOpen={!!editAssetEntry}
+          editEntry={editAssetEntry}
+          onClose={() => setEditAssetEntry(null)}
+        />
+      )}
     </div>
   );
 }

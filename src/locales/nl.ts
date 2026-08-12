@@ -1988,6 +1988,7 @@ const nl: TranslationStrings = {
   portfolioValue: "Portefeuille Waarde",
   totalNetWorth: "Totaal Netto Vermogen",
   addManualAsset: "Voeg Handmatig Actief Toe",
+  editManualAsset: "Handmatig actief bewerken",
   manualAssets: "Activa & Rekening",
   realEstate: "Onroerend Goed",
   savingsAccounts: "Spaarrekeningen",

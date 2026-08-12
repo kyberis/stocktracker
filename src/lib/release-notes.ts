@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.149",
+    date: "2026-08-12",
+    title: "Edit fixed-return schedule",
+    titleTranslations: {
+      es: "Editar calendario de retorno fijo",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Edit fixed-return investments (e.g. Civislend) from Assets & Accounts — change start date, term, total return %, principal, and name in the same modal used to add them.",
+        translations: {
+          es: "Edita inversiones de retorno fijo (p. ej. Civislend) desde Activos y cuentas: cambia fecha de inicio, plazo, retorno total %, capital y nombre en el mismo modal de alta.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.148",
     date: "2026-08-12",
     title: "Fixed-return in asset breakdown cards",

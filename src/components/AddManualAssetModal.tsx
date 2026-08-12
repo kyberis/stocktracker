@@ -11,11 +11,13 @@ import {
   maturityValue,
   valueFixedReturnAt,
 } from "@/lib/fixed-return";
-import type { ManualAssetType } from "@/lib/types";
+import type { CashEntry, ManualAssetType } from "@/lib/types";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  /** When set, modal edits this entry instead of creating a new one. */
+  editEntry?: CashEntry | null;
 }
 
 const ASSET_TYPES: { type: ManualAssetType; icon: string; labelKey: string }[] = [
@@ -27,10 +29,11 @@ const ASSET_TYPES: { type: ManualAssetType; icon: string; labelKey: string }[] =
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "SEK", "NOK", "DKK", "CAD", "AUD", "PLN", "CZK", "HUF"];
 
-export default function AddManualAssetModal({ isOpen, onClose }: Props) {
-  const { addCashEntry } = usePortfolio();
+export default function AddManualAssetModal({ isOpen, onClose, editEntry = null }: Props) {
+  const { addCashEntry, updateCashEntry } = usePortfolio();
   const { t } = useI18n();
   const trapRef = useFocusTrap(isOpen, onClose);
+  const isEdit = !!editEntry;
 
   const [assetType, setAssetType] = useState<ManualAssetType>("savings");
   const [name, setName] = useState("");
@@ -54,8 +57,22 @@ export default function AddManualAssetModal({ isOpen, onClose }: Props) {
       setTermMonths("24");
       setTotalReturnPct("25");
       setError(null);
+      setSubmitting(false);
+      return;
     }
-  }, [isOpen]);
+    if (editEntry) {
+      const type = (editEntry.type ?? "cash") as ManualAssetType;
+      setAssetType(type === "cash" ? "savings" : type);
+      setName(editEntry.name);
+      setAmount(String(editEntry.displayAmount ?? editEntry.amountEUR ?? ""));
+      setCurrency(editEntry.displayCurrency || "EUR");
+      setNotes(editEntry.notes || "");
+      setStartDate(editEntry.startDate || todayLocal());
+      setTermMonths(String(editEntry.termMonths && editEntry.termMonths > 0 ? editEntry.termMonths : 24));
+      setTotalReturnPct(String(editEntry.totalReturnPct ?? 25));
+      setError(null);
+    }
+  }, [isOpen, editEntry]);
 
   const isFixed = assetType === "fixed_return";
 
@@ -97,10 +114,10 @@ export default function AddManualAssetModal({ isOpen, onClose }: Props) {
           { principal: parsed, startDate, termMonths: term, totalReturnPct: ret },
           todayLocal(),
         );
-        await addCashEntry({
+        const payload = {
           name: name.trim(),
           amountEUR: accrued,
-          type: "fixed_return",
+          type: "fixed_return" as const,
           displayCurrency: currency,
           displayAmount: parsed,
           notes: notes.trim(),
@@ -108,9 +125,14 @@ export default function AddManualAssetModal({ isOpen, onClose }: Props) {
           startDate,
           termMonths: term,
           totalReturnPct: ret,
-        });
+        };
+        if (isEdit && editEntry) {
+          await updateCashEntry(editEntry.id, payload);
+        } else {
+          await addCashEntry(payload);
+        }
       } else {
-        await addCashEntry({
+        const payload = {
           name: name.trim(),
           amountEUR: parsed,
           type: assetType,
@@ -118,11 +140,16 @@ export default function AddManualAssetModal({ isOpen, onClose }: Props) {
           displayAmount: parsed,
           notes: notes.trim(),
           valuationDate: todayLocal(),
-        });
+        };
+        if (isEdit && editEntry) {
+          await updateCashEntry(editEntry.id, payload);
+        } else {
+          await addCashEntry(payload);
+        }
       }
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add asset");
+      setError(err instanceof Error ? err.message : isEdit ? "Failed to update asset" : "Failed to add asset");
     } finally {
       setSubmitting(false);
     }
@@ -142,35 +169,49 @@ export default function AddManualAssetModal({ isOpen, onClose }: Props) {
         : assetType === "fixed_return" ? "e.g. Civislend"
           : "e.g. ING Tagesgeld";
 
+  const title = isEdit ? t("editManualAsset") : t("addManualAsset");
+  const submitLabel = isEdit ? t("saveChanges") : t("addAsset");
+  const activeMeta = ASSET_TYPES.find((a) => a.type === assetType);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm">
       <div
         ref={trapRef}
         role="dialog"
         aria-modal="true"
-        aria-label={t("addManualAsset")}
+        aria-label={title}
         className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-[480px] max-w-[92vw] max-h-[90vh] overflow-y-auto shadow-xl animate-in fade-in slide-in-from-bottom-2"
       >
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-5">
-          {t("addManualAsset")}
+          {title}
         </h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
-          {ASSET_TYPES.map(({ type, icon, labelKey }) => (
-            <button
-              key={type}
-              onClick={() => setAssetType(type)}
-              className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center ${
-                assetType === type
-                  ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                  : "border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-500"
-              }`}
-            >
-              <span className="text-xl">{icon}</span>
-              <span className="text-xs font-semibold">{t(labelKey as Parameters<typeof t>[0])}</span>
-            </button>
-          ))}
-        </div>
+        {isEdit ? (
+          <div className="mb-5 flex items-center gap-2 rounded-xl border border-sky-500/20 bg-sky-500/5 px-3 py-2.5">
+            <span className="text-xl" aria-hidden="true">{activeMeta?.icon ?? "📉"}</span>
+            <span className="text-sm font-semibold text-gray-800 dark:text-slate-200">
+              {t((activeMeta?.labelKey ?? "assetTypeFixedReturn") as Parameters<typeof t>[0])}
+            </span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+            {ASSET_TYPES.map(({ type, icon, labelKey }) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setAssetType(type)}
+                className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center ${
+                  assetType === type
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-500"
+                }`}
+              >
+                <span className="text-xl">{icon}</span>
+                <span className="text-xs font-semibold">{t(labelKey as Parameters<typeof t>[0])}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="mb-4">
           <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 mb-1.5">
@@ -303,15 +344,16 @@ export default function AddManualAssetModal({ isOpen, onClose }: Props) {
         )}
 
         <div className="flex items-center justify-end gap-3">
-          <button className="btn-secondary text-sm px-4 py-2" onClick={onClose}>
+          <button type="button" className="btn-secondary text-sm px-4 py-2" onClick={onClose}>
             {t("cancel")}
           </button>
           <button
+            type="button"
             className="btn-primary text-sm px-5 py-2 disabled:opacity-40 disabled:cursor-not-allowed"
             disabled={!canSubmit}
             onClick={handleSubmit}
           >
-            {submitting ? "…" : t("addAsset")}
+            {submitting ? "…" : submitLabel}
           </button>
         </div>
       </div>

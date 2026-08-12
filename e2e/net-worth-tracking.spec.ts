@@ -302,4 +302,46 @@ test.describe("Net Worth Tracking — UI", () => {
     // Fixed-return is invested capital — must not be labeled as liquid cash available
     await expect(page.getByText("Cash available for investment")).toHaveCount(0);
   });
+
+  test("update fixed_return schedule fields (startDate / term / return)", async ({ request }) => {
+    const creds = await createTestUser(request, false);
+    await ensureLoggedOut(request);
+    await request.post("/api/auth/login", {
+      data: { identifier: creds.email, password: creds.password },
+    });
+
+    const add = await request.post("/api/cash", {
+      data: {
+        name: "Civislend",
+        amountEUR: 1500,
+        type: "fixed_return",
+        displayCurrency: "EUR",
+        displayAmount: 1500,
+        startDate: "2026-08-12",
+        termMonths: 24,
+        totalReturnPct: 25,
+      },
+    });
+    expect(add.status()).toBe(201);
+    const entry = await add.json();
+
+    const update = await request.put("/api/cash", {
+      data: {
+        id: entry.id,
+        updates: {
+          startDate: "2026-01-15",
+          termMonths: 18,
+          totalReturnPct: 20,
+          displayAmount: 1500,
+        },
+      },
+    });
+    expect(update.status()).toBe(200);
+    const updated = await update.json();
+    expect(updated.startDate).toBe("2026-01-15");
+    expect(updated.termMonths).toBe(18);
+    expect(updated.totalReturnPct).toBe(20);
+    expect(updated.displayAmount).toBe(1500);
+    expect(updated.amountEUR).toBeGreaterThan(1500);
+  });
 });
