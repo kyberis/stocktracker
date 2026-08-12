@@ -92,6 +92,7 @@ const es: TranslationStrings = {
   emptyStateSubtitleJobChooser: "Elige por dónde empezar. Siempre podrás añadir posiciones después.",
   emptyStateImport: "Importar Cartera",
   emptyStateImportDesc: "Sube un CSV de tu bróker",
+  emptyStateRecommended: "Recomendado",
   emptyStateAddDesc: "Busca y añade una acción a la vez",
   emptyStateSample: "Probar con Ejemplo",
   emptyStateSampleDesc: "Explora con una cartera de demostración",

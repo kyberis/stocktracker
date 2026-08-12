@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.154",
+    date: "2026-08-12",
+    title: "portfolio_first empty state layout fix",
+    titleTranslations: {
+      es: "Corrección de layout portfolio_first",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Empty activation portfolio_first: Import and Add sit in an equal two-column grid again; Import keeps a Recommended badge instead of a full-width + narrow stacked layout.",
+        translations: {
+          es: "Empty activation portfolio_first: Importar y Agregar vuelven a una cuadrícula de dos columnas iguales; Importar mantiene la insignia Recomendado en lugar del layout ancho + estrecho apilado.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.153",
     date: "2026-08-12",
     title: "Experiment metrics catalog",

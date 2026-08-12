@@ -102,7 +102,7 @@ function LinkCard({
   description,
   testId,
   icon,
-  emphasized = false,
+  badge,
 }: {
   href: string;
   onClick: () => void;
@@ -111,7 +111,7 @@ function LinkCard({
   description: string;
   testId: string;
   icon: ReactNode;
-  emphasized?: boolean;
+  badge?: string;
 }) {
   const a = ACCENT[accent];
   return (
@@ -119,12 +119,19 @@ function LinkCard({
       href={href}
       onClick={onClick}
       data-testid={testId}
-      className={`group card flex flex-col items-center p-5 text-center transition-all hover:shadow-md ${a.hover} ${
-        emphasized ? `sm:col-span-2 ring-1 ${a.ring} sm:flex-row sm:items-center sm:gap-5 sm:text-left` : ""
+      className={`group card relative flex flex-col items-center p-5 text-center transition-all hover:shadow-md ${a.hover} ${
+        badge ? `ring-1 ${a.ring}` : ""
       }`}
     >
+      {badge && (
+        <span
+          className={`absolute right-3 top-3 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${a.iconBg} ${a.iconFg}`}
+        >
+          {badge}
+        </span>
+      )}
       <ActionIcon accent={accent}>{icon}</ActionIcon>
-      <div className={emphasized ? "sm:flex-1" : undefined}>
+      <div>
         <p className="mb-1 text-sm font-semibold text-gray-900 dark:text-white">{title}</p>
         <p className="text-xs text-gray-500 dark:text-slate-400">{description}</p>
       </div>
@@ -388,7 +395,7 @@ export default function EmptyPortfolio({
     return (
       <div className="space-y-6" data-testid="empty-activation" data-variant="portfolio_first">
         {hero}
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <LinkCard
             href="/import"
             accent="emerald"
@@ -396,22 +403,20 @@ export default function EmptyPortfolio({
             description={t("emptyStateImportDesc")}
             testId="empty-cta-import"
             icon={ICON_IMPORT}
-            emphasized
+            badge={t("emptyStateRecommended")}
             onClick={() => trackCta("import")}
           />
-          <div className="mx-auto w-full max-w-md">
-            <ButtonCard
-              accent="violet"
-              title={t("addStock")}
-              description={t("emptyStateAddDesc")}
-              testId="empty-cta-add"
-              icon={ICON_ADD}
-              onClick={() => {
-                trackCta("add");
-                onAddStock();
-              }}
-            />
-          </div>
+          <ButtonCard
+            accent="violet"
+            title={t("addStock")}
+            description={t("emptyStateAddDesc")}
+            testId="empty-cta-add"
+            icon={ICON_ADD}
+            onClick={() => {
+              trackCta("add");
+              onAddStock();
+            }}
+          />
         </div>
         <div className="space-y-3">
           <p className="text-center text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-slate-500">

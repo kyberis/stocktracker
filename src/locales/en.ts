@@ -92,6 +92,7 @@ const en: TranslationStrings = {
   emptyStateSubtitleJobChooser: "Pick a starting job. You can always add holdings later.",
   emptyStateImport: "Import Portfolio",
   emptyStateImportDesc: "Upload a CSV from your broker",
+  emptyStateRecommended: "Recommended",
   emptyStateAddDesc: "Search and add one stock at a time",
   emptyStateSample: "Try Sample Data",
   emptyStateSampleDesc: "Explore with a demo portfolio",
