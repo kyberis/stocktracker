@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-305 routes.
+309 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -16,6 +16,7 @@
 | `/api/admin/ai-logs` | GET | [`src/app/api/admin/ai-logs/route.ts`](../../src/app/api/admin/ai-logs/route.ts) |
 | `/api/admin/ai-models` | GET, PUT | [`src/app/api/admin/ai-models/route.ts`](../../src/app/api/admin/ai-models/route.ts) |
 | `/api/admin/analytics` | GET | [`src/app/api/admin/analytics/route.ts`](../../src/app/api/admin/analytics/route.ts) |
+| `/api/admin/anomalies` | GET, POST | [`src/app/api/admin/anomalies/route.ts`](../../src/app/api/admin/anomalies/route.ts) |
 | `/api/admin/api-key` | GET, PUT | [`src/app/api/admin/api-key/route.ts`](../../src/app/api/admin/api-key/route.ts) |
 | `/api/admin/backfill-snapshots` | POST | [`src/app/api/admin/backfill-snapshots/route.ts`](../../src/app/api/admin/backfill-snapshots/route.ts) |
 | `/api/admin/broker-integration-requests` | GET | [`src/app/api/admin/broker-integration-requests/route.ts`](../../src/app/api/admin/broker-integration-requests/route.ts) |
@@ -161,6 +162,7 @@
 | `/api/cron/lifecycle-activation` | GET, POST | [`src/app/api/cron/lifecycle-activation/route.ts`](../../src/app/api/cron/lifecycle-activation/route.ts) |
 | `/api/cron/lifecycle-winback` | GET, POST | [`src/app/api/cron/lifecycle-winback/route.ts`](../../src/app/api/cron/lifecycle-winback/route.ts) |
 | `/api/cron/moat-sync` | GET | [`src/app/api/cron/moat-sync/route.ts`](../../src/app/api/cron/moat-sync/route.ts) |
+| `/api/cron/portfolio-anomaly-scan` | GET, POST | [`src/app/api/cron/portfolio-anomaly-scan/route.ts`](../../src/app/api/cron/portfolio-anomaly-scan/route.ts) |
 | `/api/cron/portfolio-recommendations` | GET | [`src/app/api/cron/portfolio-recommendations/route.ts`](../../src/app/api/cron/portfolio-recommendations/route.ts) |
 | `/api/cron/portfolio-snapshots` | GET, POST | [`src/app/api/cron/portfolio-snapshots/route.ts`](../../src/app/api/cron/portfolio-snapshots/route.ts) |
 | `/api/cron/prodops-dispatch` | POST | [`src/app/api/cron/prodops-dispatch/route.ts`](../../src/app/api/cron/prodops-dispatch/route.ts) |
@@ -218,6 +220,7 @@
 | `/api/intelligence` | GET | [`src/app/api/intelligence/route.ts`](../../src/app/api/intelligence/route.ts) |
 | `/api/internal/account-deleted` | POST | [`src/app/api/internal/account-deleted/route.ts`](../../src/app/api/internal/account-deleted/route.ts) |
 | `/api/internal/ops-metrics` | GET | [`src/app/api/internal/ops-metrics/route.ts`](../../src/app/api/internal/ops-metrics/route.ts) |
+| `/api/internal/prodops-action` | POST | [`src/app/api/internal/prodops-action/route.ts`](../../src/app/api/internal/prodops-action/route.ts) |
 | `/api/internal/prodops-query` | POST | [`src/app/api/internal/prodops-query/route.ts`](../../src/app/api/internal/prodops-query/route.ts) |
 | `/api/internal/screening/worker` | POST | [`src/app/api/internal/screening/worker/route.ts`](../../src/app/api/internal/screening/worker/route.ts) |
 | `/api/internal/telegram-link-status` | GET | [`src/app/api/internal/telegram-link-status/route.ts`](../../src/app/api/internal/telegram-link-status/route.ts) |
@@ -252,6 +255,7 @@
 | `/api/portfolio/backfill-snapshots` | GET, POST | [`src/app/api/portfolio/backfill-snapshots/route.ts`](../../src/app/api/portfolio/backfill-snapshots/route.ts) |
 | `/api/portfolio/chart-chat` | POST | [`src/app/api/portfolio/chart-chat/route.ts`](../../src/app/api/portfolio/chart-chat/route.ts) |
 | `/api/portfolio/history` | GET | [`src/app/api/portfolio/history/route.ts`](../../src/app/api/portfolio/history/route.ts) |
+| `/api/portfolio/matrix-cell-explain` | POST | [`src/app/api/portfolio/matrix-cell-explain/route.ts`](../../src/app/api/portfolio/matrix-cell-explain/route.ts) |
 | `/api/portfolio/score` | GET, POST | [`src/app/api/portfolio/score/route.ts`](../../src/app/api/portfolio/score/route.ts) |
 | `/api/portfolio/share` | GET, POST, DELETE | [`src/app/api/portfolio/share/route.ts`](../../src/app/api/portfolio/share/route.ts) |
 | `/api/portfolio/snapshot` | POST | [`src/app/api/portfolio/snapshot/route.ts`](../../src/app/api/portfolio/snapshot/route.ts) |

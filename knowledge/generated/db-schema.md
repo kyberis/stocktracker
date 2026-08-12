@@ -52,6 +52,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `ops_event_outbox` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `passkeys` | [`src/lib/db/index.ts`](../../src/lib/db/index.ts) |
 | `platform_settings` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `portfolio_anomalies` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_news_article_symbols` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_news_articles` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `portfolio_news_symbol_fetch_meta` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
