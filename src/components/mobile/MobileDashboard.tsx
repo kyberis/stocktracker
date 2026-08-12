@@ -153,6 +153,7 @@ export default function MobileDashboard() {
     investedValueBase,
     dayGainLoss,
     dayGainLossPercent,
+    dayChangeByType,
     dayChangePctByType,
     refreshKey,
     recalculating,
@@ -378,6 +379,7 @@ export default function MobileDashboard() {
                       <MarketAwareBreakdown
                         holdings={holdings}
                         cashEntries={investmentCashOnly}
+                        dayChangeByType={dayChangeByType}
                         onFilterChange={setAssetFilter}
                         activeFilter={assetFilter}
                       />

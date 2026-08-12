@@ -8,7 +8,6 @@ import { ASSET_COLORS } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import {
   MATRIX_PERIOD_KEYS,
-  reconcileAllAssetsToday,
   type MatrixCell,
   type MatrixPeriodKey,
   type MatrixRow,
@@ -81,16 +80,13 @@ export default function PortfolioPerformanceMatrix({
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
   const [explainerOpen, setExplainerOpen] = useState(false);
-  const { rows: rawRows, loading, displayMode, setDisplayMode, baseCurrency } =
+  const { rows, loading, displayMode, setDisplayMode, baseCurrency } =
     usePortfolioPerformanceMatrix({
       holdings,
       cashEntries,
       refreshKey,
       dayChangePctByType,
     });
-
-  // Display invariant: All Assets today = weighted combo of class rows.
-  const rows = useMemo(() => reconcileAllAssetsToday(rawRows), [rawRows]);
 
   const columns = useMemo(
     () =>

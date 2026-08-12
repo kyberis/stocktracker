@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
-import { computeDayChangeByType } from "@/lib/day-change-pct";
+import { calculatePortfolioTotals, calculateTotalsByAssetType } from "@/lib/portfolio-summary";
+import { computeDayChangeByType, dayChangeForFilter, type DayChangeByType } from "@/lib/day-change-pct";
 import { convertCurrency } from "@/lib/utils";
 import { cashAmountEUR } from "@/lib/fixed-return-cash";
 import { liquidCashEntries } from "@/lib/portfolio-summary-cash";
@@ -32,6 +32,8 @@ export interface PortfolioHomeData {
   investedValueBase: number;
   dayGainLoss: number;
   dayGainLossPercent: number;
+  /** Shared day-change result — pass into pills + matrix; do not recompute. */
+  dayChangeByType: DayChangeByType;
   dayChangePctByType: Partial<Record<AssetFilter, number>>;
   refreshKey: number;
   recalculating: boolean;
@@ -75,7 +77,6 @@ export function usePortfolioHomeData(
     [filteredHoldings, effectiveCash, quotes, exchangeRates, baseCurrency],
   );
 
-  // Hero “Cash available for investment” — exclude fixed_return (invested asset).
   const cashValueBase = useMemo(
     () =>
       liquidCashEntries(effectiveCash).reduce(
@@ -87,21 +88,44 @@ export function usePortfolioHomeData(
   );
   const investedValueBase = Math.max(0, totals.totalCurrentEUR - cashValueBase);
 
-  const dayChangeByType = useMemo(
-    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency, undefined, cashEntries),
+  // One totals-by-type pass feeds both the sleeve currents and All Assets reconcile.
+  const byType = useMemo(
+    () => calculateTotalsByAssetType(holdings, cashEntries, quotes, exchangeRates, baseCurrency),
     [holdings, cashEntries, quotes, exchangeRates, baseCurrency],
+  );
+
+  const currentBySleeve = useMemo(
+    () => ({
+      stock: byType.stock.totalCurrentEUR,
+      etf: byType.etf.totalCurrentEUR,
+      fund: byType.fund.totalCurrentEUR,
+      crypto: byType.crypto.totalCurrentEUR,
+      fixed_return: byType.fixed_return.totalCurrentEUR,
+    }),
+    [byType],
+  );
+
+  // SINGLE day-change computation for hero + pills + matrix.
+  const dayChangeByType = useMemo(
+    () =>
+      computeDayChangeByType(
+        holdings,
+        quotes,
+        exchangeRates,
+        baseCurrency,
+        undefined,
+        cashEntries,
+        currentBySleeve,
+      ),
+    [holdings, cashEntries, quotes, exchangeRates, baseCurrency, currentBySleeve],
   );
 
   const dayChangePctByType = dayChangeByType.pct;
 
-  // Headline uses the same reconciled All Assets / sleeve numbers as the matrix.
   const { dayGainLoss, dayGainLossPercent } = useMemo(() => {
-    const key = assetFilter;
-    return {
-      dayGainLoss: dayChangeByType.abs[key] ?? 0,
-      dayGainLossPercent: dayChangePctByType[key] ?? 0,
-    };
-  }, [assetFilter, dayChangeByType, dayChangePctByType]);
+    const { abs, pct } = dayChangeForFilter(dayChangeByType, assetFilter);
+    return { dayGainLoss: abs, dayGainLossPercent: pct };
+  }, [assetFilter, dayChangeByType]);
 
   const handleBackfillComplete = useCallback(() => {
     setRefreshKey((k) => k + 1);
@@ -113,7 +137,9 @@ export function usePortfolioHomeData(
       const res = await fetch("/api/portfolio/backfill-snapshots", { method: "POST", credentials: "include" });
       if (!res.ok) throw new Error("recalculate failed");
       setRefreshKey((k) => k + 1);
-    } catch { /* user can retry */ } finally {
+    } catch {
+      /* user can retry */
+    } finally {
       setRecalculating(false);
     }
   }, []);
@@ -130,6 +156,7 @@ export function usePortfolioHomeData(
     investedValueBase,
     dayGainLoss,
     dayGainLossPercent,
+    dayChangeByType,
     dayChangePctByType,
     refreshKey,
     recalculating,

@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
-import { computeDayChangeByType } from "@/lib/day-change-pct";
+import { calculatePortfolioTotals, calculateTotalsByAssetType } from "@/lib/portfolio-summary";
+import { computeDayChangeByType, dayChangeForFilter } from "@/lib/day-change-pct";
 import { convertCurrency } from "@/lib/utils";
 import { cashAmountEUR } from "@/lib/fixed-return-cash";
 import { liquidCashEntries } from "@/lib/portfolio-summary-cash";
@@ -80,20 +80,42 @@ export default function PortfolioPage() {
   );
   const investedValueBase = Math.max(0, totals.totalCurrentEUR - cashValueBase);
 
-  const dayChangeByType = useMemo(
-    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency, undefined, cashEntries),
+  const byType = useMemo(
+    () => calculateTotalsByAssetType(holdings, cashEntries, quotes, exchangeRates, baseCurrency),
     [holdings, cashEntries, quotes, exchangeRates, baseCurrency],
+  );
+
+  const currentBySleeve = useMemo(
+    () => ({
+      stock: byType.stock.totalCurrentEUR,
+      etf: byType.etf.totalCurrentEUR,
+      fund: byType.fund.totalCurrentEUR,
+      crypto: byType.crypto.totalCurrentEUR,
+      fixed_return: byType.fixed_return.totalCurrentEUR,
+    }),
+    [byType],
+  );
+
+  const dayChangeByType = useMemo(
+    () =>
+      computeDayChangeByType(
+        holdings,
+        quotes,
+        exchangeRates,
+        baseCurrency,
+        undefined,
+        cashEntries,
+        currentBySleeve,
+      ),
+    [holdings, cashEntries, quotes, exchangeRates, baseCurrency, currentBySleeve],
   );
 
   const dayChangePctByType = dayChangeByType.pct;
 
   const { dayGainLoss, dayGainLossPercent } = useMemo(() => {
-    const key = assetFilter;
-    return {
-      dayGainLoss: dayChangeByType.abs[key] ?? 0,
-      dayGainLossPercent: dayChangePctByType[key] ?? 0,
-    };
-  }, [assetFilter, dayChangeByType, dayChangePctByType]);
+    const { abs, pct } = dayChangeForFilter(dayChangeByType, assetFilter);
+    return { dayGainLoss: abs, dayGainLossPercent: pct };
+  }, [assetFilter, dayChangeByType]);
 
   const handleBackfillComplete = useCallback(() => {
     setRefreshKey((k) => k + 1);
@@ -167,6 +189,7 @@ export default function PortfolioPage() {
             <MarketAwareBreakdown
               holdings={holdings}
               cashEntries={cashEntries}
+              dayChangeByType={dayChangeByType}
               onFilterChange={setAssetFilter}
               activeFilter={assetFilter}
             />

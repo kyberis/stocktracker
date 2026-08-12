@@ -55,10 +55,24 @@ export function usePortfolioPerformanceMatrix({
     byType.crypto.totalCurrentEUR +
     byType.fixed_return.totalCurrentEUR;
 
-  const dayChangeComputed = useMemo(
-    () => computeDayChangeByType(holdings, quotes, exchangeRates, baseCurrency, undefined, cashEntries),
-    [holdings, cashEntries, quotes, exchangeRates, baseCurrency],
-  );
+  const dayChangeComputed = useMemo(() => {
+    const currents = {
+      stock: byType.stock.totalCurrentEUR,
+      etf: byType.etf.totalCurrentEUR,
+      fund: byType.fund.totalCurrentEUR,
+      crypto: byType.crypto.totalCurrentEUR,
+      fixed_return: byType.fixed_return.totalCurrentEUR,
+    };
+    return computeDayChangeByType(
+      holdings,
+      quotes,
+      exchangeRates,
+      baseCurrency,
+      undefined,
+      cashEntries,
+      currents,
+    );
+  }, [byType, holdings, cashEntries, quotes, exchangeRates, baseCurrency]);
 
   const { currentByAsset, dayPctByAsset, dayAbsByAsset } = useMemo(() => {
     const current: Partial<Record<AssetFilter, number>> = {
@@ -70,10 +84,9 @@ export function usePortfolioPerformanceMatrix({
       fixed_return: byType.fixed_return.totalCurrentEUR,
     };
 
-    // Never take All Assets % from a prop that could drift — always the live
-    // reconciled sleeve sum from computeDayChangeByType.
+    // Prefer the shared parent result when provided (same object as the hero).
     const pct: Partial<Record<AssetFilter, number>> = {
-      all: dayChangeComputed.pct.all,
+      all: dayChangePctProp?.all ?? dayChangeComputed.pct.all,
       stock: dayChangePctProp?.stock ?? dayChangeComputed.pct.stock,
       etf: dayChangePctProp?.etf ?? dayChangeComputed.pct.etf,
       fund: dayChangePctProp?.fund ?? dayChangeComputed.pct.fund,
@@ -84,10 +97,7 @@ export function usePortfolioPerformanceMatrix({
     return {
       currentByAsset: current,
       dayPctByAsset: pct,
-      dayAbsByAsset: {
-        ...dayChangeComputed.abs,
-        all: dayChangeComputed.abs.all,
-      },
+      dayAbsByAsset: dayChangeComputed.abs,
     };
   }, [byType, investedTotal, dayChangePctProp, dayChangeComputed]);
 

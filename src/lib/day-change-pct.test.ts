@@ -164,10 +164,56 @@ describe("computeDayChangeByType", () => {
       STK: quote("STK", 712, -14.8),
       BTC: quote("BTC", 7255, -6.5),
     };
-    const { pct, abs } = computeDayChangeByType(holdings, quotes, EUR_RATES, "EUR", MARKET_NOW);
+    const stockCurrent = (100 * 712) / EUR_RATES.EURUSD!;
+    const cryptoCurrent = (1 * 7255) / EUR_RATES.EURUSD!;
+    const { pct, abs } = computeDayChangeByType(
+      holdings,
+      quotes,
+      EUR_RATES,
+      "EUR",
+      MARKET_NOW,
+      undefined,
+      { stock: stockCurrent, crypto: cryptoCurrent, etf: 0, fund: 0, fixed_return: 0 },
+    );
     expect(pct.stock!).toBeLessThan(-1.5);
     expect(pct.crypto!).toBeLessThan(0);
     expect(pct.all!).toBeLessThan(0);
     expect(abs.all).toBeCloseTo((abs.stock ?? 0) + (abs.crypto ?? 0), 10);
+  });
+
+  it("headline matches all when currents are provided (hero/pills/matrix unify)", () => {
+    const holdings = [
+      holding("STK", "stock", 100, 712, -14.8, "NMS"),
+      holding("BTC", "crypto", 1, 7255, -6.5, "CRYPTO"),
+    ];
+    const quotes: Record<string, QuoteData> = {
+      STK: quote("STK", 712, -14.8),
+      BTC: quote("BTC", 7255, -6.5),
+    };
+    const currents = {
+      stock: (100 * 712) / EUR_RATES.EURUSD!,
+      crypto: (1 * 7255) / EUR_RATES.EURUSD!,
+    };
+    const byType = computeDayChangeByType(
+      holdings,
+      quotes,
+      EUR_RATES,
+      "EUR",
+      MARKET_NOW,
+      undefined,
+      currents,
+    );
+    const headline = computeDayChangeHeadline(
+      holdings,
+      quotes,
+      EUR_RATES,
+      "EUR",
+      MARKET_NOW,
+      undefined,
+      currents,
+    );
+    expect(headline.pct).toBe(byType.pct.all);
+    expect(headline.abs).toBe(byType.abs.all);
+    expect(headline.pct).toBeLessThan(0);
   });
 });

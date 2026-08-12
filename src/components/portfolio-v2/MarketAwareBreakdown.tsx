@@ -5,7 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { calculateTotalsByAssetType } from "@/lib/portfolio-summary";
-import { computeDayChangeByType } from "@/lib/day-change-pct";
+import type { DayChangeByType } from "@/lib/day-change-pct";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { ASSET_COLORS } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
@@ -14,15 +14,23 @@ import type { Holding, CashEntry } from "@/lib/types";
 interface Props {
   holdings: Holding[];
   cashEntries: CashEntry[];
+  /** Shared result from usePortfolioHomeData — do not recompute day change here. */
+  dayChangeByType: DayChangeByType;
   onFilterChange?: (type: AssetFilter) => void;
   activeFilter?: AssetFilter;
 }
 
 /**
  * Compact asset-type pills with day change aligned to the performance matrix.
- * Includes fixed-return investments as an invested asset bucket.
+ * Day % / abs come from the parent’s single computeDayChangeByType call.
  */
-export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterChange, activeFilter }: Props) {
+export default function MarketAwareBreakdown({
+  holdings,
+  cashEntries,
+  dayChangeByType,
+  onFilterChange,
+  activeFilter,
+}: Props) {
   const { t } = useI18n();
   const { quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
   const { stealthMode } = useStealthMode();
@@ -31,11 +39,6 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
 
   const byType = useMemo(
     () => calculateTotalsByAssetType(holdings, cashEntries, quotes, exchangeRates, cur),
-    [holdings, cashEntries, quotes, exchangeRates, cur],
-  );
-
-  const dayChange = useMemo(
-    () => computeDayChangeByType(holdings, quotes, exchangeRates, cur, undefined, cashEntries),
     [holdings, cashEntries, quotes, exchangeRates, cur],
   );
 
@@ -60,9 +63,6 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
     showDayChange: boolean;
   };
 
-  // When the portfolio holds only a single asset type, the "All Assets" pill
-  // would mirror the lone type pill exactly (same value, same day change).
-  // Suppress it to keep the strip honest and free up horizontal space.
   const activeTypeCount =
     (byType.stock.totalCurrentEUR > 0 ? 1 : 0) +
     (byType.etf.totalCurrentEUR > 0 ? 1 : 0) +
@@ -71,16 +71,20 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
     (byType.fixed_return.totalCurrentEUR > 0 ? 1 : 0);
   const showAllPill = activeTypeCount > 1;
 
+  const dayChange = dayChangeByType;
+
   const entries: Entry[] = [
     ...(showAllPill
-      ? [{
-          key: "all" as AssetFilter,
-          label: t("allAssets"),
-          value: investedTotal,
-          alloc: 100,
-          dayPct: dayChange.pct.all ?? 0,
-          showDayChange: dayChange.abs.all != null,
-        }]
+      ? [
+          {
+            key: "all" as AssetFilter,
+            label: t("allAssets"),
+            value: investedTotal,
+            alloc: 100,
+            dayPct: dayChange.pct.all ?? 0,
+            showDayChange: dayChange.abs.all != null,
+          },
+        ]
       : []),
     {
       key: "stock",
@@ -126,46 +130,18 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
 
   const visibleEntries = entries.filter((e) => e.key === "all" || e.value > 0);
 
-  // All Assets day % must be the value-weighted combination of class pills —
-  // never an independent number that can disagree with Acciones/Cripto.
-  const reconciledAll = (() => {
-    const sleeves = visibleEntries.filter((e) => e.key !== "all" && e.showDayChange);
-    if (sleeves.length === 0) return null;
-    let dayPL = 0;
-    let prior = 0;
-    for (const s of sleeves) {
-      const r = s.dayPct / 100;
-      if (1 + r <= 0 || s.value <= 0) continue;
-      const sleevePrior = s.value / (1 + r);
-      dayPL += s.value - sleevePrior;
-      prior += sleevePrior;
-    }
-    if (prior <= 0) return null;
-    return (dayPL / prior) * 100;
-  })();
-
-  const displayEntries =
-    reconciledAll == null
-      ? visibleEntries
-      : visibleEntries.map((e) =>
-          e.key === "all" ? { ...e, dayPct: reconciledAll, showDayChange: true } : e,
-        );
   const colsClass =
-    displayEntries.length <= 1
+    visibleEntries.length <= 1
       ? "grid-cols-1"
-      : displayEntries.length === 2
+      : visibleEntries.length === 2
         ? "grid-cols-2"
-        : displayEntries.length === 3
+        : visibleEntries.length === 3
           ? "grid-cols-3 sm:grid-cols-3"
           : "grid-cols-2 sm:grid-cols-4";
 
   return (
-    <div
-      className={`grid ${colsClass} gap-2`}
-      role="group"
-      aria-label={t("allAssets")}
-    >
-      {displayEntries.map((e) => {
+    <div className={`grid ${colsClass} gap-2`} role="group" aria-label={t("allAssets")}>
+      {visibleEntries.map((e) => {
         const color = ASSET_COLORS[e.key];
         const isSelected = activeKey === e.key;
         const showDayCell = e.showDayChange;
@@ -178,18 +154,21 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
             onClick={() => onFilterChange?.(isSelected ? "all" : e.key)}
             aria-pressed={isSelected}
             className={`relative overflow-hidden rounded-[20px] border p-3 text-left transition-colors backdrop-blur-md ${
-              isSelected
-                ? "border-transparent"
-                : "border-white/10 hover:border-white/20"
+              isSelected ? "border-transparent" : "border-white/10 hover:border-white/20"
             }`}
-            style={isSelected ? {
-              borderColor: `color-mix(in srgb, ${color} 38%, transparent)`,
-              background: `linear-gradient(180deg, color-mix(in srgb, ${color} 16%, rgba(255,255,255,0.08)), rgba(255,255,255,0.02)), color-mix(in srgb, ${color} 4%, var(--card))`,
-              boxShadow: `0 0 0 1px color-mix(in srgb, ${color} 30%, transparent), 0 16px 32px rgba(2,8,20,0.18)`,
-            } : {
-              background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), var(--card)",
-              boxShadow: "0 12px 24px rgba(2,8,20,0.12)",
-            }}
+            style={
+              isSelected
+                ? {
+                    borderColor: `color-mix(in srgb, ${color} 38%, transparent)`,
+                    background: `linear-gradient(180deg, color-mix(in srgb, ${color} 16%, rgba(255,255,255,0.08)), rgba(255,255,255,0.02)), color-mix(in srgb, ${color} 4%, var(--card))`,
+                    boxShadow: `0 0 0 1px color-mix(in srgb, ${color} 30%, transparent), 0 16px 32px rgba(2,8,20,0.18)`,
+                  }
+                : {
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), var(--card)",
+                    boxShadow: "0 12px 24px rgba(2,8,20,0.12)",
+                  }
+            }
           >
             <span
               className="absolute top-0 left-0 w-[3px] h-full"
@@ -209,7 +188,8 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
                         : "text-red-500 dark:text-red-400"
                     }`}
                   >
-                    {dayIsPos ? "+" : ""}{e.dayPct.toFixed(2)}%
+                    {dayIsPos ? "+" : ""}
+                    {e.dayPct.toFixed(2)}%
                   </span>
                 ) : (
                   <span className="shrink-0 text-[10px] font-medium text-[color:var(--muted)]">
@@ -224,7 +204,10 @@ export default function MarketAwareBreakdown({ holdings, cashEntries, onFilterCh
                 <div className="h-[2px] flex-1 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(Math.max(e.alloc, 0), 100)}%`, background: color }}
+                    style={{
+                      width: `${Math.min(Math.max(e.alloc, 0), 100)}%`,
+                      background: color,
+                    }}
                   />
                 </div>
                 <span className="shrink-0 text-[10px] tabular-nums text-[color:var(--muted)]">

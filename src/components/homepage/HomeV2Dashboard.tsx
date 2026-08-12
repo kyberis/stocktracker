@@ -147,6 +147,7 @@ export default function HomeV2Dashboard() {
     investedValueBase,
     dayGainLoss,
     dayGainLossPercent,
+    dayChangeByType,
     dayChangePctByType,
     refreshKey,
     recalculating,
@@ -240,6 +241,7 @@ export default function HomeV2Dashboard() {
                   <MarketAwareBreakdown
                     holdings={holdings}
                     cashEntries={cashEntries}
+                    dayChangeByType={dayChangeByType}
                     onFilterChange={setAssetFilter}
                     activeFilter={assetFilter}
                   />

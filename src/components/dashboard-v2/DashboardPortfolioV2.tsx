@@ -83,6 +83,7 @@ function V2Dashboard(props: Props) {
     investedValueBase,
     dayGainLoss,
     dayGainLossPercent,
+    dayChangeByType,
     dayChangePctByType,
     refreshKey,
     recalculating,
@@ -122,6 +123,7 @@ function V2Dashboard(props: Props) {
             <MarketAwareBreakdown
               holdings={holdings}
               cashEntries={cashEntries}
+              dayChangeByType={dayChangeByType}
               onFilterChange={setAssetFilter}
               activeFilter={assetFilter}
             />

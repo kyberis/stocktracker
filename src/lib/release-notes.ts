@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.158",
+    date: "2026-08-12",
+    title: "One day-change calculator for hero and matrix",
+    titleTranslations: {
+      es: "Un solo cálculo de cambio del día para titular y matriz",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Invested-assets headline, asset pills, and performance matrix now share one computeDayChangeByType result (All Assets = weighted sleeves), so the top €/% can no longer disagree with Todos los activos.",
+        translations: {
+          es: "El titular de activos invertidos, las pastillas y la matriz comparten un solo computeDayChangeByType (Todos los activos = mangas ponderadas), así el €/% de arriba ya no puede discrepar de Todos los activos.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.157",
     date: "2026-08-12",
     title: "All Assets today matches class rows",
