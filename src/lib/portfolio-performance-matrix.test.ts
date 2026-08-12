@@ -7,6 +7,7 @@ import {
   valueFromSnapshot,
   resolveMatrixAssetKeys,
   reconcileAllAssetsToday,
+  MATRIX_PERIOD_KEYS,
 } from "./portfolio-performance-matrix";
 import type { SnapshotHistoryPoint } from "./portfolio-performance-matrix";
 import type { Transaction } from "./types";
@@ -311,6 +312,109 @@ describe("buildMatrixFromSnapshots flow-adjusted return (TRF-028)", () => {
     expect(rows[0].cells.oneWeek.kind).toBe("percent");
     expect(rows[0].cells.oneWeek.value).toBe(0);
   });
+
+  it("currency mode uses flow-adjusted P/L, not current − past (ETF sale)", () => {
+    const now = new Date("2026-08-03T00:00:00Z");
+    const snapshots: SnapshotHistoryPoint[] = [
+      {
+        date: "2025-12-01",
+        value: 12000,
+        invested: 11000,
+        stockValue: 9000,
+        etfValue: 1200,
+        fundValue: 0,
+        cryptoValue: 1800,
+      },
+    ];
+    const sellEtf: Transaction = {
+      id: "tx-etf-sell",
+      holdingId: "h-etf",
+      ticker: "ISOE.DE",
+      assetType: "etf",
+      type: "sell",
+      date: "2026-06-26",
+      shares: 10,
+      pricePerShare: 65,
+      totalAmount: 650,
+      fees: 0,
+      taxes: 0,
+      currency: "EUR",
+      notes: "",
+      createdAt: "2026-06-26",
+    };
+
+    const rows = buildMatrixFromSnapshots({
+      snapshots,
+      currentByAsset: { etf: 550 },
+      dayPctByAsset: {},
+      dayAbsByAsset: {},
+      isPro: true,
+      displayMode: "currency",
+      assetKeys: ["etf"],
+      transactions: [sellEtf],
+      exchangeRates: {},
+      baseCurrency: "EUR",
+      now,
+    });
+
+    // Naive current − past = 550 − 1200 = −650 (looks like a crash).
+    // Flow-adjusted: 550 − 1200 − (−650) = 0.
+    expect(rows[0].cells.ytd.kind).toBe("currency");
+    expect(rows[0].cells.ytd.value).toBeCloseTo(0, 0);
+  });
+
+  it("currency mode large contribution is not shown as period gain", () => {
+    const now = new Date("2026-08-12T00:00:00Z");
+    const snapshots: SnapshotHistoryPoint[] = [
+      {
+        date: "2026-08-05",
+        value: 10000,
+        invested: 10000,
+        stockValue: 10000,
+        etfValue: 0,
+        fundValue: 0,
+        cryptoValue: 0,
+      },
+    ];
+    const bigBuy: Transaction = {
+      id: "tx-buy",
+      holdingId: "h1",
+      ticker: "AAPL",
+      assetType: "stock",
+      type: "buy",
+      date: "2026-08-10",
+      shares: 700,
+      pricePerShare: 100,
+      totalAmount: 70000,
+      fees: 0,
+      taxes: 0,
+      currency: "EUR",
+      notes: "",
+      createdAt: "2026-08-10",
+    };
+    const rows = buildMatrixFromSnapshots({
+      snapshots,
+      currentByAsset: { stock: 80500 },
+      dayPctByAsset: {},
+      dayAbsByAsset: {},
+      isPro: true,
+      displayMode: "currency",
+      assetKeys: ["stock"],
+      transactions: [bigBuy],
+      exchangeRates: {},
+      baseCurrency: "EUR",
+      now,
+    });
+    // Naive: 80500 − 10000 = 70500 ≈ portfolio size.
+    // Flow-adjusted: 80500 − 10000 − 70000 = 500.
+    expect(rows[0].cells.oneWeek.kind).toBe("currency");
+    expect(rows[0].cells.oneWeek.value).toBeCloseTo(500, 0);
+    expect(Math.abs(rows[0].cells.oneWeek.value!)).toBeLessThan(5000);
+  });
+
+  it("does not expose an all-time (TODO) period column", () => {
+    expect(MATRIX_PERIOD_KEYS.includes("all" as never)).toBe(false);
+  });
 });
 
 describe("resolveMatrixAssetKeys", () => {
@@ -347,7 +451,6 @@ describe("reconcileAllAssetsToday", () => {
       threeYear: { kind: "empty" as const },
       fiveYear: { kind: "empty" as const },
       tenYear: { kind: "empty" as const },
-      all: { kind: "empty" as const },
     };
     const rows = [
       {

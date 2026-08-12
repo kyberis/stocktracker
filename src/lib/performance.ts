@@ -282,6 +282,32 @@ export function calculatePeriodReturn(
 }
 
 /**
+ * Net external cash flow (buys − sells, fees/taxes included) in [periodStart, periodEnd].
+ * Same sign convention as Modified Dietz: buys positive (inflow into the sleeve).
+ */
+export function windowedNetCashFlow(
+  transactions: Transaction[],
+  periodStart: string,
+  periodEnd: string,
+  exchangeRates: ExchangeRates,
+  baseCurrency: string = "EUR",
+): number {
+  const start = periodStart.slice(0, 10);
+  const end = periodEnd.slice(0, 10);
+  let netCashFlow = 0;
+  for (const tx of transactions) {
+    if (tx.type !== "buy" && tx.type !== "sell") continue;
+    const d = tx.date.slice(0, 10);
+    if (d < start || d > end) continue;
+    const amount = txAmountToBase(tx.totalAmount, tx, baseCurrency, exchangeRates);
+    const fees = txAmountToBase(tx.fees || 0, tx, baseCurrency, exchangeRates);
+    const taxes = txAmountToBase(tx.taxes || 0, tx, baseCurrency, exchangeRates);
+    netCashFlow += tx.type === "buy" ? amount + fees + taxes : -(amount - fees - taxes);
+  }
+  return netCashFlow;
+}
+
+/**
  * Modified Dietz return for an arbitrary [periodStart, periodEnd] window,
  * per asset-class bucket (TRF-028).
  *
@@ -334,24 +360,25 @@ export function calculateWindowedModifiedDietzReturn(
     .filter((t) => t.type === "buy" || t.type === "sell")
     .filter((t) => t.date >= periodStart.slice(0, 10) && t.date <= periodEnd.slice(0, 10));
 
-  let netCashFlow = 0;
   let weightedCashFlow = 0;
-
   for (const tx of flows) {
     const amount = txAmountToBase(tx.totalAmount, tx, baseCurrency, exchangeRates);
     const fees = txAmountToBase(tx.fees || 0, tx, baseCurrency, exchangeRates);
     const taxes = txAmountToBase(tx.taxes || 0, tx, baseCurrency, exchangeRates);
-
     const flow = tx.type === "buy" ? amount + fees + taxes : -(amount - fees - taxes);
-
     const txMs = new Date(tx.date).getTime();
     const daysSinceStart = Math.min(Math.max((txMs - startMs) / 86400000, 0), totalDays);
     const weight = (totalDays - daysSinceStart) / totalDays;
-
-    netCashFlow += flow;
     weightedCashFlow += weight * flow;
   }
 
+  const netCashFlow = windowedNetCashFlow(
+    transactions,
+    periodStart,
+    periodEnd,
+    exchangeRates,
+    baseCurrency,
+  );
   const denominator = valueAtStart + weightedCashFlow;
   if (Math.abs(denominator) < 0.01) return null;
 

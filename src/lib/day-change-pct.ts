@@ -46,8 +46,11 @@ function fixedReturnDayChange(
 
 function finalizeBucket(bucket: Bucket): { pct: number; abs: number | undefined } {
   if (bucket.included === 0) return { pct: 0, abs: undefined };
+  // Guard: when prior is ~0 (e.g. capital appearing as day Δ), do not publish
+  // abs — otherwise All Assets € today can go green while % stays flat/negative.
+  if (bucket.priorValue <= 0) return { pct: 0, abs: 0 };
   return {
-    pct: bucket.priorValue > 0 ? (bucket.dayPL / bucket.priorValue) * 100 : 0,
+    pct: (bucket.dayPL / bucket.priorValue) * 100,
     abs: bucket.dayPL,
   };
 }

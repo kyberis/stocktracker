@@ -3,6 +3,7 @@ import {
   calculatePeriodReturn,
   calculatePortfolioValueOnDate,
   calculateWindowedModifiedDietzReturn,
+  windowedNetCashFlow,
   type HoldingSeriesEntry,
 } from "@/lib/performance";
 import { sanitizeTtwror } from "@/lib/portfolio/sanity";
@@ -27,8 +28,7 @@ export type MatrixPeriodKey =
   | "oneYear"
   | "threeYear"
   | "fiveYear"
-  | "tenYear"
-  | "all";
+  | "tenYear";
 
 export const MATRIX_PERIOD_KEYS: MatrixPeriodKey[] = [
   "today",
@@ -39,7 +39,6 @@ export const MATRIX_PERIOD_KEYS: MatrixPeriodKey[] = [
   "threeYear",
   "fiveYear",
   "tenYear",
-  "all",
 ];
 
 /** @deprecated Long horizons are no longer plan-gated (subscription model v2). Kept for callers/tests. */
@@ -47,7 +46,6 @@ export const PRO_MATRIX_PERIOD_KEYS: MatrixPeriodKey[] = [
   "threeYear",
   "fiveYear",
   "tenYear",
-  "all",
 ];
 
 export type MatrixCellKind = "percent" | "currency" | "empty" | "pro";
@@ -324,6 +322,36 @@ function todayCell(
   return { kind: "percent", value: dayPct };
 }
 
+/** Absolute period P/L excluding net contributions (Dietz numerator). */
+function periodCurrencyPl(
+  current: number,
+  past: number,
+  flows: PeriodReturnFlowsContext,
+): number {
+  const netCf = windowedNetCashFlow(
+    flows.transactions,
+    flows.periodStart,
+    flows.periodEnd,
+    flows.exchangeRates,
+    flows.baseCurrency,
+  );
+  return current - past - netCf;
+}
+
+function toDisplayCell(
+  percentCell: MatrixCell,
+  current: number,
+  past: number | null,
+  flows: PeriodReturnFlowsContext,
+  displayMode: "percent" | "currency",
+): MatrixCell {
+  if (percentCell.kind !== "percent" || percentCell.value == null || past == null) {
+    return percentCell;
+  }
+  if (displayMode !== "currency") return percentCell;
+  return { kind: "currency", value: periodCurrencyPl(current, past, flows) };
+}
+
 /** Ticker → assetType lookup so a sell transaction (no assetType of its own
  * in older rows) can still be attributed to the right bucket. */
 function filterTransactionsByAsset(
@@ -365,7 +393,6 @@ export function buildMatrixFromSnapshots(input: BuildMatrixFromSnapshotsInput): 
   } = input;
 
   const anchors = getMatrixPeriodAnchorDates(now);
-  const allAnchor = firstSnapshotAnchorDate(snapshots);
   const periodEnd = now.toISOString().slice(0, 10);
 
   return assetKeys.map((assetKey) => {
@@ -380,7 +407,6 @@ export function buildMatrixFromSnapshots(input: BuildMatrixFromSnapshotsInput): 
       threeYear: anchors.threeYear,
       fiveYear: anchors.fiveYear,
       tenYear: anchors.tenYear,
-      all: allAnchor ?? anchors.tenYear,
     };
 
     const cells = {} as Record<MatrixPeriodKey, MatrixCell>;
@@ -396,17 +422,15 @@ export function buildMatrixFromSnapshots(input: BuildMatrixFromSnapshotsInput): 
         current,
         currentByAsset,
       });
-      let cell = periodReturnCell(current, past, {
+      const flows: PeriodReturnFlowsContext = {
         transactions: assetTransactions,
         periodStart: anchor,
         periodEnd,
         exchangeRates,
         baseCurrency,
-      });
-      if (cell.kind === "percent" && displayMode === "currency" && cell.value != null && past != null) {
-        cell = { kind: "currency", value: current - past };
-      }
-      cells[key] = cell;
+      };
+      const pctCell = periodReturnCell(current, past, flows);
+      cells[key] = toDisplayCell(pctCell, current, past, flows, displayMode);
     }
 
     return { assetKey, currentValue: current, cells };
@@ -474,7 +498,6 @@ export function buildMatrixFromHistorical(input: BuildMatrixFromHistoricalInput)
       threeYear: anchors.threeYear,
       fiveYear: anchors.fiveYear,
       tenYear: anchors.tenYear,
-      all: anchors.tenYear,
     };
 
     const cells = {} as Record<MatrixPeriodKey, MatrixCell>;
@@ -502,17 +525,15 @@ export function buildMatrixFromHistorical(input: BuildMatrixFromHistoricalInput)
       if ((past == null || past <= 0) && assetKey === "fixed_return" && current > 0) {
         past = current;
       }
-      let cell = periodReturnCell(current, past, {
+      const flows: PeriodReturnFlowsContext = {
         transactions: assetTransactions,
         periodStart: anchorMap[key],
         periodEnd,
         exchangeRates,
         baseCurrency,
-      });
-      if (cell.kind === "percent" && displayMode === "currency" && cell.value != null) {
-        cell = { kind: "currency", value: current - (past ?? 0) };
-      }
-      cells[key] = cell;
+      };
+      const pctCell = periodReturnCell(current, past, flows);
+      cells[key] = toDisplayCell(pctCell, current, past, flows, displayMode);
     }
 
     return { assetKey, currentValue: current, cells };

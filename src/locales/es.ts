@@ -2792,10 +2792,10 @@ const es: TranslationStrings = {
     "Todos los activos es la media ponderada por valor de cada clase (acciones, ETFs, fondos, cripto, retorno fijo). Debe coincidir con el cambio del día del titular; no puede subir si la clase dominante cae con fuerza.",
   matrixExplainerPeriodsTitle: "Semana, mes, año y más",
   matrixExplainerPeriodsBody:
-    "Las columnas largas comparan el valor actual con una fecha pasada usando snapshots diarios del portfolio cuando existen, o precios históricos. Los horizontes 3A, 5A, 10A y Todo requieren Pro.",
+    "Las columnas largas comparan el valor actual con una fecha pasada usando snapshots diarios del portfolio cuando existen, o precios históricos. En modo divisa ves el P/L del periodo tras restar compras y ventas netas — no el tamaño de la cartera.",
   matrixExplainerDisplayTitle: "% o divisa",
   matrixExplainerDisplayBody:
-    "En modo % ves el rendimiento relativo. En modo divisa ves la variación absoluta en la moneda del portfolio.",
+    "En modo % ves el rendimiento relativo. En modo divisa ves la ganancia o pérdida absoluta de ese periodo en la moneda del portfolio (aportaciones y retiros no cuentan).",
 
   // Hero: invertido vs efectivo
   investedAssets: "Activos invertidos",

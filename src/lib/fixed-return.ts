@@ -79,14 +79,25 @@ export function valueFixedReturnAt(params: FixedReturnParams, asOf: string): num
   return principal + (target - principal) * progress;
 }
 
-/** Day P/L in native currency: value(asOf) − value(previous calendar day). */
+/**
+ * Day P/L in native currency: value(asOf) − value(previous calendar day).
+ *
+ * Funding on the start date is not a gain: if yesterday was before start and
+ * today is on/after start, baseline is principal (so start-day Δ ≈ 0), not 0.
+ */
 export function dayChangeFixedReturn(params: FixedReturnParams, asOf: string): number {
   const asOfDate = parseISODateUTC(asOf);
   if (!asOfDate) return 0;
   const prev = new Date(asOfDate);
   prev.setUTCDate(prev.getUTCDate() - 1);
   const prevIso = `${prev.getUTCFullYear()}-${String(prev.getUTCMonth() + 1).padStart(2, "0")}-${String(prev.getUTCDate()).padStart(2, "0")}`;
-  return valueFixedReturnAt(params, asOf) - valueFixedReturnAt(params, prevIso);
+  const curr = valueFixedReturnAt(params, asOf);
+  const prevValue = valueFixedReturnAt(params, prevIso);
+  if (prevValue === 0 && curr > 0) {
+    // First valuation day: only accrued interest above principal counts.
+    return curr - params.principal;
+  }
+  return curr - prevValue;
 }
 
 export function isFixedReturnMatured(params: FixedReturnParams, asOf: string): boolean {

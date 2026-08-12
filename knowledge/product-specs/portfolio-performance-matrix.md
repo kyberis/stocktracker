@@ -4,11 +4,11 @@
 
 ## 1. Summary
 
-Replaces the default inline Recharts hero with a scannable matrix: rows per asset class (All / Stocks / ETFs / Crypto), columns for Today through All-time. Toggle between % and currency delta. The full interactive evolution chart lives on `/portfolio#chart`.
+Replaces the default inline Recharts hero with a scannable matrix: rows per asset class (All / Stocks / ETFs / Crypto), columns for Today through 10Y. Toggle between % and currency delta (flow-adjusted period P/L). The full interactive evolution chart lives on `/portfolio#chart`.
 
 ## 2. Status
 
-- **Tier:** Free (short horizons); Pro (3Y, 5Y, 10Y, All)
+- **Tier:** Free (universal access; long horizons included)
 - **Feature flag:** _none_
 - **Health:** green
 - **Owning skill:** [`engineer-dashboard`](../../.cursor/skills/engineer-dashboard/SKILL.md)

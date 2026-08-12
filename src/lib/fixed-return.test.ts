@@ -66,6 +66,10 @@ describe("dayChangeFixedReturn", () => {
     expect(dayChangeFixedReturn(CIVISLEND, "2026-01-02")).toBe(0);
     expect(dayChangeFixedReturn(CIVISLEND, "2023-12-31")).toBe(0);
   });
+
+  it("does not treat principal funding on start date as day P/L", () => {
+    expect(dayChangeFixedReturn(CIVISLEND, "2024-01-01")).toBe(0);
+  });
 });
 
 describe("isFixedReturnMatured / fixedReturnProgress", () => {

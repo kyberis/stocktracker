@@ -34,7 +34,6 @@ const PERIOD_LABEL_KEYS: Record<MatrixPeriodKey, string> = {
   threeYear: "matrixPeriod3y",
   fiveYear: "matrixPeriod5y",
   tenYear: "matrixPeriod10y",
-  all: "matrixPeriodAll",
 };
 
 interface Props {

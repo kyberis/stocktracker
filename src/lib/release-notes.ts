@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.161",
+    date: "2026-08-12",
+    title: "Matrix € mode shows period P/L; remove All column",
+    titleTranslations: {
+      es: "Modo € de la matriz muestra P/L del periodo; se quita Todo",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Performance matrix currency mode now shows flow-adjusted period gain/loss (not portfolio size), fixed-return start-day principal no longer inflates All Assets “today” €, and the All-time (TODO) column is removed.",
+        translations: {
+          es: "El modo divisa de la matriz muestra la ganancia/pérdida del periodo ajustada por flujos (no el tamaño de la cartera), el principal del retorno fijo el día de inicio ya no infla el “hoy” en € de Todos los activos, y se elimina la columna Todo.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.160",
     date: "2026-08-12",
     title: "Portfolio anomaly agent for staff ops",

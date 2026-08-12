@@ -2795,10 +2795,10 @@ const en: TranslationStrings = {
     "All Assets is the value-weighted combination of every class (stocks, ETFs, funds, crypto, fixed return). It must match the headline day change; it cannot be up when the dominant class is sharply down.",
   matrixExplainerPeriodsTitle: "Week, month, year and longer",
   matrixExplainerPeriodsBody:
-    "Longer columns compare today's value with a past date using daily portfolio snapshots when available, or historical prices otherwise. Horizons 3Y, 5Y, 10Y and All require Pro.",
+    "Longer columns compare today's value with a past date using daily portfolio snapshots when available, or historical prices otherwise. Currency mode shows period P/L after subtracting net buys and sells — not the size of the portfolio.",
   matrixExplainerDisplayTitle: "% or currency",
   matrixExplainerDisplayBody:
-    "In % mode you see relative return. In currency mode you see the absolute change in your portfolio currency.",
+    "In % mode you see relative return. In currency mode you see absolute gain or loss for that period in your portfolio currency (contributions and withdrawals are excluded).",
 
   // Hero: invested vs cash split
   investedAssets: "Invested assets",
