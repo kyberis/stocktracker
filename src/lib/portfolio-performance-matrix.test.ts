@@ -80,7 +80,7 @@ describe("buildMatrixFromSnapshots", () => {
     expect(rows[0].cells.oneYear.value).toBeCloseTo(9.09, 1);
   });
 
-  it("locks long periods for free tier", () => {
+  it("computes long periods for all tiers (universal access)", () => {
     const rows = buildMatrixFromSnapshots({
       snapshots: SNAPSHOTS,
       currentByAsset: { all: 12000 },
@@ -93,7 +93,7 @@ describe("buildMatrixFromSnapshots", () => {
       exchangeRates: {},
       baseCurrency: "EUR",
     });
-    expect(rows[0].cells.threeYear.kind).toBe("pro");
+    expect(rows[0].cells.threeYear.kind).not.toBe("pro");
     expect(rows[0].cells.oneWeek.kind).toBe("percent");
   });
 });

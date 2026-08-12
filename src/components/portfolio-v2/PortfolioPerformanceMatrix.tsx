@@ -4,12 +4,10 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useStealthMode } from "@/lib/stealth-context";
 import { formatCurrency, formatPercent } from "@/lib/utils";
-import TierFeatureBadge from "@/components/TierFeatureBadge";
 import { ASSET_COLORS } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import {
   MATRIX_PERIOD_KEYS,
-  PRO_MATRIX_PERIOD_KEYS,
   type MatrixCell,
   type MatrixPeriodKey,
   type MatrixRow,
@@ -82,7 +80,7 @@ export default function PortfolioPerformanceMatrix({
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
   const [explainerOpen, setExplainerOpen] = useState(false);
-  const { rows, loading, displayMode, setDisplayMode, isPro, baseCurrency } =
+  const { rows, loading, displayMode, setDisplayMode, baseCurrency } =
     usePortfolioPerformanceMatrix({
       holdings,
       cashEntries,
@@ -95,7 +93,6 @@ export default function PortfolioPerformanceMatrix({
       MATRIX_PERIOD_KEYS.map((key) => ({
         key,
         label: t(PERIOD_LABEL_KEYS[key]),
-        isProCol: PRO_MATRIX_PERIOD_KEYS.includes(key),
       })),
     [t],
   );
@@ -125,7 +122,6 @@ export default function PortfolioPerformanceMatrix({
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
-          {!isPro && <TierFeatureBadge requiredPlan="pro" size="sm" />}
         </div>
         <div
           className="inline-flex rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-0.5"
@@ -175,11 +171,6 @@ export default function PortfolioPerformanceMatrix({
                   className="px-2 py-2.5 text-right text-[10px] font-semibold uppercase tracking-wide text-[color:var(--muted)] whitespace-nowrap"
                 >
                   {col.label}
-                  {col.isProCol && !isPro && (
-                    <span className="ml-0.5 text-[8px] opacity-60" aria-hidden="true">
-                      ★
-                    </span>
-                  )}
                 </th>
               ))}
             </tr>

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.150",
+    date: "2026-08-12",
+    title: "Performance matrix long periods unlocked",
+    titleTranslations: {
+      es: "Periodos largos de la matriz sin candado Pro",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Removed leftover Pro locks on 3Y / 5Y / 10Y / All in the performance-by-period matrix (and chart range PRO badges). Long horizons follow the universal-access model.",
+        translations: {
+          es: "Eliminados los candados Pro residuales en 3A / 5A / 10A / Todo de la matriz de rendimiento por periodo (y las etiquetas PRO del selector de rango). Los horizontes largos siguen el modelo de acceso universal.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.149",
     date: "2026-08-12",
     title: "Edit fixed-return schedule",

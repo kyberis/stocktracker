@@ -42,7 +42,7 @@ export const MATRIX_PERIOD_KEYS: MatrixPeriodKey[] = [
   "all",
 ];
 
-/** Long horizons gated for non-Pro (aligned with chart range selector). */
+/** @deprecated Long horizons are no longer plan-gated (subscription model v2). Kept for callers/tests. */
 export const PRO_MATRIX_PERIOD_KEYS: MatrixPeriodKey[] = [
   "threeYear",
   "fiveYear",
@@ -197,13 +197,9 @@ export interface PeriodReturnFlowsContext {
 function periodReturnCell(
   current: number,
   past: number | null,
-  isPro: boolean,
-  periodKey: MatrixPeriodKey,
   flows: PeriodReturnFlowsContext,
 ): MatrixCell {
-  if (!isPro && PRO_MATRIX_PERIOD_KEYS.includes(periodKey)) {
-    return { kind: "pro" };
-  }
+  // Universal-access model: long periods are not plan-gated (v2 quotas).
   if (past == null || past <= 0) return { kind: "empty" };
 
   const simple = calculatePeriodReturn(current, past);
@@ -267,7 +263,6 @@ export function buildMatrixFromSnapshots(input: BuildMatrixFromSnapshotsInput): 
     currentByAsset,
     dayPctByAsset,
     dayAbsByAsset,
-    isPro,
     displayMode,
     assetKeys,
     transactions,
@@ -302,7 +297,7 @@ export function buildMatrixFromSnapshots(input: BuildMatrixFromSnapshotsInput): 
       if (key === "today") continue;
       const anchor = anchorMap[key];
       const past = snapshotValueOnOrBefore(snapshots, anchor, assetKey);
-      let cell = periodReturnCell(current, past, isPro, key, {
+      let cell = periodReturnCell(current, past, {
         transactions: assetTransactions,
         periodStart: anchor,
         periodEnd,
@@ -357,7 +352,6 @@ export function buildMatrixFromHistorical(input: BuildMatrixFromHistoricalInput)
     currentByAsset,
     dayPctByAsset,
     dayAbsByAsset,
-    isPro,
     displayMode,
     assetKeys,
     transactions,
@@ -389,10 +383,6 @@ export function buildMatrixFromHistorical(input: BuildMatrixFromHistoricalInput)
 
     for (const key of MATRIX_PERIOD_KEYS) {
       if (key === "today") continue;
-      if (!isPro && PRO_MATRIX_PERIOD_KEYS.includes(key)) {
-        cells[key] = { kind: "pro" };
-        continue;
-      }
       if (filteredHoldings.length === 0) {
         cells[key] = { kind: "empty" };
         continue;
@@ -403,7 +393,7 @@ export function buildMatrixFromHistorical(input: BuildMatrixFromHistoricalInput)
         exchangeRates,
         baseCurrency,
       );
-      let cell = periodReturnCell(current, past, isPro, key, {
+      let cell = periodReturnCell(current, past, {
         transactions: assetTransactions,
         periodStart: anchorMap[key],
         periodEnd,

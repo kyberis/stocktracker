@@ -35,7 +35,7 @@ export function usePortfolioPerformanceMatrix({
 }: UsePortfolioPerformanceMatrixArgs) {
   const { exchangeRates, quotes, activePortfolioCurrency, activePortfolioId, demoMode } = usePortfolio();
   const { user } = useAuth();
-  const isPro = user?.plan === "pro";
+  const isPro = user?.plan === "pro" || user?.role === "admin";
   const baseCurrency = activePortfolioCurrency;
 
   const [loading, setLoading] = useState(!demoMode);
