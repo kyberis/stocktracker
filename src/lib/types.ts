@@ -45,7 +45,46 @@ export type ProdOpsEventType =
   | "feedback_received"
   | "broker_request_created"
   | "trial_activated"
+  | "portfolio_anomaly"
   | "test_notification";
+
+export type ProdOpsTelegramAction = {
+  id: string;
+  label: string;
+};
+
+export type PortfolioAnomalyStatus = "open" | "acked" | "fixed" | "dismissed";
+export type PortfolioAnomalySeverity = "error" | "warn" | "info";
+export type PortfolioAnomalyResolvedBy = "admin" | "telegram" | "system" | "";
+
+export type PortfolioAnomalyFinding = {
+  id: string;
+  severity: PortfolioAnomalySeverity;
+  code: string;
+  ticker?: string;
+  holdingId?: string;
+  message: string;
+  evidence: Record<string, unknown>;
+  autoFixable: boolean;
+  fixAction: string;
+};
+
+export type PortfolioAnomaly = {
+  id: string;
+  userId: string;
+  status: PortfolioAnomalyStatus;
+  severity: PortfolioAnomalySeverity;
+  codes: string[];
+  findings: PortfolioAnomalyFinding[];
+  aiExplanation: string;
+  remediationPrompt: string;
+  fingerprint: string;
+  notifiedAt: string;
+  resolvedAt: string;
+  resolvedBy: PortfolioAnomalyResolvedBy;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type ProdOpsRecipientSource = "telegram_link" | "legacy_manual";
 

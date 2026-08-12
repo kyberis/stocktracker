@@ -28,6 +28,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [impersonation](impersonation.md) — admin user-impersonation mode.
 - [membership-grant](membership-grant.md) — admin grants of Pro access.
 - [ops-telegram-agent](ops-telegram-agent.md) — staff ops Telegram bot + IdP digest + internal metrics fan-out.
+- [portfolio-anomaly-agent](portfolio-anomaly-agent.md) — hybrid portfolio data-anomaly scan + admin/Telegram triage.
 - [referral](referral.md) — referral codes + reward tracking.
 - [trial-invitations](trial-invitations.md) — eligibility cron + email invite.
 - [trial-system](trial-system.md) — Pro trial invitations + expiration.

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.160",
+    date: "2026-08-12",
+    title: "Portfolio anomaly agent for staff ops",
+    titleTranslations: {
+      es: "Agente de anomalías de cartera para ops",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Admin anomaly triage (/admin/anomalies) plus daily scan of portfolios with holdings; LLM explains findings and ProdOps Telegram buttons can ack, apply safe fixes, or dismiss.",
+        translations: {
+          es: "Triage de anomalías en /admin/anomalies y escaneo diario de carteras con holdings; el LLM explica hallazgos y los botones de Telegram ProdOps permiten acusar, aplicar fixes seguros o descartar.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.159",
     date: "2026-08-12",
     title: "Matrix period cells no longer blank when Dietz fails",

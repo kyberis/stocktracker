@@ -64,7 +64,8 @@ export type PlatformFeature =
   | "screening_agents_v2_enabled"
   | "screening_qa_enabled"
   | "screening_tavily_research_enabled"
-  | "screening_estebaranz_eval_enabled";
+  | "screening_estebaranz_eval_enabled"
+  | "portfolio_anomaly_agent";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_enabled",
@@ -84,6 +85,8 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   // trefolio evaluate step after shortlist research (requires pipeline real + screening flags).
   // Flag key kept as screening_estebaranz_eval_enabled for stored settings compatibility.
   "screening_estebaranz_eval_enabled",
+  // Staff portfolio anomaly scan + ProdOps triage (cron gated).
+  "portfolio_anomaly_agent",
 ]);
 
 const VALID_THEMES = new Set(["default", "terminal", "canvas", "studio"]);
@@ -493,6 +496,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "screening_qa_enabled",
   "screening_tavily_research_enabled",
   "screening_estebaranz_eval_enabled",
+  "portfolio_anomaly_agent",
 ];
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {
@@ -933,6 +937,7 @@ export const PRODOPS_EVENT_TYPES: ProdOpsEventType[] = [
   "feedback_received",
   "broker_request_created",
   "trial_activated",
+  "portfolio_anomaly",
   "test_notification",
 ];
 
@@ -950,6 +955,7 @@ const DEFAULT_PRODOPS_CONFIG: ProdOpsConfig = {
     "feedback_received",
     "broker_request_created",
     "trial_activated",
+    "portfolio_anomaly",
   ],
   recipient: null,
   pendingLink: null,

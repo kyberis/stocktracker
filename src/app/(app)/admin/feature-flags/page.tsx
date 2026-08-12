@@ -147,6 +147,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "After Compiler (and optional shortlist research), run compiler_evaluate to apply the trefolio value-investing checklist to each shortlisted company. Structured card sections + grounded “data not available” rules. Requires screening_pipeline_real_enabled. On by default.",
     group: "Features",
   },
+  portfolio_anomaly_agent: {
+    label: "Portfolio anomaly agent",
+    description:
+      "Daily cron scans users with ≥1 holding for data anomalies (FX, ledger mismatch, stale value_in_eur, etc.), LLM-explains findings for staff, and notifies ProdOps Telegram. Off by default.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

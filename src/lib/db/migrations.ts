@@ -4126,6 +4126,41 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 140,
+    description: "portfolio_anomalies table for staff anomaly agent triage",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS portfolio_anomalies (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'open'
+            CHECK(status IN ('open', 'acked', 'fixed', 'dismissed')),
+          severity TEXT NOT NULL DEFAULT 'warn'
+            CHECK(severity IN ('error', 'warn', 'info')),
+          codes_json TEXT NOT NULL DEFAULT '[]',
+          findings_json TEXT NOT NULL DEFAULT '[]',
+          ai_explanation TEXT NOT NULL DEFAULT '',
+          remediation_prompt TEXT NOT NULL DEFAULT '',
+          fingerprint TEXT NOT NULL,
+          notified_at TEXT NOT NULL DEFAULT '',
+          resolved_at TEXT NOT NULL DEFAULT '',
+          resolved_by TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_portfolio_anomalies_status_severity ON portfolio_anomalies(status, severity, updated_at DESC)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_portfolio_anomalies_user_fp ON portfolio_anomalies(user_id, fingerprint)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_portfolio_anomalies_user_status ON portfolio_anomalies(user_id, status)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -106,6 +106,17 @@ export {
 } from "./holdings";
 
 export {
+  getPortfolioAnomalyById,
+  findOpenPortfolioAnomalyByFingerprint,
+  listPortfolioAnomalies,
+  countOpenPortfolioAnomaliesForUser,
+  createPortfolioAnomaly,
+  updatePortfolioAnomalyFindings,
+  markPortfolioAnomalyNotified,
+  setPortfolioAnomalyStatus,
+} from "./portfolio-anomalies";
+
+export {
   listTransactions,
   addTransaction,
   addTransactionsBulk,

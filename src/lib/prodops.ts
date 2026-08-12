@@ -42,6 +42,8 @@ export interface ProdOpsEnvelope {
   };
   metadata: Record<string, unknown>;
   destinations: ProdOpsDispatchDestination[];
+  /** Optional inline Telegram actions (portfolio_anomaly). */
+  actions?: Array<{ id: string; label: string }>;
 }
 
 function getAppBaseUrl(): string {
@@ -142,12 +144,33 @@ async function postProdOpsEnvelope(baseUrl: string, secret: string, envelope: Pr
   });
 }
 
+function actionsFromMetadata(
+  eventType: ProdOpsEventType,
+  metadata: Record<string, unknown>,
+): Array<{ id: string; label: string }> | undefined {
+  if (eventType !== "portfolio_anomaly") return undefined;
+  const raw = metadata.actions;
+  if (!Array.isArray(raw)) return undefined;
+  const actions: Array<{ id: string; label: string }> = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const id = String((item as { id?: unknown }).id || "").trim();
+    const label = String((item as { label?: unknown }).label || "").trim();
+    if (!id || !label) continue;
+    actions.push({ id, label });
+  }
+  return actions.length > 0 ? actions : undefined;
+}
+
 async function buildEnvelope(
   event: ProdOpsOutboxEvent,
   destinations: ProdOpsDispatchDestination[],
 ): Promise<ProdOpsEnvelope | null> {
   const user = await findUserById(event.userId);
   if (!user) return null;
+
+  const metadata = parseMetadata(event);
+  const actions = actionsFromMetadata(event.eventType, metadata);
 
   return {
     eventId: event.id,
@@ -162,8 +185,9 @@ async function buildEnvelope(
       displayName: user.display_name || undefined,
       username: user.username || undefined,
     },
-    metadata: parseMetadata(event),
+    metadata,
     destinations,
+    ...(actions ? { actions } : {}),
   };
 }
 
@@ -381,6 +405,36 @@ export async function enqueueProdOpsTestEvent(adminUserId: string): Promise<void
     metadata: {
       triggeredBy: adminUserId,
       email: user?.email || "",
+    },
+  });
+}
+
+export async function enqueueProdOpsPortfolioAnomalyEvent(params: {
+  anomalyId: string;
+  userId: string;
+  severity: string;
+  codes: string[];
+  summary: string;
+}): Promise<void> {
+  const user = await findUserById(params.userId);
+  const day = new Date().toISOString().slice(0, 10);
+  await createNamedProdOpsEvent({
+    eventType: "portfolio_anomaly",
+    userId: params.userId,
+    dedupeKey: `anomaly:${params.userId}:${params.anomalyId}:${day}`,
+    summary: params.summary.slice(0, 480),
+    adminPath: `/admin/anomalies?id=${encodeURIComponent(params.anomalyId)}`,
+    metadata: {
+      anomalyId: params.anomalyId,
+      severity: params.severity,
+      codes: params.codes.join(", "),
+      username: user?.username || "",
+      email: user?.email || "",
+      actions: [
+        { id: `pa|${params.anomalyId}|ack`, label: "Ack" },
+        { id: `pa|${params.anomalyId}|apply_safe_fix`, label: "Apply safe fix" },
+        { id: `pa|${params.anomalyId}|dismiss`, label: "Dismiss" },
+      ],
     },
   });
 }

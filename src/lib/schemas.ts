@@ -535,6 +535,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "screening_qa_enabled",
   "screening_tavily_research_enabled",
   "screening_estebaranz_eval_enabled",
+  "portfolio_anomaly_agent",
 ]);
 
 export const featureFlagSchema = z.object({

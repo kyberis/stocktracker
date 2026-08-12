@@ -86,6 +86,17 @@ flowchart LR
   prodopsWebhook --> staffDm
 ```
 
+### Staff action flow (portfolio anomalies)
+
+```mermaid
+flowchart LR
+  anomalyBtn["Telegram inline button"] --> prodopsWebhook["external/prodops /api/telegram/webhook"]
+  prodopsWebhook -->|"HMAC signed POST"| prodopsAction["/api/internal/prodops-action"]
+  prodopsAction --> repairs["ack / dismiss / apply_safe_fix"]
+  repairs --> prodopsWebhook
+  prodopsWebhook --> staffDm["Staff Telegram DM reply"]
+```
+
 ### Payload contract
 
 Trefolio sends:

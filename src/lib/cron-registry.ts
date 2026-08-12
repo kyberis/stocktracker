@@ -157,6 +157,13 @@ export const CRON_REGISTRY: CronJob[] = [
     description: "Overnight scan: flag holdings that lost Yahoo/alias quote coverage (TRF-104)",
   },
   {
+    name: "portfolio-anomaly-scan",
+    path: "/api/cron/portfolio-anomaly-scan",
+    schedule: "15 3 * * *",
+    description:
+      "Scan portfolios with ≥1 holding for data anomalies; persist findings, LLM explain, enqueue ProdOps alerts",
+  },
+  {
     name: "screening-recover",
     path: "/api/cron/screening-recover",
     schedule: "*/2 * * * *",
