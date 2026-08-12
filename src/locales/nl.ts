@@ -97,6 +97,12 @@ const nl: TranslationStrings = {
   emptyStateWarrenChatHint:
     "Warren kan hier alleen helpen aandelen toe te voegen — tot 10 berichten, daarna 15 minuten pauze.",
   emptyStateWarrenChatPlaceholder: 'Probeer: "Ik kocht 10 AAPL voor $150 op 2024-01-15"',
+  emptyStateMeanwhileExplore: "Ondertussen verkennen",
+  emptyStateJobChooserLead: "Wat wil je eerst doen?",
+  emptyStateJobMoat: "Moat analyseren",
+  emptyStateJobMoatDesc: "Concurrentievoordelen bekijken",
+  emptyStateJobScreener: "Ideeën vinden",
+  emptyStateJobScreenerDesc: "Aandelen filteren op fundamentals",
   refreshing: "Prijzen worden vernieuwd...",
   lastUpdated: "Laatst bijgewerkt",
   quotesAsOf: "Koersen per",

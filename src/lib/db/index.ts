@@ -255,6 +255,33 @@ export {
 export type { ProdOpsLatestAnalyticsInteraction } from "./analytics";
 
 export type {
+  Experiment,
+  ExperimentAssignment,
+  ExperimentStatus,
+  ExperimentStats,
+  ExperimentVariant,
+  ExperimentVariantStats,
+} from "./experiments";
+export {
+  listExperiments,
+  getExperimentById,
+  getExperimentByKey,
+  createExperiment,
+  updateExperiment,
+  setExperimentStatus,
+  resetExperimentAssignments,
+  resolveExperimentVariant,
+  getExperimentVariant,
+  getExperimentStats,
+  getAssignment,
+  controlVariantKey,
+  hashToBucket,
+  pickVariant,
+  validateVariants,
+  validateMetrics,
+} from "./experiments";
+
+export type {
   ChannelSpendCap,
   ChannelSpendEntry,
   ChannelSpendSummary,

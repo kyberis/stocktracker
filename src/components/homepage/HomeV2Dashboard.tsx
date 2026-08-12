@@ -185,6 +185,7 @@ export default function HomeV2Dashboard() {
 
       {isEmpty ? (
         <EmptyPortfolio
+          demoMode={demoMode}
           onAddStock={openAdd}
           onAskWarren={
             demoMode

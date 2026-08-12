@@ -192,3 +192,5 @@ isFeatureEnabledForUser(flag, userId):
 - [ ] Add to `FLAG_META` in admin feature-flags page
 - [ ] Gate server-side with `isFeatureEnabledForUser` in API routes
 - [ ] Gate client-side with `useFeatureFlag` in components
+
+**Multi-variant A/B/C?** Do not encode arms as boolean flags. Use [engineer-experiments](../engineer-experiments/SKILL.md).

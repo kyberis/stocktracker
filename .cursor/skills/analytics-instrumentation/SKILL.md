@@ -33,6 +33,8 @@ Own feature instrumentation and observability readiness.
   - `page_view`
   - `settings_changed`
   - `theme_toggled`
+  - `experiment_exposure` (also written server-side on assign)
+  - `empty_activation_cta`
 - Server-side usage (current examples):
   - `signup`
   - `login`
@@ -40,6 +42,7 @@ Own feature instrumentation and observability readiness.
   - `holding_delete`
   - `portfolio_import`
 
+For multi-variant product tests use [engineer-experiments](../engineer-experiments/SKILL.md) — not boolean feature flags.
 ## Instrumentation Checklist
 
 ```md

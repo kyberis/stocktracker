@@ -13,6 +13,8 @@ const ALLOWED_EVENTS = new Set([
   "onboarding_import_method",
   "account_delete_started",
   "import_error",
+  "experiment_exposure",
+  "empty_activation_cta",
 ]);
 
 const schema = z.object({

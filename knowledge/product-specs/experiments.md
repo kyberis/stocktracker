@@ -1,0 +1,96 @@
+# experiments
+
+> First-party sticky A/B/C experiments with admin live metrics.
+
+## 1. Summary
+
+Admins (and LLM agents during development) create **draft** multi-variant experiments. When **running**, each authenticated user gets a sticky variant. Live stats in `/admin/experiments` join assignments to `analytics_events` conversion metrics.
+
+## 2. Status
+
+- **Tier:** Admin / Free (assignment applies to all signed-in users)
+- **Feature flag:** _none_
+- **Health:** green
+- **Owning skill:** [`.cursor/skills/engineer-experiments/SKILL.md`](../../.cursor/skills/engineer-experiments/SKILL.md)
+
+## 3. Entry points
+
+| Type | Path | Notes |
+|------|------|-------|
+| Admin page | `src/app/(app)/admin/experiments/page.tsx` | Draft / launch / pause / reset / live table |
+| User API | `GET /api/experiments/[key]` | Resolve + assign when running |
+| Admin API | `/api/admin/experiments` | CRUD + status + reset + stats |
+| Hook | `src/lib/use-experiment.ts` | Client resolve + CTA track helper |
+| DAL | `src/lib/db/experiments.ts` | Assignment hash, stats SQL |
+| Script | `scripts/create-experiment.ts` | Seed draft from CLI |
+| Consumer | `src/components/EmptyPortfolio.tsx` | `empty_activation` A/B/C |
+
+## 4. Data model
+
+- `experiments` — key, status (`draft|running|paused|archived`), `variants_json`, `metrics_json`, `reset_generation`
+- `experiment_assignments` — `(experiment_id, user_id)` → `variant`, `assigned_at`
+
+## 5. API surface
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/api/experiments/[key]` | user | Resolve sticky variant |
+| GET/POST | `/api/admin/experiments` | admin | List / create draft |
+| GET/PUT | `/api/admin/experiments/[id]` | admin | Detail / edit draft |
+| POST | `/api/admin/experiments/[id]/status` | admin | Lifecycle |
+| POST | `/api/admin/experiments/[id]/reset` | admin | Clear assignments |
+| GET | `/api/admin/experiments/[id]/stats` | admin | Live metrics |
+
+## 6. UI surface
+
+- Admin: `/admin/experiments`
+- Product: empty home via `EmptyPortfolio` when holdings empty
+
+## 7. Business logic
+
+- Weights must sum to 100; one variant must be `control`
+- Non-`running` → return `control`, no assignment
+- First touch while `running` → insert assignment + `experiment_exposure`
+- Reset bumps `reset_generation` so hash seed changes
+
+## 8. External dependencies
+
+- None (first-party Turso + existing analytics_events)
+
+## 9. Currency / FX / tax implications
+
+- N/A
+
+## 10. i18n
+
+- Empty activation treatment copy keys: `emptyStateMeanwhileExplore`, `emptyStateJobChooserLead`, `emptyStateJobMoat*`, `emptyStateJobScreener*`
+
+## 11. Permissions / tier gating / rate limits
+
+- Resolve requires session; admin routes require admin
+
+## 12. Telemetry
+
+- `experiment_exposure` (server on assign)
+- Experiment-defined metrics (e.g. `empty_activation_cta`, `holding_add`)
+
+## 13. Edge cases & gotchas
+
+- Demo mode forces `control` and skips resolve
+- Do not Launch from agent code — leave draft for human
+- Boolean feature flags remain separate
+
+## 14. Tests
+
+- Unit: `src/lib/db/experiments.test.ts` (hash / weights / validation)
+
+## 15. Related skills and rules
+
+- [engineer-experiments](../../.cursor/skills/engineer-experiments/SKILL.md)
+- [analytics-instrumentation](../../.cursor/skills/analytics-instrumentation/SKILL.md)
+- [engineer-feature-flags](../../.cursor/skills/engineer-feature-flags/SKILL.md) — booleans only
+
+## 16. Open questions / planned work
+
+- Per-user variant overrides in admin
+- Statistical significance helpers

@@ -97,6 +97,12 @@ const es: TranslationStrings = {
   emptyStateWarrenChatHint:
     "Warren solo puede ayudarte a añadir acciones aquí — hasta 10 mensajes, luego un descanso de 15 minutos.",
   emptyStateWarrenChatPlaceholder: 'Prueba: "Compré 10 AAPL a 150 $ el 2024-01-15"',
+  emptyStateMeanwhileExplore: "Mientras tanto, explora",
+  emptyStateJobChooserLead: "¿Qué quieres hacer primero?",
+  emptyStateJobMoat: "Analizar un moat",
+  emptyStateJobMoatDesc: "Ver puntuaciones de ventaja competitiva",
+  emptyStateJobScreener: "Buscar ideas",
+  emptyStateJobScreenerDesc: "Filtrar acciones por fundamentales",
   refreshing: "Actualizando precios...",
   lastUpdated: "Última actualización",
   quotesAsOf: "Cotizaciones a las",

@@ -4063,6 +4063,69 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 139,
+    description: "First-party A/B/C experiments + empty_activation draft seed",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS experiments (
+          id TEXT PRIMARY KEY,
+          key TEXT UNIQUE NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'draft'
+            CHECK(status IN ('draft', 'running', 'paused', 'archived')),
+          variants_json TEXT NOT NULL,
+          metrics_json TEXT NOT NULL,
+          reset_generation INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          launched_at TEXT NOT NULL DEFAULT '',
+          reset_at TEXT NOT NULL DEFAULT ''
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_experiments_status ON experiments(status)",
+      );
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS experiment_assignments (
+          experiment_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          variant TEXT NOT NULL,
+          assigned_at TEXT NOT NULL DEFAULT (datetime('now')),
+          PRIMARY KEY (experiment_id, user_id)
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_experiment_assignments_user ON experiment_assignments(user_id)",
+      );
+
+      // Seed empty_activation in draft — human launches from admin.
+      const existing = await client.execute({
+        sql: "SELECT id FROM experiments WHERE key = ?",
+        args: ["empty_activation"],
+      });
+      if (existing.rows.length === 0) {
+        await client.execute({
+          sql: `INSERT INTO experiments (
+                  id, key, name, description, status, variants_json, metrics_json
+                ) VALUES (?, ?, ?, ?, 'draft', ?, ?)`,
+          args: [
+            "exp_empty_activation",
+            "empty_activation",
+            "Empty activation (welcome dashboard)",
+            "A/B/C layouts for the post-onboarding empty portfolio surface on Home v2.",
+            JSON.stringify([
+              { key: "control", weight: 34 },
+              { key: "portfolio_first", weight: 33 },
+              { key: "job_chooser", weight: 33 },
+            ]),
+            JSON.stringify(["empty_activation_cta", "holding_add"]),
+          ],
+        });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

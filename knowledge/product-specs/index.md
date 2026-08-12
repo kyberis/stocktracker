@@ -173,6 +173,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 
 - [billing-portal](billing-portal.md) — Stripe customer portal link.
 - [feature-flags](feature-flags.md) — per-user flag system.
+- [experiments](experiments.md) — first-party sticky A/B/C experiments + admin live metrics.
 - [paywall](paywall.md) — tier gating on Pro features.
 - [refund-requests](refund-requests.md) — refund flow.
 - [stripe-checkout](stripe-checkout.md) — checkout session creation.
@@ -186,6 +187,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [admin-analytics](admin-analytics.md) — internal analytics dashboards.
 - [admin-cron-stats](admin-cron-stats.md) — cron observability.
 - [admin-feature-flags](admin-feature-flags.md) — manage flags.
+- [experiments](experiments.md) — A/B/C experiment admin (also under Billing & Feature Flags).
 - [admin-panel](admin-panel.md) — `/admin` index.
 - [admin-sub-tools](admin-sub-tools.md) — thin specs for remaining admin tools.
 - [admin-users](admin-users.md) — user admin + impersonation.

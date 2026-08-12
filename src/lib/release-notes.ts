@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.146",
+    date: "2026-08-12",
+    title: "First-party A/B/C experiments",
+    titleTranslations: {
+      es: "Experimentos A/B/C propios",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Admin Experiments: create draft multi-variant tests, launch/pause/reset sticky assignments, and view live conversion stats. Empty welcome dashboard can run control / portfolio-first / job-chooser layouts.",
+        translations: {
+          es: "Admin Experiments: crea tests multi-variante en borrador, lanza/pausa/resetea asignaciones sticky y ve métricas de conversión en vivo. La portada vacía puede probar layouts control / portfolio-first / job-chooser.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.145",
     date: "2026-08-12",
     title: "Fixed-return assets visible on Home",
