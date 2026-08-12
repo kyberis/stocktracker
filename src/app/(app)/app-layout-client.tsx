@@ -31,6 +31,7 @@ import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
 import ThemeWizard from "@/components/ThemeWizard";
 import EmailVerificationBanner from "@/components/EmailVerificationBanner";
 import ImpersonationBanner from "@/components/ImpersonationBanner";
+import ExperimentPreviewBanner from "@/components/ExperimentPreviewBanner";
 import NativeShell from "@/components/NativeShell";
 import SyncConfidenceBanner from "@/components/SyncConfidenceBanner";
 import { CURRENT_VERSION } from "@/lib/release-version";
@@ -160,6 +161,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <>
         <ImpersonationBanner />
+        <ExperimentPreviewBanner />
         <EmailVerificationBanner />
         <main id="main-content">{children}</main>
         <CapacitorBridge />
@@ -189,6 +191,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
           }}
         >
           <ImpersonationBanner />
+          <ExperimentPreviewBanner />
           <EmailVerificationBanner />
           <SyncConfidenceBanner />
           <MarketTickerBar />
@@ -216,6 +219,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       }}
     >
       <ImpersonationBanner />
+      <ExperimentPreviewBanner />
       <EmailVerificationBanner />
       <SyncConfidenceBanner />
       <MarketTickerBar />

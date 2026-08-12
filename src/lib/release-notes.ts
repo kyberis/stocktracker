@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.151",
+    date: "2026-08-12",
+    title: "Admin experiment treatment preview",
+    titleTranslations: {
+      es: "Preview de treatments de experimentos desde admin",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Admins can Preview each experiment variant from /admin/experiments (dedicated preview page for empty_activation) without writing sticky assignments or conversion metrics.",
+        translations: {
+          es: "Los admins pueden previsualizar cada variant de experimento desde /admin/experiments (página dedicada para empty_activation) sin escribir assignments sticky ni métricas de conversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.150",
     date: "2026-08-12",
     title: "Performance matrix long periods unlocked",

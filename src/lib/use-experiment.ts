@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  getExperimentPreview,
+  subscribeExperimentPreview,
+} from "@/lib/experiment-preview";
 
 export type ExperimentStatus = "draft" | "running" | "paused" | "archived";
 
@@ -11,11 +15,14 @@ export interface ExperimentResolve {
   metrics: string[];
   assigned: boolean;
   loading: boolean;
+  /** True when variant comes from admin preview override (not sticky assignment). */
+  previewing: boolean;
 }
 
 /**
  * Resolve a sticky experiment variant for the signed-in user.
  * When the experiment is not running (or fetch fails), returns control.
+ * Order: options.forceVariant → sessionStorage preview → API.
  */
 export function useExperiment(
   experimentKey: string,
@@ -24,29 +31,41 @@ export function useExperiment(
   const enabled = options?.enabled !== false;
   const forceVariant = options?.forceVariant;
 
+  const resolveForced = useCallback((): { variant: string; previewing: boolean } | null => {
+    if (forceVariant) return { variant: forceVariant, previewing: false };
+    const preview = getExperimentPreview(experimentKey);
+    if (preview) return { variant: preview, previewing: true };
+    return null;
+  }, [experimentKey, forceVariant]);
+
+  const initialForced = resolveForced();
+
   const [state, setState] = useState<ExperimentResolve>({
     key: experimentKey,
     status: "draft",
-    variant: forceVariant || "control",
+    variant: initialForced?.variant || "control",
     metrics: [],
     assigned: false,
-    loading: enabled && !forceVariant,
+    loading: enabled && !initialForced,
+    previewing: Boolean(initialForced?.previewing),
   });
 
   const load = useCallback(async () => {
-    if (!enabled || forceVariant) {
+    const forced = resolveForced();
+    if (!enabled || forced) {
       setState({
         key: experimentKey,
         status: "draft",
-        variant: forceVariant || "control",
+        variant: forced?.variant || "control",
         metrics: [],
         assigned: false,
         loading: false,
+        previewing: Boolean(forced?.previewing),
       });
       return;
     }
 
-    setState((prev) => ({ ...prev, loading: true, key: experimentKey }));
+    setState((prev) => ({ ...prev, loading: true, key: experimentKey, previewing: false }));
     try {
       const res = await fetch(`/api/experiments/${encodeURIComponent(experimentKey)}`);
       if (!res.ok) throw new Error("failed");
@@ -57,6 +76,20 @@ export function useExperiment(
         metrics?: string[];
         assigned?: boolean;
       };
+      // Preview may have been set while the request was in flight
+      const lateForced = resolveForced();
+      if (lateForced) {
+        setState({
+          key: experimentKey,
+          status: "draft",
+          variant: lateForced.variant,
+          metrics: [],
+          assigned: false,
+          loading: false,
+          previewing: lateForced.previewing,
+        });
+        return;
+      }
       setState({
         key: payload.key || experimentKey,
         status: (payload.status as ExperimentStatus) || "draft",
@@ -64,6 +97,7 @@ export function useExperiment(
         metrics: payload.metrics || [],
         assigned: Boolean(payload.assigned),
         loading: false,
+        previewing: false,
       });
     } catch {
       setState({
@@ -73,12 +107,19 @@ export function useExperiment(
         metrics: [],
         assigned: false,
         loading: false,
+        previewing: false,
       });
     }
-  }, [enabled, experimentKey, forceVariant]);
+  }, [enabled, experimentKey, resolveForced]);
 
   useEffect(() => {
     void load();
+  }, [load]);
+
+  useEffect(() => {
+    return subscribeExperimentPreview(() => {
+      void load();
+    });
   }, [load]);
 
   return state;
@@ -89,6 +130,11 @@ export async function trackExperimentEvent(
   event: string,
   metadata?: Record<string, string>,
 ): Promise<void> {
+  const experimentKey = metadata?.experiment;
+  if (experimentKey && getExperimentPreview(experimentKey)) {
+    // Admin QA preview — do not inflate conversion metrics
+    return;
+  }
   try {
     await fetch("/api/analytics/track", {
       method: "POST",

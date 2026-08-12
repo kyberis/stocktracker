@@ -102,6 +102,7 @@ Demo / unauthenticated: pass `forceVariant: "control"` or `enabled: false`.
 | Pause | Keep sticky variants; no new assignments (unassigned users see control) |
 | Reset | Delete assignments + bump generation → re-bucket on next visit |
 | Archive | Freeze |
+| Preview | Opens `/admin/experiments/preview?key=&variant=` — client sessionStorage override; no assignment/metrics. Register new surfaces on the preview page when adding consumers. |
 
 > When `draft`/`archived`, resolve returns **control**. When `paused`, sticky is kept but new users are not assigned. Launch when ready to measure.
 ## Reference consumer

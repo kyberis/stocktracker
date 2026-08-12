@@ -17,7 +17,9 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 
 | Type | Path | Notes |
 |------|------|-------|
-| Admin page | `src/app/(app)/admin/experiments/page.tsx` | Draft / launch / pause / reset / live table |
+| Admin page | `src/app/(app)/admin/experiments/page.tsx` | Draft / launch / pause / reset / live table / Preview |
+| Admin preview | `src/app/(app)/admin/experiments/preview/page.tsx` | Force-render treatment UI (client override) |
+| Preview helper | `src/lib/experiment-preview.ts` | sessionStorage override + URL `exp_preview` sync |
 | User API | `GET /api/experiments/[key]` | Resolve + assign when running |
 | Admin API | `/api/admin/experiments` | CRUD + status + reset + stats |
 | Hook | `src/lib/use-experiment.ts` | Client resolve + CTA track helper |
@@ -44,6 +46,7 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 ## 6. UI surface
 
 - Admin: `/admin/experiments`
+- Admin treatment preview: `/admin/experiments/preview?key=…&variant=…` (client-only; no DB assignment)
 - Product: empty home via `EmptyPortfolio` when holdings empty
 
 ## 7. Business logic
@@ -52,6 +55,7 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 - Non-`running` → return `control`, no assignment
 - First touch while `running` → insert assignment + `experiment_exposure`
 - Reset bumps `reset_generation` so hash seed changes
+- Admin **Preview** sets a sessionStorage override (`trefolio:exp-preview`); `useExperiment` prefers it over the API and `trackExperimentEvent` no-ops for that key
 
 ## 8. External dependencies
 
@@ -79,10 +83,12 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 - Demo mode forces `control` and skips resolve
 - Do not Launch from agent code — leave draft for human
 - Boolean feature flags remain separate
+- Preview overrides are tab-scoped (sessionStorage) and do not change sticky assignments
 
 ## 14. Tests
 
 - Unit: `src/lib/db/experiments.test.ts` (hash / weights / validation)
+- Unit: `src/lib/experiment-preview.test.ts` (sessionStorage override helper)
 
 ## 15. Related skills and rules
 
@@ -92,5 +98,4 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 
 ## 16. Open questions / planned work
 
-- Per-user variant overrides in admin
 - Statistical significance helpers

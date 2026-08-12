@@ -537,6 +537,31 @@ export default function AdminExperimentsPage() {
                   </p>
                 </div>
               )}
+
+              <div className="border-t border-[color:var(--border)] pt-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                  Preview treatments
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {selected.variants.map((v) => (
+                    <button
+                      key={v.key}
+                      type="button"
+                      className="btn-secondary text-xs"
+                      onClick={() =>
+                        router.push(
+                          `/admin/experiments/preview?key=${encodeURIComponent(selected.key)}&variant=${encodeURIComponent(v.key)}`,
+                        )
+                      }
+                    >
+                      Preview {v.key}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[11px] text-gray-500 dark:text-slate-400">
+                  Opens the treatment UI with a client-only override (no assignment / metrics).
+                </p>
+              </div>
             </div>
 
             <div className="card p-4 overflow-x-auto">
@@ -577,7 +602,20 @@ export default function AdminExperimentsPage() {
                         className="border-b border-[color:var(--border)]/60"
                       >
                         <td className="py-2 pr-3 font-medium text-gray-900 dark:text-white">
-                          {row.variant}
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span>{row.variant}</span>
+                            <button
+                              type="button"
+                              className="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+                              onClick={() =>
+                                router.push(
+                                  `/admin/experiments/preview?key=${encodeURIComponent(selected.key)}&variant=${encodeURIComponent(row.variant)}`,
+                                )
+                              }
+                            >
+                              Preview
+                            </button>
+                          </div>
                         </td>
                         <td className="py-2 pr-3">{row.assigned}</td>
                         <td className="py-2 pr-3">{row.exposed}</td>
