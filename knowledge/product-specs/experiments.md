@@ -67,7 +67,7 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 
 ## 10. i18n
 
-- Empty activation treatment copy keys: `emptyStateMeanwhileExplore`, `emptyStateJobChooserLead`, `emptyStateJobMoat*`, `emptyStateJobScreener*`
+- Empty activation treatment copy keys: `emptyStateMeanwhileExplore`, `emptyStateJobChooserLead`, `emptyStateJobMoat*`, `emptyStateJobScreener*`, `emptyStateSubtitlePortfolioFirst`, `emptyStateSubtitleJobChooser`
 
 ## 11. Permissions / tier gating / rate limits
 
@@ -84,6 +84,7 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 - Do not Launch from agent code — leave draft for human
 - Boolean feature flags remain separate
 - Preview overrides are tab-scoped (sessionStorage) and do not change sticky assignments
+- Empty activation moat CTA must link to `/tools/evaluation` (not `/moat`); screener to `/tools/screener`
 
 ## 14. Tests
 

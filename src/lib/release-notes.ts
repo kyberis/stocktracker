@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.152",
+    date: "2026-08-12",
+    title: "Empty activation treatments polished",
+    titleTranslations: {
+      es: "Treatments de empty activation mejorados",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Empty activation experiment: fixed broken moat link (/tools/evaluation), direct screener URL, and differentiated control / portfolio_first / job_chooser welcome layouts with clearer copy.",
+        translations: {
+          es: "Experimento empty activation: enlace de moat corregido (/tools/evaluation), URL directa al screener y layouts diferenciados control / portfolio_first / job_chooser con copy más claro.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.151",
     date: "2026-08-12",
     title: "Admin experiment treatment preview",
