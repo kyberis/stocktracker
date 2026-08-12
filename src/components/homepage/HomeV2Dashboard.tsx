@@ -2,9 +2,10 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFeatureFlagContext } from "@/lib/feature-flag-context";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { investmentCashEntries } from "@/lib/portfolio-summary-cash";
 import { usePortfolioCommand } from "@/contexts/portfolio-command-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
@@ -78,7 +79,8 @@ export default function HomeV2Dashboard() {
   // Aid briefing/feed/day-highlights all require a real session; demo has none.
   const aidEnabled = !isInitializing && !demoMode;
   const aidStatus = useAidStatus(aidEnabled);
-  const home = usePortfolioHomeData({ holdings, cashEntries });
+  const investmentCash = useMemo(() => investmentCashEntries(cashEntries), [cashEntries]);
+  const home = usePortfolioHomeData({ holdings, cashEntries: investmentCash });
   const [aiOpen, setAiOpen] = useState(false);
   const [warrenPrompt, setWarrenPrompt] = useState<string | undefined>();
   const [heroMode, setHeroMode] = useState<HeroMode>("simple");

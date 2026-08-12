@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { investmentCashEntries } from "@/lib/portfolio-summary-cash";
+import { investmentCashEntries, liquidCashEntries } from "@/lib/portfolio-summary-cash";
 import type { CashEntry } from "@/lib/types";
 
 function cash(partial: Partial<CashEntry> & Pick<CashEntry, "id" | "amountEUR">): CashEntry {
@@ -21,5 +21,17 @@ describe("investmentCashEntries", () => {
       cash({ id: "6", amountEUR: 1687.5, type: "fixed_return" }),
     ];
     expect(investmentCashEntries(rows).map((c) => c.id)).toEqual(["1", "2", "6"]);
+  });
+});
+
+describe("liquidCashEntries", () => {
+  it("excludes fixed_return from cash available for investment", () => {
+    const rows = [
+      cash({ id: "1", amountEUR: 100 }),
+      cash({ id: "2", amountEUR: 50, type: "cash" }),
+      cash({ id: "6", amountEUR: 1500, type: "fixed_return" }),
+      cash({ id: "3", amountEUR: 999, type: "savings" }),
+    ];
+    expect(liquidCashEntries(rows).map((c) => c.id)).toEqual(["1", "2"]);
   });
 });

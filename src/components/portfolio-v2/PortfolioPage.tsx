@@ -7,6 +7,8 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { computeDayChangeByType, computeDayChangeHeadline } from "@/lib/day-change-pct";
 import { convertCurrency } from "@/lib/utils";
+import { cashAmountEUR } from "@/lib/fixed-return-cash";
+import { liquidCashEntries } from "@/lib/portfolio-summary-cash";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import BackfillCTA from "./BackfillCTA";
 import MarketAwareBreakdown from "./MarketAwareBreakdown";
@@ -62,8 +64,9 @@ export default function PortfolioPage() {
 
   const cashValueBase = useMemo(
     () =>
-      effectiveCash.reduce(
-        (sum, c) => sum + convertCurrency(c.amountEUR, "EUR", baseCurrency, exchangeRates),
+      liquidCashEntries(effectiveCash).reduce(
+        (sum, c) =>
+          sum + convertCurrency(cashAmountEUR(c, { rates: exchangeRates }), "EUR", baseCurrency, exchangeRates),
         0,
       ),
     [effectiveCash, baseCurrency, exchangeRates],

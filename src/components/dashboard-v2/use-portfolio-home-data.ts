@@ -6,12 +6,18 @@ import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { computeDayChangeByType } from "@/lib/day-change-pct";
 import { getDayChange } from "@/lib/portfolio/metrics";
 import { convertCurrency } from "@/lib/utils";
+import { cashAmountEUR } from "@/lib/fixed-return-cash";
+import { liquidCashEntries } from "@/lib/portfolio-summary-cash";
 import type { Holding, CashEntry } from "@/lib/types";
 import type { AssetFilter } from "./AssetTypeFilter";
 
 export interface UsePortfolioHomeDataArgs {
   holdings: Holding[];
-  /** Investment cash entries (type === "cash"). Participates in the "all" filter. */
+  /**
+   * Portfolio cash slice for totals (typically `investmentCashEntries`:
+   * plain cash + fixed_return). Liquid cash for the hero “available” line
+   * is derived via `liquidCashEntries`.
+   */
   cashEntries: CashEntry[];
 }
 
@@ -66,10 +72,12 @@ export function usePortfolioHomeData(
     [filteredHoldings, effectiveCash, quotes, exchangeRates, baseCurrency],
   );
 
+  // Hero “Cash available for investment” — exclude fixed_return (invested asset).
   const cashValueBase = useMemo(
     () =>
-      effectiveCash.reduce(
-        (sum, c) => sum + convertCurrency(c.amountEUR, "EUR", baseCurrency, exchangeRates),
+      liquidCashEntries(effectiveCash).reduce(
+        (sum, c) =>
+          sum + convertCurrency(cashAmountEUR(c, { rates: exchangeRates }), "EUR", baseCurrency, exchangeRates),
         0,
       ),
     [effectiveCash, baseCurrency, exchangeRates],

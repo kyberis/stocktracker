@@ -299,5 +299,7 @@ test.describe("Net Worth Tracking — UI", () => {
     await expect(page.getByText("Civislend")).toBeVisible();
     // Accrued value on start date = principal (local calendar), not €0 from UTC server enrich
     await expect(page.getByText(/€1[,.]?500/).first()).toBeVisible({ timeout: 10_000 });
+    // Fixed-return is invested capital — must not be labeled as liquid cash available
+    await expect(page.getByText("Cash available for investment")).toHaveCount(0);
   });
 });

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.147",
+    date: "2026-08-12",
+    title: "Fixed-return counts as invested, not cash",
+    titleTranslations: {
+      es: "El retorno fijo cuenta como invertido, no como efectivo",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Fixed-return investments (e.g. Civislend) are no longer labeled “Cash available for investment” — they roll into Invested assets while staying listed under Assets & Accounts and the Fixed return allocation slice.",
+        translations: {
+          es: "Las inversiones de retorno fijo (p. ej. Civislend) ya no aparecen como “Efectivo disponible para invertir”: pasan a Activos invertidos y siguen en Activos y cuentas y en la asignación de Retorno fijo.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.146",
     date: "2026-08-12",
     title: "First-party A/B/C experiments",

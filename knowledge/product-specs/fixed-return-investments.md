@@ -51,7 +51,8 @@ Zod: `createCashSchema` / `updateCashSchema` in [`src/lib/schemas.ts`](../../src
 
 - Pure valuation: [`src/lib/fixed-return.ts`](../../src/lib/fixed-return.ts)
 - Cash enrich helpers: [`src/lib/fixed-return-cash.ts`](../../src/lib/fixed-return-cash.ts)
-- Included in [`investmentCashEntries`](../../src/lib/portfolio-summary-cash.ts)
+- Included in [`investmentCashEntries`](../../src/lib/portfolio-summary-cash.ts) for portfolio totals / charts
+- **Not** in [`liquidCashEntries`](../../src/lib/portfolio-summary-cash.ts) — hero “Cash available for investment” is liquid cash only; fixed-return counts toward **Invested assets**
 - Portfolio P/L: cost = principal, current = accrued, day change = daily accrual delta ([`portfolio-summary.ts`](../../src/lib/portfolio-summary.ts))
 
 Formula (linear):
