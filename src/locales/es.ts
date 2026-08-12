@@ -2797,6 +2797,23 @@ const es: TranslationStrings = {
   matrixExplainerDisplayBody:
     "En modo % ves el rendimiento relativo. En modo divisa ves la ganancia o pérdida absoluta de ese periodo en la moneda del portfolio (aportaciones y retiros no cuentan).",
 
+  matrixCellExplainAria: "Explicar cómo se calcula esta cifra",
+  matrixCellExplainTitle: "Cómo se calcula esta celda",
+  matrixCellExplainNotCostBasis:
+    "Esto es el rendimiento del periodo frente a un snapshot pasado — no la ganancia o pérdida respecto a lo que pagaste (precio de compra).",
+  matrixCellExplainFormula: "Fórmula",
+  matrixCellExplainCurrent: "Valor actual",
+  matrixCellExplainPast: "Valor al inicio del periodo",
+  matrixCellExplainNetCf: "Flujo neto (compras − ventas)",
+  matrixCellExplainPl: "P/L del periodo",
+  matrixCellExplainDayAbs: "P/L del día",
+  matrixCellExplainDayPct: "% del día",
+  matrixCellExplainCostBasis: "Coste de compra (contraste)",
+  matrixCellExplainVsCost: "No realizado vs coste (contraste)",
+  matrixCellExplainTxs: "Operaciones en la ventana",
+  matrixCellExplainNarrative: "Explicación en lenguaje claro",
+  matrixCellExplainLoading: "Generando explicación con IA…",
+
   // Hero: invertido vs efectivo
   investedAssets: "Activos invertidos",
   cashAvailableForInvestment: "Efectivo disponible para invertir",

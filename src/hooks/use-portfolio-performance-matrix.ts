@@ -281,5 +281,11 @@ export function usePortfolioPerformanceMatrix({
     isPro,
     assetKeys,
     baseCurrency,
+    snapshots,
+    transactions,
+    currentByAsset,
+    dayPctByAsset,
+    dayAbsByAsset,
+    demoMode,
   };
 }

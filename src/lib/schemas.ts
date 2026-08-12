@@ -709,6 +709,53 @@ export const chartChatRequestSchema = z.object({
   }),
 });
 
+/** Performance-matrix cell explainer — client sends deterministic breakdown; server narrates. */
+export const matrixCellExplainRequestSchema = z.object({
+  language: z.string().max(5).optional(),
+  breakdown: z.object({
+    assetKey: z.enum(["all", "stock", "etf", "fund", "crypto", "fixed_return"]),
+    period: z.enum([
+      "today",
+      "oneWeek",
+      "oneMonth",
+      "ytd",
+      "oneYear",
+      "threeYear",
+      "fiveYear",
+      "tenYear",
+    ]),
+    displayMode: z.enum(["percent", "currency"]),
+    baseCurrency: z.string().max(8),
+    periodStart: z.string().max(16).nullable(),
+    periodEnd: z.string().max(16),
+    current: z.number(),
+    past: z.number().nullable(),
+    netCashFlow: z.number(),
+    pl: z.number().nullable(),
+    pct: z.number().nullable(),
+    dayAbs: z.number().nullable(),
+    dayPct: z.number().nullable(),
+    notCostBasis: z.literal(true),
+    costBasis: z.number().nullable(),
+    unrealizedVsCost: z.number().nullable(),
+    formula: z.string().max(400),
+    warnings: z.array(z.string().max(400)).max(12),
+    transactions: z
+      .array(
+        z.object({
+          id: z.string().max(64),
+          date: z.string().max(16),
+          type: z.string().max(12),
+          ticker: z.string().max(32),
+          assetType: z.string().max(16).nullable(),
+          amountBase: z.number(),
+          flowBase: z.number(),
+        }),
+      )
+      .max(80),
+  }),
+});
+
 export const newsArticleSummarySchema = z.object({
   title: z.string().min(1).max(500),
   summary: z.string().max(8000).optional().default(""),

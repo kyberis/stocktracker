@@ -2800,6 +2800,23 @@ const en: TranslationStrings = {
   matrixExplainerDisplayBody:
     "In % mode you see relative return. In currency mode you see absolute gain or loss for that period in your portfolio currency (contributions and withdrawals are excluded).",
 
+  matrixCellExplainAria: "Explain how this figure is calculated",
+  matrixCellExplainTitle: "How this cell is calculated",
+  matrixCellExplainNotCostBasis:
+    "This is period performance vs a past portfolio snapshot — not profit or loss versus what you paid (purchase price).",
+  matrixCellExplainFormula: "Formula",
+  matrixCellExplainCurrent: "Current value",
+  matrixCellExplainPast: "Value at period start",
+  matrixCellExplainNetCf: "Net cash flow (buys − sells)",
+  matrixCellExplainPl: "Period P/L",
+  matrixCellExplainDayAbs: "Day P/L",
+  matrixCellExplainDayPct: "Day %",
+  matrixCellExplainCostBasis: "Purchase cost (contrast)",
+  matrixCellExplainVsCost: "Unrealized vs cost (contrast)",
+  matrixCellExplainTxs: "Transactions in window",
+  matrixCellExplainNarrative: "Plain-language explanation",
+  matrixCellExplainLoading: "Generating AI explanation…",
+
   // Hero: invested vs cash split
   investedAssets: "Invested assets",
   cashAvailableForInvestment: "Cash available for investment",

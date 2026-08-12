@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.162",
+    date: "2026-08-12",
+    title: "Explain any performance-matrix cell",
+    titleTranslations: {
+      es: "Explicar cualquier celda de la matriz de rendimiento",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Each performance-matrix cell has a ? that shows the deterministic formula (current − past − net flows), attributed transactions, a contrast vs purchase cost, and an optional AI plain-language narrative (not investment advice).",
+        translations: {
+          es: "Cada celda de la matriz tiene un ? con la fórmula determinista (actual − pasado − flujos netos), las operaciones atribuidas, el contraste vs coste de compra y una narrativa opcional en lenguaje claro generada por IA (no es consejo de inversión).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.161",
     date: "2026-08-12",
     title: "Matrix € mode shows period P/L; remove All column",

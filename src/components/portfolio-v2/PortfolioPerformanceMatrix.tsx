@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useStealthMode } from "@/lib/stealth-context";
+import { usePortfolio } from "@/lib/portfolio-context";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { ASSET_COLORS } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
@@ -12,8 +13,10 @@ import {
   type MatrixPeriodKey,
   type MatrixRow,
 } from "@/lib/portfolio-performance-matrix";
+import { buildMatrixCellBreakdown, type MatrixCellBreakdown } from "@/lib/matrix-cell-breakdown";
 import { usePortfolioPerformanceMatrix } from "@/hooks/use-portfolio-performance-matrix";
 import PerformanceMatrixExplainerModal from "./PerformanceMatrixExplainerModal";
+import MatrixCellExplainSheet from "./MatrixCellExplainSheet";
 import type { Holding, CashEntry } from "@/lib/types";
 
 const ASSET_LABEL_KEYS: Record<AssetFilter, string> = {
@@ -78,14 +81,32 @@ export default function PortfolioPerformanceMatrix({
 }: Props) {
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
+  const { exchangeRates } = usePortfolio();
   const [explainerOpen, setExplainerOpen] = useState(false);
-  const { rows, loading, displayMode, setDisplayMode, baseCurrency } =
-    usePortfolioPerformanceMatrix({
-      holdings,
-      cashEntries,
-      refreshKey,
-      dayChangePctByType,
-    });
+  const [cellExplain, setCellExplain] = useState<{
+    assetKey: AssetFilter;
+    period: MatrixPeriodKey;
+    breakdown: MatrixCellBreakdown;
+  } | null>(null);
+
+  const {
+    rows,
+    loading,
+    displayMode,
+    setDisplayMode,
+    baseCurrency,
+    snapshots,
+    transactions,
+    currentByAsset,
+    dayPctByAsset,
+    dayAbsByAsset,
+    demoMode,
+  } = usePortfolioPerformanceMatrix({
+    holdings,
+    cashEntries,
+    refreshKey,
+    dayChangePctByType,
+  });
 
   const columns = useMemo(
     () =>
@@ -94,6 +115,37 @@ export default function PortfolioPerformanceMatrix({
         label: t(PERIOD_LABEL_KEYS[key]),
       })),
     [t],
+  );
+
+  const openCellExplain = useCallback(
+    (assetKey: AssetFilter, period: MatrixPeriodKey) => {
+      const breakdown = buildMatrixCellBreakdown({
+        assetKey,
+        period,
+        displayMode,
+        baseCurrency,
+        current: currentByAsset[assetKey] ?? 0,
+        holdings,
+        transactions,
+        exchangeRates,
+        snapshots,
+        currentByAsset,
+        dayAbs: dayAbsByAsset[assetKey] ?? null,
+        dayPct: dayPctByAsset[assetKey] ?? null,
+      });
+      setCellExplain({ assetKey, period, breakdown });
+    },
+    [
+      displayMode,
+      baseCurrency,
+      holdings,
+      transactions,
+      exchangeRates,
+      snapshots,
+      currentByAsset,
+      dayAbsByAsset,
+      dayPctByAsset,
+    ],
   );
 
   if (holdings.length === 0) {
@@ -152,7 +204,6 @@ export default function PortfolioPerformanceMatrix({
         </div>
       </div>
 
-      {/* Desktop / tablet table */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full min-w-[720px] border-collapse font-variant-numeric tabular-nums">
           <thead>
@@ -185,13 +236,13 @@ export default function PortfolioPerformanceMatrix({
                 loading={loading}
                 selected={activeFilter === row.assetKey}
                 t={t}
+                onExplainCell={openCellExplain}
               />
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Mobile: card per asset */}
       <div className="flex flex-col gap-3 p-4 sm:hidden">
         {rows.map((row) => (
           <MobileAssetCard
@@ -203,6 +254,7 @@ export default function PortfolioPerformanceMatrix({
             loading={loading}
             selected={activeFilter === row.assetKey}
             t={t}
+            onExplainCell={openCellExplain}
           />
         ))}
       </div>
@@ -210,7 +262,40 @@ export default function PortfolioPerformanceMatrix({
       <p className="px-5 pb-4 pt-2 text-center text-[10px] text-[color:var(--muted)]">{t("growthCaveat")}</p>
 
       <PerformanceMatrixExplainerModal isOpen={explainerOpen} onClose={() => setExplainerOpen(false)} />
+      <MatrixCellExplainSheet
+        open={cellExplain != null}
+        onClose={() => setCellExplain(null)}
+        assetKey={cellExplain?.assetKey ?? "all"}
+        period={cellExplain?.period ?? "today"}
+        periodLabel={cellExplain ? t(PERIOD_LABEL_KEYS[cellExplain.period]) : ""}
+        assetLabel={cellExplain ? t(ASSET_LABEL_KEYS[cellExplain.assetKey]) : ""}
+        breakdown={cellExplain?.breakdown ?? null}
+        demoMode={demoMode}
+      />
     </section>
+  );
+}
+
+function CellExplainButton({
+  onClick,
+  label,
+}: {
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className="ml-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-[color:var(--muted)] opacity-70 transition-opacity hover:opacity-100 hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]"
+      aria-label={label}
+      title={label}
+    >
+      ?
+    </button>
   );
 }
 
@@ -222,6 +307,7 @@ function MatrixTableRow({
   loading,
   selected,
   t,
+  onExplainCell,
 }: {
   row: MatrixRow;
   columns: { key: MatrixPeriodKey; label: string }[];
@@ -230,6 +316,7 @@ function MatrixTableRow({
   loading: boolean;
   selected: boolean;
   t: (key: string) => string;
+  onExplainCell: (assetKey: AssetFilter, period: MatrixPeriodKey) => void;
 }) {
   const color = ASSET_COLORS[row.assetKey];
   return (
@@ -253,10 +340,17 @@ function MatrixTableRow({
       </td>
       {columns.map((col) => {
         const cell = row.cells[col.key];
+        const canExplain = !loading && cell.kind !== "empty" && cell.kind !== "pro";
         return (
           <td key={col.key} className="px-2 py-2.5 text-right text-[13px] font-semibold">
-            <span className={`${cellColor(cell)} ${loading ? "animate-value-shimmer" : ""}`}>
+            <span className={`inline-flex items-center justify-end ${cellColor(cell)} ${loading ? "animate-value-shimmer" : ""}`}>
               {loading ? "—" : formatCell(cell, currency, stealthMode)}
+              {canExplain && (
+                <CellExplainButton
+                  label={t("matrixCellExplainAria")}
+                  onClick={() => onExplainCell(row.assetKey, col.key)}
+                />
+              )}
             </span>
           </td>
         );
@@ -273,6 +367,7 @@ function MobileAssetCard({
   loading,
   selected,
   t,
+  onExplainCell,
 }: {
   row: MatrixRow;
   columns: { key: MatrixPeriodKey; label: string }[];
@@ -281,6 +376,7 @@ function MobileAssetCard({
   loading: boolean;
   selected: boolean;
   t: (key: string) => string;
+  onExplainCell: (assetKey: AssetFilter, period: MatrixPeriodKey) => void;
 }) {
   const color = ASSET_COLORS[row.assetKey];
   return (
@@ -301,11 +397,20 @@ function MobileAssetCard({
       <div className="grid grid-cols-3 gap-px bg-[color:var(--border)]">
         {columns.map((col) => {
           const cell = row.cells[col.key];
+          const canExplain = !loading && cell.kind !== "empty" && cell.kind !== "pro";
           return (
             <div key={col.key} className="bg-[color:var(--surface-soft)] px-2 py-2 text-center">
               <div className="text-[9px] font-medium uppercase text-[color:var(--muted)]">{col.label}</div>
-              <div className={`mt-0.5 text-sm font-bold tabular-nums ${cellColor(cell)} ${loading ? "animate-value-shimmer" : ""}`}>
+              <div
+                className={`mt-0.5 inline-flex items-center justify-center gap-0.5 text-sm font-bold tabular-nums ${cellColor(cell)} ${loading ? "animate-value-shimmer" : ""}`}
+              >
                 {loading ? "—" : formatCell(cell, currency, stealthMode)}
+                {canExplain && (
+                  <CellExplainButton
+                    label={t("matrixCellExplainAria")}
+                    onClick={() => onExplainCell(row.assetKey, col.key)}
+                  />
+                )}
               </div>
             </div>
           );
