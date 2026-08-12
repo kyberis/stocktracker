@@ -153,7 +153,12 @@ function V2Dashboard(props: Props) {
           <GoalPromptCard holdings={holdings} />
           <PortfolioScoreCard holdings={holdings} cashEntries={cashEntries} />
           <GoalProgressCard holdings={holdings} cashEntries={cashEntries} />
-          <StatsGrid holdings={holdings} cashEntries={cashEntries} />
+          <StatsGrid
+            holdings={holdings}
+            cashEntries={cashEntries}
+            totals={totals}
+            dayChange={{ amount: dayGainLoss, pct: dayGainLossPercent }}
+          />
           <AllocationTabs holdings={holdings} cashEntries={allCashEntries} onShowMore={onNavigateToDiversification} />
           <CompactDividendCard holdings={holdings} cashEntries={cashEntries} onNavigateToDividends={onNavigateToDividends} />
           <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />

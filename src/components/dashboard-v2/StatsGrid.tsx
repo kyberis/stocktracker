@@ -5,7 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
-import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { calculatePortfolioTotals, type PortfolioTotals } from "@/lib/portfolio-summary";
 import {
   getDayChange,
   getDividendYield,
@@ -21,27 +21,42 @@ interface Props {
   snapshotInvested?: number | null;
   /** Render without the card wrapper — used when embedded inside another card */
   inline?: boolean;
+  /** Shared totals from `usePortfolioHomeData` — do not recompute when provided. */
+  totals?: PortfolioTotals;
+  /** Shared day-change headline from `usePortfolioHomeData`. */
+  dayChange?: { amount: number; pct: number };
 }
 
-export default function StatsGrid({ holdings, cashEntries, snapshotInvested, inline }: Props) {
+export default function StatsGrid({
+  holdings,
+  cashEntries,
+  snapshotInvested,
+  inline,
+  totals: totalsProp,
+  dayChange: dayChangeProp,
+}: Props) {
   const { t } = useI18n();
   const { user } = useAuth();
   const { quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
   const { stealthMode } = useStealthMode();
   const holdingsLimit = getHoldingsLimit(user?.plan ?? "free");
 
-  const totals = useMemo(
-    () => calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency),
-    [holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency],
+  const computedTotals = useMemo(
+    () =>
+      totalsProp ??
+      calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency),
+    [totalsProp, holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency],
   );
 
   const dayHeadline = useMemo(
-    () => getDayChange(holdings, quotes, exchangeRates, activePortfolioCurrency),
-    [holdings, quotes, exchangeRates, activePortfolioCurrency],
+    () =>
+      dayChangeProp ??
+      getDayChange(holdings, quotes, exchangeRates, activePortfolioCurrency),
+    [dayChangeProp, holdings, quotes, exchangeRates, activePortfolioCurrency],
   );
 
-  const investedCost = snapshotInvested ?? totals.totalCostEUR;
-  const gainLoss = totals.totalCurrentEUR - investedCost;
+  const investedCost = snapshotInvested ?? computedTotals.totalCostEUR;
+  const gainLoss = computedTotals.totalCurrentEUR - investedCost;
   const dayChange = dayHeadline.amount;
   const dayIsPositive = dayChange >= 0;
   const dayPct = dayHeadline.pct;

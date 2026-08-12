@@ -387,7 +387,12 @@ export default function MobileDashboard() {
                   />
                 </ErrorBoundary>
 
-                <StatsGrid holdings={filteredHoldings} cashEntries={filteredCash} />
+                <StatsGrid
+                  holdings={filteredHoldings}
+                  cashEntries={filteredCash}
+                  totals={totals}
+                  dayChange={{ amount: dayGainLoss, pct: dayGainLossPercent }}
+                />
                 <AssetPerformanceTable holdings={filteredHoldings} cashEntries={filteredCash} />
                 <AllocationTabs holdings={filteredHoldings} cashEntries={cashEntries} onShowMore={() => handleTabChange("diversification")} />
                 <CompactDividendCard holdings={filteredHoldings} cashEntries={filteredCash} onNavigateToDividends={() => handleTabChange("dividends")} />

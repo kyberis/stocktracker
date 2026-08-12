@@ -314,7 +314,12 @@ export default function HomeV2Dashboard() {
       <HomeMcpCta />
       <DailyDigestsTeaserCard />
       <WeeklyDigestCard position="promoted" />
-      <StatsGrid holdings={holdings} cashEntries={cashEntries} />
+      <StatsGrid
+        holdings={holdings}
+        cashEntries={cashEntries}
+        totals={totals}
+        dayChange={{ amount: dayGainLoss, pct: dayGainLossPercent }}
+      />
     </aside>
   );
 

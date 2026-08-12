@@ -52,7 +52,7 @@ Events tracked via a single helper (`track(name, payload)`) and stored in `analy
 
 ## 15. Related skills and rules
 - [`analytics-instrumentation`](../../.cursor/skills/analytics-instrumentation/SKILL.md)
-- Related specs: [admin-analytics](admin-analytics.md).
+- Related specs: [admin-analytics](admin-analytics.md), [display-invariants](display-invariants.md).
 
 ## 16. Open questions / planned work
 - Sampling on high-volume events.

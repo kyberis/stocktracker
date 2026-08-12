@@ -56,6 +56,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "screening_ir_agent_enabled",
   "screening_agents_v2_enabled",
   "screening_qa_enabled",
+  "display_invariants",
 ];
 
 export const dynamic = "force-dynamic";

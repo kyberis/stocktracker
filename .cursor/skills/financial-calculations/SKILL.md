@@ -27,6 +27,7 @@ Enforce calculation accuracy and currency conversion correctness for all financi
 - Currency helpers: `src/lib/utils.ts` — `convertToEUR`, `convertCurrency`, `formatCurrency`
 - Performance metrics: `src/lib/performance.ts` — `calculateTTWROR`, `calculateXIRR`
 - Portfolio totals: `src/lib/portfolio-summary.ts` — `calculatePortfolioTotals`
+- Display invariants: `src/lib/portfolio/display-invariants.ts` — `assertDisplayInvariants`
 - FX rate API: `src/app/api/exchange-rates/route.ts`
 - Dividend UI: `src/components/DividendSummary.tsx`
 - Projection UI: `src/components/PortfolioProjection.tsx`
@@ -226,6 +227,7 @@ Financial Calculation Checklist
 ## Coordination
 
 - If changes affect portfolio totals or dashboard visuals, involve `engineer-dashboard`.
+- If displayed totals may drift across cards, run `assertDisplayInvariants` (see [display-invariants](../../knowledge/product-specs/display-invariants.md)).
 - If changes require new transaction fields or schema changes, involve `engineer-data`.
 - If new broker parsers need to capture withholding tax, involve `engineer-integrations`.
 - Validate calculation changes with `qa-tester`.

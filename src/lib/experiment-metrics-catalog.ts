@@ -113,6 +113,16 @@ export const EXPERIMENT_METRICS_CATALOG: ExperimentMetricDefinition[] = [
     category: "import",
     metadataKeys: ["method", "reason", "broker"],
   },
+  {
+    key: "display_invariant_violation",
+    title: "Display invariant violation",
+    description:
+      "Home totals failed a consistency check (P/L identity, day-change %, invested+cash, sleeves, dual-path). Codes and relative bps only — no amounts.",
+    where: "usePortfolioHomeData → POST /api/analytics/track",
+    source: "client_allowlist",
+    category: "portfolio",
+    metadataKeys: ["codes", "max_bps", "surface", "holding_bucket"],
+  },
 
   // —— Onboarding ——
   {

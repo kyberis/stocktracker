@@ -42,6 +42,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "screening_qa_enabled",
   "screening_tavily_research_enabled",
   "screening_estebaranz_eval_enabled",
+  "display_invariants",
 ];
 
 export const GET = withMetrics("/api/admin/feature-flags", async (req: NextRequest) => {

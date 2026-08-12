@@ -35,7 +35,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="text-slate-500">
-            Last updated: May 26, 2026
+            Last updated: August 13, 2026
           </p>
         </header>
 
@@ -251,6 +251,15 @@ export default function PrivacyPolicyPage() {
                 understand product usage. No personal identifiers are stored.
               </li>
               <li>
+                <strong className="text-slate-800">Product quality events</strong> —
+                when you are signed in, we may record enumerated reliability
+                signals (for example import-error slugs or display-invariant
+                codes, a relative error in basis points, the screen name, and a
+                holdings-count bucket). These events are stored with your
+                account id to keep portfolio numbers consistent. They do not
+                include portfolio values, tickers, or monetary amounts.
+              </li>
+              <li>
                 <strong className="text-slate-800">Attribution parameters (UTM/referrer)</strong> —
                 when you first visit trefolio, we may store first-touch attribution
                 fields such as <code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">utm_source</code>,{" "}
@@ -304,6 +313,12 @@ export default function PrivacyPolicyPage() {
               <li>Evaluate and prioritize broker integration requests submitted by users.</li>
               <li>Process and review refund requests submitted by paid subscribers.</li>
               <li>Measure acquisition performance (signup and paid conversion rates by source).</li>
+              <li>
+                Monitor display-number consistency on the home screen: if internal
+                checks fail, we store invariant codes, relative error magnitude,
+                screen name, and a holdings-count bucket — not portfolio values
+                or tickers.
+              </li>
             </ul>
             <p>
               We do <strong className="text-slate-900">not</strong> sell, rent, or

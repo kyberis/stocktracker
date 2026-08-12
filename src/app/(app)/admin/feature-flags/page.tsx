@@ -153,6 +153,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "Daily cron scans users with ≥1 holding for data anomalies (FX, ledger mismatch, stale value_in_eur, etc.), LLM-explains findings for staff, and notifies ProdOps Telegram. Off by default.",
     group: "Features",
   },
+  display_invariants: {
+    label: "Display value invariants",
+    description:
+      "Sampled production check that home totals stay internally consistent (P/L identity, day-change %, invested+cash, sleeves). Logs invariant codes only — no amounts. Off by default.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

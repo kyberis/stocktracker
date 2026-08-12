@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.163",
+    date: "2026-08-13",
+    title: "Home totals share one calculation path",
+    titleTranslations: {
+      es: "Los totales de inicio comparten un solo cálculo",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Home stats now use the same totals and day-change as the hero, with optional sampled consistency checks (codes only, no amounts) behind a staff flag.",
+        translations: {
+          es: "Las estadísticas de inicio usan los mismos totales y el mismo cambio del día que el hero, con comprobaciones de consistencia opcionales y muestreadas (solo códigos, sin importes) detrás de un flag interno.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.162",
     date: "2026-08-12",
     title: "Explain any performance-matrix cell",

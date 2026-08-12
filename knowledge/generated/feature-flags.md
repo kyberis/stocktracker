@@ -8,6 +8,7 @@ Flags discovered by scanning `useFeatureFlag(...)` and `getServerFeatureFlag(...
 
 - `ai_report_enabled`
 - `commerce_enabled`
+- `display_invariants`
 - `investment_screening_enabled`
 - `pro_trial_enabled`
 - `social_network_enabled`

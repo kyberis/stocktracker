@@ -71,7 +71,7 @@ N/A.
 
 - [`financial-calculations`](../../.cursor/skills/financial-calculations/SKILL.md)
 - [`engineer-tools`](../../.cursor/skills/engineer-tools/SKILL.md)
-- Related specs: [ttwror-xirr-performance](ttwror-xirr-performance.md).
+- Related specs: [ttwror-xirr-performance](ttwror-xirr-performance.md), [display-invariants](display-invariants.md).
 
 ## 16. Open questions / planned work
 

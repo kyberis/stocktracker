@@ -1,12 +1,16 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { calculatePortfolioTotals, calculateTotalsByAssetType } from "@/lib/portfolio-summary";
 import { computeDayChangeByType, dayChangeForFilter, type DayChangeByType } from "@/lib/day-change-pct";
 import { convertCurrency } from "@/lib/utils";
 import { cashAmountEUR } from "@/lib/fixed-return-cash";
 import { liquidCashEntries } from "@/lib/portfolio-summary-cash";
+import { getDayChange } from "@/lib/portfolio/metrics";
+import { assertDisplayInvariants, type DisplaySnapshot } from "@/lib/portfolio/display-invariants";
+import { reportDisplayInvariantViolations } from "@/lib/portfolio/report-display-invariants";
 import type { Holding, CashEntry } from "@/lib/types";
 import type { AssetFilter } from "./AssetTypeFilter";
 
@@ -49,7 +53,8 @@ export interface PortfolioHomeData {
 export function usePortfolioHomeData(
   { holdings, cashEntries }: UsePortfolioHomeDataArgs,
 ): PortfolioHomeData {
-  const { quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const { quotes, exchangeRates, activePortfolioCurrency, demoMode } = usePortfolio();
+  const displayInvariantsEnabled = useFeatureFlag("display_invariants");
 
   const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
   const [assetFilter, setAssetFilter] = useState<AssetFilter>("all");
@@ -126,6 +131,58 @@ export function usePortfolioHomeData(
     const { abs, pct } = dayChangeForFilter(dayChangeByType, assetFilter);
     return { dayGainLoss: abs, dayGainLossPercent: pct };
   }, [assetFilter, dayChangeByType]);
+
+  const displaySnapshot = useMemo((): DisplaySnapshot => {
+    const snap: DisplaySnapshot = {
+      current: totals.totalCurrentEUR,
+      cost: totals.totalCostEUR,
+      gainLoss: totals.totalGainLoss,
+      gainLossPercent: totals.totalGainLossPercent,
+      invested: investedValueBase,
+      liquidCash: cashValueBase,
+      dayAbs: dayGainLoss,
+      dayPct: dayGainLossPercent,
+    };
+    if (assetFilter === "all") {
+      snap.sleeves = currentBySleeve;
+      snap.totalsDayGainLoss = totals.dayGainLossEUR;
+    }
+    return snap;
+  }, [
+    assetFilter,
+    cashValueBase,
+    currentBySleeve,
+    dayGainLoss,
+    dayGainLossPercent,
+    investedValueBase,
+    totals,
+  ]);
+
+  useEffect(() => {
+    if (demoMode || !displayInvariantsEnabled) return;
+    const snapshot: DisplaySnapshot = { ...displaySnapshot };
+    if (assetFilter === "all") {
+      snapshot.metricsDayGainLoss = getDayChange(
+        holdings,
+        quotes,
+        exchangeRates,
+        baseCurrency,
+      ).amount;
+    }
+    const result = assertDisplayInvariants(snapshot);
+    if (!result.ok) {
+      reportDisplayInvariantViolations(result.violations, "home", holdings.length);
+    }
+  }, [
+    assetFilter,
+    baseCurrency,
+    demoMode,
+    displayInvariantsEnabled,
+    displaySnapshot,
+    exchangeRates,
+    holdings,
+    quotes,
+  ]);
 
   const handleBackfillComplete = useCallback(() => {
     setRefreshKey((k) => k + 1);

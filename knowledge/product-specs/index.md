@@ -57,6 +57,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 
 - [backfill-snapshots](backfill-snapshots.md) — recompute historical snapshots.
 - [compact-snapshots](compact-snapshots.md) — prune old high-resolution data.
+- [display-invariants](display-invariants.md) — home display-number consistency checks + sampled telemetry.
 - [materialize-portfolio-snapshots](materialize-portfolio-snapshots.md) — per-holding expansion for charts.
 - [portfolio-snapshots-cron](portfolio-snapshots-cron.md) — daily snapshot writer.
 - [portfolio-summary-math](portfolio-summary-math.md) — totals/shares/breakdowns.

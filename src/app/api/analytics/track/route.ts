@@ -15,6 +15,7 @@ const ALLOWED_EVENTS = new Set([
   "import_error",
   "experiment_exposure",
   "empty_activation_cta",
+  "display_invariant_violation",
 ]);
 
 const schema = z.object({
