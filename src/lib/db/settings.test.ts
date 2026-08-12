@@ -890,6 +890,7 @@ describe("settings", () => {
       const token = deepLink.split("start=")[1];
 
       expect(deepLink).toContain("https://t.me/trefolio_prodops_bot?start=");
+      expect(token).toMatch(/^[0-9a-f]{12}$/);
       expect(expiresAt).toBeTruthy();
 
       mockExecute.mockReset();

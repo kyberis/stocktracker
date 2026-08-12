@@ -532,18 +532,29 @@ export default function ProdOpsConfigCard({
                 ) : null}
 
                 {cachedDeepLink ? (
-                  <p className="text-xs text-gray-500 dark:text-slate-400">
-                    If Telegram did not open automatically,{" "}
-                    <a
-                      href={cachedDeepLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="prodops-telegram-link"
+                      className="block text-xs font-medium text-gray-700 dark:text-slate-300"
                     >
-                      open the link again
-                    </a>
-                    .
-                  </p>
+                      Telegram recipient link
+                    </label>
+                    <input
+                      id="prodops-telegram-link"
+                      readOnly
+                      value={cachedDeepLink}
+                      onFocus={(event) => event.currentTarget.select()}
+                      aria-describedby="prodops-telegram-link-help"
+                      className="w-full rounded-lg border border-[color:var(--border)] bg-transparent px-3 py-2 font-mono text-xs text-[color:var(--foreground)]"
+                    />
+                    <p
+                      id="prodops-telegram-link-help"
+                      className="text-xs text-gray-500 dark:text-slate-400"
+                    >
+                      Copy the full URL into Telegram. Do not reuse an older t.me link from chat
+                      history.
+                    </p>
+                  </div>
                 ) : null}
 
                 <div className="flex flex-col gap-3 sm:flex-row">

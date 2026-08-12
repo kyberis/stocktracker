@@ -102,8 +102,8 @@ None. This feature is operational only.
 ## 13. Edge cases & gotchas
 
 - If ProdOps is disabled or misconfigured, events remain queued and do not block the originating business route.
-- Telegram link tokens are stored as hashes with a short TTL; admins can mint a fresh link without exposing the previous token.
-- ProdOps `TREFOLIO_BASE_URL` must be `https://trefolio.com`, not `ops.trefolio.com` or `user.trefolio.com`. A self-pointing value makes `/start` fail with a generic “could not verify the link” message because the completion API lives on trefolio, not ProdOps.
+- Telegram link tokens are stored as hashes with a short TTL; admins can mint a fresh link without exposing the previous token. Tokens are 12 hex characters because production Telegram `/start` payloads from `t.me` deep links arrive truncated at 12 characters — a longer hashed token never matches.
+- ProdOps `TREFOLIO_BASE_URL` must reach the trefolio origin without a Cloudflare bot challenge. `ops.trefolio.com` and `user.trefolio.com` 404; `trefolio.com` behind Bot Fight returns 403 HTML to Vercel IPs. Use the Vercel production alias for server-to-server calls.
 - Trial activation via emailed token now emits the same analytics-style signal and ProdOps event as onboarding activation.
 - Full feedback bodies are intentionally not sent to Telegram; only a summary and admin link are forwarded.
 - Staff query replies over Telegram also stay intentionally narrow: no raw full feedback body and no unbounded `analytics_events.metadata` dump.

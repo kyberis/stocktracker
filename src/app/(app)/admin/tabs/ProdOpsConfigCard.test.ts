@@ -156,6 +156,9 @@ describe("ProdOpsConfigCard", () => {
         "noopener,noreferrer",
       );
     });
+    expect(
+      (screen.getByLabelText("Telegram recipient link") as HTMLInputElement).value,
+    ).toBe("https://t.me/trefolio_prodops_bot?start=test-token");
   });
 
   it("disables the test button when config is incomplete", () => {

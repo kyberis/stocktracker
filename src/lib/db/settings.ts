@@ -1179,10 +1179,35 @@ export async function completeProdOpsRecipientLink(input: {
 }): Promise<ProdOpsRecipient | null> {
   const current = await getProdOpsConfig();
   const pending = current.pendingLink;
-  if (!pending?.tokenHash || !pending.tokenExpiresAt) return null;
-  if (!input.token.trim() || !input.chatId.trim()) return null;
-  if (new Date(pending.tokenExpiresAt).getTime() <= Date.now()) return null;
-  if (hashProdOpsLinkToken(input.token.trim()) !== pending.tokenHash) return null;
+  const token = input.token.trim();
+  if (!pending?.tokenHash || !pending.tokenExpiresAt) {
+    console.warn("[prodops-link] complete failed", {
+      reason: "missing_pending",
+      tokenLength: token.length,
+    });
+    return null;
+  }
+  if (!token || !input.chatId.trim()) {
+    console.warn("[prodops-link] complete failed", {
+      reason: "missing_token_or_chat",
+      tokenLength: token.length,
+    });
+    return null;
+  }
+  if (new Date(pending.tokenExpiresAt).getTime() <= Date.now()) {
+    console.warn("[prodops-link] complete failed", {
+      reason: "expired",
+      tokenLength: token.length,
+    });
+    return null;
+  }
+  if (hashProdOpsLinkToken(token) !== pending.tokenHash) {
+    console.warn("[prodops-link] complete failed", {
+      reason: "mismatch",
+      tokenLength: token.length,
+    });
+    return null;
+  }
 
   const nextRecipient = normalizeProdOpsRecipient({
     id: current.recipient?.id || randomUUID(),
