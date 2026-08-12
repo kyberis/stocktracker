@@ -1164,19 +1164,31 @@ export async function createProdOpsRecipientLink(): Promise<{
     },
   });
 
+  console.info("[prodops-link] minted", { tokenLength: token.length, expiresAt });
+
   return {
     deepLink: buildProdOpsTelegramDeepLink(current.botUsername, token),
     expiresAt,
   };
 }
 
-export async function completeProdOpsRecipientLink(input: {
+export type ProdOpsLinkRedeemFailure =
+  | "missing_pending"
+  | "expired"
+  | "mismatch"
+  | "missing_token_or_chat";
+
+export type ProdOpsLinkRedeemResult =
+  | { ok: true; recipient: ProdOpsRecipient }
+  | { ok: false; reason: ProdOpsLinkRedeemFailure };
+
+export async function redeemProdOpsRecipientLink(input: {
   token: string;
   chatId: string;
   telegramUserId?: string;
   telegramUsername?: string;
   telegramDisplayName?: string;
-}): Promise<ProdOpsRecipient | null> {
+}): Promise<ProdOpsLinkRedeemResult> {
   const current = await getProdOpsConfig();
   const pending = current.pendingLink;
   const token = input.token.trim();
@@ -1185,28 +1197,28 @@ export async function completeProdOpsRecipientLink(input: {
       reason: "missing_pending",
       tokenLength: token.length,
     });
-    return null;
+    return { ok: false, reason: "missing_pending" };
   }
   if (!token || !input.chatId.trim()) {
     console.warn("[prodops-link] complete failed", {
       reason: "missing_token_or_chat",
       tokenLength: token.length,
     });
-    return null;
+    return { ok: false, reason: "missing_token_or_chat" };
   }
   if (new Date(pending.tokenExpiresAt).getTime() <= Date.now()) {
     console.warn("[prodops-link] complete failed", {
       reason: "expired",
       tokenLength: token.length,
     });
-    return null;
+    return { ok: false, reason: "expired" };
   }
   if (hashProdOpsLinkToken(token) !== pending.tokenHash) {
     console.warn("[prodops-link] complete failed", {
       reason: "mismatch",
       tokenLength: token.length,
     });
-    return null;
+    return { ok: false, reason: "mismatch" };
   }
 
   const nextRecipient = normalizeProdOpsRecipient({
@@ -1227,13 +1239,29 @@ export async function completeProdOpsRecipientLink(input: {
     linkedAt: new Date().toISOString(),
   });
 
-  if (!nextRecipient) return null;
+  if (!nextRecipient) {
+    return { ok: false, reason: "missing_token_or_chat" };
+  }
 
   const next = await setProdOpsConfig({
     recipient: nextRecipient,
     pendingLink: null,
   });
-  return next.recipient;
+  if (!next.recipient) {
+    return { ok: false, reason: "missing_token_or_chat" };
+  }
+  return { ok: true, recipient: next.recipient };
+}
+
+export async function completeProdOpsRecipientLink(input: {
+  token: string;
+  chatId: string;
+  telegramUserId?: string;
+  telegramUsername?: string;
+  telegramDisplayName?: string;
+}): Promise<ProdOpsRecipient | null> {
+  const result = await redeemProdOpsRecipientLink(input);
+  return result.ok ? result.recipient : null;
 }
 
 export async function unlinkProdOpsRecipient(): Promise<ProdOpsConfig> {

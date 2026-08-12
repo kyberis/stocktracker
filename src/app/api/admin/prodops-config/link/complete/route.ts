@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { completeProdOpsRecipientLink, getProdOpsSharedSecret } from "@/lib/db";
+import { getProdOpsSharedSecret, redeemProdOpsRecipientLink } from "@/lib/db";
 import { verifyProdOpsBodySignature } from "@/lib/prodops";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -50,14 +50,20 @@ export const POST = withMetrics(
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    const recipient = await completeProdOpsRecipientLink(parsed.data);
-    if (!recipient) {
-      return NextResponse.json({ error: "Link token is invalid or expired" }, { status: 400 });
+    const redeemed = await redeemProdOpsRecipientLink(parsed.data);
+    if (!redeemed.ok) {
+      const error =
+        redeemed.reason === "missing_pending"
+          ? "No pending Telegram link. Generate a new recipient link from trefolio admin and open that URL."
+          : redeemed.reason === "mismatch"
+            ? "Link token does not match the current pending link. Generate a fresh link from admin and open the full URL."
+            : "Link token is invalid or expired";
+      return NextResponse.json({ error, reason: redeemed.reason }, { status: 400 });
     }
 
     return NextResponse.json({
       ok: true,
-      recipient,
+      recipient: redeemed.recipient,
     });
   },
 );

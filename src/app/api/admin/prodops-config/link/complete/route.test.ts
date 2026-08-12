@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 vi.mock("@/lib/db", () => ({
-  completeProdOpsRecipientLink: vi.fn(),
+  redeemProdOpsRecipientLink: vi.fn(),
   getProdOpsSharedSecret: vi.fn(),
 }));
 
@@ -24,21 +24,24 @@ describe("admin prodops link completion route", () => {
   });
 
   it("accepts a signed completion callback", async () => {
-    const { getProdOpsSharedSecret, completeProdOpsRecipientLink } = await import("@/lib/db");
+    const { getProdOpsSharedSecret, redeemProdOpsRecipientLink } = await import("@/lib/db");
     const { verifyProdOpsBodySignature } = await import("@/lib/prodops");
     vi.mocked(getProdOpsSharedSecret).mockResolvedValue("shared-secret");
     vi.mocked(verifyProdOpsBodySignature).mockReturnValue(true);
-    vi.mocked(completeProdOpsRecipientLink).mockResolvedValue({
-      id: "recipient_1",
-      label: "@ops",
-      type: "telegram_dm",
-      source: "telegram_link",
-      chatId: "12345",
-      enabled: true,
-      enabledEventTypes: ["user_registered"],
-      telegramUserId: "777",
-      telegramUsername: "ops",
-      linkedAt: "2026-05-26T00:00:00.000Z",
+    vi.mocked(redeemProdOpsRecipientLink).mockResolvedValue({
+      ok: true,
+      recipient: {
+        id: "recipient_1",
+        label: "@ops",
+        type: "telegram_dm",
+        source: "telegram_link",
+        chatId: "12345",
+        enabled: true,
+        enabledEventTypes: ["user_registered"],
+        telegramUserId: "777",
+        telegramUsername: "ops",
+        linkedAt: "2026-05-26T00:00:00.000Z",
+      },
     });
 
     const { POST } = await import("./route");

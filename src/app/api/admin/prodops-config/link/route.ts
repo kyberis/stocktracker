@@ -14,6 +14,7 @@ export const POST = withMetrics("/api/admin/prodops-config/link", async (req: Ne
 
   try {
     const { deepLink, expiresAt } = await createProdOpsRecipientLink();
+    console.info("[prodops-link] admin minted telegram link", { expiresAt });
     return NextResponse.json({
       ok: true,
       deepLink,
