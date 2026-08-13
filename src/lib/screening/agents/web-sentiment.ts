@@ -557,6 +557,14 @@ export const runWebSentimentStep: StepHandler = async (
       fmpErrors: bundle.errors.length,
       tavilyErrors: [...tavilyNews.errors, ...tavilyAnalyst.errors].length,
       analystSearchSkipped: skipAnalystSearch,
+      searchQueries: [
+        `${searchName} (${researchTicker}) news`,
+        ...(skipAnalystSearch ? [] : [`${researchTicker} analyst rating`]),
+      ],
+      searchHits: [...tavilyNews.results, ...tavilyAnalyst.results]
+        .filter((r) => r.url)
+        .slice(0, 12)
+        .map((r) => ({ url: r.url.slice(0, 500), title: (r.title || "").slice(0, 160) })),
       llmError: result.errorMessage,
     },
   };

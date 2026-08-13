@@ -110,7 +110,7 @@ When v2 is off but `screening_ir_agent_enabled` is on (E4):
 | POST | `/api/screening/entry-events` | user + flag | — | Dual-write analytics for the entry funnel |
 | GET | `/api/screening/dev/outputs?limit=N&runId=` | user + flag + (admin OR dev-env OR `screening_dev_lab_enabled`) | — | Last N agent outputs (optional `runId` scope); Dev log shows sources + per-agent JSON |
 | GET | `/api/admin/screening-costs` | admin | — | All screening runs ranked by `cost_usd` DESC (ops cost leaderboard) |
-| GET | `/api/admin/screening-analyze` | admin | — | Analyze runs (newest first) with requesting users and IR resources (Serper/Jina/Tavily/LLM) |
+| GET | `/api/admin/screening-analyze` | admin | — | Analyze runs (newest first) with requesting users, IR resources, downloaded document URLs and excerpts |
 
 Regular routes go through [`requireScreeningAccess`](../../src/lib/screening/guard.ts):
 session required, then per-user flag. A disabled flag returns **404**, not 403, so
@@ -239,8 +239,10 @@ the feature is not discoverable before launch. The Dev outputs route adds
   via `screening_cost_budget_exceeded_total`. Admin leaderboard at
   `/admin/screening-costs` (`GET /api/admin/screening-costs`) ranks every run
   from most to least expensive. Analyze ops list at `/admin/screening-analyze`
-  (`GET /api/admin/screening-analyze`) shows who requested each Analyze and
-  which IR resources ran (Serper queries, Jina URLs, Tavily credits, LLM).
+  (`GET /api/admin/screening-analyze`) shows who requested each Analyze, which
+  IR resources ran (Serper queries, Jina URLs, Tavily credits, LLM), and the
+  downloaded IR hub/document URLs plus extracted excerpts (expand a row).
+  Runs finished before this capture only have LLM-cited sources from agent output.
 - Every AI turn writes an `ai_logs` row (sources such as `screening_intake`,
   `screening_hard_data`, `screening_web_sentiment`, …) plus a row in
   `screening_agent_outputs`.

@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.169",
+    date: "2026-08-14",
+    title: "Admin feature-flag toggles persist",
+    titleTranslations: {
+      es: "Los toggles de feature flags del admin persisten",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Admin Feature Flags now shows and saves every registered flag, including Portfolio anomaly agent and Display value invariants.",
+        translations: {
+          es: "Admin Feature Flags ahora muestra y guarda todos los flags registrados, incluido Portfolio anomaly agent y Display value invariants.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Admin Screening Analyze shows the IR URLs and extracted text downloaded for each run, not only credit counts.",
+        translations: {
+          es: "Admin Screening Analyze muestra las URLs de IR y el texto extraído de cada corrida, no solo los recuentos de créditos.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.168",
     date: "2026-08-14",
     title: "Force Serper/Jina on Analyze",

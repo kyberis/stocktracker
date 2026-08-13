@@ -95,6 +95,14 @@ export interface FetchIrSiteDocumentsResult {
   provider: IrSiteDocsProvider | null;
   serperQueries: number;
   jinaUrls: number;
+  /** Queries actually sent to Serper or Tavily Search. */
+  searchQueries?: string[];
+  /** Query passed to Tavily Extract (chunk rerank). */
+  extractQueries?: string[];
+  /** URLs sent to Jina or Tavily Extract. */
+  extractUrls?: string[];
+  /** Search hit URLs (before extract). */
+  searchHits?: Array<{ url: string; title: string }>;
 }
 
 function hostFromUrl(url: string): string {
@@ -301,6 +309,34 @@ export function pickIrUrls(opts: {
 const EXTRACT_QUERY =
   "management guidance outlook catalysts business segments quarterly results earnings";
 
+/** Same strings IR Search actually sends (Serper or Tavily). */
+export function irDiscoveryQueries(companyName: string, ticker: string): string[] {
+  const name = (companyName || ticker).trim();
+  const t = ticker.toUpperCase().trim();
+  return [
+    `${name} ${t} investor relations`,
+    `${name} ${t} latest earnings OR quarterly results OR shareholder report OR MD&A`,
+  ];
+}
+
+export const IR_EXTRACT_QUERY = EXTRACT_QUERY;
+
+function compactSearchHits(
+  hub: TavilyScreeningResult[],
+  docs: TavilyScreeningResult[],
+): Array<{ url: string; title: string }> {
+  const out: Array<{ url: string; title: string }> = [];
+  const seen = new Set<string>();
+  for (const r of [...hub, ...docs]) {
+    const url = (r.url || "").trim().slice(0, 500);
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    out.push({ url, title: (r.title || "").trim().slice(0, 160) });
+    if (out.length >= 12) break;
+  }
+  return out;
+}
+
 const HTML_EXCERPT_MAX = 4000;
 const PDF_EXCERPT_MAX = 12_000;
 
@@ -439,6 +475,10 @@ export async function fetchIrSiteDocuments(
   let extractCredits = 0;
   let serperQueries = 0;
   let jinaUrls = 0;
+  let searchQueries: string[] = [];
+  let extractQueries: string[] = [];
+  let extractUrls: string[] = [];
+  let searchHits: Array<{ url: string; title: string }> = [];
   let usedSerper = false;
   let usedJina = false;
   let usedTavilySearch = false;
@@ -457,6 +497,10 @@ export async function fetchIrSiteDocuments(
     provider: null,
     serperQueries,
     jinaUrls,
+    searchQueries,
+    extractQueries,
+    extractUrls,
+    searchHits,
   });
 
   const forceSerperJina = Boolean(opts.forceSerperJina);
@@ -475,8 +519,7 @@ export async function fetchIrSiteDocuments(
 
   const fetchImpl = opts.fetchImpl ?? fetch;
   const maxDocuments = Math.min(3, Math.max(1, opts.maxDocuments ?? 3));
-  const hubQuery = `${name} ${ticker} investor relations`;
-  const docQuery = `${name} ${ticker} latest earnings OR quarterly results OR shareholder report OR MD&A`;
+  const [hubQuery, docQuery] = irDiscoveryQueries(name, ticker);
 
   let hubResults: TavilyScreeningResult[] = [];
   let docResults: TavilyScreeningResult[] = [];
@@ -496,9 +539,11 @@ export async function fetchIrSiteDocuments(
       }),
     ]);
     serperQueries = 2;
+    searchQueries = [hubQuery, docQuery];
     errors.push(...hubSearch.errors, ...docSearch.errors);
     hubResults = hubSearch.results;
     docResults = docSearch.results;
+    searchHits = compactSearchHits(hubResults, docResults);
   }
 
   let { irPageUrl, candidates } = pickIrUrls({
@@ -542,6 +587,7 @@ export async function fetchIrSiteDocuments(
     searchCredits += 2;
     usedTavilySearch = true;
     usedSerper = false;
+    searchQueries = [hubQuery, docQuery];
     errors.push(...hubSearch.errors, ...docSearch.errors);
     const picked = pickIrUrls({
       hubResults: hubSearch.results,
@@ -552,6 +598,7 @@ export async function fetchIrSiteDocuments(
     });
     irPageUrl = picked.irPageUrl;
     candidates = picked.candidates;
+    searchHits = compactSearchHits(hubSearch.results, docSearch.results);
   }
 
   if (candidates.length === 0) {
@@ -559,10 +606,12 @@ export async function fetchIrSiteDocuments(
       ...empty(["no_ir_candidates"]),
       irPageUrl,
       provider: usedTavilySearch ? "tavily" : null,
+      searchHits,
     };
   }
 
   const contentByUrl = new Map<string, string>();
+  extractUrls = candidates.map((c) => c.url).slice(0, 8);
 
   if (usedSerper && jinaKeysPresent()) {
     const htmlCandidates = candidates.filter((c) => !isPdfUrl(c.url));
@@ -608,6 +657,7 @@ export async function fetchIrSiteDocuments(
       if (content.trim().length >= 40) contentByUrl.set(url, content);
     }
     usedTavilyExtract = tavily.contentByUrl.size > 0 || tavily.extractCredits > 0;
+    if (usedTavilyExtract) extractQueries = [EXTRACT_QUERY];
   }
 
   const documents = documentsFromContent(candidates, contentByUrl);
@@ -632,5 +682,9 @@ export async function fetchIrSiteDocuments(
     provider,
     serperQueries,
     jinaUrls,
+    searchQueries,
+    extractQueries,
+    extractUrls,
+    searchHits,
   };
 }

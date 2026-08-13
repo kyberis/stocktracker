@@ -37,6 +37,23 @@ interface AnalyzeRunRow {
   serperQueries: number;
   jinaUrls: number;
   irSiteDocsUsed: boolean;
+  irPageUrl: string | null;
+  documents: {
+    url: string;
+    title: string;
+    asOf: string | null;
+    role: string;
+    format: string;
+    excerpt: string;
+  }[];
+  searchQueries: string[];
+  irErrors: string[];
+  llmSources: { url: string; label: string; asOf: string }[];
+  guidanceSummary: string | null;
+  bullets: string[];
+  extractQueries: string[];
+  extractUrls: string[];
+  searchHits: { url: string; title: string }[];
   createdAt: string;
 }
 
@@ -81,7 +98,19 @@ function ScreeningAnalyzeTab() {
       if (res.ok) {
         const data = await res.json();
         setUsers(data.users || []);
-        setRuns(data.runs || []);
+        setRuns(
+          (data.runs || []).map((r: AnalyzeRunRow) => ({
+            ...r,
+            documents: r.documents ?? [],
+            searchQueries: r.searchQueries ?? [],
+            irErrors: r.irErrors ?? [],
+            llmSources: r.llmSources ?? [],
+            bullets: r.bullets ?? [],
+            extractQueries: r.extractQueries ?? [],
+            extractUrls: r.extractUrls ?? [],
+            searchHits: r.searchHits ?? [],
+          })),
+        );
         setTotal(data.total || 0);
         setUniqueUsers(data.uniqueUsers || 0);
         setTotalCostUsd(Number(data.totalCostUsd) || 0);
@@ -106,8 +135,9 @@ function ScreeningAnalyzeTab() {
           Screening Analyze
         </h2>
         <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-          Who requested a single-company Analyze, and which IR/search resources
-          each run used (LLM, Tavily, Serper, Jina). Newest first.
+          Who requested a single-company Analyze, which IR/search resources
+          each run used, and the URLs plus extracted text that were downloaded.
+          Expand a row for documents. Newest first.
         </p>
       </div>
 
@@ -362,7 +392,8 @@ function ScreeningAnalyzeTab() {
                                   colSpan={9}
                                   className="px-3 py-3 bg-gray-50 dark:bg-slate-800/50"
                                 >
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] text-gray-600 dark:text-slate-300">
+                                  <div className="space-y-4 text-[11px] text-gray-600 dark:text-slate-300">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     <div>
                                       <strong>User:</strong> {run.username || "—"}{" "}
                                       ({run.email || run.userId})
@@ -396,6 +427,206 @@ function ScreeningAnalyzeTab() {
                                       {run.serperQueries} queries / {run.jinaUrls}{" "}
                                       URLs
                                     </div>
+                                    </div>
+
+                                    <div>
+                                      <h4 className="text-[11px] font-semibold text-gray-800 dark:text-slate-200 mb-1">
+                                        Search
+                                      </h4>
+                                      {run.searchQueries.length > 0 ? (
+                                        <ul className="list-disc pl-4 space-y-0.5">
+                                          {run.searchQueries.map((q) => (
+                                            <li key={q} className="font-mono">
+                                              {q}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      ) : (
+                                        <p className="text-gray-400 dark:text-slate-500">
+                                          No search queries stored.
+                                        </p>
+                                      )}
+                                      {run.searchHits.length > 0 && (
+                                        <ul className="mt-2 space-y-1">
+                                          {run.searchHits.map((h) => (
+                                            <li key={h.url}>
+                                              <a
+                                                href={h.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-indigo-600 dark:text-indigo-400 hover:underline break-all"
+                                              >
+                                                {h.title || h.url}
+                                              </a>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                    </div>
+
+                                    <div>
+                                      <h4 className="text-[11px] font-semibold text-gray-800 dark:text-slate-200 mb-1">
+                                        Extract
+                                      </h4>
+                                      {run.extractQueries.length > 0 ? (
+                                        <ul className="list-disc pl-4 space-y-0.5 mb-1">
+                                          {run.extractQueries.map((q) => (
+                                            <li key={q} className="font-mono">
+                                              {q}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      ) : (
+                                        <p className="text-gray-400 dark:text-slate-500 mb-1">
+                                          No extract query (Jina has none; Tavily
+                                          Extract uses a rerank query).
+                                        </p>
+                                      )}
+                                      {run.extractUrls.length > 0 ? (
+                                        <ul className="space-y-1">
+                                          {run.extractUrls.map((url) => (
+                                            <li key={url}>
+                                              <a
+                                                href={url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-indigo-600 dark:text-indigo-400 hover:underline break-all font-mono"
+                                              >
+                                                {url}
+                                              </a>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      ) : (
+                                        <p className="text-gray-400 dark:text-slate-500">
+                                          No extract URLs stored on this run.
+                                        </p>
+                                      )}
+                                    </div>
+
+                                    {run.irPageUrl && (
+                                      <p>
+                                        <strong>IR hub:</strong>{" "}
+                                        <a
+                                          href={run.irPageUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-indigo-600 dark:text-indigo-400 hover:underline break-all"
+                                        >
+                                          {run.irPageUrl}
+                                        </a>
+                                      </p>
+                                    )}
+
+                                    <div>
+                                      <h4 className="text-[11px] font-semibold text-gray-800 dark:text-slate-200 mb-1">
+                                        Documents
+                                      </h4>
+                                      {run.documents.length > 0 ? (
+                                        <ul className="space-y-3">
+                                          {run.documents.map((doc) => (
+                                            <li
+                                              key={doc.url}
+                                              className="rounded-md border border-gray-200 dark:border-slate-700 p-2 bg-white dark:bg-slate-900/40"
+                                            >
+                                              <div className="flex flex-wrap items-center gap-2">
+                                                <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200">
+                                                  {doc.format || "html"}
+                                                </span>
+                                                {doc.role && (
+                                                  <span className="text-[10px] text-gray-500 dark:text-slate-400">
+                                                    {doc.role}
+                                                  </span>
+                                                )}
+                                                {doc.asOf && (
+                                                  <span className="text-[10px] tabular-nums text-gray-500 dark:text-slate-400">
+                                                    {doc.asOf}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <a
+                                                href={doc.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="mt-1 block text-indigo-600 dark:text-indigo-400 hover:underline break-all"
+                                              >
+                                                {doc.title || doc.url}
+                                              </a>
+                                              {doc.title && (
+                                                <p className="font-mono text-[10px] text-gray-500 dark:text-slate-400 break-all">
+                                                  {doc.url}
+                                                </p>
+                                              )}
+                                              {doc.excerpt ? (
+                                                <blockquote className="mt-1.5 whitespace-pre-wrap text-gray-700 dark:text-slate-200 border-l-2 border-gray-300 dark:border-slate-600 pl-2">
+                                                  {doc.excerpt}
+                                                </blockquote>
+                                              ) : (
+                                                <p className="mt-1 text-gray-400 dark:text-slate-500">
+                                                  URL known; excerpt was not stored
+                                                  on this run.
+                                                </p>
+                                              )}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      ) : (
+                                        <p className="text-gray-500 dark:text-slate-400">
+                                          No documents stored. Re-run Analyze after
+                                          this deploy to capture excerpts.
+                                        </p>
+                                      )}
+                                    </div>
+
+                                    {run.guidanceSummary && (
+                                      <p>
+                                        <strong>Guidance (AI):</strong>{" "}
+                                        {run.guidanceSummary}
+                                      </p>
+                                    )}
+
+                                    {run.bullets.length > 0 && (
+                                      <div>
+                                        <h4 className="text-[11px] font-semibold text-gray-800 dark:text-slate-200 mb-1">
+                                          IR bullets (AI)
+                                        </h4>
+                                        <ul className="list-disc pl-4 space-y-0.5">
+                                          {run.bullets.map((b) => (
+                                            <li key={b}>{b}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                    {run.llmSources.length > 0 && (
+                                      <div>
+                                        <h4 className="text-[11px] font-semibold text-gray-800 dark:text-slate-200 mb-1">
+                                          Cited sources
+                                        </h4>
+                                        <ul className="list-disc pl-4 space-y-0.5">
+                                          {run.llmSources.map((s) => (
+                                            <li key={s.url}>
+                                              <a
+                                                href={s.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-indigo-600 dark:text-indigo-400 hover:underline break-all"
+                                              >
+                                                {s.label || s.url}
+                                              </a>
+                                              {s.asOf ? ` · ${s.asOf}` : ""}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                    {run.irErrors.length > 0 && (
+                                      <p>
+                                        <strong>IR errors:</strong>{" "}
+                                        {run.irErrors.join(" · ")}
+                                      </p>
+                                    )}
                                   </div>
                                 </td>
                               </tr>

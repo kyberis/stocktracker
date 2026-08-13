@@ -30,9 +30,10 @@ Feature flags registered in code, with per-user overrides stored in DB. Both cli
 | GET/PUT | `/api/admin/feature-flags` | admin | Admin | Manage. |
 
 ## 6. UI surface
-- Admin table per user; `/account` "Labs" panel for opt-in flags.
+- Admin Feature Flags page. GET `/api/admin/feature-flags` returns every key in `ALL_PLATFORM_FEATURES` so toggles match persisted state.
 - **`commerce_enabled`** (default off): hides subscription pricing, upsell/compare cards, checkout CTAs, and new purchase API paths on trefolio. Existing Pro users keep billing portal access. See payments spec.
 - **`display_invariants`** (default off): sampled home-screen numeric consistency checks; see [display-invariants](display-invariants.md).
+- **`portfolio_anomaly_agent`** (default off): staff portfolio anomaly scan; see [portfolio-anomaly-agent](portfolio-anomaly-agent.md).
 
 ## 7. Business logic
 - Resolution: user override → global default.

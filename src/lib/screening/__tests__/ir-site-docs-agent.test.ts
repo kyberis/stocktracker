@@ -225,6 +225,12 @@ describe("runIrBusinessStep IR site docs", () => {
     expect(result.payload).toMatchObject({
       irSiteDocsUsed: true,
       researchUsed: false,
+      irPageUrl: "https://investors.tfiintl.com/",
+      documents: [
+        expect.objectContaining({
+          url: "https://investors.tfiintl.com/news/q1",
+        }),
+      ],
     });
   });
 

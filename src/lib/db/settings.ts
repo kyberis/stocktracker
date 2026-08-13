@@ -88,8 +88,6 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   // trefolio evaluate step after shortlist research (requires pipeline real + screening flags).
   // Flag key kept as screening_estebaranz_eval_enabled for stored settings compatibility.
   "screening_estebaranz_eval_enabled",
-  // Staff portfolio anomaly scan + ProdOps triage (cron gated).
-  "portfolio_anomaly_agent",
 ]);
 
 const VALID_THEMES = new Set(["default", "terminal", "canvas", "studio"]);
@@ -457,7 +455,7 @@ export async function setFeatureEnabled(feature: PlatformFeature, enabled: boole
 
 /* ─── Per-User Feature Flag Overrides ─── */
 
-const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
+export const ALL_PLATFORM_FEATURES = [
   "alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled",
   "mobile_app_enabled", "telegram_enabled",
   "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
@@ -503,7 +501,16 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "screening_estebaranz_eval_enabled",
   "portfolio_anomaly_agent",
   "display_invariants",
-];
+] as const satisfies readonly PlatformFeature[];
+
+type MissingPlatformFeature = Exclude<
+  PlatformFeature,
+  (typeof ALL_PLATFORM_FEATURES)[number]
+>;
+const _allPlatformFeaturesExhaustive: MissingPlatformFeature extends never
+  ? true
+  : MissingPlatformFeature = true;
+void _allPlatformFeaturesExhaustive;
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {
   const client = await ensureInitialized();

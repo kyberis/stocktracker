@@ -43,16 +43,15 @@ If the flag should start **disabled**, skip this — flags not in the set defaul
 
 ### 3. Add to ALL_PLATFORM_FEATURES
 
-Add the flag to the `ALL_PLATFORM_FEATURES` array in `src/lib/db/settings.ts` (used by `resolveAllFlagsForUser`).
+Add the flag to the `ALL_PLATFORM_FEATURES` array in `src/lib/db/settings.ts`.
+Admin GET `/api/admin/feature-flags` and `/api/admin/settings` read this list — do **not** maintain a separate `ALLOWED_FLAGS` copy (that drift left toggles looking off after save).
 
-### 4. Add to API allowlists
+### 4. Add to remaining API lists
 
 Update these files with the new flag:
 
-- `src/app/api/admin/feature-flags/route.ts` — `ALLOWED_FLAGS` array
-- `src/app/api/feature-flags/route.ts` — add to the anonymous fallback path's `Promise.all` and response object
-- `src/app/api/admin/settings/route.ts` — `ALLOWED_FLAGS` array (admin batch endpoint)
 - `src/lib/schemas.ts` — `PLATFORM_FEATURE_ENUM` z.enum array
+- `src/app/api/feature-flags/route.ts` — anonymous fallback path only (logged-in users already get `ALL_PLATFORM_FEATURES` via `resolveAllFlagsForUser`)
 
 ### 5. Add to admin UI metadata
 
@@ -183,11 +182,9 @@ isFeatureEnabledForUser(flag, userId):
 ## Checklist for New Feature Behind a Flag
 
 - [ ] Add to `PlatformFeature` type in `settings.ts`
-- [ ] Add to `ALL_PLATFORM_FEATURES` array in `settings.ts`
+- [ ] Add to `ALL_PLATFORM_FEATURES` array in `settings.ts` (admin GET uses this list)
 - [ ] Optionally add to `DEFAULT_ENABLED_FLAGS` if on by default
 - [ ] Add to `PLATFORM_FEATURE_ENUM` in `schemas.ts`
-- [ ] Add to `ALLOWED_FLAGS` in admin feature-flags route
-- [ ] Add to `ALLOWED_FLAGS` in admin settings route
 - [ ] Add to anonymous path in public feature-flags route
 - [ ] Add to `FLAG_META` in admin feature-flags page
 - [ ] Gate server-side with `isFeatureEnabledForUser` in API routes

@@ -178,6 +178,7 @@ export {
   getGlobalOpenAIApiKey,
   getPlatformSetting,
   setPlatformSetting,
+  ALL_PLATFORM_FEATURES,
   isFeatureEnabled,
   setFeatureEnabled,
   isFeatureEnabledForUser,

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 import {
+  ALL_PLATFORM_FEATURES,
   isFeatureEnabled,
-  type PlatformFeature,
   getGlobalResendApiKey,
   getPlatformSetting,
   getAllStripePriceConfig,
@@ -21,43 +21,6 @@ import {
 import { getCronStats } from "@/lib/cron-logging";
 import { isGrafanaCloudConfigured } from "@/lib/grafana-push";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
-
-const ALLOWED_FLAGS: PlatformFeature[] = [
-  "alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled",
-  "mobile_app_enabled", "telegram_enabled",
-  "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
-  "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
-  "tool_watchlist_enabled",
-  "support_chat_enabled",
-  "pro_trial_enabled",
-  "ai_report_enabled",
-  "portfolio_v2_chart_enabled",
-  "social_network_enabled",
-  "market_data_fmp_search",
-  "market_data_fmp_fundamentals",
-  "market_data_fmp_intelligence",
-  "market_data_fmp_portfolio_news",
-  "market_data_fmp_economic_indicators",
-  "market_data_fmp_crypto",
-  "market_data_fmp_dividends",
-  "market_data_fmp_event_sync",
-  "weekly_digest_enabled",
-  "daily_digests_enabled",
-  "aid_beta",
-  "home_v2",
-  "classic_home",
-  "commerce_enabled",
-  "tool_tax_reports_enabled",
-  "tool_simulator_enabled",
-  "tool_planning_enabled",
-  "investment_screening_enabled",
-  "screening_dev_lab_enabled",
-  "screening_pipeline_real_enabled",
-  "screening_ir_agent_enabled",
-  "screening_agents_v2_enabled",
-  "screening_qa_enabled",
-  "display_invariants",
-];
 
 export const dynamic = "force-dynamic";
 
@@ -86,7 +49,7 @@ export const GET = withMetrics("/api/admin/settings", async (req: NextRequest) =
     prodOpsConfig,
     prodOpsSecret,
   ] = await Promise.all([
-    Promise.all(ALLOWED_FLAGS.map(async (f) => [f, await isFeatureEnabled(f)] as const)),
+    Promise.all(ALL_PLATFORM_FEATURES.map(async (f) => [f, await isFeatureEnabled(f)] as const)),
     getGlobalResendApiKey(),
     isFeatureEnabled("support_chat_enabled"),
     getPlatformSetting("support_chat_starter_daily_limit").then((v) => parseInt(v || "10", 10)),

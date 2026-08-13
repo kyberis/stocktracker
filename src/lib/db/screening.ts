@@ -4,7 +4,10 @@ import { num, str } from "./helpers";
 import {
   mergeIrResources,
   parseAnalyzeBriefMeta,
+  parseIrAgentOutputJson,
   parseIrStepCompletedPayload,
+  parseWebAgentOutputJson,
+  fillAnalyzeResourceGaps,
 } from "@/lib/screening/analyze-admin";
 
 /**
@@ -335,6 +338,16 @@ export interface ScreeningAnalyzeAdminRunRow extends ScreeningRunCostAdminRow {
   serperQueries: number;
   jinaUrls: number;
   irSiteDocsUsed: boolean;
+  irPageUrl: string | null;
+  documents: import("@/lib/screening/analyze-admin").AnalyzeIrDocument[];
+  searchQueries: string[];
+  irErrors: string[];
+  llmSources: import("@/lib/screening/analyze-admin").AnalyzeLlmSource[];
+  guidanceSummary: string | null;
+  bullets: string[];
+  extractQueries: string[];
+  extractUrls: string[];
+  searchHits: import("@/lib/screening/analyze-admin").AnalyzeSearchHit[];
 }
 
 /**
@@ -414,6 +427,16 @@ export async function listScreeningAnalyzeAdmin(
       serperQueries: 0,
       jinaUrls: 0,
       irSiteDocsUsed: false,
+      irPageUrl: null as string | null,
+      documents: [] as ScreeningAnalyzeAdminRunRow["documents"],
+      searchQueries: [] as string[],
+      irErrors: [] as string[],
+      llmSources: [] as ScreeningAnalyzeAdminRunRow["llmSources"],
+      guidanceSummary: null as string | null,
+      bullets: [] as string[],
+      extractQueries: [] as string[],
+      extractUrls: [] as string[],
+      searchHits: [] as ScreeningAnalyzeAdminRunRow["searchHits"],
     };
   });
 
@@ -429,6 +452,22 @@ export async function listScreeningAnalyzeAdmin(
               AND s.agent_kind = 'ir_business'`,
       args: runIds,
     });
+    const irOutputs = await client.execute({
+      sql: `SELECT run_id, agent_kind, output_json
+            FROM screening_agent_outputs
+            WHERE run_id IN (${placeholders})
+              AND agent_kind IN ('ir_business', 'web_sentiment')`,
+      args: runIds,
+    });
+    const webEvents = await client.execute({
+      sql: `SELECT e.run_id, e.payload_json
+            FROM screening_run_events e
+            INNER JOIN screening_run_steps s ON s.id = e.step_id
+            WHERE e.run_id IN (${placeholders})
+              AND e.event_type = 'StepCompleted'
+              AND s.agent_kind = 'web_sentiment'`,
+      args: runIds,
+    });
     const byRun = new Map<string, ReturnType<typeof parseIrStepCompletedPayload>[]>();
     for (const raw of irEvents.rows) {
       const row = raw as unknown as Record<string, unknown>;
@@ -438,12 +477,50 @@ export async function listScreeningAnalyzeAdmin(
       list.push(parsed);
       byRun.set(runId, list);
     }
+    for (const raw of irOutputs.rows) {
+      const row = raw as unknown as Record<string, unknown>;
+      const runId = str(row.run_id);
+      const kind = str(row.agent_kind ?? "");
+      const json = str(row.output_json ?? "{}");
+      const parsed =
+        kind === "web_sentiment"
+          ? parseWebAgentOutputJson(json)
+          : parseIrAgentOutputJson(json);
+      const list = byRun.get(runId) ?? [];
+      list.push(parsed);
+      byRun.set(runId, list);
+    }
+    for (const raw of webEvents.rows) {
+      const row = raw as unknown as Record<string, unknown>;
+      const runId = str(row.run_id);
+      const parsed = parseIrStepCompletedPayload(str(row.payload_json ?? "{}"));
+      const list = byRun.get(runId) ?? [];
+      list.push(parsed);
+      byRun.set(runId, list);
+    }
     for (const run of runsBase) {
-      const merged = mergeIrResources(byRun.get(run.id) ?? []);
+      const merged = fillAnalyzeResourceGaps(
+        mergeIrResources(byRun.get(run.id) ?? []),
+        { ticker: run.ticker, companyName: run.companyName, exchange: run.exchange },
+        {
+          tavilySearchCredits: run.costBreakdown.tavilySearchCredits,
+          tavilyExtractCredits: run.costBreakdown.tavilyExtractCredits,
+        },
+      );
       run.irProvider = merged.provider;
       run.serperQueries = merged.serperQueries;
       run.jinaUrls = merged.jinaUrls;
       run.irSiteDocsUsed = merged.irSiteDocsUsed;
+      run.irPageUrl = merged.irPageUrl;
+      run.documents = merged.documents;
+      run.searchQueries = merged.searchQueries;
+      run.irErrors = merged.errors;
+      run.llmSources = merged.llmSources;
+      run.guidanceSummary = merged.guidanceSummary;
+      run.bullets = merged.bullets;
+      run.extractQueries = merged.extractQueries;
+      run.extractUrls = merged.extractUrls;
+      run.searchHits = merged.searchHits;
     }
   }
 

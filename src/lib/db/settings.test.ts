@@ -397,6 +397,28 @@ describe("settings", () => {
       expect(resultEnabled).toBe(true);
       expect(resultDisabled).toBe(false);
     });
+
+    it("defaults portfolio_anomaly_agent and display_invariants off", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      expect(await settings.isFeatureEnabled("portfolio_anomaly_agent")).toBe(false);
+      expect(await settings.isFeatureEnabled("display_invariants")).toBe(false);
+    });
+  });
+
+  describe("ALL_PLATFORM_FEATURES", () => {
+    it("includes admin UI flags that used to be missing from GET", () => {
+      expect(settings.ALL_PLATFORM_FEATURES).toEqual(
+        expect.arrayContaining([
+          "portfolio_anomaly_agent",
+          "display_invariants",
+          "weekly_digest_free_tier_enabled",
+          "lifecycle_activation_email_enabled",
+          "lifecycle_winback_email_enabled",
+          "mcp_fmp_proxy",
+        ]),
+      );
+    });
   });
 
   describe("setFeatureEnabled", () => {

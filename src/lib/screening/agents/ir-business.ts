@@ -21,6 +21,7 @@ import {
   summariseIrBundleForLlm,
 } from "@/lib/screening/data/fmp-ir";
 import { fetchIrSiteDocuments } from "@/lib/screening/data/ir-site-docs";
+import { compactIrDocuments } from "@/lib/screening/analyze-admin";
 import {
   cleanCompanyNameForSearch,
   researchSymbolForListed,
@@ -700,6 +701,18 @@ export const runIrBusinessStep: StepHandler = async (
     contradiction: result.output.contradictionWithHardData,
   });
 
+  const llmSources = [
+    ...(result.output.guidance.sources ?? []),
+    ...result.output.catalysts.flatMap((c) => c.sources ?? []),
+  ]
+    .filter((s) => s.url)
+    .slice(0, 12)
+    .map((s) => ({
+      url: s.url.slice(0, 500),
+      label: (s.label ?? "").slice(0, 120),
+      asOf: (s.asOf ?? "").slice(0, 40),
+    }));
+
   return {
     status: "ok",
     payload: {
@@ -713,6 +726,16 @@ export const runIrBusinessStep: StepHandler = async (
       provider: irDocs?.provider ?? null,
       serperQueries: irDocs?.serperQueries ?? 0,
       jinaUrls: irDocs?.jinaUrls ?? 0,
+      irPageUrl: irDocs?.irPageUrl ?? null,
+      documents: compactIrDocuments(irDocs?.documents ?? []),
+      searchQueries: (irDocs?.searchQueries ?? []).slice(0, 6),
+      extractQueries: (irDocs?.extractQueries ?? []).slice(0, 4),
+      extractUrls: (irDocs?.extractUrls ?? []).slice(0, 12),
+      searchHits: (irDocs?.searchHits ?? []).slice(0, 12),
+      errors: (irDocs?.errors ?? []).slice(0, 8),
+      llmSources,
+      guidanceSummary: result.output.guidance.summary.slice(0, 500),
+      bullets: result.output.bullets.slice(0, 5),
       researchUsed,
       llmError: result.errorMessage,
     },

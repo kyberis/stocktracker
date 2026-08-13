@@ -83,6 +83,31 @@ describe("GET /api/admin/screening-analyze", () => {
           serperQueries: 2,
           jinaUrls: 3,
           irSiteDocsUsed: true,
+          irPageUrl: "https://investors.uber.com/",
+          documents: [
+            {
+              url: "https://investors.uber.com/q2.pdf",
+              title: "Q2 shareholder report",
+              asOf: "2026-08-01",
+              role: "document",
+              format: "pdf",
+              excerpt: "Revenue grew 18% year over year.",
+            },
+          ],
+          searchQueries: ["Uber UBER investor relations"],
+          irErrors: [],
+          llmSources: [
+            {
+              url: "https://investors.uber.com/q2.pdf",
+              label: "Q2",
+              asOf: "2026-08-01",
+            },
+          ],
+          guidanceSummary: "Raised full-year outlook.",
+          bullets: ["Mobility mix shifted toward trips."],
+          extractQueries: ["management guidance outlook catalysts business segments quarterly results earnings"],
+          extractUrls: ["https://investors.uber.com/q2.pdf"],
+          searchHits: [{ url: "https://investors.uber.com/", title: "IR" }],
         },
       ],
       total: 1,
@@ -100,6 +125,8 @@ describe("GET /api/admin/screening-analyze", () => {
     expect(body.runs[0].ticker).toBe("UBER");
     expect(body.runs[0].irProvider).toBe("serper_jina");
     expect(body.runs[0].serperQueries).toBe(2);
+    expect(body.runs[0].documents[0].url).toContain("investors.uber.com");
+    expect(body.runs[0].guidanceSummary).toMatch(/outlook/i);
     expect(listScreeningAnalyzeAdmin).toHaveBeenCalledWith({
       limit: 20,
       offset: 0,

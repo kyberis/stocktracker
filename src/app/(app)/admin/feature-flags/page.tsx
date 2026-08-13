@@ -224,6 +224,7 @@ export default function FeatureFlagsPage() {
   const [overrideCounts, setOverrideCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [expandedFlag, setExpandedFlag] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Override[]>([]);
   const [overridesLoading, setOverridesLoading] = useState(false);
@@ -261,6 +262,7 @@ export default function FeatureFlagsPage() {
 
   const handleToggle = async (flag: string, enabled: boolean) => {
     setSaving(flag);
+    setSaveError(null);
     try {
       const res = await fetch("/api/admin/feature-flags", {
         method: "PUT",
@@ -270,8 +272,18 @@ export default function FeatureFlagsPage() {
       if (res.ok) {
         setFlags((prev) => ({ ...prev, [flag]: enabled }));
         refreshFlags();
+        loadFlags();
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setSaveError(
+          typeof body.error === "string"
+            ? body.error
+            : `Could not save ${flag} (${res.status}).`,
+        );
       }
-    } catch { /* keep previous state */ }
+    } catch {
+      setSaveError(`Could not save ${flag}.`);
+    }
     setSaving(null);
   };
 
@@ -378,6 +390,11 @@ export default function FeatureFlagsPage() {
           ))}
         </p>
       </div>
+      {saveError && (
+        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+          {saveError}
+        </p>
+      )}
       {groups.map((group) => {
         const groupFlags = Object.entries(FLAG_META).filter(([, m]) => m.group === group);
         return (
