@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.165",
+    date: "2026-08-13",
+    title: "Staff ops Telegram natural language",
+    titleTranslations: {
+      es: "Telegram de ops en lenguaje natural",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Ask @trefoliobot in natural language (or /experiments) how many people are on each experiment and treatment. Counts come from the database; AI only chooses which query to run.",
+        translations: {
+          es: "Preguntá a @trefoliobot en lenguaje natural (o /experiments) cuánta gente hay en cada experimento y tratamiento. Los números salen de la base; la IA solo elige qué consulta correr.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.164",
     date: "2026-08-13",
     title: "One staff ops Telegram bot",

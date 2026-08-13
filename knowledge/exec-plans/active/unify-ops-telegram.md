@@ -25,3 +25,4 @@ One staff Telegram bot (`@trefoliobot`), one webhook (ProdOps), one recipient. `
 
 - [x] Set `TREFOLIO_SERVER_ORIGIN` on trefolio-accounts to the Vercel production alias.
 - Confirm `@trefoliobot` webhook is `https://ops.trefolio.com/api/telegram/webhook`.
+- `/snapshot` product metrics: IdP uses `getProductServerOrigin()` (not marketing hosts); Clara proxy allows `/api/internal/ops-metrics`; Will ops-metrics returns `NextResponse.json`.

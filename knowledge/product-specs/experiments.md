@@ -89,6 +89,7 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 - Preview overrides are tab-scoped (sessionStorage) and do not change sticky assignments
 - Empty activation moat CTA must link to `/tools/evaluation` (not `/moat`); screener to `/tools/screener`
 - Experiment conversion metrics must be Turso `analytics_events` names — not `useTrack`/GA-only. Catalog: `src/lib/experiment-metrics-catalog.ts`
+- Staff ProdOps Telegram (`/experiments` or NL) reads assignment counts via `listExperimentAssignmentOverview` — aggregates only, no user ids
 
 ## 14. Tests
 

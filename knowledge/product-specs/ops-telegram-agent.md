@@ -26,6 +26,7 @@ Trefolio emits operator-relevant events such as new registrations, successful me
 | API | [`src/app/api/internal/ops-metrics/route.ts`](../../src/app/api/internal/ops-metrics/route.ts) | Aggregate metrics for ecosystem digests |
 | Cron | [`src/app/api/cron/prodops-dispatch/route.ts`](../../src/app/api/cron/prodops-dispatch/route.ts) | Sends queued events to the external service |
 | Component | [`src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx`](../../src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx) | Admin settings UI |
+| Lib | [`src/lib/prodops-staff-query.ts`](../../src/lib/prodops-staff-query.ts) | Heuristic + LLM classifier for staff NL queries |
 | Lib | [`src/lib/prodops.ts`](../../src/lib/prodops.ts) | Event builders, signature, dispatcher |
 | Lib | [`src/lib/prodops-link.ts`](../../src/lib/prodops-link.ts) | Telegram link token + deep-link helpers |
 | Lib | [`src/lib/db/ops-events.ts`](../../src/lib/db/ops-events.ts) | Outbox persistence |
@@ -54,6 +55,7 @@ Schema source: migration `v114` in [`src/lib/db/migrations.ts`](../../src/lib/db
 | POST | `/api/admin/prodops-config/link/complete` | HMAC signed | Admin | Redeem the `/start` token and persist the linked recipient |
 | POST | `/api/admin/prodops-config/test` | admin | Admin | Queue a test notification |
 | POST | `/api/cron/prodops-dispatch` | cron bearer | Admin | Dispatch queued outbox items to ProdOps |
+| POST | `/api/internal/prodops-query` | HMAC signed | Admin | Staff Telegram queries (`nl` classifies then runs a closed intent) |
 | GET | `/api/internal/ops-metrics` | Bearer `IDP_SERVICE_TOKEN` | Admin | Aggregate-only ecosystem metrics |
 
 ## 6. UI surface
@@ -67,7 +69,8 @@ Schema source: migration `v114` in [`src/lib/db/migrations.ts`](../../src/lib/db
 - The cron dispatcher resolves the current admin config at send time, so destination changes apply to queued items too.
 - Recipient routing is two-layered: global enabled event types plus per-recipient event-type filters.
 - Recipient link uses a short-lived Telegram deep link (`t.me/<bot>?start=<token>`). `trefolio-prodops` receives `/start`, then calls back into trefolio with the shared secret to complete the binding.
-- Once linked, the same ProdOps Telegram DM can answer a small deterministic set of staff queries (`latest user created`, `latest feedbacks`, `latest user interaction`) by calling back into trefolio over the same signed HMAC boundary.
+- Once linked, the same ProdOps Telegram DM can answer staff queries in natural language (English or Spanish) as well as slash commands (`/snapshot`, `/experiments`). A closed intent catalog maps the question; SQL still supplies the numbers. Supported intents: latest signup, latest feedbacks, latest user interaction, ecosystem digest, and experiment assignment counts per treatment.
+- Experiment replies are aggregates only (counts per variant). No assignment user ids.
 - Portfolio anomaly alerts may include inline Telegram buttons; `callback_query` is forwarded to trefolio `/api/internal/prodops-action` (ack / apply safe fix / dismiss) with the same HMAC auth.
 - Retry policy is exponential-ish with terminal dead-letter state after repeated failures.
 
@@ -85,7 +88,7 @@ None. This feature is operational only.
 ## 10. i18n
 
 - Admin UI copy is currently English-only like the rest of the admin settings surface.
-- Telegram operator notifications are concise operational messages and currently English-only.
+- Telegram operator notifications are concise operational messages and currently English-only. Staff NL questions may be in English or Spanish; replies stay English.
 
 ## 11. Permissions / tier gating / rate limits
 
@@ -104,14 +107,17 @@ None. This feature is operational only.
 - If ProdOps is disabled or misconfigured, events remain queued and do not block the originating business route.
 - Telegram link tokens are stored as hashes with a short TTL; admins can mint a fresh link without exposing the previous token. Tokens are 12 hex characters because production Telegram `/start` payloads from `t.me` deep links arrive truncated at 12 characters — a longer hashed token never matches.
 - ProdOps `TREFOLIO_BASE_URL` must reach the trefolio origin without a Cloudflare bot challenge. `ops.trefolio.com` and `user.trefolio.com` 404; `trefolio.com` behind Bot Fight returns 403 HTML to Vercel IPs. Use the Vercel production alias for server-to-server calls.
+- IdP `/snapshot` metrics use `TREFOLIO_SERVER_ORIGIN` (same alias). Fetching `trefolio.com` from Vercel returns HTTP 403. Clara's proxy must allow `/api/internal/ops-metrics` or the digest follows 307 `/login` HTML. Will's handler must return `Response` JSON, not a plain object.
 - Trial activation via emailed token now emits the same analytics-style signal and ProdOps event as onboarding activation.
 - Full feedback bodies are intentionally not sent to Telegram; only a summary and admin link are forwarded.
-- Staff query replies over Telegram also stay intentionally narrow: no raw full feedback body and no unbounded `analytics_events.metadata` dump.
+- Staff query replies over Telegram also stay intentionally narrow: no raw full feedback body and no unbounded `analytics_events.metadata` dump. Natural-language classification may send the operator’s question text (and experiment keys/names, not assignment PII) to OpenAI; the reply numbers always come from SQL.
+- `/experiments` and phrasing like “how many people on each treatment” return assignment counts per variant from `experiment_assignments`.
 - When the IdP owns signup/billing, a future producer can reuse the same envelope contract.
 
 ## 14. Tests
 
 - Unit: route and settings tests covering config persistence, link mint/redeem, outbox behavior, and dispatcher signing/retries.
+- Unit: `src/lib/prodops-staff-query.test.ts` (heuristic NL mapping) and `src/app/api/internal/prodops-query/route.test.ts` (experiments overview + `nl` classify).
 - E2E: admin settings coverage for reading/updating ProdOps config, minting the Telegram recipient link, and queueing a test notification.
 - Manual smoke: generate the admin deep link, press Start in Telegram, confirm the linked recipient appears in admin, queue a test event, run `/api/cron/prodops-dispatch`, verify Telegram delivery.
 
@@ -119,7 +125,7 @@ None. This feature is operational only.
 
 - Skills: `engineer-user-auth`, `engineer-data`, `legal-advisor`, `qa-tester`
 - Rules: release notes, legal compliance, accessibility, demo-page not applicable
-- Related specs: [`admin-panel`](admin-panel.md), [`admin-sub-tools`](admin-sub-tools.md), [`analytics-events`](analytics-events.md)
+- Related specs: [`admin-panel`](admin-panel.md), [`admin-sub-tools`](admin-sub-tools.md), [`analytics-events`](analytics-events.md), [`experiments`](experiments.md)
 
 ## 16. Open questions / planned work
 

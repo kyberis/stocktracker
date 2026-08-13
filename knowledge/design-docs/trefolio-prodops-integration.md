@@ -20,7 +20,7 @@ We want:
 3. **Trefolio writes an outbox row, not a Telegram message.** Business routes enqueue ops events into `ops_event_outbox`; a cron dispatcher sends them asynchronously.
 4. **Runtime integration shape is signed HTTP.** Trefolio posts a signed JSON envelope to `trefolio-prodops` using an HMAC shared secret (`X-ProdOps-Timestamp` + `X-ProdOps-Signature`).
 5. **ProdOps owns Telegram delivery and delivery-side dedupe.** The service verifies the signature, deduplicates by `eventId`, formats the operator message, and uses the Telegram Bot API. There is one staff bot (`@trefoliobot`) and one webhook (`ops.trefolio.com`). The IdP does not call Telegram.
-6. **IdP is a producer, not a second bot.** `user.trefolio.com/agents` mints the same recipient link via trefolio `/api/internal/prodops-link`. IdP signups, billing, and the daily digest enqueue through `/api/internal/prodops-ingest` (`sourceApp: accounts`). `/snapshot` on the bot asks trefolio, which fetches the IdP digest.
+6. **IdP is a producer, not a second bot.** `user.trefolio.com/agents` mints the same recipient link via trefolio `/api/internal/prodops-link`. IdP signups, billing, and the daily digest enqueue through `/api/internal/prodops-ingest` (`sourceApp: accounts`). `/snapshot` on the bot asks trefolio, which fetches the IdP digest. The IdP then fans out to each product's `/api/internal/ops-metrics` using **server origins** (`TREFOLIO_SERVER_ORIGIN`, optional `CLARA_SERVER_ORIGIN` / `WILL_SERVER_ORIGIN`), not Cloudflare-proxied marketing hosts.
 7. **No direct imports across repos.** Trefolio never imports code from `external/prodops`; the boundary is API-only.
 
 ## Why this and not X
@@ -52,6 +52,8 @@ Then set trefolio admin config:
 
 On the **ProdOps** Vercel project, set `TREFOLIO_BASE_URL` to a host that reaches the trefolio Next.js origin **without a Cloudflare JS challenge**. `trefolio.com` is orange-clouded; Bot Fight Mode returns 403 "Just a moment..." to Vercel datacenter IPs, so Telegram linking never hits `/api/admin/prodops-config/link/complete`. Use the stable Vercel production alias (`https://trefolio-marcos-projects-0d7207fa.vercel.app`) in production, and `http://localhost:3010` locally. **Do not** point it at `user.trefolio.com` (IdP) or `ops.trefolio.com` (ProdOps itself).
 
+The same rule applies on **trefolio-accounts**: `/snapshot` product metrics must not fetch `trefolio.com` from Vercel. Set `TREFOLIO_SERVER_ORIGIN` to that alias. Clara and Will custom domains are not Cloudflare-proxied; keep using `clara.trefolio.com` / `will.trefolio.com` (or localhost in dev). Do not point Clara/Will server origins at SSO-protected `*.vercel.app` aliases unless the matching `*_VERCEL_PROTECTION_BYPASS` secret is also set. Clara's proxy must treat `/api/internal/ops-metrics` as a service-token path (same as `/api/internal/office`); otherwise the digest follows a 307 to `/login` HTML.
+
 ### Event flow
 
 ```mermaid
@@ -82,9 +84,11 @@ flowchart LR
 ```mermaid
 flowchart LR
   staffDm["Staff Telegram DM"] --> prodopsWebhook["external/prodops /api/telegram/webhook"]
-  prodopsWebhook --> queryMatch["deterministic query matcher"]
+  prodopsWebhook --> queryMatch["slash / heuristic matcher"]
   queryMatch -->|"HMAC signed POST"| prodopsQuery["/api/internal/prodops-query"]
-  prodopsQuery --> dataReaders["users + feedback + analytics_events"]
+  queryMatch -->|"unmatched text → queryType nl"| prodopsQuery
+  prodopsQuery --> classifier["heuristic then LLM intent"]
+  classifier --> dataReaders["users + feedback + analytics + experiment_assignments"]
   dataReaders --> prodopsQuery
   prodopsQuery --> prodopsWebhook
   prodopsWebhook --> staffDm
@@ -124,7 +128,7 @@ The `destinations` list is resolved in trefolio from the single linked recipient
 - `prodops` rejects unsigned, invalid, or stale payloads.
 - Recipient links use a short random Telegram token whose hash and expiry are stored in trefolio; the plaintext token is only returned once to the admin browser.
 - Telegram payloads are deliberately minimal: human summary + admin link + selected metadata.
-- Staff query replies are also deliberately minimal and fetched on demand from trefolio; `prodops` does not become the source of truth for user/account data.
+- Staff query replies are also deliberately minimal and fetched on demand from trefolio; `prodops` does not become the source of truth for user/account data. Unmatched staff DMs are forwarded as `queryType: nl`; trefolio classifies into a closed intent (heuristic first, LLM fallback) and executes SQL. The model never invents counts.
 
 ## How to enforce it
 

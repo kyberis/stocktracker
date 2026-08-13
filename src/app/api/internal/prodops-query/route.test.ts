@@ -7,6 +7,11 @@ vi.mock("@/lib/db", () => ({
   getLatestAnalyticsInteraction: vi.fn(),
   getProdOpsConfig: vi.fn(),
   getProdOpsSharedSecret: vi.fn(),
+  listExperimentAssignmentOverview: vi.fn(),
+}));
+
+vi.mock("@/lib/prodops-staff-query", () => ({
+  classifyStaffQuery: vi.fn(),
 }));
 
 vi.mock("@/lib/prodops", async () => {
@@ -334,6 +339,142 @@ describe("POST /api/internal/prodops-query", () => {
       queryType: "ops_digest",
       markdown: "trefolio ops · digest",
       adminUrl: "https://trefolio.com/admin/settings",
+    });
+  });
+
+  it("returns experiment assignment counts", async () => {
+    const {
+      getProdOpsConfig,
+      getProdOpsSharedSecret,
+      listExperimentAssignmentOverview,
+    } = await import("@/lib/db");
+    const { verifyProdOpsBodySignature } = await import("@/lib/prodops");
+
+    vi.mocked(getProdOpsSharedSecret).mockResolvedValue("shared-secret");
+    vi.mocked(verifyProdOpsBodySignature).mockReturnValue(true);
+    vi.mocked(getProdOpsConfig).mockResolvedValue({
+      enabled: true,
+      baseUrl: "https://ops.trefolio.com",
+      botUsername: "trefoliobot",
+      enabledEventTypes: ["user_registered"],
+      recipient: {
+        id: "recipient_1",
+        label: "@ops",
+        type: "telegram_dm",
+        source: "telegram_link",
+        chatId: "12345",
+        enabled: true,
+        enabledEventTypes: ["user_registered"],
+        telegramUserId: "777",
+        telegramUsername: "ops",
+        linkedAt: "2026-05-26T00:00:00.000Z",
+      },
+      pendingLink: null,
+    });
+    vi.mocked(listExperimentAssignmentOverview).mockResolvedValue([
+      {
+        id: "exp_1",
+        key: "empty_activation",
+        name: "Empty activation",
+        status: "running",
+        assignedTotal: 10,
+        variants: [
+          { key: "control", weight: 50, assigned: 6 },
+          { key: "treatment", weight: 50, assigned: 4 },
+        ],
+      },
+    ]);
+
+    const { POST } = await import("./route");
+    const response = await POST(
+      new NextRequest("http://localhost/api/internal/prodops-query", {
+        method: "POST",
+        headers: {
+          "x-prodops-timestamp": "1716670000",
+          "x-prodops-signature": "sha256=test",
+        },
+        body: JSON.stringify({
+          chatId: "12345",
+          queryType: "experiments_overview",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      queryType: "experiments_overview",
+      experiments: [
+        expect.objectContaining({
+          key: "empty_activation",
+          assignedTotal: 10,
+        }),
+      ],
+      adminUrl: "https://trefolio.com/admin/experiments",
+    });
+  });
+
+  it("classifies natural-language text then runs the resolved intent", async () => {
+    const {
+      getProdOpsConfig,
+      getProdOpsSharedSecret,
+      listExperimentAssignmentOverview,
+    } = await import("@/lib/db");
+    const { verifyProdOpsBodySignature } = await import("@/lib/prodops");
+    const { classifyStaffQuery } = await import("@/lib/prodops-staff-query");
+
+    vi.mocked(getProdOpsSharedSecret).mockResolvedValue("shared-secret");
+    vi.mocked(verifyProdOpsBodySignature).mockReturnValue(true);
+    vi.mocked(getProdOpsConfig).mockResolvedValue({
+      enabled: true,
+      baseUrl: "https://ops.trefolio.com",
+      botUsername: "trefoliobot",
+      enabledEventTypes: ["user_registered"],
+      recipient: {
+        id: "recipient_1",
+        label: "@ops",
+        type: "telegram_dm",
+        source: "telegram_link",
+        chatId: "12345",
+        enabled: true,
+        enabledEventTypes: ["user_registered"],
+        telegramUserId: "777",
+        telegramUsername: "ops",
+        linkedAt: "2026-05-26T00:00:00.000Z",
+      },
+      pendingLink: null,
+    });
+    vi.mocked(classifyStaffQuery).mockResolvedValue({
+      intent: "experiments_overview",
+      experimentKey: "empty_activation",
+      source: "llm",
+    });
+    vi.mocked(listExperimentAssignmentOverview).mockResolvedValue([]);
+
+    const { POST } = await import("./route");
+    const response = await POST(
+      new NextRequest("http://localhost/api/internal/prodops-query", {
+        method: "POST",
+        headers: {
+          "x-prodops-timestamp": "1716670000",
+          "x-prodops-signature": "sha256=test",
+        },
+        body: JSON.stringify({
+          chatId: "12345",
+          queryType: "nl",
+          text: "how many people are in empty_activation treatment?",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(classifyStaffQuery).toHaveBeenCalledWith(
+      "how many people are in empty_activation treatment?",
+    );
+    expect(listExperimentAssignmentOverview).toHaveBeenCalledWith("empty_activation");
+    expect(await response.json()).toMatchObject({
+      ok: true,
+      queryType: "experiments_overview",
     });
   });
 });

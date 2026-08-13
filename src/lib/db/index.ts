@@ -269,6 +269,8 @@ export type { ProdOpsLatestAnalyticsInteraction } from "./analytics";
 export type {
   Experiment,
   ExperimentAssignment,
+  ExperimentAssignmentOverview,
+  ExperimentAssignmentOverviewVariant,
   ExperimentStatus,
   ExperimentStats,
   ExperimentVariant,
@@ -276,6 +278,7 @@ export type {
 } from "./experiments";
 export {
   listExperiments,
+  listExperimentAssignmentOverview,
   getExperimentById,
   getExperimentByKey,
   createExperiment,

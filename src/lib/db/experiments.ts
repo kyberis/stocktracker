@@ -174,6 +174,76 @@ export async function listExperiments(): Promise<Experiment[]> {
   return result.rows.map(mapExperiment);
 }
 
+export type ExperimentAssignmentOverviewVariant = {
+  key: string;
+  weight: number;
+  assigned: number;
+};
+
+export type ExperimentAssignmentOverview = {
+  id: string;
+  key: string;
+  name: string;
+  status: ExperimentStatus;
+  assignedTotal: number;
+  variants: ExperimentAssignmentOverviewVariant[];
+};
+
+/**
+ * Aggregate assignment counts per experiment × variant. No user ids.
+ * Optional `filterKey` limits to one experiment (exact key match).
+ */
+export async function listExperimentAssignmentOverview(
+  filterKey?: string,
+): Promise<ExperimentAssignmentOverview[]> {
+  const key = filterKey?.trim();
+  const experiments = key
+    ? [await getExperimentByKey(key)].filter((e): e is Experiment => e != null)
+    : await listExperiments();
+  if (experiments.length === 0) return [];
+
+  const client = await ensureInitialized();
+  const ids = experiments.map((e) => e.id);
+  const placeholders = ids.map(() => "?").join(",");
+  const counts = await client.execute({
+    sql: `SELECT experiment_id, variant, COUNT(*) AS cnt
+          FROM experiment_assignments
+          WHERE experiment_id IN (${placeholders})
+          GROUP BY experiment_id, variant`,
+    args: ids,
+  });
+
+  const byExperiment = new Map<string, Map<string, number>>();
+  for (const row of counts.rows) {
+    const experimentId = str(row.experiment_id);
+    const variant = str(row.variant);
+    if (!byExperiment.has(experimentId)) byExperiment.set(experimentId, new Map());
+    byExperiment.get(experimentId)!.set(variant, Number(row.cnt) || 0);
+  }
+
+  return experiments.map((experiment) => {
+    const assigned = byExperiment.get(experiment.id) || new Map<string, number>();
+    const variants: ExperimentAssignmentOverviewVariant[] = experiment.variants.map((v) => ({
+      key: v.key,
+      weight: v.weight,
+      assigned: assigned.get(v.key) || 0,
+    }));
+    for (const [variantKey, count] of assigned) {
+      if (!variants.some((v) => v.key === variantKey)) {
+        variants.push({ key: variantKey, weight: 0, assigned: count });
+      }
+    }
+    return {
+      id: experiment.id,
+      key: experiment.key,
+      name: experiment.name,
+      status: experiment.status,
+      assignedTotal: variants.reduce((sum, v) => sum + v.assigned, 0),
+      variants,
+    };
+  });
+}
+
 export async function getExperimentById(id: string): Promise<Experiment | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
