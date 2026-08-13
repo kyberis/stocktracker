@@ -35,6 +35,7 @@ Flags from `ALL_PLATFORM_FEATURES` in [`src/lib/db/settings.ts`](../../src/lib/d
 - `portfolio_v2_chart_enabled`
 - `pro_trial_enabled`
 - `screening_agents_v2_enabled`
+- `screening_analyze_force_serper_jina_enabled`
 - `screening_dev_lab_enabled`
 - `screening_estebaranz_eval_enabled`
 - `screening_ir_agent_enabled`

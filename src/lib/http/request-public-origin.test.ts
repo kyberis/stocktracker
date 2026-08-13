@@ -1,8 +1,22 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { getRequestPublicOrigin, isRequestPublicHttps } from "./request-public-origin";
 
 describe("getRequestPublicOrigin", () => {
+  const previousAppBaseUrl = process.env.APP_BASE_URL;
+
+  beforeEach(() => {
+    delete process.env.APP_BASE_URL;
+  });
+
+  afterEach(() => {
+    if (previousAppBaseUrl === undefined) {
+      delete process.env.APP_BASE_URL;
+    } else {
+      process.env.APP_BASE_URL = previousAppBaseUrl;
+    }
+  });
+
   it("uses forwarded host and proto when present", () => {
     const req = new NextRequest("http://127.0.0.1:3010/api/x", {
       headers: {

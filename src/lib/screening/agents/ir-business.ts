@@ -541,10 +541,15 @@ export const runIrBusinessStep: StepHandler = async (
     null;
 
   const started = Date.now();
-  const [researchEnabled, serperJinaEnabled] = await Promise.all([
-    isFeatureEnabledForUser("screening_tavily_research_enabled", ctx.userId),
-    isFeatureEnabledForUser("screening_ir_serper_jina_enabled", ctx.userId),
-  ]);
+  const [researchEnabled, serperJinaEnabled, forceAnalyzeSerperJina] =
+    await Promise.all([
+      isFeatureEnabledForUser("screening_tavily_research_enabled", ctx.userId),
+      isFeatureEnabledForUser("screening_ir_serper_jina_enabled", ctx.userId),
+      isFeatureEnabledForUser(
+        "screening_analyze_force_serper_jina_enabled",
+        ctx.userId,
+      ),
+    ]);
 
   const researchTicker = await researchSymbolForListed({
     ticker,
@@ -555,7 +560,9 @@ export const runIrBusinessStep: StepHandler = async (
     hardDataCandidate?.name || ticker,
   );
 
-  const fetchIr = researchEnabled || serperJinaEnabled;
+  const forceSerperJina =
+    forceAnalyzeSerperJina && brief.intent === "analyze";
+  const fetchIr = researchEnabled || serperJinaEnabled || forceSerperJina;
   const [bundle, irDocs] = await Promise.all([
     fetchFmpIrBundle({ ticker: researchTicker }),
     fetchIr
@@ -563,7 +570,8 @@ export const runIrBusinessStep: StepHandler = async (
           ticker: researchTicker,
           companyName: irSearchName,
           runId: ctx.runId,
-          preferSerperJina: serperJinaEnabled,
+          preferSerperJina: serperJinaEnabled || forceSerperJina,
+          forceSerperJina,
         })
       : Promise.resolve(null),
   ]);

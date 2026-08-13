@@ -218,6 +218,7 @@ describe("runIrBusinessStep IR site docs", () => {
       expect.objectContaining({
         ticker: "TFII",
         preferSerperJina: true,
+        forceSerperJina: true,
       }),
     );
     expect(mockGetResearch).not.toHaveBeenCalled();
@@ -372,6 +373,7 @@ describe("runIrBusinessStep IR site docs", () => {
         ticker: "CSU.TO",
         companyName: "Constellation Software Inc.",
         preferSerperJina: true,
+        forceSerperJina: true,
       }),
     );
     if (result.status === "ok") {
@@ -381,5 +383,78 @@ describe("runIrBusinessStep IR site docs", () => {
         irSiteDocsUsed: true,
       });
     }
+  });
+
+  it("does not force Serper/Jina on explore briefs", async () => {
+    mockIsFeature.mockImplementation(async (flag: string) => {
+      if (flag === "screening_analyze_force_serper_jina_enabled") return true;
+      if (flag === "screening_ir_serper_jina_enabled") return false;
+      return true;
+    });
+    mockFetchFmp.mockResolvedValue({
+      ticker: "TFII",
+      transcript: null,
+      news: [],
+      insiders: [],
+      requestCount: 0,
+      errors: [],
+    });
+    mockFetchIrDocs.mockResolvedValue({
+      ticker: "TFII",
+      irPageUrl: "https://investors.tfiintl.com/",
+      documents: [
+        {
+          url: "https://investors.tfiintl.com/news/q1",
+          title: "Q1",
+          asOf: "2026-04-24",
+          excerpt: "x".repeat(200),
+          role: "document",
+          format: "html",
+        },
+      ],
+      hasUsefulContent: true,
+      searchCredits: 2,
+      extractCredits: 1,
+      errors: [],
+    });
+
+    const { runIrBusinessStep } = await import("../agents/ir-business");
+    await runIrBusinessStep({
+      step: {
+        id: "s4",
+        runId: "run-4",
+        agentKind: "ir_business",
+        ticker: "TFII",
+        status: "running",
+        attempts: 1,
+        leaseOwner: "w",
+        leaseExpiresAt: null,
+        dependsOn: [],
+        errorMessage: null,
+        startedAt: null,
+        completedAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      userId: "u1",
+      runId: "run-4",
+      briefJson: JSON.stringify({
+        intent: "explore",
+        includeSectors: [],
+        excludeSectors: [],
+        regions: ["us_canada"],
+        candidateCount: 3,
+        criteria: [],
+        endedEarly: false,
+        locale: "en",
+      }),
+    });
+
+    expect(mockFetchIrDocs).toHaveBeenCalledWith(
+      expect.objectContaining({
+        preferSerperJina: false,
+        forceSerperJina: false,
+      }),
+    );
   });
 });

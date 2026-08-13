@@ -147,6 +147,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "IR document discovery/extract tries Serper Search + Jina EU Reader first (HTML and PDF), then falls back to Tavily Search/Extract per miss. Requires SERPER_API_KEY and JINA_API_KEY. Web & Sentiment, AID, and /analisis stay on Tavily. Off by default.",
     group: "Features",
   },
+  screening_analyze_force_serper_jina_enabled: {
+    label: "Screening Analyze: force Serper + Jina",
+    description:
+      "Analyze runs use Serper Search + Jina EU extract for IR docs only — no Tavily Search/Extract fallback, even if Serper scores poorly or Jina misses a URL. Requires SERPER_API_KEY and JINA_API_KEY. Explore/shortlist keep the prototype fallback. Off by default.",
+    group: "Features",
+  },
   screening_estebaranz_eval_enabled: {
     label: "Screening: trefolio framework evaluation",
     description:

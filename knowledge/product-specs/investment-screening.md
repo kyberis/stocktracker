@@ -26,6 +26,7 @@ ambiguous) via search, then runs the same research agents on that one listing
   - `screening_qa_enabled` — Agent 6 QA / verified reports; gates `reportReady` when on
   - `screening_tavily_research_enabled` — Tavily path for IR Search+Extract (fallback when Serper/Jina is off or misses), shared ticker research cache (7d; **no live Tavily Research** from screening — cache-only), slim analyst Search; off by default
   - `screening_ir_serper_jina_enabled` — prototype IR discovery/extract via Serper Search + Jina EU Reader (HTML/PDF), Tavily Search/Extract fallback; requires `SERPER_API_KEY` + `JINA_API_KEY`; off by default
+  - `screening_analyze_force_serper_jina_enabled` — Analyze IR uses Serper + Jina only (no Tavily fallback); off by default
   - `screening_estebaranz_eval_enabled` — post-shortlist `compiler_evaluate` step applies the trefolio value-investing checklist to ≤5 shortlist names; on by default (and in prod). Flag key is historical; product copy always says trefolio.
   - `screening_dev_lab_enabled` — Dev agent-log button for non-admins
 - **Health:** green — Intake (+ sample-conversation pilot) + Hard Data + IR/Web/PC/Risk/Technicals (v2) + optional shortlist Research + Compiler + QA (flag on in prod) + per-run variable cost ledger
@@ -44,6 +45,7 @@ ambiguous) via search, then runs the same research agents on that one listing
 | Component | `src/components/screening/ScreeningEntryCta.tsx` | Discovery card on `/recommendations/diversify`; renders nothing when the flag is off |
 | Component | `src/components/screening/ScreeningBetaBanner.tsx` | Home (`/`) beta banner; renders nothing when the flag is off |
 | Page | `src/app/(app)/admin/screening-costs/page.tsx` | Admin cost leaderboard (most → least expensive) |
+| Page | `src/app/(app)/admin/screening-analyze/page.tsx` | Admin Analyze list: requesting users + IR resources per run |
 
 ## 4. Data model
 
@@ -108,6 +110,7 @@ When v2 is off but `screening_ir_agent_enabled` is on (E4):
 | POST | `/api/screening/entry-events` | user + flag | — | Dual-write analytics for the entry funnel |
 | GET | `/api/screening/dev/outputs?limit=N&runId=` | user + flag + (admin OR dev-env OR `screening_dev_lab_enabled`) | — | Last N agent outputs (optional `runId` scope); Dev log shows sources + per-agent JSON |
 | GET | `/api/admin/screening-costs` | admin | — | All screening runs ranked by `cost_usd` DESC (ops cost leaderboard) |
+| GET | `/api/admin/screening-analyze` | admin | — | Analyze runs (newest first) with requesting users and IR resources (Serper/Jina/Tavily/LLM) |
 
 Regular routes go through [`requireScreeningAccess`](../../src/lib/screening/guard.ts):
 session required, then per-user flag. A disabled flag returns **404**, not 403, so
@@ -220,6 +223,10 @@ the feature is not discoverable before launch. The Dev outputs route adds
   records `provider` (`serper_jina` / `tavily` / `mixed`) plus `serperQueries` /
   `jinaUrls`. No new cost-ledger USD fields in this prototype; Tavily fallback
   still accrues Extract credits.
+- **Analyze force Serper + Jina** — optional
+  (`screening_analyze_force_serper_jina_enabled`): Analyze IR skips Tavily
+  Search/Extract entirely. Serper hits that fail the usual IR score still go to
+  Jina (blocked hosts skipped). Explore/shortlist keep the prototype fallback.
 - **Tavily Research** — cache-only in screening (`cacheOnly: true` on IR thin-FMP
   fallback and shortlist deep-dive). Live `POST /research` is not called from
   screening (PAYG 433). Hits in `screening_research_cache` (TTL 7d, cross-user)
@@ -231,7 +238,9 @@ the feature is not discoverable before launch. The Dev outputs route adds
   (ops-facing; shown on the report UI for admins). Soft budget alert at `$1.20`
   via `screening_cost_budget_exceeded_total`. Admin leaderboard at
   `/admin/screening-costs` (`GET /api/admin/screening-costs`) ranks every run
-  from most to least expensive.
+  from most to least expensive. Analyze ops list at `/admin/screening-analyze`
+  (`GET /api/admin/screening-analyze`) shows who requested each Analyze and
+  which IR resources ran (Serper queries, Jina URLs, Tavily credits, LLM).
 - Every AI turn writes an `ai_logs` row (sources such as `screening_intake`,
   `screening_hard_data`, `screening_web_sentiment`, …) plus a row in
   `screening_agent_outputs`.

@@ -76,6 +76,11 @@ export interface FetchIrSiteDocumentsOptions {
   maxDocuments?: number;
   /** Try Serper + Jina first when keys are present. */
   preferSerperJina?: boolean;
+  /**
+   * Analyze-only: never fall back to Tavily Search/Extract. Still extracts
+   * Serper hits that fail the usual IR score filter (blocked hosts skipped).
+   */
+  forceSerperJina?: boolean;
   fetchImpl?: typeof fetch;
 }
 
@@ -205,6 +210,8 @@ export function pickIrUrls(opts: {
   companyName?: string | null;
   ticker: string;
   maxDocuments?: number;
+  /** Inclusive floor. Default keeps current `score > 0` filter. */
+  minScore?: number;
 }): {
   irPageUrl: string | null;
   candidates: Array<{
@@ -215,6 +222,7 @@ export function pickIrUrls(opts: {
   }>;
 } {
   const maxDocuments = Math.min(3, Math.max(1, opts.maxDocuments ?? 3));
+  const minScore = opts.minScore ?? 0;
   const ticker = opts.ticker.toUpperCase();
 
   const hubRanked = [...opts.hubResults]
@@ -228,7 +236,7 @@ export function pickIrUrls(opts: {
         preferHub: true,
       }),
     }))
-    .filter((r) => r.score > 0)
+    .filter((r) => r.score > minScore)
     .sort((a, b) => b.score - a.score);
 
   const irPageUrl = hubRanked[0]?.url ?? null;
@@ -272,7 +280,7 @@ export function pickIrUrls(opts: {
         preferHub: false,
       }),
     }))
-    .filter((r) => r.score > 0)
+    .filter((r) => r.score > minScore)
     .sort((a, b) => b.score - a.score);
 
   for (const r of docRanked) {
@@ -302,6 +310,28 @@ type IrCandidate = {
   asOf: string | null;
   role: "ir_hub" | "document";
 };
+
+function fallbackSerperCandidates(
+  hubResults: TavilyScreeningResult[],
+  docResults: TavilyScreeningResult[],
+  maxDocuments: number,
+): IrCandidate[] {
+  const seen = new Set<string>();
+  const candidates: IrCandidate[] = [];
+  for (const r of [...hubResults, ...docResults]) {
+    const key = r.url.split("#")[0]?.toLowerCase() ?? r.url;
+    if (seen.has(key) || isRejectedIrUrl(r.url)) continue;
+    seen.add(key);
+    candidates.push({
+      url: r.url,
+      title: r.title.slice(0, 240),
+      asOf: r.publishedDate,
+      role: looksLikeIrHub(r.url, r.title) ? "ir_hub" : "document",
+    });
+    if (candidates.length >= maxDocuments) break;
+  }
+  return candidates;
+}
 
 function tavilyKeysPresent(): boolean {
   return Boolean(process.env.TAVILY_API_KEY?.trim());
@@ -429,10 +459,16 @@ export async function fetchIrSiteDocuments(
     jinaUrls,
   });
 
+  const forceSerperJina = Boolean(opts.forceSerperJina);
+  const wantSerperJina =
+    Boolean(opts.preferSerperJina) || forceSerperJina;
   const useSerperJina =
-    Boolean(opts.preferSerperJina) && serperKeysPresent() && jinaKeysPresent();
+    wantSerperJina && serperKeysPresent() && jinaKeysPresent();
   const hasTavily = tavilyKeysPresent();
 
+  if (forceSerperJina && !useSerperJina) {
+    return empty(["missing_serper_jina_keys"]);
+  }
   if (!useSerperJina && !hasTavily) {
     return empty(["missing_api_key"]);
   }
@@ -471,12 +507,21 @@ export async function fetchIrSiteDocuments(
     companyName: opts.companyName,
     ticker,
     maxDocuments,
+    minScore: forceSerperJina ? -999 : 0,
   });
+  if (
+    forceSerperJina &&
+    candidates.length === 0 &&
+    (hubResults.length > 0 || docResults.length > 0)
+  ) {
+    candidates = fallbackSerperCandidates(hubResults, docResults, maxDocuments);
+    irPageUrl = candidates.find((c) => c.role === "ir_hub")?.url ?? irPageUrl;
+  }
   if (candidates.length > 0 && useSerperJina) {
     usedSerper = true;
   }
 
-  if (candidates.length === 0 && hasTavily) {
+  if (candidates.length === 0 && hasTavily && !forceSerperJina) {
     const [hubSearch, docSearch] = await Promise.all([
       fetchTavilySearch({
         query: hubQuery,
@@ -551,7 +596,7 @@ export async function fetchIrSiteDocuments(
     const excerpt = contentByUrl.get(c.url)?.trim() ?? "";
     return excerpt.length < 40;
   });
-  if (missing.length > 0 && hasTavily) {
+  if (missing.length > 0 && hasTavily && !forceSerperJina) {
     const tavily = await extractWithTavily({
       candidates: missing,
       runId: opts.runId,

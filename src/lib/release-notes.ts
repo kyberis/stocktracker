@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.168",
+    date: "2026-08-14",
+    title: "Force Serper/Jina on Analyze",
+    titleTranslations: {
+      es: "Forzar Serper/Jina en Analyze",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "New flag screening_analyze_force_serper_jina_enabled makes Analyze IR use Serper search and Jina EU extract only, with no Tavily fallback.",
+        translations: {
+          es: "El flag screening_analyze_force_serper_jina_enabled hace que el IR de Analyze use solo búsqueda Serper y extracto Jina UE, sin respaldo de Tavily.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Admin Screening Analyze lists who requested each single-company analysis and which resources it used (LLM, Tavily, Serper, Jina).",
+        translations: {
+          es: "El admin Screening Analyze lista quién pidió cada análisis de una empresa y qué recursos usó (LLM, Tavily, Serper, Jina).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.167",
     date: "2026-08-13",
     title: "Screening IR Serper/Jina prototype",

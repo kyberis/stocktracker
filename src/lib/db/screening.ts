@@ -1,6 +1,11 @@
 import { randomUUID } from "crypto";
 import { ensureInitialized } from "./client";
 import { num, str } from "./helpers";
+import {
+  mergeIrResources,
+  parseAnalyzeBriefMeta,
+  parseIrStepCompletedPayload,
+} from "@/lib/screening/analyze-admin";
 
 /**
  * Investment screening persistence (v129).
@@ -310,6 +315,152 @@ export async function listScreeningRunsByCostAdmin(
       };
     }),
     total: Number(countResult.rows[0]?.c) || 0,
+    totalCostUsd: Number(sumResult.rows[0]?.s) || 0,
+  };
+}
+
+export interface ScreeningAnalyzeAdminUserRow {
+  userId: string;
+  username: string;
+  email: string;
+  analyzeCount: number;
+  lastRequestedAt: string;
+}
+
+export interface ScreeningAnalyzeAdminRunRow extends ScreeningRunCostAdminRow {
+  ticker: string | null;
+  companyName: string | null;
+  exchange: string | null;
+  irProvider: import("@/lib/screening/data/ir-site-docs").IrSiteDocsProvider | null;
+  serperQueries: number;
+  jinaUrls: number;
+  irSiteDocsUsed: boolean;
+}
+
+/**
+ * Admin ops: Analyze runs (newest first) plus the users who requested them.
+ * Joins IR StepCompleted payloads for Serper/Jina usage. Never expose on a
+ * user-facing route.
+ */
+export async function listScreeningAnalyzeAdmin(
+  opts: { limit?: number; offset?: number; userId?: string } = {},
+): Promise<{
+  users: ScreeningAnalyzeAdminUserRow[];
+  runs: ScreeningAnalyzeAdminRunRow[];
+  total: number;
+  uniqueUsers: number;
+  totalCostUsd: number;
+}> {
+  const client = await ensureInitialized();
+  const limit = Math.min(Math.max(1, opts.limit ?? 50), 200);
+  const offset = Math.max(0, opts.offset ?? 0);
+
+  const conditions: string[] = ["r.intent = 'analyze'"];
+  const args: (string | number)[] = [];
+  if (opts.userId) {
+    conditions.push("r.user_id = ?");
+    args.push(opts.userId);
+  }
+  const where = `WHERE ${conditions.join(" AND ")}`;
+
+  const [countResult, sumResult, uniqueResult, usersResult, result] =
+    await Promise.all([
+      client.execute({
+        sql: `SELECT COUNT(*) as c FROM screening_runs r ${where}`,
+        args,
+      }),
+      client.execute({
+        sql: `SELECT COALESCE(SUM(r.cost_usd), 0) as s FROM screening_runs r ${where}`,
+        args,
+      }),
+      client.execute({
+        sql: `SELECT COUNT(DISTINCT r.user_id) as c FROM screening_runs r ${where}`,
+        args,
+      }),
+      client.execute({
+        sql: `SELECT r.user_id, u.username, u.email,
+                     COUNT(*) as n, MAX(r.created_at) as last_requested_at
+              FROM screening_runs r
+              LEFT JOIN users u ON u.id = r.user_id
+              ${where}
+              GROUP BY r.user_id, u.username, u.email
+              ORDER BY n DESC, last_requested_at DESC
+              LIMIT 100`,
+        args,
+      }),
+      client.execute({
+        sql: `SELECT r.*, u.username, u.email
+              FROM screening_runs r
+              LEFT JOIN users u ON u.id = r.user_id
+              ${where}
+              ORDER BY r.created_at DESC
+              LIMIT ? OFFSET ?`,
+        args: [...args, limit, offset],
+      }),
+    ]);
+
+  const runsBase = result.rows.map((raw) => {
+    const row = raw as unknown as Record<string, unknown>;
+    const base = readRun(row);
+    const meta = parseAnalyzeBriefMeta(base.briefJson);
+    return {
+      ...base,
+      username: str(row.username ?? ""),
+      email: str(row.email ?? ""),
+      ticker: meta.ticker,
+      companyName: meta.companyName,
+      exchange: meta.exchange,
+      irProvider: null as ScreeningAnalyzeAdminRunRow["irProvider"],
+      serperQueries: 0,
+      jinaUrls: 0,
+      irSiteDocsUsed: false,
+    };
+  });
+
+  const runIds = runsBase.map((r) => r.id);
+  if (runIds.length > 0) {
+    const placeholders = runIds.map(() => "?").join(",");
+    const irEvents = await client.execute({
+      sql: `SELECT e.run_id, e.payload_json
+            FROM screening_run_events e
+            INNER JOIN screening_run_steps s ON s.id = e.step_id
+            WHERE e.run_id IN (${placeholders})
+              AND e.event_type = 'StepCompleted'
+              AND s.agent_kind = 'ir_business'`,
+      args: runIds,
+    });
+    const byRun = new Map<string, ReturnType<typeof parseIrStepCompletedPayload>[]>();
+    for (const raw of irEvents.rows) {
+      const row = raw as unknown as Record<string, unknown>;
+      const runId = str(row.run_id);
+      const parsed = parseIrStepCompletedPayload(str(row.payload_json ?? "{}"));
+      const list = byRun.get(runId) ?? [];
+      list.push(parsed);
+      byRun.set(runId, list);
+    }
+    for (const run of runsBase) {
+      const merged = mergeIrResources(byRun.get(run.id) ?? []);
+      run.irProvider = merged.provider;
+      run.serperQueries = merged.serperQueries;
+      run.jinaUrls = merged.jinaUrls;
+      run.irSiteDocsUsed = merged.irSiteDocsUsed;
+    }
+  }
+
+  return {
+    users: usersResult.rows.map((raw) => {
+      const row = raw as unknown as Record<string, unknown>;
+      return {
+        userId: str(row.user_id),
+        username: str(row.username ?? ""),
+        email: str(row.email ?? ""),
+        analyzeCount: Number(row.n) || 0,
+        lastRequestedAt: str(row.last_requested_at ?? ""),
+      };
+    }),
+    runs: runsBase,
+    total: Number(countResult.rows[0]?.c) || 0,
+    uniqueUsers: Number(uniqueResult.rows[0]?.c) || 0,
     totalCostUsd: Number(sumResult.rows[0]?.s) || 0,
   };
 }

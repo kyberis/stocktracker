@@ -491,4 +491,99 @@ describe("fetchIrSiteDocuments", () => {
     expect(result.serperQueries).toBe(2);
     expect(result.searchCredits).toBe(2);
   });
+
+  it("forceSerperJina skips Tavily even when Serper returns no IR-scored hits", async () => {
+    process.env.SERPER_API_KEY = "serper-test";
+    process.env.JINA_API_KEY = "jina-test";
+    process.env.TAVILY_API_KEY = "tavily-test";
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("google.serper.dev")) {
+        return new Response(
+          JSON.stringify({
+            organic: [
+              {
+                title: "UBER quote",
+                link: "https://finance.yahoo.com/quote/UBER",
+                snippet: "quote",
+              },
+            ],
+          }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("eu.r.jina.ai")) {
+        return new Response(
+          JSON.stringify({
+            data: {
+              content:
+                "Uber mobility and delivery segments. Management reiterated bookings growth. ".repeat(
+                  4,
+                ),
+            },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response("unexpected tavily", { status: 500 });
+    });
+
+    const result = await fetchIrSiteDocuments({
+      ticker: "UBER",
+      companyName: "Uber Technologies, Inc.",
+      preferSerperJina: true,
+      forceSerperJina: true,
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    expect(result.provider).toBe("serper_jina");
+    expect(result.jinaUrls).toBeGreaterThanOrEqual(1);
+    expect(result.searchCredits).toBe(0);
+    expect(result.extractCredits).toBe(0);
+    expect(
+      fetchImpl.mock.calls.some((c) => String(c[0]).includes("tavily.com")),
+    ).toBe(false);
+  });
+
+  it("forceSerperJina does not Tavily-extract when Jina fails", async () => {
+    process.env.SERPER_API_KEY = "serper-test";
+    process.env.JINA_API_KEY = "jina-test";
+    process.env.TAVILY_API_KEY = "tavily-test";
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("google.serper.dev")) {
+        return new Response(
+          JSON.stringify({
+            organic: [
+              {
+                title: "Uber Investor Relations",
+                link: "https://investor.uber.com/",
+                snippet: "IR hub",
+              },
+            ],
+          }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("eu.r.jina.ai")) {
+        return new Response("jina down", { status: 502 });
+      }
+      return new Response("unexpected tavily", { status: 500 });
+    });
+
+    const result = await fetchIrSiteDocuments({
+      ticker: "UBER",
+      companyName: "Uber Technologies, Inc.",
+      preferSerperJina: true,
+      forceSerperJina: true,
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    expect(result.provider).toBe("serper_jina");
+    expect(result.hasUsefulContent).toBe(false);
+    expect(result.extractCredits).toBe(0);
+    expect(
+      fetchImpl.mock.calls.some((c) => String(c[0]).includes("tavily.com")),
+    ).toBe(false);
+  });
 });

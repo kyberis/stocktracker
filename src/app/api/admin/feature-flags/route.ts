@@ -42,6 +42,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "screening_qa_enabled",
   "screening_tavily_research_enabled",
   "screening_ir_serper_jina_enabled",
+  "screening_analyze_force_serper_jina_enabled",
   "screening_estebaranz_eval_enabled",
   "display_invariants",
 ];

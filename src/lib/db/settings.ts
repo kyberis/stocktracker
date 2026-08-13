@@ -65,6 +65,7 @@ export type PlatformFeature =
   | "screening_qa_enabled"
   | "screening_tavily_research_enabled"
   | "screening_ir_serper_jina_enabled"
+  | "screening_analyze_force_serper_jina_enabled"
   | "screening_estebaranz_eval_enabled"
   | "portfolio_anomaly_agent"
   | "display_invariants";
@@ -498,6 +499,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "screening_qa_enabled",
   "screening_tavily_research_enabled",
   "screening_ir_serper_jina_enabled",
+  "screening_analyze_force_serper_jina_enabled",
   "screening_estebaranz_eval_enabled",
   "portfolio_anomaly_agent",
   "display_invariants",
