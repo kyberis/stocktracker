@@ -73,4 +73,36 @@ describe("internal prodops-link", () => {
     expect(json.deep_link).toBe("https://t.me/trefoliobot?start=aabbccddeeff");
     expect(json.deepLink).toBe(json.deep_link);
   });
+
+  it("unlinks the recipient", async () => {
+    const { unlinkProdOpsRecipient, getProdOpsSharedSecretMeta } = await import("@/lib/db");
+    vi.mocked(unlinkProdOpsRecipient).mockResolvedValue({
+      enabled: true,
+      baseUrl: "https://ops.trefolio.com",
+      botUsername: "trefoliobot",
+      enabledEventTypes: ["user_registered"],
+      recipient: null,
+      pendingLink: null,
+    });
+    vi.mocked(getProdOpsSharedSecretMeta).mockResolvedValue({
+      hasSecret: true,
+      maskedSecret: "****",
+      source: "env",
+    });
+
+    const { DELETE } = await import("./route");
+    const response = await DELETE(
+      new NextRequest("http://localhost/api/internal/prodops-link", {
+        method: "DELETE",
+        headers: { authorization: "Bearer idp-secret" },
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      linked: false,
+      botUsername: "trefoliobot",
+      hasSharedSecret: true,
+    });
+  });
 });

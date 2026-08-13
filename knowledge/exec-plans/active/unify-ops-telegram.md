@@ -1,6 +1,6 @@
 # Unify ops Telegram
 
-- **Status:** active
+- **Status:** completed
 - **Owner:** agent
 - **Started:** 2026-08-13
 - **Target:** 2026-08-13
@@ -23,5 +23,5 @@ One staff Telegram bot (`@trefoliobot`), one webhook (ProdOps), one recipient. `
 
 ## Follow-ups
 
-- Set `TREFOLIO_SERVER_ORIGIN` on trefolio-accounts to the Vercel production alias.
+- [x] Set `TREFOLIO_SERVER_ORIGIN` on trefolio-accounts to the Vercel production alias.
 - Confirm `@trefoliobot` webhook is `https://ops.trefolio.com/api/telegram/webhook`.
