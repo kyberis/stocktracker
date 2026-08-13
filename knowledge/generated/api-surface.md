@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-309 routes.
+311 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -221,6 +221,8 @@
 | `/api/internal/account-deleted` | POST | [`src/app/api/internal/account-deleted/route.ts`](../../src/app/api/internal/account-deleted/route.ts) |
 | `/api/internal/ops-metrics` | GET | [`src/app/api/internal/ops-metrics/route.ts`](../../src/app/api/internal/ops-metrics/route.ts) |
 | `/api/internal/prodops-action` | POST | [`src/app/api/internal/prodops-action/route.ts`](../../src/app/api/internal/prodops-action/route.ts) |
+| `/api/internal/prodops-ingest` | POST | [`src/app/api/internal/prodops-ingest/route.ts`](../../src/app/api/internal/prodops-ingest/route.ts) |
+| `/api/internal/prodops-link` | GET, POST, DELETE | [`src/app/api/internal/prodops-link/route.ts`](../../src/app/api/internal/prodops-link/route.ts) |
 | `/api/internal/prodops-query` | POST | [`src/app/api/internal/prodops-query/route.ts`](../../src/app/api/internal/prodops-query/route.ts) |
 | `/api/internal/screening/worker` | POST | [`src/app/api/internal/screening/worker/route.ts`](../../src/app/api/internal/screening/worker/route.ts) |
 | `/api/internal/telegram-link-status` | GET | [`src/app/api/internal/telegram-link-status/route.ts`](../../src/app/api/internal/telegram-link-status/route.ts) |
