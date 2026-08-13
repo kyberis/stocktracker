@@ -39,6 +39,8 @@ export type AlertCondition = "above" | "below";
 export type AlertType = "threshold" | "percent_change";
 export type PercentBasis = "daily" | "purchase";
 export type NotificationChannel = "email" | "push" | "telegram" | "device";
+export type ProdOpsSourceApp = "trefolio" | "accounts";
+
 export type ProdOpsEventType =
   | "user_registered"
   | "membership_paid"
@@ -46,6 +48,7 @@ export type ProdOpsEventType =
   | "broker_request_created"
   | "trial_activated"
   | "portfolio_anomaly"
+  | "ops_digest"
   | "test_notification";
 
 export type ProdOpsTelegramAction = {
@@ -125,7 +128,7 @@ export interface ProdOpsOutboxEvent {
   eventType: ProdOpsEventType;
   userId: string;
   dedupeKey: string;
-  sourceApp: "trefolio";
+  sourceApp: ProdOpsSourceApp;
   summary: string;
   adminUrl: string;
   payloadJson: string;

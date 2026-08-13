@@ -8,6 +8,7 @@ import {
   getProdOpsConfig,
   getProdOpsSharedSecret,
 } from "@/lib/db";
+import { fetchIdpOpsDigest, IdpClientError } from "@/lib/idp/client";
 import { verifyProdOpsBodySignature, buildProdOpsAdminUrl } from "@/lib/prodops";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -17,6 +18,7 @@ const prodOpsQuerySchema = z.object({
     "latest_user_created",
     "latest_feedbacks",
     "latest_user_interaction",
+    "ops_digest",
   ]),
 });
 
@@ -89,6 +91,24 @@ export const POST = withMetrics("/api/internal/prodops-query", async (req: NextR
         interaction,
         adminUrl: interaction ? buildProdOpsAdminUrl(`/admin/users/${interaction.userId}`) : "",
       });
+    }
+    case "ops_digest": {
+      try {
+        const digest = await fetchIdpOpsDigest();
+        return NextResponse.json({
+          ok: true,
+          queryType: parsed.data.queryType,
+          markdown: digest.markdown,
+          adminUrl: buildProdOpsAdminUrl("/admin/settings"),
+        });
+      } catch (error) {
+        const status = error instanceof IdpClientError ? error.status : 502;
+        console.warn("[prodops-query] ops_digest failed", status, error instanceof Error ? error.message : error);
+        return NextResponse.json(
+          { error: "idp_digest_unavailable" },
+          { status: status >= 400 && status < 600 ? status : 502 },
+        );
+      }
     }
   }
 });

@@ -177,4 +177,8 @@ export function inviteMembershipGrantViaIdp(payload: {
   });
 }
 
+export function fetchIdpOpsDigest(): Promise<{ ok: true; markdown: string }> {
+  return call(`/api/internal/ops-digest`);
+}
+
 export { IdpClientError, call };

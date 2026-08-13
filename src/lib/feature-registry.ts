@@ -416,6 +416,18 @@ export const featureDomains: FeatureDomain[] = [
       { method: "GET", path: "/api/admin/prodops-config", auth: "admin", description: "Get ProdOps Telegram config" },
       { method: "PUT", path: "/api/admin/prodops-config", auth: "admin", description: "Save ProdOps Telegram config" },
       { method: "POST", path: "/api/admin/prodops-config/test", auth: "admin", description: "Queue a ProdOps Telegram test event" },
+      {
+        method: "GET",
+        path: "/api/internal/prodops-link",
+        auth: "public",
+        description: "IdP mints/reads the unified ProdOps Telegram recipient (Bearer IDP_SERVICE_TOKEN)",
+      },
+      {
+        method: "POST",
+        path: "/api/internal/prodops-ingest",
+        auth: "public",
+        description: "IdP enqueues ops events into the ProdOps outbox (Bearer IDP_SERVICE_TOKEN)",
+      },
       { method: "POST", path: "/api/admin/reset-data", auth: "admin", description: "Reset user data (seed/empty)" },
       { method: "POST", path: "/api/admin/impersonate", auth: "admin", description: "Sign in as a non-admin user (support)" },
       { method: "POST", path: "/api/auth/exit-impersonation", auth: "session", description: "Restore admin session after impersonation" },

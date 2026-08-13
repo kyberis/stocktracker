@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 
-import type { ProdOpsEventType, ProdOpsOutboxEvent } from "@/lib/types";
+import type { ProdOpsEventType, ProdOpsOutboxEvent, ProdOpsSourceApp } from "@/lib/types";
 
 import { ensureInitialized } from "./client";
 import { num, str } from "./helpers";
@@ -12,7 +12,7 @@ export interface CreateProdOpsEventInput {
   summary: string;
   adminUrl: string;
   payload: Record<string, unknown>;
-  sourceApp?: "trefolio";
+  sourceApp?: ProdOpsSourceApp;
 }
 
 function mapRow(row: import("@libsql/client").Row): ProdOpsOutboxEvent {
@@ -21,7 +21,7 @@ function mapRow(row: import("@libsql/client").Row): ProdOpsOutboxEvent {
     eventType: str(row.event_type) as ProdOpsEventType,
     userId: str(row.user_id),
     dedupeKey: str(row.dedupe_key),
-    sourceApp: (str(row.source_app) || "trefolio") as "trefolio",
+    sourceApp: (str(row.source_app) || "trefolio") as ProdOpsSourceApp,
     summary: str(row.summary),
     adminUrl: str(row.admin_url),
     payloadJson: str(row.payload_json),

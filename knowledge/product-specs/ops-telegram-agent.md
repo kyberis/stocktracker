@@ -58,8 +58,8 @@ Schema source: migration `v114` in [`src/lib/db/migrations.ts`](../../src/lib/db
 
 ## 6. UI surface
 
-- Page(s): [`src/app/(app)/admin/settings/page.tsx`](../../src/app/(app)/admin/settings/page.tsx)
-- Components: [`src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx`](../../src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx), [`src/app/(app)/admin/tabs/SettingsTab.tsx`](../../src/app/(app)/admin/tabs/SettingsTab.tsx)
+- Page(s): [`src/app/(app)/admin/settings/page.tsx`](../../src/app/(app)/admin/settings/page.tsx), IdP [`external/accounts/src/app/agents/page.tsx`](../../external/accounts/src/app/agents/page.tsx)
+- Components: [`src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx`](../../src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx) (first card on `/admin/settings`), [`src/app/(app)/admin/tabs/SettingsTab.tsx`](../../src/app/(app)/admin/tabs/SettingsTab.tsx)
 
 ## 7. Business logic
 
@@ -123,5 +123,5 @@ None. This feature is operational only.
 
 ## 16. Open questions / planned work
 
-- Add `external/accounts` as another producer once IdP-owned signups and billing need the same real-time ops stream.
+- Multi-staff fan-out (ProdOps currently has one linked recipient).
 - Decide whether ProdOps should later support Slack, email, or topic-specific formatting beyond Telegram.

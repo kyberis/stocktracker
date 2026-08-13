@@ -37,6 +37,7 @@ const EVENT_LABELS: Record<ProdOpsEventType, string> = {
   broker_request_created: "Broker request",
   trial_activated: "Trial activated",
   portfolio_anomaly: "Portfolio anomaly",
+  ops_digest: "Ops digest",
   test_notification: "Test notification",
 };
 
@@ -297,10 +298,17 @@ export default function ProdOpsConfigCard({
         <div>
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">ProdOps Telegram</h3>
           <p className="mt-1 max-w-2xl text-xs text-gray-500 dark:text-slate-400">
-            Queue product-side ops events in trefolio and dispatch them asynchronously to the
-            external <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-slate-800">trefolio-prodops</code>{" "}
-            service. The recipient DM is now linked via a Telegram Start handshake instead of a
-            pasted chat id.
+            Single staff ops bot (<code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-slate-800">@trefoliobot</code>
+            ). Product events, IdP signups/billing, and the daily digest all go through{" "}
+            <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-slate-800">trefolio-prodops</code>.
+            Generate the Telegram link here or from{" "}
+            <a
+              href="https://user.trefolio.com/agents"
+              className="text-emerald-700 underline dark:text-emerald-400"
+            >
+              user.trefolio.com/agents
+            </a>
+            — both mint the same recipient.
           </p>
         </div>
         <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600 dark:bg-slate-800 dark:text-slate-300">
@@ -375,7 +383,7 @@ export default function ProdOpsConfigCard({
                 onChange={(event) =>
                   setConfig((current) => ({ ...current, botUsername: event.target.value }))
                 }
-                placeholder="trefolio_prodops_bot"
+                placeholder="trefoliobot"
                 className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
               />
               <p className="text-xs text-gray-500 dark:text-slate-400">

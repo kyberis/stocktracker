@@ -3120,12 +3120,12 @@ export default function SettingsTab() {
               </p>
             </div>
           )}
+        <ProdOpsConfigCard initialData={batch?.prodOps} />
         <AiModelConfigCard />
         <ExternalServicesCard />
         <PromoBannerCard />
         <UtmTaxonomyCard />
         <SupportChatConfigCard />
-        <ProdOpsConfigCard initialData={batch?.prodOps} />
         <GaConfigCard />
         <AdConfigCard />
         <StripePricesCard />

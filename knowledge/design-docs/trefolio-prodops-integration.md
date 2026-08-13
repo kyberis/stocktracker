@@ -19,8 +19,9 @@ We want:
 2. **Trefolio owns configuration and event production.** Admins configure the ProdOps base URL, bot username, shared secret, enabled event types, and the linked Telegram recipient from trefolio's admin settings.
 3. **Trefolio writes an outbox row, not a Telegram message.** Business routes enqueue ops events into `ops_event_outbox`; a cron dispatcher sends them asynchronously.
 4. **Runtime integration shape is signed HTTP.** Trefolio posts a signed JSON envelope to `trefolio-prodops` using an HMAC shared secret (`X-ProdOps-Timestamp` + `X-ProdOps-Signature`).
-5. **ProdOps owns Telegram delivery and delivery-side dedupe.** The service verifies the signature, deduplicates by `eventId`, formats the operator message, and uses the Telegram Bot API.
-6. **No direct imports across repos.** Trefolio never imports code from `external/prodops`; the boundary is API-only.
+5. **ProdOps owns Telegram delivery and delivery-side dedupe.** The service verifies the signature, deduplicates by `eventId`, formats the operator message, and uses the Telegram Bot API. There is one staff bot (`@trefoliobot`) and one webhook (`ops.trefolio.com`). The IdP does not call Telegram.
+6. **IdP is a producer, not a second bot.** `user.trefolio.com/agents` mints the same recipient link via trefolio `/api/internal/prodops-link`. IdP signups, billing, and the daily digest enqueue through `/api/internal/prodops-ingest` (`sourceApp: accounts`). `/snapshot` on the bot asks trefolio, which fetches the IdP digest.
+7. **No direct imports across repos.** Trefolio never imports code from `external/prodops`; the boundary is API-only.
 
 ## Why this and not X
 
@@ -28,7 +29,7 @@ We want:
 |---|---|
 | Send Telegram directly from trefolio routes | Couples external bot failures to signup, billing, feedback, and trials. Harder to retry safely. |
 | Keep everything inside trefolio as one more API route | Blurs the product/admin boundary and makes it harder to evolve staff tooling separately. |
-| Reuse the IdP ops digest path for real-time product events | The existing IdP ops flow is aggregate and staff-account centric. This feature needs per-event, trefolio-admin-managed routing. |
+| Reuse a second IdP Telegram webhook for product events | Telegram allows one webhook per bot. IdP `/agents` now mints the ProdOps link; IdP never owns the webhook. |
 | Shared package imported from `external/prodops` | Violates the repo's sister-app rule; build/lint/test boundaries should stay explicit. |
 
 ## How to follow it
@@ -49,7 +50,7 @@ Then set trefolio admin config:
 - bot username: the Telegram bot username that points at `trefolio-prodops`
 - shared secret: same value as `external/prodops/.env.local:PRODOPS_SHARED_SECRET`
 
-On the **ProdOps** Vercel project, set `TREFOLIO_BASE_URL` to the main app host (`https://trefolio.com` in production, `http://localhost:3010` locally). **Do not** point it at `user.trefolio.com` (IdP) or `ops.trefolio.com` (ProdOps itself) — those hosts do not expose `/api/admin/prodops-config/link/complete` or `/api/internal/prodops-query`, so Telegram linking and staff queries fail with HTTP 404.
+On the **ProdOps** Vercel project, set `TREFOLIO_BASE_URL` to a host that reaches the trefolio Next.js origin **without a Cloudflare JS challenge**. `trefolio.com` is orange-clouded; Bot Fight Mode returns 403 "Just a moment..." to Vercel datacenter IPs, so Telegram linking never hits `/api/admin/prodops-config/link/complete`. Use the stable Vercel production alias (`https://trefolio-marcos-projects-0d7207fa.vercel.app`) in production, and `http://localhost:3010` locally. **Do not** point it at `user.trefolio.com` (IdP) or `ops.trefolio.com` (ProdOps itself).
 
 ### Event flow
 
@@ -65,8 +66,11 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  adminPanel["trefolio admin"] --> mint["POST /api/admin/prodops-config/link"]
-  mint --> deepLink["t.me/<bot>?start=<token>"]
+  agentsUI["user.trefolio.com/agents"] -->|"Bearer IDP_SERVICE_TOKEN"| trefolioLink["trefolio /api/internal/prodops-link"]
+  adminPanel["trefolio /admin/settings"] --> mint["POST /api/admin/prodops-config/link"]
+  trefolioLink --> pending["pending 12-hex token"]
+  mint --> pending
+  pending --> deepLink["t.me/trefoliobot?start="]
   deepLink --> telegram["Telegram Bot /start"]
   telegram --> prodopsWebhook["external/prodops /api/telegram/webhook"]
   prodopsWebhook -->|"HMAC signed POST"| complete["/api/admin/prodops-config/link/complete"]
@@ -128,8 +132,9 @@ The `destinations` list is resolved in trefolio from the single linked recipient
 
 | Area | Source |
 |---|---|
-| Admin config | `src/app/api/admin/prodops-config/route.ts`, `src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx` |
-| Link flow | `src/app/api/admin/prodops-config/link/route.ts`, `src/app/api/admin/prodops-config/link/complete/route.ts`, `src/lib/prodops-link.ts` |
+| Admin config | `src/app/api/admin/prodops-config/route.ts`, `src/app/(app)/admin/tabs/ProdOpsConfigCard.tsx` (first card on `/admin/settings`) |
+| Link flow | `src/app/api/admin/prodops-config/link/route.ts`, `src/app/api/admin/prodops-config/link/complete/route.ts`, `src/lib/prodops-link.ts`, IdP mint via `src/app/api/internal/prodops-link/route.ts` |
+| IdP ingest | `src/app/api/internal/prodops-ingest/route.ts` |
 | Outbox DB | `src/lib/db/ops-events.ts`, migration `v114` |
 | Dispatcher cron | `src/app/api/cron/prodops-dispatch/route.ts` |
 | Event builders | `src/lib/prodops.ts` |
@@ -156,5 +161,4 @@ The `destinations` list is resolved in trefolio from the single linked recipient
 
 ## Open questions
 
-- The GitHub repo `kyberis/trefolio-prodops` was empty when this integration was bootstrapped locally, so trefolio currently carries the local clone and integration docs first; the final parent gitlink can be pinned once the child repo gets its first commit.
-- A future phase may let `external/accounts` publish the same envelope contract so IdP-owned signups and billing can flow through the same ProdOps service.
+- A future phase may add Slack or email destinations; Telegram remains the only staff channel for now.

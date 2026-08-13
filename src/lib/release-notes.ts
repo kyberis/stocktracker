@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.164",
+    date: "2026-08-13",
+    title: "One staff ops Telegram bot",
+    titleTranslations: {
+      es: "Un solo bot de ops en Telegram",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Staff ops Telegram is a single bot (@trefoliobot via ProdOps). user.trefolio.com/agents and trefolio admin mint the same recipient link; IdP signups, billing, and /snapshot use that chat.",
+        translations: {
+          es: "El Telegram de ops de staff es un solo bot (@trefoliobot vía ProdOps). user.trefolio.com/agents y el admin de trefolio generan el mismo enlace de destinatario; altas del IdP, billing y /snapshot usan ese chat.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.163",
     date: "2026-08-13",
     title: "Home totals share one calculation path",

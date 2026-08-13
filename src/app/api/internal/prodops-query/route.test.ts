@@ -17,6 +17,17 @@ vi.mock("@/lib/prodops", async () => {
   };
 });
 
+vi.mock("@/lib/idp/client", () => ({
+  fetchIdpOpsDigest: vi.fn(),
+  IdpClientError: class IdpClientError extends Error {
+    status: number;
+    constructor(message: string, status: number) {
+      super(message);
+      this.status = status;
+    }
+  },
+}));
+
 vi.mock("@/lib/with-metrics", () => ({
   withMetrics: (_name: string, handler: (req: NextRequest) => Promise<Response>) => handler,
 }));
@@ -268,6 +279,61 @@ describe("POST /api/internal/prodops-query", () => {
         event: "portfolio_import",
       }),
       adminUrl: "https://trefolio.com/admin/users/user_2",
+    });
+  });
+
+  it("returns the IdP ops digest", async () => {
+    const { getProdOpsConfig, getProdOpsSharedSecret } = await import("@/lib/db");
+    const { verifyProdOpsBodySignature } = await import("@/lib/prodops");
+    const { fetchIdpOpsDigest } = await import("@/lib/idp/client");
+
+    vi.mocked(getProdOpsSharedSecret).mockResolvedValue("shared-secret");
+    vi.mocked(verifyProdOpsBodySignature).mockReturnValue(true);
+    vi.mocked(getProdOpsConfig).mockResolvedValue({
+      enabled: true,
+      baseUrl: "https://ops.trefolio.com",
+      botUsername: "trefoliobot",
+      enabledEventTypes: ["user_registered"],
+      recipient: {
+        id: "recipient_1",
+        label: "@ops",
+        type: "telegram_dm",
+        source: "telegram_link",
+        chatId: "12345",
+        enabled: true,
+        enabledEventTypes: ["user_registered"],
+        telegramUserId: "777",
+        telegramUsername: "ops",
+        linkedAt: "2026-05-26T00:00:00.000Z",
+      },
+      pendingLink: null,
+    });
+    vi.mocked(fetchIdpOpsDigest).mockResolvedValue({
+      ok: true,
+      markdown: "trefolio ops · digest",
+    });
+
+    const { POST } = await import("./route");
+    const response = await POST(
+      new NextRequest("http://localhost/api/internal/prodops-query", {
+        method: "POST",
+        headers: {
+          "x-prodops-timestamp": "1716670000",
+          "x-prodops-signature": "sha256=test",
+        },
+        body: JSON.stringify({
+          chatId: "12345",
+          queryType: "ops_digest",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      queryType: "ops_digest",
+      markdown: "trefolio ops · digest",
+      adminUrl: "https://trefolio.com/admin/settings",
     });
   });
 });

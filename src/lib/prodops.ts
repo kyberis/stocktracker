@@ -4,11 +4,13 @@ import type {
   ProdOpsConfig,
   ProdOpsEventType,
   ProdOpsOutboxEvent,
+  ProdOpsSourceApp,
 } from "@/lib/types";
 
 import { findUserById } from "@/lib/db/users";
 import {
   createProdOpsEvent,
+  getProdOpsEventByDedupeKey,
   listProdOpsEventsReady,
   markProdOpsEventDropped,
   markProdOpsEventSent,
@@ -31,7 +33,7 @@ export interface ProdOpsEnvelope {
   eventId: string;
   eventType: ProdOpsEventType;
   occurredAt: string;
-  sourceApp: "trefolio";
+  sourceApp: ProdOpsSourceApp;
   summary: string;
   adminUrl: string;
   actor: {
@@ -76,15 +78,19 @@ function parseMetadata(event: ProdOpsOutboxEvent): Record<string, unknown> {
   return {};
 }
 
+function isAlwaysEnabledProdOpsEvent(eventType: ProdOpsEventType): boolean {
+  return eventType === "test_notification" || eventType === "ops_digest";
+}
+
 function resolveDestinations(config: ProdOpsConfig, eventType: ProdOpsEventType): ProdOpsDispatchDestination[] {
   const allowByGlobal =
-    eventType === "test_notification" || config.enabledEventTypes.includes(eventType);
+    isAlwaysEnabledProdOpsEvent(eventType) || config.enabledEventTypes.includes(eventType);
   if (!allowByGlobal) return [];
 
   const recipient = config.recipient;
   if (!recipient?.chatId || !recipient.enabled) return [];
   if (
-    eventType !== "test_notification" &&
+    !isAlwaysEnabledProdOpsEvent(eventType) &&
     !recipient.enabledEventTypes.includes(eventType)
   ) {
     return [];
@@ -162,21 +168,49 @@ function actionsFromMetadata(
   return actions.length > 0 ? actions : undefined;
 }
 
+function actorFromMetadata(
+  userId: string,
+  metadata: Record<string, unknown>,
+): ProdOpsEnvelope["actor"] {
+  return {
+    userId,
+    email: typeof metadata.email === "string" ? metadata.email : undefined,
+    displayName: typeof metadata.displayName === "string" ? metadata.displayName : undefined,
+    username: typeof metadata.username === "string" ? metadata.username : undefined,
+  };
+}
+
 async function buildEnvelope(
   event: ProdOpsOutboxEvent,
   destinations: ProdOpsDispatchDestination[],
 ): Promise<ProdOpsEnvelope | null> {
-  const user = await findUserById(event.userId);
-  if (!user) return null;
-
   const metadata = parseMetadata(event);
   const actions = actionsFromMetadata(event.eventType, metadata);
+  const sourceApp: ProdOpsSourceApp = event.sourceApp === "accounts" ? "accounts" : "trefolio";
+
+  if (sourceApp === "accounts") {
+    return {
+      eventId: event.id,
+      eventType: event.eventType,
+      occurredAt: event.createdAt,
+      sourceApp,
+      summary: event.summary,
+      adminUrl: event.adminUrl,
+      actor: actorFromMetadata(event.userId, metadata),
+      metadata,
+      destinations,
+      ...(actions ? { actions } : {}),
+    };
+  }
+
+  const user = await findUserById(event.userId);
+  if (!user) return null;
 
   return {
     eventId: event.id,
     eventType: event.eventType,
     occurredAt: event.createdAt,
-    sourceApp: PRODOPS_SOURCE_APP,
+    sourceApp,
     summary: event.summary,
     adminUrl: event.adminUrl,
     actor: {
@@ -260,6 +294,29 @@ export async function dispatchPendingProdOpsEvents(limit = 25): Promise<{
     failed,
     skipped: 0,
   };
+}
+
+export async function enqueueProdOpsIngestEvent(input: {
+  eventType: ProdOpsEventType;
+  userId: string;
+  dedupeKey: string;
+  summary: string;
+  adminUrl: string;
+  metadata: Record<string, unknown>;
+  sourceApp: "accounts";
+}): Promise<{ id: string; deduped: boolean }> {
+  const existing = await getProdOpsEventByDedupeKey(input.dedupeKey);
+  if (existing) return { id: existing.id, deduped: true };
+  const created = await createProdOpsEvent({
+    eventType: input.eventType,
+    userId: input.userId,
+    dedupeKey: input.dedupeKey,
+    summary: input.summary,
+    adminUrl: input.adminUrl,
+    payload: input.metadata,
+    sourceApp: input.sourceApp,
+  });
+  return { id: created.id, deduped: false };
 }
 
 async function createNamedProdOpsEvent(input: {

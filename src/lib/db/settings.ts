@@ -940,6 +940,7 @@ export const PRODOPS_EVENT_TYPES: ProdOpsEventType[] = [
   "broker_request_created",
   "trial_activated",
   "portfolio_anomaly",
+  "ops_digest",
   "test_notification",
 ];
 
