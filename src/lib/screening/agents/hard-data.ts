@@ -502,7 +502,9 @@ export const runHardDataStep: StepHandler = async (
   let universeSizeForLog = 0;
 
   if (brief.intent === "analyze" && brief.focusTicker) {
-    const seed = await seedFocusCandidate(brief.focusTicker);
+    const seed = await seedFocusCandidate(brief.focusTicker, {
+      companyName: brief.focusCompanyName,
+    });
     if (!seed) {
       return {
         status: "error",
@@ -523,6 +525,7 @@ export const runHardDataStep: StepHandler = async (
       rankReason: `Single-company analysis of ${seed.ticker}${
         brief.focusExchange ? ` (${brief.focusExchange})` : ""
       }.`,
+      researchTicker: seed.researchTicker ?? null,
     };
     let candidates = [seededCandidate];
     try {

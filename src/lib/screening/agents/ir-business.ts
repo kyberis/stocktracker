@@ -21,6 +21,10 @@ import {
   summariseIrBundleForLlm,
 } from "@/lib/screening/data/fmp-ir";
 import { fetchIrSiteDocuments } from "@/lib/screening/data/ir-site-docs";
+import {
+  cleanCompanyNameForSearch,
+  researchSymbolForListed,
+} from "@/lib/screening/data/research-symbol";
 import { accrueScreeningLlmCost } from "@/lib/screening/cost";
 import { extractLlmUsage } from "@/lib/screening/llm-usage";
 import { recordIrTickerStep } from "@/lib/screening/metrics";
@@ -537,23 +541,36 @@ export const runIrBusinessStep: StepHandler = async (
     null;
 
   const started = Date.now();
-  const researchEnabled = await isFeatureEnabledForUser(
-    "screening_tavily_research_enabled",
-    ctx.userId,
+  const [researchEnabled, serperJinaEnabled] = await Promise.all([
+    isFeatureEnabledForUser("screening_tavily_research_enabled", ctx.userId),
+    isFeatureEnabledForUser("screening_ir_serper_jina_enabled", ctx.userId),
+  ]);
+
+  const researchTicker = await researchSymbolForListed({
+    ticker,
+    companyName: hardDataCandidate?.name,
+    researchTicker: hardDataCandidate?.researchTicker,
+  });
+  const irSearchName = cleanCompanyNameForSearch(
+    hardDataCandidate?.name || ticker,
   );
 
+  const fetchIr = researchEnabled || serperJinaEnabled;
   const [bundle, irDocs] = await Promise.all([
-    fetchFmpIrBundle({ ticker }),
-    researchEnabled
+    fetchFmpIrBundle({ ticker: researchTicker }),
+    fetchIr
       ? fetchIrSiteDocuments({
-          ticker,
-          companyName: hardDataCandidate?.name ?? ticker,
+          ticker: researchTicker,
+          companyName: irSearchName,
           runId: ctx.runId,
+          preferSerperJina: serperJinaEnabled,
         })
       : Promise.resolve(null),
   ]);
 
   const evidence: Record<string, unknown> = summariseIrBundleForLlm(bundle);
+  evidence.listedTicker = ticker;
+  evidence.researchTicker = researchTicker;
   let irSiteDocsUsed = false;
   if (irDocs) {
     irSiteDocsUsed = irDocs.hasUsefulContent || irDocs.documents.length > 0;
@@ -564,6 +581,7 @@ export const runIrBusinessStep: StepHandler = async (
         title: d.title,
         asOf: d.asOf,
         role: d.role,
+        format: d.format,
         excerpt: d.excerpt,
       })),
       hasUsefulContent: irDocs.hasUsefulContent,
@@ -578,10 +596,11 @@ export const runIrBusinessStep: StepHandler = async (
     !(irDocs?.hasUsefulContent ?? false);
   if (needResearchFallback) {
     const research = await getOrFetchCompanyResearch({
-      ticker,
-      companyName: hardDataCandidate?.name ?? ticker,
+      ticker: researchTicker,
+      companyName: irSearchName,
       runId: ctx.runId,
       model: "mini",
+      cacheOnly: true,
     });
     if (
       research.businessOneLiner ||
@@ -677,11 +696,15 @@ export const runIrBusinessStep: StepHandler = async (
     status: "ok",
     payload: {
       ticker,
+      researchTicker,
       confidence: result.output.confidence,
       gaps: result.output.gaps.length,
       contradiction: result.output.contradictionWithHardData,
       fmpErrors: bundle.errors.length,
       irSiteDocsUsed,
+      provider: irDocs?.provider ?? null,
+      serperQueries: irDocs?.serperQueries ?? 0,
+      jinaUrls: irDocs?.jinaUrls ?? 0,
       researchUsed,
       llmError: result.errorMessage,
     },

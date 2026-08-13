@@ -31,6 +31,8 @@ export interface FetchTavilyExtractOptions {
   query?: string;
   chunksPerSource?: number;
   extractDepth?: TavilyExtractDepth;
+  /** Truncate raw_content (default 12_000). PDFs pass a higher cap. */
+  maxContentChars?: number;
   /** Accrue variable Extract cost on this screening run. */
   runId?: string | null;
   fetchImpl?: typeof fetch;
@@ -76,6 +78,10 @@ export async function fetchTavilyExtract(
 
   const fetchImpl = opts.fetchImpl ?? fetch;
   const extractDepth: TavilyExtractDepth = opts.extractDepth ?? "basic";
+  const maxContentChars = Math.min(
+    80_000,
+    Math.max(1_000, opts.maxContentChars ?? 12_000),
+  );
   const body: Record<string, unknown> = {
     urls,
     extract_depth: extractDepth,
@@ -145,7 +151,7 @@ export async function fetchTavilyExtract(
       if (!url || !content) continue;
       results.push({
         url: url.slice(0, 800),
-        content: content.slice(0, 12_000),
+        content: content.slice(0, maxContentChars),
       });
     }
 

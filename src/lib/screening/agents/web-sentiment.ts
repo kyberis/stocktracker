@@ -20,6 +20,10 @@ import {
   summariseIrBundleForLlm,
 } from "@/lib/screening/data/fmp-ir";
 import { fetchTavilySearch } from "@/lib/screening/data/tavily";
+import {
+  cleanCompanyNameForSearch,
+  researchSymbolForListed,
+} from "@/lib/screening/data/research-symbol";
 import { accrueScreeningLlmCost } from "@/lib/screening/cost";
 import { extractLlmUsage } from "@/lib/screening/llm-usage";
 import { recordWebTickerStep } from "@/lib/screening/metrics";
@@ -420,13 +424,24 @@ export const runWebSentimentStep: StepHandler = async (
     "screening_tavily_research_enabled",
     ctx.userId,
   );
+  const researchTicker = await researchSymbolForListed({
+    ticker,
+    companyName: hardDataCandidate?.name,
+    researchTicker: hardDataCandidate?.researchTicker,
+  });
+  const searchName = cleanCompanyNameForSearch(
+    hardDataCandidate?.name || ticker,
+  );
   const skipAnalystSearch =
-    researchEnabled && (await hasFreshScreeningResearchCache(ticker));
+    researchEnabled &&
+    ((await hasFreshScreeningResearchCache(ticker)) ||
+      (researchTicker !== ticker &&
+        (await hasFreshScreeningResearchCache(researchTicker))));
 
   const [bundle, tavilyNews, tavilyAnalyst] = await Promise.all([
-    fetchFmpIrBundle({ ticker }),
+    fetchFmpIrBundle({ ticker: researchTicker }),
     fetchTavilySearch({
-      query: `${hardDataCandidate?.name || ticker} (${ticker}) news`,
+      query: `${searchName} (${researchTicker}) news`,
       maxResults: 5,
       daysBack: 90,
       runId: ctx.runId,
@@ -434,7 +449,7 @@ export const runWebSentimentStep: StepHandler = async (
     skipAnalystSearch
       ? Promise.resolve({ results: [], errors: [] as string[] })
       : fetchTavilySearch({
-          query: `${ticker} analyst rating`,
+          query: `${researchTicker} analyst rating`,
           maxResults: 4,
           daysBack: 90,
           runId: ctx.runId,

@@ -178,6 +178,7 @@ describe("runIrBusinessStep IR site docs", () => {
           asOf: "2026-04-24",
           excerpt: "x".repeat(200),
           role: "document",
+          format: "html",
         },
       ],
       hasUsefulContent: true,
@@ -213,7 +214,12 @@ describe("runIrBusinessStep IR site docs", () => {
     if (result.status !== "ok") {
       throw new Error(`unexpected: ${JSON.stringify(result)}`);
     }
-    expect(mockFetchIrDocs).toHaveBeenCalled();
+    expect(mockFetchIrDocs).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ticker: "TFII",
+        preferSerperJina: true,
+      }),
+    );
     expect(mockGetResearch).not.toHaveBeenCalled();
     expect(result.payload).toMatchObject({
       irSiteDocsUsed: true,
@@ -281,7 +287,99 @@ describe("runIrBusinessStep IR site docs", () => {
 
     expect(result.status).toBe("ok");
     if (result.status !== "ok") throw new Error("expected ok");
-    expect(mockGetResearch).toHaveBeenCalled();
+    expect(mockGetResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ cacheOnly: true }),
+    );
     expect(result.payload).toMatchObject({ researchUsed: true });
+  });
+
+  it("uses researchTicker for FMP IR and IR site search", async () => {
+    mockGetHardData.mockResolvedValue({
+      outputJson: JSON.stringify({
+        status: "ok",
+        universeSize: 1,
+        locale: "en",
+        candidates: [
+          {
+            ticker: "W9C.MU",
+            name: "Constellation Software Inc.   R",
+            sector: "Technology",
+            industry: "Software",
+            country: "CA",
+            marketCapUsd: 70_000_000_000,
+            price: 3000,
+            rankScore: 100,
+            rankReason: "Analyze",
+            researchTicker: "CSU.TO",
+          },
+        ],
+      }),
+    });
+    mockFetchFmp.mockResolvedValue({
+      ticker: "CSU.TO",
+      transcript: { year: 2026, quarter: 2, date: "2026-08-11", excerpt: "x".repeat(250) },
+      news: [{ title: "Q2", publishedDate: "2026-08-11", url: "https://example.com", site: null }],
+      insiders: [],
+      requestCount: 2,
+      errors: [],
+    });
+    mockFetchIrDocs.mockResolvedValue({
+      ticker: "CSU.TO",
+      irPageUrl: "https://www.csisoftware.com/investor-relations/",
+      documents: [
+        {
+          url: "https://www.csisoftware.com/q2.pdf",
+          title: "Q2",
+          asOf: "2026-08-11",
+          excerpt: "x".repeat(200),
+          role: "document",
+          format: "pdf",
+        },
+      ],
+      hasUsefulContent: true,
+      searchCredits: 2,
+      extractCredits: 2,
+      errors: [],
+    });
+
+    const { runIrBusinessStep } = await import("../agents/ir-business");
+    const result = await runIrBusinessStep({
+      step: {
+        id: "s3",
+        runId: "run-3",
+        agentKind: "ir_business",
+        ticker: "W9C.MU",
+        status: "running",
+        attempts: 1,
+        leaseOwner: "w",
+        leaseExpiresAt: null,
+        dependsOn: [],
+        errorMessage: null,
+        startedAt: null,
+        completedAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      userId: "u1",
+      runId: "run-3",
+      briefJson,
+    });
+
+    expect(result.status).toBe("ok");
+    expect(mockFetchFmp).toHaveBeenCalledWith({ ticker: "CSU.TO" });
+    expect(mockFetchIrDocs).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ticker: "CSU.TO",
+        companyName: "Constellation Software Inc.",
+        preferSerperJina: true,
+      }),
+    );
+    if (result.status === "ok") {
+      expect(result.payload).toMatchObject({
+        ticker: "W9C.MU",
+        researchTicker: "CSU.TO",
+        irSiteDocsUsed: true,
+      });
+    }
   });
 });

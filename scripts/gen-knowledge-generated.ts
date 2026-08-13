@@ -132,19 +132,19 @@ function genCronRegistry() {
 }
 
 function genFeatureFlags() {
-  // Placeholder until the codebase exposes a central registry.
-  // We surface any occurrence of `useFeatureFlag("...")` calls instead.
-  const files = walk(join(ROOT, "src"), (p) => p.endsWith(".ts") || p.endsWith(".tsx"));
+  const file = join(ROOT, "src/lib/db/settings.ts");
+  const src = readFileSync(file, "utf8");
+  const block = src.match(
+    /const ALL_PLATFORM_FEATURES: PlatformFeature\[\] = \[([\s\S]*?)\];/,
+  );
   const flags = new Set<string>();
-  const re = /useFeatureFlag\(\s*"([^"]+)"/g;
-  const reServer = /getServerFeatureFlag\(\s*"([^"]+)"/g;
-  for (const file of files) {
-    const src = readFileSync(file, "utf8");
-    for (const m of src.matchAll(re)) flags.add(m[1]);
-    for (const m of src.matchAll(reServer)) flags.add(m[1]);
+  if (block) {
+    for (const m of block[1].matchAll(/"([^"]+)"/g)) flags.add(m[1]);
   }
   const lines = [writeHeader("Feature flags (referenced in code)"), ""];
-  lines.push("Flags discovered by scanning `useFeatureFlag(...)` and `getServerFeatureFlag(...)` calls.");
+  lines.push(
+    "Flags from `ALL_PLATFORM_FEATURES` in [`src/lib/db/settings.ts`](../../src/lib/db/settings.ts).",
+  );
   lines.push("");
   if (flags.size === 0) {
     lines.push("_No flags found._");

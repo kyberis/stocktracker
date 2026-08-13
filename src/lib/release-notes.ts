@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.167",
+    date: "2026-08-13",
+    title: "Screening IR Serper/Jina prototype",
+    titleTranslations: {
+      es: "Prototipo IR de cribado con Serper/Jina",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Investment screening no longer calls live Tavily Research (cache only). IR document discovery can use Serper search and Jina EU extract behind a flag, with Tavily Search/Extract as fallback.",
+        translations: {
+          es: "El cribado ya no llama a Tavily Research en vivo (solo caché). El descubrimiento de documentos IR puede usar búsqueda Serper y extracto Jina UE detrás de un flag, con Tavily Search/Extract como respaldo.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.166",
+    date: "2026-08-13",
+    title: "Screening IR PDFs and secondary listings",
+    titleTranslations: {
+      es: "Cribado IR: PDFs y listings secundarios",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Investment screening now extracts official IR PDFs (shareholder reports, MD&A, earnings releases) as primary evidence, and maps secondary quotes (e.g. Munich W9C.MU) to the primary FMP symbol for transcripts and IR search without changing the ticker on the card.",
+        translations: {
+          es: "El cribado ahora extrae PDFs oficiales de IR (informes a accionistas, MD&A, resultados) como evidencia principal, y mapea cotizaciones secundarias (p. ej. Múnich W9C.MU) al símbolo primario de FMP para transcripts y búsqueda IR, sin cambiar el ticker de la ficha.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.165",
     date: "2026-08-13",
     title: "Staff ops Telegram natural language",

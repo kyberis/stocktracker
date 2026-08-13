@@ -554,6 +554,11 @@ export const hardDataCandidateSchema = z.object({
   rankScore: z.number().min(0).max(100),
   /** Short locale-aware sentence, no prices or targets. */
   rankReason: z.string().min(1).max(280),
+  /**
+   * FMP / IR lookup symbol when the card ticker is a secondary listing
+   * (e.g. W9C.MU → CSU.TO). Display ticker stays `ticker`.
+   */
+  researchTicker: z.string().min(1).max(20).nullable().optional(),
   /** Optional report enrichment (FMP + trefolio MOAT /analisis). */
   currency: z.string().max(8).nullable().optional(),
   fwdPe: z.number().finite().nullable().optional(),

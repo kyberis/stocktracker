@@ -23,13 +23,14 @@ export const SHORTLIST_RESEARCH_AGENT_KIND = "shortlist_research";
 
 /** Leave headroom under the heavy-step lease / function maxDuration. */
 const WALL_BUDGET_MS = 150_000;
-/** Cap each live Tavily Research call so 5 tickers cannot serialize past the budget. */
+/** Cap each cache lookup so 5 tickers cannot serialize past the budget. */
 const PER_TICKER_TIMEOUT_MS = 55_000;
 const HEARTBEAT_LEASE_MS = 90_000;
 
 /**
- * Post-Compiler deep-dive: Tavily Research (cache-first) for the ≤5 shortlist
- * tickers. Enrichment is consumed at report compose time.
+ * Post-Compiler deep-dive: cached Tavily Research only (no live Research —
+ * that endpoint is what blows the Tavily PAYG cap). Enrichment is consumed
+ * at report compose time.
  *
  * Bound wall time and heartbeat the lease so a dropped waitUntil / killed
  * isolate does not leave the UI on a zombie `running` step for minutes.
@@ -124,6 +125,7 @@ export const runShortlistResearchStep: StepHandler = async (
       runId: ctx.runId,
       model: "mini",
       timeoutMs,
+      cacheOnly: true,
     });
     researched.push({
       ticker,

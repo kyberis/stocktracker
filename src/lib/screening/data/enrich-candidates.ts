@@ -8,6 +8,7 @@ import {
   hardDataOutputSchema,
   type HardDataCandidate,
 } from "@/lib/screening/schemas";
+import { fmpSymbolForCandidate } from "@/lib/screening/data/research-symbol";
 import { scoreChecklist } from "@/lib/screening/scoring/checklist";
 
 /**
@@ -77,7 +78,9 @@ export async function enrichHardDataCandidates(
   if (candidates.length === 0) return candidates;
 
   try {
-    await ensureMoatForTickers(candidates.map((c) => c.ticker));
+    await ensureMoatForTickers(
+      candidates.map((c) => fmpSymbolForCandidate(c)),
+    );
   } catch (err) {
     console.warn(
       "[screening/enrich] ensureMoatForTickers failed",
@@ -86,7 +89,7 @@ export async function enrichHardDataCandidates(
   }
 
   const signals = await loadTrefolioSignalsForTickers(
-    candidates.map((c) => c.ticker),
+    candidates.map((c) => fmpSymbolForCandidate(c)),
   );
 
   const CONCURRENCY = 3;
@@ -95,8 +98,10 @@ export async function enrichHardDataCandidates(
     const chunk = candidates.slice(i, i + CONCURRENCY);
     const rows = await Promise.all(
       chunk.map(async (c) => {
-        const fund = await fetchFmpFundamentals(c.ticker);
-        const sig = signals.get(c.ticker.toUpperCase());
+        const lookup = fmpSymbolForCandidate(c);
+        const fund = await fetchFmpFundamentals(lookup);
+        const sig =
+          signals.get(lookup) ?? signals.get(c.ticker.toUpperCase());
         return mergeCandidate(c, fund, sig);
       }),
     );

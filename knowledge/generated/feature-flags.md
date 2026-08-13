@@ -4,14 +4,57 @@
 > Do not edit by hand.
 
 
-Flags discovered by scanning `useFeatureFlag(...)` and `getServerFeatureFlag(...)` calls.
+Flags from `ALL_PLATFORM_FEATURES` in [`src/lib/db/settings.ts`](../../src/lib/db/settings.ts).
 
 - `ai_report_enabled`
+- `aid_beta`
+- `alerts_enabled`
+- `apple_signin_enabled`
+- `classic_home`
 - `commerce_enabled`
+- `csv_export_enabled`
+- `daily_digests_enabled`
+- `device_enabled`
 - `display_invariants`
+- `home_v2`
 - `investment_screening_enabled`
+- `lifecycle_activation_email_enabled`
+- `lifecycle_winback_email_enabled`
+- `market_data_alpha_vantage`
+- `market_data_fmp_crypto`
+- `market_data_fmp_dividends`
+- `market_data_fmp_economic_indicators`
+- `market_data_fmp_event_sync`
+- `market_data_fmp_fundamentals`
+- `market_data_fmp_intelligence`
+- `market_data_fmp_portfolio_news`
+- `market_data_fmp_search`
+- `mcp_fmp_proxy`
+- `mobile_app_enabled`
+- `portfolio_anomaly_agent`
+- `portfolio_v2_chart_enabled`
 - `pro_trial_enabled`
+- `screening_agents_v2_enabled`
+- `screening_dev_lab_enabled`
+- `screening_estebaranz_eval_enabled`
+- `screening_ir_agent_enabled`
+- `screening_ir_serper_jina_enabled`
+- `screening_pipeline_real_enabled`
+- `screening_qa_enabled`
+- `screening_tavily_research_enabled`
 - `social_network_enabled`
+- `support_chat_enabled`
+- `telegram_bot_enabled`
+- `telegram_enabled`
+- `tool_accounts_enabled`
+- `tool_dividends_enabled`
+- `tool_performance_enabled`
 - `tool_planning_enabled`
+- `tool_rebalancing_enabled`
 - `tool_simulator_enabled`
 - `tool_tax_reports_enabled`
+- `tool_taxonomy_enabled`
+- `tool_transactions_enabled`
+- `tool_watchlist_enabled`
+- `weekly_digest_enabled`
+- `weekly_digest_free_tier_enabled`

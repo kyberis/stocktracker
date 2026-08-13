@@ -407,6 +407,16 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3">Stock ticker symbols, company names, curated X handles, and search queries; for screening, only ticker and company name are sent (including a primary-exchange symbol when the listing is a secondary quote) — no account email or name. Screening may also send public IR page and filing URLs (including PDFs) to Tavily Extract.</td>
                   </tr>
                   <tr>
+                    <td className="py-3 pr-6">Serper</td>
+                    <td className="py-3 pr-6">Optional Investment Screening IR document discovery (experimental, flag-gated): Google search for official investor-relations pages</td>
+                    <td className="py-3">Ticker and company name only (including a primary-exchange symbol when the listing is a secondary quote) — no account email or name</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">Jina AI Reader (EU)</td>
+                    <td className="py-3 pr-6">Optional Investment Screening IR document extract (experimental, flag-gated): public HTML pages and PDFs from official investor-relations sites</td>
+                    <td className="py-3">Public IR page and filing URLs only (including PDFs) — no account email or name. Processed in the EU.</td>
+                  </tr>
+                  <tr>
                     <td className="py-3 pr-6">Clara (clara.trefolio.com)</td>
                     <td className="py-3 pr-6">Optional savings summary on Investor Briefing when you use the same trefolio account</td>
                     <td className="py-3 pr-6">Server-to-server request with your IdP subject identifier; returns aggregated savings bucket amounts only when you have a linked Clara account</td>

@@ -138,7 +138,13 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
   screening_tavily_research_enabled: {
     label: "Screening: Tavily IR docs + Research",
     description:
-      "IR agent: Tavily Search+Extract for official IR pages and recent HTML docs (primary), Tavily Research only when FMP and extract are both thin; also shortlist deep-dive after Compiler, shared ticker research cache (7d), and slim Web Search (skip analyst Search when research is cached). Accrues Search/Extract/Research credits into per-report variable cost. Requires screening_pipeline_real_enabled. Off by default.",
+      "IR agent: Tavily Search+Extract for official IR pages and recent HTML/PDF docs (primary unless Serper/Jina is on). Live Tavily Research is cache-only (no new PAYG Research calls); cache hits still feed IR fallback and shortlist deep-dive. Also slim Web Search (skip analyst Search when research is cached). Accrues Search/Extract credits into per-report variable cost. Requires screening_pipeline_real_enabled. Off by default.",
+    group: "Features",
+  },
+  screening_ir_serper_jina_enabled: {
+    label: "Screening IR: Serper + Jina (prototype)",
+    description:
+      "IR document discovery/extract tries Serper Search + Jina EU Reader first (HTML and PDF), then falls back to Tavily Search/Extract per miss. Requires SERPER_API_KEY and JINA_API_KEY. Web & Sentiment, AID, and /analisis stay on Tavily. Off by default.",
     group: "Features",
   },
   screening_estebaranz_eval_enabled: {

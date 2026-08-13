@@ -146,6 +146,7 @@ describe("runShortlistResearchStep", () => {
       expect.objectContaining({
         ticker: "AAA",
         timeoutMs: expect.any(Number),
+        cacheOnly: true,
       }),
     );
     const timeout = mockGetOrFetch.mock.calls[0][0].timeoutMs as number;

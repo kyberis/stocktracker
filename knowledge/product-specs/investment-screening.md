@@ -24,7 +24,8 @@ ambiguous) via search, then runs the same research agents on that one listing
   - `screening_ir_agent_enabled` — Agent 2 IR/Business fan-out (E4)
   - `screening_agents_v2_enabled` — umbrella for E5–E7 (Web & Sentiment, Portfolio Context, Risk); implies IR fan-out for DAG coherence
   - `screening_qa_enabled` — Agent 6 QA / verified reports; gates `reportReady` when on
-  - `screening_tavily_research_enabled` — Tavily path for IR (Search+Extract official IR pages/docs; Research only as thin-FMP fallback), shortlist deep-dive, shared ticker research cache (7d), slim analyst Search; off by default
+  - `screening_tavily_research_enabled` — Tavily path for IR Search+Extract (fallback when Serper/Jina is off or misses), shared ticker research cache (7d; **no live Tavily Research** from screening — cache-only), slim analyst Search; off by default
+  - `screening_ir_serper_jina_enabled` — prototype IR discovery/extract via Serper Search + Jina EU Reader (HTML/PDF), Tavily Search/Extract fallback; requires `SERPER_API_KEY` + `JINA_API_KEY`; off by default
   - `screening_estebaranz_eval_enabled` — post-shortlist `compiler_evaluate` step applies the trefolio value-investing checklist to ≤5 shortlist names; on by default (and in prod). Flag key is historical; product copy always says trefolio.
   - `screening_dev_lab_enabled` — Dev agent-log button for non-admins
 - **Health:** green — Intake (+ sample-conversation pilot) + Hard Data + IR/Web/PC/Risk/Technicals (v2) + optional shortlist Research + Compiler + QA (flag on in prod) + per-run variable cost ledger
@@ -81,7 +82,7 @@ When `screening_agents_v2_enabled` is on:
 
 `hard_data` → parallel `ir_business×N` + `web_sentiment×N` + `technicals×N` →
 aggregates → `portfolio_context` → `risk` → `compiler` →
-optional `shortlist_research` (if `screening_tavily_research_enabled`) →
+optional `shortlist_research` (if `screening_tavily_research_enabled`; cache-only) →
 optional `compiler_evaluate` (if `screening_estebaranz_eval_enabled`) →
 optional `qa`.
 
@@ -198,20 +199,32 @@ the feature is not discoverable before launch. The Dev outputs route adds
   no user `stock_evaluation` quota). Analysis summary remains cache-only.
   Solidity category = MOAT bands when present, else ND/EBITDA / net cash; UI
   always complements with leverage/cash when available.
-- **Tavily Search** — Web & Sentiment agent + IR hub/doc discovery (`TAVILY_API_KEY`).
+- **Tavily Search** — Web & Sentiment agent + IR hub/doc discovery fallback (`TAVILY_API_KEY`).
   If unset, agents continue with FMP-only evidence (no hard failure). Queries send
   ticker + company name only. Accrues into per-run `cost_usd` (1 credit basic /
-  2 advanced).
-- **Tavily Extract** — IR / Business agent (`screening_tavily_research_enabled`):
-  after Search finds the official IR hub and recent HTML earnings/IR pages (PDFs
-  skipped in v1), `POST /extract` pulls guidance-relevant excerpts (≤3 URLs,
-  basic depth, query chunks). Primary IR evidence ahead of FMP news/transcript.
-- **Tavily Research** — optional (`screening_tavily_research_enabled`): company
-  diligence via `POST /research` only when FMP IR is thin **and** IR Extract
-  returned no useful content; also post-Compiler shortlist deep-dive (≤5).
-  Results cached in `screening_research_cache` (TTL 7d, cross-user). When a fresh
-  cache hit exists, Web & Sentiment skips the `analyst rating` Search. Same API
-  key; fail-open.
+  2 advanced). AID and `/analisis` also use Tavily Search (unchanged).
+- **Tavily Extract** — IR / Business agent (`screening_tavily_research_enabled`,
+  or as fallback when `screening_ir_serper_jina_enabled` misses a URL):
+  after Search finds the official IR hub and recent earnings/IR documents
+  (**PDFs included**; PPT/XLS/ZIP skipped), `POST /extract` pulls guidance-relevant
+  excerpts (≤3 URLs). PDFs use advanced extract of the full document (no query
+  chunks). HTML hub still uses query chunks, with an advanced retry if empty.
+  Primary IR evidence ahead of FMP news/transcript. Secondary listings (e.g.
+  `W9C.MU`) are mapped to the FMP primary (`CSU.TO`) for transcripts/news and
+  IR search; the card keeps the ticker the user picked.
+- **Serper + Jina (IR prototype)** — optional (`screening_ir_serper_jina_enabled`):
+  two Serper searches (IR hub + earnings/MD&A/PDF) then Jina EU Reader extract
+  per URL (HTML ≤4k, PDF ≤12k, no chunks). Empty Serper results fall back to
+  Tavily Search; a Jina failure on a URL falls back to Tavily Extract for that
+  URL only. Web & Sentiment, AID, and `/analisis` stay on Tavily. Step payload
+  records `provider` (`serper_jina` / `tavily` / `mixed`) plus `serperQueries` /
+  `jinaUrls`. No new cost-ledger USD fields in this prototype; Tavily fallback
+  still accrues Extract credits.
+- **Tavily Research** — cache-only in screening (`cacheOnly: true` on IR thin-FMP
+  fallback and shortlist deep-dive). Live `POST /research` is not called from
+  screening (PAYG 433). Hits in `screening_research_cache` (TTL 7d, cross-user)
+  still feed IR fallback and skip the Web & Sentiment `analyst rating` Search.
+  Same API key; fail-open.
 - **Per-report variable cost** — `screening_runs.cost_usd` + `cost_json` breakdown
   (LLM tokens + Tavily Search/Extract/Research only; **FMP excluded** as fixed
   plan cost). Exposed on `GET /api/screening/reports/[reportId]` as `cost`

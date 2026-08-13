@@ -1,6 +1,7 @@
 /**
- * Discover the official Investor Relations hub and recent HTML IR documents,
- * then extract guidance-relevant excerpts via Tavily Extract.
+ * Discover the official Investor Relations hub and recent IR documents
+ * (HTML + PDF), then extract guidance-relevant excerpts.
+ * Prototype path: Serper Search + Jina EU Reader, with Tavily Search/Extract fallback.
  */
 
 import {
@@ -8,6 +9,14 @@ import {
   type TavilyScreeningResult,
 } from "@/lib/screening/data/tavily";
 import { fetchTavilyExtract } from "@/lib/screening/data/tavily-extract";
+import {
+  fetchSerperSearch,
+  serperKeysPresent,
+} from "@/lib/screening/data/serper-search";
+import {
+  fetchJinaExtract,
+  jinaKeysPresent,
+} from "@/lib/screening/data/jina-extract";
 
 const BLOCKED_HOST_SNIPPETS = [
   "reddit.com",
@@ -39,6 +48,9 @@ const DOC_TITLE_HINTS = [
   "guidance",
   "presentation",
   "annual report",
+  "shareholder report",
+  "md&a",
+  "mda",
   "10-q",
   "10-k",
   "form 6-k",
@@ -51,14 +63,19 @@ export interface IrSiteDocument {
   asOf: string | null;
   excerpt: string;
   role: "ir_hub" | "document";
+  format: "pdf" | "html";
 }
+
+export type IrSiteDocsProvider = "serper_jina" | "tavily" | "mixed";
 
 export interface FetchIrSiteDocumentsOptions {
   ticker: string;
   companyName?: string | null;
   runId?: string | null;
-  /** Max HTML URLs to extract (hard cap 3). */
+  /** Max URLs to extract (hard cap 3). */
   maxDocuments?: number;
+  /** Try Serper + Jina first when keys are present. */
+  preferSerperJina?: boolean;
   fetchImpl?: typeof fetch;
 }
 
@@ -70,6 +87,9 @@ export interface FetchIrSiteDocumentsResult {
   searchCredits: number;
   extractCredits: number;
   errors: string[];
+  provider: IrSiteDocsProvider | null;
+  serperQueries: number;
+  jinaUrls: number;
 }
 
 function hostFromUrl(url: string): string {
@@ -88,18 +108,26 @@ function pathFromUrl(url: string): string {
   }
 }
 
-/** True for PDF / binary links we skip in v1. */
-export function isPdfOrBinaryUrl(url: string): boolean {
+export function isPdfUrl(url: string): boolean {
+  const lower = url.toLowerCase().split("?")[0] ?? "";
+  return lower.endsWith(".pdf") || lower.includes("/pdf/");
+}
+
+/** Office / archive links we still skip (Tavily Extract is unreliable). */
+export function isUnsupportedBinaryUrl(url: string): boolean {
   const lower = url.toLowerCase().split("?")[0] ?? "";
   return (
-    lower.endsWith(".pdf") ||
     lower.endsWith(".ppt") ||
     lower.endsWith(".pptx") ||
     lower.endsWith(".xls") ||
     lower.endsWith(".xlsx") ||
-    lower.endsWith(".zip") ||
-    lower.includes("/pdf/")
+    lower.endsWith(".zip")
   );
+}
+
+/** @deprecated Use isPdfUrl / isUnsupportedBinaryUrl. Kept for callers. */
+export function isPdfOrBinaryUrl(url: string): boolean {
+  return isPdfUrl(url) || isUnsupportedBinaryUrl(url);
 }
 
 export function isBlockedIrHost(url: string): boolean {
@@ -120,6 +148,10 @@ function looksLikeIrDocument(url: string, title: string): boolean {
   return DOC_TITLE_HINTS.some((h) => hay.includes(h)) || looksLikeIrHub(url, title);
 }
 
+function isRejectedIrUrl(url: string): boolean {
+  return !url || isUnsupportedBinaryUrl(url) || isBlockedIrHost(url);
+}
+
 /** Score candidate URLs for IR relevance (higher is better). */
 export function scoreIrCandidate(opts: {
   url: string;
@@ -129,7 +161,7 @@ export function scoreIrCandidate(opts: {
   preferHub?: boolean;
 }): number {
   const { url, title, preferHub } = opts;
-  if (!url || isPdfOrBinaryUrl(url) || isBlockedIrHost(url)) return -1000;
+  if (isRejectedIrUrl(url)) return -1000;
 
   let score = 0;
   const host = hostFromUrl(url);
@@ -137,6 +169,10 @@ export function scoreIrCandidate(opts: {
   const titleLower = title.toLowerCase();
   const company = (opts.companyName || "").toLowerCase().trim();
   const ticker = (opts.ticker || "").toLowerCase().trim();
+  const pdf = isPdfUrl(url);
+
+  if (preferHub && pdf) score -= 25;
+  if (!preferHub && pdf && looksLikeIrDocument(url, title)) score += 28;
 
   if (looksLikeIrHub(url, title)) score += preferHub ? 40 : 25;
   if (looksLikeIrDocument(url, title)) score += preferHub ? 10 : 30;
@@ -149,7 +185,6 @@ export function scoreIrCandidate(opts: {
   if (ticker && (titleLower.includes(ticker) || url.toLowerCase().includes(ticker))) {
     score += 8;
   }
-  // Prefer official-looking hosts over aggregators.
   if (
     host.includes("sec.gov") ||
     host.includes("businesswire.com") ||
@@ -212,7 +247,7 @@ export function pickIrUrls(opts: {
   ) => {
     const key = r.url.split("#")[0]?.toLowerCase() ?? r.url;
     if (seen.has(key)) return;
-    if (isPdfOrBinaryUrl(r.url) || isBlockedIrHost(r.url)) return;
+    if (isRejectedIrUrl(r.url)) return;
     seen.add(key);
     candidates.push({
       url: r.url,
@@ -222,7 +257,7 @@ export function pickIrUrls(opts: {
     });
   };
 
-  if (hubRanked[0]) {
+  if (hubRanked[0] && !isPdfUrl(hubRanked[0].url)) {
     push(hubRanked[0], "ir_hub");
   }
 
@@ -245,7 +280,6 @@ export function pickIrUrls(opts: {
     push(r, "document");
   }
 
-  // If docs search was empty, allow more hub results as documents.
   if (candidates.length < maxDocuments) {
     for (const r of hubRanked.slice(1)) {
       if (candidates.length >= maxDocuments) break;
@@ -259,6 +293,112 @@ export function pickIrUrls(opts: {
 const EXTRACT_QUERY =
   "management guidance outlook catalysts business segments quarterly results earnings";
 
+const HTML_EXCERPT_MAX = 4000;
+const PDF_EXCERPT_MAX = 12_000;
+
+type IrCandidate = {
+  url: string;
+  title: string;
+  asOf: string | null;
+  role: "ir_hub" | "document";
+};
+
+function tavilyKeysPresent(): boolean {
+  return Boolean(process.env.TAVILY_API_KEY?.trim());
+}
+
+function documentsFromContent(
+  candidates: IrCandidate[],
+  contentByUrl: Map<string, string>,
+): IrSiteDocument[] {
+  const documents: IrSiteDocument[] = [];
+  for (const c of candidates) {
+    const excerpt = contentByUrl.get(c.url)?.trim() ?? "";
+    if (excerpt.length < 40) continue;
+    const pdf = isPdfUrl(c.url);
+    documents.push({
+      url: c.url,
+      title: c.title,
+      asOf: c.asOf,
+      excerpt: excerpt.slice(0, pdf ? PDF_EXCERPT_MAX : HTML_EXCERPT_MAX),
+      role: c.role,
+      format: pdf ? "pdf" : "html",
+    });
+  }
+  return documents;
+}
+
+async function extractWithTavily(opts: {
+  candidates: IrCandidate[];
+  runId?: string | null;
+  fetchImpl: typeof fetch;
+}): Promise<{
+  contentByUrl: Map<string, string>;
+  extractCredits: number;
+  errors: string[];
+}> {
+  const contentByUrl = new Map<string, string>();
+  const errors: string[] = [];
+  let extractCredits = 0;
+  const htmlCandidates = opts.candidates.filter((c) => !isPdfUrl(c.url));
+  const pdfCandidates = opts.candidates.filter((c) => isPdfUrl(c.url));
+
+  if (htmlCandidates.length > 0) {
+    let htmlExtract = await fetchTavilyExtract({
+      urls: htmlCandidates.map((c) => c.url),
+      query: EXTRACT_QUERY,
+      chunksPerSource: 4,
+      extractDepth: "basic",
+      runId: opts.runId,
+      fetchImpl: opts.fetchImpl,
+    });
+    extractCredits += htmlExtract.creditsUsed;
+    errors.push(...htmlExtract.errors);
+
+    const hubCandidate = htmlCandidates.find((c) => c.role === "ir_hub");
+    const hubExtracted = htmlExtract.results.some(
+      (r) => hubCandidate && r.url === hubCandidate.url && r.content.length > 80,
+    );
+    if (hubCandidate && !hubExtracted) {
+      const retry = await fetchTavilyExtract({
+        urls: [hubCandidate.url],
+        query: EXTRACT_QUERY,
+        chunksPerSource: 4,
+        extractDepth: "advanced",
+        runId: opts.runId,
+        fetchImpl: opts.fetchImpl,
+      });
+      extractCredits += retry.creditsUsed;
+      errors.push(...retry.errors);
+      if (retry.results.length > 0) {
+        const byUrl = new Map(htmlExtract.results.map((r) => [r.url, r]));
+        for (const r of retry.results) byUrl.set(r.url, r);
+        htmlExtract = {
+          ...htmlExtract,
+          results: [...byUrl.values()],
+          failedUrls: [...htmlExtract.failedUrls, ...retry.failedUrls],
+        };
+      }
+    }
+    for (const r of htmlExtract.results) contentByUrl.set(r.url, r.content);
+  }
+
+  if (pdfCandidates.length > 0) {
+    const pdfExtract = await fetchTavilyExtract({
+      urls: pdfCandidates.map((c) => c.url),
+      extractDepth: "advanced",
+      maxContentChars: PDF_EXCERPT_MAX,
+      runId: opts.runId,
+      fetchImpl: opts.fetchImpl,
+    });
+    extractCredits += pdfExtract.creditsUsed;
+    errors.push(...pdfExtract.errors);
+    for (const r of pdfExtract.results) contentByUrl.set(r.url, r.content);
+  }
+
+  return { contentByUrl, extractCredits, errors };
+}
+
 export async function fetchIrSiteDocuments(
   opts: FetchIrSiteDocumentsOptions,
 ): Promise<FetchIrSiteDocumentsResult> {
@@ -267,6 +407,12 @@ export async function fetchIrSiteDocuments(
   const errors: string[] = [];
   let searchCredits = 0;
   let extractCredits = 0;
+  let serperQueries = 0;
+  let jinaUrls = 0;
+  let usedSerper = false;
+  let usedJina = false;
+  let usedTavilySearch = false;
+  let usedTavilyExtract = false;
 
   const empty = (
     extraErrors: string[] = [],
@@ -278,106 +424,157 @@ export async function fetchIrSiteDocuments(
     searchCredits,
     extractCredits,
     errors: [...errors, ...extraErrors],
+    provider: null,
+    serperQueries,
+    jinaUrls,
   });
 
-  if (!process.env.TAVILY_API_KEY?.trim()) {
+  const useSerperJina =
+    Boolean(opts.preferSerperJina) && serperKeysPresent() && jinaKeysPresent();
+  const hasTavily = tavilyKeysPresent();
+
+  if (!useSerperJina && !hasTavily) {
     return empty(["missing_api_key"]);
   }
 
   const fetchImpl = opts.fetchImpl ?? fetch;
   const maxDocuments = Math.min(3, Math.max(1, opts.maxDocuments ?? 3));
+  const hubQuery = `${name} ${ticker} investor relations`;
+  const docQuery = `${name} ${ticker} latest earnings OR quarterly results OR shareholder report OR MD&A`;
 
-  const [hubSearch, docSearch] = await Promise.all([
-    fetchTavilySearch({
-      query: `${name} ${ticker} investor relations`,
-      maxResults: 5,
-      searchDepth: "basic",
-      runId: opts.runId,
-      fetchImpl,
-    }),
-    fetchTavilySearch({
-      query: `${name} ${ticker} latest earnings release OR quarterly results investor relations`,
-      maxResults: 5,
-      daysBack: 120,
-      searchDepth: "basic",
-      runId: opts.runId,
-      fetchImpl,
-    }),
-  ]);
+  let hubResults: TavilyScreeningResult[] = [];
+  let docResults: TavilyScreeningResult[] = [];
 
-  searchCredits += 2; // two basic searches
-  errors.push(...hubSearch.errors, ...docSearch.errors);
+  if (useSerperJina) {
+    const [hubSearch, docSearch] = await Promise.all([
+      fetchSerperSearch({
+        query: hubQuery,
+        maxResults: 5,
+        fetchImpl,
+      }),
+      fetchSerperSearch({
+        query: docQuery,
+        maxResults: 8,
+        daysBack: 180,
+        fetchImpl,
+      }),
+    ]);
+    serperQueries = 2;
+    errors.push(...hubSearch.errors, ...docSearch.errors);
+    hubResults = hubSearch.results;
+    docResults = docSearch.results;
+  }
 
-  const { irPageUrl, candidates } = pickIrUrls({
-    hubResults: hubSearch.results,
-    docResults: docSearch.results,
+  let { irPageUrl, candidates } = pickIrUrls({
+    hubResults,
+    docResults,
     companyName: opts.companyName,
     ticker,
     maxDocuments,
   });
+  if (candidates.length > 0 && useSerperJina) {
+    usedSerper = true;
+  }
+
+  if (candidates.length === 0 && hasTavily) {
+    const [hubSearch, docSearch] = await Promise.all([
+      fetchTavilySearch({
+        query: hubQuery,
+        maxResults: 5,
+        searchDepth: "basic",
+        runId: opts.runId,
+        fetchImpl,
+      }),
+      fetchTavilySearch({
+        query: docQuery,
+        maxResults: 8,
+        daysBack: 180,
+        searchDepth: "basic",
+        runId: opts.runId,
+        fetchImpl,
+      }),
+    ]);
+    searchCredits += 2;
+    usedTavilySearch = true;
+    usedSerper = false;
+    errors.push(...hubSearch.errors, ...docSearch.errors);
+    const picked = pickIrUrls({
+      hubResults: hubSearch.results,
+      docResults: docSearch.results,
+      companyName: opts.companyName,
+      ticker,
+      maxDocuments,
+    });
+    irPageUrl = picked.irPageUrl;
+    candidates = picked.candidates;
+  }
 
   if (candidates.length === 0) {
     return {
       ...empty(["no_ir_candidates"]),
       irPageUrl,
+      provider: usedTavilySearch ? "tavily" : null,
     };
   }
 
-  let extract = await fetchTavilyExtract({
-    urls: candidates.map((c) => c.url),
-    query: EXTRACT_QUERY,
-    chunksPerSource: 4,
-    extractDepth: "basic",
-    runId: opts.runId,
-    fetchImpl,
-  });
-  extractCredits += extract.creditsUsed;
-  errors.push(...extract.errors);
+  const contentByUrl = new Map<string, string>();
 
-  // Retry hub with advanced depth once if basic returned nothing for it.
-  const hubCandidate = candidates.find((c) => c.role === "ir_hub");
-  const hubExtracted = extract.results.some(
-    (r) => hubCandidate && r.url === hubCandidate.url && r.content.length > 80,
-  );
-  if (hubCandidate && !hubExtracted) {
-    const retry = await fetchTavilyExtract({
-      urls: [hubCandidate.url],
-      query: EXTRACT_QUERY,
-      chunksPerSource: 4,
-      extractDepth: "advanced",
-      runId: opts.runId,
-      fetchImpl,
-    });
-    extractCredits += retry.creditsUsed;
-    errors.push(...retry.errors);
-    if (retry.results.length > 0) {
-      const byUrl = new Map(extract.results.map((r) => [r.url, r]));
-      for (const r of retry.results) byUrl.set(r.url, r);
-      extract = {
-        ...extract,
-        results: [...byUrl.values()],
-        failedUrls: [...extract.failedUrls, ...retry.failedUrls],
-      };
+  if (usedSerper && jinaKeysPresent()) {
+    const htmlCandidates = candidates.filter((c) => !isPdfUrl(c.url));
+    const pdfCandidates = candidates.filter((c) => isPdfUrl(c.url));
+    if (htmlCandidates.length > 0) {
+      const htmlExtract = await fetchJinaExtract({
+        urls: htmlCandidates.map((c) => c.url),
+        maxContentChars: HTML_EXCERPT_MAX,
+        fetchImpl,
+      });
+      jinaUrls += htmlCandidates.length;
+      usedJina = usedJina || htmlExtract.results.length > 0;
+      errors.push(...htmlExtract.errors);
+      for (const r of htmlExtract.results) contentByUrl.set(r.url, r.content);
+    }
+    if (pdfCandidates.length > 0) {
+      const pdfExtract = await fetchJinaExtract({
+        urls: pdfCandidates.map((c) => c.url),
+        maxContentChars: PDF_EXCERPT_MAX,
+        pdf: true,
+        fetchImpl,
+      });
+      jinaUrls += pdfCandidates.length;
+      usedJina = usedJina || pdfExtract.results.length > 0;
+      errors.push(...pdfExtract.errors);
+      for (const r of pdfExtract.results) contentByUrl.set(r.url, r.content);
     }
   }
 
-  const contentByUrl = new Map(
-    extract.results.map((r) => [r.url, r.content] as const),
-  );
-  const documents: IrSiteDocument[] = [];
-  for (const c of candidates) {
+  const missing = candidates.filter((c) => {
     const excerpt = contentByUrl.get(c.url)?.trim() ?? "";
-    if (excerpt.length < 40) continue;
-    documents.push({
-      url: c.url,
-      title: c.title,
-      asOf: c.asOf,
-      excerpt: excerpt.slice(0, 4000),
-      role: c.role,
+    return excerpt.length < 40;
+  });
+  if (missing.length > 0 && hasTavily) {
+    const tavily = await extractWithTavily({
+      candidates: missing,
+      runId: opts.runId,
+      fetchImpl,
     });
+    extractCredits += tavily.extractCredits;
+    errors.push(...tavily.errors);
+    for (const [url, content] of tavily.contentByUrl) {
+      if (content.trim().length >= 40) contentByUrl.set(url, content);
+    }
+    usedTavilyExtract = tavily.contentByUrl.size > 0 || tavily.extractCredits > 0;
   }
 
+  const documents = documentsFromContent(candidates, contentByUrl);
   const hasUsefulContent = documents.some((d) => d.excerpt.length >= 120);
+
+  let provider: IrSiteDocsProvider | null = null;
+  if (usedSerper || usedJina) {
+    provider =
+      usedTavilySearch || usedTavilyExtract ? "mixed" : "serper_jina";
+  } else if (usedTavilySearch || usedTavilyExtract) {
+    provider = "tavily";
+  }
 
   return {
     ticker,
@@ -387,5 +584,8 @@ export async function fetchIrSiteDocuments(
     searchCredits,
     extractCredits,
     errors: errors.filter(Boolean),
+    provider,
+    serperQueries,
+    jinaUrls,
   };
 }
