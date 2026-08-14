@@ -4161,6 +4161,26 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 141,
+    description: "Backfill blank portfolio_id on holdings/transactions/cash to each user's default portfolio",
+    up: async (client: Client) => {
+      for (const table of ["holdings", "transactions", "cash_entries"] as const) {
+        await client.execute({
+          sql: `UPDATE ${table} SET portfolio_id = (
+                  SELECT p.id FROM portfolios p
+                  WHERE p.user_id = ${table}.user_id AND p.is_default = 1
+                  LIMIT 1
+                )
+                WHERE (portfolio_id = '' OR portfolio_id IS NULL)
+                  AND EXISTS (
+                    SELECT 1 FROM portfolios p
+                    WHERE p.user_id = ${table}.user_id AND p.is_default = 1
+                  )`,
+        });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

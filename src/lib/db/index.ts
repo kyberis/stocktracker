@@ -18,6 +18,7 @@ export {
   consolidateUserToSinglePortfolio,
   ensureDefaultPortfolio,
   resolvePortfolioId,
+  healEmptyPortfolioIds,
 } from "./portfolios";
 export type { MergePortfolioResult, ConsolidateSinglePortfolioResult } from "./portfolios";
 

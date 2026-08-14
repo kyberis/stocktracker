@@ -225,6 +225,14 @@ export function useImportAI(): UseImportAIReturn {
           }
         } else {
           errorCount += chunk.length;
+          if (!errorMsg) {
+            const data = await res.json().catch(() => null);
+            const detail =
+              typeof data?.error === "string"
+                ? data.error
+                : `Import request failed (${res.status}).`;
+            setErrorMsg(detail);
+          }
         }
       } catch {
         errorCount += chunk.length;
@@ -243,7 +251,7 @@ export function useImportAI(): UseImportAIReturn {
 
     if (errorCount > 0 && txCount === 0) {
       trackImportError("ai", "bulk_all_failed");
-      setErrorMsg("Import failed.");
+      setErrorMsg((prev) => prev || "Import failed.");
       setStep("error");
     } else {
       setStep("backfilling");

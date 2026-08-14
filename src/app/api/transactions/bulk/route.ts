@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSession } from "@/lib/auth/guards";
-import { addTransactionsBulk, rebuildHoldings, listHoldings, findUserById, listDistinctBuyTickers } from "@/lib/db";
+import { addTransactionsBulk, rebuildHoldings, listHoldings, findUserById, listDistinctBuyTickers, trackEvent } from "@/lib/db";
 import { baseTickerName } from "@/lib/db/helpers";
 import { withMetrics } from "@/lib/with-metrics";
 import { transactionsOpsTotal } from "@/lib/metrics";
@@ -25,7 +25,14 @@ const bulkTransactionSchema = z.object({
       name: z.string().optional().default(""),
       exchange: z.string().optional().default(""),
       isin: z.string().optional().default(""),
-      assetType: z.enum(["stock", "etf", "crypto", "fund"]).optional().default("stock"),
+      // AI / brokers sometimes emit "reit", "equity", etc. — coerce to known types.
+      assetType: z.preprocess((val) => {
+        const s = String(val || "stock").toLowerCase();
+        if (s === "etf") return "etf";
+        if (s === "crypto" || s === "cryptocurrency") return "crypto";
+        if (s === "fund" || s === "mutualfund" || s === "mutual_fund") return "fund";
+        return "stock";
+      }, z.enum(["stock", "etf", "crypto", "fund"])).optional().default("stock"),
       accountId: z.string().optional().default(""),
       shares: z.number().optional().default(0),
       pricePerShare: z.number().optional().default(0),
@@ -184,6 +191,11 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
     enrichHoldingClassifications(userId).catch((err) =>
       console.warn("[bulk] auto-classification failed:", err)
     );
+    trackEvent(userId, "portfolio_import_committed", {
+      inserted: String(inserted),
+      skipped: String(skipped + skippedByLimit),
+      portfolioId: portfolioId || "default",
+    });
   }
 
   if (finalize && inserted > 0 && !skipRebuild) {

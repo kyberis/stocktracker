@@ -574,3 +574,24 @@ export async function resolvePortfolioId(userId: string, portfolioId?: string): 
   const p = await getDefaultPortfolio(userId);
   return p.id;
 }
+
+/**
+ * Re-attach rows left with blank `portfolio_id` (pre-multi-portfolio / failed
+ * backfill) to the user's default portfolio. Blank ids are invisible when the
+ * UI filters by the default portfolio UUID.
+ *
+ * Returns rows updated across holdings, transactions, and cash_entries.
+ */
+export async function healEmptyPortfolioIds(userId: string): Promise<number> {
+  const client = await ensureInitialized();
+  const defaultId = (await getDefaultPortfolio(userId)).id;
+  let healed = 0;
+  for (const table of ["holdings", "transactions", "cash_entries"] as const) {
+    const result = await client.execute({
+      sql: `UPDATE ${table} SET portfolio_id = ? WHERE user_id = ? AND (portfolio_id = '' OR portfolio_id IS NULL)`,
+      args: [defaultId, userId],
+    });
+    healed += Number(result.rowsAffected ?? 0);
+  }
+  return healed;
+}

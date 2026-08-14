@@ -246,6 +246,32 @@ describe("portfolios", () => {
     });
   });
 
+  describe("healEmptyPortfolioIds", () => {
+    it("updates holdings, transactions, and cash_entries to the default portfolio", async () => {
+      mockExecute
+        .mockResolvedValueOnce({ rows: [portfolioRow({ id: "default-pid" })] })
+        .mockResolvedValueOnce({ rowsAffected: 2 })
+        .mockResolvedValueOnce({ rowsAffected: 5 })
+        .mockResolvedValueOnce({ rowsAffected: 1 });
+
+      const result = await portfolios.healEmptyPortfolioIds("user-1");
+
+      expect(result).toBe(8);
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("UPDATE holdings SET portfolio_id = ?"),
+        args: ["default-pid", "user-1"],
+      });
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("UPDATE transactions SET portfolio_id = ?"),
+        args: ["default-pid", "user-1"],
+      });
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("UPDATE cash_entries SET portfolio_id = ?"),
+        args: ["default-pid", "user-1"],
+      });
+    });
+  });
+
   describe("countPortfolios", () => {
     it("returns count from SELECT COUNT", async () => {
       mockExecute.mockResolvedValueOnce({ rows: [{ cnt: 3 }] });

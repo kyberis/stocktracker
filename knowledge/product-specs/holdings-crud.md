@@ -79,17 +79,21 @@ All locales.
 ## 12. Telemetry
 
 - `analytics_events`: `holding.added`, `holding.removed`, `holding.tag.changed`.
+- Import commit: `portfolio_import_committed` (from `/api/transactions/bulk` on finalize).
+- Reset: `portfolio_reset` (from `/api/reset-portfolio`).
 
 ## 13. Edge cases & gotchas
 
 - Duplicate holdings (same ticker/exchange) — merged by `holdings.ts` helpers.
 - Stock splits are handled in transactions (action `split`) and re-derive holdings.
 - Deleting a holding with transactions: warn, then delete both.
+- **Blank `portfolio_id`:** rows with `portfolio_id = ''` are invisible when the UI/API filters by the default portfolio UUID. `listHoldings` heals orphans via `healEmptyPortfolioIds`; migration v141 backfills existing rows. Reset Portfolio on the default portfolio also deletes blank-id orphans.
 
 ## 14. Tests
 
 - [`src/lib/db/holdings.test.ts`](../../src/lib/db/holdings.test.ts)
 - [`src/lib/derive-holdings.test.ts`](../../src/lib/derive-holdings.test.ts)
+- [`src/lib/db/portfolios.test.ts`](../../src/lib/db/portfolios.test.ts) (`healEmptyPortfolioIds`)
 
 ## 15. Related skills and rules
 
@@ -100,3 +104,4 @@ All locales.
 
 - Inline edit in table (no modal).
 - Bulk tag operations.
+- Consider asserting non-empty `portfolio_id` at insert time (DB CHECK or hard fail) once orphans are fully cleared.

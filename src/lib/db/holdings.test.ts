@@ -36,6 +36,15 @@ vi.mock("./accounts", () => ({
 
 vi.mock("./portfolios", () => ({
   resolvePortfolioId: vi.fn().mockResolvedValue("portfolio-1"),
+  healEmptyPortfolioIds: vi.fn().mockResolvedValue(0),
+  getDefaultPortfolio: vi.fn().mockResolvedValue({
+    id: "portfolio-1",
+    name: "My Portfolio",
+    isDefault: true,
+    sortOrder: 0,
+    currency: "EUR",
+    createdAt: "2024-01-01",
+  }),
 }));
 
 vi.mock("@/lib/api-providers/yahoo", () => ({
@@ -167,9 +176,12 @@ describe("holdings", () => {
     });
 
     it("filters by portfolioId when provided", async () => {
-      mockExecute.mockResolvedValueOnce({
-        rows: [holdingRow({ id: "h1", ticker: "AAPL", portfolio_id: "portfolio-1" })],
-      });
+      mockExecute
+        .mockResolvedValueOnce({ rows: [] }) // holdings orphan check
+        .mockResolvedValueOnce({ rows: [] }) // transactions orphan check
+        .mockResolvedValueOnce({
+          rows: [holdingRow({ id: "h1", ticker: "AAPL", portfolio_id: "portfolio-1" })],
+        });
 
       const result = await holdings.listHoldings("user-1", "portfolio-1");
 
@@ -178,6 +190,19 @@ describe("holdings", () => {
         args: ["user-1", "portfolio-1"],
       });
       expect(result).toHaveLength(1);
+    });
+
+    it("heals blank portfolio_id orphans before filtering", async () => {
+      const { healEmptyPortfolioIds } = await import("./portfolios");
+      mockExecute
+        .mockResolvedValueOnce({ rows: [{ x: 1 }] }) // holdings orphan found
+        .mockResolvedValueOnce({
+          rows: [holdingRow({ id: "h1", ticker: "AAPL" })],
+        });
+
+      await holdings.listHoldings("user-1", "portfolio-1");
+
+      expect(healEmptyPortfolioIds).toHaveBeenCalledWith("user-1");
     });
 
     it("sorts results by name", async () => {

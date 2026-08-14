@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.171",
+    date: "2026-08-14",
+    title: "Holdings visibility after import",
+    titleTranslations: {
+      es: "Visibilidad de posiciones tras importar",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Holdings and transactions left with a blank portfolio id (invisible under the default portfolio filter) are reattached to the default portfolio on list and via migration.",
+        translations: {
+          es: "Las posiciones y transacciones con portfolio id vacío (invisibles al filtrar por la cartera por defecto) se reasignan a la cartera por defecto al listar y vía migración.",
+        },
+      },
+      {
+        type: "fix",
+        text: "CSV/AI bulk import no longer rejects rows when the extractor labels a position as REIT or another non-standard asset type — those map to stock.",
+        translations: {
+          es: "La importación masiva CSV/IA ya no rechaza filas cuando el extractor etiqueta una posición como REIT u otro tipo no estándar — se mapean a stock.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Portfolio reset and successful import commit are tracked in analytics; import failures show the server error instead of a generic message.",
+        translations: {
+          es: "El reinicio de cartera y el commit de importación exitoso se registran en analytics; los fallos de importación muestran el error del servidor en lugar de un mensaje genérico.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.170",
     date: "2026-08-14",
     title: "Screening report references",

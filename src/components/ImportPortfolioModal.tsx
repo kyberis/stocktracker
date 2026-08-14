@@ -377,6 +377,14 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
           }
         } else {
           errorCount += chunk.length;
+          if (!errorMsg) {
+            const data = await res.json().catch(() => null);
+            const detail =
+              typeof data?.error === "string"
+                ? data.error
+                : `Import request failed (${res.status}).`;
+            setErrorMsg(detail);
+          }
         }
       } catch {
         errorCount += chunk.length;
@@ -416,7 +424,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     setImportedCount(hCount);
     setImportedTxCount(txCount);
     if (errorCount > 0 && txCount === 0) {
-      setErrorMsg(t("importError"));
+      setErrorMsg((prev) => prev || t("importError"));
       setStep("error");
     } else {
       setStep("backfilling");

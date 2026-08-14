@@ -14,7 +14,7 @@ import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
 import { listTransactions } from "./transactions";
 import { findOrCreateBrokerAccount } from "./accounts";
-import { resolvePortfolioId } from "./portfolios";
+import { resolvePortfolioId, healEmptyPortfolioIds, getDefaultPortfolio } from "./portfolios";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
 import { marketDataSymbolForHolding } from "@/lib/market-symbol";
@@ -127,6 +127,24 @@ const SOURCE_REF_BROKER_MAP: Record<string, { id: string; label: string }> = {
 
 export async function listHoldings(userId: string, portfolioId?: string): Promise<Holding[]> {
   const client = await ensureInitialized();
+  // Blank portfolio_id rows are invisible when the UI filters by the default
+  // portfolio UUID — reattach them before listing.
+  if (portfolioId) {
+    const emptyH = await client.execute({
+      sql: `SELECT 1 AS x FROM holdings WHERE user_id = ? AND (portfolio_id = '' OR portfolio_id IS NULL) LIMIT 1`,
+      args: [userId],
+    });
+    const emptyT =
+      emptyH.rows.length > 0
+        ? { rows: [] as unknown[] }
+        : await client.execute({
+            sql: `SELECT 1 AS x FROM transactions WHERE user_id = ? AND (portfolio_id = '' OR portfolio_id IS NULL) LIMIT 1`,
+            args: [userId],
+          });
+    if (emptyH.rows.length > 0 || emptyT.rows.length > 0) {
+      await healEmptyPortfolioIds(userId);
+    }
+  }
   const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
   const portfolioArgs = portfolioId ? [portfolioId] : [];
   const holdingsResult = await client.execute({
@@ -322,8 +340,23 @@ export async function resetUserHoldings(
   const resolved = await resolvePortfolioId(userId, portfolioId);
   const portfolioFilter = " AND portfolio_id = ?";
   const portfolioArgs = [resolved];
-  await client.execute({ sql: `DELETE FROM holdings WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
-  await client.execute({ sql: `DELETE FROM cash_entries WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
+  // When resetting the default portfolio, also wipe blank-id orphans that
+  // belong conceptually to the default (otherwise Reset leaves invisible rows).
+  const defaultPortfolio = await getDefaultPortfolio(userId);
+  const includeEmpty = resolved === defaultPortfolio.id;
+
+  await client.execute({
+    sql: includeEmpty
+      ? `DELETE FROM holdings WHERE user_id = ? AND (portfolio_id = ? OR portfolio_id = '' OR portfolio_id IS NULL)`
+      : `DELETE FROM holdings WHERE user_id = ?${portfolioFilter}`,
+    args: [userId, ...portfolioArgs],
+  });
+  await client.execute({
+    sql: includeEmpty
+      ? `DELETE FROM cash_entries WHERE user_id = ? AND (portfolio_id = ? OR portfolio_id = '' OR portfolio_id IS NULL)`
+      : `DELETE FROM cash_entries WHERE user_id = ?${portfolioFilter}`,
+    args: [userId, ...portfolioArgs],
+  });
 
   // Remove mapping entries for this portfolio, then delete orphaned transaction rows
   await client.execute({
@@ -331,8 +364,11 @@ export async function resetUserHoldings(
     args: [userId, resolved],
   });
   await client.execute({
-    sql: `DELETE FROM transactions WHERE user_id = ? AND portfolio_id = ?
-          AND id NOT IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
+    sql: includeEmpty
+      ? `DELETE FROM transactions WHERE user_id = ? AND (portfolio_id = ? OR portfolio_id = '' OR portfolio_id IS NULL)
+            AND id NOT IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`
+      : `DELETE FROM transactions WHERE user_id = ? AND portfolio_id = ?
+            AND id NOT IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
     args: [userId, resolved, userId],
   });
 
