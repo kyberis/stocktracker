@@ -1,4 +1,4 @@
 {
-  "notes": "2.5.170: screening provider-quota circuit. Ops kill-switch — hides new-screen CTAs when FMP/Tavily/Serper/Jina/OpenAI hit quota. Not a landing-page capability.",
-  "landingPageReviewed": true
+  "landingPageReviewed": true,
+  "notes": "2.5.170: diversified portfolio news + publish dates on Home/Brief. Existing news surface, not a new landing-page capability."
 }

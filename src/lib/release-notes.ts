@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "Portfolio news on Home and Brief now mixes holdings instead of repeating one ticker, and each item shows when the article was published.",
         translations: {
           es: "Las noticias de cartera en Inicio y Brief mezclan holdings en vez de repetir un solo ticker, y cada ítem muestra cuándo se publicó el artículo.",
