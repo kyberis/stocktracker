@@ -39,6 +39,7 @@ const EVENT_LABELS: Record<ProdOpsEventType, string> = {
   trial_activated: "Trial activated",
   portfolio_anomaly: "Portfolio anomaly",
   screening_provider_quota: "Screening provider quota",
+  support_user_returned: "Support user returned",
   ops_digest: "Ops digest",
   test_notification: "Test notification",
 };
