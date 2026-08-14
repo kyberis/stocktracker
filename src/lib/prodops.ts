@@ -82,7 +82,8 @@ function isAlwaysEnabledProdOpsEvent(eventType: ProdOpsEventType): boolean {
   return (
     eventType === "test_notification" ||
     eventType === "ops_digest" ||
-    eventType === "screening_provider_quota"
+    eventType === "screening_provider_quota" ||
+    eventType === "support_user_returned"
   );
 }
 
@@ -533,6 +534,28 @@ export async function enqueueProdOpsPortfolioAnomalyEvent(params: {
         { id: `pa|${params.anomalyId}|apply_safe_fix`, label: "Apply safe fix" },
         { id: `pa|${params.anomalyId}|dismiss`, label: "Dismiss" },
       ],
+    },
+  });
+}
+
+export async function enqueueProdOpsSupportUserReturnedEvent(params: {
+  userId: string;
+  reason: string;
+  emailSentAt: string;
+}): Promise<void> {
+  const user = await findUserById(params.userId);
+  const label = chooseUserLabel(user);
+  await createNamedProdOpsEvent({
+    eventType: "support_user_returned",
+    userId: params.userId,
+    dedupeKey: `support_return:${params.userId}:${params.reason}`,
+    summary: `${label} returned after holdings restore email (${params.emailSentAt} UTC).`,
+    adminPath: `/admin/users/${encodeURIComponent(params.userId)}`,
+    metadata: {
+      reason: params.reason,
+      emailSentAt: params.emailSentAt,
+      username: user?.username || "",
+      email: user?.email || "",
     },
   });
 }

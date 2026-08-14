@@ -956,6 +956,7 @@ export const PRODOPS_EVENT_TYPES: ProdOpsEventType[] = [
   "trial_activated",
   "portfolio_anomaly",
   "screening_provider_quota",
+  "support_user_returned",
   "ops_digest",
   "test_notification",
 ];

@@ -951,6 +951,10 @@ export async function updateLastActive(userId: string): Promise<void> {
     sql: "UPDATE users SET last_active_at = datetime('now') WHERE id = ?",
     args: [userId],
   });
+  // Fire-and-forget: alert ProdOps if this user is on a support return-watch.
+  void import("@/lib/user-return-watch")
+    .then((m) => m.notifyIfWatchedUserReturned(userId))
+    .catch(() => {});
 }
 
 export async function getLastActive(userId: string): Promise<string> {

@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-313 routes.
+314 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -174,6 +174,7 @@
 | `/api/cron/screening-recover` | GET | [`src/app/api/cron/screening-recover/route.ts`](../../src/app/api/cron/screening-recover/route.ts) |
 | `/api/cron/snaptrade-cleanup` | GET, POST | [`src/app/api/cron/snaptrade-cleanup/route.ts`](../../src/app/api/cron/snaptrade-cleanup/route.ts) |
 | `/api/cron/snaptrade-sync` | GET | [`src/app/api/cron/snaptrade-sync/route.ts`](../../src/app/api/cron/snaptrade-sync/route.ts) |
+| `/api/cron/support-return-watch` | POST | [`src/app/api/cron/support-return-watch/route.ts`](../../src/app/api/cron/support-return-watch/route.ts) |
 | `/api/cron/tax-rules-review` | GET | [`src/app/api/cron/tax-rules-review/route.ts`](../../src/app/api/cron/tax-rules-review/route.ts) |
 | `/api/cron/trial-expiration` | GET, POST | [`src/app/api/cron/trial-expiration/route.ts`](../../src/app/api/cron/trial-expiration/route.ts) |
 | `/api/cron/trial-invitations` | GET, POST | [`src/app/api/cron/trial-invitations/route.ts`](../../src/app/api/cron/trial-invitations/route.ts) |

@@ -23,6 +23,7 @@
     { "path": "/api/cron/moat-sync", "schedule": "0 */4 * * *" },
     { "path": "/api/cron/feedback-pipeline", "schedule": "*/15 * * * *" },
     { "path": "/api/cron/prodops-dispatch", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/support-return-watch", "schedule": "*/5 * * * *" },
     { "path": "/api/cron/aid-digest", "schedule": "0 */6 * * *" },
     { "path": "/api/cron/aid-finpulse", "schedule": "*/30 * * * *" },
     { "path": "/api/cron/coverage-reconcile", "schedule": "15 2 * * *" },

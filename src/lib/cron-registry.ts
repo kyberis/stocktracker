@@ -139,6 +139,12 @@ export const CRON_REGISTRY: CronJob[] = [
     description: "Dispatch queued staff ops notifications to the external ProdOps Telegram service",
   },
   {
+    name: "support-return-watch",
+    path: "/api/cron/support-return-watch",
+    schedule: "*/5 * * * *",
+    description: "Alert ProdOps when a holdings-restore email recipient returns to the app",
+  },
+  {
     name: "aid-digest",
     path: "/api/cron/aid-digest",
     schedule: "0 */6 * * *",

@@ -100,6 +100,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `transactions` | [`src/lib/db/admin-raw-export.ts`](../../src/lib/db/admin-raw-export.ts) |
 | `unsubscribe_tokens` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `user_connections` | [`src/lib/db/feed.ts`](../../src/lib/db/feed.ts) |
+| `user_return_watches` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `user_settings` | [`src/lib/db/aid-user-state.ts`](../../src/lib/db/aid-user-state.ts) |
 | `user_settings_new` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `users` | [`src/lib/db/ai-logs.ts`](../../src/lib/db/ai-logs.ts) |

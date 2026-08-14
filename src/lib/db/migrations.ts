@@ -4203,6 +4203,49 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 143,
+    description: "Watch restored-holdings email recipients and alert ProdOps on first return",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS user_return_watches (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          reason TEXT NOT NULL DEFAULT 'holdings_restore_support_email',
+          email_sent_at TEXT NOT NULL,
+          notified_at TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(user_id, reason)
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_user_return_watches_open ON user_return_watches(notified_at, email_sent_at)",
+      );
+
+      const { randomUUID } = await import("crypto");
+      const sent = await client.execute({
+        sql: `SELECT user_id, MIN(sent_at) AS sent_at
+              FROM email_sends
+              WHERE user_id IS NOT NULL AND user_id != ''
+                AND status IN ('sent', 'delivered')
+                AND (
+                  subject LIKE '%holdings are back%'
+                  OR subject LIKE '%posiciones del portfolio%'
+                )
+              GROUP BY user_id`,
+      });
+      for (const row of sent.rows) {
+        const userId = String(row.user_id || "");
+        const emailSentAt = String(row.sent_at || "");
+        if (!userId || !emailSentAt) continue;
+        await client.execute({
+          sql: `INSERT OR IGNORE INTO user_return_watches (id, user_id, reason, email_sent_at)
+                VALUES (?, ?, 'holdings_restore_support_email', ?)`,
+          args: [randomUUID(), userId, emailSentAt],
+        });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

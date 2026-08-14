@@ -49,6 +49,7 @@ export type ProdOpsEventType =
   | "trial_activated"
   | "portfolio_anomaly"
   | "screening_provider_quota"
+  | "support_user_returned"
   | "ops_digest"
   | "test_notification";
 

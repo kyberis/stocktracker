@@ -125,6 +125,14 @@ export {
 export type { PortfolioResetArchive } from "./portfolio-reset-archives";
 
 export {
+  listDueUserReturnWatches,
+  claimUserReturnWatch,
+  claimDueWatchForUser,
+  ensureUserReturnWatch,
+} from "./user-return-watches";
+export type { UserReturnWatch } from "./user-return-watches";
+
+export {
   listTransactions,
   addTransaction,
   addTransactionsBulk,

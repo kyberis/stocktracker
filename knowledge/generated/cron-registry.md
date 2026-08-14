@@ -28,6 +28,7 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `compact-snapshots` | `0 4 * * *` | `/api/cron/compact-snapshots` | Compact old hourly portfolio snapshots into daily (and weekly) rows to bound storage |
 | `feedback-pipeline` | `*/15 * * * *` | `/api/cron/feedback-pipeline` | Process queued user feedback into Linear issues via the feedback pipeline |
 | `prodops-dispatch` | `*/5 * * * *` | `/api/cron/prodops-dispatch` | Dispatch queued staff ops notifications to the external ProdOps Telegram service |
+| `support-return-watch` | `*/5 * * * *` | `/api/cron/support-return-watch` | Alert ProdOps when a holdings-restore email recipient returns to the app |
 | `aid-digest` | `0 */6 * * *` | `/api/cron/aid-digest` | Pre-warm AID news digest cache for aid_beta users (earnings + portfolio news summaries) |
 | `aid-finpulse` | `*/30 * * * *` | `/api/cron/aid-finpulse` | Ingest FinPulse X influencer posts via Tavily for AID beta |
 | `coverage-reconcile` | `15 2 * * *` | `/api/cron/coverage-reconcile` | Overnight scan: flag holdings that lost Yahoo/alias quote coverage (TRF-104) |

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.173",
+    date: "2026-08-15",
+    title: "ProdOps alert when restored users return",
+    titleTranslations: {
+      es: "Alerta ProdOps cuando vuelven usuarios restaurados",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Staff get a Telegram ProdOps alert the first time a holdings-restore email recipient returns to the app.",
+        translations: {
+          es: "El equipo recibe una alerta Telegram vía ProdOps la primera vez que un destinatario del email de restauración de posiciones vuelve a la app.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.172",
     date: "2026-08-14",
     title: "Portfolio reset recovery and empty-ledger alerts",
