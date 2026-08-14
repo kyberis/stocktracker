@@ -258,6 +258,8 @@ export const sourceRefSchema = z.object({
   asOf: z.string().min(1),
   field: z.string().min(1),
   label: z.string().min(1).optional(),
+  /** Public excerpt shown on the report. Never vendor/API text. */
+  excerpt: z.string().min(1).max(400).optional(),
 });
 export type SourceRef = z.infer<typeof sourceRefSchema>;
 
@@ -747,6 +749,8 @@ export const irBusinessOutputSchema = z.object({
   guidanceTrackRecord: z.string().max(600).optional(),
   /** Qualitative Fase-0 eliminators grounded in evidence. */
   eliminationFlags: z.array(z.string().max(200)).max(8).optional(),
+  /** Public IR hub / document / search links for the user-facing report. */
+  references: z.array(sourceRefSchema).max(16).optional(),
 });
 export type IrBusinessOutput = z.infer<typeof irBusinessOutputSchema>;
 
@@ -793,6 +797,8 @@ export const webSentimentOutputSchema = z.object({
   insiderSummary: webInsiderSummarySchema,
   sentimentSummary: z.string().min(1).max(500),
   gaps: z.array(z.string().min(1).max(200)).max(8).default([]),
+  /** Public news / article links for the user-facing report. */
+  references: z.array(sourceRefSchema).max(16).optional(),
 });
 export type WebSentimentOutput = z.infer<typeof webSentimentOutputSchema>;
 

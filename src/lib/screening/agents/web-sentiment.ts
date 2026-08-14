@@ -38,6 +38,7 @@ import {
   type ScreeningBrief,
   type WebSentimentOutput,
 } from "@/lib/screening/schemas";
+import { buildWebPublicReferences } from "@/lib/screening/public-references";
 import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 
 export const WEB_SENTIMENT_AGENT_KIND = "web_sentiment";
@@ -486,6 +487,11 @@ export const runWebSentimentStep: StepHandler = async (
     model,
     tokensInput: result.tokensInput,
     tokensOutput: result.tokensOutput,
+  });
+
+  result.output.references = buildWebPublicReferences({
+    news: tavilyNews.results,
+    analyst: tavilyAnalyst.results,
   });
 
   try {

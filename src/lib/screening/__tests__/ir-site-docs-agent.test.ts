@@ -9,6 +9,7 @@ const {
   mockFetchGateway,
   mockResolveKey,
   mockBuildQaHint,
+  mockInsertOutput,
 } = vi.hoisted(() => ({
   mockFetchFmp: vi.fn(),
   mockFetchIrDocs: vi.fn(),
@@ -18,6 +19,7 @@ const {
   mockFetchGateway: vi.fn(),
   mockResolveKey: vi.fn(),
   mockBuildQaHint: vi.fn(),
+  mockInsertOutput: vi.fn().mockResolvedValue({}),
 }));
 
 vi.mock("@/lib/screening/data/fmp-ir", async () => {
@@ -45,7 +47,7 @@ vi.mock("@/lib/db/settings", () => ({
 vi.mock("@/lib/db", () => ({
   getLatestScreeningAgentOutputUnscoped: mockGetHardData,
   insertAiLog: vi.fn().mockResolvedValue("log-1"),
-  insertScreeningAgentOutput: vi.fn().mockResolvedValue({}),
+  insertScreeningAgentOutput: mockInsertOutput,
 }));
 
 vi.mock("@/lib/ai/gateway", () => ({
@@ -94,6 +96,8 @@ describe("runIrBusinessStep IR site docs", () => {
     mockFetchGateway.mockReset();
     mockResolveKey.mockReset();
     mockBuildQaHint.mockReset();
+    mockInsertOutput.mockReset();
+    mockInsertOutput.mockResolvedValue({});
 
     mockIsFeature.mockResolvedValue(true);
     mockBuildQaHint.mockResolvedValue("");
@@ -185,6 +189,10 @@ describe("runIrBusinessStep IR site docs", () => {
       searchCredits: 2,
       extractCredits: 1,
       errors: [],
+      searchHits: [
+        { url: "https://investors.tfiintl.com/news/q1", title: "Q1" },
+        { url: "https://www.sec.gov/cgi-bin/browse-edgar", title: "SEC" },
+      ],
     });
 
     const { runIrBusinessStep } = await import("../agents/ir-business");
@@ -232,6 +240,18 @@ describe("runIrBusinessStep IR site docs", () => {
         }),
       ],
     });
+    const persisted = JSON.parse(
+      String(mockInsertOutput.mock.calls[0]?.[0]?.outputJson ?? "{}"),
+    ) as { references?: Array<{ url: string; excerpt?: string }> };
+    expect(persisted.references?.map((r) => r.url)).toEqual([
+      "https://investors.tfiintl.com/",
+      "https://investors.tfiintl.com/news/q1",
+      "https://www.sec.gov/cgi-bin/browse-edgar",
+    ]);
+    expect(persisted.references?.[1]?.excerpt).toBe("x".repeat(200));
+    expect(JSON.stringify(persisted.references)).not.toMatch(
+      /tavily|serper|jina|fmp|openai/i,
+    );
   });
 
   it("calls Research fallback when FMP is thin and extract is empty", async () => {

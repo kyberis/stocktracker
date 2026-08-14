@@ -290,4 +290,136 @@ describe("composeScreeningReport degraded survivors", () => {
     expect(report!.cards[0]!.qa?.verified).toBe(true);
     expect(report!.cards[0]!.qa?.unsupportedClaims).toEqual([]);
   });
+
+  it("copies public IR and news references onto the card, dropping vendor URLs", () => {
+    const report = composeScreeningReport({
+      now: new Date("2026-08-10T12:00:00.000Z"),
+      run: runRow(),
+      hardDataRow: agentRow("hard_data", {
+        status: "ok",
+        universeSize: 1,
+        candidates: [
+          {
+            ticker: "NKE",
+            name: "Nike",
+            sector: "Consumer Cyclical",
+            industry: null,
+            country: "US",
+            marketCapUsd: 1e11,
+            price: 75,
+            rankScore: 70,
+            rankReason: "Focus ticker for analyze",
+          },
+        ],
+        deferredTickers: [],
+        gaps: [],
+        locale: "en",
+        sources: [],
+      }),
+      compilerRow: agentRow("compiler", {
+        summary: "Nike analysis summary.",
+        candidateBullets: [
+          {
+            ticker: "NKE",
+            headline: "Nike focus name",
+            bullet: "Single-name analyze draft.",
+          },
+        ],
+        disclaimer: "Not advice.",
+        locale: "en",
+      }),
+      irAggregateRow: agentRow("aggregate_ir_business", {
+        tickers: [
+          {
+            ticker: "NKE",
+            businessOneLiner: "Athletic footwear and apparel",
+            guidance: {
+              summary: "Maintained outlook",
+              direction: "flat",
+              asOf: "2026-08-06",
+              sources: [
+                {
+                  url: "https://api.tavily.com/search",
+                  asOf: "2026-08-06",
+                  label: "should not appear",
+                },
+              ],
+            },
+            catalysts: [],
+            segments: [],
+            contradictionWithHardData: false,
+            confidence: "medium",
+            bullets: ["Brand strength"],
+            gaps: [],
+            references: [
+              {
+                url: "https://investors.nike.com/",
+                asOf: "2026-08-10",
+                field: "ir_page",
+              },
+              {
+                url: "https://investors.nike.com/news/q4",
+                asOf: "2026-06-26",
+                field: "document",
+                label: "Q4 earnings",
+                excerpt: "Revenue grew versus last year.",
+              },
+            ],
+          },
+        ],
+        generatedAt: "2026-08-10T00:00:00.000Z",
+      }),
+      webAggregateRow: agentRow("aggregate_web_sentiment", {
+        tickers: [
+          {
+            ticker: "NKE",
+            signals: [],
+            insiderSummary: {
+              netBias: "none",
+              notes: "No clear insider bias.",
+              sources: [],
+            },
+            sentimentSummary: "Coverage mixed.",
+            gaps: [],
+            references: [
+              {
+                url: "https://www.reuters.com/nike",
+                asOf: "2026-08-01",
+                field: "news",
+                label: "Nike beats estimates",
+                excerpt: "Nike reported better than expected results.",
+              },
+            ],
+          },
+        ],
+        generatedAt: "2026-08-10T00:00:00.000Z",
+      }),
+    });
+
+    expect(report).not.toBeNull();
+    expect(report!.cards[0]!.sources).toEqual([
+      {
+        url: "https://investors.nike.com/",
+        asOf: "2026-08-10",
+        field: "ir_page",
+      },
+      {
+        url: "https://investors.nike.com/news/q4",
+        asOf: "2026-06-26",
+        field: "document",
+        label: "Q4 earnings",
+        excerpt: "Revenue grew versus last year.",
+      },
+      {
+        url: "https://www.reuters.com/nike",
+        asOf: "2026-08-01",
+        field: "news",
+        label: "Nike beats estimates",
+        excerpt: "Nike reported better than expected results.",
+      },
+    ]);
+    expect(JSON.stringify(report!.cards[0]!.sources)).not.toMatch(
+      /tavily|serper|jina|fmp|openai/i,
+    );
+  });
 });

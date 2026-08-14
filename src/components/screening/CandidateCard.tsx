@@ -3,9 +3,10 @@
 import Link from "next/link";
 import FiftyTwoWeekRangeBar from "@/components/FiftyTwoWeekRangeBar";
 import { formatCompactNumber } from "@/lib/utils";
-import { fill } from "@/lib/screening/copy";
+import { fill, type ScreeningCopy } from "@/lib/screening/copy";
 import { ensureCardCategories } from "@/lib/screening/ensure-categories";
 import { levelsFromDistancePct } from "@/lib/screening/fifty-two-week-range";
+import { hostnameLabel } from "@/lib/screening/public-references";
 import type { ScreeningCandidateCard } from "@/lib/screening/schemas";
 import { BlurredValue, redactedCandidateLabel } from "./BlurredValue";
 import { CriteriaList } from "./CriteriaList";
@@ -30,6 +31,16 @@ function pct(value: number | null): string {
 
 function yieldPct(value: number | null): string {
   return value == null ? "—" : `${(value * 100).toFixed(1)}%`;
+}
+
+function referenceLabel(
+  source: ScreeningCandidateCard["sources"][number],
+  copy: ScreeningCopy,
+): string {
+  const label = source.label?.trim();
+  if (label) return label;
+  if (source.field === "ir_page") return copy.report.linkIr;
+  return hostnameLabel(source.url);
 }
 
 function toneClass(value: number | null): string {
@@ -795,18 +806,29 @@ export function CandidateCard({
       )}
 
       {card.sources.length > 0 && !blurResearch && (
-        <details className="mt-3">
-          <summary className="cursor-pointer text-xs font-semibold text-teal-700 dark:text-teal-300">
+        <section className="mt-3">
+          <p className="text-xs font-semibold text-teal-700 dark:text-teal-300">
             {fill(copy.report.sourcesToggle, { n: card.sources.length })}
-          </summary>
-          <ul className="mt-1.5 list-disc space-y-1 pl-5 text-[11px] text-[color:var(--muted)]">
+          </p>
+          <ul className="mt-1.5 list-none space-y-2 p-0 text-[11px] text-[color:var(--muted)]">
             {card.sources.map((source) => (
               <li key={`${source.url}-${source.field}`}>
-                {source.label || source.field} · {source.asOf}
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-teal-800 underline-offset-2 hover:underline dark:text-teal-200"
+                >
+                  {referenceLabel(source, copy)} ↗
+                </a>
+                {source.asOf ? ` · ${source.asOf}` : ""}
+                {source.excerpt ? (
+                  <p className="mt-0.5 leading-relaxed">{source.excerpt}</p>
+                ) : null}
               </li>
             ))}
           </ul>
-        </details>
+        </section>
       )}
       {blurResearch && card.sources.length > 0 && (
         <p className="mt-3 text-xs font-semibold text-amber-700 dark:text-amber-300">

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.170",
+    date: "2026-08-14",
+    title: "Screening report references",
+    titleTranslations: {
+      es: "Referencias en el informe de cribado",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Screening reports now list public investor-relations pages, documents, and news links (with short excerpts) as clickable references.",
+        translations: {
+          es: "Los informes de cribado ahora listan páginas de relación con inversores, documentos y noticias públicas (con extractos cortos) como referencias clicables.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.169",
     date: "2026-08-14",
     title: "Admin feature-flag toggles persist",

@@ -30,6 +30,7 @@ import { accrueScreeningLlmCost } from "@/lib/screening/cost";
 import { extractLlmUsage } from "@/lib/screening/llm-usage";
 import { recordIrTickerStep } from "@/lib/screening/metrics";
 import { buildIrBusinessPrompt } from "@/lib/screening/prompts/ir-business";
+import { buildIrPublicReferences } from "@/lib/screening/public-references";
 import { buildQaHintBlock } from "@/lib/screening/qa/hint";
 import {
   hardDataOutputSchema,
@@ -646,6 +647,12 @@ export const runIrBusinessStep: StepHandler = async (
     model,
     tokensInput: result.tokensInput,
     tokensOutput: result.tokensOutput,
+  });
+
+  result.output.references = buildIrPublicReferences({
+    irPageUrl: irDocs?.irPageUrl ?? null,
+    documents: irDocs?.documents ?? [],
+    searchHits: irDocs?.searchHits ?? [],
   });
 
   try {

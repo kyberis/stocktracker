@@ -74,8 +74,10 @@ DAL: [`src/lib/db/screening.ts`](../../src/lib/db/screening.ts) +
 Types: [`src/lib/screening/schemas.ts`](../../src/lib/screening/schemas.ts) —
 `ScreeningBrief` (includes optional `riskProfile`), `ScreeningRun`,
 `ScreeningReport`, `ScreeningCandidateCard` (optional sentiment / fit / risk
-fields), `HardDataOutput`, `IrBusinessOutput`, `AggregateIrBusinessOutput`,
-`WebSentimentOutput`, `AggregateWebSentimentOutput`, `PortfolioContextOutput`,
+fields; `sources` are public references with optional excerpts), `HardDataOutput`,
+`IrBusinessOutput` / `WebSentimentOutput` (`references`: public IR hub, documents,
+and news links — vendor/API hosts stripped), `AggregateIrBusinessOutput`,
+`AggregateWebSentimentOutput`, `PortfolioContextOutput`,
 `RiskOutput`, `IntakeAgentOutput`. Mirror HLD §5.3.
 
 ### Pipeline DAG
@@ -311,8 +313,13 @@ API routes wrapped in `withMetrics`. Prometheus adds
 - **Report before ready** — 409 with the run payload.
 - **Demo mode** — not wired into `/demo`; the flow is authenticated-only.
 - **External links** — always `target="_blank" rel="noopener noreferrer"` with a `↗`
-  mark and a note that they leave trefolio. Links come from provider fields or a
-  deterministic resolver, never from the model.
+  mark and a note that they leave trefolio. Company website / IR chips come from
+  provider fields or a deterministic resolver, never from the model.
+- **Report references** — each card lists public IR pages, downloaded documents,
+  and news links (title, date, short excerpt) under **References**. Built from
+  fetched IR docs + news hits, plus LLM-cited URLs after a public-host filter.
+  Search/extract vendor names, API hosts, and error codes never appear on the
+  report. Runs finished before this persist only have LLM-cited sources.
 
 ## 14. Tests
 

@@ -36,6 +36,7 @@ import { scoreCategories } from "@/lib/screening/scoring/categories";
 import { ensureReportCategories } from "@/lib/screening/ensure-categories";
 import { buildEducationalThesis } from "@/lib/screening/thesis";
 import { renderEvaluationThesis } from "@/lib/screening/evaluation-thesis";
+import { mergePublicSourceRefs } from "@/lib/screening/public-references";
 import { filterSpuriousR6IssuesForDisplay } from "@/lib/screening/qa/filter-layer-b-r6";
 import { formatQaIssueForUser } from "@/lib/screening/qa/format-issue";
 
@@ -86,71 +87,55 @@ function clip(value: string | null | undefined, max: number): string | undefined
 function mapIrSources(
   ir: IrBusinessOutput,
 ): ScreeningCandidateCard["sources"] {
-  const out: ScreeningCandidateCard["sources"] = [];
+  const llmCited: ScreeningCandidateCard["sources"] = [];
   for (const s of ir.guidance.sources) {
     if (!s.url || !s.url.startsWith("http")) continue;
-    try {
-      out.push({
-        url: s.url,
-        asOf: s.asOf || ir.guidance.asOf,
-        field: "guidance",
-        label: s.label,
-      });
-    } catch {
-      // skip invalid urls
-    }
+    llmCited.push({
+      url: s.url,
+      asOf: s.asOf || ir.guidance.asOf,
+      field: "guidance",
+      label: s.label,
+    });
   }
   for (const c of ir.catalysts) {
     for (const s of c.sources) {
       if (!s.url || !s.url.startsWith("http")) continue;
-      try {
-        out.push({
-          url: s.url,
-          asOf: s.asOf || ir.guidance.asOf,
-          field: "catalyst",
-          label: s.label ?? c.label,
-        });
-      } catch {
-        // skip
-      }
+      llmCited.push({
+        url: s.url,
+        asOf: s.asOf || ir.guidance.asOf,
+        field: "catalyst",
+        label: s.label ?? c.label,
+      });
     }
   }
-  return out.slice(0, 12);
+  return mergePublicSourceRefs([...(ir.references ?? []), ...llmCited], 20);
 }
 
 function mapWebSources(
   web: WebSentimentOutput,
 ): ScreeningCandidateCard["sources"] {
-  const out: ScreeningCandidateCard["sources"] = [];
+  const llmCited: ScreeningCandidateCard["sources"] = [];
   for (const signal of web.signals) {
     for (const s of signal.sources) {
       if (!s.url || !s.url.startsWith("http")) continue;
-      try {
-        out.push({
-          url: s.url,
-          asOf: s.asOf || new Date().toISOString().slice(0, 10),
-          field: "sentiment",
-          label: s.label ?? signal.kind,
-        });
-      } catch {
-        // skip
-      }
+      llmCited.push({
+        url: s.url,
+        asOf: s.asOf || new Date().toISOString().slice(0, 10),
+        field: "sentiment",
+        label: s.label,
+      });
     }
   }
   for (const s of web.insiderSummary.sources) {
     if (!s.url || !s.url.startsWith("http")) continue;
-    try {
-      out.push({
-        url: s.url,
-        asOf: s.asOf || new Date().toISOString().slice(0, 10),
-        field: "insider",
-        label: s.label,
-      });
-    } catch {
-      // skip
-    }
+    llmCited.push({
+      url: s.url,
+      asOf: s.asOf || new Date().toISOString().slice(0, 10),
+      field: "insider",
+      label: s.label,
+    });
   }
-  return out.slice(0, 12);
+  return mergePublicSourceRefs([...(web.references ?? []), ...llmCited], 20);
 }
 
 export function composeScreeningReport(
@@ -392,11 +377,14 @@ export function composeScreeningReport(
         field: "company_research",
         label: s.title,
       }));
-    const sources = [
-      ...(ir ? mapIrSources(ir) : []),
-      ...(web ? mapWebSources(web) : []),
-      ...researchSources,
-    ].slice(0, 12);
+    const sources = mergePublicSourceRefs(
+      [
+        ...(ir ? mapIrSources(ir) : []),
+        ...(web ? mapWebSources(web) : []),
+        ...researchSources,
+      ],
+      20,
+    );
 
     const risks = [
       ...(evaluation?.risksAndPremortem
