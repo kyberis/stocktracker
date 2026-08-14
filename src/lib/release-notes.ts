@@ -32,7 +32,7 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
-        type: "improvement",
+        type: "feature",
         text: "When a screening provider hits quota, new screens pause automatically (existing reports stay available) and ops is alerted on Telegram. Admins resume from Screening Costs.",
         translations: {
           es: "Si un proveedor de cribado llega a su cuota, los cribados nuevos se pausan solos (los informes existentes siguen disponibles) y ops recibe una alerta en Telegram. El admin los reactiva desde Screening Costs.",
