@@ -47,6 +47,10 @@ vi.mock("./portfolios", () => ({
   }),
 }));
 
+vi.mock("./portfolio-reset-archives", () => ({
+  archivePortfolioLedgerBeforeReset: vi.fn().mockResolvedValue(null),
+}));
+
 vi.mock("@/lib/api-providers/yahoo", () => ({
   YahooProvider: vi.fn().mockImplementation(() => ({
     getQuote: vi.fn().mockResolvedValue({ regularMarketPrice: 100, currency: "USD" }),

@@ -6,6 +6,7 @@ import {
   updatePortfolioAnomalyFindings,
 } from "@/lib/db/portfolio-anomalies";
 import { listUserIdsWithHoldings } from "@/lib/db/holdings";
+import { listUserIdsWithEmptyLedgerSnapshotHistory } from "@/lib/db/portfolio-reset-archives";
 import { isFeatureEnabled } from "@/lib/db/settings";
 import { enqueueProdOpsPortfolioAnomalyEvent } from "@/lib/prodops";
 
@@ -38,7 +39,14 @@ export async function runPortfolioAnomalyScan(opts?: {
     };
   }
 
-  const userIds = opts?.userIds ?? (await listUserIdsWithHoldings());
+  let userIds = opts?.userIds;
+  if (!userIds) {
+    const [withHoldings, emptyLedger] = await Promise.all([
+      listUserIdsWithHoldings(),
+      listUserIdsWithEmptyLedgerSnapshotHistory(100),
+    ]);
+    userIds = [...new Set([...withHoldings, ...emptyLedger])];
+  }
   const capped = opts?.maxUsers ? userIds.slice(0, opts.maxUsers) : userIds;
   const maxLlm = opts?.maxLlmExplanations ?? DEFAULT_MAX_LLM;
   const notify = opts?.notify !== false;

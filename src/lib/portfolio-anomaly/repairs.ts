@@ -82,16 +82,42 @@ function toAnomalyFindings(
     }));
 }
 
-/** Run deterministic anomaly rules for one user with ≥1 holding. */
+/** Run deterministic anomaly rules for one user.
+ *  Also scans empty ledgers that still have snapshot history (orphaned resets).
+ */
 export async function scanUserPortfolioAnomalies(userId: string): Promise<AnomalyScanResult | null> {
   const holdings = await listHoldings(userId);
-  if (holdings.length === 0) return null;
-
   const [rawHoldings, transactions, recentSnapshots] = await Promise.all([
     listRawHoldingsRows(userId),
     listTransactions(userId),
     listRecentSnapshots(userId),
   ]);
+
+  const maxSnap = Math.max(0, ...recentSnapshots.map((s) => s.totalValueEur));
+  const emptyWithHistory =
+    holdings.length === 0 && transactions.length === 0 && maxSnap >= 100;
+
+  if (holdings.length === 0 && !emptyWithHistory) return null;
+
+  if (emptyWithHistory) {
+    const integrity = auditIntegrityFindings({
+      holdings: [],
+      rawHoldings: [],
+      transactions: [],
+      quotes: {},
+      exchangeRates: {},
+      recentSnapshots,
+    });
+    const findings = integrity.filter((f) => f.severity === "error" || f.severity === "warn");
+    if (findings.length === 0) return null;
+    return {
+      userId,
+      findings,
+      severity: maxSeverity(findings),
+      codes: codesFromFindings(findings),
+      fingerprint: fingerprintFindings(findings),
+    };
+  }
 
   const yahoo = new YahooProvider();
   const quotes = await fetchQuotesForTickers(

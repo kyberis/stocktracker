@@ -24,6 +24,11 @@ function buildDeterministicExplanation(findings: AnomalyScanFinding[]): AnomalyE
   if (findings.some((f) => f.code === "snapshot_spike")) {
     steps.push("3. Inspect recent snapshots and backfill if values look corrupt.");
   }
+  if (findings.some((f) => f.code === "empty_ledger_with_history")) {
+    steps.push(
+      "2. Check portfolio_reset_archives and ai_logs imports; restore ledger if the wipe was accidental.",
+    );
+  }
   if (findings.some((f) => !f.autoFixable)) {
     steps.push("4. Open the user in admin and manually review non-auto-fixable findings.");
   }

@@ -88,6 +88,7 @@ All locales.
 - Stock splits are handled in transactions (action `split`) and re-derive holdings.
 - Deleting a holding with transactions: warn, then delete both.
 - **Blank `portfolio_id`:** rows with `portfolio_id = ''` are invisible when the UI/API filters by the default portfolio UUID. `listHoldings` heals orphans via `healEmptyPortfolioIds`; migration v141 backfills existing rows. Reset Portfolio on the default portfolio also deletes blank-id orphans.
+- **Accidental Reset Portfolio:** Reset clears holdings/transactions/cash but leaves `portfolio_snapshots`. Before wipe, `resetUserHoldings` archives the ledger into `portfolio_reset_archives` (migration v142). The portfolio anomaly scan also includes empty ledgers with snapshot history (`empty_ledger_with_history`) so ops is alerted — previously only users with holdings were scanned.
 
 ## 14. Tests
 

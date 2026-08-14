@@ -226,5 +226,31 @@ export function auditIntegrityFindings(args: {
     }
   }
 
+  // Live ledger empty but snapshot history shows a real portfolio — usually an
+  // accidental Reset Portfolio after holdings were invisible (blank portfolio_id).
+  const maxSnap = Math.max(0, ...(args.recentSnapshots ?? []).map((s) => s.totalValueEur));
+  const openHoldings = args.holdings.filter((h) => h.shares > 0).length;
+  if (
+    openHoldings === 0 &&
+    args.transactions.length === 0 &&
+    maxSnap >= 100 &&
+    (args.recentSnapshots?.length ?? 0) > 0
+  ) {
+    push({
+      id: findingId("empty_ledger_with_history", "all"),
+      severity: "error",
+      code: "empty_ledger_with_history",
+      message: `Live ledger is empty but snapshot history peaked at €${maxSnap.toFixed(0)}. Likely accidental portfolio reset or failed import visibility.`,
+      evidence: {
+        maxSnapshotEur: maxSnap,
+        snapshotCount: args.recentSnapshots?.length ?? 0,
+        holdings: 0,
+        transactions: 0,
+      },
+      autoFixable: false,
+      fixAction: "none",
+    });
+  }
+
   return findings;
 }

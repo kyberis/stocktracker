@@ -4181,6 +4181,28 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 142,
+    description: "Archive table for portfolio resets so wiped ledgers can be recovered",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS portfolio_reset_archives (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          portfolio_id TEXT NOT NULL DEFAULT '',
+          holdings_json TEXT NOT NULL DEFAULT '[]',
+          transactions_json TEXT NOT NULL DEFAULT '[]',
+          cash_json TEXT NOT NULL DEFAULT '[]',
+          snapshot_max_eur REAL NOT NULL DEFAULT 0,
+          source TEXT NOT NULL DEFAULT 'reset_portfolio',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_portfolio_reset_archives_user ON portfolio_reset_archives(user_id, created_at DESC)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

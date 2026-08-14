@@ -95,6 +95,31 @@ describe("auditIntegrityFindings", () => {
     expect(findings.some((f) => f.code === "snapshot_spike")).toBe(true);
   });
 
+  it("flags empty ledger with snapshot history", () => {
+    const findings = auditIntegrityFindings({
+      holdings: [],
+      transactions: [],
+      quotes: {},
+      exchangeRates: {},
+      recentSnapshots: [
+        { date: "2026-07-20", totalValueEur: 5200 },
+        { date: "2026-07-21", totalValueEur: 5400 },
+      ],
+    });
+    expect(findings.some((f) => f.code === "empty_ledger_with_history")).toBe(true);
+  });
+
+  it("does not flag empty ledger without meaningful snapshots", () => {
+    const findings = auditIntegrityFindings({
+      holdings: [],
+      transactions: [],
+      quotes: {},
+      exchangeRates: {},
+      recentSnapshots: [{ date: "2026-07-20", totalValueEur: 10 }],
+    });
+    expect(findings.some((f) => f.code === "empty_ledger_with_history")).toBe(false);
+  });
+
   it("flags ledger mismatch when derived shares differ", () => {
     const txs: Transaction[] = [
       {

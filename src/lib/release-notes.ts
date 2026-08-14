@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.172",
+    date: "2026-08-14",
+    title: "Portfolio reset recovery and empty-ledger alerts",
+    titleTranslations: {
+      es: "Recuperación tras reset y alertas de ledger vacío",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Portfolio reset now archives holdings, transactions, and cash before wiping so support can restore accidental resets.",
+        translations: {
+          es: "El reinicio de cartera ahora archiva posiciones, transacciones y cash antes de borrar, para poder restaurar resets accidentales.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Portfolio anomaly scan alerts when a live ledger is empty but snapshot history shows a real portfolio (empty_ledger_with_history).",
+        translations: {
+          es: "El escaneo de anomalías alerta cuando el ledger está vacío pero el historial de snapshots muestra una cartera real (empty_ledger_with_history).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.171",
     date: "2026-08-14",
     title: "Holdings visibility after import",

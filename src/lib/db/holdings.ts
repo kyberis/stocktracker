@@ -345,6 +345,17 @@ export async function resetUserHoldings(
   const defaultPortfolio = await getDefaultPortfolio(userId);
   const includeEmpty = resolved === defaultPortfolio.id;
 
+  // Archive before wipe so support can recover accidental resets.
+  try {
+    const { archivePortfolioLedgerBeforeReset } = await import("./portfolio-reset-archives");
+    await archivePortfolioLedgerBeforeReset(userId, resolved, {
+      includeEmptyPortfolioId: includeEmpty,
+      source: "reset_portfolio",
+    });
+  } catch (err) {
+    console.warn("[resetUserHoldings] archive failed (continuing with reset):", err);
+  }
+
   await client.execute({
     sql: includeEmpty
       ? `DELETE FROM holdings WHERE user_id = ? AND (portfolio_id = ? OR portfolio_id = '' OR portfolio_id IS NULL)`
