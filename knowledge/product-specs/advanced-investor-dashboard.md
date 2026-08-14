@@ -39,7 +39,7 @@
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
-| GET | `/api/aid/digest` | user + `aid_beta` | 48h news rows (sorted by impact score) |
+| GET | `/api/aid/digest` | user + `aid_beta` | 48h news rows (diversified by ticker, then sorted by impact score; publish time on each row) |
 | GET | `/api/aid/status` | user + `aid_beta` | Since-last-visit counts, briefing, Warren nudge |
 | POST | `/api/aid/status` | user + `aid_beta` | Mark visit (`last_aid_visit_at`) |
 | GET | `/api/aid/feed` | user + `aid_beta` | Top-5 priority items merged across sources |
@@ -72,7 +72,7 @@
 ## 7. Impact score (1–5)
 
 - Computed in `src/lib/aid/impact-score.ts` from AI `impact` (high/medium/low) + portfolio signals (move %, earnings tag, FinPulse relevance).
-- Shown via `AidImpactBadge`; feeds sorted descending by score.
+- Shown via `AidImpactBadge`; feeds sorted descending by score, then **round-robin diversified** (max 2 items per ticker) so one holding cannot dominate the digest.
 - Merged priority list: `mergePriorityFeed()` → `/api/aid/feed`.
 
 ## 8. External dependencies

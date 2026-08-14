@@ -12,7 +12,7 @@ import {
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { getPremiumMarketDataFromRequest } from "@/lib/market-data/resolve-provider";
 import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
-import { rankPortfolioNewsForTickers } from "@/lib/portfolio-news-rank";
+import { diversifyPortfolioNews } from "@/lib/portfolio-news-rank";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { withMetrics } from "@/lib/with-metrics";
 import { deferTask } from "@/lib/task-runner";
@@ -123,6 +123,6 @@ export const GET = withMetrics("/api/portfolio-news", async (request: NextReques
   }
 
   const fromDb = await listPortfolioNewsForTickers(norm, 500);
-  const ranked = rankPortfolioNewsForTickers(fromDb, tickers).slice(0, 30);
+  const ranked = diversifyPortfolioNews(fromDb, tickers, { limit: 30, maxPerTicker: 2 });
   return Response.json(ranked);
 });

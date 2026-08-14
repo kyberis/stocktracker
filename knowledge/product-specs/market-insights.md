@@ -40,6 +40,7 @@ Single page that aggregates macro indicators, newsworthy moves, and AI-generated
 ## 7. Business logic
 
 - News via Finnhub and FMP.
+- Portfolio news ranking (`rankPortfolioNewsForTickers`) is weight-then-recency, then **round-robin diversified** (`diversifyPortfolioNews`, max 2 articles per ticker) so a large holding cannot fill Home, Brief, or MCP feeds.
 - AI summary uses `ai-stream` with a constrained prompt.
 
 ## 8. External dependencies

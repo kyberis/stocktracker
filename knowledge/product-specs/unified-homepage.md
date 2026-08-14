@@ -66,7 +66,7 @@ type HomeDayHighlight = {
 
 ## 6. UI surface
 
-**Main column (desktop):** Morning brief → Portfolio hero → **Portfolio recommendation card** → Movers \| Catalysts → Day highlights → Holdings → FinPulse teaser → Portfolio News (compact).
+**Main column (desktop):** Morning brief → Portfolio hero → **Portfolio recommendation card** → Movers \| Catalysts → Day highlights → Holdings → FinPulse teaser → Portfolio News (compact, round-robin diversified across holdings with publish date/time).
 
 **Portfolio hero modes:** Default is a compact **Portfolio total** card (total value in display currency, day P&L, cost basis, total return %, holdings count) with an **Advanced** CTA. Advanced swaps in-place to the existing `PortfolioHeroCard` (invested assets, breakdown, performance matrix). **Summary** restores the compact card. Preference persisted as `home_v2_hero_mode` (`simple` | `advanced`).
 

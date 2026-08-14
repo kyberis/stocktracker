@@ -82,7 +82,7 @@ export function digestToFeedItem(item: AidDigestItem, source: AidFeedSource = "d
     source,
     impactScore: item.impactScore,
     headline: item.headline,
-    sortDate: item.cachedAt,
+    sortDate: item.publishedAt || item.cachedAt,
     anchorId: source === "earnings" ? "aid-earnings" : "aid-news",
     label: item.ticker,
   };

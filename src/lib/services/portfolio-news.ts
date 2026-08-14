@@ -1,6 +1,6 @@
 import { listHoldings } from "@/lib/db";
 import { listPortfolioNewsForTickers, normalizePortfolioNewsSymbol } from "@/lib/db/portfolio-news";
-import { rankPortfolioNewsForTickers } from "@/lib/portfolio-news-rank";
+import { diversifyPortfolioNews } from "@/lib/portfolio-news-rank";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import type { ServiceResult } from "@/lib/services/service-result";
 import { serviceErr } from "@/lib/services/service-result";
@@ -32,14 +32,14 @@ export async function getPortfolioNewsForUser(
 
   const norm = tickers.map(normalizePortfolioNewsSymbol);
   const fromDb = await listPortfolioNewsForTickers(norm, 500);
-  const ranked = rankPortfolioNewsForTickers(fromDb, tickers);
   const limit = Math.min(opts?.maxArticles ?? 15, 25);
+  const ranked = diversifyPortfolioNews(fromDb, tickers, { limit, maxPerTicker: 2 });
 
   return {
     ok: true,
     data: {
       coverageTickers: tickers,
-      articles: ranked.slice(0, limit).map((a) => ({
+      articles: ranked.map((a) => ({
         title: a.title,
         source: a.source,
         publishedAt: a.publishedAt,

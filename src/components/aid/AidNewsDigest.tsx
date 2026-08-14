@@ -8,6 +8,7 @@ import { formatPercent } from "@/lib/utils";
 import type { AidDigestItem } from "@/lib/types";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { withDigestImpactScore, sortByImpactScore } from "@/lib/aid/impact-score";
+import { formatNewsPublishedFull, formatNewsPublishedShort } from "@/lib/format-news-date";
 import AidImpactBadge from "./AidImpactBadge";
 
 type Filter = "all" | "earnings" | "move";
@@ -25,7 +26,7 @@ function matchesFilter(item: AidDigestItem, filter: Filter): boolean {
 }
 
 export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { quotes, activePortfolioId, holdings } = usePortfolio();
   const track = useTrack();
   const [items, setItems] = useState<AidDigestItem[]>([]);
@@ -231,11 +232,20 @@ export default function AidNewsDigest({ hasHoldings }: { hasHoldings: boolean })
                     {t("aidWebSaved")}
                   </span>
                 )}
-                {!item.usedWeb && item.cachedAt && (
+                {item.publishedAt ? (
+                  <time
+                    dateTime={item.publishedAt}
+                    title={formatNewsPublishedFull(item.publishedAt, language)}
+                    aria-label={formatNewsPublishedFull(item.publishedAt, language)}
+                    className="text-[10px] tabular-nums text-[color:var(--muted)]"
+                  >
+                    {formatNewsPublishedShort(item.publishedAt, language)}
+                  </time>
+                ) : !item.usedWeb && item.cachedAt ? (
                   <span className="text-[10px] text-[color:var(--muted)]">
                     {t("aidCacheLabel").replace("{date}", item.cachedAt.slice(0, 10))}
                   </span>
-                )}
+                ) : null}
                 <button
                   type="button"
                   onClick={() => void refreshTicker(item.ticker)}
