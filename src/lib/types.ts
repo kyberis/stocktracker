@@ -615,6 +615,7 @@ export interface AidDigestSummary {
   bullets: string[];
   impact: AidNewsImpact;
   filterTags: AidNewsFilterTag[];
+  publishedAt?: string;
 }
 
 export interface AidDigestItem {
@@ -629,6 +630,7 @@ export interface AidDigestItem {
   usedWeb: boolean;
   cachedAt: string;
   eventKey: string;
+  publishedAt?: string;
 }
 
 export interface AidNewsCacheRow {

@@ -14,7 +14,7 @@ import {
   touchSymbolFetchMeta,
 } from "@/lib/db/portfolio-news";
 import { fetchFinnhubPortfolioNews } from "@/lib/api-providers/finnhub-news";
-import { rankPortfolioNewsForTickers } from "@/lib/portfolio-news-rank";
+import { diversifyItemsByTicker, diversifyPortfolioNews } from "@/lib/portfolio-news-rank";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { withDigestImpactScore, sortByImpactScore } from "@/lib/aid/impact-score";
 import { summarizeAidDigestItem } from "@/lib/aid/summarize-digest";
@@ -52,6 +52,7 @@ function cacheRowToItem(
     usedWeb: row.usedWeb,
     cachedAt: row.fetchedAt,
     eventKey: row.eventKey,
+    publishedAt: typeof summary.publishedAt === "string" ? summary.publishedAt : undefined,
   });
 }
 
@@ -158,7 +159,7 @@ export async function buildAidDigest(args: {
           ticker,
           eventKey,
           headline: summary.headline,
-          summary,
+          summary: { ...summary, publishedAt: today },
           sources: web.map((w) => w.url),
           usedWeb,
           expiresAt: earningsExpiresAt(),
@@ -169,10 +170,11 @@ export async function buildAidDigest(args: {
   }
 
   const articles = await ensurePortfolioNews(tickers);
-  const ranked = rankPortfolioNewsForTickers(
+  const ranked = diversifyPortfolioNews(
     articles.filter((a) => isWithin48h(a.publishedAt)),
     tickers,
-  ).slice(0, 12);
+    { limit: 12, maxPerTicker: 2 },
+  );
 
   for (const article of ranked) {
     if (generated >= maxGenerate) break;
@@ -202,7 +204,7 @@ export async function buildAidDigest(args: {
         ticker,
         eventKey,
         headline: summary.headline,
-        summary: { ...summary, filterTags: tags },
+        summary: { ...summary, filterTags: tags, publishedAt: article.publishedAt },
         sources: [article.url],
         usedWeb: false,
         expiresAt: newsExpiresAt,
@@ -244,6 +246,7 @@ export async function buildAidDigest(args: {
           usedWeb: false,
           cachedAt: new Date().toISOString(),
           eventKey: articleEventKey(article),
+          publishedAt: article.publishedAt,
         }),
       );
     }
@@ -271,6 +274,7 @@ export async function buildAidDigest(args: {
         usedWeb: false,
         cachedAt: new Date().toISOString(),
         eventKey,
+        publishedAt: today,
       }),
     );
   }
@@ -285,7 +289,12 @@ export async function buildAidDigest(args: {
     });
   }
 
-  const feed = sorted.slice(0, feedLimit);
+  const feed = diversifyItemsByTicker(
+    sorted,
+    tickers,
+    (item) => item.ticker,
+    { limit: feedLimit, maxPerTicker: 2 },
+  );
   const newSinceVisitCount = sinceVisit
     ? sorted.filter((item) => item.cachedAt > sinceVisit).length
     : 0;

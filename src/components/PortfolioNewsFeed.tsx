@@ -12,6 +12,12 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
 import EmptyState from "@/components/EmptyState";
 import type { NewsArticle } from "@/lib/types";
 import demoArticles from "../../data/demo-portfolio-news.json";
+import {
+  formatNewsPublishedCompact,
+  formatNewsPublishedFull,
+} from "@/lib/format-news-date";
+import { diversifyPortfolioNews } from "@/lib/portfolio-news-rank";
+import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 
 type FeedStatus = "idle" | "loading" | "done" | "error" | "quota";
 
@@ -54,7 +60,13 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
 
   useEffect(() => {
     if (demoMode) {
-      setArticles([...(demoArticles as NewsArticle[])]);
+      const tickers = derivePortfolioNewsTickersFromHoldings(holdings);
+      setArticles(
+        diversifyPortfolioNews(demoArticles as NewsArticle[], tickers, {
+          limit: 30,
+          maxPerTicker: 2,
+        }),
+      );
       setStatus("done");
       return;
     }
@@ -286,40 +298,6 @@ function sentimentBg(label: string): string {
   if (l.includes("bullish")) return "bg-emerald-500/10 border-emerald-500/18";
   if (l.includes("bearish")) return "bg-red-500/10 border-red-500/18";
   return "bg-amber-500/10 border-amber-500/18";
-}
-
-function formatNewsDate(raw: string, locale?: string): string {
-  if (!raw) return raw;
-  let d: Date | null = null;
-  if (raw.includes("T") || raw.includes("-")) {
-    const parsed = new Date(raw);
-    if (!isNaN(parsed.getTime())) d = parsed;
-  } else if (raw.length >= 8) {
-    const year = Number(raw.slice(0, 4));
-    const month = Number(raw.slice(4, 6)) - 1;
-    const day = Number(raw.slice(6, 8));
-    const hour = raw.length >= 13 ? Number(raw.slice(9, 11)) : 0;
-    const min = raw.length >= 13 ? Number(raw.slice(11, 13)) : 0;
-    const parsed = new Date(year, month, day, hour, min);
-    if (!isNaN(parsed.getTime())) d = parsed;
-  }
-  if (!d) return raw;
-  try {
-    return d.toLocaleString(locale || undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return d.toISOString();
-  }
-}
-
-/** Compact home feed: date + time for scanability. */
-function formatNewsDateCompact(raw: string, locale?: string): string {
-  return formatNewsDate(raw, locale);
 }
 
 /** Returns up to `max` tickers from tickerSentiment that are in the user's holdings.
@@ -569,6 +547,8 @@ function NewsListRow({
     closeSummary,
   } = useNewsArticleSummary(article);
 
+  const compactDate = formatNewsPublishedCompact(article.publishedAt, language);
+
   return (
     <article
       className={`group relative border-b border-[color:var(--border)] py-2.5 transition-colors last:border-b-0 hover:bg-[color:var(--surface-soft)]/55 ${
@@ -578,9 +558,18 @@ function NewsListRow({
       <div className="flex items-start gap-2.5 sm:gap-3">
         <time
           dateTime={article.publishedAt}
-          className="w-[2.85rem] shrink-0 pt-0.5 text-[10px] font-medium tabular-nums leading-4 text-[color:var(--muted)] sm:w-[3.25rem]"
+          title={formatNewsPublishedFull(article.publishedAt, language)}
+          aria-label={formatNewsPublishedFull(article.publishedAt, language)}
+          className="flex w-[3.25rem] shrink-0 flex-col pt-0.5 text-[10px] font-medium tabular-nums leading-4 text-[color:var(--muted)] sm:w-[3.5rem]"
         >
-          {formatNewsDateCompact(article.publishedAt, language)}
+          {compactDate ? (
+            <>
+              <span>{compactDate.day}</span>
+              <span>{compactDate.time}</span>
+            </>
+          ) : (
+            article.publishedAt
+          )}
         </time>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)]">
@@ -649,7 +638,7 @@ function NewsCard({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--muted)] sm:text-[11px]">
             <span>{article.source}</span>
             <span aria-hidden="true">&middot;</span>
-            <span>{formatNewsDate(article.publishedAt, language)}</span>
+            <span>{formatNewsPublishedFull(article.publishedAt, language)}</span>
             {highlightHoldings && (
               <>
                 <span aria-hidden="true">&middot;</span>
