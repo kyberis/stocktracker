@@ -4,6 +4,7 @@ import {
   tavilyExtractCreditsForUrls,
 } from "@/lib/screening/cost";
 import { recordTavilyExtractRequest } from "@/lib/screening/metrics";
+import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
 
 /**
  * Screening-scoped Tavily Extract client for IR document processing.
@@ -115,6 +116,13 @@ export async function fetchTavilyExtract(
             : "error";
       recordTavilyExtractRequest(status);
       const errBody = (await res.text().catch(() => "")).slice(0, 300);
+      if (res.status === 429) {
+        noteScreeningProviderQuota({
+          provider: "tavily",
+          statusCode: 429,
+          detail: errBody,
+        });
+      }
       return {
         results: [],
         failedUrls: [],

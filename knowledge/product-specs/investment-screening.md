@@ -20,6 +20,7 @@ ambiguous) via search, then runs the same research agents on that one listing
 - **Tier:** Experimental (no tier gating yet — flag only)
 - **Feature flags:**
   - `investment_screening_enabled` (off by default) — gates UI/API
+  - `screening_new_runs_enabled` (on by default) — client mirror of the provider-quota circuit. When off, discovery CTAs hide and new runs/intake are blocked; existing reports stay readable. Auto-tripped on provider 429/quota; resume from Admin → Screening Costs.
   - `screening_pipeline_real_enabled` — Hard Data + Compiler on durable queue
   - `screening_ir_agent_enabled` — Agent 2 IR/Business fan-out (E4)
   - `screening_agents_v2_enabled` — umbrella for E5–E7 (Web & Sentiment, Portfolio Context, Risk); implies IR fan-out for DAG coherence
@@ -44,7 +45,8 @@ ambiguous) via search, then runs the same research agents on that one listing
 | API | `src/app/api/screening/reports/[reportId]/route.ts` | `GET` — typed report JSON |
 | Component | `src/components/screening/ScreeningEntryCta.tsx` | Discovery card on `/recommendations/diversify`; renders nothing when the flag is off |
 | Component | `src/components/screening/ScreeningBetaBanner.tsx` | Home (`/`) beta banner; renders nothing when the flag is off |
-| Page | `src/app/(app)/admin/screening-costs/page.tsx` | Admin cost leaderboard (most → least expensive) |
+| Page | `src/app/(app)/admin/screening-costs/page.tsx` | Admin cost leaderboard + provider-quota circuit (pause / resume) |
+| API | `src/app/api/admin/screening-provider-circuit/route.ts` | Admin GET/POST: inspect, pause, or resume the provider-quota circuit |
 | Page | `src/app/(app)/admin/screening-analyze/page.tsx` | Admin Analyze list: requesting users + IR resources per run |
 
 ## 4. Data model
@@ -330,7 +332,23 @@ API routes wrapped in `withMetrics`. Prometheus adds
 - Manual smoke: enable the flag, `/screening` → rebalance → answer through → run →
   report renders in ~15s.
 
-## 15. Related skills and rules
+## 15. Provider quota circuit
+
+When FMP, Tavily, Serper, Jina, or OpenAI return 429 / explicit quota during
+screening, `tripScreeningProviderCircuit` pauses **new** screens only:
+
+- Source of truth: `platform_settings.screening_provider_circuit`
+- Client mirror: `screening_new_runs_enabled` (CTAs hide)
+- `POST /api/screening/runs` and `POST /api/screening/intake/chat` return `503`
+  with `code: screening_provider_paused`
+- `GET` runs/reports and `/screening` recent-list stay available
+- ProdOps event `screening_provider_quota` alerts Telegram (deduped per open
+  generation)
+- Admin verifies and resumes from `/admin/screening-costs` (manual pause too)
+
+Helpers: [`src/lib/screening/provider-circuit.ts`](../../src/lib/screening/provider-circuit.ts).
+
+## 16. Related skills and rules
 
 - Rules: [`.cursor/rules/legal-compliance.mdc`](../../.cursor/rules/legal-compliance.mdc),
   [`.cursor/rules/release-notes.mdc`](../../.cursor/rules/release-notes.mdc)
@@ -338,7 +356,7 @@ API routes wrapped in `withMetrics`. Prometheus adds
   [`docs/PRD_INVESTMENT_SCREENING_AGENTS_FEASIBLE.md`](../../docs/PRD_INVESTMENT_SCREENING_AGENTS_FEASIBLE.md)
 - Mock reference: `public/mockups/screening-e2e-v1.html`
 
-## 16. Open questions / planned work
+## 17. Open questions / planned work
 
 - **E5–E7 shipped (flag-gated)** — Web & Sentiment (FMP + Tavily), Portfolio
   Context, and Risk & Suitability behind `screening_agents_v2_enabled`. Intake

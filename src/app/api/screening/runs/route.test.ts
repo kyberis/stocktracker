@@ -7,6 +7,7 @@ vi.mock("@/lib/with-metrics", () => ({
 
 vi.mock("@/lib/screening/guard", () => ({
   requireScreeningAccess: vi.fn(),
+  requireScreeningNewRunsAllowed: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/guards", () => ({
@@ -28,6 +29,7 @@ vi.mock("@/lib/db", () => ({
   appendEvent: vi.fn(),
   listStepsForRun: vi.fn().mockResolvedValue([]),
   listScreeningRunsByUser: vi.fn().mockResolvedValue([]),
+  getLatestQaVerdictForRun: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("@/lib/screening/metrics", () => ({
@@ -42,13 +44,14 @@ vi.mock("@/lib/http/request-public-origin", () => ({
   getRequestPublicOrigin: () => "http://localhost",
 }));
 
-import { requireScreeningAccess } from "@/lib/screening/guard";
+import { requireScreeningAccess, requireScreeningNewRunsAllowed } from "@/lib/screening/guard";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import {
   createScreeningRun,
   insertSteps,
   linkPendingAgentOutputToRun,
+  listScreeningRunsByUser,
 } from "@/lib/db";
 import { continueScreeningRunInBackground } from "@/lib/screening/orchestrator/drain-run";
 
@@ -93,16 +96,19 @@ describe("POST /api/screening/runs", () => {
     vi.mocked(requireScreeningAccess).mockResolvedValue(
       okSession as unknown as Awaited<ReturnType<typeof requireScreeningAccess>>,
     );
+    vi.mocked(requireScreeningNewRunsAllowed).mockResolvedValue(
+      okSession as unknown as Awaited<ReturnType<typeof requireScreeningNewRunsAllowed>>,
+    );
     vi.mocked(requireFeatureQuota).mockResolvedValue(
       okQuota as unknown as Awaited<ReturnType<typeof requireFeatureQuota>>,
     );
   });
 
   it("returns 401 when auth fails", async () => {
-    vi.mocked(requireScreeningAccess).mockResolvedValueOnce({
+    vi.mocked(requireScreeningNewRunsAllowed).mockResolvedValueOnce({
       session: null,
       error: NextResponse.json({ error: "unauth" }, { status: 401 }),
-    } as unknown as Awaited<ReturnType<typeof requireScreeningAccess>>);
+    } as unknown as Awaited<ReturnType<typeof requireScreeningNewRunsAllowed>>);
     const { POST } = await import("./route");
     const res = await POST(
       new NextRequest("http://localhost/api/screening/runs", {
@@ -216,6 +222,28 @@ describe("POST /api/screening/runs", () => {
     expect(requireFeatureQuota).not.toHaveBeenCalled();
   });
 
+  it("returns 503 when the provider circuit is paused", async () => {
+    vi.mocked(requireScreeningNewRunsAllowed).mockResolvedValueOnce({
+      session: null,
+      error: NextResponse.json(
+        { error: "Screening temporarily unavailable", code: "screening_provider_paused" },
+        { status: 503 },
+      ),
+    } as unknown as Awaited<ReturnType<typeof requireScreeningNewRunsAllowed>>);
+    const { POST } = await import("./route");
+    const res = await POST(
+      new NextRequest("http://localhost/api/screening/runs", {
+        method: "POST",
+        body: JSON.stringify(validBrief),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.code).toBe("screening_provider_paused");
+    expect(createScreeningRun).not.toHaveBeenCalled();
+  });
+
   it("returns 429 when the weekly screening quota is exhausted", async () => {
     vi.mocked(requireFeatureQuota).mockResolvedValueOnce({
       session: null,
@@ -234,5 +262,22 @@ describe("POST /api/screening/runs", () => {
     );
     expect(res.status).toBe(429);
     expect(createScreeningRun).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/screening/runs", () => {
+  it("lists runs even when new screens are paused", async () => {
+    vi.clearAllMocks();
+    vi.mocked(requireScreeningAccess).mockResolvedValue(
+      okSession as unknown as Awaited<ReturnType<typeof requireScreeningAccess>>,
+    );
+    vi.mocked(isFeatureEnabledForUser).mockResolvedValue(false);
+    vi.mocked(listScreeningRunsByUser).mockResolvedValue([]);
+    const { GET } = await import("./route");
+    const res = await GET(new NextRequest("http://localhost/api/screening/runs"));
+    expect(res.status).toBe(200);
+    expect(requireScreeningNewRunsAllowed).not.toHaveBeenCalled();
+    const body = await res.json();
+    expect(body.runs).toEqual([]);
   });
 });

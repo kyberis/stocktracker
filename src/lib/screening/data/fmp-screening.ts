@@ -3,6 +3,7 @@ import {
   recordFmpScreenerRequest,
   recordHardDataUniverseSize,
 } from "@/lib/screening/metrics";
+import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
 
 /**
  * Client for FMP's stable `company-screener` endpoint. Used by the Hard Data
@@ -174,6 +175,13 @@ export async function fetchFmpScreener(
       if (!res.ok) {
         recordFmpScreenerRequest(res.status === 429 ? "rate_limited" : "error");
         const body = (await res.text().catch(() => "")).slice(0, 300);
+        if (res.status === 429) {
+          noteScreeningProviderQuota({
+            provider: "fmp",
+            statusCode: 429,
+            detail: body,
+          });
+        }
         errors.push(`fmp_${res.status}:${body}`);
         continue;
       }

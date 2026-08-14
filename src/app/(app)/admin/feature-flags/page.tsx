@@ -105,6 +105,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "Screening flow at /screening: sector exposure entry, intake chat, brief, run progress, and HTML report. Stage E0 — the report comes from a typed fixture, no agents or market data yet. Off by default.",
     group: "Features",
   },
+  screening_new_runs_enabled: {
+    label: "Screening: new runs",
+    description:
+      "Client mirror of the provider-quota circuit. When off, discovery CTAs hide and new screens cannot start; existing reports stay readable. Auto-tripped on FMP/Tavily/Serper/Jina/OpenAI quota. Resume from Admin → Screening Costs, not by toggling this alone.",
+    group: "Features",
+  },
   screening_dev_lab_enabled: {
     label: "Screening Dev log",
     description:

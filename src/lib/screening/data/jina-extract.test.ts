@@ -1,4 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/screening/provider-circuit", () => ({
+  noteScreeningProviderQuota: vi.fn(),
+}));
+
 import { fetchJinaExtract } from "@/lib/screening/data/jina-extract";
 
 describe("fetchJinaExtract", () => {

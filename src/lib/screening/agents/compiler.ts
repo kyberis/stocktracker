@@ -1,7 +1,5 @@
-import {
-  fetchGatewayChatCompletions,
-  resolveGatewayApiKey,
-} from "@/lib/ai/gateway";
+import { resolveGatewayApiKey } from "@/lib/ai/gateway";
+import { fetchScreeningGatewayChatCompletions as fetchGatewayChatCompletions } from "@/lib/screening/gateway";
 import {
   getLatestScreeningAgentOutputUnscoped,
   insertAiLog,

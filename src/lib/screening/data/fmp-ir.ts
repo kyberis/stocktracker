@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { recordFmpIrRequest } from "@/lib/screening/metrics";
+import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
 
 /**
  * Screening-scoped FMP client for the IR / Business agent (E4).
@@ -112,6 +113,13 @@ async function fmpGet(
     });
     if (!res.ok) {
       const body = (await res.text().catch(() => "")).slice(0, 300);
+      if (res.status === 429) {
+        noteScreeningProviderQuota({
+          provider: "fmp",
+          statusCode: 429,
+          detail: body,
+        });
+      }
       return { ok: false, status: res.status, body };
     }
     const json = (await res.json().catch(() => null)) as unknown;

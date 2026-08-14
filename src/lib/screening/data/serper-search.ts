@@ -8,6 +8,7 @@ import type {
   FetchTavilySearchResult,
   TavilyScreeningResult,
 } from "@/lib/screening/data/tavily";
+import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
 
 const SERPER_URL = "https://google.serper.dev/search";
 
@@ -60,6 +61,13 @@ export async function fetchSerperSearch(
     });
     if (!res.ok) {
       const errBody = (await res.text().catch(() => "")).slice(0, 300);
+      if (res.status === 429) {
+        noteScreeningProviderQuota({
+          provider: "serper",
+          statusCode: 429,
+          detail: errBody,
+        });
+      }
       return {
         results: [],
         errors: [`serper_${res.status}:${errBody}`],

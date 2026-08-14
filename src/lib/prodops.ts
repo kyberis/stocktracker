@@ -79,7 +79,11 @@ function parseMetadata(event: ProdOpsOutboxEvent): Record<string, unknown> {
 }
 
 function isAlwaysEnabledProdOpsEvent(eventType: ProdOpsEventType): boolean {
-  return eventType === "test_notification" || eventType === "ops_digest";
+  return (
+    eventType === "test_notification" ||
+    eventType === "ops_digest" ||
+    eventType === "screening_provider_quota"
+  );
 }
 
 function resolveDestinations(config: ProdOpsConfig, eventType: ProdOpsEventType): ProdOpsDispatchDestination[] {
@@ -204,7 +208,20 @@ async function buildEnvelope(
   }
 
   const user = await findUserById(event.userId);
-  if (!user) return null;
+  if (!user) {
+    if (event.eventType !== "screening_provider_quota") return null;
+    return {
+      eventId: event.id,
+      eventType: event.eventType,
+      occurredAt: event.createdAt,
+      sourceApp,
+      summary: event.summary,
+      adminUrl: event.adminUrl,
+      actor: actorFromMetadata(event.userId || "system", metadata),
+      metadata,
+      destinations,
+    };
+  }
 
   return {
     eventId: event.id,
@@ -462,6 +479,30 @@ export async function enqueueProdOpsTestEvent(adminUserId: string): Promise<void
     metadata: {
       triggeredBy: adminUserId,
       email: user?.email || "",
+    },
+  });
+}
+
+export async function enqueueProdOpsScreeningProviderQuotaEvent(params: {
+  provider: string;
+  statusCode?: number;
+  detail: string;
+  trippedAt: string;
+  generation: number;
+}): Promise<void> {
+  const status = params.statusCode != null ? ` (${params.statusCode})` : "";
+  await createNamedProdOpsEvent({
+    eventType: "screening_provider_quota",
+    userId: "system",
+    dedupeKey: `screening_provider_quota:${params.generation}`,
+    summary: `Screening paused: ${params.provider} quota/rate-limit${status}. New screens hidden; existing reports stay available.`,
+    adminPath: "/admin/screening-costs?circuit=1",
+    metadata: {
+      provider: params.provider,
+      statusCode: params.statusCode ?? "",
+      detail: params.detail.slice(0, 300),
+      trippedAt: params.trippedAt,
+      generation: params.generation,
     },
   });
 }

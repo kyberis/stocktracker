@@ -8,6 +8,10 @@ vi.mock("@/lib/screening/metrics", () => ({
   recordTavilyScreeningRequest: mockRecord,
 }));
 
+vi.mock("@/lib/screening/provider-circuit", () => ({
+  noteScreeningProviderQuota: vi.fn(),
+}));
+
 describe("fetchTavilySearch", () => {
   beforeEach(() => {
     mockRecord.mockReset();

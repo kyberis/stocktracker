@@ -3,6 +3,8 @@
  * Fail-open when the key is missing.
  */
 
+import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
+
 const JINA_EU_URL = "https://eu.r.jina.ai/";
 
 export interface JinaExtractedPage {
@@ -88,6 +90,13 @@ export async function fetchJinaExtract(
       });
       if (!res.ok) {
         const errBody = (await res.text().catch(() => "")).slice(0, 200);
+        if (res.status === 429) {
+          noteScreeningProviderQuota({
+            provider: "jina",
+            statusCode: 429,
+            detail: errBody,
+          });
+        }
         failedUrls.push({
           url,
           error: `jina_${res.status}:${errBody}`.slice(0, 200),

@@ -58,6 +58,7 @@ export type PlatformFeature =
   | "tool_simulator_enabled"
   | "tool_planning_enabled"
   | "investment_screening_enabled"
+  | "screening_new_runs_enabled"
   | "screening_dev_lab_enabled"
   | "screening_pipeline_real_enabled"
   | "screening_ir_agent_enabled"
@@ -88,6 +89,8 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   // trefolio evaluate step after shortlist research (requires pipeline real + screening flags).
   // Flag key kept as screening_estebaranz_eval_enabled for stored settings compatibility.
   "screening_estebaranz_eval_enabled",
+  // Client mirror of the screening provider circuit. Server enforcement uses the circuit JSON.
+  "screening_new_runs_enabled",
 ]);
 
 const VALID_THEMES = new Set(["default", "terminal", "canvas", "studio"]);
@@ -490,6 +493,7 @@ export const ALL_PLATFORM_FEATURES = [
   "tool_simulator_enabled",
   "tool_planning_enabled",
   "investment_screening_enabled",
+  "screening_new_runs_enabled",
   "screening_dev_lab_enabled",
   "screening_pipeline_real_enabled",
   "screening_ir_agent_enabled",
@@ -951,6 +955,7 @@ export const PRODOPS_EVENT_TYPES: ProdOpsEventType[] = [
   "broker_request_created",
   "trial_activated",
   "portfolio_anomaly",
+  "screening_provider_quota",
   "ops_digest",
   "test_notification",
 ];
@@ -970,6 +975,7 @@ const DEFAULT_PRODOPS_CONFIG: ProdOpsConfig = {
     "broker_request_created",
     "trial_activated",
     "portfolio_anomaly",
+    "screening_provider_quota",
   ],
   recipient: null,
   pendingLink: null,
@@ -1382,6 +1388,85 @@ export async function resolveAiModelForUserPlan(
 ): Promise<string> {
   const cfg = await getAiModelConfig();
   return resolveAiModelForPlan(flow, plan, cfg);
+}
+
+/* ─── Screening provider circuit ─── */
+
+export type ScreeningCircuitProvider =
+  | "fmp"
+  | "tavily"
+  | "serper"
+  | "jina"
+  | "openai"
+  | "unknown";
+
+export type ScreeningProviderCircuit = {
+  paused: boolean;
+  provider: ScreeningCircuitProvider;
+  statusCode?: number;
+  detail: string;
+  trippedAt: string;
+  trippedBy: "system" | "admin";
+  generation?: number;
+  clearedAt?: string;
+  clearedByUserId?: string;
+};
+
+const SCREENING_PROVIDER_CIRCUIT_KEY = "screening_provider_circuit";
+const SCREENING_CIRCUIT_PROVIDERS = new Set<ScreeningCircuitProvider>([
+  "fmp",
+  "tavily",
+  "serper",
+  "jina",
+  "openai",
+  "unknown",
+]);
+
+export const EMPTY_SCREENING_PROVIDER_CIRCUIT: ScreeningProviderCircuit = {
+  paused: false,
+  provider: "unknown",
+  detail: "",
+  trippedAt: "",
+  trippedBy: "system",
+};
+
+function parseScreeningProviderCircuit(raw: string): ScreeningProviderCircuit {
+  if (!raw) return { ...EMPTY_SCREENING_PROVIDER_CIRCUIT };
+  try {
+    const parsed = JSON.parse(raw) as Partial<ScreeningProviderCircuit>;
+    if (!parsed || typeof parsed !== "object") {
+      return { ...EMPTY_SCREENING_PROVIDER_CIRCUIT };
+    }
+    const provider = SCREENING_CIRCUIT_PROVIDERS.has(parsed.provider as ScreeningCircuitProvider)
+      ? (parsed.provider as ScreeningCircuitProvider)
+      : "unknown";
+    const trippedBy = parsed.trippedBy === "admin" ? "admin" : "system";
+    return {
+      paused: parsed.paused === true,
+      provider,
+      statusCode: typeof parsed.statusCode === "number" ? parsed.statusCode : undefined,
+      detail: typeof parsed.detail === "string" ? parsed.detail.slice(0, 300) : "",
+      trippedAt: typeof parsed.trippedAt === "string" ? parsed.trippedAt : "",
+      trippedBy,
+      generation: typeof parsed.generation === "number" ? parsed.generation : undefined,
+      clearedAt: typeof parsed.clearedAt === "string" ? parsed.clearedAt : undefined,
+      clearedByUserId:
+        typeof parsed.clearedByUserId === "string" ? parsed.clearedByUserId : undefined,
+    };
+  } catch {
+    return { ...EMPTY_SCREENING_PROVIDER_CIRCUIT };
+  }
+}
+
+export async function getScreeningProviderCircuit(): Promise<ScreeningProviderCircuit> {
+  const raw = await getPlatformSetting(SCREENING_PROVIDER_CIRCUIT_KEY);
+  return parseScreeningProviderCircuit(raw);
+}
+
+export async function setScreeningProviderCircuit(
+  circuit: ScreeningProviderCircuit,
+): Promise<void> {
+  await setPlatformSetting(SCREENING_PROVIDER_CIRCUIT_KEY, JSON.stringify(circuit));
 }
 
 export async function getAllPlatformSettings(): Promise<Record<string, string>> {

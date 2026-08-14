@@ -48,6 +48,7 @@ export type ProdOpsEventType =
   | "broker_request_created"
   | "trial_activated"
   | "portfolio_anomaly"
+  | "screening_provider_quota"
   | "ops_digest"
   | "test_notification";
 

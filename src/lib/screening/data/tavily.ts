@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { recordTavilyScreeningRequest } from "@/lib/screening/metrics";
 import { accrueScreeningTavilySearchCost } from "@/lib/screening/cost";
+import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
 
 /**
  * Screening-scoped Tavily search. Reuses the same TAVILY_API_KEY as AID /
@@ -83,6 +84,13 @@ export async function fetchTavilySearch(
       const status = res.status === 429 ? "rate_limited" : "error";
       recordTavilyScreeningRequest(status);
       const errBody = (await res.text().catch(() => "")).slice(0, 300);
+      if (res.status === 429) {
+        noteScreeningProviderQuota({
+          provider: "tavily",
+          statusCode: 429,
+          detail: errBody,
+        });
+      }
       return {
         results: [],
         errors: [`tavily_${res.status}:${errBody}`],

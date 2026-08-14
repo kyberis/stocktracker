@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import {
   REC_THRESHOLDS,
@@ -239,6 +240,7 @@ export function ExposureEntry() {
   const { copy } = useScreeningCopy();
   const track = useTrack();
   const { user } = useAuth();
+  const newRunsEnabled = useFeatureFlag("screening_new_runs_enabled");
   const { holdings, quotes, exchangeRates, isInitializing } = usePortfolio();
   const viewedKeyRef = useRef<string | null>(null);
 
@@ -400,59 +402,75 @@ export function ExposureEntry() {
         </section>
       )}
 
-      <h2 className="mt-6 text-base font-bold text-[color:var(--foreground)]">{optionsTitle}</h2>
-      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {isEmpty ? (
-          <ExploreOptionCard
-            entry={copy.entry}
-            eyebrow={copy.entry.exploreEyebrowPrimary}
-            primary
-            variant={variant}
-            track={track}
-          />
-        ) : isBalanced ? (
-          <>
-            <ExploreOptionCard
-              entry={copy.entry}
-              eyebrow={copy.entry.exploreEyebrowPrimary}
-              primary
-              variant={variant}
-              track={track}
-            />
-            <RebalanceOptionCard
-              entry={copy.entry}
-              eyebrow={copy.entry.rebalanceEyebrowSecondary}
-              primary={false}
-              includeSectors={includeSectors}
-              excludeSectors={[]}
-              mode="balanced"
-              variant={variant}
-              track={track}
-            />
-          </>
-        ) : (
-          <>
-            <RebalanceOptionCard
-              entry={copy.entry}
-              eyebrow={copy.entry.rebalanceEyebrowPrimary}
-              primary
-              includeSectors={includeSectors}
-              excludeSectors={excludeSectors}
-              mode="overexposed"
-              variant={variant}
-              track={track}
-            />
-            <ExploreOptionCard
-              entry={copy.entry}
-              eyebrow={copy.entry.exploreEyebrowSecondary}
-              primary={false}
-              variant={variant}
-              track={track}
-            />
-          </>
-        )}
-        <AnalyzeOptionCard entry={copy.entry} variant={variant} track={track} />
-      </div>
+      {newRunsEnabled ? (
+        <>
+          <h2 className="mt-6 text-base font-bold text-[color:var(--foreground)]">{optionsTitle}</h2>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {isEmpty ? (
+              <ExploreOptionCard
+                entry={copy.entry}
+                eyebrow={copy.entry.exploreEyebrowPrimary}
+                primary
+                variant={variant}
+                track={track}
+              />
+            ) : isBalanced ? (
+              <>
+                <ExploreOptionCard
+                  entry={copy.entry}
+                  eyebrow={copy.entry.exploreEyebrowPrimary}
+                  primary
+                  variant={variant}
+                  track={track}
+                />
+                <RebalanceOptionCard
+                  entry={copy.entry}
+                  eyebrow={copy.entry.rebalanceEyebrowSecondary}
+                  primary={false}
+                  includeSectors={includeSectors}
+                  excludeSectors={[]}
+                  mode="balanced"
+                  variant={variant}
+                  track={track}
+                />
+              </>
+            ) : (
+              <>
+                <RebalanceOptionCard
+                  entry={copy.entry}
+                  eyebrow={copy.entry.rebalanceEyebrowPrimary}
+                  primary
+                  includeSectors={includeSectors}
+                  excludeSectors={excludeSectors}
+                  mode="overexposed"
+                  variant={variant}
+                  track={track}
+                />
+                <ExploreOptionCard
+                  entry={copy.entry}
+                  eyebrow={copy.entry.exploreEyebrowSecondary}
+                  primary={false}
+                  variant={variant}
+                  track={track}
+                />
+              </>
+            )}
+            <AnalyzeOptionCard entry={copy.entry} variant={variant} track={track} />
+          </div>
+        </>
+      ) : (
+        <section
+          className="card mt-6 rounded-[20px] border border-amber-500/30 bg-amber-500/[0.06] p-4 sm:p-5"
+          role="status"
+        >
+          <h2 className="text-base font-bold text-[color:var(--foreground)]">
+            {copy.quota.providerPausedTitle}
+          </h2>
+          <p className="mt-1.5 text-[13px] text-[color:var(--muted)]">
+            {copy.quota.providerPaused}
+          </p>
+        </section>
+      )}
 
       <RecentScreensList />
 

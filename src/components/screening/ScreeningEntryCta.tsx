@@ -16,9 +16,10 @@ import { useScreeningCopy } from "./use-screening-copy";
  */
 export function ScreeningEntryCta({ className = "" }: { className?: string }) {
   const enabled = useFeatureFlag("investment_screening_enabled");
+  const newRunsEnabled = useFeatureFlag("screening_new_runs_enabled");
   const { copy } = useScreeningCopy();
   const track = useTrack();
-  if (!enabled) return null;
+  if (!enabled || !newRunsEnabled) return null;
 
   const meta = buildDiscoveryOpenedMetadata("diversify");
 

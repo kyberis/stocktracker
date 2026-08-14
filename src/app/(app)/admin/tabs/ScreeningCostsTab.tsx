@@ -31,6 +31,17 @@ interface ScreeningCostRow {
   updatedAt: string;
 }
 
+interface ScreeningCircuit {
+  paused: boolean;
+  provider: string;
+  statusCode?: number;
+  detail: string;
+  trippedAt: string;
+  trippedBy: "system" | "admin";
+  clearedAt?: string;
+  clearedByUserId?: string;
+}
+
 function formatCost(usd: number): string {
   if (usd === 0) return "$0.00";
   if (usd < 0.001) return `$${usd.toFixed(6)}`;
@@ -46,6 +57,9 @@ function ScreeningCostsTab() {
   const [page, setPage] = useState(0);
   const [filterUser, setFilterUser] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [circuit, setCircuit] = useState<ScreeningCircuit | null>(null);
+  const [circuitBusy, setCircuitBusy] = useState(false);
+  const [circuitError, setCircuitError] = useState<string | null>(null);
   const pageSize = 30;
 
   const fetchRuns = useCallback(async () => {
@@ -69,9 +83,50 @@ function ScreeningCostsTab() {
     }
   }, [page, filterUser]);
 
+  const fetchCircuit = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/screening-provider-circuit");
+      if (!res.ok) return;
+      const data = (await res.json()) as { circuit?: ScreeningCircuit };
+      if (data.circuit) setCircuit(data.circuit);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   useEffect(() => {
     fetchRuns();
   }, [fetchRuns]);
+
+  useEffect(() => {
+    void fetchCircuit();
+  }, [fetchCircuit]);
+
+  async function setCircuitAction(action: "pause" | "resume") {
+    setCircuitBusy(true);
+    setCircuitError(null);
+    try {
+      const res = await fetch("/api/admin/screening-provider-circuit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          action === "pause"
+            ? { action, provider: "unknown", detail: "Paused manually from admin" }
+            : { action },
+        ),
+      });
+      if (!res.ok) {
+        setCircuitError("Could not update screening circuit");
+        return;
+      }
+      const data = (await res.json()) as { circuit?: ScreeningCircuit };
+      if (data.circuit) setCircuit(data.circuit);
+    } catch {
+      setCircuitError("Could not update screening circuit");
+    } finally {
+      setCircuitBusy(false);
+    }
+  }
 
   const totalPages = Math.ceil(total / pageSize);
   const pageTotalCost = runs.reduce((s, r) => s + r.costUsd, 0);
@@ -88,6 +143,83 @@ function ScreeningCostsTab() {
           excluded (fixed plan).
         </p>
       </div>
+
+      <section
+        id="screening-provider-circuit"
+        className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+              Provider circuit
+            </h3>
+            <p className="mt-1 text-xs text-gray-600 dark:text-slate-400">
+              Pauses new screens when FMP, Tavily, Serper, Jina, or OpenAI hit
+              quota. Existing reports stay readable.
+            </p>
+          </div>
+          <span
+            className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+              circuit?.paused
+                ? "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+                : "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
+            }`}
+            role="status"
+          >
+            {circuit?.paused ? "Paused" : "Active"}
+          </span>
+        </div>
+        {circuit?.paused || circuit?.trippedAt ? (
+          <dl className="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-700 dark:text-slate-300 sm:grid-cols-2">
+            <div>
+              <dt className="font-medium text-gray-500 dark:text-slate-400">Provider</dt>
+              <dd className="mt-0.5">{circuit.provider || "—"}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-gray-500 dark:text-slate-400">HTTP status</dt>
+              <dd className="mt-0.5">{circuit.statusCode ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-gray-500 dark:text-slate-400">Tripped</dt>
+              <dd className="mt-0.5">
+                {circuit.trippedAt
+                  ? `${circuit.trippedAt} (${circuit.trippedBy})`
+                  : "—"}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-medium text-gray-500 dark:text-slate-400">Detail</dt>
+              <dd className="mt-0.5 break-all">{circuit.detail || "—"}</dd>
+            </div>
+          </dl>
+        ) : null}
+        {circuitError ? (
+          <p className="mt-2 text-xs text-red-600 dark:text-red-400" role="alert">
+            {circuitError}
+          </p>
+        ) : null}
+        <div className="mt-3 flex flex-wrap gap-2">
+          {circuit?.paused ? (
+            <button
+              type="button"
+              onClick={() => void setCircuitAction("resume")}
+              disabled={circuitBusy}
+              className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-60"
+            >
+              Resume screening
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void setCircuitAction("pause")}
+              disabled={circuitBusy}
+              className="px-3 py-1.5 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-60"
+            >
+              Pause manually
+            </button>
+          )}
+        </div>
+      </section>
 
       <div className="flex flex-wrap gap-3 items-end">
         <div>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { fill } from "@/lib/screening/copy";
@@ -60,6 +61,7 @@ export function IntakeChat() {
   const { user } = useAuth();
   const { copy } = useScreeningCopy();
   const searchParams = useSearchParams();
+  const newRunsEnabled = useFeatureFlag("screening_new_runs_enabled");
 
   const screeningQuota = user?.quotas?.investment_screening;
   const isAdmin = user?.role === "admin";
@@ -535,6 +537,10 @@ export function IntakeChat() {
           setSubmitError(copy.quota.exhausted);
           return;
         }
+        if (res.status === 503) {
+          setSubmitError(copy.quota.providerPaused);
+          return;
+        }
         setSubmitError(copy.report.loadError);
         return;
       }
@@ -564,6 +570,31 @@ export function IntakeChat() {
     agentStatus !== "rejected_infeasible" &&
     rows.length > 0 &&
     (!isAnalyze || Boolean(brief.focusTicker));
+
+  if (!newRunsEnabled) {
+    return (
+      <main className="mx-auto flex min-h-[40vh] w-full max-w-xl flex-col items-center justify-center px-3 py-10 text-center sm:px-4">
+        <h1 className="text-xl font-bold text-[color:var(--foreground)]">
+          {copy.quota.providerPausedTitle}
+        </h1>
+        <p className="mt-2 text-sm text-[color:var(--muted)]">{copy.quota.providerPaused}</p>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href="/screening"
+            className="btn-primary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+          >
+            {copy.quota.providerPausedCta}
+          </Link>
+          <Link
+            href="/"
+            className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+          >
+            {copy.common.backHome}
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-5xl flex-col px-3 pb-6 pt-8 sm:px-4">
