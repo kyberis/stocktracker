@@ -135,7 +135,7 @@ function genFeatureFlags() {
   const file = join(ROOT, "src/lib/db/settings.ts");
   const src = readFileSync(file, "utf8");
   const block = src.match(
-    /const ALL_PLATFORM_FEATURES: PlatformFeature\[\] = \[([\s\S]*?)\];/,
+    /(?:export )?const ALL_PLATFORM_FEATURES(?:: [^=]+)? = \[([\s\S]*?)\](?:\s+as const)?/,
   );
   const flags = new Set<string>();
   if (block) {
