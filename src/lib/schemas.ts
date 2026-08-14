@@ -528,6 +528,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "tool_simulator_enabled",
   "tool_planning_enabled",
   "investment_screening_enabled",
+  "screening_new_runs_enabled",
   "screening_dev_lab_enabled",
   "screening_pipeline_real_enabled",
   "screening_ir_agent_enabled",

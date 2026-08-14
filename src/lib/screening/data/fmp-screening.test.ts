@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@/lib/screening/provider-circuit", () => ({
+  noteScreeningProviderQuota: vi.fn(),
+}));
+
 const ORIGINAL_API_KEY = process.env.FMP_API_KEY;
 
 describe("fetchFmpScreener", () => {

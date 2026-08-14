@@ -141,7 +141,7 @@ The `destinations` list is resolved in trefolio from the single linked recipient
 | IdP ingest | `src/app/api/internal/prodops-ingest/route.ts` |
 | Outbox DB | `src/lib/db/ops-events.ts`, migration `v114` |
 | Dispatcher cron | `src/app/api/cron/prodops-dispatch/route.ts` |
-| Event builders | `src/lib/prodops.ts` |
+| Event builders | `src/lib/prodops.ts` (`user_registered`, `membership_paid`, `feedback_received`, `broker_request_created`, `trial_activated`, `portfolio_anomaly`, `screening_provider_quota`) |
 
 ### ProdOps side
 

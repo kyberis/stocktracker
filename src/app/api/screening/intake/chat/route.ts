@@ -4,7 +4,7 @@ export const maxDuration = 60;
 import type { NextRequest } from "next/server";
 import { withMetrics } from "@/lib/with-metrics";
 import { ok, parseBody } from "@/lib/api-response";
-import { requireScreeningAccess } from "@/lib/screening/guard";
+import { requireScreeningNewRunsAllowed } from "@/lib/screening/guard";
 import { runIntakeAgent } from "@/lib/screening/intake-agent";
 import { insertScreeningAgentOutput, findUserById } from "@/lib/db";
 import { intakeChatRequestSchema } from "@/lib/screening/schemas";
@@ -25,7 +25,7 @@ import type { SubscriptionPlan } from "@/lib/types";
 export const POST = withMetrics(
   "/api/screening/intake/chat",
   async (req: NextRequest) => {
-    const { session, error } = await requireScreeningAccess(req);
+    const { session, error } = await requireScreeningNewRunsAllowed(req);
     if (error || !session) return error;
 
     const parsed = await parseBody(req, intakeChatRequestSchema);

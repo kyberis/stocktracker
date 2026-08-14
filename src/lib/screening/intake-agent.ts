@@ -1,7 +1,5 @@
-import {
-  fetchGatewayChatCompletions,
-  resolveGatewayApiKey,
-} from "@/lib/ai/gateway";
+import { resolveGatewayApiKey } from "@/lib/ai/gateway";
+import { fetchScreeningGatewayChatCompletions as fetchGatewayChatCompletions } from "@/lib/screening/gateway";
 import { insertAiLog } from "@/lib/db";
 import type { SubscriptionPlan } from "@/lib/types";
 import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";

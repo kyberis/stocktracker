@@ -4,7 +4,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
-import { requireScreeningAccess } from "@/lib/screening/guard";
+import { requireScreeningAccess, requireScreeningNewRunsAllowed } from "@/lib/screening/guard";
 import {
   buildMockRun,
   createMockRunId,
@@ -75,7 +75,7 @@ export const GET = withMetrics("/api/screening/runs", async (req: NextRequest) =
  *     drain **in-process** via waitUntil (no HTTP self-call).
  */
 export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) => {
-  const { session, error } = await requireScreeningAccess(req);
+  const { session, error } = await requireScreeningNewRunsAllowed(req);
   if (error || !session) return error;
 
   const parsed = await parseBody(req, screeningBriefSchema);

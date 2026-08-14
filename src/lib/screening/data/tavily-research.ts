@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { recordTavilyResearchRequest } from "@/lib/screening/metrics";
 import { accrueScreeningTavilyResearchCost } from "@/lib/screening/cost";
+import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
 
 /**
  * Tavily Research API client for screening company diligence.
@@ -280,6 +281,13 @@ export async function fetchTavilyCompanyResearch(
             : "error";
       recordTavilyResearchRequest(status);
       const errBody = (await createRes.text().catch(() => "")).slice(0, 300);
+      if (createRes.status === 429) {
+        noteScreeningProviderQuota({
+          provider: "tavily",
+          statusCode: 429,
+          detail: errBody,
+        });
+      }
       return empty([`tavily_research_${createRes.status}:${errBody}`]);
     }
     const created = (await createRes.json().catch(() => null)) as {
@@ -324,6 +332,13 @@ export async function fetchTavilyCompanyResearch(
           getRes.status === 429 ? "rate_limited" : "error",
         );
         const errBody = (await getRes.text().catch(() => "")).slice(0, 300);
+        if (getRes.status === 429) {
+          noteScreeningProviderQuota({
+            provider: "tavily",
+            statusCode: 429,
+            detail: errBody,
+          });
+        }
         return {
           ...empty([`tavily_research_get_${getRes.status}:${errBody}`]),
           requestId,

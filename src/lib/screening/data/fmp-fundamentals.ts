@@ -3,6 +3,7 @@ import {
   computeNormalizedPe,
   evaluateEarningsQuality,
 } from "@/lib/screening/scoring/earnings-quality";
+import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
 
 /**
  * Thin FMP client for Hard Data report enrichment (ratios + profile + series).
@@ -294,6 +295,13 @@ async function fetchJson(
     });
     if (!res.ok) {
       const body = (await res.text().catch(() => "")).slice(0, 200);
+      if (res.status === 429) {
+        noteScreeningProviderQuota({
+          provider: "fmp",
+          statusCode: 429,
+          detail: body,
+        });
+      }
       return { ok: false, data: null, error: `fmp_${res.status}:${body}` };
     }
     return { ok: true, data: await res.json().catch(() => null) };

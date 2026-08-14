@@ -1,4 +1,4 @@
 {
-  "landingPageReviewed": true,
-  "notes": "2.5.149: edit fixed-return schedule from Assets & Accounts. Feature — no new landing-page capability beyond existing fixed-return already listed."
+  "notes": "2.5.170: screening provider-quota circuit. Ops kill-switch — hides new-screen CTAs when FMP/Tavily/Serper/Jina/OpenAI hit quota. Not a landing-page capability.",
+  "landingPageReviewed": true
 }

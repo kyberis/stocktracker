@@ -25,6 +25,10 @@ const en = {
     remaining: "{remaining} of {limit} screens left this week",
     exhausted:
       "You have used your 3 screens for this week. Try again when the weekly limit resets.",
+    providerPausedTitle: "New screens are paused",
+    providerPaused:
+      "New screens are temporarily unavailable. You can still open reports you already ran.",
+    providerPausedCta: "View your recent screens",
   },
   entry: {
     eyebrow: "Your portfolio today",
@@ -823,6 +827,10 @@ const es: ScreeningCopy = {
     remaining: "Te quedan {remaining} de {limit} cribados esta semana",
     exhausted:
       "Has usado tus 3 cribados de esta semana. Vuelve a intentarlo cuando se reinicie el límite semanal.",
+    providerPausedTitle: "Los cribados nuevos están en pausa",
+    providerPaused:
+      "Los cribados nuevos no están disponibles por ahora. Puedes seguir abriendo los informes que ya hayas hecho.",
+    providerPausedCta: "Ver tus cribados recientes",
   },
   entry: {
     eyebrow: "Tu cartera hoy",

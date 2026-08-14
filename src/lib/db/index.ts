@@ -163,6 +163,8 @@ export type {
   UtmTaxonomyConfig,
   FeatureFlagOverride,
   DigestSenderDomain,
+  ScreeningCircuitProvider,
+  ScreeningProviderCircuit,
 } from "./settings";
 export {
   getUserSettings,
@@ -178,6 +180,9 @@ export {
   getGlobalOpenAIApiKey,
   getPlatformSetting,
   setPlatformSetting,
+  getScreeningProviderCircuit,
+  setScreeningProviderCircuit,
+  EMPTY_SCREENING_PROVIDER_CIRCUIT,
   ALL_PLATFORM_FEATURES,
   isFeatureEnabled,
   setFeatureEnabled,

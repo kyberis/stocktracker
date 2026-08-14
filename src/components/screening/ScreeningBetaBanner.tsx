@@ -15,10 +15,11 @@ import { useScreeningCopy } from "./use-screening-copy";
  */
 export default function ScreeningBetaBanner() {
   const enabled = useFeatureFlag("investment_screening_enabled");
+  const newRunsEnabled = useFeatureFlag("screening_new_runs_enabled");
   const { copy } = useScreeningCopy();
   const track = useTrack();
 
-  if (!enabled) return null;
+  if (!enabled || !newRunsEnabled) return null;
 
   const meta = buildDiscoveryOpenedMetadata("home");
 

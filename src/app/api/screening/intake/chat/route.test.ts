@@ -4,6 +4,7 @@ import type { IntakeAgentOutput } from "@/lib/screening/schemas";
 
 vi.mock("@/lib/screening/guard", () => ({
   requireScreeningAccess: vi.fn(),
+  requireScreeningNewRunsAllowed: vi.fn(),
 }));
 
 vi.mock("@/lib/screening/intake-agent", () => ({
@@ -23,12 +24,12 @@ vi.mock("@/lib/with-metrics", () => ({
   withMetrics: (_name: string, handler: unknown) => handler,
 }));
 
-import { requireScreeningAccess } from "@/lib/screening/guard";
+import { requireScreeningNewRunsAllowed } from "@/lib/screening/guard";
 import { runIntakeAgent } from "@/lib/screening/intake-agent";
 import { insertScreeningAgentOutput, findUserById } from "@/lib/db";
 import { recordScreeningIntakeTurn } from "@/lib/screening/metrics";
 
-const mockedAccess = vi.mocked(requireScreeningAccess);
+const mockedAccess = vi.mocked(requireScreeningNewRunsAllowed);
 const mockedAgent = vi.mocked(runIntakeAgent);
 const mockedInsert = vi.mocked(insertScreeningAgentOutput);
 const mockedMetric = vi.mocked(recordScreeningIntakeTurn);

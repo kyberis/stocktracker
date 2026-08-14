@@ -7,6 +7,7 @@ import {
   type StepHandler,
 } from "@/lib/screening/orchestrator/handlers";
 import { deriveScreeningTechnicals } from "@/lib/screening/data/technicals-derive";
+import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
 import {
   technicalsOutputSchema,
   type TechnicalsOutput,
@@ -55,6 +56,14 @@ export const runTechnicalsStep: StepHandler = async (
         currency: quote?.currency ?? null,
       });
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "unknown";
+      if (/\b429\b|rate limit/i.test(msg)) {
+        noteScreeningProviderQuota({
+          provider: "fmp",
+          statusCode: 429,
+          detail: msg.slice(0, 300),
+        });
+      }
       output = deriveScreeningTechnicals({
         ticker,
         history: [],
@@ -62,7 +71,7 @@ export const runTechnicalsStep: StepHandler = async (
         currency: null,
       });
       output.gaps = [
-        `fetch_failed:${err instanceof Error ? err.message.slice(0, 80) : "unknown"}`,
+        `fetch_failed:${msg.slice(0, 80)}`,
       ];
     }
   }

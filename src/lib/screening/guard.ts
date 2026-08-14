@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { isFeatureEnabledForUser } from "@/lib/db";
+import { isScreeningNewRunsAllowed } from "@/lib/screening/provider-circuit";
 
 type SessionShape = { userId: string; role: string };
 type GuardResult =
@@ -24,6 +25,28 @@ export async function requireScreeningAccess(req: NextRequest): Promise<GuardRes
   }
 
   return { session: { userId: session.userId, role: session.role }, error: null };
+}
+
+/**
+ * Same as requireScreeningAccess, plus the provider-quota circuit.
+ * Use on mutations (new intake turns, new runs). Read routes stay on access only.
+ */
+export async function requireScreeningNewRunsAllowed(req: NextRequest): Promise<GuardResult> {
+  const base = await requireScreeningAccess(req);
+  if (base.error || !base.session) return base;
+
+  const allowed = await isScreeningNewRunsAllowed();
+  if (!allowed) {
+    return {
+      session: null,
+      error: NextResponse.json(
+        { error: "Screening temporarily unavailable", code: "screening_provider_paused" },
+        { status: 503 },
+      ),
+    };
+  }
+
+  return base;
 }
 
 /**

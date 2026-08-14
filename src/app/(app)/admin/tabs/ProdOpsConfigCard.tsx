@@ -19,6 +19,7 @@ const EVENT_TYPES: ProdOpsEventType[] = [
   "broker_request_created",
   "trial_activated",
   "portfolio_anomaly",
+  "screening_provider_quota",
 ];
 
 const DEFAULT_CONFIG: ProdOpsConfig = {
@@ -37,6 +38,7 @@ const EVENT_LABELS: Record<ProdOpsEventType, string> = {
   broker_request_created: "Broker request",
   trial_activated: "Trial activated",
   portfolio_anomaly: "Portfolio anomaly",
+  screening_provider_quota: "Screening provider quota",
   ops_digest: "Ops digest",
   test_notification: "Test notification",
 };
