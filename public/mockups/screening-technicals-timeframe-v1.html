@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>trefolio — Technicals por temporalidad (mock)</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #07111d;
+      --bg1: #0b1627;
+      --fg: #edf4ff;
+      --muted: #8ea1bf;
+      --border: rgba(154, 174, 209, 0.14);
+      --card: rgba(10, 16, 26, 0.92);
+      --soft: rgba(255, 255, 255, 0.03);
+      --surface: rgba(255, 255, 255, 0.045);
+      --accent: #1dd1a1;
+      --accent-dim: rgba(29, 209, 161, 0.14);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.12);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: linear-gradient(180deg, var(--bg0), var(--bg1) 50%, var(--bg0));
+      color: var(--fg);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 72px; }
+    .banner {
+      margin-bottom: 16px; padding: 12px 14px;
+      border: 1px dashed rgba(29, 209, 161, 0.35);
+      border-radius: 12px; background: var(--accent-dim);
+      font-size: 12px; color: var(--muted);
+    }
+    .banner strong { color: var(--accent); }
+    .hero { padding: 20px 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+    .eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #2dd4bf; margin-bottom: 10px;
+    }
+    .hero h1 {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: clamp(26px, 5vw, 36px);
+      font-weight: 400; line-height: 1.15; margin-bottom: 8px;
+    }
+    .hero .meta { font-size: 13px; color: var(--muted); }
+    .ficha {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px;
+    }
+    .ficha-head {
+      display: flex; flex-wrap: wrap; justify-content: space-between;
+      gap: 10px; align-items: flex-start; margin-bottom: 14px;
+    }
+    .ficha-head h2 {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: 24px; font-weight: 400;
+    }
+    .ficha-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .badge {
+      display: inline-flex; align-items: center;
+      font-size: 11px; font-weight: 600; padding: 3px 8px;
+      border-radius: 999px; background: var(--accent-dim); color: var(--accent);
+      border: 1px solid rgba(29, 209, 161, 0.3);
+    }
+    .tech {
+      margin-top: 4px; border-radius: 14px;
+      border: 1px solid var(--border); background: var(--soft); padding: 14px;
+    }
+    .tech-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #2dd4bf; margin-bottom: 10px;
+    }
+    .pills {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;
+    }
+    .pills button {
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      padding: 6px 12px; min-height: 36px; min-width: 44px;
+      border-radius: 999px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer;
+    }
+    .pills button:hover { color: var(--fg); border-color: rgba(154, 174, 209, 0.35); }
+    .pills button[aria-pressed="true"] {
+      background: var(--accent-dim); color: var(--accent);
+      border-color: rgba(29, 209, 161, 0.4);
+    }
+    .pills button:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 2px;
+    }
+    .chart-wrap { position: relative; height: 148px; margin: 4px 0 8px; }
+    .chart-wrap svg { width: 100%; height: 100%; display: block; }
+    .chart-meta {
+      display: flex; justify-content: space-between; gap: 8px;
+      font-size: 11px; color: var(--muted); margin-bottom: 12px;
+    }
+    .chart-meta .ret.up { color: #34d399; }
+    .chart-meta .ret.down { color: var(--red); }
+    .grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+    }
+    @media (min-width: 520px) {
+      .grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .cell {
+      padding: 10px 11px; border-radius: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+    }
+    .cell .label {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--muted); margin-bottom: 4px;
+    }
+    .cell .value { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .cell .hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .up { color: #34d399; }
+    .down { color: var(--red); }
+    .neutral { color: var(--fg); }
+    .reading {
+      margin-top: 12px; padding: 12px 13px; border-radius: 12px;
+      border: 1px solid var(--border); display: grid;
+      grid-template-columns: auto 1fr; gap: 10px; align-items: start;
+    }
+    .reading.bull { background: var(--accent-dim); border-color: rgba(29, 209, 161, 0.28); }
+    .reading.warn { background: var(--amber-dim); border-color: rgba(251, 191, 36, 0.28); }
+    .reading.bear { background: var(--red-dim); border-color: rgba(248, 113, 113, 0.28); }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%; margin-top: 5px;
+    }
+    .reading.bull .dot { background: var(--accent); }
+    .reading.warn .dot { background: var(--amber); }
+    .reading.bear .dot { background: var(--red); }
+    .reading p { font-size: 13.5px; color: var(--fg); }
+    .reading .tf-tag {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 3px;
+    }
+    .range {
+      margin-top: 12px; padding: 10px 4px 2px;
+    }
+    .range-title {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px;
+    }
+    .range-track {
+      position: relative; height: 6px; border-radius: 999px;
+      background: #1e3348;
+    }
+    .range-fill {
+      position: absolute; inset: 0 auto 0 0; height: 6px; border-radius: 999px;
+      background: #2dd4bf;
+    }
+    .range-mark {
+      position: absolute; top: -4px; width: 14px; height: 14px;
+      margin-left: -7px; border-radius: 50%;
+      background: var(--fg); border: 2px solid #0b1627;
+    }
+    .range-labels {
+      display: flex; justify-content: space-between; margin-top: 8px;
+      font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums;
+    }
+    .note {
+      margin-top: 18px; font-size: 12px; color: var(--muted);
+    }
+    .disclaimer {
+      margin-top: 28px; padding: 14px 16px;
+      border-radius: 12px; border: 1px solid var(--border);
+      background: var(--soft); font-size: 12px; color: var(--muted);
+    }
+    .alts { margin-top: 28px; }
+    .alts h3 {
+      font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+    }
+    .alts ol { padding-left: 18px; font-size: 13px; color: var(--muted); display: grid; gap: 8px; }
+    .alts strong { color: var(--fg); }
+    code { font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="banner">
+      <strong>Mock D · combo</strong> — Análisis técnico ligado a la temporalidad del chart.
+      Los indicadores (RSI, MA50, MACD, rango) se recalculan al cambiar el periodo.
+      Sin API. Superficie: CandidateCard / Technicals.
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">Cribado · ficha de candidato</p>
+      <h1>Technicals con temporalidad</h1>
+      <p class="meta">El chart ya tenía pills 1W–5Y; las métricas no seguían. Este mock las ata al mismo selector.</p>
+    </header>
+
+    <article class="ficha" aria-labelledby="asml-title">
+      <div class="ficha-head">
+        <div>
+          <h2 id="asml-title">ASML — ASML Holding</h2>
+          <p class="ficha-sub">Semiconductores · Países Bajos · 680,40 EUR</p>
+        </div>
+        <span class="badge">Candidato fuerte · 7/8</span>
+      </div>
+
+      <section class="tech" aria-labelledby="tech-title">
+        <p class="tech-title" id="tech-title">Técnicos</p>
+        <div class="pills" role="group" aria-label="Temporalidad del análisis técnico" id="pills"></div>
+        <div class="chart-wrap" aria-hidden="true">
+          <svg id="chart" viewBox="0 0 640 148" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="chart-meta">
+          <span id="chart-window"></span>
+          <span id="chart-return" class="ret"></span>
+        </div>
+        <div class="grid" id="metrics"></div>
+        <div class="range">
+          <p class="range-title" id="range-title">Rango del periodo</p>
+          <div class="range-track">
+            <div class="range-fill" id="range-fill"></div>
+            <div class="range-mark" id="range-mark"></div>
+          </div>
+          <div class="range-labels">
+            <span id="range-low"></span>
+            <span id="range-high"></span>
+          </div>
+        </div>
+        <div class="reading" id="reading">
+          <span class="dot" aria-hidden="true"></span>
+          <div>
+            <p class="tf-tag" id="reading-tf"></p>
+            <p id="reading-text"></p>
+          </div>
+        </div>
+      </section>
+    </article>
+
+    <p class="note">En producto, el selector reutilizaría las pills de <code>ScreeningPriceChart</code>. RSI / MACD / % vs MA se derivarían del mismo OHLC ya usado por el agente de technicals, recortado al periodo activo.</p>
+
+    <section class="alts">
+      <h3>Otras alternativas (no en este mock)</h3>
+      <ol>
+        <li><strong>A. Solo indicadores clásicos</strong> — RSI, MACD, MA por TF, sin semáforo narrativo.</li>
+        <li><strong>B. TradingView embebido</strong> — velas reales y timeframe nativo; menos control de UX/i18n.</li>
+        <li><strong>C. Solo narrativa</strong> — una frase + semáforo, sin grid de indicadores.</li>
+      </ol>
+    </section>
+
+    <aside class="disclaimer" role="note">
+      Datos ilustrativos (no cotizaciones en vivo). El análisis técnico no es un consejo de inversión ni una recomendación de compra o venta. trefolio no presta servicio de asesoramiento financiero. Las lecturas de sobrecompra/tendencia son reglas cuantitativas sobre un periodo elegido y pueden cambiar al instante.
+    </aside>
+  </div>
+
+  <script>
+    const TIMEFRAMES = [
+      {
+        id: "1d",
+        label: "1D",
+        window: "Sesión · 14 ago 2026",
+        prices: [676.2, 677.1, 675.8, 676.9, 678.4, 679.0, 678.1, 679.6, 680.2, 679.4, 680.8, 681.1, 680.4],
+        rsi: 58,
+        rsiHint: "Zona media",
+        vsMa50Pct: 0.4,
+        vsMa50Hint: "Por encima",
+        macdHist: 0.18,
+        macdHint: "Ligero impulso",
+        rangePct: 62,
+        low: 675.8,
+        high: 681.1,
+        readingTone: "bull",
+        readingTf: "Lectura · 1 día",
+        reading: "Sesión constructiva: el precio cotiza en la mitad alta del rango diario, con RSI neutro y MACD apenas positivo. Sin señal de sobrecompra intradía.",
+      },
+      {
+        id: "1w",
+        label: "1W",
+        window: "Últimos 5 días de cotización",
+        prices: [662.0, 665.4, 661.8, 668.2, 672.5, 670.1, 674.8, 678.9, 681.4, 679.6, 682.8, 681.0, 680.4],
+        rsi: 71,
+        rsiHint: "Sobrecompra",
+        vsMa50Pct: 2.1,
+        vsMa50Hint: "Por encima",
+        macdHist: 1.42,
+        macdHint: "Impulso alcista",
+        rangePct: 88,
+        low: 661.8,
+        high: 682.8,
+        readingTone: "warn",
+        readingTf: "Lectura · 1 semana",
+        reading: "Sobrecompra en 1W — el precio está cerca del máximo del rango semanal (RSI 71). La tendencia sigue alcista vs MA50; un retroceso táctico sería coherente, no una ruptura.",
+      },
+      {
+        id: "1m",
+        label: "1M",
+        window: "Últimos 21 días de cotización",
+        prices: [648, 652, 641, 655, 661, 658, 664, 670, 666, 672, 678, 674, 680.4],
+        rsi: 62,
+        rsiHint: "Alcista, no extremo",
+        vsMa50Pct: 3.6,
+        vsMa50Hint: "Por encima",
+        macdHist: 0.54,
+        macdHint: "Se aplana",
+        rangePct: 79,
+        low: 641.0,
+        high: 680.4,
+        readingTone: "bull",
+        readingTf: "Lectura · 1 mes",
+        reading: "Tendencia alcista de un mes: ASML ha recuperado el rango desde 641 EUR y cotiza cerca de máximos. El MACD se aplana — el impulso mensual ya no acelera.",
+      },
+      {
+        id: "3m",
+        label: "3M",
+        window: "Últimos 3 meses",
+        prices: [702, 688, 671, 694, 658, 642, 655, 638, 661, 648, 672, 666, 680.4],
+        rsi: 48,
+        rsiHint: "Neutro",
+        vsMa50Pct: -0.8,
+        vsMa50Hint: "Por debajo",
+        macdHist: -0.62,
+        macdHint: "Histograma negativo",
+        rangePct: 44,
+        low: 638.0,
+        high: 702.0,
+        readingTone: "bear",
+        readingTf: "Lectura · 3 meses",
+        reading: "Rango de 3 meses: el valor recortó desde 702 EUR y ahora cotiza a mitad de banda, ligeramente bajo la MA50. Sin tendencia clara a este horizonte.",
+      },
+      {
+        id: "1y",
+        label: "1Y",
+        window: "Últimos 12 meses",
+        prices: [812, 790, 745, 698, 720, 664, 701, 642, 688, 655, 672, 658, 680.4],
+        rsi: 44,
+        rsiHint: "Debilidad relativa",
+        vsMa50Pct: -4.2,
+        vsMa50Hint: "Por debajo",
+        macdHist: -2.15,
+        macdHint: "Impulso negativo",
+        rangePct: 22,
+        low: 642.0,
+        high: 812.0,
+        readingTone: "bear",
+        readingTf: "Lectura · 1 año",
+        reading: "En 1Y el precio está lejos del máximo (812 EUR) y por debajo de la MA50. La lectura anual es de tendencia débil; el rebote reciente no repara el recorte de 12 meses.",
+      },
+    ];
+
+    const PRICE = 680.4;
+
+    function pathFromPrices(prices) {
+      const w = 640, h = 148, pad = 8;
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      const span = Math.max(max - min, 1);
+      const pts = prices.map((p, i) => {
+        const x = pad + (i / (prices.length - 1)) * (w - pad * 2);
+        const y = pad + (1 - (p - min) / span) * (h - pad * 2);
+        return [x, y];
+      });
+      const line = pts.map((p, i) => (i === 0 ? `M ${p[0]} ${p[1]}` : `L ${p[0]} ${p[1]}`)).join(" ");
+      const last = pts[pts.length - 1];
+      const first = pts[0];
+      const area = `${line} L ${last[0]} ${h} L ${first[0]} ${h} Z`;
+      return { line, area, last };
+    }
+
+    function fmt(n) {
+      return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function pct(n, digits) {
+      const sign = n > 0 ? "+" : "";
+      return sign + n.toFixed(digits) + "%";
+    }
+    function toneClass(n) {
+      if (n > 0) return "up";
+      if (n < 0) return "down";
+      return "neutral";
+    }
+
+    function renderChart(tf) {
+      const { line, area, last } = pathFromPrices(tf.prices);
+      const ret = ((tf.prices[tf.prices.length - 1] / tf.prices[0]) - 1) * 100;
+      document.getElementById("chart").innerHTML = `
+        <defs>
+          <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1dd1a1" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#1dd1a1" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${area}" fill="url(#fill)"/>
+        <path d="${line}" fill="none" stroke="#1dd1a1" stroke-width="2" vector-effect="non-scaling-stroke"/>
+        <circle cx="${last[0]}" cy="${last[1]}" r="3.5" fill="#edf4ff"/>
+      `;
+      document.getElementById("chart-window").textContent = tf.window;
+      const retEl = document.getElementById("chart-return");
+      retEl.textContent = pct(ret, 1) + " en el periodo";
+      retEl.className = "ret " + toneClass(ret);
+    }
+
+    function renderMetrics(tf) {
+      const cells = [
+        { label: "RSI (14)", value: String(tf.rsi), cls: tf.rsi >= 70 ? "down" : tf.rsi <= 30 ? "up" : "neutral", hint: tf.rsiHint },
+        { label: "vs MA50", value: pct(tf.vsMa50Pct, 1), cls: toneClass(tf.vsMa50Pct), hint: tf.vsMa50Hint },
+        { label: "MACD hist.", value: (tf.macdHist > 0 ? "+" : "") + tf.macdHist.toFixed(2), cls: toneClass(tf.macdHist), hint: tf.macdHint },
+        { label: "% del rango", value: tf.rangePct + "%", cls: tf.rangePct >= 85 ? "down" : tf.rangePct <= 20 ? "up" : "neutral", hint: "Dentro del periodo" },
+      ];
+      document.getElementById("metrics").innerHTML = cells.map((c) => `
+        <div class="cell">
+          <div class="label">${c.label}</div>
+          <div class="value ${c.cls}">${c.value}</div>
+          <div class="hint">${c.hint}</div>
+        </div>
+      `).join("");
+
+      document.getElementById("range-title").textContent = "Rango del periodo (" + tf.label + ")";
+      document.getElementById("range-low").textContent = fmt(tf.low) + " EUR";
+      document.getElementById("range-high").textContent = fmt(tf.high) + " EUR";
+      const pos = Math.min(100, Math.max(0, ((PRICE - tf.low) / (tf.high - tf.low)) * 100));
+      document.getElementById("range-fill").style.width = pos + "%";
+      document.getElementById("range-mark").style.left = pos + "%";
+
+      const box = document.getElementById("reading");
+      box.className = "reading " + tf.readingTone;
+      document.getElementById("reading-tf").textContent = tf.readingTf;
+      document.getElementById("reading-text").textContent = tf.reading;
+    }
+
+    function select(id) {
+      const tf = TIMEFRAMES.find((t) => t.id === id);
+      document.querySelectorAll(".pills button").forEach((b) => {
+        b.setAttribute("aria-pressed", b.dataset.id === id ? "true" : "false");
+      });
+      renderChart(tf);
+      renderMetrics(tf);
+    }
+
+    const pills = document.getElementById("pills");
+    TIMEFRAMES.forEach((tf, i) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.dataset.id = tf.id;
+      btn.textContent = tf.label;
+      btn.setAttribute("aria-pressed", i === 1 ? "true" : "false");
+      btn.addEventListener("click", () => select(tf.id));
+      pills.appendChild(btn);
+    });
+
+    select("1w");
+  </script>
+</body>
+</html>
