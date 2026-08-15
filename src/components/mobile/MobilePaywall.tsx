@@ -23,7 +23,7 @@ const BENEFITS = [
 
 const BENEFIT_FALLBACK: Record<string, { en: string; es: string }> = {
   paywallBenefit1: { en: "Unlimited holdings & portfolios", es: "Holdings y portafolios ilimitados" },
-  paywallBenefit2: { en: "Price alerts via push, email & WhatsApp", es: "Alertas de precio por push, email y WhatsApp" },
+  paywallBenefit2: { en: "Price alerts via push, email & Telegram", es: "Alertas de precio por push, email y Telegram" },
   paywallBenefit3: { en: "Advanced metrics, growth charts & screener", es: "Métricas avanzadas, gráficos de crecimiento y screener" },
   paywallBenefit4: { en: "Broker sync with 80+ brokerages", es: "Sincronización con 80+ brokers" },
   paywallBenefit5: { en: "AI-powered analysis & tax reports", es: "Análisis con IA e informes fiscales" },

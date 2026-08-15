@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.177",
+    date: "2026-08-15",
+    title: "Reliable price alerts + admin dispatch log",
+    titleTranslations: {
+      es: "Alertas de precio fiables + registro en admin",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Price alerts no longer false-fire on bad/zero quotes, compare thresholds with FX when currencies differ, and only deactivate after delivery (or permanent channel skips) so transient send failures can retry.",
+        translations: {
+          es: "Las alertas de precio ya no se disparan con cotizaciones erróneas o a cero, comparan umbrales con FX si las divisas difieren, y solo se desactivan tras el envío (o saltos permanentes de canal) para reintentar fallos transitorios.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Percent and portfolio-wide alerts can coexist: uniqueness is keyed by percent basis/value (not the old threshold-only key that blocked multiple % alerts).",
+        translations: {
+          es: "Las alertas porcentuales y de cartera pueden coexistir: la unicidad usa base/valor porcentual (no la clave antigua solo de umbral que bloqueaba varias alertas %).",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Alerts dispatch only to the channels the user selected (email and/or Telegram; push/device when enabled). WhatsApp is not a delivery path. Admins can verify firings and per-channel outcomes under Admin → Price Alerts.",
+        translations: {
+          es: "Las alertas se envían solo por los canales que el usuario eligió (email y/o Telegram; push/dispositivo si están activos). WhatsApp no es un canal. Los admins verifican disparos y resultados por canal en Admin → Price Alerts.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.176",
     date: "2026-08-15",
     title: "Email copy without plan names",

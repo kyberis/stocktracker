@@ -4273,6 +4273,97 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 145,
+    description: "Price alert uniqueness by type + alert_dispatch_log for admin observability",
+    up: async (client: Client) => {
+      try {
+        await client.execute("DROP INDEX IF EXISTS idx_price_alerts_unique_active");
+      } catch (e: unknown) {
+        console.warn("[migration 145] drop old unique index:", e instanceof Error ? e.message : e);
+      }
+
+      // Collapse duplicate active percent alerts before installing the stricter unique key
+      try {
+        await client.execute(`
+          DELETE FROM price_alerts
+          WHERE alert_type = 'percent_change' AND active = 1 AND rowid NOT IN (
+            SELECT MIN(rowid) FROM price_alerts
+            WHERE alert_type = 'percent_change' AND active = 1
+            GROUP BY user_id, ticker, percent_basis, percent_value, is_portfolio_wide, portfolio_id
+          )
+        `);
+      } catch (e: unknown) {
+        console.warn("[migration 145] percent dedupe:", e instanceof Error ? e.message : e);
+      }
+
+      try {
+        await client.execute(`
+          DELETE FROM price_alerts
+          WHERE alert_type = 'threshold' AND active = 1 AND rowid NOT IN (
+            SELECT MIN(rowid) FROM price_alerts
+            WHERE alert_type = 'threshold' AND active = 1
+            GROUP BY user_id, ticker, condition, threshold, currency
+          )
+        `);
+      } catch (e: unknown) {
+        console.warn("[migration 145] threshold dedupe:", e instanceof Error ? e.message : e);
+      }
+
+      try {
+        await client.execute(`
+          CREATE UNIQUE INDEX IF NOT EXISTS idx_price_alerts_unique_threshold
+          ON price_alerts(user_id, ticker, condition, threshold, currency)
+          WHERE active = 1 AND alert_type = 'threshold'
+        `);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("already exists") && !msg.includes("duplicate")) {
+          console.warn("[migration 145] threshold unique index:", msg);
+        }
+      }
+
+      try {
+        await client.execute(`
+          CREATE UNIQUE INDEX IF NOT EXISTS idx_price_alerts_unique_percent
+          ON price_alerts(user_id, ticker, percent_basis, percent_value, is_portfolio_wide, portfolio_id)
+          WHERE active = 1 AND alert_type = 'percent_change'
+        `);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("already exists") && !msg.includes("duplicate")) {
+          console.warn("[migration 145] percent unique index:", msg);
+        }
+      }
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS alert_dispatch_log (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          alert_id TEXT NOT NULL DEFAULT '',
+          ticker TEXT NOT NULL DEFAULT '',
+          alert_type TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT '',
+          channels_requested TEXT NOT NULL DEFAULT '',
+          channels_sent TEXT NOT NULL DEFAULT '',
+          channels_failed TEXT NOT NULL DEFAULT '',
+          channels_skipped TEXT NOT NULL DEFAULT '[]',
+          details TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_alert_dispatch_log_created ON alert_dispatch_log(created_at)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_alert_dispatch_log_user ON alert_dispatch_log(user_id)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_alert_dispatch_log_status ON alert_dispatch_log(status)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

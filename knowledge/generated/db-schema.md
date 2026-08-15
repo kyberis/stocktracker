@@ -15,6 +15,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `ai_logs` | [`src/lib/db/ai-logs.ts`](../../src/lib/db/ai-logs.ts) |
 | `aid_news_cache` | [`src/lib/db/aid-news-cache.ts`](../../src/lib/db/aid-news-cache.ts) |
 | `aid_social_posts` | [`src/lib/db/aid-social-posts.ts`](../../src/lib/db/aid-social-posts.ts) |
+| `alert_dispatch_log` | [`src/lib/db/alerts.ts`](../../src/lib/db/alerts.ts) |
 | `analytics_events` | [`src/lib/db/analytics.ts`](../../src/lib/db/analytics.ts) |
 | `broker_integration_requests` | [`src/lib/db/broker-integration-requests.ts`](../../src/lib/db/broker-integration-requests.ts) |
 | `calendar_events` | [`src/lib/db/calendar-events.ts`](../../src/lib/db/calendar-events.ts) |

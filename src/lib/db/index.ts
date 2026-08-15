@@ -370,7 +370,14 @@ export {
 } from "./feedback";
 export type { ProdOpsFeedbackPreview } from "./feedback";
 
-export type { CronAlert, HoldingForAlert } from "./alerts";
+export type {
+  CronAlert,
+  HoldingForAlert,
+  AlertDispatchStatus,
+  InsertAlertDispatchLogParams,
+  AlertDispatchLogRow,
+  AlertDispatchSummary,
+} from "./alerts";
 export {
   listAlerts,
   listAlertedTickers,
@@ -382,6 +389,9 @@ export {
   updateLastNotified,
   listActiveAlertsForCron,
   getUserHoldingsForAlerts,
+  insertAlertDispatchLog,
+  getAlertDispatchSummary,
+  listAlertDispatchLogs,
 } from "./alerts";
 
 export type { UpsertInvestmentStrategyInput } from "./investment-strategies";

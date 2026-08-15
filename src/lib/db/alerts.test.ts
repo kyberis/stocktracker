@@ -134,7 +134,7 @@ describe("alerts", () => {
       expect(result.alert.createdAt).toBeDefined();
     });
 
-    it("returns alreadyExists when identical active alert is present", async () => {
+    it("returns alreadyExists when identical active threshold alert is present", async () => {
       mockExecute.mockResolvedValueOnce({
         rows: [
           {
@@ -171,6 +171,45 @@ describe("alerts", () => {
       expect(result.alreadyExists).toBe(true);
       expect(result.alert.id).toBe("existing-1");
       expect(mockExecute).toHaveBeenCalledTimes(1);
+      expect(mockExecute.mock.calls[0][0].sql).toContain("alert_type = 'threshold'");
+    });
+
+    it("dedupes percent alerts by basis and value, not threshold", async () => {
+      mockExecute.mockResolvedValueOnce({
+        rows: [
+          {
+            id: "pct-1",
+            ticker: "AAPL",
+            name: "AAPL",
+            condition: "above",
+            threshold: 0,
+            currency: "USD",
+            active: 1,
+            triggered: 0,
+            triggered_at: "",
+            created_at: "2026-01-01",
+            alert_type: "percent_change",
+            percent_basis: "daily",
+            percent_value: 5,
+            is_portfolio_wide: 0,
+            portfolio_id: "",
+          },
+        ],
+      });
+      const result = await alerts.createAlert("user-1", {
+        ticker: "AAPL",
+        name: "AAPL",
+        condition: "above",
+        threshold: 0,
+        currency: "USD",
+        alertType: "percent_change",
+        percentBasis: "daily",
+        percentValue: 5,
+        isPortfolioWide: false,
+        portfolioId: "",
+      });
+      expect(result.alreadyExists).toBe(true);
+      expect(mockExecute.mock.calls[0][0].sql).toContain("percent_basis");
     });
   });
 

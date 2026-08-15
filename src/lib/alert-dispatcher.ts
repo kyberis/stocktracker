@@ -10,8 +10,15 @@ import {
   isFeatureEnabled,
   trackEvent,
 } from "@/lib/db";
-import { canAccessFeature } from "@/lib/subscription";
 import type { NotificationChannel, SubscriptionPlan, PercentBasis } from "@/lib/types";
+
+/** Channels supported for price alerts. WhatsApp is intentionally not supported. */
+export const ALERT_DELIVERY_CHANNELS: readonly NotificationChannel[] = [
+  "email",
+  "push",
+  "telegram",
+  "device",
+] as const;
 
 export interface AlertDispatchContext {
   userId: string;
@@ -46,6 +53,38 @@ export interface PercentAlertPayload {
 
 export type AlertPayload = ThresholdAlertPayload | PercentAlertPayload;
 
+export interface ChannelSkip {
+  channel: NotificationChannel;
+  reason: string;
+}
+
+export interface ChannelFail {
+  channel: NotificationChannel;
+  reason: string;
+}
+
+export interface AlertDispatchResult {
+  channelsRequested: NotificationChannel[];
+  channelsSent: NotificationChannel[];
+  channelsSkipped: ChannelSkip[];
+  channelsFailed: ChannelFail[];
+}
+
+/** Normalize user channel prefs: drop WhatsApp, keep only known delivery channels. */
+export function normalizeAlertChannels(channels: NotificationChannel[] | string[]): NotificationChannel[] {
+  const out: NotificationChannel[] = [];
+  for (const raw of channels) {
+    const mapped = String(raw).toLowerCase() === "whatsapp" ? "telegram" : String(raw);
+    if (
+      (mapped === "email" || mapped === "push" || mapped === "telegram" || mapped === "device") &&
+      !out.includes(mapped)
+    ) {
+      out.push(mapped);
+    }
+  }
+  return out;
+}
+
 function buildChangeDescription(payload: AlertPayload): string {
   if (payload.type === "threshold") {
     const dir = payload.condition === "above" ? "rose above" : "dropped below";
@@ -72,25 +111,32 @@ function buildPushBody(payload: AlertPayload): string {
   return `${name}: ${buildChangeDescription(payload)} — now ${payload.currency} ${payload.currentPrice.toFixed(2)}`;
 }
 
+/**
+ * Dispatch to exactly the channels the user selected (email / push / telegram / device).
+ * WhatsApp is not a delivery path.
+ */
 export async function dispatchAlert(
   ctx: AlertDispatchContext,
-  payload: AlertPayload
-): Promise<{ channelsSent: NotificationChannel[] }> {
-  const sent: NotificationChannel[] = [];
+  payload: AlertPayload,
+): Promise<AlertDispatchResult> {
+  const channelsRequested = normalizeAlertChannels(ctx.alertChannels);
+  const channelsSent: NotificationChannel[] = [];
+  const channelsSkipped: ChannelSkip[] = [];
+  const channelsFailed: ChannelFail[] = [];
 
-  for (const channel of ctx.alertChannels) {
-    const featureKey = channel === "email" ? "alerts-email"
-      : channel === "push" ? "alerts-push"
-      : channel === "telegram" ? "alerts-telegram"
-      : "alerts-device";
-
-    const access = canAccessFeature(featureKey, { plan: ctx.plan, aiCallsThisMonth: 0 });
-    if (!access.allowed) continue;
-
+  for (const channel of channelsRequested) {
     try {
-      if (channel === "email" && ctx.email && ctx.emailVerified) {
+      if (channel === "email") {
+        if (!ctx.email) {
+          channelsSkipped.push({ channel, reason: "missing_email" });
+          continue;
+        }
+        if (!ctx.emailVerified) {
+          channelsSkipped.push({ channel, reason: "email_unverified" });
+          continue;
+        }
         if (payload.type === "threshold") {
-          await sendAlertEmail(ctx.email, {
+          const result = await sendAlertEmail(ctx.email, {
             ticker: payload.ticker,
             name: payload.name,
             condition: payload.condition,
@@ -98,8 +144,12 @@ export async function dispatchAlert(
             currentPrice: payload.currentPrice,
             currency: payload.currency,
           }, ctx.locale, ctx.userId);
+          if (!result.success) {
+            channelsFailed.push({ channel, reason: result.error || "email_send_failed" });
+            continue;
+          }
         } else {
-          await sendPercentAlertEmail(ctx.email, {
+          const result = await sendPercentAlertEmail(ctx.email, {
             ticker: payload.ticker,
             name: payload.name,
             currentPrice: payload.currentPrice,
@@ -108,32 +158,55 @@ export async function dispatchAlert(
             percentBasis: payload.percentBasis,
             isPortfolioWide: payload.isPortfolioWide,
           }, ctx.locale, ctx.userId);
+          if (!result.success) {
+            channelsFailed.push({ channel, reason: result.error || "email_send_failed" });
+            continue;
+          }
         }
-        sent.push("email");
+        channelsSent.push("email");
         trackEvent(ctx.userId, "alert_email_sent", { ticker: payload.ticker });
+        continue;
       }
 
       if (channel === "push") {
         const subs = await listPushSubscriptions(ctx.userId);
+        if (subs.length === 0) {
+          channelsSkipped.push({ channel, reason: "no_push_subscription" });
+          continue;
+        }
+        let delivered = 0;
         for (const sub of subs) {
           const result = await sendPushNotification(
             { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
-            { title: buildPushTitle(payload), body: buildPushBody(payload), url: "/" }
+            { title: buildPushTitle(payload), body: buildPushBody(payload), url: "/" },
           );
           if (result.gone) {
             await deletePushSubscription(ctx.userId, sub.endpoint);
+          } else if (result.success) {
+            delivered++;
           }
         }
-        if (subs.length > 0) {
-          sent.push("push");
-          trackEvent(ctx.userId, "alert_push_sent", { ticker: payload.ticker });
+        if (delivered === 0) {
+          channelsFailed.push({ channel, reason: "push_delivery_failed" });
+          continue;
         }
+        channelsSent.push("push");
+        trackEvent(ctx.userId, "alert_push_sent", { ticker: payload.ticker });
+        continue;
       }
 
-      if (channel === "telegram" && ctx.telegramChatId && await isFeatureEnabled("telegram_enabled")) {
+      if (channel === "telegram") {
+        if (!(await isFeatureEnabled("telegram_enabled"))) {
+          channelsSkipped.push({ channel, reason: "telegram_feature_disabled" });
+          continue;
+        }
+        if (!ctx.telegramChatId) {
+          channelsSkipped.push({ channel, reason: "telegram_not_linked" });
+          continue;
+        }
         const quota = await getTelegramQuota(ctx.userId);
         if (!quota.allowed) {
-          console.warn(`Telegram quota exceeded for user ${ctx.userId}: ${quota.reason}`);
+          channelsSkipped.push({ channel, reason: quota.reason || "telegram_quota" });
           continue;
         }
         const result = await sendTelegramAlert(ctx.telegramChatId, {
@@ -143,24 +216,29 @@ export async function dispatchAlert(
           currency: payload.currency,
           changeDescription: buildChangeDescription(payload),
         });
-        if (result.success) {
-          await incrementTelegramCounter(ctx.userId);
-          sent.push("telegram");
-          trackEvent(ctx.userId, "alert_telegram_sent", { ticker: payload.ticker });
+        if (!result.success) {
+          channelsFailed.push({ channel, reason: result.error || "telegram_send_failed" });
+          continue;
         }
+        await incrementTelegramCounter(ctx.userId);
+        channelsSent.push("telegram");
+        trackEvent(ctx.userId, "alert_telegram_sent", { ticker: payload.ticker });
+        continue;
       }
 
       if (channel === "device") {
         const title = buildPushTitle(payload);
         const message = buildPushBody(payload);
         await createDeviceNotification(ctx.userId, { title, message, ticker: payload.ticker });
-        sent.push("device");
+        channelsSent.push("device");
         trackEvent(ctx.userId, "alert_device_sent", { ticker: payload.ticker });
       }
     } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
       console.error(`Alert dispatch failed for channel ${channel}:`, err);
+      channelsFailed.push({ channel, reason });
     }
   }
 
-  return { channelsSent: sent };
+  return { channelsRequested, channelsSent, channelsSkipped, channelsFailed };
 }
