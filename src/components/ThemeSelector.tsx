@@ -5,6 +5,7 @@ import type { LayoutTheme, SubscriptionPlan } from "@/lib/types";
 import { canAccessTheme, getThemeUpgradeTarget, planDisplayName } from "@/lib/subscription";
 import { useSettings } from "@/lib/settings-context";
 import { useAuth } from "@/lib/auth-context";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { useI18n } from "@/lib/i18n";
 
 interface ThemeOption {
@@ -65,6 +66,7 @@ export default function ThemeSelector() {
   const { dashboardTheme, setDashboardTheme } = useSettings();
   const { user } = useAuth();
   const { t } = useI18n();
+  const studioEnabled = useFeatureFlag("theme_studio_enabled");
   const plan = (user?.plan ?? "free") as SubscriptionPlan;
   const [selected, setSelected] = useState<LayoutTheme>(dashboardTheme);
   const [isMobile, setIsMobile] = useState(false);
@@ -77,17 +79,28 @@ export default function ThemeSelector() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  useEffect(() => {
+    if (!studioEnabled && selected === "studio") {
+      setSelected(dashboardTheme === "studio" ? "default" : dashboardTheme);
+    }
+  }, [studioEnabled, selected, dashboardTheme]);
+
   function handleSelect(theme: LayoutTheme) {
+    if (theme === "studio" && !studioEnabled) return;
     if (!canAccessTheme(theme, plan)) return;
     setSelected(theme);
   }
 
   function handleSave() {
     if (!hasChanges) return;
+    if (selected === "studio" && !studioEnabled) return;
     setDashboardTheme(selected);
   }
 
-  const visibleThemes = isMobile ? THEMES.filter((th) => th.id !== "studio") : THEMES;
+  const visibleThemes = THEMES.filter((th) => {
+    if (th.id === "studio" && (!studioEnabled || isMobile)) return false;
+    return true;
+  });
 
   return (
     <div>

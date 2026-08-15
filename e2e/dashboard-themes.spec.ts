@@ -34,6 +34,12 @@ async function upgradeToProAndSetTheme(
 ) {
   await loginAsAdmin(request);
   await setPlanViaAdmin(request, creds.userId, "pro");
+  if (theme === "studio") {
+    const flagRes = await request.put("/api/admin/feature-flags", {
+      data: { flag: "theme_studio_enabled", enabled: true },
+    });
+    expect(flagRes.status()).toBe(200);
+  }
   await request.post("/api/auth/login", {
     data: { identifier: creds.email, password: creds.password },
   });
@@ -391,9 +397,15 @@ test.describe("Dashboard Themes", () => {
   });
 
   test.describe("Theme Selector in Settings", () => {
-    test("shows theme selector with 4 options", async ({ page, request }) => {
+    test("shows theme selector without Studio when flag is off", async ({ page, request }) => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
+      const adminOk = await loginAsAdmin(request);
+      expect(adminOk).toBe(true);
+      const flagRes = await request.put("/api/admin/feature-flags", {
+        data: { flag: "theme_studio_enabled", enabled: false },
+      });
+      expect(flagRes.status()).toBe(200);
       const creds = await createTestUser(request, true);
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
@@ -406,6 +418,25 @@ test.describe("Dashboard Themes", () => {
       await expect(dialog.getByText(/Default|Predeterminado/).first()).toBeVisible();
       await expect(dialog.getByText("Canvas").first()).toBeVisible();
       await expect(dialog.getByText("Terminal").first()).toBeVisible();
+      await expect(dialog.getByRole("button", { name: /Studio.*theme/i })).toHaveCount(0);
+    });
+
+    test("shows Studio when theme_studio_enabled is on", async ({ page, request }) => {
+      test.setTimeout(45_000);
+      await ensureLoggedOut(request);
+      const adminOk = await loginAsAdmin(request);
+      expect(adminOk).toBe(true);
+      const flagRes = await request.put("/api/admin/feature-flags", {
+        data: { flag: "theme_studio_enabled", enabled: true },
+      });
+      expect(flagRes.status()).toBe(200);
+      const creds = await createTestUser(request, true);
+      await loginViaUI(page, creds.email, creds.password);
+      await dismissOverlays(page);
+
+      await openSettings(page);
+
+      const dialog = page.getByRole("dialog");
       await expect(dialog.getByText("Studio").first()).toBeVisible();
     });
 

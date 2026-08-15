@@ -519,7 +519,11 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "market_data_alpha_vantage",
   "mcp_fmp_proxy",
   "weekly_digest_enabled",
+  "weekly_digest_free_tier_enabled",
+  "lifecycle_activation_email_enabled",
+  "lifecycle_winback_email_enabled",
   "daily_digests_enabled",
+  "telegram_bot_enabled",
   "aid_beta",
   "home_v2",
   "classic_home",
@@ -540,6 +544,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "screening_estebaranz_eval_enabled",
   "portfolio_anomaly_agent",
   "display_invariants",
+  "theme_studio_enabled",
 ]);
 
 export const featureFlagSchema = z.object({

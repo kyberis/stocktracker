@@ -21,7 +21,7 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
 
   const plan: SubscriptionPlan = (user?.plan as SubscriptionPlan) || session.plan || "free";
   let { dashboardTheme } = settings;
-  if (!canAccessTheme(dashboardTheme, plan)) {
+  if (!canAccessTheme(dashboardTheme, plan) || (dashboardTheme === "studio" && !flags.theme_studio_enabled)) {
     dashboardTheme = "default";
     updateUserSettings(session.userId, { dashboardTheme: "default" }).catch(() => {});
   }
@@ -54,6 +54,13 @@ export const PUT = withMetrics("/api/user-settings", async (req: NextRequest) =>
   const result = await parseBody(req, userSettingsSchema);
   if (!result.success) return result.error;
   const updates = result.data;
+
+  if (updates.dashboardTheme === "studio") {
+    const flags = await resolveAllFlagsForUser(session.userId);
+    if (!flags.theme_studio_enabled) {
+      return NextResponse.json({ error: "Studio theme is not available" }, { status: 403 });
+    }
+  }
 
   const next = await updateUserSettings(session.userId, updates);
   const res = NextResponse.json({

@@ -9,6 +9,7 @@ import { useSettings } from "@/lib/settings-context";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import TierIcon from "@/components/TierIcon";
 import ThemeSelector from "@/components/ThemeSelector";
+import { useCommerceEnabled } from "@/lib/commerce";
 import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
 import type { SubscriptionPlan } from "@/lib/types";
 
@@ -22,6 +23,7 @@ export default function SettingsModal({ isOpen, onClose, onResetPortfolio }: Set
   const { t } = useI18n();
   const { user } = useAuth();
   const { defaultCurrency, setDefaultCurrency } = useSettings();
+  const commerceEnabled = useCommerceEnabled();
   const track = useTrack();
   const openedRef = useRef(false);
 
@@ -46,28 +48,30 @@ export default function SettingsModal({ isOpen, onClose, onResetPortfolio }: Set
       <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="settings-modal-title" className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl max-h-[90vh] overflow-y-auto">
         <h2 id="settings-modal-title" className="text-xl font-bold text-gray-900 dark:text-white mb-5">{t("settings")}</h2>
 
-        {/* Plan badge + compact upgrade nudge */}
-        <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-3 bg-gray-50 dark:bg-slate-800/40 flex items-center justify-between gap-3">
-          <p className="text-sm text-gray-700 dark:text-slate-200">
-            {t("currentPlan")}:{" "}
-            <span className="inline-flex items-center gap-1 font-semibold">
-              <TierIcon plan={plan} size={14} />
-              {isPro ? t("planPro") : t("planFree")}
-            </span>
-          </p>
-          {!isPro && (
-            <Link
-              href="/profile"
-              onClick={onClose}
-              className="shrink-0 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
-            >
-              {t("upgradeToPro")} →
-            </Link>
-          )}
-        </div>
+        {/* Plan badge + upgrade nudge — only while commerce / paid tiers are live */}
+        {commerceEnabled && (
+          <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-3 bg-gray-50 dark:bg-slate-800/40 flex items-center justify-between gap-3">
+            <p className="text-sm text-gray-700 dark:text-slate-200">
+              {t("currentPlan")}:{" "}
+              <span className="inline-flex items-center gap-1 font-semibold">
+                <TierIcon plan={plan} size={14} />
+                {isPro ? t("planPro") : t("planFree")}
+              </span>
+            </p>
+            {!isPro && (
+              <Link
+                href="/profile"
+                onClick={onClose}
+                className="shrink-0 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
+                {t("upgradeToPro")} →
+              </Link>
+            )}
+          </div>
+        )}
 
         {/* Theme selector */}
-        <div className="mt-5">
+        <div className={commerceEnabled ? "mt-5" : undefined}>
           <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-2">{t("settingsQuickPreferences")}</p>
           <label className="block text-sm text-gray-500 dark:text-slate-400 mb-2">{t("dashboardTheme")}</label>
           <ThemeSelector />

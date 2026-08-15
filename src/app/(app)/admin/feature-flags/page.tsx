@@ -177,6 +177,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "Sampled production check that home totals stay internally consistent (P/L identity, day-change %, invested+cash, sleeves). Logs invariant codes only — no amounts. Off by default.",
     group: "Features",
   },
+  theme_studio_enabled: {
+    label: "Studio dashboard theme",
+    description:
+      "Show the Studio layout theme in Settings (sidebar + glass). Code stays in the app; when off, Studio is hidden and users on Studio fall back to Default. Off by default.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

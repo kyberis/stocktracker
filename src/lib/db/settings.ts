@@ -69,7 +69,8 @@ export type PlatformFeature =
   | "screening_analyze_force_serper_jina_enabled"
   | "screening_estebaranz_eval_enabled"
   | "portfolio_anomaly_agent"
-  | "display_invariants";
+  | "display_invariants"
+  | "theme_studio_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_enabled",
@@ -505,6 +506,7 @@ export const ALL_PLATFORM_FEATURES = [
   "screening_estebaranz_eval_enabled",
   "portfolio_anomaly_agent",
   "display_invariants",
+  "theme_studio_enabled",
 ] as const satisfies readonly PlatformFeature[];
 
 type MissingPlatformFeature = Exclude<

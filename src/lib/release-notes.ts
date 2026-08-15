@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.178",
+    date: "2026-08-16",
+    title: "Studio theme behind feature flag",
+    titleTranslations: {
+      es: "Tema Studio tras feature flag",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The Studio dashboard theme is hidden by default behind the theme_studio_enabled feature flag (Admin → Feature Flags). Code remains; enable the flag to show Studio again in Settings.",
+        translations: {
+          es: "El tema Studio del panel queda oculto por defecto tras el feature flag theme_studio_enabled (Admin → Feature Flags). El código permanece; activa el flag para volver a mostrar Studio en Ajustes.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Settings no longer shows the current-plan badge or Upgrade to Trefolio link while commerce_enabled is off (everyone is on complimentary Trefolio Pro).",
+        translations: {
+          es: "En Ajustes ya no aparecen el plan actual ni el enlace Pasar a Trefolio mientras commerce_enabled está desactivado (todos están en Trefolio Pro complimentary).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.177",
     date: "2026-08-15",
     title: "Reliable price alerts + admin dispatch log",

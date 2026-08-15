@@ -48,6 +48,7 @@ Flags from `ALL_PLATFORM_FEATURES` in [`src/lib/db/settings.ts`](../../src/lib/d
 - `support_chat_enabled`
 - `telegram_bot_enabled`
 - `telegram_enabled`
+- `theme_studio_enabled`
 - `tool_accounts_enabled`
 - `tool_dividends_enabled`
 - `tool_performance_enabled`
