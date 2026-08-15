@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import Link from "next/link";
 import { TabSkeleton } from "../shared";
 import type {
+  CodeOwnedPreview,
   EmailFlow,
   EnrichedCronMeta,
   EnrichedEmailFlowsResponse,
@@ -35,6 +36,43 @@ const KIND_LABEL: Record<FlowNodeKind, string> = {
   parallel: "Parallel",
   note: "Note",
 };
+
+function EmailToggle({
+  nodeId,
+  enabled,
+  busy,
+  onToggle,
+  label,
+}: {
+  nodeId: string;
+  enabled: boolean;
+  busy?: boolean;
+  onToggle: (nodeId: string, enabled: boolean) => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={enabled}
+      aria-label={`${enabled ? "Disable" : "Enable"} ${label}`}
+      disabled={busy}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle(nodeId, !enabled);
+      }}
+      className={`relative inline-flex h-6 w-11 min-h-6 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:opacity-50 ${
+        enabled ? "bg-emerald-600" : "bg-gray-300 dark:bg-slate-600"
+      }`}
+    >
+      <span
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
+          enabled ? "translate-x-5" : "translate-x-0.5"
+        }`}
+      />
+    </button>
+  );
+}
 
 function nodeKindClass(kind: FlowNodeKind): string {
   switch (kind) {
@@ -69,12 +107,12 @@ function NodeCard({
   node,
   selected,
   onSelect,
-  flagOff,
+  emailOff,
 }: {
   node: FlowNode;
   selected: boolean;
   onSelect: (id: string) => void;
-  flagOff?: boolean;
+  emailOff?: boolean;
 }) {
   return (
     <button
@@ -89,8 +127,10 @@ function NodeCard({
         <span className="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--muted)]">
           {KIND_LABEL[node.kind]}
         </span>
-        {flagOff ? (
-          <span className="text-[10px] font-medium text-amber-700 dark:text-amber-400">Flag off</span>
+        {node.kind === "email" ? (
+          <span className={`text-[10px] font-medium ${emailOff ? "text-amber-700 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+            {emailOff ? "Off" : "On"}
+          </span>
         ) : null}
       </div>
       <div className="mt-0.5 text-sm font-semibold text-[color:var(--foreground)]">{node.label}</div>
@@ -107,12 +147,12 @@ function FlowGraph({
   flow,
   selectedId,
   onSelect,
-  flags,
+  nodeEnabled,
 }: {
   flow: EmailFlow;
   selectedId: string | null;
   onSelect: (id: string) => void;
-  flags: Record<string, boolean>;
+  nodeEnabled: Record<string, boolean>;
 }) {
   const byId = useMemo(() => new Map(flow.nodes.map((node) => [node.id, node])), [flow.nodes]);
 
@@ -122,7 +162,7 @@ function FlowGraph({
     const node = byId.get(id);
     if (!node) return null;
     const children = node.children ?? [];
-    const flagOff = node.featureFlag ? flags[node.featureFlag] === false : false;
+    const emailOff = node.kind === "email" ? nodeEnabled[node.id] === false : false;
 
     return (
       <div className="flex flex-col items-center">
@@ -130,7 +170,7 @@ function FlowGraph({
           node={node}
           selected={selectedId === node.id}
           onSelect={onSelect}
-          flagOff={flagOff}
+          emailOff={emailOff}
         />
         {children.length === 1 ? (
           <>
@@ -202,20 +242,30 @@ function PreviewFrame({ html, title }: { html: string; title: string }) {
 
 function NodeDetail({
   node,
-  flags,
   crons,
   template,
+  codePreview,
+  enabled,
+  toggling,
+  onToggle,
 }: {
   node: FlowNode;
-  flags: Record<string, boolean>;
   crons: Record<string, EnrichedCronMeta>;
   template?: EnrichedTemplatePreview;
+  codePreview?: CodeOwnedPreview;
+  enabled?: boolean;
+  toggling?: boolean;
+  onToggle: (nodeId: string, enabled: boolean) => void;
 }) {
   const [lang, setLang] = useState<"en" | "es">("en");
   const cron = node.cronId ? crons[node.cronId] : undefined;
-  const flagOn = node.featureFlag ? flags[node.featureFlag] : undefined;
-  const subject = lang === "es" ? template?.subjectEs || template?.subject : template?.subject;
-  const html = lang === "es" ? template?.bodyHtmlEs || template?.bodyHtml : template?.bodyHtml;
+  const previewSubject = lang === "es"
+    ? (template?.subjectEs || template?.subject || codePreview?.subjectEs || codePreview?.subject)
+    : (template?.subject || codePreview?.subject);
+  const previewHtml = lang === "es"
+    ? (template?.bodyHtmlEs || template?.bodyHtml || codePreview?.bodyHtmlEs || codePreview?.bodyHtml)
+    : (template?.bodyHtml || codePreview?.bodyHtml);
+  const hasPreview = Boolean(previewHtml);
 
   return (
     <aside className="card p-4 space-y-4" aria-live="polite">
@@ -224,8 +274,28 @@ function NodeDetail({
           {KIND_LABEL[node.kind]}
         </p>
         <h3 className="text-base font-semibold text-[color:var(--foreground)]">{node.label}</h3>
-        <p className="mt-1 text-sm text-[color:var(--muted)]">{node.description}</p>
+        <p className="mt-1 text-sm text-[color:var(--muted)]">{node.purpose || node.description}</p>
       </div>
+
+      {node.kind === "email" ? (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-[color:var(--border)] px-3 py-2">
+          <div>
+            <p className="text-sm font-medium text-[color:var(--foreground)]">{enabled ? "Sending" : "Paused"}</p>
+            <p className="text-xs text-[color:var(--muted)]">
+              {node.featureFlag
+                ? `Also stored as ${node.featureFlag}`
+                : "Toggle applies immediately to new sends"}
+            </p>
+          </div>
+          <EmailToggle
+            nodeId={node.id}
+            enabled={enabled !== false}
+            busy={toggling}
+            onToggle={onToggle}
+            label={node.label}
+          />
+        </div>
+      ) : null}
 
       {node.conditionSummary ? (
         <div>
@@ -235,26 +305,6 @@ function NodeDetail({
           <pre className="text-[11px] whitespace-pre-wrap rounded-lg border border-[color:var(--border)] bg-[color:var(--page-background)] p-2 text-[color:var(--foreground)]">
             {node.conditionSummary}
           </pre>
-        </div>
-      ) : null}
-
-      {node.featureFlag ? (
-        <div>
-          <h4 className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--muted)] mb-1">
-            Feature flag
-          </h4>
-          <p className="text-sm">
-            <code className="font-mono text-xs">{node.featureFlag}</code>
-            <span className="ml-2 text-xs font-medium">
-              {flagOn ? "On" : "Off"}
-            </span>
-          </p>
-          <Link
-            href="/admin/feature-flags"
-            className="mt-1 inline-block text-xs text-[color:var(--accent)] underline underline-offset-2 min-h-11 leading-[44px] sm:min-h-0 sm:leading-normal"
-          >
-            Open Feature Flags
-          </Link>
         </div>
       ) : null}
 
@@ -300,22 +350,28 @@ function NodeDetail({
         </p>
       ) : null}
 
-      {template ? (
+      {hasPreview ? (
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
             <h4 className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--muted)]">
-              Template preview
+              Email body
             </h4>
-            <Link
-              href="/admin/email-templates"
-              className="text-xs text-[color:var(--accent)] underline underline-offset-2"
-            >
-              Edit templates
-            </Link>
+            {template ? (
+              <Link
+                href="/admin/email-templates"
+                className="text-xs text-[color:var(--accent)] underline underline-offset-2"
+              >
+                Edit templates
+              </Link>
+            ) : (
+              <span className="text-[10px] text-[color:var(--muted)]">Code-owned preview</span>
+            )}
           </div>
-          <p className="text-sm font-medium text-[color:var(--foreground)]">{template.name}</p>
+          {template ? (
+            <p className="text-sm font-medium text-[color:var(--foreground)]">{template.name}</p>
+          ) : null}
           <p className="text-xs text-[color:var(--muted)]">
-            Subject ({lang.toUpperCase()}): {subject || "—"}
+            Subject ({lang.toUpperCase()}): {previewSubject || "—"}
           </p>
           <div className="flex rounded-lg border border-[color:var(--border)] overflow-hidden w-fit" role="group" aria-label="Preview language">
             {(["en", "es"] as const).map((code) => (
@@ -334,7 +390,7 @@ function NodeDetail({
               </button>
             ))}
           </div>
-          <PreviewFrame html={html || ""} title={`${template.name} preview (${lang})`} />
+          <PreviewFrame html={previewHtml || ""} title={`${node.label} preview (${lang})`} />
           {template.stats ? (
             <dl className="grid grid-cols-2 gap-2 text-xs">
               <div>
@@ -356,9 +412,11 @@ function NodeDetail({
             </dl>
           ) : null}
         </div>
-      ) : node.templateSlug ? (
+      ) : node.kind === "email" ? (
         <p className="text-xs text-[color:var(--muted)]">
-          Template <code>{node.templateSlug}</code> is not in the database yet.
+          {node.templateSlug
+            ? `Template ${node.templateSlug} is not in the database yet.`
+            : "No preview available."}
         </p>
       ) : null}
     </aside>
@@ -371,6 +429,7 @@ export default function EmailFlowsTab() {
   const [error, setError] = useState("");
   const [selectedFlowId, setSelectedFlowId] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -392,6 +451,37 @@ export default function EmailFlowsTab() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleToggle = useCallback(async (nodeId: string, enabled: boolean) => {
+    setTogglingId(nodeId);
+    setData((current) =>
+      current ? { ...current, nodeEnabled: { ...current.nodeEnabled, [nodeId]: enabled } } : current,
+    );
+    try {
+      const res = await fetch("/api/admin/email-flows", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nodeId, enabled }),
+      });
+      if (!res.ok) {
+        setData((current) =>
+          current ? { ...current, nodeEnabled: { ...current.nodeEnabled, [nodeId]: !enabled } } : current,
+        );
+      } else {
+        const payload = await res.json().catch(() => null);
+        if (payload && typeof payload.enabled === "boolean") {
+          setData((current) =>
+            current ? { ...current, nodeEnabled: { ...current.nodeEnabled, [nodeId]: payload.enabled } } : current,
+          );
+        }
+      }
+    } catch {
+      setData((current) =>
+        current ? { ...current, nodeEnabled: { ...current.nodeEnabled, [nodeId]: !enabled } } : current,
+      );
+    }
+    setTogglingId(null);
+  }, []);
 
   const flow = data?.flows.find((item) => item.id === selectedFlowId) ?? data?.flows[0];
   const selectedNode =
@@ -418,7 +508,7 @@ export default function EmailFlowsTab() {
       <div>
         <h2 className="text-lg font-semibold text-[color:var(--foreground)]">Email Flows</h2>
         <p className="text-sm text-[color:var(--muted)] mt-1">
-          Read-only map of current automations. Edit templates and flags elsewhere; this page does not create flows.
+          Map of outbound automations. Turn each email on or off here — you do not need Feature Flags for that.
         </p>
       </div>
 
@@ -452,24 +542,94 @@ export default function EmailFlowsTab() {
 
       <p className="text-sm text-[color:var(--muted)]">{flow.description}</p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-4 items-start">
         <div className="card p-4">
           <FlowGraph
             flow={flow}
             selectedId={selectedNode?.id ?? null}
             onSelect={setSelectedNodeId}
-            flags={data.flags}
+            nodeEnabled={data.nodeEnabled}
           />
         </div>
         {selectedNode ? (
           <NodeDetail
             node={selectedNode}
-            flags={data.flags}
             crons={data.crons}
             template={selectedNode.templateSlug ? data.templates[selectedNode.templateSlug] : undefined}
+            codePreview={selectedNode.hardcodedSender ? data.codePreviews[selectedNode.hardcodedSender] : undefined}
+            enabled={data.nodeEnabled[selectedNode.id]}
+            toggling={togglingId === selectedNode.id}
+            onToggle={handleToggle}
           />
         ) : null}
       </div>
+
+      <section className="card overflow-hidden" aria-labelledby="all-emails-heading">
+        <div className="px-4 py-3 border-b border-[color:var(--border)]">
+          <h3 id="all-emails-heading" className="text-sm font-semibold text-[color:var(--foreground)]">
+            All emails
+          </h3>
+          <p className="text-xs text-[color:var(--muted)] mt-0.5">
+            Every automated and library email, with why it exists. Click a row to see the body.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-left text-[color:var(--muted)] border-b border-[color:var(--border)] bg-[color:var(--page-background)]">
+                <th className="p-3 font-medium">Email</th>
+                <th className="p-3 font-medium">Used for</th>
+                <th className="p-3 font-medium">Flow</th>
+                <th className="p-3 font-medium">On</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.flows.flatMap((item) =>
+                item.nodes
+                  .filter((node) => node.kind === "email")
+                  .map((node) => {
+                    const on = data.nodeEnabled[node.id] !== false;
+                    const selected = selectedNode?.id === node.id && flow.id === item.id;
+                    return (
+                      <tr
+                        key={`${item.id}-${node.id}`}
+                        className={`border-b border-[color:var(--border)] ${
+                          selected ? "bg-[color:var(--accent)]/10" : ""
+                        }`}
+                      >
+                        <td className="p-3 align-top">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedFlowId(item.id);
+                              setSelectedNodeId(node.id);
+                            }}
+                            className="text-left font-medium text-[color:var(--foreground)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded"
+                          >
+                            {node.label}
+                          </button>
+                        </td>
+                        <td className="p-3 align-top text-[color:var(--muted)] max-w-md">
+                          {node.purpose || node.description}
+                        </td>
+                        <td className="p-3 align-top text-[color:var(--muted)]">{item.name}</td>
+                        <td className="p-3 align-top">
+                          <EmailToggle
+                            nodeId={node.id}
+                            enabled={on}
+                            busy={togglingId === node.id}
+                            onToggle={handleToggle}
+                            label={node.label}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  }),
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }

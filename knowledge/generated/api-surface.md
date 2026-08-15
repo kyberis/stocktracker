@@ -31,7 +31,7 @@
 | `/api/admin/cron-stats` | GET | [`src/app/api/admin/cron-stats/route.ts`](../../src/app/api/admin/cron-stats/route.ts) |
 | `/api/admin/digest-senders` | GET, PUT | [`src/app/api/admin/digest-senders/route.ts`](../../src/app/api/admin/digest-senders/route.ts) |
 | `/api/admin/docs` | GET, POST | [`src/app/api/admin/docs/route.ts`](../../src/app/api/admin/docs/route.ts) |
-| `/api/admin/email-flows` | GET | [`src/app/api/admin/email-flows/route.ts`](../../src/app/api/admin/email-flows/route.ts) |
+| `/api/admin/email-flows` | GET, PUT | [`src/app/api/admin/email-flows/route.ts`](../../src/app/api/admin/email-flows/route.ts) |
 | `/api/admin/email-sends` | GET | [`src/app/api/admin/email-sends/route.ts`](../../src/app/api/admin/email-sends/route.ts) |
 | `/api/admin/email-templates` | GET, POST | [`src/app/api/admin/email-templates/route.ts`](../../src/app/api/admin/email-templates/route.ts) |
 | `/api/admin/email-templates/[id]` | GET, PUT, DELETE | [`src/app/api/admin/email-templates/[id]/route.ts`](../../src/app/api/admin/email-templates/[id]/route.ts) |

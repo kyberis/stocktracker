@@ -290,6 +290,7 @@ Week: ${weekStart} to ${weekEnd}`;
           subject: digestSubject,
           html,
           userId: user.id,
+          automationKey: "digest-email",
         });
 
         const emailStatus = emailResult.suppressed ? "suppressed" : emailResult.success ? "sent" : "failed";

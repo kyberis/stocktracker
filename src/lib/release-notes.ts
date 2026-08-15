@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.175",
+    date: "2026-08-15",
+    title: "Toggle emails from the admin flow map",
+    titleTranslations: {
+      es: "Activar emails desde el mapa de flujos",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Admin Email Flows can turn each email on or off on the same page, lists every template with why it exists, and previews code-owned bodies such as signup confirmation.",
+        translations: {
+          es: "Admin Email Flows permite prender o apagar cada email en la misma página, lista todas las plantillas con su propósito y muestra el cuerpo de emails en código como la confirmación de alta.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.174",
     date: "2026-08-15",
     title: "Admin email flow map",
