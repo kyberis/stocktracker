@@ -142,6 +142,12 @@ async function sendRefundTemplateEmail(
   const html = applyTokens(htmlRaw, vars);
   const text = applyTokens(textRaw || htmlToPlainText(htmlRaw), vars);
 
+  const automationKey =
+    slug === "refund-request-approved"
+      ? "refund-approved"
+      : slug === "refund-request-rejected"
+        ? "refund-rejected"
+        : "refund-received";
   const result = await sendEmail({
     to: input.email,
     subject,
@@ -149,6 +155,7 @@ async function sendRefundTemplateEmail(
     text,
     userId: input.userId,
     transactional: true,
+    automationKey,
   });
 
   await logEmailSend({

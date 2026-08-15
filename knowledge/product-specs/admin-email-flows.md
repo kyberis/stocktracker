@@ -4,7 +4,7 @@
 
 ## 1. Summary
 
-Staff-only observability for outbound email automations. Admins see each journey as a flowchart (trigger → wait/condition → email), with live feature-flag state, cron schedule, template or hardcoded-sender preview, and `email_sends` window stats. It does not create or edit flows.
+Staff-only observability and control for outbound email automations. Admins see each journey as a flowchart, can turn every email on or off from this page, and can preview the live body (DB template or code-owned HTML) plus why the email exists.
 
 ## 2. Status
 
@@ -37,23 +37,25 @@ Types: `EmailFlow`, `FlowNode`, `FlowStatus` in the registry.
 
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
-| GET | `/api/admin/email-flows` | admin | Admin | Registry + live flags, cron metadata, template HTML, 7d/30d send stats. Read-only. |
+| GET | `/api/admin/email-flows` | admin | Admin | Registry + flags, crons, template/code previews, per-email on/off, 7d/30d stats. |
+| PUT | `/api/admin/email-flows` | admin | Admin | `{ nodeId, enabled }` toggles one email. Flag-gated nodes write the existing platform flag; others write `email_node_toggles`. |
 
-Input/output: no request body. JSON `{ flows, flags, crons, templates }`.
+Input/output: GET JSON `{ flows, flags, crons, templates, nodeEnabled, codePreviews }`.
 
 ## 6. UI surface
 
 - Page: `/admin/email-flows`
 - Nav: Admin → Messaging → Email Flows
-- Components: `EmailFlowsTab` (flow picker, CSS flowchart, node detail with EN/ES preview)
+- Components: `EmailFlowsTab` (flow picker, flowchart, per-email toggles, all-emails catalog, EN/ES body preview)
 - Context consumers: none (admin session only)
 
 ## 7. Business logic
 
 - Diagrams are documented in `EMAIL_FLOWS`, not inferred from cron SQL at runtime.
-- Flow status: `paused` if any referenced cron is paused; else `flag_off` / `enabled` from `gatingFlags`; else `always_on`.
-- Template-backed nodes show DB subject/body and `email_sends` aggregates. Hardcoded senders point at helpers in `src/lib/email.ts` (or `weekly-digest-email.ts`).
-- v1 catalog: onboarding, winback, weekly digest, trial invite/expire, price alerts, event-triggered emails.
+- Every `kind: email` node is toggleable on this page. `sendEmail({ automationKey })` suppresses sends when the node is off.
+- Nodes with `featureFlag` write that flag (so Feature Flags stays in sync). Others persist in `platform_settings.email_node_toggles`.
+- Hardcoded senders show a sample body via `getCodeOwnedEmailPreview`. Template nodes use DB HTML.
+- Catalog: onboarding, winback, weekly digest, trial, alerts, event-triggered, and the seeded template library.
 
 ## 8. External dependencies
 

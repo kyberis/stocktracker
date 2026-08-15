@@ -15,6 +15,12 @@ vi.mock("resend", () => ({
   })),
 }));
 
+vi.mock("@/lib/email-flows/toggles", () => ({
+  isEmailNodeEnabled: vi.fn().mockResolvedValue(true),
+  setEmailNodeEnabled: vi.fn(),
+  getEmailNodeEnabledMap: vi.fn().mockResolvedValue({}),
+}));
+
 vi.mock("@/lib/db", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/db")>();
   return {
@@ -39,6 +45,7 @@ import {
   sendWelcomeEmail,
   sendBifolioUpgradeEmail,
   sendTrefolioUpgradeEmail,
+  getCodeOwnedEmailPreview,
   TEST_VERIFICATION_TOKEN,
 } from "./email";
 
@@ -449,6 +456,15 @@ describe("email", () => {
         success: false,
         error: "Trefolio upgrade failed",
       });
+    });
+  });
+
+  describe("getCodeOwnedEmailPreview", () => {
+    it("returns subject and HTML for signup confirmation", () => {
+      const preview = getCodeOwnedEmailPreview("sendVerificationEmail", "en");
+      expect(preview.subject.length).toBeGreaterThan(0);
+      expect(preview.html).toContain("trefolio");
+      expect(preview.html).toContain("PREVIEW");
     });
   });
 });

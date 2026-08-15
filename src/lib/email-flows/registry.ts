@@ -37,6 +37,8 @@ export interface FlowNode {
   kind: FlowNodeKind;
   label: string;
   description: string;
+  /** Why this email exists — shown in the admin catalog. */
+  purpose?: string;
   conditionSummary?: string;
   templateSlug?: string;
   hardcodedSender?: HardcodedEmailSender;
@@ -79,6 +81,8 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Confirm your email",
         description: "Transactional verification link. Credentials signup only; OAuth/IdP skip this.",
+        purpose:
+          "Proves the signup email is real so the user can unlock verified-only features. Credentials signup only — Google, Apple, and IdP skip this.",
         hardcodedSender: "sendVerificationEmail",
         bodySource: "code",
         transactional: true,
@@ -97,6 +101,8 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         label: "Welcome",
         description:
           "Hardcoded welcome from sendWelcomeEmail. The seeded welcome-free-with-stocks template is not the live send path.",
+        purpose:
+          "First hello after signup: what trefolio does and a CTA to import or add holdings. Sent in parallel with the user already being in the app.",
         hardcodedSender: "sendWelcomeEmail",
         bodySource: "code",
         transactional: false,
@@ -131,6 +137,8 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Invite to add a holding",
         description: "DB-seeded lifecycle template inviting the user to import or add a first position.",
+        purpose:
+          "If someone signed up but still has zero holdings after 48–72 hours, invite them to add or import a first position.",
         templateSlug: "welcome-no-stocks",
         bodySource: "template",
         featureFlag: "lifecycle_activation_email_enabled",
@@ -183,6 +191,8 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         label: "AI analysis feature drip",
         description:
           "v1 re-engagement uses the feature-ai-analysis template. Swap the cron slug to any other feature-* template without changing send/dedupe logic.",
+        purpose:
+          "Bring back users who already have holdings but have been inactive 14+ days, by highlighting AI analysis.",
         templateSlug: "feature-ai-analysis",
         bodySource: "template",
         featureFlag: "lifecycle_winback_email_enabled",
@@ -226,6 +236,8 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         label: "Weekly portfolio digest",
         description:
           "HTML is built in weekly-digest-email.ts. Sends are logged to email_sends without a template_id, so slug stats stay empty.",
+        purpose:
+          "Monday portfolio recap (AI summary + week stats) for opted-in users with holdings. This toggle also gates the home digest card via weekly_digest_enabled.",
         hardcodedSender: "buildWeeklyDigestEmailHtml",
         bodySource: "code",
         featureFlag: "weekly_digest_enabled",
@@ -268,6 +280,8 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         label: "Trial invitation",
         description:
           "Live body is sendTrialInvitationEmail. Sends are attributed to the trial-invitation template for stats.",
+        purpose:
+          "Invite eligible free users (7–8 days after signup, with holdings or transactions) to start a 7-day Pro trial. Does not turn commerce or the trial product off.",
         hardcodedSender: "sendTrialInvitationEmail",
         templateSlug: "trial-invitation",
         bodySource: "code",
@@ -290,10 +304,11 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         label: "Trial expired",
         description:
           "Downgrades to free, then sendTrialExpiredEmail. Seeded trial-expired template is not the live body.",
+        purpose:
+          "Tell the user the Pro trial ended and invite them to subscribe. Turning this off skips the email only — the downgrade still runs.",
         hardcodedSender: "sendTrialExpiredEmail",
         templateSlug: "trial-expired",
         bodySource: "code",
-        featureFlag: "pro_trial_enabled",
         cronId: "trial-expiration",
         transactional: false,
         logsToEmailSends: false,
@@ -328,6 +343,7 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Price alert",
         description: "Hardcoded transactional email from sendAlertEmail.",
+        purpose: "Notify the user that a price target they set was crossed, with current price and a dashboard link.",
         hardcodedSender: "sendAlertEmail",
         bodySource: "code",
         cronId: "check-alerts",
@@ -339,6 +355,7 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Percent alert",
         description: "Hardcoded transactional email from sendPercentAlertEmail.",
+        purpose: "Notify the user that a holding (or the whole portfolio) moved by their chosen percent.",
         hardcodedSender: "sendPercentAlertEmail",
         bodySource: "code",
         cronId: "check-alerts",
@@ -369,6 +386,8 @@ export const EMAIL_FLOWS: EmailFlow[] = [
           "account-delete",
           "broker-request",
           "refund-received",
+          "refund-approved",
+          "refund-rejected",
         ],
       },
       {
@@ -376,6 +395,7 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "First broker sync complete",
         description: "Transactional confirmation after the first SnapTrade/broker sync finishes.",
+        purpose: "Confirm that the first broker sync imported positions so the user knows the portfolio is live.",
         hardcodedSender: "sendFirstSyncCompleteEmail",
         bodySource: "code",
         transactional: true,
@@ -386,6 +406,7 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Bifolio upgrade",
         description: "Hardcoded upgrade mail. Seeded upgrade-bifolio is available for admin send.",
+        purpose: "Celebrate a Bifolio upgrade and point the user at alerts and starter-tier features.",
         hardcodedSender: "sendBifolioUpgradeEmail",
         templateSlug: "upgrade-bifolio",
         bodySource: "code",
@@ -397,6 +418,7 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Trefolio upgrade",
         description: "Hardcoded upgrade mail. Seeded upgrade-trefolio is available for admin send.",
+        purpose: "Celebrate a Trefolio upgrade and highlight Pro tools (fundamentals, screener, simulator).",
         hardcodedSender: "sendTrefolioUpgradeEmail",
         templateSlug: "upgrade-trefolio",
         bodySource: "code",
@@ -408,6 +430,7 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Membership grant invite",
         description: "Admin-granted Pro access invitation.",
+        purpose: "Invite a user to activate complimentary Pro that an admin granted.",
         hardcodedSender: "sendMembershipGrantInvitationEmail",
         bodySource: "code",
         transactional: true,
@@ -418,6 +441,7 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Feedback auto-ack",
         description: "Automated acknowledgement when feedback is submitted.",
+        purpose: "Confirm we received their feedback so they know it is in the queue.",
         hardcodedSender: "sendFeedbackAutoAckEmail",
         bodySource: "code",
         transactional: true,
@@ -428,6 +452,7 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Feedback completion",
         description: "Admin-approved completion email after a feedback ticket is resolved.",
+        purpose: "Close the loop after support handles feedback. The body is written by an admin, not a fixed template.",
         hardcodedSender: "sendFeedbackCompletionEmail",
         bodySource: "code",
         transactional: true,
@@ -438,6 +463,7 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Trustpilot follow-up",
         description: "Sent after a high satisfaction-survey rating.",
+        purpose: "Thank 4–5 star survey respondents and invite a Trustpilot review.",
         hardcodedSender: "sendSatisfactionTrustpilotEmail",
         bodySource: "code",
         transactional: false,
@@ -448,6 +474,7 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Confirm account deletion",
         description: "Transactional confirmation link before permanent delete.",
+        purpose: "Ask the user to confirm account deletion via a short-lived link. Required for passwordless accounts.",
         hardcodedSender: "sendAccountDeletionEmail",
         bodySource: "code",
         transactional: true,
@@ -458,6 +485,7 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Broker integration request received",
         description: "Confirms a user-submitted broker request.",
+        purpose: "Ack that we received a request to add a broker to the import hub.",
         templateSlug: "broker-integration-request-received",
         bodySource: "template",
         transactional: true,
@@ -468,14 +496,130 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         kind: "email",
         label: "Refund request received",
         description: "Ack for a refund request. Approved/rejected variants use refund-request-approved and refund-request-rejected.",
+        purpose: "Confirm we received a refund request and that the team will review it.",
         templateSlug: "refund-request-received",
+        bodySource: "template",
+        transactional: true,
+        logsToEmailSends: true,
+      },
+      {
+        id: "refund-approved",
+        kind: "email",
+        label: "Refund approved",
+        description: "Sent when an admin approves a refund request.",
+        purpose: "Tell the user the refund was approved.",
+        templateSlug: "refund-request-approved",
+        bodySource: "template",
+        transactional: true,
+        logsToEmailSends: true,
+      },
+      {
+        id: "refund-rejected",
+        kind: "email",
+        label: "Refund rejected",
+        description: "Sent when an admin rejects a refund request.",
+        purpose: "Tell the user the refund was not approved.",
+        templateSlug: "refund-request-rejected",
         bodySource: "template",
         transactional: true,
         logsToEmailSends: true,
       },
     ],
   },
+  {
+    id: "library",
+    name: "Template library",
+    description:
+      "Seeded templates that are not on an automatic cron (except feature-ai-analysis, used by winback). Available for admin send and future drips.",
+    entryNodeId: "library-root",
+    nodes: [
+      {
+        id: "library-root",
+        kind: "trigger",
+        label: "Admin send / future drip",
+        description: "These templates exist in email_templates. They do not fire on a dedicated cron unless noted.",
+        children: [
+          "welcome-free-with-stocks",
+          "referral-program",
+          "feature-real-time-quotes",
+          "feature-dividend-tracking",
+          "feature-price-alerts",
+          "feature-broker-import",
+          "feature-fundamentals",
+          "feature-stock-screener",
+          "feature-tax-reports",
+          "feature-portfolio-simulator",
+          "feature-net-worth",
+          "feature-crypto",
+          "feature-moat-screener",
+        ],
+      },
+      {
+        id: "welcome-free-with-stocks",
+        kind: "email",
+        label: "Welcome — free with stocks",
+        description: "Seeded voucher welcome. Not the live sendWelcomeEmail path.",
+        purpose: "Optional follow-up for free users who already added holdings (voucher / upgrade nudge). Not auto-sent today.",
+        templateSlug: "welcome-free-with-stocks",
+        bodySource: "template",
+        transactional: false,
+        logsToEmailSends: true,
+      },
+      {
+        id: "referral-program",
+        kind: "email",
+        label: "Referral program",
+        description: "Seeded referral explainer.",
+        purpose: "Explain the referral program and share link. Manual / future campaign, not on a cron.",
+        templateSlug: "referral-program",
+        bodySource: "template",
+        transactional: false,
+        logsToEmailSends: true,
+      },
+      ...([
+        ["feature-real-time-quotes", "Real-time quotes", "Feature drip: live quotes from 60+ exchanges."],
+        ["feature-dividend-tracking", "Dividend tracking", "Feature drip: dividend calendar and projections."],
+        ["feature-price-alerts", "Price alerts", "Feature drip: email and push price alerts."],
+        ["feature-broker-import", "Broker import", "Feature drip: CSV / broker import."],
+        ["feature-fundamentals", "Fundamentals", "Feature drip: company fundamentals."],
+        ["feature-stock-screener", "Stock screener", "Feature drip: stock screener."],
+        ["feature-tax-reports", "Tax reports", "Feature drip: tax reports tool."],
+        ["feature-portfolio-simulator", "Portfolio simulator", "Feature drip: simulator."],
+        ["feature-net-worth", "Net worth", "Feature drip: net-worth tracker."],
+        ["feature-crypto", "Crypto", "Feature drip: crypto holdings."],
+        ["feature-moat-screener", "Moat screener", "Feature drip: moat scores."],
+      ] as const).map(([id, label, purpose]) => ({
+        id,
+        kind: "email" as const,
+        label,
+        description: purpose,
+        purpose,
+        templateSlug: id,
+        bodySource: "template" as const,
+        transactional: false,
+        logsToEmailSends: true,
+      })),
+    ],
+  },
 ];
+
+export function listEmailNodes(): { flow: EmailFlow; node: FlowNode }[] {
+  const out: { flow: EmailFlow; node: FlowNode }[] = [];
+  for (const flow of EMAIL_FLOWS) {
+    for (const node of flow.nodes) {
+      if (node.kind === "email") out.push({ flow, node });
+    }
+  }
+  return out;
+}
+
+export function findEmailNode(nodeId: string): FlowNode | undefined {
+  for (const flow of EMAIL_FLOWS) {
+    const node = flow.nodes.find((item) => item.id === nodeId && item.kind === "email");
+    if (node) return node;
+  }
+  return undefined;
+}
 
 export function listFlowTemplateSlugs(): string[] {
   const slugs = new Set<string>();
@@ -545,11 +689,20 @@ export interface EnrichedCronMeta {
   paused?: boolean;
 }
 
+export interface CodeOwnedPreview {
+  subject: string;
+  subjectEs: string;
+  bodyHtml: string;
+  bodyHtmlEs: string;
+}
+
 export interface EnrichedEmailFlowsResponse {
   flows: EnrichedEmailFlow[];
   flags: Record<string, boolean>;
   crons: Record<string, EnrichedCronMeta>;
   templates: Record<string, EnrichedTemplatePreview>;
+  nodeEnabled: Record<string, boolean>;
+  codePreviews: Record<string, CodeOwnedPreview>;
 }
 
 export function computeFlowStatus(opts: {

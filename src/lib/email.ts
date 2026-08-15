@@ -10,6 +10,7 @@ import {
   logEmailSend,
   checkAndIncrementRateLimit,
 } from "@/lib/db";
+import { isEmailNodeEnabled } from "@/lib/email-flows/toggles";
 
 const VERIFICATION_TOKEN_TTL = 60 * 60 * 24; // 24 hours
 const ACCOUNT_DELETION_TOKEN_TTL = 60 * 15; // 15 minutes — short-lived, destructive action
@@ -108,6 +109,8 @@ export interface SendEmailOptions {
   transactional?: boolean;
   /** BCC recipients (e.g. Trustpilot AFS). */
   bcc?: string | string[];
+  /** Email Flows node id — when set, respects the admin on/off toggle. */
+  automationKey?: string;
 }
 
 export interface SendEmailResult {
@@ -125,6 +128,16 @@ export async function isMarketingEmailAllowed(userId: string): Promise<boolean> 
 }
 
 export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult> {
+  if (opts.automationKey) {
+    try {
+      if (!(await isEmailNodeEnabled(opts.automationKey))) {
+        return { success: true, suppressed: true };
+      }
+    } catch (err) {
+      console.error("[sendEmail] email node toggle check failed:", err);
+    }
+  }
+
   // Marketing/template opt-out (user_settings.email_notifications_enabled) applies to every
   // subscription tier (free, starter, pro). Plan does not bypass unsubscribe.
   let recipientUserId = opts.userId;
@@ -332,6 +345,7 @@ export async function sendVerificationEmail(
     subject: s.subject,
     html: verificationEmailHtml(verifyUrl, locale),
     internal: true,
+    automationKey: "verify",
   });
   if (!result.success) console.error("Failed to send verification email:", result.error);
   return result;
@@ -434,6 +448,7 @@ export async function sendAccountDeletionEmail(
     subject: s.subject,
     html: accountDeletionEmailHtml(confirmUrl, locale),
     internal: true,
+    automationKey: "account-delete",
   });
   if (!result.success) console.error("Failed to send account deletion email:", result.error);
   return result;
@@ -475,6 +490,7 @@ export async function sendAlertEmail(
     html,
     userId,
     transactional: true,
+    automationKey: "price-alert",
   });
   if (!result.success) console.error("Failed to send alert email:", result.error);
   return result;
@@ -517,6 +533,7 @@ export async function sendFirstSyncCompleteEmail(
     html,
     userId,
     transactional: true,
+    automationKey: "first-sync",
   });
   if (!result.success) console.error("Failed to send first-sync-complete email:", result.error);
   return result;
@@ -574,6 +591,7 @@ export async function sendPercentAlertEmail(
     html,
     userId,
     transactional: true,
+    automationKey: "percent-alert",
   });
   if (!result.success) console.error("Failed to send percent alert email:", result.error);
   return result;
@@ -742,6 +760,7 @@ export async function sendWelcomeEmail(
     subject: c.subject,
     html: welcomeEmailHtml(displayName, locale),
     userId,
+    automationKey: "welcome",
   });
   if (!result.success) console.error("Failed to send welcome email:", result.error);
   return result;
@@ -793,6 +812,7 @@ export async function sendBifolioUpgradeEmail(
     subject: c.subject,
     html: bifolioUpgradeHtml(displayName, locale),
     userId,
+    automationKey: "upgrade-bifolio",
   });
   if (!result.success) console.error("Failed to send Bifolio upgrade email:", result.error);
   return result;
@@ -860,6 +880,7 @@ export async function sendTrefolioUpgradeEmail(
     subject: c.subject,
     html: trefolioUpgradeHtml(displayName, locale),
     userId,
+    automationKey: "upgrade-trefolio",
   });
   if (!result.success) console.error("Failed to send Trefolio upgrade email:", result.error);
   return result;
@@ -1018,6 +1039,7 @@ export async function sendTrialInvitationEmail(
     from: TRIAL_FROM,
     replyTo: "communications@trefolio.com",
     userId,
+    automationKey: "trial-invite",
   });
   if (!result.success) console.error("Failed to send trial invitation email:", result.error);
 
@@ -1140,6 +1162,7 @@ export async function sendMembershipGrantInvitationEmail(opts: {
     text,
     userId: opts.userId,
     transactional: true,
+    automationKey: "membership-grant",
   });
 }
 
@@ -1219,6 +1242,7 @@ export async function sendTrialExpiredEmail(
     from: TRIAL_FROM,
     replyTo: "communications@trefolio.com",
     userId,
+    automationKey: "trial-expired",
   });
   if (!result.success) console.error("Failed to send trial expired email:", result.error);
 
@@ -1309,6 +1333,7 @@ export async function sendSatisfactionTrustpilotEmail(
     html,
     userId,
     bcc: TRUSTPILOT_AFS_EMAIL,
+    automationKey: "trustpilot",
   });
   if (!result.success) console.error("Failed to send satisfaction Trustpilot email:", result.error);
 
@@ -1415,6 +1440,7 @@ export async function sendFeedbackAutoAckEmail(
     html,
     userId,
     transactional: true,
+    automationKey: "feedback-ack",
   });
   if (!result.success) console.error("Failed to send feedback auto-ack email:", result.error);
 
@@ -1450,6 +1476,7 @@ export async function sendFeedbackCompletionEmail(
     html: htmlBody,
     userId,
     transactional: true,
+    automationKey: "feedback-done",
   });
   if (!result.success) console.error("Failed to send feedback completion email:", result.error);
 
@@ -1470,3 +1497,129 @@ export async function sendFeedbackCompletionEmail(
 
   return result;
 }
+
+export function getCodeOwnedEmailPreview(
+  sender: import("@/lib/email-flows/registry").HardcodedEmailSender,
+  locale: EmailLocale = "en",
+): { subject: string; html: string } {
+  const base = getBaseUrl();
+  switch (sender) {
+    case "sendVerificationEmail": {
+      const s = verificationStrings[locale] ?? verificationStrings.en;
+      return {
+        subject: s.subject,
+        html: verificationEmailHtml(`${base}/api/auth/verify-email?token=PREVIEW`, locale),
+      };
+    }
+    case "sendWelcomeEmail": {
+      const c = i18nWelcome[locale] ?? i18nWelcome.en;
+      return { subject: c.subject, html: welcomeEmailHtml("Alex", locale) };
+    }
+    case "sendBifolioUpgradeEmail": {
+      const c = i18nBifolio[locale] ?? i18nBifolio.en;
+      return { subject: c.subject, html: bifolioUpgradeHtml("Alex", locale) };
+    }
+    case "sendTrefolioUpgradeEmail": {
+      const c = i18nTrefolio[locale] ?? i18nTrefolio.en;
+      return { subject: c.subject, html: trefolioUpgradeHtml("Alex", locale) };
+    }
+    case "sendAccountDeletionEmail": {
+      const s = accountDeletionStrings[locale] ?? accountDeletionStrings.en;
+      return {
+        subject: s.subject,
+        html: accountDeletionEmailHtml(`${base}/delete-account/confirm?token=PREVIEW`, locale),
+      };
+    }
+    case "sendAlertEmail": {
+      const s = thresholdAlertStrings[locale] ?? thresholdAlertStrings.en;
+      return {
+        subject: `Price Alert: AAPL ${s.roseAbove} USD 200`,
+        html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 0;">
+          <h2 style="color:#10b981;">${s.heading}</h2>
+          <p style="font-size:16px;">${s.bodyTemplate
+            .replace("{{name}}", "<strong>Apple</strong>")
+            .replace("{{ticker}}", "AAPL")
+            .replace("{{direction}}", s.roseAbove)
+            .replace("{{currency}}", "USD")
+            .replace("{{threshold}}", "<strong>USD 200.00</strong>")}</p>
+          <p style="font-size:18px;padding:16px;background:#f0fdf4;border-radius:8px;text-align:center;">${s.currentPriceLabel} <strong>USD 201.50</strong></p>
+        </div>`,
+      };
+    }
+    case "sendPercentAlertEmail": {
+      const s = percentAlertStrings[locale] ?? percentAlertStrings.en;
+      return {
+        subject: `Price Alert: AAPL ${s.up} 3.20% ${s.today}`,
+        html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 0;">
+          <h2 style="color:#10b981;">${s.heading}</h2>
+          <p style="font-size:16px;">${s.bodyTemplate
+            .replace("{{name}}", "<strong>Apple</strong>")
+            .replace("{{ticker}}", "AAPL")
+            .replace("{{directionWithPercent}}", `<span style="color:#16a34a;font-weight:700;">${s.up} 3.20%</span>`)
+            .replace("{{basis}}", s.today)}</p>
+        </div>`,
+      };
+    }
+    case "sendFirstSyncCompleteEmail": {
+      const s = firstSyncCompleteStrings[locale] ?? firstSyncCompleteStrings.en;
+      return {
+        subject: s.subject,
+        html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 0;">
+          <h2 style="color:#10b981;">${s.heading}</h2>
+          <p style="font-size:16px;">${s.bodyTemplate.replace("{{count}}", "12")}</p>
+        </div>`,
+      };
+    }
+    case "sendTrialInvitationEmail": {
+      return {
+        subject: "Your 7-day Trefolio Pro trial is ready",
+        html: trialInvitationHtml("Alex", `${base}/trial/activate?token=PREVIEW`, locale),
+      };
+    }
+    case "sendTrialExpiredEmail": {
+      return {
+        subject: "Your Trefolio Pro trial has ended",
+        html: trialExpiredHtml("Alex", locale, 4.2),
+      };
+    }
+    case "sendMembershipGrantInvitationEmail": {
+      const c = getMembershipGrantStrings(locale);
+      const url = `${base}/membership-grant/activate?token=PREVIEW`;
+      return {
+        subject: c.subject.replace("{{name}}", "Alex").replace("{{days}}", "30").replace("{{planName}}", c.planNamePro),
+        html: membershipGrantInvitationHtml("Alex", locale, "pro", 30, url),
+      };
+    }
+    case "sendSatisfactionTrustpilotEmail": {
+      const afs = locale === "es" ? "es" : "en";
+      const c = satisfactionThankYouCopy[afs];
+      return { subject: c.subject, html: satisfactionThankYouHtml(5, afs) };
+    }
+    case "sendFeedbackAutoAckEmail": {
+      const loc = locale === "es" ? "es" : "en";
+      const c = feedbackAutoAckCopy[loc];
+      return { subject: c.subject, html: feedbackAutoAckHtml(loc, "Chart is hard to read") };
+    }
+    case "sendFeedbackCompletionEmail": {
+      return {
+        subject: locale === "es" ? "Revisamos tu comentario" : "We looked into your feedback",
+        html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
+          <p>${locale === "es"
+            ? "El cuerpo lo escribe un admin al cerrar el ticket. No hay plantilla fija."
+            : "An admin writes this body when closing a feedback ticket. There is no fixed template."}</p>
+        </div>`,
+      };
+    }
+    case "buildWeeklyDigestEmailHtml": {
+      return {
+        subject: "Your Weekly Portfolio Digest — 2026-08-03 to 2026-08-10",
+        html: "<p>See weekly-digest preview in enrich.</p>",
+      };
+    }
+    default: {
+      const _never: never = sender;
+      return { subject: String(_never), html: "<p>No preview</p>" };
+    }
+  }
+}
+

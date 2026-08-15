@@ -2,16 +2,21 @@ import { isFeatureEnabled, listEmailTemplatesBySlugs, getTemplateSendAggregatesB
 import type { EmailTemplate, TemplateSendWindowStats } from "@/lib/db/email-templates";
 import { getCronJob } from "@/lib/cron-registry";
 import type { PlatformFeature } from "@/lib/db/settings";
+import { getCodeOwnedEmailPreview } from "@/lib/email";
+import { buildWeeklyDigestEmailHtml } from "@/lib/weekly-digest-email";
 import {
   EMAIL_FLOWS,
+  HARDCODED_EMAIL_SENDERS,
   computeFlowStatus,
   listFlowCronIds,
   listFlowFeatureFlags,
   listFlowTemplateSlugs,
+  type CodeOwnedPreview,
   type EnrichedEmailFlow,
   type EnrichedEmailFlowsResponse,
   type EnrichedTemplatePreview,
 } from "./registry";
+import { getEmailNodeEnabledMap } from "./toggles";
 
 export type { EnrichedEmailFlow, EnrichedEmailFlowsResponse, EnrichedTemplatePreview };
 
@@ -36,10 +41,11 @@ export async function enrichEmailFlows(): Promise<EnrichedEmailFlowsResponse> {
   const cronIds = listFlowCronIds();
   const slugs = listFlowTemplateSlugs();
 
-  const [flagEntries, templates, statsMap] = await Promise.all([
+  const [flagEntries, templates, statsMap, nodeEnabled] = await Promise.all([
     Promise.all(flagKeys.map(async (key) => [key, await isFeatureEnabled(key)] as const)),
     listEmailTemplatesBySlugs(slugs),
     getTemplateSendAggregatesBySlugs(slugs),
+    getEmailNodeEnabledMap(),
   ]);
 
   const flags = Object.fromEntries(flagEntries) as Record<string, boolean>;
@@ -74,5 +80,39 @@ export async function enrichEmailFlows(): Promise<EnrichedEmailFlowsResponse> {
     };
   });
 
-  return { flows, flags, crons, templates: templatesBySlug };
+  const codePreviews: Record<string, CodeOwnedPreview> = {};
+  for (const sender of HARDCODED_EMAIL_SENDERS) {
+    if (sender === "buildWeeklyDigestEmailHtml") {
+      const html = buildWeeklyDigestEmailHtml(
+        "Your portfolio was steady this week, led by AAPL.",
+        {
+          totalValue: 24500,
+          weekChange: 320,
+          currency: "EUR",
+          bestPerformer: { ticker: "AAPL", changePct: 2.4 },
+          dividendsReceived: 12.5,
+        },
+        process.env.APP_BASE_URL || "https://trefolio.com",
+        "2026-08-03",
+        "2026-08-10",
+      );
+      codePreviews[sender] = {
+        subject: "Your Weekly Portfolio Digest — 2026-08-03 to 2026-08-10",
+        subjectEs: "Tu resumen semanal de cartera — 2026-08-03 a 2026-08-10",
+        bodyHtml: html,
+        bodyHtmlEs: html,
+      };
+      continue;
+    }
+    const en = getCodeOwnedEmailPreview(sender, "en");
+    const es = getCodeOwnedEmailPreview(sender, "es");
+    codePreviews[sender] = {
+      subject: en.subject,
+      subjectEs: es.subject,
+      bodyHtml: en.html,
+      bodyHtmlEs: es.html,
+    };
+  }
+
+  return { flows, flags, crons, templates: templatesBySlug, nodeEnabled, codePreviews };
 }

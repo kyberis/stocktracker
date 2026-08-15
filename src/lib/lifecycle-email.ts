@@ -48,6 +48,7 @@ export async function sendLifecycleTemplateEmail(opts: {
     html,
     text: text || htmlToPlainText(html),
     userId: opts.userId,
+    automationKey: opts.slug === "feature-ai-analysis" ? "winback-email" : opts.slug,
   });
 
   await logEmailSend({
