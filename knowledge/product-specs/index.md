@@ -153,6 +153,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [alerts](alerts.md) — price/news/earnings/AI alerts.
 - [daily-market-digest](daily-market-digest.md) — opt-in daily market email.
 - [email-system](email-system.md) — Resend-backed transactional + marketing email.
+- [admin-email-flows](admin-email-flows.md) — admin map of email automations (also under Admin).
 - [goals](goals.md) — target-value goals.
 - [notifications-inapp](notifications-inapp.md) — in-app bell + drawer.
 - [push-notifications](push-notifications.md) — web + native push.
@@ -188,6 +189,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [admin-ai-logs](admin-ai-logs.md) — AI usage + cost logs.
 - [admin-analytics](admin-analytics.md) — internal analytics dashboards.
 - [admin-cron-stats](admin-cron-stats.md) — cron observability.
+- [admin-email-flows](admin-email-flows.md) — read-only email automation map.
 - [admin-feature-flags](admin-feature-flags.md) — manage flags.
 - [experiments](experiments.md) — A/B/C experiment admin (also under Billing & Feature Flags).
 - [admin-panel](admin-panel.md) — `/admin` index.

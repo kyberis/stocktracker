@@ -18,6 +18,7 @@ const TAB_GROUPS: { category: string; tabs: Tab[] }[] = [
     tabs: [
       { slug: "notifications", label: "Notifications" },
       { slug: "email-templates", label: "Email Templates" },
+      { slug: "email-flows", label: "Email Flows" },
       { slug: "unsubscribes", label: "Unsubscribes" },
       { slug: "x-posts", label: "X Posts" },
       { slug: "market-digests", label: "Market Digests" },

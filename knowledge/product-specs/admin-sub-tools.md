@@ -37,6 +37,10 @@
 - API: `/api/admin/email-sends`
 - Purpose: view send logs; resend.
 
+## admin-email-flows
+- API: `/api/admin/email-flows` — see [admin-email-flows](admin-email-flows.md).
+- Purpose: read-only flowchart of existing email automations.
+
 ## admin-email-templates
 - API: `/api/admin/email-templates` (if present)
 - Purpose: template previews.

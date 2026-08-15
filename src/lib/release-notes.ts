@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.174",
+    date: "2026-08-15",
+    title: "Admin email flow map",
+    titleTranslations: {
+      es: "Mapa de flujos de email en admin",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Admin Messaging now includes a read-only Email Flows map of signup, lifecycle, digest, trial, and alert automations with template preview and send stats.",
+        translations: {
+          es: "Admin → Messaging ahora incluye un mapa de solo lectura de Email Flows (alta, ciclo de vida, digest, trial y alertas) con vista previa de plantillas y estadísticas de envío.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.173",
     date: "2026-08-15",
     title: "ProdOps alert when restored users return",

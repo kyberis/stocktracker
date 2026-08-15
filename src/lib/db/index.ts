@@ -576,7 +576,10 @@ export {
   getEmailSendByResendId,
   updateEmailSendStatus,
   getTemplateStats,
+  listEmailTemplatesBySlugs,
+  getTemplateSendAggregatesBySlugs,
 } from "./email-templates";
+export type { TemplateSendWindowStats } from "./email-templates";
 
 export type {
   RefundRequest,

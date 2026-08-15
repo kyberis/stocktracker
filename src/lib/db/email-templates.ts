@@ -278,6 +278,82 @@ export async function listEmailSendsByTemplateId(templateId: string): Promise<Em
   return result.rows.map(mapSendRow);
 }
 
+export async function listEmailTemplatesBySlugs(slugs: string[]): Promise<EmailTemplate[]> {
+  if (slugs.length === 0) return [];
+  const client = await ensureInitialized();
+  const placeholders = slugs.map(() => "?").join(", ");
+  const result = await client.execute({
+    sql: `SELECT * FROM email_templates WHERE slug IN (${placeholders})`,
+    args: slugs,
+  });
+  return result.rows.map(mapTemplateRow);
+}
+
+export interface TemplateSendWindowStats {
+  sent7d: number;
+  sent30d: number;
+  delivered7d: number;
+  delivered30d: number;
+  bounced7d: number;
+  bounced30d: number;
+  failed7d: number;
+  failed30d: number;
+}
+
+export async function getTemplateSendAggregatesBySlugs(
+  slugs: string[],
+): Promise<Map<string, TemplateSendWindowStats>> {
+  const empty = (): TemplateSendWindowStats => ({
+    sent7d: 0,
+    sent30d: 0,
+    delivered7d: 0,
+    delivered30d: 0,
+    bounced7d: 0,
+    bounced30d: 0,
+    failed7d: 0,
+    failed30d: 0,
+  });
+  const map = new Map<string, TemplateSendWindowStats>();
+  for (const slug of slugs) map.set(slug, empty());
+  if (slugs.length === 0) return map;
+
+  const client = await ensureInitialized();
+  const placeholders = slugs.map(() => "?").join(", ");
+  const result = await client.execute({
+    sql: `SELECT t.slug,
+            SUM(CASE WHEN es.id IS NOT NULL AND es.sent_at >= datetime('now', '-7 days')
+                      AND es.status NOT IN ('failed', 'suppressed') THEN 1 ELSE 0 END) as sent7d,
+            SUM(CASE WHEN es.id IS NOT NULL AND es.sent_at >= datetime('now', '-30 days')
+                      AND es.status NOT IN ('failed', 'suppressed') THEN 1 ELSE 0 END) as sent30d,
+            SUM(CASE WHEN es.sent_at >= datetime('now', '-7 days')
+                      AND es.status IN ('sent','delivered','opened','clicked') THEN 1 ELSE 0 END) as delivered7d,
+            SUM(CASE WHEN es.sent_at >= datetime('now', '-30 days')
+                      AND es.status IN ('sent','delivered','opened','clicked') THEN 1 ELSE 0 END) as delivered30d,
+            SUM(CASE WHEN es.sent_at >= datetime('now', '-7 days') AND es.status = 'bounced' THEN 1 ELSE 0 END) as bounced7d,
+            SUM(CASE WHEN es.sent_at >= datetime('now', '-30 days') AND es.status = 'bounced' THEN 1 ELSE 0 END) as bounced30d,
+            SUM(CASE WHEN es.sent_at >= datetime('now', '-7 days') AND es.status = 'failed' THEN 1 ELSE 0 END) as failed7d,
+            SUM(CASE WHEN es.sent_at >= datetime('now', '-30 days') AND es.status = 'failed' THEN 1 ELSE 0 END) as failed30d
+          FROM email_templates t
+          LEFT JOIN email_sends es ON es.template_id = t.id
+          WHERE t.slug IN (${placeholders})
+          GROUP BY t.slug`,
+    args: slugs,
+  });
+  for (const row of result.rows) {
+    map.set(str(row.slug), {
+      sent7d: num(row.sent7d),
+      sent30d: num(row.sent30d),
+      delivered7d: num(row.delivered7d),
+      delivered30d: num(row.delivered30d),
+      bounced7d: num(row.bounced7d),
+      bounced30d: num(row.bounced30d),
+      failed7d: num(row.failed7d),
+      failed30d: num(row.failed30d),
+    });
+  }
+  return map;
+}
+
 export async function getTemplateStats(templateId: string): Promise<{
   totalSent: number;
   delivered: number;

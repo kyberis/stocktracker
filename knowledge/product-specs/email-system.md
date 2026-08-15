@@ -57,7 +57,8 @@ All outbound email goes through `src/lib/email/` helpers, with templated React E
 ## 15. Related skills and rules
 - [`ux-writer`](../../.cursor/skills/ux-writer/SKILL.md)
 - [`automated-user-comms`](../../.cursor/skills/automated-user-comms/SKILL.md)
-- Related specs: [weekly-digest](weekly-digest.md), [daily-market-digest](daily-market-digest.md).
+- Related specs: [weekly-digest](weekly-digest.md), [daily-market-digest](daily-market-digest.md), [admin-email-flows](admin-email-flows.md).
 
 ## 16. Open questions / planned work
-- Observability dashboards for deliverability per campaign.
+- Flow-level observability shipped in [admin-email-flows](admin-email-flows.md) (read-only map + 7d/30d template stats).
+- Deeper deliverability dashboards per campaign still open.

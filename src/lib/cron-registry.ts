@@ -90,6 +90,18 @@ export const CRON_REGISTRY: CronJob[] = [
     description: "Downgrade expired trial users to free and send expiration email",
   },
   {
+    name: "lifecycle-activation",
+    path: "/api/cron/lifecycle-activation",
+    schedule: "30 10 * * *",
+    description: "Send welcome-no-stocks to verified users 48–72h after signup with zero holdings",
+  },
+  {
+    name: "lifecycle-winback",
+    path: "/api/cron/lifecycle-winback",
+    schedule: "0 11 * * *",
+    description: "Re-engage verified users inactive 14+ days who have holdings (feature-ai-analysis)",
+  },
+  {
     name: "commerce-complimentary-renewal",
     path: "/api/cron/commerce-complimentary-renewal",
     schedule: "0 2 * * *",
@@ -177,3 +189,7 @@ export const CRON_REGISTRY: CronJob[] = [
       "Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain",
   },
 ];
+
+export function getCronJob(name: string): CronJob | undefined {
+  return CRON_REGISTRY.find((job) => job.name === name);
+}

@@ -20,6 +20,8 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `portfolio-snapshots` | `*/5 * * * *` | `/api/cron/portfolio-snapshots` | Compute and store portfolio value snapshots for all users (every 5 min for dense intraday charts) |
 | `trial-invitations` | `0 10 * * *` | `/api/cron/trial-invitations` | Invite eligible free users to 7-day Pro trial after 1 week of activity |
 | `trial-expiration` | `0 * * * *` | `/api/cron/trial-expiration` | Downgrade expired trial users to free and send expiration email |
+| `lifecycle-activation` | `30 10 * * *` | `/api/cron/lifecycle-activation` | Send welcome-no-stocks to verified users 48–72h after signup with zero holdings |
+| `lifecycle-winback` | `0 11 * * *` | `/api/cron/lifecycle-winback` | Re-engage verified users inactive 14+ days who have holdings (feature-ai-analysis) |
 | `commerce-complimentary-renewal` | `0 2 * * *` | `/api/cron/commerce-complimentary-renewal` | Renew 30-day complimentary Trefolio Pro while commerce_enabled is off |
 | `weekly-digest` | `0 8 * * 1` | `/api/cron/weekly-digest` | Generate and send AI-powered weekly portfolio digest to Pro users every Monday |
 | `portfolio-recommendations` | `0 7 * * 1` | `/api/cron/portfolio-recommendations` | Weekly portfolio tip analysis for active non-test users (last_active within 30d, ≥1 holding); cache Home recommendation queue |
