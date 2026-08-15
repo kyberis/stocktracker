@@ -266,6 +266,7 @@ function NodeDetail({
     ? (template?.bodyHtmlEs || template?.bodyHtml || codePreview?.bodyHtmlEs || codePreview?.bodyHtml)
     : (template?.bodyHtml || codePreview?.bodyHtml);
   const hasPreview = Boolean(previewHtml);
+  const stats = template?.stats;
 
   return (
     <aside className="card p-4 space-y-4" aria-live="polite">
@@ -391,23 +392,23 @@ function NodeDetail({
             ))}
           </div>
           <PreviewFrame html={previewHtml || ""} title={`${node.label} preview (${lang})`} />
-          {template.stats ? (
+          {stats ? (
             <dl className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <dt className="text-[color:var(--muted)]">Sent 7d / 30d</dt>
-                <dd className="font-semibold">{template.stats.sent7d} / {template.stats.sent30d}</dd>
+                <dd className="font-semibold">{stats.sent7d} / {stats.sent30d}</dd>
               </div>
               <div>
                 <dt className="text-[color:var(--muted)]">Delivered 7d / 30d</dt>
-                <dd className="font-semibold">{template.stats.delivered7d} / {template.stats.delivered30d}</dd>
+                <dd className="font-semibold">{stats.delivered7d} / {stats.delivered30d}</dd>
               </div>
               <div>
                 <dt className="text-[color:var(--muted)]">Bounced 7d / 30d</dt>
-                <dd className="font-semibold">{template.stats.bounced7d} / {template.stats.bounced30d}</dd>
+                <dd className="font-semibold">{stats.bounced7d} / {stats.bounced30d}</dd>
               </div>
               <div>
                 <dt className="text-[color:var(--muted)]">Failed 7d / 30d</dt>
-                <dd className="font-semibold">{template.stats.failed7d} / {template.stats.failed30d}</dd>
+                <dd className="font-semibold">{stats.failed7d} / {stats.failed30d}</dd>
               </div>
             </dl>
           ) : null}
