@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Цінові сповіщення",
-      desc: "Отримуйте сповіщення, коли акції досягають цільової ціни. Сповіщення email та push доступні в Bifolio."
+      desc: "Отримуйте сповіщення, коли акції досягають цільової ціни. Сповіщення email та push доступні в trefolio."
     },
     {
       title: "Розширені метрики",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Ексклюзивна пропозиція",
   voucherDiscountDisplay: "75% ЗНИЖКА",
   voucherApply: "Використовуйте код при оплаті:",
-  voucherValid: "Дійсний для Bifolio та Trefolio — щомісячно або щорічно",
+  voucherValid: "щомісячно або щорічно",
   ctaPrimary: "Оновити зараз — 75% знижка",
-  ctaSecondary: "Продовжити з Folio",
-  tipText: "&#x1F4A1; <strong>Ваш план Folio</strong> включає до 15 активів, 1 портфель та 5 AI-дзвінків/місяць. Оновіть для більше."
+  ctaSecondary: "Перегляньте панель керування",
+  tipText: "&#x1F4A1; <strong>Почати легко:</strong> Додайте лише одну акцію, щоб побачити панель керування з даними в реальному часі, графіками та інсайтами AI."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Ласкаво просимо до Bifolio!",
+  heading: "Ласкаво просимо до trefolio!",
   paragraph: "Ваше оновлення активне. Ось усе, що ви щойно розблокували:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Налаштуйте перше сповіщення",
   ctaSecondary: "Поділіться своїм портфелем",
-  upsellText: "<strong>Хочете ще більше?</strong> Trefolio відкриває фундаментали компаній, фільтр акцій, податкові звіти, сповіщення WhatsApp та необмежені активи. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Дізнатися більше</a>"
+  upsellText: "<strong>Хочете ще більше?</strong> trefolio відкриває фундаментали компаній, фільтр акцій, податкові звіти, сповіщення WhatsApp та необмежені активи. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Дізнатися більше</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Ласкаво просимо до Trefolio Pro!",
+  heading: "Ласкаво просимо до trefolio!",
   paragraph: "Тепер у вас є повний доступ до всіх функцій trefolio. Ось ваш повний набір інструментів:",
   groups: [
     {

@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Alert sui prezzi",
-      desc: "Ricevi notifiche quando le azioni raggiungono il prezzo target. Alert email e push disponibili su Bifolio."
+      desc: "Ricevi notifiche quando le azioni raggiungono il prezzo target. Alert email e push disponibili."
     },
     {
       title: "Metriche avanzate",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Offerta esclusiva",
   voucherDiscountDisplay: "75% DI SCONTO",
   voucherApply: "Usa il codice al checkout:",
-  voucherValid: "Valido su Bifolio e Trefolio &mdash; mensile o annuale",
+  voucherValid: "mensile o annuale",
   ctaPrimary: "Aggiorna ora &mdash; 75% di sconto",
-  ctaSecondary: "Continua con Folio",
-  tipText: "&#x1F4A1; <strong>Il tuo piano Folio</strong> include fino a 15 posizioni, 1 portafoglio e 5 chiamate IA/mese. Aggiorna per sbloccare di pi&ugrave;."
+  ctaSecondary: "Esplora la dashboard",
+  tipText: "&#x1F4A1; <strong>Iniziare &egrave; facile:</strong> Aggiungi solo un&rsquo;azione per vedere la tua dashboard animarsi con dati in tempo reale, grafici e insight IA."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Benvenuto su Bifolio!",
+  heading: "Benvenuto su trefolio!",
   paragraph: "Il tuo upgrade &egrave; attivo. Ecco tutto ci&ograve; che hai appena sbloccato:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Configura il tuo primo alert",
   ctaSecondary: "Condividi il tuo portafoglio",
-  upsellText: "<strong>Vuoi ancora di pi&ugrave;?</strong> Trefolio sblocca i fondamentali aziendali, lo screener azionario, i report fiscali, gli alert WhatsApp e le posizioni illimitate. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Scopri di pi&ugrave;</a>"
+  upsellText: "<strong>Vuoi ancora di pi&ugrave;?</strong> trefolio sblocca i fondamentali aziendali, lo screener azionario, i report fiscali, gli alert WhatsApp e le posizioni illimitate. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Scopri di pi&ugrave;</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Benvenuto su Trefolio Pro!",
+  heading: "Benvenuto su trefolio!",
   paragraph: "Ora hai accesso completo a tutte le funzionalit&agrave; di trefolio. Ecco il tuo toolkit completo:",
   groups: [
     {
@@ -234,7 +234,7 @@ export const trialInvitation: TrialInvitationStrings = {
 
 export const trialExpired: TrialExpiredStrings = {
   heading: "La tua prova Pro &egrave; terminata",
-  paragraph: "Ciao {{display_name}}, la tua prova Trefolio Pro di 7 giorni &egrave; finita. Ecco cosa perderai:",
+  paragraph: "Ciao {{display_name}}, la tua prova trefolio di 7 giorni &egrave; finita. Ecco cosa perderai:",
   features: [
     {
       title: "Analisi avanzate",
@@ -254,7 +254,7 @@ export const trialExpired: TrialExpiredStrings = {
     }
   ],
   pricingNote: "I piani partono da &euro;4,99/mese. Disdici in qualsiasi momento.",
-  ctaPrimary: "Abbonati a Trefolio Pro",
+  ctaPrimary: "Abbonati a trefolio",
   ctaSecondary: "Vedi i prezzi",
   signoffIntro: "Spero che la prova ti abbia dato un assaggio reale di cosa pu&ograve; fare trefolio. Se hai feedback, mi farebbe davvero piacere leggerlo.",
   growthTitle: "Il tuo portafoglio &egrave; cresciuto del {{growth_pct}}% durante la prova",

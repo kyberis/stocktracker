@@ -404,9 +404,9 @@ export const EMAIL_FLOWS: EmailFlow[] = [
       {
         id: "upgrade-bifolio",
         kind: "email",
-        label: "Bifolio upgrade",
+        label: "Upgrade confirmation",
         description: "Hardcoded upgrade mail. Seeded upgrade-bifolio is available for admin send.",
-        purpose: "Celebrate a Bifolio upgrade and point the user at alerts and starter-tier features.",
+        purpose: "Celebrate an upgrade and point the user at alerts and newly unlocked features.",
         hardcodedSender: "sendBifolioUpgradeEmail",
         templateSlug: "upgrade-bifolio",
         bodySource: "code",
@@ -416,9 +416,9 @@ export const EMAIL_FLOWS: EmailFlow[] = [
       {
         id: "upgrade-trefolio",
         kind: "email",
-        label: "Trefolio upgrade",
+        label: "Full-access confirmation",
         description: "Hardcoded upgrade mail. Seeded upgrade-trefolio is available for admin send.",
-        purpose: "Celebrate a Trefolio upgrade and highlight Pro tools (fundamentals, screener, simulator).",
+        purpose: "Celebrate a full-access upgrade and highlight fundamentals, screener, and simulator.",
         hardcodedSender: "sendTrefolioUpgradeEmail",
         templateSlug: "upgrade-trefolio",
         bodySource: "code",

@@ -4246,6 +4246,33 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 144,
+    description: "Refresh email templates to drop Folio / Bifolio / Trefolio plan names",
+    up: async (client: Client) => {
+      const { EMAIL_TEMPLATE_SEEDS } = await import("./email-template-seeds");
+      for (const t of EMAIL_TEMPLATE_SEEDS) {
+        await client.execute({
+          sql: `UPDATE email_templates
+                SET name = ?, subject = ?, subject_es = ?,
+                    body_html = ?, body_html_es = ?,
+                    body_text = ?, body_text_es = ?,
+                    updated_at = datetime('now')
+                WHERE slug = ?`,
+          args: [
+            t.name,
+            t.subject,
+            t.subjectEs,
+            t.bodyHtml,
+            t.bodyHtmlEs,
+            t.bodyText,
+            t.bodyTextEs,
+            t.slug,
+          ],
+        });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

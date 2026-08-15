@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Se v&aelig;rdier i din lokale valuta. Vi underst&oslash;tter 21 valutaer med automatisk konvertering."
       }
     ],
-    tierText: "Tilg&aelig;ngelig i alle planer",
+    tierText: "",
     ctaLabel: "&Aring;bn din dashboard"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Se hvordan geninvestering af dividend kunne for&oslash;ge dine afkast over 5, 10 eller 20 &aring;r."
       }
     ],
-    tierText: "Tilg&aelig;ngelig i alle planer",
+    tierText: "",
     ctaLabel: "Se dine dividend"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Gennemgå min portefølje\" — AI analyserer din allokering, risiko og foreslår forbedringer."
       }
     ],
-    tierText: "Folio: 5 opkald/mån | Bifolio: 20/mån | Trefolio: Ubegrænset",
+    tierText: "",
     ctaLabel: "Prøv AI-analyse nu"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Multi-kanal",
-        desc: "E-mail og push-alarm på Bifolio. Tilføj WhatsApp og enhedsalarm på Trefolio."
+        desc: "E-mail, push, WhatsApp og enhedsalarmer."
       },
       {
         title: "Cron-drevet",
         desc: "Vores system tjekker priser hvert minut i markeds timer. Du behøver aldrig at se skærmen."
       }
     ],
-    tierText: "Bifolio: Op til 10 alarm | Trefolio: Ubegrænsede alarm",
+    tierText: "",
     ctaLabel: "Opret din første alarm"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Upload enhver fil — CSV, PDF eller skærmbillede — og vores AI vil omdanne den til din portefølje. Virker selv med usædvanlige formater."
       }
     ],
-    tierText: "Folio: CSV og Manuel | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Importer din portefølje"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Følg hvad de store fonde ejer — Vanguard, BlackRock, Fidelity og mere."
       }
     ],
-    tierText: "Trefolio Pro eksklusiv",
+    tierText: "",
     ctaLabel: "Udforsk fundamentale data"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Fundet noget interessant? Tilf&oslash;j det til din portef&oslash;lje eller overv&aring;gningsliste direkte fra resultaterne."
       }
     ],
-    tierText: "Trefolio Pro eksklusiv",
+    tierText: "",
     ctaLabel: "&Aring;bn filteret"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Still sp&oslash;rgsm&aring;l som \"Hvor meget kildeskat betalte jeg af amerikanske udbytter?\" og f&aring; øjeblikkelige svar."
       }
     ],
-    tierText: "Trefolio Pro eksklusiv",
+    tierText: "",
     ctaLabel: "Generer skatterapport"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Tilføj eller fjern positioner, ændr allokeringer og se øjeblikkeligt effekten på risiko og afkast."
       }
     ],
-    tierText: "Trefolio Pro eksklusiv",
+    tierText: "",
     ctaLabel: "Åbn simulatoren"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Se alt kombineret: aktier + ETFs + krypto + fast ejendom + opsparinger + pensioner = dit komplette billede."
       }
     ],
-    tierText: "Bifolio: Op til 10 aktiver | Trefolio: Op til 999 aktiver",
+    tierText: "",
     ctaLabel: "Tilføj manuelle aktiver"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Spørg vores AI om enhver krypto — fundamentale data, trender og markedsanalyse."
       }
     ],
-    tierText: "Folio: Markedsoversigt | Trefolio: Fuld portefølje sporing og AI",
+    tierText: "",
     ctaLabel: "Udforsk krypto"
   }
 };

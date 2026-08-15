@@ -93,27 +93,6 @@ function feature(emoji: string, title: string, desc: string, hasBorder = false):
             <tr><td style="height:8px;"></td></tr>`;
 }
 
-function tierBadge(tier: string, color: string): string {
-  return `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:${color};color:#fff;text-transform:uppercase;letter-spacing:0.5px;">${tier}</span>`;
-}
-
-const FREE_BADGE = tierBadge("Folio", "#64748b");
-const BIFOLIO_BADGE = tierBadge("Bifolio", "#3b82f6");
-const TREFOLIO_BADGE = tierBadge("Trefolio", "#10b981");
-
-function featureWithTier(emoji: string, title: string, desc: string, badge: string): string {
-  return `<tr><td style="padding:12px 16px;background:#f0fdf4;border-radius:10px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-                <td style="width:36px;font-size:20px;vertical-align:top;padding-top:2px;">${emoji}</td>
-                <td style="padding-left:8px;">
-                  <strong style="color:#0f172a;font-size:14px;">${title}</strong> ${badge}
-                  <p style="margin:4px 0 0;font-size:13px;color:#475569;line-height:1.4;">${desc}</p>
-                </td>
-              </tr></table>
-            </td></tr>
-            <tr><td style="height:8px;"></td></tr>`;
-}
-
 function proFeatureGroup(label: string, items: string[]): string {
   const checks = items.map((i) => `&#x2705; ${i}`).join("<br>");
   return `<tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">${label}</p></td></tr>
@@ -130,7 +109,7 @@ function voucherBox(code: string, discount: string): string {
               <p style="margin:0 0 8px;font-size:28px;font-weight:800;color:#92400e;letter-spacing:-0.5px;">${discount} OFF</p>
               <p style="margin:0 0 4px;font-size:14px;color:#78350f;">Use code at checkout:</p>
               <p style="margin:0;font-size:22px;font-weight:800;color:#0f172a;letter-spacing:2px;font-family:monospace;">${code}</p>
-              <p style="margin:8px 0 0;font-size:12px;color:#92400e;">Valid on Bifolio &amp; Trefolio &mdash; monthly or annual</p>
+              <p style="margin:8px 0 0;font-size:12px;color:#92400e;">Valid monthly or annual</p>
             </td></tr>
           </table>`;
 }
@@ -142,7 +121,7 @@ function voucherBoxEs(code: string, discount: string): string {
               <p style="margin:0 0 8px;font-size:28px;font-weight:800;color:#92400e;letter-spacing:-0.5px;">${discount} DTO</p>
               <p style="margin:0 0 4px;font-size:14px;color:#78350f;">Usa este c&oacute;digo al pagar:</p>
               <p style="margin:0;font-size:22px;font-weight:800;color:#0f172a;letter-spacing:2px;font-family:monospace;">${code}</p>
-              <p style="margin:8px 0 0;font-size:12px;color:#92400e;">V&aacute;lido en Bifolio y Trefolio &mdash; mensual o anual</p>
+              <p style="margin:8px 0 0;font-size:12px;color:#92400e;">V&aacute;lido mensual o anual</p>
             </td></tr>
           </table>`;
 }
@@ -186,14 +165,14 @@ const welcomeNoStocksHtml = `${HEADER}
           ${heading("Welcome to trefolio!")}
           ${paragraph("Your account is ready. trefolio is the extra leaf for your portfolio &mdash; everything you need to track, understand, and grow your investments in one place.")}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-            ${featureWithTier("&#x1F4C8;", "Real-time Quotes", "Live prices from Yahoo Finance across 60+ global exchanges. See your portfolio value update throughout the day.", FREE_BADGE)}
-            ${featureWithTier("&#x1F4B0;", "Dividend Tracking", "Automatic dividend detection, annual income projections, yield-on-cost, and monthly payment calendar.", FREE_BADGE)}
-            ${featureWithTier("&#x1F916;", "AI-Powered Analysis", "Ask our AI about any stock &mdash; get earnings analysis, competitor comparisons, and risk assessments. 5 free calls/month.", FREE_BADGE)}
-            ${featureWithTier("&#x1F4E5;", "Easy Import", "Bring your portfolio from 20+ brokers via CSV upload, one-click Broker Sync, or AI-assisted import.", FREE_BADGE)}
-            ${featureWithTier("&#x1F514;", "Price Alerts", "Get notified when stocks hit your target price. Email and push alerts available on Bifolio.", BIFOLIO_BADGE)}
-            ${featureWithTier("&#x1F4CA;", "Advanced Metrics", "Sharpe ratio, max drawdown, volatility, and full performance history to measure your strategy.", BIFOLIO_BADGE)}
-            ${featureWithTier("&#x1F3E6;", "Fundamentals &amp; Intelligence", "Company financials, insider trades, institutional holdings, and news sentiment &mdash; all in one view.", TREFOLIO_BADGE)}
-            ${featureWithTier("&#x1F50D;", "Stock Screener", "Screen 600+ stocks with 6 filters and 5 built-in strategies to discover new opportunities.", TREFOLIO_BADGE)}
+            ${feature("&#x1F4C8;", "Real-time Quotes", "Live prices from Yahoo Finance across 60+ global exchanges. See your portfolio value update throughout the day.")}
+            ${feature("&#x1F4B0;", "Dividend Tracking", "Automatic dividend detection, annual income projections, yield-on-cost, and monthly payment calendar.")}
+            ${feature("&#x1F916;", "AI-Powered Analysis", "Ask our AI about any stock &mdash; get earnings analysis, competitor comparisons, and risk assessments. 5 free calls/month.")}
+            ${feature("&#x1F4E5;", "Easy Import", "Bring your portfolio from 20+ brokers via CSV upload, one-click Broker Sync, or AI-assisted import.")}
+            ${feature("&#x1F514;", "Price Alerts", "Get notified when stocks hit your target price. Email and push alerts are available.")}
+            ${feature("&#x1F4CA;", "Advanced Metrics", "Sharpe ratio, max drawdown, volatility, and full performance history to measure your strategy.")}
+            ${feature("&#x1F3E6;", "Fundamentals &amp; Intelligence", "Company financials, insider trades, institutional holdings, and news sentiment &mdash; all in one view.")}
+            ${feature("&#x1F50D;", "Stock Screener", "Screen 600+ stocks with 6 filters and 5 built-in strategies to discover new opportunities.")}
           </table>
           ${cta("Add Your First Stock", "{{base_url}}/import?utm_source=email&utm_medium=lifecycle&utm_campaign=welcome_no_stocks")}
           ${ctaSecondary("Explore the Dashboard", "{{base_url}}/?utm_source=email&utm_medium=lifecycle&utm_campaign=welcome_no_stocks")}
@@ -207,14 +186,14 @@ const welcomeNoStocksHtmlEs = `${HEADER}
           ${heading("&iexcl;Bienvenido a trefolio!")}
           ${paragraph("Tu cuenta est&aacute; lista. trefolio es la hoja extra para tu cartera &mdash; todo lo que necesitas para seguir, entender y hacer crecer tus inversiones en un solo lugar.")}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-            ${featureWithTier("&#x1F4C8;", "Cotizaciones en Tiempo Real", "Precios en vivo de Yahoo Finance en m&aacute;s de 60 bolsas mundiales. Mira c&oacute;mo se actualiza tu cartera durante el d&iacute;a.", FREE_BADGE)}
-            ${featureWithTier("&#x1F4B0;", "Seguimiento de Dividendos", "Detecci&oacute;n autom&aacute;tica de dividendos, proyecciones de ingresos anuales, rendimiento sobre coste y calendario mensual.", FREE_BADGE)}
-            ${featureWithTier("&#x1F916;", "An&aacute;lisis con IA", "Pregunta a nuestra IA sobre cualquier acci&oacute;n &mdash; an&aacute;lisis de resultados, comparaci&oacute;n con competidores y evaluaci&oacute;n de riesgos. 5 consultas gratis/mes.", FREE_BADGE)}
-            ${featureWithTier("&#x1F4E5;", "Importaci&oacute;n F&aacute;cil", "Trae tu cartera de 20+ br&oacute;kers v&iacute;a CSV, sincronizaci&oacute;n autom&aacute;tica o importaci&oacute;n asistida por IA.", FREE_BADGE)}
-            ${featureWithTier("&#x1F514;", "Alertas de Precio", "Recibe avisos cuando las acciones alcancen tu precio objetivo. Alertas por email y push en Bifolio.", BIFOLIO_BADGE)}
-            ${featureWithTier("&#x1F4CA;", "M&eacute;tricas Avanzadas", "Ratio Sharpe, drawdown m&aacute;ximo, volatilidad e historial completo de rendimiento.", BIFOLIO_BADGE)}
-            ${featureWithTier("&#x1F3E6;", "Fundamentales e Inteligencia", "Finanzas de empresas, operaciones de insiders, posiciones institucionales y sentimiento de noticias.", TREFOLIO_BADGE)}
-            ${featureWithTier("&#x1F50D;", "Buscador de Acciones", "Filtra m&aacute;s de 600 acciones con 6 filtros y 5 estrategias integradas para descubrir oportunidades.", TREFOLIO_BADGE)}
+            ${feature("&#x1F4C8;", "Cotizaciones en Tiempo Real", "Precios en vivo de Yahoo Finance en m&aacute;s de 60 bolsas mundiales. Mira c&oacute;mo se actualiza tu cartera durante el d&iacute;a.")}
+            ${feature("&#x1F4B0;", "Seguimiento de Dividendos", "Detecci&oacute;n autom&aacute;tica de dividendos, proyecciones de ingresos anuales, rendimiento sobre coste y calendario mensual.")}
+            ${feature("&#x1F916;", "An&aacute;lisis con IA", "Pregunta a nuestra IA sobre cualquier acci&oacute;n &mdash; an&aacute;lisis de resultados, comparaci&oacute;n con competidores y evaluaci&oacute;n de riesgos. 5 consultas gratis/mes.")}
+            ${feature("&#x1F4E5;", "Importaci&oacute;n F&aacute;cil", "Trae tu cartera de 20+ br&oacute;kers v&iacute;a CSV, sincronizaci&oacute;n autom&aacute;tica o importaci&oacute;n asistida por IA.")}
+            ${feature("&#x1F514;", "Alertas de Precio", "Recibe avisos cuando las acciones alcancen tu precio objetivo. Alertas por email y push disponibles.")}
+            ${feature("&#x1F4CA;", "M&eacute;tricas Avanzadas", "Ratio Sharpe, drawdown m&aacute;ximo, volatilidad e historial completo de rendimiento.")}
+            ${feature("&#x1F3E6;", "Fundamentales e Inteligencia", "Finanzas de empresas, operaciones de insiders, posiciones institucionales y sentimiento de noticias.")}
+            ${feature("&#x1F50D;", "Buscador de Acciones", "Filtra m&aacute;s de 600 acciones con 6 filtros y 5 estrategias integradas para descubrir oportunidades.")}
           </table>
           ${cta("A&ntilde;ade Tu Primera Acci&oacute;n", "{{base_url}}/import?utm_source=email&utm_medium=lifecycle&utm_campaign=welcome_no_stocks")}
           ${ctaSecondary("Explorar el Dashboard", "{{base_url}}/?utm_source=email&utm_medium=lifecycle&utm_campaign=welcome_no_stocks")}
@@ -230,20 +209,20 @@ const welcomeFreeStocksHtml = `${HEADER}
           ${heading("You're off to a great start!")}
           ${intro("You&rsquo;ve added your first stocks &mdash; your portfolio dashboard is now tracking your investments in real time. Here&rsquo;s what trefolio can do for you:")}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
-            ${featureWithTier("&#x1F4C8;", "Real-time Dashboard", "Your portfolio value, daily changes, allocation breakdown, and performance charts &mdash; all updating live.", FREE_BADGE)}
-            ${featureWithTier("&#x1F4B0;", "Dividend Insights", "Annual income projections, yield tracking, and a monthly dividend calendar for your holdings.", FREE_BADGE)}
-            ${featureWithTier("&#x1F916;", "AI Stock Analysis", "Ask our AI anything about your stocks. Get earnings analysis, risk assessments, and competitive insights.", FREE_BADGE)}
-            ${featureWithTier("&#x1F514;", "Price Alerts", "Never miss a price movement. Set alerts and get notified by email or push notification.", BIFOLIO_BADGE)}
-            ${featureWithTier("&#x1F4CA;", "Performance Metrics", "Sharpe ratio, max drawdown, TTWROR, and full portfolio growth history over any time period.", BIFOLIO_BADGE)}
-            ${featureWithTier("&#x1F3E6;", "Company Fundamentals", "Income statements, balance sheets, cash flow, insider trades, and institutional holdings.", TREFOLIO_BADGE)}
-            ${featureWithTier("&#x1F50D;", "Stock Screener &amp; Simulator", "Screen 600+ stocks and backtest portfolio strategies with our what-if simulator.", TREFOLIO_BADGE)}
+            ${feature("&#x1F4C8;", "Real-time Dashboard", "Your portfolio value, daily changes, allocation breakdown, and performance charts &mdash; all updating live.")}
+            ${feature("&#x1F4B0;", "Dividend Insights", "Annual income projections, yield tracking, and a monthly dividend calendar for your holdings.")}
+            ${feature("&#x1F916;", "AI Stock Analysis", "Ask our AI anything about your stocks. Get earnings analysis, risk assessments, and competitive insights.")}
+            ${feature("&#x1F514;", "Price Alerts", "Never miss a price movement. Set alerts and get notified by email or push notification.")}
+            ${feature("&#x1F4CA;", "Performance Metrics", "Sharpe ratio, max drawdown, TTWROR, and full portfolio growth history over any time period.")}
+            ${feature("&#x1F3E6;", "Company Fundamentals", "Income statements, balance sheets, cash flow, insider trades, and institutional holdings.")}
+            ${feature("&#x1F50D;", "Stock Screener &amp; Simulator", "Screen 600+ stocks and backtest portfolio strategies with our what-if simulator.")}
           </table>
           ${voucherBox("EARLYBIRD", "75%")}
           ${cta("Upgrade Now &mdash; 75% Off", "{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=welcome_free_stocks")}
-          ${ctaSecondary("Continue with Folio", "{{base_url}}/?utm_source=email&utm_medium=lifecycle&utm_campaign=welcome_free_stocks")}
+          ${ctaSecondary("Keep exploring", "{{base_url}}/?utm_source=email&utm_medium=lifecycle&utm_campaign=welcome_free_stocks")}
         </td></tr>
         ${divider()}
-        ${tip("&#x1F4A1; <strong>Your Folio plan</strong> includes up to 15 holdings, 1 portfolio, and 5 AI calls/month. Upgrade to unlock more.")}
+        ${tip("&#x1F4A1; <strong>Getting started is easy:</strong> Add just one stock to see your dashboard come alive with real-time data, charts, and AI insights.")}
 ${FOOTER}`;
 
 const welcomeFreeStocksHtmlEs = `${HEADER}
@@ -251,27 +230,27 @@ const welcomeFreeStocksHtmlEs = `${HEADER}
           ${heading("&iexcl;Has empezado genial!")}
           ${intro("Has a&ntilde;adido tus primeras acciones &mdash; tu dashboard ahora est&aacute; siguiendo tus inversiones en tiempo real. Esto es lo que trefolio puede hacer por ti:")}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
-            ${featureWithTier("&#x1F4C8;", "Dashboard en Tiempo Real", "Valor de tu cartera, cambios diarios, distribuci&oacute;n de activos y gr&aacute;ficos de rendimiento &mdash; todo actualiz&aacute;ndose en vivo.", FREE_BADGE)}
-            ${featureWithTier("&#x1F4B0;", "Insights de Dividendos", "Proyecciones de ingresos anuales, seguimiento de rendimiento y calendario mensual de dividendos.", FREE_BADGE)}
-            ${featureWithTier("&#x1F916;", "An&aacute;lisis IA", "Pregunta a nuestra IA lo que quieras sobre tus acciones. An&aacute;lisis de resultados, evaluaci&oacute;n de riesgos y comparativas.", FREE_BADGE)}
-            ${featureWithTier("&#x1F514;", "Alertas de Precio", "No te pierdas ning&uacute;n movimiento. Configura alertas y recibe notificaciones por email o push.", BIFOLIO_BADGE)}
-            ${featureWithTier("&#x1F4CA;", "M&eacute;tricas de Rendimiento", "Ratio Sharpe, drawdown m&aacute;ximo, TTWROR e historial completo de crecimiento.", BIFOLIO_BADGE)}
-            ${featureWithTier("&#x1F3E6;", "Fundamentales de Empresa", "Cuenta de resultados, balance, flujo de caja, operaciones de insiders y posiciones institucionales.", TREFOLIO_BADGE)}
-            ${featureWithTier("&#x1F50D;", "Buscador y Simulador", "Filtra 600+ acciones y simula estrategias con nuestro simulador what-if.", TREFOLIO_BADGE)}
+            ${feature("&#x1F4C8;", "Dashboard en Tiempo Real", "Valor de tu cartera, cambios diarios, distribuci&oacute;n de activos y gr&aacute;ficos de rendimiento &mdash; todo actualiz&aacute;ndose en vivo.")}
+            ${feature("&#x1F4B0;", "Insights de Dividendos", "Proyecciones de ingresos anuales, seguimiento de rendimiento y calendario mensual de dividendos.")}
+            ${feature("&#x1F916;", "An&aacute;lisis IA", "Pregunta a nuestra IA lo que quieras sobre tus acciones. An&aacute;lisis de resultados, evaluaci&oacute;n de riesgos y comparativas.")}
+            ${feature("&#x1F514;", "Alertas de Precio", "No te pierdas ning&uacute;n movimiento. Configura alertas y recibe notificaciones por email o push.")}
+            ${feature("&#x1F4CA;", "M&eacute;tricas de Rendimiento", "Ratio Sharpe, drawdown m&aacute;ximo, TTWROR e historial completo de crecimiento.")}
+            ${feature("&#x1F3E6;", "Fundamentales de Empresa", "Cuenta de resultados, balance, flujo de caja, operaciones de insiders y posiciones institucionales.")}
+            ${feature("&#x1F50D;", "Buscador y Simulador", "Filtra 600+ acciones y simula estrategias con nuestro simulador what-if.")}
           </table>
           ${voucherBoxEs("EARLYBIRD", "75%")}
           ${cta("Mejora Ahora &mdash; 75% Dto", "{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=welcome_free_stocks")}
-          ${ctaSecondary("Continuar con Folio", "{{base_url}}/?utm_source=email&utm_medium=lifecycle&utm_campaign=welcome_free_stocks")}
+          ${ctaSecondary("Seguir explorando", "{{base_url}}/?utm_source=email&utm_medium=lifecycle&utm_campaign=welcome_free_stocks")}
         </td></tr>
         ${divider()}
-        ${tip("&#x1F4A1; <strong>Tu plan Folio</strong> incluye hasta 15 posiciones, 1 cartera y 5 consultas IA/mes. Mejora para desbloquear m&aacute;s.")}
+        ${tip("&#x1F4A1; <strong>Empezar es f&aacute;cil:</strong> A&ntilde;ade solo una acci&oacute;n para ver tu dashboard cobrar vida con datos en tiempo real, gr&aacute;ficos e insights de IA.")}
 ${FOOTER_ES}`;
 
-/* ── 3. Bifolio Upgrade ── */
+/* ── 3. trefolio Upgrade ── */
 
-const bifolioUpgradeHtml = `${headerWithBadge("Bifolio")}
+const bifolioUpgradeHtml = `${HEADER}
         <tr><td style="padding:36px 32px 16px;">
-          ${heading("Welcome to Bifolio!")}
+          ${heading("Welcome to trefolio!")}
           ${paragraph("Your upgrade is active. Here&rsquo;s everything you just unlocked:")}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             ${feature("&#x1F517;", "Portfolio Sharing", "Generate a public link to share your portfolio performance with anyone &mdash; friends, family, or your community.", true)}
@@ -288,12 +267,12 @@ const bifolioUpgradeHtml = `${headerWithBadge("Bifolio")}
           ${ctaSecondary("Share Your Portfolio", "{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade")}
         </td></tr>
         ${divider()}
-        ${upsellTip("<strong>Want even more?</strong> Trefolio unlocks company fundamentals, stock screener, tax reports, WhatsApp alerts, and unlimited holdings. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Learn more</a>")}
+        ${upsellTip("<strong>Want even more?</strong> trefolio unlocks company fundamentals, stock screener, tax reports, WhatsApp alerts, and unlimited holdings. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Learn more</a>")}
 ${FOOTER}`;
 
-const bifolioUpgradeHtmlEs = `${headerWithBadge("Bifolio")}
+const bifolioUpgradeHtmlEs = `${HEADER}
         <tr><td style="padding:36px 32px 16px;">
-          ${heading("&iexcl;Bienvenido a Bifolio!")}
+          ${heading("&iexcl;Bienvenido a trefolio!")}
           ${paragraph("Tu mejora est&aacute; activa. Esto es todo lo que has desbloqueado:")}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             ${feature("&#x1F517;", "Compartir Cartera", "Genera un enlace p&uacute;blico para compartir el rendimiento de tu cartera con quien quieras.", true)}
@@ -310,14 +289,14 @@ const bifolioUpgradeHtmlEs = `${headerWithBadge("Bifolio")}
           ${ctaSecondary("Compartir Cartera", "{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade")}
         </td></tr>
         ${divider()}
-        ${upsellTip("<strong>&iquest;Quieres m&aacute;s?</strong> Trefolio desbloquea fundamentales, buscador de acciones, informes fiscales, alertas WhatsApp y posiciones ilimitadas. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Saber m&aacute;s</a>")}
+        ${upsellTip("<strong>&iquest;Quieres m&aacute;s?</strong> trefolio desbloquea fundamentales, buscador de acciones, informes fiscales, alertas WhatsApp y posiciones ilimitadas. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Saber m&aacute;s</a>")}
 ${FOOTER_ES}`;
 
-/* ── 4. Trefolio Upgrade ── */
+/* ── 4. trefolio Upgrade ── */
 
-const trefolioUpgradeHtml = `${headerWithBadge("&#x2B50; Trefolio Pro &#x2B50;")}
+const trefolioUpgradeHtml = `${HEADER}
         <tr><td style="padding:36px 32px 16px;">
-          ${heading("Welcome to Trefolio Pro!")}
+          ${heading("Welcome to trefolio!")}
           ${paragraph("You now have full access to every feature trefolio offers. Here&rsquo;s your complete toolkit:")}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
             ${proFeatureGroup("Data &amp; Analysis", ["Alpha Vantage premium data", "Company fundamentals: income, balance sheet, cash flow", "Economic indicators dashboard"])}
@@ -335,9 +314,9 @@ const trefolioUpgradeHtml = `${headerWithBadge("&#x2B50; Trefolio Pro &#x2B50;")
         ${tip("&#x1F31F; <strong>You&rsquo;re one of our first 500 Pro members.</strong> Thank you for believing in trefolio. Your feedback shapes what we build next.")}
 ${FOOTER}`;
 
-const trefolioUpgradeHtmlEs = `${headerWithBadge("&#x2B50; Trefolio Pro &#x2B50;")}
+const trefolioUpgradeHtmlEs = `${HEADER}
         <tr><td style="padding:36px 32px 16px;">
-          ${heading("&iexcl;Bienvenido a Trefolio Pro!")}
+          ${heading("&iexcl;Bienvenido a trefolio!")}
           ${paragraph("Ahora tienes acceso completo a todas las funciones de trefolio. Aqu&iacute; tienes tu kit completo:")}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
             ${proFeatureGroup("Datos y An&aacute;lisis", ["Datos premium de Alpha Vantage", "Fundamentales: cuenta de resultados, balance, flujo de caja", "Panel de indicadores econ&oacute;micos"])}
@@ -399,7 +378,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x26A1;", "Auto-refresh", "Quotes refresh every 15 seconds (configurable to 30s or 60s in your settings).")}
             ${feature("&#x1F4B1;", "Multi-currency", "See values in your local currency. We support 21 currencies with automatic conversion.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${FREE_BADGE} Available on all plans</p>
           ${cta("Open Your Dashboard", "{{base_url}}/?utm_source=email&utm_medium=feature&utm_campaign=real_time_quotes")}`),
     bodyHtmlEs: featureEmailEs("Cotizaciones en Tiempo Real", "&#x1F4C8;", `
           ${intro("Tu dashboard actualiza los precios en vivo durante todo el d&iacute;a de negociaci&oacute;n &mdash; sin necesidad de refrescar.")}
@@ -409,7 +387,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x26A1;", "Auto-refresco", "Las cotizaciones se actualizan cada 15 segundos (configurable a 30s o 60s).")}
             ${feature("&#x1F4B1;", "Multi-divisa", "Ve los valores en tu moneda local. Soportamos 21 divisas con conversi&oacute;n autom&aacute;tica.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${FREE_BADGE} Disponible en todos los planes</p>
           ${cta("Abre Tu Dashboard", "{{base_url}}/?utm_source=email&utm_medium=feature&utm_campaign=real_time_quotes")}`),
     bodyText: "Real-time Quotes\n\nYour portfolio dashboard updates prices live throughout the trading day.\n\n- 60+ exchanges worldwide via Yahoo Finance\n- Auto-refresh every 15 seconds\n- 21 currencies with automatic conversion\n\nAvailable on all plans.\n\nOpen your dashboard: {{base_url}}/",
     bodyTextEs: "Cotizaciones en Tiempo Real\n\nTu dashboard actualiza precios en vivo durante todo el día.\n\n- 60+ bolsas con Yahoo Finance\n- Auto-refresco cada 15 segundos\n- 21 divisas con conversión automática\n\nDisponible en todos los planes.\n\nAbre tu dashboard: {{base_url}}/",
@@ -430,7 +407,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F4C9;", "Yield-on-Cost", "Track your real yield based on purchase price &mdash; not just the current dividend rate.")}
             ${feature("&#x1F504;", "DRIP Simulation", "See how reinvesting dividends could compound your returns over 5, 10, or 20 years.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${FREE_BADGE} Available on all plans</p>
           ${cta("View Your Dividends", "{{base_url}}/tools/dividends?utm_source=email&utm_medium=feature&utm_campaign=dividend_tracking")}`),
     bodyHtmlEs: featureEmailEs("Seguimiento de Dividendos", "&#x1F4B0;", `
           ${intro("trefolio detecta autom&aacute;ticamente los dividendos de tus posiciones y construye una imagen completa de tus ingresos.")}
@@ -441,7 +417,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F4C9;", "Rendimiento sobre Coste", "Sigue tu rendimiento real basado en el precio de compra.")}
             ${feature("&#x1F504;", "Simulaci&oacute;n DRIP", "Ve c&oacute;mo reinvertir dividendos podr&iacute;a multiplicar tus retornos en 5, 10 o 20 a&ntilde;os.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${FREE_BADGE} Disponible en todos los planes</p>
           ${cta("Ver Tus Dividendos", "{{base_url}}/tools/dividends?utm_source=email&utm_medium=feature&utm_campaign=dividend_tracking")}`),
     bodyText: "Dividend Tracking\n\ntrefolio automatically detects dividends and builds a complete income picture.\n\n- Dividend calendar with monthly view\n- Annual income projections per stock\n- Yield-on-cost tracking\n- DRIP reinvestment simulation\n\nAvailable on all plans.\n\nView dividends: {{base_url}}/tools/dividends",
     bodyTextEs: "Seguimiento de Dividendos\n\ntrefolio detecta dividendos automáticamente.\n\n- Calendario mensual de dividendos\n- Proyección de ingresos anuales por acción\n- Rendimiento sobre coste\n- Simulación de reinversión DRIP\n\nDisponible en todos los planes.\n\nVer dividendos: {{base_url}}/tools/dividends",
@@ -462,7 +437,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F50E;", "Competitor Comparison", "\"Compare MSFT vs GOOG\" &mdash; side-by-side analysis of financials, growth, and valuation.")}
             ${feature("&#x1F4CA;", "Portfolio Review", "\"Review my portfolio\" &mdash; AI analyzes your allocation, risk, and suggests improvements.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${FREE_BADGE} 5 calls/month &nbsp;|&nbsp; ${BIFOLIO_BADGE} 20/month &nbsp;|&nbsp; ${TREFOLIO_BADGE} Unlimited</p>
           ${cta("Try AI Analysis Now", "{{base_url}}/?utm_source=email&utm_medium=feature&utm_campaign=ai_analysis")}`),
     bodyHtmlEs: featureEmailEs("An&aacute;lisis IA de Acciones", "&#x1F916;", `
           ${intro("Pregunta a nuestra IA sobre cualquier acci&oacute;n en tu cartera o cualquier ticker que est&eacute;s considerando.")}
@@ -473,10 +447,9 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F50E;", "Comparaci&oacute;n", "\"Compara MSFT vs GOOG\" &mdash; an&aacute;lisis lado a lado de finanzas, crecimiento y valoraci&oacute;n.")}
             ${feature("&#x1F4CA;", "Revisi&oacute;n de Cartera", "\"Revisa mi cartera\" &mdash; la IA analiza tu distribuci&oacute;n, riesgo y sugiere mejoras.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${FREE_BADGE} 5/mes &nbsp;|&nbsp; ${BIFOLIO_BADGE} 20/mes &nbsp;|&nbsp; ${TREFOLIO_BADGE} Ilimitado</p>
           ${cta("Probar An&aacute;lisis IA", "{{base_url}}/?utm_source=email&utm_medium=feature&utm_campaign=ai_analysis")}`),
-    bodyText: "AI Stock Analysis\n\nAsk our AI about any stock. Get institutional-quality analysis in seconds.\n\n- Earnings analysis and guidance summaries\n- Risk assessment with competitive threats\n- Competitor comparison side-by-side\n- Full portfolio review with suggestions\n\nFolio: 5 calls/month | Bifolio: 20/month | Trefolio: Unlimited",
-    bodyTextEs: "Análisis IA de Acciones\n\nPregunta a nuestra IA sobre cualquier acción.\n\n- Análisis de resultados\n- Evaluación de riesgos\n- Comparación de competidores\n- Revisión completa de cartera\n\nFolio: 5/mes | Bifolio: 20/mes | Trefolio: Ilimitado",
+    bodyText: "AI Stock Analysis\n\nAsk our AI about any stock. Get institutional-quality analysis in seconds.\n\n- Earnings analysis and guidance summaries\n- Risk assessment with competitive threats\n- Competitor comparison side-by-side\n- Full portfolio review with suggestions",
+    bodyTextEs: "Análisis IA de Acciones\n\nPregunta a nuestra IA sobre cualquier acción.\n\n- Análisis de resultados\n- Evaluación de riesgos\n- Comparación de competidores\n- Revisión completa de cartera",
   },
   {
     slug: "feature-price-alerts",
@@ -491,10 +464,9 @@ const featureTemplates: TemplateSeed[] = [
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             ${feature("&#x1F3AF;", "Threshold Alerts", "Set \"above\" or \"below\" price targets. Get notified when any stock crosses your line.")}
             ${feature("&#x1F4C9;", "Percent Change Alerts", "Track daily or from-purchase percent changes. Catch drops or rallies early.")}
-            ${feature("&#x1F4E7;", "Multi-channel", "Email and push alerts on Bifolio. Add WhatsApp and device alerts on Trefolio.")}
+            ${feature("&#x1F4E7;", "Multi-channel", "Email, push, WhatsApp, and device alerts.")}
             ${feature("&#x23F0;", "Cron-powered", "Our system checks prices every minute during market hours. You never need to watch the screen.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${BIFOLIO_BADGE} Up to 10 alerts &nbsp;|&nbsp; ${TREFOLIO_BADGE} Unlimited alerts</p>
           ${cta("Create Your First Alert", "{{base_url}}/tools/alerts?utm_source=email&utm_medium=feature&utm_campaign=price_alerts")}`),
     bodyHtmlEs: featureEmailEs("Alertas de Precio", "&#x1F514;", `
           ${intro("No te pierdas ning&uacute;n movimiento importante. Configura precios objetivo y recibe notificaciones al instante.")}
@@ -502,13 +474,12 @@ const featureTemplates: TemplateSeed[] = [
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             ${feature("&#x1F3AF;", "Alertas de Umbral", "Configura objetivos \"por encima\" o \"por debajo\". Recibe aviso cuando se crucen.")}
             ${feature("&#x1F4C9;", "Alertas de % de Cambio", "Sigue cambios porcentuales diarios o desde la compra.")}
-            ${feature("&#x1F4E7;", "Multi-canal", "Email y push en Bifolio. A&ntilde;ade WhatsApp y dispositivo en Trefolio.")}
+            ${feature("&#x1F4E7;", "Multi-canal", "Email, push, WhatsApp y notificaciones de dispositivo.")}
             ${feature("&#x23F0;", "Automatizado", "Nuestro sistema revisa precios cada minuto durante el horario de mercado.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${BIFOLIO_BADGE} Hasta 10 alertas &nbsp;|&nbsp; ${TREFOLIO_BADGE} Alertas ilimitadas</p>
           ${cta("Crea Tu Primera Alerta", "{{base_url}}/tools/alerts?utm_source=email&utm_medium=feature&utm_campaign=price_alerts")}`),
-    bodyText: "Price Alerts\n\nSet target prices and get notified when stocks cross your threshold.\n\n- Above/below price targets\n- Daily or from-purchase % change alerts\n- Email, push, WhatsApp, and device notifications\n- Checked every minute during market hours\n\nBifolio: 10 alerts | Trefolio: Unlimited",
-    bodyTextEs: "Alertas de Precio\n\nConfigura precios objetivo y recibe notificaciones.\n\n- Objetivos por encima/debajo\n- Alertas de % de cambio diario o desde compra\n- Email, push, WhatsApp y dispositivo\n- Revisado cada minuto en horario de mercado\n\nBifolio: 10 alertas | Trefolio: Ilimitadas",
+    bodyText: "Price Alerts\n\nSet target prices and get notified when stocks cross your threshold.\n\n- Above/below price targets\n- Daily or from-purchase % change alerts\n- Email, push, WhatsApp, and device notifications\n- Checked every minute during market hours",
+    bodyTextEs: "Alertas de Precio\n\nConfigura precios objetivo y recibe notificaciones.\n\n- Objetivos por encima/debajo\n- Alertas de % de cambio diario o desde compra\n- Email, push, WhatsApp y dispositivo\n- Revisado cada minuto en horario de mercado",
   },
   {
     slug: "feature-broker-import",
@@ -525,7 +496,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F4C4;", "CSV Upload", "Export a CSV from your broker and upload it. We support 20+ broker formats including DEGIRO, Interactive Brokers, Trade Republic, and more.", true)}
             ${feature("&#x1F916;", "AI Import", "Upload any file &mdash; CSV, PDF, or screenshot &mdash; and our AI will parse it into your portfolio. Works even with unusual formats.", true)}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${FREE_BADGE} CSV &amp; Manual &nbsp;|&nbsp; ${BIFOLIO_BADGE} + Broker Sync &nbsp;|&nbsp; ${TREFOLIO_BADGE} + AI Import</p>
           ${cta("Import Your Portfolio", "{{base_url}}/import?utm_source=email&utm_medium=feature&utm_campaign=broker_import")}`),
     bodyHtmlEs: featureEmailEs("Importar Cartera", "&#x1F4E5;", `
           ${intro("&iquest;A&ntilde;adiendo acciones una por una? Hay una forma m&aacute;s r&aacute;pida. trefolio soporta tres m&eacute;todos de importaci&oacute;n.")}
@@ -535,10 +505,9 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F4C4;", "Subir CSV", "Exporta un CSV de tu br&oacute;ker y s&uacute;belo. Soportamos 20+ formatos incluyendo DEGIRO, Interactive Brokers, Trade Republic y m&aacute;s.", true)}
             ${feature("&#x1F916;", "Importar con IA", "Sube cualquier archivo &mdash; CSV, PDF o captura &mdash; y nuestra IA lo convertir&aacute; en tu cartera.", true)}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${FREE_BADGE} CSV y Manual &nbsp;|&nbsp; ${BIFOLIO_BADGE} + Broker Sync &nbsp;|&nbsp; ${TREFOLIO_BADGE} + IA Import</p>
           ${cta("Importar Tu Cartera", "{{base_url}}/import?utm_source=email&utm_medium=feature&utm_campaign=broker_import")}`),
-    bodyText: "Portfolio Import\n\nGet your full portfolio in seconds with three import methods.\n\n- Broker Sync: auto-sync holdings, cash, and transactions (Bifolio+)\n- CSV Upload: 20+ broker formats supported (all plans)\n- AI Import: upload any file format (Trefolio)\n\nImport now: {{base_url}}/import",
-    bodyTextEs: "Importar Cartera\n\nTres métodos para importar tu cartera en segundos.\n\n- Broker Sync: sincroniza automáticamente (Bifolio+)\n- CSV: 20+ formatos de broker (todos los planes)\n- IA Import: cualquier formato de archivo (Trefolio)\n\nImportar: {{base_url}}/import",
+    bodyText: "Portfolio Import\n\nGet your full portfolio in seconds with three import methods.\n\n- Broker Sync: auto-sync holdings, cash, and transactions (trefolio+)\n- CSV Upload: 20+ broker formats supported (all plans)\n- AI Import: upload any file format\n\nImport now: {{base_url}}/import",
+    bodyTextEs: "Importar Cartera\n\nTres métodos para importar tu cartera en segundos.\n\n- Broker Sync: sincroniza automáticamente (trefolio+)\n- CSV: 20+ formatos de broker (todos los planes)\n- IA Import: cualquier formato de archivo\n\nImportar: {{base_url}}/import",
   },
   {
     slug: "feature-fundamentals",
@@ -557,7 +526,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F50D;", "Insider Trades", "See what executives and directors are buying and selling.")}
             ${feature("&#x1F3DB;", "Institutional Holdings", "Track what the big funds own &mdash; Vanguard, BlackRock, Fidelity, and more.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Trefolio Pro exclusive</p>
           ${cta("Explore Fundamentals", "{{base_url}}/?utm_source=email&utm_medium=feature&utm_campaign=fundamentals")}`),
     bodyHtmlEs: featureEmailEs("Fundamentales de Empresa", "&#x1F3E6;", `
           ${intro("Ve m&aacute;s all&aacute; de los precios. trefolio te da acceso a las finanzas completas de cada empresa.")}
@@ -569,10 +537,9 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F50D;", "Operaciones de Insiders", "Ve qu&eacute; compran y venden los ejecutivos y directores.")}
             ${feature("&#x1F3DB;", "Posiciones Institucionales", "Sigue lo que poseen los grandes fondos &mdash; Vanguard, BlackRock, Fidelity y m&aacute;s.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Exclusivo de Trefolio Pro</p>
           ${cta("Explorar Fundamentales", "{{base_url}}/?utm_source=email&utm_medium=feature&utm_campaign=fundamentals")}`),
-    bodyText: "Company Fundamentals\n\nComplete financials for any company.\n\n- Income statement: revenue, margins, EPS\n- Balance sheet: assets, liabilities, debt\n- Cash flow statement\n- Insider trades\n- Institutional holdings\n\nTrefolio Pro exclusive.",
-    bodyTextEs: "Fundamentales de Empresa\n\nFinanzas completas de cualquier empresa.\n\n- Cuenta de resultados\n- Balance\n- Flujo de caja\n- Operaciones de insiders\n- Posiciones institucionales\n\nExclusivo de Trefolio Pro.",
+    bodyText: "Company Fundamentals\n\nComplete financials for any company.\n\n- Income statement: revenue, margins, EPS\n- Balance sheet: assets, liabilities, debt\n- Cash flow statement\n- Insider trades\n- Institutional holdings\n\ntrefolio exclusive.",
+    bodyTextEs: "Fundamentales de Empresa\n\nFinanzas completas de cualquier empresa.\n\n- Cuenta de resultados\n- Balance\n- Flujo de caja\n- Operaciones de insiders\n- Posiciones institucionales\n\n",
   },
   {
     slug: "feature-stock-screener",
@@ -590,7 +557,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F4CA;", "Rich Data", "Price, change %, market cap, P/E, dividend yield, and sector for every result.")}
             ${feature("&#x2795;", "Quick Add", "Found something interesting? Add it to your portfolio or watchlist directly from results.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Trefolio Pro exclusive</p>
           ${cta("Open the Screener", "{{base_url}}/tools/screener?utm_source=email&utm_medium=feature&utm_campaign=stock_screener")}`),
     bodyHtmlEs: featureEmailEs("Buscador de Acciones", "&#x1F50D;", `
           ${intro("Descubre acciones que coincidan con tus criterios de inversi&oacute;n. Filtra 600+ acciones y aplica estrategias probadas.")}
@@ -601,10 +567,9 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F4CA;", "Datos Completos", "Precio, cambio %, cap, P/E, dividendo y sector para cada resultado.")}
             ${feature("&#x2795;", "A&ntilde;adir R&aacute;pido", "&iquest;Encontraste algo? A&ntilde;&aacute;delo a tu cartera o watchlist directamente.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Exclusivo de Trefolio Pro</p>
           ${cta("Abrir el Buscador", "{{base_url}}/tools/screener?utm_source=email&utm_medium=feature&utm_campaign=stock_screener")}`),
-    bodyText: "Stock Screener\n\nFilter 600+ stocks with 6 dimensions and 5 strategies.\n\n- Market cap, P/E, dividend yield, sector, country, exchange\n- Value, dividend growth, momentum, quality, small-cap strategies\n- Add to portfolio or watchlist from results\n\nTrefolio Pro exclusive.",
-    bodyTextEs: "Buscador de Acciones\n\nFiltra 600+ acciones con 6 dimensiones y 5 estrategias.\n\n- Cap, P/E, dividendo, sector, país, bolsa\n- Estrategias: valor, dividendo, momentum, calidad, small-cap\n- Añade a cartera o watchlist desde resultados\n\nExclusivo de Trefolio Pro.",
+    bodyText: "Stock Screener\n\nFilter 600+ stocks with 6 dimensions and 5 strategies.\n\n- Market cap, P/E, dividend yield, sector, country, exchange\n- Value, dividend growth, momentum, quality, small-cap strategies\n- Add to portfolio or watchlist from results\n\ntrefolio exclusive.",
+    bodyTextEs: "Buscador de Acciones\n\nFiltra 600+ acciones con 6 dimensiones y 5 estrategias.\n\n- Cap, P/E, dividendo, sector, país, bolsa\n- Estrategias: valor, dividendo, momentum, calidad, small-cap\n- Añade a cartera o watchlist desde resultados\n\n",
   },
   {
     slug: "feature-tax-reports",
@@ -622,7 +587,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F4B0;", "Dividend Income", "Gross dividends, withholding tax, and net income by country of origin.")}
             ${feature("&#x1F916;", "AI Tax Assistant", "Ask questions like \"How much withholding tax did I pay on US dividends?\" and get instant answers.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Trefolio Pro exclusive</p>
           ${cta("Generate Your Tax Report", "{{base_url}}/tools/tax?utm_source=email&utm_medium=feature&utm_campaign=tax_reports")}`),
     bodyHtmlEs: featureEmailEs("Informes Fiscales", "&#x1F4CB;", `
           ${intro("La declaraci&oacute;n fiscal no tiene que ser complicada. trefolio genera informes espec&iacute;ficos por pa&iacute;s con un Asistente Fiscal IA.")}
@@ -633,10 +597,9 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F4B0;", "Ingresos por Dividendos", "Dividendos brutos, retenci&oacute;n fiscal y neto por pa&iacute;s de origen.")}
             ${feature("&#x1F916;", "Asistente Fiscal IA", "Pregunta cosas como \"&iquest;Cu&aacute;nta retenci&oacute;n pagu&eacute; en dividendos de EEUU?\" y obt&eacute;n respuestas.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Exclusivo de Trefolio Pro</p>
           ${cta("Generar Informe Fiscal", "{{base_url}}/tools/tax?utm_source=email&utm_medium=feature&utm_campaign=tax_reports")}`),
-    bodyText: "Tax Reports\n\nCountry-specific EU tax reports with AI assistant.\n\n- Reports for DE, FR, ES, NL, IT\n- Capital gains/losses calculation\n- Dividend income with withholding tax\n- AI Tax Assistant for questions\n\nTrefolio Pro exclusive.",
-    bodyTextEs: "Informes Fiscales\n\nInformes fiscales EU específicos por país con asistente IA.\n\n- Informes para DE, FR, ES, NL, IT\n- Cálculo de plusvalías/minusvalías\n- Ingresos por dividendos con retención\n- Asistente Fiscal IA\n\nExclusivo de Trefolio Pro.",
+    bodyText: "Tax Reports\n\nCountry-specific EU tax reports with AI assistant.\n\n- Reports for DE, FR, ES, NL, IT\n- Capital gains/losses calculation\n- Dividend income with withholding tax\n- AI Tax Assistant for questions\n\ntrefolio exclusive.",
+    bodyTextEs: "Informes Fiscales\n\nInformes fiscales EU específicos por país con asistente IA.\n\n- Informes para DE, FR, ES, NL, IT\n- Cálculo de plusvalías/minusvalías\n- Ingresos por dividendos con retención\n- Asistente Fiscal IA\n\n",
   },
   {
     slug: "feature-portfolio-simulator",
@@ -653,7 +616,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F300;", "Stress Testing", "What if the market drops 30%? What about rising rates? See how your portfolio holds up under different scenarios.")}
             ${feature("&#x1F52E;", "What-if Analysis", "Add or remove positions, change allocations, and instantly see the impact on risk and return.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Trefolio Pro exclusive</p>
           ${cta("Open the Simulator", "{{base_url}}/tools/simulator?utm_source=email&utm_medium=feature&utm_campaign=portfolio_simulator")}`),
     bodyHtmlEs: featureEmailEs("Simulador de Cartera", "&#x1F3AE;", `
           ${intro("Prueba tus ideas de inversi&oacute;n antes de arriesgar dinero real. El simulador te permite hacer backtesting, pruebas de estr&eacute;s y escenarios what-if.")}
@@ -663,10 +625,9 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F300;", "Pruebas de Estr&eacute;s", "&iquest;Qu&eacute; pasa si el mercado cae un 30%? Ve c&oacute;mo tu cartera aguanta diferentes escenarios.")}
             ${feature("&#x1F52E;", "An&aacute;lisis What-if", "A&ntilde;ade o elimina posiciones, cambia distribuciones y ve el impacto instant&aacute;neo en riesgo y retorno.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Exclusivo de Trefolio Pro</p>
           ${cta("Abrir el Simulador", "{{base_url}}/tools/simulator?utm_source=email&utm_medium=feature&utm_campaign=portfolio_simulator")}`),
-    bodyText: "Portfolio Simulator\n\nBacktest, stress-test, and explore what-if scenarios.\n\n- Historical backtesting vs benchmarks\n- Stress testing: market crashes, rate changes\n- What-if: add/remove positions, see instant impact\n\nTrefolio Pro exclusive.",
-    bodyTextEs: "Simulador de Cartera\n\nBacktesting, pruebas de estrés y escenarios what-if.\n\n- Backtesting histórico vs benchmarks\n- Pruebas de estrés: caídas de mercado, cambios de tipos\n- What-if: añade/elimina posiciones\n\nExclusivo de Trefolio Pro.",
+    bodyText: "Portfolio Simulator\n\nBacktest, stress-test, and explore what-if scenarios.\n\n- Historical backtesting vs benchmarks\n- Stress testing: market crashes, rate changes\n- What-if: add/remove positions, see instant impact\n\ntrefolio exclusive.",
+    bodyTextEs: "Simulador de Cartera\n\nBacktesting, pruebas de estrés y escenarios what-if.\n\n- Backtesting histórico vs benchmarks\n- Pruebas de estrés: caídas de mercado, cambios de tipos\n- What-if: añade/elimina posiciones\n\n",
   },
   {
     slug: "feature-net-worth",
@@ -684,7 +645,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F3E6;", "Pensions &amp; Insurance", "Include pension funds and life insurance policies in your net worth.")}
             ${feature("&#x1F4CA;", "Total Net Worth", "See everything combined: stocks + ETFs + crypto + real estate + savings + pensions = your complete picture.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${BIFOLIO_BADGE} Up to 10 assets &nbsp;|&nbsp; ${TREFOLIO_BADGE} Up to 999 assets</p>
           ${cta("Add Manual Assets", "{{base_url}}/tools/net-worth?utm_source=email&utm_medium=feature&utm_campaign=net_worth")}`),
     bodyHtmlEs: featureEmailEs("Seguimiento de Patrimonio Neto", "&#x1F3E0;", `
           ${intro("Tus inversiones son solo una parte de tus finanzas. Registra todo &mdash; inmuebles, ahorros, pensiones y m&aacute;s &mdash; en un solo lugar.")}
@@ -695,10 +655,9 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F3E6;", "Pensiones y Seguros", "Incluye fondos de pensiones y p&oacute;lizas de seguro de vida.")}
             ${feature("&#x1F4CA;", "Patrimonio Total", "Ve todo combinado: acciones + ETFs + crypto + inmuebles + ahorros + pensiones.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${BIFOLIO_BADGE} Hasta 10 activos &nbsp;|&nbsp; ${TREFOLIO_BADGE} Hasta 999 activos</p>
           ${cta("A&ntilde;adir Activos Manuales", "{{base_url}}/tools/net-worth?utm_source=email&utm_medium=feature&utm_campaign=net_worth")}`),
-    bodyText: "Net Worth Tracking\n\nTrack your complete financial picture beyond stocks.\n\n- Real estate, savings accounts, pensions\n- All combined into total net worth\n\nBifolio: 10 manual assets | Trefolio: 999 assets",
-    bodyTextEs: "Patrimonio Neto\n\nSigue tu imagen financiera completa.\n\n- Inmuebles, cuentas de ahorro, pensiones\n- Todo combinado en patrimonio total\n\nBifolio: 10 activos | Trefolio: 999 activos",
+    bodyText: "Net Worth Tracking\n\nTrack your complete financial picture beyond stocks.\n\n- Real estate, savings accounts, pensions\n- All combined into total net worth",
+    bodyTextEs: "Patrimonio Neto\n\nSigue tu imagen financiera completa.\n\n- Inmuebles, cuentas de ahorro, pensiones\n- Todo combinado en patrimonio total",
   },
   {
     slug: "feature-crypto",
@@ -716,7 +675,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F4C8;", "Charts &amp; History", "Price charts with multiple timeframes and exchange rate overlays.")}
             ${feature("&#x1F916;", "AI Crypto Analysis", "Ask our AI about any crypto &mdash; fundamentals, trends, and market analysis.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${FREE_BADGE} Market overview &nbsp;|&nbsp; ${TREFOLIO_BADGE} Full portfolio tracking &amp; AI</p>
           ${cta("Explore Crypto", "{{base_url}}/crypto?utm_source=email&utm_medium=feature&utm_campaign=crypto")}`),
     bodyHtmlEs: featureEmailEs("Cartera Crypto", "&#x1FA99;", `
           ${intro("Sigue crypto junto a tus acciones y ETFs. Obt&eacute;n el mismo nivel de an&aacute;lisis para tus criptomonedas.")}
@@ -727,10 +685,9 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F4C8;", "Gr&aacute;ficos e Historial", "Gr&aacute;ficos de precio con m&uacute;ltiples periodos y tipos de cambio.")}
             ${feature("&#x1F916;", "An&aacute;lisis IA Crypto", "Pregunta a nuestra IA sobre cualquier crypto &mdash; fundamentales, tendencias y mercado.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${FREE_BADGE} Vista de mercado &nbsp;|&nbsp; ${TREFOLIO_BADGE} Cartera completa y IA</p>
           ${cta("Explorar Crypto", "{{base_url}}/crypto?utm_source=email&utm_medium=feature&utm_campaign=crypto")}`),
-    bodyText: "Crypto Portfolio\n\nTrack crypto alongside stocks and ETFs.\n\n- Crypto market overview (all plans)\n- Full portfolio tracking (Trefolio)\n- Charts and price history\n- AI crypto analysis\n\nFolio: Market overview | Trefolio: Full tracking & AI",
-    bodyTextEs: "Cartera Crypto\n\nSigue crypto junto a acciones y ETFs.\n\n- Vista de mercado crypto (todos los planes)\n- Seguimiento completo (Trefolio)\n- Gráficos e historial\n- Análisis IA crypto\n\nFolio: Vista de mercado | Trefolio: Tracking completo y IA",
+    bodyText: "Crypto Portfolio\n\nTrack crypto alongside stocks and ETFs.\n\n- Crypto market overview (all plans)\n- Full portfolio tracking\n- Charts and price history\n- AI crypto analysis",
+    bodyTextEs: "Cartera Crypto\n\nSigue crypto junto a acciones y ETFs.\n\n- Vista de mercado crypto (todos los planes)\n- Seguimiento completo\n- Gráficos e historial\n- Análisis IA crypto",
   },
   {
     slug: "feature-moat-screener",
@@ -748,7 +705,6 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F50D;", "Filter to your edge", "Minimum score, sector, and P/E &mdash; combine filters to surface ideas that fit your process.")}
             ${feature("&#x1F4CD;", "Where to open it", "Go to <strong>Tools &rarr; Stock evaluation</strong>, then select the <strong>Moat Screener</strong> tab.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Trefolio Pro exclusive</p>
           ${cta("Open Stock Evaluation", "{{base_url}}/tools/evaluation?utm_source=email&utm_medium=feature&utm_campaign=moat_screener")}`),
     bodyHtmlEs: featureEmailEs("Moat Screener", "&#x1F6E1;&#xFE0F;", `
           ${intro("Filtra cientos de acciones que ya tienen una evaluaci&oacute;n estilo moat &mdash; ocho criterios inspirados en c&oacute;mo los grandes inversores piensan en negocios duraderos.")}
@@ -759,10 +715,9 @@ const featureTemplates: TemplateSeed[] = [
             ${feature("&#x1F50D;", "Filtra seg&uacute;n tu criterio", "Puntuaci&oacute;n m&iacute;nima, sector y P/E &mdash; combina filtros para ver ideas que encajen con tu proceso.")}
             ${feature("&#x1F4CD;", "D&oacute;nde abrirlo", "Ve a <strong>Herramientas &rarr; Evaluaci&oacute;n de acciones</strong> y elige la pesta&ntilde;a <strong>Buscador de Moat</strong>.")}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Exclusivo de Trefolio Pro</p>
           ${cta("Abrir evaluaci&oacute;n de acciones", "{{base_url}}/tools/evaluation?utm_source=email&utm_medium=feature&utm_campaign=moat_screener")}`),
-    bodyText: "Moat Screener\n\nScreen hundreds of pre-evaluated stocks with eight moat-style criteria.\n\n- 680+ names in a shared, rolling-updated universe\n- Pass / warning / fail per criterion\n- Filters: min score, sector, P/E\n- Tools → Stock evaluation → Moat Screener tab\n\nTrefolio Pro exclusive.",
-    bodyTextEs: "Moat Screener\n\nFiltra cientos de acciones pre-evaluadas con ocho criterios estilo moat.\n\n- Más de 680 valores en un universo compartido\n- Aprobado / aviso / fallo por criterio\n- Filtros: puntuación mínima, sector, P/E\n- Herramientas → Evaluación → pestaña Buscador de Moat\n\nExclusivo de Trefolio Pro.",
+    bodyText: "Moat Screener\n\nScreen hundreds of pre-evaluated stocks with eight moat-style criteria.\n\n- 680+ names in a shared, rolling-updated universe\n- Pass / warning / fail per criterion\n- Filters: min score, sector, P/E\n- Tools → Stock evaluation → Moat Screener tab\n\ntrefolio exclusive.",
+    bodyTextEs: "Moat Screener\n\nFiltra cientos de acciones pre-evaluadas con ocho criterios estilo moat.\n\n- Más de 680 valores en un universo compartido\n- Aprobado / aviso / fallo por criterio\n- Filtros: puntuación mínima, sector, P/E\n- Herramientas → Evaluación → pestaña Buscador de Moat\n\n",
   },
 ];
 
@@ -777,7 +732,7 @@ const referralProgramHtml = `${HEADER}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             ${feature("&#x1F517;", "Share your personal link", "Send your unique referral link to friends, family, or your investing community. They get a great portfolio tool, you get rewarded.", true)}
             ${feature("&#x1F4E7;", "They sign up and verify", "Your friend creates a trefolio account using your link and verifies their email. That&rsquo;s it &mdash; no purchase required.", true)}
-            ${feature("&#x1F381;", "You earn 30 days of Pro", "Once they verify, you automatically get 30 days of Trefolio Pro added to your account. Stack up to 365 days!", true)}
+            ${feature("&#x1F381;", "You earn 30 days of Pro", "Once they verify, you automatically get 30 days of trefolio added to your account. Stack up to 365 days!", true)}
           </table>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
             <tr><td style="padding:20px 24px;background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-radius:12px;border:2px solid #10b981;text-align:center;">
@@ -801,7 +756,7 @@ const referralProgramHtmlEs = `${HEADER}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             ${feature("&#x1F517;", "Comparte tu enlace personal", "Env&iacute;a tu enlace &uacute;nico de referido a amigos, familia o tu comunidad de inversores. Ellos obtienen una gran herramienta, t&uacute; ganas.", true)}
             ${feature("&#x1F4E7;", "Se registran y verifican", "Tu amigo crea una cuenta en trefolio usando tu enlace y verifica su email. Eso es todo &mdash; no necesitan comprar nada.", true)}
-            ${feature("&#x1F381;", "Ganas 30 d&iacute;as de Pro", "Cuando verifican, autom&aacute;ticamente recibes 30 d&iacute;as de Trefolio Pro en tu cuenta. &iexcl;Acumula hasta 365 d&iacute;as!", true)}
+            ${feature("&#x1F381;", "Ganas 30 d&iacute;as de Pro", "Cuando verifican, autom&aacute;ticamente recibes 30 d&iacute;as de trefolio en tu cuenta. &iexcl;Acumula hasta 365 d&iacute;as!", true)}
           </table>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
             <tr><td style="padding:20px 24px;background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-radius:12px;border:2px solid #10b981;text-align:center;">
@@ -826,8 +781,8 @@ export const EMAIL_TEMPLATE_SEEDS: TemplateSeed[] = [
     subjectEs: "Bienvenido a trefolio \u2014 esto es lo que puedes hacer",
     bodyHtml: welcomeNoStocksHtml,
     bodyHtmlEs: welcomeNoStocksHtmlEs,
-    bodyText: "Welcome to trefolio! 🍀\n\nYour account is ready. trefolio is the extra leaf for your portfolio — here's what you can do:\n\n- Real-time quotes from 60+ exchanges (Free)\n- Dividend tracking with annual projections (Free)\n- AI stock analysis — 5 free calls/month (Free)\n- Easy import from 20+ brokers (Free)\n- Price alerts via email & push (Bifolio)\n- Advanced metrics: Sharpe, drawdown, volatility (Bifolio)\n- Company fundamentals & intelligence (Trefolio)\n- Stock screener: 600+ stocks (Trefolio)\n\nAdd your first stock: {{base_url}}/import",
-    bodyTextEs: "¡Bienvenido a trefolio! 🍀\n\nTu cuenta está lista. trefolio es la hoja extra para tu cartera — esto es lo que puedes hacer:\n\n- Cotizaciones en tiempo real de 60+ bolsas (Gratis)\n- Seguimiento de dividendos (Gratis)\n- Análisis IA — 5 consultas gratis/mes (Gratis)\n- Importación fácil de 20+ brókers (Gratis)\n- Alertas de precio por email y push (Bifolio)\n- Métricas avanzadas (Bifolio)\n- Fundamentales e inteligencia (Trefolio)\n- Buscador de acciones (Trefolio)\n\nAñade tu primera acción: {{base_url}}/import",
+    bodyText: "Welcome to trefolio! 🍀\n\nYour account is ready. trefolio is the extra leaf for your portfolio — here's what you can do:\n\n- Real-time quotes from 60+ exchanges\n- Dividend tracking with annual projections\n- AI stock analysis — 5 free calls/month\n- Easy import from 20+ brokers\n- Price alerts via email & push\n- Advanced metrics: Sharpe, drawdown, volatility\n- Company fundamentals & intelligence\n- Stock screener: 600+ stocks\n\nAdd your first stock: {{base_url}}/import",
+    bodyTextEs: "¡Bienvenido a trefolio! 🍀\n\nTu cuenta está lista. trefolio es la hoja extra para tu cartera — esto es lo que puedes hacer:\n\n- Cotizaciones en tiempo real de 60+ bolsas\n- Seguimiento de dividendos\n- Análisis IA — 5 consultas gratis/mes\n- Importación fácil de 20+ brókers\n- Alertas de precio por email y push\n- Métricas avanzadas\n- Fundamentales e inteligencia\n- Buscador de acciones\n\nAñade tu primera acción: {{base_url}}/import",
     category: "lifecycle",
     experienceLevel: "",
   },
@@ -838,40 +793,40 @@ export const EMAIL_TEMPLATE_SEEDS: TemplateSeed[] = [
     subjectEs: "Has empezado genial \u2014 aqu\u00ed tienes un 75% de descuento",
     bodyHtml: welcomeFreeStocksHtml,
     bodyHtmlEs: welcomeFreeStocksHtmlEs,
-    bodyText: "You're off to a great start!\n\nYou've added your first stocks. Here's what trefolio can do for you:\n\n- Real-time dashboard (Free)\n- Dividend insights (Free)\n- AI stock analysis (Free: 5/mo, Bifolio: 20/mo, Trefolio: unlimited)\n- Price alerts (Bifolio)\n- Performance metrics (Bifolio)\n- Company fundamentals (Trefolio)\n- Stock screener & simulator (Trefolio)\n\n🎁 EXCLUSIVE OFFER: 75% OFF\nUse code: EARLYBIRD\nValid on Bifolio & Trefolio — monthly or annual\n\nUpgrade: {{base_url}}/profile",
-    bodyTextEs: "¡Has empezado genial!\n\nHas añadido tus primeras acciones. Esto es lo que trefolio puede hacer:\n\n- Dashboard en tiempo real (Gratis)\n- Insights de dividendos (Gratis)\n- Análisis IA (Gratis: 5/mes, Bifolio: 20/mes, Trefolio: ilimitado)\n- Alertas de precio (Bifolio)\n- Métricas de rendimiento (Bifolio)\n- Fundamentales (Trefolio)\n- Buscador y simulador (Trefolio)\n\n🎁 OFERTA EXCLUSIVA: 75% DTO\nCódigo: EARLYBIRD\nVálido en Bifolio y Trefolio — mensual o anual\n\nMejorar: {{base_url}}/profile",
+    bodyText: "You're off to a great start!\n\nYou've added your first stocks. Here's what trefolio can do for you:\n\n- Real-time dashboard\n- Dividend insights\n- AI stock analysis\n- Price alerts\n- Performance metrics\n- Company fundamentals\n- Stock screener & simulator\n\n🎁 EXCLUSIVE OFFER: 75% OFF\nUse code: EARLYBIRD\nValid monthly or annual\n\nUpgrade: {{base_url}}/profile",
+    bodyTextEs: "¡Has empezado genial!\n\nHas añadido tus primeras acciones. Esto es lo que trefolio puede hacer:\n\n- Dashboard en tiempo real\n- Insights de dividendos\n- Análisis IA\n- Alertas de precio\n- Métricas de rendimiento\n- Fundamentales\n- Buscador y simulador\n\n🎁 OFERTA EXCLUSIVA: 75% DTO\nCódigo: EARLYBIRD\nVálido mensual o anual\n\nMejorar: {{base_url}}/profile",
     category: "lifecycle",
     experienceLevel: "",
   },
   {
     slug: "upgrade-bifolio",
-    name: "Upgrade — Bifolio",
-    subject: "Welcome to Bifolio \u2014 here\u2019s what you unlocked",
-    subjectEs: "Bienvenido a Bifolio \u2014 esto es lo que has desbloqueado",
+    name: "Upgrade — trefolio",
+    subject: "Welcome to trefolio \u2014 here\u2019s what you unlocked",
+    subjectEs: "Bienvenido a trefolio \u2014 esto es lo que has desbloqueado",
     bodyHtml: bifolioUpgradeHtml,
     bodyHtmlEs: bifolioUpgradeHtmlEs,
-    bodyText: "Welcome to Bifolio!\n\nHere's everything you just unlocked:\n\n✅ Portfolio sharing — public link\n✅ CSV export\n✅ Email & push alerts — up to 10\n✅ Advanced metrics (Sharpe, drawdown, volatility)\n✅ Full portfolio growth history\n✅ Net worth tracking — up to 10 manual assets\n✅ Broker sync — one-click auto-sync\n✅ 20 AI calls/month (up from 5)\n✅ AI Support Agent — 24/7\n\nSet up your first alert: {{base_url}}/tools/alerts\n\nWant more? Trefolio unlocks fundamentals, screener, tax reports, WhatsApp alerts, and unlimited holdings.",
-    bodyTextEs: "¡Bienvenido a Bifolio!\n\nEsto es lo que has desbloqueado:\n\n✅ Compartir cartera — enlace público\n✅ Exportar CSV\n✅ Alertas email y push — hasta 10\n✅ Métricas avanzadas\n✅ Historial completo de rendimiento\n✅ Patrimonio neto — hasta 10 activos\n✅ Sincronización de broker\n✅ 20 consultas IA/mes\n✅ Agente de Soporte IA — 24/7\n\nConfigura tu primera alerta: {{base_url}}/tools/alerts\n\n¿Quieres más? Trefolio desbloquea fundamentales, buscador, informes fiscales y posiciones ilimitadas.",
+    bodyText: "Welcome to trefolio!\n\nHere's everything you just unlocked:\n\n✅ Portfolio sharing — public link\n✅ CSV export\n✅ Email & push alerts — up to 10\n✅ Advanced metrics (Sharpe, drawdown, volatility)\n✅ Full portfolio growth history\n✅ Net worth tracking — up to 10 manual assets\n✅ Broker sync — one-click auto-sync\n✅ 20 AI calls/month (up from 5)\n✅ AI Support Agent — 24/7\n\nSet up your first alert: {{base_url}}/tools/alerts\n\nWant more? trefolio unlocks fundamentals, screener, tax reports, WhatsApp alerts, and unlimited holdings.",
+    bodyTextEs: "¡Bienvenido a trefolio!\n\nEsto es lo que has desbloqueado:\n\n✅ Compartir cartera — enlace público\n✅ Exportar CSV\n✅ Alertas email y push — hasta 10\n✅ Métricas avanzadas\n✅ Historial completo de rendimiento\n✅ Patrimonio neto — hasta 10 activos\n✅ Sincronización de broker\n✅ 20 consultas IA/mes\n✅ Agente de Soporte IA — 24/7\n\nConfigura tu primera alerta: {{base_url}}/tools/alerts\n\n¿Quieres más? trefolio desbloquea fundamentales, buscador, informes fiscales y posiciones ilimitadas.",
     category: "lifecycle",
     experienceLevel: "",
   },
   {
     slug: "upgrade-trefolio",
-    name: "Upgrade — Trefolio Pro",
-    subject: "Welcome to Trefolio Pro \u2014 your full toolkit",
-    subjectEs: "Bienvenido a Trefolio Pro \u2014 tu kit completo",
+    name: "Upgrade — trefolio",
+    subject: "Welcome to trefolio \u2014 your full toolkit",
+    subjectEs: "Bienvenido a trefolio \u2014 tu kit completo",
     bodyHtml: trefolioUpgradeHtml,
     bodyHtmlEs: trefolioUpgradeHtmlEs,
-    bodyText: "Welcome to Trefolio Pro!\n\nYou now have full access to everything:\n\nDATA & ANALYSIS\n✅ Alpha Vantage premium data\n✅ Company fundamentals\n✅ Economic indicators\n\nINTELLIGENCE\n✅ News with sentiment analysis\n✅ Insider trades & institutional holdings\n✅ Unlimited AI analysis\n\nADVANCED TOOLS\n✅ Sharpe, drawdown, volatility\n✅ Stock screener: 600+ stocks\n✅ Full performance history\n\nCRYPTO PRO\n✅ Charts, exchange rates, AI analysis\n\nTAX & PLANNING\n✅ EU tax reports with AI assistant\n✅ Portfolio simulator\n✅ Financial planning (FIRE, retirement)\n\nALERTS & LIMITS\n✅ WhatsApp & device notifications\n✅ Unlimited alerts & holdings\n✅ Up to 5 portfolios\n\nYou're one of our first 500 Pro members. Thank you!",
-    bodyTextEs: "¡Bienvenido a Trefolio Pro!\n\nAcceso completo a todo:\n\nDATOS\n✅ Alpha Vantage premium\n✅ Fundamentales de empresa\n✅ Indicadores económicos\n\nINTELIGENCIA\n✅ Noticias con sentimiento\n✅ Insiders e institucionales\n✅ IA ilimitada\n\nHERRAMIENTAS\n✅ Sharpe, drawdown, volatilidad\n✅ Buscador: 600+ acciones\n✅ Historial completo\n\nCRYPTO PRO\n✅ Gráficos, tipos de cambio, IA\n\nFISCAL\n✅ Informes fiscales EU con IA\n✅ Simulador de cartera\n✅ Planificación financiera\n\nALERTAS\n✅ WhatsApp y dispositivo\n✅ Ilimitadas\n✅ 5 carteras\n\n¡Eres de los primeros 500 Pro! Gracias.",
+    bodyText: "Welcome to trefolio!\n\nYou now have full access to everything:\n\nDATA & ANALYSIS\n✅ Alpha Vantage premium data\n✅ Company fundamentals\n✅ Economic indicators\n\nINTELLIGENCE\n✅ News with sentiment analysis\n✅ Insider trades & institutional holdings\n✅ Unlimited AI analysis\n\nADVANCED TOOLS\n✅ Sharpe, drawdown, volatility\n✅ Stock screener: 600+ stocks\n✅ Full performance history\n\nCRYPTO PRO\n✅ Charts, exchange rates, AI analysis\n\nTAX & PLANNING\n✅ EU tax reports with AI assistant\n✅ Portfolio simulator\n✅ Financial planning (FIRE, retirement)\n\nALERTS & LIMITS\n✅ WhatsApp & device notifications\n✅ Unlimited alerts & holdings\n✅ Up to 5 portfolios\n\nYou're one of our first 500 Pro members. Thank you!",
+    bodyTextEs: "¡Bienvenido a trefolio!\n\nAcceso completo a todo:\n\nDATOS\n✅ Alpha Vantage premium\n✅ Fundamentales de empresa\n✅ Indicadores económicos\n\nINTELIGENCIA\n✅ Noticias con sentimiento\n✅ Insiders e institucionales\n✅ IA ilimitada\n\nHERRAMIENTAS\n✅ Sharpe, drawdown, volatilidad\n✅ Buscador: 600+ acciones\n✅ Historial completo\n\nCRYPTO PRO\n✅ Gráficos, tipos de cambio, IA\n\nFISCAL\n✅ Informes fiscales EU con IA\n✅ Simulador de cartera\n✅ Planificación financiera\n\nALERTAS\n✅ WhatsApp y dispositivo\n✅ Ilimitadas\n✅ 5 carteras\n\n¡Eres de los primeros 500 Pro! Gracias.",
     category: "lifecycle",
     experienceLevel: "",
   },
   {
     slug: "trial-invitation",
     name: "Trial — 7-Day Pro Invitation",
-    subject: "Your 7-day Trefolio Pro trial is ready",
-    subjectEs: "Tu prueba de 7 d\u00edas de Trefolio Pro est\u00e1 lista",
+    subject: "Your 7-day trefolio trial is ready",
+    subjectEs: "Tu prueba de 7 d\u00edas de trefolio est\u00e1 lista",
     bodyHtml: `${headerWithBadge("7-DAY PRO TRIAL")}
         <tr><td style="padding:36px 32px 16px;">
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Your Pro trial is waiting</h1>
@@ -924,12 +879,12 @@ ${FOOTER}`,
   {
     slug: "trial-expired",
     name: "Trial — Pro Trial Ended",
-    subject: "Your Trefolio Pro trial has ended",
-    subjectEs: "Tu prueba de Trefolio Pro ha terminado",
+    subject: "Your trefolio trial has ended",
+    subjectEs: "Tu prueba de trefolio ha terminado",
     bodyHtml: `${HEADER}
         <tr><td style="padding:36px 32px 16px;">
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Your Pro trial has ended</h1>
-          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hi {{display_name}}, your 7-day Trefolio Pro trial is over. Here&rsquo;s what you&rsquo;ll miss:</p>
+          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hi {{display_name}}, your 7-day trefolio trial is over. Here&rsquo;s what you&rsquo;ll miss:</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             ${feature("&#x1F4CA;", "Advanced Analytics", "Sharpe ratio, max drawdown, volatility, and full growth history")}
             ${feature("&#x1F9E0;", "AI Analysis", "30 calls/day with deep stock insights and portfolio reviews")}
@@ -940,7 +895,7 @@ ${FOOTER}`,
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td style="padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;">
             <p style="margin:0;font-size:14px;color:#1e40af;text-align:center;line-height:1.5;">Plans start at &euro;4.99/month. Cancel anytime.</p>
           </td></tr></table>
-          ${cta("Subscribe to Trefolio Pro", "{{base_url}}/pricing")}
+          ${cta("Subscribe", "{{base_url}}/pricing")}
           ${ctaSecondary("View pricing", "{{base_url}}/pricing")}
           <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0;">
             <p style="margin:0 0 4px;font-size:14px;color:#475569;line-height:1.6;">I hope the trial gave you a real taste of what trefolio can do. If you have feedback, I&rsquo;d genuinely love to hear it.</p>
@@ -952,7 +907,7 @@ ${FOOTER}`,
     bodyHtmlEs: `${HEADER}
         <tr><td style="padding:36px 32px 16px;">
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Tu prueba Pro ha terminado</h1>
-          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hola {{display_name}}, tu prueba de 7 d&iacute;as de Trefolio Pro ha terminado. Esto es lo que echar&aacute;s de menos:</p>
+          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hola {{display_name}}, tu prueba de 7 d&iacute;as de trefolio ha terminado. Esto es lo que echar&aacute;s de menos:</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             ${feature("&#x1F4CA;", "Anal&iacute;tica avanzada", "Ratio Sharpe, drawdown m&aacute;ximo, volatilidad e historial completo")}
             ${feature("&#x1F9E0;", "An&aacute;lisis IA", "30 consultas/d&iacute;a con insights profundos y revisiones de cartera")}
@@ -963,7 +918,7 @@ ${FOOTER}`,
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td style="padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;">
             <p style="margin:0;font-size:14px;color:#1e40af;text-align:center;line-height:1.5;">Planes desde 4,99&euro;/mes. Cancela cuando quieras.</p>
           </td></tr></table>
-          ${cta("Suscr\u00edbete a Trefolio Pro", "{{base_url}}/pricing")}
+          ${cta("Suscr\u00edbete a trefolio", "{{base_url}}/pricing")}
           ${ctaSecondary("Ver precios", "{{base_url}}/pricing")}
           <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0;">
             <p style="margin:0 0 4px;font-size:14px;color:#475569;line-height:1.6;">Espero que la prueba te haya dado una idea real de lo que trefolio puede hacer. Si tienes feedback, me encantar&iacute;a escucharlo.</p>
@@ -972,8 +927,8 @@ ${FOOTER}`,
           </div>
         </td></tr>
 ${FOOTER}`,
-    bodyText: "Your Pro trial has ended\n\nHi {{display_name}}, your 7-day Trefolio Pro trial is over.\n\nHere's what you'll miss:\n- Advanced Analytics: Sharpe ratio, max drawdown, volatility\n- AI Analysis: 30 calls/day with deep stock insights\n- Company Fundamentals: income, balance sheets, insider trades\n- Premium Alerts: WhatsApp and unlimited alerts\n\nPlans start at €4.99/month. Cancel anytime.\n\nSubscribe: {{base_url}}/pricing\n\nI hope the trial gave you a real taste of what trefolio can do. If you have feedback, I'd genuinely love to hear it.\n\nMarcos\nFounder, trefolio",
-    bodyTextEs: "Tu prueba Pro ha terminado\n\nHola {{display_name}}, tu prueba de 7 días de Trefolio Pro ha terminado.\n\nEsto es lo que echarás de menos:\n- Analítica avanzada: ratio Sharpe, drawdown máximo, volatilidad\n- Análisis IA: 30 consultas/día con insights profundos\n- Fundamentales de empresas: ingresos, balances, insiders\n- Alertas premium: WhatsApp, ilimitadas, hasta 5 carteras\n\nPlanes desde 4,99€/mes. Cancela cuando quieras.\n\nSuscríbete: {{base_url}}/pricing\n\nEspero que la prueba te haya dado una idea real de lo que trefolio puede hacer.\n\nMarcos\nFundador, trefolio",
+    bodyText: "Your Pro trial has ended\n\nHi {{display_name}}, your 7-day trefolio trial is over.\n\nHere's what you'll miss:\n- Advanced Analytics: Sharpe ratio, max drawdown, volatility\n- AI Analysis: 30 calls/day with deep stock insights\n- Company Fundamentals: income, balance sheets, insider trades\n- Premium Alerts: WhatsApp and unlimited alerts\n\nPlans start at €4.99/month. Cancel anytime.\n\nSubscribe: {{base_url}}/pricing\n\nI hope the trial gave you a real taste of what trefolio can do. If you have feedback, I'd genuinely love to hear it.\n\nMarcos\nFounder, trefolio",
+    bodyTextEs: "Tu prueba Pro ha terminado\n\nHola {{display_name}}, tu prueba de 7 días de trefolio ha terminado.\n\nEsto es lo que echarás de menos:\n- Analítica avanzada: ratio Sharpe, drawdown máximo, volatilidad\n- Análisis IA: 30 consultas/día con insights profundos\n- Fundamentales de empresas: ingresos, balances, insiders\n- Alertas premium: WhatsApp, ilimitadas, hasta 5 carteras\n\nPlanes desde 4,99€/mes. Cancela cuando quieras.\n\nSuscríbete: {{base_url}}/pricing\n\nEspero que la prueba te haya dado una idea real de lo que trefolio puede hacer.\n\nMarcos\nFundador, trefolio",
     category: "lifecycle",
     experienceLevel: "",
   },
@@ -985,8 +940,8 @@ ${FOOTER}`,
     subjectEs: "Comparte trefolio con amigos \u2014 gana 30 d\u00edas de Pro",
     bodyHtml: referralProgramHtml,
     bodyHtmlEs: referralProgramHtmlEs,
-    bodyText: "Share trefolio, earn free Pro time\n\nLove using trefolio? Share it with friends and earn 30 days of Pro for every friend who signs up and verifies.\n\nHow it works:\n1. Share your personal referral link\n2. Your friend signs up and verifies their email\n3. You earn 30 days of Trefolio Pro (up to 365 days total)\n\nYour referral link: {{referral_link}}\n\nShare now: {{base_url}}/profile?section=referrals\n\nPro tip: Share on WhatsApp, Telegram, or X for maximum reach!",
-    bodyTextEs: "Comparte trefolio, gana tiempo Pro gratis\n\n\u00bfTe encanta trefolio? Comp\u00e1rtelo con amigos y gana 30 d\u00edas de Pro por cada amigo que se registre y verifique.\n\nC\u00f3mo funciona:\n1. Comparte tu enlace personal de referido\n2. Tu amigo se registra y verifica su email\n3. Ganas 30 d\u00edas de Trefolio Pro (hasta 365 d\u00edas en total)\n\nTu enlace de referido: {{referral_link}}\n\nCompartir: {{base_url}}/profile?section=referrals\n\nConsejo: \u00a1Comparte en WhatsApp, Telegram o X para m\u00e1ximo alcance!",
+    bodyText: "Share trefolio, earn free Pro time\n\nLove using trefolio? Share it with friends and earn 30 days of Pro for every friend who signs up and verifies.\n\nHow it works:\n1. Share your personal referral link\n2. Your friend signs up and verifies their email\n3. You earn 30 days of trefolio (up to 365 days total)\n\nYour referral link: {{referral_link}}\n\nShare now: {{base_url}}/profile?section=referrals\n\nPro tip: Share on WhatsApp, Telegram, or X for maximum reach!",
+    bodyTextEs: "Comparte trefolio, gana tiempo Pro gratis\n\n\u00bfTe encanta trefolio? Comp\u00e1rtelo con amigos y gana 30 d\u00edas de Pro por cada amigo que se registre y verifique.\n\nC\u00f3mo funciona:\n1. Comparte tu enlace personal de referido\n2. Tu amigo se registra y verifica su email\n3. Ganas 30 d\u00edas de trefolio (hasta 365 d\u00edas en total)\n\nTu enlace de referido: {{referral_link}}\n\nCompartir: {{base_url}}/profile?section=referrals\n\nConsejo: \u00a1Comparte en WhatsApp, Telegram o X para m\u00e1ximo alcance!",
     category: "feature",
     experienceLevel: "",
   },

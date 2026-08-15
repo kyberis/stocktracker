@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Yerel para biriminizde değerleri g&ouml;r&uuml;n. 21 para birimini otomatik d&ouml;n&uuml;ş&uuml;mle destekliyoruz."
       }
     ],
-    tierText: "T&uuml;m planlarda mevcut",
+    tierText: "",
     ctaLabel: "Panoyu a&ccedil;"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Temett&uuml;lerin yeniden yatırımının 5, 10 veya 20 yılda getirilerinizi nasıl artırabileceğini g&ouml;r&uuml;n."
       }
     ],
-    tierText: "T&uuml;m planlarda mevcut",
+    tierText: "",
     ctaLabel: "Temett&uuml;leri g&ouml;r&uuml;nt&uuml;le"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Portföyümü incele\" — AI tahsisinizi, riskinizi analiz eder ve iyileştirmeler önerir."
       }
     ],
-    tierText: "Folio: 5 çağrı/ay | Bifolio: 20/ay | Trefolio: Sınırsız",
+    tierText: "",
     ctaLabel: "AI analizini şimdi deneyin"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Çok kanallı",
-        desc: "Bifolio'da e-posta ve push uyarıları. Trefolio'da WhatsApp ve cihaz uyarıları ekleyin."
+        desc: "trefolio'da e-posta ve push uyarıları. trefolio'da WhatsApp ve cihaz uyarıları ekleyin."
       },
       {
         title: "Cron destekli",
         desc: "Sistemimiz piyasa saatlerinde her dakika fiyatları kontrol eder. Ekranı izlemenize hiç gerek yok."
       }
     ],
-    tierText: "Bifolio: 10 uyarıya kadar | Trefolio: Sınırsız uyarılar",
+    tierText: "",
     ctaLabel: "İlk uyarınızı oluşturun"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Herhangi bir dosya yükleyin — CSV, PDF veya ekran görüntüsü — ve AI'mız onu portföyünüze dönüştürecek. Alışılmadık formatlarla bile çalışır."
       }
     ],
-    tierText: "Folio: CSV ve Manuel | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Portföyünüzü içe aktarın"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "B&uuml;y&uuml;k fonların neye sahip olduğunu takip edin — Vanguard, BlackRock, Fidelity ve daha fazlası."
       }
     ],
-    tierText: "Trefolio Pro &ouml;zel",
+    tierText: "",
     ctaLabel: "Temel verileri keşfedin"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "İlginç bir şey mi buldunuz? Portföyünüze veya izleme listenize doğrudan sonuçlardan ekleyin."
       }
     ],
-    tierText: "Trefolio Pro özel",
+    tierText: "",
     ctaLabel: "Filtreyi aç"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"ABD temettülerinde ne kadar kaynak vergisi ödedim?\" gibi sorular sorun ve anında yanıtlar alın."
       }
     ],
-    tierText: "Trefolio Pro özel",
+    tierText: "",
     ctaLabel: "Vergi raporunuzu oluşturun"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Pozisyon ekleyin veya çıkarın, tahsisleri değiştirin ve risk ve getiri üzerindeki etkiyi anında görün."
       }
     ],
-    tierText: "Trefolio Pro özel",
+    tierText: "",
     ctaLabel: "Simülatörü aç"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Her şeyi birleşik görün: hisse senetleri + ETFs + kripto + gayrimenkul + tasarruflar + emeklilikler = tam resminiz."
       }
     ],
-    tierText: "Bifolio: 10 varlığa kadar | Trefolio: 999 varlığa kadar",
+    tierText: "",
     ctaLabel: "Manuel varlık ekle"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Herhangi bir kripto hakkında IA'mıza sorun — temeller, trendler ve piyasa analizi."
       }
     ],
-    tierText: "Folio: Piyasa genel bakış | Trefolio: Tam portföy takibi ve IA",
+    tierText: "",
     ctaLabel: "Kriptoyu keşfedin"
   }
 };

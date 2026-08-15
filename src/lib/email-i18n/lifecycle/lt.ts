@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Kainų įspėjimai",
-      desc: "Gaukite pranešimą, kai akcijos pasiekia jūsų tikslinę kainą. El. pašto ir push įspėjimai prieinami Bifolio."
+      desc: "Gaukite pranešimą, kai akcijos pasiekia jūsų tikslinę kainą. El. pašto ir push įspėjimai prieinami trefolio."
     },
     {
       title: "Išplėstinės metrikos",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Ekskluzyvi pasiūlymas",
   voucherDiscountDisplay: "75% NUOLAIDA",
   voucherApply: "Naudokite kodą mokant:",
-  voucherValid: "Galioja Bifolio ir Trefolio — mėnesiui arba metams",
+  voucherValid: "mėnesiui arba metams",
   ctaPrimary: "Atnaujinkite dabar — 75% nuolaida",
-  ctaSecondary: "Tęsti su Folio",
-  tipText: "&#x1F4A1; <strong>Jūsų Folio planas</strong> apima iki 15 pozicijų, 1 portfelį ir 5 AI kvietimus/mėnesį. Atnaujinkite, kad atrakintumėte daugiau."
+  ctaSecondary: "Naršykite skydelį",
+  tipText: "&#x1F4A1; <strong>Pradėti lengva:</strong> Pridėkite tik vieną akciją, kad pamatytumėte savo skydelį atgyjantį su realaus laiko duomenimis, diagramomis ir AI įžvalgomis."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Sveiki atvykę į Bifolio!",
+  heading: "Sveiki atvykę į trefolio!",
   paragraph: "Jūsų atnaujinimas aktyvus. Štai ką ką tik atrakinote:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Nustatykite pirmą įspėjimą",
   ctaSecondary: "Pasidalinkite savo portfeliu",
-  upsellText: "<strong>Norite dar daugiau?</strong> Trefolio atrakina įmonių fundamentus, akcijų filtrą, mokesčių ataskaitas, WhatsApp įspėjimus ir neribotus turinius. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Sužinokite daugiau</a>"
+  upsellText: "<strong>Norite dar daugiau?</strong> trefolio atrakina įmonių fundamentus, akcijų filtrą, mokesčių ataskaitas, WhatsApp įspėjimus ir neribotus turinius. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Sužinokite daugiau</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Sveiki atvykę į Trefolio Pro!",
+  heading: "Sveiki atvykę į trefolio!",
   paragraph: "Dabar turite pilną prieigą prie visų trefolio funkcijų. Štai jūsų pilnas įrankių rinkinys:",
   groups: [
     {

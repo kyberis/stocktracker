@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Cijenska upozorenja",
-      desc: "Budite obavije&scaron;teni kada dionice dosegnu va&scaron;u ciljnu cijenu. Email i push upozorenja dostupna na Bifolio."
+      desc: "Budite obavije&scaron;teni kada dionice dosegnu va&scaron;u ciljnu cijenu. Email i push upozorenja dostupna na trefolio."
     },
     {
       title: "Napredne metrike",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Ekskluzivna ponuda",
   voucherDiscountDisplay: "75% POPUST",
   voucherApply: "Koristite kod pri pla&#263;anju:",
-  voucherValid: "Vrijedi za Bifolio i Trefolio &mdash; mjese&#269;no ili godi&#353;nje",
+  voucherValid: "mjese&#269;no ili godi&#353;nje",
   ctaPrimary: "Nadogradi sada &mdash; 75% popusta",
-  ctaSecondary: "Nastavi s Folio",
-  tipText: "&#x1F4A1; <strong>Va&#353; Folio plan</strong> uklju&#269;uje do 15 pozicija, 1 portfelj i 5 AI poziva/mjesec. Nadogradi za vi&#353;e."
+  ctaSecondary: "Istra&zcaron;ite kontrolnu tablu",
+  tipText: "&#x1F4A1; <strong>Po&#269;etak je jednostavan:</strong> Dodajte samo jednu dionicu da vidi&#353; svoju kontrolnu tablu oživjeti s podacima u stvarnom vremenu, grafovima i AI uvida."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Dobrodo&scaron;li u Bifolio!",
+  heading: "Dobrodo&scaron;li u trefolio!",
   paragraph: "Va&scaron;a nadogradnja je aktivna. Evo svega &scaron;to ste upravo otklju&ccedil;ali:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Postavite svoje prvo upozorenje",
   ctaSecondary: "Podijelite svoj portfelj",
-  upsellText: "<strong>&Zcaron;elite jo&scaron; vi&scaron;e?</strong> Trefolio otklju&ccedil;ava osnove kompanija, filtar dionica, porezne izvje&scaron;taje, WhatsApp obavijesti i neograni&ccedil;ene pozicije. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Saznajte vi&scaron;e</a>"
+  upsellText: "<strong>&Zcaron;elite jo&scaron; vi&scaron;e?</strong> trefolio otklju&ccedil;ava osnove kompanija, filtar dionica, porezne izvje&scaron;taje, WhatsApp obavijesti i neograni&ccedil;ene pozicije. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Saznajte vi&scaron;e</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Dobrodo&scaron;li u Trefolio Pro!",
+  heading: "Dobrodo&scaron;li u trefolio!",
   paragraph: "Sada imate puni pristup svim zna&ccedil;ajkama koje trefolio nudi. Evo va&scaron;eg kompletnog alata:",
   groups: [
     {

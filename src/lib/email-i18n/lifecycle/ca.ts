@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Alertes de preus",
-      desc: "Rep notificacions quan les accions arribin al teu preu objectiu. Alertes per email i push disponibles a Bifolio."
+      desc: "Rep notificacions quan les accions arribin al teu preu objectiu. Alertes per email i push disponibles a trefolio."
     },
     {
       title: "M&eacute;triques avan&ccedil;ades",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Oferta exclusiva",
   voucherDiscountDisplay: "75% DE DESCOMPTE",
   voucherApply: "Utilitza el codi a la caixa:",
-  voucherValid: "V&agrave;lid per a Bifolio i Trefolio &mdash; mensual o anual",
+  voucherValid: "mensual o anual",
   ctaPrimary: "Actualitza ara &mdash; 75% de descompte",
-  ctaSecondary: "Continua amb Folio",
-  tipText: "&#x1F4A1; <strong>El teu pla Folio</strong> inclou fins a 15 posicions, 1 portafoli i 5 trucades IA/mes. Actualitza per desbloquejar m&eacute;s."
+  ctaSecondary: "Explora el tauler",
+  tipText: "&#x1F4A1; <strong>Comen&ccedil;ar &eacute;s f&agrave;cil:</strong> Afegeix nom&eacute;s una acci&oacute; per veure el teu tauler cobrar vida amb dades en temps real, gr&agrave;fics i insights d&apos;IA."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Benvingut/da a Bifolio!",
+  heading: "Benvingut/da a trefolio!",
   paragraph: "La teva actualitzaci&oacute; est&agrave; activa. Aqu&iacute; tens tot el que acabes de desbloquejar:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Configura la teva primera alerta",
   ctaSecondary: "Comparteix el teu portafoli",
-  upsellText: "<strong>Vols encara m&eacute;s?</strong> Trefolio desbloqueja els fonaments empresarials, el filtre d&apos;accions, els informes fiscals, les alertes WhatsApp i les posicions il&middot;limitades. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">M&eacute;s informaci&oacute;</a>"
+  upsellText: "<strong>Vols encara m&eacute;s?</strong> trefolio desbloqueja els fonaments empresarials, el filtre d&apos;accions, els informes fiscals, les alertes WhatsApp i les posicions il&middot;limitades. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">M&eacute;s informaci&oacute;</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Benvingut/da a Trefolio Pro!",
+  heading: "Benvingut/da a trefolio!",
   paragraph: "Ara tens acc&eacute;s complet a totes les funcions que ofereix trefolio. Aqu&iacute; tens el teu conjunt d&apos;eines complet:",
   groups: [
     {

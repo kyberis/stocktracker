@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Se v&auml;rden i din lokala valuta. Vi st&ouml;der 21 valutor med automatisk konvertering."
       }
     ],
-    tierText: "Tillg&aring;nglig i alla planer",
+    tierText: "",
     ctaLabel: "&Ouml;ppna din &ouml;versikt"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Se hur &aring;terinvestering av dividend kunde &ouml;ka dina avkastningar &ouml;ver 5, 10 eller 20 &aring;r."
       }
     ],
-    tierText: "Tillg&aring;nglig i alla planer",
+    tierText: "",
     ctaLabel: "Visa dina dividend"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Granska min portfölj\" — AI analyserar din allokering, risk och föreslår förbättringar."
       }
     ],
-    tierText: "Folio: 5 anrop/mån | Bifolio: 20/mån | Trefolio: Obegränsat",
+    tierText: "",
     ctaLabel: "Prova AI-analys nu"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Flerkanal",
-        desc: "E-post och push-larm på Bifolio. Lägg till WhatsApp och enhetslarm på Trefolio."
+        desc: "E-post, push, WhatsApp och enhetslarm."
       },
       {
         title: "Cron-driven",
         desc: "Vårt system kontrollerar priser varje minut under marknadstider. Du behöver aldrig titta på skärmen."
       }
     ],
-    tierText: "Bifolio: Upp till 10 larm | Trefolio: Obegränsade larm",
+    tierText: "",
     ctaLabel: "Skapa ditt första larm"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ladda upp vilken fil som helst — CSV, PDF eller skärmdump — och vår AI kommer att omvandla den till din portfölj. Fungerar även med ovanliga format."
       }
     ],
-    tierText: "Folio: CSV och Manuell | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Importera din portfölj"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Följ vad de stora fonderna äger — Vanguard, BlackRock, Fidelity och mer."
       }
     ],
-    tierText: "Trefolio Pro exklusivt",
+    tierText: "",
     ctaLabel: "Utforska fundamenta"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Hittat n&aring;got intressant? L&auml;gg till i portf&ouml;ljen eller bevakningslistan direkt fr&aring;n resultaten."
       }
     ],
-    tierText: "Trefolio Pro exklusivt",
+    tierText: "",
     ctaLabel: "&Ouml;ppna filtret"
   },
   "feature-moat-screener": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "G&aring; till <strong>Verktyg &rarr; Aktiev&auml;rdering</strong> och v&auml;lj fliken <strong>Moat-screener</strong>."
       }
     ],
-    tierText: "Trefolio Pro exklusivt",
+    tierText: "",
     ctaLabel: "&Ouml;ppna aktiev&auml;rdering"
   },
   "feature-tax-reports": {
@@ -224,7 +224,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "St&auml;ll fr&aring;gor som \"Hur mycket k&auml;llskatt betalade jag p&aring; amerikanska utdelningar?\" och f&aring; omedelbara svar."
       }
     ],
-    tierText: "Trefolio Pro exklusivt",
+    tierText: "",
     ctaLabel: "Generera skatterapport"
   },
   "feature-portfolio-simulator": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Lägg till eller ta bort positioner, ändra allokeringar och se omedelbart effekten på risk och avkastning."
       }
     ],
-    tierText: "Trefolio Pro exklusivt",
+    tierText: "",
     ctaLabel: "Öppna simulatorn"
   },
   "feature-net-worth": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Se allt kombinerat: aktier + ETFs + krypto + fastigheter + besparingar + pensioner = din kompletta bild."
       }
     ],
-    tierText: "Bifolio: Upp till 10 tillgångar | Trefolio: Upp till 999 tillgångar",
+    tierText: "",
     ctaLabel: "Lägg till manuella tillgångar"
   },
   "feature-crypto": {
@@ -295,7 +295,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Fråga vår AI om vilken krypto som helst — fundamenta, trender och marknadsanalys."
       }
     ],
-    tierText: "Folio: Marknadsöversikt | Trefolio: Full portföljspårning och AI",
+    tierText: "",
     ctaLabel: "Utforska krypto"
   }
 };

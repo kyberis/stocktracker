@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Fiyat Uyar&#305;lar&#305;",
-      desc: "Hisseler hedef fiyat&#305;n&#305;za ula&#351;t&#305;&#287;&#305;nda bildirim al&#305;n. Bifolio&#x27;da e-posta ve push uyar&#305;lar&#305; mevcut."
+      desc: "Hisseler hedef fiyat&#305;n&#305;za ula&#351;t&#305;&#287;&#305;nda bildirim al&#305;n. trefolio&#x27;da e-posta ve push uyar&#305;lar&#305; mevcut."
     },
     {
       title: "Geli&#351;mi&#351; Metrikler",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "&Ouml;zel teklif",
   voucherDiscountDisplay: "%75 &#304;ND&#304;R&#304;M",
   voucherApply: "&Ouml;deme s&#305;ras&#305;nda kodu kullan&#305;n:",
-  voucherValid: "Bifolio ve Trefolio i&ccedil;in ge&ccedil;erli &mdash; ayl&#305;k veya y&#305;ll&#305;k",
+  voucherValid: "ayl&#305;k veya y&#305;ll&#305;k",
   ctaPrimary: "&#304;ndirime ge&ccedil;in &mdash; %75 indirim",
-  ctaSecondary: "Folio ile devam edin",
-  tipText: "&#x1F4A1; <strong>Folio plan&#305;n&#305;z</strong> 15 tutara kadar, 1 portf&ouml;y ve ayda 5 AI &ccedil;a&#287;r&#305;s&#305; i&ccedil;erir. Daha fazlas&#305; i&ccedil;in y&uuml;kseltin."
+  ctaSecondary: "Paneli Ke&#351;fedin",
+  tipText: "&#x1F4A1; <strong>Ba&#351;lamak kolay:</strong> Dashboard&#x27;unuzun ger&ccedil;ek zamanl&#305; veriler, grafikler ve AI ile canlanmas&#305; i&ccedil;in sadece bir hisse ekleyin."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Bifolio&#x27;ya Ho&#351;geldiniz!",
+  heading: "trefolio&#x27;ya Ho&#351;geldiniz!",
   paragraph: "Y&uuml;kseltmeniz aktif. &#304;&#351;te az &ouml;nce a&ccedil;t&#305;&#287;&#305;n&#305;z her &#351;ey:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "&#304;lk Uyar&#305;n&#305;z&#305; Ayarlay&#305;n",
   ctaSecondary: "Portf&ouml;y&uuml;n&uuml;z&uuml; Payla&#351;&#305;n",
-  upsellText: "<strong>Daha fazlas&#305; m&#305; istiyorsunuz?</strong> Trefolio &#351;irket fundamentallerini, hisse s&uuml;zgecini, vergi raporlar&#305;n&#305;, WhatsApp uyar&#305;lar&#305;n&#305; ve s&#305;n&#305;rs&#305;z tutarlar&#305; a&ccedil;ar. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Daha fazla bilgi</a>"
+  upsellText: "<strong>Daha fazlas&#305; m&#305; istiyorsunuz?</strong> trefolio &#351;irket fundamentallerini, hisse s&uuml;zgecini, vergi raporlar&#305;n&#305;, WhatsApp uyar&#305;lar&#305;n&#305; ve s&#305;n&#305;rs&#305;z tutarlar&#305; a&ccedil;ar. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Daha fazla bilgi</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Trefolio Pro&#x27;ya Ho&#351;geldiniz!",
+  heading: "trefolio&#x27;ya Ho&#351;geldiniz!",
   paragraph: "Art&#305;k trefolio&#x27;nin sundu&#287;u her &ouml;zelli&#287;e tam eri&#351;iminiz var. &#304;&#351;te tam ara&ccedil; setiniz:",
   groups: [
     {

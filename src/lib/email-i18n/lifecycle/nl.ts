@@ -29,7 +29,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Prijsmeldingen",
-      desc: "Word op de hoogte gesteld wanneer aandelen je streefprijs bereiken. E-mail- en pushmeldingen beschikbaar op Bifolio."
+      desc: "Word op de hoogte gesteld wanneer aandelen je streefprijs bereiken. E-mail- en pushmeldingen beschikbaar."
     },
     {
       title: "Geavanceerde metrics",
@@ -85,14 +85,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Exclusief aanbod",
   voucherDiscountDisplay: "75% KORTING",
   voucherApply: "Gebruik code bij checkout:",
-  voucherValid: "Geldig op Bifolio &amp; Trefolio &mdash; maandelijks of jaarlijks",
+  voucherValid: "maandelijks of jaarlijks",
   ctaPrimary: "Nu upgraden &mdash; 75% korting",
-  ctaSecondary: "Doorgaan met Folio",
-  tipText: "&#x1F4A1; <strong>Je Folio-plan</strong> bevat tot 15 posities, 1 portefeuille en 5 AI-gesprekken/maand. Upgrade om meer te ontgrendelen."
+  ctaSecondary: "Dashboard verkennen",
+  tipText: "&#x1F4A1; <strong>Beginnen is eenvoudig:</strong> Voeg slechts &eacute;&eacute;n aandeel toe om je dashboard tot leven te zien komen met realtime data, grafieken en AI-inzichten."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Welkom bij Bifolio!",
+  heading: "Welkom bij trefolio!",
   paragraph: "Je upgrade is actief. Dit is alles wat je net hebt ontgrendeld:",
   features: [
     {
@@ -134,11 +134,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Eerste alarm instellen",
   ctaSecondary: "Portefeuille delen",
-  upsellText: "<strong>Nog meer willen?</strong> Trefolio ontgrendelt bedrijfsfundamentals, aandelenfilter, belastingrapporten, WhatsApp-meldingen en onbeperkte posities. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Meer informatie</a>"
+  upsellText: "<strong>Nog meer willen?</strong> trefolio ontgrendelt bedrijfsfundamentals, aandelenfilter, belastingrapporten, WhatsApp-meldingen en onbeperkte posities. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Meer informatie</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Welkom bij Trefolio Pro!",
+  heading: "Welkom bij trefolio!",
   paragraph: "Je hebt nu volledige toegang tot alle functies van trefolio. Hier is je complete toolkit:",
   groups: [
     {
@@ -245,7 +245,7 @@ export const trialInvitation: TrialInvitationStrings = {
 export const trialExpired: TrialExpiredStrings = {
   heading: "Je Pro-proefperiode is voorbij",
   paragraph:
-    "Hoi {{display_name}}, je 7-daagse Trefolio Pro-proefperiode is afgelopen. Dit mis je:",
+    "Hoi {{display_name}}, je 7-daagse trefolio-proefperiode is afgelopen. Dit mis je:",
   features: [
     {
       title: "Geavanceerde analytics",
@@ -265,7 +265,7 @@ export const trialExpired: TrialExpiredStrings = {
     },
   ],
   pricingNote: "Abonnementen vanaf &euro;4,99 per maand. Altijd opzegbaar.",
-  ctaPrimary: "Abonneer op Trefolio Pro",
+  ctaPrimary: "Abonneer",
   ctaSecondary: "Bekijk prijzen",
   signoffIntro:
     "Ik hoop dat de proefperiode je een echte indruk gaf van wat trefolio kan. Als je feedback hebt, hoor ik het graag.",

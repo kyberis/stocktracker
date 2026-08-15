@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "See values in your local currency. We support 21 currencies with automatic conversion."
       }
     ],
-    tierText: "Available on all plans",
+    tierText: "",
     ctaLabel: "Open Your Dashboard"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "See how reinvesting dividends could compound your returns over 5, 10, or 20 years."
       }
     ],
-    tierText: "Available on all plans",
+    tierText: "",
     ctaLabel: "View Your Dividends"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Review my portfolio\" — AI analyzes your allocation, risk, and suggests improvements."
       }
     ],
-    tierText: "Folio: 5 calls/month | Bifolio: 20/month | Trefolio: Unlimited",
+    tierText: "",
     ctaLabel: "Try AI Analysis Now"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Multi-channel",
-        desc: "Email and push alerts on Bifolio. Add WhatsApp and device alerts on Trefolio."
+        desc: "Email, push, WhatsApp, and device alerts."
       },
       {
         title: "Cron-powered",
         desc: "Our system checks prices every minute during market hours. You never need to watch the screen."
       }
     ],
-    tierText: "Bifolio: Up to 10 alerts | Trefolio: Unlimited alerts",
+    tierText: "",
     ctaLabel: "Create Your First Alert"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Upload any file — CSV, PDF, or screenshot — and our AI will parse it into your portfolio. Works even with unusual formats."
       }
     ],
-    tierText: "Folio: CSV & Manual | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Import Your Portfolio"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Track what the big funds own — Vanguard, BlackRock, Fidelity, and more."
       }
     ],
-    tierText: "Trefolio Pro exclusive",
+    tierText: "",
     ctaLabel: "Explore Fundamentals"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Found something interesting? Add it to your portfolio or watchlist directly from results."
       }
     ],
-    tierText: "Trefolio Pro exclusive",
+    tierText: "",
     ctaLabel: "Open the Screener"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ask questions like \"How much withholding tax did I pay on US dividends?\" and get instant answers."
       }
     ],
-    tierText: "Trefolio Pro exclusive",
+    tierText: "",
     ctaLabel: "Generate Your Tax Report"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Add or remove positions, change allocations, and instantly see the impact on risk and return."
       }
     ],
-    tierText: "Trefolio Pro exclusive",
+    tierText: "",
     ctaLabel: "Open the Simulator"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "See everything combined: stocks + ETFs + crypto + real estate + savings + pensions = your complete picture."
       }
     ],
-    tierText: "Bifolio: Up to 10 assets | Trefolio: Up to 999 assets",
+    tierText: "",
     ctaLabel: "Add Manual Assets"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ask our AI about any crypto — fundamentals, trends, and market analysis."
       }
     ],
-    tierText: "Folio: Market overview | Trefolio: Full portfolio tracking & AI",
+    tierText: "",
     ctaLabel: "Explore Crypto"
   }
 };

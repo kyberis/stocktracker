@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Hinnoitteluh&#228;lytykset",
-      desc: "Saa ilmoitus, kun osakkeet saavuttavat tavoitehintasi. S&#228;hk&#246;posti- ja push-h&#228;lytykset saatavilla Bifoliossa."
+      desc: "Saa ilmoitus, kun osakkeet saavuttavat tavoitehintasi. S&#228;hk&#246;posti- ja push-h&#228;lytykset saatavilla trefoliossa."
     },
     {
       title: "Edistyneet mittarit",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Eksklusiivinen tarjous",
   voucherDiscountDisplay: "75% ALE",
   voucherApply: "K&#228;yt&#228; koodia maksun yhteydess&#228;:",
-  voucherValid: "Voimassa Bifolio ja Trefolio &mdash; kuukausittain tai vuosittain",
+  voucherValid: "kuukausittain tai vuosittain",
   ctaPrimary: "P&#228;ivit&#228; nyt &mdash; 75% alennus",
-  ctaSecondary: "Jatka Folio",
-  tipText: "&#x1F4A1; <strong>Folio-suunnitelmasi</strong> sis&#228;lt&#228;&#228; enint&#228;&#228;n 15 omistusta, 1 salkun ja 5 AI-kutsua/kk. P&#228;ivit&#228; saadaksesi lis&#228;&#228;."
+  ctaSecondary: "Tutustu dashboardiin",
+  tipText: "&#x1F4A1; <strong>Aloittaminen on helppoa:</strong> Lis&#228;&#228; vain yksi osake n&#228;d&#228;ksesi dashboardisi her&#228;&#228;v&#228;n eloon reaaliaikaisilla tiedoilla, kaavioilla ja AI-n&#228;kemyksill&#228;."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Tervetuloa Bifolioon!",
+  heading: "Tervetuloa trefolioon!",
   paragraph: "P&#228;ivityksesi on aktiivinen. T&#228;ss&#228; kaikki mit&#228; juuri avasit:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Asenna ensimm&#228;inen h&#228;lytyksesi",
   ctaSecondary: "Jaa salkkusi",
-  upsellText: "<strong>Haluatko viel&#228; enemm&#228;n?</strong> Trefolio avaa yritysten fundamentaalidatan, osakesuodattimen, veroraportit, WhatsApp-h&#228;lytykset ja rajattomat omistukset. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Lue lis&#228;&#228;</a>"
+  upsellText: "<strong>Haluatko viel&#228; enemm&#228;n?</strong> trefolio avaa yritysten fundamentaalidatan, osakesuodattimen, veroraportit, WhatsApp-h&#228;lytykset ja rajattomat omistukset. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Lue lis&#228;&#228;</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Tervetuloa Trefolio Pro -palveluun!",
+  heading: "Tervetuloa trefolio -palveluun!",
   paragraph: "Sinulla on nyt t&#228;ysi p&#228;&#228;sy kaikkiin trefolion tarjoamiin ominaisuuksiin. T&#228;ss&#228; koko ty&#246;kalupakkisi:",
   groups: [
     {
@@ -238,7 +238,7 @@ export const trialInvitation: TrialInvitationStrings = {
 export const trialExpired: TrialExpiredStrings = {
   heading: "Pro-kokeilusi on p&#228;&#228;ttynyt",
   paragraph:
-    "Hei {{display_name}}, 7 p&#228;iv&#228;n Trefolio Pro -kokeilusi on ohi. T&#228;ss&#228; mit&#228; tulet kaipaamaan:",
+    "Hei {{display_name}}, 7 p&#228;iv&#228;n trefolio -kokeilusi on ohi. T&#228;ss&#228; mit&#228; tulet kaipaamaan:",
   features: [
     {
       title: "Edistynyt analytiikka",
@@ -258,7 +258,7 @@ export const trialExpired: TrialExpiredStrings = {
     },
   ],
   pricingNote: "Suunnitelmat alkavat &euro;4,99/kk. Voit peruuttaa milloin tahansa.",
-  ctaPrimary: "Tilaa Trefolio Pro",
+  ctaPrimary: "Tilaa trefolio",
   ctaSecondary: "Katso hinnoittelu",
   signoffIntro:
     "Toivon, ett&#228; kokeilu antoi oikean maun siit&#228;, mit&#228; trefolio voi tehd&#228;. Jos sinulla on palautetta, haluaisin aidosti kuulla sen.",

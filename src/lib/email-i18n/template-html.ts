@@ -92,27 +92,6 @@ function feature(emoji: string, title: string, desc: string, hasBorder = false):
             <tr><td style="height:8px;"></td></tr>`;
 }
 
-function tierBadge(tier: string, color: string): string {
-  return `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:${color};color:#fff;text-transform:uppercase;letter-spacing:0.5px;">${tier}</span>`;
-}
-
-const FREE_BADGE = tierBadge("Folio", "#64748b");
-const BIFOLIO_BADGE = tierBadge("Bifolio", "#3b82f6");
-const TREFOLIO_BADGE = tierBadge("Trefolio", "#10b981");
-
-function featureWithTier(emoji: string, title: string, desc: string, badge: string): string {
-  return `<tr><td style="padding:12px 16px;background:#f0fdf4;border-radius:10px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-                <td style="width:36px;font-size:20px;vertical-align:top;padding-top:2px;">${emoji}</td>
-                <td style="padding-left:8px;">
-                  <strong style="color:#0f172a;font-size:14px;">${title}</strong> ${badge}
-                  <p style="margin:4px 0 0;font-size:13px;color:#475569;line-height:1.4;">${desc}</p>
-                </td>
-              </tr></table>
-            </td></tr>
-            <tr><td style="height:8px;"></td></tr>`;
-}
-
 function proFeatureGroup(label: string, items: string[]): string {
   const checks = items.map((i) => `&#x2705; ${i}`).join("<br>");
   return `<tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">${label}</p></td></tr>
@@ -186,18 +165,6 @@ const WELCOME_NO_STOCKS_EMOJIS = [
   "&#x1F50D;", // Stock Screener
 ];
 
-/** Badges for Welcome No Stocks features */
-const WELCOME_NO_STOCKS_BADGES = [
-  FREE_BADGE,
-  FREE_BADGE,
-  FREE_BADGE,
-  FREE_BADGE,
-  BIFOLIO_BADGE,
-  BIFOLIO_BADGE,
-  TREFOLIO_BADGE,
-  TREFOLIO_BADGE,
-];
-
 /** Emojis for Welcome Free Stocks features (7 features) */
 const WELCOME_FREE_STOCKS_EMOJIS = [
   "&#x1F4C8;", // Real-time Dashboard
@@ -209,18 +176,7 @@ const WELCOME_FREE_STOCKS_EMOJIS = [
   "&#x1F50D;", // Stock Screener & Simulator
 ];
 
-/** Badges for Welcome Free Stocks features */
-const WELCOME_FREE_STOCKS_BADGES = [
-  FREE_BADGE,
-  FREE_BADGE,
-  FREE_BADGE,
-  BIFOLIO_BADGE,
-  BIFOLIO_BADGE,
-  TREFOLIO_BADGE,
-  TREFOLIO_BADGE,
-];
-
-/** Emojis for Bifolio Upgrade features (9 features, all with border) */
+/** Emojis for upgrade features (9 features, all with border) */
 const BIFOLIO_UPGRADE_EMOJIS = [
   "&#x1F517;", // Portfolio Sharing
   "&#x1F4CA;", // CSV Export
@@ -259,7 +215,9 @@ export function generateFeatureEmail(
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             ${featureRows}
           </table>
-          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${strings.tierText}</p>
+          ${strings.tierText
+            ? `<p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${strings.tierText}</p>`
+            : ""}
           ${cta(strings.ctaLabel, ctaUrl)}`;
 
   const foot = footerForLocale(footer.receivedText, footer.unsubscribeLabel);
@@ -283,11 +241,10 @@ export function generateWelcomeNoStocks(
   const baseUrl = "{{base_url}}";
   const featureRows = strings.features
     .map((f, i) =>
-      featureWithTier(
+      feature(
         WELCOME_NO_STOCKS_EMOJIS[i] ?? "&#x2022;",
         f.title,
         f.desc,
-        WELCOME_NO_STOCKS_BADGES[i] ?? FREE_BADGE,
       ),
     )
     .join("\n            ");
@@ -316,11 +273,10 @@ export function generateWelcomeFreeStocks(
   const baseUrl = "{{base_url}}";
   const featureRows = strings.features
     .map((f, i) =>
-      featureWithTier(
+      feature(
         WELCOME_FREE_STOCKS_EMOJIS[i] ?? "&#x2022;",
         f.title,
         f.desc,
-        WELCOME_FREE_STOCKS_BADGES[i] ?? FREE_BADGE,
       ),
     )
     .join("\n            ");
@@ -369,7 +325,7 @@ export function generateBifolioUpgrade(
 
   const foot = footerForLocale(footer.receivedText, footer.unsubscribeLabel);
 
-  return `${headerWithBadge("Bifolio")}
+  return `${HEADER}
         <tr><td style="padding:36px 32px 16px;">
           ${heading(strings.heading)}
           ${paragraph(strings.paragraph)}
@@ -395,7 +351,7 @@ export function generateTrefolioUpgrade(
 
   const foot = footerForLocale(footer.receivedText, footer.unsubscribeLabel);
 
-  return `${headerWithBadge("&#x2B50; Trefolio Pro &#x2B50;")}
+  return `${HEADER}
         <tr><td style="padding:36px 32px 16px;">
           ${heading(strings.heading)}
           ${paragraph(strings.paragraph)}

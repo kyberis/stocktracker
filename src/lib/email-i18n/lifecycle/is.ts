@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Ver&eth;&aacute;varanir",
-      desc: "F&aacute;&eth;u tilkynningu &thorn;egar hlutabréf n&aacute; markver&eth;i &thorn;&iacute;nu. T&oacute;lkubo&eth; og &iacute;varpanir tilt&aelig;kilegar &aacute; Bifolio."
+      desc: "F&aacute;&eth;u tilkynningu &thorn;egar hlutabréf n&aacute; markver&eth;i &thorn;&iacute;nu. T&oacute;lkubo&eth; og &iacute;varpanir tilt&aelig;kilegar &aacute; trefolio."
     },
     {
       title: "&Iacute;tarlegar m&aelig;lingar",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Einkarétt tilbo&eth;",
   voucherDiscountDisplay: "75% AFSL&Aacute;TTUR",
   voucherApply: "Nota&eth;u k&oacute;&eth;a vi&eth; grei&eth;slu:",
-  voucherValid: "Gildir fyrir Bifolio og Trefolio &mdash; m&aacute;na&eth;arlega e&eth;a &aacute;rlega",
+  voucherValid: "m&aacute;na&eth;arlega e&eth;a &aacute;rlega",
   ctaPrimary: "Uppf&aelig;r&eth;u n&uacute;na &mdash; 75% afsl&aacute;ttur",
-  ctaSecondary: "Halda &aacute;fram me&eth; Folio",
-  tipText: "&#x1F4A1; <strong>Folio &aacute;ætlunin &thorn;&iacute;n</strong> inniheldur allt a&eth; 15 eignir, 1 eignasafn og 5 AI k&ouml;ll/m&aacute;nu&eth;i. Uppf&aelig;r&eth;u fyrir meira."
+  ctaSecondary: "Kanna&eth;u yfirlitsskj&aacute;linn",
+  tipText: "&#x1F4A1; <strong>A&eth; byrja er au&eth;velt:</strong> B&aelige;ttu bara vi&eth; eitt hlutabr&eacute;f til a&eth; sj&aacute; yfirlitsskj&aacute;linn &thorn;&iacute;n koma til l&iacute;fi me&eth; raunt&iacute;ma g&ouml;gnum, t&oacute;lurit og AI inns&aelig;&eth;i."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Velkomin &iacute; Bifolio!",
+  heading: "Velkomin &iacute; trefolio!",
   paragraph: "Uppf&aring;rslan &thorn;&iacute;n er virk. H&eacute;r er allt sem &thorn;&uacute; opnaðir:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Settu upp fyrstu &aacute;varp &thorn;&iacute;n",
   ctaSecondary: "Deildu eignasafni &thorn;&iacute;nu",
-  upsellText: "<strong>Viltu enn meira?</strong> Trefolio opnar fyrirt&aelig;kis grundvallaratri&eth;i, hlutabréf skr&aacute;, skattask&yacute;rslur, WhatsApp &aacute;varpanir og &oacute;takmarkaðar eignir. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Frekari uppl&yacute;singu</a>"
+  upsellText: "<strong>Viltu enn meira?</strong> trefolio opnar fyrirt&aelig;kis grundvallaratri&eth;i, hlutabréf skr&aacute;, skattask&yacute;rslur, WhatsApp &aacute;varpanir og &oacute;takmarkaðar eignir. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Frekari uppl&yacute;singu</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Velkomin &iacute; Trefolio Pro!",
+  heading: "Velkomin &iacute; trefolio!",
   paragraph: "Þ&uacute; hefur n&uacute; fullan a&ccedil;gang a&eth; &ouml;llum eiginleikum sem trefolio b&yacute;&eth;ur upp &aacute;. H&eacute;r er heildarverkf&aelig;r&iacute;&eth;i &thorn;&iacute;n:",
   groups: [
     {

@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Cenu brīdinājumi",
-      desc: "Saņemiet paziņojumu, kad akcijas sasniedz jūsu mērķa cenu. E-pasta un push brīdinājumi pieejami Bifolio."
+      desc: "Saņemiet paziņojumu, kad akcijas sasniedz jūsu mērķa cenu. E-pasta un push brīdinājumi pieejami trefolio."
     },
     {
       title: "Uzlabotas metrikas",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Ekskluzīvs piedāvājums",
   voucherDiscountDisplay: "75% ATLAIDE",
   voucherApply: "Izmantojiet kodu maksājot:",
-  voucherValid: "Derīgs Bifolio un Trefolio — ikmēneša vai gada",
+  voucherValid: "ikmēneša vai gada",
   ctaPrimary: "Jauniniet tagad — 75% atlaide",
-  ctaSecondary: "Turpināt ar Folio",
-  tipText: "&#x1F4A1; <strong>Jūsu Folio plāns</strong> ietver līdz 15 pozīcijām, 1 portfeli un 5 AI zvanus/mēnesī. Jauniniet, lai atbloķētu vairāk."
+  ctaSecondary: "Izpētiet paneli",
+  tipText: "&#x1F4A1; <strong>Sākt ir viegli:</strong> Pievienojiet tikai vienu akciju, lai redzētu savu paneli atdzīvoties ar reāllaika datiem, diagrammām un AI ieskatiem."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Laipni lūdzam Bifolio!",
+  heading: "Laipni lūdzam trefolio!",
   paragraph: "Jūsu jauninājums ir aktīvs. Lūk, ko jūs tikko atbloķējāt:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Iestatiet pirmo brīdinājumu",
   ctaSecondary: "Kopīgojiet savu portfeli",
-  upsellText: "<strong>Vēlaties vēl vairāk?</strong> Trefolio atbloķē uzņēmumu fundamentālos datus, akciju filtru, nodokļu pārskatus, WhatsApp brīdinājumus un neierobežotus turējumus. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Uzziniet vairāk</a>"
+  upsellText: "<strong>Vēlaties vēl vairāk?</strong> trefolio atbloķē uzņēmumu fundamentālos datus, akciju filtru, nodokļu pārskatus, WhatsApp brīdinājumus un neierobežotus turējumus. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Uzziniet vairāk</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Laipni lūdzam Trefolio Pro!",
+  heading: "Laipni lūdzam trefolio!",
   paragraph: "Tagad jums ir pilna piekļuve visām trefolio funkcijām. Lūk jūsu pilnais rīku komplekts:",
   groups: [
     {

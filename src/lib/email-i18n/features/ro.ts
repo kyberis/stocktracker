@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Vezi valorile în moneda ta locală. Suportăm 21 valute cu conversie automată."
       }
     ],
-    tierText: "Disponibil în toate planurile",
+    tierText: "",
     ctaLabel: "Deschide panoul"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Vezi cum reinvestirea dividendelor ar putea compune randamentele tale în 5, 10 sau 20 de ani."
       }
     ],
-    tierText: "Disponibil în toate planurile",
+    tierText: "",
     ctaLabel: "Vezi dividendele"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Revizuiește-mi portofoliul\" — IA analizează alocarea, riscul și sugerează îmbunătățiri."
       }
     ],
-    tierText: "Folio: 5 apeluri/lună | Bifolio: 20/lună | Trefolio: Nelimitat",
+    tierText: "",
     ctaLabel: "Încearcă analiza IA acum"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Multi-canal",
-        desc: "Alerte email și push pe Bifolio. Adăugați WhatsApp și alerte dispozitiv pe Trefolio."
+        desc: "Alerte email și push pe trefolio. Adăugați WhatsApp și alerte dispozitiv pe trefolio."
       },
       {
         title: "Alimentat de cron",
         desc: "Sistemul nostru verifică prețurile în fiecare minut în orele de piață. Nu trebuie să urmăriți ecranul."
       }
     ],
-    tierText: "Bifolio: Până la 10 alerte | Trefolio: Alerte nelimitate",
+    tierText: "",
     ctaLabel: "Creați prima alertă"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Încărcați orice fișier — CSV, PDF sau captură — și AI-ul nostru îl va transforma în portofoliu. Funcționează chiar și cu formate neobișnuite."
       }
     ],
-    tierText: "Folio: CSV și Manual | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Importați portofoliul"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Urmărește ce dețin fondurile mari — Vanguard, BlackRock, Fidelity și altele."
       }
     ],
-    tierText: "Exclusiv Trefolio Pro",
+    tierText: "",
     ctaLabel: "Explorează fundamentalele"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ați găsit ceva interesant? Adăugați-l la portofoliu sau lista de urmărire direct din rezultate."
       }
     ],
-    tierText: "Exclusiv Trefolio Pro",
+    tierText: "",
     ctaLabel: "Deschide filtrul"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Puneți întrebări ca \"Cât impozit pe dividende am plătit în SUA?\" și primiți răspunsuri instantanee."
       }
     ],
-    tierText: "Exclusiv Trefolio Pro",
+    tierText: "",
     ctaLabel: "Generați raportul fiscal"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Adăugați sau eliminați poziții, schimbați alocările și vedeți instant impactul asupra riscului și rentabilității."
       }
     ],
-    tierText: "Exclusiv Trefolio Pro",
+    tierText: "",
     ctaLabel: "Deschide simulatorul"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Vedeți totul combinat: acțiuni + ETFs + cripto + imobiliare + economii + pensii = imaginea completă."
       }
     ],
-    tierText: "Bifolio: Până la 10 active | Trefolio: Până la 999 active",
+    tierText: "",
     ctaLabel: "Adăugați active manuale"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Întrebați IA noastră despre orice crypto — fundamentale, tendințe și analiză de piață."
       }
     ],
-    tierText: "Folio: Prezentare generală piață | Trefolio: Urmărire completă portofoliu și IA",
+    tierText: "",
     ctaLabel: "Explorați crypto"
   }
 };

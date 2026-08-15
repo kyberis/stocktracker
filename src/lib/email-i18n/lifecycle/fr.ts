@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Alertes de prix",
-      desc: "Soyez notifi&eacute; quand les actions atteignent votre prix cible. Alertes email et push disponibles sur Bifolio."
+      desc: "Soyez notifi&eacute; quand les actions atteignent votre prix cible. Alertes email et push disponibles."
     },
     {
       title: "M&eacute;triques avanc&eacute;es",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Offre exclusive",
   voucherDiscountDisplay: "75% DE R&Eacute;DUCTION",
   voucherApply: "Utilisez le code au paiement :",
-  voucherValid: "Valable sur Bifolio et Trefolio &mdash; mensuel ou annuel",
+  voucherValid: "mensuel ou annuel",
   ctaPrimary: "Mettre &agrave; niveau maintenant &mdash; 75% de r&eacute;duction",
-  ctaSecondary: "Continuer avec Folio",
-  tipText: "&#x1F4A1; <strong>Votre plan Folio</strong> inclut jusqu&rsquo;&agrave; 15 positions, 1 portefeuille et 5 appels IA/mois. Passez &agrave; une version sup&eacute;rieure pour en d&eacute;bloquer plus."
+  ctaSecondary: "Explorer le tableau de bord",
+  tipText: "&#x1F4A1; <strong>Commencer est facile :</strong> Ajoutez une seule action pour voir votre tableau de bord prendre vie avec des donn&eacute;es en temps r&eacute;el, des graphiques et des insights IA."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Bienvenue sur Bifolio !",
+  heading: "Bienvenue sur trefolio !",
   paragraph: "Votre mise &agrave; niveau est active. Voici tout ce que vous venez de d&eacute;bloquer :",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Configurer votre premi&egrave;re alerte",
   ctaSecondary: "Partager votre portefeuille",
-  upsellText: "<strong>Envie d&rsquo;encore plus ?</strong> Trefolio d&eacute;bloque les fondamentaux d&rsquo;entreprises, le filtre d&rsquo;actions, les rapports fiscaux, les alertes WhatsApp et les positions illimit&eacute;es. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">En savoir plus</a>"
+  upsellText: "<strong>Envie d&rsquo;encore plus ?</strong> trefolio d&eacute;bloque les fondamentaux d&rsquo;entreprises, le filtre d&rsquo;actions, les rapports fiscaux, les alertes WhatsApp et les positions illimit&eacute;es. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">En savoir plus</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Bienvenue sur Trefolio Pro !",
+  heading: "Bienvenue sur trefolio !",
   paragraph: "Vous avez maintenant acc&egrave;s complet &agrave; toutes les fonctionnalit&eacute;s de trefolio. Voici votre bo&icirc;te &agrave; outils compl&egrave;te :",
   groups: [
     {
@@ -234,7 +234,7 @@ export const trialInvitation: TrialInvitationStrings = {
 
 export const trialExpired: TrialExpiredStrings = {
   heading: "Votre essai Pro est termin&eacute;",
-  paragraph: "Bonjour {{display_name}}, votre essai Trefolio Pro de 7 jours est termin&eacute;. Voici ce que vous allez manquer :",
+  paragraph: "Bonjour {{display_name}}, votre essai trefolio de 7 jours est termin&eacute;. Voici ce que vous allez manquer :",
   features: [
     {
       title: "Analyses avanc&eacute;es",
@@ -254,7 +254,7 @@ export const trialExpired: TrialExpiredStrings = {
     }
   ],
   pricingNote: "Les formules &agrave; partir de &euro;4,99/mois. R&eacute;siliation &agrave; tout moment.",
-  ctaPrimary: "Souscrire &agrave; Trefolio Pro",
+  ctaPrimary: "Souscrire &agrave; trefolio",
   ctaSecondary: "Voir les tarifs",
   signoffIntro: "J&rsquo;esp&egrave;re que l&rsquo;essai vous a donn&eacute; un vrai aper&ccedil;u de ce que trefolio peut faire. Si vous avez des retours, je serais ravi de les lire.",
   growthTitle: "Votre portefeuille a progress&eacute; de {{growth_pct}}% pendant l&rsquo;essai",

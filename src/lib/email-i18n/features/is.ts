@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Sja&eth;u gildi &iacute; sta&eth;bundnu gjaldeyri &iacute;&eth;&iacute;nu. Vi&eth; sty&eth;jum 21 gjaldeyri me&eth; sj&aacute;lfvirku umbreytingu."
       }
     ],
-    tierText: "Tilt&aelig;k &iacute; &ouml;llum &aacute;ætlunum",
+    tierText: "",
     ctaLabel: "Opna yfirlit"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Sja&eth;u hvernig endurfj&aacute;rfesting arðs g&aelig;ti auki&eth; &aacute;v&ouml;xtun &iacute;&eth;&iacute;na &iacute; 5, 10 e&eth;a 20 &aacute;r."
       }
     ],
-    tierText: "Tilt&aelig;k &iacute; &ouml;llum &aacute;ætlunum",
+    tierText: "",
     ctaLabel: "Sko&eth;a arð &iacute;&eth;&iacute;nn"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Fara yfir eignasafn mitt\" — AI greinir úthlutun, áhættu og leggur til úrbætur."
       }
     ],
-    tierText: "Folio: 5 símtöl/mán. | Bifolio: 20/mán. | Trefolio: Ótakmarkað",
+    tierText: "",
     ctaLabel: "Prófaðu AI greiningu núna"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Fjölrás",
-        desc: "Tölvupóstur og push viðvaranir á Bifolio. Bætið við WhatsApp og tækja viðvörunum á Trefolio."
+        desc: "Tölvupóstur og push viðvaranir á trefolio. Bætið við WhatsApp og tækja viðvörunum á trefolio."
       },
       {
         title: "Cron knúið",
         desc: "Kerfið okkar athugar verð á mínútu fresti á markaðstímum. Þú þarft aldrei að horfa á skjáinn."
       }
     ],
-    tierText: "Bifolio: Allt að 10 viðvaranir | Trefolio: Ótakmarkaðar viðvaranir",
+    tierText: "",
     ctaLabel: "Búðu til fyrstu viðvörun"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Hladdu upp hvaða skrá sem er — CSV, PDF eða skjámynd — og AI okkar mun breyta henni í eignasafn þitt. Virkar jafnvel með óvenjulegum formátum."
       }
     ],
-    tierText: "Folio: CSV og Handvirk | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Flytja inn eignasafn þitt"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Fylgstu me&eth; &thorn;v&iacute; hva&eth; st&oacute;ru sj&oacute;&eth;ir eiga — Vanguard, BlackRock, Fidelity og fleira."
       }
     ],
-    tierText: "Einkarétt Trefolio Pro",
+    tierText: "",
     ctaLabel: "Kanna grunnuppl&yacute;singar"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Fannst &thorn;&eacute;r eitthva&eth; &aacute;hugavert? B&aelig;ttu &thorn;v&iacute; vi&eth; eignasafn e&eth;a eftirlitslista beint fr&aacute; ni&ethurst&ouml;&eth;um."
       }
     ],
-    tierText: "Einkarétt Trefolio Pro",
+    tierText: "",
     ctaLabel: "Opna s&iacute;una"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Spur&eth;u spurningar eins og \"Hversu miki&eth; sta&eth;bundi&eth; skatt grei&eth;di &eacute;g af bandar&iacute;skum ar&eth;s?\" og f&aacute;&eth;u samstundis sv&ouml;r."
       }
     ],
-    tierText: "Einkar&eacute;tt Trefolio Pro",
+    tierText: "",
     ctaLabel: "Framlei&eth;a skattask&yacute;rslu"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "B&aelig;ttu vi&eth; st&ouml;&eth;ur e&eth;a fjarl&aelig;g&eth;u &thorn;&eacute;r, breyttu &uacute;thlutun og sj&aacute;&eth;u strax &aacute;hrif &aacute; &aacute;h&aelig;ttu og &aacute;v&ouml;xtun."
       }
     ],
-    tierText: "Einkar&eacute;tt Trefolio Pro",
+    tierText: "",
     ctaLabel: "Opna herminn"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Sja&eth;u allt sameina&eth;: hlutabr&eacute;f + ETFs + dulritunargjaldmi&eth;lar + fasteignir + sparna&eth;ur + l&iacute;feyrir = heildarmynd &thorn;&iacute;n."
       }
     ],
-    tierText: "Bifolio: Allt a&eth; 10 eignir | Trefolio: Allt a&eth; 999 eignir",
+    tierText: "",
     ctaLabel: "B&aelig;ta vi&eth; handvirkar eignir"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Spur&eth;u AI okkar um hva&eth;a dulritunargjaldmi&eth;il sem er — grunnuppl&yacute;singar, stefnur og marka&eth;sgreining."
       }
     ],
-    tierText: "Folio: Marka&eth;syfirlit | Trefolio: Full eignasafns rakning og AI",
+    tierText: "",
     ctaLabel: "Kanna dulritunargjaldmi&eth;la"
   }
 };

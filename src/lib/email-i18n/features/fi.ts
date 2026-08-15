@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "N&auml;e arvot paikallisessa valuutassasi. Tuemme 21 valuuttaa automaattisella muunnoksella."
       }
     ],
-    tierText: "Saatavilla kaikissa hinnoittelupaketeissa",
+    tierText: "",
     ctaLabel: "Avaa hallintapaneeli"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "N&auml;e miten dividendien uudelleensijoittaminen voisi kasvattaa tuottojasi 5, 10 tai 20 vuodessa."
       }
     ],
-    tierText: "Saatavilla kaikissa hinnoittelupaketeissa",
+    tierText: "",
     ctaLabel: "N&auml;yt&auml; dividendit"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Arvioi salkkuni\" — AI analysoi allokaation, riskin ja ehdottaa parannuksia."
       }
     ],
-    tierText: "Folio: 5 kutsua/kk | Bifolio: 20/kk | Trefolio: Rajaton",
+    tierText: "",
     ctaLabel: "Kokeile AI-analyysiä nyt"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Monikanavainen",
-        desc: "Sähköposti- ja push-hälyt Bifoliossa. Lisää WhatsApp ja laitehälyt Trefoliossa."
+        desc: "Sähköposti- ja push-hälyt trefoliossa. Lisää WhatsApp ja laitehälyt trefoliossa."
       },
       {
         title: "Cron-ajettu",
         desc: "Järjestelmämme tarkistaa hinnat minuutin välein markkina-aikoina. Sinun ei koskaan tarvitse katsella näyttöä."
       }
     ],
-    tierText: "Bifolio: Jopa 10 hälytystä | Trefolio: Rajattomat hälytykset",
+    tierText: "",
     ctaLabel: "Luo ensimmäinen hälytys"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Lataa mikä tahansa tiedosto — CSV, PDF tai kuvakaappaus — ja AI-mme muuntaa sen salkuksesi. Toimii jopa epätavallisilla formaateilla."
       }
     ],
-    tierText: "Folio: CSV ja Manuaalinen | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Tuo salkkusi"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Seuraa mitä suuret rahastot omistavat — Vanguard, BlackRock, Fidelity ja muut."
       }
     ],
-    tierText: "Trefolio Pro eksklusiivinen",
+    tierText: "",
     ctaLabel: "Tutustu perustietoihin"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "L&ouml;ysit jotain mielenkiintoista? Lis&auml;&auml; se salkkuun tai seurantalistaan suoraan tuloksista."
       }
     ],
-    tierText: "Trefolio Pro eksklusiivinen",
+    tierText: "",
     ctaLabel: "Avaa suodatin"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Kysy kysymyksi&auml; kuten \"Kuinka paljon l&auml;hdeveroa maksoin yhdysvaltalaisista osingoista?\" ja saa v&auml;litt&ouml;m&auml;t vastaukset."
       }
     ],
-    tierText: "Trefolio Pro eksklusiivinen",
+    tierText: "",
     ctaLabel: "Luo veroraportti"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Lisää tai poista positioita, muuta allokaatioita ja näe välittömästi vaikutus riskiin ja tuottoon."
       }
     ],
-    tierText: "Trefolio Pro eksklusiivinen",
+    tierText: "",
     ctaLabel: "Avaa simulointi"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Näe kaikki yhdistettynä: osakkeet + ETFs + krypto + kiinteistöt + säästöt + eläkkeet = täydellinen kuva."
       }
     ],
-    tierText: "Bifolio: Enintään 10 omaisuutta | Trefolio: Enintään 999 omaisuutta",
+    tierText: "",
     ctaLabel: "Lisää manuaalisia omaisuuseriä"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Kysy AI:ltamme mitä tahansa kryptosta — perustiedot, trendit ja markkina-analyysi."
       }
     ],
-    tierText: "Folio: Markkinayleiskatsaus | Trefolio: Täysi salkun seuranta ja AI",
+    tierText: "",
     ctaLabel: "Tutustu kryptoon"
   }
 };

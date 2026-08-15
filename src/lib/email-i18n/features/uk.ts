@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Переглядайте значення у своїй локальній валюті. Підтримуємо 21 валюту з автоматичною конвертацією."
       }
     ],
-    tierText: "Доступно в усіх планах",
+    tierText: "",
     ctaLabel: "Відкрити панель"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Побачте, як реінвестування дивідендів може збільшити вашу прибутковість за 5, 10 або 20 років."
       }
     ],
-    tierText: "Доступно в усіх планах",
+    tierText: "",
     ctaLabel: "Переглянути дивіденди"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Переглянь мій портфель\" — AI аналізує розподіл, ризик і пропонує покращення."
       }
     ],
-    tierText: "Folio: 5 дзвінків/міс. | Bifolio: 20/міс. | Trefolio: Безліміт",
+    tierText: "",
     ctaLabel: "Спробувати AI аналіз зараз"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Багатоканальні",
-        desc: "Email та push сповіщення на Bifolio. Додайте WhatsApp та сповіщення пристрою на Trefolio."
+        desc: "Email та push сповіщення на trefolio. Додайте WhatsApp та сповіщення пристрою на trefolio."
       },
       {
         title: "На cron",
         desc: "Наша система перевіряє ціни щохвилини під час торгових годин. Вам ніколи не потрібно дивитися на екран."
       }
     ],
-    tierText: "Bifolio: До 10 сповіщень | Trefolio: Необмежені сповіщення",
+    tierText: "",
     ctaLabel: "Створити перше сповіщення"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Завантажте будь-який файл — CSV, PDF або знімок екрана — і наш AI перетворить його на портфель. Працює навіть з незвичайними форматами."
       }
     ],
-    tierText: "Folio: CSV та Вручну | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Імпортувати портфель"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Відстежуйте, що володіють великі фонди — Vanguard, BlackRock, Fidelity та інші."
       }
     ],
-    tierText: "Виключно Trefolio Pro",
+    tierText: "",
     ctaLabel: "Досліджуйте фундаментали"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Знайшли щось цікаве? Додайте до портфеля або списку спостереження безпосередньо з результатів."
       }
     ],
-    tierText: "Виключно Trefolio Pro",
+    tierText: "",
     ctaLabel: "Відкрити фільтр"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ставте питання на кшталт \"Скільки податку на джерело я сплатив з американських дивідендів?\" і отримуйте миттєві відповіді."
       }
     ],
-    tierText: "Виключно Trefolio Pro",
+    tierText: "",
     ctaLabel: "Згенерувати податковий звіт"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Додавайте або видаляйте позиції, змінюйте алокації та миттєво бачте вплив на ризик і прибутковість."
       }
     ],
-    tierText: "Виключно Trefolio Pro",
+    tierText: "",
     ctaLabel: "Відкрити симулятор"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Перегляньте все разом: акції + ETFs + крипто + нерухомість + заощадження + пенсії = ваша повна картина."
       }
     ],
-    tierText: "Bifolio: До 10 активів | Trefolio: До 999 активів",
+    tierText: "",
     ctaLabel: "Додати ручні активи"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Запитуйте нашу IA про будь-яку крипто — фундаментали, тренди та ринковий аналіз."
       }
     ],
-    tierText: "Folio: Огляд ринку | Trefolio: Повне відстеження портфеля та IA",
+    tierText: "",
     ctaLabel: "Досліджуйте крипто"
   }
 };

@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Alerte de pre&#539;",
-      desc: "Fii notificat când ac&#539;iunile ating pre&#539;ul țint&#259;. Alerte email &#537;i push disponibile pe Bifolio."
+      desc: "Fii notificat când ac&#539;iunile ating pre&#539;ul țint&#259;. Alerte email &#537;i push disponibile pe trefolio."
     },
     {
       title: "Metrici avansate",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Ofert&#259; exclusiv&#259;",
   voucherDiscountDisplay: "75% REDUCERE",
   voucherApply: "Folose&#537;te codul la plat&#259;:",
-  voucherValid: "Valabil pe Bifolio &#537;i Trefolio &mdash; lunar sau anual",
+  voucherValid: "lunar sau anual",
   ctaPrimary: "Actualizeaz&#259; acum &mdash; 75% reducere",
-  ctaSecondary: "Continu&#259; cu Folio",
-  tipText: "&#x1F4A1; <strong>Planul t&#259;u Folio</strong> include p&#226;n&#259; la 15 pozi&#539;ii, 1 portofoliu &#537;i 5 apeluri IA/lun&#259;. Actualizeaz&#259; pentru a debloca mai mult."
+  ctaSecondary: "Exploreaz&#259; dashboard-ul",
+  tipText: "&#x1F4A1; <strong>Începutul e u&#539;or:</strong> Adaug&#259; doar o ac&#539;iune pentru a vedea dashboard-ul t&#259;u prinde via&#539;&#259; cu date în timp real, grafice &#537;i insight-uri IA."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Bine ai venit la Bifolio!",
+  heading: "Bine ai venit la trefolio!",
   paragraph: "Actualizarea ta este activ&#259;. Iat&#259; tot ce tocmai ai deblocat:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Configureaz&#259; prima ta alert&#259;",
   ctaSecondary: "Partajeaz&#259; portofoliul",
-  upsellText: "<strong>Vrei și mai mult?</strong> Trefolio deblocheaz&#259; fundamentale companii, filtru ac&#539;iuni, rapoarte fiscale, alerte WhatsApp și pozi&#539;ii nelimitate. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Afl&#259; mai multe</a>"
+  upsellText: "<strong>Vrei și mai mult?</strong> trefolio deblocheaz&#259; fundamentale companii, filtru ac&#539;iuni, rapoarte fiscale, alerte WhatsApp și pozi&#539;ii nelimitate. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Afl&#259; mai multe</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Bine ai venit la Trefolio Pro!",
+  heading: "Bine ai venit la trefolio!",
   paragraph: "Ai acum acces complet la toate func&#539;iile pe care trefolio le ofer&#259;. Iat&#259; toolkit-ul t&#259;u complet:",
   groups: [
     {
@@ -239,7 +239,7 @@ export const trialInvitation: TrialInvitationStrings = {
 export const trialExpired: TrialExpiredStrings = {
   heading: "Perioada ta Pro de prob&#x103; s-a &#xee;ncheiat",
   paragraph:
-    "Salut, {{display_name}}, perioada ta de prob&#x103; Trefolio Pro de 7 zile s-a &#xee;ncheiat. Iat&#x103; ce vei rata:",
+    "Salut, {{display_name}}, perioada ta de prob&#x103; trefolio de 7 zile s-a &#xee;ncheiat. Iat&#x103; ce vei rata:",
   features: [
     {
       title: "Analitic&#x103; avansat&#x103;",
@@ -259,7 +259,7 @@ export const trialExpired: TrialExpiredStrings = {
     },
   ],
   pricingNote: "Planurile &#xee;ncep de la &euro;4,99/lun&#x103;. Anulezi oric&#xe2;nd.",
-  ctaPrimary: "Aboneaz&#x103;-te la Trefolio Pro",
+  ctaPrimary: "Aboneaz&#x103;-te la trefolio",
   ctaSecondary: "Vezi pre&#x21b;urile",
   signoffIntro:
     "Sper c&#x103; perioada de prob&#x103; &#x21b;i-a oferit o idee real&#x103; despre ce poate face trefolio. Dac&#x103; ai feedback, chiar a&#x219; vrea s&#x103; &#xee;l aud.",

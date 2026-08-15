@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Cenovna opozorila",
-      desc: "Bodi obve&#353;&#269;en, ko delnice dosežejo va&#353;o ciljno ceno. Email in push opozorila na voljo v Bifolio."
+      desc: "Bodi obve&#353;&#269;en, ko delnice dosežejo va&#353;o ciljno ceno. Email in push opozorila na voljo v trefolio."
     },
     {
       title: "Napredne metrike",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Ekskluzivna ponudba",
   voucherDiscountDisplay: "75% POPUST",
   voucherApply: "Uporabite kodo pri pla&#269;ilu:",
-  voucherValid: "Velja za Bifolio in Trefolio &mdash; mese&#269;no ali letno",
+  voucherValid: "mese&#269;no ali letno",
   ctaPrimary: "Nadgradi zdaj &mdash; 75% popusta",
-  ctaSecondary: "Nadaljuj z Folio",
-  tipText: "&#x1F4A1; <strong>Tvoj Folio na&#269rt</strong> vklju&#269;uje do 15 pozicij, 1 portfelj in 5 AI klicev/mesec. Nadgradi za ve&#269;."
+  ctaSecondary: "Razi&#353;&#269;i dashboard",
+  tipText: "&#x1F4A1; <strong>Za&#269;etek je enostaven:</strong> Dodaj samo eno delnico, da vidi&#353; svoj dashboard oživeti s podatki v realnem &#269;asu, grafih in AI vpogledih."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Dobrodo&#353;el v Bifolio!",
+  heading: "Dobrodo&#353;el v trefolio!",
   paragraph: "Va&#353;a nadgradnja je aktivna. Tukaj je vse, kar ste pravkar odklenili:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Nastavite svoje prvo opozorilo",
   ctaSecondary: "Delite svoj portfelj",
-  upsellText: "<strong>&#381;elite &#353;e ve&#269;?</strong> Trefolio odkleni fundamentalne podatke podjetij, filtar delnic, davčna poročila, WhatsApp opozorila in neomejene pozicije. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Izvedite ve&#269;</a>"
+  upsellText: "<strong>&#381;elite &#353;e ve&#269;?</strong> trefolio odkleni fundamentalne podatke podjetij, filtar delnic, davčna poročila, WhatsApp opozorila in neomejene pozicije. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Izvedite ve&#269;</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Dobrodo&#353;el v Trefolio Pro!",
+  heading: "Dobrodo&#353;el v trefolio!",
   paragraph: "Zdaj imate polni dostop do vseh funkcij, ki jih trefolio ponuja. Tukaj je va&#353;e popolno orodje:",
   groups: [
     {

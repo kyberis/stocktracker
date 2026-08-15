@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Peržiūrėkite vertes savo vietinėje valiutoje. Palaikome 21 valiutą su automatine konversija."
       }
     ],
-    tierText: "Prieinama visuose planuose",
+    tierText: "",
     ctaLabel: "Atidaryti skydelį"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Peržiūrėkite, kaip dividendų reinvestavimas galėtų padidinti jūsų grąžą per 5, 10 arba 20 metų."
       }
     ],
-    tierText: "Prieinama visuose planuose",
+    tierText: "",
     ctaLabel: "Peržiūrėti dividendus"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Peržiūrėk mano portfelį\" — AI analizuoja alokaciją, riziką ir siūlo pagerinimus."
       }
     ],
-    tierText: "Folio: 5 skambučiai/mėn. | Bifolio: 20/mėn. | Trefolio: Neribota",
+    tierText: "",
     ctaLabel: "Išbandykite AI analizę dabar"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Daugia kanalų",
-        desc: "El. pašto ir push įspėjimai Bifolio. Pridėkite WhatsApp ir įrenginio įspėjimus Trefolio."
+        desc: "El. pašto ir push įspėjimai trefolio. Pridėkite WhatsApp ir įrenginio įspėjimus trefolio."
       },
       {
         title: "Cron varomas",
         desc: "Mūsų sistema tikrina kainas kas minutę rinkos valandomis. Niekada nereikia žiūrėti į ekraną."
       }
     ],
-    tierText: "Bifolio: Iki 10 įspėjimų | Trefolio: Neriboti įspėjimai",
+    tierText: "",
     ctaLabel: "Sukurti pirmą įspėjimą"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Įkelkite bet kurį failą — CSV, PDF arba ekrano kopiją — ir mūsų AI paverš jį į jūsų portfelį. Veikia net su neįprastais formatais."
       }
     ],
-    tierText: "Folio: CSV ir Rankinis | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Importuoti portfelį"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Sekite, ką valdo dideli fondai — Vanguard, BlackRock, Fidelity ir kt."
       }
     ],
-    tierText: "Trefolio Pro išskirtinai",
+    tierText: "",
     ctaLabel: "Tyrinėkite pagrindinius duomenis"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Radote ką nors įdomaus? Pridėkite prie portfelio ar stebėjimo sąrašo tiesiogiai iš rezultatų."
       }
     ],
-    tierText: "Trefolio Pro išskirtinai",
+    tierText: "",
     ctaLabel: "Atidaryti filtrą"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Užduokite klausimus kaip \"Kiek išskaičiuoto mokesčio sumokėjau už JAV dividendus?\" ir gaukite momentines atsakymus."
       }
     ],
-    tierText: "Trefolio Pro išskirtinai",
+    tierText: "",
     ctaLabel: "Generuoti mokesčių ataskaitą"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Pridėkite arba pašalinkite pozicijas, pakeiskite alokacijas ir iš karto pamatykite poveikį rizikai ir grąžai."
       }
     ],
-    tierText: "Trefolio Pro išskirtinai",
+    tierText: "",
     ctaLabel: "Atidaryti simuliatorių"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Peržiūrėkite viską kartu: akcijos + ETFs + kripto + nekilnojamasis turtas + taupymai + pensijos = jūsų pilnas vaizdas."
       }
     ],
-    tierText: "Bifolio: Iki 10 turto vienetų | Trefolio: Iki 999 turto vienetų",
+    tierText: "",
     ctaLabel: "Pridėti rankinius turto vienetus"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Paklauskite mūsų AI apie bet kurią kripto — pagrindai, tendencijos ir rinkos analizė."
       }
     ],
-    tierText: "Folio: Rinkos apžvalga | Trefolio: Pilnas portfelio sekimas ir AI",
+    tierText: "",
     ctaLabel: "Tyrinėti kripto"
   }
 };

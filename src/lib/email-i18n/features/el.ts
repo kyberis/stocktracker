@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Δείτε αξίες στο τοπικό σας νόμισμα. Υποστηρίζουμε 21 νομίσματα με αυτόματη μετατροπή."
       }
     ],
-    tierText: "Διαθέσιμο σε όλα τα πλάνα",
+    tierText: "",
     ctaLabel: "Άνοιγμα πίνακα ελέγχου"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Δείτε πώς η επανεπένδυση μερισμάτων θα μπορούσε να αυξήσει τις αποδόσεις σας σε 5, 10 ή 20 χρόνια."
       }
     ],
-    tierText: "Διαθέσιμο σε όλα τα πλάνα",
+    tierText: "",
     ctaLabel: "Προβολή μερισμάτων"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Ανάλυσε το χαρτοφυλάκιό μου\" — το AI αναλύει την κατανομή, τον κίνδυνο και προτείνει βελτιώσεις."
       }
     ],
-    tierText: "Folio: 5 κλήσεις/μήνα | Bifolio: 20/μήνα | Trefolio: Απεριόριστο",
+    tierText: "",
     ctaLabel: "Δοκιμάστε την ανάλυση AI τώρα"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Πολυκαναλικό",
-        desc: "Ειδοποιήσεις email και push στο Bifolio. Προσθέστε WhatsApp και ειδοποιήσεις συσκευής στο Trefolio."
+        desc: "Ειδοποιήσεις email και push στο trefolio. Προσθέστε WhatsApp και ειδοποιήσεις συσκευής στο trefolio."
       },
       {
         title: "Τροφοδοτούμενο από cron",
         desc: "Το σύστημά μας ελέγχει τις τιμές κάθε λεπτό κατά τις ώρες αγοράς. Δεν χρειάζεται ποτέ να παρακολουθείτε την οθόνη."
       }
     ],
-    tierText: "Bifolio: Έως 10 ειδοποιήσεις | Trefolio: Απεριόριστες ειδοποιήσεις",
+    tierText: "",
     ctaLabel: "Δημιουργήστε την πρώτη σας ειδοποίηση"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Μεταφορτώστε οποιοδήποτε αρχείο — CSV, PDF ή στιγμιότυπο — και το AI μας θα το μετατρέψει σε χαρτοφυλάκιο. Λειτουργεί ακόμη και με ασυνήθιστες μορφές."
       }
     ],
-    tierText: "Folio: CSV και Χειροκίνητα | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Εισαγωγή χαρτοφυλακίου"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Παρακολουθήστε τι κατέχουν τα μεγάλα funds — Vanguard, BlackRock, Fidelity και άλλα."
       }
     ],
-    tierText: "Αποκλειστικά Trefolio Pro",
+    tierText: "",
     ctaLabel: "Εξερευνήστε τα θεμελιώδη"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Βρήκατε κάτι ενδιαφέρον; Προσθέστε το στο χαρτοφυλάκιό σας ή τη λίστα παρακολούθησης απευθείας από τα αποτελέσματα."
       }
     ],
-    tierText: "Αποκλειστικά Trefolio Pro",
+    tierText: "",
     ctaLabel: "Άνοιγμα φίλτρου"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Κάντε ερωτήσεις όπως \"Πόσο παρακρατούμενο φόρο πλήρωσα σε αμερικανικά μερίσματα;\" και λάβετε άμεσες απαντήσεις."
       }
     ],
-    tierText: "Αποκλειστικά Trefolio Pro",
+    tierText: "",
     ctaLabel: "Δημιουργία φορολογικής αναφοράς"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Προσθέστε ή αφαιρέστε θέσεις, αλλάξτε τις κατανομές και δείτε αμέσως την επίδραση στον κίνδυνο και την απόδοση."
       }
     ],
-    tierText: "Αποκλειστικά Trefolio Pro",
+    tierText: "",
     ctaLabel: "Άνοιγμα προσομοιωτή"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Δείτε τα πάντα συνδυαστικά: μετοχές + ETFs + κρυπτονομίσματα + ακίνητα + αποταμιεύσεις + συντάξεις = η πλήρης εικόνα σας."
       }
     ],
-    tierText: "Bifolio: Έως 10 περιουσιακά στοιχεία | Trefolio: Έως 999 περιουσιακά στοιχεία",
+    tierText: "",
     ctaLabel: "Προσθήκη χειροκίνητων περιουσιακών στοιχείων"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ρωτήστε την IA μας για οποιοδήποτε κρυπτονόμισμα — θεμελιώδη στοιχεία, τάσεις και ανάλυση αγοράς."
       }
     ],
-    tierText: "Folio: Επισκόπηση αγοράς | Trefolio: Πλήρης παρακολούθηση χαρτοφυλακίου και IA",
+    tierText: "",
     ctaLabel: "Εξερευνήστε τα κρυπτονομίσματα"
   }
 };

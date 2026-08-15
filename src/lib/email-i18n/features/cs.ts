@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Zobrazte hodnoty ve sv&eacute; lok&aacute;ln&iacute; m&ecaron;n&ecaron;. Podporujeme 21 m&ecaron;n s automatick&yacute;m p&rcaron;evodem."
       }
     ],
-    tierText: "Dostupn&eacute; ve v&scaron;ech pl&aacute;nech",
+    tierText: "",
     ctaLabel: "Otevř&iacute;t dashboard"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Pod&iacute;vejte se, jak reinvestice dividend mohla zhodnotit va&scaron;e výnosy za 5, 10 nebo 20 let."
       }
     ],
-    tierText: "Dostupn&eacute; ve v&scaron;ech pl&aacute;nech",
+    tierText: "",
     ctaLabel: "Zobrazit dividendy"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Projděte m&eacute; portf&oacute;lio\" — IA analyzuje alokaci, riziko a navrhuje zlep&scaron;en&iacute;."
       }
     ],
-    tierText: "Folio: 5 hovorů/měs. | Bifolio: 20/měs. | Trefolio: Neomezeně",
+    tierText: "",
     ctaLabel: "Vyzkou&scaron;ejte anal&yacute;zu IA nyn&iacute;"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Multi-kanál",
-        desc: "E-mailové a push alarmy na Bifolio. Přidejte WhatsApp a alarmy zařízení na Trefolio."
+        desc: "E-mailové a push alarmy na trefolio. Přidejte WhatsApp a alarmy zařízení na trefolio."
       },
       {
         title: "Poháněno cronem",
         desc: "Náš systém kontroluje ceny každou minutu během obchodních hodin. Nikdy nemusíte sledovat obrazovku."
       }
     ],
-    tierText: "Bifolio: Až 10 alarmů | Trefolio: Neomezené alarmy",
+    tierText: "",
     ctaLabel: "Vytvořit první alarm"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Nahrajte jak&yacute;koli soubor — CSV, PDF nebo screenshot — a na&scaron;e IA ho převede do portf&oacute;lia. Funguje i s neobvykl&yacute;mi form&aacute;ty."
       }
     ],
-    tierText: "Folio: CSV a Ručn&iacute; | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Importovat portf&oacute;lio"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Sledujte, co vlastn&iacute; velk&eacute; fondy — Vanguard, BlackRock, Fidelity a dal&scaron;&iacute;."
       }
     ],
-    tierText: "Exkluzivn&iacute; Trefolio Pro",
+    tierText: "",
     ctaLabel: "Prozkoumat fundamenty"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Na&scaron;li jste n&eacute;co zaj&iacute;mav&eacute;ho? Přidejte to do portf&oacute;lia nebo watchlistu přímo z v&yacute;sledků."
       }
     ],
-    tierText: "Exkluzivn&iacute; Trefolio Pro",
+    tierText: "",
     ctaLabel: "Otevř&iacute;t filtr"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ptejte se jako \"Kolik srážkov&eacute; daně jsem zaplatil z americk&yacute;ch dividend?\" a z&iacute;skejte okam&zdot;it&eacute; odpovědi."
       }
     ],
-    tierText: "Exkluzivn&iacute; Trefolio Pro",
+    tierText: "",
     ctaLabel: "Generovat daňov&yacute; zpr&aacute;vu"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Přid&aacute;vejte nebo odeb&iacute;rejte pozice, měňte alokace a okam&zdot;itě uvid&iacute;te dopad na riziko a v&yacute;nos."
       }
     ],
-    tierText: "Exkluzivn&iacute; Trefolio Pro",
+    tierText: "",
     ctaLabel: "Otevř&iacute;t simul&aacute;tor"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Zobrazte vše kombinovaně: akcie + ETFs + krypto + nemovitosti + &uacute;spory + důchody = v&aacute;&scaron; kompletní obr&aacute;zek."
       }
     ],
-    tierText: "Bifolio: Až 10 aktiv | Trefolio: Až 999 aktiv",
+    tierText: "",
     ctaLabel: "Přidat manu&aacute;ln&iacute; aktiva"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Zeptejte se na&scaron;&iacute; IA na jakoukoli krypto — fundamenty, trendy a tr&zdot;n&iacute; anal&yacute;zu."
       }
     ],
-    tierText: "Folio: P&rcaron;ehled trhu | Trefolio: Pln&eacute; sledov&aacute;n&iacute; portf&oacute;lia a IA",
+    tierText: "",
     ctaLabel: "Prozkoumat krypto"
   }
 };

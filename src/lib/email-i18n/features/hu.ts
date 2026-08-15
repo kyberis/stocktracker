@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "L&aacute;ssa az &eacute;rt&eacute;keket helyi valut&aacute;ban. 21 valut&aacute;t t&aacute;mogatunk automatikus &aacute;tvalt&aacute;ssal."
       }
     ],
-    tierText: "El&eacute;rhető minden csomagban",
+    tierText: "",
     ctaLabel: "Irány&iacute;t&oacute;pult megnyit&aacute;sa"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "L&aacute;ssa, hogyan n&ouml;velheti a dividendek visszaforgat&aacute;sa a hozamait 5, 10 vagy 20 &eacute;v alatt."
       }
     ],
-    tierText: "El&eacute;rhető minden csomagban",
+    tierText: "",
     ctaLabel: "Dividendek megtekint&eacute;se"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"N&eacute;zd &aacute;t a portf&oacute;li&oacute;mat\" — az IA elemzi az allok&aacute;ci&oacute;t, kock&aacute;zatot &eacute;s javaslatokat tesz."
       }
     ],
-    tierText: "Folio: 5 h&iacute;v&aacute;s/h&oacute; | Bifolio: 20/h&oacute; | Trefolio: Korl&aacute;tlan",
+    tierText: "",
     ctaLabel: "Pr&oacute;b&aacute;ld ki az IA elemz&eacute;st most"
   },
   "feature-price-alerts": {
@@ -99,7 +99,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Rendszerünk percenként ellenőrzi az árakat a piaci órákban. Soha nem kell a képernyőt figyelnie."
       }
     ],
-    tierText: "Bifolio: Akár 10 riasztás | Trefolio: Korlátlan riasztások",
+    tierText: "",
     ctaLabel: "Első riasztás létrehozása"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "T&ouml;lts&ouml;n fel b&aacute;rmilyen f&aacute;jlt — CSV, PDF vagy screenshot — &eacute;s az IA portf&oacute;li&oacute;v&aacute; alak&iacute;tja. Műk&ouml;dik szokatlan form&aacute;tumokkal is."
       }
     ],
-    tierText: "Folio: CSV &amp; K&eacute;zi | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Portf&oacute;li&oacute; import&aacute;l&aacute;sa"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "K&ouml;vesse, mit birtokolnak a nagy alapok — Vanguard, BlackRock, Fidelity &eacute;s t&ouml;bb."
       }
     ],
-    tierText: "Trefolio Pro exkluz&iacute;v",
+    tierText: "",
     ctaLabel: "Fundamentumok felfedez&eacute;se"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Tal&aacute;lt valami &eacute;rdekeset? Adja hozzá a portf&oacute;li&oacute;hoz vagy figyelőlist&aacute;hoz k&ouml;zvetlen&uuml;l az eredm&eacute;nyekből."
       }
     ],
-    tierText: "Trefolio Pro exkluz&iacute;v",
+    tierText: "",
     ctaLabel: "Szűrő megnyit&aacute;sa"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Tegyen fel k&eacute;rd&eacute;seket, mint \"Mennyi forr&aacute;sad&oacute;t fizettem az amerikai osztal&eacute;kokon?\" &eacute;s kapjon azonnali v&aacute;laszokat."
       }
     ],
-    tierText: "Trefolio Pro exkluz&iacute;v",
+    tierText: "",
     ctaLabel: "Ad&oacute;jelent&eacute;s gener&aacute;l&aacute;sa"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Adjon hozz&aacute; vagy vegyen el poz&iacute;ci&oacute;kat, v&aacute;ltoztassa az allok&aacute;ci&oacute;t &eacute;s azonnal l&aacute;ssa a kock&aacute;zat &eacute;s hozam hat&aacute;s&aacute;t."
       }
     ],
-    tierText: "Trefolio Pro exkluz&iacute;v",
+    tierText: "",
     ctaLabel: "Szimul&aacute;tor megnyit&aacute;sa"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "L&aacute;ssa mindent kombin&aacute;lva: r&eacute;szv&eacute;nyek + ETFs + kripto + ingatlanok + megtakar&iacute;t&aacute;sok + nyugd&iacute;jak = teljes k&eacute;ped."
       }
     ],
-    tierText: "Bifolio: Ak&aacute;r 10 eszk&ouml;z | Trefolio: Ak&aacute;r 999 eszk&ouml;z",
+    tierText: "",
     ctaLabel: "Manu&aacute;lis eszk&ouml;z&ouml;k hozz&aacute;ad&aacute;sa"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "K&eacute;rdezze meg AI-nkat b&aacute;rmely kriptor&oacute;l — fundamentumok, trendek &eacute;s piaci elemz&eacute;s."
       }
     ],
-    tierText: "Folio: Piaci &aacute;ttekint&eacute;s | Trefolio: Teljes portf&oacute;li&oacute; k&ouml;vet&eacute;s & IA",
+    tierText: "",
     ctaLabel: "Kripto felfedez&eacute;se"
   }
 };

@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Njoftime &ccedil;mimesh",
-      desc: "Merrni njoftim kur aksionet arrijn&euml; &ccedil;mimin tuaj t&euml; synuar. Njoftime me email dhe push t&euml; disponueshme n&euml; Bifolio."
+      desc: "Merrni njoftim kur aksionet arrijn&euml; &ccedil;mimin tuaj t&euml; synuar. Njoftime me email dhe push t&euml; disponueshme n&euml; trefolio."
     },
     {
       title: "Metrika t&euml; avancuara",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Oferta ekskluzive",
   voucherDiscountDisplay: "75% ZBRITJE",
   voucherApply: "P&euml;rdorni kodin n&euml; checkout:",
-  voucherValid: "E vlefshme p&euml;r Bifolio dhe Trefolio &mdash; mujore ose vjetore",
+  voucherValid: "mujore ose vjetore",
   ctaPrimary: "P&euml;rmir&euml;soni tani &mdash; 75% zbritje",
-  ctaSecondary: "Vazhdoni me Folio",
-  tipText: "&#x1F4A1; <strong>Plani juaj Folio</strong> p&euml;rfshin deri n&euml; 15 aksione, 1 portofol dhe 5 thirrje AI/muaj. P&euml;rmir&euml;soni p&euml;r m&euml; shum&euml;."
+  ctaSecondary: "Eksploroni panelin",
+  tipText: "&#x1F4A1; <strong>Fillimi &euml;sht&euml; i leht&euml;:</strong> Shtoni vet&euml;m nj&euml; aksion p&euml;r t&euml; par&euml; panelin tuaj t&euml; vij&euml; n&euml; jet&euml; me t&euml; dh&euml;na n&euml; koh&euml; reale, grafik&euml; dhe njohuri AI."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Mir&euml; se erdhe n&euml; Bifolio!",
+  heading: "Mir&euml; se erdhe n&euml; trefolio!",
   paragraph: "P&euml;rmir&euml;simi juaj &euml;sht&euml; aktiv. Ja &ccedil;far&euml; sapo hap&euml;t:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Vendosni alarmin tuaj t&euml; par&euml;",
   ctaSecondary: "Ndani portofolin tuaj",
-  upsellText: "<strong>Doni edhe m&euml; shum&euml;?</strong> Trefolio hap fundamentet e kompanis&euml;, filtrin e aksioneve, raportet tatimore, njoftimet WhatsApp dhe aksione t&euml; pakufizuara. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">M&euml;so m&euml; shum&euml;</a>"
+  upsellText: "<strong>Doni edhe m&euml; shum&euml;?</strong> trefolio hap fundamentet e kompanis&euml;, filtrin e aksioneve, raportet tatimore, njoftimet WhatsApp dhe aksione t&euml; pakufizuara. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">M&euml;so m&euml; shum&euml;</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Mir&euml; se erdhe n&euml; Trefolio Pro!",
+  heading: "Mir&euml; se erdhe n&euml; trefolio!",
   paragraph: "Tani keni akses t&euml; plot&euml; n&euml; t&euml; gjitha veçorit&euml; q&euml; ofron trefolio. Ja kompletet e mjetit tuaj:",
   groups: [
     {

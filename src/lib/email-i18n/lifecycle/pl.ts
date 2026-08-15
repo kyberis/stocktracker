@@ -29,7 +29,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Alerty cenowe",
-      desc: "Otrzymuj powiadomienia, gdy akcje osiągną docelową cenę. Alerty e-mail i push dostępne w Bifolio."
+      desc: "Otrzymuj powiadomienia, gdy akcje osiągną docelową cenę. Alerty e-mail i push dostępne w trefolio."
     },
     {
       title: "Zaawansowane metryki",
@@ -85,14 +85,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Oferta ekskluzywna",
   voucherDiscountDisplay: "75% ZNIŻKI",
   voucherApply: "Użyj kodu przy płatności:",
-  voucherValid: "Ważne na Bifolio i Trefolio &mdash; miesięcznie lub rocznie",
+  voucherValid: "miesięcznie lub rocznie",
   ctaPrimary: "Ulepsz teraz &mdash; 75% zniżki",
-  ctaSecondary: "Kontynuuj z Folio",
-  tipText: "&#x1F4A1; <strong>Twój plan Folio</strong> obejmuje do 15 pozycji, 1 portfel i 5 wywołań IA/miesiąc. Ulepsz, aby odblokować więcej."
+  ctaSecondary: "Poznaj dashboard",
+  tipText: "&#x1F4A1; <strong>Rozpoczęcie jest proste:</strong> Dodaj tylko jedną akcję, by zobaczyć dashboard ożywiony danymi w czasie rzeczywistym, wykresami i insightami IA."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Witaj w Bifolio!",
+  heading: "Witaj w trefolio!",
   paragraph: "Twoja aktualizacja jest aktywna. Oto wszystko, co właśnie odblokowałeś:",
   features: [
     {
@@ -134,11 +134,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Skonfiguruj pierwszy alert",
   ctaSecondary: "Udostępnij swój portfel",
-  upsellText: "<strong>Chcesz jeszcze więcej?</strong> Trefolio odblokowuje fundamenty firm, filtr akcji, raporty podatkowe, alerty WhatsApp i nieograniczone pozycje. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Dowiedz się więcej</a>"
+  upsellText: "<strong>Chcesz jeszcze więcej?</strong> trefolio odblokowuje fundamenty firm, filtr akcji, raporty podatkowe, alerty WhatsApp i nieograniczone pozycje. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Dowiedz się więcej</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Witaj w Trefolio Pro!",
+  heading: "Witaj w trefolio!",
   paragraph: "Masz teraz pełny dostęp do wszystkich funkcji trefolio. Oto Twój kompletny zestaw narzędzi:",
   groups: [
     {
@@ -245,7 +245,7 @@ export const trialInvitation: TrialInvitationStrings = {
 export const trialExpired: TrialExpiredStrings = {
   heading: "Tw&#243;j okres pr&#243;bny Pro dobieg&#322; ko&#324;ca",
   paragraph:
-    "Cze&#347;&#263; {{display_name}}, tw&#243;j 7-dniowy trial Trefolio Pro si&#281; sko&#324;czy&#322;. Tego zabraknie:",
+    "Cze&#347;&#263; {{display_name}}, tw&#243;j 7-dniowy trial trefolio si&#281; sko&#324;czy&#322;. Tego zabraknie:",
   features: [
     {
       title: "Zaawansowana analityka",
@@ -265,7 +265,7 @@ export const trialExpired: TrialExpiredStrings = {
     },
   ],
   pricingNote: "Plany od &euro;4,99/mies. Anuluj w dowolnym momencie.",
-  ctaPrimary: "Wykup subskrypcj&#281; Trefolio Pro",
+  ctaPrimary: "Wykup subskrypcj&#281; trefolio",
   ctaSecondary: "Zobacz cennik",
   signoffIntro:
     "Mam nadziej&#281;, &#380;e trial da&#322; Ci prawdziwy smak tego, co potrafi trefolio. Je&#347;li masz opini&#281;, ch&#281;tnie j&#261; przeczytam.",

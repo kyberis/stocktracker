@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Bekijk waarden in je lokale valuta. We ondersteunen 21 valuta's met automatische conversie."
       }
     ],
-    tierText: "Beschikbaar op alle plannen",
+    tierText: "",
     ctaLabel: "Open je dashboard"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Zie hoe herbeleggen van dividend je rendement kan laten groeien over 5, 10 of 20 jaar."
       }
     ],
-    tierText: "Beschikbaar op alle plannen",
+    tierText: "",
     ctaLabel: "Bekijk je dividend"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Bekijk mijn portefeuille\" — AI analyseert je allocatie, risico en suggereert verbeteringen."
       }
     ],
-    tierText: "Folio: 5 gesprekken/maand | Bifolio: 20/maand | Trefolio: Onbeperkt",
+    tierText: "",
     ctaLabel: "Probeer AI-analyse nu"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Multi-kanaal",
-        desc: "E-mail en push-alarmen op Bifolio. Voeg WhatsApp en apparaatalarmen toe op Trefolio."
+        desc: "E-mail, push, WhatsApp en apparaatalarmen."
       },
       {
         title: "Cron-aangedreven",
         desc: "Ons systeem controleert prijzen elke minuut tijdens markturen. Je hoeft nooit het scherm te bewaken."
       }
     ],
-    tierText: "Bifolio: Tot 10 alarmen | Trefolio: Onbeperkte alarmen",
+    tierText: "",
     ctaLabel: "Maak je eerste alarm"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Upload elk bestand — CSV, PDF of screenshot — en onze AI zet het om in je portefeuille. Werkt zelfs met ongebruikelijke formaten."
       }
     ],
-    tierText: "Folio: CSV en Handmatig | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Importeer je portefeuille"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Volg wat de grote fondsen bezitten — Vanguard, BlackRock, Fidelity en meer."
       }
     ],
-    tierText: "Trefolio Pro exclusief",
+    tierText: "",
     ctaLabel: "Fundamentals verkennen"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Iets interessants gevonden? Voeg het direct vanuit de resultaten toe aan je portefeuille of volglijst."
       }
     ],
-    tierText: "Trefolio Pro exclusief",
+    tierText: "",
     ctaLabel: "Filter openen"
   },
   "feature-moat-screener": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ga naar <strong>Tools &rarr; Aandelenbeoordeling</strong> en kies het tabblad <strong>Moat-screener</strong>."
       }
     ],
-    tierText: "Trefolio Pro exclusief",
+    tierText: "",
     ctaLabel: "Aandelenbeoordeling openen"
   },
   "feature-tax-reports": {
@@ -224,7 +224,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Stel vragen zoals \"Hoeveel bronbelasting heb ik betaald over Amerikaans dividend?\" en krijg direct antwoord."
       }
     ],
-    tierText: "Trefolio Pro exclusief",
+    tierText: "",
     ctaLabel: "Belastingrapport genereren"
   },
   "feature-portfolio-simulator": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Voeg posities toe of verwijder ze, wijzig allocaties en zie direct de impact op risico en rendement."
       }
     ],
-    tierText: "Trefolio Pro exclusief",
+    tierText: "",
     ctaLabel: "Simulator openen"
   },
   "feature-net-worth": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Zie alles gecombineerd: aandelen + ETFs + crypto + vastgoed + spaargeld + pensioenen = je complete plaatje."
       }
     ],
-    tierText: "Bifolio: Tot 10 activa | Trefolio: Tot 999 activa",
+    tierText: "",
     ctaLabel: "Handmatige activa toevoegen"
   },
   "feature-crypto": {
@@ -295,7 +295,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Vraag onze AI over elke crypto — fundamenten, trends en marktanalyse."
       }
     ],
-    tierText: "Folio: Marktoverzicht | Trefolio: Volledige portefeuille tracking & AI",
+    tierText: "",
     ctaLabel: "Crypto verkennen"
   }
 };

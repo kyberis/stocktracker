@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Alertas de precios",
-      desc: "Recibe notificaciones cuando las acciones alcancen tu precio objetivo. Alertas por email y push disponibles en Bifolio."
+      desc: "Recibe notificaciones cuando las acciones alcancen tu precio objetivo. Alertas por email y push disponibles."
     },
     {
       title: "M&eacute;tricas avanzadas",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Oferta exclusiva",
   voucherDiscountDisplay: "75% DTO",
   voucherApply: "Usa el c&oacute;digo al pagar:",
-  voucherValid: "V&aacute;lido en Bifolio y Trefolio &mdash; mensual o anual",
+  voucherValid: "V&aacute;lido mensual o anual",
   ctaPrimary: "Actualizar ahora &mdash; 75% descuento",
-  ctaSecondary: "Continuar con Folio",
-  tipText: "&#x1F4A1; <strong>Tu plan Folio</strong> incluye hasta 15 posiciones, 1 portafolio y 5 llamadas IA/mes. Actualiza para desbloquear m&aacute;s."
+  ctaSecondary: "Explorar el panel",
+  tipText: "&#x1F4A1; <strong>Empezar es f&aacute;cil:</strong> A&ntilde;ade solo una acci&oacute;n para ver tu panel cobrar vida con datos en tiempo real, gr&aacute;ficos e insights de IA."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "&#161;Bienvenido a Bifolio!",
+  heading: "&#161;Bienvenido a trefolio!",
   paragraph: "Tu actualizaci&oacute;n est&aacute; activa. Esto es todo lo que acabas de desbloquear:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Configura tu primera alerta",
   ctaSecondary: "Comparte tu portafolio",
-  upsellText: "<strong>&#191;Quieres a&uacute;n m&aacute;s?</strong> Trefolio desbloquea fundamentos de empresas, filtro de acciones, informes fiscales, alertas WhatsApp y posiciones ilimitadas. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">M&aacute;s informaci&oacute;n</a>"
+  upsellText: "<strong>&#191;Quieres a&uacute;n m&aacute;s?</strong> Explora fundamentos de empresas, el filtro de acciones, informes fiscales y alertas WhatsApp en tu panel. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">M&aacute;s informaci&oacute;n</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "&#161;Bienvenido a Trefolio Pro!",
+  heading: "&#161;Bienvenido a trefolio!",
   paragraph: "Ahora tienes acceso completo a todas las funciones que ofrece trefolio. Aqu&iacute; tienes tu kit completo:",
   groups: [
     {

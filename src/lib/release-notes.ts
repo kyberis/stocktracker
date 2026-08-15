@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.176",
+    date: "2026-08-15",
+    title: "Email copy without plan names",
+    titleTranslations: {
+      es: "Emails sin nombres de plan",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Outbound emails no longer mention Folio, Bifolio, or Trefolio as plan names. The product is just trefolio until paid tiers are turned back on.",
+        translations: {
+          es: "Los emails salientes ya no mencionan Folio, Bifolio ni Trefolio como nombres de plan. El producto es solo trefolio hasta que se reactiven los planes de pago.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Admins can turn an email on or off from the right-hand detail panel on the Email Flows map, including emails reached from a condition.",
+        translations: {
+          es: "Los admins pueden activar o desactivar un email desde el panel derecho del mapa de Email Flows, también cuando el email cuelga de una condición.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.175",
     date: "2026-08-15",
     title: "Toggle emails from the admin flow map",

@@ -14,7 +14,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Partagez votre lien personnel", desc: "Envoyez votre lien de parrainage unique &agrave; vos amis, votre famille ou votre communaut&eacute; d&rsquo;investisseurs." },
         { title: "Ils s&rsquo;inscrivent et v&eacute;rifient", desc: "Votre ami cr&eacute;e un compte trefolio avec votre lien et v&eacute;rifie son e-mail. C&rsquo;est tout &mdash; aucun achat requis." },
-        { title: "Vous gagnez 30 jours de Pro", desc: "Une fois v&eacute;rifi&eacute;, vous recevez automatiquement 30 jours de Trefolio Pro. Cumulez jusqu&rsquo;&agrave; 365 jours&nbsp;!" },
+        { title: "Vous gagnez 30 jours de Pro", desc: "Une fois v&eacute;rifi&eacute;, vous recevez automatiquement 30 jours de trefolio. Cumulez jusqu&rsquo;&agrave; 365 jours&nbsp;!" },
       ],
       referralLinkLabel: "Votre lien de parrainage",
       referralLinkHint: "Partagez ce lien avec vos amis pour commencer &agrave; gagner",
@@ -31,7 +31,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Teilen Sie Ihren pers&ouml;nlichen Link", desc: "Senden Sie Ihren einzigartigen Empfehlungslink an Freunde, Familie oder Ihre Investoren-Community." },
         { title: "Sie registrieren sich und best&auml;tigen", desc: "Ihr Freund erstellt ein trefolio-Konto &uuml;ber Ihren Link und best&auml;tigt seine E-Mail. Das ist alles &mdash; kein Kauf erforderlich." },
-        { title: "Sie verdienen 30 Tage Pro", desc: "Nach der Best&auml;tigung erhalten Sie automatisch 30 Tage Trefolio Pro. Sammeln Sie bis zu 365 Tage!" },
+        { title: "Sie verdienen 30 Tage Pro", desc: "Nach der Best&auml;tigung erhalten Sie automatisch 30 Tage trefolio. Sammeln Sie bis zu 365 Tage!" },
       ],
       referralLinkLabel: "Ihr Empfehlungslink",
       referralLinkHint: "Teilen Sie diesen Link mit Freunden, um loszulegen",
@@ -48,7 +48,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Condividi il tuo link personale", desc: "Invia il tuo link di referral unico ad amici, familiari o alla tua comunit&agrave; di investitori." },
         { title: "Si iscrivono e verificano", desc: "Il tuo amico crea un account trefolio con il tuo link e verifica la sua email. Tutto qui &mdash; nessun acquisto richiesto." },
-        { title: "Guadagni 30 giorni di Pro", desc: "Una volta verificato, ricevi automaticamente 30 giorni di Trefolio Pro. Accumula fino a 365 giorni!" },
+        { title: "Guadagni 30 giorni di Pro", desc: "Una volta verificato, ricevi automaticamente 30 giorni di trefolio. Accumula fino a 365 giorni!" },
       ],
       referralLinkLabel: "Il tuo link di referral",
       referralLinkHint: "Condividi questo link con gli amici per iniziare a guadagnare",
@@ -65,7 +65,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Partilhe o seu link pessoal", desc: "Envie o seu link de refer&ecirc;ncia &uacute;nico a amigos, fam&iacute;lia ou &agrave; sua comunidade de investidores." },
         { title: "Eles registam-se e verificam", desc: "O seu amigo cria uma conta trefolio com o seu link e verifica o email. &Eacute; tudo &mdash; sem necessidade de compra." },
-        { title: "Ganha 30 dias de Pro", desc: "Quando verificam, recebe automaticamente 30 dias de Trefolio Pro. Acumule at&eacute; 365 dias!" },
+        { title: "Ganha 30 dias de Pro", desc: "Quando verificam, recebe automaticamente 30 dias de trefolio. Acumule at&eacute; 365 dias!" },
       ],
       referralLinkLabel: "O seu link de refer&ecirc;ncia",
       referralLinkHint: "Partilhe este link com amigos para come&ccedil;ar a ganhar",
@@ -82,7 +82,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Deel uw persoonlijke link", desc: "Stuur uw unieke verwijzingslink naar vrienden, familie of uw beleggerscommunity." },
         { title: "Ze melden zich aan en verifi&euml;ren", desc: "Uw vriend maakt een trefolio-account aan via uw link en verifieert zijn e-mail. Dat is alles &mdash; geen aankoop vereist." },
-        { title: "U verdient 30 dagen Pro", desc: "Na verificatie ontvangt u automatisch 30 dagen Trefolio Pro. Spaar tot 365 dagen!" },
+        { title: "U verdient 30 dagen Pro", desc: "Na verificatie ontvangt u automatisch 30 dagen trefolio. Spaar tot 365 dagen!" },
       ],
       referralLinkLabel: "Uw verwijzingslink",
       referralLinkHint: "Deel deze link met vrienden om te beginnen met verdienen",
@@ -99,7 +99,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Podziel si&#281; swoim linkiem", desc: "Wy&#347;lij sw&oacute;j unikalny link polecaj&#261;cy do znajomych, rodziny lub spo&#322;eczno&#347;ci inwestor&oacute;w." },
         { title: "Rejestruj&#261; si&#281; i weryfikuj&#261;", desc: "Tw&oacute;j znajomy tworzy konto trefolio u&#380;ywaj&#261;c Twojego linku i weryfikuje email. To wszystko &mdash; bez zakupu." },
-        { title: "Zdobywasz 30 dni Pro", desc: "Po weryfikacji automatycznie otrzymujesz 30 dni Trefolio Pro. Zbieraj do 365 dni!" },
+        { title: "Zdobywasz 30 dni Pro", desc: "Po weryfikacji automatycznie otrzymujesz 30 dni trefolio. Zbieraj do 365 dni!" },
       ],
       referralLinkLabel: "Tw&oacute;j link polecaj&#261;cy",
       referralLinkHint: "Podziel si&#281; tym linkiem ze znajomymi, aby zacz&#261;&#263; zarabia&#263;",
@@ -116,7 +116,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Dela din personliga l&auml;nk", desc: "Skicka din unika v&auml;rvningsl&auml;nk till v&auml;nner, familj eller din investerarcommunity." },
         { title: "De registrerar sig och verifierar", desc: "Din v&auml;n skapar ett trefolio-konto via din l&auml;nk och verifierar sin e-post. Det &auml;r allt &mdash; inget k&ouml;p kr&auml;vs." },
-        { title: "Du tj&auml;nar 30 dagar Pro", desc: "Efter verifiering f&aring;r du automatiskt 30 dagar Trefolio Pro. Samla upp till 365 dagar!" },
+        { title: "Du tj&auml;nar 30 dagar Pro", desc: "Efter verifiering f&aring;r du automatiskt 30 dagar trefolio. Samla upp till 365 dagar!" },
       ],
       referralLinkLabel: "Din v&auml;rvningsl&auml;nk",
       referralLinkHint: "Dela denna l&auml;nk med v&auml;nner f&ouml;r att b&ouml;rja tj&auml;na",
@@ -133,7 +133,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Del dit personlige link", desc: "Send dit unikke henvisningslink til venner, familie eller dit investormilj&oslash;." },
         { title: "De tilmelder sig og verificerer", desc: "Din ven opretter en trefolio-konto via dit link og verificerer sin e-mail. Det er alt &mdash; intet k&oslash;b kr&aelig;ves." },
-        { title: "Du tjener 30 dages Pro", desc: "Efter verifikation f&aring;r du automatisk 30 dages Trefolio Pro. Saml op til 365 dage!" },
+        { title: "Du tjener 30 dages Pro", desc: "Efter verifikation f&aring;r du automatisk 30 dages trefolio. Saml op til 365 dage!" },
       ],
       referralLinkLabel: "Dit henvisningslink",
       referralLinkHint: "Del dette link med venner for at begynde at tjene",
@@ -150,7 +150,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Jaa henkil&ouml;kohtainen linkkisi", desc: "L&auml;het&auml; ainutlaatuinen suosittelulinkkisi yst&auml;ville, perheelle tai sijoittajayhteis&ouml;llesi." },
         { title: "He rekister&ouml;ityv&auml;t ja vahvistavat", desc: "Yst&auml;v&auml;si luo trefolio-tilin linkkisi kautta ja vahvistaa s&auml;hk&ouml;postinsa. Siinä kaikki &mdash; ei ostopakkoa." },
-        { title: "Ansaitset 30 p&auml;iv&auml;&auml; Pro-aikaa", desc: "Vahvistuksen j&auml;lkeen saat automaattisesti 30 p&auml;iv&auml;&auml; Trefolio Pro -aikaa. Ker&auml;&auml; jopa 365 p&auml;iv&auml;&auml;!" },
+        { title: "Ansaitset 30 p&auml;iv&auml;&auml; Pro-aikaa", desc: "Vahvistuksen j&auml;lkeen saat automaattisesti 30 p&auml;iv&auml;&auml; trefolio -aikaa. Ker&auml;&auml; jopa 365 p&auml;iv&auml;&auml;!" },
       ],
       referralLinkLabel: "Suosittelulinkkisi",
       referralLinkHint: "Jaa t&auml;m&auml; linkki yst&auml;ville ansaitaksesi",
@@ -167,7 +167,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Del din personlige lenke", desc: "Send din unike henvisningslenke til venner, familie eller investormilj&oslash;et ditt." },
         { title: "De registrerer seg og verifiserer", desc: "Vennen din oppretter en trefolio-konto via lenken din og verifiserer e-posten sin. Det er alt &mdash; ikke noe kj&oslash;p p&aring;krevd." },
-        { title: "Du tjener 30 dager Pro", desc: "Etter verifisering f&aring;r du automatisk 30 dager Trefolio Pro. Samle opp til 365 dager!" },
+        { title: "Du tjener 30 dager Pro", desc: "Etter verifisering f&aring;r du automatisk 30 dager trefolio. Samle opp til 365 dager!" },
       ],
       referralLinkLabel: "Din henvisningslenke",
       referralLinkHint: "Del denne lenken med venner for &aring; begynne &aring; tjene",
@@ -184,7 +184,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Sd&iacute;lejte sv&#367;j osobn&iacute; odkaz", desc: "Po&scaron;lete sv&#367;j unik&aacute;tn&iacute; doporu&#269;ovac&iacute; odkaz p&#345;&aacute;tel&#367;m, rodin&#283; nebo investi&#269;n&iacute; komunit&#283;." },
         { title: "Zaregistruj&iacute; se a ov&#283;&#345;&iacute;", desc: "V&aacute;&#353; p&#345;&iacute;tel si vytvo&#345;&iacute; &uacute;&#269;et trefolio p&#345;es v&aacute;&#353; odkaz a ov&#283;&#345;&iacute; sv&#367;j e-mail. To je v&#353;e &mdash; &#382;&aacute;dn&yacute; n&aacute;kup nen&iacute; pot&#345;eba." },
-        { title: "Z&iacute;sk&aacute;te 30 dn&iacute; Pro", desc: "Po ov&#283;&#345;en&iacute; automaticky z&iacute;sk&aacute;te 30 dn&iacute; Trefolio Pro. Nasbírejte a&#382; 365 dn&iacute;!" },
+        { title: "Z&iacute;sk&aacute;te 30 dn&iacute; Pro", desc: "Po ov&#283;&#345;en&iacute; automaticky z&iacute;sk&aacute;te 30 dn&iacute; trefolio. Nasbírejte a&#382; 365 dn&iacute;!" },
       ],
       referralLinkLabel: "V&aacute;&#353; doporu&#269;ovac&iacute; odkaz",
       referralLinkHint: "Sd&iacute;lejte tento odkaz s p&#345;&aacute;teli a za&#269;n&#283;te z&iacute;sk&aacute;vat",
@@ -201,7 +201,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Μοιραστείτε τον προσωπικό σας σύνδεσμο", desc: "Στείλτε τον μοναδικό σύνδεσμο παραπομπής σας σε φίλους, οικογένεια ή την επενδυτική σας κοινότητα." },
         { title: "Εγγράφονται και επαληθεύουν", desc: "Ο φίλος σας δημιουργεί λογαριασμό trefolio μέσω του συνδέσμου σας και επαληθεύει το email του. Αυτό είναι &mdash; δεν απαιτείται αγορά." },
-        { title: "Κερδίζετε 30 ημέρες Pro", desc: "Μετά την επαλήθευση, λαμβάνετε αυτόματα 30 ημέρες Trefolio Pro. Συγκεντρώστε έως 365 ημέρες!" },
+        { title: "Κερδίζετε 30 ημέρες Pro", desc: "Μετά την επαλήθευση, λαμβάνετε αυτόματα 30 ημέρες trefolio. Συγκεντρώστε έως 365 ημέρες!" },
       ],
       referralLinkLabel: "Ο σύνδεσμος παραπομπής σας",
       referralLinkHint: "Μοιραστείτε αυτόν τον σύνδεσμο με φίλους για να αρχίσετε να κερδίζετε",
@@ -218,7 +218,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Împărtășiți linkul personal", desc: "Trimiteți linkul unic de recomandare prietenilor, familiei sau comunității de investitori." },
         { title: "Se înregistrează și verifică", desc: "Prietenul dvs. creează un cont trefolio prin linkul dvs. și verifică emailul. Asta e tot &mdash; fără achiziție necesară." },
-        { title: "Câștigați 30 de zile Pro", desc: "După verificare, primiți automat 30 de zile Trefolio Pro. Acumulați până la 365 de zile!" },
+        { title: "Câștigați 30 de zile Pro", desc: "După verificare, primiți automat 30 de zile trefolio. Acumulați până la 365 de zile!" },
       ],
       referralLinkLabel: "Linkul dvs. de recomandare",
       referralLinkHint: "Împărtășiți acest link cu prietenii pentru a începe să câștigați",
@@ -235,7 +235,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Ossza meg szem&eacute;lyes linkj&eacute;t", desc: "K&uuml;ldje el egyedi aj&aacute;nl&oacute; linkj&eacute;t bar&aacute;tainak, csal&aacute;dj&aacute;nak vagy befektet&#337;i k&ouml;z&ouml;ss&eacute;g&eacute;nek." },
         { title: "Regisztr&aacute;lnak &eacute;s igazolnak", desc: "Bar&aacute;tja l&eacute;trehoz egy trefolio fi&oacute;kot az &Ouml;n linkj&eacute;n kereszt&uuml;l &eacute;s igazolja e-mail-j&eacute;t. Ennyi &mdash; v&aacute;s&aacute;rl&aacute;s nem sz&uuml;ks&eacute;ges." },
-        { title: "Szerezzen 30 nap Pro-t", desc: "Az igazol&aacute;s ut&aacute;n automatikusan kap 30 nap Trefolio Pro-t. Gy&#369;jts&ouml;n &ouml;ssze ak&aacute;r 365 napot!" },
+        { title: "Szerezzen 30 nap Pro-t", desc: "Az igazol&aacute;s ut&aacute;n automatikusan kap 30 nap trefolio-t. Gy&#369;jts&ouml;n &ouml;ssze ak&aacute;r 365 napot!" },
       ],
       referralLinkLabel: "Az &Ouml;n aj&aacute;nl&oacute; linkje",
       referralLinkHint: "Ossza meg ezt a linket bar&aacute;taival a keres&eacute;s megkezd&eacute;s&eacute;hez",
@@ -252,7 +252,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Ki&#351;isel linkinizi payla&#351;&#305;n", desc: "Benzersiz y&ouml;nlendirme linkinizi arkada&#351;lar&#305;n&#305;za, ailenize veya yat&#305;r&#305;mc&#305; toplulu&#287;unuza g&ouml;nderin." },
         { title: "Kaydolur ve do&#287;rularlar", desc: "Arkada&#351;&#305;n&#305;z linkiniz &uuml;zerinden bir trefolio hesab&#305; olu&#351;turur ve e-postas&#305;n&#305; do&#287;rular. Hepsi bu &mdash; sat&#305;n alma gerekmiyor." },
-        { title: "30 g&uuml;n Pro kazan&#305;rs&#305;n&#305;z", desc: "Do&#287;rulamadan sonra otomatik olarak 30 g&uuml;n Trefolio Pro al&#305;rs&#305;n&#305;z. 365 g&uuml;ne kadar biriktirin!" },
+        { title: "30 g&uuml;n Pro kazan&#305;rs&#305;n&#305;z", desc: "Do&#287;rulamadan sonra otomatik olarak 30 g&uuml;n trefolio al&#305;rs&#305;n&#305;z. 365 g&uuml;ne kadar biriktirin!" },
       ],
       referralLinkLabel: "Y&ouml;nlendirme linkiniz",
       referralLinkHint: "Kazanmaya ba&#351;lamak i&ccedil;in bu linki arkada&#351;lar&#305;n&#305;zla payla&#351;&#305;n",
@@ -269,7 +269,7 @@ export const referralStrings: Record<string, { referral: ReferralProgramStrings;
       steps: [
         { title: "Поділіться своїм особистим посиланням", desc: "Відправте унікальне реферальне посилання друзям, родині чи інвестиційній спільноті." },
         { title: "Вони реєструються та підтверджують", desc: "Ваш друг створює акаунт trefolio за вашим посиланням і підтверджує email. Це все &mdash; покупка не потрібна." },
-        { title: "Ви заробляєте 30 днів Pro", desc: "Після підтвердження автоматично отримуєте 30 днів Trefolio Pro. Накопичуйте до 365 днів!" },
+        { title: "Ви заробляєте 30 днів Pro", desc: "Після підтвердження автоматично отримуєте 30 днів trefolio. Накопичуйте до 365 днів!" },
       ],
       referralLinkLabel: "Ваше реферальне посилання",
       referralLinkHint: "Поділіться цим посиланням з друзями, щоб почати заробляти",

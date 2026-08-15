@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Cenov&eacute; upozornenia",
-      desc: "Buďte informovan&iacute;, keď akcie dosiahnu va&scaron;u cieľov&uacute; cenu. E-mailov&eacute; a push upozornenia dostupn&eacute; na Bifolio."
+      desc: "Buďte informovan&iacute;, keď akcie dosiahnu va&scaron;u cieľov&uacute; cenu. E-mailov&eacute; a push upozornenia dostupn&eacute; na trefolio."
     },
     {
       title: "Pokročil&eacute; metriky",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Exkluz&iacute;vna ponuka",
   voucherDiscountDisplay: "75% ZĽAVA",
   voucherApply: "Použite k&oacute;d pri platbe:",
-  voucherValid: "Platn&eacute; na Bifolio a Trefolio &mdash; mesačne alebo ročne",
+  voucherValid: "mesačne alebo ročne",
   ctaPrimary: "Upgradovať teraz &mdash; 75% zľava",
-  ctaSecondary: "Pokračovať s Folio",
-  tipText: "&#x1F4A1; <strong>V&aacute;&scaron; pl&aacute;n Folio</strong> zahŕňa a&zcaron; 15 poz&iacute;ci&iacute;, 1 portfolio a 5 volan&iacute; IA/mesiac. Upgradujte pre odomknutie viac."
+  ctaSecondary: "Presk&uacute;mať dashboard",
+  tipText: "&#x1F4A1; <strong>Začať je jednoduch&eacute;:</strong> Pridajte len jednu akciu a uvid&iacute;te svoj dashboard ožiť s d&aacute;tami v re&aacute;lnom &ccaron;ase, grafmi a insightmi IA."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Vitajte v Bifolio!",
+  heading: "Vitajte v trefolio!",
   paragraph: "V&aacute;&scaron; upgrade je akt&iacute;vny. Tu je v&scaron;etko, čo ste pr&aacute;ve odomkli:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Nastaviť prvé upozornenie",
   ctaSecondary: "Zdieľať portf&oacute;lio",
-  upsellText: "<strong>Chcete e&scaron;te viac?</strong> Trefolio odomkne firemn&eacute; fundament&aacute;ly, filtr akci&iacute;, daňov&eacute; v&yacute;kazy, WhatsApp upozornenia a neobmedzen&eacute; poz&iacute;cie. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Zistiť viac</a>"
+  upsellText: "<strong>Chcete e&scaron;te viac?</strong> trefolio odomkne firemn&eacute; fundament&aacute;ly, filtr akci&iacute;, daňov&eacute; v&yacute;kazy, WhatsApp upozornenia a neobmedzen&eacute; poz&iacute;cie. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Zistiť viac</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Vitajte v Trefolio Pro!",
+  heading: "Vitajte v trefolio!",
   paragraph: "Teraz m&aacute;te pln&yacute; pr&iacute;stup ku v&scaron;etk&yacute;m funkci&aacute;m trefolio. Tu je v&aacute;&scaron; kompletn&yacute; n&aacute;strojov&yacute; set:",
   groups: [
     {

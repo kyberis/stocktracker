@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Skatiet vērtības savā vietējā valūtā. Atbalstām 21 valūtu ar automātisku konversiju."
       }
     ],
-    tierText: "Pieejams visos plānos",
+    tierText: "",
     ctaLabel: "Atvērt paneli"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Skatiet, kā dividendes reinvestēšana varētu palielināt jūsu ienesīgumu 5, 10 vai 20 gadu laikā."
       }
     ],
-    tierText: "Pieejams visos plānos",
+    tierText: "",
     ctaLabel: "Skatīt dividendes"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Pārskati manu portfeli\" — AI analizē alokāciju, risku un iesaka uzlabojumus."
       }
     ],
-    tierText: "Folio: 5 zvanu/mēn. | Bifolio: 20/mēn. | Trefolio: Neierobežots",
+    tierText: "",
     ctaLabel: "Izmēģiniet AI analīzi tagad"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Vairākkanālu",
-        desc: "E-pasta un push brīdinājumi Bifolio. Pievienojiet WhatsApp un ierīces brīdinājumus Trefolio."
+        desc: "E-pasta un push brīdinājumi trefolio. Pievienojiet WhatsApp un ierīces brīdinājumus trefolio."
       },
       {
         title: "Cron darbināts",
         desc: "Mūsu sistēma pārbauda cenas katru minūti tirgus stundās. Jums nekad nav jāskatās ekrānā."
       }
     ],
-    tierText: "Bifolio: Līdz 10 brīdinājumiem | Trefolio: Neierobežoti brīdinājumi",
+    tierText: "",
     ctaLabel: "Izveidot pirmo brīdinājumu"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Augšupielādējiet jebkuru failu — CSV, PDF vai ekrānuzņēmumu — un mūsu AI pārveidos to par jūsu portfeli. Darbojas pat ar neparastiem formātiem."
       }
     ],
-    tierText: "Folio: CSV un Manuāli | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Importēt portfeli"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Sekojiet, ko īpašumā lielie fondi — Vanguard, BlackRock, Fidelity un citi."
       }
     ],
-    tierText: "Trefolio Pro ekskluzīvs",
+    tierText: "",
     ctaLabel: "Izpētiet pamatdatus"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Atradāt kaut ko interesantu? Pievienojiet to portfelim vai novērošanas sarakstam tieši no rezultātiem."
       }
     ],
-    tierText: "Trefolio Pro ekskluzīvs",
+    tierText: "",
     ctaLabel: "Atvērt filtru"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Uzdodiet jautājumus kā \"Cik daudz avota nodokļa es samaksāju par ASV dividendēm?\" un saņemiet tūlītējas atbildes."
       }
     ],
-    tierText: "Trefolio Pro ekskluzīvs",
+    tierText: "",
     ctaLabel: "Ģenerēt nodokļu ziņojumu"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Pievienojiet vai noņemiet pozīcijas, mainiet alokācijas un nekavējoties redziet ietekmi uz risku un atdevi."
       }
     ],
-    tierText: "Trefolio Pro ekskluzīvs",
+    tierText: "",
     ctaLabel: "Atvērt simulatoru"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Skatiet visu kombinēti: akcijas + ETFs + kripto + nekustamais īpašums + uzkrājumi + pensijas = jūsu pilnīgs attēls."
       }
     ],
-    tierText: "Bifolio: Līdz 10 aktīviem | Trefolio: Līdz 999 aktīviem",
+    tierText: "",
     ctaLabel: "Pievienot manuālus aktīvus"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Jautājiet mūsu AI par jebkuru kripto — pamatdati, tendences un tirgus analīze."
       }
     ],
-    tierText: "Folio: Tirgus pārskats | Trefolio: Pilna portfeļa izsekošana un AI",
+    tierText: "",
     ctaLabel: "Izpētiet kripto"
   }
 };

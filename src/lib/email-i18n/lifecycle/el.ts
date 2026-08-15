@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Ειδοποιήσεις τιμών",
-      desc: "Ενημερώσου όταν οι μετοχές φτάσουν την τιμή στόχο σου. Ειδοποιήσεις email και push διαθέσιμες στο Bifolio."
+      desc: "Ενημερώσου όταν οι μετοχές φτάσουν την τιμή στόχο σου. Ειδοποιήσεις email και push διαθέσιμες στο trefolio."
     },
     {
       title: "Προηγμένα μετρήσιμα",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Αποκλειστική προσφορά",
   voucherDiscountDisplay: "75% Έκπτωση",
   voucherApply: "Χρησιμοποίησε τον κωδικό κατά την πληρωμή:",
-  voucherValid: "Έγκυρο για Bifolio και Trefolio — μηνιαία ή ετήσια",
+  voucherValid: "μηνιαία ή ετήσια",
   ctaPrimary: "Αναβάθμισε τώρα — 75% έκπτωση",
-  ctaSecondary: "Συνέχισε με Folio",
-  tipText: "&#x1F4A1; <strong>Το πλάνο Folio σου</strong> περιλαμβάνει έως 15 θέσεις, 1 χαρτοφυλάκιο και 5 κλήσεις AI/μήνα. Αναβάθμισε για περισσότερα."
+  ctaSecondary: "Εξερεύνησε το dashboard",
+  tipText: "&#x1F4A1; <strong>Η έναρξη είναι εύκολη:</strong> Πρόσθεσε μόνο μία μετοχή για να δεις το dashboard σου να ζωντανεύει με δεδομένα πραγματικού χρόνου, γραφήματα και AI insights."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Καλώς ήρθες στο Bifolio!",
+  heading: "Καλώς ήρθες στο trefolio!",
   paragraph: "Η αναβάθμισή σου είναι ενεργή. Να τι ξεκλείδωσες:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Ρύθμισε την πρώτη σου ειδοποίηση",
   ctaSecondary: "Μοιράσου το χαρτοφυλάκιό σου",
-  upsellText: "<strong>Θέλεις ακόμα περισσότερα;</strong> Το Trefolio ξεκλειδώνει θεμελιώδη στοιχεία εταιρειών, φίλτρο μετοχών, φορολογικές αναφορές, ειδοποιήσεις WhatsApp και απεριόριστες θέσεις. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Μάθε περισσότερα</a>"
+  upsellText: "<strong>Θέλεις ακόμα περισσότερα;</strong> Το trefolio ξεκλειδώνει θεμελιώδη στοιχεία εταιρειών, φίλτρο μετοχών, φορολογικές αναφορές, ειδοποιήσεις WhatsApp και απεριόριστες θέσεις. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Μάθε περισσότερα</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Καλώς ήρθες στο Trefolio Pro!",
+  heading: "Καλώς ήρθες στο trefolio!",
   paragraph: "Έχεις πλέον πλήρη πρόσβαση σε κάθε λειτουργία που προσφέρει το trefolio. Να το πλήρες toolkit σου:",
   groups: [
     {
@@ -239,7 +239,7 @@ export const trialInvitation: TrialInvitationStrings = {
 export const trialExpired: TrialExpiredStrings = {
   heading: "Η δοκιμ&#x3ae; Pro σας τελε&#x3af;ωσε",
   paragraph:
-    "Γεια σου {{display_name}}, η 7&#x3ae;μερη δοκιμ&#x3ae; Trefolio Pro τελε&#x3af;ωσε. Να τι θα χ&#x3ac;σεις:",
+    "Γεια σου {{display_name}}, η 7&#x3ae;μερη δοκιμ&#x3ae; trefolio τελε&#x3af;ωσε. Να τι θα χ&#x3ac;σεις:",
   features: [
     {
       title: "Προηγμ&#x3ad;νη αναλυτικ&#x3ae;",
@@ -259,7 +259,7 @@ export const trialExpired: TrialExpiredStrings = {
     },
   ],
   pricingNote: "Τα πλ&#x3ac;να ξεκινο&#x3cd;ν απ&#x3cc; &euro;4,99/μ&#x3ae;να. Ακ&#x3cd;ρωση αν&#x3ac; π&#x3ac;σα στιγμ&#x3ae;.",
-  ctaPrimary: "Εγγραφ&#x3ae; στο Trefolio Pro",
+  ctaPrimary: "Εγγραφ&#x3ae; στο trefolio",
   ctaSecondary: "Δες τιμολ&#x3cc;γηση",
   signoffIntro:
     "Ελπ&#x3af;ζω η δοκιμ&#x3ae; να σου &#x3ad;δωσε μια πραγματικ&#x3ae; γε&#x3cd;ση απ&#x3cc; το τι μπορε&#x3af; να κ&#x3ac;νει το trefolio. Αν &#x3ad;χεις feedback, θα &#x3ae;θελα πραγματικ&#x3ac; να το ακο&#x3cd;σω.",

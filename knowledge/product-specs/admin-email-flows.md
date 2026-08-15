@@ -46,13 +46,13 @@ Input/output: GET JSON `{ flows, flags, crons, templates, nodeEnabled, codePrevi
 
 - Page: `/admin/email-flows`
 - Nav: Admin → Messaging → Email Flows
-- Components: `EmailFlowsTab` (flow picker, flowchart, per-email toggles, all-emails catalog, EN/ES body preview)
+- Components: `EmailFlowsTab` (flow picker, flowchart, right-panel on/off for the selected node and its descendant emails, EN/ES body preview)
 - Context consumers: none (admin session only)
 
 ## 7. Business logic
 
 - Diagrams are documented in `EMAIL_FLOWS`, not inferred from cron SQL at runtime.
-- Every `kind: email` node is toggleable on this page. `sendEmail({ automationKey })` suppresses sends when the node is off.
+- Every `kind: email` node is toggleable from the right detail panel. Selecting a trigger, wait, or condition shows switches for descendant emails (e.g. “Has any holding?” controls `welcome-no-stocks`). `sendEmail({ automationKey })` suppresses sends when the node is off.
 - Nodes with `featureFlag` write that flag (so Feature Flags stays in sync). Others persist in `platform_settings.email_node_toggles`.
 - Hardcoded senders show a sample body via `getCodeOwnedEmailPreview`. Template nodes use DB HTML.
 - Catalog: onboarding, winback, weekly digest, trial, alerts, event-triggered, and the seeded template library.

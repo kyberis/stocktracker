@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Gweld gwerthoedd yn eich arian cyfred lleol. Rydym yn cefnogi 21 arian cyfred gyda throsiad awtomatig."
       }
     ],
-    tierText: "Ar gael ar bob cynllun",
+    tierText: "",
     ctaLabel: "Agorwch eich bwrdd"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Gweld sut gall ail-fuddsoddi dividendau gynyddu eich enillion dros 5, 10 neu 20 mlynedd."
       }
     ],
-    tierText: "Ar gael ar bob cynllun",
+    tierText: "",
     ctaLabel: "Gweld eich dividendau"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Adolygwch fy mhortffolio\" — mae'r AI yn dadansoddi eich dyrannu, risg ac yn awgrymu gwelliannau."
       }
     ],
-    tierText: "Folio: 5 galwadau/mis | Bifolio: 20/mis | Trefolio: Diderfyn",
+    tierText: "",
     ctaLabel: "Rhoi cynnig ar ddadansoddiad AI nawr"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Aml-sianel",
-        desc: "Rhybuddion e-bost a push ar Bifolio. Ychwanegwch WhatsApp a rhybuddion dyfais ar Trefolio."
+        desc: "Rhybuddion e-bost a push ar trefolio. Ychwanegwch WhatsApp a rhybuddion dyfais ar trefolio."
       },
       {
         title: "Cron bwer",
         desc: "Mae ein system yn gwirio prisiau bob munud yn ystod oriau'r farchnad. Does dim angen i chi edrych ar y sgrin byth."
       }
     ],
-    tierText: "Bifolio: Hyd at 10 rhybuddion | Trefolio: Rhybuddion diderfyn",
+    tierText: "",
     ctaLabel: "Creu eich rhybudd cyntaf"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Llwythwch unrhyw ffeil — CSV, PDF neu screenshot — a bydd ein AI yn ei drawsnewid i'ch portffolio. Gweithio hyd yn oed gyda fformatiau anarferol."
       }
     ],
-    tierText: "Folio: CSV a Llaw | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Mewnforio eich portffolio"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Dilynwch beth sydd gan y cronfeydd mawr — Vanguard, BlackRock, Fidelity a mwy."
       }
     ],
-    tierText: "Ar wahân i Trefolio Pro",
+    tierText: "",
     ctaLabel: "Archwilio sylfaenol"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Wedi dod o hyd i rywbeth diddorol? Ychwanegwch at eich portffolio neu restr wylio yn uniongyrchol o'r canlyniadau."
       }
     ],
-    tierText: "Ar wahân i Trefolio Pro",
+    tierText: "",
     ctaLabel: "Agorwch yr hidlydd"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Gofynnwch gwestiynau fel \"Faint o dreth wrth y ffynhonnell talais ar gyfranddaliadau America?\" a chael atebion ar unwaith."
       }
     ],
-    tierText: "Ar wahân i Trefolio Pro",
+    tierText: "",
     ctaLabel: "Cynhyrchu eich adroddiad treth"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ychwanegwch neu ddilewch sefyllfaoedd, newidiwch dyrannau a gweld yr effaith ar risg a ffurflen ar unwaith."
       }
     ],
-    tierText: "Ar wahân i Trefolio Pro",
+    tierText: "",
     ctaLabel: "Agorwch y symudydd"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Gweld popeth gyda'i gilydd: stociau + ETFs + crypto + eiddo + cynilion + pensiynau = eich darlun cyflawn."
       }
     ],
-    tierText: "Bifolio: Hyd at 10 asedau | Trefolio: Hyd at 999 asedau",
+    tierText: "",
     ctaLabel: "Ychwanegu asedau llaw"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Gofynnwch i'n IA am unrhyw crypto — sylfaenolion, tueddiadau a dadansoddiad marchnad."
       }
     ],
-    tierText: "Folio: Trosolwg marchnad | Trefolio: Trafod portffolio llawn ac IA",
+    tierText: "",
     ctaLabel: "Archwilio crypto"
   }
 };

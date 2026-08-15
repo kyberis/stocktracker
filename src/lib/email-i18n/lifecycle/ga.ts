@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Fol&aacute;ireamh Praghsanna",
-      desc: "Faigh f&oacute;gra nuair a bhaineann stoic amach do phraghas sprice. Fol&aacute;ireamh r&iacute;omhphoist agus push ar f&aacute;il ar Bifolio."
+      desc: "Faigh f&oacute;gra nuair a bhaineann stoic amach do phraghas sprice. Fol&aacute;ireamh r&iacute;omhphoist agus push ar f&aacute;il ar trefolio."
     },
     {
       title: "M&eacute;adair Chasta",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Tairiscint eisiach",
   voucherDiscountDisplay: "75% LAC&Aacute;ID",
   voucherApply: "Bain &uacute;s&aacute;id as an gc&oacute;d ag an seice&aacute;il amach:",
-  voucherValid: "Bail&iacute; ar Bifolio &amp; Trefolio &mdash; m&iacute;os&uacute;il n&oacute; bliant&uacute;il",
+  voucherValid: "m&iacute;os&uacute;il n&oacute; bliant&uacute;il",
   ctaPrimary: "Uascthaigh anois &mdash; 75% lac&aacute;id",
-  ctaSecondary: "Lean ar aghaidh le Folio",
-  tipText: "&#x1F4A1; <strong>Do phlean Folio</strong> cuims&iacute;onn suas le 15 sealbh&uacute;, 1 phortaf&oacute;il agus 5 ghlaoch AI/m&iacute;. Uascthaigh chun n&iacute;os m&oacute; a oscailt."
+  ctaSecondary: "Ini&uacute;ch an Deais",
+  tipText: "&#x1F4A1; <strong>T&aacute; t&uacute;s r&eacute;idh:</strong> Cuir ach stoc amh&aacute;in leis chun do dheais a fheice&aacute;il ag teacht beo le sonra&iacute; f&iacute;or-ama, cairteacha agus l&eacute;argas AI."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "F&aacute;ilte go Bifolio!",
+  heading: "F&aacute;ilte go trefolio!",
   paragraph: "T&aacute; do uasctha gn&iacute;omhach. Seo gach rud a d&#x27;oscail t&uacute; d&iacute;reach:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Socraigh do Ch&eacute;ad Fhol&aacute;ireamh",
   ctaSecondary: "Roinnt do Phortaf&oacute;il",
-  upsellText: "<strong>Ba mhaith leat n&iacute;os m&oacute;?</strong> Oscla&iacute;onn Trefolio bunfhadhbanna cuideachta, scagaire stoc, tuarasc&aacute;la&iacute; c&aacute;naigh, fol&aacute;ireamh WhatsApp agus sealbhuithe gan teorainn. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Foghlaim n&iacute;os m&oacute;</a>"
+  upsellText: "<strong>Ba mhaith leat n&iacute;os m&oacute;?</strong> Oscla&iacute;onn trefolio bunfhadhbanna cuideachta, scagaire stoc, tuarasc&aacute;la&iacute; c&aacute;naigh, fol&aacute;ireamh WhatsApp agus sealbhuithe gan teorainn. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Foghlaim n&iacute;os m&oacute;</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "F&aacute;ilte go Trefolio Pro!",
+  heading: "F&aacute;ilte go trefolio!",
   paragraph: "T&aacute; rochtain ioml&aacute;n agat anois ar gach gn&eacute; de trefolio. Seo do threalamh ioml&aacute;n:",
   groups: [
     {

@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Cenov&aacute; upozornění",
-      desc: "Buďte informov&aacute;ni, kdy akcie dos&aacute;hnou va&scaron;eho c&iacute;lov&eacute;ho ceny. E-mailov&aacute; a push upozornění dostupn&aacute; na Bifolio."
+      desc: "Buďte informov&aacute;ni, kdy akcie dos&aacute;hnou va&scaron;eho c&iacute;lov&eacute;ho ceny. E-mailov&aacute; a push upozornění dostupn&aacute; na trefolio."
     },
     {
       title: "Pokročil&eacute; metriky",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Exkluzivn&iacute; nab&iacute;dka",
   voucherDiscountDisplay: "75% SLEVA",
   voucherApply: "Použijte k&oacute;d při platbě:",
-  voucherValid: "Platn&eacute; na Bifolio a Trefolio &mdash; m&ecirc;s&iacute;čně nebo ročn&iacute;",
+  voucherValid: "m&ecirc;s&iacute;čně nebo ročn&iacute;",
   ctaPrimary: "Upgradovat nyn&iacute; &mdash; 75% sleva",
-  ctaSecondary: "Pokračovat s Folio",
-  tipText: "&#x1F4A1; <strong>V&aacute;&scaron; pl&aacute;n Folio</strong> zahrnuje a&zcaron; 15 pozic, 1 portfolio a 5 vol&aacute;n&iacute; IA/měs&iacute;c. Upgradujte pro odemčen&iacute; v&iacute;ce."
+  ctaSecondary: "Prozkoumat dashboard",
+  tipText: "&#x1F4A1; <strong>Zač&iacute;t je snadn&eacute;:</strong> Přidejte jen jednu akcii a uvid&iacute;te svůj dashboard ož&iacute;t s daty v re&aacute;ln&eacute;m &ccaron;ase, grafy a insighty IA."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "V&iacute;tejte v Bifolio!",
+  heading: "V&iacute;tejte v trefolio!",
   paragraph: "V&aacute;&scaron; upgrade je aktivn&iacute;. Zde je v&scaron;echno, co jste pr&aacute;vě odemkli:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Nastavit první upozornění",
   ctaSecondary: "Sd&iacute;let portf&oacute;lio",
-  upsellText: "<strong>Chcete je&scaron;tě v&iacute;ce?</strong> Trefolio odemkne firemn&iacute; fundament&aacute;ly, filtr akci&iacute;, daňov&eacute; v&yacute;kazy, WhatsApp upozornění a neomezen&eacute; pozice. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Zjistit v&iacute;ce</a>"
+  upsellText: "<strong>Chcete je&scaron;tě v&iacute;ce?</strong> trefolio odemkne firemn&iacute; fundament&aacute;ly, filtr akci&iacute;, daňov&eacute; v&yacute;kazy, WhatsApp upozornění a neomezen&eacute; pozice. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Zjistit v&iacute;ce</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "V&iacute;tejte v Trefolio Pro!",
+  heading: "V&iacute;tejte v trefolio!",
   paragraph: "Nyn&iacute; m&aacute;te pln&yacute; př&iacute;stup ke v&scaron;em funkc&iacute;m trefolio. Zde je v&aacute;&scaron; kompletn&iacute; n&aacute;strojov&yacute; set:",
   groups: [
     {
@@ -239,7 +239,7 @@ export const trialInvitation: TrialInvitationStrings = {
 export const trialExpired: TrialExpiredStrings = {
   heading: "Va&#x161;e zku&#x161;ebn&#xed; verze Pro skon&#x10d;ila",
   paragraph:
-    "Ahoj, {{display_name}}, va&#x161;e 7denn&#xed; zku&#x161;ebn&#xed; verze Trefolio Pro skon&#x10d;ila. O to p&#x159;ijdete:",
+    "Ahoj, {{display_name}}, va&#x161;e 7denn&#xed; zku&#x161;ebn&#xed; verze trefolio skon&#x10d;ila. O to p&#x159;ijdete:",
   features: [
     {
       title: "Pokro&#x10d;il&#xe1; analytika",
@@ -259,7 +259,7 @@ export const trialExpired: TrialExpiredStrings = {
     },
   ],
   pricingNote: "Pl&#xe1;ny za&#x10d;&#xed;naj&#xed; na &euro;4,99/m&#x11b;s&#xed;c. Zru&#x161;it m&#x16f;&#x17e;ete kdykoli.",
-  ctaPrimary: "P&#x159;edplatit Trefolio Pro",
+  ctaPrimary: "P&#x159;edplatit trefolio",
   ctaSecondary: "Zobrazit ceny",
   signoffIntro:
     "Douf&#xe1;m, &#x17e;e zku&#x161;ebn&#xed; verze v&#xe1;m dala opravdovou p&#x159;edstavu o tom, co trefolio um&#xed;. Pokud m&#xe1;te zp&#x11b;tnou vazbu, r&#xe1;d ji usly&#x161;&#xed;m.",

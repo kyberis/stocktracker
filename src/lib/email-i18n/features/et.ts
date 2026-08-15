@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Vaadake väärtusi oma kohalikus valuutas. Toetame 21 valuutat automaatse konversiooniga."
       }
     ],
-    tierText: "Saadaval kõigis plaanides",
+    tierText: "",
     ctaLabel: "Avage juhtpaneel"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Vaadake, kuidas dividendide reinvesteerimine võiks suurendada teie tootlust 5, 10 või 20 aasta jooksul."
       }
     ],
-    tierText: "Saadaval kõigis plaanides",
+    tierText: "",
     ctaLabel: "Vaata dividende"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Vaata üle minu portfell\" — AI analüüsib teie allokatsiooni, riski ja soovitab parandusi."
       }
     ],
-    tierText: "Folio: 5 kutsut/kuu | Bifolio: 20/kuu | Trefolio: Piiramatu",
+    tierText: "",
     ctaLabel: "Proovi AI analüüsi nüüd"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Mitmekanaliline",
-        desc: "E-mail ja push hoiatused Bifolios. Lisage WhatsApp ja seadme hoiatused Trefolios."
+        desc: "E-mail ja push hoiatused trefolios. Lisage WhatsApp ja seadme hoiatused trefolios."
       },
       {
         title: "Croniga juhitud",
         desc: "Meie süsteem kontrollib hindu iga minuti järel turu tundidel. Te ei pea kunagi ekraani vaatama."
       }
     ],
-    tierText: "Bifolio: Kuni 10 hoiust | Trefolio: Piiramatud hoiatused",
+    tierText: "",
     ctaLabel: "Loo esimene hoiatus"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Laadige üles mis tahes fail — CSV, PDF või ekraanipilt — ja meie AI teisendab selle teie portfelliks. Toimib isegi ebatavaliste formaatidega."
       }
     ],
-    tierText: "Folio: CSV ja Käsitsi | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Impordi oma portfell"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Jälgige, mida suured fondid omavad — Vanguard, BlackRock, Fidelity ja teised."
       }
     ],
-    tierText: "Trefolio Pro eksklusiivne",
+    tierText: "",
     ctaLabel: "Uurige põhiandmeid"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Leidsid midagi huvitavat? Lisa see oma portfelli või jälgimisnimekirja otse tulemustest."
       }
     ],
-    tierText: "Trefolio Pro eksklusiivne",
+    tierText: "",
     ctaLabel: "Ava filter"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Esitage küsimusi nagu \"Kui palju allahindluse maksu maksin USA dividendidelt?\" ja saage kohesti vastuseid."
       }
     ],
-    tierText: "Trefolio Pro eksklusiivne",
+    tierText: "",
     ctaLabel: "Genereeri maksuaruanne"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Lisage või eemaldage positsioone, muutke allokatsioone ja näete kohe mõju riskile ja tootlusele."
       }
     ],
-    tierText: "Trefolio Pro eksklusiivne",
+    tierText: "",
     ctaLabel: "Avage simulaator"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Vaadake kõike kombineeritult: aktsiad + ETFs + krüpto + kinnisvara + säästud + pensionid = teie täielik pilt."
       }
     ],
-    tierText: "Bifolio: Kuni 10 vara | Trefolio: Kuni 999 vara",
+    tierText: "",
     ctaLabel: "Lisa käsitsi varasid"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Küsige meie AI-lt mis tahes krüpto kohta — fundamentaalsed andmed, trendid ja turuanalüüs."
       }
     ],
-    tierText: "Folio: Turu ülevaade | Trefolio: Täielik portfelli jälgimine ja AI",
+    tierText: "",
     ctaLabel: "Uurige krüptot"
   }
 };

@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Вижте стойностите в местната си валута. Поддържаме 21 валути с автоматично преобразуване."
       }
     ],
-    tierText: "Достъпно във всички планове",
+    tierText: "",
     ctaLabel: "Отворете таблото"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Вижте как реинвестирането на дивиденти може да увеличи възвръщаемостта ви за 5, 10 или 20 години."
       }
     ],
-    tierText: "Достъпно във всички планове",
+    tierText: "",
     ctaLabel: "Преглед на дивиденти"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Прегледай портфейла ми\" — AI анализира разпределението, риска и предлага подобрения."
       }
     ],
-    tierText: "Folio: 5 обаждания/мес. | Bifolio: 20/мес. | Trefolio: Неограничено",
+    tierText: "",
     ctaLabel: "Опитай AI анализ сега"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Мултиканал",
-        desc: "Имейл и push сигнали на Bifolio. Добавете WhatsApp и сигнали за устройство на Trefolio."
+        desc: "Имейл и push сигнали на trefolio. Добавете WhatsApp и сигнали за устройство на trefolio."
       },
       {
         title: "Задвижвано от cron",
         desc: "Системата ни проверява цените всяка минута по време на пазарните часове. Никога не е нужно да гледате екрана."
       }
     ],
-    tierText: "Bifolio: До 10 сигнала | Trefolio: Неограничени сигнали",
+    tierText: "",
     ctaLabel: "Създайте първия си сигнал"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Качете всеки файл — CSV, PDF или екранна снимка — и нашият AI ще го превърне в портфейл. Работи дори с необичайни формати."
       }
     ],
-    tierText: "Folio: CSV и Ръчно | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Импортирайте портфейла"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Проследявайте какво притежават големите фондове — Vanguard, BlackRock, Fidelity и други."
       }
     ],
-    tierText: "Изключително Trefolio Pro",
+    tierText: "",
     ctaLabel: "Разгледайте фундаменталите"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Намерихте нещо интересно? Добавете го към портфейла или списъка за наблюдение директно от резултатите."
       }
     ],
-    tierText: "Изключително Trefolio Pro",
+    tierText: "",
     ctaLabel: "Отворете филтъра"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Задавайте въпроси като \"Колко данък при източник платих върху американски дивиденти?\" и получавайте незабавни отговори."
       }
     ],
-    tierText: "Изключително Trefolio Pro",
+    tierText: "",
     ctaLabel: "Генерирайте данъчния отчет"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Добавяйте или премахвайте позиции, променяйте разпределенията и вижте незабавно въздействието върху риска и възвръщаемостта."
       }
     ],
-    tierText: "Изключително Trefolio Pro",
+    tierText: "",
     ctaLabel: "Отворете симулатора"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Вижте всичко комбинирано: акции + ETFs + крипто + недвижими имоти + спестявания + пенсии = вашата пълна картина."
       }
     ],
-    tierText: "Bifolio: До 10 актива | Trefolio: До 999 актива",
+    tierText: "",
     ctaLabel: "Добавяне на ръчни активи"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Питайте нашата IA за всяка крипто — фундаментали, тенденции и пазарен анализ."
       }
     ],
-    tierText: "Folio: Пазарен преглед | Trefolio: Пълно проследяване и IA",
+    tierText: "",
     ctaLabel: "Разгледайте крипто"
   }
 };

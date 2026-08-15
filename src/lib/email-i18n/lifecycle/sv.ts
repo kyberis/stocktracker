@@ -29,7 +29,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Prisaviseringar",
-      desc: "Bli meddelad n&#228;r aktier n&#229;r ditt m&#229;lpris. E-post- och pushaviseringar tillg&#228;ngliga p&#229; Bifolio."
+      desc: "Bli meddelad n&#228;r aktier n&#229;r ditt m&#229;lpris. E-post- och pushaviseringar tillg&#228;ngliga p&#229; trefolio."
     },
     {
       title: "Avancerade m&#228;tningar",
@@ -85,14 +85,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Exklusivt erbjudande",
   voucherDiscountDisplay: "75% RABATT",
   voucherApply: "Anv&#228;nd kod vid kassan:",
-  voucherValid: "G&#228;ller f&#246;r Bifolio och Trefolio &mdash; m&#229;natligt eller &#229;rligen",
+  voucherValid: "m&#229;natligt eller &#229;rligen",
   ctaPrimary: "Uppgradera nu &mdash; 75% rabatt",
-  ctaSecondary: "Forts&#228;tt med Folio",
-  tipText: "&#x1F4A1; <strong>Din Folio-plan</strong> inkluderar upp till 15 innehav, 1 portf&#246;lj och 5 AI-anrop/m&#229;nad. Uppgradera f&#246;r mer."
+  ctaSecondary: "Utforska dashboarden",
+  tipText: "&#x1F4A1; <strong>Kom ig&#229;ng &#228;r enkelt:</strong> L&#228;gg bara till en aktie f&#246;r att se din dashboard komma till liv med realtidsdata, diagram och AI-insikter."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "V&#228;lkommen till Bifolio!",
+  heading: "V&#228;lkommen till trefolio!",
   paragraph: "Din uppgradering &#228;r aktiv. H&#228;r &#228;r allt du precis l&#229;ste upp:",
   features: [
     {
@@ -134,11 +134,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "St&#228;ll in din f&#246;rsta avisering",
   ctaSecondary: "Dela din portf&#246;lj",
-  upsellText: "<strong>Vill du ha &#228;nnu mer?</strong> Trefolio l&#229;ser upp f&#246;retagsfundamenta, aktiescreener, skatterapporter, WhatsApp-aviseringar och obegr&#228;nsade innehav. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">L&#228;s mer</a>"
+  upsellText: "<strong>Vill du ha &#228;nnu mer?</strong> trefolio l&#229;ser upp f&#246;retagsfundamenta, aktiescreener, skatterapporter, WhatsApp-aviseringar och obegr&#228;nsade innehav. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">L&#228;s mer</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "V&#228;lkommen till Trefolio Pro!",
+  heading: "V&#228;lkommen till trefolio!",
   paragraph: "Du har nu full tillg&#229;ng till alla funktioner trefolio erbjuder. H&#228;r &#228;r ditt kompletta verktygsset:",
   groups: [
     {
@@ -245,7 +245,7 @@ export const trialInvitation: TrialInvitationStrings = {
 export const trialExpired: TrialExpiredStrings = {
   heading: "Din Pro-provperiod &#228;r slut",
   paragraph:
-    "Hej {{display_name}}, din 7-dagars Trefolio Pro-provperiod &#228;r &#246;ver. H&#228;r &#228;r vad du g&#229;r miste om:",
+    "Hej {{display_name}}, din 7-dagars trefolio-provperiod &#228;r &#246;ver. H&#228;r &#228;r vad du g&#229;r miste om:",
   features: [
     {
       title: "Avancerad analys",
@@ -265,7 +265,7 @@ export const trialExpired: TrialExpiredStrings = {
     },
   ],
   pricingNote: "Planer fr&#229;n &euro;4,99/m&#229;nad. S&#228;g upp n&#228;r som helst.",
-  ctaPrimary: "Prenumerera p&#229; Trefolio Pro",
+  ctaPrimary: "Prenumerera p&#229; trefolio",
   ctaSecondary: "Visa priser",
   signoffIntro:
     "Jag hoppas provperioden gav dig en riktig smak av vad trefolio kan g&#246;ra. Om du har feedback vill jag g&#228;rna h&#246;ra den.",

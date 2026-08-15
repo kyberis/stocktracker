@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Feic luachanna i do airgeadra áitiúil. Tacaímid le 21 airgeadra le comhshó uathoibríoch."
       }
     ],
-    tierText: "Ar fáil ar gach plean",
+    tierText: "",
     ctaLabel: "Oscail do phainéal"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Feic conas a d'fhéadfadh ath-infheistiú ddividinní do thorthaíocht a chomhchodú thar 5, 10 nó 20 bliain."
       }
     ],
-    tierText: "Ar fáil ar gach plean",
+    tierText: "",
     ctaLabel: "Féach ar do ddividinní"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Athbhreithnigh mo phortafóil\" — déanann an IA anailís ar do leithdháileadh, riosca agus molann feabhsuithe."
       }
     ],
-    tierText: "Folio: 5 glaonna/mí | Bifolio: 20/mí | Trefolio: Gan teoranta",
+    tierText: "",
     ctaLabel: "Bain triail as anailís IA anois"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Il-chainéal",
-        desc: "Foláirim r-phost agus push ar Bifolio. Cuir WhatsApp agus foláirim gléas ar Trefolio."
+        desc: "Foláirim r-phost agus push ar trefolio. Cuir WhatsApp agus foláirim gléas ar trefolio."
       },
       {
         title: "Cron-phoinn",
         desc: "Seiceálann ár gcóras praghsanna gach nóiméad le linn uaireanta an mhargaidh. Ní gá duit an scáileán a fheiceáil riamh."
       }
     ],
-    tierText: "Bifolio: Suas le 10 foláirim | Trefolio: Foláirim gan teorainn",
+    tierText: "",
     ctaLabel: "Cruthaigh do chéad fholáirim"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Uaslódáil aon chomhad — CSV, PDF nó screenshot — agus déanfaidh ár n-IA é a pharsáil isteach i do phortafóil. Oibríonn fiú le formáidí neamhghnácha."
       }
     ],
-    tierText: "Folio: CSV agus Lámh | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Iompórtáil do phortafóil"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Rian cad a bhfuil ag na cistí móra — Vanguard, BlackRock, Fidelity agus níos mó."
       }
     ],
-    tierText: "Eisiach Trefolio Pro",
+    tierText: "",
     ctaLabel: "Iniúch na bunús"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Fuair tú rud suimiúil? Cuir leis do phortafóil nó liosta faireacháin go díreach ó na torthaí."
       }
     ],
-    tierText: "Eisiach Trefolio Pro",
+    tierText: "",
     ctaLabel: "Oscail an scagaire"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Cuir ceisteanna mar \"C&eacute; mh&eacute;ad c&aacute;in &iacute;oc &oacute; fhoinse a d&iacute;ol m&eacute; ar dhividend&iacute; Mheirice&aacute;?\" agus faigh freagra&iacute; l&aacute;ithreacha."
       }
     ],
-    tierText: "Eisiach Trefolio Pro",
+    tierText: "",
     ctaLabel: "Gin do thuairisc ch&aacute;nach"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Cuir poist leis nó bain iad, athraigh leithdháilí agus feic an tionchar ar riosca agus toradh láithreach."
       }
     ],
-    tierText: "Eisiach Trefolio Pro",
+    tierText: "",
     ctaLabel: "Oscail an t-imitheoir"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Feic gach rud le chéile: stocanna + ETFs + cripte + eastát réadach + coigiltis + pinsin = do phictiúr iomlán."
       }
     ],
-    tierText: "Bifolio: Suas le 10 sócmhainní | Trefolio: Suas le 999 sócmhainní",
+    tierText: "",
     ctaLabel: "Cuir sócmhainní láimhe leis"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Fiafraigh dár n-IA faoi aon chripte — bunús, treochtaí agus anailís margaidh."
       }
     ],
-    tierText: "Folio: Forbhreathnú margaidh | Trefolio: Rianú iomlán portafóil agus IA",
+    tierText: "",
     ctaLabel: "Iniúch cripte"
   }
 };

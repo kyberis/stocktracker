@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ara valuri fil-valuta lokali tiegħek. Nappoġġaw 21 valuta bi konverżjoni awtomatika."
       }
     ],
-    tierText: "Disponibbli fuq kull pjan",
+    tierText: "",
     ctaLabel: "Iftaħ id-dashboard"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ara kif ir-reinvestiment tad-dividendi jista' jkabbir ir-rendimenti tiegħek fuq 5, 10 jew 20 sena."
       }
     ],
-    tierText: "Disponibbli fuq kull pjan",
+    tierText: "",
     ctaLabel: "Ara d-dividendi tiegħek"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Revja l-portfolju tiegħi\" — l-AI janalizza l-allokazzjoni, ir-riskju u jissuġġerixxi titjibiet."
       }
     ],
-    tierText: "Folio: 5 sejħiet/xahar | Bifolio: 20/xahar | Trefolio: Illimitata",
+    tierText: "",
     ctaLabel: "Ipprova l-analiżi AI issa"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Multi-kanal",
-        desc: "Twissijiet email u push fuq Bifolio. Żid WhatsApp u twissijiet ta' apparat fuq Trefolio."
+        desc: "Twissijiet email u push fuq trefolio. Żid WhatsApp u twissijiet ta' apparat fuq trefolio."
       },
       {
         title: "Imexxi minn cron",
         desc: "Is-sistema tagħna tiċċekkja l-prezzijiet kull minuta matul ħinijiet tas-suq. Qatt ma għandek bżonn tħares lejn l-iskrin."
       }
     ],
-    tierText: "Bifolio: Sa 10 twissijiet | Trefolio: Twissijiet illimitati",
+    tierText: "",
     ctaLabel: "Oħloq l-ewwel twissija"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Upload kwalunkwe fajl — CSV, PDF jew screenshot — u l-AI tagħna se jipparsejha fil-portfolju tiegħek. Taħdem anki ma' formati mhux tas-soltu."
       }
     ],
-    tierText: "Folio: CSV u Manwali | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Importa l-portfolju tiegħek"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Segwi x'għandhom il-fondi kbar — Vanguard, BlackRock, Fidelity u aktar."
       }
     ],
-    tierText: "Esklużiv Trefolio Pro",
+    tierText: "",
     ctaLabel: "Esplora l-fundamentali"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Sibt xi ħaġa interessanti? Żidha mal-portfolju jew lista ta' osservazzjoni direttament mir-riżultati."
       }
     ],
-    tierText: "Esklużiv Trefolio Pro",
+    tierText: "",
     ctaLabel: "Iftaħ il-filtru"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Staqsi mistoqsijiet bħal \"Kemm taxxa ta' wiċċ ħallast fuq dividendi Amerikani?\" u ikseb tweġibiet immedjati."
       }
     ],
-    tierText: "Esklużiv Trefolio Pro",
+    tierText: "",
     ctaLabel: "Ġenera r-rapport fiskali tiegħek"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Żid jew neħħi pożizzjonijiet, ibdel l-allokazzjonijiet u ara l-impatt fuq ir-riskju u r-ritorn istantanjament."
       }
     ],
-    tierText: "Esklużiv Trefolio Pro",
+    tierText: "",
     ctaLabel: "Iftaħ is-simulatur"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ara kollox magħqud: stokks + ETFs + crypto + proprjetà + tfaddil + pensjonijiet = stampa sħiħa tiegħek."
       }
     ],
-    tierText: "Bifolio: Sa 10 assi | Trefolio: Sa 999 assi",
+    tierText: "",
     ctaLabel: "Żid assi manwali"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Staqsi lill-IA tagħna dwar kull kripto — fundamentali, tendenzi u analiżi tal-mercatus."
       }
     ],
-    tierText: "Folio: Dehra tal-mercatus | Trefolio: Tracking sħiħ tal-portfolju u IA",
+    tierText: "",
     ctaLabel: "Esplora kripto"
   }
 };

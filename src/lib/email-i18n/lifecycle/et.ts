@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Hinnateavitused",
-      desc: "Saa teavitus, kui aktsiad jõuavad sinu sihihinnani. E-maili ja push teavitused saadaval Bifolios."
+      desc: "Saa teavitus, kui aktsiad jõuavad sinu sihihinnani. E-maili ja push teavitused saadaval trefolios."
     },
     {
       title: "Täpsemad mõõdikud",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Eksklusiivne pakkumine",
   voucherDiscountDisplay: "75% ALLAHINDLUS",
   voucherApply: "Kasuta koodi maksel:",
-  voucherValid: "Kehtib Bifolio ja Trefolio — kuine või aastane",
+  voucherValid: "kuine või aastane",
   ctaPrimary: "Uuenda nüüd — 75% allahindlus",
-  ctaSecondary: "Jätka Folio-ga",
-  tipText: "&#x1F4A1; <strong>Sinu Folio plaan</strong> sisaldab kuni 15 positsiooni, 1 portfelli ja 5 AI kutsut kuus. Uuenda rohkem avamiseks."
+  ctaSecondary: "Uuri dashboardit",
+  tipText: "&#x1F4A1; <strong>Alustamine on lihtne:</strong> Lisa ainult üks aktsia, et näha oma dashboardi elustuvat reaalajas andmetega, graafikutega ja AI ülevaadetega."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Tere tulemast Bifolio-sse!",
+  heading: "Tere tulemast trefolio-sse!",
   paragraph: "Sinu uuendus on aktiivne. Siin on k&#245;ik, mida sa just avasid:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Seadista oma esimene teavitus",
   ctaSecondary: "Jaga oma portfelli",
-  upsellText: "<strong>Tahad veel rohkem?</strong> Trefolio avab ettev&#245;tete fundamentaalsed andmed, aktsiate filtri, maksuaruanded, WhatsApp teavitused ja piiramatud positsioonid. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Loe rohkem</a>"
+  upsellText: "<strong>Tahad veel rohkem?</strong> trefolio avab ettev&#245;tete fundamentaalsed andmed, aktsiate filtri, maksuaruanded, WhatsApp teavitused ja piiramatud positsioonid. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Loe rohkem</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Tere tulemast Trefolio Pro-sse!",
+  heading: "Tere tulemast trefolio-sse!",
   paragraph: "Sul on n&#252;&#252;d t&#228;ielik juurdep&#228;&#228;s k&#245;igile trefolio funktsioonidele. Siin on sinu t&#228;ielik t&#246;&#246;riistakomplekt:",
   groups: [
     {

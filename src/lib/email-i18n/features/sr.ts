@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Погледајте вредности у својој локалној валути. Подржавамо 21 валуту са аутоматском конверзијом."
       }
     ],
-    tierText: "Доступно у свим плановима",
+    tierText: "",
     ctaLabel: "Отворите контролну таблу"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Погледајте како реинвестирање дивиденди може повећати ваше приносе током 5, 10 или 20 година."
       }
     ],
-    tierText: "Доступно у свим плановима",
+    tierText: "",
     ctaLabel: "Погледај дивиденде"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Прегледај мој портфељ\" — AI анализира вашу алокацију, ризик и предлаже побољшања."
       }
     ],
-    tierText: "Folio: 5 позива/мес. | Bifolio: 20/мес. | Trefolio: Неограничено",
+    tierText: "",
     ctaLabel: "Испробај AI анализу сада"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Мулти-канал",
-        desc: "Имејл и пуш упозорења на Bifolio. Додајте WhatsApp и упозорења уређаја на Trefolio."
+        desc: "Имејл и пуш упозорења на trefolio. Додајте WhatsApp и упозорења уређаја на trefolio."
       },
       {
         title: "Покретано cron-ом",
         desc: "Наш систем проверава цене сваког минута током трговачких сати. Никада не морате да гледате екран."
       }
     ],
-    tierText: "Bifolio: До 10 упозорења | Trefolio: Неограничена упозорења",
+    tierText: "",
     ctaLabel: "Направите прво упозорење"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Отпремите било коју датотеку — CSV, PDF или снимак екрана — и наша AI ће је претворити у портфељ. Ради чак и са необичним форматима."
       }
     ],
-    tierText: "Folio: CSV и Ручно | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Увезите портфељ"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Пратите шта поседују велики фондови — Vanguard, BlackRock, Fidelity и други."
       }
     ],
-    tierText: "Искључиво Trefolio Pro",
+    tierText: "",
     ctaLabel: "Истражите фундаментале"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Нашли сте нешто занимљиво? Додајте у портфељ или листу праћења директно из резултата."
       }
     ],
-    tierText: "Искључиво Trefolio Pro",
+    tierText: "",
     ctaLabel: "Отворите филтер"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Поставите питања као \"Колико пореза на извор сам платио на америчке дивиденде?\" и добијте тренутне одговоре."
       }
     ],
-    tierText: "Искључиво Trefolio Pro",
+    tierText: "",
     ctaLabel: "Генеришите порески извештај"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Додајте или уклоните позиције, промените алокације и одмах видите утицај на ризик и поврат."
       }
     ],
-    tierText: "Искључиво Trefolio Pro",
+    tierText: "",
     ctaLabel: "Отворите симулатор"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Погледајте све комбиновано: акције + ETFs + крипто + некретнине + штедња + пензије = ваша потпуна слика."
       }
     ],
-    tierText: "Bifolio: До 10 средстава | Trefolio: До 999 средстава",
+    tierText: "",
     ctaLabel: "Додај ручна средства"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Питајте нашу IA о било којој крипто — фундаментали, трендови и тржишна анализа."
       }
     ],
-    tierText: "Folio: Преглед тржишта | Trefolio: Пуно праћење портфеља и IA",
+    tierText: "",
     ctaLabel: "Истражите крипто"
   }
 };

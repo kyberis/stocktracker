@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Avvi&#x017C;i tal-Prezzijiet",
-      desc: "Ikseb notifika meta l-istokks jil&#x0127;qu l-prezz target tieg&#x0127;ek. Avvi&#x017C;i tal-email u push disponibbli fuq Bifolio."
+      desc: "Ikseb notifika meta l-istokks jil&#x0127;qu l-prezz target tieg&#x0127;ek. Avvi&#x017C;i tal-email u push disponibbli fuq trefolio."
     },
     {
       title: "Metri&#x010B;i Avvanzati",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Offerta esklussiva",
   voucherDiscountDisplay: "75% SKONT",
   voucherApply: "Uża l-kodi&#x010B;i fil-checkout:",
-  voucherValid: "Validu fuq Bifolio u Trefolio &mdash; kull xahar jew annwali",
+  voucherValid: "kull xahar jew annwali",
   ctaPrimary: "Itejjeb issa &mdash; 75% skont",
-  ctaSecondary: "Kompli bil-Folio",
-  tipText: "&#x1F4A1; <strong>Il-pjan Folio tieg&#x0127;ek</strong> jinkludi sa 15 sejbiet, 1 portafoll u 5 sej&#x0127;iet AI/xahar. Itejjeb biex tift&#x0127;u aktar."
+  ctaSecondary: "Esplora d-Dashboard",
+  tipText: "&#x1F4A1; <strong>Il-bidu huwa fa&#x010B;li:</strong> Żid biss stokk wie&#x0127;ed biex tara d-dashboard tieg&#x0127;ek jie&#x0127;a b&#x27;data f&#x27;&#x017C;mien reali, &#x010B;arti u insights tal-AI."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Mer&#x0127;ba g&#x0127;al Bifolio!",
+  heading: "Mer&#x0127;ba g&#x0127;al trefolio!",
   paragraph: "It-tejjeb tieg&#x0127;ek huwa attiv. Dan huwa kollox li g&#x0127;adek kemm fet&#x0127;et:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Ikkonfigura l-Ewwel Avvi&#x017C;",
   ctaSecondary: "Aqsam il-Portafoll Tiegħek",
-  upsellText: "<strong>Tixtieq aktar?</strong> Trefolio jift&#x0127;u fundamentali tal-kumpanija, screener tal-istokks, rapporti tat-taxxa, avvi&#x017C;i WhatsApp u sejbiet illimitati. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Ikseb aktar informazzjoni</a>"
+  upsellText: "<strong>Tixtieq aktar?</strong> trefolio jift&#x0127;u fundamentali tal-kumpanija, screener tal-istokks, rapporti tat-taxxa, avvi&#x017C;i WhatsApp u sejbiet illimitati. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Ikseb aktar informazzjoni</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Mer&#x0127;ba g&#x0127;al Trefolio Pro!",
+  heading: "Mer&#x0127;ba g&#x0127;al trefolio!",
   paragraph: "Issa g&#x0127;andek a&#x010B;&#x010B;ess s&#x0127;i&#x0127; g&#x0127;al kull karatteristika li trefolio joffri. Dan huwa s-sett s&#x0127;i&#x0127; ta&#x27; g&#x0127;odod tieg&#x0127;ek:",
   groups: [
     {

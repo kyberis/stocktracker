@@ -12,8 +12,8 @@ const membershipGrantEn: MembershipGrantStrings = {
   footer: "You received this email because the trefolio team added membership to your account.",
   managePreferences: "Manage email preferences",
   fallbackName: "there",
-  planNameStarter: "Bifolio",
-  planNamePro: "Trefolio",
+  planNameStarter: "trefolio",
+  planNamePro: "trefolio",
 };
 
 const membershipGrantEs: MembershipGrantStrings = {
@@ -28,8 +28,8 @@ const membershipGrantEs: MembershipGrantStrings = {
   footer: "Has recibido este correo porque el equipo de trefolio añadió membresía a tu cuenta.",
   managePreferences: "Gestionar preferencias de correo",
   fallbackName: "hola",
-  planNameStarter: "Bifolio",
-  planNamePro: "Trefolio",
+  planNameStarter: "trefolio",
+  planNamePro: "trefolio",
 };
 
 const membershipGrantFr: MembershipGrantStrings = {

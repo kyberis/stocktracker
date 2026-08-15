@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ve valores en tu moneda local. Soportamos 21 monedas con conversi&oacute;n autom&aacute;tica."
       }
     ],
-    tierText: "Disponible en todos los planes",
+    tierText: "",
     ctaLabel: "Abrir tu panel"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ve c&oacute;mo reinvertir dividendos podr&iacute;a hacer crecer tus rendimientos en 5, 10 o 20 a&ntilde;os."
       }
     ],
-    tierText: "Disponible en todos los planes",
+    tierText: "",
     ctaLabel: "Ver tus dividendos"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Revisa mi cartera\" — la IA analiza tu asignaci&oacute;n, riesgo y sugiere mejoras."
       }
     ],
-    tierText: "Folio: 5 llamadas/mes | Bifolio: 20/mes | Trefolio: Ilimitado",
+    tierText: "",
     ctaLabel: "Probar an&aacute;lisis IA ahora"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Multi-canal",
-        desc: "Alertas por email y push en Bifolio. A&ntilde;ade WhatsApp y alertas de dispositivo en Trefolio."
+        desc: "Alertas por email, push, WhatsApp y dispositivo."
       },
       {
         title: "Impulsado por cron",
         desc: "Nuestro sistema comprueba precios cada minuto durante el horario de mercado. Nunca necesitas vigilar la pantalla."
       }
     ],
-    tierText: "Bifolio: Hasta 10 alertas | Trefolio: Alertas ilimitadas",
+    tierText: "",
     ctaLabel: "Crear tu primera alerta"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Sube cualquier archivo — CSV, PDF o captura — y nuestra IA lo parsear&aacute; a tu cartera. Funciona incluso con formatos inusuales."
       }
     ],
-    tierText: "Folio: CSV y Manual | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Importar tu cartera"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Rastrea qu&eacute; poseen los grandes fondos — Vanguard, BlackRock, Fidelity y m&aacute;s."
       }
     ],
-    tierText: "Exclusivo Trefolio Pro",
+    tierText: "",
     ctaLabel: "Explorar fundamentales"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "¿Encontraste algo interesante? A&ntilde;&aacute;delo a tu cartera o lista de seguimiento directamente desde los resultados."
       }
     ],
-    tierText: "Exclusivo Trefolio Pro",
+    tierText: "",
     ctaLabel: "Abrir el filtro"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Pregunta cosas como \"¿Cu&aacute;nta retenci&oacute;n pagu&eacute; en dividendos estadounidenses?\" y obt&eacute;n respuestas instant&aacute;neas."
       }
     ],
-    tierText: "Exclusivo Trefolio Pro",
+    tierText: "",
     ctaLabel: "Generar tu informe fiscal"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "A&ntilde;ade o quita posiciones, cambia asignaciones y ve al instante el impacto en riesgo y rendimiento."
       }
     ],
-    tierText: "Exclusivo Trefolio Pro",
+    tierText: "",
     ctaLabel: "Abrir el simulador"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ve todo combinado: acciones + ETFs + cripto + inmuebles + ahorros + pensiones = tu imagen completa."
       }
     ],
-    tierText: "Bifolio: Hasta 10 activos | Trefolio: Hasta 999 activos",
+    tierText: "",
     ctaLabel: "A&ntilde;adir activos manuales"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Pregunta a nuestra IA sobre cualquier cripto — fundamentales, tendencias y an&aacute;lisis de mercado."
       }
     ],
-    tierText: "Folio: Visi&oacute;n de mercado | Trefolio: Seguimiento completo y IA",
+    tierText: "",
     ctaLabel: "Explorar cripto"
   }
 };

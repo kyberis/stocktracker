@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Rhybuddion prisiau",
-      desc: "Cael hysbysiad pan fydd stociau yn cyrraedd eich pris targed. Rhybuddion e-bost a push ar gael ar Bifolio."
+      desc: "Cael hysbysiad pan fydd stociau yn cyrraedd eich pris targed. Rhybuddion e-bost a push ar gael ar trefolio."
     },
     {
       title: "Metrigau uwch",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Cynnig eithriadol",
   voucherDiscountDisplay: "75% ODDI AR",
   voucherApply: "Defnyddiwch y cod wrth dalu:",
-  voucherValid: "Yn ddilys ar Bifolio a Trefolio &mdash; misol neu flynyddol",
+  voucherValid: "misol neu flynyddol",
   ctaPrimary: "Uwchraddiwch nawr &mdash; 75% oddi ar",
-  ctaSecondary: "Parhau gyda Folio",
-  tipText: "&#x1F4A1; <strong>Mae eich cynllun Folio</strong> yn cynnwys hyd at 15 daliad, 1 portffolio a 5 galwad AI/mis. Uwchraddiwch i ddatgloi mwy."
+  ctaSecondary: "Archwiliwch y bwrdd gwaith",
+  tipText: "&#x1F4A1; <strong>Mae dechrau&rsquo;n hawdd:</strong> Ychwanegwch ddim ond un stoc i weld eich bwrdd gwaith yn dod yn fyw gyda data amser real, siartiau ac mewnwelediadau AI."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Croeso i Bifolio!",
+  heading: "Croeso i trefolio!",
   paragraph: "Mae eich uwchraddiad yn weithredol. Dyma bopeth rydych newydd ei ddatgloi:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Gosodwch eich rhybudd cyntaf",
   ctaSecondary: "Rhannwch eich portffolio",
-  upsellText: "<strong>Eisiau mwy hyd yn oed?</strong> Mae Trefolio yn datgloi sylfeini cwmni, sgrinydd stociau, adroddiadau treth, rhybuddion WhatsApp a daliadau diderfyn. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Dysgu mwy</a>"
+  upsellText: "<strong>Eisiau mwy hyd yn oed?</strong> Mae trefolio yn datgloi sylfeini cwmni, sgrinydd stociau, adroddiadau treth, rhybuddion WhatsApp a daliadau diderfyn. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Dysgu mwy</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Croeso i Trefolio Pro!",
+  heading: "Croeso i trefolio!",
   paragraph: "Mae gennych chi nawr mynediad llawn i bob nodwedd mae trefolio yn ei chynnig. Dyma eich pecyn offer cyflawn:",
   groups: [
     {

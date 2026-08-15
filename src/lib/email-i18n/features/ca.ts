@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Veure els valors en la teva moneda local. Suportem 21 monedes amb conversi&oacute; autom&agrave;tica."
       }
     ],
-    tierText: "Disponible en tots els plans",
+    tierText: "",
     ctaLabel: "Obrir el tauler"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Veure com reinvertir dividends podria fer créixer els teus rendiments en 5, 10 o 20 anys."
       }
     ],
-    tierText: "Disponible en tots els plans",
+    tierText: "",
     ctaLabel: "Veure els teus dividends"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Revisa el meu portafoli\" — la IA analitza l'allocaci&oacute;, el risc i suggereix millores."
       }
     ],
-    tierText: "Folio: 5 trucades/mes | Bifolio: 20/mes | Trefolio: Il&middot;limitat",
+    tierText: "",
     ctaLabel: "Prova l'an&agrave;lisi IA ara"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Multi-canal",
-        desc: "Alertes per email i push al Bifolio. Afegeix WhatsApp i alertes de dispositiu al Trefolio."
+        desc: "Alertes per email i push al trefolio. Afegeix WhatsApp i alertes de dispositiu al trefolio."
       },
       {
         title: "Impulsat per cron",
         desc: "El nostre sistema comprova els preus cada minut durant les hores de mercat. Mai cal que miris la pantalla."
       }
     ],
-    tierText: "Bifolio: Fins a 10 alertes | Trefolio: Alertes il·limitades",
+    tierText: "",
     ctaLabel: "Crea la teva primera alerta"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Puja qualsevol fitxer — CSV, PDF o captura — i la nostra IA el transformar&agrave; en cartera. Funciona fins i tot amb formats inusual."
       }
     ],
-    tierText: "Folio: CSV i Manual | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Importar la teva cartera"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Segueix qu&egrave; posseeixen els grans fons — Vanguard, BlackRock, Fidelity i m&eacute;s."
       }
     ],
-    tierText: "Exclusiu Trefolio Pro",
+    tierText: "",
     ctaLabel: "Explorar els fonamentals"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Heu trobat alguna cosa interessant? Afegiu-la al portafoli o llista de seguiment directament des dels resultats."
       }
     ],
-    tierText: "Exclusiu Trefolio Pro",
+    tierText: "",
     ctaLabel: "Obrir el filtre"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Feu preguntes com \"Quant he pagat de retenci&oacute; en dividends americans?\" i obteniu respostes instant&agrave;nies."
       }
     ],
-    tierText: "Exclusiu Trefolio Pro",
+    tierText: "",
     ctaLabel: "Generar el teu informe fiscal"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Afegeix o treu posicions, canvia les allocacions i veu a l'instant l'impacte en risc i rendiment."
       }
     ],
-    tierText: "Exclusiu Trefolio Pro",
+    tierText: "",
     ctaLabel: "Obrir el simulador"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Veure tot combinat: accions + ETFs + cripto + immobles + estalvis + pensions = la teva imatge completa."
       }
     ],
-    tierText: "Bifolio: Fins a 10 actius | Trefolio: Fins a 999 actius",
+    tierText: "",
     ctaLabel: "Afegir actius manuals"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Pregunta a la nostra IA sobre qualsevol cripto — fonamentals, tend&egrave;ncies i an&agrave;lisi de mercat."
       }
     ],
-    tierText: "Folio: Visi&oacute; de mercat | Trefolio: Seguiment complet i IA",
+    tierText: "",
     ctaLabel: "Explorar cripto"
   }
 };

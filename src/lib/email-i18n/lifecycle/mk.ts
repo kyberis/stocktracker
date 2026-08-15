@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Ценовни известувања",
-      desc: "Добијте известување кога акциите ќе ја достигнат вашата целна цена. Имејл и push известувања достапни на Bifolio."
+      desc: "Добијте известување кога акциите ќе ја достигнат вашата целна цена. Имејл и push известувања достапни на trefolio."
     },
     {
       title: "Напредни метрики",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Ексклузивна понуда",
   voucherDiscountDisplay: "75% ПОПУСТ",
   voucherApply: "Користете го кодот при плаќање:",
-  voucherValid: "Валидно за Bifolio и Trefolio — месечно или годишно",
+  voucherValid: "месечно или годишно",
   ctaPrimary: "Надградете сега — 75% попуст",
-  ctaSecondary: "Продолжете со Folio",
-  tipText: "&#x1F4A1; <strong>Вашиот Folio план</strong> вклучува до 15 позиции, 1 портфолио и 5 AI повици/месец. Надградете за повеќе."
+  ctaSecondary: "Истражете ја контролната табла",
+  tipText: "&#x1F4A1; <strong>Почетокот е лесен:</strong> Додајте само една акција за да ја видите својата контролна табла да оживее со податоци во реално време, графикони и AI увиди."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Добредојдовте во Bifolio!",
+  heading: "Добредојдовте во trefolio!",
   paragraph: "Вашата надградба е активна. Еве сè што штотуку отклучивте:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Поставете ја вашата прва аларма",
   ctaSecondary: "Споделете го вашиот портфолио",
-  upsellText: "<strong>Сакате уште повеќе?</strong> Trefolio отклучува фундаментали на компании, филтер за акции, даночни извештаи, WhatsApp известувања и неограничени позиции. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Дознајте повеќе</a>"
+  upsellText: "<strong>Сакате уште повеќе?</strong> trefolio отклучува фундаментали на компании, филтер за акции, даночни извештаи, WhatsApp известувања и неограничени позиции. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Дознајте повеќе</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Добредојдовте во Trefolio Pro!",
+  heading: "Добредојдовте во trefolio!",
   paragraph: "Сега имате целосен пристап до сите функции што trefolio нуди. Еве го вашиот целосен алат:",
   groups: [
     {

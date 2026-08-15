@@ -767,14 +767,14 @@ export async function sendWelcomeEmail(
 }
 
 // ---------------------------------------------------------------------------
-// 2. Bifolio (starter) upgrade email (35 European languages)
+// 2. trefolio (starter) upgrade email (35 European languages)
 // ---------------------------------------------------------------------------
 
 function bifolioUpgradeHtml(displayName: string, locale: EmailLocale): string {
   const c = i18nBifolio[locale] ?? i18nBifolio.en;
   const name = displayName || c.fallbackName;
   const campaign = "bifolio_upgrade";
-  return `${emailHeader("Bifolio")}
+  return `${emailHeader()}
         <tr><td style="padding:36px 32px 16px;">
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">${c.heading}</h1>
           <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${resolveIntro(c.intro, name)}</p>
@@ -814,12 +814,12 @@ export async function sendBifolioUpgradeEmail(
     userId,
     automationKey: "upgrade-bifolio",
   });
-  if (!result.success) console.error("Failed to send Bifolio upgrade email:", result.error);
+  if (!result.success) console.error("Failed to send trefolio upgrade email:", result.error);
   return result;
 }
 
 // ---------------------------------------------------------------------------
-// 3. Trefolio Pro upgrade email
+// 3. trefolio upgrade email
 // ---------------------------------------------------------------------------
 
 function proFeatureGroup(label: string, items: string[]): string {
@@ -832,7 +832,7 @@ function proFeatureGroup(label: string, items: string[]): string {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Trefolio Pro upgrade email (35 European languages)
+// 3. trefolio upgrade email (35 European languages)
 // ---------------------------------------------------------------------------
 
 function trefolioUpgradeHtml(displayName: string, locale: EmailLocale): string {
@@ -846,7 +846,7 @@ function trefolioUpgradeHtml(displayName: string, locale: EmailLocale): string {
     [c.g4Label, c.g4Items],
     [c.g5Label, c.g5Items],
   ].map(([label, items]) => proFeatureGroup(label as string, items as string[])).join("");
-  return `${emailHeader("&#x2B50; Trefolio Pro &#x2B50;")}
+  return `${emailHeader()}
         <tr><td style="padding:36px 32px 16px;">
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">${c.heading}</h1>
           <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${resolveIntro(c.intro, name)}</p>
@@ -882,7 +882,7 @@ export async function sendTrefolioUpgradeEmail(
     userId,
     automationKey: "upgrade-trefolio",
   });
-  if (!result.success) console.error("Failed to send Trefolio upgrade email:", result.error);
+  if (!result.success) console.error("Failed to send trefolio upgrade email:", result.error);
   return result;
 }
 
@@ -1030,7 +1030,7 @@ export async function sendTrialInvitationEmail(
     resolveIdpTrialActivateUrl(token) ??
     utm(`/trial/activate?token=${encodeURIComponent(token)}`, "trial_invitation");
   const html = trialInvitationHtml(displayName, activateUrl, locale);
-  const subject = "Your 7-day Trefolio Pro trial is ready";
+  const subject = "Your 7-day trefolio trial is ready";
 
   const result = await sendEmail({
     to: email,
@@ -1197,7 +1197,7 @@ function trialExpiredHtml(displayName: string, _locale: EmailLocale, growthPct?:
   return `${emailHeader()}
         <tr><td style="padding:36px 32px 16px;">
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Your Pro trial has ended</h1>
-          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hi ${name}, your 7-day Trefolio Pro trial is over. Here&rsquo;s what you&rsquo;ll miss:</p>
+          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hi ${name}, your 7-day trefolio trial is over. Here&rsquo;s what you&rsquo;ll miss:</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             ${featureRow("&#x1F4CA;", "Advanced Analytics", "Sharpe ratio, max drawdown, volatility, and full growth history")}
             ${featureRow("&#x1F9E0;", "AI Analysis", "30 calls/day with deep stock insights and portfolio reviews")}
@@ -1208,7 +1208,7 @@ function trialExpiredHtml(displayName: string, _locale: EmailLocale, growthPct?:
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td style="padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;">
             <p style="margin:0;font-size:14px;color:#1e40af;text-align:center;line-height:1.5;">Plans start at &euro;4.99/month. Cancel anytime.</p>
           </td></tr></table>
-          ${primaryCta("Subscribe to Trefolio Pro", utm("/pricing", campaign))}
+          ${primaryCta("Subscribe to trefolio", utm("/pricing", campaign))}
           <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0;">
             <p style="margin:0 0 4px;font-size:14px;color:#475569;line-height:1.6;">I hope the trial gave you a real taste of what trefolio can do. If you have feedback, I&rsquo;d genuinely love to hear it.</p>
             <p style="margin:12px 0 0;font-size:14px;color:#0f172a;font-weight:600;">Marcos</p>
@@ -1233,7 +1233,7 @@ export async function sendTrialExpiredEmail(
   if (isTestEmail(email)) return { success: true };
 
   const html = trialExpiredHtml(displayName, locale, growthPct);
-  const subject = "Your Trefolio Pro trial has ended";
+  const subject = "Your trefolio trial has ended";
 
   const result = await sendEmail({
     to: email,
@@ -1572,13 +1572,13 @@ export function getCodeOwnedEmailPreview(
     }
     case "sendTrialInvitationEmail": {
       return {
-        subject: "Your 7-day Trefolio Pro trial is ready",
+        subject: "Your 7-day trefolio trial is ready",
         html: trialInvitationHtml("Alex", `${base}/trial/activate?token=PREVIEW`, locale),
       };
     }
     case "sendTrialExpiredEmail": {
       return {
-        subject: "Your Trefolio Pro trial has ended",
+        subject: "Your trefolio trial has ended",
         html: trialExpiredHtml("Alex", locale, 4.2),
       };
     }

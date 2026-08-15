@@ -24,7 +24,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Shikoni vlerat n&euml; monedh&euml;n tuaj lokale. Mb&euml;shtesim 21 monedha me konvertim automatik."
       }
     ],
-    tierText: "E disponueshme n&euml; t&euml; gjitha planet",
+    tierText: "",
     ctaLabel: "Hap panelin"
   },
   "feature-dividend-tracking": {
@@ -49,7 +49,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Shikoni si riinvestimi i dividendave mund të rrisë kthimet tuaja gjatë 5, 10 ose 20 vjetëve."
       }
     ],
-    tierText: "E disponueshme në të gjitha planet",
+    tierText: "",
     ctaLabel: "Shikoni dividendet"
   },
   "feature-ai-analysis": {
@@ -74,7 +74,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "\"Rishiko portofolin tim\" — AI analizon alokimin, rrezikun dhe sugjeron përmirësime."
       }
     ],
-    tierText: "Folio: 5 thirrje/muaj | Bifolio: 20/muaj | Trefolio: I pakufizuar",
+    tierText: "",
     ctaLabel: "Provoni analizën AI tani"
   },
   "feature-price-alerts": {
@@ -92,14 +92,14 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Multi-kanal",
-        desc: "Njoftime email dhe push në Bifolio. Shtoni WhatsApp dhe njoftime pajisjeje në Trefolio."
+        desc: "Njoftime email dhe push në trefolio. Shtoni WhatsApp dhe njoftime pajisjeje në trefolio."
       },
       {
         title: "Të fuqizuara nga cron",
         desc: "Sistemi ynë kontrollon çmimet çdo minutë gjatë orëve të tregut. Kurrë nuk keni nevojë të shikoni ekranin."
       }
     ],
-    tierText: "Bifolio: Deri në 10 njoftime | Trefolio: Njoftime të pakufizuara",
+    tierText: "",
     ctaLabel: "Krijo njoftimin tënd të parë"
   },
   "feature-broker-import": {
@@ -120,7 +120,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ngarkoni çdo skedar — CSV, PDF ose screenshot — dhe AI-ja jonë do ta shndërrojë në portofolin tuaj. Funksionon edhe me formate të pazakonta."
       }
     ],
-    tierText: "Folio: CSV dhe Manual | Bifolio: + Broker Sync | Trefolio: + AI Import",
+    tierText: "",
     ctaLabel: "Importoni portofolin tuaj"
   },
   "feature-fundamentals": {
@@ -149,7 +149,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Ndiqni çfarë zotërojnë fondet e mëdha — Vanguard, BlackRock, Fidelity dhe më shumë."
       }
     ],
-    tierText: "Ekskluzivisht Trefolio Pro",
+    tierText: "",
     ctaLabel: "Eksploroni të dhënat themelore"
   },
   "feature-stock-screener": {
@@ -174,7 +174,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Gjetët diçka interesante? Shtojeni në portofolin ose listën e ndjekjes direkt nga rezultatet."
       }
     ],
-    tierText: "Ekskluzivisht Trefolio Pro",
+    tierText: "",
     ctaLabel: "Hapni filtrin"
   },
   "feature-tax-reports": {
@@ -199,7 +199,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Bëni pyetje si \"Sa taksë e mbajtur në burim paga për dividentët amerikanë?\" dhe merrni përgjigje të menjëhershme."
       }
     ],
-    tierText: "Ekskluzivisht Trefolio Pro",
+    tierText: "",
     ctaLabel: "Gjeneroni raportin tatimor"
   },
   "feature-portfolio-simulator": {
@@ -220,7 +220,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Shtoni ose hiqni pozicione, ndryshoni alokacionet dhe shikoni menjëherë ndikimin në rrezik dhe kthim."
       }
     ],
-    tierText: "Ekskluzivisht Trefolio Pro",
+    tierText: "",
     ctaLabel: "Hapni simulatorin"
   },
   "feature-net-worth": {
@@ -245,7 +245,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Shikoni gjithçka të kombinuar: aksione + ETFs + kripto + pasuri të paluajtshme + kursime + pensionet = imazhi juaj i plotë."
       }
     ],
-    tierText: "Bifolio: Deri në 10 asete | Trefolio: Deri në 999 asete",
+    tierText: "",
     ctaLabel: "Shtoni asete manuale"
   },
   "feature-crypto": {
@@ -270,7 +270,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
         desc: "Pyetni IA-në tonë për çdo kripto — bazat, trendet dhe analiza e tregut."
       }
     ],
-    tierText: "Folio: Përmbledhje tregu | Trefolio: Ndiqje e plotë e portofolit dhe IA",
+    tierText: "",
     ctaLabel: "Eksploroni kripto"
   }
 };

@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "&Aacute;rfigyelő riaszt&aacute;sok",
-      desc: "Kapj &eacute;rtes&iacute;t&eacute;st, amikor a r&eacute;szv&eacute;nyek el&eacute;rik a c&eacute;l&aacute;rat. E-mail &eacute;s push riaszt&aacute;sok el&eacute;rhetők a Bifolio-n."
+      desc: "Kapj &eacute;rtes&iacute;t&eacute;st, amikor a r&eacute;szv&eacute;nyek el&eacute;rik a c&eacute;l&aacute;rat. E-mail &eacute;s push riaszt&aacute;sok el&eacute;rhetők a trefolio-n."
     },
     {
       title: "Fejlett m&eacute;rősz&aacute;mok",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Exkluz&iacute;v aj&aacute;nlat",
   voucherDiscountDisplay: "75% KEDVEZM&Eacute;NY",
   voucherApply: "Haszn&aacute;ld a k&oacute;dot fizet&eacute;skor:",
-  voucherValid: "&Eacute;rv&eacute;nyes Bifolio &amp; Trefolio &mdash; havi vagy &eacuteves",
+  voucherValid: "havi vagy &eacuteves",
   ctaPrimary: "Friss&iacute;ts most &mdash; 75% kedvezm&eacute;ny",
-  ctaSecondary: "Folytat&aacute;s Folio-val",
-  tipText: "&#x1F4A1; <strong>A Folio csomagod</strong> legfeljebb 15 poz&iacute;ci&oacute;t, 1 portf&oacute;li&oacute;t &eacute;s 5 IA h&iacute;v&aacute;st/h&oacute;nap tartalmaz. Friss&iacute;ts t&ouml;bb felold&aacute;s&aacute;hoz."
+  ctaSecondary: "Dashboard felfedez&eacute;se",
+  tipText: "&#x1F4A1; <strong>Kezd&eacute;s egyszerű:</strong> Adj hozz&aacute; csak egy r&eacute;szv&eacute;nyt, hogy a dashboardod &eacute;ljen val&oacute;s idejű adatokkal, grafikonokkal &eacute;s IA insightokkal."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "&Uuml;dv&ouml;z&ouml;l a Bifolio-ban!",
+  heading: "&Uuml;dv&ouml;z&ouml;l a trefolio-ban!",
   paragraph: "A friss&iacute;t&eacute;s akt&iacute;v. Itt van minden, amit most nyitott&aacute;l ki:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Első riaszt&aacute;s be&aacute;ll&iacute;t&aacute;sa",
   ctaSecondary: "Portf&oacute;li&oacute; megoszt&aacute;sa",
-  upsellText: "<strong>M&eacute;g t&ouml;bbre v&aacute;gy?</strong> A Trefolio kinyitja a v&aacute;llalati fundamentumokat, r&eacute;szv&eacute;ny szűrőt, ad&oacute;jelent&eacute;seket, WhatsApp riaszt&aacute;sokat &eacute;s korl&aacute;tlan poz&iacute;ci&oacute;kat. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Tudj meg t&ouml;bbet</a>"
+  upsellText: "<strong>M&eacute;g t&ouml;bbre v&aacute;gy?</strong> A trefolio kinyitja a v&aacute;llalati fundamentumokat, r&eacute;szv&eacute;ny szűrőt, ad&oacute;jelent&eacute;seket, WhatsApp riaszt&aacute;sokat &eacute;s korl&aacute;tlan poz&iacute;ci&oacute;kat. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Tudj meg t&ouml;bbet</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "&Uuml;dv&ouml;z&ouml;l a Trefolio Pro-ban!",
+  heading: "&Uuml;dv&ouml;z&ouml;l a trefolio-ban!",
   paragraph: "Most teljes hozz&aacute;f&eacute;r&eacute;sed van a trefolio minden funkci&oacute;j&aacute;hoz. Itt a teljes eszk&ouml;zkészleted:",
   groups: [
     {
@@ -238,7 +238,7 @@ export const trialInvitation: TrialInvitationStrings = {
 export const trialExpired: TrialExpiredStrings = {
   heading: "A Pro pr&oacute;b&aacute;id&otilde;d v&eacute;get &eacute;rt",
   paragraph:
-    "Szia {{display_name}}, a 7 napos Trefolio Pro pr&oacute;b&aacute;id&otilde;d lej&aacute;rt. Ezt fogod hi&aacute;nyozni:",
+    "Szia {{display_name}}, a 7 napos trefolio pr&oacute;b&aacute;id&otilde;d lej&aacute;rt. Ezt fogod hi&aacute;nyozni:",
   features: [
     {
       title: "Fejlett analitika",
@@ -258,7 +258,7 @@ export const trialExpired: TrialExpiredStrings = {
     },
   ],
   pricingNote: "A csomagok &euro;4.99/h&oacute;-t&oacute;l kezd&otilde;dnek. B&aacute;rmikor lemondhat&oacute;.",
-  ctaPrimary: "Feliratkozom a Trefolio Pro-ra",
+  ctaPrimary: "Feliratkozom a trefolio-ra",
   ctaSecondary: "Megn&eacute;zem az &aacute;rakat",
   signoffIntro:
     "Rem&eacute;lem, a pr&oacute;b&aacute;id&otilde; val&oacute;di &iacute;zel&iacute;t&otilde;t adott abb&oacute;l, mit tud a trefolio. Ha van visszajelz&eacute;sed, &otilde;szint&eacute;n sz&iacute;vesen hallan&aacute;m.",

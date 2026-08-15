@@ -22,7 +22,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     },
     {
       title: "Preisalarme",
-      desc: "Werden Sie benachrichtigt, wenn Aktien Ihren Zielpreis erreichen. E-Mail- und Push-Benachrichtigungen auf Bifolio verf&uuml;gbar."
+      desc: "Werden Sie benachrichtigt, wenn Aktien Ihren Zielpreis erreichen. E-Mail- und Push-Benachrichtigungen verf&uuml;gbar."
     },
     {
       title: "Erweiterte Kennzahlen",
@@ -78,14 +78,14 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Exklusives Angebot",
   voucherDiscountDisplay: "75% RABATT",
   voucherApply: "Code an der Kasse verwenden:",
-  voucherValid: "G&uuml;ltig f&uuml;r Bifolio &amp; Trefolio &mdash; monatlich oder j&auml;hrlich",
+  voucherValid: "monatlich oder j&auml;hrlich",
   ctaPrimary: "Jetzt upgraden &mdash; 75% Rabatt",
-  ctaSecondary: "Mit Folio fortfahren",
-  tipText: "&#x1F4A1; <strong>Ihr Folio-Plan</strong> umfasst bis zu 15 Positionen, 1 Portfolio und 5 KI-Anrufe/Monat. Upgraden Sie, um mehr freizuschalten."
+  ctaSecondary: "Dashboard erkunden",
+  tipText: "&#x1F4A1; <strong>Der Einstieg ist einfach:</strong> F&uuml;gen Sie nur eine Aktie hinzu, um Ihr Dashboard mit Echtzeitdaten, Charts und KI-Einblicken zum Leben zu erwecken."
 };
 
 export const bifolioUpgrade: BifolioUpgradeStrings = {
-  heading: "Willkommen bei Bifolio!",
+  heading: "Willkommen bei trefolio!",
   paragraph: "Ihr Upgrade ist aktiv. Hier ist alles, was Sie gerade freigeschaltet haben:",
   features: [
     {
@@ -127,11 +127,11 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Ersten Alarm einrichten",
   ctaSecondary: "Portfolio teilen",
-  upsellText: "<strong>Noch mehr wollen?</strong> Trefolio schaltet Unternehmensfundamentaldaten, Aktien-Screener, Steuerberichte, WhatsApp-Alarme und unbegrenzte Positionen frei. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Mehr erfahren</a>"
+  upsellText: "<strong>Noch mehr wollen?</strong> trefolio schaltet Unternehmensfundamentaldaten, Aktien-Screener, Steuerberichte, WhatsApp-Alarme und unbegrenzte Positionen frei. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Mehr erfahren</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
-  heading: "Willkommen bei Trefolio Pro!",
+  heading: "Willkommen bei trefolio!",
   paragraph: "Sie haben jetzt vollen Zugriff auf alle Funktionen von trefolio. Hier ist Ihr komplettes Toolkit:",
   groups: [
     {
@@ -234,7 +234,7 @@ export const trialInvitation: TrialInvitationStrings = {
 
 export const trialExpired: TrialExpiredStrings = {
   heading: "Ihr Pro-Test ist beendet",
-  paragraph: "Hallo {{display_name}}, Ihr 7-t&auml;giger Trefolio-Pro-Test ist vorbei. Das verpassen Sie k&uuml;nftig:",
+  paragraph: "Hallo {{display_name}}, Ihr 7-t&auml;giger trefolio-Pro-Test ist vorbei. Das verpassen Sie k&uuml;nftig:",
   features: [
     {
       title: "Erweiterte Analysen",
@@ -254,7 +254,7 @@ export const trialExpired: TrialExpiredStrings = {
     }
   ],
   pricingNote: "Pl&auml;ne ab &euro;4,99/Monat. Jederzeit k&uuml;ndbar.",
-  ctaPrimary: "Trefolio Pro abonnieren",
+  ctaPrimary: "trefolio abonnieren",
   ctaSecondary: "Preise ansehen",
   signoffIntro: "Ich hoffe, der Test hat Ihnen gezeigt, was trefolio kann. &Uuml;ber Feedback freue ich mich wirklich sehr.",
   growthTitle: "Ihr Portfolio ist w&auml;hrend der Testphase um {{growth_pct}}% gewachsen",

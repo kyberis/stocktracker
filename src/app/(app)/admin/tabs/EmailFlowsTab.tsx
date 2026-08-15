@@ -37,6 +37,22 @@ const KIND_LABEL: Record<FlowNodeKind, string> = {
   note: "Note",
 };
 
+function descendantEmails(flow: EmailFlow, startId: string): FlowNode[] {
+  const byId = new Map(flow.nodes.map((node) => [node.id, node]));
+  const out: FlowNode[] = [];
+  const seen = new Set<string>();
+  const walk = (id: string) => {
+    if (seen.has(id)) return;
+    seen.add(id);
+    const node = byId.get(id);
+    if (!node) return;
+    if (node.kind === "email") out.push(node);
+    for (const child of node.children ?? []) walk(child);
+  };
+  walk(startId);
+  return out;
+}
+
 function EmailToggle({
   nodeId,
   enabled,
@@ -242,23 +258,28 @@ function PreviewFrame({ html, title }: { html: string; title: string }) {
 
 function NodeDetail({
   node,
+  relatedEmails,
   crons,
-  template,
-  codePreview,
-  enabled,
-  toggling,
+  templates,
+  codePreviews,
+  nodeEnabled,
+  togglingId,
   onToggle,
 }: {
   node: FlowNode;
+  relatedEmails: FlowNode[];
   crons: Record<string, EnrichedCronMeta>;
-  template?: EnrichedTemplatePreview;
-  codePreview?: CodeOwnedPreview;
-  enabled?: boolean;
-  toggling?: boolean;
+  templates: Record<string, EnrichedTemplatePreview>;
+  codePreviews: Record<string, CodeOwnedPreview>;
+  nodeEnabled: Record<string, boolean>;
+  togglingId: string | null;
   onToggle: (nodeId: string, enabled: boolean) => void;
 }) {
   const [lang, setLang] = useState<"en" | "es">("en");
   const cron = node.cronId ? crons[node.cronId] : undefined;
+  const previewNode = node.kind === "email" ? node : relatedEmails[0];
+  const template = previewNode?.templateSlug ? templates[previewNode.templateSlug] : undefined;
+  const codePreview = previewNode?.hardcodedSender ? codePreviews[previewNode.hardcodedSender] : undefined;
   const previewSubject = lang === "es"
     ? (template?.subjectEs || template?.subject || codePreview?.subjectEs || codePreview?.subject)
     : (template?.subject || codePreview?.subject);
@@ -278,23 +299,32 @@ function NodeDetail({
         <p className="mt-1 text-sm text-[color:var(--muted)]">{node.purpose || node.description}</p>
       </div>
 
-      {node.kind === "email" ? (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-[color:var(--border)] px-3 py-2">
-          <div>
-            <p className="text-sm font-medium text-[color:var(--foreground)]">{enabled ? "Sending" : "Paused"}</p>
-            <p className="text-xs text-[color:var(--muted)]">
-              {node.featureFlag
-                ? `Also stored as ${node.featureFlag}`
-                : "Toggle applies immediately to new sends"}
-            </p>
-          </div>
-          <EmailToggle
-            nodeId={node.id}
-            enabled={enabled !== false}
-            busy={toggling}
-            onToggle={onToggle}
-            label={node.label}
-          />
+      {relatedEmails.length > 0 ? (
+        <div className="space-y-2">
+          <h4 className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--muted)]">
+            On / off
+          </h4>
+          {relatedEmails.map((email) => {
+            const on = nodeEnabled[email.id] !== false;
+            return (
+              <div
+                key={email.id}
+                className="flex items-center justify-between gap-3 rounded-lg border border-[color:var(--border)] px-3 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-[color:var(--foreground)] truncate">{email.label}</p>
+                  <p className="text-xs text-[color:var(--muted)]">{on ? "On — will send" : "Off — will not send"}</p>
+                </div>
+                <EmailToggle
+                  nodeId={email.id}
+                  enabled={on}
+                  busy={togglingId === email.id}
+                  onToggle={onToggle}
+                  label={email.label}
+                />
+              </div>
+            );
+          })}
         </div>
       ) : null}
 
@@ -391,7 +421,7 @@ function NodeDetail({
               </button>
             ))}
           </div>
-          <PreviewFrame html={previewHtml || ""} title={`${node.label} preview (${lang})`} />
+          <PreviewFrame html={previewHtml || ""} title={`${(previewNode || node).label} preview (${lang})`} />
           {stats ? (
             <dl className="grid grid-cols-2 gap-2 text-xs">
               <div>
@@ -555,82 +585,16 @@ export default function EmailFlowsTab() {
         {selectedNode ? (
           <NodeDetail
             node={selectedNode}
+            relatedEmails={descendantEmails(flow, selectedNode.id)}
             crons={data.crons}
-            template={selectedNode.templateSlug ? data.templates[selectedNode.templateSlug] : undefined}
-            codePreview={selectedNode.hardcodedSender ? data.codePreviews[selectedNode.hardcodedSender] : undefined}
-            enabled={data.nodeEnabled[selectedNode.id]}
-            toggling={togglingId === selectedNode.id}
+            templates={data.templates}
+            codePreviews={data.codePreviews}
+            nodeEnabled={data.nodeEnabled}
+            togglingId={togglingId}
             onToggle={handleToggle}
           />
         ) : null}
       </div>
-
-      <section className="card overflow-hidden" aria-labelledby="all-emails-heading">
-        <div className="px-4 py-3 border-b border-[color:var(--border)]">
-          <h3 id="all-emails-heading" className="text-sm font-semibold text-[color:var(--foreground)]">
-            All emails
-          </h3>
-          <p className="text-xs text-[color:var(--muted)] mt-0.5">
-            Every automated and library email, with why it exists. Click a row to see the body.
-          </p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-left text-[color:var(--muted)] border-b border-[color:var(--border)] bg-[color:var(--page-background)]">
-                <th className="p-3 font-medium">Email</th>
-                <th className="p-3 font-medium">Used for</th>
-                <th className="p-3 font-medium">Flow</th>
-                <th className="p-3 font-medium">On</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.flows.flatMap((item) =>
-                item.nodes
-                  .filter((node) => node.kind === "email")
-                  .map((node) => {
-                    const on = data.nodeEnabled[node.id] !== false;
-                    const selected = selectedNode?.id === node.id && flow.id === item.id;
-                    return (
-                      <tr
-                        key={`${item.id}-${node.id}`}
-                        className={`border-b border-[color:var(--border)] ${
-                          selected ? "bg-[color:var(--accent)]/10" : ""
-                        }`}
-                      >
-                        <td className="p-3 align-top">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedFlowId(item.id);
-                              setSelectedNodeId(node.id);
-                            }}
-                            className="text-left font-medium text-[color:var(--foreground)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded"
-                          >
-                            {node.label}
-                          </button>
-                        </td>
-                        <td className="p-3 align-top text-[color:var(--muted)] max-w-md">
-                          {node.purpose || node.description}
-                        </td>
-                        <td className="p-3 align-top text-[color:var(--muted)]">{item.name}</td>
-                        <td className="p-3 align-top">
-                          <EmailToggle
-                            nodeId={node.id}
-                            enabled={on}
-                            busy={togglingId === node.id}
-                            onToggle={handleToggle}
-                            label={node.label}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  }),
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
     </div>
   );
 }
