@@ -115,6 +115,20 @@ function getHeroFeatures(t: T): HeroFeature[] {
       ],
     },
     {
+      tag: t("landingFeatureScreeningTag"),
+      title: t("landingFeatureScreeningTitle"),
+      description: t("landingFeatureScreeningDesc"),
+      screenshot: "/screenshots/investment-screening.png",
+      points: [
+        t("landingFeatureScreeningPoint1"),
+        t("landingFeatureScreeningPoint2"),
+        t("landingFeatureScreeningPoint3"),
+        t("landingFeatureScreeningPoint4"),
+      ],
+      ctaHref: "/screening",
+      ctaLabel: t("landingFeatureScreeningCta"),
+    },
+    {
       tag: t("landingFeatureImportTag"),
       title: t("landingFeatureImportTitle"),
       description: t("landingFeatureImportDesc"),
@@ -127,35 +141,18 @@ function getHeroFeatures(t: T): HeroFeature[] {
       ],
     },
     {
-      tag: "Telegram",
-      title: "Warren on Telegram (now with voice)",
-      description:
-        "Connect once from your profile and chat with Warren on Telegram — same AI portfolio companion, same write-with-confirmation safety, on any phone or desktop. Type or send a voice note: Warren transcribes, answers, and even speaks the reply back. Ask for charts, news, dividends, allocation, performance, or propose adds, removes, cash entries or alerts with a single Confirm tap. Warren also explains the concepts behind the numbers — margin of safety, drawdown, payout ratio — in plain language from a curated value-investing knowledge base.",
+      tag: t("landingFeatureWarrenTag"),
+      title: t("landingFeatureWarrenTitle"),
+      description: t("landingFeatureWarrenDesc"),
       screenshot: "/screenshots/warren-telegram.svg",
       points: [
-        "One-time deep-link from /profile — no password sharing",
-        "Talk to Warren: send a voice note, get a spoken reply (text always sent first)",
-        "Educational concept lookup — \"what is P/E?\", \"explain drawdown\" — paraphrased in plain language",
-        "Read holdings, growth, dividends, news, alerts and watchlist",
-        "Add holdings, cash or alerts — every write requires Confirm",
-        "Replies in your language (35 supported); commands /help, /portfolios, /news, /alerts",
+        t("landingFeatureWarrenPoint1"),
+        t("landingFeatureWarrenPoint2"),
+        t("landingFeatureWarrenPoint3"),
+        t("landingFeatureWarrenPoint4"),
+        t("landingFeatureWarrenPoint5"),
+        t("landingFeatureWarrenPoint6"),
       ],
-    },
-    {
-      tag: "AI Screening",
-      tagBadge: "Trefolio",
-      title: "Verified investment screening reports",
-      description:
-        "Ask for candidates that fit your portfolio gaps. Agents pull Hard Data, IR, sentiment and technicals, then a QA pass checks claims against the raw evidence before the report unlocks — retries flagged agents when something doesn't line up. Research aid only, not financial advice.",
-      screenshot: "/screenshots/verified-reports.svg",
-      points: [
-        "Methodology checklist scored from multiples, catalysts, insiders and trend",
-        "Technicals block: price chart (1W–5Y), 52w range, MA200, support/resistance",
-        "QA verifies numbers and sources; stubborn tickers are dropped after 2 rounds",
-        "Verified / Flagged banner so you know what was checked",
-      ],
-      ctaHref: "/screening",
-      ctaLabel: "Open screening",
     },
   ];
 }
@@ -166,7 +163,7 @@ function getFeatureCards(t: T) {
   return [
     { icon: "shield", title: t("landingCardTaxTitle"), desc: t("landingCardTaxDesc") },
     { icon: "search", title: t("landingCardScreenerTitle"), desc: t("landingCardScreenerDesc") },
-    { icon: "shield", title: t("landingCardVerifiedTitle"), desc: t("landingCardVerifiedDesc"), badge: "Trefolio" },
+    { icon: "shield", title: t("landingCardVerifiedTitle"), desc: t("landingCardVerifiedDesc") },
     { icon: "castle", title: t("landingCardMoatTitle"), desc: t("landingCardMoatDesc") },
     { icon: "wallet", title: t("landingCardNetWorthTitle"), desc: t("landingCardNetWorthDesc") },
     { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc") },
@@ -1016,7 +1013,7 @@ function FeaturesSection() {
                   {feature.ctaHref && feature.ctaLabel ? (
                     <Link
                       href={feature.ctaHref}
-                      onClick={() => trackLanding("landing_cta_click", { cta: "feature_office" })}
+                      onClick={() => trackLanding("landing_cta_click", { cta: "feature_screening" })}
                       className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-500/20"
                     >
                       {feature.ctaLabel}

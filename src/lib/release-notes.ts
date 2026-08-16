@@ -38,6 +38,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "En Ajustes ya no aparecen el plan actual ni el enlace Pasar a Trefolio mientras commerce_enabled está desactivado (todos están en Trefolio Pro complimentary).",
         },
       },
+      {
+        type: "improvement",
+        text: "The public landing page now highlights AI investment screening (Cheap / Fit / Solidity scores, Analyze a ticker, QA Verified reports) and clarifies the fundamentals stock screener versus AI research.",
+        translations: {
+          es: "La landing pública destaca el cribado de inversión con IA (puntuaciones Barata / Encaje / Solidez, Analizar un ticker, informes Verificados) y aclara el filtro de fundamentales frente a la investigación con IA.",
+        },
+      },
     ],
   },
   {
