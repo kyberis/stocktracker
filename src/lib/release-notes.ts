@@ -45,6 +45,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "La landing pública destaca el cribado de inversión con IA (puntuaciones Barata / Encaje / Solidez, Analizar un ticker, informes Verificados) y aclara el filtro de fundamentales frente a la investigación con IA.",
         },
       },
+      {
+        type: "improvement",
+        text: "While commerce is off, the landing value card says Free instead of a monthly Pro price.",
+        translations: {
+          es: "Mientras commerce está desactivado, la tarjeta de valor de la landing dice Gratis en lugar de un precio Pro mensual.",
+        },
+      },
     ],
   },
   {

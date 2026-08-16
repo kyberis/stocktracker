@@ -1886,6 +1886,7 @@ function ThemesShowcase() {
 
 function ValuePropsSection() {
   const { t } = useI18n();
+  const commerceEnabled = useLandingCommerceEnabled();
   const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "value_props" }), []);
   const sectionRef = useInViewOnce(sectionCb);
 
@@ -1912,8 +1913,12 @@ function ValuePropsSection() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
         </svg>
       ),
-      value: t("landingValue3Value"), label: t("landingValue3Label"), desc: t("landingValue3Desc"),
-      badge: t("landingValue3Badge"), highlighted: true,
+      value: commerceEnabled ? t("landingValue3Value") : t("landingValue3ValueFree"),
+      label: commerceEnabled ? t("landingValue3Label") : t("landingValue3LabelFree"),
+      desc: commerceEnabled ? t("landingValue3Desc") : t("landingValue3DescFree"),
+      badge: commerceEnabled ? t("landingValue3Badge") : t("landingValue3BadgeFree"),
+      highlighted: true,
+      showMonthly: commerceEnabled,
     },
     {
       icon: (
@@ -1923,7 +1928,7 @@ function ValuePropsSection() {
       ),
       value: t("landingValue4Value"), label: t("landingValue4Label"), desc: t("landingValue4Desc"),
     },
-  ], [t]);
+  ], [t, commerceEnabled]);
 
   return (
     <section className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
@@ -1962,7 +1967,7 @@ function ValuePropsSection() {
                 {v.icon}
               </div>
               <div className="text-4xl font-extrabold text-slate-900 tracking-tight mb-1">
-                {v.value}{v.highlighted && <span className="text-base font-medium text-slate-400">/mo</span>}
+                {v.value}{v.showMonthly && <span className="text-base font-medium text-slate-400">/mo</span>}
               </div>
               <div className="text-sm font-semibold text-slate-600 mb-1">{v.label}</div>
               <div className="text-xs text-slate-400">{v.desc}</div>
