@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import type { CompanyAnalysisReport as Report } from "@/lib/company-analysis/types";
 import {
@@ -25,8 +26,13 @@ export type CompanyAnalysisNarrative = WebNumericEnrichment & {
  * NewsPanel, AnalysisNarrativePanel and InsidersFlowPanel so switching tabs
  * never re-fetches or shows a duplicate loading skeleton.
  */
+function hasLockedPaidSections(report: Report): boolean {
+  return report.congress.status === "locked" || report.insiders.status === "locked";
+}
+
 export function useCompanyAnalysisReport(ticker: string) {
   const { t, language } = useI18n();
+  const { user, isLoading: authLoading } = useAuth();
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,22 +40,28 @@ export function useCompanyAnalysisReport(ticker: string) {
   const [narrativeLoading, setNarrativeLoading] = useState(false);
   const [narrative, setNarrative] = useState<CompanyAnalysisNarrative | null>(null);
   const freshNarrativeRef = useRef(false);
+  const unlockAttemptedForTicker = useRef<string | null>(null);
+  const [unlockingPaid, setUnlockingPaid] = useState(false);
 
   const load = useCallback(
-    async (opts?: { fresh?: boolean }) => {
+    async (opts?: { fresh?: boolean; silent?: boolean }) => {
       const fresh = opts?.fresh === true;
+      const silent = opts?.silent === true;
       if (fresh) {
         setRegenerating(true);
         setNarrative(null);
         freshNarrativeRef.current = true;
-      } else {
+      } else if (!silent) {
         setLoading(true);
       }
       setError(null);
       try {
         const qs = new URLSearchParams({ symbol: ticker });
         if (fresh) qs.set("fresh", "1");
-        const res = await fetch(`/api/company-analysis?${qs.toString()}`);
+        const res = await fetch(`/api/company-analysis?${qs.toString()}`, {
+          credentials: "include",
+          cache: "no-store",
+        });
         const data = await res.json();
         if (!res.ok) {
           setError(data.error || t("companyAnalysisLoadError"));
@@ -71,9 +83,20 @@ export function useCompanyAnalysisReport(ticker: string) {
   );
 
   useEffect(() => {
+    unlockAttemptedForTicker.current = null;
+    setUnlockingPaid(false);
+    if (authLoading) return;
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticker]);
+  }, [ticker, authLoading, load]);
+
+  // Browser/CDN may still have a redacted anonymous body for this URL.
+  useEffect(() => {
+    if (authLoading || !user || !report || !hasLockedPaidSections(report)) return;
+    if (unlockAttemptedForTicker.current === ticker) return;
+    unlockAttemptedForTicker.current = ticker;
+    setUnlockingPaid(true);
+    void load({ silent: true }).finally(() => setUnlockingPaid(false));
+  }, [authLoading, user, report, ticker, load]);
 
   useEffect(() => {
     if (!report) return;
@@ -137,6 +160,14 @@ export function useCompanyAnalysisReport(ticker: string) {
     ? formatAnalysisDateTime(report.generatedAt || report.updatedAt, language)
     : null;
   const narrativePending = narrativeLoading || regenerating;
+  const unlockingPaidSections =
+    unlockingPaid ||
+    Boolean(
+      user &&
+        report &&
+        hasLockedPaidSections(report) &&
+        unlockAttemptedForTicker.current !== ticker,
+    );
 
   return {
     report,
@@ -149,6 +180,7 @@ export function useCompanyAnalysisReport(ticker: string) {
     fundamentals,
     sources,
     generatedAt,
+    unlockingPaidSections,
     regenerate: () => load({ fresh: true }),
   };
 }

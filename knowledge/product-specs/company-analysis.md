@@ -81,7 +81,8 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 ## 11. Permissions / tier gating / rate limits
 
 - `requireFeatureQuota(..., "company_analysis")` on fresh builds
-- Cached reads: session only
+- Cached reads: anonymous allowed with `redactPaidSections` (Congress + insiders → `locked`); session gets the full cached report
+- HTTP responses: `Cache-Control: private, no-store` + `Vary: Cookie` so a redacted anonymous body is never reused for a logged-in visitor
 - FMP `requireRateLimit`
 - Narratives: `ai_consult` + AI rate limits
 
@@ -95,10 +96,11 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 - Label 12-month close high as such (not all-time ATH unless confirmed).
 - Do not present consensus as company guidance.
 - Launch checklist: product/legal review of “sector alternative” copy.
+- Do not cache GET `/api/company-analysis` in the browser or CDN (`max-age` on the same URL mixed anonymous/authenticated bodies and showed a login wall to logged-in users). Client fetch uses `cache: "no-store"` and refetches once if the session is present but Congress/insiders are still `locked`.
 
 ## 14. Tests
 
-- `src/lib/company-analysis/*.test.ts` — ticker, URLs, technicals, insider tags, congress empty, peer pick, empty-UI row/section visibility.
+- `src/lib/company-analysis/*.test.ts` — ticker, URLs, technicals, insider tags, congress empty, peer pick, empty-UI row/section visibility, paid-section redact, `no-store` response headers.
 
 ## 15. Related skills and rules
 

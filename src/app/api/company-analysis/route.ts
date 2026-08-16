@@ -22,6 +22,7 @@ import {
   WEEK_MS,
 } from "@/lib/company-analysis/gaps";
 import { withLiveQuote } from "@/lib/company-analysis/live-quote";
+import { COMPANY_ANALYSIS_RESPONSE_HEADERS } from "@/lib/company-analysis/http";
 import { redactPaidSections } from "@/lib/company-analysis/redact";
 import { parseTicker } from "@/lib/company-analysis/ticker";
 import type { CompanyAnalysisReport } from "@/lib/company-analysis/types";
@@ -59,7 +60,7 @@ function expiresAtIso(fromMs = Date.now()): string {
 async function respondCachedReport(report: CompanyAnalysisReport): Promise<Response> {
   const withQuote = await withLiveQuote(report);
   return Response.json(withCacheFlag(withQuote, true), {
-    headers: { "Cache-Control": "private, max-age=60" },
+    headers: COMPANY_ANALYSIS_RESPONSE_HEADERS,
   });
 }
 
@@ -194,7 +195,7 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
         await persistReport(merged, durable.generatedAt, durable.expiresAt);
         const withQuote = await withLiveQuote(merged);
         return jsonWithCallCount(provider, withQuote, {
-          headers: { "Cache-Control": "private, max-age=60" },
+          headers: { ...COMPANY_ANALYSIS_RESPONSE_HEADERS },
         });
       } catch (err) {
         console.warn(
@@ -262,7 +263,7 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
     await persistReport(report, generatedAt, expiresAtIso());
 
     return jsonWithCallCount(provider, report, {
-      headers: { "Cache-Control": "private, max-age=3600" },
+      headers: { ...COMPANY_ANALYSIS_RESPONSE_HEADERS },
     });
   } catch (err) {
     console.error("[company-analysis] Error:", err instanceof Error ? err.message : err);
@@ -330,7 +331,7 @@ async function buildForAnonymousVisitor(request: NextRequest, ticker: string): P
     await incrementPublicAnalysisBuildGlobalBudget();
 
     return jsonWithCallCount(provider, redactPaidSections(report), {
-      headers: { "Cache-Control": "private, max-age=3600" },
+      headers: { ...COMPANY_ANALYSIS_RESPONSE_HEADERS },
     });
   } catch (err) {
     console.error("[company-analysis] anonymous build error:", err instanceof Error ? err.message : err);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { buildLoginRedirectHref } from "@/lib/auth/client-redirect";
 import { formatAnalysisDate } from "@/lib/company-analysis/format";
@@ -15,7 +16,8 @@ import type { CompanyAnalysisData } from "../use-company-analysis-report";
  */
 export default function InsidersFlowPanel({ data }: { data: CompanyAnalysisData }) {
   const { t, language } = useI18n();
-  const { report, narrative } = data;
+  const { user, isLoading: authLoading } = useAuth();
+  const { report, narrative, unlockingPaidSections } = data;
   if (!report) return null;
 
   // TRF-019: SEC Form 4 / STOCK Act only apply to US listings.
@@ -29,7 +31,12 @@ export default function InsidersFlowPanel({ data }: { data: CompanyAnalysisData 
   if (nonUsSuffix || nonUsExchange) return null;
 
   const congressLocked = report.congress.status === "locked";
-  const showCongress = report.congress.status !== "unavailable";
+  const congressUnlocking = authLoading || unlockingPaidSections;
+  // After a logged-in refetch still comes back locked, hide the section
+  // rather than asking them to sign in again.
+  const showCongress =
+    report.congress.status !== "unavailable" &&
+    !(congressLocked && user && !congressUnlocking);
   const showInsiderReading = Boolean(narrative?.insiderReading);
   if (!showInsiderReading && !showCongress) return null;
 
@@ -57,7 +64,16 @@ export default function InsidersFlowPanel({ data }: { data: CompanyAnalysisData 
           <p className="mb-4 text-xs uppercase tracking-wide text-[color:var(--muted)]">
             {t("companyAnalysisCongressSub")}
           </p>
-          {congressLocked ? (
+          {congressLocked && congressUnlocking ? (
+            <div
+              className="rounded-lg border border-dashed border-[color:var(--border)] bg-[color:var(--surface-soft)] p-6 text-center text-sm text-[color:var(--muted)]"
+              aria-busy="true"
+            >
+              <p className="animate-pulse font-semibold text-[color:var(--foreground)]">
+                {t("loading")}
+              </p>
+            </div>
+          ) : congressLocked ? (
             <div className="rounded-lg border border-dashed border-[color:var(--border)] bg-[color:var(--surface-soft)] p-6 text-center text-sm text-[color:var(--muted)]">
               <p className="font-semibold text-[color:var(--foreground)]">
                 {t("companyAnalysisCongressLockedTitle")}

@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "fix",
+        text: "Logged-in visitors on /analisis no longer see a login wall on US Congress trading. The report API was reusable from an anonymous cache of the same URL.",
+        translations: {
+          es: "Quien ya tiene sesión en /analisis ya no ve un muro de login en el trading del Congreso. La API reutilizaba una respuesta anónima cacheada de la misma URL.",
+        },
+      },
+      {
         type: "improvement",
         text: "The Studio dashboard theme is hidden by default behind the theme_studio_enabled feature flag (Admin → Feature Flags). Code remains; enable the flag to show Studio again in Settings.",
         translations: {
