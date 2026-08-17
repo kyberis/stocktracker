@@ -16,6 +16,8 @@ export interface ThresholdAlertStrings {
   currentPriceLabel: string;
   ctaLabel: string;
   deactivatedNotice: string;
+  headlinesHeading?: string;
+  headlinesDisclaimer?: string;
 }
 
 export interface PercentAlertStrings {
@@ -359,6 +361,8 @@ export const thresholdAlertStrings: Record<string, ThresholdAlertStrings> = {
     currentPriceLabel: "Current price:",
     ctaLabel: "Open Dashboard",
     deactivatedNotice: "This alert has been automatically deactivated. Re-enable it from your Tools page.",
+    headlinesHeading: "Recent headlines",
+    headlinesDisclaimer: "Headlines are for context only and are not investment advice. They may not explain this price move.",
   },
   es: {
     heading: "trefolio — Alerta de precio",
@@ -368,6 +372,8 @@ export const thresholdAlertStrings: Record<string, ThresholdAlertStrings> = {
     currentPriceLabel: "Precio actual:",
     ctaLabel: "Abrir panel",
     deactivatedNotice: "Esta alerta se ha desactivado autom&#225;ticamente. React&#237;vala desde tu p&#225;gina de Herramientas.",
+    headlinesHeading: "Titulares recientes",
+    headlinesDisclaimer: "Los titulares son solo contexto, no asesoramiento de inversi&#243;n. Puede que no expliquen este movimiento de precio.",
   },
   fr: {
     heading: "trefolio — Alerte de prix",

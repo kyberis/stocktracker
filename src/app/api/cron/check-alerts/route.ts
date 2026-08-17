@@ -1,13 +1,14 @@
 import { NextRequest } from "next/server";
 import {
   listActiveAlertsForCron,
-  markAlertTriggered,
-  updateLastNotified,
+  claimAlertForOneShotDispatch,
+  claimPortfolioWideTickerNotify,
   getUserHoldingsForAlerts,
   insertAlertDispatchLog,
   trackEvent,
   isFeatureEnabled,
 } from "@/lib/db";
+import { getAlertNewsContext } from "@/lib/alert-context";
 import type { CronAlert } from "@/lib/db";
 import {
   dispatchAlert,
@@ -21,8 +22,9 @@ import {
   shouldTriggerThreshold,
   shouldTriggerPercent,
   percentChangeSincePurchase,
+  tickerAlreadyNotifiedToday,
+  mergeNotifiedTicker,
   isSameUtcDay,
-  shouldFinalizeOneShot,
   type AlertQuote,
 } from "@/lib/alert-evaluation";
 import type { ExchangeRates, SubscriptionPlan } from "@/lib/types";
@@ -101,15 +103,27 @@ async function finalizeDispatch(
   alertType: string,
   payload: AlertPayload,
   opts: { oneShot: boolean; portfolioWide?: boolean },
-): Promise<"fired" | "dispatch_failed" | "skipped_config"> {
-  const ctx = buildContext(alert);
-  const result = await dispatchAlert(ctx, payload);
+): Promise<"fired" | "dispatch_failed" | "skipped_config" | "already_claimed"> {
+  if (opts.oneShot) {
+    const claimed = await claimAlertForOneShotDispatch(alert.id);
+    if (!claimed) return "already_claimed";
+  }
+  if (opts.portfolioWide) {
+    const claimed = await claimPortfolioWideTickerNotify(alert.id, ticker);
+    if (!claimed) return "already_claimed";
+    alert.lastNotifiedTicker = mergeNotifiedTicker(
+      alert.lastNotifiedTicker,
+      ticker,
+      isSameUtcDay(alert.lastNotifiedAt),
+    );
+    alert.lastNotifiedAt = new Date().toISOString();
+  }
 
-  const finalize = shouldFinalizeOneShot({
-    channelsRequested: result.channelsRequested,
-    channelsSent: result.channelsSent,
-    channelsFailed: result.channelsFailed.map((f) => f.channel),
-  });
+  const news = await getAlertNewsContext(ticker);
+  const enriched: AlertPayload = { ...payload, alertId: alert.id, headlines: news.headlines };
+
+  const ctx = buildContext(alert);
+  const result = await dispatchAlert(ctx, enriched);
 
   let status: "fired" | "dispatch_failed" | "skipped_config";
   if (result.channelsSent.length > 0) status = "fired";
@@ -142,14 +156,6 @@ async function finalizeDispatch(
     channelsSent: result.channelsSent.join(",") || "none",
     channelsRequested: result.channelsRequested.join(",") || "none",
   });
-
-  if (finalize) {
-    if (opts.portfolioWide) {
-      await updateLastNotified(alert.id, ticker);
-    } else if (opts.oneShot) {
-      await markAlertTriggered(alert.id);
-    }
-  }
 
   return status;
 }
@@ -268,7 +274,7 @@ const runCheckAlerts = withCronLogging("check-alerts", async () => {
       };
 
       const status = await finalizeDispatch(alert, alert.ticker, "threshold", payload, { oneShot: true });
-      bumpStatus(status);
+      if (status !== "already_claimed") bumpStatus(status);
     } else if (alert.alertType === "percent_change") {
       let pctChange: number | null = null;
 
@@ -309,7 +315,7 @@ const runCheckAlerts = withCronLogging("check-alerts", async () => {
       };
 
       const status = await finalizeDispatch(alert, alert.ticker, "percent_change", payload, { oneShot: true });
-      bumpStatus(status);
+      if (status !== "already_claimed") bumpStatus(status);
     }
   }
 
@@ -326,7 +332,7 @@ const runCheckAlerts = withCronLogging("check-alerts", async () => {
       const price = quote.regularMarketPrice;
       const quoteCcy = quote.currency || holding.displayCurrency || "USD";
 
-      if (isSameUtcDay(alert.lastNotifiedAt) && alert.lastNotifiedTicker === holding.ticker) {
+      if (tickerAlreadyNotifiedToday(alert.lastNotifiedAt, alert.lastNotifiedTicker, holding.ticker)) {
         continue;
       }
 
@@ -368,13 +374,7 @@ const runCheckAlerts = withCronLogging("check-alerts", async () => {
         oneShot: false,
         portfolioWide: true,
       });
-      bumpStatus(status);
-
-      // Keep in-memory dedupe for subsequent holdings in this same cron run
-      if (status === "fired" || status === "skipped_config") {
-        alert.lastNotifiedAt = new Date().toISOString();
-        alert.lastNotifiedTicker = holding.ticker;
-      }
+      if (status !== "already_claimed") bumpStatus(status);
     }
   }
 

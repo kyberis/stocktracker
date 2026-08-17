@@ -7,6 +7,9 @@ import {
   percentChangeSincePurchase,
   shouldFinalizeOneShot,
   isSameUtcDay,
+  parseNotifiedTickers,
+  tickerAlreadyNotifiedToday,
+  mergeNotifiedTicker,
 } from "../alert-evaluation";
 import { normalizeAlertChannels } from "../alert-dispatcher";
 
@@ -81,6 +84,23 @@ describe("alert-evaluation", () => {
     expect(isSameUtcDay(new Date().toISOString())).toBe(true);
     expect(isSameUtcDay("")).toBe(false);
     expect(isSameUtcDay("2020-01-01T00:00:00.000Z")).toBe(false);
+  });
+
+  it("tracks every notified ticker for the UTC day, not only the last one", () => {
+    expect(parseNotifiedTickers("AAPL, MSFT")).toEqual(["AAPL", "MSFT"]);
+    const now = new Date("2026-08-17T15:00:00.000Z");
+    expect(
+      tickerAlreadyNotifiedToday("2026-08-17T08:00:00.000Z", "AAPL,MSFT", "AAPL", now),
+    ).toBe(true);
+    expect(
+      tickerAlreadyNotifiedToday("2026-08-17T08:00:00.000Z", "AAPL,MSFT", "NVDA", now),
+    ).toBe(false);
+    expect(
+      tickerAlreadyNotifiedToday("2026-08-16T22:00:00.000Z", "AAPL", "AAPL", now),
+    ).toBe(false);
+    expect(mergeNotifiedTicker("AAPL", "MSFT", true)).toBe("AAPL,MSFT");
+    expect(mergeNotifiedTicker("AAPL,MSFT", "aapl", true)).toBe("AAPL,MSFT");
+    expect(mergeNotifiedTicker("AAPL", "MSFT", false)).toBe("MSFT");
   });
 });
 

@@ -312,6 +312,21 @@ describe("email", () => {
       const result = await sendAlertEmail("user@real-domain.com", alert);
       expect(result).toEqual({ success: false, error: "Alert email failed" });
     });
+
+    it("includes recent headlines and a disclaimer", async () => {
+      mockSend.mockResolvedValue({ data: { id: "email-1" }, error: null });
+      await sendAlertEmail("user@real-domain.com", {
+        ...alert,
+        headlines: [
+          { title: "Apple <beats> estimates", source: "Reuters", url: "https://example.com/aapl" },
+        ],
+      });
+      const html = mockSend.mock.calls[0][0].html as string;
+      expect(html).toContain("Recent headlines");
+      expect(html).toContain("https://example.com/aapl");
+      expect(html).toContain("Apple &lt;beats&gt; estimates");
+      expect(html).toContain("not investment advice");
+    });
   });
 
   describe("sendPercentAlertEmail", () => {
@@ -351,6 +366,21 @@ describe("email", () => {
         alert
       );
       expect(result).toEqual({ success: false, error: "Percent alert failed" });
+    });
+
+    it("includes recent headlines and a disclaimer", async () => {
+      mockSend.mockResolvedValue({ data: { id: "email-1" }, error: null });
+      await sendPercentAlertEmail("user@real-domain.com", {
+        ...alert,
+        headlines: [
+          { title: "Microsoft <beats> estimates", source: "Reuters", url: "https://example.com/msft" },
+        ],
+      });
+      const html = mockSend.mock.calls[0][0].html as string;
+      expect(html).toContain("Recent headlines");
+      expect(html).toContain("https://example.com/msft");
+      expect(html).toContain("Microsoft &lt;beats&gt; estimates");
+      expect(html).toContain("not investment advice");
     });
   });
 

@@ -21,6 +21,7 @@ import type {
   DividendEvent,
 } from "./types";
 import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
+import { parseQuoteTimestamp } from "@/lib/quote-time";
 
 function parseFloat0(val: unknown): number {
   if (val === undefined || val === null || val === "None" || val === "-") return 0;
@@ -121,6 +122,7 @@ export class FmpMarketDataProvider implements StockDataProvider {
       fiftyTwoWeekHigh: parseFloat0(q.yearHigh),
       fiftyTwoWeekLow: parseFloat0(q.yearLow),
       marketCap: parseFloat0(q.marketCap),
+      regularMarketTime: parseQuoteTimestamp(q.timestamp ?? q.updatedAt),
     };
   }
 

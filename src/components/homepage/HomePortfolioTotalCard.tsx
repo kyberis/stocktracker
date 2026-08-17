@@ -4,6 +4,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent } from "@/lib/utils";
+import DayMoveAsOf from "@/components/DayMoveAsOf";
 
 interface Props {
   totalValue: number;
@@ -94,7 +95,9 @@ export default function HomePortfolioTotalCard({
                 ? ""
                 : `${formatPercent(dayGainLossPercent)}`}
             </span>
-            <span className="font-normal text-[color:var(--muted)]">{t("todayLabel")}</span>
+            <span className="font-normal text-[color:var(--muted)]">
+              <DayMoveAsOf />
+            </span>
           </div>
         </div>
 

@@ -86,7 +86,7 @@ Every item below MUST be present in ALL four themes. When modifying the dashboar
 - [ ] **PortfolioSummary** card:
   - [ ] Total portfolio value (EUR, stealth-mode aware)
   - [ ] Cost basis
-  - [ ] Day gain/loss (amount + percentage, colored)
+  - [ ] Day gain/loss (amount + percentage, colored) with last-market-update timestamp (`day-move-as-of`; weekday + time when the session is not today)
   - [ ] Total gain/loss percentage
   - [ ] Holdings count (used / limit)
   - [ ] Asset allocation (donut/bar + legend by type: stocks, ETFs, crypto, cash, other)

@@ -394,6 +394,8 @@ export interface QuoteData {
   quoteType?: string;
   providerUsed?: string;
   fetchedAt?: number;
+  /** Last trade / session time from the provider (epoch ms). */
+  regularMarketTime?: number;
 }
 
 export interface CompanyOverview {

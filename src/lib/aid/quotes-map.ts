@@ -20,6 +20,7 @@ export function providerQuotesToQuoteMap(
       trailingAnnualDividendRate: q.trailingAnnualDividendRate,
       trailingAnnualDividendYield: q.trailingAnnualDividendYield,
       quoteType: q.quoteType,
+      regularMarketTime: q.regularMarketTime,
     };
   }
   return out;

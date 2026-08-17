@@ -62,6 +62,7 @@ export async function buildPortfolioSnapshot(opts: {
           regularMarketPreviousClose: q.regularMarketPreviousClose || 0,
           fiftyTwoWeekHigh: q.fiftyTwoWeekHigh || 0,
           fiftyTwoWeekLow: q.fiftyTwoWeekLow || 0,
+          regularMarketTime: q.regularMarketTime,
         };
         return [t, data] as const;
       } catch {

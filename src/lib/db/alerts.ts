@@ -136,12 +136,69 @@ export async function markAlertTriggered(alertId: string): Promise<void> {
   });
 }
 
-export async function updateLastNotified(alertId: string, ticker: string): Promise<void> {
+/** Atomically claim a one-shot alert so overlapping cron runs cannot both dispatch. */
+export async function claimAlertForOneShotDispatch(alertId: string): Promise<boolean> {
   const client = await ensureInitialized();
-  await client.execute({
-    sql: "UPDATE price_alerts SET last_notified_ticker = ?, last_notified_at = datetime('now') WHERE id = ?",
-    args: [ticker, alertId],
+  const result = await client.execute({
+    sql: `UPDATE price_alerts
+          SET triggered = 1, triggered_at = datetime('now'), active = 0
+          WHERE id = ? AND active = 1 AND triggered = 0`,
+    args: [alertId],
   });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
+/** True if this alert already delivered email in the last 24 hours (optionally for one ticker). */
+export async function hasRecentFiredEmailDispatch(alertId: string, ticker?: string): Promise<boolean> {
+  if (!alertId) return false;
+  const client = await ensureInitialized();
+  const tickerFilter = ticker ? " AND ticker = ?" : "";
+  const args: string[] = [alertId];
+  if (ticker) args.push(ticker);
+  const result = await client.execute({
+    sql: `SELECT 1 AS hit FROM alert_dispatch_log
+          WHERE alert_id = ?
+            AND status = 'fired'
+            AND (',' || channels_sent || ',') LIKE '%,email,%'
+            AND created_at >= datetime('now', '-1 day')${tickerFilter}
+          LIMIT 1`,
+    args,
+  });
+  return result.rows.length > 0;
+}
+
+/**
+ * Atomically record a portfolio-wide notify for `ticker` on the current UTC day.
+ * Returns false if that ticker was already recorded today (overlapping cron).
+ */
+export async function claimPortfolioWideTickerNotify(alertId: string, ticker: string): Promise<boolean> {
+  const key = ticker.trim().toUpperCase();
+  if (!alertId || !key) return false;
+  const client = await ensureInitialized();
+  const like = `%,${key},%`;
+  const result = await client.execute({
+    sql: `UPDATE price_alerts
+          SET last_notified_ticker = CASE
+                WHEN last_notified_at != ''
+                     AND date(last_notified_at) = date('now')
+                     AND last_notified_ticker != ''
+                  THEN last_notified_ticker || ',' || ?
+                ELSE ?
+              END,
+              last_notified_at = datetime('now')
+          WHERE id = ?
+            AND NOT (
+              last_notified_at != ''
+              AND date(last_notified_at) = date('now')
+              AND (',' || last_notified_ticker || ',') LIKE ?
+            )`,
+    args: [key, key, alertId, like],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
+export async function updateLastNotified(alertId: string, ticker: string): Promise<void> {
+  await claimPortfolioWideTickerNotify(alertId, ticker);
 }
 
 export interface CronAlert extends PriceAlert {

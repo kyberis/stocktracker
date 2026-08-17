@@ -2849,6 +2849,7 @@ const es: TranslationStrings = {
   calculatingPortfolioValue: "Calculando\u2026",
   calculatingPortfolioValueHint: "Obteniendo precios en vivo de tus posiciones",
   todayLabel: "hoy",
+  dayMoveAsOfTitle: "Última actualización de mercado de este movimiento diario",
   sparkline1WLabel: "\u00DAltima semana",
   sparkline1MLabel: "\u00DAltimo mes",
 

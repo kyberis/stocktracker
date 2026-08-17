@@ -263,13 +263,71 @@ describe("alerts", () => {
     });
   });
 
-  describe("updateLastNotified", () => {
-    it("updates last_notified fields", async () => {
+  describe("claimAlertForOneShotDispatch", () => {
+    it("returns true when the alert is claimed", async () => {
+      mockExecute.mockResolvedValue({ rowsAffected: 1 });
+      await expect(alerts.claimAlertForOneShotDispatch("alert-1")).resolves.toBe(true);
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("AND active = 1 AND triggered = 0"),
+        args: ["alert-1"],
+      });
+    });
+
+    it("returns false when another run already claimed it", async () => {
+      mockExecute.mockResolvedValue({ rowsAffected: 0 });
+      await expect(alerts.claimAlertForOneShotDispatch("alert-1")).resolves.toBe(false);
+    });
+  });
+
+  describe("hasRecentFiredEmailDispatch", () => {
+    it("returns false for empty alert id", async () => {
+      await expect(alerts.hasRecentFiredEmailDispatch("")).resolves.toBe(false);
+      expect(mockExecute).not.toHaveBeenCalled();
+    });
+
+    it("returns true when a fired email log exists", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ hit: 1 }] });
+      await expect(alerts.hasRecentFiredEmailDispatch("alert-1")).resolves.toBe(true);
+      expect(mockExecute.mock.calls[0][0].sql).toContain("channels_sent");
+      expect(mockExecute.mock.calls[0][0].args).toEqual(["alert-1"]);
+    });
+
+    it("scopes the lookup to a ticker when provided", async () => {
       mockExecute.mockResolvedValue({ rows: [] });
+      await alerts.hasRecentFiredEmailDispatch("alert-1", "AAPL");
+      expect(mockExecute.mock.calls[0][0].sql).toContain("AND ticker = ?");
+      expect(mockExecute.mock.calls[0][0].args).toEqual(["alert-1", "AAPL"]);
+    });
+
+    it("returns false when no recent fired email exists", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+      await expect(alerts.hasRecentFiredEmailDispatch("alert-1")).resolves.toBe(false);
+    });
+  });
+
+  describe("claimPortfolioWideTickerNotify", () => {
+    it("returns true when the ticker is newly recorded for today", async () => {
+      mockExecute.mockResolvedValue({ rowsAffected: 1 });
+      await expect(alerts.claimPortfolioWideTickerNotify("alert-1", "aapl")).resolves.toBe(true);
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("last_notified_ticker"),
+        args: ["AAPL", "AAPL", "alert-1", "%,AAPL,%"],
+      });
+    });
+
+    it("returns false when that ticker was already claimed today", async () => {
+      mockExecute.mockResolvedValue({ rowsAffected: 0 });
+      await expect(alerts.claimPortfolioWideTickerNotify("alert-1", "AAPL")).resolves.toBe(false);
+    });
+  });
+
+  describe("updateLastNotified", () => {
+    it("records the ticker via the same-day claim update", async () => {
+      mockExecute.mockResolvedValue({ rowsAffected: 1 });
       await alerts.updateLastNotified("alert-1", "AAPL");
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "UPDATE price_alerts SET last_notified_ticker = ?, last_notified_at = datetime('now') WHERE id = ?",
-        args: ["AAPL", "alert-1"],
+        sql: expect.stringContaining("last_notified_ticker"),
+        args: ["AAPL", "AAPL", "alert-1", "%,AAPL,%"],
       });
     });
   });

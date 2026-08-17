@@ -19,6 +19,7 @@ import type {
   DividendEvent,
 } from "./types";
 import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
+import { parseQuoteTimestamp } from "@/lib/quote-time";
 
 const AV_BASE = "https://www.alphavantage.co/query";
 // 75 requests/minute ~= 800ms between calls. Keep slight safety buffer.
@@ -152,6 +153,7 @@ export class AlphaVantageProvider implements StockDataProvider {
       fiftyTwoWeekHigh: 0,
       fiftyTwoWeekLow: 0,
       marketCap: 0,
+      regularMarketTime: parseQuoteTimestamp(gq["07. latest trading day"]),
     };
   }
 
