@@ -7,6 +7,7 @@ import { useStealthMode } from "@/lib/stealth-context";
 import { usePortfolioHomeData } from "@/components/dashboard-v2/use-portfolio-home-data";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import type { CashEntry, Holding } from "@/lib/types";
+import DayMoveAsOf from "@/components/DayMoveAsOf";
 
 interface Props {
   holdings: Holding[];
@@ -58,7 +59,9 @@ export default function AidPortfolioHeaderSummary({ holdings, cashEntries }: Pro
       >
         <span>{dayLabel.pct}</span>
         {dayLabel.abs ? <span className="ml-1 font-medium">{dayLabel.abs}</span> : null}
-        <span className="ml-1 text-[color:var(--muted)]">{t("todayLabel")}</span>
+        <span className="ml-1 text-[color:var(--muted)]">
+          <DayMoveAsOf />
+        </span>
       </div>
     </button>
   );

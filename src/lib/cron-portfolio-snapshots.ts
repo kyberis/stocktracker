@@ -39,6 +39,7 @@ function toQuoteData(q: ProviderQuoteResult): QuoteData {
     marketCap: q.marketCap,
     trailingAnnualDividendRate: q.trailingAnnualDividendRate,
     trailingAnnualDividendYield: q.trailingAnnualDividendYield,
+    regularMarketTime: q.regularMarketTime,
   };
 }
 

@@ -1,4 +1,5 @@
 import type { Language } from "./types";
+import { isHttpUrl } from "./alert-context";
 
 function escapeHtml(text: string): string {
   return text
@@ -60,6 +61,7 @@ export async function sendTelegramAlert(
     currentPrice: number;
     currency: string;
     changeDescription: string;
+    headline?: { title: string; url: string };
   }
 ): Promise<{ success: boolean; error?: string }> {
   if (!process.env.TELEGRAM_BOT_TOKEN) {
@@ -71,7 +73,12 @@ export async function sendTelegramAlert(
   const lineName = escapeHtml(`${alert.name || alert.ticker} (${alert.ticker})`);
   const lineChange = escapeHtml(alert.changeDescription);
   const linePrice = escapeHtml(`Current price: ${alert.currency} ${alert.currentPrice.toFixed(2)}`);
-  const html = `<b>${title}</b>\n\n<b>${lineName}</b>\n${lineChange}\n${linePrice}\n\n<a href="${base}">Open dashboard</a>`;
+  let headlineBlock = "";
+  const headlineUrl = alert.headline?.url?.trim() ?? "";
+  if (alert.headline?.title && isHttpUrl(headlineUrl)) {
+    headlineBlock = `\n\n${escapeHtml(alert.headline.title)}\n<a href="${escapeHtml(headlineUrl)}">Read headline</a>`;
+  }
+  const html = `<b>${title}</b>\n\n<b>${lineName}</b>\n${lineChange}\n${linePrice}${headlineBlock}\n\n<a href="${base}">Open dashboard</a>`;
   const result = await callTelegramApi("sendMessage", {
     chat_id: chatId,
     text: html,

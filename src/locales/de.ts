@@ -2595,6 +2595,7 @@ const de: TranslationStrings = {
   addFirstHoldingCta: "Erste Position hinzufügen",
   noGainsYetInvestedEmpty: "Keine Gewinne heute \u2014 noch nichts investiert",
   todayLabel: "heute",
+  dayMoveAsOfTitle: "Letzte Marktaktualisierung für diese Tagesbewegung",
   sparkline1WLabel: "Letzte Woche",
   sparkline1MLabel: "Letzter Monat",
 

@@ -9,6 +9,7 @@ import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { Holding } from "@/lib/types";
 import PortfolioPerformanceMatrix from "./PortfolioPerformanceMatrix";
 import PortfolioQuoteFreshness from "@/components/PortfolioQuoteFreshness";
+import DayMoveAsOf from "@/components/DayMoveAsOf";
 
 interface Props {
   holdings: Holding[];
@@ -124,7 +125,9 @@ export default function PortfolioHeroCard({
                     ? ""
                     : `${formatPercent(dayPct)}`}
                 </span>
-                <span className="ml-0.5 font-normal text-[color:var(--muted)]">{t("todayLabel")}</span>
+                <span className="ml-0.5 font-normal text-[color:var(--muted)]">
+                  <DayMoveAsOf />
+                </span>
               </span>
             )}
             {isCalculatingValue && (

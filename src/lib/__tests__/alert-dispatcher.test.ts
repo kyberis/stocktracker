@@ -11,6 +11,7 @@ const {
   incrementTelegramCounter,
   isFeatureEnabled,
   trackEvent,
+  hasRecentFiredEmailDispatch,
 } = vi.hoisted(() => ({
   sendAlertEmail: vi.fn(),
   sendPercentAlertEmail: vi.fn(),
@@ -22,6 +23,7 @@ const {
   incrementTelegramCounter: vi.fn(),
   isFeatureEnabled: vi.fn(),
   trackEvent: vi.fn(),
+  hasRecentFiredEmailDispatch: vi.fn(),
 }));
 
 vi.mock("@/lib/email", () => ({
@@ -42,9 +44,10 @@ vi.mock("@/lib/db", () => ({
   incrementTelegramCounter,
   isFeatureEnabled,
   trackEvent,
+  hasRecentFiredEmailDispatch,
 }));
 
-import { dispatchAlert } from "../alert-dispatcher";
+import { buildPushBody, dispatchAlert } from "../alert-dispatcher";
 
 describe("dispatchAlert channels", () => {
   beforeEach(() => {
@@ -54,6 +57,7 @@ describe("dispatchAlert channels", () => {
     isFeatureEnabled.mockResolvedValue(true);
     getTelegramQuota.mockResolvedValue({ allowed: true });
     listPushSubscriptions.mockResolvedValue([]);
+    hasRecentFiredEmailDispatch.mockResolvedValue(false);
   });
 
   it("sends only email when email is selected", async () => {
@@ -161,5 +165,115 @@ describe("dispatchAlert channels", () => {
 
     expect(sendAlertEmail).not.toHaveBeenCalled();
     expect(result.channelsSkipped[0]?.reason).toBe("email_unverified");
+  });
+
+  it("skips email when the same alert already emailed in 24h", async () => {
+    hasRecentFiredEmailDispatch.mockResolvedValue(true);
+    const result = await dispatchAlert(
+      {
+        userId: "u1",
+        email: "a@example.com",
+        emailVerified: true,
+        plan: "pro",
+        alertChannels: ["email"],
+        telegramChatId: "",
+      },
+      {
+        type: "threshold",
+        ticker: "AAPL",
+        name: "Apple",
+        condition: "above",
+        threshold: 200,
+        currentPrice: 201,
+        currency: "USD",
+        alertId: "alert-1",
+      },
+    );
+
+    expect(sendAlertEmail).not.toHaveBeenCalled();
+    expect(hasRecentFiredEmailDispatch).toHaveBeenCalledWith("alert-1", "AAPL");
+    expect(result.channelsSkipped).toEqual([{ channel: "email", reason: "already_emailed_24h" }]);
+  });
+
+  it("passes headlines through to the threshold email", async () => {
+    await dispatchAlert(
+      {
+        userId: "u1",
+        email: "a@example.com",
+        emailVerified: true,
+        plan: "pro",
+        alertChannels: ["email"],
+        telegramChatId: "",
+      },
+      {
+        type: "threshold",
+        ticker: "AAPL",
+        name: "Apple",
+        condition: "above",
+        threshold: 200,
+        currentPrice: 201,
+        currency: "USD",
+        headlines: [{ title: "Apple news", source: "Reuters", publishedAt: "2026-08-17T10:00:00Z", url: "https://example.com/a" }],
+      },
+    );
+
+    expect(sendAlertEmail).toHaveBeenCalledWith(
+      "a@example.com",
+      expect.objectContaining({
+        headlines: [expect.objectContaining({ title: "Apple news" })],
+      }),
+      undefined,
+      "u1",
+    );
+  });
+
+  it("includes the top headline in Telegram and push/device copy", async () => {
+    listPushSubscriptions.mockResolvedValue([
+      { endpoint: "https://push.example/1", p256dh: "p", auth: "a" },
+    ]);
+    sendPushNotification.mockResolvedValue({ success: true });
+    createDeviceNotification.mockResolvedValue(undefined);
+
+    const payload = {
+      type: "threshold" as const,
+      ticker: "AAPL",
+      name: "Apple",
+      condition: "above" as const,
+      threshold: 200,
+      currentPrice: 201,
+      currency: "USD",
+      headlines: [
+        { title: "Apple reports earnings", source: "Reuters", publishedAt: "2026-08-17T10:00:00Z", url: "https://example.com/a" },
+      ],
+    };
+
+    expect(buildPushBody(payload)).toContain("Apple reports earnings");
+
+    await dispatchAlert(
+      {
+        userId: "u1",
+        email: "a@example.com",
+        emailVerified: true,
+        plan: "pro",
+        alertChannels: ["telegram", "push", "device"],
+        telegramChatId: "999",
+      },
+      payload,
+    );
+
+    expect(sendTelegramAlert).toHaveBeenCalledWith(
+      "999",
+      expect.objectContaining({
+        headline: { title: "Apple reports earnings", url: "https://example.com/a" },
+      }),
+    );
+    expect(sendPushNotification).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ body: expect.stringContaining("Apple reports earnings") }),
+    );
+    expect(createDeviceNotification).toHaveBeenCalledWith(
+      "u1",
+      expect.objectContaining({ message: expect.stringContaining("Apple reports earnings") }),
+    );
   });
 });

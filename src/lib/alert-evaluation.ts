@@ -72,6 +72,34 @@ export function percentChangeSincePurchase(
   return ((quotePrice - cost) / cost) * 100;
 }
 
+export function parseNotifiedTickers(raw: string): string[] {
+  return raw
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+}
+
+export function tickerAlreadyNotifiedToday(
+  lastNotifiedAt: string,
+  lastNotifiedTicker: string,
+  ticker: string,
+  now = new Date(),
+): boolean {
+  if (!isSameUtcDay(lastNotifiedAt, now)) return false;
+  const key = ticker.trim().toUpperCase();
+  if (!key) return false;
+  return parseNotifiedTickers(lastNotifiedTicker).includes(key);
+}
+
+export function mergeNotifiedTicker(existing: string, ticker: string, sameDay: boolean): string {
+  const key = ticker.trim().toUpperCase();
+  if (!key) return existing;
+  if (!sameDay) return key;
+  const list = parseNotifiedTickers(existing);
+  if (list.includes(key)) return list.join(",");
+  return [...list, key].join(",");
+}
+
 export function isSameUtcDay(dateStr: string, now = new Date()): boolean {
   if (!dateStr) return false;
   const d = new Date(dateStr);

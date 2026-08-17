@@ -24,7 +24,8 @@ A single `getQuote(ticker, exchange)` abstraction chooses the right provider and
 
 ## 4. Data model
 
-- No DB storage for live quotes (SWR cache only).
+- No DB storage for live quotes (Redis TTL cache + in-memory Yahoo TTL).
+- `QuoteData` / `ProviderQuoteResult` include optional `regularMarketTime` (epoch ms, last trade / session).
 - Historical quotes cached in `yahoo_historical_cache`.
 
 ## 5. API surface
@@ -36,12 +37,14 @@ A single `getQuote(ticker, exchange)` abstraction chooses the right provider and
 ## 6. UI surface
 
 - Consumed by `PortfolioProvider`, `MarketTickerBar`, `ExploreAssetSearch`.
+- Dashboard daily G/L (`DayMoveAsOf` in `PortfolioHeroCard` / `HomePortfolioTotalCard`) uses `regularMarketTime` (fallback: last fetch) so Monday still shows Friday's session.
 
 ## 7. Business logic
 
 - Provider selection: Yahoo > AV > FMP based on availability and tier.
 - Exponential backoff retry on 429/5xx.
-- Response normalization into `QuoteData` with `price`, `currency`, `change`, `changePct`, `marketState`.
+- Response normalization into `QuoteData` with `price`, `currency`, `change`, `changePct`, optional `regularMarketTime`.
+- Yahoo maps `regularMarketTime`; Alpha Vantage uses `07. latest trading day`; FMP uses `timestamp` / `updatedAt`.
 
 ## 8. External dependencies
 
@@ -55,7 +58,7 @@ A single `getQuote(ticker, exchange)` abstraction chooses the right provider and
 
 ## 10. i18n
 
-N/A.
+- Dashboard as-of label: `todayLabel`, `dayMoveAsOfTitle` in `src/locales/en.ts` / `es.ts`.
 
 ## 11. Permissions / tier gating / rate limits
 
@@ -76,6 +79,8 @@ N/A.
 
 - [`src/lib/api-providers/index.test.ts`](../../src/lib/api-providers/index.test.ts)
 - [`src/lib/api-providers/coinlore.test.ts`](../../src/lib/api-providers/coinlore.test.ts)
+- [`src/lib/quote-time.test.ts`](../../src/lib/quote-time.test.ts)
+- [`e2e/day-move-as-of.spec.ts`](../../e2e/day-move-as-of.spec.ts)
 
 ## 15. Related skills and rules
 

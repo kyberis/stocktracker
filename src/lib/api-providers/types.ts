@@ -12,6 +12,8 @@ export interface ProviderQuoteResult {
   trailingAnnualDividendRate?: number;
   trailingAnnualDividendYield?: number;
   quoteType?: string;
+  /** Last trade / session time from the provider (epoch ms). */
+  regularMarketTime?: number;
   error?: boolean;
 }
 

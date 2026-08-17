@@ -89,6 +89,26 @@ describe("Yahoo Finance chaos", () => {
       expect(result.marketCap).toBe(0);
     });
 
+    it("maps regularMarketTime from Date objects", async () => {
+      const tradedAt = new Date("2026-08-14T20:00:00.000Z");
+      mockQuote.mockResolvedValueOnce({
+        symbol: "AAPL",
+        shortName: "Apple Inc.",
+        regularMarketPrice: 150,
+        regularMarketChange: 2,
+        regularMarketChangePercent: 1.3,
+        currency: "USD",
+        regularMarketPreviousClose: 148,
+        fiftyTwoWeekHigh: 180,
+        fiftyTwoWeekLow: 120,
+        marketCap: 2_400_000_000_000,
+        regularMarketTime: tradedAt,
+      });
+
+      const result = await provider.getQuote("AAPL");
+      expect(result.regularMarketTime).toBe(tradedAt.getTime());
+    });
+
     it("records success metric on successful call", async () => {
       mockQuote.mockResolvedValueOnce({
         symbol: "AAPL",

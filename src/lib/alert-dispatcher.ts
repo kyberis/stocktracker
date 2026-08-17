@@ -9,8 +9,10 @@ import {
   incrementTelegramCounter,
   isFeatureEnabled,
   trackEvent,
+  hasRecentFiredEmailDispatch,
 } from "@/lib/db";
 import type { NotificationChannel, SubscriptionPlan, PercentBasis } from "@/lib/types";
+import type { AlertHeadline } from "@/lib/alert-context";
 
 /** Channels supported for price alerts. WhatsApp is intentionally not supported. */
 export const ALERT_DELIVERY_CHANNELS: readonly NotificationChannel[] = [
@@ -38,6 +40,8 @@ export interface ThresholdAlertPayload {
   threshold: number;
   currentPrice: number;
   currency: string;
+  alertId?: string;
+  headlines?: AlertHeadline[];
 }
 
 export interface PercentAlertPayload {
@@ -49,6 +53,8 @@ export interface PercentAlertPayload {
   percentChange: number;
   percentBasis: PercentBasis;
   isPortfolioWide: boolean;
+  alertId?: string;
+  headlines?: AlertHeadline[];
 }
 
 export type AlertPayload = ThresholdAlertPayload | PercentAlertPayload;
@@ -106,9 +112,16 @@ function buildPushTitle(payload: AlertPayload): string {
   return `${dir} ${ticker} ${Math.abs(payload.percentChange).toFixed(1)}%`;
 }
 
-function buildPushBody(payload: AlertPayload): string {
+export function topAlertHeadline(payload: AlertPayload): AlertHeadline | undefined {
+  return payload.headlines?.find((h) => h.title && h.url);
+}
+
+export function buildPushBody(payload: AlertPayload): string {
   const name = payload.name || payload.ticker;
-  return `${name}: ${buildChangeDescription(payload)} — now ${payload.currency} ${payload.currentPrice.toFixed(2)}`;
+  const base = `${name}: ${buildChangeDescription(payload)} — now ${payload.currency} ${payload.currentPrice.toFixed(2)}`;
+  const headline = topAlertHeadline(payload);
+  if (!headline) return base;
+  return `${base} · ${headline.title}`.slice(0, 220);
 }
 
 /**
@@ -135,6 +148,10 @@ export async function dispatchAlert(
           channelsSkipped.push({ channel, reason: "email_unverified" });
           continue;
         }
+        if (payload.alertId && (await hasRecentFiredEmailDispatch(payload.alertId, payload.ticker))) {
+          channelsSkipped.push({ channel, reason: "already_emailed_24h" });
+          continue;
+        }
         if (payload.type === "threshold") {
           const result = await sendAlertEmail(ctx.email, {
             ticker: payload.ticker,
@@ -143,6 +160,7 @@ export async function dispatchAlert(
             threshold: payload.threshold,
             currentPrice: payload.currentPrice,
             currency: payload.currency,
+            headlines: payload.headlines,
           }, ctx.locale, ctx.userId);
           if (!result.success) {
             channelsFailed.push({ channel, reason: result.error || "email_send_failed" });
@@ -157,6 +175,7 @@ export async function dispatchAlert(
             percentChange: payload.percentChange,
             percentBasis: payload.percentBasis,
             isPortfolioWide: payload.isPortfolioWide,
+            headlines: payload.headlines,
           }, ctx.locale, ctx.userId);
           if (!result.success) {
             channelsFailed.push({ channel, reason: result.error || "email_send_failed" });
@@ -209,12 +228,14 @@ export async function dispatchAlert(
           channelsSkipped.push({ channel, reason: quota.reason || "telegram_quota" });
           continue;
         }
+        const headline = topAlertHeadline(payload);
         const result = await sendTelegramAlert(ctx.telegramChatId, {
           ticker: payload.ticker,
           name: payload.name,
           currentPrice: payload.currentPrice,
           currency: payload.currency,
           changeDescription: buildChangeDescription(payload),
+          headline: headline ? { title: headline.title, url: headline.url } : undefined,
         });
         if (!result.success) {
           channelsFailed.push({ channel, reason: result.error || "telegram_send_failed" });

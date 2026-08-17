@@ -90,6 +90,7 @@ describe("Alpha Vantage chaos", () => {
           "08. previous close": "173.20",
           "09. change": "2.30",
           "10. change percent": "1.328%",
+          "07. latest trading day": "2026-08-14",
         },
       });
       const provider = await freshProvider();
@@ -98,6 +99,7 @@ describe("Alpha Vantage chaos", () => {
       expect(result.regularMarketPrice).toBe(175.5);
       expect(result.regularMarketChange).toBe(2.3);
       expect(result.regularMarketPreviousClose).toBe(173.2);
+      expect(result.regularMarketTime).toBe(Date.parse("2026-08-14T12:00:00Z"));
     });
 
     it("returns zero-price result when Global Quote is empty", async () => {

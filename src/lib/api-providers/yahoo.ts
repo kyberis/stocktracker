@@ -16,6 +16,7 @@ import type {
 } from "./types";
 import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
 import { getCachedHistorical, cacheHistoricalPoints } from "@/lib/db/historical-cache";
+import { parseQuoteTimestamp } from "@/lib/quote-time";
 
 const yahooFinance = new YahooFinance();
 
@@ -99,6 +100,9 @@ export class YahooProvider implements StockDataProvider {
         trailingAnnualDividendRate: quote.trailingAnnualDividendRate ?? undefined,
         trailingAnnualDividendYield: quote.trailingAnnualDividendYield ?? undefined,
         ...(qt ? { quoteType: qt } : {}),
+        regularMarketTime: parseQuoteTimestamp(
+          (quote as { regularMarketTime?: unknown }).regularMarketTime,
+        ),
       };
       setCache(cacheKey, result);
       return result;

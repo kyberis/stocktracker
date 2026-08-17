@@ -2852,6 +2852,7 @@ const en: TranslationStrings = {
   calculatingPortfolioValue: "Calculating\u2026",
   calculatingPortfolioValueHint: "Fetching live prices for your holdings",
   todayLabel: "today",
+  dayMoveAsOfTitle: "Last market update for this daily move",
   sparkline1WLabel: "Past week",
   sparkline1MLabel: "Past month",
 

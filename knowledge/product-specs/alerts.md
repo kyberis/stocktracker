@@ -21,7 +21,7 @@ Users create threshold or percent-change alerts (per ticker or portfolio-wide). 
 | DB | [`src/lib/db/alerts.ts`](../../src/lib/db/alerts.ts) | Storage + `alert_dispatch_log`. |
 
 ## 4. Data model
-- `price_alerts`: threshold or percent_change; one-shot for per-ticker; portfolio-wide uses same-day/ticker notify dedupe.
+- `price_alerts`: threshold or percent_change; one-shot for per-ticker (atomic claim before dispatch); portfolio-wide uses same-day/ticker notify dedupe.
 - Unique active keys:
   - threshold: `(user, ticker, condition, threshold, currency)`
   - percent: `(user, ticker, percent_basis, percent_value, is_portfolio_wide, portfolio_id)`
@@ -42,8 +42,9 @@ Users create threshold or percent-change alerts (per ticker or portfolio-wide). 
 1. Cron loads active alerts + holdings, fetches quotes via Yahoo/cache (skips invalid/zero quotes).
 2. Threshold compare uses FX when alert currency ≠ quote currency; skips cycle if FX missing.
 3. `dispatchAlert` sends **only** to selected channels; maps legacy `whatsapp` → `telegram`.
-4. One-shot: deactivate **after** successful send (or permanent skips). Transient channel failures leave the alert active for retry.
-5. Portfolio-wide: `last_notified_*` same-UTC-day/ticker dedupe.
+4. One-shot (threshold + per-ticker percent): `claimAlertForOneShotDispatch` deactivates **before** send so overlapping cron runs cannot both email. Failed send after claim is logged as `dispatch_failed` and is **not** reactivated. Email is also skipped if `alert_dispatch_log` already has `fired` + `email` for that `alert_id` **and ticker** in the last 24h (ticker-scoped so a portfolio-wide alert can still email a second holding).
+5. All alert emails include up to 3 recent headlines from the portfolio news cache (48h lookback) plus a “context only, not advice” disclaimer. Telegram, push, and device include the top headline (title + http(s) link on Telegram). No live web/X/AI call at fire time.
+6. Portfolio-wide: `last_notified_ticker` is a comma-separated list for the current UTC day. `claimPortfolioWideTickerNotify` atomically appends a ticker; overlapping crons cannot re-notify the same ticker the same day. A later holding (e.g. MSFT after AAPL) can still fire. Failed send after claim is **not** retried that day.
 
 ## 8. External dependencies
 - Yahoo quotes + FX, Resend (email), Telegram Bot API, Web Push.
@@ -65,10 +66,11 @@ Users create threshold or percent-change alerts (per ticker or portfolio-wide). 
 ## 13. Edge cases & gotchas
 - Quote outage / zero price → no fire (alert stays active).
 - Missing FX for cross-currency threshold → skip + log `fx_unavailable`.
-- Unverified email / unlinked Telegram → skip that channel; finalize if no transient failures remain.
+- Unverified email / unlinked Telegram → skip that channel; one-shot alerts stay deactivated after claim.
+- Missing news cache → email / Telegram / push still send without a headlines block.
 
 ## 14. Tests
-- DB tests; `alert-evaluation` unit tests; schema/e2e CRUD.
+- DB tests (`claimAlertForOneShotDispatch`, `claimPortfolioWideTickerNotify`, `hasRecentFiredEmailDispatch`); `alert-context` / `alert-evaluation` / dispatcher unit tests; schema/e2e CRUD.
 
 ## 15. Related skills and rules
 - [`engineer-data`](../../.cursor/skills/engineer-data/SKILL.md)

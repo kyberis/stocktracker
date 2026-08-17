@@ -17,6 +17,54 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.180",
+    date: "2026-08-17",
+    title: "One email per price alert, with recent headlines",
+    titleTranslations: {
+      es: "Un email por alerta de precio, con titulares recientes",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Threshold price alerts now send only once: the cron claims and deactivates the alert before emailing, so overlapping 15-minute runs cannot repeat the same message.",
+        translations: {
+          es: "Las alertas de umbral ahora se envían una sola vez: el cron reclama y desactiva la alerta antes de enviar el email, así que ejecuciones solapadas cada 15 minutos no pueden repetir el mismo mensaje.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Alert emails can include up to three recent headlines from our news cache for context. Telegram, push, and device alerts include the top headline. Headlines are informational only and are not investment advice.",
+        translations: {
+          es: "Los emails de alerta pueden incluir hasta tres titulares recientes de nuestra caché de noticias como contexto. Telegram, push y el dispositivo incluyen el titular principal. Los titulares son solo informativos y no son asesoramiento de inversión.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Portfolio-wide percent alerts now notify once per ticker per day, so a later holding can still fire without repeating an earlier one on the next cron run.",
+        translations: {
+          es: "Las alertas porcentuales de toda la cartera ahora avisan una vez por ticker al día, así que una posición posterior puede dispararse sin repetir una anterior en la siguiente ejecución del cron.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.179",
+    date: "2026-08-17",
+    title: "Daily move shows last market update",
+    titleTranslations: {
+      es: "El movimiento diario muestra la última actualización de mercado",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The dashboard daily G/L now shows when prices last traded (for example Friday close on Monday morning), so weekend and Monday moves are easier to read.",
+        translations: {
+          es: "La G/L diaria del panel ahora muestra cuándo cotizaron los precios por última vez (por ejemplo el cierre del viernes el lunes por la mañana), para que los movimientos del fin de semana y del lunes se entiendan mejor.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.178",
     date: "2026-08-16",
     title: "Studio theme behind feature flag",

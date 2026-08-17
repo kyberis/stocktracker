@@ -17,7 +17,8 @@ Replaces the default inline Recharts hero with a scannable matrix: rows per asse
 
 | Type | Path | Notes |
 |------|------|-------|
-| Component | [`src/components/portfolio-v2/PortfolioHeroCard.tsx`](../../src/components/portfolio-v2/PortfolioHeroCard.tsx) | Hero shell: header, pills, matrix, footer |
+| Component | [`src/components/portfolio-v2/PortfolioHeroCard.tsx`](../../src/components/portfolio-v2/PortfolioHeroCard.tsx) | Hero shell: header, daily G/L as-of, pills, matrix, footer |
+| Component | [`src/components/DayMoveAsOf.tsx`](../../src/components/DayMoveAsOf.tsx) | Last-trade / last-fetch label next to daily G/L |
 | Component | [`src/components/portfolio-v2/PortfolioPerformanceMatrix.tsx`](../../src/components/portfolio-v2/PortfolioPerformanceMatrix.tsx) | Table UI + cell `?` |
 | Component | [`src/components/portfolio-v2/MatrixCellExplainSheet.tsx`](../../src/components/portfolio-v2/MatrixCellExplainSheet.tsx) | Per-cell formula / txs / AI narrative |
 | Hook | [`src/hooks/use-portfolio-performance-matrix.ts`](../../src/hooks/use-portfolio-performance-matrix.ts) | Data fetch + matrix build |
@@ -30,10 +31,16 @@ Replaces the default inline Recharts hero with a scannable matrix: rows per asse
 
 - **Single portfolio:** `GET /api/portfolio/history?range=all` snapshots with `stockValue`, `etfValue`, `cryptoValue`.
 - **All portfolios:** Yahoo `/api/historical?period=all` per ticker + `calculatePortfolioValueOnDate`.
-- **Today:** live quotes (same rules as hero day change).
+- **Today:** live quotes (same rules as hero day change). Daily G/L is labeled with last trade time (`regularMarketTime`), not "today" when the session is a prior day (weekends / Monday morning).
 - **Currency period cells:** `current − past − netCashFlow` (not vs purchase price).
 - **Demo:** [`data/demo-performance-matrix.json`](../../data/demo-performance-matrix.json).
 
 ## 5. Related specs
 
 - [portfolio-value-chart](portfolio-value-chart.md) — interactive chart (secondary surface)
+- [quotes-provider-abstraction](quotes-provider-abstraction.md) — `regularMarketTime` on live quotes
+
+## 6. Tests
+
+- [`src/lib/quote-time.test.ts`](../../src/lib/quote-time.test.ts)
+- [`e2e/day-move-as-of.spec.ts`](../../e2e/day-move-as-of.spec.ts)

@@ -454,9 +454,51 @@ export async function sendAccountDeletionEmail(
   return result;
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function renderAlertHeadlinesHtml(
+  headlines: Array<{ title: string; source: string; url: string }>,
+  locale: string,
+): string {
+  if (headlines.length === 0) return "";
+  const s = thresholdAlertStrings[locale] ?? thresholdAlertStrings.en;
+  const heading = s.headlinesHeading ?? thresholdAlertStrings.en.headlinesHeading ?? "Recent headlines";
+  const disclaimer =
+    s.headlinesDisclaimer ??
+    thresholdAlertStrings.en.headlinesDisclaimer ??
+    "Headlines are for context only and are not investment advice.";
+  const items = headlines
+    .map((h) => {
+      const title = escapeHtml(h.title);
+      const source = h.source ? ` <span style="color:#94a3b8;">(${escapeHtml(h.source)})</span>` : "";
+      return `<li style="margin:0 0 8px;"><a href="${escapeHtml(h.url)}" style="color:#0f766e;text-decoration:underline;">${title}</a>${source}</li>`;
+    })
+    .join("");
+  return `
+        <div style="margin-top: 20px; padding: 14px 16px; background: #f8fafc; border-radius: 8px;">
+          <p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #334155;">${heading}</p>
+          <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #334155;">${items}</ul>
+          <p style="margin: 10px 0 0; font-size: 11px; color: #94a3b8;">${disclaimer}</p>
+        </div>`;
+}
+
 export async function sendAlertEmail(
   email: string,
-  alert: { ticker: string; name: string; condition: string; threshold: number; currentPrice: number; currency: string },
+  alert: {
+    ticker: string;
+    name: string;
+    condition: string;
+    threshold: number;
+    currentPrice: number;
+    currency: string;
+    headlines?: Array<{ title: string; source: string; url: string }>;
+  },
   locale: EmailLocale = "en",
   userId?: string,
 ): Promise<{ success: boolean; error?: string }> {
@@ -471,12 +513,14 @@ export async function sendAlertEmail(
     .replace("{{direction}}", direction)
     .replace("{{currency}}", alert.currency)
     .replace("{{threshold}}", `<strong>${alert.currency} ${alert.threshold.toFixed(2)}</strong>`);
+  const headlinesHtml = renderAlertHeadlinesHtml(alert.headlines ?? [], locale);
 
   const html = `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
         <h2 style="color: #10b981;">${s.heading}</h2>
         <p style="font-size: 16px;">${body}</p>
         <p style="font-size: 18px; padding: 16px; background: #f0fdf4; border-radius: 8px; text-align: center;">${s.currentPriceLabel} <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong></p>
+        ${headlinesHtml}
         <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">${s.ctaLabel}</a>
         <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${s.deactivatedNotice}</p>
         <p style="margin-top: 16px; font-size: 11px; color: #94a3b8; text-align: center;">
@@ -549,6 +593,7 @@ export async function sendPercentAlertEmail(
     percentChange: number;
     percentBasis: "daily" | "purchase";
     isPortfolioWide: boolean;
+    headlines?: Array<{ title: string; source: string; url: string }>;
   },
   locale: EmailLocale = "en",
   userId?: string,
@@ -570,6 +615,8 @@ export async function sendPercentAlertEmail(
     .replace("{{directionWithPercent}}", directionWithPercent)
     .replace("{{basis}}", basisLabel);
 
+  const headlinesHtml = renderAlertHeadlinesHtml(alert.headlines ?? [], locale);
+
   const html = `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
         <h2 style="color: #10b981;">${s.heading}</h2>
@@ -578,6 +625,7 @@ export async function sendPercentAlertEmail(
           ${s.currentPriceLabel} <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong>
         </p>
         ${alert.isPortfolioWide ? `<p style="font-size: 13px; color: #64748b;">${s.portfolioWideNotice}</p>` : ""}
+        ${headlinesHtml}
         <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">${s.ctaLabel}</a>
         <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${alert.isPortfolioWide ? s.activeNotice : s.deactivatedNotice}</p>
         <p style="margin-top: 16px; font-size: 11px; color: #94a3b8; text-align: center;">
@@ -1543,11 +1591,19 @@ export function getCodeOwnedEmailPreview(
             .replace("{{currency}}", "USD")
             .replace("{{threshold}}", "<strong>USD 200.00</strong>")}</p>
           <p style="font-size:18px;padding:16px;background:#f0fdf4;border-radius:8px;text-align:center;">${s.currentPriceLabel} <strong>USD 201.50</strong></p>
+          <div style="margin-top:20px;padding:14px 16px;background:#f8fafc;border-radius:8px;">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#334155;">${s.headlinesHeading ?? "Recent headlines"}</p>
+            <ul style="margin:0;padding-left:18px;font-size:13px;color:#334155;">
+              <li><a href="https://example.com/news">Apple reports quarterly results</a></li>
+            </ul>
+            <p style="margin:10px 0 0;font-size:11px;color:#94a3b8;">${s.headlinesDisclaimer ?? "Headlines are for context only and are not investment advice."}</p>
+          </div>
         </div>`,
       };
     }
     case "sendPercentAlertEmail": {
       const s = percentAlertStrings[locale] ?? percentAlertStrings.en;
+      const hs = thresholdAlertStrings[locale] ?? thresholdAlertStrings.en;
       return {
         subject: `Price Alert: AAPL ${s.up} 3.20% ${s.today}`,
         html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 0;">
@@ -1557,6 +1613,13 @@ export function getCodeOwnedEmailPreview(
             .replace("{{ticker}}", "AAPL")
             .replace("{{directionWithPercent}}", `<span style="color:#16a34a;font-weight:700;">${s.up} 3.20%</span>`)
             .replace("{{basis}}", s.today)}</p>
+          <div style="margin-top:20px;padding:14px 16px;background:#f8fafc;border-radius:8px;">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#334155;">${hs.headlinesHeading ?? "Recent headlines"}</p>
+            <ul style="margin:0;padding-left:18px;font-size:13px;color:#334155;">
+              <li><a href="https://example.com/news">Apple reports quarterly results</a></li>
+            </ul>
+            <p style="margin:10px 0 0;font-size:11px;color:#94a3b8;">${hs.headlinesDisclaimer ?? "Headlines are for context only and are not investment advice."}</p>
+          </div>
         </div>`,
       };
     }

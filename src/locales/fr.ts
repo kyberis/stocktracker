@@ -2624,6 +2624,7 @@ const fr: TranslationStrings = {
   addFirstHoldingCta: "Ajoutez votre premier actif",
   noGainsYetInvestedEmpty: "Aucun gain aujourd'hui \u2014 rien n'est encore investi",
   todayLabel: "aujourd'hui",
+  dayMoveAsOfTitle: "Dernière mise à jour de marché de ce mouvement quotidien",
   sparkline1WLabel: "Semaine pass\u00E9e",
   sparkline1MLabel: "Mois pass\u00E9",
   allAssets: "Tous les actifs",
