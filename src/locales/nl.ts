@@ -2594,6 +2594,7 @@ const nl: TranslationStrings = {
   addFirstHoldingCta: "Voeg je eerste positie toe",
   noGainsYetInvestedEmpty: "Geen winst vandaag \u2014 nog niets geïnvesteerd",
   todayLabel: "vandaag",
+  dayMoveAsOfTitle: "Laatste marktupdate voor deze dagelijkse beweging",
   sparkline1WLabel: "Afgelopen week",
   sparkline1MLabel: "Afgelopen maand",
 

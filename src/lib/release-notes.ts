@@ -56,7 +56,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "The dashboard daily G/L now shows when prices last traded (for example Friday close on Monday morning), so weekend and Monday moves are easier to read.",
         translations: {
           es: "La G/L diaria del panel ahora muestra cuándo cotizaron los precios por última vez (por ejemplo el cierre del viernes el lunes por la mañana), para que los movimientos del fin de semana y del lunes se entiendan mejor.",

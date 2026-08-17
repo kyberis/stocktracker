@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.170: diversified portfolio news + publish dates on Home/Brief. Existing news surface, not a new landing-page capability."
+  "notes": "2.5.179–2.5.180: daily G/L as-of timestamp and one-shot alert emails with cached headlines. Existing dashboard/alert surfaces, not a new landing-page capability."
 }
