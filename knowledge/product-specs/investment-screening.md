@@ -29,7 +29,7 @@ ambiguous) via search, then runs the same research agents on that one listing
   - `screening_ir_serper_jina_enabled` — prototype IR discovery/extract via Serper Search + Jina EU Reader (HTML/PDF), Tavily Search/Extract fallback; requires `SERPER_API_KEY` + `JINA_API_KEY`; off by default
   - `screening_analyze_force_serper_jina_enabled` — Analyze IR uses Serper + Jina only (no Tavily fallback); off by default
   - `screening_estebaranz_eval_enabled` — post-shortlist `compiler_evaluate` step applies the trefolio value-investing checklist to ≤5 shortlist names; on by default (and in prod). Flag key is historical; product copy always says trefolio.
-  - `screening_thesis_pipeline_enabled` — bake-off: shows a **Cribado / Checklist vs Tesis** toggle on `/screening` and intake. Off by default. Off → all runs are checklist. On → the user chooses per run (`pipeline_kind` on `screening_runs`). Thesis requires `screening_pipeline_real_enabled`. Not an A/B experiment (no sticky assignment). Informational only — not investment advice.
+  - `screening_thesis_pipeline_enabled` — bake-off: shows a **Cribado / Checklist vs Tesis** toggle on `/screening` and intake. On by default. Off → all runs are checklist. On → the user chooses per run (`pipeline_kind` on `screening_runs`). Thesis requires `screening_pipeline_real_enabled`. Not an A/B experiment (no sticky assignment). Informational only — not investment advice.
   - `screening_dev_lab_enabled` — Dev agent-log button for non-admins
 - **Health:** green — Intake (+ sample-conversation pilot) + Hard Data + IR/Web/PC/Risk/Technicals (v2) + optional shortlist Research + Compiler + QA (flag on in prod) + per-run variable cost ledger
 - **Owning skill:** [`.cursor/skills/engineer-tools/SKILL.md`](../../.cursor/skills/engineer-tools/SKILL.md)
@@ -398,7 +398,7 @@ Helpers: [`src/lib/screening/provider-circuit.ts`](../../src/lib/screening/provi
   through the real Intake agent; the user still confirms and presses Run.
 - Discoverability beyond `/recommendations/diversify` (tools hub entry needs locale
   keys in all 35 files).
-- **Thesis vs checklist bake-off** — flag `screening_thesis_pipeline_enabled` (off).
+- **Thesis vs checklist bake-off** — flag `screening_thesis_pipeline_enabled` (on).
   User picks Cribado vs Tesis on `/screening`; one pipeline will be turned off
   after a sample (AAPL, KO, NVDA, small-cap) shows a falsifiable statement,
   ≥1 kill criterion bound to a Fact (or an explicit gap), 0 soft scores without

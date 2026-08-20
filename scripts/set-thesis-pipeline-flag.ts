@@ -1,12 +1,9 @@
 #!/usr/bin/env npx tsx
 /**
- * Enable Investment Screening v2 flags globally in platform_settings.
+ * Set screening_thesis_pipeline_enabled in platform_settings (production Turso).
  *
- * Usage:
- *   npx tsx scripts/enable-screening-v2.ts
- *   npx tsx scripts/enable-screening-v2.ts --off
- *
- * Reads TURSO credentials from `.env.production.local` (or process env).
+ *   npx tsx scripts/set-thesis-pipeline-flag.ts
+ *   npx tsx scripts/set-thesis-pipeline-flag.ts --off
  */
 import { readFileSync } from "fs";
 import { resolve } from "path";
@@ -34,13 +31,9 @@ function loadDotEnv(path: string): Record<string, string> {
   return out;
 }
 
-const FLAGS = [
+const RELATED = [
   "investment_screening_enabled",
   "screening_pipeline_real_enabled",
-  "screening_ir_agent_enabled",
-  "screening_agents_v2_enabled",
-  "screening_qa_enabled",
-  "screening_tavily_research_enabled",
   "screening_thesis_pipeline_enabled",
 ] as const;
 
@@ -62,23 +55,21 @@ async function main() {
   }
 
   const client = createClient({ url, authToken });
-  for (const flag of FLAGS) {
-    await client.execute({
-      sql: `INSERT INTO platform_settings (key, value)
-            VALUES (?, ?)
-            ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-      args: [flag, value],
-    });
-    console.log(`${off ? "✗" : "✓"} ${flag} = ${value}`);
-  }
+  await client.execute({
+    sql: `INSERT INTO platform_settings (key, value)
+          VALUES (?, ?)
+          ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    args: ["screening_thesis_pipeline_enabled", value],
+  });
 
   const check = await client.execute({
     sql: `SELECT key, value FROM platform_settings
-          WHERE key IN (${FLAGS.map(() => "?").join(",")})
+          WHERE key IN (${RELATED.map(() => "?").join(",")})
           ORDER BY key`,
-    args: [...FLAGS],
+    args: [...RELATED],
   });
-  console.log("\nVerified:");
+  console.log(`screening_thesis_pipeline_enabled = ${value}`);
+  console.log("Related:");
   for (const row of check.rows) {
     console.log(`  ${row.key} = ${row.value}`);
   }
