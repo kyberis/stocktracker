@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.183",
+    date: "2026-08-20",
+    title: "Checklist vs Thesis is on in screening",
+    titleTranslations: {
+      es: "Cribado vs Tesis está activo en el cribado",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Screening now shows Checklist vs Thesis before you run. Thesis writes a falsifiable draft with gates and kill criteria. Both reports are informational research notes, not investment advice.",
+        translations: {
+          es: "El cribado ahora muestra Cribado vs Tesis antes de lanzar. Tesis redacta un borrador falsable con puertas y criterios de muerte. Ambos informes son notas de investigación, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.182",
     date: "2026-08-20",
     title: "Moat scores ROIC, not buyback-inflated ROE",

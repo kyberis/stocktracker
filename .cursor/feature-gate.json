@@ -1,4 +1,4 @@
 {
-  "landingPageReviewed": true,
-  "notes": "2.5.181–2.5.182: thesis screening bake-off is flag-off (screening_thesis_pipeline_enabled) and not a landing capability. Moat ROIC vs ROE is a scoring fix on the existing moat report, not a new customer-facing surface."
+  "notes": "2.5.183: thesis vs checklist toggle is on by default on existing /screening. Not a new landing-page capability.",
+  "landingPageReviewed": true
 }

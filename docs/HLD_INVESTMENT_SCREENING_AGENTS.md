@@ -7,7 +7,7 @@ Pattern: **Feature-flagged** · **incremental** · **app-triggered only** · fan
 **Bake-off (temporal):** el pipeline de checklist de este HLD sigue siendo el default.
 Un DAG paralelo en `src/lib/screening/thesis/` emite un Thesis draft (hechos, puertas,
 criterios de muerte). El usuario elige **Cribado vs Tesis** en `/screening` cuando
-`screening_thesis_pipeline_enabled` está on. El flag off oculta el toggle y fuerza
+`screening_thesis_pipeline_enabled` está on (default). El flag off oculta el toggle y fuerza
 checklist. No hay asignación A/B sticky. Veredictos informativos; nunca buy/sell/hold.
 El score MOAT se envuelve (`calc:moat_score_pct`); no se duplica el evaluador.
 **Fase 0:** `npx tsx scripts/probe-fmp-thesis-endpoints.ts` genera la matriz de
