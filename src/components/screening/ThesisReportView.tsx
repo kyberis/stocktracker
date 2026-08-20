@@ -8,6 +8,15 @@ function verdictLabel(copy: ReturnType<typeof useScreeningCopy>["copy"], v: Thes
   return copy.thesisReport.verdicts[v] ?? v;
 }
 
+function formatFactValue(value: unknown): string {
+  if (typeof value === "boolean") return value ? "yes" : "no";
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+  if (value == null) return "—";
+  return String(value);
+}
+
 export function ThesisReportView({ report }: { report: ThesisReport }) {
   const { copy } = useScreeningCopy();
   const t = copy.thesisReport;
@@ -57,6 +66,28 @@ export function ThesisReportView({ report }: { report: ThesisReport }) {
                 </li>
               ))}
             </ul>
+
+            <h3 className="mt-4 text-[13px] font-semibold text-[color:var(--foreground)]">
+              {t.facts}
+            </h3>
+            {card.facts.filter((f) => f.value != null).length === 0 ? (
+              <p className="mt-1 text-[13px] text-[color:var(--muted)]">{t.noFacts}</p>
+            ) : (
+              <ul className="mt-1 list-none space-y-1 p-0 text-[12px] text-[color:var(--foreground)]">
+                {card.facts
+                  .filter((f) => f.value != null)
+                  .slice(0, 16)
+                  .map((f) => (
+                    <li key={f.field_id}>
+                      <span className="text-[color:var(--muted)]">
+                        {t.factLabels[f.field_id] ?? f.field_id}:
+                      </span>{" "}
+                      {formatFactValue(f.value)}
+                      {f.unit ? ` ${f.unit}` : ""}
+                    </li>
+                  ))}
+              </ul>
+            )}
 
             {draft ? (
               <>

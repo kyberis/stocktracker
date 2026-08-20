@@ -4,7 +4,6 @@ import {
   getLatestScreeningAgentOutputUnscoped,
   insertScreeningAgentOutput,
 } from "@/lib/db";
-import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import {
   registerHandler,
   type HandlerContext,
@@ -17,38 +16,27 @@ import {
   cleanCompanyNameForSearch,
   researchSymbolForListed,
 } from "@/lib/screening/data/research-symbol";
+import { jinaKeysPresent } from "@/lib/screening/data/jina-extract";
+import { serperKeysPresent } from "@/lib/screening/data/serper-search";
 import { accrueScreeningLlmCost } from "@/lib/screening/cost";
 import { extractLlmUsage } from "@/lib/screening/llm-usage";
 import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 import { screeningBriefSchema } from "@/lib/screening/schemas";
-import { insufficientSoft } from "@/lib/screening/thesis/insufficient-soft";
+import {
+  mergeSoftPreferringQuotes,
+  seedSoftFromPublished,
+} from "@/lib/screening/thesis/seed-soft";
 import { THESIS_HARD_DATA_KIND, THESIS_IR_KIND } from "@/lib/screening/thesis/kinds";
 import {
   thesisHardDataOutputSchema,
   thesisIrOutputSchema,
   thesisSoftAssessmentSchema,
-  type ThesisIrOutput,
   type ThesisSoftAssessment,
 } from "@/lib/screening/thesis/schemas";
 
 export { THESIS_IR_KIND };
 
 const FIELDS = ["EQ:A1", "EQ:A3", "EQ:B7", "EQ:J2", "EQ:F10"] as const;
-
-function gapOutput(ticker: string): ThesisIrOutput {
-  return thesisIrOutputSchema.parse({
-    ticker,
-    soft_assessments: FIELDS.map((field_id) =>
-      insufficientSoft({
-        ticker,
-        field_id,
-        assessed_by: "llm:screening-thesis-ir",
-      }),
-    ),
-    references: [],
-    gaps: ["llm_or_sources_unavailable"],
-  });
-}
 
 const runThesisIrStep: StepHandler = async (
   ctx: HandlerContext,
@@ -81,38 +69,62 @@ const runThesisIrStep: StepHandler = async (
     companyName: candidate?.name,
     researchTicker: candidate?.researchTicker,
   });
-  const [tavilyOn, serperOn] = await Promise.all([
-    isFeatureEnabledForUser("screening_tavily_research_enabled", ctx.userId),
-    isFeatureEnabledForUser("screening_ir_serper_jina_enabled", ctx.userId),
-  ]);
+  const preferSerperJina = serperKeysPresent() && jinaKeysPresent();
   const [bundle, irDocs] = await Promise.all([
     fetchFmpIrBundle({ ticker: researchTicker }),
-    tavilyOn || serperOn
-      ? fetchIrSiteDocuments({
-          ticker: researchTicker,
-          companyName: cleanCompanyNameForSearch(candidate?.name || ticker),
-          runId: ctx.runId,
-          preferSerperJina: serperOn,
-        })
-      : Promise.resolve(null),
+    fetchIrSiteDocuments({
+      ticker: researchTicker,
+      companyName: cleanCompanyNameForSearch(candidate?.name || ticker),
+      runId: ctx.runId,
+      preferSerperJina,
+    }),
   ]);
 
   const evidence = {
     ...summariseIrBundleForLlm(bundle),
-    irSiteDocuments: irDocs
+    listedTicker: ticker,
+    researchTicker,
+    candidate: candidate
+      ? {
+          name: candidate.name,
+          sector: candidate.sector,
+          industry: candidate.industry,
+          analysisSummary: candidate.analysisSummary,
+          growthNote: candidate.growthNote,
+          valuationNote: candidate.valuationNote,
+          moatVerdict: candidate.moatVerdict,
+        }
+      : null,
+    irSiteDocuments: irDocs.documents.length
       ? {
           irPageUrl: irDocs.irPageUrl,
           documents: irDocs.documents.slice(0, 4).map((d) => ({
             url: d.url,
             title: d.title,
             asOf: d.asOf,
-            excerpt: d.excerpt?.slice(0, 800),
+            excerpt: d.excerpt?.slice(0, 1200),
           })),
         }
       : null,
   };
+  const seeds = seedSoftFromPublished({
+    ticker,
+    candidate,
+    news: bundle.news,
+  });
 
-  let output = gapOutput(ticker);
+  let output = thesisIrOutputSchema.parse({
+    ticker,
+    soft_assessments: mergeSoftPreferringQuotes(
+      [],
+      seeds,
+      FIELDS,
+      ticker,
+      "code:screening-thesis-seed",
+    ),
+    references: [],
+    gaps: ["llm_or_sources_pending"],
+  });
   const started = Date.now();
   const gatewayOk = await resolveGatewayApiKey();
   let tokensInput = 0;
@@ -130,7 +142,8 @@ const runThesisIrStep: StepHandler = async (
             role: "system",
             content: `You extract SoftAssessments for ${ticker}. Language: ${locale}.
 One object per field_id: EQ:A1 (explain the business in 3 sentences), EQ:A3 (revenue model), EQ:B7 (moat type), EQ:J2 (dated catalysts), EQ:F10 (management language).
-Rules: score 1-5 only with a literal quote (min 10 chars) from EVIDENCE. If you cannot cite, score null and confidence insufficient_evidence. Never buy/sell/hold. Reply only via submit_soft.`,
+Cite a literal quote (min 10 chars) from EVIDENCE: IR pages, earnings excerpts, FMP news, or the company profile. Prefer IR / transcript quotes over the profile.
+If a field has no quote, score null and confidence insufficient_evidence. Do not mark A1 insufficient when analysisSummary exists. Never buy/sell/hold. Reply only via submit_soft.`,
           },
           {
             role: "user",
@@ -174,7 +187,7 @@ Rules: score 1-5 only with a literal quote (min 10 chars) from EVIDENCE. If you 
         const items = Array.isArray(parsed.soft_assessments)
           ? parsed.soft_assessments
           : [];
-        const soft: ThesisSoftAssessment[] = [];
+        const llmSoft: ThesisSoftAssessment[] = [];
         for (const field_id of FIELDS) {
           const match = items.find(
             (row) =>
@@ -191,21 +204,18 @@ Rules: score 1-5 only with a literal quote (min 10 chars) from EVIDENCE. If you 
                 assessed_by: "llm:screening-thesis-ir",
               })
             : null;
-          if (candidateRow?.success) soft.push(candidateRow.data);
-          else {
-            soft.push(
-              insufficientSoft({
-                ticker,
-                field_id,
-                assessed_by: "llm:screening-thesis-ir",
-              }),
-            );
-          }
+          if (candidateRow?.success) llmSoft.push(candidateRow.data);
         }
         output = thesisIrOutputSchema.parse({
           ticker,
-          soft_assessments: soft,
-          references: irDocs?.irPageUrl
+          soft_assessments: mergeSoftPreferringQuotes(
+            llmSoft,
+            seeds,
+            FIELDS,
+            ticker,
+            "llm:screening-thesis-ir",
+          ),
+          references: irDocs.irPageUrl
             ? [
                 {
                   url: irDocs.irPageUrl,
@@ -213,8 +223,18 @@ Rules: score 1-5 only with a literal quote (min 10 chars) from EVIDENCE. If you 
                   label: "IR hub",
                 },
               ]
-            : [],
-          gaps: [],
+            : bundle.news[0]?.url
+              ? [
+                  {
+                    url: bundle.news[0].url,
+                    asOf: (bundle.news[0].publishedDate || "").slice(0, 10),
+                    label: "FMP news",
+                  },
+                ]
+              : [],
+          gaps: bundle.transcript
+            ? []
+            : ["fmp_transcript_unavailable_used_ir_or_profile"],
         });
       }
     } catch (err) {

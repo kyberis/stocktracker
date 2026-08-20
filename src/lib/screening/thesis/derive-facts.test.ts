@@ -94,6 +94,15 @@ describe("deriveFactsFromCandidate", () => {
     expect(e1?.value).toBe(0.4);
   });
 
+  it("maps published target and upside when present", () => {
+    const { facts } = deriveFactsFromCandidate(
+      { ...base, targetPrice: 85, upsidePct: 12.4 },
+      "2026-08-19T00:00:00.000Z",
+    );
+    expect(facts.find((f) => f.field_id === "calc:target_price")?.value).toBe(85);
+    expect(facts.find((f) => f.field_id === "calc:upside_pct")?.value).toBe(12.4);
+  });
+
   it("keeps null values instead of inventing metrics", () => {
     const { facts, gaps } = deriveFactsFromCandidate({
       ...base,

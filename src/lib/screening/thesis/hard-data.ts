@@ -30,6 +30,7 @@ import {
   SCREENING_MAX_CANDIDATES,
 } from "@/lib/screening/constants";
 import { deriveFactsFromCandidate } from "@/lib/screening/thesis/derive-facts";
+import { fetchAnalystEstimateFacts } from "@/lib/screening/thesis/fmp-consensus";
 import { insertThesisFanout } from "@/lib/screening/thesis/insert-fanout";
 import { THESIS_HARD_DATA_KIND } from "@/lib/screening/thesis/kinds";
 import { thesisHardDataOutputSchema } from "@/lib/screening/thesis/schemas";
@@ -134,8 +135,27 @@ const runThesisHardDataStep: StepHandler = async (
   }
 
   const derived = candidates.map((c) => deriveFactsFromCandidate(c, asOf));
-  const facts = derived.flatMap((d) => d.facts);
-  const factGaps = derived.flatMap((d) => d.gaps);
+  const consensus = await Promise.all(
+    candidates.map((c) =>
+      fetchAnalystEstimateFacts({
+        ticker: c.researchTicker || c.ticker,
+        asOf,
+      }),
+    ),
+  );
+  const facts = [
+    ...derived.flatMap((d) => d.facts),
+    ...consensus.flatMap((row, i) =>
+      row.facts.map((f) => ({
+        ...f,
+        asset_id: candidates[i]?.ticker.toUpperCase() ?? f.asset_id,
+      })),
+    ),
+  ];
+  const factGaps = [
+    ...derived.flatMap((d) => d.gaps),
+    ...consensus.flatMap((row) => row.errors),
+  ];
   const output = thesisHardDataOutputSchema.parse({
     status: candidates.length === 0 ? "empty" : "ok",
     universeSize,

@@ -267,6 +267,30 @@ export function deriveFactsFromCandidate(
       ref: "quote",
     }),
   );
+  facts.push(
+    fact({
+      ticker,
+      field_id: "calc:target_price",
+      value: num(candidate.targetPrice),
+      unit: "usd",
+      asOf,
+      method: "raw",
+      ref: "price-target-consensus",
+      periodKind: "POINT_IN_TIME",
+    }),
+  );
+  facts.push(
+    fact({
+      ticker,
+      field_id: "calc:upside_pct",
+      value: num(candidate.upsidePct),
+      unit: "pct",
+      asOf,
+      method: "derived",
+      ref: "price-target-consensus",
+      periodKind: "POINT_IN_TIME",
+    }),
+  );
 
   return { facts, gaps };
 }
