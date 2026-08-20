@@ -77,6 +77,9 @@ export function composeThesisReport(opts: {
         businessSummary: candidate?.analysisSummary ?? undefined,
         industry: candidate?.industry ?? undefined,
         narrative: e.narrative,
+        metrics: (hd.data.metrics ?? []).filter(
+          (m) => m.ticker.toUpperCase() === e.ticker.toUpperCase(),
+        ),
       };
     });
 

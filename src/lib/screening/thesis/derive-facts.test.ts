@@ -100,7 +100,10 @@ describe("deriveFactsFromCandidate", () => {
       "2026-08-19T00:00:00.000Z",
     );
     expect(facts.find((f) => f.field_id === "calc:target_price")?.value).toBe(85);
-    expect(facts.find((f) => f.field_id === "calc:upside_pct")?.value).toBe(12.4);
+    expect(facts.find((f) => f.field_id === "calc:upside_pct")?.value).toBeCloseTo(
+      (85 / 190 - 1) * 100,
+      5,
+    );
   });
 
   it("keeps null values instead of inventing metrics", () => {
@@ -113,5 +116,37 @@ describe("deriveFactsFromCandidate", () => {
     });
     expect(facts.find((f) => f.field_id === "EQ:E1")?.value).toBeNull();
     expect(gaps.some((g) => g.startsWith("EQ:E1"))).toBe(true);
+  });
+
+  it("computes interest coverage from EBIT / |interest| and drops a TTM −15.33", () => {
+    const { facts } = deriveFactsFromCandidate(
+      {
+        ...base,
+        interestCoverage: -15.33,
+        annualSeries: [
+          {
+            year: 2025,
+            revenue: 30e9,
+            grossMarginPct: 22,
+            operatingMarginPct: 10,
+            netMarginPct: 3,
+            eps: 4,
+            operatingCashFlow: 2e9,
+            freeCashFlow: 766e6,
+            roicPct: 8,
+            sharesOutstanding: 195e6,
+            ebit: 1850e6,
+            interestExpense: 772e6,
+            ebitda: 3805e6,
+            netIncome: 864e6,
+          },
+        ],
+      },
+      "2026-08-20T00:00:00.000Z",
+    );
+    expect(facts.find((f) => f.field_id === "EQ:E2")?.value).toBeCloseTo(
+      1850 / 772,
+      5,
+    );
   });
 });

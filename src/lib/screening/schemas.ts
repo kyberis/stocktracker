@@ -629,6 +629,18 @@ export const hardDataCandidateSchema = z.object({
         freeCashFlow: z.number().finite().nullable(),
         roicPct: z.number().finite().nullable(),
         sharesOutstanding: z.number().finite().nullable(),
+        ebit: z.number().finite().nullable().optional(),
+        interestExpense: z.number().finite().nullable().optional(),
+        ebitda: z.number().finite().nullable().optional(),
+        netIncome: z.number().finite().nullable().optional(),
+        totalDebt: z.number().finite().nullable().optional(),
+        cash: z.number().finite().nullable().optional(),
+        shortTermInvestments: z.number().finite().nullable().optional(),
+        totalEquity: z.number().finite().nullable().optional(),
+        incomeTaxExpense: z.number().finite().nullable().optional(),
+        incomeBeforeTax: z.number().finite().nullable().optional(),
+        annualPe: z.number().finite().nullable().optional(),
+        filingDate: z.string().max(40).nullable().optional(),
       }),
     )
     .max(10)
@@ -642,6 +654,8 @@ export const hardDataCandidateSchema = z.object({
   thinLiquidity: z.boolean().nullable().optional(),
   peerPe: z.number().finite().nullable().optional(),
   roicPct: z.number().finite().nullable().optional(),
+  epsTtm: z.number().finite().nullable().optional(),
+  yearHigh: z.number().finite().nullable().optional(),
 });
 export type HardDataCandidate = z.infer<typeof hardDataCandidateSchema>;
 

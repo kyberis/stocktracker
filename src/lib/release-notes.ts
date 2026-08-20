@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.188",
+    date: "2026-08-20",
+    title: "Thesis numbers carry a unit, a period, and a sanity check",
+    titleTranslations: {
+      es: "Los números de la tesis llevan unidad, periodo y un chequeo de cordura",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Thesis notes no longer describe a raw ratio. Interest coverage, leverage and cash conversion are computed from filings, stamped (e.g. FY2025), and rejected when they are impossible (negative coverage with positive EBIT). Informational only — not investment advice.",
+        translations: {
+          es: "Las tesis ya no adjetivan un ratio suelto. La cobertura de intereses, el apalancamiento y la conversión de caja se calculan con las cuentas, llevan sello (p. ej. FY2025) y se rechazan si son imposibles (cobertura negativa con EBIT positivo). Solo informativo, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.187",
     date: "2026-08-20",
     title: "Thesis reports read as a research note, not a checklist of codes",

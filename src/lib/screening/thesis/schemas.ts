@@ -261,12 +261,47 @@ export const thesisDraftSchema = z
   });
 export type ThesisDraft = z.infer<typeof thesisDraftSchema>;
 
+export const thesisMetricSchema = z.object({
+  ticker: z.string().min(1).max(20),
+  id: z.enum([
+    "roic",
+    "interestCoverage",
+    "netDebtToEbitda",
+    "fcfToNetIncome",
+    "fcfYield",
+    "revenueCagr",
+    "shareCountCagr",
+    "grossMarginVol",
+    "peCurrent",
+    "peHistoric",
+    "drawdown52w",
+    "targetUpside",
+  ]),
+  value: z.number().finite().nullable(),
+  unit: z.enum(["x", "pct", "pp", "usd", "count", "years"]),
+  period: z.object({
+    kind: z.enum(["FY", "TTM", "Q", "SPOT", "CAGR"]),
+    label: z.string().min(1).max(80),
+    asOf: z.string().min(1).max(40),
+  }),
+  source: z.object({
+    provider: z.enum(["fmp", "yahoo", "derived"]),
+    endpoint: z.string().max(120),
+    filingDate: z.string().max(40).optional(),
+  }),
+  formula: z.string().max(240),
+  status: z.enum(["ok", "warn", "error"]),
+  flags: z.array(z.string().max(40)).max(16),
+});
+export type ThesisMetricRow = z.infer<typeof thesisMetricSchema>;
+
 export const thesisHardDataOutputSchema = z.object({
   status: z.enum(["ok", "empty"]),
   universeSize: z.number().int().min(0),
   tickers: z.array(z.string().min(1).max(20)).max(20),
   candidates: z.array(hardDataCandidateSchema).max(20),
   facts: z.array(thesisFactSchema).max(400),
+  metrics: z.array(thesisMetricSchema).max(240).optional().default([]),
   gaps: z.array(z.string().max(200)).max(16).default([]),
   locale: z.string().min(2).max(10),
   generatedAt: z.string().min(1).max(40),
@@ -355,6 +390,7 @@ export const thesisReportCardSchema = z.object({
   businessSummary: z.string().max(400).optional(),
   industry: z.string().max(200).optional(),
   narrative: z.string().max(8000).optional(),
+  metrics: z.array(thesisMetricSchema).max(24).optional(),
 });
 export type ThesisReportCard = z.infer<typeof thesisReportCardSchema>;
 

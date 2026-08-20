@@ -243,6 +243,9 @@ Street target / forward P/E is consensus, not company guidance. Call submit_draf
         };
       }
     }
+    const metrics = (hd?.success ? hd.data.metrics ?? [] : []).filter(
+      (m) => m.ticker.toUpperCase() === ticker.toUpperCase(),
+    );
     const article = buildReadableThesis({
       locale,
       companyName: candidate?.name || ticker,
@@ -253,6 +256,7 @@ Street target / forward P/E is consensus, not company guidance. Call submit_draf
       facts,
       soft,
       draft,
+      metrics,
     });
     const writeup = joinReadableThesis(article, locale).slice(0, 8000);
     if (draft) {

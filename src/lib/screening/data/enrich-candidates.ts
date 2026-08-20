@@ -206,6 +206,8 @@ function mergeCandidate(
     thinLiquidity: fund.thinLiquidity ?? null,
     peerPe: fund.peerPe ?? null,
     roicPct: fund.roicPct ?? null,
+    epsTtm: fund.epsTtm ?? null,
+    yearHigh: fund.yearHigh ?? null,
   };
 }
 
