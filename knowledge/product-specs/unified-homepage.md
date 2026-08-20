@@ -76,7 +76,7 @@ type HomeDayHighlight = {
 
 **Empty (no holdings):** Same `EmptyPortfolio` CTA as Classic `/` (import + add stock). Cash-only still counts as empty for this gate. When `onAskWarren` is wired (Home v2), Warren is **add-stock only** with a 10-consult / 15-minute cooldown — see [warren-empty-add-stock.md](warren-empty-add-stock.md).
 
-**Mobile:** Same order stacked; MCP CTA after holdings; touch targets ≥44px.
+**Mobile:** Same order stacked; **WarrenTrigger** + Warren nudge + MCP CTA after holdings (rail is desktop-only); touch targets ≥44px.
 
 **Chrome:** Existing `AppNav` + `AppPortfolioCommandStrip` / toolbar. No left icon rail.
 

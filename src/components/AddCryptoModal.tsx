@@ -160,25 +160,51 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
   const focusTrapRef = useFocusTrap(isOpen, onClose);
   const coinKey = getCoinKey(ticker);
   const icon = coinKey ? COIN_ICONS[coinKey] : undefined;
+  const pairCcyLabel = currencyFromCryptoTicker(ticker.trim().toUpperCase().replace(/\s+/g, "-")) || "USD";
 
   if (!isOpen) return null;
 
+  // Mobile: full-viewport page (not a floating card) so submit stays above browser chrome.
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="addcrypto-modal-title" className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
-        <h2 id="addcrypto-modal-title" className="text-xl font-bold text-gray-900 dark:text-white mb-5">{t("addCrypto")}</h2>
+    <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm max-sm:hidden"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="addcrypto-modal-title"
+        className="relative flex h-[100dvh] w-full flex-col bg-white dark:bg-slate-800 sm:h-auto sm:max-h-[90vh] sm:max-w-md sm:mx-4 sm:rounded-2xl sm:border sm:border-gray-200 sm:dark:border-slate-700 sm:shadow-xl"
+      >
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-5 pb-3 pt-[max(1.25rem,env(safe-area-inset-top))] dark:border-slate-700 sm:px-6 sm:pb-4 sm:pt-6">
+          <h2 id="addcrypto-modal-title" className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl">
+            {t("addCrypto")}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+            aria-label={t("close")}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
         {holdingsAtLimit ? (
-          <div>
-            <div className="text-center mb-4">
-              <div className="mx-auto w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center mb-3">
-                <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="flex-1 overflow-y-auto px-5 py-4 sm:px-6 sm:py-5">
+            <div className="mb-4 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/10">
+                <svg className="h-6 w-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
               <p className="text-sm text-gray-600 dark:text-slate-300">{t("holdingsLimitReached")}</p>
-              <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+              <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">
                 {t("holdingsUsage").replace("{used}", String(holdings.length)).replace("{limit}", String(holdingsLimit))}
               </p>
             </div>
@@ -186,145 +212,170 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
           </div>
         ) : (
           <>
-            <div className="space-y-4">
-              {holdingsLimit < Infinity && (
-                <p className="text-xs text-gray-400 dark:text-slate-500 text-right tabular-nums">
-                  {t("holdingsUsage").replace("{used}", String(holdings.length)).replace("{limit}", String(holdingsLimit))}
-                </p>
-              )}
-
-              <div className="relative">
-                <label htmlFor="addcrypto-search" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("search")}</label>
-                <input
-                  id="addcrypto-search"
-                  ref={inputRef}
-                  type="text"
-                  value={query}
-                  onChange={(e) => handleQueryChange(e.target.value)}
-                  placeholder={t("cryptoSearchPlaceholder")}
-                  className="w-full"
-                />
-                {searching && (
-                  <div className="absolute right-3 top-9">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500" />
-                  </div>
+            <div className="flex-1 overflow-y-auto px-5 py-3 sm:px-6 sm:py-4">
+              <div className="space-y-4">
+                {holdingsLimit < Infinity && (
+                  <p className="text-right text-xs tabular-nums text-gray-400 dark:text-slate-500">
+                    {t("holdingsUsage").replace("{used}", String(holdings.length)).replace("{limit}", String(holdingsLimit))}
+                  </p>
                 )}
-                {results.length > 0 && !selected && (
-                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                    {results.map((r) => {
-                      const rk = getCoinKey(r.symbol);
-                      const ri = rk ? COIN_ICONS[rk] : undefined;
-                      return (
-                        <button
-                          key={r.symbol}
-                          onClick={() => handleSelect(r)}
-                          className="w-full text-left px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
-                        >
-                          {ri ? (
-                            <span className={`w-6 h-6 rounded-full ${ri.bg} flex items-center justify-center text-white text-xs font-bold shrink-0`}>{ri.label}</span>
-                          ) : (
-                            <span className="w-6 h-6 rounded-full bg-slate-500 flex items-center justify-center text-white text-xs font-bold shrink-0">?</span>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <span className="font-medium text-gray-900 dark:text-white">{r.symbol}</span>
-                            <span className="text-gray-500 dark:text-slate-400 text-sm ml-2 truncate">{r.shortname}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
 
-              {(selected || coinName || ticker) && (
-                <div className="bg-amber-50 dark:bg-amber-500/10 rounded-lg px-3 py-2 border border-amber-200 dark:border-amber-500/20 flex items-center gap-2">
-                  {icon ? (
-                    <span className={`w-6 h-6 rounded-full ${icon.bg} flex items-center justify-center text-white text-xs font-bold shrink-0`}>{icon.label}</span>
-                  ) : (
-                    <span className="w-6 h-6 rounded-full bg-slate-500 flex items-center justify-center text-white text-xs font-bold shrink-0">?</span>
+                <div className="relative">
+                  <label htmlFor="addcrypto-search" className="mb-1.5 block text-sm text-gray-500 dark:text-slate-400">
+                    {t("search")}
+                  </label>
+                  <input
+                    id="addcrypto-search"
+                    ref={inputRef}
+                    type="text"
+                    value={query}
+                    onChange={(e) => handleQueryChange(e.target.value)}
+                    placeholder={t("cryptoSearchPlaceholder")}
+                    className="w-full"
+                  />
+                  {searching && (
+                    <div className="absolute right-3 top-9">
+                      <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-amber-500" />
+                    </div>
                   )}
-                  <span className="text-amber-700 dark:text-amber-300 font-medium">{ticker || t("ticker")}</span>
-                  <span className="text-gray-600 dark:text-slate-400 text-sm">{coinName || t("name")}</span>
+                  {results.length > 0 && !selected && (
+                    <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800">
+                      {results.map((r) => {
+                        const rk = getCoinKey(r.symbol);
+                        const ri = rk ? COIN_ICONS[rk] : undefined;
+                        return (
+                          <button
+                            key={r.symbol}
+                            type="button"
+                            onClick={() => handleSelect(r)}
+                            className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-slate-700"
+                          >
+                            {ri ? (
+                              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${ri.bg}`}>
+                                {ri.label}
+                              </span>
+                            ) : (
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-500 text-xs font-bold text-white">
+                                ?
+                              </span>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <span className="font-medium text-gray-900 dark:text-white">{r.symbol}</span>
+                              <span className="ml-2 truncate text-sm text-gray-500 dark:text-slate-400">{r.shortname}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              )}
 
-              <div>
-                <label htmlFor="addcrypto-name" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("name")}</label>
-                <input
-                  id="addcrypto-name"
-                  type="text"
-                  value={coinName}
-                  onChange={(e) => setCoinName(e.target.value)}
-                  placeholder={t("name")}
-                  className="w-full"
-                />
-              </div>
+                {(selected || coinName || ticker) && (
+                  <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/20 dark:bg-amber-500/10">
+                    {icon ? (
+                      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${icon.bg}`}>
+                        {icon.label}
+                      </span>
+                    ) : (
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-500 text-xs font-bold text-white">
+                        ?
+                      </span>
+                    )}
+                    <span className="font-medium text-amber-700 dark:text-amber-300">{ticker || t("ticker")}</span>
+                    <span className="text-sm text-gray-600 dark:text-slate-400">{coinName || t("name")}</span>
+                  </div>
+                )}
 
-              <div>
-                <label htmlFor="addcrypto-ticker" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("ticker")}</label>
-                <input
-                  id="addcrypto-ticker"
-                  type="text"
-                  value={ticker}
-                  onChange={(e) => setTicker(e.target.value)}
-                  placeholder="BTC-USD"
-                  className="w-full"
-                />
-              </div>
+                <div>
+                  <label htmlFor="addcrypto-name" className="mb-1.5 block text-sm text-gray-500 dark:text-slate-400">
+                    {t("name")}
+                  </label>
+                  <input
+                    id="addcrypto-name"
+                    type="text"
+                    value={coinName}
+                    onChange={(e) => setCoinName(e.target.value)}
+                    placeholder={t("name")}
+                    className="w-full"
+                  />
+                </div>
 
-              <div>
-                <label htmlFor="addcrypto-date" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("transactionDate")}</label>
-                <input
-                  id="addcrypto-date"
-                  type="date"
-                  value={txDate}
-                  onChange={(e) => setTxDate(e.target.value)}
-                  max={todayLocal()}
-                  className="w-full"
-                />
-              </div>
+                <div>
+                  <label htmlFor="addcrypto-ticker" className="mb-1.5 block text-sm text-gray-500 dark:text-slate-400">
+                    {t("ticker")}
+                  </label>
+                  <input
+                    id="addcrypto-ticker"
+                    type="text"
+                    value={ticker}
+                    onChange={(e) => setTicker(e.target.value)}
+                    placeholder="BTC-USD / SOL-EUR"
+                    className="w-full"
+                  />
+                </div>
 
-              <div>
-                <label htmlFor="addcrypto-quantity" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("cryptoQuantity")}</label>
-                <input
-                  id="addcrypto-quantity"
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder={t("cryptoEnterQuantity")}
-                  min="0"
-                  step="any"
-                  className="w-full"
-                />
-              </div>
+                <div>
+                  <label htmlFor="addcrypto-date" className="mb-1.5 block text-sm text-gray-500 dark:text-slate-400">
+                    {t("transactionDate")}
+                  </label>
+                  <input
+                    id="addcrypto-date"
+                    type="date"
+                    value={txDate}
+                    onChange={(e) => setTxDate(e.target.value)}
+                    max={todayLocal()}
+                    className="w-full"
+                  />
+                </div>
 
-              <div>
-                <label htmlFor="addcrypto-price" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("purchasePrice")} (USD)</label>
-                <input
-                  id="addcrypto-price"
-                  type="number"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder={t("enterPrice")}
-                  min="0"
-                  step="any"
-                  className="w-full"
-                />
+                <div>
+                  <label htmlFor="addcrypto-quantity" className="mb-1.5 block text-sm text-gray-500 dark:text-slate-400">
+                    {t("cryptoQuantity")}
+                  </label>
+                  <input
+                    id="addcrypto-quantity"
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    placeholder={t("cryptoEnterQuantity")}
+                    min="0"
+                    step="any"
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="addcrypto-price" className="mb-1.5 block text-sm text-gray-500 dark:text-slate-400">
+                    {t("purchasePrice")} ({pairCcyLabel})
+                  </label>
+                  <input
+                    id="addcrypto-price"
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder={t("enterPrice")}
+                    min="0"
+                    step="any"
+                    className="w-full"
+                  />
+                </div>
+
+                <p className="text-xs text-gray-400 dark:text-slate-500">{t("cryptoDisclaimer")}</p>
               </div>
             </div>
 
-            <p className="text-xs text-gray-400 dark:text-slate-500 mt-4">
-              {t("cryptoDisclaimer")}
-            </p>
-
-            <div className="flex justify-end gap-3 mt-4">
-              <button onClick={onClose} className="btn-secondary">
+            <div
+              className="flex flex-shrink-0 gap-3 border-t border-gray-100 px-5 pt-3 dark:border-slate-700 sm:px-6 sm:py-4"
+              style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+            >
+              <button type="button" onClick={onClose} className="btn-secondary min-h-11 flex-1 sm:flex-none">
                 {t("cancel")}
               </button>
               <button
+                type="button"
                 onClick={handleSubmit}
                 disabled={!coinName.trim() || !ticker.trim() || !quantity || !price || submitting}
-                className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn-primary min-h-11 flex-1 disabled:cursor-not-allowed disabled:opacity-40 sm:ml-auto sm:flex-none"
               >
                 {submitting ? t("adding") : t("addToPortfolio")}
               </button>
