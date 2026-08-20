@@ -76,7 +76,6 @@ function fallbackDraft(
   facts: ThesisFact[],
 ): ThesisDraft | null {
   const d1 = facts.find((f) => f.field_id === "EQ:D1");
-  const e1 = facts.find((f) => f.field_id === "EQ:E1");
   const gaps: string[] = [];
   if (d1?.value == null) gaps.push("EQ:D1 missing — cannot bind a cash-conversion kill criterion.");
   const kill =

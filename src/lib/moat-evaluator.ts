@@ -74,7 +74,6 @@ function scoreEarningsConsistency(income: FundamentalData<IncomeStatementReport>
   else if (consistency >= 0.4) score = MAX_SCORE_PER_CRITERION * 0.3;
 
   const status = statusFromScore(score, MAX_SCORE_PER_CRITERION);
-  const growthLabel = growth > 0 ? `+${growth.toFixed(0)}%` : `${growth.toFixed(0)}%`;
 
   return {
     key: "earnings_consistency",

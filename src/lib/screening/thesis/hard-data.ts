@@ -57,7 +57,7 @@ const runThesisHardDataStep: StepHandler = async (
   const asOf = new Date().toISOString();
   let candidates: HardDataCandidate[] = [];
   let universeSize = 0;
-  let gaps: string[] = [];
+  const gaps: string[] = [];
 
   if (brief.intent === "analyze" && brief.focusTicker) {
     const seed = await seedFocusCandidate(brief.focusTicker, {

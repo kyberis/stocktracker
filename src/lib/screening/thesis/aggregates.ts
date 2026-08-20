@@ -5,7 +5,6 @@ import {
 import {
   registerHandler,
   type HandlerContext,
-  type HandlerResult,
   type StepHandler,
 } from "@/lib/screening/orchestrator/handlers";
 import {
