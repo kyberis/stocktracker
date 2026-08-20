@@ -17,6 +17,7 @@ import type {
 import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
 import { getCachedHistorical, cacheHistoricalPoints } from "@/lib/db/historical-cache";
 import { parseQuoteTimestamp } from "@/lib/quote-time";
+import { augmentCryptoSearchWithEurPairs } from "@/lib/crypto-search-eur";
 
 const yahooFinance = new YahooFinance();
 
@@ -120,7 +121,7 @@ export class YahooProvider implements StockDataProvider {
       ok = true;
       const allowedTypes = new Set(["EQUITY", "ETF", "MUTUALFUND"]);
       if (options?.includeCrypto) allowedTypes.add("CRYPTOCURRENCY");
-      return (result.quotes || [])
+      const mapped = (result.quotes || [])
         .filter(
           (q): q is typeof q & { symbol: string; quoteType: string } =>
             "symbol" in q &&
@@ -137,6 +138,10 @@ export class YahooProvider implements StockDataProvider {
           exchange: String(("exchange" in q ? q.exchange : "") || ""),
           quoteType: String(q.quoteType || ""),
         }));
+      // Yahoo usually lists USD crypto pairs; surface EUR siblings for EU users (e.g. SOL-EUR).
+      return options?.includeCrypto
+        ? augmentCryptoSearchWithEurPairs(mapped, query)
+        : mapped;
     } finally {
       end();
       providerRequestsTotal.inc({ provider: "yahoo", operation: "search", status: ok ? "success" : "error" });

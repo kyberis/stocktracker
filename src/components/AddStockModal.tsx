@@ -149,22 +149,22 @@ export default function AddStockModal({ isOpen, onClose, initialAssetType }: Add
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm max-sm:hidden" onClick={onClose} aria-hidden="true" />
       <div
         ref={focusTrapRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="addstock-modal-title"
-        className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 w-full max-h-[100dvh] sm:max-h-[90vh] sm:max-w-md sm:mx-4 sm:rounded-2xl rounded-t-2xl shadow-xl flex flex-col"
+        className="relative flex h-[100dvh] w-full flex-col border-gray-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:mx-4 sm:h-auto sm:max-h-[90vh] sm:max-w-md sm:rounded-2xl sm:border"
       >
-        <div className="px-5 pt-5 pb-3 sm:px-6 sm:pt-6 sm:pb-4 border-b border-gray-100 dark:border-slate-700 flex-shrink-0">
+        <div className="flex-shrink-0 border-b border-gray-100 px-5 pb-3 pt-[max(1.25rem,env(safe-area-inset-top))] dark:border-slate-700 sm:px-6 sm:pb-4 sm:pt-6">
           <div className="flex items-center justify-between">
             <h2 id="addstock-modal-title" className="text-lg font-bold text-gray-900 dark:text-white">
               {fundMode ? t("addFund") : t("addStock")}
             </h2>
-            <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" aria-label={t("close")}>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            <button type="button" onClick={onClose} className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300" aria-label={t("close")}>
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
         </div>
@@ -367,14 +367,18 @@ export default function AddStockModal({ isOpen, onClose, initialAssetType }: Add
               </div>
             </div>
 
-            <div className="flex gap-3 px-5 py-3 sm:px-6 sm:py-4 border-t border-gray-100 dark:border-slate-700 flex-shrink-0">
-              <button onClick={onClose} className="btn-secondary flex-1 sm:flex-none">
+            <div
+              className="flex flex-shrink-0 gap-3 border-t border-gray-100 px-5 pt-3 dark:border-slate-700 sm:px-6 sm:py-4"
+              style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+            >
+              <button type="button" onClick={onClose} className="btn-secondary min-h-11 flex-1 sm:flex-none">
                 {t("cancel")}
               </button>
               <button
+                type="button"
                 onClick={handleSubmit}
                 disabled={!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || parseFloat(shares) <= 0 || !price || !assetType || successToast}
-                className="btn-primary flex-1 sm:flex-none sm:ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn-primary min-h-11 flex-1 disabled:cursor-not-allowed disabled:opacity-40 sm:ml-auto sm:flex-none"
               >
                 {t("addToPortfolio")}
               </button>

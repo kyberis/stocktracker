@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.184",
+    date: "2026-08-20",
+    title: "Mobile add crypto, SOL-EUR, Warren on home",
+    titleTranslations: {
+      es: "Añadir cripto en móvil, SOL-EUR y Warren en inicio",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Add Crypto on mobile is a full-screen page with a sticky footer so Add to portfolio stays above the browser chrome instead of a clipped centered modal.",
+        translations: {
+          es: "Añadir Cripto en móvil es una página a pantalla completa con pie fijo para que Agregar al portafolio quede por encima de la barra del navegador, no un modal centrado recortado.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Crypto search now lists euro pairs such as SOL-EUR alongside USD quotes so Solana in euros is selectable.",
+        translations: {
+          es: "La búsqueda de cripto ahora lista pares en euros como SOL-EUR junto a las cotizaciones en USD para poder elegir Solana en euros.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Warren’s chat trigger appears on the mobile home feed again (it was only in the desktop rail).",
+        translations: {
+          es: "El acceso al chat de Warren vuelve a aparecer en el inicio móvil (antes solo estaba en la columna de escritorio).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.183",
     date: "2026-08-20",
     title: "Checklist vs Thesis is on in screening",

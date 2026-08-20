@@ -41,7 +41,7 @@ Own the **daily check-in homepage** experience that merges Classic portfolio dep
 8. Portfolio News (compact feed)
 9. Rail: Allocation · Warren nudge · Claude MCP CTA · digests
 
-Empty (no holdings): reuse Classic `EmptyPortfolio` (import + add). Mobile: Allocation above holdings; MCP after holdings.
+Empty (no holdings): reuse Classic `EmptyPortfolio` (import + add). Mobile: Allocation above holdings; WarrenTrigger + MCP after holdings.
 
 Related: [home-portfolio-recommendations](../../knowledge/product-specs/home-portfolio-recommendations.md), `HomeRecommendationCard`, `/api/home-v2/recommendations`, `/recommendations/diversify`.
 
