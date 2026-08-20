@@ -48,7 +48,7 @@ const CRITERIA_KEYS = [
   { key: "grossMargin", label: "Gross Margin" },
   { key: "netMargin", label: "Net Margin" },
   { key: "retainedEarnings", label: "Retained Earn." },
-  { key: "returnOnEquity", label: "ROE" },
+  { key: "returnOnEquity", label: "ROIC" },
   { key: "debtSustainability", label: "Debt" },
   { key: "capexEfficiency", label: "CapEx" },
   { key: "productDurability", label: "Durability" },

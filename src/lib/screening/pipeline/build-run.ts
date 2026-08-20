@@ -7,6 +7,16 @@ import {
   type ScreeningRunStep,
   type ScreeningRunStatus,
 } from "@/lib/screening/schemas";
+import {
+  THESIS_AGGREGATE_KINDS,
+  THESIS_COMPILER_KIND,
+  THESIS_EVALUATE_KIND,
+  THESIS_FANOUT_KINDS,
+  THESIS_HARD_DATA_KIND,
+  THESIS_QA_KIND,
+  THESIS_UI_STEP_ORDER,
+} from "@/lib/screening/thesis/kinds";
+import { isThesisPipelineKind } from "@/lib/screening/pipeline-kind";
 
 /**
  * All agent kinds the UI expects to see in the progress timeline. Any kind not
@@ -109,12 +119,21 @@ const CORE_PENDING_KINDS = new Set([
  * Placeholder timeline shown before the first poll returns — Intake done,
  * research agents + Compiler + QA pending.
  */
-export function buildOptimisticRun(runId: string): ScreeningRun {
-  const steps: ScreeningRunStep[] = UI_STEP_ORDER.map((kind): ScreeningRunStep => {
+export function buildOptimisticRun(
+  runId: string,
+  pipelineKind: "checklist" | "thesis" = "checklist",
+): ScreeningRun {
+  const order = isThesisPipelineKind(pipelineKind)
+    ? THESIS_UI_STEP_ORDER
+    : UI_STEP_ORDER;
+  const pendingKinds = isThesisPipelineKind(pipelineKind)
+    ? new Set(THESIS_UI_STEP_ORDER.filter((k) => k !== "intake"))
+    : CORE_PENDING_KINDS;
+  const steps: ScreeningRunStep[] = order.map((kind): ScreeningRunStep => {
     if (kind === "intake") {
       return { agentKind: kind, status: "done", elapsedSeconds: 0 };
     }
-    if (CORE_PENDING_KINDS.has(kind)) {
+    if (pendingKinds.has(kind)) {
       return { agentKind: kind, status: "pending", elapsedSeconds: null };
     }
     return { agentKind: kind, status: "skipped", elapsedSeconds: null };
@@ -131,6 +150,7 @@ export function buildOptimisticRun(runId: string): ScreeningRun {
     reportReady: false,
     lastActivityAt: now,
     stallState: "ok",
+    pipelineKind,
   };
 }
 
@@ -202,12 +222,16 @@ export function buildRunResponse(
   dbSteps: ScreeningStepRow[],
   options: BuildRunOptions = {},
 ): ScreeningRun {
+  const thesis = isThesisPipelineKind(row.pipelineKind);
+  const order = thesis ? THESIS_UI_STEP_ORDER : UI_STEP_ORDER;
+
   const byKind = new Map<string, ScreeningStepRow[]>();
   for (const s of dbSteps) {
     if (
       s.agentKind === "aggregate_ir_business" ||
       s.agentKind === "aggregate_web_sentiment" ||
-      s.agentKind === "aggregate_technicals"
+      s.agentKind === "aggregate_technicals" ||
+      THESIS_AGGREGATE_KINDS.has(s.agentKind)
     ) {
       continue;
     }
@@ -216,7 +240,8 @@ export function buildRunResponse(
     byKind.set(s.agentKind, list);
   }
 
-  const hardDataRows = byKind.get("hard_data") ?? [];
+  const hardKind = thesis ? THESIS_HARD_DATA_KIND : "hard_data";
+  const hardDataRows = byKind.get(hardKind) ?? [];
   const hardDataStatus = hardDataRows[0]?.status;
   const hardDataActive =
     !row.mockedPipeline &&
@@ -224,8 +249,6 @@ export function buildRunResponse(
       hardDataStatus === "running" ||
       hardDataRows.length === 0);
 
-  // Once v2 fan-out inserts rows, those kinds appear in byKind. While Hard Data
-  // is still active (before fan-out), show research agents as pending.
   const v2KindsPendingWhileHardData = [
     "web_sentiment",
     "technicals",
@@ -233,22 +256,25 @@ export function buildRunResponse(
     "risk",
   ] as const;
 
-  const steps: ScreeningRunStep[] = UI_STEP_ORDER.map((kind): ScreeningRunStep => {
+  const steps: ScreeningRunStep[] = order.map((kind): ScreeningRunStep => {
     const rows = byKind.get(kind) ?? [];
     if (rows.length === 0) {
       if (kind === "intake") {
         return { agentKind: kind, status: "done", elapsedSeconds: 0 };
       }
-      // Real pipeline: IR / Compiler expected after Hard Data.
-      if (kind === "ir_business" && hardDataActive) {
-        return { agentKind: kind, status: "pending", elapsedSeconds: null };
-      }
-      if (kind === "compiler" && hardDataActive) {
+      if (
+        (kind === "ir_business" ||
+          kind === THESIS_UI_STEP_ORDER[2] ||
+          kind === "compiler" ||
+          kind === THESIS_COMPILER_KIND) &&
+        hardDataActive
+      ) {
         return { agentKind: kind, status: "pending", elapsedSeconds: null };
       }
       if (
         hardDataActive &&
-        (v2KindsPendingWhileHardData as readonly string[]).includes(kind)
+        ((v2KindsPendingWhileHardData as readonly string[]).includes(kind) ||
+          (thesis && kind !== "intake" && kind !== THESIS_HARD_DATA_KIND))
       ) {
         return { agentKind: kind, status: "pending", elapsedSeconds: null };
       }
@@ -263,6 +289,7 @@ export function buildRunResponse(
       kind === "ir_business" ||
       kind === "web_sentiment" ||
       kind === "technicals" ||
+      THESIS_FANOUT_KINDS.has(kind) ||
       rows.length > 1
     ) {
       return synthesiseFanOutStep(kind, rows);
@@ -312,20 +339,29 @@ export function buildRunResponse(
     status = "queued";
   }
 
-  const compilerDone = active.find((s) => s.agentKind === "compiler")?.status === "done";
-  const evaluateStep = active.find((s) => s.agentKind === "compiler_evaluate");
+  const compilerKind = thesis ? THESIS_COMPILER_KIND : "compiler";
+  const evaluateKind = thesis ? THESIS_EVALUATE_KIND : "compiler_evaluate";
+  const qaKind = thesis ? THESIS_QA_KIND : "qa";
+  const compilerDone = active.find((s) => s.agentKind === compilerKind)?.status === "done";
+  const evaluateStep = active.find((s) => s.agentKind === evaluateKind);
   const evaluateDone =
     !evaluateStep ||
     evaluateStep.status === "done" ||
     evaluateStep.status === "failed";
   const researchStep = active.find((s) => s.agentKind === "shortlist_research");
   const researchDone =
+    thesis ||
     !researchStep ||
     researchStep.status === "done" ||
     researchStep.status === "failed";
 
   let reportReady = compilerDone && researchDone && evaluateDone;
-  if (options.qaGating) {
+  if (thesis) {
+    const qaStep = active.find((s) => s.agentKind === qaKind);
+    const qaDone =
+      qaStep?.status === "done" || qaStep?.status === "failed";
+    reportReady = Boolean(compilerDone && evaluateDone && qaDone);
+  } else if (options.qaGating) {
     // QA-gated: report is ready only when the latest verdict passes (or
     // pass_with_degradation after the round cap). null verdict means still
     // running -> not ready.
@@ -355,6 +391,7 @@ export function buildRunResponse(
     reportReady,
     lastActivityAt,
     stallState: stallStateForActivity(status, lastActivityAt),
+    pipelineKind: row.pipelineKind ?? "checklist",
     qa: options.qaGating
       ? {
           gating: true,

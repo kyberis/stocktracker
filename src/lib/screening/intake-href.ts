@@ -1,13 +1,18 @@
 import type { ScreeningBrief, ScreeningIntent } from "./schemas";
+import {
+  parseScreeningPipelineKind,
+  type ScreeningPipelineKind,
+} from "./pipeline-kind";
 
 /**
  * Build the intake URL so Back from the run/report returns to the agent with
- * the same intent and sector hints the user started from.
+ * the same intent, sector hints, and pipeline mode the user started from.
  */
 export function buildIntakeHref(opts: {
   intent?: ScreeningIntent | string | null;
   includeSectors?: string[] | null;
   excludeSectors?: string[] | null;
+  pipeline?: ScreeningPipelineKind | string | null;
 }): string {
   const search = new URLSearchParams();
   const intent =
@@ -21,6 +26,9 @@ export function buildIntakeHref(opts: {
   const exclude = (opts.excludeSectors ?? []).filter(Boolean).slice(0, 5);
   if (include.length) search.set("include", include.join(","));
   if (exclude.length) search.set("exclude", exclude.join(","));
+  if (opts.pipeline) {
+    search.set("pipeline", parseScreeningPipelineKind(opts.pipeline));
+  }
   return `/screening/intake?${search.toString()}`;
 }
 
@@ -30,6 +38,7 @@ export function buildIntakeHrefFromBrief(brief: ScreeningBrief | null | undefine
     intent: brief.intent,
     includeSectors: brief.includeSectors,
     excludeSectors: brief.excludeSectors,
+    pipeline: brief.pipelineKind,
   });
 }
 

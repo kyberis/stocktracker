@@ -30,8 +30,8 @@ The idea is simple: Warren Buffett's investment framework, applied at scale. Ins
 → Earnings Consistency (10yr trend)
 → Gross Margin (≥40% benchmark)
 → Net Margin (≥20% benchmark)
-→ Retained Earnings growth
-→ Return on Equity
+→ Retained Earnings (or FCF-funded buybacks)
+→ Return on Invested Capital
 → Debt Sustainability (<4yr payoff)
 → CapEx Efficiency (<25% of earnings)
 → Product Durability
@@ -50,7 +50,7 @@ trefolio.com`,
 ✅ Gross Margin — 59% (benchmark: 40%)
 ✅ Net Margin — 23% (benchmark: 20%)
 ✅ Retained Earnings — growing
-✅ ROE — high capital efficiency
+✅ ROIC — high capital efficiency
 ✅ Debt — sustainable, <4yr payoff
 ✅ CapEx — only 9% of earnings
 ✅ Product Durability — same product for 130 years
@@ -69,13 +69,11 @@ Score it yourself → trefolio.com`,
 
 ✅ Gross Margin: ~45%
 ✅ Net Margin: ~26%
-✅ ROE: extremely high
+✅ ROIC: the operating return on capital actually used
 ✅ CapEx: under 25% of earnings
-⚠️ Retained Earnings: declining (massive buybacks)
+✅ Buybacks: FCF-funded (retained earnings fall as a bookkeeping entry)
 
-The retained earnings dip isn't a red flag when you adjust for $100B+ in buybacks. Buffett himself called Apple his best investment.
-
-Our framework flags the buyback adjustment automatically.
+A triple-digit ROE after shrinking equity is not proof of a moat. We score ROIC instead, and we do not double-count buybacks as an RE failure.
 
 680+ stocks scored → trefolio.com`,
   },

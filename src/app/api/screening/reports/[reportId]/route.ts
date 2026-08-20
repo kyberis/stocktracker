@@ -19,6 +19,8 @@ import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import { backfillHardDataOutputJson } from "@/lib/screening/data/enrich-candidates";
 import { backfillTechnicalsAggregateOutputJson } from "@/lib/screening/data/backfill-technicals";
 import { composeScreeningReport } from "@/lib/screening/pipeline/build-report";
+import { composeThesisReport } from "@/lib/screening/thesis/compose-report";
+import { isThesisPipelineKind } from "@/lib/screening/pipeline-kind";
 import { MAX_QA_ROUNDS } from "@/lib/screening/qa/rerun";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +77,49 @@ export const GET = withMetrics(
       listScreeningAgentOutputsByRun(row.id, session.userId),
       listStepsForRun(row.id),
     ]);
+
+    if (isThesisPipelineKind(row.pipelineKind)) {
+      const latestByKind = new Map<string, (typeof outputs)[number]>();
+      for (const o of outputs) {
+        const prev = latestByKind.get(o.agentKind);
+        if (!prev || Date.parse(o.createdAt) >= Date.parse(prev.createdAt)) {
+          latestByKind.set(o.agentKind, o);
+        }
+      }
+      if (!latestByKind.get("thesis_evaluate")) {
+        return NextResponse.json(
+          { error: "Report not ready", pendingAgentKinds: ["thesis_evaluate"] },
+          { status: 409 },
+        );
+      }
+      let locale = "en";
+      try {
+        const brief = JSON.parse(row.briefJson) as { locale?: string };
+        if (typeof brief.locale === "string") locale = brief.locale;
+      } catch {
+        // keep en
+      }
+      const report = composeThesisReport({
+        runId: row.id,
+        locale,
+        outputs,
+      });
+      if (!report) {
+        return NextResponse.json(
+          { error: "Report shape invalid" },
+          { status: 500 },
+        );
+      }
+      return NextResponse.json({
+        report,
+        pipelineKind: "thesis",
+        mocked: false,
+        cost: {
+          costUsd: row.costUsd,
+          breakdown: row.costBreakdown,
+        },
+      });
+    }
 
     // Pick the LATEST row per agent kind so retries don't collide.
     const latestByKind = new Map<string, (typeof outputs)[number]>();
@@ -232,6 +277,7 @@ export const GET = withMetrics(
 
     return NextResponse.json({
       report,
+      pipelineKind: "checklist",
       mocked: false,
       cost: {
         costUsd: row.costUsd,

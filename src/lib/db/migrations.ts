@@ -4364,6 +4364,25 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 146,
+    description: "screening_runs.pipeline_kind for checklist vs thesis bake-off",
+    up: async (client: Client) => {
+      try {
+        await client.execute(
+          "ALTER TABLE screening_runs ADD COLUMN pipeline_kind TEXT NOT NULL DEFAULT 'checklist'",
+        );
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column") && !msg.includes("already exists")) {
+          console.warn("[migration 146] pipeline_kind:", msg);
+        }
+      }
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_screening_runs_pipeline_kind ON screening_runs(pipeline_kind)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

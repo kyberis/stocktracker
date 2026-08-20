@@ -46,6 +46,7 @@ vi.mock("@/lib/http/request-public-origin", () => ({
 
 import { requireScreeningAccess, requireScreeningNewRunsAllowed } from "@/lib/screening/guard";
 import { requireFeatureQuota } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { isFeatureEnabledForUser } from "@/lib/db/settings";
 import {
   createScreeningRun,
@@ -262,6 +263,72 @@ describe("POST /api/screening/runs", () => {
     );
     expect(res.status).toBe(429);
     expect(createScreeningRun).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when thesis is requested while the flag is off", async () => {
+    vi.mocked(isFeatureEnabledForUser).mockImplementation(async (flag) => {
+      return flag !== "screening_thesis_pipeline_enabled";
+    });
+    const { POST } = await import("./route");
+    const res = await POST(
+      new NextRequest("http://localhost/api/screening/runs", {
+        method: "POST",
+        body: JSON.stringify({ ...validBrief, pipelineKind: "thesis" }),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toBe("thesis_pipeline_disabled");
+    expect(createScreeningRun).not.toHaveBeenCalled();
+    expect(refundFeatureQuota).toHaveBeenCalled();
+  });
+
+  it("queues thesis_hard_data when the thesis flag is on", async () => {
+    vi.mocked(isFeatureEnabledForUser).mockResolvedValue(true);
+    vi.mocked(createScreeningRun).mockResolvedValue({
+      id: "thesis-run-1",
+      userId: "user-1",
+      status: "authorized",
+      intent: "explore",
+      briefJson: JSON.stringify({ ...validBrief, pipelineKind: "thesis" }),
+      mockedPipeline: false,
+      pipelineKind: "thesis",
+      costUsd: 0,
+      costJson: "",
+      costBreakdown: {
+        currency: "USD",
+        llmUsd: 0,
+        tavilySearchUsd: 0,
+        tavilyExtractUsd: 0,
+        tavilyResearchUsd: 0,
+        tavilySearchCredits: 0,
+        tavilyExtractCredits: 0,
+        tavilyResearchCredits: 0,
+        llmTokensIn: 0,
+        llmTokensOut: 0,
+      },
+      createdAt: "2026-08-19T00:00:00.000Z",
+      updatedAt: "2026-08-19T00:00:00.000Z",
+    });
+    vi.mocked(insertSteps).mockResolvedValue([]);
+    vi.mocked(linkPendingAgentOutputToRun).mockResolvedValue(1);
+
+    const { POST } = await import("./route");
+    const res = await POST(
+      new NextRequest("http://localhost/api/screening/runs", {
+        method: "POST",
+        body: JSON.stringify({ ...validBrief, pipelineKind: "thesis" }),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    expect(res.status).toBe(201);
+    expect(insertSteps).toHaveBeenCalledWith(
+      "thesis-run-1",
+      expect.arrayContaining([
+        expect.objectContaining({ agentKind: "thesis_hard_data" }),
+      ]),
+    );
   });
 });
 

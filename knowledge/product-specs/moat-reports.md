@@ -32,8 +32,15 @@ For each covered ticker, we produce a detailed moat report (grades across intang
 - `MoatEvaluationPicker` lets the user adjust weights.
 
 ## 7. Business logic
-- Grades produced by the model against a strict rubric.
-- Cached per ticker; TTL ≈ 30 days with staleness-based refresh.
+- Quantitative engine: [`src/lib/moat-evaluator.ts`](../../src/lib/moat-evaluator.ts)
+  scores eight criteria. Returns use **ROIC** (NOPAT / invested capital), not
+  ROE — buybacks shrink equity and can push ROE above 100% without improving
+  the operating engine. Declining retained earnings under buybacks is scored
+  as FCF-funded capital return, not a second quality failure.
+- Screening thesis wraps the cached moat score as `calc:moat_score_pct`
+  (input pillar, not a verdict). Do not reimplement the evaluator there.
+- Narrative grades produced by the model against a rubric; cached per ticker;
+  TTL ≈ 30 days with staleness-based refresh.
 
 ## 8. External dependencies
 - Alpha Vantage / FMP fundamentals, OpenAI.

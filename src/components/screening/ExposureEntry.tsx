@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
@@ -12,6 +12,8 @@ import {
 } from "@/lib/homepage/build-portfolio-recommendations";
 import { SCREENING_MAX_SCORE } from "@/lib/screening/criteria";
 import { fill, type ScreeningCopy } from "@/lib/screening/copy";
+import { buildIntakeHref } from "@/lib/screening/intake-href";
+import type { ScreeningPipelineKind } from "@/lib/screening/pipeline-kind";
 import type { ScreeningEntryVariant } from "@/lib/screening/schemas";
 import {
   buildEntryBackHomeMetadata,
@@ -22,6 +24,7 @@ import {
 import { useTrack } from "@/lib/use-track";
 import { RecentScreensList } from "./RecentScreensList";
 import { ScreeningDisclaimer } from "./ScreeningNotices";
+import { ScreeningPipelineToggle } from "./ScreeningPipelineToggle";
 import { useScreeningCopy } from "./use-screening-copy";
 
 const OVEREXPOSURE_PCT = REC_THRESHOLDS.topSectorPct;
@@ -33,21 +36,26 @@ function intakeHref(params: {
   intent: "rebalance" | "explore" | "analyze";
   include?: string[];
   exclude?: string[];
+  pipeline: ScreeningPipelineKind;
 }): string {
-  const search = new URLSearchParams({ intent: params.intent });
-  if (params.include?.length) search.set("include", params.include.join(","));
-  if (params.exclude?.length) search.set("exclude", params.exclude.join(","));
-  return `/screening/intake?${search.toString()}`;
+  return buildIntakeHref({
+    intent: params.intent,
+    includeSectors: params.include,
+    excludeSectors: params.exclude,
+    pipeline: params.pipeline,
+  });
 }
 
 function AnalyzeOptionCard({
   entry,
   variant,
   track,
+  pipeline,
 }: {
   entry: EntryCopy;
   variant: ScreeningEntryVariant;
   track: TrackEntryFn;
+  pipeline: ScreeningPipelineKind;
 }) {
   const meta = buildEntryCtaMetadata({
     intent: "analyze",
@@ -70,7 +78,7 @@ function AnalyzeOptionCard({
         <Chip tone="info">{entry.analyzeChipExchange}</Chip>
       </div>
       <Link
-        href={intakeHref({ intent: "analyze" })}
+        href={intakeHref({ intent: "analyze", pipeline })}
         className="btn-secondary mt-3 inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
         onClick={() => {
           track("screening_entry_cta_clicked", meta);
@@ -113,12 +121,14 @@ function ExploreOptionCard({
   primary,
   variant,
   track,
+  pipeline,
 }: {
   entry: EntryCopy;
   eyebrow: string;
   primary: boolean;
   variant: ScreeningEntryVariant;
   track: TrackEntryFn;
+  pipeline: ScreeningPipelineKind;
 }) {
   const meta = buildEntryCtaMetadata({
     intent: "explore",
@@ -141,7 +151,7 @@ function ExploreOptionCard({
         <Chip tone="info">{entry.exploreChipPreset}</Chip>
       </div>
       <Link
-        href={intakeHref({ intent: "explore" })}
+        href={intakeHref({ intent: "explore", pipeline })}
         className={`${primary ? "btn-primary" : "btn-secondary"} mt-3 inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold`}
         onClick={() => {
           track("screening_entry_cta_clicked", meta);
@@ -163,6 +173,7 @@ function RebalanceOptionCard({
   mode,
   variant,
   track,
+  pipeline,
 }: {
   entry: EntryCopy;
   eyebrow: string;
@@ -172,6 +183,7 @@ function RebalanceOptionCard({
   mode: "overexposed" | "balanced";
   variant: ScreeningEntryVariant;
   track: TrackEntryFn;
+  pipeline: ScreeningPipelineKind;
 }) {
   const body =
     mode === "balanced"
@@ -222,6 +234,7 @@ function RebalanceOptionCard({
           intent: "rebalance",
           include: includeSectors,
           exclude: excludeSectors,
+          pipeline,
         })}
         className={`${primary ? "btn-primary" : "btn-secondary"} mt-3 inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold`}
         onClick={() => {
@@ -241,6 +254,8 @@ export function ExposureEntry() {
   const track = useTrack();
   const { user } = useAuth();
   const newRunsEnabled = useFeatureFlag("screening_new_runs_enabled");
+  const thesisEnabled = useFeatureFlag("screening_thesis_pipeline_enabled");
+  const [pipeline, setPipeline] = useState<ScreeningPipelineKind>("checklist");
   const { holdings, quotes, exchangeRates, isInitializing } = usePortfolio();
   const viewedKeyRef = useRef<string | null>(null);
 
@@ -404,6 +419,9 @@ export function ExposureEntry() {
 
       {newRunsEnabled ? (
         <>
+          {thesisEnabled ? (
+            <ScreeningPipelineToggle value={pipeline} onChange={setPipeline} />
+          ) : null}
           <h2 className="mt-6 text-base font-bold text-[color:var(--foreground)]">{optionsTitle}</h2>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {isEmpty ? (
@@ -413,6 +431,7 @@ export function ExposureEntry() {
                 primary
                 variant={variant}
                 track={track}
+                pipeline={thesisEnabled ? pipeline : "checklist"}
               />
             ) : isBalanced ? (
               <>
@@ -422,6 +441,7 @@ export function ExposureEntry() {
                   primary
                   variant={variant}
                   track={track}
+                  pipeline={thesisEnabled ? pipeline : "checklist"}
                 />
                 <RebalanceOptionCard
                   entry={copy.entry}
@@ -432,6 +452,7 @@ export function ExposureEntry() {
                   mode="balanced"
                   variant={variant}
                   track={track}
+                  pipeline={thesisEnabled ? pipeline : "checklist"}
                 />
               </>
             ) : (
@@ -445,6 +466,7 @@ export function ExposureEntry() {
                   mode="overexposed"
                   variant={variant}
                   track={track}
+                  pipeline={thesisEnabled ? pipeline : "checklist"}
                 />
                 <ExploreOptionCard
                   entry={copy.entry}
@@ -452,10 +474,16 @@ export function ExposureEntry() {
                   primary={false}
                   variant={variant}
                   track={track}
+                  pipeline={thesisEnabled ? pipeline : "checklist"}
                 />
               </>
             )}
-            <AnalyzeOptionCard entry={copy.entry} variant={variant} track={track} />
+            <AnalyzeOptionCard
+              entry={copy.entry}
+              variant={variant}
+              track={track}
+              pipeline={thesisEnabled ? pipeline : "checklist"}
+            />
           </div>
         </>
       ) : (

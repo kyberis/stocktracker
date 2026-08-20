@@ -29,6 +29,7 @@ ambiguous) via search, then runs the same research agents on that one listing
   - `screening_ir_serper_jina_enabled` — prototype IR discovery/extract via Serper Search + Jina EU Reader (HTML/PDF), Tavily Search/Extract fallback; requires `SERPER_API_KEY` + `JINA_API_KEY`; off by default
   - `screening_analyze_force_serper_jina_enabled` — Analyze IR uses Serper + Jina only (no Tavily fallback); off by default
   - `screening_estebaranz_eval_enabled` — post-shortlist `compiler_evaluate` step applies the trefolio value-investing checklist to ≤5 shortlist names; on by default (and in prod). Flag key is historical; product copy always says trefolio.
+  - `screening_thesis_pipeline_enabled` — bake-off: shows a **Cribado / Checklist vs Tesis** toggle on `/screening` and intake. Off by default. Off → all runs are checklist. On → the user chooses per run (`pipeline_kind` on `screening_runs`). Thesis requires `screening_pipeline_real_enabled`. Not an A/B experiment (no sticky assignment). Informational only — not investment advice.
   - `screening_dev_lab_enabled` — Dev agent-log button for non-admins
 - **Health:** green — Intake (+ sample-conversation pilot) + Hard Data + IR/Web/PC/Risk/Technicals (v2) + optional shortlist Research + Compiler + QA (flag on in prod) + per-run variable cost ledger
 - **Owning skill:** [`.cursor/skills/engineer-tools/SKILL.md`](../../.cursor/skills/engineer-tools/SKILL.md)
@@ -56,6 +57,7 @@ ambiguous) via search, then runs the same research agents on that one listing
 - `screening_runs` — one row per user launch attempt. Fields: `id`, `user_id`
   (`ON DELETE CASCADE`), `status` (`draft | needs_clarification | rejected_infeasible | authorized | running | completed`),
   `intent` (`rebalance | explore | analyze`), `brief_json` (the confirmed `ScreeningBrief`),
+  `pipeline_kind` (`checklist | thesis`, default `checklist`; migration 146),
   `mocked_pipeline` (1 while the research pipeline is fixture), `created_at`,
   `updated_at`.
 - `screening_agent_outputs` — one row per agent turn. Fields: `id`, `run_id`
@@ -102,13 +104,34 @@ When v2 is off but `screening_ir_agent_enabled` is on (E4):
 
 `hard_data` → `ir_business×N` → `aggregate_ir_business` → `compiler`.
 
+### Thesis pipeline (bake-off)
+
+Temporary parallel DAG. The checklist agents above are **not** modified.
+User chooses mode in the UI (same mode for Explore / Rebalance / Analyze).
+Staff uses the same `/screening` toggle — there is no admin-only path.
+
+`thesis_hard_data` → fan-out `thesis_ir` / `thesis_web` / `thesis_technicals`
+→ aggregates → `thesis_portfolio` → `thesis_risk` → `thesis_compiler` →
+`thesis_evaluate` → `thesis_qa`.
+
+Code lives in [`src/lib/screening/thesis/`](../../src/lib/screening/thesis/).
+Shared: orchestrator, `data/` clients, cost ledger, intake chat, `screening_runs`.
+Contracts: Fact / SoftAssessment / KillCriterion / Assessment / Thesis draft
+(subset of the investment-thesis spec). `GET /api/screening/reports/[id]`
+composes `ThesisReport` when `pipeline_kind=thesis`. Verdicts are informational
+(never buy/sell/hold). Persistent Thesis objects + kill-criteria monitoring
+(spec phases 4–5) are **out of scope**.
+
+Compare by launching the same ticker twice (two `runId`s). Optional wipe:
+`npx tsx scripts/wipe-screening-old-reports.ts --dry-run`.
+
 ## 5. API surface
 
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
 | POST | `/api/screening/intake/chat` | user + flag | — | One Intake agent turn; returns `{ assistantText, agent, brief }` |
 | GET | `/api/screening/runs` | user + flag | — | Recent runs for the entry-page history list |
-| POST | `/api/screening/runs` | user + flag | — | Validates + persists the brief; mock or real pipeline |
+| POST | `/api/screening/runs` | user + flag | — | Validates + persists the brief; mock or real pipeline. `pipelineKind: thesis` with the thesis flag off → **400** `thesis_pipeline_disabled`. |
 | GET | `/api/screening/runs/[runId]` | user + flag | — | Status, steps (IR fan-out synthesised), `progressPct`, `reportReady` |
 | GET | `/api/screening/reports/[reportId]?candidates=N` | user + flag | — | Report JSON; 409 while the run is not finished |
 | POST | `/api/screening/entry-events` | user + flag | — | Dual-write analytics for the entry funnel |
@@ -125,7 +148,8 @@ the feature is not discoverable before launch. The Dev outputs route adds
 
 - Pages: `src/app/(app)/screening/**`
 - Components: `src/components/screening/` — `ExposureEntry`, `RecentScreensList`,
-  `IntakeChat`, `BriefTable`, `RunProgress`, `ScreeningReportView`, `CandidateCard`,
+  `IntakeChat`, `BriefTable`, `RunProgress`, `ScreeningReportView`, `ThesisReportView`,
+  `ScreeningPipelineToggle`, `CandidateCard`,
   `CriteriaList`, `ScreeningNotices`, `ScreeningGate`, `ScreeningEntryCta`
 - Candidate technicals include a DEGIRO-style 52-week range bar
   ([`FiftyTwoWeekRangeBar`](../../src/components/FiftyTwoWeekRangeBar.tsx)) when
@@ -329,8 +353,11 @@ API routes wrapped in `withMetrics`. Prometheus adds
   — fixture parses against the shared schema, criterion ids exist in the registry,
   scores stay within the ceiling, run progress advances and completes, brief preset
   fill and row ordering, intake script has no unresolved placeholders in either language.
-- Manual smoke: enable the flag, `/screening` → rebalance → answer through → run →
-  report renders in ~15s.
+- [`src/lib/screening/__tests__/pipeline-kind.test.ts`](../../src/lib/screening/__tests__/pipeline-kind.test.ts)
+  — thesis flag off forces checklist; POST `pipelineKind: thesis` with flag off is 400.
+- [`src/lib/screening/thesis/`](../../src/lib/screening/thesis/) unit tests — facts provenance,
+  gate fail → `watchlist_gate_failed`, kill_criteria field ids, no buy/sell, compose, QA
+  (soft score without quote is blocking).
 
 ## 15. Provider quota circuit
 
@@ -371,8 +398,19 @@ Helpers: [`src/lib/screening/provider-circuit.ts`](../../src/lib/screening/provi
   through the real Intake agent; the user still confirms and presses Run.
 - Discoverability beyond `/recommendations/diversify` (tools hub entry needs locale
   keys in all 35 files).
-- Report history (`GET /api/screening/reports`) and feedback endpoints from HLD §6.1
-  are not built yet.
+- **Thesis vs checklist bake-off** — flag `screening_thesis_pipeline_enabled` (off).
+  User picks Cribado vs Tesis on `/screening`; one pipeline will be turned off
+  after a sample (AAPL, KO, NVDA, small-cap) shows a falsifiable statement,
+  ≥1 kill criterion bound to a Fact (or an explicit gap), 0 soft scores without
+  a quote, and §10.5 verdicts. No localStorage persistence of the mode.
+- **F5 (guidance promised vs delivered)** — not in the bake-off. Probe
+  2026-08-20: `earnings`, `analyst-estimates`, and `key-metrics` are on-plan;
+  `earning-call-transcript` and `etf/holdings` return 402 (plan). Earnings
+  surprise is consensus, not company guidance. Do not invent F5 from ROE or
+  from soft “management quality”. Next slice: either upgrade FMP for
+  transcripts, or extract promised vs delivered from IR filings we already
+  fetch (`ir-site-docs`), 8–12 quarters. Re-run
+  `npx tsx scripts/probe-fmp-thesis-endpoints.ts` after a plan change.
 - **Temporary:** the `Dev — agent log` floating button on `/screening`
   ships behind admin role / dev env / `screening_dev_lab_enabled`. Remove when
   the Dev Lab at `/tools/screening/jobs/...` (E1 formal) lands.

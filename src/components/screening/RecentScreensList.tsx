@@ -98,6 +98,11 @@ export function RecentScreensList() {
                             : rs.intentExplore}
                       </span>
                       <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[color:var(--muted)]">
+                        {run.pipelineKind === "thesis"
+                          ? rs.pipelineThesis
+                          : rs.pipelineChecklist}
+                      </span>
+                      <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[color:var(--muted)]">
                         {statusLabel(run.status)}
                       </span>
                     </div>

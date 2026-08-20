@@ -43,12 +43,13 @@ const MOAT_CRITERIA = [
   {
     key: "retained_earnings",
     name: "Retained Earnings",
-    benchmark: "Growing retained earnings over time",
+    benchmark:
+      "Rising RE without buybacks; if the company repurchases shares, require FCF-funded buybacks instead of RE growth",
   },
   {
-    key: "return_on_equity",
-    name: "Return on Equity",
-    benchmark: "Consistent ROE without excessive leverage",
+    key: "return_on_invested_capital",
+    name: "Return on Invested Capital",
+    benchmark: "ROIC ≥ 15% (NOPAT / invested capital; not ROE)",
   },
   {
     key: "debt_sustainability",

@@ -165,6 +165,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "After Compiler (and optional shortlist research), run compiler_evaluate to apply the trefolio value-investing checklist to each shortlisted company. Structured card sections + grounded “data not available” rules. Requires screening_pipeline_real_enabled. On by default.",
     group: "Features",
   },
+  screening_thesis_pipeline_enabled: {
+    label: "Screening: thesis pipeline (bake-off)",
+    description:
+      "Shows a Cribado vs Tesis toggle on /screening. Tesis runs a parallel agent DAG that emits falsifiable thesis drafts (facts, gates, kill criteria). Off by default. Requires screening_pipeline_real_enabled. Informational only — not investment advice.",
+    group: "Features",
+  },
   portfolio_anomaly_agent: {
     label: "Portfolio anomaly agent",
     description:

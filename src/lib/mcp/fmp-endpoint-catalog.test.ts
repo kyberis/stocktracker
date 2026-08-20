@@ -26,6 +26,9 @@ describe("listFmpCatalog", () => {
       "news/stock",
       "senate-trades",
       "stock-peers",
+      "key-metrics",
+      "analyst-estimates",
+      "etf/holdings",
     ]) {
       expect(paths.has(p)).toBe(true);
     }
