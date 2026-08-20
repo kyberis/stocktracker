@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.187",
+    date: "2026-08-20",
+    title: "Thesis reports read as a research note, not a checklist of codes",
+    titleTranslations: {
+      es: "Las tesis se leen como una nota de investigación, no como códigos",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Thesis screening now opens with the business, what looks solid, what to watch, and a three-year outlook in plain language. Internal codes (EQ:A1) and “a gate failed” are gone. Informational only — not investment advice.",
+        translations: {
+          es: "El cribado de tesis ahora abre con el negocio, lo que encaja, lo que hay que vigilar y una mirada a tres años, en lenguaje claro. Se acaban los códigos internos (EQ:A1) y “falló una puerta”. Solo informativo, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.186",
     date: "2026-08-20",
     title: "Thesis screening uses FMP, IR and news instead of empty evidence",

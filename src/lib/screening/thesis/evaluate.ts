@@ -17,6 +17,10 @@ import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 import { screeningBriefSchema } from "@/lib/screening/schemas";
 import { fallbackThesisDraft } from "@/lib/screening/thesis/fallback-draft";
 import {
+  buildReadableThesis,
+  joinReadableThesis,
+} from "@/lib/screening/thesis/readable";
+import {
   maxConvictionForAssessment,
   scoreThesisAssessment,
 } from "@/lib/screening/thesis/score-assessment";
@@ -133,7 +137,7 @@ const runThesisEvaluateStep: StepHandler = async (
             {
               role: "system",
               content: `Write a falsifiable investment thesis draft for ${ticker}. Language: ${locale}.
-Use FACTS from FMP filings and SOFT quotes from IR / news / company profile. Do not claim there is no evidence when facts or quotes are present.
+Write for a retail investor: the business in plain words, what looks solid, what to watch, and a 36-month outlook. No internal codes (EQ:A1, EQ:D7). Use FACTS from FMP filings and SOFT quotes from IR / news / company profile.
 Never use buy/sell/hold or Spanish equivalents (comprar, vender, mantener). Kill criteria MUST use metric_field_id from FACTS (e.g. EQ:D1, EQ:E1). Premortem min 50 chars. Scenarios bull/base/bear probabilities sum to 1. Conviction 1-${cap}. If a gate failed, status=watchlist and conviction <=2.
 Street target / forward P/E is consensus, not company guidance. Call submit_draft.`,
             },
@@ -239,12 +243,27 @@ Street target / forward P/E is consensus, not company guidance. Call submit_draf
         };
       }
     }
+    const article = buildReadableThesis({
+      locale,
+      companyName: candidate?.name || ticker,
+      ticker,
+      industry: candidate?.industry,
+      businessSummary: candidate?.analysisSummary,
+      assessment,
+      facts,
+      soft,
+      draft,
+    });
+    const writeup = joinReadableThesis(article, locale).slice(0, 8000);
+    if (draft) {
+      draft = { ...draft, writeup };
+    }
     evaluations.push({
       ticker,
       companyName: candidate?.name || ticker,
       assessment,
       thesis_draft: draft,
-      narrative: draft ? `${draft.statement}\n\n${draft.premortem}` : undefined,
+      narrative: writeup,
     });
   }
 

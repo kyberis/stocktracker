@@ -210,6 +210,8 @@ export const thesisDraftSchema = z
   .object({
     ticker: z.string().min(1).max(20),
     statement: z.string().min(40).max(800),
+    /** Multi-paragraph research note. Optional so older runs still parse. */
+    writeup: z.string().max(8000).optional(),
     variant_perception: z.object({
       consensus_view: z.string().min(1).max(600),
       our_view: z.string().min(1).max(600),
@@ -350,6 +352,9 @@ export const thesisReportCardSchema = z.object({
   facts: z.array(thesisFactSchema).max(80),
   soft_assessments: z.array(thesisSoftAssessmentSchema).max(16),
   gaps: z.array(z.string().max(280)).max(16).default([]),
+  businessSummary: z.string().max(400).optional(),
+  industry: z.string().max(200).optional(),
+  narrative: z.string().max(8000).optional(),
 });
 export type ThesisReportCard = z.infer<typeof thesisReportCardSchema>;
 

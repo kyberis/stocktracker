@@ -1,12 +1,10 @@
 "use client";
 
-import type { ThesisReport, ThesisVerdict } from "@/lib/screening/thesis/schemas";
+import type { ThesisReport } from "@/lib/screening/thesis/schemas";
+import { buildReadableThesis } from "@/lib/screening/thesis/readable";
+import { fill } from "@/lib/screening/copy";
 import { AiLabel, ScreeningDisclaimer } from "./ScreeningNotices";
 import { useScreeningCopy } from "./use-screening-copy";
-
-function verdictLabel(copy: ReturnType<typeof useScreeningCopy>["copy"], v: ThesisVerdict): string {
-  return copy.thesisReport.verdicts[v] ?? v;
-}
 
 function formatFactValue(value: unknown): string {
   if (typeof value === "boolean") return value ? "yes" : "no";
@@ -35,7 +33,21 @@ export function ThesisReportView({ report }: { report: ThesisReport }) {
       </header>
 
       {report.cards.map((card) => {
-        const draft = card.thesis_draft;
+        const article = buildReadableThesis({
+          locale: report.locale,
+          companyName: card.companyName,
+          ticker: card.ticker,
+          industry: card.industry,
+          businessSummary: card.businessSummary,
+          assessment: card.assessment,
+          facts: card.facts,
+          soft: card.soft_assessments,
+          draft: card.thesis_draft,
+        });
+        const numberedFacts = card.facts
+          .filter((f) => f.value != null && typeof f.value !== "boolean")
+          .slice(0, 16);
+
         return (
           <section
             key={card.ticker}
@@ -47,108 +59,105 @@ export function ThesisReportView({ report }: { report: ThesisReport }) {
                 {card.ticker}
               </span>
             </h2>
-            <p className="mt-2 text-[13px] font-semibold text-[color:var(--foreground)]">
-              {t.verdict}: {verdictLabel(copy, card.assessment.verdict)}
-              {card.assessment.total != null
-                ? ` · ${Math.round(card.assessment.total)}`
-                : ""}
+            <p className="mt-2 text-[15px] font-semibold leading-snug text-[color:var(--foreground)]">
+              {article.headline}
             </p>
-            <ul className="mt-2 list-none space-y-1 p-0 text-[12px] text-[color:var(--muted)]">
-              {card.assessment.gates.map((g) => (
-                <li key={g.field_id}>
-                  {g.field_id}:{" "}
-                  {g.passed === true
-                    ? t.gatePass
-                    : g.passed === false
-                      ? t.gateFail
-                      : t.gateUnknown}
-                  {g.value != null ? ` (${String(g.value)})` : ""}
-                </li>
-              ))}
-            </ul>
+            {card.assessment.total != null ? (
+              <p className="mt-1 text-[12px] text-[color:var(--muted)]">
+                {fill(t.filingSnapshot, { score: Math.round(card.assessment.total) })}
+              </p>
+            ) : null}
 
-            <h3 className="mt-4 text-[13px] font-semibold text-[color:var(--foreground)]">
-              {t.facts}
+            <h3 className="mt-5 text-[13px] font-semibold text-[color:var(--foreground)]">
+              {t.sectionBusiness}
             </h3>
-            {card.facts.filter((f) => f.value != null).length === 0 ? (
-              <p className="mt-1 text-[13px] text-[color:var(--muted)]">{t.noFacts}</p>
-            ) : (
-              <ul className="mt-1 list-none space-y-1 p-0 text-[12px] text-[color:var(--foreground)]">
-                {card.facts
-                  .filter((f) => f.value != null)
-                  .slice(0, 16)
-                  .map((f) => (
+            <p className="mt-1 text-[14px] leading-relaxed text-[color:var(--foreground)]">
+              {article.business}
+            </p>
+
+            {article.strengths.length > 0 ? (
+              <>
+                <h3 className="mt-5 text-[13px] font-semibold text-[color:var(--foreground)]">
+                  {t.sectionStrengths}
+                </h3>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-[13px] text-[color:var(--foreground)]">
+                  {article.strengths.map((s) => (
+                    <li key={s.text}>{s.text}</li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+
+            {article.weaknesses.length > 0 ? (
+              <>
+                <h3 className="mt-5 text-[13px] font-semibold text-[color:var(--foreground)]">
+                  {t.sectionWeaknesses}
+                </h3>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-[13px] text-[color:var(--foreground)]">
+                  {article.weaknesses.map((s) => (
+                    <li key={s.text}>{s.text}</li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+
+            <h3 className="mt-5 text-[13px] font-semibold text-[color:var(--foreground)]">
+              {t.sectionOutlook}
+            </h3>
+            <p className="mt-1 text-[13px] leading-relaxed text-[color:var(--foreground)]">
+              {article.outlook}
+            </p>
+
+            {article.invalidation ? (
+              <>
+                <h3 className="mt-5 text-[13px] font-semibold text-[color:var(--foreground)]">
+                  {t.sectionInvalidation}
+                </h3>
+                <p className="mt-1 text-[13px] leading-relaxed text-[color:var(--foreground)]">
+                  {article.invalidation}
+                </p>
+              </>
+            ) : null}
+
+            {article.openQuestions ? (
+              <>
+                <h3 className="mt-5 text-[13px] font-semibold text-[color:var(--foreground)]">
+                  {t.sectionOpen}
+                </h3>
+                <p className="mt-1 text-[13px] leading-relaxed text-[color:var(--muted)]">
+                  {article.openQuestions}
+                </p>
+              </>
+            ) : null}
+
+            <p className="mt-4 text-[12px] text-[color:var(--muted)]">
+              {t.horizon}: {fill(t.horizonHint, { value: article.horizonMonths })}
+              {" · "}
+              {t.conviction}:{" "}
+              {fill(t.convictionHint, { value: article.conviction })}
+            </p>
+
+            {numberedFacts.length > 0 ? (
+              <details className="mt-4">
+                <summary className="cursor-pointer text-[12px] text-[color:var(--muted)]">
+                  {t.sectionNumbers}
+                </summary>
+                <ul className="mt-2 list-none space-y-1 p-0 text-[12px] text-[color:var(--foreground)]">
+                  {numberedFacts.map((f) => (
                     <li key={f.field_id}>
                       <span className="text-[color:var(--muted)]">
                         {t.factLabels[f.field_id] ?? f.field_id}:
                       </span>{" "}
                       {formatFactValue(f.value)}
-                      {f.unit ? ` ${f.unit}` : ""}
+                      {f.unit && f.unit !== "flag" && f.unit !== "ratio"
+                        ? ` ${f.unit}`
+                        : ""}
                     </li>
                   ))}
-              </ul>
-            )}
-
-            {draft ? (
-              <>
-                <h3 className="mt-4 text-[13px] font-semibold text-[color:var(--foreground)]">
-                  {t.statement}
-                </h3>
-                <p className="mt-1 text-[14px] text-[color:var(--foreground)]">{draft.statement}</p>
-                <h3 className="mt-4 text-[13px] font-semibold text-[color:var(--foreground)]">
-                  {t.variant}
-                </h3>
-                <p className="mt-1 text-[13px] text-[color:var(--muted)]">
-                  <strong>{t.consensus}:</strong> {draft.variant_perception.consensus_view}
-                </p>
-                <p className="mt-1 text-[13px] text-[color:var(--muted)]">
-                  <strong>{t.ourView}:</strong> {draft.variant_perception.our_view}
-                </p>
-                <h3 className="mt-4 text-[13px] font-semibold text-[color:var(--foreground)]">
-                  {t.killCriteria}
-                </h3>
-                {draft.kill_criteria.length === 0 ? (
-                  <p className="mt-1 text-[13px] text-amber-700 dark:text-amber-300">{t.killGap}</p>
-                ) : (
-                  <ul className="mt-1 list-disc space-y-1 pl-5 text-[13px] text-[color:var(--foreground)]">
-                    {draft.kill_criteria.map((k) => (
-                      <li key={`${k.metric_field_id}-${k.operator}`}>
-                        {k.label ?? k.metric_field_id} {k.operator} {String(k.threshold)}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <h3 className="mt-4 text-[13px] font-semibold text-[color:var(--foreground)]">
-                  {t.premortem}
-                </h3>
-                <p className="mt-1 text-[13px] text-[color:var(--foreground)]">{draft.premortem}</p>
-                <p className="mt-3 text-[12px] text-[color:var(--muted)]">
-                  {t.conviction}: {draft.conviction}/5 · {t.horizon}: {draft.horizon_months}m
-                </p>
-              </>
+                </ul>
+              </details>
             ) : (
-              <p className="mt-3 text-[13px] text-amber-700 dark:text-amber-300">{t.noDraft}</p>
-            )}
-
-            <h3 className="mt-4 text-[13px] font-semibold text-[color:var(--foreground)]">
-              {t.gaps}
-            </h3>
-            {card.gaps.length === 0 &&
-            card.soft_assessments.every((s) => s.confidence !== "insufficient_evidence") ? (
-              <p className="mt-1 text-[13px] text-[color:var(--muted)]">{t.noGaps}</p>
-            ) : (
-              <ul className="mt-1 list-disc space-y-1 pl-5 text-[13px] text-[color:var(--muted)]">
-                {card.gaps.map((g) => (
-                  <li key={g}>{g}</li>
-                ))}
-                {card.soft_assessments
-                  .filter((s) => s.confidence === "insufficient_evidence")
-                  .map((s) => (
-                    <li key={s.field_id}>
-                      {s.field_id}: {t.insufficientEvidence}
-                    </li>
-                  ))}
-              </ul>
+              <p className="mt-3 text-[12px] text-[color:var(--muted)]">{t.noFacts}</p>
             )}
           </section>
         );
