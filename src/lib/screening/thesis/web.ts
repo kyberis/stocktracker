@@ -97,19 +97,26 @@ const runThesisWebStep: StepHandler = async (
     assessed_at: now,
     assessed_by: "code:screening-thesis-web",
   });
-  const i6News = news.results[0];
-  const i6: ThesisSoftAssessment = i6News?.title
+  const i6News = news.results[0] ?? bundle.news[0];
+  const i6Quote =
+    i6News && "title" in i6News
+      ? String(i6News.title || "").trim()
+      : "";
+  const i6Url =
+    i6News && "url" in i6News ? String(i6News.url || "") : "";
+  const i6: ThesisSoftAssessment = i6Quote.length >= 10
     ? thesisSoftAssessmentSchema.parse({
         asset_id: ticker,
         field_id: "EQ:I6",
         score: null,
         confidence: "low",
-        rationale: "Media tone is context for variant perception, not a pillar score.",
+        rationale:
+          "Media tone is context for variant perception, not a pillar score.",
         evidence: [
           {
-            quote: String(i6News.title).slice(0, 280).padEnd(10, "."),
-            location: i6News.url || "tavily news",
-            url: i6News.url,
+            quote: i6Quote.slice(0, 280).padEnd(10, "."),
+            location: i6Url || "FMP news/stock",
+            url: i6Url || undefined,
             date: now.slice(0, 10),
           },
         ],

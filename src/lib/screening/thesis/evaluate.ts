@@ -116,8 +116,8 @@ const runThesisEvaluateStep: StepHandler = async (
     const assessment = scoreThesisAssessment({ facts, soft });
     const cap = maxConvictionForAssessment(assessment);
     let draft =
-      fallbackThesisDraft(ticker, locale, assessment, facts) ??
-      fallbackThesisDraft(ticker, "en", assessment, facts);
+      fallbackThesisDraft(ticker, locale, assessment, facts, { candidate }) ??
+      fallbackThesisDraft(ticker, "en", assessment, facts, { candidate });
     const gatewayOk = await resolveGatewayApiKey();
     let tokensInput = 0;
     let tokensOutput = 0;
@@ -133,17 +133,39 @@ const runThesisEvaluateStep: StepHandler = async (
             {
               role: "system",
               content: `Write a falsifiable investment thesis draft for ${ticker}. Language: ${locale}.
+Use FACTS from FMP filings and SOFT quotes from IR / news / company profile. Do not claim there is no evidence when facts or quotes are present.
 Never use buy/sell/hold or Spanish equivalents (comprar, vender, mantener). Kill criteria MUST use metric_field_id from FACTS (e.g. EQ:D1, EQ:E1). Premortem min 50 chars. Scenarios bull/base/bear probabilities sum to 1. Conviction 1-${cap}. If a gate failed, status=watchlist and conviction <=2.
-Call submit_draft.`,
+Street target / forward P/E is consensus, not company guidance. Call submit_draft.`,
             },
             {
               role: "user",
               content: JSON.stringify({
+                candidate: candidate
+                  ? {
+                      name: candidate.name,
+                      sector: candidate.sector,
+                      industry: candidate.industry,
+                      analysisSummary: candidate.analysisSummary,
+                      growthNote: candidate.growthNote,
+                      valuationNote: candidate.valuationNote,
+                      targetPrice: candidate.targetPrice,
+                      upsidePct: candidate.upsidePct,
+                      fwdPe: candidate.fwdPe,
+                      histPeAvg: candidate.histPeAvg,
+                    }
+                  : null,
                 assessment,
                 facts: facts.map((f) => ({
                   field_id: f.field_id,
                   value: f.value,
                   method: f.method,
+                })),
+                soft: soft.map((s) => ({
+                  field_id: s.field_id,
+                  score: s.score,
+                  confidence: s.confidence,
+                  rationale: s.rationale,
+                  evidence: s.evidence,
                 })),
                 gaps: candidate ? [] : ["candidate_row_missing"],
               }).slice(0, 12000),

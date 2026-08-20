@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.186",
+    date: "2026-08-20",
+    title: "Thesis screening uses FMP, IR and news instead of empty evidence",
+    titleTranslations: {
+      es: "El cribado de tesis usa FMP, IR y noticias en vez de evidencia vacía",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Thesis drafts now write from published FMP facts, IR pages, earnings excerpts and news. Street targets stay labeled as consensus, not company guidance. Reports remain informational, not investment advice.",
+        translations: {
+          es: "Las tesis ahora se redactan con hechos FMP publicados, páginas de IR, extractos de resultados y noticias. Los precios objetivo se etiquetan como consenso, no como guidance de la empresa. Los informes son informativos, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.185",
     date: "2026-08-20",
     title: "Spanish thesis drafts no longer vanish on “mantener”",

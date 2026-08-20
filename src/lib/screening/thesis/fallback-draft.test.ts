@@ -59,4 +59,30 @@ describe("fallbackThesisDraft", () => {
     expect(draft?.kill_criteria[0]?.metric_field_id).toBe("EQ:D1");
     expect(draft?.status).toBe("watchlist");
   });
+
+  it("writes consensus from FMP target and forward P/E instead of an I1–I3 gap", () => {
+    const facts = [
+      fact("EQ:D1", 0.98),
+      fact("calc:fwd_pe", 22),
+      fact("calc:hist_pe_avg", 18),
+      fact("calc:upside_pct", 12.4),
+    ];
+    const assessment = scoreThesisAssessment({ facts, soft: [] });
+    const draft = fallbackThesisDraft("UBER", "en", assessment, facts, {
+      candidate: {
+        ticker: "UBER",
+        name: "Uber Technologies, Inc.",
+        sector: "Technology",
+        industry: "Software",
+        country: "US",
+        marketCapUsd: 1,
+        price: 70,
+        rankScore: 50,
+        rankReason: "Analyze.",
+      },
+    });
+    expect(draft?.variant_perception.consensus_view).toMatch(/12\.4|forward P\/E/i);
+    expect(draft?.variant_perception.consensus_view).not.toMatch(/not fetched/i);
+    expect(draft?.statement).toMatch(/Uber Technologies/);
+  });
 });

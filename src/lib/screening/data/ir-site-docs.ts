@@ -307,7 +307,7 @@ export function pickIrUrls(opts: {
 }
 
 const EXTRACT_QUERY =
-  "management guidance outlook catalysts business segments quarterly results earnings";
+  "management guidance outlook catalysts business segments quarterly results earnings call transcript";
 
 /** Same strings IR Search actually sends (Serper or Tavily). */
 export function irDiscoveryQueries(companyName: string, ticker: string): string[] {
@@ -315,7 +315,7 @@ export function irDiscoveryQueries(companyName: string, ticker: string): string[
   const t = ticker.toUpperCase().trim();
   return [
     `${name} ${t} investor relations`,
-    `${name} ${t} latest earnings OR quarterly results OR shareholder report OR MD&A`,
+    `${name} ${t} latest earnings OR quarterly results OR earnings call transcript OR shareholder report OR MD&A`,
   ];
 }
 
