@@ -81,6 +81,8 @@ export const screeningBriefObjectSchema = z.object({
   focusTicker: z.string().min(1).max(20).nullable().optional(),
   focusExchange: z.string().min(1).max(40).nullable().optional(),
   focusCompanyName: z.string().min(1).max(200).nullable().optional(),
+  /** User-chosen screening DAG. Ignored when the thesis flag is off. */
+  pipelineKind: z.enum(["checklist", "thesis"]).optional(),
 });
 
 /** Fully validated brief ready to authorize a run. */
@@ -210,6 +212,7 @@ export const screeningRunSchema = z.object({
    * - stuck: no updates long enough that the UI should offer resume / error
    */
   stallState: z.enum(["ok", "stale", "stuck"]).optional(),
+  pipelineKind: z.enum(["checklist", "thesis"]).optional(),
   /**
    * QA round context. Present only when QA gating is on for the user. Lets the
    * progress UI show "Verifying (round N of 2)" while QA is running or between
@@ -245,6 +248,7 @@ export const screeningRunListItemSchema = z.object({
   summary: z.string().max(160),
   candidateCount: z.number().int().min(0).max(5).nullable(),
   reportReady: z.boolean(),
+  pipelineKind: z.enum(["checklist", "thesis"]).optional(),
 });
 export type ScreeningRunListItem = z.infer<typeof screeningRunListItemSchema>;
 

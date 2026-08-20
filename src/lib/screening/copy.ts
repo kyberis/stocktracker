@@ -80,6 +80,14 @@ const en = {
     discoveryBody:
       "Start from your sector mix: rebalance if something is heavy, explore freely, or deep-dive a single company.",
     discoveryCta: "Open screening",
+    pipeline: {
+      legend: "Report mode",
+      help: "Same brief and research agents; the report shape changes. Informational only — not a recommendation.",
+      checklistLabel: "Checklist",
+      checklistHelp: "Shortlist of candidates with cheap / fit / solidity cards.",
+      thesisLabel: "Thesis",
+      thesisHelp: "Falsifiable draft with gates, variant perception, and kill criteria.",
+    },
     recentScreens: {
       title: "Your recent screens",
       empty: "No screens yet. Start one above — it will show up here.",
@@ -92,6 +100,8 @@ const en = {
       intentRebalance: "Rebalance",
       intentExplore: "Explore",
       intentAnalyze: "Analyze",
+      pipelineChecklist: "Checklist",
+      pipelineThesis: "Thesis",
     },
   },
   methodology: {
@@ -541,6 +551,10 @@ const en = {
     runCtaAnalyze: "Run the analysis",
     editCta: "Adjust in the chat",
     empty: "The brief is empty. Go back to the chat to define your criteria.",
+    thesisDisabled:
+      "The thesis pipeline is not available. Run a checklist screen instead.",
+    thesisNeedsReal:
+      "Thesis screens need the live research pipeline. Run a checklist screen, or ask an admin to enable it.",
   },
   progress: {
     eyebrow: "Screening",
@@ -593,6 +607,19 @@ const en = {
       compiler_evaluate:
         "Applying the trefolio checklist to each shortlisted company.",
       qa: "Verifying numbers, citations and cross-agent consistency.",
+      thesis_hard_data:
+        "Pulling listed facts (cash conversion, leverage, dilution) with source and as-of.",
+      thesis_ir:
+        "Reading filings for cited soft assessments — or marking insufficient evidence.",
+      thesis_web:
+        "Gathering insider and news context. Consensus estimates are a gap unless fetched.",
+      thesis_technicals: "Price card only — technicals are not a thesis pillar.",
+      thesis_portfolio: "Overlap note versus current holdings (not a sizing instruction).",
+      thesis_risk: "Key risks for the draft — informational, not advice.",
+      thesis_compiler: "Selecting the shortlist that will get a thesis draft.",
+      thesis_evaluate:
+        "Scoring gates in code, then drafting a falsifiable statement and kill criteria.",
+      thesis_qa: "Checking provenance, citations, and that the copy is not advice.",
     },
     steps: {
       intake: "Intake",
@@ -606,6 +633,15 @@ const en = {
       shortlist_research: "Shortlist research",
       compiler_evaluate: "trefolio evaluation",
       qa: "Verification",
+      thesis_hard_data: "Thesis facts",
+      thesis_ir: "Thesis filings",
+      thesis_web: "Thesis web",
+      thesis_technicals: "Thesis technicals",
+      thesis_portfolio: "Thesis overlap",
+      thesis_risk: "Thesis risks",
+      thesis_compiler: "Thesis shortlist",
+      thesis_evaluate: "Thesis draft",
+      thesis_qa: "Thesis verification",
     },
   },
   report: {
@@ -806,6 +842,38 @@ const en = {
     candidateVerifiedBadge: "Verified",
     candidateFlaggedBadge: "Notes to review",
   },
+  thesisReport: {
+    eyebrow: "Thesis draft · automated",
+    title: "Falsifiable thesis",
+    subtitle:
+      "Facts, gates and kill criteria are informational research notes. They are not a buy, sell or hold recommendation.",
+    verdict: "Verdict",
+    gatePass: "pass",
+    gateFail: "fail",
+    gateUnknown: "not scored",
+    statement: "Statement",
+    variant: "Variant perception",
+    consensus: "Consensus",
+    ourView: "Our view",
+    killCriteria: "Kill criteria",
+    killGap: "No code-evaluable kill criterion could be bound to a published fact.",
+    premortem: "Pre-mortem",
+    conviction: "Conviction",
+    horizon: "Horizon",
+    noDraft: "No thesis draft was produced for this name.",
+    gaps: "Gaps",
+    noGaps: "No listed gaps.",
+    insufficientEvidence: "insufficient evidence (no citable quote)",
+    verdicts: {
+      high_quality_attractively_priced: "High quality, attractively priced",
+      high_quality_richly_priced: "High quality, richly priced",
+      improving_fundamentals: "Improving fundamentals",
+      value_with_open_questions: "Value with open questions",
+      deteriorating: "Deteriorating",
+      insufficient_data: "Insufficient data",
+      watchlist_gate_failed: "Watchlist — a gate failed",
+    },
+  },
 };
 
 export type ScreeningCopy = typeof en;
@@ -882,6 +950,14 @@ const es: ScreeningCopy = {
     discoveryBody:
       "Parte de tu mezcla por sectores: rebalancea si algo pesa de más, explora libremente, o profundiza en una sola empresa.",
     discoveryCta: "Abrir cribado",
+    pipeline: {
+      legend: "Modo del informe",
+      help: "Mismo brief y mismos agentes; cambia la forma del informe. Solo informativo — no es una recomendación.",
+      checklistLabel: "Cribado",
+      checklistHelp: "Lista corta de candidatos con fichas de barato / encaje / solidez.",
+      thesisLabel: "Tesis",
+      thesisHelp: "Borrador falsable con puertas, percepción variante y criterios de muerte.",
+    },
     recentScreens: {
       title: "Tus cribados recientes",
       empty: "Aún no hay cribados. Empieza uno arriba — aparecerá aquí.",
@@ -894,6 +970,8 @@ const es: ScreeningCopy = {
       intentRebalance: "Rebalanceo",
       intentExplore: "Exploración",
       intentAnalyze: "Analizar",
+      pipelineChecklist: "Cribado",
+      pipelineThesis: "Tesis",
     },
   },
   methodology: {
@@ -1340,6 +1418,10 @@ const es: ScreeningCopy = {
     runCtaAnalyze: "Ejecutar el análisis",
     editCta: "Ajustar en el chat",
     empty: "El brief está vacío. Vuelve al chat para definir tus criterios.",
+    thesisDisabled:
+      "El pipeline de tesis no está disponible. Ejecuta un cribado de checklist.",
+    thesisNeedsReal:
+      "Las tesis necesitan el pipeline de investigación en vivo. Ejecuta un cribado de checklist, o pide a un admin que lo active.",
   },
   progress: {
     eyebrow: "Cribado",
@@ -1392,6 +1474,19 @@ const es: ScreeningCopy = {
       compiler_evaluate:
         "Aplicando el checklist de trefolio a cada empresa de la shortlist.",
       qa: "Verificando números, citas y coherencia entre agentes.",
+      thesis_hard_data:
+        "Reuniendo hechos publicados (conversión de caja, apalancamiento, dilución) con fuente y fecha.",
+      thesis_ir:
+        "Leyendo filings para evaluaciones blandas citadas — o marcando evidencia insuficiente.",
+      thesis_web:
+        "Recogiendo insiders y noticias. Las estimaciones de consenso son un hueco si no se fetchean.",
+      thesis_technicals: "Solo ficha de precio — el técnico no es un pilar de la tesis.",
+      thesis_portfolio: "Nota de solapamiento con la cartera actual (no es una instrucción de sizing).",
+      thesis_risk: "Riesgos clave del borrador — informativo, no consejo.",
+      thesis_compiler: "Eligiendo la shortlist que recibirá un borrador de tesis.",
+      thesis_evaluate:
+        "Puntuando puertas en código y redactando una afirmación falsable y criterios de muerte.",
+      thesis_qa: "Comprobando procedencia, citas y que el texto no sea asesoramiento.",
     },
     steps: {
       intake: "Intake",
@@ -1405,6 +1500,15 @@ const es: ScreeningCopy = {
       shortlist_research: "Research de shortlist",
       compiler_evaluate: "Evaluación trefolio",
       qa: "Verificación",
+      thesis_hard_data: "Hechos de tesis",
+      thesis_ir: "Filings de tesis",
+      thesis_web: "Web de tesis",
+      thesis_technicals: "Técnico de tesis",
+      thesis_portfolio: "Solapamiento de tesis",
+      thesis_risk: "Riesgos de tesis",
+      thesis_compiler: "Shortlist de tesis",
+      thesis_evaluate: "Borrador de tesis",
+      thesis_qa: "Verificación de tesis",
     },
   },
   report: {
@@ -1604,6 +1708,38 @@ const es: ScreeningCopy = {
     verificationIssueGeneric: "{type}: {detail}",
     candidateVerifiedBadge: "Verificado",
     candidateFlaggedBadge: "Notas a revisar",
+  },
+  thesisReport: {
+    eyebrow: "Borrador de tesis · automatizado",
+    title: "Tesis falsable",
+    subtitle:
+      "Hechos, puertas y criterios de muerte son notas de investigación. No son una recomendación de compra, venta o mantener.",
+    verdict: "Veredicto",
+    gatePass: "pasa",
+    gateFail: "falla",
+    gateUnknown: "sin puntuar",
+    statement: "Afirmación",
+    variant: "Percepción variante",
+    consensus: "Consenso",
+    ourView: "Nuestra vista",
+    killCriteria: "Criterios de muerte",
+    killGap: "No se pudo ligar un criterio de muerte evaluable a un hecho publicado.",
+    premortem: "Pre-mortem",
+    conviction: "Convicción",
+    horizon: "Horizonte",
+    noDraft: "No se produjo un borrador de tesis para este nombre.",
+    gaps: "Huecos",
+    noGaps: "Sin huecos listados.",
+    insufficientEvidence: "evidencia insuficiente (sin cita)",
+    verdicts: {
+      high_quality_attractively_priced: "Alta calidad, precio atractivo",
+      high_quality_richly_priced: "Alta calidad, precio rico",
+      improving_fundamentals: "Fundamentales en mejora",
+      value_with_open_questions: "Valor con preguntas abiertas",
+      deteriorating: "En deterioro",
+      insufficient_data: "Datos insuficientes",
+      watchlist_gate_failed: "Watchlist — falló una puerta",
+    },
   },
 };
 

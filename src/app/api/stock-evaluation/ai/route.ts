@@ -89,9 +89,9 @@ Rules:
 - Structure your response using markdown ## headings.
 - Start with "## Investment Thesis: ${companyName} (${symbol})" — a 2-3 sentence summary of the overall moat assessment referencing the composite score.
 - Include "## Key Strengths" — explain which criteria passed and WHY they indicate a durable advantage. Use specific numbers from the data.
-- Include "## Areas of Caution" — explain any criteria that received "warning" or "fail" status. Contextualize them (e.g. the "Apple Caveat" for retained earnings declining due to aggressive buybacks).
+- Include "## Areas of Caution" — explain any criteria that received "warning" or "fail" status. Do not treat declining retained earnings under buybacks as a second failure if ROIC is already scored; those are the same capital-return story. Do not treat a high ROE as proof of quality when equity has been shrunk by repurchases.
 - Include "## Product Durability Assessment" — this is the qualitative analysis. Based on the company's sector, industry, and R&D ratio, assess whether the core product/service is likely to remain relevant for 10+ years. Consider brand strength, switching costs, and disruption risk.
-- End with "## Verdict" — state clearly: "Strong Moat", "Narrow Moat", or "No Moat". Include a holding-period recommendation and note the current P/E valuation context.
+- End with "## Verdict" — state clearly: "Strong Moat", "Narrow Moat", or "No Moat". Note the current P/E as context only. Do not use buy, sell, or hold language. This is not a recommendation.
 - Keep the total response under 800 words.
 - Tone: authoritative but accessible. Explain financial terms briefly when first used.
 - Include a disclaimer that this is not financial advice at the very end.`;

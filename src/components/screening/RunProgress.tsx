@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { parseScreeningPipelineKind } from "@/lib/screening/pipeline-kind";
 import type {
   ScreeningBrief,
   ScreeningReport,
@@ -11,6 +12,7 @@ import type {
   ScreeningRun,
   ScreeningRunStep,
 } from "@/lib/screening/schemas";
+import type { ThesisReport } from "@/lib/screening/thesis/schemas";
 import {
   buildIntakeHrefFromBrief,
   SCREENING_INTAKE_RETURN_KEY,
@@ -19,11 +21,18 @@ import { fill } from "@/lib/screening/copy";
 import { buildOptimisticRun } from "@/lib/screening/pipeline/build-run";
 import { ScreeningDisclaimer } from "./ScreeningNotices";
 import { ScreeningReportView } from "./ScreeningReportView";
+import { ThesisReportView } from "./ThesisReportView";
 import { useScreeningCopy } from "./use-screening-copy";
 
 const POLL_MS = 1200;
 /** ~12 min — research fan-out over ~20 tickers (IR + Web + Tech) can be long. */
 const MAX_POLLS = 600;
+
+function isThesisReport(
+  report: ScreeningReport | ThesisReport,
+): report is ThesisReport {
+  return "kind" in report && report.kind === "thesis";
+}
 
 function readStoredBrief(runId: string): ScreeningBrief | null {
   try {
@@ -69,7 +78,9 @@ function activityForStep(
   const kind = step.agentKind as keyof typeof copy.progress.activity;
   const body = copy.progress.activity[kind] ?? null;
   if (step.status === "running") {
-    if (step.agentKind === "qa" && qaLine) return qaLine;
+    if ((step.agentKind === "qa" || step.agentKind === "thesis_qa") && qaLine) {
+      return qaLine;
+    }
     return body ?? copy.progress.statusRunningLine;
   }
   if (step.status === "done") return body;
@@ -150,8 +161,11 @@ export function RunProgress({ runId }: { runId: string }) {
   const searchParams = useSearchParams();
   const openReportOnReady = searchParams.get("view") === "report";
   const isAdmin = user?.role === "admin";
-  const [run, setRun] = useState<ScreeningRun | null>(() => buildOptimisticRun(runId));
-  const [report, setReport] = useState<ScreeningReport | null>(null);
+  const [run, setRun] = useState<ScreeningRun | null>(() => {
+    const brief = typeof window === "undefined" ? null : readStoredBrief(runId);
+    return buildOptimisticRun(runId, parseScreeningPipelineKind(brief?.pipelineKind));
+  });
+  const [report, setReport] = useState<ScreeningReport | ThesisReport | null>(null);
   const [reportCost, setReportCost] = useState<ScreeningReportCost | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
@@ -172,7 +186,12 @@ export function RunProgress({ runId }: { runId: string }) {
     const brief = readStoredBrief(runId);
     briefRef.current = brief;
     setBackHref(readIntakeReturn(runId, brief));
-    setRun(buildOptimisticRun(runId));
+    setRun(
+      buildOptimisticRun(
+        runId,
+        parseScreeningPipelineKind(brief?.pipelineKind),
+      ),
+    );
     setReport(null);
     setReportCost(null);
     setShowReport(false);
@@ -217,7 +236,7 @@ export function RunProgress({ runId }: { runId: string }) {
         return;
       }
       const data = (await res.json()) as {
-        report?: ScreeningReport;
+        report?: ScreeningReport | ThesisReport;
         cost?: ScreeningReportCost;
       };
       if (data.report) {
@@ -337,10 +356,14 @@ export function RunProgress({ runId }: { runId: string }) {
   if (showReport && report) {
     return (
       <main className="mx-auto w-full max-w-7xl px-3 py-6 sm:px-4 lg:px-6">
-        <ScreeningReportView
-          report={report}
-          cost={isAdmin ? reportCost : null}
-        />
+        {isThesisReport(report) ? (
+          <ThesisReportView report={report} />
+        ) : (
+          <ScreeningReportView
+            report={report}
+            cost={isAdmin ? reportCost : null}
+          />
+        )}
         <div className="mt-5 flex flex-wrap gap-2">
           <button
             type="button"
@@ -363,7 +386,9 @@ export function RunProgress({ runId }: { runId: string }) {
   const reportReady = Boolean(run?.reportReady);
   const runFailed = run?.status === "failed";
   const failedStep = run?.steps.find((s) => s.status === "failed");
-  const qaStep = run?.steps.find((s) => s.agentKind === "qa");
+  const qaStep = run?.steps.find(
+    (s) => s.agentKind === "qa" || s.agentKind === "thesis_qa",
+  );
   const qaRunning = qaStep?.status === "running";
   const qaContext = run?.qa ?? null;
   const qaRoundInFlight =
@@ -397,6 +422,13 @@ export function RunProgress({ runId }: { runId: string }) {
               ? copy.progress.readyTitle
               : copy.progress.title}
         </h1>
+        {run?.pipelineKind ? (
+          <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-300">
+            {run.pipelineKind === "thesis"
+              ? copy.entry.recentScreens.pipelineThesis
+              : copy.entry.recentScreens.pipelineChecklist}
+          </p>
+        ) : null}
         <p className="mt-2 text-sm text-[color:var(--muted)]">
           {runFailed
             ? copy.progress.failedBanner
@@ -476,7 +508,12 @@ export function RunProgress({ runId }: { runId: string }) {
               copy.progress.steps[step.agentKind as keyof typeof copy.progress.steps] ??
               step.agentKind
             }
-            qaLine={step.agentKind === "qa" && qaRunning ? qaVerifyingLine : null}
+            qaLine={
+              (step.agentKind === "qa" || step.agentKind === "thesis_qa") &&
+              qaRunning
+                ? qaVerifyingLine
+                : null
+            }
           />
         ))}
         <div ref={feedEndRef} />

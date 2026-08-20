@@ -2,6 +2,10 @@ import { randomUUID } from "crypto";
 import { ensureInitialized } from "./client";
 import { num, str } from "./helpers";
 import {
+  parseScreeningPipelineKind,
+  type ScreeningPipelineKind,
+} from "@/lib/screening/pipeline-kind";
+import {
   mergeIrResources,
   parseAnalyzeBriefMeta,
   parseIrAgentOutputJson,
@@ -42,6 +46,8 @@ export interface ScreeningRunRow {
   intent: ScreeningRunIntent;
   briefJson: string;
   mockedPipeline: boolean;
+  /** checklist = existing pipeline; thesis = falsifiable-thesis DAG. */
+  pipelineKind?: ScreeningPipelineKind;
   /** Variable ops cost (LLM + Tavily). FMP excluded. */
   costUsd: number;
   /** JSON breakdown — see screeningCostBreakdownSchema. */
@@ -106,6 +112,7 @@ function readRun(row: Record<string, unknown>): ScreeningRunRow {
     intent: str(row.intent) as ScreeningRunIntent,
     briefJson: str(row.brief_json),
     mockedPipeline: num(row.mocked_pipeline) === 1,
+    pipelineKind: parseScreeningPipelineKind(row.pipeline_kind),
     costUsd: Number(row.cost_usd) || 0,
     costJson,
     costBreakdown,
@@ -142,6 +149,7 @@ export interface CreateScreeningRunParams {
   intent: ScreeningRunIntent;
   briefJson: string;
   mockedPipeline: boolean;
+  pipelineKind?: ScreeningPipelineKind;
   /** Optional fixed id (e.g. mock run id) so the UI deep-link matches the row. */
   id?: string;
 }
@@ -152,10 +160,11 @@ export async function createScreeningRun(
   const client = await ensureInitialized();
   const id = params.id ?? randomUUID();
   const now = new Date().toISOString();
+  const pipelineKind = params.pipelineKind ?? "checklist";
   await client.execute({
     sql: `INSERT INTO screening_runs
-            (id, user_id, status, intent, brief_json, mocked_pipeline, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            (id, user_id, status, intent, brief_json, mocked_pipeline, pipeline_kind, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       params.userId,
@@ -163,6 +172,7 @@ export async function createScreeningRun(
       params.intent,
       params.briefJson.slice(0, 50_000),
       params.mockedPipeline ? 1 : 0,
+      pipelineKind,
       now,
       now,
     ],
@@ -174,6 +184,7 @@ export async function createScreeningRun(
     intent: params.intent,
     briefJson: params.briefJson,
     mockedPipeline: params.mockedPipeline,
+    pipelineKind,
     costUsd: 0,
     costJson: "",
     costBreakdown: {

@@ -124,8 +124,12 @@ export async function upsertMoatCache(evaluation: MoatEvaluation): Promise<void>
       c("net_margin")?.status ?? null,
       c("retained_earnings")?.score ?? null,
       c("retained_earnings")?.status ?? null,
-      c("return_on_equity")?.score ?? null,
-      c("return_on_equity")?.status ?? null,
+      c("return_on_invested_capital")?.score ??
+        c("return_on_equity")?.score ??
+        null,
+      c("return_on_invested_capital")?.status ??
+        c("return_on_equity")?.status ??
+        null,
       c("debt_sustainability")?.score ?? null,
       c("debt_sustainability")?.status ?? null,
       c("capex_efficiency")?.score ?? null,

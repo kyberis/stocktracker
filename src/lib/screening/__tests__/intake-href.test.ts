@@ -40,4 +40,10 @@ describe("buildIntakeHref", () => {
       "/screening/intake?intent=explore&exclude=Technology",
     );
   });
+
+  it("carries pipeline=thesis for deep links", () => {
+    expect(
+      buildIntakeHref({ intent: "analyze", pipeline: "thesis" }),
+    ).toBe("/screening/intake?intent=analyze&pipeline=thesis");
+  });
 });

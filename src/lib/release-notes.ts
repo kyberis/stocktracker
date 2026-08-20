@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.182",
+    date: "2026-08-20",
+    title: "Moat scores ROIC, not buyback-inflated ROE",
+    titleTranslations: {
+      es: "El moat puntúa ROIC, no un ROE inflado por recompras",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "The economic-moat engine now scores return on invested capital instead of ROE, and no longer treats declining retained earnings under share buybacks as a second quality failure. High ROE after shrinking equity is an accounting artifact, not proof of a moat. This is research information, not investment advice.",
+        translations: {
+          es: "El motor de foso económico ahora puntúa el retorno sobre el capital invertido en lugar del ROE, y ya no trata las ganancias retenidas decrecientes bajo recompras como un segundo fallo de calidad. Un ROE alto tras reducir el patrimonio es un artefacto contable, no prueba de foso. Es información de investigación, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.181",
+    date: "2026-08-20",
+    title: "Screening thesis pipeline bake-off",
+    titleTranslations: {
+      es: "Bake-off del pipeline de tesis en cribado",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "When enabled, screening lets you choose Checklist or Thesis before a run. Thesis writes a falsifiable draft with gates and kill criteria. Both reports are informational research notes, not investment advice.",
+        translations: {
+          es: "Cuando está activado, el cribado te deja elegir Cribado o Tesis antes de lanzar. Tesis redacta un borrador falsable con puertas y criterios de muerte. Ambos informes son notas de investigación, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.180",
     date: "2026-08-17",
     title: "One email per price alert, with recent headlines",

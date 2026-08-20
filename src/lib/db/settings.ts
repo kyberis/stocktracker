@@ -68,6 +68,7 @@ export type PlatformFeature =
   | "screening_ir_serper_jina_enabled"
   | "screening_analyze_force_serper_jina_enabled"
   | "screening_estebaranz_eval_enabled"
+  | "screening_thesis_pipeline_enabled"
   | "portfolio_anomaly_agent"
   | "display_invariants"
   | "theme_studio_enabled";
@@ -504,6 +505,7 @@ export const ALL_PLATFORM_FEATURES = [
   "screening_ir_serper_jina_enabled",
   "screening_analyze_force_serper_jina_enabled",
   "screening_estebaranz_eval_enabled",
+  "screening_thesis_pipeline_enabled",
   "portfolio_anomaly_agent",
   "display_invariants",
   "theme_studio_enabled",

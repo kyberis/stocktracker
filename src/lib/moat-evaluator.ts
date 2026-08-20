@@ -74,7 +74,6 @@ function scoreEarningsConsistency(income: FundamentalData<IncomeStatementReport>
   else if (consistency >= 0.4) score = MAX_SCORE_PER_CRITERION * 0.3;
 
   const status = statusFromScore(score, MAX_SCORE_PER_CRITERION);
-  const growthLabel = growth > 0 ? `+${growth.toFixed(0)}%` : `${growth.toFixed(0)}%`;
 
   return {
     key: "earnings_consistency",
@@ -141,6 +140,34 @@ function scoreNetMargin(income: FundamentalData<IncomeStatementReport>): Criteri
   };
 }
 
+function nopat(r: IncomeStatementReport): number | null {
+  const ebit = r.operatingIncome;
+  if (ebit == null || !Number.isFinite(ebit)) return null;
+  const pretax = r.incomeBeforeTax;
+  const tax = r.incomeTaxExpense;
+  if (pretax != null && pretax > 0 && tax != null && Number.isFinite(tax)) {
+    const rate = Math.min(0.5, Math.max(0, tax / pretax));
+    return ebit * (1 - rate);
+  }
+  return null;
+}
+
+/**
+ * Operating invested capital. Prefer equity + interest-bearing debt − cash
+ * (cash buybacks leave this invariant). If that is ≤ 0 (net-cash balance
+ * sheet), fall back to equity + debt so ROIC is defined.
+ */
+function investedCapital(b: BalanceSheetReport): number | null {
+  const equity = b.totalShareholderEquity;
+  if (equity == null || !Number.isFinite(equity)) return null;
+  const debt = (b.longTermDebt ?? 0) + (b.shortTermDebt ?? 0);
+  const cash = b.cashAndEquivalents ?? 0;
+  const exCash = equity + debt - cash;
+  if (exCash > 0) return exCash;
+  const gross = equity + debt;
+  return gross > 0 ? gross : null;
+}
+
 function scoreRetainedEarnings(balance: FundamentalData<BalanceSheetReport>, cashflow: FundamentalData<CashFlowReport>): CriterionResult {
   const annual = balance.annual.slice(0, 10).reverse();
   const retained = annual.map((r) => r.retainedEarnings ?? 0);
@@ -149,22 +176,45 @@ function scoreRetainedEarnings(balance: FundamentalData<BalanceSheetReport>, cas
   const growth = trendGrowthRate(retained);
   const consistency = trendConsistency(retained);
 
-  const cfAnnual = cashflow.annual.slice(0, 5).reverse();
-  const hasBuybacks = cfAnnual.some((r) => (r.shareRepurchase ?? 0) > 0 || (r.paymentsForRepurchaseOfEquity ?? 0) > 0);
+  const cfAnnual = cashflow.annual.slice(0, 5);
+  let buybackCash = 0;
+  let fcfSum = 0;
+  for (const r of cfAnnual) {
+    buybackCash += Math.abs(r.shareRepurchase ?? 0) + Math.abs(r.paymentsForRepurchaseOfEquity ?? 0);
+    fcfSum += r.freeCashFlow ?? 0;
+  }
+  const hasBuybacks = buybackCash > 0;
 
   let score: number;
-  if (consistency >= 0.6 && growth > 0) {
+  let label: string;
+  let benchmark: string;
+  if (hasBuybacks) {
+    // Declining retained earnings is the bookkeeping of retiring equity, not a
+    // second quality failure next to ROIC. Score whether cash returns were
+    // funded by free cash flow.
+    const covered = fcfSum >= buybackCash * 0.8;
+    score = covered
+      ? MAX_SCORE_PER_CRITERION
+      : fcfSum > 0
+        ? MAX_SCORE_PER_CRITERION * 0.7
+        : MAX_SCORE_PER_CRITERION * 0.35;
+    label = covered ? "Buybacks (FCF-funded)" : "Buybacks (check FCF)";
+    benchmark = "RE not comparable under buybacks — require FCF to fund repurchases";
+  } else if (consistency >= 0.6 && growth > 0) {
     score = MAX_SCORE_PER_CRITERION;
-  } else if (hasBuybacks && growth <= 0) {
-    score = MAX_SCORE_PER_CRITERION * 0.5;
+    label = growth > 10 ? "Growing" : "Stable";
+    benchmark = "Steady upward trend";
   } else if (consistency >= 0.4) {
     score = MAX_SCORE_PER_CRITERION * 0.4;
+    label = growth > 0 ? "Uneven" : "Declining";
+    benchmark = "Steady upward trend";
   } else {
     score = MAX_SCORE_PER_CRITERION * 0.15;
+    label = "Declining";
+    benchmark = "Steady upward trend";
   }
 
   const status = statusFromScore(score, MAX_SCORE_PER_CRITERION);
-  const label = growth > 10 ? "Growing" : growth > 0 ? "Stable" : hasBuybacks ? "Declining" : "Declining";
 
   return {
     key: "retained_earnings",
@@ -172,44 +222,47 @@ function scoreRetainedEarnings(balance: FundamentalData<BalanceSheetReport>, cas
     status,
     value: label,
     numericValue: growth,
-    benchmark: `Steady upward trend${hasBuybacks ? " (buyback adj.)" : ""}`,
+    benchmark,
     score,
     maxScore: MAX_SCORE_PER_CRITERION,
     trend,
   };
 }
 
-function scoreROE(overview: CompanyOverview, income: FundamentalData<IncomeStatementReport>, balance: FundamentalData<BalanceSheetReport>): CriterionResult {
-  const roeFromOverview = overview.returnOnEquity != null ? overview.returnOnEquity * 100 : null;
+function scoreROIC(
+  income: FundamentalData<IncomeStatementReport>,
+  balance: FundamentalData<BalanceSheetReport>,
+): CriterionResult {
+  const bal = balance.annual.slice(0, 10).reverse();
+  const inc = income.annual.slice(0, 10).reverse();
+  const roics: number[] = [];
 
-  const annual = balance.annual.slice(0, 10).reverse();
-  const incomeAnnual = income.annual.slice(0, 10).reverse();
-  const roes: number[] = [];
-
-  for (let i = 0; i < Math.min(annual.length, incomeAnnual.length); i++) {
-    const equity = annual[i].totalShareholderEquity;
-    const ni = incomeAnnual[i].netIncome;
-    if (equity && equity !== 0 && ni) {
-      roes.push((ni / equity) * 100);
-    }
+  for (let i = 0; i < Math.min(bal.length, inc.length); i++) {
+    const ic = investedCapital(bal[i]);
+    const n = nopat(inc[i]);
+    if (ic == null || n == null) continue;
+    roics.push((n / ic) * 100);
   }
 
-  const current = roeFromOverview ?? (roes.length > 0 ? roes[roes.length - 1] : 0);
-  const avg = roes.length > 0 ? roes.reduce((a, b) => a + b, 0) / roes.length : current;
+  const current = roics.length > 0 ? roics[roics.length - 1] : 0;
+  const avg = roics.length > 0 ? roics.reduce((a, b) => a + b, 0) / roics.length : current;
 
-  const score = linearScore(Math.abs(avg), 20, 10, MAX_SCORE_PER_CRITERION);
+  const score =
+    roics.length === 0
+      ? 0
+      : linearScore(avg, 15, 8, MAX_SCORE_PER_CRITERION);
   const status = statusFromScore(score, MAX_SCORE_PER_CRITERION);
 
   return {
-    key: "return_on_equity",
-    name: "Return on Equity",
+    key: "return_on_invested_capital",
+    name: "Return on Invested Capital",
     status,
-    value: `${current.toFixed(1)}%`,
-    numericValue: current,
-    benchmark: "High ROE (industry-leading)",
+    value: roics.length === 0 ? "n/a" : `${current.toFixed(1)}%`,
+    numericValue: roics.length === 0 ? null : current,
+    benchmark: "ROIC ≥ 15% (not ROE — buybacks shrink equity and inflate ROE)",
     score,
     maxScore: MAX_SCORE_PER_CRITERION,
-    trend: roes,
+    trend: roics,
   };
 }
 
@@ -353,7 +406,7 @@ export function evaluateMoat(input: EvalInput): MoatEvaluation {
     scoreGrossMargin(input.income),
     scoreNetMargin(input.income),
     scoreRetainedEarnings(input.balance, input.cashflow),
-    scoreROE(input.overview, input.income, input.balance),
+    scoreROIC(input.income, input.balance),
     scoreDebtSustainability(input.income, input.balance),
     scoreCapExEfficiency(input.income, input.cashflow),
     scoreProductDurability(input.overview, input.income),

@@ -1,4 +1,4 @@
 {
-  "notes": "2.5.179–2.5.180: daily G/L as-of timestamp and one-shot alert emails with cached headlines. Existing dashboard/alert surfaces, not a new landing-page capability.",
-  "landingPageReviewed": true
+  "landingPageReviewed": true,
+  "notes": "2.5.181–2.5.182: thesis screening bake-off is flag-off (screening_thesis_pipeline_enabled) and not a landing capability. Moat ROIC vs ROE is a scoring fix on the existing moat report, not a new customer-facing surface."
 }

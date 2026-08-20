@@ -4,6 +4,20 @@ Status: **v1.6** · Companion PRD: [`PRD_INVESTMENT_SCREENING_AGENTS_FEASIBLE.md
 Domain: **AI Intelligence** + **Tools** (+ **Billing** solo en iteración créditos)  
 Pattern: **Feature-flagged** · **incremental** · **app-triggered only** · fan-out **1 ticker/step** · **informe HTML in-app** (sin PDF) · **ficha tipada + tesis corta** · Dev Lab · outbox notify · Prometheus. Every step: **`user_id` + `job_id`**. Blob opcional solo para exports ops (Excel).
 
+**Bake-off (temporal):** el pipeline de checklist de este HLD sigue siendo el default.
+Un DAG paralelo en `src/lib/screening/thesis/` emite un Thesis draft (hechos, puertas,
+criterios de muerte). El usuario elige **Cribado vs Tesis** en `/screening` cuando
+`screening_thesis_pipeline_enabled` está on. El flag off oculta el toggle y fuerza
+checklist. No hay asignación A/B sticky. Veredictos informativos; nunca buy/sell/hold.
+El score MOAT se envuelve (`calc:moat_score_pct`); no se duplica el evaluador.
+**Fase 0:** `npx tsx scripts/probe-fmp-thesis-endpoints.ts` genera la matriz de
+capacidades FMP (el catálogo MCP no implica que el plan cubra `key-metrics`,
+segmentación, `etf/holdings`, etc.). Probe 2026-08-20: `key-metrics`,
+`analyst-estimates`, `earnings` y segmentación OK; `earning-call-transcript` y
+`etf/holdings` → 402. **F5** (guidance prometido vs entregado, 8–12 trimestres)
+no se finge con surprise de consenso ni con transcripts fuera de plan.
+Detalle: [`knowledge/product-specs/investment-screening.md`](../knowledge/product-specs/investment-screening.md).
+
 ---
 
 ## 1. Contexto del sistema (C4 — Level 1)
@@ -715,7 +729,7 @@ type ScreeningCandidateCard = {
     netCash: boolean | null;
     buyback: boolean | null;
     dividendYield: number | null;
-    moatScore: number | null;   // trefolio MOAT if available
+    moatScore: number | null;   // wrap evaluateMoat — ROIC, not ROE; do not duplicate
   };
   /** Narrativa — cita paths en citedFields; no volcar ratios extra */
   thesis: string;

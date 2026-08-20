@@ -26,7 +26,9 @@ import { buildRunResponse } from "@/lib/screening/pipeline/build-run";
 import { toScreeningRunListItem } from "@/lib/screening/pipeline/build-run-list-item";
 import { HARD_DATA_AGENT_KIND } from "@/lib/screening/agents/hard-data";
 import { COMPILER_AGENT_KIND } from "@/lib/screening/agents/compiler";
+import { THESIS_HARD_DATA_KIND } from "@/lib/screening/thesis/kinds";
 import { continueScreeningRunInBackground } from "@/lib/screening/orchestrator/drain-run";
+import { resolveScreeningPipelineKind } from "@/lib/screening/pipeline-kind";
 
 export const dynamic = "force-dynamic";
 /**
@@ -100,6 +102,28 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
     "screening_pipeline_real_enabled",
     session.userId,
   );
+  const thesisEnabled = await isFeatureEnabledForUser(
+    "screening_thesis_pipeline_enabled",
+    session.userId,
+  );
+  if (parsed.data.pipelineKind === "thesis" && !thesisEnabled) {
+    if (consumedQuota) await refundFeatureQuota(session.userId, "investment_screening");
+    return NextResponse.json(
+      { error: "thesis_pipeline_disabled" },
+      { status: 400 },
+    );
+  }
+  const pipelineKind = resolveScreeningPipelineKind({
+    requested: parsed.data.pipelineKind,
+    thesisEnabled,
+  });
+  if (pipelineKind === "thesis" && !realPipeline) {
+    if (consumedQuota) await refundFeatureQuota(session.userId, "investment_screening");
+    return NextResponse.json(
+      { error: "thesis_requires_real_pipeline" },
+      { status: 400 },
+    );
+  }
 
   if (!realPipeline) {
     const runId = createMockRunId();
@@ -116,6 +140,7 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
         intent: parsed.data.intent,
         briefJson: JSON.stringify(parsed.data),
         mockedPipeline: true,
+        pipelineKind: "checklist",
       });
     } catch (err) {
       console.error(
@@ -137,6 +162,7 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
       intent: parsed.data.intent,
       briefJson: JSON.stringify(parsed.data),
       mockedPipeline: false,
+      pipelineKind,
     });
   } catch (err) {
     console.error(
@@ -149,10 +175,16 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
 
   try {
     const hardDataStepId = crypto.randomUUID();
-    await insertSteps(runRow.id, [
-      { id: hardDataStepId, agentKind: HARD_DATA_AGENT_KIND },
-      { agentKind: COMPILER_AGENT_KIND, dependsOn: [hardDataStepId] },
-    ]);
+    if (pipelineKind === "thesis") {
+      await insertSteps(runRow.id, [
+        { id: hardDataStepId, agentKind: THESIS_HARD_DATA_KIND },
+      ]);
+    } else {
+      await insertSteps(runRow.id, [
+        { id: hardDataStepId, agentKind: HARD_DATA_AGENT_KIND },
+        { agentKind: COMPILER_AGENT_KIND, dependsOn: [hardDataStepId] },
+      ]);
+    }
   } catch (err) {
     console.error(
       "[screening/runs] insertSteps failed",

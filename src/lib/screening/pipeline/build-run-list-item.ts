@@ -59,7 +59,11 @@ export function toScreeningRunListItem(
   }
 
   const compilerDone = steps.some(
-    (s) => s.agentKind === "compiler" && s.status === "done",
+    (s) =>
+      (s.agentKind === "compiler" ||
+        s.agentKind === "thesis_compiler" ||
+        s.agentKind === "thesis_evaluate") &&
+      s.status === "done",
   );
   const anyFailed = steps.some((s) => s.status === "failed");
   const anyRunning = steps.some(
@@ -99,5 +103,6 @@ export function toScreeningRunListItem(
     summary: summary || "—",
     candidateCount,
     reportReady,
+    pipelineKind: row.pipelineKind ?? "checklist",
   };
 }

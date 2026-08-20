@@ -44,6 +44,7 @@ Flags from `ALL_PLATFORM_FEATURES` in [`src/lib/db/settings.ts`](../../src/lib/d
 - `screening_pipeline_real_enabled`
 - `screening_qa_enabled`
 - `screening_tavily_research_enabled`
+- `screening_thesis_pipeline_enabled`
 - `social_network_enabled`
 - `support_chat_enabled`
 - `telegram_bot_enabled`
