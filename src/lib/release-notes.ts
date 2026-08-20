@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.185",
+    date: "2026-08-20",
+    title: "Spanish thesis drafts no longer vanish on “mantener”",
+    titleTranslations: {
+      es: "Las tesis en español ya no desaparecen por la palabra “mantener”",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Thesis screening in Spanish now keeps a fallback draft. The word “mantener” (hold) was blocking the whole write-up even when Uber and other names had facts and gates. Reports remain informational, not investment advice.",
+        translations: {
+          es: "El cribado de tesis en español ahora conserva un borrador de respaldo. La palabra “mantener” bloqueaba todo el texto aunque Uber y otros nombres tuvieran hechos y puertas. Los informes son informativos, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.184",
     date: "2026-08-20",
     title: "Mobile add crypto, SOL-EUR, Warren on home",

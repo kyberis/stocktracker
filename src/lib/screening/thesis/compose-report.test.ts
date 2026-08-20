@@ -151,4 +151,62 @@ describe("composeThesisReport", () => {
     );
     expect(report?.disclaimer.toLowerCase()).toContain("not constitute investment advice");
   });
+
+  it("does not throw when a ticker has more than 80 facts", () => {
+    const extraFacts = Array.from({ length: 90 }, (_, i) =>
+      fact(i % 2 === 0 ? "EQ:D1" : "EQ:E1", i % 2 === 0 ? 1.1 : 0.4),
+    );
+    const assessment = scoreThesisAssessment({
+      facts: extraFacts.slice(0, 4),
+      soft: [],
+    });
+    const hd = thesisHardDataOutputSchema.parse({
+      status: "ok",
+      universeSize: 1,
+      tickers: ["AAPL"],
+      candidates: [
+        {
+          ticker: "AAPL",
+          name: "Apple",
+          sector: "Technology",
+          industry: "Consumer Electronics",
+          country: "US",
+          marketCapUsd: 3e12,
+          price: 190,
+          rankScore: 80,
+          rankReason: "Analyze.",
+        },
+      ],
+      facts: extraFacts,
+      gaps: [],
+      locale: "en",
+      generatedAt: "2026-08-19T00:00:00.000Z",
+    });
+    const ev = thesisEvaluateOutputSchema.parse({
+      evaluations: [
+        {
+          ticker: "AAPL",
+          companyName: "Apple",
+          assessment,
+          thesis_draft: null,
+        },
+      ],
+      ruleset_version: THESIS_RULESET_VERSION,
+      locale: "en",
+      generatedAt: "2026-08-19T00:00:00.000Z",
+    });
+    expect(() =>
+      composeThesisReport({
+        runId: "run-1",
+        locale: "en",
+        outputs: [output("thesis_hard_data", hd), output("thesis_evaluate", ev)],
+      }),
+    ).not.toThrow();
+    const report = composeThesisReport({
+      runId: "run-1",
+      locale: "en",
+      outputs: [output("thesis_hard_data", hd), output("thesis_evaluate", ev)],
+    });
+    expect(report?.cards[0]?.facts.length).toBe(80);
+  });
 });

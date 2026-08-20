@@ -860,7 +860,8 @@ const en = {
     premortem: "Pre-mortem",
     conviction: "Conviction",
     horizon: "Horizon",
-    noDraft: "No thesis draft was produced for this name.",
+    noDraft:
+      "No thesis draft was produced for this name. Quality gates and evidence gaps are still listed below.",
     gaps: "Gaps",
     noGaps: "No listed gaps.",
     insufficientEvidence: "insufficient evidence (no citable quote)",
@@ -1727,7 +1728,8 @@ const es: ScreeningCopy = {
     premortem: "Pre-mortem",
     conviction: "Convicción",
     horizon: "Horizonte",
-    noDraft: "No se produjo un borrador de tesis para este nombre.",
+    noDraft:
+      "No se produjo un borrador de tesis para este nombre. Las puertas de calidad y los huecos de evidencia siguen visibles abajo.",
     gaps: "Huecos",
     noGaps: "Sin huecos listados.",
     insufficientEvidence: "evidencia insuficiente (sin cita)",
