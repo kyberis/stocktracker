@@ -23,9 +23,7 @@ Search → select → specify quantity + purchase price → add a `holding` with
 - Uses `/api/crypto/search` + `/api/holdings`.
 
 ## 6. UI surface
-- Desktop: centered modal with debounced search.
-- Mobile: full-viewport page sheet (`100dvh`) with sticky footer + safe-area padding so **Add to portfolio** stays above browser chrome (not a floating card).
-- Search lists Yahoo USD pairs and synthesizes EUR siblings (e.g. `SOL-EUR` alongside `SOL-USD`).
+- Modal with debounced search.
 
 ## 7. Business logic
 - Quantity validated > 0.
