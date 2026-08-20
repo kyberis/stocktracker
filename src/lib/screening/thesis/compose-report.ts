@@ -58,19 +58,27 @@ export function composeThesisReport(opts: {
 
   const cards = ev.data.evaluations
     .filter((e) => !degraded.has(e.ticker.toUpperCase()) || ev.data.evaluations.length === 1)
-    .map((e) => ({
-      ticker: e.ticker,
-      companyName: e.companyName,
-      assessment: e.assessment,
-      thesis_draft: e.thesis_draft,
-      facts: hd.data.facts
-        .filter((f) => f.asset_id.toUpperCase() === e.ticker.toUpperCase())
-        .slice(0, 80),
-      soft_assessments: [...irSoft, ...webSoft].filter(
-        (s) => s.asset_id.toUpperCase() === e.ticker.toUpperCase(),
-      ),
-      gaps: e.thesis_draft?.gaps ?? [],
-    }));
+    .map((e) => {
+      const candidate = hd.data.candidates.find(
+        (c) => c.ticker.toUpperCase() === e.ticker.toUpperCase(),
+      );
+      return {
+        ticker: e.ticker,
+        companyName: e.companyName,
+        assessment: e.assessment,
+        thesis_draft: e.thesis_draft,
+        facts: hd.data.facts
+          .filter((f) => f.asset_id.toUpperCase() === e.ticker.toUpperCase())
+          .slice(0, 80),
+        soft_assessments: [...irSoft, ...webSoft].filter(
+          (s) => s.asset_id.toUpperCase() === e.ticker.toUpperCase(),
+        ),
+        gaps: e.thesis_draft?.gaps ?? [],
+        businessSummary: candidate?.analysisSummary ?? undefined,
+        industry: candidate?.industry ?? undefined,
+        narrative: e.narrative,
+      };
+    });
 
   const parsed = thesisReportSchema.safeParse({
     kind: "thesis",
