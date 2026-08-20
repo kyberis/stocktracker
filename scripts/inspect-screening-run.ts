@@ -1,6 +1,7 @@
 #!/usr/bin/env npx tsx
 import { readFileSync } from "fs";
 import { resolve } from "path";
+import { createClient } from "@libsql/client";
 
 function loadDotEnv(path: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -25,50 +26,91 @@ function loadDotEnv(path: string): Record<string, string> {
 }
 
 async function main() {
-  const runId = process.argv[2]?.trim();
-  if (!runId) {
-    console.error("Usage: npx tsx scripts/inspect-screening-run.ts <runId>");
-    process.exit(1);
-  }
-
+  const runId = process.argv[2];
+  if (!runId) throw new Error("usage: inspect-screening-run.ts <runId>");
   const envFile = loadDotEnv(".env.production.local");
-  for (const [k, v] of Object.entries(envFile)) {
-    if (!process.env[k]) process.env[k] = v;
-  }
-  if (!process.env.TURSO_DATABASE_URL && envFile.stocktracker_TURSO_DATABASE_URL) {
-    process.env.TURSO_DATABASE_URL = envFile.stocktracker_TURSO_DATABASE_URL;
-  }
-  if (!process.env.TURSO_AUTH_TOKEN && envFile.stocktracker_TURSO_AUTH_TOKEN) {
-    process.env.TURSO_AUTH_TOKEN = envFile.stocktracker_TURSO_AUTH_TOKEN;
-  }
-  process.env.STOCKTRACKER_USE_REMOTE_DB_IN_DEV = "true";
+  const url =
+    process.env.TURSO_DATABASE_URL ||
+    envFile.TURSO_DATABASE_URL ||
+    envFile.stocktracker_TURSO_DATABASE_URL;
+  const authToken =
+    process.env.TURSO_AUTH_TOKEN ||
+    envFile.TURSO_AUTH_TOKEN ||
+    envFile.stocktracker_TURSO_AUTH_TOKEN;
+  if (!url || !authToken) throw new Error("Missing Turso credentials");
+  const client = createClient({ url, authToken });
 
-  const { ensureInitialized } = await import("../src/lib/db/client");
-  const db = await ensureInitialized();
-  const run = await db.execute({
-    sql: "select id, status, updated_at, cost_usd from screening_runs where id = ?",
+  const run = await client.execute({
+    sql: `SELECT id, user_id, status, intent, pipeline_kind, mocked_pipeline,
+                 cost_usd, created_at, updated_at,
+                 substr(brief_json, 1, 2500) AS brief
+          FROM screening_runs WHERE id = ?`,
     args: [runId],
   });
-  console.log("run", run.rows[0]);
-  const steps = await db.execute({
-    sql: `select agent_kind, status, count(*) as n, max(updated_at) as last
-          from screening_run_steps where run_id = ?
-          group by agent_kind, status
-          order by agent_kind, status`,
+  console.log("=== RUN ===");
+  console.log(JSON.stringify(run.rows[0] ?? null, null, 2));
+
+  const steps = await client.execute({
+    sql: `SELECT id, agent_kind, ticker, status, error_message, attempts,
+                 created_at, updated_at, started_at, completed_at,
+                 substr(depends_on, 1, 200) AS depends
+          FROM screening_run_steps WHERE run_id = ? ORDER BY created_at, agent_kind`,
     args: [runId],
   });
-  console.log("steps", steps.rows);
-  const pending = await db.execute({
-    sql: `select id, agent_kind, ticker, status, attempts, lease_owner, lease_expires_at, depends_on, error_message, updated_at
-          from screening_run_steps
-          where run_id = ? and status in ('pending','running','failed')
-          order by updated_at desc
-          limit 40`,
+  console.log("\n=== STEPS ===");
+  for (const row of steps.rows) {
+    console.log(
+      `${row.status}\t${row.agent_kind}\t${row.ticker ?? "-"}\tattempts=${row.attempts}\t${row.error_message ?? ""}`,
+    );
+  }
+
+  const outs = await client.execute({
+    sql: `SELECT agent_kind, ticker, length(output_json) AS n, created_at,
+                 substr(output_json, 1, 400) AS preview
+          FROM screening_agent_outputs WHERE run_id = ? ORDER BY created_at`,
     args: [runId],
   });
-  console.log("open", pending.rows);
-  console.log("now", new Date().toISOString());
-  process.exit(0);
+  console.log("\n=== OUTPUTS ===");
+  for (const row of outs.rows) {
+    console.log(
+      `${row.agent_kind}\t${row.ticker ?? "-"}\t${row.n} chars\t${row.created_at}`,
+    );
+  }
+
+  const hd = await client.execute({
+    sql: `SELECT output_json FROM screening_agent_outputs WHERE run_id = ? AND agent_kind = 'thesis_hard_data' ORDER BY created_at DESC LIMIT 1`,
+    args: [runId],
+  });
+  const ev = await client.execute({
+    sql: `SELECT output_json FROM screening_agent_outputs WHERE run_id = ? AND agent_kind = 'thesis_evaluate' ORDER BY created_at DESC LIMIT 1`,
+    args: [runId],
+  });
+  const hdJson = JSON.parse(String(hd.rows[0]?.output_json ?? "{}"));
+  const evJson = JSON.parse(String(ev.rows[0]?.output_json ?? "{}"));
+  console.log("\n=== HARD DATA STATS ===");
+  console.log({
+    status: hdJson.status,
+    tickers: hdJson.tickers,
+    candidateKeys: hdJson.candidates?.[0] ? Object.keys(hdJson.candidates[0]) : [],
+    country: hdJson.candidates?.[0]?.country,
+    factCount: hdJson.facts?.length,
+    fieldIds: (hdJson.facts ?? []).map((f: { field_id: string }) => f.field_id),
+    gaps: hdJson.gaps,
+  });
+  console.log("\n=== EVALUATE ===");
+  const e0 = evJson.evaluations?.[0];
+  console.log({
+    ticker: e0?.ticker,
+    companyName: e0?.companyName,
+    verdict: e0?.assessment?.verdict,
+    total: e0?.assessment?.total,
+    draftNull: e0?.thesis_draft == null,
+    statementLen: e0?.thesis_draft?.statement?.length,
+    kill: e0?.thesis_draft?.kill_criteria,
+    gaps: e0?.thesis_draft?.gaps,
+    narrativeLen: e0?.narrative?.length,
+  });
+  console.log(JSON.stringify(e0?.thesis_draft, null, 2)?.slice(0, 2500));
 }
 
 main().catch((err) => {

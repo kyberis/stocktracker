@@ -63,16 +63,16 @@ export function composeThesisReport(opts: {
       companyName: e.companyName,
       assessment: e.assessment,
       thesis_draft: e.thesis_draft,
-      facts: hd.data.facts.filter(
-        (f) => f.asset_id.toUpperCase() === e.ticker.toUpperCase(),
-      ),
+      facts: hd.data.facts
+        .filter((f) => f.asset_id.toUpperCase() === e.ticker.toUpperCase())
+        .slice(0, 80),
       soft_assessments: [...irSoft, ...webSoft].filter(
         (s) => s.asset_id.toUpperCase() === e.ticker.toUpperCase(),
       ),
       gaps: e.thesis_draft?.gaps ?? [],
     }));
 
-  return thesisReportSchema.parse({
+  const parsed = thesisReportSchema.safeParse({
     kind: "thesis",
     runId: opts.runId,
     locale: opts.locale ?? ev.data.locale,
@@ -84,4 +84,5 @@ export function composeThesisReport(opts: {
       : DISCLAIMER_EN,
     qa: qa?.success ? qa.data : null,
   });
+  return parsed.success ? parsed.data : null;
 }

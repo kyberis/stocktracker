@@ -15,6 +15,7 @@ import { accrueScreeningLlmCost } from "@/lib/screening/cost";
 import { extractLlmUsage } from "@/lib/screening/llm-usage";
 import { resolveScreeningGatewayModel } from "@/lib/screening/resolve-model";
 import { screeningBriefSchema } from "@/lib/screening/schemas";
+import { fallbackThesisDraft } from "@/lib/screening/thesis/fallback-draft";
 import {
   maxConvictionForAssessment,
   scoreThesisAssessment,
@@ -36,9 +37,7 @@ import {
   thesisIrOutputSchema,
   thesisSoftAssessmentSchema,
   thesisWebOutputSchema,
-  type ThesisDraft,
   type ThesisEvaluateTicker,
-  type ThesisFact,
   type ThesisSoftAssessment,
 } from "@/lib/screening/thesis/schemas";
 
@@ -69,76 +68,6 @@ function parseSoftFromRows(
   return out;
 }
 
-function fallbackDraft(
-  ticker: string,
-  locale: string,
-  assessment: ReturnType<typeof scoreThesisAssessment>,
-  facts: ThesisFact[],
-): ThesisDraft | null {
-  const d1 = facts.find((f) => f.field_id === "EQ:D1");
-  const gaps: string[] = [];
-  if (d1?.value == null) gaps.push("EQ:D1 missing — cannot bind a cash-conversion kill criterion.");
-  const kill =
-    d1?.value != null
-      ? [
-          {
-            metric_field_id: "EQ:D1" as const,
-            operator: "<" as const,
-            threshold: 0.6,
-            window: "TTM 3y average",
-            action: "review" as const,
-            label: "FCF/NI average falls below 0.6",
-          },
-        ]
-      : [];
-  if (kill.length === 0) gaps.push("No code-evaluable kill criterion available from facts.");
-  const raw = {
-    ticker,
-    statement: locale.startsWith("es")
-      ? `Creo que ${ticker} puede mantener su calidad de negocio en 36 meses si la conversión de caja y el apalancamiento publicados se sostienen; el mercado ya descuenta parte de esa calidad.`
-      : `I believe ${ticker} can sustain its published business quality over 36 months if cash conversion and leverage hold; the market already prices some of that quality.`,
-    variant_perception: {
-      consensus_view:
-        "Consensus estimates were not fetched in this pipeline version (I1–I3 gap).",
-      our_view:
-        "Quality and balance-sheet facts are scored independently of price targets.",
-      why_mispricing_persists:
-        "Insufficient measured consensus — this is a gap, not a hidden edge.",
-    },
-    horizon_months: 36,
-    conviction: Math.min(2, maxConvictionForAssessment(assessment)),
-    conviction_rationale: "Fallback draft without a full LLM narrative pass.",
-    kill_criteria: kill,
-    premortem:
-      "It is 2029 and this position is down 50 percent. The most likely causes are a broken cash-conversion story, a refinancing wall, or a thesis that was never falsifiable because consensus was not measured.",
-    scenarios: [
-      {
-        label: "bear" as const,
-        probability: 0.25,
-        value: 0,
-        key_assumptions: [{ driver: "fcf_ni", assumption: "breaks below 0.6" }],
-      },
-      {
-        label: "base" as const,
-        probability: 0.5,
-        value: 0,
-        key_assumptions: [{ driver: "fcf_ni", assumption: "holds near history" }],
-      },
-      {
-        label: "bull" as const,
-        probability: 0.25,
-        value: 0,
-        key_assumptions: [{ driver: "multiple", assumption: "mean reversion" }],
-      },
-    ],
-    status: assessment.verdict === "watchlist_gate_failed" ? "watchlist" : "draft",
-    gaps,
-    disclaimer: locale.startsWith("es") ? DISCLAIMER_ES : DISCLAIMER_EN,
-  };
-  const parsed = thesisDraftSchema.safeParse(raw);
-  return parsed.success ? parsed.data : null;
-}
-
 const runThesisEvaluateStep: StepHandler = async (
   ctx: HandlerContext,
 ): Promise<HandlerResult> => {
@@ -161,7 +90,11 @@ const runThesisEvaluateStep: StepHandler = async (
   const compiler = compilerRow
     ? thesisCompilerOutputSchema.safeParse(JSON.parse(compilerRow.outputJson))
     : null;
-  const shortlist = compiler?.success ? compiler.data.tickers : hd?.success ? hd.data.tickers.slice(0, 5) : [];
+  const shortlist = compiler?.success
+    ? compiler.data.tickers
+    : hd?.success
+      ? hd.data.tickers.slice(0, 5)
+      : [];
   const allSoft = [
     ...parseSoftFromRows(irRows, thesisIrOutputSchema),
     ...parseSoftFromRows(webRows, thesisWebOutputSchema),
@@ -172,13 +105,19 @@ const runThesisEvaluateStep: StepHandler = async (
     const facts = (hd?.success ? hd.data.facts : []).filter(
       (f) => f.asset_id.toUpperCase() === ticker.toUpperCase(),
     );
-    const soft = allSoft.filter((s) => s.asset_id.toUpperCase() === ticker.toUpperCase());
+    const soft = allSoft.filter(
+      (s) => s.asset_id.toUpperCase() === ticker.toUpperCase(),
+    );
     const candidate = hd?.success
-      ? hd.data.candidates.find((c) => c.ticker.toUpperCase() === ticker.toUpperCase())
+      ? hd.data.candidates.find(
+          (c) => c.ticker.toUpperCase() === ticker.toUpperCase(),
+        )
       : undefined;
     const assessment = scoreThesisAssessment({ facts, soft });
     const cap = maxConvictionForAssessment(assessment);
-    let draft = fallbackDraft(ticker, locale, assessment, facts);
+    let draft =
+      fallbackThesisDraft(ticker, locale, assessment, facts) ??
+      fallbackThesisDraft(ticker, "en", assessment, facts);
     const gatewayOk = await resolveGatewayApiKey();
     let tokensInput = 0;
     let tokensOutput = 0;
@@ -194,7 +133,7 @@ const runThesisEvaluateStep: StepHandler = async (
             {
               role: "system",
               content: `Write a falsifiable investment thesis draft for ${ticker}. Language: ${locale}.
-Never use buy/sell/hold. Kill criteria MUST use metric_field_id from FACTS (e.g. EQ:D1, EQ:E1). Premortem min 50 chars. Scenarios bull/base/bear probabilities sum to 1. Conviction 1-${cap}. If a gate failed, status=watchlist and conviction <=2.
+Never use buy/sell/hold or Spanish equivalents (comprar, vender, mantener). Kill criteria MUST use metric_field_id from FACTS (e.g. EQ:D1, EQ:E1). Premortem min 50 chars. Scenarios bull/base/bear probabilities sum to 1. Conviction 1-${cap}. If a gate failed, status=watchlist and conviction <=2.
 Call submit_draft.`,
             },
             {
@@ -237,16 +176,16 @@ Call submit_draft.`,
           const raw =
             data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? "";
           const parsedJson = JSON.parse(raw) as Record<string, unknown>;
-          if (typeof parsedJson.statement === "string" && ADVICE_LANGUAGE.test(parsedJson.statement)) {
-            parsedJson.statement = fallbackDraft(ticker, locale, assessment, facts)?.statement;
+          if (
+            typeof parsedJson.statement === "string" &&
+            ADVICE_LANGUAGE.test(parsedJson.statement)
+          ) {
+            parsedJson.statement = draft?.statement;
           }
           const parsed = thesisDraftSchema.safeParse({
             ...parsedJson,
             ticker,
-            conviction: Math.min(
-              cap,
-              Number(parsedJson.conviction) || 1,
-            ),
+            conviction: Math.min(cap, Number(parsedJson.conviction) || 1),
             status:
               assessment.verdict === "watchlist_gate_failed"
                 ? "watchlist"
@@ -283,9 +222,7 @@ Call submit_draft.`,
       companyName: candidate?.name || ticker,
       assessment,
       thesis_draft: draft,
-      narrative: draft
-        ? `${draft.statement}\n\n${draft.premortem}`
-        : undefined,
+      narrative: draft ? `${draft.statement}\n\n${draft.premortem}` : undefined,
     });
   }
 
