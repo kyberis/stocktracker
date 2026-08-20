@@ -28,6 +28,12 @@ const POLL_MS = 1200;
 /** ~12 min — research fan-out over ~20 tickers (IR + Web + Tech) can be long. */
 const MAX_POLLS = 600;
 
+function isThesisReport(
+  report: ScreeningReport | ThesisReport,
+): report is ThesisReport {
+  return "kind" in report && report.kind === "thesis";
+}
+
 function readStoredBrief(runId: string): ScreeningBrief | null {
   try {
     const raw = sessionStorage.getItem(`trefolio-screening-brief-${runId}`);
@@ -348,10 +354,9 @@ export function RunProgress({ runId }: { runId: string }) {
   }, [visibleSteps.length, run?.progressPct]);
 
   if (showReport && report) {
-    const isThesis = "kind" in report && report.kind === "thesis";
     return (
       <main className="mx-auto w-full max-w-7xl px-3 py-6 sm:px-4 lg:px-6">
-        {isThesis ? (
+        {isThesisReport(report) ? (
           <ThesisReportView report={report} />
         ) : (
           <ScreeningReportView

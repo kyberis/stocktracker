@@ -31,6 +31,7 @@ describe("collectThesisQaIssues", () => {
         score: 4,
         confidence: "medium",
         evidence: [],
+        disconfirming_evidence: [],
         assessed_at: "2026-08-19T00:00:00.000Z",
         assessed_by: "test",
       },
@@ -64,6 +65,7 @@ describe("collectThesisQaIssues", () => {
             premortem:
               "It is 2029 and this name is down 50 percent because cash conversion broke.",
             scenarios: [],
+            key_risks: [],
             status: "draft",
             gaps: [],
             disclaimer: "Informational.",
