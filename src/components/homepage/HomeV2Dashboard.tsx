@@ -281,6 +281,10 @@ export default function HomeV2Dashboard() {
 
           {isMobile && (
             <>
+              <WarrenTrigger
+                onOpen={() => setAiOpen(true)}
+                href={demoMode ? "/signup" : undefined}
+              />
               {aidStatus.data?.warrenNudge && (
                 <AidWarrenNudge
                   nudge={aidStatus.data.warrenNudge}

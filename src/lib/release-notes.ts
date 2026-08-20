@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.184",
+    version: "2.5.185",
     date: "2026-08-20",
     title: "Spanish thesis drafts no longer vanish on “mantener”",
     titleTranslations: {
@@ -29,6 +29,37 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Thesis screening in Spanish now keeps a fallback draft. The word “mantener” (hold) was blocking the whole write-up even when Uber and other names had facts and gates. Reports remain informational, not investment advice.",
         translations: {
           es: "El cribado de tesis en español ahora conserva un borrador de respaldo. La palabra “mantener” bloqueaba todo el texto aunque Uber y otros nombres tuvieran hechos y puertas. Los informes son informativos, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.184",
+    date: "2026-08-20",
+    title: "Mobile add crypto, SOL-EUR, Warren on home",
+    titleTranslations: {
+      es: "Añadir cripto en móvil, SOL-EUR y Warren en inicio",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Add Crypto on mobile is a full-screen page with a sticky footer so Add to portfolio stays above the browser chrome instead of a clipped centered modal.",
+        translations: {
+          es: "Añadir Cripto en móvil es una página a pantalla completa con pie fijo para que Agregar al portafolio quede por encima de la barra del navegador, no un modal centrado recortado.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Crypto search now lists euro pairs such as SOL-EUR alongside USD quotes so Solana in euros is selectable.",
+        translations: {
+          es: "La búsqueda de cripto ahora lista pares en euros como SOL-EUR junto a las cotizaciones en USD para poder elegir Solana en euros.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Warren’s chat trigger appears on the mobile home feed again (it was only in the desktop rail).",
+        translations: {
+          es: "El acceso al chat de Warren vuelve a aparecer en el inicio móvil (antes solo estaba en la columna de escritorio).",
         },
       },
     ],
