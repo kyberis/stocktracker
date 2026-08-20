@@ -1,4 +1,5 @@
 import type { Metric, MetricUnit } from "./types";
+export type { MetricUnit };
 
 export type MetricLocale = "en" | "es";
 

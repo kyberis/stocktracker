@@ -1,5 +1,4 @@
 import { METRIC_CATALOG } from "./catalog";
-import { recordThesisMetricRejected } from "@/lib/screening/metrics";
 import type { Metric, ValidateContext } from "./types";
 
 function sign(n: number): 1 | 0 | -1 {
@@ -9,7 +8,9 @@ function sign(n: number): 1 | 0 | -1 {
 }
 
 function fail(metric: Metric, flag: string, ctx: ValidateContext): Metric {
-  recordThesisMetricRejected({
+  // Do not import screening/metrics here: this module is reachable from the
+  // client report view. Telemetry is recorded on the hard-data path instead.
+  console.warn("[thesis/metrics] rejected", {
     ticker: ctx.ticker ?? "unknown",
     metricId: metric.id,
     flag,

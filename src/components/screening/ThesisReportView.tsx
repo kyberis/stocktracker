@@ -8,7 +8,7 @@ import {
   formatMetricValue,
   metricLocaleFromTag,
   type MetricUnit,
-} from "@/lib/screening/thesis/metrics";
+} from "@/lib/screening/thesis/metrics/format";
 import { AiLabel, ScreeningDisclaimer } from "./ScreeningNotices";
 import { useScreeningCopy } from "./use-screening-copy";
 

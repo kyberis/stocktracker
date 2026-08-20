@@ -1,4 +1,5 @@
 import type { HardDataCandidate } from "@/lib/screening/schemas";
+import { recordThesisMetricRejected } from "@/lib/screening/metrics";
 import type { ThesisFact, ThesisSource } from "@/lib/screening/thesis/schemas";
 import {
   metricsFromCandidate,
@@ -218,6 +219,12 @@ export function deriveFactsFromCandidate(
 
   for (const m of metrics) {
     if (m.status === "error") {
+      recordThesisMetricRejected({
+        ticker,
+        metricId: m.id,
+        flag: m.flags[0] ?? "error",
+        rawValue: m.value,
+      });
       gaps.push(`${m.id}_${m.flags[0] ?? "error"}`);
     }
   }

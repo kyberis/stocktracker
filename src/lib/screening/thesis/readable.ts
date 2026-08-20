@@ -10,16 +10,18 @@ import {
   adjectiveFor,
   cagrSpanYears,
   compoundedChangePct,
+  mustDescribeBuyback,
+  mustDescribeFcfGenerates,
+} from "@/lib/screening/thesis/metrics/adjectives";
+import { metricById } from "@/lib/screening/thesis/metrics/compute";
+import {
   formatMetric,
   formatMetricUnreliable,
   formatMetricValue,
-  metricById,
   metricLocaleFromTag,
-  mustDescribeBuyback,
-  mustDescribeFcfGenerates,
-  publishedMetricValue,
-} from "@/lib/screening/thesis/metrics";
-import type { Metric } from "@/lib/screening/thesis/metrics";
+} from "@/lib/screening/thesis/metrics/format";
+import { publishedMetricValue } from "@/lib/screening/thesis/metrics/validate";
+import type { Metric } from "@/lib/screening/thesis/metrics/types";
 
 export type SnapshotTone = "ok" | "watch" | "unknown";
 
