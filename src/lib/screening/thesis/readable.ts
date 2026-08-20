@@ -3,8 +3,25 @@ import type {
   ThesisAssessment,
   ThesisDraft,
   ThesisFact,
+  ThesisMetricRow,
   ThesisSoftAssessment,
 } from "@/lib/screening/thesis/schemas";
+import {
+  adjectiveFor,
+  cagrSpanYears,
+  compoundedChangePct,
+  mustDescribeBuyback,
+  mustDescribeFcfGenerates,
+} from "@/lib/screening/thesis/metrics/adjectives";
+import { metricById } from "@/lib/screening/thesis/metrics/compute";
+import {
+  formatMetric,
+  formatMetricUnreliable,
+  formatMetricValue,
+  metricLocaleFromTag,
+} from "@/lib/screening/thesis/metrics/format";
+import { publishedMetricValue } from "@/lib/screening/thesis/metrics/validate";
+import type { Metric } from "@/lib/screening/thesis/metrics/types";
 
 export type SnapshotTone = "ok" | "watch" | "unknown";
 
@@ -16,6 +33,7 @@ export interface ThesisSnapshotLine {
 export interface ReadableThesis {
   headline: string;
   business: string;
+  whatHappened: string | null;
   strengths: ThesisSnapshotLine[];
   weaknesses: ThesisSnapshotLine[];
   outlook: string;
@@ -28,13 +46,6 @@ export interface ReadableThesis {
 function num(facts: ThesisFact[], fieldId: string): number | null {
   const v = facts.find((f) => f.field_id === fieldId)?.value;
   return typeof v === "number" && Number.isFinite(v) ? v : null;
-}
-
-function fmt(n: number, digits = 2): string {
-  return n.toLocaleString(undefined, {
-    maximumFractionDigits: digits,
-    minimumFractionDigits: 0,
-  });
 }
 
 function gate(
@@ -52,6 +63,14 @@ function quoteFor(
   const row = soft.find((s) => s.field_id === fieldId);
   const q = row?.evidence[0]?.quote?.trim();
   return q && q.length >= 10 ? q : null;
+}
+
+function rowsToMetrics(rows: ThesisMetricRow[] | undefined): Metric[] {
+  return (rows ?? []).map(({ ticker: _ticker, ...m }) => m);
+}
+
+function pub(metric: Metric | undefined): number | null {
+  return metric ? publishedMetricValue(metric) : null;
 }
 
 const OPEN_FIELDS: Record<string, "openMoat" | "openMgmt" | "openInsiders" | "openMix" | "openNews" | "openCatalysts"> =
@@ -74,22 +93,39 @@ export function buildReadableThesis(opts: {
   facts: ThesisFact[];
   soft: ThesisSoftAssessment[];
   draft: ThesisDraft | null;
+  metrics?: ThesisMetricRow[];
 }): ReadableThesis {
   const t = getScreeningCopy(opts.locale).thesisReport;
+  const loc = metricLocaleFromTag(opts.locale);
   const name = opts.companyName.trim() || opts.ticker;
+  const metrics = rowsToMetrics(opts.metrics);
   const a1 = gate(opts.assessment, "EQ:A1");
   const d1 = gate(opts.assessment, "EQ:D1");
   const e1 = gate(opts.assessment, "EQ:E1");
-  const e2 = gate(opts.assessment, "EQ:E2");
   const d7 = gate(opts.assessment, "EQ:D7");
-  const d1n = num(opts.facts, "EQ:D1");
-  const e1n = num(opts.facts, "EQ:E1");
-  const e2n = num(opts.facts, "EQ:E2");
+
+  const coverageM = metricById(metrics, "interestCoverage");
+  const fcfM = metricById(metrics, "fcfToNetIncome");
+  const ndM = metricById(metrics, "netDebtToEbitda");
+  const shareM = metricById(metrics, "shareCountCagr");
+  const roicM = metricById(metrics, "roic");
+  const cagrM = metricById(metrics, "revenueCagr");
+  const drawM = metricById(metrics, "drawdown52w");
+  const upsideM = metricById(metrics, "targetUpside");
+  const peNowM = metricById(metrics, "peCurrent");
+  const peHistM = metricById(metrics, "peHistoric");
+
+  const d1n = pub(fcfM) ?? num(opts.facts, "EQ:D1");
+  const e1n = pub(ndM) ?? num(opts.facts, "EQ:E1");
+  const e2n = pub(coverageM) ?? num(opts.facts, "EQ:E2");
+  const roic = pub(roicM) ?? num(opts.facts, "EQ:B1");
+  const cagrPct =
+    pub(cagrM) ??
+    (num(opts.facts, "EQ:C1") != null ? num(opts.facts, "EQ:C1")! * 100 : null);
+  const sharePct = pub(shareM);
   const fwdPe = num(opts.facts, "calc:fwd_pe");
-  const histPe = num(opts.facts, "calc:hist_pe_avg");
-  const upside = num(opts.facts, "calc:upside_pct");
-  const roic = num(opts.facts, "EQ:B1");
-  const cagr = num(opts.facts, "EQ:C1");
+  const histPe = pub(peHistM) ?? num(opts.facts, "calc:hist_pe_avg");
+  const upside = pub(upsideM) ?? num(opts.facts, "calc:upside_pct");
 
   let headline = t.verdicts[opts.assessment.verdict] ?? opts.assessment.verdict;
   if (opts.assessment.verdict === "watchlist_gate_failed") {
@@ -113,6 +149,13 @@ export function buildReadableThesis(opts: {
     business = `${name} (${opts.ticker}). ${business}`;
   }
 
+  let whatHappened: string | null = null;
+  if (drawM && drawM.flags.includes("major_drawdown") && drawM.status !== "error") {
+    whatHappened = fill(t.whatHappenedDrawdown, {
+      value: formatMetric(drawM, loc),
+    });
+  }
+
   const strengths: ThesisSnapshotLine[] = [];
   const weaknesses: ThesisSnapshotLine[] = [];
 
@@ -122,70 +165,125 @@ export function buildReadableThesis(opts: {
     weaknesses.push({ text: t.gateBusinessFail, tone: "watch" });
   }
 
-  if (d1.passed === true && d1n != null) {
-    strengths.push({
-      text: fill(t.gateCashOk, { value: fmt(d1n) }),
-      tone: "ok",
-    });
-  } else if (d1.passed === false) {
+  if (fcfM?.status === "error") {
     weaknesses.push({
-      text: fill(t.gateCashFail, { value: d1n != null ? fmt(d1n) : "—" }),
-      tone: "watch",
+      text: fill(t.gateCashFail, { value: formatMetricUnreliable(loc) }),
+      tone: "unknown",
     });
+  } else if (d1n != null) {
+    const shown = fcfM ? formatMetric(fcfM, loc) : formatMetricValue(d1n, "x", loc);
+    if (mustDescribeFcfGenerates(d1n)) {
+      strengths.push({ text: fill(t.gateCashGenerates, { value: shown }), tone: "ok" });
+    } else if (d1.passed === false) {
+      weaknesses.push({ text: fill(t.gateCashFail, { value: shown }), tone: "watch" });
+    } else {
+      strengths.push({ text: fill(t.gateCashOk, { value: shown }), tone: "ok" });
+    }
   }
 
-  if (e1.passed === true && e1n != null) {
-    strengths.push({
-      text: fill(t.gateDebtOk, { value: fmt(e1n) }),
-      tone: "ok",
-    });
-  } else if (e1.passed === false && e1n != null) {
+  if (ndM?.status === "error") {
     weaknesses.push({
-      text: fill(t.gateDebtFail, { value: fmt(e1n) }),
-      tone: "watch",
+      text: fill(t.gateDebtFail, { value: formatMetricUnreliable(loc) }),
+      tone: "unknown",
     });
+  } else if (e1n != null) {
+    const shown = ndM ? formatMetric(ndM, loc) : formatMetricValue(e1n, "x", loc);
+    if (e1.passed === false) {
+      weaknesses.push({ text: fill(t.gateDebtFail, { value: shown }), tone: "watch" });
+    } else if (e1.passed === true) {
+      strengths.push({ text: fill(t.gateDebtOk, { value: shown }), tone: "ok" });
+    }
   }
 
-  if (e2.passed === true && e2n != null) {
-    strengths.push({
-      text: fill(t.gateCoverageOk, { value: fmt(e2n, 1) }),
-      tone: "ok",
-    });
-  } else if (e2.passed === false && e2n != null) {
-    weaknesses.push({
-      text: fill(t.gateCoverageFail, { value: fmt(e2n, 1) }),
-      tone: "watch",
-    });
+  if (coverageM?.status === "error" || (coverageM && e2n == null)) {
+    weaknesses.push({ text: t.coverageUnavailable, tone: "unknown" });
+  } else if (e2n != null) {
+    const adj = coverageM
+      ? adjectiveFor(coverageM, loc)
+      : e2n < 1.5
+        ? loc === "es"
+          ? "crítica"
+          : "critical"
+        : e2n < 3
+          ? loc === "es"
+            ? "ajustada"
+            : "tight"
+          : e2n <= 6
+            ? loc === "es"
+              ? "razonable"
+              : "reasonable"
+            : loc === "es"
+              ? "holgada"
+              : "comfortable";
+    const shown = coverageM
+      ? formatMetric(coverageM, loc)
+      : formatMetricValue(e2n, "x", loc);
+    const line = fill(t.coverageLine, { adj: adj ?? t.coverageUnavailable, value: shown });
+    if (adj === "critical" || adj === "crítica" || adj === "tight" || adj === "ajustada") {
+      weaknesses.push({ text: line, tone: "watch" });
+    } else {
+      strengths.push({ text: line, tone: "ok" });
+    }
   }
 
   if (roic != null && roic >= 15) {
-    strengths.push({
-      text: fill(t.roicOk, { value: fmt(roic, 1) }),
-      tone: "ok",
-    });
+    const shown = roicM ? formatMetric(roicM, loc) : formatMetricValue(roic, "pct", loc);
+    strengths.push({ text: fill(t.roicOk, { value: shown }), tone: "ok" });
   }
 
-  if (d7.passed === false) {
+  if (mustDescribeBuyback(sharePct ?? null) && shareM && shareM.status !== "error") {
+    const years = cagrSpanYears(shareM.period.label) ?? 3;
+    const cumulative = Math.abs(compoundedChangePct(sharePct!, years));
+    strengths.push({
+      text: fill(t.shareBuyback, {
+        cagr: formatMetric(shareM, loc),
+        cumulative: formatMetricValue(cumulative, "pct", loc),
+        years: String(years),
+      }),
+      tone: "ok",
+    });
+  } else if (d7.passed === false) {
     weaknesses.push({ text: t.gateDilutionFail, tone: "watch" });
-  } else if (d7.passed === true) {
+  } else if (d7.passed === true && !mustDescribeBuyback(sharePct ?? null)) {
     strengths.push({ text: t.gateDilutionOk, tone: "ok" });
   }
 
-  if (cagr != null && cagr < 0) {
-    weaknesses.push({
-      text: fill(t.revenueDown, { value: fmt(cagr * 100, 1) }),
-      tone: "watch",
-    });
+  if (cagrPct != null && cagrPct < 0) {
+    const shown = cagrM ? formatMetric(cagrM, loc) : formatMetricValue(cagrPct, "pct", loc);
+    weaknesses.push({ text: fill(t.revenueDown, { value: shown }), tone: "watch" });
   }
 
   const outlookBits: string[] = [];
   if (opts.draft?.variant_perception.consensus_view) {
     outlookBits.push(opts.draft.variant_perception.consensus_view);
-  } else if (upside != null || (fwdPe != null && histPe != null)) {
-    if (upside != null) outlookBits.push(fill(t.outlookUpside, { value: fmt(upside, 1) }));
-    if (fwdPe != null && histPe != null) {
-      outlookBits.push(fill(t.outlookPe, { fwd: fmt(fwdPe, 1), hist: fmt(histPe, 1) }));
+  } else if (upside != null || (fwdPe != null && histPe != null) || peNowM) {
+    if (upside != null) {
+      const shown = upsideM
+        ? formatMetric(upsideM, loc)
+        : formatMetricValue(upside, "pct", loc);
+      outlookBits.push(fill(t.outlookUpside, { value: shown }));
     }
+    if (upsideM?.flags.includes("stale_target")) {
+      outlookBits.push(t.staleTarget);
+    }
+    if (peNowM && peNowM.status !== "error" && peNowM.value != null) {
+      outlookBits.push(fill(t.outlookCurrentPe, { value: formatMetric(peNowM, loc) }));
+    }
+    if (fwdPe != null && histPe != null) {
+      outlookBits.push(
+        fill(t.outlookPe, {
+          fwd: formatMetricValue(fwdPe, "x", loc),
+          hist: formatMetricValue(histPe, "x", loc),
+        }),
+      );
+    }
+  }
+  if (metrics.some((m) => m.flags.includes("mixed_period"))) {
+    outlookBits.push(t.mixedPeriod);
+  }
+  if (coverageM?.flags.includes("stale_filing") || ndM?.flags.includes("stale_filing")) {
+    const filed = coverageM?.source.filingDate || ndM?.source.filingDate;
+    if (filed) outlookBits.push(fill(t.staleFiling, { date: filed }));
   }
   outlookBits.push(t.outlookNotGuidance);
   const outlook = outlookBits.join(" ");
@@ -217,6 +315,7 @@ export function buildReadableThesis(opts: {
   return {
     headline,
     business,
+    whatHappened,
     strengths,
     weaknesses,
     outlook,
@@ -235,6 +334,11 @@ export function joinReadableThesis(article: ReadableThesis, locale: string): str
     "",
     t.sectionBusiness,
     article.business,
+  ];
+  if (article.whatHappened) {
+    lines.push("", t.sectionWhatHappened, article.whatHappened);
+  }
+  lines.push(
     "",
     t.sectionStrengths,
     ...article.strengths.map((s) => `• ${s.text}`),
@@ -244,7 +348,7 @@ export function joinReadableThesis(article: ReadableThesis, locale: string): str
     "",
     t.sectionOutlook,
     article.outlook,
-  ];
+  );
   if (article.invalidation) {
     lines.push("", t.sectionInvalidation, article.invalidation);
   }

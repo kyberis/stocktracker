@@ -83,6 +83,39 @@ export const screeningRunsCreatedTotal = getOrCreateMetric(
     }),
 );
 
+export const screeningThesisMetricRejectedTotal = getOrCreateMetric(
+  "screening_thesis_metric_rejected_total",
+  () =>
+    new Counter({
+      name: "screening_thesis_metric_rejected_total",
+      help: "Thesis metric envelopes rejected by hard validation (H1–H5)",
+      labelNames: ["metric_id", "flag"] as const,
+      registers: [getMetricsRegistry()],
+    }),
+);
+
+export function recordThesisMetricRejected(opts: {
+  ticker: string;
+  metricId: string;
+  flag: string;
+  rawValue: number | null;
+}): void {
+  try {
+    screeningThesisMetricRejectedTotal.inc({
+      metric_id: opts.metricId || "unknown",
+      flag: opts.flag || "unknown",
+    });
+  } catch {
+    // metrics are best-effort
+  }
+  console.warn("[thesis/metrics] rejected", {
+    ticker: opts.ticker,
+    metricId: opts.metricId,
+    flag: opts.flag,
+    rawValue: opts.rawValue,
+  });
+}
+
 export function recordScreeningIntakeTurn(
   status: string,
   intent: string,

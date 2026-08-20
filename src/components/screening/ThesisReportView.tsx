@@ -1,18 +1,59 @@
 "use client";
 
-import type { ThesisReport } from "@/lib/screening/thesis/schemas";
+import type { ThesisFact, ThesisReport } from "@/lib/screening/thesis/schemas";
 import { buildReadableThesis } from "@/lib/screening/thesis/readable";
 import { fill } from "@/lib/screening/copy";
+import {
+  formatMetric,
+  formatMetricValue,
+  metricLocaleFromTag,
+  type MetricUnit,
+} from "@/lib/screening/thesis/metrics/format";
 import { AiLabel, ScreeningDisclaimer } from "./ScreeningNotices";
 import { useScreeningCopy } from "./use-screening-copy";
 
-function formatFactValue(value: unknown): string {
-  if (typeof value === "boolean") return value ? "yes" : "no";
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+const METRIC_FACT_LABEL: Record<string, string> = {
+  roic: "EQ:B1",
+  interestCoverage: "EQ:E2",
+  netDebtToEbitda: "EQ:E1",
+  fcfToNetIncome: "EQ:D1",
+  fcfYield: "calc:fcf_yield",
+  revenueCagr: "EQ:C1",
+  shareCountCagr: "EQ:D7",
+  grossMarginVol: "EQ:B3",
+  peCurrent: "calc:pe_current",
+  peHistoric: "calc:hist_pe_avg",
+  drawdown52w: "calc:drawdown_52w",
+  targetUpside: "calc:upside_pct",
+};
+
+const FRACTION_FIELDS = new Set(["EQ:C1", "EQ:D7", "calc:fcf_yield"]);
+
+function formatFactValue(
+  fact: ThesisFact,
+  locale: string,
+): string {
+  const loc = metricLocaleFromTag(locale);
+  if (typeof fact.value === "boolean") return fact.value ? "yes" : "no";
+  if (fact.value == null) return loc === "es" ? "n/d" : "n/a";
+  if (typeof fact.value !== "number" || !Number.isFinite(fact.value)) {
+    return String(fact.value);
   }
-  if (value == null) return "—";
-  return String(value);
+  if (fact.disputed) {
+    return loc === "es" ? "n/d — dato no fiable" : "n/a — unreliable figure";
+  }
+  let n = fact.value;
+  let unit = fact.unit as MetricUnit | undefined;
+  if (FRACTION_FIELDS.has(fact.field_id) && Math.abs(n) <= 2) {
+    n = n * 100;
+    unit = "pct";
+  }
+  if (unit === "x" || unit === "pct" || unit === "pp" || unit === "usd" || unit === "count" || unit === "years") {
+    const formatted = formatMetricValue(n, unit, loc);
+    const label = fact.period?.fiscal_label;
+    return label ? `${formatted} (${label})` : formatted;
+  }
+  return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
 }
 
 export function ThesisReportView({ report }: { report: ThesisReport }) {
@@ -43,7 +84,10 @@ export function ThesisReportView({ report }: { report: ThesisReport }) {
           facts: card.facts,
           soft: card.soft_assessments,
           draft: card.thesis_draft,
+          metrics: card.metrics,
         });
+        const loc = metricLocaleFromTag(report.locale);
+        const metricRows = card.metrics ?? [];
         const numberedFacts = card.facts
           .filter((f) => f.value != null && typeof f.value !== "boolean")
           .slice(0, 16);
@@ -74,6 +118,17 @@ export function ThesisReportView({ report }: { report: ThesisReport }) {
             <p className="mt-1 text-[14px] leading-relaxed text-[color:var(--foreground)]">
               {article.business}
             </p>
+
+            {article.whatHappened ? (
+              <>
+                <h3 className="mt-5 text-[13px] font-semibold text-[color:var(--foreground)]">
+                  {t.sectionWhatHappened}
+                </h3>
+                <p className="mt-1 text-[14px] leading-relaxed text-[color:var(--foreground)]">
+                  {article.whatHappened}
+                </p>
+              </>
+            ) : null}
 
             {article.strengths.length > 0 ? (
               <>
@@ -137,7 +192,23 @@ export function ThesisReportView({ report }: { report: ThesisReport }) {
               {fill(t.convictionHint, { value: article.conviction })}
             </p>
 
-            {numberedFacts.length > 0 ? (
+            {metricRows.length > 0 ? (
+              <details className="mt-4">
+                <summary className="cursor-pointer text-[12px] text-[color:var(--muted)]">
+                  {t.sectionNumbers}
+                </summary>
+                <ul className="mt-2 list-none space-y-1 p-0 text-[12px] text-[color:var(--foreground)]">
+                  {metricRows.map((m) => (
+                    <li key={m.id}>
+                      <span className="text-[color:var(--muted)]">
+                        {t.factLabels[METRIC_FACT_LABEL[m.id] ?? ""] ?? m.id}:
+                      </span>{" "}
+                      {formatMetric(m, loc)}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : numberedFacts.length > 0 ? (
               <details className="mt-4">
                 <summary className="cursor-pointer text-[12px] text-[color:var(--muted)]">
                   {t.sectionNumbers}
@@ -148,10 +219,7 @@ export function ThesisReportView({ report }: { report: ThesisReport }) {
                       <span className="text-[color:var(--muted)]">
                         {t.factLabels[f.field_id] ?? f.field_id}:
                       </span>{" "}
-                      {formatFactValue(f.value)}
-                      {f.unit && f.unit !== "flag" && f.unit !== "ratio"
-                        ? ` ${f.unit}`
-                        : ""}
+                      {formatFactValue(f, report.locale)}
                     </li>
                   ))}
                 </ul>

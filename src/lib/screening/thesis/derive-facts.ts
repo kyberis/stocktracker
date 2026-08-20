@@ -1,5 +1,12 @@
 import type { HardDataCandidate } from "@/lib/screening/schemas";
+import { recordThesisMetricRejected } from "@/lib/screening/metrics";
 import type { ThesisFact, ThesisSource } from "@/lib/screening/thesis/schemas";
+import {
+  metricsFromCandidate,
+  publishedMetricValue,
+  metricById,
+} from "@/lib/screening/thesis/metrics";
+import type { Metric } from "@/lib/screening/thesis/metrics";
 
 const FMP_SOURCE = (ref: string, asOf: string): ThesisSource => ({
   type: "fmp",
@@ -14,21 +21,6 @@ function num(v: unknown): number | null {
   return null;
 }
 
-function cagr(start: number, end: number, years: number): number | null {
-  if (years <= 0 || start <= 0 || end <= 0) return null;
-  const ratio = end / start;
-  if (ratio <= 0) return null;
-  return Math.pow(ratio, 1 / years) - 1;
-}
-
-function stdev(values: number[]): number | null {
-  if (values.length < 2) return null;
-  const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance =
-    values.reduce((acc, v) => acc + (v - mean) ** 2, 0) / (values.length - 1);
-  return Math.sqrt(variance);
-}
-
 function fact(opts: {
   ticker: string;
   field_id: ThesisFact["field_id"];
@@ -39,6 +31,8 @@ function fact(opts: {
   ref: string;
   estimation_method?: string;
   periodKind?: NonNullable<ThesisFact["period"]>["kind"];
+  fiscalLabel?: string;
+  disputed?: boolean;
 }): ThesisFact {
   const row: ThesisFact = {
     asset_id: opts.ticker,
@@ -48,175 +42,115 @@ function fact(opts: {
     as_of: opts.asOf,
     source: FMP_SOURCE(opts.ref, opts.asOf),
     method: opts.method,
-    period: opts.periodKind ? { kind: opts.periodKind } : undefined,
+    period:
+      opts.periodKind || opts.fiscalLabel
+        ? {
+            kind: opts.periodKind,
+            fiscal_label: opts.fiscalLabel,
+          }
+        : undefined,
   };
   if (opts.estimation_method) row.estimation_method = opts.estimation_method;
+  if (opts.disputed) row.disputed = true;
   return row;
 }
 
+function fromMetric(
+  ticker: string,
+  fieldId: ThesisFact["field_id"],
+  metric: Metric | undefined,
+  asOf: string,
+  opts?: { storeAsFraction?: boolean; fallback?: ThesisFact["value"] },
+): ThesisFact {
+  const published = metric ? publishedMetricValue(metric) : null;
+  const raw =
+    published != null && opts?.storeAsFraction ? published / 100 : published;
+  const kind =
+    metric?.period.kind === "CAGR"
+      ? "RANGE"
+      : metric?.period.kind === "SPOT"
+        ? "POINT_IN_TIME"
+        : metric?.period.kind === "Q"
+          ? "Q"
+          : metric?.period.kind === "FY"
+            ? "FY"
+            : metric?.period.kind === "TTM"
+              ? "TTM"
+              : undefined;
+  return fact({
+    ticker,
+    field_id: fieldId,
+    value: raw ?? opts?.fallback ?? null,
+    unit: metric?.unit,
+    asOf: metric?.period.asOf || asOf,
+    method: "derived",
+    ref: metric?.source.endpoint || "derived",
+    periodKind: kind,
+    fiscalLabel: metric?.period.label,
+    disputed: metric?.status === "error",
+    estimation_method:
+      metric && metric.flags.length > 0
+        ? `flags:${metric.flags.join(",")}`
+        : undefined,
+  });
+}
+
 /**
- * Map Hard Data enrichment (annual series + TTM ratios) into provenance-bearing
- * Facts. Never invents numbers: missing inputs become value null + stay in facts
- * so gates can return passed: null.
+ * Map Hard Data enrichment into provenance-bearing Facts.
+ * Numbers pass through the metric envelope first: unit, period, validation.
  */
 export function deriveFactsFromCandidate(
   candidate: HardDataCandidate,
   asOf: string = new Date().toISOString(),
-): { facts: ThesisFact[]; gaps: string[] } {
+): { facts: ThesisFact[]; gaps: string[]; metrics: Metric[] } {
   const ticker = candidate.ticker.toUpperCase();
   const facts: ThesisFact[] = [];
   const gaps: string[] = [];
-  const series = [...(candidate.annualSeries ?? [])].filter((r) => r.year != null);
-  series.sort((a, b) => (a.year ?? 0) - (b.year ?? 0));
+  const metrics = metricsFromCandidate(candidate, asOf);
 
-  const latestRoic = num(candidate.roicPct) ?? num(series.at(-1)?.roicPct);
-  facts.push(
-    fact({
-      ticker,
-      field_id: "EQ:B1",
-      value: latestRoic,
-      unit: "pct",
-      asOf,
-      method: "derived",
-      ref: "key-metrics-ttm",
-      periodKind: "TTM",
-    }),
-  );
-  if (latestRoic == null) gaps.push("EQ:B1_roic_missing_not_ex_goodwill");
-  else gaps.push("EQ:B1_roic_not_ex_goodwill");
-
-  const gross = series
-    .map((r) => num(r.grossMarginPct))
-    .filter((v): v is number => v != null);
-  const sigma = stdev(gross);
-  facts.push(
-    fact({
-      ticker,
-      field_id: "EQ:B3",
-      value: sigma,
-      unit: "pp",
-      asOf,
-      method: "derived",
-      ref: "income-statement",
-      periodKind: "RANGE",
-    }),
-  );
-
-  const revenues = series
-    .map((r) => num(r.revenue))
-    .filter((v): v is number => v != null && v > 0);
-  const years = revenues.length >= 2 ? revenues.length - 1 : 0;
-  const revCagr =
-    revenues.length >= 3 ? cagr(revenues[0], revenues[revenues.length - 1], years) : null;
-  facts.push(
-    fact({
-      ticker,
-      field_id: "EQ:C1",
-      value: revCagr,
-      unit: "ratio",
-      asOf,
-      method: "derived",
-      ref: "income-statement",
-      periodKind: "RANGE",
-    }),
-  );
-
-  const fcfNi: number[] = [];
-  for (const row of series) {
-    const fcf = num(row.freeCashFlow);
-    const niFromMargin =
-      num(row.revenue) != null && num(row.netMarginPct) != null
-        ? (row.revenue as number) * ((row.netMarginPct as number) / 100)
-        : null;
-    const niFromEps =
-      num(row.eps) != null && num(row.sharesOutstanding) != null
-        ? (row.eps as number) * (row.sharesOutstanding as number)
-        : null;
-    const ni = niFromMargin ?? niFromEps;
-    if (fcf == null || ni == null || Math.abs(ni) < 1) continue;
-    fcfNi.push(fcf / ni);
+  const roic = metricById(metrics, "roic");
+  facts.push(fromMetric(ticker, "EQ:B1", roic, asOf));
+  if (roic == null || publishedMetricValue(roic) == null) {
+    gaps.push("EQ:B1_roic_missing_not_ex_goodwill");
+  } else {
+    gaps.push("EQ:B1_roic_not_ex_goodwill");
   }
-  const fcfNiAvg =
-    fcfNi.length >= 3
-      ? fcfNi.slice(-5).reduce((a, b) => a + b, 0) / Math.min(5, fcfNi.length)
-      : fcfNi.length > 0
-        ? fcfNi.reduce((a, b) => a + b, 0) / fcfNi.length
-        : null;
+
+  facts.push(fromMetric(ticker, "EQ:B3", metricById(metrics, "grossMarginVol"), asOf));
   facts.push(
-    fact({
-      ticker,
-      field_id: "EQ:D1",
-      value: fcfNiAvg,
-      unit: "ratio",
-      asOf,
-      method: "derived",
-      ref: "cash-flow-statement",
-      periodKind: "RANGE",
+    fromMetric(ticker, "EQ:C1", metricById(metrics, "revenueCagr"), asOf, {
+      storeAsFraction: true,
     }),
   );
-  if (fcfNiAvg == null) gaps.push("EQ:D1_fcf_ni_unavailable");
-
-  const shares = series
-    .map((r) => num(r.sharesOutstanding))
-    .filter((v): v is number => v != null && v > 0);
-  let dilutionPct: number | null = null;
-  if (shares.length >= 3) {
-    const start = shares[0];
-    const end = shares[shares.length - 1];
-    const y = shares.length - 1;
-    dilutionPct = start > 0 ? (end / start) ** (1 / y) - 1 : null;
+  const fcfNi = metricById(metrics, "fcfToNetIncome");
+  facts.push(fromMetric(ticker, "EQ:D1", fcfNi, asOf));
+  if (fcfNi == null || publishedMetricValue(fcfNi) == null) {
+    gaps.push("EQ:D1_fcf_ni_unavailable");
   }
+
+  const shareCagr = metricById(metrics, "shareCountCagr");
   facts.push(
-    fact({
-      ticker,
-      field_id: "EQ:D7",
-      value: candidate.severeDilution === true ? true : dilutionPct,
-      unit: candidate.severeDilution === true ? "flag" : "ratio",
-      asOf,
-      method: "derived",
-      ref: "income-statement",
-      periodKind: "RANGE",
+    fromMetric(ticker, "EQ:D7", shareCagr, asOf, {
+      storeAsFraction: true,
+      fallback: candidate.severeDilution === true ? true : null,
     }),
   );
 
-  facts.push(
-    fact({
-      ticker,
-      field_id: "EQ:E1",
-      value: num(candidate.ndEbitda),
-      unit: "x",
-      asOf,
-      method: "raw",
-      ref: "ratios-ttm",
-      periodKind: "TTM",
-    }),
-  );
-  if (candidate.ndEbitda == null) gaps.push("EQ:E1_nd_ebitda_missing");
+  const nd = metricById(metrics, "netDebtToEbitda");
+  facts.push(fromMetric(ticker, "EQ:E1", nd, asOf));
+  if (nd == null || publishedMetricValue(nd) == null) {
+    gaps.push("EQ:E1_nd_ebitda_missing");
+  }
+
+  const coverage = metricById(metrics, "interestCoverage");
+  facts.push(fromMetric(ticker, "EQ:E2", coverage, asOf));
+  if (coverage == null || publishedMetricValue(coverage) == null) {
+    gaps.push("EQ:E2_interest_coverage_missing");
+  }
 
   facts.push(
-    fact({
-      ticker,
-      field_id: "EQ:E2",
-      value: num(candidate.interestCoverage),
-      unit: "x",
-      asOf,
-      method: "raw",
-      ref: "ratios-ttm",
-      periodKind: "TTM",
-    }),
-  );
-  if (candidate.interestCoverage == null) gaps.push("EQ:E2_interest_coverage_missing");
-
-  facts.push(
-    fact({
-      ticker,
-      field_id: "calc:hist_pe_avg",
-      value: num(candidate.histPeAvg),
-      unit: "x",
-      asOf,
-      method: "derived",
-      ref: "ratios",
-      periodKind: "RANGE",
+    fromMetric(ticker, "calc:hist_pe_avg", metricById(metrics, "peHistoric"), asOf, {
+      fallback: num(candidate.histPeAvg),
     }),
   );
   facts.push(
@@ -229,22 +163,20 @@ export function deriveFactsFromCandidate(
       method: "raw",
       ref: "ratios-ttm",
       periodKind: "TTM",
+      fiscalLabel: "TTM",
     }),
   );
   facts.push(
-    fact({
-      ticker,
-      field_id: "calc:fcf_yield",
-      value: num(candidate.fcfYield),
-      unit: "ratio",
-      asOf,
-      method: "raw",
-      ref: "key-metrics-ttm",
-      periodKind: "TTM",
+    fromMetric(ticker, "calc:fcf_yield", metricById(metrics, "fcfYield"), asOf, {
+      storeAsFraction: true,
     }),
   );
-  // Wrap trefolio MOAT as an input pillar (not a verdict). Engine scores ROIC
-  // and buyback-aware retained earnings; do not reimplement here.
+  facts.push(
+    fromMetric(ticker, "calc:pe_current", metricById(metrics, "peCurrent"), asOf),
+  );
+  facts.push(
+    fromMetric(ticker, "calc:drawdown_52w", metricById(metrics, "drawdown52w"), asOf),
+  );
   facts.push(
     fact({
       ticker,
@@ -280,17 +212,22 @@ export function deriveFactsFromCandidate(
     }),
   );
   facts.push(
-    fact({
-      ticker,
-      field_id: "calc:upside_pct",
-      value: num(candidate.upsidePct),
-      unit: "pct",
-      asOf,
-      method: "derived",
-      ref: "price-target-consensus",
-      periodKind: "POINT_IN_TIME",
+    fromMetric(ticker, "calc:upside_pct", metricById(metrics, "targetUpside"), asOf, {
+      fallback: num(candidate.upsidePct),
     }),
   );
 
-  return { facts, gaps };
+  for (const m of metrics) {
+    if (m.status === "error") {
+      recordThesisMetricRejected({
+        ticker,
+        metricId: m.id,
+        flag: m.flags[0] ?? "error",
+        rawValue: m.value,
+      });
+      gaps.push(`${m.id}_${m.flags[0] ?? "error"}`);
+    }
+  }
+
+  return { facts, gaps: gaps.slice(0, 16), metrics };
 }

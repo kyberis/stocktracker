@@ -4,6 +4,7 @@ import {
   evaluateEarningsQuality,
 } from "@/lib/screening/scoring/earnings-quality";
 import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
+import { truncateAtLastSentence } from "@/lib/screening/thesis/metrics/truncate";
 
 /**
  * Thin FMP client for Hard Data report enrichment (ratios + profile + series).
@@ -44,6 +45,8 @@ const incomeStatementSchema = z
   .object({
     symbol: z.string().optional(),
     date: z.string().optional(),
+    fillingDate: z.string().optional(),
+    acceptedDate: z.string().optional(),
     calendarYear: z.union([z.number(), z.string()]).optional(),
     eps: num,
     epssdiluted: num,
@@ -52,6 +55,12 @@ const incomeStatementSchema = z
     revenue: num,
     grossProfit: num,
     operatingIncome: num,
+    ebit: num,
+    ebitda: num,
+    interestExpense: num,
+    interestExpenseNonOperating: num,
+    incomeTaxExpense: num,
+    incomeBeforeTax: num,
     weightedAverageShsOutDil: num,
     weightedAverageShsOut: num,
   })
@@ -65,6 +74,21 @@ const cashFlowSchema = z
     operatingCashFlow: num,
     freeCashFlow: num,
     capitalExpenditure: num,
+  })
+  .passthrough();
+
+const balanceSheetSchema = z
+  .object({
+    symbol: z.string().optional(),
+    date: z.string().optional(),
+    calendarYear: z.union([z.number(), z.string()]).optional(),
+    totalDebt: num,
+    netDebt: num,
+    cashAndCashEquivalents: num,
+    cashAndShortTermInvestments: num,
+    shortTermInvestments: num,
+    totalStockholdersEquity: num,
+    totalEquity: num,
   })
   .passthrough();
 
@@ -116,6 +140,9 @@ const profileSchema = z
     mktCap: num,
     industry: z.string().optional(),
     sector: z.string().optional(),
+    yearHigh: num,
+    yearLow: num,
+    range: z.string().optional(),
   })
   .passthrough();
 
@@ -214,6 +241,18 @@ export interface AnnualFinancialPoint {
   freeCashFlow: number | null;
   roicPct: number | null;
   sharesOutstanding: number | null;
+  ebit?: number | null;
+  interestExpense?: number | null;
+  ebitda?: number | null;
+  netIncome?: number | null;
+  totalDebt?: number | null;
+  cash?: number | null;
+  shortTermInvestments?: number | null;
+  totalEquity?: number | null;
+  incomeTaxExpense?: number | null;
+  incomeBeforeTax?: number | null;
+  annualPe?: number | null;
+  filingDate?: string | null;
 }
 
 export interface FmpFundamentalsBundle {
@@ -247,6 +286,8 @@ export interface FmpFundamentalsBundle {
   epsTtm: number | null;
   /** Diluted EPS, latest completed fiscal year. */
   epsFy: number | null;
+  /** 52-week high from the FMP profile when present. */
+  yearHigh: number | null;
   /** P/E on FY diluted EPS (price / epsFy). */
   normalizedPe: number | null;
   /** True when TTM earnings look inflated vs FY (one-offs). */
@@ -330,11 +371,29 @@ function asRows(data: unknown): unknown[] {
   return [];
 }
 
+function filingDateOf(row: {
+  fillingDate?: string | null;
+  acceptedDate?: string | null;
+  date?: string | null;
+}): string | null {
+  const raw = row.fillingDate || row.acceptedDate || row.date;
+  return raw && raw.length >= 8 ? String(raw).slice(0, 10) : null;
+}
+
+function interestCoverageFromParts(
+  ebit: number | null,
+  interest: number | null,
+): number | null {
+  if (ebit == null || interest == null || interest === 0) return null;
+  return ebit / Math.abs(interest);
+}
+
 function buildAnnualSeries(
   incomeRows: unknown[],
   cashRows: unknown[],
   metricsRows: unknown[],
   ratiosRows: unknown[],
+  balanceRows: unknown[],
 ): AnnualFinancialPoint[] {
   const cashByYear = new Map<number, z.infer<typeof cashFlowSchema>>();
   for (const row of cashRows) {
@@ -357,6 +416,13 @@ function buildAnnualSeries(
     const y = toYear(p.data);
     if (y != null) ratiosByYear.set(y, p.data);
   }
+  const balanceByYear = new Map<number, z.infer<typeof balanceSheetSchema>>();
+  for (const row of balanceRows) {
+    const p = balanceSheetSchema.safeParse(row);
+    if (!p.success) continue;
+    const y = toYear(p.data);
+    if (y != null) balanceByYear.set(y, p.data);
+  }
 
   const points: AnnualFinancialPoint[] = [];
   for (const row of incomeRows) {
@@ -370,6 +436,7 @@ function buildAnnualSeries(
     const ratios = year != null ? ratiosByYear.get(year) : undefined;
     const cash = year != null ? cashByYear.get(year) : undefined;
     const metrics = year != null ? metricsByYear.get(year) : undefined;
+    const balance = year != null ? balanceByYear.get(year) : undefined;
 
     const grossFromIncome =
       revenue != null && revenue !== 0 && grossProfit != null
@@ -383,6 +450,18 @@ function buildAnnualSeries(
       revenue != null && revenue !== 0 && netIncome != null
         ? (netIncome / revenue) * 100
         : null;
+
+    const ebit = operatingIncome ?? toNum(p.data.ebit);
+    const interest =
+      toNum(p.data.interestExpense) ?? toNum(p.data.interestExpenseNonOperating);
+    const cashBal =
+      toNum(balance?.cashAndCashEquivalents) ??
+      toNum(balance?.cashAndShortTermInvestments);
+    const stInv = toNum(balance?.shortTermInvestments);
+    const pe =
+      toNum(ratios?.priceToEarningsRatio) ??
+      toNum(ratios?.priceToEarningsDilutedRatio) ??
+      toNum(ratios?.peRatio);
 
     points.push({
       year,
@@ -405,6 +484,19 @@ function buildAnnualSeries(
       sharesOutstanding:
         toNum(p.data.weightedAverageShsOutDil) ??
         toNum(p.data.weightedAverageShsOut),
+      ebit,
+      interestExpense: interest,
+      ebitda: toNum(p.data.ebitda),
+      netIncome,
+      totalDebt: toNum(balance?.totalDebt),
+      cash: cashBal,
+      shortTermInvestments: stInv,
+      totalEquity:
+        toNum(balance?.totalStockholdersEquity) ?? toNum(balance?.totalEquity),
+      incomeTaxExpense: toNum(p.data.incomeTaxExpense),
+      incomeBeforeTax: toNum(p.data.incomeBeforeTax),
+      annualPe: pe != null && pe > 0 ? pe : null,
+      filingDate: filingDateOf(p.data),
     });
     if (points.length >= 10) break;
   }
@@ -451,6 +543,7 @@ export async function fetchFmpFundamentals(
     ratiosAnnualRes,
     cashFlowRes,
     keyMetricsAnnualRes,
+    balanceSheetRes,
   ] = await Promise.all([
     fetchJson("ratios-ttm", symbol, doFetch),
     fetchJson("key-metrics-ttm", symbol, doFetch),
@@ -471,6 +564,10 @@ export async function fetchFmpFundamentals(
       period: "annual",
       limit: "10",
     }),
+    fetchJson("balance-sheet-statement", symbol, doFetch, {
+      period: "annual",
+      limit: "10",
+    }),
   ]);
 
   for (const res of [
@@ -484,6 +581,7 @@ export async function fetchFmpFundamentals(
     ratiosAnnualRes,
     cashFlowRes,
     keyMetricsAnnualRes,
+    balanceSheetRes,
   ]) {
     if (!res.ok && res.error) errors.push(res.error);
   }
@@ -498,6 +596,7 @@ export async function fetchFmpFundamentals(
   const ratiosAnnualRows = asRows(ratiosAnnualRes.data);
   const cashFlowRows = asRows(cashFlowRes.data);
   const keyMetricsAnnualRows = asRows(keyMetricsAnnualRes.data);
+  const balanceSheetRows = asRows(balanceSheetRes.data);
   const { histPeAvg, histPeYears } = averageAnnualPe(ratiosAnnualRows);
 
   const ratios = ratiosRaw ? ratiosTtmSchema.safeParse(ratiosRaw) : null;
@@ -619,6 +718,7 @@ export async function fetchFmpFundamentals(
     cashFlowRows,
     keyMetricsAnnualRows,
     ratiosAnnualRows,
+    balanceSheetRows,
   );
   const { buyback, severeDilution } = shareCountFlags(annualSeries);
 
@@ -638,6 +738,16 @@ export async function fetchFmpFundamentals(
   }
 
   const interestCoverage =
+    interestCoverageFromParts(
+      toNum(fyIncome?.operatingIncome) ?? toNum(fyIncome?.ebit),
+      toNum(fyIncome?.interestExpense) ??
+        toNum(fyIncome?.interestExpenseNonOperating),
+    ) ??
+    interestCoverageFromParts(
+      toNum(ttmIncome?.operatingIncome) ?? toNum(ttmIncome?.ebit),
+      toNum(ttmIncome?.interestExpense) ??
+        toNum(ttmIncome?.interestExpenseNonOperating),
+    ) ??
     toNum(r?.interestCoverageRatioTTM) ??
     toNum(r?.interestCoverageTTM) ??
     toNum(m?.interestCoverageTTM) ??
@@ -686,10 +796,11 @@ export async function fetchFmpFundamentals(
     revenueGrowthHistoryPct,
     epsTtm,
     epsFy,
+    yearHigh: toNum(p?.yearHigh),
     normalizedPe,
     earningsQualitySuspect: quality.suspect,
     description: p?.description
-      ? String(p.description).trim().slice(0, 400)
+      ? truncateAtLastSentence(String(p.description).trim(), 400)
       : null,
     annualSeries,
     fcfYield,

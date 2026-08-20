@@ -152,6 +152,12 @@ const runThesisHardDataStep: StepHandler = async (
       })),
     ),
   ];
+  const metrics = derived.flatMap((d, i) =>
+    d.metrics.map((m) => ({
+      ticker: candidates[i]?.ticker.toUpperCase() ?? "",
+      ...m,
+    })),
+  );
   const factGaps = [
     ...derived.flatMap((d) => d.gaps),
     ...consensus.flatMap((row) => row.errors),
@@ -162,6 +168,7 @@ const runThesisHardDataStep: StepHandler = async (
     tickers: candidates.map((c) => c.ticker),
     candidates,
     facts,
+    metrics,
     gaps: [...gaps, ...factGaps].slice(0, 16),
     locale: brief.locale,
     generatedAt: asOf,

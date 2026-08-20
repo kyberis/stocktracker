@@ -18,6 +18,7 @@ Cross-cutting patterns, principles, and non-obvious contracts that apply across 
 - [notetaker-will-integration.md](notetaker-will-integration.md) — How trefolio links to Will (the note-taking sister codebase).
 - [will-idp-integration.md](will-idp-integration.md) — Will-side change list to become an OIDC client of `user.trefolio.com`.
 - [kyberis-agent-os.md](kyberis-agent-os.md) — The shared agent platform (`@kyberis/agent-os`): duplication audit, module boundaries, design rules, adoption status.
+- [thesis-metric-integrity.md](thesis-metric-integrity.md) — Thesis notes never receive a naked number: every metric has a unit, period label, and H1–H5 validation before copy.
 
 ## Cursor skills
 
