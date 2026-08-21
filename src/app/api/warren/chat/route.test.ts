@@ -11,6 +11,7 @@ vi.mock("@/lib/db", () => ({
   listPortfolios: vi.fn(),
   findUserById: vi.fn(),
   countHoldings: vi.fn(),
+  listHoldings: vi.fn().mockResolvedValue([]),
 }));
 vi.mock("@/lib/feature-quotas", () => ({
   refundFeatureQuota: vi.fn(),
@@ -30,7 +31,7 @@ vi.mock("@/lib/ai/office/office-identity", () => ({
 }));
 
 import { requireFeatureQuota } from "@/lib/auth/guards";
-import { listPortfolios, findUserById, countHoldings } from "@/lib/db";
+import { listPortfolios, findUserById, countHoldings, listHoldings } from "@/lib/db";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { checkWarrenEmptyAddRateLimit } from "@/lib/rate-limit";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
@@ -279,6 +280,46 @@ describe("POST /api/warren/chat", () => {
     const body = await res.json();
     expect(body.reason).toBe("warren_empty_add_cooldown");
     expect(mockedRefund).toHaveBeenCalledWith("u-warren-test", "ai_consult");
+    expect(mockedRunWarrenTurn).not.toHaveBeenCalled();
+  });
+
+  const validSelection = {
+    holdingId: "h-1",
+    ticker: "ASML",
+    name: "ASML Holding",
+    assetType: "stock" as const,
+    metricKey: "peRatio" as const,
+    displayValue: "18.4",
+    numericValue: 18.4,
+    row: { peRatio: 18.4, weightPct: 8, sector: "Technology" },
+  };
+
+  it("passes selection appendix when selectionContext is valid", async () => {
+    vi.mocked(listHoldings).mockResolvedValueOnce([
+      { id: "h-1", ticker: "ASML", name: "ASML Holding", shares: 2, assetType: "stock" },
+    ] as never);
+    const { POST } = await import("./route");
+    await (POST as (req: NextRequest) => Promise<Response>)(
+      makeRequest({
+        messages: [{ role: "user", content: "What does this mean?" }],
+        selectionContext: validSelection,
+      }),
+    );
+    const appendix = mockedRunWarrenTurn.mock.calls[0]?.[0]?.systemAppendix ?? "";
+    expect(appendix).toContain("ASML");
+    expect(appendix).toContain("peRatio");
+    expect(appendix).toContain("never tell the user to buy or sell");
+  });
+
+  it("returns 400 for invalid selectionContext", async () => {
+    const { POST } = await import("./route");
+    const res = await (POST as (req: NextRequest) => Promise<Response>)(
+      makeRequest({
+        messages: [{ role: "user", content: "What does this mean?" }],
+        selectionContext: { ...validSelection, metricKey: "not-a-metric" },
+      }),
+    );
+    expect(res.status).toBe(400);
     expect(mockedRunWarrenTurn).not.toHaveBeenCalled();
   });
 });

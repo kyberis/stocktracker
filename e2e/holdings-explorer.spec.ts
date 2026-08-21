@@ -70,6 +70,28 @@ test.describe("Holdings explorer", () => {
     await expect(page.getByRole("heading", { name: /Holdings explorer/i })).toBeVisible();
   });
 
+  test("Ask Warren FAB then a P/E cell shows the context chip", async ({ page }) => {
+    if (!(await loginAdmin(page))) {
+      test.skip(true, "Local admin login unavailable (IdP-only environment).");
+      return;
+    }
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/tools/holdings-explorer");
+    await dismissOverlays(page);
+    const fab = page.getByTestId("holdings-explorer-warren-fab");
+    await expect(fab).toBeVisible({ timeout: 20_000 });
+    await fab.click();
+    await expect(fab).toHaveAttribute("aria-pressed", "true");
+    const pe = page.locator('[data-testid="holdings-explorer-cell-pe"]').first();
+    if ((await pe.count()) === 0) {
+      test.skip(true, "No holdings with a P/E cell in this environment.");
+      return;
+    }
+    await pe.click();
+    await expect(page.getByTestId("holdings-explorer-warren-chip")).toBeVisible();
+    await expect(page.getByText(/AI-generated|Not financial advice/i).first()).toBeVisible();
+  });
+
   for (const theme of ["default", "canvas", "terminal", "studio"] as const) {
     test(`renders heading in ${theme} theme`, async ({ page }) => {
       if (!(await loginAdmin(page))) {

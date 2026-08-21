@@ -1173,6 +1173,13 @@ const nl: TranslationStrings = {
   holdingsExplorerLoading: "Fundamentals laden…",
   holdingsExplorerError: "Kon holdings-fundamentals niet laden. Probeer opnieuw.",
   holdingsExplorerResearch: "Onderzoek",
+  holdingsExplorerAskWarren: "Vraag het Warren",
+  holdingsExplorerInspectHint: "Klik op een cel om Warren naar dat cijfer te vragen. Escape om te stoppen.",
+  holdingsExplorerWarrenChipClear: "Geselecteerde cel wissen",
+  holdingsExplorerWarrenSuggestMeaning: "Wat betekent dit?",
+  holdingsExplorerWarrenSuggestHighLow: "Is dit hoog of laag voor dit bedrijf?",
+  holdingsExplorerWarrenGreeting:
+    "Selecteer een cel in de tabel — ik leg dat cijfer uit voor die positie. Alleen ter informatie, geen advies.",
   warrenScreenerNav: "Warren Screener",
   warrenScreenerPageTitle: "Warren Screener",
   warrenScreenerIntro:

@@ -333,6 +333,144 @@ export function sortResearchViews(
   });
 }
 
+export const HOLDINGS_EXPLORER_METRIC_KEYS = [
+  "holding",
+  "positionValue",
+  "weightPct",
+  "dayChange",
+  "returnPct",
+  "peRatio",
+  "forwardPe",
+  "pegRatio",
+  "dividendYield",
+  "divIncome",
+  "sectorSize",
+  "beta",
+  "eps",
+  "roe",
+  "marketCap",
+  "pctFromHigh",
+  "analystUpside",
+] as const;
+
+export type HoldingsExplorerMetricKey = (typeof HOLDINGS_EXPLORER_METRIC_KEYS)[number];
+
+export interface HoldingsExplorerRowSnapshot {
+  valueEUR?: number;
+  weightPct?: number;
+  peRatio?: number | null;
+  forwardPe?: number | null;
+  pegRatio?: number | null;
+  dividendYield?: number | null;
+  sector?: string;
+  beta?: number | null;
+  returnOnEquity?: number | null;
+  dayChangePct?: number | null;
+  returnPct?: number | null;
+}
+
+export interface HoldingsExplorerSelection {
+  holdingId: string;
+  ticker: string;
+  name: string;
+  assetType?: HoldingAssetType;
+  metricKey: HoldingsExplorerMetricKey;
+  displayValue: string;
+  numericValue: number | null;
+  row: HoldingsExplorerRowSnapshot;
+}
+
+function finiteOrNull(n: number | null | undefined): number | null {
+  return n != null && Number.isFinite(n) ? n : null;
+}
+
+export function metricNumericValue(
+  row: HoldingResearchView,
+  key: HoldingsExplorerMetricKey,
+): number | null {
+  switch (key) {
+    case "holding":
+      return null;
+    case "positionValue":
+      return finiteOrNull(row.valueEUR);
+    case "weightPct":
+      return finiteOrNull(row.weightPct);
+    case "dayChange":
+      return finiteOrNull(row.dayChangePct);
+    case "returnPct":
+      return finiteOrNull(row.returnPct);
+    case "peRatio":
+      return sortablePe(row.fundamentals.peRatio);
+    case "forwardPe":
+      return sortablePe(row.fundamentals.forwardPe);
+    case "pegRatio":
+      return sortablePe(row.fundamentals.pegRatio);
+    case "dividendYield":
+      return finiteOrNull(row.fundamentals.dividendYield);
+    case "divIncome":
+      return finiteOrNull(row.estimatedDivIncomeEUR);
+    case "sectorSize":
+      return finiteOrNull(row.fundamentals.marketCap);
+    case "beta":
+      return finiteOrNull(row.fundamentals.beta);
+    case "eps":
+      return finiteOrNull(row.fundamentals.eps);
+    case "roe":
+      return finiteOrNull(row.fundamentals.returnOnEquity);
+    case "marketCap":
+      return finiteOrNull(row.fundamentals.marketCap);
+    case "pctFromHigh":
+      return finiteOrNull(row.pctFromHigh);
+    case "analystUpside":
+      return finiteOrNull(row.analystUpsidePct);
+    default:
+      return null;
+  }
+}
+
+export function buildHoldingsExplorerRowSnapshot(
+  row: HoldingResearchView,
+  opts?: { stealth?: boolean },
+): HoldingsExplorerRowSnapshot {
+  const snap: HoldingsExplorerRowSnapshot = {
+    weightPct: finiteOrNull(row.weightPct) ?? undefined,
+    peRatio: sortablePe(row.fundamentals.peRatio),
+    forwardPe: sortablePe(row.fundamentals.forwardPe),
+    pegRatio: sortablePe(row.fundamentals.pegRatio),
+    dividendYield: finiteOrNull(row.fundamentals.dividendYield),
+    sector: (row.fundamentals.sector || row.holding.sector || "").slice(0, 80) || undefined,
+    beta: finiteOrNull(row.fundamentals.beta),
+    returnOnEquity: finiteOrNull(row.fundamentals.returnOnEquity),
+    dayChangePct: finiteOrNull(row.dayChangePct),
+    returnPct: finiteOrNull(row.returnPct),
+  };
+  if (!opts?.stealth) {
+    const value = finiteOrNull(row.valueEUR);
+    if (value != null) snap.valueEUR = value;
+  }
+  return snap;
+}
+
+export function buildHoldingsExplorerSelection(
+  row: HoldingResearchView,
+  metricKey: HoldingsExplorerMetricKey,
+  displayValue: string,
+  opts?: { stealth?: boolean },
+): HoldingsExplorerSelection {
+  const stealth = Boolean(opts?.stealth);
+  const hideMoney = stealth && (metricKey === "positionValue" || metricKey === "divIncome");
+  return {
+    holdingId: row.holding.id,
+    ticker: row.holding.ticker.slice(0, 32),
+    name: (row.holding.name || "").slice(0, 120),
+    assetType: row.holding.assetType ?? "stock",
+    metricKey,
+    displayValue: hideMoney ? "—" : displayValue.slice(0, 40),
+    numericValue: hideMoney ? null : metricNumericValue(row, metricKey),
+    row: buildHoldingsExplorerRowSnapshot(row, { stealth }),
+  };
+}
+
 export function filterResearchViews(
   rows: HoldingResearchView[],
   opts: {

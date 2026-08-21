@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useSettings } from "@/lib/settings-context";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, type TranslationKey } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
 import { useTrack } from "@/lib/use-track";
 import { useStealthMode } from "@/lib/stealth-context";
@@ -18,9 +18,12 @@ import HoldingResearchLinks from "@/components/HoldingResearchLinks";
 import type { Holding, HoldingAssetType } from "@/lib/types";
 import {
   PRESET_SORT,
+  buildHoldingsExplorerSelection,
   buildResearchViews,
   filterResearchViews,
   sortResearchViews,
+  type HoldingsExplorerMetricKey,
+  type HoldingsExplorerSelection,
   type HoldingsResearchApiRow,
   type HoldingsResearchFundamentals,
   type HoldingsResearchPreset,
@@ -29,6 +32,7 @@ import {
 } from "@/lib/holdings-research";
 
 const StockDetailDrawer = dynamic(() => import("@/components/StockDetailDrawer"), { ssr: false });
+const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
 
 type AssetFilter = HoldingAssetType | "all";
 
@@ -51,6 +55,101 @@ function formatRatioPct(val: number | null | undefined): string {
 function formatCap(val: number | null | undefined): string {
   if (val == null || !Number.isFinite(val)) return "—";
   return formatCompactNumber(val);
+}
+
+function metricI18nKey(key: HoldingsExplorerMetricKey): TranslationKey {
+  switch (key) {
+    case "holding":
+      return "name";
+    case "positionValue":
+      return "holdingsExplorerColValue";
+    case "weightPct":
+      return "holdingsExplorerColWeight";
+    case "dayChange":
+      return "screenerDay";
+    case "returnPct":
+      return "sortReturnPct";
+    case "peRatio":
+      return "peRatio";
+    case "forwardPe":
+      return "forwardPE";
+    case "pegRatio":
+      return "pegRatio";
+    case "dividendYield":
+      return "dividendYield";
+    case "divIncome":
+      return "holdingsExplorerColDivIncome";
+    case "sectorSize":
+      return "sector";
+    case "beta":
+      return "beta";
+    case "eps":
+      return "eps";
+    case "roe":
+      return "returnOnEquity";
+    case "marketCap":
+      return "screenerMarketCap";
+    case "pctFromHigh":
+      return "holdingsExplorerCol52w";
+    case "analystUpside":
+      return "holdingsExplorerColUpside";
+    default:
+      return "name";
+  }
+}
+
+function InspectTd({
+  inspectMode,
+  selected,
+  metricKey,
+  holdingId,
+  ticker,
+  label,
+  displayValue,
+  className,
+  children,
+  onSelect,
+  testId,
+}: {
+  inspectMode: boolean;
+  selected: HoldingsExplorerSelection | null;
+  metricKey: HoldingsExplorerMetricKey;
+  holdingId: string;
+  ticker: string;
+  label: string;
+  displayValue: string;
+  className: string;
+  children: ReactNode;
+  onSelect: () => void;
+  testId?: string;
+}) {
+  const selectedHere = selected?.holdingId === holdingId && selected?.metricKey === metricKey;
+  if (!inspectMode) {
+    return (
+      <td className={className} data-testid={testId}>
+        {children}
+      </td>
+    );
+  }
+  return (
+    <td
+      className={`${className} cursor-cell outline-offset-[-1px] hover:outline hover:outline-2 hover:outline-[color:var(--accent)] ${
+        selectedHere ? "outline outline-2 outline-[color:var(--accent)] bg-[color:var(--accent-soft,transparent)]" : ""
+      }`}
+      data-metric={metricKey}
+      data-holding-id={holdingId}
+      data-testid={testId}
+      aria-selected={selectedHere}
+      aria-label={`${ticker} ${label} ${displayValue}`}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect();
+      }}
+    >
+      {children}
+    </td>
+  );
 }
 
 function SortButton({
@@ -100,10 +199,28 @@ export default function HoldingsExplorer() {
   const [sector, setSector] = useState("");
   const [tag, setTag] = useState("");
   const [selected, setSelected] = useState<Holding | null>(null);
+  const [inspectMode, setInspectMode] = useState(false);
+  const [warrenOpen, setWarrenOpen] = useState(false);
+  const [cellSelection, setCellSelection] = useState<HoldingsExplorerSelection | null>(null);
 
   useEffect(() => {
     track("holdings_explorer_open");
   }, [track]);
+
+  useEffect(() => {
+    if (!inspectMode && !warrenOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (warrenOpen) {
+        setWarrenOpen(false);
+        return;
+      }
+      setInspectMode(false);
+      setCellSelection(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [inspectMode, warrenOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -205,6 +322,27 @@ export default function HoldingsExplorer() {
     return formatStealthCurrency(amount, ccy, stealthMode);
   };
 
+  const selectCell = useCallback(
+    (row: HoldingResearchView, metricKey: HoldingsExplorerMetricKey, displayValue: string) => {
+      setCellSelection(buildHoldingsExplorerSelection(row, metricKey, displayValue, { stealth: stealthMode }));
+      setWarrenOpen(true);
+      track("holdings_explorer_warren_select", { metric_key: metricKey });
+    },
+    [stealthMode, track],
+  );
+
+  const toggleInspect = useCallback(() => {
+    setInspectMode((on) => {
+      if (on) {
+        setWarrenOpen(false);
+        setCellSelection(null);
+        return false;
+      }
+      track("holdings_explorer_warren_inspect");
+      return true;
+    });
+  }, [track]);
+
   const containerClass =
     layoutTheme === "terminal"
       ? "max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-4 space-y-3"
@@ -235,6 +373,11 @@ export default function HoldingsExplorer() {
         <p className={`mt-1 ${layoutTheme === "terminal" ? "text-xs font-mono text-zinc-500" : "text-sm text-[color:var(--muted)]"}`}>
           {t("holdingsExplorerDesc")}
         </p>
+        {inspectMode && (
+          <p role="status" className="mt-2 text-xs text-amber-800 dark:text-amber-300">
+            {t("holdingsExplorerInspectHint")}
+          </p>
+        )}
       </header>
 
       <div className="flex flex-wrap gap-2" role="group" aria-label={t("holdingsExplorerPresets")}>
@@ -397,7 +540,15 @@ export default function HoldingsExplorer() {
             </thead>
             <tbody>
               {sorted.map((row) => (
-                <ExplorerRow key={row.holding.id} row={row} money={money} onOpen={() => setSelected(row.holding)} />
+                <ExplorerRow
+                  key={row.holding.id}
+                  row={row}
+                  money={money}
+                  inspectMode={inspectMode}
+                  cellSelection={cellSelection}
+                  onSelectCell={selectCell}
+                  onOpen={() => setSelected(row.holding)}
+                />
               ))}
             </tbody>
           </table>
@@ -408,7 +559,42 @@ export default function HoldingsExplorer() {
         {t("holdingsExplorerDisclaimer")}
       </p>
 
-      {selected && <StockDetailDrawer holding={selected} onClose={() => setSelected(null)} />}
+      {selected && !inspectMode && <StockDetailDrawer holding={selected} onClose={() => setSelected(null)} />}
+
+      <button
+        type="button"
+        data-testid="holdings-explorer-warren-fab"
+        aria-pressed={inspectMode}
+        aria-label={t("holdingsExplorerAskWarren")}
+        hidden={warrenOpen}
+        onClick={toggleInspect}
+        className={`fixed bottom-20 sm:bottom-6 right-6 z-40 min-h-11 rounded-full border px-4 py-2.5 text-sm font-semibold shadow-lg transition-colors ${
+          inspectMode
+            ? "border-amber-500 bg-amber-500 text-amber-950"
+            : "border-amber-500/40 bg-white text-amber-800 dark:bg-[#151e2f] dark:text-amber-100"
+        }`}
+      >
+        {t("holdingsExplorerAskWarren")}
+      </button>
+
+      <WarrenDrawer
+        isOpen={warrenOpen}
+        onClose={() => setWarrenOpen(false)}
+        placement="floating"
+        selectionContext={cellSelection}
+        selectionChipText={
+          cellSelection
+            ? `${cellSelection.ticker} · ${t(metricI18nKey(cellSelection.metricKey))} · ${cellSelection.displayValue}`
+            : null
+        }
+        onClearSelection={() => setCellSelection(null)}
+        emptyGreeting={t("holdingsExplorerWarrenGreeting")}
+        suggestionPrompts={
+          cellSelection
+            ? [t("holdingsExplorerWarrenSuggestMeaning"), t("holdingsExplorerWarrenSuggestHighLow")]
+            : undefined
+        }
+      />
     </div>
   );
 }
@@ -416,10 +602,16 @@ export default function HoldingsExplorer() {
 function ExplorerRow({
   row,
   money,
+  inspectMode,
+  cellSelection,
+  onSelectCell,
   onOpen,
 }: {
   row: HoldingResearchView;
   money: (eur: number) => string;
+  inspectMode: boolean;
+  cellSelection: HoldingsExplorerSelection | null;
+  onSelectCell: (row: HoldingResearchView, key: HoldingsExplorerMetricKey, display: string) => void;
   onOpen: () => void;
 }) {
   const { t } = useI18n();
@@ -430,49 +622,81 @@ function ExplorerRow({
     (row.dayChangePct ?? 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const retClass =
     (row.returnPct ?? 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
+  const hid = row.holding.id;
+  const ticker = row.holding.ticker;
+  const na = t("holdingsExplorerMetricsNa");
+
+  const cell = (
+    key: HoldingsExplorerMetricKey,
+    display: string,
+    className: string,
+    extra?: { testId?: string },
+  ) => ({
+    inspectMode,
+    selected: cellSelection,
+    metricKey: key,
+    holdingId: hid,
+    ticker,
+    label: t(metricI18nKey(key)),
+    displayValue: display,
+    className,
+    onSelect: () => onSelectCell(row, key, display),
+    testId: extra?.testId,
+  });
+
+  const pe = showFund ? formatPe(f.peRatio) : na;
+  const fwd = showFund ? formatPe(f.forwardPe) : na;
+  const peg = showFund ? formatPe(f.pegRatio) : na;
+  const yld = showFund ? formatYieldPct(f.dividendYield) : na;
+  const divInc = showFund && row.estimatedDivIncomeEUR != null ? money(row.estimatedDivIncomeEUR) : "—";
+  const weight = `${row.weightPct.toFixed(1)}%`;
+  const day = row.dayChangePct == null ? "—" : formatPercent(row.dayChangePct);
+  const ret = row.returnPct == null ? "—" : formatPercent(row.returnPct);
+  const sector = f.sector || row.holding.sector || "—";
+  const beta = showFund && f.beta != null ? f.beta.toFixed(2) : "—";
+  const eps = showFund && f.eps != null ? f.eps.toFixed(2) : "—";
+  const roe = showFund ? formatRatioPct(f.returnOnEquity) : "—";
+  const cap = formatCap(f.marketCap);
+  const fromHigh = row.pctFromHigh == null ? "—" : formatPercent(row.pctFromHigh);
+  const upside = row.analystUpsidePct == null ? "—" : formatPercent(row.analystUpsidePct);
+  const value = money(row.valueEUR);
 
   return (
     <tr className="border-b border-[color:var(--border)] last:border-0 hover:bg-[color:var(--surface-hover,transparent)]">
-      <td className="px-3 py-2.5 sticky left-0 bg-[color:var(--surface,var(--page-background))]">
+      <InspectTd {...cell("holding", ticker, "px-3 py-2.5 sticky left-0 bg-[color:var(--surface,var(--page-background))]")}>
         <button
           type="button"
-          onClick={onOpen}
+          onClick={inspectMode ? undefined : onOpen}
           className="text-left min-h-11 sm:min-h-0 focus-visible:ring-2 focus-visible:ring-[color:var(--accent)] rounded"
         >
           <span className="font-semibold block">{row.holding.ticker}</span>
           <span className="text-xs text-[color:var(--muted)] block truncate max-w-[160px]">{row.holding.name}</span>
           <span className="text-[10px] uppercase tracking-wide text-[color:var(--muted)]">{type}</span>
         </button>
-      </td>
-      <td className="px-3 py-2.5 text-right tabular-nums">{money(row.valueEUR)}</td>
-      <td className="px-3 py-2.5 text-right tabular-nums">{row.weightPct.toFixed(1)}%</td>
-      <td className={`px-3 py-2.5 text-right tabular-nums ${dayClass}`}>
-        {row.dayChangePct == null ? "—" : formatPercent(row.dayChangePct)}
-      </td>
-      <td className={`px-3 py-2.5 text-right tabular-nums ${retClass}`}>
-        {row.returnPct == null ? "—" : formatPercent(row.returnPct)}
-      </td>
-      <td className="px-3 py-2.5 text-right tabular-nums">{showFund ? formatPe(f.peRatio) : t("holdingsExplorerMetricsNa")}</td>
-      <td className="px-3 py-2.5 text-right tabular-nums">{showFund ? formatPe(f.forwardPe) : t("holdingsExplorerMetricsNa")}</td>
-      <td className="px-3 py-2.5 text-right tabular-nums">{showFund ? formatPe(f.pegRatio) : t("holdingsExplorerMetricsNa")}</td>
-      <td className="px-3 py-2.5 text-right tabular-nums">{showFund ? formatYieldPct(f.dividendYield) : t("holdingsExplorerMetricsNa")}</td>
-      <td className="px-3 py-2.5 text-right tabular-nums">
-        {showFund && row.estimatedDivIncomeEUR != null ? money(row.estimatedDivIncomeEUR) : "—"}
-      </td>
-      <td className="px-3 py-2.5">
-        <div className="text-xs">{f.sector || row.holding.sector || "—"}</div>
+      </InspectTd>
+      <InspectTd {...cell("positionValue", value, "px-3 py-2.5 text-right tabular-nums")}>{value}</InspectTd>
+      <InspectTd {...cell("weightPct", weight, "px-3 py-2.5 text-right tabular-nums")}>{weight}</InspectTd>
+      <InspectTd {...cell("dayChange", day, `px-3 py-2.5 text-right tabular-nums ${dayClass}`)}>{day}</InspectTd>
+      <InspectTd {...cell("returnPct", ret, `px-3 py-2.5 text-right tabular-nums ${retClass}`)}>{ret}</InspectTd>
+      <InspectTd
+        {...cell("peRatio", pe, "px-3 py-2.5 text-right tabular-nums", { testId: "holdings-explorer-cell-pe" })}
+      >
+        {pe}
+      </InspectTd>
+      <InspectTd {...cell("forwardPe", fwd, "px-3 py-2.5 text-right tabular-nums")}>{fwd}</InspectTd>
+      <InspectTd {...cell("pegRatio", peg, "px-3 py-2.5 text-right tabular-nums")}>{peg}</InspectTd>
+      <InspectTd {...cell("dividendYield", yld, "px-3 py-2.5 text-right tabular-nums")}>{yld}</InspectTd>
+      <InspectTd {...cell("divIncome", divInc, "px-3 py-2.5 text-right tabular-nums")}>{divInc}</InspectTd>
+      <InspectTd {...cell("sectorSize", sector, "px-3 py-2.5")}>
+        <div className="text-xs">{sector}</div>
         <div className="text-[10px] text-[color:var(--muted)]">{formatCap(f.marketCap)}</div>
-      </td>
-      <td className="px-3 py-2.5 text-right tabular-nums">{showFund && f.beta != null ? f.beta.toFixed(2) : "—"}</td>
-      <td className="px-3 py-2.5 text-right tabular-nums">{showFund && f.eps != null ? f.eps.toFixed(2) : "—"}</td>
-      <td className="px-3 py-2.5 text-right tabular-nums">{showFund ? formatRatioPct(f.returnOnEquity) : "—"}</td>
-      <td className="px-3 py-2.5 text-right tabular-nums">{formatCap(f.marketCap)}</td>
-      <td className="px-3 py-2.5 text-right tabular-nums">
-        {row.pctFromHigh == null ? "—" : formatPercent(row.pctFromHigh)}
-      </td>
-      <td className="px-3 py-2.5 text-right tabular-nums">
-        {row.analystUpsidePct == null ? "—" : formatPercent(row.analystUpsidePct)}
-      </td>
+      </InspectTd>
+      <InspectTd {...cell("beta", beta, "px-3 py-2.5 text-right tabular-nums")}>{beta}</InspectTd>
+      <InspectTd {...cell("eps", eps, "px-3 py-2.5 text-right tabular-nums")}>{eps}</InspectTd>
+      <InspectTd {...cell("roe", roe, "px-3 py-2.5 text-right tabular-nums")}>{roe}</InspectTd>
+      <InspectTd {...cell("marketCap", cap, "px-3 py-2.5 text-right tabular-nums")}>{cap}</InspectTd>
+      <InspectTd {...cell("pctFromHigh", fromHigh, "px-3 py-2.5 text-right tabular-nums")}>{fromHigh}</InspectTd>
+      <InspectTd {...cell("analystUpside", upside, "px-3 py-2.5 text-right tabular-nums")}>{upside}</InspectTd>
       <td className="px-3 py-2.5">
         <HoldingResearchLinks holding={row.holding} variant="inline" />
       </td>
