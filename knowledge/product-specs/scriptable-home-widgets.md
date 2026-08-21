@@ -73,6 +73,8 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 ## 11. Permissions / tier gating / rate limits
 
 - Available on Free. Device auth rate limit applies to bearer widget-token calls (`checkDeviceAuthRateLimit`).
+- Rate-limit exhaustion returns **HTTP 429** (`reason: rate_limited`), not 401 — so Scriptable can distinguish “wait” from “bad token”. Limit is `PLATFORM_LIMITS.DEVICE_AUTH_PER_IP_PER_15MIN` (raised from 10 so Leaf’s ~1/min poll and setup retries do not false-401).
+- Bearer tokens are trimmed before hash lookup (copy/paste whitespace).
 
 ## 12. Telemetry
 
@@ -84,6 +86,7 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 - Missing `price` without `full=true` → movers script requires `?full=true`.
 - Yahoo sparkline failures → synthetic sparkline; widget still shows price + %.
 - Small / Medium / Large are all supported; Small hides company names and uses a compact sparkline.
+- Repeated setup runs that hit the IP rate limit used to look like a bad token (401); they now surface as 429 with a clear error body.
 
 ## 14. Tests
 

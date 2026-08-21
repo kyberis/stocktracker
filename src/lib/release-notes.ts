@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.192",
+    date: "2026-08-21",
+    title: "Scriptable widget auth no longer false-401s under load",
+    titleTranslations: {
+      es: "La autenticación del widget Scriptable ya no da 401 falsos bajo carga",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Home-screen widget and Leaf device Bearer auth no longer return HTTP 401 when the per-IP rate limit is hit — you get 429 instead — and the limit is higher so valid tokens keep working while you set up or refresh. Informational only — not investment advice.",
+        translations: {
+          es: "La autenticación Bearer del widget de inicio y del Leaf ya no responde HTTP 401 cuando se alcanza el límite por IP — ahora es 429 — y el límite es más alto para que los tokens válidos sigan funcionando al configurar o actualizar. Solo informativo, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.191",
     date: "2026-08-21",
     title: "Top-movers Scriptable widget adapts to Small, Medium, and Large",

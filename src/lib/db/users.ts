@@ -533,9 +533,10 @@ export async function revokeWidgetToken(userId: string): Promise<void> {
 }
 
 export async function findUserByWidgetToken(token: string): Promise<DbUser | null> {
-  if (!token || !token.startsWith("tfw_")) return null;
+  const normalized = token?.trim() ?? "";
+  if (!normalized || !normalized.startsWith("tfw_")) return null;
   const client = await ensureInitialized();
-  const hash = hashToken(token);
+  const hash = hashToken(normalized);
   const result = await client.execute({
     sql: "SELECT * FROM users WHERE widget_token_hash = ?",
     args: [hash],
@@ -566,12 +567,13 @@ export async function revokeDevicePasskey(userId: string): Promise<void> {
 }
 
 export async function findUserByDevicePasskey(passkey: string): Promise<DbUser | null> {
-  if (!passkey) return null;
-  const isLegacy = /^\d{4}-\d{4}$/.test(passkey);
-  const isNew = /^\d{4}-\d{4}-\d{4}$/.test(passkey);
+  const normalized = passkey?.trim() ?? "";
+  if (!normalized) return null;
+  const isLegacy = /^\d{4}-\d{4}$/.test(normalized);
+  const isNew = /^\d{4}-\d{4}-\d{4}$/.test(normalized);
   if (!isLegacy && !isNew) return null;
   const client = await ensureInitialized();
-  const hash = hashToken(passkey);
+  const hash = hashToken(normalized);
   const result = await client.execute({
     sql: "SELECT * FROM users WHERE device_passkey_hash = ?",
     args: [hash],

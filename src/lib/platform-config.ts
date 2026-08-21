@@ -42,8 +42,13 @@ export const PLATFORM_LIMITS = {
   /** Login attempts per IP per 15 minutes. */
   AUTH_LOGIN_PER_IP_PER_15MIN: 10,
 
-  /** Device bearer-token auth attempts per IP per 15 minutes. */
-  DEVICE_AUTH_PER_IP_PER_15MIN: 10,
+  /**
+   * Device / widget bearer-token auth attempts per IP per 15 minutes.
+   * Leaf polls summary about once per minute; Scriptable widgets refresh less
+   * often but users re-run scripts while setting up. 10 was too low and was
+   * surfaced as HTTP 401 (indistinguishable from a bad token).
+   */
+  DEVICE_AUTH_PER_IP_PER_15MIN: 180,
 
   /**
    * Global cap on OpenAI API calls per calendar month (all endpoints combined).

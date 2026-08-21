@@ -1,42 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth/session";
-import { findUserByWidgetToken, findUserByDevicePasskey, markDeviceLinked, findUserById, listHoldings, listCashEntries } from "@/lib/db";
+import { findUserById, listHoldings, listCashEntries } from "@/lib/db";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { investmentCashEntries } from "@/lib/portfolio-summary-cash";
 import { withMetrics } from "@/lib/with-metrics";
-import { checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
 import { deviceApiCalls } from "@/lib/metrics";
 import { json401 } from "@/lib/log-unauthorized";
+import {
+  authenticateDeviceBearer,
+  deviceBearerRateLimitResponse,
+  type DeviceBearerMethod,
+} from "@/lib/device-bearer-auth";
 import type { ExchangeRates } from "@/lib/types";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import { fetchQuoteMapForHoldings } from "@/lib/holding-quotes";
 import { getRatesWithCache } from "@/lib/quote-cache";
 
-type AuthMethod = "session" | "widget_token" | "device_passkey";
+type AuthMethod = "session" | DeviceBearerMethod;
 
 interface AuthContext {
   userId: string | null;
   method: AuthMethod | null;
+  rateLimited?: boolean;
+  retryAfterSec?: number;
 }
 
 async function resolveAuthContext(req: NextRequest): Promise<AuthContext> {
   const session = await getSessionFromRequest(req);
   if (session) return { userId: session.userId, method: "session" };
 
-  const auth = req.headers.get("authorization");
-  if (auth?.startsWith("Bearer ")) {
-    const ip = getClientIp(req);
-    const rl = await checkDeviceAuthRateLimit(ip);
-    if (!rl.allowed) return { userId: null, method: null };
-
-    const token = auth.slice(7);
-    const widgetUser = await findUserByWidgetToken(token);
-    if (widgetUser) return { userId: widgetUser.id, method: "widget_token" };
-    const deviceUser = await findUserByDevicePasskey(token);
-    if (deviceUser) {
-      markDeviceLinked(deviceUser.id).catch(() => {});
-      return { userId: deviceUser.id, method: "device_passkey" };
-    }
+  const bearer = await authenticateDeviceBearer(req);
+  if (bearer.status === "ok") {
+    return { userId: bearer.user.id, method: bearer.method };
+  }
+  if (bearer.status === "rate_limited") {
+    return {
+      userId: null,
+      method: null,
+      rateLimited: true,
+      retryAfterSec: bearer.retryAfterSec,
+    };
   }
   return { userId: null, method: null };
 }
@@ -48,6 +51,10 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
   }
 
   const authContext = await resolveAuthContext(req);
+  if (authContext.rateLimited) {
+    if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/portfolio/summary", status: "rate_limited" });
+    return deviceBearerRateLimitResponse(authContext.retryAfterSec);
+  }
   if (!authContext.userId) {
     if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/portfolio/summary", status: "auth_failed" });
     return json401(req, {

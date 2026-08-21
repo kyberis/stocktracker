@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.191: Responsive Scriptable movers layout; not a new landing capability."
+  "notes": "2.5.192: Widget auth 401→429 rate-limit fix; not a landing capability"
 }

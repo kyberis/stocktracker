@@ -748,6 +748,16 @@ describe("users", () => {
       expect(mockExecute).not.toHaveBeenCalled();
     });
 
+    it("trims whitespace before prefix check and lookup", async () => {
+      mockExecute.mockResolvedValue({ rows: [dbUserRow] });
+      const result = await users.findUserByWidgetToken("  tfw_abc123\n");
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "SELECT * FROM users WHERE widget_token_hash = ?",
+        args: ["hashed"],
+      });
+      expect(result?.id).toBe("u1");
+    });
+
     it("returns null for empty token", async () => {
       const result = await users.findUserByWidgetToken("");
       expect(result).toBeNull();
