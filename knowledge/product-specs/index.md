@@ -132,6 +132,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [global-search](global-search.md) — cmd-K palette.
 - [net-worth-tracking](net-worth-tracking.md) — combined net worth view.
 - [rebalance-targets](rebalance-targets.md) — allocation targets + suggested trades.
+- [holdings-explorer](holdings-explorer.md) — sort your own holdings by P/E, yield, weight, sector.
 - [stock-screener](stock-screener.md) — 600-stock filter UI.
 - [strategies](strategies.md) — saved investment ideas + auto-alerts.
 - [tax-reports](tax-reports.md) — year-end tax reports per country.

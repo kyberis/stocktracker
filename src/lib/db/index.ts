@@ -548,6 +548,7 @@ export type { ScreenerCacheRow, ScreenerFilters, ScreenerResponse } from "./scre
 export {
   queryScreener,
   upsertScreenerCache,
+  getScreenerCacheBySymbols,
   getScreenerCacheCount,
   getScreenerDistinctSectors,
   getScreenerDistinctCountries,

@@ -233,6 +233,31 @@ export async function upsertScreenerCache(row: {
   });
 }
 
+/** Lookup cached fundamentals for a set of Yahoo-style symbols (case-insensitive). */
+export async function getScreenerCacheBySymbols(
+  symbols: readonly string[],
+): Promise<Map<string, ScreenerCacheRow>> {
+  const out = new Map<string, ScreenerCacheRow>();
+  const unique = [...new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean))];
+  if (unique.length === 0) return out;
+
+  const client = await ensureInitialized();
+  const CHUNK = 80;
+  for (let i = 0; i < unique.length; i += CHUNK) {
+    const chunk = unique.slice(i, i + CHUNK);
+    const placeholders = chunk.map(() => "?").join(",");
+    const result = await client.execute({
+      sql: `SELECT * FROM screener_cache WHERE UPPER(symbol) IN (${placeholders})`,
+      args: chunk,
+    });
+    for (const row of result.rows) {
+      const mapped = mapRow(row as unknown as Record<string, unknown>);
+      out.set(mapped.symbol.toUpperCase(), mapped);
+    }
+  }
+  return out;
+}
+
 export async function getScreenerCacheCount(): Promise<number> {
   const client = await ensureInitialized();
   const result = await client.execute("SELECT COUNT(*) as cnt FROM screener_cache");
