@@ -37,3 +37,14 @@ Do **not** update for internal improvements, minor fixes, or backend-only change
 - [ ] Screenshot is high-quality and shows the feature in context
 - [ ] Pro features include the `badge: "Pro"` property
 - [ ] Pricing lists stay accurate with current tier structure
+
+## Feature guard (CI)
+
+If the feature is **not** landing-worthy, still record the decision in this PR so
+`enforce-feature-requirements` passes:
+
+```bash
+npm run feature:landing-reviewed -- "<version>: <why landing was skipped>"
+```
+
+Run `npm run prepr` before opening the PR (see `.cursor/rules/pre-pr-checks.mdc`).

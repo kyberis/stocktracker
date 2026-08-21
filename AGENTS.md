@@ -141,6 +141,9 @@ cursor-plugins/       kyberis/cursor-plugins submodule — Cursor Marketplace pl
 
 - Bypass pre-commit/pre-push hooks and GPG signing: `git -c commit.gpgsign=false commit --no-verify -m "..."`
   and `git push --no-verify origin <branch>`. See [`.cursor/rules/git-push.mdc`](.cursor/rules/git-push.mdc).
+- **Before opening a PR:** run `npm run prepr` (lint errors + feature guard + knowledge lint).
+  See [`.cursor/rules/pre-pr-checks.mdc`](.cursor/rules/pre-pr-checks.mdc).
+  For feature PRs that skip the landing page: `npm run feature:landing-reviewed -- "<version>: <reason>"`.
 - Do not push to `main` without a successful `npm run build && npm test`.
 
 ## Cross-references

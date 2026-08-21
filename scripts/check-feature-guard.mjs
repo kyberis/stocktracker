@@ -73,6 +73,14 @@ const markerDiff = markerChanged
   ? run(`git diff -U0 ${mergeBase}...HEAD -- ${LANDING_REVIEW_MARKER}`)
   : "";
 const markerSetsLandingReviewed = parseLandingMarkerFromDiff(markerDiff);
+const markerJson = readJson(LANDING_REVIEW_MARKER);
+const markerCurrentlyReviewed = markerJson?.landingPageReviewed === true;
+// Accept either an added `"landingPageReviewed": true` line in the diff, or any
+// change to the marker file in this PR while the file currently asserts reviewed.
+const landingReviewOk =
+  landingPageChanged ||
+  markerSetsLandingReviewed ||
+  (markerChanged && markerCurrentlyReviewed);
 
 const featureDetected = addedFeatureEntry || productSpecChanged;
 
@@ -95,9 +103,9 @@ if (!productSpecChanged) {
   );
 }
 
-if (!landingPageChanged && !markerSetsLandingReviewed) {
+if (!landingReviewOk) {
   errors.push(
-    `Landing page check missing: update \`${LANDING_PAGE_PATH}\` or update \`${LANDING_REVIEW_MARKER}\` with \`"landingPageReviewed": true\` in this PR.`,
+    `Landing page check missing: update \`${LANDING_PAGE_PATH}\`, or run \`npm run feature:landing-reviewed -- "<version>: <reason>"\` (writes \`${LANDING_REVIEW_MARKER}\`).`,
   );
 }
 
@@ -107,7 +115,6 @@ if (errors.length > 0) {
     console.error(`- ${error}`);
   }
 
-  const markerJson = readJson(LANDING_REVIEW_MARKER);
   if (markerJson) {
     console.error("\nCurrent landing review marker content:");
     console.error(JSON.stringify(markerJson, null, 2));
