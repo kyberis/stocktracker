@@ -32,7 +32,7 @@ const SCRIPT_VARIANTS: Record<
     file: "/widget/trefolio-scriptable-movers.js",
     filename: "trefolio-scriptable-movers.js",
     label: "Top movers",
-    description: "Biggest day moves: two gainers and one loser (adapts to Small / Medium / Large).",
+    description: "Biggest day moves — Large shows 4 up + 3 down (fills the other side if short).",
   },
 };
 

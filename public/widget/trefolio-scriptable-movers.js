@@ -1,6 +1,6 @@
 // trefolio — Top Movers Widget for Scriptable (iOS)
 // Paste this script in the Scriptable app, then add a Scriptable widget to your home screen.
-// Shows the day's biggest movers: prefer two gainers and one loser (by day %).
+// Shows the day's biggest movers by day % (fills from the other side if short).
 // Adapts layout for Small / Medium / Large widget sizes (config.widgetFamily).
 // Set your widget token below (generate one at trefolio.com → Profile → Widget Access).
 // Portfolio scope: Profile → Device & Widget (independent from the in-app portfolio picker).
@@ -54,22 +54,22 @@ function layoutFor(family) {
   if (family === "large") {
     return {
       family,
-      rows: 5,
-      gainers: 3,
-      losers: 2,
-      padding: 14,
+      rows: 7,
+      gainers: 4,
+      losers: 3,
+      padding: 12,
       showName: true,
       showSpark: true,
-      sparkW: 96,
-      sparkH: 32,
-      gap: 8,
-      sepGap: 5,
-      tickerFont: 15,
-      nameFont: 11,
-      priceFont: 16,
-      pctFont: 12,
-      arrowFont: 10,
-      sparkStroke: 1.5,
+      sparkW: 80,
+      sparkH: 22,
+      gap: 5,
+      sepGap: 3,
+      tickerFont: 14,
+      nameFont: 10,
+      priceFont: 14,
+      pctFont: 11,
+      arrowFont: 9,
+      sparkStroke: 1.4,
       corner: 24,
     };
   }

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.193",
+    date: "2026-08-21",
+    title: "Large top-movers widget shows 4 up and 3 down",
+    titleTranslations: {
+      es: "El widget grande de movimientos muestra 4 subidas y 3 bajadas",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The Large Scriptable top-movers widget now prefers four gainers and three losers (seven rows). If one side is short, remaining slots fill from the other side. Informational only — not investment advice.",
+        translations: {
+          es: "El widget Scriptable grande de mayores movimientos ahora prioriza cuatro subidas y tres bajadas (siete filas). Si falta un lado, rellena con el otro. Solo informativo, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.192",
     date: "2026-08-21",
     title: "Scriptable widget auth no longer false-401s under load",
