@@ -2,275 +2,42 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Copy, Check, Smartphone, Apple, MonitorSmartphone, RefreshCw, Trash2, KeyRound, Briefcase } from "lucide-react";
+import {
+  Copy,
+  Check,
+  Smartphone,
+  Apple,
+  MonitorSmartphone,
+  RefreshCw,
+  Trash2,
+  KeyRound,
+  Briefcase,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 
-const SCRIPT_URL = "https://trefolio.com/widget/trefolio-scriptable.js";
+type ScriptVariant = "portfolio" | "movers";
 
-const SCRIPTABLE_TEMPLATE = `// trefolio — Portfolio Widget for Scriptable (iOS)
-// Paste this script in the Scriptable app, then add a Scriptable widget to your home screen.
-
-const TOKEN = "__TOKEN__";
-const API_URL = "https://trefolio.com/api/portfolio/summary";
-const ICON_URL = "https://trefolio.com/favicon.png";
-const APP_URL = "https://trefolio.com";
-const REFRESH_MINUTES = 30;
-
-const BG = new Color("#0f172a");
-const TEXT = new Color("#f1f5f9");
-const MUTED = new Color("#94a3b8");
-const GREEN = new Color("#10b981");
-const RED = new Color("#ef4444");
-const CURRENCY_SYMBOLS = {
-  EUR: "€",
-  USD: "$",
-  GBP: "£",
-  CAD: "C$",
-  DKK: "kr",
+const SCRIPT_VARIANTS: Record<
+  ScriptVariant,
+  { file: string; label: string; description: string; filename: string }
+> = {
+  portfolio: {
+    file: "/widget/trefolio-scriptable.js",
+    filename: "trefolio-scriptable.js",
+    label: "Portfolio summary",
+    description: "Total value, day change, and top holdings by weight.",
+  },
+  movers: {
+    file: "/widget/trefolio-scriptable-movers.js",
+    filename: "trefolio-scriptable-movers.js",
+    label: "Top movers",
+    description: "Biggest day moves: two gainers and one loser, with sparklines.",
+  },
 };
 
-async function fetchData() {
-  const req = new Request(API_URL);
-  req.headers = { Authorization: \`Bearer \${TOKEN}\` };
-  req.timeoutInterval = 15;
-  const body = await req.loadString();
-  const status = req.response.statusCode;
-  if (status < 200 || status >= 300) {
-    throw new Error(\`HTTP \${status}\`);
-  }
-  return JSON.parse(body);
-}
-
-async function fetchIcon() {
-  try {
-    const req = new Request(ICON_URL);
-    req.timeoutInterval = 10;
-    return await req.loadImage();
-  } catch {
-    return null;
-  }
-}
-
-function num(v) {
-  return typeof v === "number" && isFinite(v) ? v : 0;
-}
-
-function fmt(n) {
-  return Math.abs(num(n)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function sign(n) {
-  return num(n) >= 0 ? "+" : "−";
-}
-
-function currencyCode(data) {
-  return typeof data?.currency === "string" && data.currency.trim() ? data.currency.trim().toUpperCase() : "EUR";
-}
-
-function money(amount, data) {
-  const code = currencyCode(data);
-  const symbol = CURRENCY_SYMBOLS[code];
-  if (symbol) return \`\${symbol}\${fmt(amount)}\`;
-  return \`\${code} \${fmt(amount)}\`;
-}
-
-function createSmallWidget(data, icon) {
-  const w = new ListWidget();
-  w.backgroundColor = BG;
-  w.setPadding(12, 14, 12, 14);
-  w.url = APP_URL;
-
-  const header = w.addStack();
-  header.layoutHorizontally();
-  header.centerAlignContent();
-  header.spacing = 4;
-
-  if (icon) {
-    const img = header.addImage(icon);
-    img.imageSize = new Size(12, 12);
-    img.cornerRadius = 3;
-  }
-
-  const title = header.addText("trefolio");
-  title.font = Font.boldSystemFont(10);
-  title.textColor = GREEN;
-
-  if (data.portfolioName) {
-    header.addSpacer(null);
-    const pName = header.addText(data.portfolioName);
-    pName.font = Font.regularSystemFont(8);
-    pName.textColor = MUTED;
-    pName.lineLimit = 1;
-  }
-
-  w.addSpacer(4);
-
-  const value = w.addText(money(data.totalValueEUR, data));
-  value.font = Font.boldSystemFont(22);
-  value.textColor = TEXT;
-  value.minimumScaleFactor = 0.6;
-
-  w.addSpacer(2);
-
-  const isUp = num(data.dayChangeEUR) >= 0;
-  const change = w.addText(\`\${sign(data.dayChangeEUR)}\${money(data.dayChangeEUR, data)} (\${sign(data.dayChangePercent)}\${Math.abs(num(data.dayChangePercent)).toFixed(2)}%)\`);
-  change.font = Font.mediumSystemFont(11);
-  change.textColor = isUp ? GREEN : RED;
-
-  w.addSpacer(4);
-
-  const gainUp = num(data.totalGainLoss) >= 0;
-  const pl = w.addText(\`P/L \${sign(data.totalGainLoss)}\${money(data.totalGainLoss, data)}\`);
-  pl.font = Font.regularSystemFont(10);
-  pl.textColor = gainUp ? GREEN : RED;
-
-  w.addSpacer(null);
-
-  const footer = w.addText(\`\${data.holdingsCount} holdings · \${currencyCode(data)}\`);
-  footer.font = Font.regularSystemFont(8);
-  footer.textColor = MUTED;
-
-  return w;
-}
-
-function createMediumWidget(data, icon) {
-  const w = new ListWidget();
-  w.backgroundColor = BG;
-  w.setPadding(12, 14, 12, 14);
-  w.url = APP_URL;
-
-  const header = w.addStack();
-  header.layoutHorizontally();
-  header.centerAlignContent();
-
-  if (icon) {
-    const img = header.addImage(icon);
-    img.imageSize = new Size(12, 12);
-    img.cornerRadius = 3;
-  }
-
-  header.addSpacer(4);
-
-  const title = header.addText("trefolio");
-  title.font = Font.boldSystemFont(10);
-  title.textColor = GREEN;
-
-  header.addSpacer();
-
-  if (data.portfolioName) {
-    const pName = header.addText(data.portfolioName);
-    pName.font = Font.regularSystemFont(9);
-    pName.textColor = MUTED;
-    pName.lineLimit = 1;
-    header.addSpacer(6);
-  }
-
-  const count = header.addText(\`\${data.holdingsCount} holdings · \${currencyCode(data)}\`);
-  count.font = Font.regularSystemFont(9);
-  count.textColor = MUTED;
-
-  w.addSpacer(4);
-
-  const value = w.addText(money(data.totalValueEUR, data));
-  value.font = Font.boldSystemFont(26);
-  value.textColor = TEXT;
-  value.minimumScaleFactor = 0.6;
-
-  const isUp = num(data.dayChangeEUR) >= 0;
-  const changeLine = w.addStack();
-  changeLine.layoutHorizontally();
-  changeLine.centerAlignContent();
-  changeLine.spacing = 6;
-
-  const change = changeLine.addText(\`\${sign(data.dayChangeEUR)}\${money(data.dayChangeEUR, data)}\`);
-  change.font = Font.semiboldSystemFont(12);
-  change.textColor = isUp ? GREEN : RED;
-
-  const pct = changeLine.addText(\`(\${sign(data.dayChangePercent)}\${Math.abs(num(data.dayChangePercent)).toFixed(2)}%)\`);
-  pct.font = Font.regularSystemFont(11);
-  pct.textColor = isUp ? GREEN : RED;
-
-  const gainUp = num(data.totalGainLoss) >= 0;
-  const plText = changeLine.addText(\`  P/L \${sign(data.totalGainLoss)}\${Math.abs(num(data.totalGainLossPercent)).toFixed(1)}%\`);
-  plText.font = Font.regularSystemFont(10);
-  plText.textColor = gainUp ? GREEN : RED;
-
-  w.addSpacer(8);
-
-  if (data.topHoldings && data.topHoldings.length > 0) {
-    const grid = w.addStack();
-    grid.layoutHorizontally();
-    grid.spacing = 0;
-
-    for (const h of data.topHoldings.slice(0, 4)) {
-      const col = grid.addStack();
-      col.layoutVertically();
-      col.size = new Size(0, 0);
-      col.addSpacer(null);
-
-      const ticker = col.addText(h.ticker);
-      ticker.font = Font.semiboldSystemFont(10);
-      ticker.textColor = TEXT;
-      ticker.lineLimit = 1;
-
-      const hUp = num(h.dayChange) >= 0;
-      const dc = col.addText(\`\${sign(h.dayChange)}\${Math.abs(num(h.dayChange)).toFixed(1)}%\`);
-      dc.font = Font.mediumSystemFont(9);
-      dc.textColor = hUp ? GREEN : RED;
-
-      grid.addSpacer(null);
-    }
-  }
-
-  return w;
-}
-
-async function run() {
-  let data;
-  let icon;
-  try {
-    [data, icon] = await Promise.all([fetchData(), fetchIcon()]);
-    if (data.error) throw new Error(data.error);
-  } catch (e) {
-    const w = new ListWidget();
-    w.backgroundColor = BG;
-    w.setPadding(12, 14, 12, 14);
-    w.url = APP_URL;
-    const err = w.addText("Unable to load portfolio");
-    err.font = Font.regularSystemFont(12);
-    err.textColor = RED;
-    w.addSpacer(4);
-    const hint = w.addText(String(e.message || "Check token"));
-    hint.font = Font.regularSystemFont(8);
-    hint.textColor = MUTED;
-    w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000);
-    if (config.runsInWidget) {
-      Script.setWidget(w);
-    } else {
-      w.presentSmall();
-    }
-    Script.complete();
-    return;
-  }
-
-  const family = config.widgetFamily || "small";
-  const widget = family === "medium" ? createMediumWidget(data, icon) : createSmallWidget(data, icon);
-
-  widget.refreshAfterDate = new Date(Date.now() + REFRESH_MINUTES * 60 * 1000);
-
-  if (config.runsInWidget) {
-    Script.setWidget(widget);
-  } else {
-    family === "medium" ? widget.presentMedium() : widget.presentSmall();
-  }
-  Script.complete();
-}
-
-await run();`;
-
-function buildScript(token: string) {
-  return SCRIPTABLE_TEMPLATE
-    .replace("__TOKEN__", token || "YOUR_TOKEN_HERE");
+function injectToken(script: string, token: string) {
+  return script.replace(/YOUR_TOKEN_HERE/g, token || "YOUR_TOKEN_HERE");
 }
 
 export default function WidgetSetupPage() {
@@ -285,6 +52,10 @@ function WidgetSetupContent() {
   const searchParams = useSearchParams();
   const [copiedScript, setCopiedScript] = useState(false);
   const [activeTab, setActiveTab] = useState<"ios" | "android">("ios");
+  const [scriptVariant, setScriptVariant] = useState<ScriptVariant>("portfolio");
+  const [scriptPreview, setScriptPreview] = useState("");
+  const [scriptBody, setScriptBody] = useState("");
+  const [scriptLoading, setScriptLoading] = useState(false);
   const [widgetToken, setWidgetToken] = useState("");
   const [widgetHasToken, setWidgetHasToken] = useState(false);
   const [widgetLoading, setWidgetLoading] = useState(false);
@@ -301,6 +72,32 @@ function WidgetSetupContent() {
         .catch(() => {});
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setScriptLoading(true);
+    fetch(SCRIPT_VARIANTS[scriptVariant].file)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.text();
+      })
+      .then((text) => {
+        if (cancelled) return;
+        setScriptBody(text);
+        setScriptPreview(text.split("\n").slice(0, 9).join("\n"));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setScriptBody("");
+        setScriptPreview("// Unable to load script preview");
+      })
+      .finally(() => {
+        if (!cancelled) setScriptLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [scriptVariant]);
 
   const handleGenerateToken = useCallback(async () => {
     setWidgetLoading(true);
@@ -325,13 +122,27 @@ function WidgetSetupContent() {
     setWidgetLoading(false);
   }, []);
 
-  const handleCopyScript = () => {
-    const script = buildScript(widgetToken);
+  const handleCopyScript = async () => {
+    let body = scriptBody;
+    if (!body) {
+      try {
+        const res = await fetch(SCRIPT_VARIANTS[scriptVariant].file);
+        if (!res.ok) return;
+        body = await res.text();
+        setScriptBody(body);
+      } catch {
+        return;
+      }
+    }
+    const script = injectToken(body, widgetToken);
     navigator.clipboard.writeText(script).then(() => {
       setCopiedScript(true);
       setTimeout(() => setCopiedScript(false), 2000);
     }).catch(() => {});
   };
+
+  const variantMeta = SCRIPT_VARIANTS[scriptVariant];
+  const previewText = injectToken(scriptPreview || "// Loading…", widgetToken);
 
   return (
     <main className="px-4 py-8">
@@ -480,6 +291,40 @@ function WidgetSetupContent() {
                 </p>
               </div>
 
+              <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-emerald-500" aria-hidden="true" />
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">Script version</span>
+                </div>
+                <div
+                  role="radiogroup"
+                  aria-label="Scriptable widget version"
+                  className="grid gap-2 sm:grid-cols-2"
+                >
+                  {(Object.keys(SCRIPT_VARIANTS) as ScriptVariant[]).map((key) => {
+                    const meta = SCRIPT_VARIANTS[key];
+                    const selected = scriptVariant === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setScriptVariant(key)}
+                        className={`text-left rounded-xl border px-3 py-2.5 transition-colors ${
+                          selected
+                            ? "border-emerald-500/60 bg-emerald-50 dark:bg-emerald-500/10"
+                            : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                        }`}
+                      >
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">{meta.label}</div>
+                        <div className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{meta.description}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <ol className="space-y-3 text-sm text-gray-700 dark:text-slate-300">
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">1</span>
@@ -491,27 +336,33 @@ function WidgetSetupContent() {
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">3</span>
-                  <span>Copy the script below {widgetToken ? "(token is already included)" : ""} and paste it into a new Scriptable script</span>
+                  <span>
+                    Choose a script version, then copy it below {widgetToken ? "(token is already included)" : ""} and paste it into a new Scriptable script
+                  </span>
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">4</span>
-                  <span>Long-press your home screen &rarr; tap <strong>+</strong> &rarr; search <strong>Scriptable</strong> &rarr; choose Small or Medium &rarr; select the script</span>
+                  <span>
+                    Long-press your home screen &rarr; tap <strong>+</strong> &rarr; search <strong>Scriptable</strong> &rarr; choose{" "}
+                    {scriptVariant === "movers" ? "Medium" : "Small or Medium"} &rarr; select the script
+                  </span>
                 </li>
               </ol>
 
               <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">trefolio-scriptable.js</span>
+                <div className="flex items-center justify-between mb-2 gap-2">
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{variantMeta.filename}</span>
                   <button
                     onClick={handleCopyScript}
-                    className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+                    disabled={scriptLoading && !scriptBody}
+                    className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:underline disabled:opacity-50"
                   >
                     {copiedScript ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     {copiedScript ? "Copied!" : widgetToken ? "Copy Script (with token)" : "Copy Script"}
                   </button>
                 </div>
                 <pre className="text-[10px] leading-relaxed text-slate-600 dark:text-slate-400 font-mono overflow-x-auto max-h-40 scrollbar-thin">
-                  {buildScript(widgetToken).split("\n").slice(0, 9).join("\n")}
+                  {previewText}
                   {"\n// ..."}
                 </pre>
               </div>
@@ -563,7 +414,7 @@ function WidgetSetupContent() {
         {/* Disclaimer */}
         <p className="text-[10px] text-center text-gray-400 dark:text-slate-500 leading-relaxed px-4">
           trefolio is not a financial advisor. Portfolio data is provided for informational purposes only.
-          Widget data refreshes periodically and may be delayed.
+          Widget data refreshes periodically and may be delayed. Past performance does not guarantee future results.
         </p>
       </div>
     </main>

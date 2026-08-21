@@ -1,4 +1,4 @@
 {
-  "notes": "2.5.183: thesis vs checklist toggle is on by default on existing /screening. Not a new landing-page capability.",
-  "landingPageReviewed": true
+  "landingPageReviewed": true,
+  "notes": "2.5.189: Scriptable top-movers is an enhancement to existing Widget Setup / Scriptable, not a new landing-page capability."
 }

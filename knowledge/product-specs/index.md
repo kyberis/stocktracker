@@ -227,6 +227,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [device-firmware-ota](device-firmware-ota.md) — firmware OTA updates.
 - [device-lvgl-ui](device-lvgl-ui.md) — LVGL-based device UI.
 - [pwa](pwa.md) — progressive web app + service worker.
+- [scriptable-home-widgets](scriptable-home-widgets.md) — iOS Scriptable widgets (portfolio + top movers).
 - [sdl-simulator](sdl-simulator.md) — desktop device simulator.
 - [trefolio-leaf-device](trefolio-leaf-device.md) — Leaf device page + provisioning.
 

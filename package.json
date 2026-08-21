@@ -12,6 +12,8 @@
     "build:next": "next build",
     "start": "next start",
     "feature:guard": "node scripts/check-feature-guard.mjs",
+    "feature:landing-reviewed": "node scripts/mark-landing-reviewed.mjs",
+    "prepr": "node scripts/prepr.mjs",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "db:migrate": "tsx scripts/run-migrations.ts",

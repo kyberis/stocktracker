@@ -188,7 +188,7 @@ export function computeThesisMetrics(input: ComputeMetricsInput): Metric[] {
     let value: number | null = null;
     let kind: MetricPeriodKind = "FY";
     let label = fy;
-    let ebitForH1 = last?.ebit ?? null;
+    const ebitForH1 = last?.ebit ?? null;
     if (last?.ebit != null && last.interestExpense != null) {
       if (last.interestExpense === 0) {
         value = null;

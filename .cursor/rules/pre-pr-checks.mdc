@@ -1,0 +1,41 @@
+---
+description: Run local CI gates before opening or updating a pull request
+alwaysApply: true
+---
+
+# Pre-PR Checks (Always)
+
+Before the **first** `ManagePullRequest` / `create_pr` on a branch — and again after any follow-up commits meant to fix CI — run the local gates that CI enforces:
+
+```bash
+npm run prepr
+```
+
+That runs, in order:
+
+1. `npm run lint -- --quiet` — same class of failures as the `quality` job (eslint **errors**)
+2. `npm run feature:guard` — release note `type: "feature"` + product spec + landing review
+3. `npm run knowledge:lint` — knowledge-base link integrity
+
+Do **not** open the PR until `prepr` exits 0. If it fails, fix and re-run before creating/updating the PR.
+
+## Feature + landing (the usual miss)
+
+When the PR adds a `type: "feature"` release note or a new product spec:
+
+- Update `src/app/landing/page.tsx` if it is a top-level customer capability, **or**
+- Mark landing reviewed in this PR:
+
+```bash
+npm run feature:landing-reviewed -- "<CURRENT_VERSION>: <one-line reason landing was skipped or updated>"
+```
+
+Then `git add .cursor/feature-gate.json` and commit. Touching only the notes without rewriting the marker often fails CI because the guard requires `"landingPageReviewed": true` to appear in the **diff**.
+
+## Also before PR (when relevant)
+
+- Bump `CURRENT_VERSION` + release notes (see release-notes rule)
+- Add/update product spec + index (see knowledge-base rule)
+- Unit/E2E for user-visible changes
+
+Full `npm run build && npm test` remains required before merging to `main`; `prepr` is the fast gate so agents do not burn a CI round on the same two failures every feature PR.

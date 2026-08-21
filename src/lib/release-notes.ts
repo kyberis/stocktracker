@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.189",
+    date: "2026-08-21",
+    title: "Scriptable top-movers widget (two up, one down)",
+    titleTranslations: {
+      es: "Widget Scriptable de mayores movimientos (dos subidas, una bajada)",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Widget Setup now offers a second Scriptable script: today’s biggest movers with two gainers and one loser, prices, and sparklines. Informational only — not investment advice.",
+        translations: {
+          es: "La configuración del widget ofrece un segundo script de Scriptable: los mayores movimientos del día con dos subidas y una bajada, precios y sparklines. Solo informativo, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.188",
     date: "2026-08-20",
     title: "Thesis numbers carry a unit, a period, and a sanity check",
