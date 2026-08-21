@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "After you generate a home-screen widget token once, it stays available on this device for Portfolio and Top movers scripts — paste an existing token if needed instead of regenerating. Informational only — not investment advice.",
         translations: {
           es: "Tras generar el token del widget una vez, permanece disponible en este dispositivo para los scripts de Cartera y Mayores movimientos — puedes pegar un token existente si hace falta en lugar de regenerarlo. Solo informativo, no asesoramiento de inversión.",
