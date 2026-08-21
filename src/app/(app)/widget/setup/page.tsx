@@ -32,7 +32,7 @@ const SCRIPT_VARIANTS: Record<
     file: "/widget/trefolio-scriptable-movers.js",
     filename: "trefolio-scriptable-movers.js",
     label: "Top movers",
-    description: "Biggest day moves: two gainers and one loser, with sparklines.",
+    description: "Biggest day moves: two gainers and one loser (adapts to Small / Medium / Large).",
   },
 };
 
@@ -344,7 +344,7 @@ function WidgetSetupContent() {
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">4</span>
                   <span>
                     Long-press your home screen &rarr; tap <strong>+</strong> &rarr; search <strong>Scriptable</strong> &rarr; choose{" "}
-                    {scriptVariant === "movers" ? "Medium" : "Small or Medium"} &rarr; select the script
+                    {scriptVariant === "movers" ? "Small, Medium, or Large" : "Small or Medium"} &rarr; select the script
                   </span>
                 </li>
               </ol>

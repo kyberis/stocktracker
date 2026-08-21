@@ -45,12 +45,14 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 
 - Setup page: platform tabs (iOS / Android), token controls, **script version** radiogroup (Portfolio summary | Top movers), copy-ready preview.
 - Scripts are loaded from `/widget/*.js` so the public files remain the single source of truth.
+- Movers Scriptable script reads `config.widgetFamily` and adapts: **Small** (compact, no company name, tiny spark), **Medium** (3 rows + names), **Large** (5 rows, bigger type).
 
 ## 7. Business logic
 
-- Mover selection: [`src/lib/widget/pick-top-movers.ts`](../../src/lib/widget/pick-top-movers.ts) — prefer 2 gainers + 1 loser by day %, fill from absolute movers if a side is empty, then sort by `|dayChange|` desc.
+- Mover selection: [`src/lib/widget/pick-top-movers.ts`](../../src/lib/widget/pick-top-movers.ts) — prefer 2 gainers + 1 loser by day %, fill from absolute movers if a side is empty, then sort by `|dayChange|` desc. Large widgets use 3+2 / 5 rows.
 - The movers Scriptable script inlines the same algorithm (Scriptable cannot import app modules).
 - Sparklines: Scriptable fetches Yahoo 5m/1d chart closes on-device; falls back to a synthetic path from `dayChange` when Yahoo is unavailable.
+- Layout avoids fixed column widths that clipped on Small; uses natural widths + a trailing spacer.
 
 ## 8. External dependencies
 
@@ -81,7 +83,7 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 - Fewer than three holdings / all flat / only gainers or only losers → fill from absolute movers or show fewer rows.
 - Missing `price` without `full=true` → movers script requires `?full=true`.
 - Yahoo sparkline failures → synthetic sparkline; widget still shows price + %.
-- Medium widget size recommended for movers (three rows).
+- Small / Medium / Large are all supported; Small hides company names and uses a compact sparkline.
 
 ## 14. Tests
 

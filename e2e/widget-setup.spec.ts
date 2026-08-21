@@ -67,6 +67,7 @@ test.describe("Widget setup Scriptable variants", () => {
     const body = await res.text();
     expect(body).toContain("pickTopMovers");
     expect(body).toContain("full=true");
+    expect(body).toContain("widgetFamily");
     expect(body).toContain("YOUR_TOKEN_HERE");
   });
 });

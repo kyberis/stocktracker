@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.191",
+    date: "2026-08-21",
+    title: "Top-movers Scriptable widget adapts to Small, Medium, and Large",
+    titleTranslations: {
+      es: "El widget Scriptable de movimientos se adapta a Pequeño, Mediano y Grande",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The Top movers home-screen widget now scales fonts, sparklines, and row count for Small / Medium / Large Scriptable sizes so content is no longer clipped. Informational only — not investment advice.",
+        translations: {
+          es: "El widget de mayores movimientos ahora ajusta tipografía, sparklines y número de filas en tamaños Pequeño / Mediano / Grande de Scriptable para que el contenido no se corte. Solo informativo, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.190",
     date: "2026-08-21",
     title: "Home screen widget setup is easier to find",
