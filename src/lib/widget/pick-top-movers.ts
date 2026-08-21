@@ -1,7 +1,8 @@
 /**
- * Picks home-screen widget movers: always prefer 2 gainers + 1 loser,
- * ranked by absolute day % change. Fills from leftover absolute movers
- * when one side of the book is thin.
+ * Picks home-screen widget movers: prefer N gainers + M losers
+ * (defaults 2 + 1), ranked by absolute day % change. If one side is
+ * short (e.g. fewer than M losers), fills remaining slots from the
+ * other side / leftover absolute movers until `total`.
  */
 
 export interface MoverCandidate {

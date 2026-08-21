@@ -68,6 +68,8 @@ test.describe("Widget setup Scriptable variants", () => {
     expect(body).toContain("pickTopMovers");
     expect(body).toContain("full=true");
     expect(body).toContain("widgetFamily");
+    expect(body).toContain("gainers: 4");
+    expect(body).toContain("losers: 3");
     expect(body).toContain("YOUR_TOKEN_HERE");
   });
 });
