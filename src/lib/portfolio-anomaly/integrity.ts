@@ -1,6 +1,8 @@
 import { createHash } from "crypto";
 
 import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
+import { canonicalExchangeCode } from "@/lib/db/helpers";
+import { normalizeHkYahooSymbol } from "@/lib/market-symbol";
 import { convertToEUR, hasExchangeRate, resolveQuoteCurrency } from "@/lib/utils";
 import type { ExchangeRates, Holding, HoldingAssetType, Transaction } from "@/lib/types";
 import type { MarketQuoteRef } from "@/lib/import-quality";
@@ -46,6 +48,36 @@ export function auditIntegrityFindings(args: {
       autoFixable: true,
       fixAction: "delete_ghost_holding",
     });
+  }
+
+  // Duplicate lots under venue aliases (CPH/OMK, NYSEAM/NYSE, HK padding)
+  if (args.rawHoldings && args.rawHoldings.length > 1) {
+    const byKey = new Map<string, typeof args.rawHoldings>();
+    for (const h of args.rawHoldings) {
+      const key = `${normalizeHkYahooSymbol(h.ticker).toUpperCase()}|${canonicalExchangeCode(h.exchange)}`;
+      const list = byKey.get(key) || [];
+      list.push(h);
+      byKey.set(key, list);
+    }
+    for (const [key, group] of byKey) {
+      if (group.length < 2) continue;
+      const ticker = group[0].ticker;
+      push({
+        id: findingId("duplicate_venue_alias", key),
+        severity: "error",
+        code: "duplicate_venue_alias",
+        ticker,
+        holdingId: group[0].id,
+        message: `${ticker} appears ${group.length}× under equivalent venues (${group.map((g) => g.exchange || "∅").join(", ")}), doubling portfolio value.`,
+        evidence: {
+          holdingIds: group.map((g) => g.id),
+          exchanges: group.map((g) => g.exchange),
+          shares: group.map((g) => g.shares),
+        },
+        autoFixable: true,
+        fixAction: "collapse_venue_aliases",
+      });
+    }
   }
 
   // Zero cost basis / missing exchange

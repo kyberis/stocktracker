@@ -14,6 +14,7 @@ import {
 } from "@/lib/db";
 import { ensureInitialized } from "@/lib/db/client";
 import { num, str } from "@/lib/db/helpers";
+import { repairExchangeAliasDuplicatesForUser } from "@/lib/repair-exchange-alias-duplicates";
 import type { Holding } from "@/lib/types";
 
 import { codesFromFindings, fingerprintFindings, maxSeverity } from "./fingerprint";
@@ -189,6 +190,17 @@ export async function applySafeAnomalyFixes(userId: string, findings: AnomalySca
       f.evidence = { ...f.evidence, fixed: true };
       fixedCount += 1;
       deletedGhosts += 1;
+    }
+  }
+
+  // Collapse CPH/OMK (and similar) duplicate lots
+  if (nextFindings.some((f) => f.fixAction === "collapse_venue_aliases" && f.autoFixable)) {
+    const summary = await repairExchangeAliasDuplicatesForUser(userId);
+    for (const f of nextFindings) {
+      if (f.fixAction === "collapse_venue_aliases" && f.autoFixable) {
+        f.evidence = { ...f.evidence, fixed: true, summary };
+        fixedCount += 1;
+      }
     }
   }
 

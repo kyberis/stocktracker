@@ -152,6 +152,23 @@ describe("auditIntegrityFindings", () => {
     });
     expect(findings.some((f) => f.code === "ledger_holdings_mismatch")).toBe(true);
   });
+
+  it("flags duplicate Copenhagen holdings under CPH and OMK", () => {
+    const findings = auditIntegrityFindings({
+      holdings: [baseHolding({ ticker: "NOVO-B.CO", exchange: "OMK", shares: 102 })],
+      rawHoldings: [
+        { id: "a", ticker: "NOVO-B.CO", shares: 102, purchasePrice: 320, exchange: "OMK" },
+        { id: "b", ticker: "NOVO-B.CO", shares: 102, purchasePrice: 320, exchange: "CPH" },
+      ],
+      transactions: [],
+      quotes: {},
+      exchangeRates: {},
+    });
+    const dup = findings.find((f) => f.code === "duplicate_venue_alias");
+    expect(dup).toBeTruthy();
+    expect(dup?.autoFixable).toBe(true);
+    expect(dup?.fixAction).toBe("collapse_venue_aliases");
+  });
 });
 
 describe("buildDeterministicExplanation", () => {

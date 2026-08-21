@@ -7,6 +7,8 @@ import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal, rateLimitHitsTotal } from "@/lib/metrics";
 import { getHoldingsLimit } from "@/lib/subscription";
 import type { SubscriptionPlan } from "@/lib/types";
+import { canonicalExchangeCode } from "@/lib/db/helpers";
+import { normalizeHkYahooSymbol } from "@/lib/market-symbol";
 
 const EXTRACTION_PROMPT = `You are a portfolio data extractor. Analyze the provided data and extract two things:
 1. Current stock/ETF/mutual fund **holdings** (net positions).
@@ -238,11 +240,14 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     const holdings = rawHoldings
       .map((h: Record<string, unknown>) => ({
         name: String(h.name || "Unknown"),
-        ticker: String(h.ticker || h.isin || "").toUpperCase(),
+        ticker: normalizeHkYahooSymbol(String(h.ticker || h.isin || "").toUpperCase()),
         shares: Number(h.shares) || 0,
         purchasePrice: Number(h.purchasePrice) || 0,
         displayCurrency: String(h.displayCurrency || "USD").toUpperCase(),
-        exchange: String(h.exchange || "").toUpperCase(),
+        exchange: (() => {
+          const raw = String(h.exchange || "").toUpperCase();
+          return canonicalExchangeCode(raw) || raw;
+        })(),
         assetType: h.assetType === "etf" ? "etf" : "stock",
       }))
       .filter((h) => h.ticker && TICKER_RE.test(h.ticker));

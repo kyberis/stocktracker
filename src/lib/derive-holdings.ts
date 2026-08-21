@@ -1,3 +1,5 @@
+import { canonicalExchangeCode } from "@/lib/db/helpers";
+import { normalizeHkYahooSymbol } from "@/lib/market-symbol";
 import type { Holding, HoldingAssetType, Transaction } from "@/lib/types";
 
 interface HoldingMetadata {
@@ -26,7 +28,27 @@ interface AggregateState {
 }
 
 function holdingKey(ticker: string, exchange: string): string {
-  return `${ticker.toUpperCase()}|${exchange.toUpperCase()}`;
+  return `${ticker.toUpperCase()}|${canonicalExchangeCode(exchange)}`;
+}
+
+function lookupMeta(
+  metadataByKey: Map<string, HoldingMetadata>,
+  ticker: string,
+  exchange: string,
+): HoldingMetadata | undefined {
+  const canonical = holdingKey(ticker, exchange);
+  if (metadataByKey.has(canonical)) return metadataByKey.get(canonical);
+  // Legacy keys stored with non-canonical exchange (CPH vs OMK)
+  for (const [k, meta] of metadataByKey) {
+    const pipe = k.indexOf("|");
+    if (pipe < 0) continue;
+    const t = k.slice(0, pipe);
+    const ex = k.slice(pipe + 1);
+    if (t === ticker.toUpperCase() && canonicalExchangeCode(ex) === canonicalExchangeCode(exchange)) {
+      return meta;
+    }
+  }
+  return undefined;
 }
 
 export function deriveHoldingsFromTransactions(
@@ -41,12 +63,12 @@ export function deriveHoldingsFromTransactions(
   const aggregates = new Map<string, AggregateState>();
 
   for (const tx of sorted) {
-    const ticker = (tx.ticker || "").toUpperCase().trim();
+    const ticker = normalizeHkYahooSymbol((tx.ticker || "").toUpperCase().trim());
     if (!ticker) continue;
-    const exchange = (tx.exchange || "").toUpperCase().trim();
+    const exchange = canonicalExchangeCode(tx.exchange);
     const key = holdingKey(ticker, exchange);
 
-    const meta = metadataByKey.get(key);
+    const meta = lookupMeta(metadataByKey, ticker, exchange);
     const isTradeType = tx.type === "buy" || tx.type === "sell";
     const current = aggregates.get(key) || {
       ticker,
@@ -84,7 +106,7 @@ export function deriveHoldingsFromTransactions(
   const derived: Holding[] = [];
   for (const [key, state] of aggregates.entries()) {
     if (state.shares <= 0) continue;
-    const meta = metadataByKey.get(key);
+    const meta = lookupMeta(metadataByKey, state.ticker, state.exchange);
     derived.push({
       id: meta?.id || key,
       name: state.name,
@@ -94,7 +116,7 @@ export function deriveHoldingsFromTransactions(
       shares: state.shares,
       purchasePrice: state.shares > 0 ? state.costAmount / state.shares : 0,
       displayCurrency: state.displayCurrency,
-      exchange: state.exchange,
+      exchange: canonicalExchangeCode(state.exchange) || state.exchange,
       valueInEUR: 0,
       sector: meta?.sector || "",
       region: meta?.region || "",

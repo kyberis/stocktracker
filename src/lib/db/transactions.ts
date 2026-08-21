@@ -1,14 +1,24 @@
 import { randomUUID } from "crypto";
 import type { InValue } from "@libsql/client";
 import { ensureInitialized } from "./client";
-import { str, num, holdingAssetType, txType, normalizeTickerForExchange } from "./helpers";
+import {
+  str,
+  num,
+  holdingAssetType,
+  txType,
+  normalizeTickerForExchange,
+  canonicalExchangeCode,
+  exchangeCodeAliases,
+  exchangesEquivalent,
+} from "./helpers";
 import type { Transaction } from "@/lib/types";
 import { resolvePortfolioId } from "./portfolios";
+import { normalizeHkYahooSymbol } from "@/lib/market-symbol";
 
 export async function listTransactions(userId: string, holdingId?: string, portfolioId?: string): Promise<Transaction[]> {
   const client = await ensureInitialized();
   let sql: string;
-  let args: string[];
+  let args: (string | number)[];
 
   // When filtering by holdingId, also match unlinked transactions by ticker+exchange
   // so transactions created before the holding_id backfill still appear.
@@ -29,16 +39,20 @@ export async function listTransactions(userId: string, holdingId?: string, portf
 
   // When filtering by holdingId, also match unlinked transactions by ticker.
   // Blank exchange on the tx is treated as a wildcard (SnapTrade/order imports
-  // often omit it) so they still appear on /analisis and TransactionHistory.
+  // often omit it). Venue aliases (CPH ↔ OMK) are expanded so Copenhagen lots match.
+  const exchangeAliases = holdingExchange != null ? exchangeCodeAliases(holdingExchange) : [];
+  const exchangeInPlaceholders = exchangeAliases.map(() => "?").join(",");
   const unlinkedTickerMatch =
-    "(holding_id = '' AND UPPER(ticker) = UPPER(?) AND (UPPER(COALESCE(exchange,'')) = ? OR COALESCE(exchange,'') = ''))";
+    exchangeAliases.length > 0
+      ? `(holding_id = '' AND UPPER(ticker) = UPPER(?) AND (UPPER(COALESCE(exchange,'')) IN (${exchangeInPlaceholders}) OR COALESCE(exchange,'') = ''))`
+      : "(holding_id = '' AND UPPER(ticker) = UPPER(?) AND COALESCE(exchange,'') = '')";
 
   if (holdingId && portfolioId && holdingTicker) {
     sql = `SELECT * FROM transactions WHERE user_id = ?
            AND (portfolio_id = ? OR id IN ${mapSub})
            AND (holding_id = ? OR ${unlinkedTickerMatch})
            ORDER BY date DESC, created_at DESC`;
-    args = [userId, portfolioId, userId, portfolioId, holdingId, holdingTicker, (holdingExchange || "").toUpperCase()];
+    args = [userId, portfolioId, userId, portfolioId, holdingId, holdingTicker, ...exchangeAliases.map((a) => a.toUpperCase())];
   } else if (holdingId && portfolioId) {
     sql = `SELECT * FROM transactions WHERE user_id = ? AND holding_id = ?
            AND (portfolio_id = ? OR id IN ${mapSub})
@@ -53,7 +67,7 @@ export async function listTransactions(userId: string, holdingId?: string, portf
     sql = `SELECT * FROM transactions WHERE user_id = ?
            AND (holding_id = ? OR ${unlinkedTickerMatch})
            ORDER BY date DESC, created_at DESC`;
-    args = [userId, holdingId, holdingTicker, (holdingExchange || "").toUpperCase()];
+    args = [userId, holdingId, holdingTicker, ...exchangeAliases.map((a) => a.toUpperCase())];
   } else if (holdingId) {
     sql = "SELECT * FROM transactions WHERE user_id = ? AND holding_id = ? ORDER BY date DESC, created_at DESC";
     args = [userId, holdingId];
@@ -63,17 +77,25 @@ export async function listTransactions(userId: string, holdingId?: string, portf
   }
   const result = await client.execute({ sql, args });
 
-  // Self-heal: backfill holding_id (and blank exchange) on unlinked transactions
+  // Self-heal: backfill holding_id; canonicalize blank/alias exchange onto the holding venue
   if (holdingId && holdingTicker) {
-    const unlinked = result.rows.filter((r) => str(r.holding_id) === "");
+    const unlinked = result.rows.filter((r) => {
+      if (str(r.holding_id) !== "") return false;
+      if (str(r.ticker).toUpperCase() !== holdingTicker!.toUpperCase()) return false;
+      return exchangesEquivalent(str(r.exchange), holdingExchange);
+    });
     if (unlinked.length > 0) {
       const ids = unlinked.map((r) => str(r.id));
       const placeholders = ids.map(() => "?").join(",");
+      const canonEx = canonicalExchangeCode(holdingExchange) || holdingExchange || "";
       await client.execute({
         sql: `UPDATE transactions SET holding_id = ?,
-                exchange = CASE WHEN COALESCE(exchange,'') = '' THEN ? ELSE exchange END
+                exchange = CASE
+                  WHEN COALESCE(exchange,'') = '' THEN ?
+                  ELSE ?
+                END
               WHERE id IN (${placeholders}) AND user_id = ?`,
-        args: [holdingId, holdingExchange || "", ...ids, userId],
+        args: [holdingId, canonEx, canonEx, ...ids, userId],
       });
     }
   }
@@ -112,20 +134,33 @@ async function findHoldingForTicker(
 ): Promise<{ id: string; shares: number; purchasePrice: number } | null> {
   const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
   const portfolioArgs = portfolioId ? [portfolioId] : [];
+  const canonTicker = normalizeHkYahooSymbol(ticker).toUpperCase();
+  const aliases = exchangeCodeAliases(exchange).map((a) => a.toUpperCase()).filter(Boolean);
 
-  let result = await client.execute({
-    sql: `SELECT id, shares, purchase_price FROM holdings WHERE user_id = ? AND UPPER(ticker) = ? AND UPPER(exchange) = ?${portfolioFilter}`,
-    args: [userId, ticker, exchange, ...portfolioArgs],
-  });
-
-  if (result.rows.length === 0 && exchange === "") {
+  let result;
+  if (aliases.length > 0) {
+    const placeholders = aliases.map(() => "?").join(",");
     result = await client.execute({
-      sql: `SELECT id, shares, purchase_price FROM holdings WHERE user_id = ? AND UPPER(ticker) = ?${portfolioFilter}`,
-      args: [userId, ticker, ...portfolioArgs],
+      sql: `SELECT id, shares, purchase_price, exchange FROM holdings
+            WHERE user_id = ? AND UPPER(ticker) = ? AND UPPER(exchange) IN (${placeholders})${portfolioFilter}`,
+      args: [userId, canonTicker, ...aliases, ...portfolioArgs],
+    });
+  } else {
+    result = await client.execute({
+      sql: `SELECT id, shares, purchase_price, exchange FROM holdings WHERE user_id = ? AND UPPER(ticker) = ? AND UPPER(exchange) = ?${portfolioFilter}`,
+      args: [userId, canonTicker, exchange.toUpperCase(), ...portfolioArgs],
+    });
+  }
+
+  if (result.rows.length === 0 && (!exchange || aliases.length === 0)) {
+    result = await client.execute({
+      sql: `SELECT id, shares, purchase_price, exchange FROM holdings WHERE user_id = ? AND UPPER(ticker) = ?${portfolioFilter}`,
+      args: [userId, canonTicker, ...portfolioArgs],
     });
   }
   if (result.rows.length === 0) return null;
 
+  const canonEx = canonicalExchangeCode(exchange) || exchange.toUpperCase();
   if (result.rows.length > 1) {
     const keep = result.rows[0];
     let mergedShares = num(keep.shares);
@@ -135,8 +170,14 @@ async function findHoldingForTicker(
     for (let i = 1; i < result.rows.length; i++) {
       const dup = result.rows[i];
       const dupShares = num(dup.shares);
-      mergedShares += dupShares;
-      mergedCost += dupShares * num(dup.purchase_price);
+      // Identical lot under venue aliases — keep one, do not sum.
+      const sameLot =
+        Math.abs(dupShares - num(keep.shares)) < 1e-6 &&
+        Math.abs(num(dup.purchase_price) - num(keep.purchase_price)) < 1e-4;
+      if (!sameLot) {
+        mergedShares += dupShares;
+        mergedCost += dupShares * num(dup.purchase_price);
+      }
       await client.execute({
         sql: `DELETE FROM holdings WHERE id = ? AND user_id = ?${dupDeleteFilter}`,
         args: [str(dup.id), userId, ...dupDeleteArgs],
@@ -144,13 +185,23 @@ async function findHoldingForTicker(
     }
     const mergedPrice = mergedShares > 0 ? mergedCost / mergedShares : 0;
     await client.execute({
-      sql: "UPDATE holdings SET shares = ?, purchase_price = ? WHERE id = ? AND user_id = ?",
-      args: [mergedShares, mergedPrice, str(keep.id), userId],
+      sql: "UPDATE holdings SET shares = ?, purchase_price = ?, exchange = ?, ticker = ? WHERE id = ? AND user_id = ?",
+      args: [mergedShares, mergedPrice, canonEx, canonTicker, str(keep.id), userId],
     });
     return { id: str(keep.id), shares: mergedShares, purchasePrice: mergedPrice };
   }
 
   const row = result.rows[0];
+  // Heal non-canonical spelling when we know the canonical venue
+  const rowEx = str(row.exchange);
+  const shouldHealExchange = Boolean(canonEx) && rowEx !== canonEx;
+  // ticker column isn't selected above for the simple path — re-read via update only when venue heals
+  if (shouldHealExchange) {
+    await client.execute({
+      sql: "UPDATE holdings SET exchange = ?, ticker = ? WHERE id = ? AND user_id = ?",
+      args: [canonEx, canonTicker, str(row.id), userId],
+    });
+  }
   return { id: str(row.id), shares: num(row.shares), purchasePrice: num(row.purchase_price) };
 }
 
@@ -162,8 +213,8 @@ async function syncHoldingForTransaction(
   if (tx.type !== "buy" && tx.type !== "sell") return undefined;
 
   const client = await ensureInitialized();
-  const ticker = tx.ticker.toUpperCase();
-  const exchange = (tx.exchange || "").toUpperCase();
+  const ticker = normalizeHkYahooSymbol(tx.ticker.toUpperCase());
+  const exchange = canonicalExchangeCode(tx.exchange) || (tx.exchange || "").toUpperCase();
   const existing = await findHoldingForTicker(client, userId, ticker, exchange, portfolioId);
 
   if (tx.type === "buy") {
@@ -217,8 +268,8 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
   const resolved = await resolvePortfolioId(userId, portfolioId);
   const id = randomUUID();
   const total = tx.totalAmount || tx.shares * tx.pricePerShare;
-  const exchange = (tx.exchange || "").toUpperCase();
-  const ticker = normalizeTickerForExchange(tx.ticker, exchange);
+  const exchange = canonicalExchangeCode(tx.exchange) || (tx.exchange || "").toUpperCase();
+  const ticker = normalizeHkYahooSymbol(normalizeTickerForExchange(tx.ticker, exchange));
   const sourceRef = tx.sourceRef || "";
 
   try {
@@ -303,8 +354,8 @@ export async function addTransactionsBulk(
     const stmts = batch.map((tx) => {
       const id = randomUUID();
       const total = tx.totalAmount || tx.shares * tx.pricePerShare;
-      const exchange = (tx.exchange || "").toUpperCase();
-      const ticker = normalizeTickerForExchange(tx.ticker, exchange);
+      const exchange = canonicalExchangeCode(tx.exchange) || (tx.exchange || "").toUpperCase();
+      const ticker = normalizeHkYahooSymbol(normalizeTickerForExchange(tx.ticker, exchange));
       const sourceRef = tx.sourceRef || "";
 
       return {
@@ -359,18 +410,22 @@ export async function linkUnlinkedTransactionsToHoldings(
   let linked = 0;
   for (const h of holdings.rows) {
     const holdingId = str(h.id);
-    const ticker = str(h.ticker);
-    const exchange = str(h.exchange);
+    const ticker = normalizeHkYahooSymbol(str(h.ticker));
+    const exchange = canonicalExchangeCode(str(h.exchange)) || str(h.exchange);
+    const aliases = exchangeCodeAliases(exchange).map((a) => a.toUpperCase());
+    const aliasPlaceholders = aliases.length > 0 ? aliases.map(() => "?").join(",") : "?";
+    const aliasArgs = aliases.length > 0 ? aliases : [""];
     const result = await client.execute({
       sql: `UPDATE transactions SET
               holding_id = ?,
-              exchange = CASE WHEN COALESCE(exchange, '') = '' THEN ? ELSE exchange END
+              exchange = ?,
+              ticker = ?
             WHERE user_id = ?
               AND portfolio_id = ?
               AND holding_id = ''
               AND UPPER(ticker) = UPPER(?)
-              AND (COALESCE(exchange, '') = '' OR UPPER(exchange) = UPPER(?))`,
-      args: [holdingId, exchange, userId, resolved, ticker, exchange],
+              AND (COALESCE(exchange, '') = '' OR UPPER(exchange) IN (${aliasPlaceholders}))`,
+      args: [holdingId, exchange, ticker, userId, resolved, ticker, ...aliasArgs],
     });
     linked += Number(result.rowsAffected ?? 0);
   }

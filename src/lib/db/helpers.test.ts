@@ -14,6 +14,9 @@ import {
   parseRefreshInterval,
   normalizeTickerForExchange,
   EXCHANGE_SUFFIX_MAP,
+  canonicalExchangeCode,
+  exchangeCodeAliases,
+  exchangesEquivalent,
   rowToDbUser,
   rowToPortfolio,
   mapUser,
@@ -278,6 +281,27 @@ describe("normalizeTickerForExchange", () => {
   it("adds .CO suffix for Nordic exchanges (OMK, CPH)", () => {
     expect(normalizeTickerForExchange("NOVO", "OMK")).toBe("NOVO.CO");
     expect(normalizeTickerForExchange("CARL", "CPH")).toBe("CARL.CO");
+  });
+
+  it("canonicalExchangeCode collapses Copenhagen and NYSE aliases", () => {
+    expect(canonicalExchangeCode("CPH")).toBe("OMK");
+    expect(canonicalExchangeCode("XCSE")).toBe("OMK");
+    expect(canonicalExchangeCode("omk")).toBe("OMK");
+    expect(canonicalExchangeCode("NYSEAM")).toBe("NYSE");
+    expect(canonicalExchangeCode("")).toBe("");
+  });
+
+  it("exchangesEquivalent treats CPH and OMK as the same venue", () => {
+    expect(exchangesEquivalent("CPH", "OMK")).toBe(true);
+    expect(exchangesEquivalent("CPH", "")).toBe(true);
+    expect(exchangesEquivalent("NYSE", "NASDAQ")).toBe(false);
+  });
+
+  it("exchangeCodeAliases includes CPH when given OMK", () => {
+    const aliases = exchangeCodeAliases("OMK");
+    expect(aliases).toContain("OMK");
+    expect(aliases).toContain("CPH");
+    expect(aliases).toContain("XCSE");
   });
 
   it("adds .PA, .AS, .BR, .MI, .HE, .VI, .SW, .TO for other European exchanges", () => {

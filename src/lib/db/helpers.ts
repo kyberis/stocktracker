@@ -191,6 +191,60 @@ export const EXCHANGE_SUFFIX_MAP: Record<string, string> = {
   XHKG: ".HK",
 };
 
+/**
+ * Map equivalent venue codes onto one canonical code.
+ * SnapTrade / brokers often alternate CPH vs OMK (Copenhagen) or NYSEAM vs NYSE;
+ * without this, rebuild + listHoldings treat them as two positions and double value.
+ */
+const EXCHANGE_CANONICAL: Record<string, string> = {
+  CPH: "OMK",
+  XCSE: "OMK",
+  NYSEAM: "NYSE",
+  NYSEARCA: "NYSE",
+  ARCX: "NYSE",
+  NYQ: "NYSE",
+  NMS: "NASDAQ",
+  NGM: "NASDAQ",
+  NCM: "NASDAQ",
+  XETR: "XET",
+  GER: "XET",
+  XGAT: "XET",
+  TRADEGATE: "TGD",
+  XHKG: "HKG",
+};
+
+/** Collapse broker/MIC aliases to a single venue code (e.g. CPH → OMK). */
+export function canonicalExchangeCode(exchange: string | null | undefined): string {
+  const upper = (exchange || "").trim().toUpperCase();
+  if (!upper) return "";
+  return EXCHANGE_CANONICAL[upper] || upper;
+}
+
+/** All known spellings of a venue, including the canonical form (for SQL IN matches). */
+export function exchangeCodeAliases(exchange: string | null | undefined): string[] {
+  const canonical = canonicalExchangeCode(exchange);
+  if (!canonical) return [""];
+  const aliases = new Set<string>([canonical]);
+  for (const [alias, canon] of Object.entries(EXCHANGE_CANONICAL)) {
+    if (canon === canonical) aliases.add(alias);
+  }
+  // Also include the raw code if it was already canonical-looking
+  const raw = (exchange || "").trim().toUpperCase();
+  if (raw) aliases.add(raw);
+  return [...aliases];
+}
+
+/** True when two exchange codes refer to the same venue (blank matches anything). */
+export function exchangesEquivalent(
+  a: string | null | undefined,
+  b: string | null | undefined,
+): boolean {
+  const ca = canonicalExchangeCode(a);
+  const cb = canonicalExchangeCode(b);
+  if (!ca || !cb) return true;
+  return ca === cb;
+}
+
 export function str(val: unknown): string {
   return val == null ? "" : String(val);
 }

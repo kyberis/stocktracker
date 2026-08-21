@@ -349,7 +349,7 @@ describe("holdings", () => {
 
       expect(mockExecute).toHaveBeenNthCalledWith(2, {
         sql: expect.stringContaining("UPDATE holdings SET shares = ?, purchase_price = ?"),
-        args: [15, 106.66666666666667, "existing-h1", "user-1"],
+        args: [15, 106.66666666666667, "", "AAPL", "existing-h1", "user-1"],
       });
       expect(result).toMatchObject({
         id: "existing-h1",
