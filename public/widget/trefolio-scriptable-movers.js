@@ -1,6 +1,7 @@
 // trefolio — Top Movers Widget for Scriptable (iOS)
 // Paste this script in the Scriptable app, then add a Scriptable widget to your home screen.
-// Shows the day's biggest movers: two gainers and one loser (by day %).
+// Shows the day's biggest movers: prefer two gainers and one loser (by day %).
+// Adapts layout for Small / Medium / Large widget sizes (config.widgetFamily).
 // Set your widget token below (generate one at trefolio.com → Profile → Widget Access).
 // Portfolio scope: Profile → Device & Widget (independent from the in-app portfolio picker).
 
@@ -8,9 +9,6 @@ const TOKEN = "YOUR_TOKEN_HERE";
 const API_URL = "https://trefolio.com/api/portfolio/summary?full=true";
 const APP_URL = "https://trefolio.com";
 const REFRESH_MINUTES = 30;
-const ROW_COUNT = 3;
-const GAINERS = 2;
-const LOSERS = 1;
 
 const BG = new Color("#1c1c1e");
 const TEXT = new Color("#ffffff");
@@ -18,6 +16,84 @@ const MUTED = new Color("#8e8e93");
 const SEP = new Color("#2c2c2e");
 const GREEN = new Color("#34c759");
 const RED = new Color("#ff3b30");
+
+/** @returns {"small"|"medium"|"large"} */
+function widgetFamily() {
+  const f = config.widgetFamily;
+  if (f === "small" || f === "medium" || f === "large") return f;
+  return "medium";
+}
+
+/**
+ * Size-aware layout. Small drops the company name and shrinks type/spark
+ * so ticker + spark + price fit; large shows more rows.
+ */
+function layoutFor(family) {
+  if (family === "small") {
+    return {
+      family,
+      rows: 3,
+      gainers: 2,
+      losers: 1,
+      padding: 8,
+      showName: false,
+      showSpark: true,
+      sparkW: 34,
+      sparkH: 14,
+      gap: 4,
+      sepGap: 2,
+      tickerFont: 11,
+      nameFont: 9,
+      priceFont: 11,
+      pctFont: 9,
+      arrowFont: 8,
+      sparkStroke: 1.2,
+      corner: 18,
+    };
+  }
+  if (family === "large") {
+    return {
+      family,
+      rows: 5,
+      gainers: 3,
+      losers: 2,
+      padding: 14,
+      showName: true,
+      showSpark: true,
+      sparkW: 96,
+      sparkH: 32,
+      gap: 8,
+      sepGap: 5,
+      tickerFont: 15,
+      nameFont: 11,
+      priceFont: 16,
+      pctFont: 12,
+      arrowFont: 10,
+      sparkStroke: 1.5,
+      corner: 24,
+    };
+  }
+  return {
+    family: "medium",
+    rows: 3,
+    gainers: 2,
+    losers: 1,
+    padding: 12,
+    showName: true,
+    showSpark: true,
+    sparkW: 72,
+    sparkH: 26,
+    gap: 6,
+    sepGap: 4,
+    tickerFont: 13,
+    nameFont: 10,
+    priceFont: 14,
+    pctFont: 11,
+    arrowFont: 9,
+    sparkStroke: 1.5,
+    corner: 22,
+  };
+}
 
 async function fetchData() {
   const req = new Request(API_URL);
@@ -50,7 +126,7 @@ function num(v) {
   return typeof v === "number" && isFinite(v) ? v : 0;
 }
 
-function pickTopMovers(holdings) {
+function pickTopMovers(holdings, gainersWanted, losersWanted, totalWanted) {
   const withChange = (holdings || []).filter(
     (h) => typeof h.dayChange === "number" && isFinite(h.dayChange),
   );
@@ -66,19 +142,19 @@ function pickTopMovers(holdings) {
 
   const selected = [];
   const seen = new Set();
-  for (const h of gainers.slice(0, GAINERS)) {
+  for (const h of gainers.slice(0, gainersWanted)) {
     selected.push(h);
     seen.add(h.ticker);
   }
-  for (const h of losers.slice(0, LOSERS)) {
-    if (selected.length >= ROW_COUNT) break;
+  for (const h of losers.slice(0, losersWanted)) {
+    if (selected.length >= totalWanted) break;
     selected.push(h);
     seen.add(h.ticker);
   }
-  if (selected.length < ROW_COUNT) {
+  if (selected.length < totalWanted) {
     const rest = withChange.filter((h) => !seen.has(h.ticker)).sort(byAbsDesc);
     for (const h of rest) {
-      if (selected.length >= ROW_COUNT) break;
+      if (selected.length >= totalWanted) break;
       selected.push(h);
       seen.add(h.ticker);
     }
@@ -125,9 +201,7 @@ function syntheticPoints(dayChange) {
   return pts;
 }
 
-function drawSparkline(points, isUp) {
-  const width = 72;
-  const height = 28;
+function drawSparkline(points, isUp, width, height, strokeWidth) {
   const dc = new DrawContext();
   dc.size = new Size(width, height);
   dc.opaque = false;
@@ -156,109 +230,129 @@ function drawSparkline(points, isUp) {
     else line.addLine(new Point(x, y));
   });
   dc.setStrokeColor(color);
-  dc.setLineWidth(1.5);
+  dc.setLineWidth(strokeWidth);
   dc.addPath(line);
   dc.strokePath();
 
   return dc.getImage();
 }
 
-function addRow(parent, holding, sparkPoints, code, isLast) {
+function addRow(parent, holding, sparkPoints, code, layout, isLast) {
   const isUp = num(holding.dayChange) >= 0;
   const accent = isUp ? GREEN : RED;
 
   const row = parent.addStack();
   row.layoutHorizontally();
   row.centerAlignContent();
-  row.size = new Size(0, 44);
 
+  // Left: ticker (+ optional name). Natural width — no fixed Size (clips on small).
   const left = row.addStack();
   left.layoutVertically();
-  left.size = new Size(110, 0);
+  left.centerAlignContent();
 
   const titleRow = left.addStack();
   titleRow.layoutHorizontally();
   titleRow.centerAlignContent();
-  titleRow.spacing = 4;
+  titleRow.spacing = layout.family === "small" ? 2 : 4;
 
   const arrow = titleRow.addText(isUp ? "▲" : "▼");
-  arrow.font = Font.boldSystemFont(9);
+  arrow.font = Font.boldSystemFont(layout.arrowFont);
   arrow.textColor = accent;
 
   const ticker = titleRow.addText(String(holding.ticker || ""));
-  ticker.font = Font.boldSystemFont(13);
+  ticker.font = Font.boldSystemFont(layout.tickerFont);
   ticker.textColor = TEXT;
   ticker.lineLimit = 1;
+  ticker.minimumScaleFactor = 0.6;
 
-  const name = left.addText(String(holding.name || holding.ticker || ""));
-  name.font = Font.regularSystemFont(10);
-  name.textColor = MUTED;
-  name.lineLimit = 1;
+  if (layout.showName) {
+    const name = left.addText(String(holding.name || holding.ticker || ""));
+    name.font = Font.regularSystemFont(layout.nameFont);
+    name.textColor = MUTED;
+    name.lineLimit = 1;
+    name.minimumScaleFactor = 0.65;
+  }
 
-  row.addSpacer(6);
+  row.addSpacer(layout.gap);
 
-  const points = sparkPoints && sparkPoints.length >= 2
-    ? sparkPoints
-    : syntheticPoints(holding.dayChange);
-  const spark = row.addImage(drawSparkline(points, isUp));
-  spark.imageSize = new Size(72, 28);
+  if (layout.showSpark) {
+    const points = sparkPoints && sparkPoints.length >= 2
+      ? sparkPoints
+      : syntheticPoints(holding.dayChange);
+    const spark = row.addImage(
+      drawSparkline(points, isUp, layout.sparkW, layout.sparkH, layout.sparkStroke),
+    );
+    spark.imageSize = new Size(layout.sparkW, layout.sparkH);
+    spark.resizable = false;
+    row.addSpacer(layout.gap);
+  }
 
+  // Flexible middle spacer pushes price to the trailing edge.
   row.addSpacer(null);
 
   const right = row.addStack();
   right.layoutVertically();
-  right.size = new Size(78, 0);
+  right.centerAlignContent();
 
   const price = right.addText(fmtPrice(holding.price, code));
-  price.font = Font.semiboldSystemFont(14);
+  price.font = Font.semiboldSystemFont(layout.priceFont);
   price.textColor = TEXT;
   price.rightAlignText();
   price.lineLimit = 1;
-  price.minimumScaleFactor = 0.7;
+  price.minimumScaleFactor = 0.55;
 
   const pct = right.addText(fmtPct(holding.dayChange));
-  pct.font = Font.mediumSystemFont(11);
+  pct.font = Font.mediumSystemFont(layout.pctFont);
   pct.textColor = accent;
   pct.rightAlignText();
+  pct.lineLimit = 1;
+  pct.minimumScaleFactor = 0.55;
 
   if (!isLast) {
-    parent.addSpacer(4);
+    parent.addSpacer(layout.sepGap);
     const line = parent.addStack();
     line.backgroundColor = SEP;
     line.size = new Size(0, 0.5);
-    parent.addSpacer(4);
+    parent.addSpacer(layout.sepGap);
   }
 }
 
-function createMoversWidget(data, movers, sparklines) {
+function createMoversWidget(data, movers, sparklines, layout) {
   const w = new ListWidget();
   w.backgroundColor = BG;
-  w.setPadding(12, 14, 12, 14);
+  const p = layout.padding;
+  w.setPadding(p, p, p, p);
   w.url = APP_URL;
-  w.cornerRadius = 22;
+  w.cornerRadius = layout.corner;
 
   const code = currencyCode(data);
   const list = w.addStack();
   list.layoutVertically();
+  list.topAlignContent();
 
   if (movers.length === 0) {
     const empty = list.addText("No movers today");
     empty.font = Font.regularSystemFont(12);
     empty.textColor = MUTED;
+    w.addSpacer(null);
     return w;
   }
 
   movers.forEach((h, i) => {
-    addRow(list, h, sparklines[h.ticker], code, i === movers.length - 1);
+    addRow(list, h, sparklines[h.ticker], code, layout, i === movers.length - 1);
   });
+
+  // Pin rows to the top; leftover height sits below (avoids huge mid-gaps).
+  w.addSpacer(null);
 
   return w;
 }
 
-function createErrorWidget(message) {
+function createErrorWidget(message, layout) {
   const w = new ListWidget();
   w.backgroundColor = BG;
-  w.setPadding(12, 14, 12, 14);
+  const p = layout?.padding ?? 12;
+  w.setPadding(p, p, p, p);
   w.url = APP_URL;
   const err = w.addText("Unable to load movers");
   err.font = Font.regularSystemFont(12);
@@ -270,33 +364,51 @@ function createErrorWidget(message) {
   return w;
 }
 
+function presentByFamily(widget, family) {
+  if (family === "large") widget.presentLarge();
+  else if (family === "small") widget.presentSmall();
+  else widget.presentMedium();
+}
+
 async function run() {
+  const family = widgetFamily();
+  const layout = layoutFor(family);
+
   let data;
   try {
     data = await fetchData();
     if (data.error) throw new Error(data.error);
   } catch (e) {
-    const w = createErrorWidget(e.message);
+    const w = createErrorWidget(e.message, layout);
     w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000);
     if (config.runsInWidget) Script.setWidget(w);
-    else w.presentMedium();
+    else presentByFamily(w, family);
     Script.complete();
     return;
   }
 
-  const movers = pickTopMovers(data.topHoldings || []).slice(0, ROW_COUNT);
-  const sparkEntries = await Promise.all(
-    movers.map(async (h) => [h.ticker, await fetchSparklinePoints(h.ticker)]),
-  );
-  const sparklines = Object.fromEntries(sparkEntries);
+  const movers = pickTopMovers(
+    data.topHoldings || [],
+    layout.gainers,
+    layout.losers,
+    layout.rows,
+  ).slice(0, layout.rows);
 
-  const widget = createMoversWidget(data, movers, sparklines);
+  let sparklines = {};
+  if (layout.showSpark) {
+    const sparkEntries = await Promise.all(
+      movers.map(async (h) => [h.ticker, await fetchSparklinePoints(h.ticker)]),
+    );
+    sparklines = Object.fromEntries(sparkEntries);
+  }
+
+  const widget = createMoversWidget(data, movers, sparklines, layout);
   widget.refreshAfterDate = new Date(Date.now() + REFRESH_MINUTES * 60 * 1000);
 
   if (config.runsInWidget) {
     Script.setWidget(widget);
   } else {
-    widget.presentMedium();
+    presentByFamily(widget, family);
   }
   Script.complete();
 }
