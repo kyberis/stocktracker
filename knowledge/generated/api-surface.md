@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-316 routes.
+317 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -213,6 +213,7 @@
 | `/api/goals` | GET, POST, DELETE | [`src/app/api/goals/route.ts`](../../src/app/api/goals/route.ts) |
 | `/api/historical` | GET | [`src/app/api/historical/route.ts`](../../src/app/api/historical/route.ts) |
 | `/api/holdings` | GET, POST, PUT, DELETE | [`src/app/api/holdings/route.ts`](../../src/app/api/holdings/route.ts) |
+| `/api/holdings-research` | GET | [`src/app/api/holdings-research/route.ts`](../../src/app/api/holdings-research/route.ts) |
 | `/api/holdings/ai-classify` | POST | [`src/app/api/holdings/ai-classify/route.ts`](../../src/app/api/holdings/ai-classify/route.ts) |
 | `/api/holdings/autofill-classification` | POST | [`src/app/api/holdings/autofill-classification/route.ts`](../../src/app/api/holdings/autofill-classification/route.ts) |
 | `/api/holdings/normalize-classifications` | POST | [`src/app/api/holdings/normalize-classifications/route.ts`](../../src/app/api/holdings/normalize-classifications/route.ts) |
