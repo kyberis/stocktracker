@@ -19,11 +19,13 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 |------|------|-------|
 | Page | [`src/app/(app)/widget/setup/page.tsx`](../../src/app/(app)/widget/setup/page.tsx) | Token + script copy UI |
 | Page | [`src/app/(app)/widget/page.tsx`](../../src/app/(app)/widget/page.tsx) | In-browser compact widget view |
+| Nav | [`src/lib/app-nav.ts`](../../src/lib/app-nav.ts) | Desktop overflow + mobile More → `/widget/setup` |
+| Nav | Dashboard More menu + menu search | Always lists “Home screen widget” |
 | Static | [`public/widget/trefolio-scriptable.js`](../../public/widget/trefolio-scriptable.js) | Portfolio summary Scriptable script |
 | Static | [`public/widget/trefolio-scriptable-movers.js`](../../public/widget/trefolio-scriptable-movers.js) | Top movers Scriptable script |
 | API | [`src/app/api/portfolio/summary/route.ts`](../../src/app/api/portfolio/summary/route.ts) | Bearer widget token; `?full=true` for prices |
 | API | [`src/app/api/widget-token/route.ts`](../../src/app/api/widget-token/route.ts) | Issue / revoke widget token |
-| Profile | [`src/components/ProfilePage.tsx`](../../src/components/ProfilePage.tsx) | Widget Access section → setup link |
+| Profile | [`src/components/ProfilePage.tsx`](../../src/components/ProfilePage.tsx) | **Widget & devices** tab (always visible) → primary “Set up widget” CTA |
 
 ## 4. Data model
 

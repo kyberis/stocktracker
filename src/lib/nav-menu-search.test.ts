@@ -7,6 +7,7 @@ const sampleIndex = () =>
     toolsLabel: "Tools",
     newsLabel: "News",
     importLabel: "Import",
+    widgetSetupLabel: "Home screen widget",
     viewLinks: [
       { id: "diversification", label: "Diversification", href: "/tools/taxonomy" },
       { id: "dividends", label: "Dividends", href: "/tools/dividends" },
@@ -33,6 +34,7 @@ describe("buildNavMenuIndex", () => {
     expect(ids).toContain("view-dividends");
     expect(ids).toContain("extra-news");
     expect(ids).toContain("extra-import");
+    expect(ids).toContain("extra-widget-setup");
     expect(ids).toContain("tool-screener");
     expect(ids).toContain("tool-evaluation");
     expect(ids).toContain("tool-strategies");
@@ -58,6 +60,7 @@ describe("buildNavMenuIndex", () => {
       toolsLabel: "Tools",
       newsLabel: "News",
       importLabel: "Import",
+      widgetSetupLabel: "Home screen widget",
       viewLinks: [
         {
           id: "diversification",

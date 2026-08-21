@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.190",
+    date: "2026-08-21",
+    title: "Home screen widget setup is easier to find",
+    titleTranslations: {
+      es: "Configurar el widget de inicio es más fácil de encontrar",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Set up your Scriptable home screen widget from Profile → Widget & devices, the More menu, and mobile navigation — no Leaf device flag required. Informational only — not investment advice.",
+        translations: {
+          es: "Configura el widget Scriptable desde Perfil → Widget y dispositivos, el menú Más y la navegación móvil — sin necesitar el flag del dispositivo Leaf. Solo informativo, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.189",
     date: "2026-08-21",
     title: "Scriptable top-movers widget (two up, one down)",

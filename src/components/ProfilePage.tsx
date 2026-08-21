@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo, FormEvent } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { startRegistration, browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import { useAuth } from "@/lib/auth-context";
@@ -909,7 +910,8 @@ export default function ProfilePage() {
   const sectionParam = searchParams.get("section") as ProfileTab | null;
   const initialTab = sectionParam && PROFILE_TABS.includes(sectionParam) ? sectionParam : "account";
   const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab);
-  const effectiveTab = activeTab === "devices" && !deviceEnabled ? "account" : activeTab;
+  const effectiveTab = activeTab;
+
 
   const handleTabChange = useCallback((tab: ProfileTab) => {
     setActiveTab(tab);
@@ -1425,9 +1427,7 @@ export default function ProfilePage() {
     }
   }, [refundLoading, refundReason]);
 
-  const visibleTabs = deviceEnabled
-    ? PROFILE_TABS
-    : PROFILE_TABS.filter((tab) => tab !== "devices");
+  const visibleTabs = PROFILE_TABS;
   const portfolioPlanLimit = isPro ? 3 : 1;
 
   return (
@@ -2254,22 +2254,48 @@ export default function ProfilePage() {
           aria-labelledby="profile-tab-devices"
           className="space-y-6"
         >
-        {/* Widget Access */}
+        {/* Widget Access — always available (not gated by Leaf device flag) */}
         <div className="card p-6 space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
               <Smartphone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Widget Access</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("widgetAccessTitle")}</h2>
               <p className="text-xs text-gray-500 dark:text-slate-400">
-                Use a token to connect home screen widgets
+                {t("widgetAccessDesc")}
               </p>
             </div>
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={widgetToken ? `/widget/setup?token=${encodeURIComponent(widgetToken)}` : "/widget/setup"}
+              className="btn-primary text-sm inline-flex items-center gap-1.5"
+            >
+              {t("widgetSetupCta")}
+            </Link>
+            <button
+              onClick={handleGenerateToken}
+              disabled={widgetLoading}
+              className="btn-secondary text-sm disabled:opacity-40"
+            >
+              {widgetLoading ? "Generating..." : widgetHasToken ? "Regenerate Token" : "Generate Token"}
+            </button>
+            {widgetHasToken && (
+              <button
+                onClick={handleRevokeToken}
+                disabled={widgetLoading}
+                className="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-40"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Revoke
+              </button>
+            )}
+          </div>
+
           {widgetToken ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
                 Copy this token now &mdash; it won&apos;t be shown again.
               </p>
@@ -2285,46 +2311,13 @@ export default function ProfilePage() {
                   {widgetCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
-              <a
-                href={`/widget/setup?token=${encodeURIComponent(widgetToken)}`}
-                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
-              >
-                View setup instructions &rarr;
-              </a>
             </div>
           ) : (
-            <div className="space-y-3">
-              {widgetHasToken && (
-                <p className="text-xs text-gray-500 dark:text-slate-400">
-                  A widget token is active. Generate a new one to replace it, or revoke it.
-                </p>
-              )}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleGenerateToken}
-                  disabled={widgetLoading}
-                  className="btn-primary text-sm disabled:opacity-40"
-                >
-                  {widgetLoading ? "Generating..." : widgetHasToken ? "Regenerate Token" : "Generate Token"}
-                </button>
-                {widgetHasToken && (
-                  <button
-                    onClick={handleRevokeToken}
-                    disabled={widgetLoading}
-                    className="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-40"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    Revoke
-                  </button>
-                )}
-              </div>
-              <a
-                href="/widget/setup"
-                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline inline-block"
-              >
-                View setup instructions &rarr;
-              </a>
-            </div>
+            widgetHasToken && (
+              <p className="text-xs text-gray-500 dark:text-slate-400">
+                A widget token is active. Open setup to copy a ready script, or regenerate the token.
+              </p>
+            )
           )}
         </div>
 
