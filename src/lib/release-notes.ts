@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.195",
+    date: "2026-08-22",
+    title: "Fix doubled holdings from broker venue aliases",
+    titleTranslations: {
+      es: "Corregidos holdings duplicados por alias de bolsa del bróker",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Broker venue aliases (CPH ↔ OMK for Copenhagen, NYSEAM ↔ NYSE, padded Hong Kong tickers) are now treated as the same lot — stopping doubled share counts/values and empty transaction history on the stock detail page. Existing duplicates are auto-detected and collapsed by the portfolio anomaly repair path; new SnapTrade/CSV/manual imports canonicalize the venue on write.",
+        translations: {
+          es: "Los alias de bolsa del bróker (CPH ↔ OMK en Copenhague, NYSEAM ↔ NYSE, tickers de Hong Kong con ceros) se tratan como la misma posición — ya no duplican acciones/valor ni dejan vacío el historial en el detalle. Los duplicados existentes se detectan y colapsan automáticamente; las importaciones nuevas (SnapTrade/CSV/manual) canonizan la sede al guardar.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.194",
     date: "2026-08-22",
     title: "Ask Warren about a holdings-explorer cell",

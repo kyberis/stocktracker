@@ -9,6 +9,7 @@ import type {
 import type { ExtractedTransaction, ExtractedHolding, CashBalance } from "@/hooks/import-types";
 import { inferAssetType } from "@/lib/infer-asset-type";
 import { insertSnapTradeLog } from "@/lib/db/snaptrade-logs";
+import { canonicalExchangeCode } from "@/lib/db/helpers";
 
 let _client: Snaptrade | null = null;
 
@@ -344,7 +345,7 @@ function positionToHolding(pos: Position): ExtractedHolding | null {
     shares: pos.units ?? 0,
     purchasePrice: pos.average_purchase_price ?? 0,
     displayCurrency: sym.currency?.code || "USD",
-    exchange: exchange || sym.exchange?.code || "",
+    exchange: canonicalExchangeCode(exchange || sym.exchange?.code || "") || exchange || sym.exchange?.code || "",
     assetType,
     ...(figiShareClass ? { figiShareClass } : {}),
   };
@@ -463,7 +464,10 @@ function orderToTransaction(
 
   const orderId = order.brokerage_order_id || "";
   // Prefer normalized venue (XET) over SnapTrade's raw code (XETRA) so txs match holdings.
-  const exchangeCode = String(normalized.exchange || sym?.exchange?.code || "").toUpperCase();
+  // Canonicalize aliases (CPH→OMK) so rebuild doesn't create duplicate lots.
+  const exchangeCode = canonicalExchangeCode(
+    String(normalized.exchange || sym?.exchange?.code || ""),
+  );
   return {
     date,
     type,
@@ -614,7 +618,9 @@ function activityToTransaction(a: UniversalActivity): ExtractedTransaction | nul
     const exchangeMic = a.symbol?.exchange?.mic_code || "";
     const normalized = normalizeSnapTradeTicker(ticker, exchangeMic);
     ticker = normalized.ticker || ticker;
-    exchangeCode = String(normalized.exchange || a.symbol?.exchange?.code || "").toUpperCase();
+    exchangeCode = canonicalExchangeCode(
+      String(normalized.exchange || a.symbol?.exchange?.code || ""),
+    );
   }
 
   const units = Math.abs(a.units ?? 0);

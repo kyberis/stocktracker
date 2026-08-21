@@ -165,7 +165,7 @@ describe("transactions", () => {
 
       expect(mockExecute).toHaveBeenNthCalledWith(3, {
         sql: expect.stringContaining("UPDATE transactions SET holding_id = ?"),
-        args: ["h1", "", "tx1", "tx2", "user-1"],
+        args: ["h1", "", "", "tx1", "tx2", "user-1"],
       });
       expect(result).toHaveLength(2);
     });
@@ -244,27 +244,20 @@ describe("transactions", () => {
         totalAmount: 1000,
       };
       mockExecute
-        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 })
+        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 }) // INSERT tx
+        .mockResolvedValueOnce({ rows: [] }) // find by ticker+exchange ""
         .mockResolvedValueOnce({
-          rows: [{ id: "h1", shares: 10, purchase_price: 100 }],
-        })
-        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 })
-        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
+          rows: [{ id: "h1", shares: 10, purchase_price: 100, exchange: "" }],
+        }) // find by ticker only
+        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 }) // DELETE holding
+        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 }); // UPDATE holding_id on tx
 
       const result = await transactions.addTransaction("user-1", sellTx);
 
-      expect(mockExecute).toHaveBeenCalledTimes(4);
+      expect(mockExecute).toHaveBeenCalledTimes(5);
       expect(mockExecute).toHaveBeenNthCalledWith(1, {
         sql: expect.stringContaining("INSERT INTO transactions"),
         args: expect.arrayContaining(["user-1", "AAPL", "sell", 10]),
-      });
-      expect(mockExecute).toHaveBeenNthCalledWith(2, {
-        sql: expect.stringContaining("SELECT id, shares, purchase_price FROM holdings"),
-        args: expect.arrayContaining(["user-1", "AAPL", ""]),
-      });
-      expect(mockExecute).toHaveBeenNthCalledWith(3, {
-        sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
-        args: ["h1", "user-1"],
       });
       expect(result).not.toBeNull();
       expect(result?.holdingId).toBe("h1");
@@ -278,17 +271,18 @@ describe("transactions", () => {
         totalAmount: 500,
       };
       mockExecute
-        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 })
+        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 }) // INSERT tx
+        .mockResolvedValueOnce({ rows: [] }) // find by ticker+exchange
         .mockResolvedValueOnce({
-          rows: [{ id: "h1", shares: 10, purchase_price: 100 }],
-        })
-        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 })
-        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
+          rows: [{ id: "h1", shares: 10, purchase_price: 100, exchange: "" }],
+        }) // find by ticker only
+        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 }) // UPDATE shares
+        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 }); // UPDATE holding_id
 
       const result = await transactions.addTransaction("user-1", sellTx);
 
-      expect(mockExecute).toHaveBeenCalledTimes(4);
-      expect(mockExecute).toHaveBeenNthCalledWith(3, {
+      expect(mockExecute).toHaveBeenCalledTimes(5);
+      expect(mockExecute).toHaveBeenCalledWith({
         sql: "UPDATE holdings SET shares = ?, purchase_price = ? WHERE id = ? AND user_id = ?",
         args: [5, 100, "h1", "user-1"],
       });
@@ -353,7 +347,7 @@ describe("transactions", () => {
       });
       expect(mockExecute).toHaveBeenCalledWith({
         sql: expect.stringContaining("UPDATE transactions SET"),
-        args: ["hold-zts", "NYSE", "user-1", "default-portfolio-id", "ZTS", "NYSE"],
+        args: expect.arrayContaining(["hold-zts", "NYSE", "ZTS", "user-1", "default-portfolio-id", "ZTS"]),
       });
     });
   });

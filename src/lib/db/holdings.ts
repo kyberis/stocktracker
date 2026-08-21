@@ -8,6 +8,8 @@ import {
   parseHoldingTagsJson,
   serializeHoldingTags,
   mergeHoldingTags,
+  canonicalExchangeCode,
+  exchangeCodeAliases,
 } from "./helpers";
 import type { Holding, HoldingAssetType, ExchangeRates } from "@/lib/types";
 import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
@@ -17,7 +19,7 @@ import { findOrCreateBrokerAccount } from "./accounts";
 import { resolvePortfolioId, healEmptyPortfolioIds, getDefaultPortfolio } from "./portfolios";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
-import { marketDataSymbolForHolding } from "@/lib/market-symbol";
+import { marketDataSymbolForHolding, normalizeHkYahooSymbol } from "@/lib/market-symbol";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import { convertToEUR, hasExchangeRate, resolveQuoteCurrency } from "@/lib/utils";
 
@@ -157,13 +159,13 @@ export async function listHoldings(userId: string, portfolioId?: string): Promis
     const rows = holdingsResult.rows.map((row) => ({
       id: str(row.id),
       name: str(row.name),
-      ticker: str(row.ticker),
+      ticker: normalizeHkYahooSymbol(str(row.ticker)),
       isin: str(row.isin),
       assetType: holdingAssetType(row.asset_type),
       shares: num(row.shares),
       purchasePrice: num(row.purchase_price),
       displayCurrency: str(row.display_currency),
-      exchange: str(row.exchange),
+      exchange: canonicalExchangeCode(str(row.exchange)) || str(row.exchange),
       valueInEUR: num(row.value_in_eur),
       sector: str(row.sector),
       region: str(row.region),
@@ -171,15 +173,52 @@ export async function listHoldings(userId: string, portfolioId?: string): Promis
       accountId: str(row.account_id),
       tags: parseHoldingTagsJson(row.tags),
     }));
-    const byTicker = new Map<string, Holding>();
+    // Collapse venue aliases (CPH/OMK) and HK padding (215.HK/0215.HK) first.
+    // Identical lots (same shares + cost) are duplicates — keep one. Distinct
+    // lots on the same venue still sum.
+    const byVenue = new Map<string, Holding>();
     for (const h of rows) {
-      const key = h.ticker.toUpperCase();
-      const prev = byTicker.get(key);
+      const venueKey = `${h.ticker.toUpperCase()}|${canonicalExchangeCode(h.exchange)}`;
+      const prev = byVenue.get(venueKey);
       if (prev) {
+        const sameLot =
+          Math.abs(prev.shares - h.shares) < 1e-6 &&
+          Math.abs(prev.purchasePrice - h.purchasePrice) < 1e-4;
+        if (sameLot) {
+          prev.tags = mergeHoldingTags(prev.tags, h.tags);
+          if (h.valueInEUR > prev.valueInEUR) prev.valueInEUR = h.valueInEUR;
+          continue;
+        }
         const oldCost = prev.shares * prev.purchasePrice;
         const addCost = h.shares * h.purchasePrice;
         prev.shares += h.shares;
         prev.purchasePrice = prev.shares > 0 ? (oldCost + addCost) / prev.shares : 0;
+        prev.valueInEUR += h.valueInEUR;
+        prev.tags = mergeHoldingTags(prev.tags, h.tags);
+        continue;
+      }
+      byVenue.set(venueKey, { ...h });
+    }
+    // Then merge remaining same-ticker rows across truly different venues
+    // (rare; e.g. dual listing under identical Yahoo ticker).
+    const byTicker = new Map<string, Holding>();
+    for (const h of byVenue.values()) {
+      const key = h.ticker.toUpperCase();
+      const prev = byTicker.get(key);
+      if (prev) {
+        // Duplicate-looking rows (same shares + cost) from residual aliases: keep one.
+        const sameLot =
+          Math.abs(prev.shares - h.shares) < 1e-6 &&
+          Math.abs(prev.purchasePrice - h.purchasePrice) < 1e-4;
+        if (sameLot) {
+          prev.tags = mergeHoldingTags(prev.tags, h.tags);
+          continue;
+        }
+        const oldCost = prev.shares * prev.purchasePrice;
+        const addCost = h.shares * h.purchasePrice;
+        prev.shares += h.shares;
+        prev.purchasePrice = prev.shares > 0 ? (oldCost + addCost) / prev.shares : 0;
+        prev.valueInEUR += h.valueInEUR;
         prev.tags = mergeHoldingTags(prev.tags, h.tags);
       } else {
         byTicker.set(key, { ...h });
@@ -221,12 +260,16 @@ export async function addHolding(
 ): Promise<Holding> {
   const client = await ensureInitialized();
   const resolved = await resolvePortfolioId(userId, portfolioId);
-  const ticker = normalizeTickerForExchange(holding.ticker, holding.exchange);
+  const exchange = canonicalExchangeCode(holding.exchange) || (holding.exchange || "").toUpperCase();
+  const ticker = normalizeHkYahooSymbol(normalizeTickerForExchange(holding.ticker, exchange));
+  const aliases = exchangeCodeAliases(exchange).map((a) => a.toUpperCase()).filter(Boolean);
+  const aliasPlaceholders = aliases.length > 0 ? aliases.map(() => "?").join(",") : "?";
+  const aliasArgs = aliases.length > 0 ? aliases : [""];
 
   const existing = await client.execute({
     sql: `SELECT id, shares, purchase_price FROM holdings
-          WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?) AND portfolio_id = ?`,
-    args: [userId, ticker, holding.exchange, resolved],
+          WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) IN (${aliasPlaceholders}) AND portfolio_id = ?`,
+    args: [userId, ticker, ...aliasArgs, resolved],
   });
 
   if (existing.rows.length > 0) {
@@ -245,10 +288,10 @@ export async function addHolding(
     const finalShares = Math.max(totalShares, 0);
     const existingId = str(row.id);
     await client.execute({
-      sql: `UPDATE holdings SET shares = ?, purchase_price = ? WHERE id = ? AND user_id = ?`,
-      args: [finalShares, avgPrice, existingId, userId],
+      sql: `UPDATE holdings SET shares = ?, purchase_price = ?, exchange = ?, ticker = ? WHERE id = ? AND user_id = ?`,
+      args: [finalShares, avgPrice, exchange, ticker, existingId, userId],
     });
-    return { ...holding, id: existingId, ticker, shares: finalShares, purchasePrice: avgPrice };
+    return { ...holding, id: existingId, ticker, exchange, shares: finalShares, purchasePrice: avgPrice };
   }
 
   const id = randomUUID();
@@ -260,12 +303,12 @@ export async function addHolding(
       id, userId, holding.name, ticker, holding.isin,
       holding.assetType ?? "stock",
       holding.shares, holding.purchasePrice, holding.displayCurrency,
-      holding.exchange, holding.valueInEUR,
+      exchange, holding.valueInEUR,
       resolved,
       serializeHoldingTags(holding.tags),
     ],
   });
-  return { ...holding, id, ticker };
+  return { ...holding, id, ticker, exchange };
 }
 
 export async function updateHolding(
@@ -283,11 +326,12 @@ export async function updateHolding(
   if (result.rows.length === 0) return null;
   const current = result.rows[0];
 
-  const exchange = updates.exchange ?? str(current.exchange);
+  const exchangeRaw = updates.exchange ?? str(current.exchange);
+  const exchange = canonicalExchangeCode(exchangeRaw) || (exchangeRaw || "").toUpperCase();
   const rawTicker = updates.ticker ?? str(current.ticker);
   const next = {
     name: updates.name ?? str(current.name),
-    ticker: normalizeTickerForExchange(rawTicker, exchange),
+    ticker: normalizeHkYahooSymbol(normalizeTickerForExchange(rawTicker, exchange)),
     isin: updates.isin ?? str(current.isin),
     assetType: updates.assetType ?? holdingAssetType(current.asset_type),
     shares: updates.shares ?? num(current.shares),
@@ -432,11 +476,11 @@ export async function upsertHoldingsFromPositions(
       assetClass: str(row.asset_class), accountId: str(row.account_id),
       source: str(row.source) || "transaction",
       valueInEUR: num(row.value_in_eur),
-      ticker: str(row.ticker), exchange: str(row.exchange),
+      ticker: normalizeHkYahooSymbol(str(row.ticker)), exchange: canonicalExchangeCode(str(row.exchange)) || str(row.exchange),
       figiShareClass: str(row.figi_share_class),
       tags: parseHoldingTagsJson(row.tags),
     };
-    const key = `${meta.ticker.toUpperCase()}|${meta.exchange.toUpperCase()}`;
+    const key = `${meta.ticker.toUpperCase()}|${canonicalExchangeCode(meta.exchange)}`;
     existingByKey.set(key, meta);
     if (meta.figiShareClass) {
       existingByFigi.set(meta.figiShareClass, meta);
@@ -447,8 +491,9 @@ export async function upsertHoldingsFromPositions(
 
   for (const pos of positions) {
     if (pos.shares <= 0) continue;
-    const ticker = normalizeTickerForExchange(pos.ticker, pos.exchange);
-    const key = `${ticker.toUpperCase()}|${pos.exchange.toUpperCase()}`;
+    const ticker = normalizeHkYahooSymbol(normalizeTickerForExchange(pos.ticker, pos.exchange));
+    const exchange = canonicalExchangeCode(pos.exchange) || pos.exchange;
+    const key = `${ticker.toUpperCase()}|${canonicalExchangeCode(exchange)}`;
     touchedKeys.add(key);
 
     let existing = existingByKey.get(key);
@@ -465,19 +510,19 @@ export async function upsertHoldingsFromPositions(
 
         await client.execute({
           sql: `UPDATE holdings SET ticker = ?, exchange = ? WHERE id = ? AND user_id = ?`,
-          args: [ticker, pos.exchange, figiMatch.id, userId],
+          args: [ticker, exchange, figiMatch.id, userId],
         });
         await client.execute({
           sql: `UPDATE transactions SET ticker = ?, exchange = ?, name = CASE WHEN name = ? THEN ? ELSE name END
                 WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND portfolio_id = ?`,
-          args: [ticker, pos.exchange, oldTicker, pos.name, userId, oldTicker, resolved],
+          args: [ticker, exchange, oldTicker, pos.name, userId, oldTicker, resolved],
         });
 
         // Update maps so stale cleanup sees the new key
-        const oldKey = `${oldTicker.toUpperCase()}|${oldExchange.toUpperCase()}`;
+        const oldKey = `${oldTicker.toUpperCase()}|${canonicalExchangeCode(oldExchange)}`;
         existingByKey.delete(oldKey);
         figiMatch.ticker = ticker;
-        figiMatch.exchange = pos.exchange;
+        figiMatch.exchange = exchange;
         existingByKey.set(key, figiMatch);
         touchedKeys.add(key);
 
@@ -490,23 +535,23 @@ export async function upsertHoldingsFromPositions(
       const updateFigi = figi && figi !== existing.figiShareClass;
       await client.execute({
         sql: updateFigi
-          ? `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?,
+          ? `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?, exchange = ?,
               name = CASE WHEN name = ticker THEN ? ELSE name END,
               source = 'snaptrade', figi_share_class = ?
               WHERE id = ? AND user_id = ?`
-          : `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?,
+          : `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?, exchange = ?,
               name = CASE WHEN name = ticker THEN ? ELSE name END,
               source = 'snaptrade'
               WHERE id = ? AND user_id = ?`,
         args: updateFigi
-          ? [pos.shares, pos.purchasePrice, pos.displayCurrency, pos.name, figi, existing.id, userId]
-          : [pos.shares, pos.purchasePrice, pos.displayCurrency, pos.name, existing.id, userId],
+          ? [pos.shares, pos.purchasePrice, pos.displayCurrency, exchange, pos.name, figi, existing.id, userId]
+          : [pos.shares, pos.purchasePrice, pos.displayCurrency, exchange, pos.name, existing.id, userId],
       });
       upserted.push({
         id: existing.id, name: existing.name === ticker ? pos.name : existing.name,
         ticker, isin: existing.isin, assetType: holdingAssetType(pos.assetType),
         shares: pos.shares, purchasePrice: pos.purchasePrice,
-        displayCurrency: pos.displayCurrency, exchange: pos.exchange,
+        displayCurrency: pos.displayCurrency, exchange,
         valueInEUR: 0, sector: existing.sector, region: existing.region,
         assetClass: existing.assetClass, accountId: existing.accountId,
         tags: existing.tags,
@@ -518,13 +563,13 @@ export async function upsertHoldingsFromPositions(
               display_currency, exchange, value_in_eur, portfolio_id, source, figi_share_class)
               VALUES (?, ?, ?, ?, '', ?, ?, ?, ?, ?, 0, ?, 'snaptrade', ?)`,
         args: [id, userId, pos.name, ticker, pos.assetType || "stock",
-               pos.shares, pos.purchasePrice, pos.displayCurrency, pos.exchange, resolved,
+               pos.shares, pos.purchasePrice, pos.displayCurrency, exchange, resolved,
                pos.figiShareClass || ""],
       });
       upserted.push({
         id, name: pos.name, ticker, isin: "", assetType: holdingAssetType(pos.assetType),
         shares: pos.shares, purchasePrice: pos.purchasePrice,
-        displayCurrency: pos.displayCurrency, exchange: pos.exchange, valueInEUR: 0,
+        displayCurrency: pos.displayCurrency, exchange, valueInEUR: 0,
         tags: [],
       });
     }
@@ -551,7 +596,7 @@ export async function upsertHoldingsFromPositions(
   );
 
   for (const h of upserted) {
-    const key = `${h.ticker.toUpperCase()}|${h.exchange.toUpperCase()}`;
+    const key = `${h.ticker.toUpperCase()}|${canonicalExchangeCode(h.exchange)}`;
     const prevVal = existingByKey.get(key)?.valueInEUR || 0;
     let finalVal = h.valueInEUR > 0 ? h.valueInEUR : prevVal;
     // Last-resort: only store cost as EUR when the holding itself is EUR
@@ -597,7 +642,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
   // silently excluded.
   const snapTradeTickers = new Set<string>();
   for (const row of metadataRows.rows) {
-    const key = `${str(row.ticker).toUpperCase()}|${str(row.exchange).toUpperCase()}`;
+    const key = `${normalizeHkYahooSymbol(str(row.ticker)).toUpperCase()}|${canonicalExchangeCode(str(row.exchange))}`;
     if (!metadataByKey.has(key)) {
       metadataByKey.set(key, {
         id: str(row.id), name: str(row.name), isin: str(row.isin),
@@ -648,7 +693,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
   // that exact ticker+exchange — snaptrade positions are the source of truth
   // and including both would double the shares/value in listHoldings.
   const derived = snapTradeTickers.size > 0
-    ? allDerived.filter((h) => !snapTradeTickers.has(`${h.ticker.toUpperCase()}|${h.exchange.toUpperCase()}`))
+    ? allDerived.filter((h) => !snapTradeTickers.has(`${h.ticker.toUpperCase()}|${canonicalExchangeCode(h.exchange)}`))
     : allDerived;
 
   await enrichValueInEUR(derived).catch((err) =>
@@ -658,7 +703,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
   await client.execute({ sql: `DELETE FROM holdings WHERE user_id = ? AND source != 'snaptrade'${portfolioFilter}`, args: [userId, ...portfolioArgs] });
 
   for (const h of derived) {
-    const key = `${h.ticker.toUpperCase()}|${h.exchange.toUpperCase()}`;
+    const key = `${h.ticker.toUpperCase()}|${canonicalExchangeCode(h.exchange)}`;
     const existingId = metadataByKey.get(key)?.id;
     const id = existingId || randomUUID();
     let valueEUR = h.valueInEUR > 0 ? h.valueInEUR : (prevValueByKey.get(key) || 0);
@@ -667,11 +712,12 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
       valueEUR = h.shares * h.purchasePrice;
     }
     h.valueInEUR = valueEUR;
+    const exchange = canonicalExchangeCode(h.exchange) || h.exchange;
     await client.execute({
       sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, portfolio_id, source, tags)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'transaction', ?)
-            ON CONFLICT(id) DO UPDATE SET shares = excluded.shares, purchase_price = excluded.purchase_price, value_in_eur = excluded.value_in_eur, tags = excluded.tags`,
-      args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, h.exchange, valueEUR, h.sector || "", h.region || "", h.assetClass || "", h.accountId || "", resolved, serializeHoldingTags(h.tags)],
+            ON CONFLICT(id) DO UPDATE SET shares = excluded.shares, purchase_price = excluded.purchase_price, value_in_eur = excluded.value_in_eur, tags = excluded.tags, exchange = excluded.exchange, ticker = excluded.ticker`,
+      args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, exchange, valueEUR, h.sector || "", h.region || "", h.assetClass || "", h.accountId || "", resolved, serializeHoldingTags(h.tags)],
     });
   }
 

@@ -63,4 +63,37 @@ describe("deriveHoldingsFromTransactions", () => {
     );
     expect(holdings).toHaveLength(0);
   });
+
+  it("merges CPH and OMK buys for the same Copenhagen ticker into one lot", () => {
+    const holdings = deriveHoldingsFromTransactions(
+      [
+        tx({
+          id: "1",
+          ticker: "NOVO-B.CO",
+          exchange: "CPH",
+          shares: 50,
+          totalAmount: 16000,
+          pricePerShare: 320,
+          currency: "DKK",
+          displayCurrency: "DKK",
+          date: "2025-10-01",
+        }),
+        tx({
+          id: "2",
+          ticker: "NOVO-B.CO",
+          exchange: "OMK",
+          shares: 52,
+          totalAmount: 16800,
+          pricePerShare: 323,
+          currency: "DKK",
+          displayCurrency: "DKK",
+          date: "2025-12-01",
+        }),
+      ],
+      new Map()
+    );
+    expect(holdings).toHaveLength(1);
+    expect(holdings[0].shares).toBe(102);
+    expect(holdings[0].exchange).toBe("OMK");
+  });
 });
