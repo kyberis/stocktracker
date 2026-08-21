@@ -44,12 +44,14 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 ## 6. UI surface
 
 - Setup page: platform tabs (iOS / Android), token controls, **script version** radiogroup (Portfolio summary | Top movers), copy-ready preview.
+- **One token for all scripts:** after generate (or URL `?token=`), plaintext is kept in `localStorage` (`trefolio.widgetToken`) so switching variants or returning later still injects the token. If the server has a hash but local storage is empty, setup offers a paste field to reuse the existing `tfw_…` token instead of regenerating.
 - Scripts are loaded from `/widget/*.js` so the public files remain the single source of truth.
 - Movers Scriptable script reads `config.widgetFamily` and adapts: **Small** (compact, no company name, tiny spark), **Medium** (3 rows + names), **Large** (5 rows, bigger type).
 
 ## 7. Business logic
 
 - Mover selection: [`src/lib/widget/pick-top-movers.ts`](../../src/lib/widget/pick-top-movers.ts) — prefer 2 gainers + 1 loser by day %, fill from absolute movers if a side is empty, then sort by `|dayChange|` desc. Large widgets use 3+2 / 5 rows.
+- Client token helpers: [`src/lib/widget/widget-token-client.ts`](../../src/lib/widget/widget-token-client.ts).
 - The movers Scriptable script inlines the same algorithm (Scriptable cannot import app modules).
 - Sparklines: Scriptable fetches Yahoo 5m/1d chart closes on-device; falls back to a synthetic path from `dayChange` when Yahoo is unavailable.
 - Layout avoids fixed column widths that clipped on Small; uses natural widths + a trailing spacer.
@@ -84,12 +86,13 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 - Missing `price` without `full=true` → movers script requires `?full=true`.
 - Yahoo sparkline failures → synthetic sparkline; widget still shows price + %.
 - Small / Medium / Large are all supported; Small hides company names and uses a compact sparkline.
+- Regenerating the token invalidates every Scriptable widget that still embeds the old value — prefer paste/reuse when adding a second script.
 
 ## 14. Tests
 
-- Unit: [`src/lib/widget/pick-top-movers.test.ts`](../../src/lib/widget/pick-top-movers.test.ts)
+- Unit: [`src/lib/widget/pick-top-movers.test.ts`](../../src/lib/widget/pick-top-movers.test.ts), [`src/lib/widget/widget-token-client.test.ts`](../../src/lib/widget/widget-token-client.test.ts)
 - E2E: [`e2e/widget-setup.spec.ts`](../../e2e/widget-setup.spec.ts)
-- Manual: copy movers script into Scriptable, pin Medium widget, confirm two green + one red when the book has both sides.
+- Manual: copy movers script into Scriptable, pin Medium widget, confirm two green + one red when the book has both sides. Switch to Portfolio script without regenerating the token.
 
 ## 15. Related skills and rules
 

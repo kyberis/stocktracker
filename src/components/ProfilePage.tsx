@@ -20,6 +20,12 @@ import ProfileMcpSection from "@/components/profile/ProfileMcpSection";
 import { COUNTRIES } from "@/lib/countries";
 import { resolveBillingPortalHref } from "@/lib/idp/config";
 import { useCommerceEnabled } from "@/lib/commerce";
+import {
+  clearStoredWidgetToken,
+  isWidgetTokenShape,
+  readStoredWidgetToken,
+  writeStoredWidgetToken,
+} from "@/lib/widget/widget-token-client";
 
 const PROFILE_TABS = ["account", "mcp", "subscription", "notifications", "portfolios", "referrals", "social", "devices"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
@@ -1044,9 +1050,21 @@ export default function ProfilePage() {
   }, [user]);
 
   useEffect(() => {
+    const stored = readStoredWidgetToken();
+    if (stored) setWidgetToken(stored);
+
     fetch("/api/widget-token")
       .then((r) => r.json())
-      .then((d) => setWidgetHasToken(!!d.hasToken))
+      .then((d) => {
+        const has = !!d.hasToken;
+        setWidgetHasToken(has);
+        if (!has) {
+          clearStoredWidgetToken();
+          setWidgetToken("");
+        } else if (stored) {
+          setWidgetToken(stored);
+        }
+      })
       .catch((err) => console.error("[ProfilePage] request failed:", err));
     fetch("/api/device-passkey")
       .then((r) => r.json())
@@ -1148,9 +1166,10 @@ export default function ProfilePage() {
     try {
       const res = await fetch("/api/widget-token", { method: "POST" });
       const data = await res.json();
-      if (data.token) {
+      if (data.token && isWidgetTokenShape(data.token)) {
         setWidgetToken(data.token);
         setWidgetHasToken(true);
+        writeStoredWidgetToken(data.token);
       }
     } catch { /* ignore */ }
     setWidgetLoading(false);
@@ -1162,6 +1181,7 @@ export default function ProfilePage() {
       await fetch("/api/widget-token", { method: "DELETE" });
       setWidgetHasToken(false);
       setWidgetToken("");
+      clearStoredWidgetToken();
     } catch { /* ignore */ }
     setWidgetLoading(false);
   }, []);
@@ -2296,8 +2316,8 @@ export default function ProfilePage() {
 
           {widgetToken ? (
             <div className="space-y-2">
-              <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                Copy this token now &mdash; it won&apos;t be shown again.
+              <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                Same token for every home-screen script on this device. Open setup to copy Portfolio or Top movers without regenerating.
               </p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg font-mono break-all">
@@ -2315,7 +2335,7 @@ export default function ProfilePage() {
           ) : (
             widgetHasToken && (
               <p className="text-xs text-gray-500 dark:text-slate-400">
-                A widget token is active. Open setup to copy a ready script, or regenerate the token.
+                A widget token is active. Open setup to reuse it in any script — regenerate only if you lost the token or want to invalidate old widgets.
               </p>
             )
           )}

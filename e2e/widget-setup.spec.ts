@@ -70,4 +70,55 @@ test.describe("Widget setup Scriptable variants", () => {
     expect(body).toContain("widgetFamily");
     expect(body).toContain("YOUR_TOKEN_HERE");
   });
+
+  test("one widget token is reused across script variants without regenerating", async ({
+    page,
+    request,
+    context,
+  }) => {
+    await createTestUser(request);
+    await adoptApiSessionInBrowser(request, context);
+    await page.goto("/widget/setup");
+    await dismissOverlays(page);
+    await page.getByRole("tab", { name: /^iOS$/ }).click();
+
+    const tokenResponse = page.waitForResponse(
+      (r) => r.url().includes("/api/widget-token") && r.request().method() === "POST",
+    );
+    await page.getByRole("button", { name: /^Generate Token$/i }).click();
+    const posted = await tokenResponse;
+    expect(posted.ok()).toBeTruthy();
+    const { token } = (await posted.json()) as { token: string };
+    expect(token).toMatch(/^tfw_/);
+
+    await expect(page.locator("code").filter({ hasText: token })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.locator("pre")).toContainText(token);
+
+    await page.getByRole("radio", { name: /Top movers/i }).click();
+    await expect(page.getByText("trefolio-scriptable-movers.js")).toBeVisible();
+    await expect(page.locator("pre")).toContainText(token);
+    await expect(page.getByRole("button", { name: /^Generate Token$/i })).toHaveCount(0);
+
+    await page.reload();
+    await dismissOverlays(page);
+    await page.getByRole("tab", { name: /^iOS$/ }).click();
+    await expect(page.locator("code").filter({ hasText: token })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.locator("pre")).toContainText(token);
+
+    await page.evaluate(() => localStorage.removeItem("trefolio.widgetToken"));
+    await page.reload();
+    await dismissOverlays(page);
+    await page.getByRole("tab", { name: /^iOS$/ }).click();
+    await expect(page.getByLabel(/Paste existing widget token/i)).toBeVisible({
+      timeout: 10_000,
+    });
+    await page.getByLabel(/Paste existing widget token/i).fill(token);
+    await page.getByRole("button", { name: /Use this token/i }).click();
+    await expect(page.locator("code").filter({ hasText: token })).toBeVisible();
+    await expect(page.locator("pre")).toContainText(token);
+  });
 });

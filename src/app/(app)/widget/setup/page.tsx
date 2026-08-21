@@ -15,6 +15,12 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
+import {
+  clearStoredWidgetToken,
+  isWidgetTokenShape,
+  readStoredWidgetToken,
+  writeStoredWidgetToken,
+} from "@/lib/widget/widget-token-client";
 
 type ScriptVariant = "portfolio" | "movers";
 
@@ -59,19 +65,46 @@ function WidgetSetupContent() {
   const [widgetToken, setWidgetToken] = useState("");
   const [widgetHasToken, setWidgetHasToken] = useState(false);
   const [widgetLoading, setWidgetLoading] = useState(false);
+  const [pasteToken, setPasteToken] = useState("");
+  const [pasteError, setPasteError] = useState("");
+
+  const applyToken = useCallback((token: string) => {
+    const t = token.trim();
+    if (!isWidgetTokenShape(t)) return false;
+    setWidgetToken(t);
+    setWidgetHasToken(true);
+    writeStoredWidgetToken(t);
+    setPasteToken("");
+    setPasteError("");
+    return true;
+  }, []);
 
   useEffect(() => {
     const tokenFromUrl = searchParams.get("token");
-    if (tokenFromUrl) {
-      setWidgetToken(tokenFromUrl);
-      setWidgetHasToken(true);
-    } else {
-      fetch("/api/widget-token")
-        .then((r) => r.json())
-        .then((d) => setWidgetHasToken(!!d.hasToken))
-        .catch(() => {});
+    if (tokenFromUrl && isWidgetTokenShape(tokenFromUrl)) {
+      applyToken(tokenFromUrl);
+      return;
     }
-  }, [searchParams]);
+
+    const stored = readStoredWidgetToken();
+    if (stored) {
+      setWidgetToken(stored);
+    }
+
+    fetch("/api/widget-token")
+      .then((r) => r.json())
+      .then((d) => {
+        const has = !!d.hasToken;
+        setWidgetHasToken(has);
+        if (!has) {
+          clearStoredWidgetToken();
+          setWidgetToken("");
+        } else if (stored) {
+          setWidgetToken(stored);
+        }
+      })
+      .catch(() => {});
+  }, [searchParams, applyToken]);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,12 +138,11 @@ function WidgetSetupContent() {
       const res = await fetch("/api/widget-token", { method: "POST" });
       const data = await res.json();
       if (data.token) {
-        setWidgetToken(data.token);
-        setWidgetHasToken(true);
+        applyToken(data.token);
       }
     } catch { /* ignore */ }
     setWidgetLoading(false);
-  }, []);
+  }, [applyToken]);
 
   const handleRevokeToken = useCallback(async () => {
     setWidgetLoading(true);
@@ -118,9 +150,19 @@ function WidgetSetupContent() {
       await fetch("/api/widget-token", { method: "DELETE" });
       setWidgetHasToken(false);
       setWidgetToken("");
+      clearStoredWidgetToken();
+      setPasteToken("");
+      setPasteError("");
     } catch { /* ignore */ }
     setWidgetLoading(false);
   }, []);
+
+  const handleReusePastedToken = useCallback(() => {
+    if (!applyToken(pasteToken)) {
+      setPasteError("Paste a valid widget token (starts with tfw_).");
+      return;
+    }
+  }, [applyToken, pasteToken]);
 
   const handleCopyScript = async () => {
     let body = scriptBody;
@@ -238,45 +280,83 @@ function WidgetSetupContent() {
 
                 {widgetToken ? (
                   <div className="space-y-2">
-                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                      Token ready &mdash; it&apos;s already embedded in the script below.
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                      One token for every Scriptable script on this device &mdash; already embedded below. Switch Portfolio / Top movers without generating again.
                     </p>
                     <code className="block text-xs bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg font-mono break-all">
                       {widgetToken}
                     </code>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {widgetHasToken ? (
-                      <p className="text-xs text-gray-500 dark:text-slate-400">
-                        A widget token is active. Generate a new one to get a copy-ready script, or revoke it.
-                      </p>
+                      <>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">
+                          A token is already active. Reuse it (paste from an existing Scriptable script) — do not generate a new one unless you want to invalidate the old widgets.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="text"
+                            value={pasteToken}
+                            onChange={(e) => {
+                              setPasteToken(e.target.value);
+                              setPasteError("");
+                            }}
+                            placeholder="Paste existing tfw_… token"
+                            aria-label="Paste existing widget token"
+                            className="flex-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 font-mono text-slate-800 dark:text-slate-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleReusePastedToken}
+                            className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap"
+                          >
+                            Use this token
+                          </button>
+                        </div>
+                        {pasteError ? (
+                          <p className="text-xs text-red-600 dark:text-red-400">{pasteError}</p>
+                        ) : null}
+                      </>
                     ) : (
                       <p className="text-xs text-gray-500 dark:text-slate-400">
-                        Generate a token first so the script is ready to paste into Scriptable.
+                        Generate a token once — then reuse it for every widget script (Portfolio, Top movers, …).
                       </p>
                     )}
                   </div>
                 )}
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleGenerateToken}
-                    disabled={widgetLoading}
-                    className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${widgetLoading ? "animate-spin" : ""}`} />
-                    {widgetHasToken ? "Regenerate Token" : "Generate Token"}
-                  </button>
-                  {widgetHasToken && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {!widgetToken && !widgetHasToken && (
                     <button
-                      onClick={handleRevokeToken}
+                      onClick={handleGenerateToken}
                       disabled={widgetLoading}
-                      className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5 text-red-600 dark:text-red-400"
+                      className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Revoke
+                      <RefreshCw className={`w-3.5 h-3.5 ${widgetLoading ? "animate-spin" : ""}`} />
+                      Generate Token
                     </button>
+                  )}
+                  {widgetHasToken && (
+                    <>
+                      <button
+                        onClick={handleGenerateToken}
+                        disabled={widgetLoading}
+                        className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5"
+                        title="Invalidates tokens already pasted into Scriptable"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${widgetLoading ? "animate-spin" : ""}`} />
+                        Regenerate Token
+                      </button>
+                      <button
+                        onClick={handleRevokeToken}
+                        disabled={widgetLoading}
+                        className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5 text-red-600 dark:text-red-400"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Revoke
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -328,7 +408,13 @@ function WidgetSetupContent() {
               <ol className="space-y-3 text-sm text-gray-700 dark:text-slate-300">
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">1</span>
-                  <span>Generate a widget token above</span>
+                  <span>
+                    {widgetToken
+                      ? "Token ready — reuse it for any script version below"
+                      : widgetHasToken
+                        ? "Reuse your existing token above (or regenerate only if needed)"
+                        : "Generate a widget token once above"}
+                  </span>
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">2</span>

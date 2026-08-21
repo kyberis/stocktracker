@@ -175,9 +175,13 @@ export default function PrivacyPolicyPage() {
               <li>
                 <strong className="text-slate-800">Widget access token (optional)</strong> —
                 if you generate a widget token for home screen widget access, we
-                store a one-way SHA-256 hash of the token. The plaintext token is
-                shown once and never stored. You can revoke it at any time from
-                your profile, which permanently deletes the hash.
+                store a one-way SHA-256 hash of the token on our servers. The
+                plaintext token is never stored server-side. Your browser may keep
+                a local copy on this device so you can embed the same token in
+                multiple widget scripts (for example Portfolio and Top movers)
+                without regenerating. You can revoke the token at any time from
+                your profile, which permanently deletes the server hash; clear
+                site data or regenerate if you want to remove the local copy.
               </li>
             </ul>
 

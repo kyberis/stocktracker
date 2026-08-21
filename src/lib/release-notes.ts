@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.192",
+    date: "2026-08-21",
+    title: "Reuse one widget token for every Scriptable script",
+    titleTranslations: {
+      es: "Reutiliza un solo token de widget en todos los scripts Scriptable",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "After you generate a home-screen widget token once, it stays available on this device for Portfolio and Top movers scripts — paste an existing token if needed instead of regenerating. Informational only — not investment advice.",
+        translations: {
+          es: "Tras generar el token del widget una vez, permanece disponible en este dispositivo para los scripts de Cartera y Mayores movimientos — puedes pegar un token existente si hace falta en lugar de regenerarlo. Solo informativo, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.191",
     date: "2026-08-21",
     title: "Top-movers Scriptable widget adapts to Small, Medium, and Large",
