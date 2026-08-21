@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { createTestUser, ensureLoggedOut, loginViaUI, dismissOverlays } from "./helpers";
+import {
+  adoptApiSessionInBrowser,
+  createTestUser,
+  ensureLoggedOut,
+  dismissOverlays,
+} from "./helpers";
 
 test.describe("Widget setup Scriptable variants", () => {
   test.beforeEach(async ({ request }) => {
@@ -9,12 +14,12 @@ test.describe("Widget setup Scriptable variants", () => {
   test("user can switch to top movers script and see the movers file preview", async ({
     page,
     request,
+    context,
   }) => {
-    const creds = await createTestUser(request);
-    await loginViaUI(page, creds.email, creds.password);
-    await dismissOverlays(page);
-
+    await createTestUser(request);
+    await adoptApiSessionInBrowser(request, context);
     await page.goto("/widget/setup");
+    await dismissOverlays(page);
     await expect(page.getByRole("heading", { name: /Widget Setup/i })).toBeVisible({
       timeout: 15_000,
     });
