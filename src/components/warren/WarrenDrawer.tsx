@@ -30,6 +30,7 @@ import {
   type WarrenTextRow,
 } from "@/lib/ai/warren/normalize-chat-messages";
 import { Paperclip } from "lucide-react";
+import type { HoldingsExplorerSelection } from "@/lib/holdings-research";
 
 type Bubble =
   | { id: string; kind: "text-user"; content: string }
@@ -45,11 +46,18 @@ interface Props {
   embedded?: boolean;
   /** Optional height/layout override when `embedded` (e.g. AID sticky column). */
   embeddedClassName?: string;
+  /** `floating` = compact popover (Holdings Explorer). Overrides `embedded` when set. */
+  placement?: "drawer" | "embedded" | "floating";
   suggestionPrompts?: string[];
   onSuggestionClick?: (prompt: string) => void;
   /** When set, sends this prompt once (AID Warren nudge). */
   triggerPrompt?: string | null;
   onTriggerPromptConsumed?: () => void;
+  /** Structured Holdings Explorer cell — sent with each message, not in user text. */
+  selectionContext?: HoldingsExplorerSelection | null;
+  selectionChipText?: string | null;
+  onClearSelection?: () => void;
+  emptyGreeting?: string;
 }
 
 function makeId(): string {
@@ -108,11 +116,17 @@ export default function WarrenDrawer({
   onClose,
   embedded = false,
   embeddedClassName,
+  placement,
   suggestionPrompts,
   onSuggestionClick,
   triggerPrompt,
   onTriggerPromptConsumed,
+  selectionContext,
+  selectionChipText,
+  onClearSelection,
+  emptyGreeting,
 }: Props) {
+  const mode = placement ?? (embedded ? "embedded" : "drawer");
   const { t, language } = useI18n();
   const { userPlan } = usePlatform();
   const {
@@ -216,6 +230,7 @@ export default function WarrenDrawer({
               baseCurrency: activePortfolioCurrency,
               isDemo: !!demoMode,
               portfolioContext: snapshot,
+              selectionContext: selectionContext ?? undefined,
             }),
           );
           fd.append("userText", trimmed);
@@ -237,6 +252,7 @@ export default function WarrenDrawer({
               baseCurrency: activePortfolioCurrency,
               isDemo: !!demoMode,
               portfolioContext: snapshot,
+              selectionContext: selectionContext ?? undefined,
             }),
           });
         }
@@ -297,6 +313,7 @@ export default function WarrenDrawer({
       activePortfolioId,
       activePortfolioCurrency,
       demoMode,
+      selectionContext,
     ],
   );
 
@@ -332,7 +349,8 @@ export default function WarrenDrawer({
   );
 
   const greeting =
-    holdings.length === 0 ? t("warrenGreetingEmptyAdd") || t("warrenGreeting") : t("warrenGreeting");
+    emptyGreeting ||
+    (holdings.length === 0 ? t("warrenGreetingEmptyAdd") || t("warrenGreeting") : t("warrenGreeting"));
 
   const contextLine = stealthMode
     ? t("warrenConnected")
@@ -343,22 +361,26 @@ export default function WarrenDrawer({
           activePortfolioCurrency,
         )}`;
 
+  const panelClass =
+    mode === "embedded"
+      ? [
+          "flex w-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]",
+          embeddedClassName ?? "h-[min(560px,calc(100vh-14rem))]",
+        ].join(" ")
+      : mode === "floating"
+        ? `fixed bottom-20 sm:bottom-6 right-6 z-50 flex w-[min(360px,calc(100vw-1.5rem))] h-[min(480px,70vh)] flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-amber-500/15 bg-white dark:bg-[#151e2f] text-gray-900 dark:text-slate-100 shadow-2xl ${
+            isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`
+        : `fixed top-0 right-0 z-[101] w-[460px] max-w-[calc(100vw-1rem)] h-full flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+            isOpen ? "translate-x-0" : "translate-x-full"
+          } bg-white dark:bg-[#151e2f] text-gray-900 dark:text-slate-100 border-l border-gray-200 dark:border-amber-500/15`;
+
   const panel = (
       <aside
-        className={
-          embedded
-            ? [
-                "flex w-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]",
-                embeddedClassName ??
-                  "h-[min(560px,calc(100vh-14rem))]",
-              ].join(" ")
-            : `fixed top-0 right-0 z-[101] w-[460px] max-w-[calc(100vw-1rem)] h-full flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-                isOpen ? "translate-x-0" : "translate-x-full"
-              } bg-white dark:bg-[#151e2f] text-gray-900 dark:text-slate-100 border-l border-gray-200 dark:border-amber-500/15`
-        }
-        role={embedded ? "region" : "dialog"}
-        aria-label="Warren"
-        aria-hidden={embedded ? undefined : !isOpen}
+        className={panelClass}
+        role={mode === "embedded" ? "region" : "dialog"}
+        aria-label={t("warrenName")}
+        aria-hidden={mode === "embedded" ? undefined : !isOpen}
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-amber-500/10 bg-gradient-to-r from-amber-500/[0.05] to-transparent shrink-0">
@@ -372,7 +394,7 @@ export default function WarrenDrawer({
               {t("warrenSubtitle")}
             </div>
           </div>
-          {!embedded && (
+          {mode !== "embedded" && (
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-lg border border-gray-200 dark:border-amber-500/15 bg-gray-50 dark:bg-white/[0.04] flex items-center justify-center text-gray-500 dark:text-amber-200/60 hover:text-amber-700 dark:hover:text-amber-200 hover:border-amber-400/50 transition-colors"
@@ -515,6 +537,24 @@ export default function WarrenDrawer({
               e.target.value = "";
             }}
           />
+          {selectionChipText ? (
+            <div
+              data-testid="holdings-explorer-warren-chip"
+              className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/[0.1] px-2.5 py-1 text-[11px] font-medium text-amber-900 dark:text-amber-100"
+            >
+              <span className="truncate">{selectionChipText}</span>
+              {onClearSelection && (
+                <button
+                  type="button"
+                  onClick={onClearSelection}
+                  className="shrink-0 opacity-70 hover:opacity-100"
+                  aria-label={t("holdingsExplorerWarrenChipClear")}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          ) : null}
           {pendingFiles.length > 0 && (
             <div className="flex flex-wrap gap-1.5 text-[11px]">
               {pendingFiles.map((f, idx) => (
@@ -578,7 +618,11 @@ export default function WarrenDrawer({
       </aside>
   );
 
-  if (embedded) return panel;
+  if (mode === "embedded") return panel;
+  if (mode === "floating") {
+    if (!isOpen) return null;
+    return panel;
+  }
 
   return (
     <>

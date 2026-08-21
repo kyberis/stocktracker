@@ -20,6 +20,10 @@ import { listPortfolios, findUserById, countHoldings } from "@/lib/db";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { checkWarrenEmptyAddRateLimit } from "@/lib/rate-limit";
 import { warrenPortfolioSnapshotSchema } from "@/lib/ai/warren/portfolio-snapshot-zod";
+import {
+  buildHoldingsExplorerSelectionAppendix,
+  holdingsExplorerSelectionSchema,
+} from "@/lib/ai/warren/holdings-explorer-selection";
 import { sanitizeWarrenPortfolioLabel } from "@/lib/ai/prompt-safety";
 import type { SubscriptionPlan } from "@/lib/types";
 import {
@@ -46,6 +50,7 @@ const sharedPayload = {
   baseCurrency: z.string().default("EUR"),
   isDemo: z.boolean().optional(),
   portfolioContext: warrenPortfolioSnapshotSchema.optional(),
+  selectionContext: holdingsExplorerSelectionSchema.optional(),
 };
 
 const requestSchema = z
@@ -195,13 +200,21 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
   const officeIdentity = emptyAddStockOnly
     ? null
     : await resolveOfficeIdentity(session.userId);
-  const systemAppendix = emptyAddStockOnly
+  const prefetchAppendix = emptyAddStockOnly
     ? null
     : await buildWarrenPrefetchAppendix(serializeWarrenPromptUserLog(modelMessages), {
         userId: session.userId,
         portfolioId: serverPortfolioId,
         snapshot: body.portfolioContext,
       });
+  const selectionAppendix =
+    !emptyAddStockOnly && body.selectionContext
+      ? await buildHoldingsExplorerSelectionAppendix(body.selectionContext, {
+          userId: session.userId,
+          portfolioId: serverPortfolioId,
+        })
+      : null;
+  const systemAppendix = [selectionAppendix, prefetchAppendix].filter(Boolean).join("\n\n") || null;
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {

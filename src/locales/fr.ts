@@ -1174,6 +1174,13 @@ const fr: TranslationStrings = {
   holdingsExplorerLoading: "Chargement des fondamentaux…",
   holdingsExplorerError: "Impossible de charger les fondamentaux. Réessayez.",
   holdingsExplorerResearch: "Recherche",
+  holdingsExplorerAskWarren: "Demander à Warren",
+  holdingsExplorerInspectHint: "Cliquez une cellule pour demander à Warren ce chiffre. Échap pour quitter.",
+  holdingsExplorerWarrenChipClear: "Effacer la cellule sélectionnée",
+  holdingsExplorerWarrenSuggestMeaning: "Que signifie ce chiffre ?",
+  holdingsExplorerWarrenSuggestHighLow: "Est-ce élevé ou faible pour cette entreprise ?",
+  holdingsExplorerWarrenGreeting:
+    "Sélectionnez une cellule du tableau — j'expliquerai ce chiffre pour cette position. Informatif uniquement, pas un conseil.",
   warrenScreenerNav: "Warren Screener",
   warrenScreenerPageTitle: "Warren Screener",
   warrenScreenerIntro:

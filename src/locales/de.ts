@@ -1174,6 +1174,13 @@ const de: TranslationStrings = {
   holdingsExplorerLoading: "Fundamentaldaten werden geladen…",
   holdingsExplorerError: "Fundamentaldaten konnten nicht geladen werden. Bitte erneut versuchen.",
   holdingsExplorerResearch: "Recherche",
+  holdingsExplorerAskWarren: "Warren fragen",
+  holdingsExplorerInspectHint: "Klicken Sie eine Zelle, um Warren zu dieser Zahl zu fragen. Escape beendet.",
+  holdingsExplorerWarrenChipClear: "Ausgewählte Zelle entfernen",
+  holdingsExplorerWarrenSuggestMeaning: "Was bedeutet das?",
+  holdingsExplorerWarrenSuggestHighLow: "Ist das für dieses Unternehmen hoch oder niedrig?",
+  holdingsExplorerWarrenGreeting:
+    "Wählen Sie eine Zelle in der Tabelle — ich erkläre diese Zahl zu dieser Position. Nur zur Information, keine Beratung.",
   warrenScreenerNav: "Warren Screener",
   warrenScreenerPageTitle: "Warren Screener",
   warrenScreenerIntro:

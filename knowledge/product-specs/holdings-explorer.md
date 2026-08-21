@@ -37,6 +37,7 @@ No new tables. Reads:
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
 | GET | `/api/holdings-research` | user | quota `screener` | Fundamentals keyed by holding id |
+| POST | `/api/warren/chat` | user | quota `ai_consult` | Optional `selectionContext` (highlighted explorer cell + sibling row) |
 
 Query: `portfolioId` (optional). Response: `{ rows, metricsPartial, staleAt }`. Zod not used (GET, no body). Overview miss-fill capped at 8 tickers per request.
 
@@ -44,8 +45,9 @@ Query: `portfolioId` (optional). Response: `{ rows, metricsPartial, staleAt }`. 
 
 - Page: `/tools/holdings-explorer`
 - Component: `HoldingsExplorer`
-- Context: `PortfolioProvider` (quotes, FX, holdings), `StockDetailDrawer` on row click
+- Context: `PortfolioProvider` (quotes, FX, holdings), `StockDetailDrawer` on name click (when not inspecting)
 - Hub: Tools → Analysis, Pro badge
+- Inspect mode: FAB “Ask Warren” → select a metric cell → floating `WarrenDrawer` (`placement="floating"`) with structured `selectionContext`
 
 ## 7. Business logic
 
@@ -73,24 +75,27 @@ Query: `portfolioId` (optional). Response: `{ rows, metricsPartial, staleAt }`. 
 ## 11. Permissions / tier gating / rate limits
 
 - `requireFeatureQuota(req, "screener")` — admins bypass.
+- Warren inspect messages: `requireFeatureQuota(req, "ai_consult")`.
 - Hub card `tierBadge: "pro"`.
 
 ## 12. Telemetry
 
 - Server: `holdings_explorer_open` (`analytics_events`)
-- Client (gtag): `holdings_explorer_sort` with `sort_by`
+- Client (gtag): `holdings_explorer_sort` with `sort_by`; `holdings_explorer_warren_inspect`; `holdings_explorer_warren_select` with `metric_key` only
 
 ## 13. Edge cases & gotchas
 
 - Empty portfolio: CTA toward import.
 - Tickers outside the ~600-name `screener_cache` may show `metricsPartial`.
 - Demo `/demo` does not embed this tool.
-- Stealth mode masks monetary columns.
+- Stealth mode masks monetary columns and omits `valueEUR` from Warren `selectionContext`.
+- Inspect mode: name-cell click selects the row for Warren instead of opening `StockDetailDrawer`.
+- Floating Warren keeps the existing “AI-generated… Not financial advice.” footer. Answers must stay educational (no buy/sell).
 
 ## 14. Tests
 
-- Unit: [`src/lib/holdings-research.test.ts`](../../src/lib/holdings-research.test.ts), [`src/lib/db/screener-by-symbols.test.ts`](../../src/lib/db/screener-by-symbols.test.ts), API route test.
-- E2E: [`e2e/holdings-explorer.spec.ts`](../../e2e/holdings-explorer.spec.ts)
+- Unit: [`src/lib/holdings-research.test.ts`](../../src/lib/holdings-research.test.ts), [`src/lib/ai/warren/holdings-explorer-selection.test.ts`](../../src/lib/ai/warren/holdings-explorer-selection.test.ts), [`src/lib/db/screener-by-symbols.test.ts`](../../src/lib/db/screener-by-symbols.test.ts), API route tests.
+- E2E: [`e2e/holdings-explorer.spec.ts`](../../e2e/holdings-explorer.spec.ts) (FAB → P/E cell → chip)
 
 ## 15. Related skills and rules
 

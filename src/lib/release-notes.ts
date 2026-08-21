@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.194",
+    date: "2026-08-22",
+    title: "Ask Warren about a holdings-explorer cell",
+    titleTranslations: {
+      es: "Pregúntale a Warren por una celda del explorador de posiciones",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "On Holdings explorer, turn on Ask Warren, click a cell (for example a P/E), and ask about that figure for that holding. Warren sees the selected metric and the rest of the row. AI-generated — informational only, not investment advice.",
+        translations: {
+          es: "En el explorador de posiciones, activa Preguntar a Warren, pulsa una celda (por ejemplo el PER) y pregunta por esa cifra de esa posición. Warren ve la métrica y el resto de la fila. Generado por IA — solo informativo, no es asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.193",
     date: "2026-08-21",
     title: "Large top-movers widget shows 4 up and 3 down",

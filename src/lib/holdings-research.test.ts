@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Holding, QuoteData } from "@/lib/types";
 import {
+  buildHoldingsExplorerSelection,
   buildResearchViews,
   compareNullable,
   emptyFundamentals,
@@ -166,5 +167,36 @@ describe("buildResearchViews + sort/filter", () => {
     const views = buildResearchViews(holdings, funds, quotes, {});
     expect(filterResearchViews(views, { assetType: "crypto" })).toHaveLength(1);
     expect(filterResearchViews(views, { query: "alpha" }).map((v) => v.holding.ticker)).toEqual(["AAA"]);
+  });
+
+  it("builds a P/E selection with sibling row fields", () => {
+    const views = buildResearchViews(holdings, funds, quotes, {});
+    const alpha = views.find((v) => v.holding.id === "1")!;
+    const sel = buildHoldingsExplorerSelection(alpha, "peRatio", "12.0");
+    expect(sel.ticker).toBe("AAA");
+    expect(sel.metricKey).toBe("peRatio");
+    expect(sel.numericValue).toBe(12);
+    expect(sel.displayValue).toBe("12.0");
+    expect(sel.row.peRatio).toBe(12);
+    expect(sel.row.weightPct).toBeCloseTo(alpha.weightPct);
+    expect(sel.row.valueEUR).toBe(1000);
+  });
+
+  it("omits valueEUR in stealth and blanks money cells", () => {
+    const views = buildResearchViews(holdings, funds, quotes, {});
+    const alpha = views.find((v) => v.holding.id === "1")!;
+    const sel = buildHoldingsExplorerSelection(alpha, "positionValue", "€1,000", { stealth: true });
+    expect(sel.row.valueEUR).toBeUndefined();
+    expect(sel.displayValue).toBe("—");
+    expect(sel.numericValue).toBeNull();
+  });
+
+  it("crypto P/E selection has a null numeric value", () => {
+    const views = buildResearchViews(holdings, funds, quotes, {});
+    const crypto = views.find((v) => v.holding.id === "3")!;
+    const sel = buildHoldingsExplorerSelection(crypto, "peRatio", "—");
+    expect(sel.numericValue).toBeNull();
+    expect(sel.row.peRatio).toBeNull();
+    expect(sel.assetType).toBe("crypto");
   });
 });

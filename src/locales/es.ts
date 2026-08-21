@@ -1181,6 +1181,13 @@ const es: TranslationStrings = {
   holdingsExplorerLoading: "Cargando fundamentales…",
   holdingsExplorerError: "No se pudieron cargar los fundamentales. Inténtalo de nuevo.",
   holdingsExplorerResearch: "Investigar",
+  holdingsExplorerAskWarren: "Preguntar a Warren",
+  holdingsExplorerInspectHint: "Pulsa una celda para preguntarle a Warren por esa cifra. Escape para salir.",
+  holdingsExplorerWarrenChipClear: "Quitar celda seleccionada",
+  holdingsExplorerWarrenSuggestMeaning: "¿Qué significa esto?",
+  holdingsExplorerWarrenSuggestHighLow: "¿Es alto o bajo para esta empresa?",
+  holdingsExplorerWarrenGreeting:
+    "Selecciona una celda de la tabla — te explico esa cifra de esa posición. Solo informativo, no es asesoramiento.",
   warrenScreenerNav: "Warren Screener",
   warrenScreenerPageTitle: "Warren Screener",
   warrenScreenerIntro:
