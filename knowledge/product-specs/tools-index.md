@@ -52,7 +52,7 @@ Single entry point to the tool suite, with favorites and tier gating.
 
 ## 15. Related skills and rules
 - [`engineer-tools`](../../.cursor/skills/engineer-tools/SKILL.md)
-- Related specs: [rebalance-targets](rebalance-targets.md), [tax-reports](tax-reports.md), [backtest-whatif](backtest-whatif.md), [financial-planning](financial-planning.md), [net-worth-tracking](net-worth-tracking.md), [strategies](strategies.md), [favorite-tools](favorite-tools.md).
+- Related specs: [rebalance-targets](rebalance-targets.md), [tax-reports](tax-reports.md), [backtest-whatif](backtest-whatif.md), [financial-planning](financial-planning.md), [net-worth-tracking](net-worth-tracking.md), [strategies](strategies.md), [favorite-tools](favorite-tools.md), [holdings-explorer](holdings-explorer.md), [stock-screener](stock-screener.md).
 
 ## 16. Open questions / planned work
 - Search within tools.

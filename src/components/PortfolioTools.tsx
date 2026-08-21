@@ -35,6 +35,7 @@ const AccountsManager = dynamic(() => import("./AccountsManager"), { ssr: false 
 const Watchlist = dynamic(() => import("./Watchlist"), { ssr: false });
 const PriceAlerts = dynamic(() => import("./PriceAlerts"), { ssr: false });
 const StockScreener = dynamic(() => import("./StockScreener"), { ssr: false });
+const HoldingsExplorer = dynamic(() => import("./HoldingsExplorer"), { ssr: false });
 const TaxReport = dynamic(() => import("./TaxReport"), { ssr: false });
 const PortfolioSimulator = dynamic(() => import("./PortfolioSimulator"), { ssr: false });
 const FinancialPlanner = dynamic(() => import("./planning/FinancialPlanner"), { ssr: false });
@@ -370,6 +371,7 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
               {activeTab === "accounts" && <AccountsManager />}
               {activeTab === "watchlist" && <Watchlist />}
               {activeTab === "alerts" && <PriceAlerts />}
+              {activeTab === "holdingsExplorer" && <HoldingsExplorer />}
               {activeTab === "screener" && <StockScreener />}
               {activeTab === "warren" && <WarrenScreener />}
               {activeTab === "tax" && <TaxReport />}

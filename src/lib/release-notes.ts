@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "feature",
+        text: "Holdings explorer under Tools ranks your own positions by P/E, forward P/E, dividend yield, weight, sector, and more — with decision metrics on stocks and ETFs. Informational only, not investment advice.",
+        translations: {
+          es: "El explorador de posiciones en Herramientas ordena lo que ya tienes por PER, PER forward, dividendos, peso, sector y más — con métricas de decisión en acciones y ETF. Solo informativo, no es asesoramiento de inversión.",
+        },
+      },
+      {
         type: "improvement",
         text: "Thesis notes no longer describe a raw ratio. Interest coverage, leverage and cash conversion are computed from filings, stamped (e.g. FY2025), and rejected when they are impossible (negative coverage with positive EBIT). Informational only — not investment advice.",
         translations: {
