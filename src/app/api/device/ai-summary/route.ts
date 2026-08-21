@@ -2,8 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import {
-  findUserByWidgetToken,
-  findUserByDevicePasskey,
   listHoldings,
   listCashEntries,
   trackEvent,
@@ -13,25 +11,16 @@ import {
 } from "@/lib/db";
 import { effectivePlan } from "@/lib/subscription";
 import { checkAndIncrementFeatureQuota, refundFeatureQuota } from "@/lib/feature-quotas";
-import { checkGlobalAiCap, incrementGlobalAiCalls, checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkGlobalAiCap, incrementGlobalAiCalls } from "@/lib/rate-limit";
 import { aiCallsTotal, aiRequestDuration, deviceApiCalls } from "@/lib/metrics";
 import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
+import {
+  authenticateDeviceBearer,
+  deviceBearerRateLimitResponse,
+} from "@/lib/device-bearer-auth";
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import type { SubscriptionPlan } from "@/lib/types";
-
-async function resolveAuthedUser(req: NextRequest) {
-  const auth = req.headers.get("authorization");
-  if (!auth?.startsWith("Bearer ")) return null;
-
-  const ip = getClientIp(req);
-  const rl = await checkDeviceAuthRateLimit(ip);
-  if (!rl.allowed) return null;
-
-  const token = auth.slice(7);
-  const user = await findUserByWidgetToken(token) ?? await findUserByDevicePasskey(token);
-  return user || null;
-}
 
 export const POST = withMetrics("/api/device/ai-summary", async (request: NextRequest) => {
   if (!(await isFeatureEnabled("device_enabled"))) {
@@ -41,8 +30,12 @@ export const POST = withMetrics("/api/device/ai-summary", async (request: NextRe
   const fwVersion = request.headers.get("x-firmware-version");
   if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/ai-summary", status: "attempt" });
 
-  const user = await resolveAuthedUser(request);
-  if (!user) {
+  const auth = await authenticateDeviceBearer(request);
+  if (auth.status === "rate_limited") {
+    if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/ai-summary", status: "rate_limited" });
+    return deviceBearerRateLimitResponse(auth.retryAfterSec);
+  }
+  if (auth.status !== "ok") {
     if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/ai-summary", status: "auth_failed" });
     return json401(request, {
       source: "api/device/ai-summary",
@@ -50,6 +43,7 @@ export const POST = withMetrics("/api/device/ai-summary", async (request: NextRe
       tags: { hasBearer: Boolean(request.headers.get("authorization")?.startsWith("Bearer ")) },
     });
   }
+  const user = auth.user;
 
   const plan = effectivePlan(user.plan, user.plan_expires_at);
   const quota = await checkAndIncrementFeatureQuota(user.id, "ai_portfolio_review", plan);

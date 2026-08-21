@@ -1,31 +1,15 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
-import {
-  findUserByWidgetToken,
-  findUserByDevicePasskey,
-  isFeatureEnabled,
-} from "@/lib/db";
-import { checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
-import { deviceApiCalls } from "@/lib/metrics";
+import { isFeatureEnabled } from "@/lib/db";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
+import { deviceApiCalls } from "@/lib/metrics";
 import { json401 } from "@/lib/log-unauthorized";
-
-async function resolveUser(req: NextRequest) {
-  const auth = req.headers.get("authorization");
-  if (!auth?.startsWith("Bearer ")) return null;
-
-  const ip = getClientIp(req);
-  const rl = await checkDeviceAuthRateLimit(ip);
-  if (!rl.allowed) return null;
-
-  const token = auth.slice(7);
-  return (
-    (await findUserByWidgetToken(token)) ??
-    (await findUserByDevicePasskey(token))
-  );
-}
+import {
+  authenticateDeviceBearer,
+  deviceBearerRateLimitResponse,
+} from "@/lib/device-bearer-auth";
 
 export const GET = withMetrics("/api/device/sparkline", async (req: NextRequest) => {
   if (!(await isFeatureEnabled("device_enabled"))) {
@@ -35,8 +19,12 @@ export const GET = withMetrics("/api/device/sparkline", async (req: NextRequest)
   const fwVersion = req.headers.get("x-firmware-version");
   if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/sparkline", status: "attempt" });
 
-  const user = await resolveUser(req);
-  if (!user) {
+  const auth = await authenticateDeviceBearer(req);
+  if (auth.status === "rate_limited") {
+    if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/sparkline", status: "rate_limited" });
+    return deviceBearerRateLimitResponse(auth.retryAfterSec);
+  }
+  if (auth.status !== "ok") {
     if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/sparkline", status: "auth_failed" });
     return json401(req, {
       source: "api/device/sparkline",

@@ -25,12 +25,26 @@ const CURRENCY_SYMBOLS = {
 
 async function fetchData() {
   const req = new Request(API_URL);
-  req.headers = { Authorization: `Bearer ${TOKEN}` };
+  req.headers = { Authorization: `Bearer ${String(TOKEN).trim()}` };
   req.timeoutInterval = 15;
   const body = await req.loadString();
   const status = req.response.statusCode;
   if (status < 200 || status >= 300) {
-    throw new Error(`HTTP ${status}`);
+    let detail = `HTTP ${status}`;
+    try {
+      const parsed = JSON.parse(body);
+      if (parsed && typeof parsed.error === "string" && parsed.error) {
+        detail = `${detail}: ${parsed.error}`;
+      } else if (parsed?.reason === "rate_limited") {
+        detail = `${detail}: rate limited — wait a few minutes`;
+      }
+    } catch {
+      /* non-JSON body (e.g. CDN challenge) */
+    }
+    if (status === 401) {
+      detail = `${detail} — regenerate token at trefolio.com → Profile → Widget Access`;
+    }
+    throw new Error(detail);
   }
   return JSON.parse(body);
 }
