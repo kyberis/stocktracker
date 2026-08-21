@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "Set up your Scriptable home screen widget from Profile → Widget & devices, the More menu, and mobile navigation — no Leaf device flag required. Informational only — not investment advice.",
         translations: {
           es: "Configura el widget Scriptable desde Perfil → Widget y dispositivos, el menú Más y la navegación móvil — sin necesitar el flag del dispositivo Leaf. Solo informativo, no asesoramiento de inversión.",
