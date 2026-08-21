@@ -1,4 +1,4 @@
 {
-  "notes": "2.5.183: thesis vs checklist toggle is on by default on existing /screening. Not a new landing-page capability.",
-  "landingPageReviewed": true
+  "landingPageReviewed": true,
+  "notes": "2.5.188: Holdings explorer is a Pro tools page; not a landing-page first-impression capability (screenshot deferred)."
 }
