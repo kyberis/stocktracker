@@ -60,6 +60,7 @@ describe("buildNavMenuIndex", () => {
       toolsLabel: "Tools",
       newsLabel: "News",
       importLabel: "Import",
+      widgetSetupLabel: "Home screen widget",
       viewLinks: [
         {
           id: "diversification",
