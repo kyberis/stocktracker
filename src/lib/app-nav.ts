@@ -140,6 +140,15 @@ export const APP_NAV_PRIMARY: AppNavPrimaryItem[] = [
     mobileWebTab: false,
     mobileWebMore: true,
   },
+  {
+    href: "/widget/setup",
+    labelKey: "widgetSetupNav",
+    matches: exactOrChild("/widget"),
+    desktop: true,
+    desktopTopStrip: false,
+    mobileWebTab: false,
+    mobileWebMore: true,
+  },
 ];
 
 export interface MobileMoreExtraItem {
@@ -229,7 +238,8 @@ export type AppNavSidebarIconId =
   | "newspaper"
   | "crypto"
   | "indicators"
-  | "network";
+  | "network"
+  | "widget";
 
 export const APP_NAV_SIDEBAR_ICON: Record<string, AppNavSidebarIconId> = {
   "/": "home",
@@ -243,4 +253,5 @@ export const APP_NAV_SIDEBAR_ICON: Record<string, AppNavSidebarIconId> = {
   "/crypto": "crypto",
   "/economic-indicators": "indicators",
   "/network": "network",
+  "/widget/setup": "widget",
 };

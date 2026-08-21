@@ -273,6 +273,7 @@ export default function DashboardTabBarQuickLinks({
         toolsLabel: t("toolsNav"),
         newsLabel: t("newsTab"),
         importLabel: t("importNav"),
+        widgetSetupLabel: t("widgetSetupNav"),
         viewLinks: DASHBOARD_VIEW_LINKS.map((row) => ({
           id: row.key,
           label: t(row.labelKey),
@@ -537,7 +538,10 @@ export default function DashboardTabBarQuickLinks({
             {t("importNav")}
           </Link>
         )}
-        {(showNewsInMore || showImportInMore) && moreMenuTools.length > 0 ? (
+        <Link href="/widget/setup" role="menuitem" className={itemClass} onClick={() => setMoreOpen(false)}>
+          {t("widgetSetupNav")}
+        </Link>
+        {moreMenuTools.length > 0 ? (
           <div
             className="mx-2 my-1 border-t border-gray-200 dark:border-slate-600"
             role="separator"

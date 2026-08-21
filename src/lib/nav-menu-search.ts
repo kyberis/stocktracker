@@ -42,6 +42,7 @@ export type NavMenuIndexInput = {
   toolsLabel: string;
   newsLabel: string;
   importLabel: string;
+  widgetSetupLabel: string;
   viewLinks: NavMenuViewLinkInput[];
   tools: NavMenuToolInput[];
 };
@@ -107,6 +108,14 @@ export function buildNavMenuIndex(input: NavMenuIndexInput): NavMenuItem[] {
     group: "extras",
     kind: "href",
     href: "/import",
+  });
+
+  pushHref({
+    id: "extra-widget-setup",
+    label: input.widgetSetupLabel,
+    group: "extras",
+    kind: "href",
+    href: "/widget/setup",
   });
 
   for (const tool of input.tools) {

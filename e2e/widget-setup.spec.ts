@@ -43,6 +43,24 @@ test.describe("Widget setup Scriptable variants", () => {
     await expect(page.getByRole("button", { name: /Copy Script/i })).toBeEnabled();
   });
 
+  test("widget setup is linked from profile devices tab without device flag", async ({
+    page,
+    request,
+    context,
+  }) => {
+    await createTestUser(request);
+    await adoptApiSessionInBrowser(request, context);
+    await page.goto("/profile?section=devices");
+    await dismissOverlays(page);
+
+    await expect(page.getByRole("tab", { name: /Widget/i })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: /Home screen widget|Widget en pantalla/i })).toBeVisible();
+    const setupCta = page.getByRole("link", { name: /Set up widget|Configurar widget/i });
+    await expect(setupCta).toBeVisible();
+    await setupCta.click();
+    await expect(page.getByRole("heading", { name: /Widget Setup/i })).toBeVisible({ timeout: 15_000 });
+  });
+
   test("movers script file is served publicly", async ({ request }) => {
     const res = await request.get("/widget/trefolio-scriptable-movers.js");
     expect(res.status()).toBe(200);
