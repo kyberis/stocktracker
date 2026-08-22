@@ -47,7 +47,7 @@
     radial-gradient(circle at 20% 20%, rgb(16 185 129 / 0.12), transparent 45%),
     radial-gradient(circle at 80% 30%, rgb(245 158 11 / 0.12), transparent 42%),
     linear-gradient(180deg, rgb(15 23 42 / 0.99), rgb(2 6 23 / 1));
-  transition: opacity 520ms ease, visibility 520ms ease;
+  transition: opacity 640ms ease, visibility 640ms ease;
 }
 
 .overlayHidden {
@@ -180,6 +180,9 @@
 .logoTagline {
   font-size: 0.8125rem;
   color: rgb(148 163 184);
+  text-align: center;
+  max-width: 18rem;
+  line-height: 1.4;
 }
 
 .loadingBlock {
@@ -251,6 +254,7 @@
   position: absolute;
   inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   pointer-events: none;
@@ -379,6 +383,8 @@
 .briefingLogoWrap {
   margin-top: 1.25rem;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
 }
 
@@ -397,10 +403,28 @@
   transform: translateY(0);
 }
 
-.briefingPhaseMerge .briefingCard {
+.briefingPhaseMerge .briefingStage,
+.briefingPhaseReveal .briefingStage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 18rem;
+}
+
+.briefingPhaseMerge .briefingCard,
+.briefingPhaseReveal .briefingCard {
+  position: absolute;
+  width: min(100%, 36rem);
   opacity: 0;
+  pointer-events: none;
   transform: scale(0.96);
   transition: opacity 360ms ease, transform 360ms ease;
+}
+
+.briefingPhaseMerge .briefingLogoWrap,
+.briefingPhaseReveal .briefingLogoWrap {
+  margin-top: 0;
 }
 
 .briefingPhaseMerge .logoBlock,
