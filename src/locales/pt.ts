@@ -1702,6 +1702,16 @@ const pt: TranslationStrings = {
   landingFeatureScreeningPoint4: "Banner Verified / Flagged depois do QA verificar números e fontes",
   landingFeatureScreeningCta: "Abrir screening",
 
+  landingFeatureHoldingsExplorerTag: "Explorador de posições",
+  landingFeatureHoldingsExplorerTitle: "Ordene as suas posições. Pergunte ao Warren qualquer número.",
+  landingFeatureHoldingsExplorerDesc:
+    "Ordene as ações e ETFs que já tem por P/E, dividendos, peso e qualidade. Clique numa célula e o Warren explica essa cifra — e pode consultar documentos públicos de investor relations e transcrições de earnings calls. Gerado por IA e apenas informativo. trefolio não é um consultor financeiro.",
+  landingFeatureHoldingsExplorerPoint1: "As suas posições, ordenadas — não um dump de todo o mercado",
+  landingFeatureHoldingsExplorerPoint2: "Clique em P/E, ROE, dividendos ou peso para perguntar ao Warren essa cifra",
+  landingFeatureHoldingsExplorerPoint3: "Chat em ecrã inteiro; o Warren pode pesquisar páginas IR, PDFs e earnings calls",
+  landingFeatureHoldingsExplorerPoint4: "Respostas geradas por IA. Não é conselho de investimento. Os números podem estar atrasados ou incompletos.",
+  landingFeatureHoldingsExplorerCta: "Começar com a sua carteira",
+
   landingFeatureWarrenTag: "Telegram",
   landingFeatureWarrenTitle: "Warren no Telegram (agora com voz)",
   landingFeatureWarrenDesc: "Ligue uma vez a partir do perfil e converse com Warren no Telegram — o mesmo companheiro de carteira com IA, a mesma segurança de escrita com confirmação, no telemóvel ou no computador. Escreva ou envie uma nota de voz: Warren transcreve, responde e pode devolver a resposta falada. Peça gráficos, notícias, dividendos, alocação, desempenho, ou proponha compras, vendas, numerário ou alertas com um toque em Confirmar. Warren também explica os conceitos por trás dos números — margem de segurança, drawdown, payout — em linguagem clara a partir de uma base de conhecimento de value investing.",
@@ -1732,6 +1742,8 @@ const pt: TranslationStrings = {
   landingCardTaxDesc: "Resumos fiscais específicos de cada país para Alemanha, França, Espanha, Países Baixos e Itália com Assistente Fiscal AI",
   landingCardScreenerTitle: "Filtro de Ações",
   landingCardScreenerDesc: "Filtre mais de 680 ações por rendimento de dividendos, P/E, setor e capitalização com estratégias predefinidas — um filtro de fundamentais, não pesquisa com IA",
+  landingCardHoldingsExplorerTitle: "Explorador de posições + Warren",
+  landingCardHoldingsExplorerDesc: "Ordene as suas posições por P/E e dividendos e pergunte ao Warren sobre uma célula. Baseado em documentos públicos. Não é conselho de investimento.",
   landingCardMoatTitle: "Filtro de Moat",
   landingCardMoatDesc: "Mais de 680 ações avaliadas com base em 8 critérios ao estilo Buffett — consistência de lucros, margens, ROE, dívida e mais. Pré-avaliadas e pesquisáveis.",
   landingCardVerifiedTitle: "Screening de investimento com IA",

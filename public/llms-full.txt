@@ -134,6 +134,7 @@ Everything in Folio, plus higher limits and premium capabilities, including for 
 - AI Tax Assistant with optimization suggestions
 - Portfolio simulator (backtesting, what-if scenarios, crisis stress testing)
 - Stock screener (600+ stocks, 6 filters, 5 presets)
+- Holdings explorer — rank your own positions by P/E, yield, weight, and quality; click a cell to ask Warren (may use public IR pages and earnings-call excerpts). AI-generated; not investment advice.
 - Company fundamentals (income, balance, cash flow)
 - Stock intelligence (news sentiment, insider trades)
 - Economic indicators dashboard

@@ -4,7 +4,7 @@
 
 ## What is trefolio?
 
-trefolio is a web-based portfolio tracker built for European retail investors. It offers tax reports for 17 countries (Germany, France, Spain, Netherlands, Italy, UK, US, Switzerland, Austria, Portugal, Belgium, Ireland, Sweden, Denmark, Norway, Finland, Poland) with AI Tax Assistant, a stock screener covering 600+ stocks, net worth tracking (real estate, savings, pensions), broker auto-sync via SnapTrade (20+ brokerages), 14 broker CSV import formats, AI-powered analysis in your native language, dividend tracking and projections, performance metrics (TTWROR, XIRR, Sharpe, Max Drawdown), portfolio simulator (backtesting, what-if, stress testing), and 4 dashboard themes. Available in 35 European languages with 21-currency support.
+trefolio is a web-based portfolio tracker built for European retail investors. It offers tax reports for 17 countries (Germany, France, Spain, Netherlands, Italy, UK, US, Switzerland, Austria, Portugal, Belgium, Ireland, Sweden, Denmark, Norway, Finland, Poland) with AI Tax Assistant, a stock screener covering 600+ stocks, a Holdings explorer to rank your own positions by P/E, yield, and weight (ask Warren about a highlighted figure; AI-generated, not investment advice), net worth tracking (real estate, savings, pensions), broker auto-sync via SnapTrade (20+ brokerages), 14 broker CSV import formats, AI-powered analysis in your native language, dividend tracking and projections, performance metrics (TTWROR, XIRR, Sharpe, Max Drawdown), portfolio simulator (backtesting, what-if, stress testing), and 4 dashboard themes. Available in 35 European languages with 21-currency support.
 
 ## Pricing
 

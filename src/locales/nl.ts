@@ -1701,6 +1701,16 @@ const nl: TranslationStrings = {
   landingFeatureScreeningPoint4: "Banner Verified / Flagged nadat QA cijfers en bronnen heeft gecontroleerd",
   landingFeatureScreeningCta: "Screening openen",
 
+  landingFeatureHoldingsExplorerTag: "Holdings-explorer",
+  landingFeatureHoldingsExplorerTitle: "Rangschik uw posities. Vraag Warren naar elk cijfer.",
+  landingFeatureHoldingsExplorerDesc:
+    "Sorteer de aandelen en ETF's die u al bezit op K/W, dividendrendement, gewicht en kwaliteit. Klik een cel en Warren legt dat cijfer uit — en kan openbare investor-relationsdocumenten en earnings-calltranscripten opzoeken. AI-gegenereerd en alleen ter informatie. trefolio is geen financieel adviseur.",
+  landingFeatureHoldingsExplorerPoint1: "Uw posities, gerangschikt — geen marktbrede tickerlijst",
+  landingFeatureHoldingsExplorerPoint2: "Klik K/W, ROE, rendement of gewicht om Warren dat exacte cijfer te vragen",
+  landingFeatureHoldingsExplorerPoint3: "Chat op volledig scherm; Warren kan IR-pagina's, pdf's en earnings calls doorzoeken",
+  landingFeatureHoldingsExplorerPoint4: "AI-gegenereerde antwoorden. Geen beleggingsadvies. Cijfers kunnen vertraagd of onvolledig zijn.",
+  landingFeatureHoldingsExplorerCta: "Begin met uw portefeuille",
+
   landingFeatureWarrenTag: "Telegram",
   landingFeatureWarrenTitle: "Warren op Telegram (nu met spraak)",
   landingFeatureWarrenDesc: "Verbind één keer via je profiel en chat met Warren op Telegram — dezelfde AI-portefeuillebegeleider, dezelfde schrijfveiligheid met bevestiging, op telefoon of desktop. Typ of stuur een spraakbericht: Warren transcribeert, antwoordt en kan het antwoord inspreken. Vraag om grafieken, nieuws, dividenden, allocatie, performance, of stel aankopen, verkopen, cash of alerts voor met één tik op Bevestigen. Warren legt ook de begrippen achter de cijfers uit — veiligheidsmarge, drawdown, payout — in gewone taal vanuit een value-investing-kennisbank.",
@@ -1731,6 +1741,8 @@ const nl: TranslationStrings = {
   landingCardTaxDesc: "Landspecifieke belastingoverzichten voor Duitsland, Frankrijk, Spanje, Nederland en Italië met AI Belastingassistent",
   landingCardScreenerTitle: "Aandelen Screener",
   landingCardScreenerDesc: "Filter 680+ aandelen op dividendrendement, P/E, sector en marktkapitalisatie met vooraf ingestelde strategieën — een fundamentenfilter, geen AI-onderzoek",
+  landingCardHoldingsExplorerTitle: "Holdings-explorer + Warren",
+  landingCardHoldingsExplorerDesc: "Rangschik uw posities op K/W en dividend en vraag Warren naar een cel. Gebaseerd op openbare stukken. Geen beleggingsadvies.",
   landingCardMoatTitle: "Moat Screener",
   landingCardMoatDesc: "680+ aandelen beoordeeld op 8 Buffett-stijl criteria — winstconsistentie, marges, ROE, schulden en meer. Vooraf geëvalueerd en doorzoekbaar.",
   landingCardVerifiedTitle: "AI-investeringsscreening",

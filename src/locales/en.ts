@@ -1726,6 +1726,16 @@ const en: TranslationStrings = {
   landingFeatureScreeningPoint4: "Verified / Flagged banner after QA checks numbers and sources",
   landingFeatureScreeningCta: "Open screening",
 
+  landingFeatureHoldingsExplorerTag: "Holdings explorer",
+  landingFeatureHoldingsExplorerTitle: "Rank your positions. Ask Warren about any number.",
+  landingFeatureHoldingsExplorerDesc:
+    "Sort the stocks and ETFs you already own by P/E, dividend yield, weight, and quality. Click a cell and Warren explains that figure — and can look up public investor-relations filings and earnings-call transcripts. AI-generated and informational only. trefolio is not a financial advisor.",
+  landingFeatureHoldingsExplorerPoint1: "Your holdings, ranked — not a market-wide ticker dump",
+  landingFeatureHoldingsExplorerPoint2: "Click P/E, ROE, yield, or weight to ask Warren about that exact figure",
+  landingFeatureHoldingsExplorerPoint3: "Full-screen chat; Warren can search IR pages, PDFs, and earnings calls",
+  landingFeatureHoldingsExplorerPoint4: "AI-generated answers. Not investment advice. Figures can be delayed or incomplete.",
+  landingFeatureHoldingsExplorerCta: "Start with your portfolio",
+
   landingFeatureWarrenTag: "Telegram",
   landingFeatureWarrenTitle: "Warren on Telegram (now with voice)",
   landingFeatureWarrenDesc: "Connect once from your profile and chat with Warren on Telegram — same AI portfolio companion, same write-with-confirmation safety, on any phone or desktop. Type or send a voice note: Warren transcribes, answers, and even speaks the reply back. Ask for charts, news, dividends, allocation, performance, or propose adds, removes, cash entries or alerts with a single Confirm tap. Warren also explains the concepts behind the numbers — margin of safety, drawdown, payout ratio — in plain language from a curated value-investing knowledge base.",
@@ -1758,6 +1768,8 @@ const en: TranslationStrings = {
   landingCardTaxDesc: "Country-specific tax summaries for Germany, France, Spain, Netherlands, and Italy with AI Tax Assistant",
   landingCardScreenerTitle: "Stock Screener",
   landingCardScreenerDesc: "Filter 680+ stocks by dividend yield, P/E, sector and market cap with preset strategies — a fundamentals filter, not AI research",
+  landingCardHoldingsExplorerTitle: "Holdings explorer + Warren",
+  landingCardHoldingsExplorerDesc: "Rank your own positions by P/E and yield, then ask Warren about a highlighted cell. Grounded in public filings. Not investment advice.",
   landingCardVerifiedTitle: "AI investment screening",
   landingCardVerifiedDesc: "Portfolio-gap or Analyze a ticker — candidates scored on Cheap, Fit and Solidity, then QA-checked before the report unlocks",
   landingCardMoatTitle: "Moat Screener",

@@ -73,6 +73,7 @@ interface HeroFeature {
   tagBadge?: string;
   ctaHref?: string;
   ctaLabel?: string;
+  ctaTrack?: string;
 }
 
 function getHeroFeatures(t: T): HeroFeature[] {
@@ -127,6 +128,22 @@ function getHeroFeatures(t: T): HeroFeature[] {
       ],
       ctaHref: "/screening",
       ctaLabel: t("landingFeatureScreeningCta"),
+      ctaTrack: "feature_screening",
+    },
+    {
+      tag: t("landingFeatureHoldingsExplorerTag"),
+      title: t("landingFeatureHoldingsExplorerTitle"),
+      description: t("landingFeatureHoldingsExplorerDesc"),
+      screenshot: "/screenshots/holdings-explorer-warren.png",
+      points: [
+        t("landingFeatureHoldingsExplorerPoint1"),
+        t("landingFeatureHoldingsExplorerPoint2"),
+        t("landingFeatureHoldingsExplorerPoint3"),
+        t("landingFeatureHoldingsExplorerPoint4"),
+      ],
+      ctaHref: "/signup",
+      ctaLabel: t("landingFeatureHoldingsExplorerCta"),
+      ctaTrack: "feature_holdings_explorer",
     },
     {
       tag: t("landingFeatureImportTag"),
@@ -163,6 +180,7 @@ function getFeatureCards(t: T) {
   return [
     { icon: "shield", title: t("landingCardTaxTitle"), desc: t("landingCardTaxDesc") },
     { icon: "search", title: t("landingCardScreenerTitle"), desc: t("landingCardScreenerDesc") },
+    { icon: "sparkle", title: t("landingCardHoldingsExplorerTitle"), desc: t("landingCardHoldingsExplorerDesc") },
     { icon: "shield", title: t("landingCardVerifiedTitle"), desc: t("landingCardVerifiedDesc") },
     { icon: "castle", title: t("landingCardMoatTitle"), desc: t("landingCardMoatDesc") },
     { icon: "wallet", title: t("landingCardNetWorthTitle"), desc: t("landingCardNetWorthDesc") },
@@ -1013,7 +1031,7 @@ function FeaturesSection() {
                   {feature.ctaHref && feature.ctaLabel ? (
                     <Link
                       href={feature.ctaHref}
-                      onClick={() => trackLanding("landing_cta_click", { cta: "feature_screening" })}
+                      onClick={() => trackLanding("landing_cta_click", { cta: feature.ctaTrack ?? "feature" })}
                       className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-emerald-500/20"
                     >
                       {feature.ctaLabel}
