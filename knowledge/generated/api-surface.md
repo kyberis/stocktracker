@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-317 routes.
+319 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -15,6 +15,7 @@
 | `/api/admin/ai-compare` | POST | [`src/app/api/admin/ai-compare/route.ts`](../../src/app/api/admin/ai-compare/route.ts) |
 | `/api/admin/ai-logs` | GET | [`src/app/api/admin/ai-logs/route.ts`](../../src/app/api/admin/ai-logs/route.ts) |
 | `/api/admin/ai-models` | GET, PUT | [`src/app/api/admin/ai-models/route.ts`](../../src/app/api/admin/ai-models/route.ts) |
+| `/api/admin/ai-prompts` | GET, POST | [`src/app/api/admin/ai-prompts/route.ts`](../../src/app/api/admin/ai-prompts/route.ts) |
 | `/api/admin/alert-dispatch` | GET | [`src/app/api/admin/alert-dispatch/route.ts`](../../src/app/api/admin/alert-dispatch/route.ts) |
 | `/api/admin/analytics` | GET | [`src/app/api/admin/analytics/route.ts`](../../src/app/api/admin/analytics/route.ts) |
 | `/api/admin/anomalies` | GET, POST | [`src/app/api/admin/anomalies/route.ts`](../../src/app/api/admin/anomalies/route.ts) |
@@ -80,6 +81,7 @@
 | `/api/admin/support-chat` | GET | [`src/app/api/admin/support-chat/route.ts`](../../src/app/api/admin/support-chat/route.ts) |
 | `/api/admin/support-chat-config` | GET, PUT | [`src/app/api/admin/support-chat-config/route.ts`](../../src/app/api/admin/support-chat-config/route.ts) |
 | `/api/admin/support-chat/[id]` | GET, PUT | [`src/app/api/admin/support-chat/[id]/route.ts`](../../src/app/api/admin/support-chat/[id]/route.ts) |
+| `/api/admin/traffic-graph` | GET | [`src/app/api/admin/traffic-graph/route.ts`](../../src/app/api/admin/traffic-graph/route.ts) |
 | `/api/admin/unsubscribes` | GET | [`src/app/api/admin/unsubscribes/route.ts`](../../src/app/api/admin/unsubscribes/route.ts) |
 | `/api/admin/users` | GET, POST, DELETE | [`src/app/api/admin/users/route.ts`](../../src/app/api/admin/users/route.ts) |
 | `/api/admin/users/[userId]/data` | GET | [`src/app/api/admin/users/[userId]/data/route.ts`](../../src/app/api/admin/users/[userId]/data/route.ts) |
