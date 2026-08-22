@@ -4420,6 +4420,42 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 148,
+    description: "Seed agent_intro A/B experiment (Warren + Clara home intro) as draft",
+    up: async (client: Client) => {
+      const existing = await client.execute({
+        sql: "SELECT id FROM experiments WHERE key = ?",
+        args: ["agent_intro"],
+      });
+      if (existing.rows.length === 0) {
+        await client.execute({
+          sql: `INSERT INTO experiments (
+                  id, key, name, description, status, variants_json, metrics_json
+                ) VALUES (?, ?, ?, ?, 'draft', ?, ?)`,
+          args: [
+            "exp_agent_intro",
+            "agent_intro",
+            "Agent intro (Warren + Clara)",
+            "A/B/C home intro animation for all signed-in users on trefolio.com — control (no intro), convergence, or briefing. Destination is portfolio dashboard or empty import state.",
+            JSON.stringify([
+              { key: "control", weight: 34 },
+              { key: "convergence", weight: 33 },
+              { key: "briefing", weight: 33 },
+            ]),
+            JSON.stringify([
+              "agent_intro_post_action",
+              "agent_intro_completed",
+              "agent_intro_skipped",
+              "holding_add",
+              "empty_activation_cta",
+              "portfolio_import",
+            ]),
+          ],
+        });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

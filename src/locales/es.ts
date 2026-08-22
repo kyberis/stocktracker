@@ -2104,6 +2104,19 @@ const es: TranslationStrings = {
   landingAgentsFreeNote: "Gratis: 30 mensajes/día en Clara y Will para siempre. Pro sube todos los límites a 200/día.",
   landingAgentsSeeAllStudio: "Ver los cinco agentes →",
 
+  agentIntroSkip: "Saltar",
+  agentIntroWarrenTagline: "Tu cartera, analizada.",
+  agentIntroClaraTagline: "Tus finanzas, bajo control.",
+  agentIntroLogoTagline: "Juntos en trefolio",
+  agentIntroBriefingWarren:
+    "Reviso tu cartera y propongo movimientos — toda escritura sigue requiriendo Confirmar.",
+  agentIntroBriefingClara:
+    "Te ayudo con gastos, ahorro y presupuesto para mejorar tu salud financiera.",
+  agentIntroBriefingSubtitle: "Salud financiera y estrategia de inversión, en un solo sitio.",
+  agentIntroBriefingLogoTagline: "Warren y Clara, coordinados en trefolio",
+  agentIntroConvergenceAria: "Intro animada — Convergencia",
+  agentIntroBriefingAria: "Intro animada — Briefing en equipo",
+
   landingDevDocsEyebrow: "Desarrolladores e IA",
   landingDevDocsHeading: "Conecta Cursor, Claude Code y tus agentes",
   landingDevDocsHeadingAccent: "a tu cartera",

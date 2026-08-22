@@ -11,6 +11,12 @@ describe("experiment-metrics-catalog", () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
+  it("includes agent_intro defaults", () => {
+    expect(getExperimentMetric("agent_intro_post_action")?.recommendedFor).toContain("agent_intro");
+    expect(getExperimentMetric("agent_intro_completed")?.recommendedFor).toContain("agent_intro");
+    expect(getExperimentMetric("holding_add")?.recommendedFor).toContain("agent_intro");
+  });
+
   it("includes empty_activation defaults", () => {
     expect(getExperimentMetric("empty_activation_cta")?.recommendedFor).toContain(
       "empty_activation",

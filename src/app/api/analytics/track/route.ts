@@ -15,6 +15,9 @@ const ALLOWED_EVENTS = new Set([
   "import_error",
   "experiment_exposure",
   "empty_activation_cta",
+  "agent_intro_completed",
+  "agent_intro_skipped",
+  "agent_intro_post_action",
   "display_invariant_violation",
 ]);
 
