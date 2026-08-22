@@ -25,6 +25,7 @@ import {
 } from "@kyberis/agent-os/runtime";
 
 import { getPlatformSetting } from "@/lib/db/settings";
+import { trackExternalProvider } from "@/lib/traffic/provider-track";
 
 export {
   toGatewayModelId,
@@ -66,6 +67,7 @@ export async function fetchGatewayChatCompletions(
   body: GatewayChatCompletionsBody,
   options?: { headers?: Headers },
 ): Promise<Response> {
+  trackExternalProvider("ai_gateway");
   return sharedFetchGatewayChatCompletions(body, {
     envKeys: WARREN_GATEWAY_ENV_KEYS,
     headers: options?.headers,

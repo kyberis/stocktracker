@@ -2,6 +2,7 @@ import { getIdpServiceToken } from "@/lib/idp/config";
 import type { OfficeIdentity } from "./office-identity";
 import { normalizeSisterAppBaseUrl } from "./sister-app-url";
 import type { WillNoteHit, WillRecentTagsHit } from "./types";
+import { trackExternalProvider } from "@/lib/traffic/provider-track";
 
 const TIMEOUT_MS = 8_000;
 
@@ -59,6 +60,7 @@ export async function searchWillNotes(identity: OfficeIdentity, query: string): 
       signal: controller.signal,
       cache: "no-store",
     });
+    trackExternalProvider("will");
 
     if (res.status === 404) {
       return {
@@ -139,6 +141,7 @@ export async function fetchWillRecentTags(identity: OfficeIdentity): Promise<Wil
       signal: controller.signal,
       cache: "no-store",
     });
+    trackExternalProvider("will");
 
     if (res.ok) {
       const data = (await res.json()) as Partial<WillRecentTagsHit>;
@@ -208,6 +211,7 @@ export async function createWillOfficeNote(
       signal: controller.signal,
       cache: "no-store",
     });
+    trackExternalProvider("will");
 
     if (!res.ok) {
       return { ok: false, message: `Will HTTP ${res.status}` };

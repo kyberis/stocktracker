@@ -20,7 +20,8 @@ import type {
   SearchOptions,
   DividendEvent,
 } from "./types";
-import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
+import { providerRequestDuration } from "@/lib/metrics";
+import { recordProviderRequest } from "@/lib/traffic/provider-track";
 import { parseQuoteTimestamp } from "@/lib/quote-time";
 
 function parseFloat0(val: unknown): number {
@@ -75,14 +76,14 @@ export class FmpMarketDataProvider implements StockDataProvider {
       const res = await fetch(url.toString());
       const text = await res.text();
       if (!res.ok || text.includes("Restricted Endpoint")) {
-        providerRequestsTotal.inc({ provider: "fmp", operation, status: "error" });
+        recordProviderRequest("fmp", operation, "error");
         throw new Error(`FMP ${endpoint}: ${res.status} ${text.slice(0, 200)}`);
       }
       const data = JSON.parse(text) as T;
-      providerRequestsTotal.inc({ provider: "fmp", operation, status: "success" });
+      recordProviderRequest("fmp", operation, "success");
       return data;
     } catch (err) {
-      providerRequestsTotal.inc({ provider: "fmp", operation, status: "error" });
+      recordProviderRequest("fmp", operation, "error");
       throw err;
     } finally {
       end();

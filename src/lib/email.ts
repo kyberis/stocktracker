@@ -11,6 +11,7 @@ import {
   checkAndIncrementRateLimit,
 } from "@/lib/db";
 import { isEmailNodeEnabled } from "@/lib/email-flows/toggles";
+import { trackExternalProvider } from "@/lib/traffic/provider-track";
 
 const VERIFICATION_TOKEN_TTL = 60 * 60 * 24; // 24 hours
 const ACCOUNT_DELETION_TOKEN_TTL = 60 * 15; // 15 minutes — short-lived, destructive action
@@ -184,6 +185,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
   const plainText = text || htmlToPlainText(html);
 
   try {
+    trackExternalProvider("resend");
     const { data, error } = await resend.emails.send({
       from: opts.from || getFromAddress(),
       to: opts.to,

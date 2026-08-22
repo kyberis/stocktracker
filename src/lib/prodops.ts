@@ -18,6 +18,7 @@ import {
 } from "@/lib/db/ops-events";
 import { getProdOpsConfig, getProdOpsSharedSecret } from "@/lib/db/settings";
 import { str } from "@/lib/db/helpers";
+import { trackExternalProvider } from "@/lib/traffic/provider-track";
 
 const PRODOPS_SOURCE_APP = "trefolio" as const;
 const PRODOPS_MAX_ATTEMPTS = 8;
@@ -144,6 +145,7 @@ async function postProdOpsEnvelope(baseUrl: string, secret: string, envelope: Pr
   const body = JSON.stringify(envelope);
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const signature = signProdOpsBody(body, secret, timestamp);
+  trackExternalProvider("prodops");
   return fetch(`${baseUrl.replace(/\/+$/, "")}/api/intake`, {
     method: "POST",
     headers: {

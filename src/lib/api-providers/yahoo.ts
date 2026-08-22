@@ -14,7 +14,8 @@ import type {
   EarningsReport,
   ETFHoldingsData,
 } from "./types";
-import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
+import { providerRequestDuration } from "@/lib/metrics";
+import { recordProviderRequest } from "@/lib/traffic/provider-track";
 import { getCachedHistorical, cacheHistoricalPoints } from "@/lib/db/historical-cache";
 import { parseQuoteTimestamp } from "@/lib/quote-time";
 import { augmentCryptoSearchWithEurPairs } from "@/lib/crypto-search-eur";
@@ -109,7 +110,7 @@ export class YahooProvider implements StockDataProvider {
       return result;
     } finally {
       end();
-      providerRequestsTotal.inc({ provider: "yahoo", operation: "quote", status: ok ? "success" : "error" });
+      recordProviderRequest("yahoo", "quote", ok ? "success" : "error");
     }
   }
 
@@ -144,7 +145,7 @@ export class YahooProvider implements StockDataProvider {
         : mapped;
     } finally {
       end();
-      providerRequestsTotal.inc({ provider: "yahoo", operation: "search", status: ok ? "success" : "error" });
+      recordProviderRequest("yahoo", "search", ok ? "success" : "error");
     }
   }
 
@@ -264,7 +265,7 @@ export class YahooProvider implements StockDataProvider {
       return points;
     } finally {
       end();
-      providerRequestsTotal.inc({ provider: "yahoo", operation: "historical", status: ok ? "success" : "error" });
+      recordProviderRequest("yahoo", "historical", ok ? "success" : "error");
     }
   }
 
@@ -313,7 +314,7 @@ export class YahooProvider implements StockDataProvider {
       return null;
     } finally {
       end();
-      providerRequestsTotal.inc({ provider: "yahoo", operation: "classification", status: ok ? "success" : "error" });
+      recordProviderRequest("yahoo", "classification", ok ? "success" : "error");
     }
   }
 
@@ -333,7 +334,7 @@ export class YahooProvider implements StockDataProvider {
       return rate;
     } finally {
       end();
-      providerRequestsTotal.inc({ provider: "yahoo", operation: "exchange_rate", status: ok ? "success" : "error" });
+      recordProviderRequest("yahoo", "exchange_rate", ok ? "success" : "error");
     }
   }
 
@@ -393,7 +394,7 @@ export class YahooProvider implements StockDataProvider {
       return null;
     } finally {
       end();
-      providerRequestsTotal.inc({ provider: "yahoo", operation: "overview", status: ok ? "success" : "error" });
+      recordProviderRequest("yahoo", "overview", ok ? "success" : "error");
     }
   }
 
@@ -432,7 +433,7 @@ export class YahooProvider implements StockDataProvider {
       return null;
     } finally {
       end();
-      providerRequestsTotal.inc({ provider: "yahoo", operation: "income_statement", status: ok ? "success" : "error" });
+      recordProviderRequest("yahoo", "income_statement", ok ? "success" : "error");
     }
   }
 
@@ -487,7 +488,7 @@ export class YahooProvider implements StockDataProvider {
       return null;
     } finally {
       end();
-      providerRequestsTotal.inc({ provider: "yahoo", operation: "balance_sheet", status: ok ? "success" : "error" });
+      recordProviderRequest("yahoo", "balance_sheet", ok ? "success" : "error");
     }
   }
 
@@ -522,7 +523,7 @@ export class YahooProvider implements StockDataProvider {
       return null;
     } finally {
       end();
-      providerRequestsTotal.inc({ provider: "yahoo", operation: "cash_flow", status: ok ? "success" : "error" });
+      recordProviderRequest("yahoo", "cash_flow", ok ? "success" : "error");
     }
   }
 
@@ -559,7 +560,7 @@ export class YahooProvider implements StockDataProvider {
       return null;
     } finally {
       end();
-      providerRequestsTotal.inc({ provider: "yahoo", operation: "earnings", status: ok ? "success" : "error" });
+      recordProviderRequest("yahoo", "earnings", ok ? "success" : "error");
     }
   }
 
@@ -626,11 +627,7 @@ export class YahooProvider implements StockDataProvider {
       return null;
     } finally {
       end();
-      providerRequestsTotal.inc({
-        provider: "yahoo",
-        operation: "earnings_outlook",
-        status: ok ? "success" : "error",
-      });
+      recordProviderRequest("yahoo", "earnings_outlook", ok ? "success" : "error");
     }
   }
 
@@ -693,7 +690,7 @@ export class YahooProvider implements StockDataProvider {
       return null;
     } finally {
       end();
-      providerRequestsTotal.inc({ provider: "yahoo", operation: "etf_holdings", status: ok ? "success" : "error" });
+      recordProviderRequest("yahoo", "etf_holdings", ok ? "success" : "error");
     }
   }
 }
