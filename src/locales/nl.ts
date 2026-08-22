@@ -2855,6 +2855,10 @@ const nl: TranslationStrings = {
   warrenSubtitle: "Jouw waardebeleggings-metgezel",
   warrenTriggerSub: "Vraag, leer en handel in je portefeuille",
   warrenClose: "Warren sluiten",
+  warrenExpand: "Warren in volledig scherm openen",
+  warrenCollapse: "Volledig scherm verlaten",
+  warrenResearchHint:
+    "In volledig scherm kan ik het openbare web, investor-relationsdocumenten en earnings-calltranscripten doorzoeken om antwoorden te onderbouwen.",
   warrenSend: "Verzenden",
   warrenConnected: "Verbonden met je portefeuille",
   warrenConnectedEmptyAdd: "Aandelen-toevoegen-modus — lege portefeuille",
@@ -3022,6 +3026,7 @@ const nl: TranslationStrings = {
   homeV2AdvancedCta: "Geavanceerd",
   homeV2SimpleCta: "Overzicht",
   homeV2TotalReturn: "Totaalrendement",
+  homeV2HoldingsExplorerCta: "Verkennen op K/W en dividend",
   homeV2EmptyTitle: "Add your first holding",
   homeV2EmptyBody: "Once you add stocks or ETFs, this home shows movers, catalysts, and day highlights.",
   homeV2EmptyCta: "Add holding",

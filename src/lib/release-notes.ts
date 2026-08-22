@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.196",
+    date: "2026-08-22",
+    title: "Warren full screen and public-company research",
+    titleTranslations: {
+      es: "Warren a pantalla completa e investigación pública de compañías",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Warren can open full screen from the floating chat (and the dashboard drawer). He can search the public web, official investor-relations pages and PDFs, and earnings-call transcripts to ground answers — still AI-generated and not financial advice.",
+        translations: {
+          es: "Warren se puede abrir a pantalla completa desde el chat flotante (y el panel del dashboard). Puede buscar en la web pública, páginas y PDFs de investor relations y transcripciones de earnings calls para fundamentar las respuestas — sigue siendo IA y no es consejo financiero.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Home holdings list now links to Holdings explorer so you can rank the same positions by P/E, yield, and weight.",
+        translations: {
+          es: "La lista de acciones en Home enlaza al explorador de posiciones para ordenarlas por PER, dividendos y peso.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.195",
     date: "2026-08-22",
     title: "Fix doubled holdings from broker venue aliases",

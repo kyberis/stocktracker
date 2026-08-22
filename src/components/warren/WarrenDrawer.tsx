@@ -29,7 +29,7 @@ import {
   normalizeWarrenTextMessages,
   type WarrenTextRow,
 } from "@/lib/ai/warren/normalize-chat-messages";
-import { Paperclip } from "lucide-react";
+import { Maximize2, Minimize2, Paperclip } from "lucide-react";
 import type { HoldingsExplorerSelection } from "@/lib/holdings-research";
 
 type Bubble =
@@ -150,6 +150,8 @@ export default function WarrenDrawer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const canExpand = mode !== "embedded";
 
   const totals = useMemo(
     () => calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency),
@@ -158,7 +160,19 @@ export default function WarrenDrawer({
 
   useEffect(() => {
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 320);
+    else setExpanded(false);
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !expanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.stopImmediatePropagation();
+      setExpanded(false);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [isOpen, expanded]);
 
   useEffect(() => {
     streamEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -361,19 +375,24 @@ export default function WarrenDrawer({
           activePortfolioCurrency,
         )}`;
 
-  const panelClass =
-    mode === "embedded"
+  const chrome =
+    "flex flex-col overflow-hidden bg-white dark:bg-[#151e2f] text-gray-900 dark:text-slate-100";
+  const panelClass = expanded
+    ? `fixed inset-0 sm:inset-3 z-[110] ${chrome} w-auto h-auto rounded-none sm:rounded-2xl border-0 sm:border border-gray-200 dark:border-amber-500/15 shadow-2xl ${
+        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`
+    : mode === "embedded"
       ? [
-          "flex w-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]",
+          `${chrome} w-full rounded-[var(--radius-card)] border border-[color:var(--border)] shadow-[0_16px_32px_rgba(1,6,16,0.28)]`,
           embeddedClassName ?? "h-[min(560px,calc(100vh-14rem))]",
         ].join(" ")
       : mode === "floating"
-        ? `fixed bottom-20 sm:bottom-6 right-6 z-50 flex w-[min(360px,calc(100vw-1.5rem))] h-[min(480px,70vh)] flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-amber-500/15 bg-white dark:bg-[#151e2f] text-gray-900 dark:text-slate-100 shadow-2xl ${
+        ? `fixed bottom-20 sm:bottom-6 right-6 z-50 w-[min(360px,calc(100vw-1.5rem))] h-[min(480px,70vh)] rounded-2xl border border-gray-200 dark:border-amber-500/15 shadow-2xl ${chrome} ${
             isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           }`
-        : `fixed top-0 right-0 z-[101] w-[460px] max-w-[calc(100vw-1rem)] h-full flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        : `fixed top-0 right-0 z-[101] w-[460px] max-w-[calc(100vw-1rem)] h-full shadow-2xl border-l border-gray-200 dark:border-amber-500/15 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${chrome} ${
             isOpen ? "translate-x-0" : "translate-x-full"
-          } bg-white dark:bg-[#151e2f] text-gray-900 dark:text-slate-100 border-l border-gray-200 dark:border-amber-500/15`;
+          }`;
 
   const panel = (
       <aside
@@ -381,6 +400,7 @@ export default function WarrenDrawer({
         role={mode === "embedded" ? "region" : "dialog"}
         aria-label={t("warrenName")}
         aria-hidden={mode === "embedded" ? undefined : !isOpen}
+        data-warren-expanded={expanded ? "true" : "false"}
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-amber-500/10 bg-gradient-to-r from-amber-500/[0.05] to-transparent shrink-0">
@@ -394,6 +414,18 @@ export default function WarrenDrawer({
               {t("warrenSubtitle")}
             </div>
           </div>
+          {canExpand && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="w-8 h-8 rounded-lg border border-gray-200 dark:border-amber-500/15 bg-gray-50 dark:bg-white/[0.04] flex items-center justify-center text-gray-500 dark:text-amber-200/60 hover:text-amber-700 dark:hover:text-amber-200 hover:border-amber-400/50 transition-colors"
+            aria-label={expanded ? t("warrenCollapse") : t("warrenExpand")}
+            aria-pressed={expanded}
+            data-testid="warren-expand"
+          >
+            {expanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+          )}
           {mode !== "embedded" && (
           <button
             onClick={onClose}
@@ -407,9 +439,12 @@ export default function WarrenDrawer({
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] text-gray-500 dark:text-amber-300/60 border-b border-gray-100 dark:border-amber-500/[0.08] shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-          {contextLine}
+        <div className="px-4 py-2 text-[11px] text-gray-500 dark:text-amber-300/60 border-b border-gray-100 dark:border-amber-500/[0.08] shrink-0">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            {contextLine}
+          </div>
+          {expanded && <p className="mt-1 pl-3">{t("warrenResearchHint")}</p>}
         </div>
 
         {!demoMode && userPlan !== "pro" && (

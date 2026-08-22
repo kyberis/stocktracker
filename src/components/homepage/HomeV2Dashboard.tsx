@@ -24,6 +24,7 @@ import HomeMcpCta from "./HomeMcpCta";
 import HomeFinPulseTeaser from "./HomeFinPulseTeaser";
 import HomePortfolioTotalCard from "./HomePortfolioTotalCard";
 import HomeRecommendationCard from "./HomeRecommendationCard";
+import HomeHoldingsExplorerCta from "./HomeHoldingsExplorerCta";
 import ScreeningBetaBanner from "@/components/screening/ScreeningBetaBanner";
 
 type HeroMode = "simple" | "advanced";
@@ -267,11 +268,14 @@ export default function HomeV2Dashboard() {
             <AllocationTabs holdings={holdings} cashEntries={cashEntries} />
           )}
 
-          {isMobile ? (
-            <PortfolioCards holdings={holdings} />
-          ) : (
-            <PortfolioTable holdings={holdings} onAddStock={openAdd} />
-          )}
+          <div className="flex flex-col gap-2" data-testid="home-holdings">
+            {!demoMode && holdings.length > 0 && <HomeHoldingsExplorerCta />}
+            {isMobile ? (
+              <PortfolioCards holdings={holdings} />
+            ) : (
+              <PortfolioTable holdings={holdings} onAddStock={openAdd} />
+            )}
+          </div>
 
           <MarketAndCash holdings={holdings} cashEntries={cashEntries} />
 

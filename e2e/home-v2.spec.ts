@@ -32,12 +32,14 @@ test.describe("Home v2 recommendations", () => {
     await dismissOverlays(page);
 
     await expect(page.getByTestId("home-recommendation-card")).toHaveCount(0);
+    await expect(page.getByTestId("home-holdings-explorer-cta")).toHaveCount(0);
   });
 
   test("demo mode does not show recommendation card", async ({ page }) => {
     await page.goto("/demo");
     await dismissOverlays(page);
     await expect(page.getByTestId("home-recommendation-card")).toHaveCount(0);
+    await expect(page.getByTestId("home-holdings-explorer-cta")).toHaveCount(0);
   });
 
   test("seeded user can load recommendations API", async ({ page }) => {
@@ -80,5 +82,29 @@ test.describe("Home v2 recommendations", () => {
         timeout: 20_000,
       });
     }
+  });
+
+  test("holdings list CTA opens holdings explorer", async ({ page }) => {
+    const login = await page.request.post("/api/auth/login", {
+      data: { identifier: "admin", password: "admin" },
+    });
+    if (login.status() !== 200) {
+      const alt = await page.request.post("/api/auth/login", {
+        data: { identifier: "admin", password: "Admin123!" },
+      });
+      if (alt.status() !== 200) {
+        test.skip(true, "Local admin login unavailable (IdP-only environment).");
+        return;
+      }
+    }
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/");
+    await dismissOverlays(page);
+    const cta = page.getByTestId("home-holdings-explorer-cta");
+    await expect(cta).toBeVisible({ timeout: 20_000 });
+    await expect(cta).toHaveAttribute("href", "/tools/holdings-explorer");
+    await cta.click();
+    await page.waitForURL(/\/tools\/holdings-explorer/);
+    await expect(page.getByTestId("holdings-explorer")).toBeVisible({ timeout: 20_000 });
   });
 });
