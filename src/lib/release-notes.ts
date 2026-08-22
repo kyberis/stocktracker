@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.204",
+    date: "2026-08-22",
+    title: "Warren and Clara home intro A/B test",
+    titleTranslations: {
+      es: "A/B test de intro Warren y Clara en el home",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Signed-in users on trefolio.com can see a Warren + Clara intro animation (A/B test: Convergence vs Briefing vs control). After the intro, users with holdings land on the dashboard; users without holdings see the existing import/add empty state. Live stats track post-splash actions via agent_intro_post_action.",
+        translations: {
+          es: "Los usuarios logueados en trefolio.com pueden ver una intro animada de Warren y Clara (A/B: Convergencia vs Briefing vs control). Tras la intro, quien tiene posiciones va al dashboard; quien no, al empty state de importar/añadir. Las métricas en vivo registran acciones post-splash con agent_intro_post_action.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.203",
     date: "2026-08-22",
     title: "Warren valuation fundamentals data",

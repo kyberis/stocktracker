@@ -62,6 +62,37 @@ export const EXPERIMENT_METRICS_CATALOG: ExperimentMetricDefinition[] = [
     metadataKeys: ["experiment", "variant", "cta"],
     recommendedFor: ["empty_activation"],
   },
+  {
+    key: "agent_intro_post_action",
+    title: "Agent intro post-splash action",
+    description:
+      "Primary success metric: first meaningful home action after the intro (treatment) or on first home load (control).",
+    where: "src/hooks/useAgentIntroPostAction.ts → HomeV2Dashboard / EmptyPortfolio",
+    source: "client_allowlist",
+    category: "activation",
+    metadataKeys: ["experiment", "variant", "dest", "action"],
+    recommendedFor: ["agent_intro"],
+  },
+  {
+    key: "agent_intro_completed",
+    title: "Agent intro completed",
+    description: "User watched the Warren + Clara home intro animation through to the end.",
+    where: "src/components/agent-intro/AgentIntroGate.tsx → trackExperimentEvent",
+    source: "client_allowlist",
+    category: "activation",
+    metadataKeys: ["experiment", "variant", "dest"],
+    recommendedFor: ["agent_intro"],
+  },
+  {
+    key: "agent_intro_skipped",
+    title: "Agent intro skipped",
+    description: "User tapped Skip on the Warren + Clara home intro overlay.",
+    where: "src/components/agent-intro/AgentIntroGate.tsx → trackExperimentEvent",
+    source: "client_allowlist",
+    category: "activation",
+    metadataKeys: ["experiment", "variant", "dest"],
+    recommendedFor: ["agent_intro"],
+  },
 
   // —— Activation / portfolio ——
   {
@@ -72,7 +103,7 @@ export const EXPERIMENT_METRICS_CATALOG: ExperimentMetricDefinition[] = [
     source: "server",
     category: "portfolio",
     metadataKeys: ["ticker"],
-    recommendedFor: ["empty_activation"],
+    recommendedFor: ["empty_activation", "agent_intro"],
   },
   {
     key: "holding_delete",

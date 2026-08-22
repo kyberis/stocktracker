@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import EmptyPortfolio from "@/components/EmptyPortfolio";
+import AgentIntroGate from "@/components/agent-intro/AgentIntroGate";
 import {
   clearExperimentPreview,
   setExperimentPreview,
@@ -179,6 +180,25 @@ function AdminExperimentPreviewInner() {
             onAddStock={() => showToast("Preview: Add stock (no-op)")}
             onAskWarren={(prompt) => showToast(`Preview Warren: ${prompt.slice(0, 80)}`)}
           />
+        </div>
+      ) : keyParam === "agent_intro" && (variantParam === "convergence" || variantParam === "briefing") ? (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-600 dark:text-slate-300">
+            Previewing variant <span className="font-mono text-xs">{variantParam}</span>. Open{" "}
+            <Link href="/" className="text-indigo-600 dark:text-indigo-400">
+              Home
+            </Link>{" "}
+            in this tab to see the full-screen intro over the live dashboard, or use the embedded mock below.
+          </p>
+          <div className="relative min-h-[480px] overflow-hidden rounded-xl border border-[color:var(--border)] bg-[color:var(--page-background)]">
+            <AgentIntroGate
+              isEmpty={false}
+              demoMode={false}
+              isReady
+              contained
+              forceVariant={variantParam === "briefing" ? "briefing" : "convergence"}
+            />
+          </div>
         </div>
       ) : (
         <div className="card space-y-3 p-5 text-sm text-gray-600 dark:text-slate-300">

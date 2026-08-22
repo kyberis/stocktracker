@@ -1,0 +1,410 @@
+.mockViewport {
+  position: relative;
+  isolation: isolate;
+  min-height: min(720px, 78vh);
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: var(--page-background, #0b1220);
+}
+
+.productionOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+}
+
+.containedOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at 20% 20%, rgb(16 185 129 / 0.12), transparent 45%),
+    radial-gradient(circle at 80% 30%, rgb(245 158 11 / 0.12), transparent 42%),
+    linear-gradient(180deg, rgb(15 23 42 / 0.96), rgb(2 6 23 / 0.98));
+  transition: opacity 520ms ease, visibility 520ms ease;
+}
+
+.overlayHidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.skipBtn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 30;
+  min-height: 2.5rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  background: rgb(15 23 42 / 0.55);
+  color: rgb(226 232 240 / 0.9);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.behind {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 1rem;
+  overflow: auto;
+  opacity: 0.35;
+  transform: translateY(12px) scale(0.985);
+  transition:
+    opacity 640ms ease 120ms,
+    transform 640ms cubic-bezier(0.22, 1, 0.36, 1) 120ms;
+}
+
+.behindVisible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.agentOrb {
+  position: absolute;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 999px;
+  filter: blur(28px);
+  opacity: 0;
+  transition: opacity 480ms ease, transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.agentOrbEmerald {
+  background: rgb(16 185 129 / 0.55);
+}
+
+.agentOrbAmber {
+  background: rgb(245 158 11 / 0.55);
+}
+
+.agentCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 420ms ease,
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.agentAvatarWrap {
+  position: relative;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.04);
+  box-shadow: 0 0 0 4px rgb(255 255 255 / 0.06);
+}
+
+.agentName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgb(248 250 252);
+}
+
+.agentRole {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.roleEmerald {
+  color: rgb(52 211 153);
+}
+
+.roleAmber {
+  color: rgb(251 191 36);
+}
+
+.agentTagline {
+  max-width: 11rem;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: rgb(203 213 225 / 0.88);
+}
+
+.logoBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  opacity: 0;
+  transform: scale(0.88);
+  transition:
+    opacity 520ms ease,
+    transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.logoWordmark {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: rgb(248 250 252);
+}
+
+.logoTagline {
+  font-size: 0.8125rem;
+  color: rgb(148 163 184);
+}
+
+/* ── Version A: Convergence ── */
+
+.convergenceStage {
+  position: relative;
+  width: min(100%, 42rem);
+  min-height: 18rem;
+}
+
+.convergenceAgents {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.convergenceWarren {
+  justify-self: end;
+  transform: translateX(-120%);
+}
+
+.convergenceClara {
+  justify-self: start;
+  transform: translateX(120%);
+}
+
+.convergenceCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.convergenceOrbWarren {
+  left: 18%;
+  top: 22%;
+}
+
+.convergenceOrbClara {
+  right: 18%;
+  top: 22%;
+}
+
+.convergencePhaseEnter .convergenceWarren,
+.convergencePhaseEnter .convergenceClara {
+  opacity: 1;
+  transform: translateX(0) translateY(0);
+}
+
+.convergencePhasePresent .convergenceWarren,
+.convergencePhasePresent .convergenceClara {
+  opacity: 1;
+  transform: translateX(0) translateY(0);
+}
+
+.convergencePhaseMerge .convergenceWarren,
+.convergencePhaseMerge .convergenceClara {
+  opacity: 0;
+  transform: translateX(0) scale(0.82);
+}
+
+.convergencePhaseMerge .convergenceOrbWarren {
+  opacity: 0.85;
+  transform: translate(70%, 10%) scale(0.55);
+}
+
+.convergencePhaseMerge .convergenceOrbClara {
+  opacity: 0.85;
+  transform: translate(-70%, 10%) scale(0.55);
+}
+
+.convergencePhaseMerge .logoBlock,
+.convergencePhaseReveal .logoBlock {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.convergencePhaseReveal .convergenceOrbWarren,
+.convergencePhaseReveal .convergenceOrbClara {
+  opacity: 0;
+}
+
+/* ── Version B: Briefing ── */
+
+.briefingStage {
+  width: min(100%, 36rem);
+}
+
+.briefingCard {
+  border-radius: 1.25rem;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  background: rgb(15 23 42 / 0.72);
+  padding: 1.25rem;
+  backdrop-filter: blur(12px);
+}
+
+.briefingRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.briefingRow + .briefingRow {
+  margin-top: 1rem;
+}
+
+.bubble {
+  flex: 1;
+  border-radius: 1rem;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 420ms ease,
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bubbleWarren {
+  background: rgb(16 185 129 / 0.12);
+  border: 1px solid rgb(16 185 129 / 0.22);
+  color: rgb(209 250 229);
+}
+
+.bubbleClara {
+  background: rgb(245 158 11 / 0.12);
+  border: 1px solid rgb(245 158 11 / 0.22);
+  color: rgb(254 243 199);
+}
+
+.briefingBridge {
+  margin-top: 1rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgb(16 185 129), rgb(245 158 11));
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.briefingSubtitle {
+  margin-top: 0.85rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: rgb(203 213 225);
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 420ms ease 80ms,
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1) 80ms;
+}
+
+.briefingLogoWrap {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: center;
+}
+
+.briefingPhaseChat .bubbleWarren,
+.briefingPhaseChat .bubbleClara {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.briefingPhaseBridge .briefingBridge {
+  transform: scaleX(1);
+}
+
+.briefingPhaseBridge .briefingSubtitle {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.briefingPhaseMerge .briefingCard {
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 360ms ease, transform 360ms ease;
+}
+
+.briefingPhaseMerge .logoBlock,
+.briefingPhaseReveal .logoBlock {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.briefingChips {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 420ms ease 120ms,
+    transform 520ms ease 120ms;
+}
+
+.briefingOverlayReveal .briefingChips {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.miniChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  background: rgb(15 23 42 / 0.8);
+  padding: 0.25rem 0.55rem 0.25rem 0.3rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgb(226 232 240);
+}
+
+.miniChipAvatar {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .behind,
+  .agentCard,
+  .agentOrb,
+  .logoBlock,
+  .bubble,
+  .briefingBridge,
+  .briefingSubtitle,
+  .briefingChips,
+  .convergenceWarren,
+  .convergenceClara {
+    transition: none !important;
+  }
+}
