@@ -29,6 +29,13 @@ import {
   normalizeWarrenTextMessages,
   type WarrenTextRow,
 } from "@/lib/ai/warren/normalize-chat-messages";
+import {
+  loadWarrenChatBubbles,
+  saveWarrenChatBubbles,
+  warrenChatStorageKey,
+  type PersistedWarrenBubble,
+} from "@/lib/ai/warren/chat-persistence";
+import { useAuth } from "@/lib/auth-context";
 import { Maximize2, Minimize2, Paperclip } from "lucide-react";
 import type { HoldingsExplorerSelection } from "@/lib/holdings-research";
 
@@ -38,6 +45,10 @@ type Bubble =
   | { id: string; kind: "tool-step"; label: string }
   | { id: string; kind: "part"; part: WarrenPart }
   | { id: string; kind: "proposal"; proposal: WarrenProposal };
+
+function bubbleToPersisted(bubble: Bubble): PersistedWarrenBubble {
+  return bubble;
+}
 
 interface Props {
   isOpen: boolean;
@@ -141,8 +152,15 @@ export default function WarrenDrawer({
     refreshAlertedTickers,
   } = usePortfolio();
   const { stealthMode } = useStealthMode();
+  const { user, isLoading: authLoading } = useAuth();
+
+  const chatStorageKey = useMemo(
+    () => (demoMode ? null : warrenChatStorageKey(user?.id, activePortfolioId)),
+    [demoMode, user?.id, activePortfolioId],
+  );
 
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
+  const [chatHydrated, setChatHydrated] = useState(false);
   const [input, setInput] = useState("");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [streaming, setStreaming] = useState(false);
@@ -152,6 +170,31 @@ export default function WarrenDrawer({
   const abortRef = useRef<AbortController | null>(null);
   const [expanded, setExpanded] = useState(false);
   const canExpand = mode !== "embedded";
+  const loadedStorageKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (demoMode) {
+      setBubbles([]);
+      setChatHydrated(true);
+      loadedStorageKeyRef.current = null;
+      return;
+    }
+    if (!chatStorageKey) {
+      if (authLoading) return;
+      setBubbles([]);
+      setChatHydrated(true);
+      return;
+    }
+    if (loadedStorageKeyRef.current === chatStorageKey) return;
+    loadedStorageKeyRef.current = chatStorageKey;
+    setBubbles(loadWarrenChatBubbles(chatStorageKey) as Bubble[]);
+    setChatHydrated(true);
+  }, [chatStorageKey, demoMode, authLoading]);
+
+  useEffect(() => {
+    if (!chatHydrated || streaming || demoMode || !chatStorageKey) return;
+    saveWarrenChatBubbles(chatStorageKey, bubbles.map(bubbleToPersisted));
+  }, [bubbles, chatHydrated, streaming, demoMode, chatStorageKey]);
 
   const totals = useMemo(
     () => calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency),
@@ -463,7 +506,7 @@ export default function WarrenDrawer({
         )}
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-          {bubbles.length === 0 && (
+          {bubbles.length === 0 && chatHydrated && (
             <div className="flex gap-2 items-start">
               <WarrenAvatar size={28} />
               <div className="text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-amber-500/[0.06] border border-amber-500/15 text-gray-800 dark:text-amber-50 max-w-[82%]">
@@ -529,7 +572,7 @@ export default function WarrenDrawer({
           <div ref={streamEndRef} />
         </div>
 
-        {!streaming && bubbles.length === 0 && (
+        {!streaming && bubbles.length === 0 && chatHydrated && (
           <div className="flex flex-wrap gap-1.5 px-4 pb-3 shrink-0">
             {quickPrompts.map((q) => (
               <button
@@ -655,8 +698,14 @@ export default function WarrenDrawer({
 
   if (mode === "embedded") return panel;
   if (mode === "floating") {
-    if (!isOpen) return null;
-    return panel;
+    return (
+      <div
+        className={isOpen ? undefined : "pointer-events-none"}
+        aria-hidden={!isOpen}
+      >
+        <div className={isOpen ? undefined : "invisible"}>{panel}</div>
+      </div>
+    );
   }
 
   return (

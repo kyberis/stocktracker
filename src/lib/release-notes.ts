@@ -17,6 +17,74 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.217",
+    date: "2026-08-23",
+    title: "Agent intro splash first",
+    titleTranslations: {
+      es: "Splash de intro primero",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Warren + Clara home intro now shows the branded splash immediately on dashboard entry (before portfolio data paints), then plays the animation — app-like launch instead of dashboard-then-splash.",
+        translations: {
+          es: "La intro de Warren y Clara en el home muestra el splash con marca al entrar al dashboard (antes de que pinte la cartera) y luego la animación — arranque tipo app en vez de dashboard y después splash.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.216",
+    date: "2026-08-23",
+    title: "Admin plan override vs IdP sync",
+    titleTranslations: {
+      es: "Override de plan admin vs sincronización IdP",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Admin plan changes (e.g. Folio → Trefolio Pro) now sync to the unified IdP and are no longer overwritten when the user opens Profile or refreshes the session.",
+        translations: {
+          es: "Los cambios de plan desde admin (p. ej. Folio → Trefolio Pro) se sincronizan con el IdP unificado y ya no se revierten al abrir Perfil o refrescar la sesión.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.215",
+    date: "2026-08-23",
+    title: "Warren chat history persists",
+    titleTranslations: {
+      es: "Warren recuerda el chat",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Warren web chat now resumes your last conversation when you close and reopen the drawer, switch pages, or refresh — scoped per portfolio.",
+        translations: {
+          es: "El chat web de Warren retoma la última conversación al cerrar y abrir el panel, cambiar de página o refrescar — por cartera.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.214",
+    date: "2026-08-23",
+    title: "Warren trade guidance cards",
+    titleTranslations: {
+      es: "Warren — guía de compra/venta",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren no longer proposes “Add cash” with €0 when you ask about selling or trimming a position. Buy/sell/trim questions now show an informational guidance card grounded in price, valuation, and position size — trefolio does not execute trades.",
+        translations: {
+          es: "Warren ya no propone «Añadir efectivo» con 0 € cuando preguntas por vender o reducir una posición. Las preguntas de compra/venta/recorte muestran una tarjeta informativa basada en precio, valoración y tamaño de posición — trefolio no ejecuta operaciones.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.213",
     date: "2026-08-23",
     title: "Warren valuation P/E fix",

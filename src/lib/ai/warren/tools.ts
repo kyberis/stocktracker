@@ -27,6 +27,7 @@ import type {
   SummaryCardData,
   MoatSummaryCardData,
   StockPickCardData,
+  TradeGuidanceCardData,
 } from "@/components/chat-cards/types";
 import { searchKnowledge } from "./knowledge";
 import {
@@ -447,6 +448,41 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
       },
     }),
 
+    renderTradeGuidanceCard: tool({
+      description:
+        "Display an informational buy/sell/trim/hold guidance card grounded in price and fundamentals. Use when the user asks whether or how to buy, sell, trim, or reduce a position — trefolio does NOT execute trades. Call analyzeValuation + getQuote + listHoldings first so currentPrice, valuationLabel, upsideToTargetPct, and suggestedShares/amount are real numbers. Never use proposeAddCash or proposeRemoveHolding for this.",
+      inputSchema: z.object({
+        ticker: z.string().min(1).max(20),
+        name: z.string().optional(),
+        action: z.enum(["buy", "sell", "trim", "hold"]),
+        currentPrice: z.number().positive().optional(),
+        currency: z.string().optional(),
+        changePct: z.number().optional(),
+        valuationLabel: z.enum(["expensive", "fair", "cheap"]).optional(),
+        upsideToTargetPct: z.number().optional(),
+        suggestedShares: z.number().positive().optional(),
+        suggestedAmount: z.number().positive().optional(),
+        rationale: z.string().min(1).max(400),
+      }),
+      execute: async (input) => {
+        const data: TradeGuidanceCardData = {
+          ticker: input.ticker.toUpperCase(),
+          name: input.name,
+          action: input.action,
+          currentPrice: input.currentPrice,
+          currency: input.currency || ctx.baseCurrency,
+          changePct: input.changePct,
+          valuationLabel: input.valuationLabel,
+          upsideToTargetPct: input.upsideToTargetPct,
+          suggestedShares: input.suggestedShares,
+          suggestedAmount: input.suggestedAmount,
+          rationale: input.rationale,
+        };
+        ctx.emitPart({ kind: "tradeGuidance", data });
+        return { rendered: "trade-guidance", ticker: data.ticker, action: data.action };
+      },
+    }),
+
     renderMoatSummaryCard: tool({
       description:
         "Display a compact moat evaluation card (score %, verdict, P/E, criteria pass count). Use after getMoatEvaluation or when summarizing a company's competitive moat.",
@@ -850,7 +886,8 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
     }),
 
     proposeAddCash: tool({
-      description: "Propose adding a cash entry (or other manual asset like savings/pension/real estate).",
+      description:
+        "Propose adding a cash entry the user already holds (savings, pension, real estate, or manual cash). ONLY when the user explicitly asks to record cash in their portfolio. NEVER for simulated sale proceeds, trade ideas, or buy/sell guidance — use renderTradeGuidanceCard for that.",
       inputSchema: z.object({
         name: z.string().min(1).max(100),
         amountEUR: z.number().positive(),
@@ -859,6 +896,14 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
       }),
       execute: async (input) => {
         if (ctx.isDemo) return demoBlocked("add cash");
+        const saleLike = /\b(venta|sale|sold|vender|sell|proceeds|liquidaci[oó]n)\b/i.test(input.name);
+        if (saleLike) {
+          return {
+            error: "wrong_tool",
+            message:
+              "Do not use proposeAddCash for sales. Call renderTradeGuidanceCard with analyzeValuation + getQuote + listHoldings for buy/sell/trim analysis.",
+          };
+        }
         const id = randomUUID();
         ctx.emitProposal({
           id,

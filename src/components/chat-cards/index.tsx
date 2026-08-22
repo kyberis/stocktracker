@@ -15,6 +15,7 @@ export { default as HoldingCard } from "./HoldingCard";
 export { default as AllocationCard } from "./AllocationCard";
 export { default as SummaryCard } from "./SummaryCard";
 export { default as StockPickCard } from "./StockPickCard";
+export { default as TradeGuidanceCard } from "./TradeGuidanceCard";
 export * from "./types";
 
 export function ChatCardRenderer({

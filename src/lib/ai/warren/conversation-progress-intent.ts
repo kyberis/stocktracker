@@ -53,8 +53,9 @@ export function buildConversationProgressAppendix(
     "TASK OVERRIDE — User accepted a prior offer / asked to proceed:",
     "- Do NOT call `analyzeValuation` again unless they asked for fresh data or new tickers.",
     "- Use valuation numbers already stated in this thread.",
-    "- Deliver the requested next step NOW (rank by upside, compare candidates, decision framework).",
+    "- Deliver the requested next step NOW (rank by upside, compare candidates, decision framework, or trade guidance card).",
     "- Call `getQuote` for current prices if `currentPrice` / `upsideToTargetPct` are missing; compute upside vs analystTargetPrice when available.",
+    "- For buy/sell/trim proposals: call `listHoldings` for position size, then `renderTradeGuidanceCard` with real suggestedShares/suggestedAmount — NEVER `proposeAddCash` for sale proceeds.",
     "- Do NOT repeat the expensive/fair/cheap grouping from the previous turn.",
     "- Do NOT repeat the same follow-up question you already asked.",
   ].join("\n");

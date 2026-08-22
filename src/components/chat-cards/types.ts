@@ -46,6 +46,21 @@ export interface MoatSummaryCardData {
   sector?: string;
 }
 
+/** Informational buy/sell/trim guidance — not an executable trade proposal. */
+export interface TradeGuidanceCardData {
+  ticker: string;
+  name?: string;
+  action: "buy" | "sell" | "trim" | "hold";
+  currentPrice?: number;
+  currency?: string;
+  changePct?: number;
+  valuationLabel?: "expensive" | "fair" | "cheap";
+  upsideToTargetPct?: number;
+  suggestedShares?: number;
+  suggestedAmount?: number;
+  rationale: string;
+}
+
 export type ChatCardKind = "holding" | "allocation" | "summary" | "stock_pick" | "moat_summary";
 
 export function tryParseChatCard<T>(content: string): T | null {
