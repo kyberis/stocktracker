@@ -1,21 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useAgentIntroDismissWhenReady } from "@/hooks/useAgentIntroDismissWhenReady";
 import { useI18n } from "@/lib/i18n";
 import styles from "./agent-intro.module.css";
 import {
   AgentAvatarImage,
+  AgentIntroLoadingBlock,
   AgentIntroLogoBlock,
   overlayShellClass,
   type IntroPhase,
 } from "./AgentIntroShared";
 
-const PHASE_MS: Record<Exclude<IntroPhase, "idle" | "done">, number> = {
+const PHASE_MS: Record<Exclude<IntroPhase, "idle" | "done" | "reveal">, number> = {
   enter: 800,
   present: 1000,
   merge: 800,
-  reveal: 600,
 };
 
 function nextPhase(phase: IntroPhase): IntroPhase {
@@ -23,65 +24,67 @@ function nextPhase(phase: IntroPhase): IntroPhase {
   if (phase === "enter") return "present";
   if (phase === "present") return "merge";
   if (phase === "merge") return "reveal";
-  if (phase === "reveal") return "done";
-  return "done";
+  return "reveal";
 }
 
 export default function AgentIntroConvergence({
   playKey = 0,
   contained = false,
+  dashboardReady,
   onComplete,
   onSkip,
 }: {
   playKey?: number;
   contained?: boolean;
+  dashboardReady: boolean;
   onComplete: () => void;
   onSkip: () => void;
 }) {
   const { t } = useI18n();
   const [phase, setPhase] = useState<IntroPhase>("idle");
   const [mounted, setMounted] = useState(false);
-  const finishedRef = useRef(false);
+
+  const { fading, dismissed } = useAgentIntroDismissWhenReady({
+    playKey,
+    dashboardReady,
+    animationReady: phase === "reveal",
+    onComplete,
+  });
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    finishedRef.current = false;
     setPhase("enter");
   }, [playKey]);
 
   useEffect(() => {
-    if (phase === "idle") return;
-    if (phase === "done") {
-      if (!finishedRef.current) {
-        finishedRef.current = true;
-        onComplete();
-      }
-      return;
-    }
+    if (phase !== "enter" && phase !== "present" && phase !== "merge") return;
+
     const timer = window.setTimeout(() => {
       setPhase((current) => nextPhase(current));
     }, PHASE_MS[phase]);
-    return () => window.clearTimeout(timer);
-  }, [phase, onComplete]);
 
-  const overlayVisible = phase !== "done";
+    return () => window.clearTimeout(timer);
+  }, [phase]);
+
+  const overlayVisible = !dismissed;
+  const waitingForDashboard = phase === "reveal" && !dashboardReady;
 
   const stageClass = [
     styles.convergenceStage,
     phase === "enter" ? styles.convergencePhaseEnter : "",
     phase === "present" ? styles.convergencePhasePresent : "",
     phase === "merge" || phase === "reveal" ? styles.convergencePhaseMerge : "",
-    phase === "reveal" || phase === "done" ? styles.convergencePhaseReveal : "",
+    phase === "reveal" ? styles.convergencePhaseReveal : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   const panel = (
     <div
-      className={overlayShellClass(contained, !overlayVisible)}
+      className={overlayShellClass(contained, fading || dismissed)}
       role="dialog"
       aria-modal="true"
       aria-label={t("agentIntroConvergenceAria")}
@@ -118,6 +121,7 @@ export default function AgentIntroConvergence({
 
         <div className={styles.convergenceCenter}>
           <AgentIntroLogoBlock tagline={t("agentIntroLogoTagline")} />
+          <AgentIntroLoadingBlock label={t("agentIntroLoading")} visible={waitingForDashboard} />
         </div>
       </div>
     </div>

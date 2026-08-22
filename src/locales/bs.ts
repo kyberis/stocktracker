@@ -1020,6 +1020,7 @@ const bs: TranslationStrings = {
   agentIntroBriefingLogoTagline: "Warren and Clara, coordinated on trefolio",
   agentIntroConvergenceAria: "Animated intro — Convergence",
   agentIntroBriefingAria: "Animated intro — Team briefing",
+  agentIntroLoading: "Loading your portfolio2026",
   idpUnifiedBridgeHeadingSignup: "OneLogin registration",
   idpUnifiedBridgeBodyLogin:
     "You are being redirected to OneLogin at user.trefolio.com. The same sign-in works across trefolio, Clara, and Will.",

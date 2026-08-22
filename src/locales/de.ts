@@ -3024,6 +3024,7 @@ const de: TranslationStrings = {
   agentIntroBriefingLogoTagline: "Warren and Clara, coordinated on trefolio",
   agentIntroConvergenceAria: "Animated intro — Convergence",
   agentIntroBriefingAria: "Animated intro — Team briefing",
+  agentIntroLoading: "Loading your portfolio2026",
   idpUnifiedBridgeHeadingLogin: "OneLogin sign-in",
   idpUnifiedBridgeHeadingSignup: "OneLogin registration",
   idpUnifiedBridgeBodyLogin:

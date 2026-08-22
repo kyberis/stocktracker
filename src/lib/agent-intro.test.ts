@@ -2,8 +2,10 @@ import { describe, expect, it, beforeEach, vi } from "vitest";
 import {
   AGENT_INTRO_EXPERIMENT_KEY,
   hasAgentIntroShownThisSession,
+  isAgentIntroEngagementReady,
   isAgentIntroTreatment,
   markAgentIntroShownThisSession,
+  resetAgentIntroEngagementSession,
 } from "./agent-intro";
 
 describe("agent-intro session", () => {
@@ -29,6 +31,11 @@ describe("agent-intro session", () => {
     expect(hasAgentIntroShownThisSession()).toBe(false);
     markAgentIntroShownThisSession();
     expect(hasAgentIntroShownThisSession()).toBe(true);
+  });
+
+  it("resets engagement session for each intro visit", () => {
+    resetAgentIntroEngagementSession();
+    expect(isAgentIntroEngagementReady()).toBe(false);
   });
 
   it("recognizes treatment variants", () => {

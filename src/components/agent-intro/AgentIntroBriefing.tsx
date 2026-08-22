@@ -1,23 +1,24 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useAgentIntroDismissWhenReady } from "@/hooks/useAgentIntroDismissWhenReady";
 import { useI18n } from "@/lib/i18n";
 import styles from "./agent-intro.module.css";
 import {
   AgentAvatarImage,
+  AgentIntroLoadingBlock,
   AgentIntroLogoBlock,
   overlayShellClass,
 } from "./AgentIntroShared";
 
-type BriefPhase = "idle" | "chat" | "bridge" | "merge" | "reveal" | "done";
+type BriefPhase = "idle" | "chat" | "bridge" | "merge" | "reveal";
 
-const PHASE_MS: Record<Exclude<BriefPhase, "idle" | "done">, number> = {
+const PHASE_MS: Record<Exclude<BriefPhase, "idle" | "reveal">, number> = {
   chat: 1200,
   bridge: 1200,
   merge: 800,
-  reveal: 800,
 };
 
 function nextPhase(phase: BriefPhase): BriefPhase {
@@ -25,68 +26,69 @@ function nextPhase(phase: BriefPhase): BriefPhase {
   if (phase === "chat") return "bridge";
   if (phase === "bridge") return "merge";
   if (phase === "merge") return "reveal";
-  if (phase === "reveal") return "done";
-  return "done";
+  return "reveal";
 }
 
 export default function AgentIntroBriefing({
   playKey = 0,
   contained = false,
+  dashboardReady,
   onComplete,
   onSkip,
 }: {
   playKey?: number;
   contained?: boolean;
+  dashboardReady: boolean;
   onComplete: () => void;
   onSkip: () => void;
 }) {
   const { t } = useI18n();
   const [phase, setPhase] = useState<BriefPhase>("idle");
   const [mounted, setMounted] = useState(false);
-  const finishedRef = useRef(false);
+
+  const { fading, dismissed } = useAgentIntroDismissWhenReady({
+    playKey,
+    dashboardReady,
+    animationReady: phase === "reveal",
+    onComplete,
+  });
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    finishedRef.current = false;
     setPhase("chat");
   }, [playKey]);
 
   useEffect(() => {
-    if (phase === "idle") return;
-    if (phase === "done") {
-      if (!finishedRef.current) {
-        finishedRef.current = true;
-        onComplete();
-      }
-      return;
-    }
+    if (phase === "idle" || phase === "reveal") return;
+
     const timer = window.setTimeout(() => {
       setPhase((current) => nextPhase(current));
     }, PHASE_MS[phase]);
-    return () => window.clearTimeout(timer);
-  }, [phase, onComplete]);
 
-  const overlayVisible = phase !== "done";
+    return () => window.clearTimeout(timer);
+  }, [phase]);
+
+  const overlayVisible = !dismissed;
+  const waitingForDashboard = phase === "reveal" && !dashboardReady;
 
   const stageClass = [
     styles.briefingStage,
     phase !== "idle" ? styles.briefingPhaseChat : "",
-    phase === "bridge" || phase === "merge" || phase === "reveal" || phase === "done"
+    phase === "bridge" || phase === "merge" || phase === "reveal"
       ? styles.briefingPhaseBridge
       : "",
-    phase === "merge" || phase === "reveal" || phase === "done" ? styles.briefingPhaseMerge : "",
-    phase === "reveal" || phase === "done" ? styles.briefingPhaseReveal : "",
+    phase === "merge" || phase === "reveal" ? styles.briefingPhaseMerge : "",
+    phase === "reveal" ? styles.briefingPhaseReveal : "",
   ]
     .filter(Boolean)
     .join(" ");
 
-  const overlayClass = overlayShellClass(
-    contained,
-    !overlayVisible,
-  ).concat(phase === "reveal" || phase === "done" ? ` ${styles.briefingOverlayReveal}` : "");
+  const overlayClass = overlayShellClass(contained, fading || dismissed).concat(
+    phase === "reveal" ? ` ${styles.briefingOverlayReveal}` : "",
+  );
 
   const panel = (
     <div className={overlayClass} role="dialog" aria-modal="true" aria-label={t("agentIntroBriefingAria")}>
@@ -110,6 +112,7 @@ export default function AgentIntroBriefing({
 
         <div className={styles.briefingLogoWrap}>
           <AgentIntroLogoBlock tagline={t("agentIntroBriefingLogoTagline")} />
+          <AgentIntroLoadingBlock label={t("agentIntroLoading")} visible={waitingForDashboard} />
         </div>
       </div>
 

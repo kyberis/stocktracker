@@ -12,6 +12,16 @@
   position: fixed;
   inset: 0;
   z-index: 250;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding:
+    env(safe-area-inset-top, 0)
+    env(safe-area-inset-right, 0)
+    env(safe-area-inset-bottom, 0)
+    env(safe-area-inset-left, 0);
 }
 
 .containedOverlay {
@@ -27,7 +37,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
   padding: 1.5rem;
+  box-sizing: border-box;
   background:
     radial-gradient(circle at 20% 20%, rgb(16 185 129 / 0.12), transparent 45%),
     radial-gradient(circle at 80% 30%, rgb(245 158 11 / 0.12), transparent 42%),
@@ -165,6 +179,45 @@
 .logoTagline {
   font-size: 0.8125rem;
   color: rgb(148 163 184);
+}
+
+.loadingBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 420ms ease,
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.loadingBlockVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.loadingSpinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 2px solid rgb(16 185 129 / 0.22);
+  border-top-color: rgb(16 185 129);
+  animation: agentIntroSpin 0.8s linear infinite;
+}
+
+.loadingLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(203 213 225 / 0.92);
+}
+
+@keyframes agentIntroSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── Version A: Convergence ── */
@@ -406,5 +459,10 @@
   .convergenceWarren,
   .convergenceClara {
     transition: none !important;
+  }
+
+  .loadingSpinner {
+    animation: none !important;
+    border-top-color: rgb(16 185 129 / 0.55);
   }
 }

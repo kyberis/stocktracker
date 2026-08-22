@@ -194,7 +194,7 @@ function AdminExperimentPreviewInner() {
             <AgentIntroGate
               isEmpty={false}
               demoMode={false}
-              isReady
+              dashboardReady
               contained
               forceVariant={variantParam === "briefing" ? "briefing" : "convergence"}
             />

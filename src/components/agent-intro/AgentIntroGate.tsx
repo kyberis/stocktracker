@@ -4,11 +4,10 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AGENT_INTRO_EXPERIMENT_KEY,
-  hasAgentIntroShownThisSession,
   isAgentIntroTreatment,
   markAgentIntroEngagementReady,
-  markAgentIntroShownThisSession,
   prefersReducedMotionIntro,
+  resetAgentIntroEngagementSession,
 } from "@/lib/agent-intro";
 import { trackExperimentEvent, useExperiment } from "@/lib/use-experiment";
 
@@ -17,47 +16,37 @@ const AgentIntroBriefing = dynamic(() => import("./AgentIntroBriefing"), { ssr: 
 
 /**
  * A/B gate for Warren + Clara home intro (`agent_intro` experiment).
- * Control: no overlay. Treatments: once per session on `/`.
+ * Control: no overlay. Treatments: full-screen intro on every home visit until the dashboard loads.
  */
 export default function AgentIntroGate({
   isEmpty,
   demoMode,
-  isReady,
+  dashboardReady,
   forceVariant,
   contained = false,
   onIntroDismissed,
 }: {
   isEmpty: boolean;
   demoMode: boolean;
-  isReady: boolean;
+  dashboardReady: boolean;
   forceVariant?: "convergence" | "briefing";
   contained?: boolean;
   onIntroDismissed?: () => void;
 }) {
   const experiment = useExperiment(AGENT_INTRO_EXPERIMENT_KEY, {
-    enabled: !demoMode && isReady && !forceVariant,
+    enabled: !demoMode && !forceVariant,
     forceVariant,
   });
 
-  const [sessionShown, setSessionShown] = useState(true);
   const [dismissed, setDismissed] = useState(false);
   const [playKey, setPlayKey] = useState(0);
-
-  useEffect(() => {
-    if (forceVariant) {
-      setSessionShown(false);
-      return;
-    }
-    setSessionShown(hasAgentIntroShownThisSession());
-  }, [forceVariant]);
 
   const dest = isEmpty ? "empty" : "portfolio";
   const variant = forceVariant ?? experiment.variant;
   const treatment = isAgentIntroTreatment(variant);
 
   const shouldShow = useMemo(() => {
-    if (demoMode || !isReady || dismissed) return false;
-    if (!forceVariant && sessionShown) return false;
+    if (demoMode || dismissed) return false;
     if (!forceVariant && prefersReducedMotionIntro()) return false;
 
     if (forceVariant) return true;
@@ -73,17 +62,18 @@ export default function AgentIntroGate({
     experiment.previewing,
     experiment.status,
     forceVariant,
-    isReady,
-    sessionShown,
     treatment,
   ]);
 
+  useEffect(() => {
+    if (shouldShow) {
+      resetAgentIntroEngagementSession();
+      setPlayKey((k) => k + 1);
+    }
+  }, [shouldShow, variant]);
+
   const finish = useCallback(
     (outcome: "completed" | "skipped") => {
-      if (!forceVariant) {
-        markAgentIntroShownThisSession();
-        setSessionShown(true);
-      }
       markAgentIntroEngagementReady();
       onIntroDismissed?.();
       setDismissed(true);
@@ -93,12 +83,8 @@ export default function AgentIntroGate({
         dest,
       });
     },
-    [dest, forceVariant, onIntroDismissed, variant],
+    [dest, onIntroDismissed, variant],
   );
-
-  useEffect(() => {
-    if (shouldShow) setPlayKey((k) => k + 1);
-  }, [shouldShow, variant]);
 
   if (!shouldShow) return null;
 
@@ -108,6 +94,7 @@ export default function AgentIntroGate({
         key={`briefing-${playKey}`}
         playKey={playKey}
         contained={contained}
+        dashboardReady={dashboardReady}
         onComplete={() => finish("completed")}
         onSkip={() => finish("skipped")}
       />
@@ -120,6 +107,7 @@ export default function AgentIntroGate({
         key={`convergence-${playKey}`}
         playKey={playKey}
         contained={contained}
+        dashboardReady={dashboardReady}
         onComplete={() => finish("completed")}
         onSkip={() => finish("skipped")}
       />
