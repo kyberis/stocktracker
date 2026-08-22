@@ -1,5 +1,7 @@
 "use client";
 
+import { TRAFFIC_SCREEN_HEADER, normalizeClientPath } from "@/lib/traffic/normalize";
+
 let loginRedirectStarted = false;
 let navigateToLogin = (href: string) => window.location.replace(href);
 const PUBLIC_CLIENT_ROUTES = new Set([
@@ -93,8 +95,26 @@ export function maybeRedirectToLogin(response: Response, input: RequestInfo | UR
   return redirectToLogin();
 }
 
+function isApiRequest(input: RequestInfo | URL): boolean {
+  const pathname = getRequestPathname(input);
+  return Boolean(pathname?.startsWith("/api/"));
+}
+
+function withTrafficScreenHeader(input: RequestInfo | URL, init?: RequestInit): RequestInit | undefined {
+  if (typeof window === "undefined" || !isApiRequest(input)) return init;
+
+  const screen = normalizeClientPath(window.location.pathname);
+  const headers = new Headers(
+    init?.headers ??
+      (typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined),
+  );
+  headers.set(TRAFFIC_SCREEN_HEADER, screen);
+
+  return { ...init, headers };
+}
+
 export async function fetchWithAuthRedirect(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const response = await fetch(input, init);
+  const response = await fetch(input, withTrafficScreenHeader(input, init));
   maybeRedirectToLogin(response, input);
   return response;
 }

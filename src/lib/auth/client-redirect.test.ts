@@ -65,6 +65,18 @@ describe("client auth redirect", () => {
     expect(navigateSpy).toHaveBeenCalledWith("/login?redirect=%2Fdashboard%3Ftab%3Dholdings%23chart");
   });
 
+  it("fetchWithAuthRedirect sends X-Trefolio-Screen for API calls", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    globalThis.fetch = fetchMock;
+
+    await fetchWithAuthRedirect("/api/holdings");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const headers = new Headers(init.headers);
+    expect(headers.get("x-trefolio-screen")).toBe("screen:dashboard");
+  });
+
   it("does not redirect on public demo route even when an api returns 401", () => {
     window.history.replaceState({}, "", "/demo");
 
