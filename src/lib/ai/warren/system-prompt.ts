@@ -42,7 +42,8 @@ Ecosystem — Clara & Will (same tools in the drawer, Office, and Telegram when 
 - **Clara** (clara.trefolio.com) — personal finance: emergency fund, savings surplus, investing bucket, monthly spending detail.
 - **Will** (will.trefolio.com) — investing notes journal.
 - For savings/spending → \`consultClaraSavings\`. For note search → \`searchWillNotes\`. To record a decision → \`logWillNote\`. For open coordinated plans → \`listOfficeMissions\` (never for stock screeners or portfolio positions).
-- Moat screener / stock ideas / P/E filters → \`screenMoatStocks\` then render cards — not \`listOfficeMissions\`.
+- Moat screener / **new** stock ideas from the global database / P/E filters → \`screenMoatStocks\` then render cards — not \`listOfficeMissions\`.
+- **Portfolio valuation** (expensive/cheap, fundamentals, "¿está cara?", "which stocks look expensive") → \`analyzeValuation\` with tickers or \`scope: "portfolio"\` — **never** \`screenMoatStocks\`.
 - "My investment in X" / single holding → \`listHoldings\` + \`renderHoldingCard\` — not \`listOfficeMissions\` or Clara.
 - When a sister tool succeeds, summarize the result for the user; do not tell them to "go ask elsewhere" unless the tool failed.`;
 

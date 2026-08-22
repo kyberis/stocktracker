@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.201",
+    date: "2026-08-22",
+    title: "Warren valuation routing fix",
+    titleTranslations: {
+      es: "Corrección de enrutado de valoración en Warren",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren now routes 'which stocks look expensive/cheap' to portfolio valuation (analyzeValuation) instead of the global moat screener, with server-side prefetch and safer error handling when data cannot load.",
+        translations: {
+          es: "Warren enruta «qué acciones parecen caras/baratas» a la valoración de cartera (analyzeValuation) en lugar del screener moat global, con prefetch en servidor y mejor manejo de errores cuando no puede cargar datos.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.200",
     date: "2026-08-22",
     title: "Relink Warren on Telegram from Profile",
