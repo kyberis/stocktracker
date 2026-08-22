@@ -20,6 +20,8 @@ import ProfileMcpSection from "@/components/profile/ProfileMcpSection";
 import { COUNTRIES } from "@/lib/countries";
 import { resolveBillingPortalHref } from "@/lib/idp/config";
 import { useCommerceEnabled } from "@/lib/commerce";
+import { useWidgetTokens } from "@/hooks/use-widget-tokens";
+import { WidgetTokenList } from "@/components/WidgetTokenList";
 
 const PROFILE_TABS = ["account", "mcp", "subscription", "notifications", "portfolios", "referrals", "social", "devices"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
@@ -959,10 +961,15 @@ export default function ProfilePage() {
   const [googleMsg, setGoogleMsg] = useState("");
   const [googleError, setGoogleError] = useState("");
 
-  const [widgetHasToken, setWidgetHasToken] = useState(false);
-  const [widgetToken, setWidgetToken] = useState("");
+  const {
+    tokens: widgetTokens,
+    latestToken: widgetToken,
+    hasToken: widgetHasToken,
+    loading: widgetLoading,
+    generate: handleGenerateWidgetToken,
+    revoke: handleRevokeWidgetToken,
+  } = useWidgetTokens();
   const [widgetCopied, setWidgetCopied] = useState(false);
-  const [widgetLoading, setWidgetLoading] = useState(false);
 
   const [deviceHasPasskey, setDeviceHasPasskey] = useState(false);
   const [deviceLinked, setDeviceLinked] = useState(false);
@@ -1044,10 +1051,6 @@ export default function ProfilePage() {
   }, [user]);
 
   useEffect(() => {
-    fetch("/api/widget-token")
-      .then((r) => r.json())
-      .then((d) => setWidgetHasToken(!!d.hasToken))
-      .catch((err) => console.error("[ProfilePage] request failed:", err));
     fetch("/api/device-passkey")
       .then((r) => r.json())
       .then((d) => {
@@ -1143,30 +1146,8 @@ export default function ProfilePage() {
     } catch { /* ignore */ }
   }, [renameValue, fetchPasskeys, t]);
 
-  const handleGenerateToken = useCallback(async () => {
-    setWidgetLoading(true);
-    try {
-      const res = await fetch("/api/widget-token", { method: "POST" });
-      const data = await res.json();
-      if (data.token) {
-        setWidgetToken(data.token);
-        setWidgetHasToken(true);
-      }
-    } catch { /* ignore */ }
-    setWidgetLoading(false);
-  }, []);
-
-  const handleRevokeToken = useCallback(async () => {
-    setWidgetLoading(true);
-    try {
-      await fetch("/api/widget-token", { method: "DELETE" });
-      setWidgetHasToken(false);
-      setWidgetToken("");
-    } catch { /* ignore */ }
-    setWidgetLoading(false);
-  }, []);
-
   const handleCopyToken = useCallback(() => {
+    if (!widgetToken) return;
     navigator.clipboard.writeText(widgetToken);
     setWidgetCopied(true);
     setTimeout(() => setWidgetCopied(false), 2000);
@@ -2270,34 +2251,34 @@ export default function ProfilePage() {
 
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              href={widgetToken ? `/widget/setup?token=${encodeURIComponent(widgetToken)}` : "/widget/setup"}
+              href="/widget/setup"
               className="btn-primary text-sm inline-flex items-center gap-1.5"
             >
               {t("widgetSetupCta")}
             </Link>
             <button
-              onClick={handleGenerateToken}
+              onClick={() => handleGenerateWidgetToken()}
               disabled={widgetLoading}
               className="btn-secondary text-sm disabled:opacity-40"
             >
-              {widgetLoading ? "Generating..." : widgetHasToken ? "Regenerate Token" : "Generate Token"}
+              {widgetLoading ? "Generating..." : widgetHasToken ? "Generate New Token" : "Generate Token"}
             </button>
             {widgetHasToken && (
               <button
-                onClick={handleRevokeToken}
+                onClick={() => handleRevokeWidgetToken()}
                 disabled={widgetLoading}
                 className="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-40"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                Revoke
+                Revoke All
               </button>
             )}
           </div>
 
           {widgetToken ? (
             <div className="space-y-2">
-              <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                Copy this token now &mdash; it won&apos;t be shown again.
+              <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                Latest valid token — used automatically when you copy the script from Widget setup.
               </p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg font-mono break-all">
@@ -2315,10 +2296,16 @@ export default function ProfilePage() {
           ) : (
             widgetHasToken && (
               <p className="text-xs text-gray-500 dark:text-slate-400">
-                A widget token is active. Open setup to copy a ready script, or regenerate the token.
+                Active tokens are listed below. Open Widget setup to copy a script with the latest valid token.
               </p>
             )
           )}
+
+          <WidgetTokenList
+            tokens={widgetTokens}
+            onRevoke={(id) => handleRevokeWidgetToken(id)}
+            disabled={widgetLoading}
+          />
         </div>
 
         {/* Device Passkey (trefolio Leaf) */}

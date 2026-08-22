@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Copy,
@@ -15,6 +15,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
+import { useWidgetTokens } from "@/hooks/use-widget-tokens";
+import { WidgetTokenList } from "@/components/WidgetTokenList";
 
 type ScriptVariant = "portfolio" | "movers" | "byType";
 
@@ -56,28 +58,21 @@ export default function WidgetSetupPage() {
 
 function WidgetSetupContent() {
   const searchParams = useSearchParams();
+  const tokenFromUrl = searchParams.get("token");
+  const {
+    tokens,
+    latestToken: widgetToken,
+    hasToken: widgetHasToken,
+    loading: widgetLoading,
+    generate: handleGenerateToken,
+    revoke: handleRevokeToken,
+  } = useWidgetTokens(tokenFromUrl);
   const [copiedScript, setCopiedScript] = useState(false);
   const [activeTab, setActiveTab] = useState<"ios" | "android">("ios");
   const [scriptVariant, setScriptVariant] = useState<ScriptVariant>("portfolio");
   const [scriptPreview, setScriptPreview] = useState("");
   const [scriptBody, setScriptBody] = useState("");
   const [scriptLoading, setScriptLoading] = useState(false);
-  const [widgetToken, setWidgetToken] = useState("");
-  const [widgetHasToken, setWidgetHasToken] = useState(false);
-  const [widgetLoading, setWidgetLoading] = useState(false);
-
-  useEffect(() => {
-    const tokenFromUrl = searchParams.get("token");
-    if (tokenFromUrl) {
-      setWidgetToken(tokenFromUrl);
-      setWidgetHasToken(true);
-    } else {
-      fetch("/api/widget-token")
-        .then((r) => r.json())
-        .then((d) => setWidgetHasToken(!!d.hasToken))
-        .catch(() => {});
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,29 +99,6 @@ function WidgetSetupContent() {
       cancelled = true;
     };
   }, [scriptVariant]);
-
-  const handleGenerateToken = useCallback(async () => {
-    setWidgetLoading(true);
-    try {
-      const res = await fetch("/api/widget-token", { method: "POST" });
-      const data = await res.json();
-      if (data.token) {
-        setWidgetToken(data.token);
-        setWidgetHasToken(true);
-      }
-    } catch { /* ignore */ }
-    setWidgetLoading(false);
-  }, []);
-
-  const handleRevokeToken = useCallback(async () => {
-    setWidgetLoading(true);
-    try {
-      await fetch("/api/widget-token", { method: "DELETE" });
-      setWidgetHasToken(false);
-      setWidgetToken("");
-    } catch { /* ignore */ }
-    setWidgetLoading(false);
-  }, []);
 
   const handleCopyScript = async () => {
     let body = scriptBody;
@@ -244,8 +216,8 @@ function WidgetSetupContent() {
 
                 {widgetToken ? (
                   <div className="space-y-2">
-                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                      Token ready &mdash; it&apos;s already embedded in the script below.
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                      Latest valid token is embedded automatically when you copy the script below.
                     </p>
                     <code className="block text-xs bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg font-mono break-all">
                       {widgetToken}
@@ -255,7 +227,7 @@ function WidgetSetupContent() {
                   <div className="space-y-2">
                     {widgetHasToken ? (
                       <p className="text-xs text-gray-500 dark:text-slate-400">
-                        A widget token is active. Generate a new one to get a copy-ready script, or revoke it.
+                        Active tokens are listed below. Generate a new token to get a copy-ready script, or revoke old ones individually.
                       </p>
                     ) : (
                       <p className="text-xs text-gray-500 dark:text-slate-400">
@@ -265,23 +237,29 @@ function WidgetSetupContent() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-2">
+                <WidgetTokenList
+                  tokens={tokens}
+                  onRevoke={(id) => handleRevokeToken(id)}
+                  disabled={widgetLoading}
+                />
+
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
-                    onClick={handleGenerateToken}
+                    onClick={() => handleGenerateToken()}
                     disabled={widgetLoading}
                     className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${widgetLoading ? "animate-spin" : ""}`} />
-                    {widgetHasToken ? "Regenerate Token" : "Generate Token"}
+                    {widgetHasToken ? "Generate New Token" : "Generate Token"}
                   </button>
                   {widgetHasToken && (
                     <button
-                      onClick={handleRevokeToken}
+                      onClick={() => handleRevokeToken()}
                       disabled={widgetLoading}
                       className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5 text-red-600 dark:text-red-400"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      Revoke
+                      Revoke All
                     </button>
                   )}
                 </div>
@@ -364,7 +342,7 @@ function WidgetSetupContent() {
                     className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:underline disabled:opacity-50"
                   >
                     {copiedScript ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedScript ? "Copied!" : widgetToken ? "Copy Script (with token)" : "Copy Script"}
+                    {copiedScript ? "Copied!" : widgetToken ? "Copy Script (latest token)" : "Copy Script"}
                   </button>
                 </div>
                 <pre className="text-[10px] leading-relaxed text-slate-600 dark:text-slate-400 font-mono overflow-x-auto max-h-40 scrollbar-thin">

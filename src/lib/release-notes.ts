@@ -59,6 +59,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "improvement",
+        text: "Widget tokens are now reusable — you can keep multiple active tokens, revoke them individually, and copy Scriptable scripts with the latest valid token automatically embedded.",
+        translations: {
+          es: "Los tokens de widget ahora son reutilizables: puedes mantener varios tokens activos, revocarlos individualmente y copiar scripts de Scriptable con el último token válido incluido automáticamente.",
+        },
+      },
+      {
         type: "feature",
         text: "A new Scriptable home-screen widget shows portfolio value and day change per asset type — Stocks, ETFs, Crypto, Funds, and Fixed return — with Small, Medium, and Large layouts. Copy it from Widget setup. Informational only — not investment advice.",
         translations: {
