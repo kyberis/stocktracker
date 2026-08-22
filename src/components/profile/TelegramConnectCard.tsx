@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useI18n } from "@/lib/i18n";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useI18n, type TranslationKey } from "@/lib/i18n";
 
 interface LinkStatus {
   enabled: boolean;
@@ -20,9 +20,9 @@ interface GeneratedLink {
 }
 
 /**
- * Card on the profile page that lets the user connect or disconnect their
- * Telegram account from Warren. Renders nothing if the platform feature flag
- * is off, so we don't advertise an unconfigured integration.
+ * Card on the profile page that lets the user connect, relink, or disconnect
+ * their Telegram account from Warren. Renders nothing if the platform feature
+ * flag is off, so we don't advertise an unconfigured integration.
  */
 export default function TelegramConnectCard() {
   const { t } = useI18n();
@@ -30,73 +30,126 @@ export default function TelegramConnectCard() {
   const [link, setLink] = useState<GeneratedLink | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [linkPending, setLinkPending] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const relinkBaselineRef = useRef<string | null>(null);
 
-  const refresh = useCallback(async () => {
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    setLinkPending(false);
+  }, []);
+
+  const refresh = useCallback(async (): Promise<LinkStatus | null> => {
     try {
       const res = await fetch("/api/integrations/telegram/link", { method: "GET" });
       if (!res.ok) {
-        setStatus({
+        const disabled: LinkStatus = {
           enabled: false,
           botUsername: null,
           linked: false,
           linkedAt: null,
           chatIdMasked: null,
           languageCode: null,
-        });
-        return;
+        };
+        setStatus(disabled);
+        return disabled;
       }
-      setStatus((await res.json()) as LinkStatus);
+      const next = (await res.json()) as LinkStatus;
+      setStatus(next);
+      return next;
     } catch {
-      // ignore — leave the previous status if any
+      return null;
     }
   }, []);
 
   useEffect(() => {
     void refresh();
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
   }, [refresh]);
+
+  const startPolling = useCallback(
+    (baselineChatId: string | null) => {
+      relinkBaselineRef.current = baselineChatId;
+      setLinkPending(true);
+      if (pollRef.current) clearInterval(pollRef.current);
+      pollRef.current = setInterval(() => {
+        void (async () => {
+          const res = await fetch("/api/integrations/telegram/link", { method: "GET" });
+          if (!res.ok) return;
+          const next = (await res.json()) as LinkStatus;
+          setStatus(next);
+          const relinked =
+            next.linked &&
+            (relinkBaselineRef.current === null ||
+              next.chatIdMasked !== relinkBaselineRef.current ||
+              !relinkBaselineRef.current);
+          if (relinked) {
+            stopPolling();
+            setLink(null);
+          }
+        })();
+      }, 2500);
+      setTimeout(() => stopPolling(), 120_000);
+    },
+    [stopPolling],
+  );
 
   const onGenerate = useCallback(async () => {
     setBusy(true);
     setError(null);
-    setLink(null);
     try {
       const res = await fetch("/api/integrations/telegram/link", { method: "POST" });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(typeof json?.error === "string" ? json.error : "Failed to generate link");
-      } else {
-        setLink(json as GeneratedLink);
+        setError(typeof json?.error === "string" ? json.error : t("telegramLinkError"));
+        return;
       }
+      const generated = json as GeneratedLink;
+      setLink(generated);
+      startPolling(status?.chatIdMasked ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
+      setError(err instanceof Error ? err.message : t("telegramLinkError"));
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [startPolling, status?.chatIdMasked, t]);
 
   const onUnlink = useCallback(async () => {
     setBusy(true);
     setError(null);
+    stopPolling();
     try {
       const res = await fetch("/api/integrations/telegram/link", { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        setError(typeof json?.error === "string" ? json.error : "Failed to unlink");
+        setError(typeof json?.error === "string" ? json.error : t("telegramLinkError"));
       } else {
         setLink(null);
         await refresh();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
+      setError(err instanceof Error ? err.message : t("telegramLinkError"));
     } finally {
       setBusy(false);
     }
-  }, [refresh]);
+  }, [refresh, stopPolling, t]);
+
+  const onLinkDone = useCallback(async () => {
+    stopPolling();
+    setLink(null);
+    await refresh();
+  }, [refresh, stopPolling]);
 
   if (!status) return null;
   if (!status.enabled) return null;
 
-  const title = t("warrenName") || "Warren";
+  const title = t("warrenTelegramTitle").replace("{name}", t("warrenName") || "Warren");
+  const botHandle = status.botUsername || link?.botUsername || "the Warren bot";
 
   return (
     <div className="card p-6 space-y-4">
@@ -106,79 +159,56 @@ export default function TelegramConnectCard() {
             <TelegramGlyph />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {title} on Telegram
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-slate-400">
-              Chat with Warren from anywhere — full read/write portfolio access with confirmation.
-            </p>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
+            <p className="text-xs text-gray-500 dark:text-slate-400">{t("warrenTelegramSubtitle")}</p>
           </div>
         </div>
       </div>
 
-      {status.linked ? (
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100 dark:border-slate-700/50">
+      {link ? (
+        <LinkInstructions
+          link={link}
+          botHandle={botHandle}
+          linkPending={linkPending}
+          onDone={() => void onLinkDone()}
+          t={t}
+        />
+      ) : status.linked ? (
+        <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-slate-700/50">
           <div className="text-sm">
-            <p className="font-medium text-emerald-600 dark:text-emerald-400">Connected</p>
+            <p className="font-medium text-emerald-600 dark:text-emerald-400">{t("telegramLinked")}</p>
             <p className="text-xs text-gray-500 dark:text-slate-400">
-              Linked {status.linkedAt ? new Date(status.linkedAt).toLocaleDateString() : ""} ·{" "}
-              chat {status.chatIdMasked || "•••"}
+              {t("telegramLinkedDetails")
+                .replace("{date}", status.linkedAt ? new Date(status.linkedAt).toLocaleDateString() : "")
+                .replace("{chatId}", status.chatIdMasked || "•••")}
             </p>
           </div>
-          <button
-            onClick={onUnlink}
-            disabled={busy}
-            className="btn-secondary text-xs disabled:opacity-40"
-          >
-            {busy ? t("loading") : "Disconnect"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => void onGenerate()}
+              disabled={busy}
+              className="btn-primary text-xs disabled:opacity-40"
+            >
+              {busy ? t("loading") : t("telegramRelink")}
+            </button>
+            <button
+              onClick={() => void onUnlink()}
+              disabled={busy}
+              className="btn-secondary text-xs disabled:opacity-40"
+            >
+              {busy ? t("loading") : t("telegramDisconnect")}
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400">{t("telegramRelinkHint")}</p>
         </div>
       ) : (
         <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-slate-700/50">
-          {!link ? (
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600 dark:text-slate-300">
-                Generate a one-time link to bind your trefolio account to{" "}
-                <strong>@{status.botUsername || "the Warren bot"}</strong>. The link expires in 15 minutes.
-              </p>
-              <button onClick={onGenerate} disabled={busy} className="btn-primary text-xs">
-                {busy ? t("loading") : "Connect Telegram"}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600 dark:text-slate-300">
-                Open this link from a device that has Telegram installed:
-              </p>
-              <a
-                href={link.deepLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary text-xs inline-flex"
-              >
-                Open in Telegram
-              </a>
-              <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 break-all">
-                <code className="text-xs text-gray-700 dark:text-slate-300">{link.deepLink}</code>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-slate-400">
-                Or open Telegram and send <code>/start {link.token}</code> to{" "}
-                <strong>@{link.botUsername}</strong>.
-              </p>
-              <p className="text-xs text-gray-400 dark:text-slate-500">
-                Token expires {new Date(link.expiresAt).toLocaleString()}.
-              </p>
-              <button
-                onClick={async () => {
-                  setLink(null);
-                  await refresh();
-                }}
-                className="btn-secondary text-xs"
-              >
-                I&apos;ve linked it
-              </button>
-            </div>
-          )}
+          <p className="text-sm text-gray-600 dark:text-slate-300">
+            {t("telegramConnectWarrenHint").replace("{bot}", `@${botHandle}`)}
+          </p>
+          <button onClick={() => void onGenerate()} disabled={busy} className="btn-primary text-xs disabled:opacity-40">
+            {busy ? t("loading") : t("telegramConnectWarren")}
+          </button>
         </div>
       )}
 
@@ -187,6 +217,51 @@ export default function TelegramConnectCard() {
           {error}
         </p>
       )}
+    </div>
+  );
+}
+
+function LinkInstructions({
+  link,
+  botHandle,
+  linkPending,
+  onDone,
+  t,
+}: {
+  link: GeneratedLink;
+  botHandle: string;
+  linkPending: boolean;
+  onDone: () => void;
+  t: (key: TranslationKey) => string;
+}) {
+  return (
+    <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-slate-700/50">
+      <p className="text-sm text-gray-600 dark:text-slate-300">{t("telegramOpenLinkHint")}</p>
+      <a
+        href={link.deepLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn-primary text-xs inline-flex"
+      >
+        {t("telegramOpenInTelegram")}
+      </a>
+      <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 break-all">
+        <code className="text-xs text-gray-700 dark:text-slate-300">{link.deepLink}</code>
+      </div>
+      <p className="text-xs text-gray-500 dark:text-slate-400">
+        {t("telegramStartCommandHint")
+          .replace("{token}", link.token)
+          .replace("{bot}", `@${botHandle}`)}
+      </p>
+      <p className="text-xs text-gray-400 dark:text-slate-500">
+        {t("telegramTokenExpires").replace("{date}", new Date(link.expiresAt).toLocaleString())}
+      </p>
+      {linkPending && (
+        <p className="text-xs text-emerald-600 dark:text-emerald-400">{t("telegramLinkPending")}</p>
+      )}
+      <button onClick={onDone} className="btn-secondary text-xs">
+        {t("telegramLinkDone")}
+      </button>
     </div>
   );
 }

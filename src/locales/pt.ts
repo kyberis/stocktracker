@@ -3445,6 +3445,18 @@ const pt: TranslationStrings = {
   matrixCellExplainTxs: "Transactions in window",
   matrixCellExplainNarrative: "Plain-language explanation",
   matrixCellExplainLoading: "Generating AI explanation…",
+  telegramConnectWarren: "Connect Telegram",
+  telegramConnectWarrenHint: "Generate a one-time link to bind your trefolio account to {bot}. The link expires in 15 minutes.",
+  telegramOpenInTelegram: "Open in Telegram",
+  telegramOpenLinkHint: "Open this link from a device that has Telegram installed:",
+  telegramLinkedDetails: "Linked {date} · chat {chatId}",
+  telegramRelink: "Relink Telegram",
+  telegramRelinkHint: "Use this if you changed phones, switched Telegram accounts, or need to connect a different chat. Your current link stays active until you finish the new one.",
+  telegramLinkDone: "I've linked it",
+  telegramStartCommandHint: "Or open Telegram and send /start {token} to {bot}.",
+  telegramTokenExpires: "Token expires {date}.",
+  warrenTelegramTitle: "{name} on Telegram",
+  warrenTelegramSubtitle: "Chat with Warren from anywhere — full read/write portfolio access with confirmation.",
 };
 
 export default pt;

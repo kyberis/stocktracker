@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.200",
+    date: "2026-08-22",
+    title: "Relink Warren on Telegram from Profile",
+    titleTranslations: {
+      es: "Volver a vincular Warren en Telegram desde Perfil",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Profile → Warren on Telegram now lets you relink without disconnecting first — useful after changing phones or Telegram accounts.",
+        translations: {
+          es: "Perfil → Warren en Telegram ahora permite volver a vincular sin desconectar primero — útil tras cambiar de móvil o de cuenta de Telegram.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.199",
     date: "2026-08-22",
     title: "Warren shared fundamentals and valuation",
