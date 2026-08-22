@@ -26,6 +26,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "Warren + Clara home intro centers the trefolio logo on the final splash frame and holds the reveal longer so the tagline is easier to read before the dashboard appears.",
+        translations: {
+          es: "La intro de Warren y Clara en el home centra el logo de trefolio en el splash final y mantiene la revelación más tiempo para que el tagline sea más fácil de leer antes de mostrar el dashboard.",
+        },
+      },
+      {
+        type: "improvement",
         text: "Admin Traffic graph now shows a third column for external services (Yahoo, FMP, AI Gateway, Stripe, Resend, SnapTrade, Clara, Will, ProdOps, Tavily) linked to the API routes that call them.",
         translations: {
           es: "El grafo Traffic en admin ahora muestra una tercera columna de servicios externos (Yahoo, FMP, AI Gateway, Stripe, Resend, SnapTrade, Clara, Will, ProdOps, Tavily) vinculados a las rutas API que los invocan.",

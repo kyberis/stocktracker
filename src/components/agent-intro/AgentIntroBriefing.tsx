@@ -19,7 +19,7 @@ type BriefPhase = "idle" | "chat" | "bridge" | "merge" | "reveal";
 const PHASE_MS: Record<Exclude<BriefPhase, "idle" | "reveal">, number> = {
   chat: 1200,
   bridge: 1200,
-  merge: 800,
+  merge: 1100,
 };
 
 function nextPhase(phase: BriefPhase): BriefPhase {
