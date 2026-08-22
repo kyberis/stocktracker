@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.209",
+    date: "2026-08-22",
+    title: "Warren Telegram on Profile for OneLogin users",
+    titleTranslations: {
+      es: "Warren en Telegram en Perfil para usuarios OneLogin",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Profile → Account now shows the Warren on Telegram connect card for unified OneLogin users (it was hidden behind the IdP account redirect).",
+        translations: {
+          es: "Perfil → Cuenta ahora muestra la tarjeta para vincular Warren en Telegram a usuarios unificados con OneLogin (antes quedaba oculta tras el redireccionamiento a la cuenta IdP).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.208",
     date: "2026-08-22",
     title: "Warren valuation Yahoo fallback",
