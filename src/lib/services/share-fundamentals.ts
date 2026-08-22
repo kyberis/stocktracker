@@ -15,7 +15,8 @@ import {
   type FundamentalsCacheType,
 } from "@/lib/db/fundamentals-cache";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
-import { isCacheableFundamentalData } from "@/lib/fundamentals/cache-quality";
+import { isCacheableFundamentalData, isCacheableOverview } from "@/lib/fundamentals/cache-quality";
+import { fetchResolvedOverview } from "@/lib/fundamentals/resolve-overview";
 import {
   resolveFundamentalsProvider,
   type FundamentalsDataBackend,
@@ -98,8 +99,12 @@ async function readCachedType<T extends CachedPayload>(
     return { data: null, updatedAt: null, provider: null };
   }
   try {
+    const data = JSON.parse(row.dataJson) as T;
+    if (type === "overview" && !isCacheableOverview(data as CompanyOverview)) {
+      return { data: null, updatedAt: null, provider: null };
+    }
     return {
-      data: JSON.parse(row.dataJson) as T,
+      data,
       updatedAt: row.updatedAt,
       provider: row.provider,
     };
@@ -208,13 +213,25 @@ export async function ensureShareFundamentals(
     }
 
     for (const type of missingTypes) {
-      let result = await fetchType(provider, backend, symbol, type);
-      if (!result.data && backend === "fmp") {
-        const yahooResolved = await resolveFundamentalsProvider(null);
-        if (yahooResolved.backend === "yahoo") {
-          result = await fetchType(yahooResolved.provider, "yahoo", symbol, type);
-          provider = yahooResolved.provider;
-          backend = "yahoo";
+      let result: { data: CachedPayload | null; backend: FundamentalsDataBackend };
+
+      if (type === "overview") {
+        const resolved = await fetchResolvedOverview(userId, symbol, {
+          provider,
+          backend,
+        });
+        result = resolved
+          ? { data: resolved.data, backend: resolved.backend }
+          : { data: null, backend };
+      } else {
+        result = await fetchType(provider, backend, symbol, type);
+        if (!result.data && backend === "fmp") {
+          const yahooResolved = await resolveFundamentalsProvider(null);
+          if (yahooResolved.backend === "yahoo") {
+            result = await fetchType(yahooResolved.provider, "yahoo", symbol, type);
+            provider = yahooResolved.provider;
+            backend = "yahoo";
+          }
         }
       }
 

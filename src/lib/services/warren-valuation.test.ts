@@ -5,6 +5,7 @@ import {
   buildValuationSnapshot,
   scoreValuation,
   demoValuationItems,
+  analyzeValuationForWarren,
 } from "@/lib/services/warren-valuation";
 
 const baseOverview: CompanyOverview = {
@@ -89,5 +90,15 @@ describe("demoValuationItems", () => {
     expect(items[0]?.symbol).toBe("KO");
     expect(items[1]?.symbol).toBe("MSFT");
     expect(items[0]?.dataGaps[0]).toContain("demo");
+  });
+});
+
+describe("analyzeValuationForWarren", () => {
+  it("rejects crypto-only symbol lists", async () => {
+    const result = await analyzeValuationForWarren("u1", ["BTC-EUR"]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain("crypto");
+    }
   });
 });
