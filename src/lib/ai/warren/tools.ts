@@ -500,61 +500,73 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
           .describe("When true, bypass share cache and re-fetch fundamentals (uses fundamentals quota on miss)."),
       }),
       execute: async ({ tickers, scope, fresh }) => {
-        let symbols = tickers?.map((t) => t.toUpperCase()) ?? [];
-        if (symbols.length === 0 && scope === "portfolio") {
-          symbols =
-            ctx.snapshot?.topHoldings
-              ?.slice()
-              .sort((a, b) => b.weight - a.weight)
-              .slice(0, 10)
-              .map((h) => h.ticker.toUpperCase()) ?? [];
-        }
-        if (symbols.length === 0) {
-          return {
-            found: false,
-            note: "No tickers to analyze. Pass tickers or scope portfolio with holdings loaded.",
-          };
-        }
-
-        ctx.emitStep(`Fetching fundamentals for ${symbols.join(", ")}…`);
-
-        if (ctx.isDemo) {
-          return {
-            found: true,
-            results: demoValuationItems(symbols),
-            errors: [] as const,
-            replyHint:
-              "Demo mode — explain each valuationLabel using metrics and note data is illustrative. Not investment advice.",
-          };
-        }
-
-        const result = await analyzeValuationForWarren(ctx.userId, symbols, { fresh: fresh === true });
-        if (!result.ok) {
-          if (result.code === "quota_exceeded") {
+        try {
+          let symbols = tickers?.map((t) => t.toUpperCase()) ?? [];
+          if (symbols.length === 0 && scope === "portfolio") {
+            symbols =
+              ctx.snapshot?.topHoldings
+                ?.slice()
+                .sort((a, b) => b.weight - a.weight)
+                .slice(0, 10)
+                .map((h) => h.ticker.toUpperCase()) ?? [];
+            if (symbols.length === 0 && ctx.activePortfolioId) {
+              const holdings = await dbListHoldings(ctx.userId, ctx.activePortfolioId);
+              symbols = holdings.slice(0, 10).map((h) => h.ticker.toUpperCase());
+            }
+          }
+          if (symbols.length === 0) {
             return {
               found: false,
-              note: "Monthly fundamentals quota exceeded. Upgrade or try again next period.",
+              note: "No tickers to analyze. Pass tickers or scope portfolio with holdings loaded.",
             };
           }
-          if (result.code === "rate_limited") {
+
+          ctx.emitStep(`Fetching fundamentals for ${symbols.join(", ")}…`);
+
+          if (ctx.isDemo) {
+            return {
+              found: true,
+              results: demoValuationItems(symbols),
+              errors: [] as const,
+              replyHint:
+                "Demo mode — explain each valuationLabel using metrics and note data is illustrative. Not investment advice.",
+            };
+          }
+
+          const result = await analyzeValuationForWarren(ctx.userId, symbols, { fresh: fresh === true });
+          if (!result.ok) {
+            if (result.code === "quota_exceeded") {
+              return {
+                found: false,
+                note: "Monthly fundamentals quota exceeded. Upgrade or try again next period.",
+              };
+            }
+            if (result.code === "rate_limited") {
+              return { found: false, note: result.error };
+            }
             return { found: false, note: result.error };
           }
-          return { found: false, note: result.error };
-        }
 
-        return {
-          found: true,
-          results: result.results,
-          errors: result.errors,
-          replyHint:
-            "Ground the answer in valuationLabel, metrics, fetchedAt, and provider for each ticker. Mention dataGaps when present. Not investment advice.",
-        };
+          return {
+            found: true,
+            results: result.results,
+            errors: result.errors,
+            replyHint:
+              "Ground the answer in valuationLabel, metrics, fetchedAt, and provider for each ticker. Mention dataGaps when present. Not investment advice.",
+          };
+        } catch (err) {
+          console.error("[warren/analyzeValuation]", err instanceof Error ? err.message : err);
+          return {
+            found: false,
+            note: "Could not load fundamentals right now. Try again in a moment or name one ticker.",
+          };
+        }
       },
     }),
 
     screenMoatStocks: tool({
       description:
-        "PRIMARY tool for moat screener / stock ideas requests (e.g. 'ideas del moat screener', 'P/E bajo 15', 'wide moat stocks'). Screens cached moat evaluations with P/E, score, market cap filters. Always follow with renderMoatSummaryCard or renderStockPickCard for top picks.",
+        "Screen the GLOBAL moat database for NEW stock ideas (e.g. 'ideas del moat screener', 'P/E bajo 15', 'wide moat stocks'). NOT for whether the user's existing portfolio holdings look expensive/cheap — use analyzeValuation for that.",
       inputSchema: z.object({
         peMax: z.number().positive().optional().describe("Max P/E (default 15)"),
         scoreMin: z.number().min(0).max(100).optional().describe("Min moat score % (default 60)"),
@@ -563,33 +575,45 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
         sortBy: z.enum(["score", "pe", "marketCap"]).optional(),
       }),
       execute: async (input) => {
-        ctx.emitStep("Screening moat database…");
-        const result = await queryMoatCache({
-          peMax: input.peMax ?? 15,
-          scoreMin: input.scoreMin ?? 60,
-          marketCapMax: input.marketCapMax,
-          limit: input.limit ?? 8,
-          sortBy: input.sortBy ?? "score",
-          sortDir: "desc",
-          page: 1,
-        });
-        return {
-          total: result.total,
-          results: result.results.map((r) => ({
-            symbol: r.symbol,
-            companyName: r.companyName,
-            scorePct: r.scorePct,
-            verdict: r.verdict,
-            peRatio: r.peRatio,
-            price: r.price,
-            currency: r.currency,
-            marketCap: r.marketCap,
-            passedCount: r.passedCount,
-            criteriaCount: r.criteriaCount,
-            sector: r.sector,
-          })),
-          tip: "Pick 2-3 standouts and call renderMoatSummaryCard or renderStockPickCard for each. Not financial advice.",
-        };
+        try {
+          ctx.emitStep("Screening moat database…");
+          const result = await queryMoatCache({
+            peMax: input.peMax ?? 15,
+            scoreMin: input.scoreMin ?? 60,
+            marketCapMax: input.marketCapMax,
+            limit: input.limit ?? 8,
+            sortBy: input.sortBy ?? "score",
+            sortDir: "desc",
+            page: 1,
+          });
+          return {
+            total: result.total,
+            results: result.results.map((r) => ({
+              symbol: r.symbol,
+              companyName: r.companyName,
+              scorePct: r.scorePct,
+              verdict: r.verdict,
+              peRatio: r.peRatio,
+              price: r.price,
+              currency: r.currency,
+              marketCap: r.marketCap,
+              passedCount: r.passedCount,
+              criteriaCount: r.criteriaCount,
+              sector: r.sector,
+            })),
+            tip:
+              result.total === 0
+                ? "No matches — explain clearly; do not call renderMoatSummaryCard with invented tickers."
+                : "Pick 2-3 standouts and call renderMoatSummaryCard or renderStockPickCard for each. Not financial advice.",
+          };
+        } catch (err) {
+          console.error("[warren/screenMoatStocks]", err instanceof Error ? err.message : err);
+          return {
+            total: 0,
+            results: [],
+            tip: "Moat screener is temporarily unavailable. For portfolio valuation use analyzeValuation instead.",
+          };
+        }
       },
     }),
 

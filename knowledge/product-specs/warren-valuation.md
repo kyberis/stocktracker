@@ -18,6 +18,7 @@ When a user asks whether a stock looks expensive or cheap, or requests fundament
 | Type | Path | Notes |
 |------|------|-------|
 | Tool | [`src/lib/ai/warren/tools.ts`](../../src/lib/ai/warren/tools.ts) | `analyzeValuation` |
+| Prefetch | [`src/lib/ai/warren/valuation-intent.ts`](../../src/lib/ai/warren/valuation-intent.ts) | Detects expensive/cheap prompts; prefetches fundamentals server-side |
 | Service | [`src/lib/services/share-fundamentals.ts`](../../src/lib/services/share-fundamentals.ts) | Cache + fetch |
 | Service | [`src/lib/services/warren-valuation.ts`](../../src/lib/services/warren-valuation.ts) | Metrics + label |
 | Prompt | [`src/lib/ai/warren/system-prompt.ts`](../../src/lib/ai/warren/system-prompt.ts) | Routes valuation questions |

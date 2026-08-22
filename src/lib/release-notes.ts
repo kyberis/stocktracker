@@ -31,6 +31,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Warren puede obtener fundamentales compartidos por acción (FMP o Yahoo, en caché para todos) y decir si una acción parece barata, justa o cara — para un ticker o tu cartera. Sigue siendo IA, no es consejo de inversión.",
         },
       },
+      {
+        type: "fix",
+        text: "Warren now routes 'which stocks look expensive/cheap' to portfolio valuation (analyzeValuation) instead of the global moat screener, with server-side prefetch and safer error handling when data cannot load.",
+        translations: {
+          es: "Warren enruta «qué acciones parecen caras/baratas» a la valoración de cartera (analyzeValuation) en lugar del screener moat global, con prefetch en servidor y mejor manejo de errores cuando no puede cargar datos.",
+        },
+      },
     ],
   },
   {
