@@ -47,7 +47,7 @@ type Bubble =
   | { id: string; kind: "proposal"; proposal: WarrenProposal };
 
 function bubbleToPersisted(bubble: Bubble): PersistedWarrenBubble {
-  return bubble;
+  return bubble as PersistedWarrenBubble;
 }
 
 interface Props {
