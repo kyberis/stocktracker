@@ -6,6 +6,20 @@ vi.mock("@/lib/api-providers/yahoo", () => ({
   YahooProvider: vi.fn().mockImplementation(() => ({ name: "yahoo" })),
 }));
 
+function stubProvider(
+  name: string,
+  getOverview: NonNullable<StockDataProvider["getOverview"]>,
+): StockDataProvider {
+  return {
+    name,
+    getQuote: vi.fn(),
+    search: vi.fn(),
+    getHistorical: vi.fn(),
+    getExchangeRate: vi.fn(),
+    getOverview,
+  };
+}
+
 describe("overviewSymbolCandidates", () => {
   it("includes Yahoo aliases for Novo Nordisk Copenhagen", () => {
     const candidates = overviewSymbolCandidates("NOVO-B.CO");
@@ -59,14 +73,8 @@ describe("fetchResolvedOverview", () => {
       forwardPE: 23.2,
     };
 
-    const fmpProvider: StockDataProvider = {
-      name: "fmp",
-      getOverview: vi.fn().mockResolvedValue(sparseFmp),
-    };
-    const yahooProvider: StockDataProvider = {
-      name: "yahoo",
-      getOverview: vi.fn().mockResolvedValue(richYahoo),
-    };
+    const fmpProvider = stubProvider("fmp", vi.fn().mockResolvedValue(sparseFmp));
+    const yahooProvider = stubProvider("yahoo", vi.fn().mockResolvedValue(richYahoo));
 
     const { YahooProvider } = await import("@/lib/api-providers/yahoo");
     vi.mocked(YahooProvider).mockImplementation(() => yahooProvider as never);
