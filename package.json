@@ -32,6 +32,7 @@
     "pre-deploy": "bash scripts/pre-deploy.sh",
     "materialize:portfolio-snapshots": "bash scripts/materialize-portfolio-snapshots.sh",
     "knowledge:gen": "tsx scripts/gen-knowledge-generated.ts",
+    "prompts:sync-external": "tsx scripts/sync-external-agent-prompts.ts",
     "knowledge:lint": "tsx scripts/lint-knowledge.ts",
     "cap:dev": "CAPACITOR_SERVER_URL=http://localhost:3010 npx cap copy",
     "cap:ios": "CAPACITOR_SERVER_URL=http://localhost:3010 npx cap copy ios && npx cap open ios",

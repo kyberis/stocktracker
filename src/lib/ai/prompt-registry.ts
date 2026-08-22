@@ -4,6 +4,11 @@ import { HOLDING_CLASSIFICATION_SYSTEM_PROMPT } from "@/lib/ai-classify-holding"
 import { buildWarrenSystemPrompt } from "@/lib/ai/warren/system-prompt";
 import { buildSupportSystemPrompt } from "@/lib/support-knowledge";
 import { buildScorePrompt } from "@/lib/portfolio-score";
+import {
+  extractAssignmentTemplateLiteral,
+  extractConstTemplateLiteral,
+  previewTemplate,
+} from "@/lib/ai/extract-source-prompt";
 import { buildIntakePrompt } from "@/lib/screening/prompts/intake";
 import { buildHardDataPrompt } from "@/lib/screening/prompts/hard-data";
 import { buildIrBusinessPrompt } from "@/lib/screening/prompts/ir-business";
@@ -15,12 +20,9 @@ import { buildCompilerEvaluatePrompt } from "@/lib/screening/prompts/compiler-ev
 import { buildQaQualitativePrompt } from "@/lib/screening/prompts/qa-qualitative";
 import type { ScreeningBrief, ScreeningReport } from "@/lib/screening/schemas";
 import {
-  extractAssignmentTemplateLiteral,
-  extractBacktickLiteral,
-  extractConstTemplateLiteral,
-  previewTemplate,
-  readSource,
-} from "@/lib/ai/extract-source-prompt";
+  CLARA_PROMPT_EN_SNAPSHOT,
+  previewWillEnPrompt,
+} from "@/lib/ai/external-agent-prompts";
 
 export type PromptGroupId =
   | "warren"
@@ -92,33 +94,29 @@ function flowDescription(key: AiFlowKey): string {
   return AI_FLOW_META[key]?.description ?? "";
 }
 
-function warrenChannels(): AiPromptEntry[] {
-  const channels = [
-    { id: "web", label: "Web drawer", channel: "web" as const },
-    { id: "telegram", label: "Telegram", channel: "telegram" as const },
-    { id: "office", label: "Agent Office", channel: "office" as const },
-  ];
-
-  return channels.map(({ id, label, channel }) => ({
-    id: `warren-${id}`,
-    group: "warren" as const,
-    agent: "warren" as const,
-    label: `Warren · ${label}`,
-    description: `Portfolio analyst system prompt (${channel} channel)`,
+function warrenPromptEntry(): AiPromptEntry {
+  return {
+    id: "warren",
+    group: "warren",
+    agent: "warren",
+    label: "Warren · System prompt",
+    description:
+      "Single Warren persona for web drawer, Telegram, and Agent Office. Only delivery rules (length, cards, disclaimer) change via the channel option.",
     sourceFile: "src/lib/ai/warren/system-prompt.ts",
-    flowKey: "portfolio_chat" as const,
+    flowKey: "portfolio_chat",
     systemPrompt: buildWarrenSystemPrompt({
       language: "es",
       userName: "María",
       baseCurrency: "EUR",
       activePortfolioName: "Mi cartera",
       activePortfolioId: "demo-portfolio",
-      channel,
+      channel: "web",
       subscriptionPlan: "pro",
     }),
     isSample: true,
-    notes: "Sample context: Spanish, EUR, Pro plan, named portfolio.",
-  }));
+    notes:
+      "Set channel to web | telegram | office for delivery deltas. Legacy streaming /api/portfolio/ai-chat uses the same prompt with textOnlyStream: true and an inlined portfolio snapshot.",
+  };
 }
 
 function screeningPrompts(): AiPromptEntry[] {
@@ -348,26 +346,7 @@ function analysisPrompts(): AiPromptEntry[] {
   });
 }
 
-function extractClaraEnPrompt(): string | null {
-  const source = readSource("external/etracker/src/lib/ai/run-expense-agent.ts");
-  if (!source) return null;
-  const marker = "return `You are Clara, an AI financial assistant";
-  const idx = source.indexOf(marker);
-  if (idx < 0) return null;
-  const start = source.indexOf("`", idx) + 1;
-  return extractBacktickLiteral(source, start);
-}
-
 function externalAgentPrompts(): AiPromptEntry[] {
-  const claraEn = extractClaraEnPrompt();
-
-  const willEn =
-    extractConstTemplateLiteral(
-      "external/notetaker/src/lib/ai/prompts/en.ts",
-      "SYSTEM_PROMPT_EN",
-    ) ??
-    "(Will prompt file not available — submodule may not be checked out)";
-
   return [
     {
       id: "clara-main",
@@ -376,11 +355,9 @@ function externalAgentPrompts(): AiPromptEntry[] {
       label: "Clara · Main agent (EN)",
       description: "Personal finance assistant — lives in external/etracker",
       sourceFile: "external/etracker/src/lib/ai/run-expense-agent.ts",
-      systemPrompt:
-        claraEn ??
-        "(Clara source not available — initialize the etracker submodule)",
+      systemPrompt: CLARA_PROMPT_EN_SNAPSHOT,
       notes:
-        "Clara prompts vary by locale, guest-event scope, and setup state. This shows the default English template from buildSystemPrompt().",
+        "Vendored snapshot (npm run prompts:sync-external). Runtime prompt varies by locale, guest-event scope, and setup state; may include unresolved template placeholders from the Clara source.",
       isSample: true,
     },
     {
@@ -390,12 +367,9 @@ function externalAgentPrompts(): AiPromptEntry[] {
       label: "Will · Main agent (EN)",
       description: "Investing notes journal — lives in external/notetaker",
       sourceFile: "external/notetaker/src/lib/ai/prompts/en.ts",
-      systemPrompt: willEn.replaceAll("{LOCALE}", "en").replaceAll(
-        "{NOW_UTC}",
-        new Date().toISOString(),
-      ),
+      systemPrompt: previewWillEnPrompt(),
       notes:
-        "Will also has es / pt / ar prompts in the same folder. {LOCALE} and {NOW_UTC} are replaced at runtime.",
+        "Vendored snapshot (npm run prompts:sync-external). Will also has es / pt / ar prompts in the same folder.",
       isSample: true,
     },
   ];
@@ -430,7 +404,7 @@ export function listAiPromptCatalog(): AiPromptEntry[] {
   );
 
   return [
-    ...warrenChannels(),
+    warrenPromptEntry(),
     {
       id: "warren-moat-narrative",
       group: "warren",
@@ -446,35 +420,7 @@ export function listAiPromptCatalog(): AiPromptEntry[] {
       ),
       isSample: true,
     },
-    {
-      id: "office-warren",
-      group: "office",
-      agent: "warren",
-      label: "Agent Office · Warren host",
-      description: "Warren in the multi-agent Office workspace — same motor as web with office channel",
-      sourceFile: "src/lib/ai/warren/system-prompt.ts",
-      flowKey: "portfolio_chat",
-      systemPrompt: buildWarrenSystemPrompt({
-        language: "en",
-        baseCurrency: "EUR",
-        channel: "office",
-        subscriptionPlan: "pro",
-      }),
-      isSample: true,
-    },
     ...screeningPrompts(),
-    {
-      id: "portfolio-ai-chat",
-      group: "portfolio",
-      label: "Portfolio AI (legacy chat)",
-      description: "Legacy portfolio assistant in /api/portfolio/ai-chat (distinct from Warren)",
-      sourceFile: "src/app/api/portfolio/ai-chat/route.ts",
-      flowKey: "portfolio_chat",
-      systemPrompt: previewTemplate(
-        routePrompt("src/app/api/portfolio/ai-chat/route.ts", "const systemPrompt ="),
-      ),
-      isSample: true,
-    },
     {
       id: "chart-chat",
       group: "portfolio",

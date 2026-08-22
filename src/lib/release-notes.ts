@@ -33,6 +33,13 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "improvement",
+        text: "Warren now uses one shared system prompt across web, Telegram, Agent Office, and the legacy portfolio chat — only delivery rules change by channel. Admin AI Prompts vendors Clara and Will snapshots so they display in production without the external submodules.",
+        translations: {
+          es: "Warren usa un único system prompt compartido en web, Telegram, Agent Office y el chat legacy de cartera: solo cambian las reglas de entrega según el canal. AI Prompts en admin incluye snapshots de Clara y Will para mostrarlos en producción sin los submódulos externos.",
+        },
+      },
+      {
+        type: "improvement",
         text: "Admin panel adds an AI Prompts page listing canonical system prompts for Warren, screening agents, portfolio tools, digests, and sister agents Clara and Will.",
         translations: {
           es: "El panel de admin incluye una página AI Prompts con los system prompts canónicos de Warren, los agentes de screening, herramientas de cartera, digests y los agentes hermanos Clara y Will.",
