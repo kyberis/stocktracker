@@ -1,47 +1,53 @@
 import { z } from "zod";
-import type { WarrenPart, WarrenProposal } from "./types";
 
 /** Serializable Warren chat bubble stored in localStorage. */
 export type PersistedWarrenBubble =
   | { id: string; kind: "text-user"; content: string }
   | { id: string; kind: "text-assistant"; content: string }
   | { id: string; kind: "tool-step"; label: string }
-  | { id: string; kind: "part"; part: WarrenPart }
-  | { id: string; kind: "proposal"; proposal: WarrenProposal };
+  | { id: string; kind: "part"; part: { kind: string; data: Record<string, unknown> } }
+  | {
+      id: string;
+      kind: "proposal";
+      proposal: {
+        id: string;
+        kind: string;
+        title: string;
+        summary: string;
+        destructive?: boolean;
+        rows: { label: string; value: string }[];
+        data: Record<string, unknown>;
+      };
+    };
 
 const STORAGE_PREFIX = "trefolio:warren-chat:v1";
 export const WARREN_CHAT_MAX_BUBBLES = 80;
 const MAX_BYTES = 512_000;
 
-const warrenPartSchema: z.ZodType<WarrenPart> = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("holding"), data: z.record(z.string(), z.unknown()) }),
-  z.object({ kind: z.literal("allocation"), data: z.record(z.string(), z.unknown()) }),
-  z.object({ kind: z.literal("summary"), data: z.record(z.string(), z.unknown()) }),
-  z.object({ kind: z.literal("stockPick"), data: z.record(z.string(), z.unknown()) }),
-  z.object({ kind: z.literal("moatSummary"), data: z.record(z.string(), z.unknown()) }),
-  z.object({ kind: z.literal("tradeGuidance"), data: z.record(z.string(), z.unknown()) }),
-  z.object({ kind: z.literal("stockSnapshot"), data: z.record(z.string(), z.unknown()) }),
-  z.object({ kind: z.literal("chart"), data: z.record(z.string(), z.unknown()) }),
-]) as z.ZodType<WarrenPart>;
-
-const warrenProposalSchema: z.ZodType<WarrenProposal> = z
-  .object({
-    id: z.string(),
-    kind: z.enum(["addHolding", "removeHolding", "addCash", "createAlert", "addWatchlist"]),
-    title: z.string(),
-    summary: z.string(),
-    destructive: z.boolean().optional(),
-    rows: z.array(z.object({ label: z.string(), value: z.string() })),
-    data: z.record(z.string(), z.unknown()),
-  })
-  .transform((row) => row as WarrenProposal);
-
-const bubbleSchema: z.ZodType<PersistedWarrenBubble> = z.discriminatedUnion("kind", [
+const bubbleSchema = z.discriminatedUnion("kind", [
   z.object({ id: z.string(), kind: z.literal("text-user"), content: z.string() }),
   z.object({ id: z.string(), kind: z.literal("text-assistant"), content: z.string() }),
   z.object({ id: z.string(), kind: z.literal("tool-step"), label: z.string() }),
-  z.object({ id: z.string(), kind: z.literal("part"), part: warrenPartSchema }),
-  z.object({ id: z.string(), kind: z.literal("proposal"), proposal: warrenProposalSchema }),
+  z.object({
+    id: z.string(),
+    kind: z.literal("part"),
+    part: z.object({ kind: z.string(), data: z.record(z.string(), z.unknown()) }),
+  }),
+  z.object({
+    id: z.string(),
+    kind: z.literal("proposal"),
+    proposal: z
+      .object({
+        id: z.string(),
+        kind: z.enum(["addHolding", "removeHolding", "addCash", "createAlert", "addWatchlist"]),
+        title: z.string(),
+        summary: z.string(),
+        destructive: z.boolean().optional(),
+        rows: z.array(z.object({ label: z.string(), value: z.string() })),
+        data: z.record(z.string(), z.unknown()),
+      })
+      .passthrough(),
+  }),
 ]);
 
 const payloadSchema = z.object({
@@ -67,7 +73,7 @@ export function loadWarrenChatBubbles(key: string | null): PersistedWarrenBubble
     if (!parsed.success) return [];
     return parsed.data.bubbles.filter(
       (b) => !(b.kind === "text-assistant" && !b.content.trim()),
-    );
+    ) as PersistedWarrenBubble[];
   } catch {
     return [];
   }
