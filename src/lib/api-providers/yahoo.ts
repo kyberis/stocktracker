@@ -19,6 +19,7 @@ import { recordProviderRequest } from "@/lib/traffic/provider-track";
 import { getCachedHistorical, cacheHistoricalPoints } from "@/lib/db/historical-cache";
 import { parseQuoteTimestamp } from "@/lib/quote-time";
 import { augmentCryptoSearchWithEurPairs } from "@/lib/crypto-search-eur";
+import { sanitizeOverviewPe } from "@/lib/fundamentals/normalize-overview-pe";
 
 const yahooFinance = new YahooFinance();
 
@@ -361,7 +362,7 @@ export class YahooProvider implements StockDataProvider {
         (typeof profile?.name === "string" && profile.name) ||
         symbol;
 
-      return {
+      return sanitizeOverviewPe({
         symbol,
         name: displayName,
         description: profile?.longBusinessSummary ?? "",
@@ -374,7 +375,7 @@ export class YahooProvider implements StockDataProvider {
         industry: profile?.industry ?? "",
         peRatio: detail?.trailingPE ?? null,
         pegRatio: stats?.pegRatio ?? null,
-        eps: fin?.revenuePerShare ?? null,
+        eps: stats?.trailingEps ?? fin?.revenuePerShare ?? null,
         dividendPerShare: detail?.dividendRate ?? null,
         dividendYield: detail?.dividendYield ?? null,
         beta: detail?.beta ?? null,
@@ -389,7 +390,7 @@ export class YahooProvider implements StockDataProvider {
         twoHundredDayMA: detail?.twoHundredDayAverage ?? null,
         sharesOutstanding: stats?.sharesOutstanding ?? null,
         forwardPE: stats?.forwardPE ?? detail?.forwardPE ?? numOrNull(fin?.forwardPE),
-      };
+      });
     } catch {
       return null;
     } finally {

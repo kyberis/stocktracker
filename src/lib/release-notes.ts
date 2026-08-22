@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.213",
+    date: "2026-08-23",
+    title: "Warren valuation P/E fix",
+    titleTranslations: {
+      es: "Corrección P/E en valoración Warren",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren valuation no longer labels stocks expensive by comparing forward P/E to trailing P/E as “historical average” — fetches FMP multi-year annual P/E when available (e.g. GOOGL fair vs ~22x history, not expensive at ~17x trailing). Drops absurd forward P/E spikes from Yahoo on LSE GBp tickers (e.g. Serabi Gold SRB.L ~5x trailing, not 216x forward). Analyst target upside stays separate from the cheap/fair/expensive label.",
+        translations: {
+          es: "La valoración en Warren ya no marca acciones como caras comparando PER forward con PER trailing como «media histórica» — obtiene la media anual multi-año de FMP cuando está disponible (p. ej. GOOGL justa vs ~22x histórico, no cara a ~17x trailing). Elimina picos absurdos de PER forward de Yahoo en tickers LSE en GBp (p. ej. Serabi Gold SRB.L ~5x trailing, no 216x forward). El upside al objetivo de analistas sigue separado del etiquetado barata/justa/cara.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.212",
     date: "2026-08-22",
     title: "Admin traffic graph — external providers",

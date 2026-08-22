@@ -6,6 +6,7 @@ import {
   mergeOverviews,
   overviewQualityScore,
 } from "@/lib/fundamentals/overview-quality";
+import { sanitizeOverviewPe } from "@/lib/fundamentals/normalize-overview-pe";
 import {
   resolveFundamentalsProvider,
   type FundamentalsDataBackend,
@@ -112,5 +113,5 @@ export async function fetchResolvedOverview(
   }
 
   if (!best) return null;
-  return { data: best, backend };
+  return { data: sanitizeOverviewPe(best), backend };
 }

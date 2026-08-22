@@ -34,9 +34,9 @@ On follow-ups that accept a prior offer ("sí", "yes") or ask to rank / sell / p
 
 1. User asks valuation question → Warren calls `analyzeValuation`.
 2. `ensureShareFundamentals` loads fresh cache or fetches via `resolveFundamentalsProvider`.
-3. `scoreValuation` applies [`scoreCheap`](../../src/lib/screening/scoring/categories.ts) on P/E multiples.
-4. Tool attaches quote upside: `currentPrice`, `upsideToTargetPct = (target − price) / price`, `hasLimitedUpside` when upside is below 5%.
-5. Warren cites `valuationLabel`, `metrics`, `currentPrice`, `upsideToTargetPct`, `fetchedAt`, and `provider`; adds disclaimer when discussing a specific ticker.
+3. Overview multiples are sanitized (drop absurd forward P/E vs trailing, especially LSE GBp). `scoreValuation` applies [`scoreCheap`](../../src/lib/screening/scoring/categories.ts): forward vs FMP multi-year annual average when available; trailing-only or absolute bands when history is missing.
+4. Tool attaches quote upside: `currentPrice`, `upsideToTargetPct = (target − price) / price`, `hasLimitedUpside` when upside is below 5%. This is independent of `valuationLabel`.
+5. Warren cites `valuationLabel`, `metrics` (including `peRatio`, `forwardPE`, `histPeAvg`), `currentPrice`, `upsideToTargetPct`, `fetchedAt`, and `provider`; explains when multiples and analyst upside diverge; adds disclaimer when discussing a specific ticker.
 6. Follow-up turns that accept a prior offer reuse thread numbers and rank instead of re-fetching fundamentals.
 
 ## 6. Related specs

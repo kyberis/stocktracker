@@ -1,6 +1,11 @@
-import type { CompanyOverview, EarningsReport, IncomeStatementReport } from "@/lib/api-providers/types";
-import type { FundamentalData, HoldingAssetType } from "@/lib/types";
+import type { CompanyOverview } from "@/lib/api-providers/types";
+import type { HoldingAssetType } from "@/lib/types";
 import { isCryptoAssetRoute } from "@/lib/asset-detail-href";
+import { fetchFmpHistoricalPeAverage } from "@/lib/fundamentals/hist-pe-from-fmp";
+import {
+  forwardPeWasRejected,
+  sanitizePeMultiples,
+} from "@/lib/fundamentals/normalize-overview-pe";
 import { holdingNeedsFundamentals } from "@/lib/holdings-research";
 import { scoreCheap, type CheapLabel } from "@/lib/screening/scoring/categories";
 import {
@@ -83,16 +88,12 @@ export type WarrenValuationBatchResult =
   | { ok: true; results: WarrenValuationItem[]; errors: Array<{ symbol: string; error: string }> }
   | { ok: false; error: string; code: WarrenValuationErrorCode };
 
-export function buildValuationSnapshot(
-  overview: CompanyOverview,
-  income?: FundamentalData<IncomeStatementReport> | null,
-  earnings?: FundamentalData<EarningsReport> | null,
-): ValuationMetrics {
-  const { histPeAvg, histPeYears } = deriveHistoricalPe(income, earnings, overview);
+export function buildValuationSnapshot(overview: CompanyOverview): ValuationMetrics {
+  const { peRatio, forwardPE } = sanitizePeMultiples(overview.peRatio, overview.forwardPE);
 
   return {
-    peRatio: overview.peRatio,
-    forwardPE: overview.forwardPE,
+    peRatio,
+    forwardPE,
     pegRatio: overview.pegRatio,
     returnOnEquity: overview.returnOnEquity,
     profitMargin: overview.profitMargin,
@@ -100,45 +101,86 @@ export function buildValuationSnapshot(
     beta: overview.beta,
     analystTargetPrice: overview.analystTargetPrice,
     dividendYield: overview.dividendYield,
-    histPeAvg,
-    histPeYears,
+    histPeAvg: null,
+    histPeYears: null,
   };
 }
 
-function deriveHistoricalPe(
-  _income: FundamentalData<IncomeStatementReport> | null | undefined,
-  earnings: FundamentalData<EarningsReport> | null | undefined,
-  overview: CompanyOverview,
-): { histPeAvg: number | null; histPeYears: number | null } {
-  const epsValues = (earnings?.annual ?? [])
-    .map((row) => row.reportedEPS)
-    .filter((v): v is number => v != null && v > 0);
-  if (epsValues.length >= 3 && overview.peRatio != null) {
-    return { histPeAvg: overview.peRatio, histPeYears: epsValues.length };
-  }
-  return { histPeAvg: null, histPeYears: null };
+function hasMultiYearHistPe(metrics: ValuationMetrics): boolean {
+  return metrics.histPeAvg != null && (metrics.histPeYears ?? 0) >= 3;
+}
+
+export function applyHistoricalPeMetrics(
+  metrics: ValuationMetrics,
+  hist: { histPeAvg: number | null; histPeYears: number },
+): ValuationMetrics {
+  if (hist.histPeAvg == null || hist.histPeYears < 3) return metrics;
+  return {
+    ...metrics,
+    histPeAvg: hist.histPeAvg,
+    histPeYears: hist.histPeYears,
+  };
+}
+
+export async function enrichValuationWithHistoricalPe(
+  item: WarrenValuationItem,
+): Promise<WarrenValuationItem> {
+  if (hasMultiYearHistPe(item.metrics)) return item;
+
+  const hist = await fetchFmpHistoricalPeAverage(item.symbol);
+  if (hist.histPeAvg == null || hist.histPeYears < 3) return item;
+
+  const metrics = applyHistoricalPeMetrics(item.metrics, hist);
+  const scored = scoreValuation(metrics);
+  const forwardGap = item.dataGaps.find((g) => g.includes("forward P/E omitted"));
+  const dataGaps =
+    forwardGap && !scored.dataGaps.includes(forwardGap)
+      ? [...scored.dataGaps, forwardGap]
+      : scored.dataGaps;
+  return {
+    ...item,
+    metrics,
+    valuationLabel: scored.label,
+    valuationSummary: scored.summary,
+    dataGaps,
+  };
 }
 
 export function scoreValuation(
   metrics: ValuationMetrics,
+  opts?: { rawForwardPE?: number | null },
 ): { label: CheapLabel; summary: string; dataGaps: string[] } {
   const dataGaps: string[] = [];
   if (metrics.peRatio == null && metrics.forwardPE == null) {
     dataGaps.push("no trailing or forward P/E");
   }
-  if (metrics.histPeAvg == null) {
+  if (forwardPeWasRejected(metrics.peRatio, opts?.rawForwardPE ?? metrics.forwardPE)) {
+    dataGaps.push(
+      "forward P/E omitted (provider value inconsistent with trailing — common on LSE GBp tickers)",
+    );
+  }
+  if (!hasMultiYearHistPe(metrics)) {
     dataGaps.push("no multi-year historical P/E average");
   }
 
+  const multiYearHist = hasMultiYearHistPe(metrics);
+
   const cheap = scoreCheap({
-    fwdPe: metrics.forwardPE,
+    // Forward vs multi-year history only when that history exists — never forward vs trailing TTM.
+    fwdPe: multiYearHist ? metrics.forwardPE : null,
     ownHistPe: metrics.peRatio,
     histPeAvg: metrics.histPeAvg,
     histPeYears: metrics.histPeYears,
     moatScorePct: null,
   });
 
-  const summary = valuationSummaryForLabel(cheap.label, cheap.currentPe, cheap.histPe);
+  const summary = valuationSummaryForLabel(
+    cheap.label,
+    cheap.currentPe,
+    cheap.histPe,
+    metrics,
+    multiYearHist,
+  );
   return { label: cheap.label, summary, dataGaps };
 }
 
@@ -146,11 +188,27 @@ function valuationSummaryForLabel(
   label: CheapLabel,
   currentPe: number | null,
   histPe: number | null,
+  metrics: ValuationMetrics,
+  comparedForwardToHist: boolean,
 ): string {
-  const peText =
-    currentPe != null
-      ? `Current P/E ${currentPe.toFixed(1)}x${histPe != null ? ` vs historical ~${histPe.toFixed(1)}x` : ""}.`
-      : "";
+  const parts: string[] = [];
+  if (comparedForwardToHist && currentPe != null && histPe != null) {
+    parts.push(
+      `Forward P/E ${currentPe.toFixed(1)}x vs ${metrics.histPeYears}y avg ~${histPe.toFixed(1)}x`,
+    );
+    if (metrics.peRatio != null) {
+      parts.push(`trailing ${metrics.peRatio.toFixed(1)}x`);
+    }
+  } else if (currentPe != null) {
+    parts.push(`Trailing P/E ${currentPe.toFixed(1)}x`);
+    if (histPe != null && Math.abs(histPe - currentPe) > 0.05) {
+      parts.push(`vs ~${histPe.toFixed(1)}x`);
+    }
+    if (metrics.forwardPE != null) {
+      parts.push(`forward ${metrics.forwardPE.toFixed(1)}x (separate from label)`);
+    }
+  }
+  const peText = parts.length > 0 ? `${parts.join("; ")}.` : "";
 
   switch (label) {
     case "cheap":
@@ -205,8 +263,9 @@ export function enrichValuationItemsWithQuotes(
 }
 
 export function mapShareFundamentalsToValuation(bundle: ShareFundamentalsBundle): WarrenValuationItem {
-  const metrics = buildValuationSnapshot(bundle.overview!, bundle.income, bundle.earnings);
-  const scored = scoreValuation(metrics);
+  const overview = bundle.overview!;
+  const metrics = buildValuationSnapshot(overview);
+  const scored = scoreValuation(metrics, { rawForwardPE: overview.forwardPE });
 
   return {
     symbol: bundle.symbol,
@@ -277,7 +336,9 @@ export async function analyzeValuationForWarren(
     };
   }
 
-  return { ok: true, results, errors };
+  const enriched = await Promise.all(results.map((item) => enrichValuationWithHistoricalPe(item)));
+
+  return { ok: true, results: enriched, errors };
 }
 
 export function demoValuationItems(tickers: string[]): WarrenValuationItem[] {
