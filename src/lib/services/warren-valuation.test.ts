@@ -5,6 +5,7 @@ import {
   buildValuationSnapshot,
   scoreValuation,
   demoValuationItems,
+  analyzeValuationForWarren,
   filterWarrenValuationSymbols,
   isEligibleForWarrenValuation,
   WARREN_VALUATION_MAX_SYMBOLS,
@@ -125,5 +126,15 @@ describe("filterWarrenValuationSymbols", () => {
     expect(filtered).not.toContain("BTC-EUR");
     expect(filtered.length).toBe(WARREN_VALUATION_MAX_SYMBOLS);
     expect(filtered[0]).toBe("UBER");
+  });
+});
+
+describe("analyzeValuationForWarren", () => {
+  it("rejects crypto-only symbol lists", async () => {
+    const result = await analyzeValuationForWarren("u1", ["BTC-EUR"]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.toLowerCase()).toMatch(/equity|fundamental|valuation/);
+    }
   });
 });

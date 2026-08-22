@@ -11,7 +11,12 @@ import {
   queryMoatCache,
 } from "@/lib/db";
 import { getWarrenMoatEvaluation, mapWarrenMoatEvaluationForTool } from "@/lib/services/warren-moat";
-import { analyzeValuationForWarren, demoValuationItems, filterWarrenValuationSymbols } from "@/lib/services/warren-valuation";
+import {
+  analyzeValuationForWarren,
+  demoValuationItems,
+  filterWarrenValuationSymbols,
+  WARREN_VALUATION_MAX_SYMBOLS,
+} from "@/lib/services/warren-valuation";
 import { createProvider } from "@/lib/api-providers";
 import type { WarrenPart, WarrenProposal, StockSnapshotData } from "./types";
 import type {
@@ -487,13 +492,15 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
         tickers: z
           .array(z.string().min(1).max(20))
           .min(1)
-          .max(10)
+          .max(WARREN_VALUATION_MAX_SYMBOLS)
           .optional()
-          .describe("Explicit tickers to analyze (1–10). Omit when scope is portfolio."),
+          .describe("Explicit tickers to analyze (1–6). Omit when scope is portfolio."),
         scope: z
           .enum(["portfolio"])
           .optional()
-          .describe("When set and tickers omitted, analyze top holdings in the active portfolio (max 10 by weight)."),
+          .describe(
+            `When set and tickers omitted, analyze top holdings in the active portfolio (max ${WARREN_VALUATION_MAX_SYMBOLS} by weight).`,
+          ),
         fresh: z
           .boolean()
           .optional()

@@ -1,14 +1,15 @@
 import type { CompanyOverview } from "@/lib/api-providers/types";
 import type { FundamentalData } from "@/lib/types";
 import type { FundamentalsCacheType, FundamentalsCacheProvider } from "@/lib/db/fundamentals-cache";
+import { hasValuationMetrics } from "@/lib/fundamentals/overview-quality";
 
 export function isCacheableOverview(data: CompanyOverview | null | undefined): boolean {
   if (!data?.symbol?.trim()) return false;
   return (
-    Boolean(data.name?.trim()) ||
-    data.peRatio != null ||
-    data.forwardPE != null ||
-    data.returnOnEquity != null
+    hasValuationMetrics(data) ||
+    data.returnOnEquity != null ||
+    data.profitMargin != null ||
+    data.revenueTTM != null
   );
 }
 

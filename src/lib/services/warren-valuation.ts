@@ -181,8 +181,12 @@ export async function analyzeValuationForWarren(
   if (normalized.length === 0) {
     return { ok: false, error: "At least one ticker is required", code: "invalid_input" };
   }
-  if (normalized.length > 10) {
-    return { ok: false, error: "Maximum 10 tickers per valuation request", code: "invalid_input" };
+  if (normalized.length > WARREN_VALUATION_MAX_SYMBOLS) {
+    return {
+      ok: false,
+      error: `Maximum ${WARREN_VALUATION_MAX_SYMBOLS} tickers per valuation request`,
+      code: "invalid_input",
+    };
   }
 
   const batch = await ensureShareFundamentalsBatch(userId, normalized, {

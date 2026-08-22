@@ -342,10 +342,11 @@ export class YahooProvider implements StockDataProvider {
     let ok = false;
     try {
       const result = await yahooFinance.quoteSummary(symbol, {
-        modules: ["summaryProfile", "summaryDetail", "financialData", "defaultKeyStatistics", "recommendationTrend"],
+        modules: ["price", "summaryProfile", "summaryDetail", "financialData", "defaultKeyStatistics", "recommendationTrend"],
       });
       ok = true;
 
+      const price = result.price;
       const profile = result.summaryProfile;
       const detail = result.summaryDetail;
       const fin = result.financialData;
@@ -353,12 +354,20 @@ export class YahooProvider implements StockDataProvider {
       const rec = result.recommendationTrend;
 
       const trend = rec?.trend?.find((t) => t.period === "0m");
+      const displayName =
+        (typeof price?.longName === "string" && price.longName) ||
+        (typeof price?.shortName === "string" && price.shortName) ||
+        (typeof profile?.name === "string" && profile.name) ||
+        symbol;
 
       return {
         symbol,
-        name: profile?.longBusinessSummary ? symbol : symbol,
+        name: displayName,
         description: profile?.longBusinessSummary ?? "",
-        exchange: "",
+        exchange:
+          (typeof price?.exchange === "string" && price.exchange) ||
+          (typeof price?.exchangeName === "string" && price.exchangeName) ||
+          "",
         currency: fin?.financialCurrency ?? detail?.currency ?? "USD",
         sector: profile?.sector ?? "",
         industry: profile?.industry ?? "",
@@ -378,7 +387,7 @@ export class YahooProvider implements StockDataProvider {
         fiftyDayMA: detail?.fiftyDayAverage ?? null,
         twoHundredDayMA: detail?.twoHundredDayAverage ?? null,
         sharesOutstanding: stats?.sharesOutstanding ?? null,
-        forwardPE: stats?.forwardPE ?? null,
+        forwardPE: stats?.forwardPE ?? detail?.forwardPE ?? numOrNull(fin?.forwardPE),
       };
     } catch {
       return null;

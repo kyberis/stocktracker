@@ -89,4 +89,70 @@ describe("isCacheableFundamentalData", () => {
       )
     ).toBe(true);
   });
+
+  it("rejects overview with only a symbol/name and no valuation fields", () => {
+    expect(
+      isCacheableFundamentalData(
+        "overview",
+        {
+          symbol: "GOOGL",
+          name: "GOOGL",
+          description: "",
+          exchange: "",
+          currency: "USD",
+          sector: "",
+          industry: "",
+          peRatio: null,
+          forwardPE: null,
+          pegRatio: null,
+          eps: null,
+          dividendPerShare: null,
+          dividendYield: null,
+          beta: null,
+          profitMargin: null,
+          returnOnEquity: null,
+          revenueTTM: null,
+          analystTargetPrice: null,
+          analystRatings: null,
+          fiftyDayMA: null,
+          twoHundredDayMA: null,
+          sharesOutstanding: null,
+        },
+        "yahoo"
+      )
+    ).toBe(false);
+  });
+
+  it("accepts overview with trailing P/E", () => {
+    expect(
+      isCacheableFundamentalData(
+        "overview",
+        {
+          symbol: "GOOGL",
+          name: "Alphabet Inc.",
+          description: "",
+          exchange: "NMS",
+          currency: "USD",
+          sector: "Tech",
+          industry: "Internet",
+          peRatio: 28,
+          forwardPE: null,
+          pegRatio: null,
+          eps: null,
+          dividendPerShare: null,
+          dividendYield: null,
+          beta: null,
+          profitMargin: null,
+          returnOnEquity: null,
+          revenueTTM: null,
+          analystTargetPrice: null,
+          analystRatings: null,
+          fiftyDayMA: null,
+          twoHundredDayMA: null,
+          sharesOutstanding: null,
+        },
+        "yahoo"
+      )
+    ).toBe(true);
+  });
 });
