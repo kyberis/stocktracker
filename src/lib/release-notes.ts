@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "Warren now advances the conversation instead of repeating the same valuation recap: follow-ups like “yes, rank by least upside” get a ranking and a new next step, not the same expensive/fair grouping again.",
         translations: {
           es: "Warren ahora avanza la conversación en vez de repetir el mismo resumen de valoración: si dices “sí, ordénalas por menor margen de subida”, responde con un ranking y un paso extra, no con el mismo agrupado de caras/justas.",
