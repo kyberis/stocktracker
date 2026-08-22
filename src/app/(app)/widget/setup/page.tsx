@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-type ScriptVariant = "portfolio" | "movers";
+type ScriptVariant = "portfolio" | "movers" | "byType";
 
 const SCRIPT_VARIANTS: Record<
   ScriptVariant,
@@ -33,6 +33,12 @@ const SCRIPT_VARIANTS: Record<
     filename: "trefolio-scriptable-movers.js",
     label: "Top movers",
     description: "Biggest day moves — Large shows 4 up + 3 down (fills the other side if short).",
+  },
+  byType: {
+    file: "/widget/trefolio-scriptable-by-type.js",
+    filename: "trefolio-scriptable-by-type.js",
+    label: "By asset type",
+    description: "Value and day change per sleeve — Stocks, ETFs, Crypto, Funds, Fixed return.",
   },
 };
 
@@ -299,7 +305,7 @@ function WidgetSetupContent() {
                 <div
                   role="radiogroup"
                   aria-label="Scriptable widget version"
-                  className="grid gap-2 sm:grid-cols-2"
+                  className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
                 >
                   {(Object.keys(SCRIPT_VARIANTS) as ScriptVariant[]).map((key) => {
                     const meta = SCRIPT_VARIANTS[key];
@@ -344,7 +350,7 @@ function WidgetSetupContent() {
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">4</span>
                   <span>
                     Long-press your home screen &rarr; tap <strong>+</strong> &rarr; search <strong>Scriptable</strong> &rarr; choose{" "}
-                    {scriptVariant === "movers" ? "Small, Medium, or Large" : "Small or Medium"} &rarr; select the script
+                    {scriptVariant === "movers" || scriptVariant === "byType" ? "Small, Medium, or Large" : "Small or Medium"} &rarr; select the script
                   </span>
                 </li>
               </ol>

@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.198",
+    version: "2.5.199",
     date: "2026-08-22",
     title: "Warren shared fundamentals and valuation",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Warren can fetch share-level fundamentals (FMP or Yahoo, cached for all users) and say whether a stock looks cheap, fair, or expensive — for one ticker or your portfolio. Still AI-generated, not investment advice.",
         translations: {
           es: "Warren puede obtener fundamentales compartidos por acción (FMP o Yahoo, en caché para todos) y decir si una acción parece barata, justa o cara — para un ticker o tu cartera. Sigue siendo IA, no es consejo de inversión.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.198",
+    date: "2026-08-22",
+    title: "Home screen widget by asset type",
+    titleTranslations: {
+      es: "Widget de inicio por tipo de activo",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "A new Scriptable home-screen widget shows portfolio value and day change per asset type — Stocks, ETFs, Crypto, Funds, and Fixed return — with Small, Medium, and Large layouts. Copy it from Widget setup. Informational only — not investment advice.",
+        translations: {
+          es: "Un nuevo widget Scriptable para la pantalla de inicio muestra valor y variación diaria por tipo de activo — acciones, ETFs, cripto, fondos y renta fija — con tamaños Pequeño, Mediano y Grande. Cópialo desde Configurar widget. Solo informativo, no es consejo de inversión.",
         },
       },
     ],
