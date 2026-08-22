@@ -1,4 +1,5 @@
 import { listHoldings as dbListHoldings } from "@/lib/db";
+import { filterWarrenValuationSymbols } from "@/lib/services/warren-valuation";
 import type { PortfolioSnapshot } from "./tools";
 
 /** User asks whether holdings look expensive/cheap — NOT moat screener stock ideas. */
@@ -21,20 +22,29 @@ export function wantsValuationIntent(message: string): boolean {
 
 async function resolveValuationSymbols(
   opts: { userId: string; portfolioId?: string; snapshot?: PortfolioSnapshot },
-  max = 8,
 ): Promise<string[]> {
+  const assetTypes = new Map<string, string | undefined>();
+  const symbols: string[] = [];
+
   const fromSnapshot =
-    opts.snapshot?.topHoldings
-      ?.slice()
-      .sort((a, b) => b.weight - a.weight)
-      .slice(0, max)
-      .map((h) => h.ticker.toUpperCase()) ?? [];
+    opts.snapshot?.topHoldings?.slice().sort((a, b) => b.weight - a.weight) ?? [];
 
-  if (fromSnapshot.length > 0) return fromSnapshot;
+  if (fromSnapshot.length > 0) {
+    for (const h of fromSnapshot) {
+      const sym = h.ticker.toUpperCase();
+      assetTypes.set(sym, h.assetType);
+      symbols.push(sym);
+    }
+  } else if (opts.portfolioId) {
+    const holdings = await dbListHoldings(opts.userId, opts.portfolioId);
+    for (const h of holdings) {
+      const sym = h.ticker.toUpperCase();
+      assetTypes.set(sym, h.assetType);
+      symbols.push(sym);
+    }
+  }
 
-  if (!opts.portfolioId) return [];
-  const holdings = await dbListHoldings(opts.userId, opts.portfolioId);
-  return holdings.slice(0, max).map((h) => h.ticker.toUpperCase());
+  return filterWarrenValuationSymbols(symbols, assetTypes);
 }
 
 /**

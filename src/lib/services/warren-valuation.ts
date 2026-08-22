@@ -1,10 +1,42 @@
 import type { CompanyOverview, EarningsReport, IncomeStatementReport } from "@/lib/api-providers/types";
-import type { FundamentalData } from "@/lib/types";
+import type { FundamentalData, HoldingAssetType } from "@/lib/types";
+import { isCryptoAssetRoute } from "@/lib/asset-detail-href";
+import { holdingNeedsFundamentals } from "@/lib/holdings-research";
 import { scoreCheap, type CheapLabel } from "@/lib/screening/scoring/categories";
 import {
   ensureShareFundamentalsBatch,
   type ShareFundamentalsBundle,
 } from "@/lib/services/share-fundamentals";
+
+/** Cap portfolio valuation batch size so Warren tool steps finish before the chat stream idles out. */
+export const WARREN_VALUATION_MAX_SYMBOLS = 6;
+
+export function isEligibleForWarrenValuation(
+  ticker: string,
+  assetType?: string | null,
+): boolean {
+  const type = (assetType ?? "stock") as HoldingAssetType;
+  if (!holdingNeedsFundamentals({ assetType: type })) return false;
+  if (isCryptoAssetRoute(ticker)) return false;
+  return true;
+}
+
+export function filterWarrenValuationSymbols(
+  symbols: string[],
+  assetTypes?: Map<string, string | undefined>,
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of symbols) {
+    const symbol = raw.trim().toUpperCase();
+    if (!symbol || seen.has(symbol)) continue;
+    if (!isEligibleForWarrenValuation(symbol, assetTypes?.get(symbol))) continue;
+    seen.add(symbol);
+    out.push(symbol);
+    if (out.length >= WARREN_VALUATION_MAX_SYMBOLS) break;
+  }
+  return out;
+}
 
 export interface ValuationMetrics {
   peRatio: number | null;
