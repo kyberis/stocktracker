@@ -115,7 +115,11 @@ export default function HomeV2Dashboard() {
 
   // Empty only when there are no holdings and no cash/manual assets.
   // Fixed-return (and other Assets & Accounts) must not hide behind EmptyPortfolio.
-  const isEmpty = holdings.length === 0 && cashEntries.length === 0;
+  // Empty only after portfolio data is loaded — avoids EmptyPortfolio flash while holdings fetch.
+  const isEmpty =
+    !isInitializing && holdings.length === 0 && cashEntries.length === 0;
+
+  const [introVisible, setIntroVisible] = useState(false);
 
   const introExperiment = useExperiment(AGENT_INTRO_EXPERIMENT_KEY, {
     enabled: aidEnabled,
@@ -213,7 +217,7 @@ export default function HomeV2Dashboard() {
         />
       )}
 
-      {isEmpty ? (
+      {isInitializing ? null : isEmpty ? (
         <EmptyPortfolio
           demoMode={demoMode}
           onAddStock={() => {
@@ -392,8 +396,13 @@ export default function HomeV2Dashboard() {
         demoMode={demoMode}
         dashboardReady={!isInitializing}
         onIntroDismissed={() => setIntroDismissed(true)}
+        onIntroVisibilityChange={setIntroVisible}
       />
-      <main className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-4 lg:px-6">
+      <main
+        className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-4 lg:px-6"
+        hidden={introVisible}
+        aria-hidden={introVisible}
+      >
       {isMobile || isEmpty ? (
         main
       ) : (
