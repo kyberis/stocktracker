@@ -61,6 +61,40 @@ test.describe("Widget setup Scriptable variants", () => {
     await expect(page.getByRole("heading", { name: /Widget Setup/i })).toBeVisible({ timeout: 15_000 });
   });
 
+  test("user can switch to by asset type script and see the by-type file preview", async ({
+    page,
+    request,
+    context,
+  }) => {
+    await createTestUser(request);
+    await adoptApiSessionInBrowser(request, context);
+    await page.goto("/widget/setup");
+    await dismissOverlays(page);
+    await expect(page.getByRole("heading", { name: /Widget Setup/i })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole("tab", { name: /^iOS$/ }).click();
+    const byTypeRadio = page.getByRole("radio", { name: /By asset type/i });
+    await expect(byTypeRadio).toBeVisible();
+    await byTypeRadio.click();
+    await expect(byTypeRadio).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByText("trefolio-scriptable-by-type.js")).toBeVisible();
+    await expect(
+      page.getByText(/Asset Type Breakdown Widget for Scriptable/i).first(),
+    ).toBeVisible({ timeout: 10_000 });
+  });
+
+  test("by-type script file is served publicly", async ({ request }) => {
+    const res = await request.get("/widget/trefolio-scriptable-by-type.js");
+    expect(res.status()).toBe(200);
+    const body = await res.text();
+    expect(body).toContain("byAssetType");
+    expect(body).toContain("TYPE_LABELS");
+    expect(body).toContain("widgetFamily");
+    expect(body).toContain("YOUR_TOKEN_HERE");
+  });
+
   test("movers script file is served publicly", async ({ request }) => {
     const res = await request.get("/widget/trefolio-scriptable-movers.js");
     expect(res.status()).toBe(200);

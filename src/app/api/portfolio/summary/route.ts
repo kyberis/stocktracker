@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth/session";
 import { findUserById, listHoldings, listCashEntries } from "@/lib/db";
-import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { computeDayChangeByType } from "@/lib/day-change-pct";
+import { calculatePortfolioTotals, calculateTotalsByAssetType } from "@/lib/portfolio-summary";
 import { investmentCashEntries } from "@/lib/portfolio-summary-cash";
+import { buildByAssetTypeForWidget } from "@/lib/widget/build-by-asset-type";
 import { withMetrics } from "@/lib/with-metrics";
 import { deviceApiCalls } from "@/lib/metrics";
 import { json401 } from "@/lib/log-unauthorized";
@@ -111,6 +113,7 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
       totalGainLossPercent: 0,
       holdingsCount: 0,
       topHoldings: [],
+      byAssetType: [],
       portfolioName,
       currency: emptyCurrency,
       updatedAt: new Date().toISOString(),
@@ -148,6 +151,23 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
   }
 
   const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, portfolioCurrency);
+  const byType = calculateTotalsByAssetType(holdings, cashEntries, quotes, exchangeRates, portfolioCurrency);
+  const dayChangeByType = computeDayChangeByType(
+    holdings,
+    quotes,
+    exchangeRates,
+    portfolioCurrency,
+    undefined,
+    cashEntries,
+    {
+      stock: byType.stock.totalCurrentEUR,
+      etf: byType.etf.totalCurrentEUR,
+      fund: byType.fund.totalCurrentEUR,
+      crypto: byType.crypto.totalCurrentEUR,
+      fixed_return: byType.fixed_return.totalCurrentEUR,
+    },
+  );
+  const byAssetType = buildByAssetTypeForWidget(byType, dayChangeByType);
 
   const holdingValues = holdings.map((h) => {
     const q = quotes[h.ticker];
@@ -194,6 +214,7 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     totalGainLossPercent: Math.round(totals.totalGainLossPercent * 100) / 100,
     holdingsCount: holdings.length,
     topHoldings,
+    byAssetType,
     portfolioName,
     currency: portfolioCurrency,
     updatedAt: new Date().toISOString(),
