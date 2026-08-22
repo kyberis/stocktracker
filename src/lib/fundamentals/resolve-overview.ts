@@ -1,4 +1,5 @@
 import { DE_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { CompanyOverview, StockDataProvider } from "@/lib/api-providers/types";
 import {
   hasValuationMetrics,
@@ -94,7 +95,7 @@ export async function fetchResolvedOverview(
   if (!hasValuationMetrics(best)) {
     const alt =
       primary.backend === "fmp"
-        ? { provider: (await resolveFundamentalsProvider(null)).provider, backend: "yahoo" as const }
+        ? { provider: new YahooProvider(), backend: "yahoo" as const }
         : await resolveFundamentalsProvider(userId);
 
     if (alt.backend !== primary.backend) {

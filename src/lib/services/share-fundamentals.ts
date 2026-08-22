@@ -17,6 +17,7 @@ import {
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { isCacheableFundamentalData, isCacheableOverview } from "@/lib/fundamentals/cache-quality";
 import { fetchResolvedOverview } from "@/lib/fundamentals/resolve-overview";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
 import {
   resolveFundamentalsProvider,
   type FundamentalsDataBackend,
@@ -253,12 +254,10 @@ export async function ensureShareFundamentals(
       } else {
         result = await fetchType(provider, backend, symbol, type);
         if (!result.data && backend === "fmp") {
-          const yahooResolved = await resolveFundamentalsProvider(null);
-          if (yahooResolved.backend === "yahoo") {
-            result = await fetchType(yahooResolved.provider, "yahoo", symbol, type);
-            provider = yahooResolved.provider;
-            backend = "yahoo";
-          }
+          const yahooProvider = new YahooProvider();
+          result = await fetchType(yahooProvider, "yahoo", symbol, type);
+          provider = yahooProvider;
+          backend = "yahoo";
         }
       }
 
