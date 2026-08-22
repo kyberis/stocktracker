@@ -11,6 +11,7 @@ import {
   queryMoatCache,
 } from "@/lib/db";
 import { getWarrenMoatEvaluation, mapWarrenMoatEvaluationForTool } from "@/lib/services/warren-moat";
+import { analyzeValuationForWarren, demoValuationItems } from "@/lib/services/warren-valuation";
 import { createProvider } from "@/lib/api-providers";
 import type { WarrenPart, WarrenProposal, StockSnapshotData } from "./types";
 import type {
@@ -476,6 +477,78 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
           return { found: false, note: result.error };
         }
         return mapWarrenMoatEvaluationForTool(result.data);
+      },
+    }),
+
+    analyzeValuation: tool({
+      description:
+        "Fetch share-level fundamentals (FMP or Yahoo, cached for all users) and return valuation metrics plus a cheap/fair/expensive label. Use when the user asks whether a stock looks expensive or cheap, wants fundamentals, P/E analysis, or portfolio valuation. Explain the label in prose citing metrics and fetchedAt — do not invent ratios.",
+      inputSchema: z.object({
+        tickers: z
+          .array(z.string().min(1).max(20))
+          .min(1)
+          .max(10)
+          .optional()
+          .describe("Explicit tickers to analyze (1–10). Omit when scope is portfolio."),
+        scope: z
+          .enum(["portfolio"])
+          .optional()
+          .describe("When set and tickers omitted, analyze top holdings in the active portfolio (max 10 by weight)."),
+        fresh: z
+          .boolean()
+          .optional()
+          .describe("When true, bypass share cache and re-fetch fundamentals (uses fundamentals quota on miss)."),
+      }),
+      execute: async ({ tickers, scope, fresh }) => {
+        let symbols = tickers?.map((t) => t.toUpperCase()) ?? [];
+        if (symbols.length === 0 && scope === "portfolio") {
+          symbols =
+            ctx.snapshot?.topHoldings
+              ?.slice()
+              .sort((a, b) => b.weight - a.weight)
+              .slice(0, 10)
+              .map((h) => h.ticker.toUpperCase()) ?? [];
+        }
+        if (symbols.length === 0) {
+          return {
+            found: false,
+            note: "No tickers to analyze. Pass tickers or scope portfolio with holdings loaded.",
+          };
+        }
+
+        ctx.emitStep(`Fetching fundamentals for ${symbols.join(", ")}…`);
+
+        if (ctx.isDemo) {
+          return {
+            found: true,
+            results: demoValuationItems(symbols),
+            errors: [] as const,
+            replyHint:
+              "Demo mode — explain each valuationLabel using metrics and note data is illustrative. Not investment advice.",
+          };
+        }
+
+        const result = await analyzeValuationForWarren(ctx.userId, symbols, { fresh: fresh === true });
+        if (!result.ok) {
+          if (result.code === "quota_exceeded") {
+            return {
+              found: false,
+              note: "Monthly fundamentals quota exceeded. Upgrade or try again next period.",
+            };
+          }
+          if (result.code === "rate_limited") {
+            return { found: false, note: result.error };
+          }
+          return { found: false, note: result.error };
+        }
+
+        return {
+          found: true,
+          results: result.results,
+          errors: result.errors,
+          replyHint:
+            "Ground the answer in valuationLabel, metrics, fetchedAt, and provider for each ticker. Mention dataGaps when present. Not investment advice.",
+        };
       },
     }),
 

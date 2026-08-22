@@ -59,7 +59,7 @@ Types and helpers in [`src/lib/db/telegram.ts`](../../src/lib/db/telegram.ts).
 
 ## 6. UI surface
 
-- `/profile` → **Warren on Telegram** card with Connect / Relink / Disconnect and deep link.
+- `/profile` → **Warren on Telegram** card with Connect / Disconnect button and deep link.
 - Telegram bot itself: `/help`, `/menu`, `/portfolios`, `/holdings`, `/chart`, `/news`, `/growth`, `/dividends`, `/alerts`, `/watchlist`, `/lang <code>`, `/unlink`.
 - Free-form text → Warren AI turn.
 - Voice notes → transcribed by Whisper, fed into the same Warren turn, reply

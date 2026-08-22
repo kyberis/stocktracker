@@ -1,6 +1,11 @@
 import { ensureInitialized } from "./client";
 
-export type FundamentalsCacheType = "income" | "balance" | "cashflow" | "earnings";
+export type FundamentalsCacheType =
+  | "overview"
+  | "income"
+  | "balance"
+  | "cashflow"
+  | "earnings";
 export type FundamentalsCacheProvider = "fmp" | "yahoo";
 
 export interface FundamentalsCacheRow {
