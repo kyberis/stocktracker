@@ -66,7 +66,7 @@ type HomeDayHighlight = {
 
 ## 6. UI surface
 
-**Main column (desktop):** Morning brief → Portfolio hero → **Portfolio recommendation card** → Movers \| Catalysts → Day highlights → Holdings → FinPulse teaser → Portfolio News (compact, round-robin diversified across holdings with publish date/time).
+**Main column (desktop):** Morning brief → Portfolio hero → **Portfolio recommendation card** → Movers \| Catalysts → Day highlights → Holdings (CTA → `/tools/holdings-explorer`) → FinPulse teaser → Portfolio News (compact, round-robin diversified across holdings with publish date/time).
 
 **Portfolio hero modes:** Default is a compact **Portfolio total** card (total value in display currency, day P&L, cost basis, total return %, holdings count) with an **Advanced** CTA. Advanced swaps in-place to the existing `PortfolioHeroCard` (invested assets, breakdown, performance matrix). **Summary** restores the compact card. Preference persisted as `home_v2_hero_mode` (`simple` | `advanced`).
 
@@ -122,6 +122,7 @@ type HomeDayHighlight = {
 | `home_v2_section_viewed` | Scroll into section |
 | `home_v2_highlight_clicked` | Chip click (`kind`, `ticker`) |
 | `home_v2_mcp_cta_clicked` | MCP card CTA |
+| `home_v2_holdings_explorer_cta_clicked` | Holdings-list CTA → `/tools/holdings-explorer` |
 | `home_rec_viewed` / `home_rec_next` / `home_rec_acted` | Recommendation card lifecycle |
 | `home_rec_diversify_opened` / `home_rec_candidate_clicked` | Diversify research funnel |
 
@@ -137,7 +138,7 @@ type HomeDayHighlight = {
 
 - Unit: `src/lib/homepage/score-day-highlights.test.ts`, `src/lib/homepage/build-portfolio-recommendations.test.ts`
 - Theme + responsive gates per `engineer-homepage` / `engineer-dashboard`
-- E2E: `e2e/home-v2.spec.ts`
+- E2E: `e2e/home-v2.spec.ts` (empty/demo hide explorer CTA; holdings CTA → `/tools/holdings-explorer`)
 
 ## 14. Rollout / migration
 

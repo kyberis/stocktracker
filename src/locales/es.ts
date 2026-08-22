@@ -3099,6 +3099,10 @@ const es: TranslationStrings = {
   warrenSubtitle: "Tu acompañante de inversión paciente",
   warrenTriggerSub: "Pregunta, aprende y actúa sobre tu portafolio",
   warrenClose: "Cerrar Warren",
+  warrenExpand: "Abrir Warren a pantalla completa",
+  warrenCollapse: "Salir de pantalla completa",
+  warrenResearchHint:
+    "A pantalla completa puedo buscar en la web pública, documentos de investor relations y transcripciones de earnings calls para fundamentar las respuestas.",
   warrenSend: "Enviar",
   warrenConnected: "Conectado a tu portafolio",
   warrenConnectedEmptyAdd: "Modo añadir acciones — cartera vacía",
@@ -3168,6 +3172,7 @@ const es: TranslationStrings = {
   homeV2AdvancedCta: "Avanzado",
   homeV2SimpleCta: "Resumen",
   homeV2TotalReturn: "Rentabilidad total",
+  homeV2HoldingsExplorerCta: "Explorar por PER y dividendos",
 
   homeRecEyebrow: "Recomendación de cartera",
   homeRecDiversifyTitle: "Mejora tu diversificación",

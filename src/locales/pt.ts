@@ -2856,6 +2856,10 @@ const pt: TranslationStrings = {
   warrenSubtitle: "O teu companheiro de investimento em valor",
   warrenTriggerSub: "Pergunta, aprende e age na tua carteira",
   warrenClose: "Fechar Warren",
+  warrenExpand: "Abrir Warren em ecrã inteiro",
+  warrenCollapse: "Sair do ecrã inteiro",
+  warrenResearchHint:
+    "Em ecrã inteiro posso pesquisar a web pública, documentos de investor relations e transcrições de earnings calls para fundamentar as respostas.",
   warrenSend: "Enviar",
   warrenConnected: "Ligado à tua carteira",
   warrenConnectedEmptyAdd: "Modo adicionar ações — carteira vazia",
@@ -3023,6 +3027,7 @@ const pt: TranslationStrings = {
   homeV2AdvancedCta: "Avançado",
   homeV2SimpleCta: "Resumo",
   homeV2TotalReturn: "Retorno total",
+  homeV2HoldingsExplorerCta: "Explorar por P/E e dividendos",
   homeV2EmptyTitle: "Add your first holding",
   homeV2EmptyBody: "Once you add stocks or ETFs, this home shows movers, catalysts, and day highlights.",
   homeV2EmptyCta: "Add holding",

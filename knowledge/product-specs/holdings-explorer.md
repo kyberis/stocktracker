@@ -21,6 +21,7 @@ Trefolio users open `/tools/holdings-explorer` to list **their** positions (not 
 | API | [`src/app/api/holdings-research/route.ts`](../../src/app/api/holdings-research/route.ts) | Fundamentals join |
 | Modal/Component | [`src/components/HoldingsExplorer.tsx`](../../src/components/HoldingsExplorer.tsx) | Table + presets |
 | Registry | [`src/lib/tools-registry.ts`](../../src/lib/tools-registry.ts) | Hub card, Pro badge |
+| Home CTA | [`src/components/homepage/HomeHoldingsExplorerCta.tsx`](../../src/components/homepage/HomeHoldingsExplorerCta.tsx) | Above holdings list on `/` |
 
 ## 4. Data model
 
@@ -48,6 +49,7 @@ Query: `portfolioId` (optional). Response: `{ rows, metricsPartial, staleAt }`. 
 - Context: `PortfolioProvider` (quotes, FX, holdings), `StockDetailDrawer` on name click (when not inspecting)
 - Hub: Tools → Analysis, Pro badge
 - Inspect mode: FAB “Ask Warren” → select a metric cell → floating `WarrenDrawer` (`placement="floating"`) with structured `selectionContext`
+- Full-screen toggle on the floating/drawer header; Warren may call `searchPublicWeb`, `fetchInvestorRelations`, and `fetchEarningsContext` (ticker/query only — no portfolio PII to search providers)
 
 ## 7. Business logic
 
@@ -94,8 +96,8 @@ Query: `portfolioId` (optional). Response: `{ rows, metricsPartial, staleAt }`. 
 
 ## 14. Tests
 
-- Unit: [`src/lib/holdings-research.test.ts`](../../src/lib/holdings-research.test.ts), [`src/lib/ai/warren/holdings-explorer-selection.test.ts`](../../src/lib/ai/warren/holdings-explorer-selection.test.ts), [`src/lib/db/screener-by-symbols.test.ts`](../../src/lib/db/screener-by-symbols.test.ts), API route tests.
-- E2E: [`e2e/holdings-explorer.spec.ts`](../../e2e/holdings-explorer.spec.ts) (FAB → P/E cell → chip)
+- Unit: [`src/lib/holdings-research.test.ts`](../../src/lib/holdings-research.test.ts), [`src/lib/ai/warren/holdings-explorer-selection.test.ts`](../../src/lib/ai/warren/holdings-explorer-selection.test.ts), [`src/lib/ai/warren/public-research.test.ts`](../../src/lib/ai/warren/public-research.test.ts), [`src/lib/db/screener-by-symbols.test.ts`](../../src/lib/db/screener-by-symbols.test.ts), API route tests.
+- E2E: [`e2e/holdings-explorer.spec.ts`](../../e2e/holdings-explorer.spec.ts) (FAB → P/E cell → chip → full screen)
 
 ## 15. Related skills and rules
 

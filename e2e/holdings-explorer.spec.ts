@@ -90,6 +90,10 @@ test.describe("Holdings explorer", () => {
     await pe.click();
     await expect(page.getByTestId("holdings-explorer-warren-chip")).toBeVisible();
     await expect(page.getByText(/AI-generated|Not financial advice/i).first()).toBeVisible();
+    const expand = page.getByTestId("warren-expand");
+    await expect(expand).toBeVisible();
+    await expand.click();
+    await expect(page.locator('[data-warren-expanded="true"]')).toBeVisible();
   });
 
   for (const theme of ["default", "canvas", "terminal", "studio"] as const) {

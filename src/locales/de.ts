@@ -2856,6 +2856,10 @@ const de: TranslationStrings = {
   warrenSubtitle: "Dein Value-Investing-Begleiter",
   warrenTriggerSub: "Frage, lerne und handle in deinem Portfolio",
   warrenClose: "Warren schließen",
+  warrenExpand: "Warren im Vollbild öffnen",
+  warrenCollapse: "Vollbild verlassen",
+  warrenResearchHint:
+    "Im Vollbild kann ich das öffentliche Web, Investor-Relations-Dokumente und Earnings-Call-Transkripte durchsuchen, um Antworten zu begründen.",
   warrenSend: "Senden",
   warrenConnected: "Mit deinem Portfolio verbunden",
   warrenConnectedEmptyAdd: "Aktien-hinzufügen-Modus — leeres Portfolio",
@@ -3023,6 +3027,7 @@ const de: TranslationStrings = {
   homeV2AdvancedCta: "Erweitert",
   homeV2SimpleCta: "Übersicht",
   homeV2TotalReturn: "Gesamtrendite",
+  homeV2HoldingsExplorerCta: "Nach KGV und Dividende erkunden",
   homeV2EmptyTitle: "Add your first holding",
   homeV2EmptyBody: "Once you add stocks or ETFs, this home shows movers, catalysts, and day highlights.",
   homeV2EmptyCta: "Add holding",

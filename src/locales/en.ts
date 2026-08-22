@@ -3103,6 +3103,10 @@ const en: TranslationStrings = {
   warrenSubtitle: "Your value-investing companion",
   warrenTriggerSub: "Ask, learn, and act on your portfolio",
   warrenClose: "Close Warren",
+  warrenExpand: "Open Warren full screen",
+  warrenCollapse: "Exit full screen",
+  warrenResearchHint:
+    "In full screen I can search the public web, investor-relations filings, and earnings-call transcripts to ground answers.",
   warrenSend: "Send",
   warrenConnected: "Connected to your portfolio",
   warrenConnectedEmptyAdd: "Add-stock mode — empty portfolio",
@@ -3171,6 +3175,7 @@ const en: TranslationStrings = {
   homeV2AdvancedCta: "Advanced",
   homeV2SimpleCta: "Summary",
   homeV2TotalReturn: "Total return",
+  homeV2HoldingsExplorerCta: "Explore by P/E & yield",
 
   // ── Home portfolio recommendations ──
   homeRecEyebrow: "Portfolio tip",

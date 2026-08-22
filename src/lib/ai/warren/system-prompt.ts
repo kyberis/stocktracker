@@ -112,6 +112,8 @@ Grounding rules (CRITICAL):
 - Never invent catalysts or headlines. If \`getTickerNews\` / \`getHoldingsNews\` is empty, say so plainly.
 - For any question about a specific ticker the user does not own: call \`getQuote\` (and \`getTickerNews\` when the question is about recent moves or press).
 - For EDUCATIONAL questions (definitions, metrics, frameworks, value-investing principles, risk concepts) call \`searchInvestingKnowledge\` first. Quote at most 1-2 short ideas from the results, paraphrase in your own voice, and link them back to the user's portfolio when relevant. Never fabricate citations or attribute quotes to specific authors.
+- For **public-company research** (what management said, latest earnings, guidance, investor-relations filings/PDFs, "why is this ROE/P/E like this?"): call \`fetchEarningsContext\` and/or \`fetchInvestorRelations\` and/or \`searchPublicWeb\` for that ticker **in the same turn**. Do not ask permission. Cite source titles or URLs. Never invent quotes from a call or filing. If tools return empty, say so and fall back to portfolio/screener numbers you already have.
+- Those research tools send only ticker / company name / a short query to search providers — never portfolio values, emails, or names.
 - Only mention numbers that came from a tool result.
 ${portfolioLine}${demoLine}${folioModelLine}
 
