@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   AGENT_INTRO_EXPERIMENT_KEY,
   isAgentIntroTreatment,
@@ -10,9 +10,16 @@ import {
   resetAgentIntroEngagementSession,
 } from "@/lib/agent-intro";
 import { trackExperimentEvent, useExperiment } from "@/lib/use-experiment";
+import AgentIntroSplashShell from "./AgentIntroSplashShell";
 
-const AgentIntroConvergence = dynamic(() => import("./AgentIntroConvergence"), { ssr: false });
-const AgentIntroBriefing = dynamic(() => import("./AgentIntroBriefing"), { ssr: false });
+const AgentIntroConvergence = dynamic(() => import("./AgentIntroConvergence"), {
+  ssr: false,
+  loading: () => <AgentIntroSplashShell />,
+});
+const AgentIntroBriefing = dynamic(() => import("./AgentIntroBriefing"), {
+  ssr: false,
+  loading: () => <AgentIntroSplashShell />,
+});
 
 /**
  * A/B gate for Warren + Clara home intro (`agent_intro` experiment).
@@ -47,7 +54,27 @@ export default function AgentIntroGate({
   const variant = forceVariant ?? experiment.variant;
   const treatment = isAgentIntroTreatment(variant);
 
-  const shouldShow = useMemo(() => {
+  const blocksDashboard = useMemo(() => {
+    if (demoMode || dismissed) return false;
+    if (!forceVariant && prefersReducedMotionIntro()) return false;
+
+    if (forceVariant) return isAgentIntroTreatment(forceVariant);
+
+    if (experiment.loading) return true;
+    if (experiment.previewing && treatment) return true;
+    if (experiment.status !== "running" || !treatment) return false;
+    return true;
+  }, [
+    demoMode,
+    dismissed,
+    experiment.loading,
+    experiment.previewing,
+    experiment.status,
+    forceVariant,
+    treatment,
+  ]);
+
+  const showAnimation = useMemo(() => {
     if (demoMode || dismissed) return false;
     if (!forceVariant && prefersReducedMotionIntro()) return false;
 
@@ -68,15 +95,15 @@ export default function AgentIntroGate({
   ]);
 
   useEffect(() => {
-    if (shouldShow) {
+    if (showAnimation) {
       resetAgentIntroEngagementSession();
       setPlayKey((k) => k + 1);
     }
-  }, [shouldShow, variant]);
+  }, [showAnimation, variant]);
 
-  useEffect(() => {
-    onIntroVisibilityChange?.(shouldShow);
-  }, [onIntroVisibilityChange, shouldShow]);
+  useLayoutEffect(() => {
+    onIntroVisibilityChange?.(blocksDashboard);
+  }, [blocksDashboard, onIntroVisibilityChange]);
 
   const finish = useCallback(
     (outcome: "completed" | "skipped") => {
@@ -92,7 +119,11 @@ export default function AgentIntroGate({
     [dest, onIntroDismissed, variant],
   );
 
-  if (!shouldShow) return null;
+  if (!blocksDashboard) return null;
+
+  if (!showAnimation) {
+    return <AgentIntroSplashShell contained={contained} />;
+  }
 
   if (variant === "briefing") {
     return (
@@ -120,5 +151,5 @@ export default function AgentIntroGate({
     );
   }
 
-  return null;
+  return <AgentIntroSplashShell contained={contained} />;
 }

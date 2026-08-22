@@ -170,6 +170,11 @@
     transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.splashShell .logoBlock {
+  opacity: 1;
+  transform: scale(1);
+}
+
 .logoWordmark {
   font-size: 1.35rem;
   font-weight: 800;
