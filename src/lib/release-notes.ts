@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.211",
+    version: "2.5.212",
     date: "2026-08-22",
     title: "Admin traffic graph — external providers",
     titleTranslations: {
@@ -34,6 +34,23 @@ export const releaseNotes: ReleaseEntry[] = [
     ],
   },
   {
+    version: "2.5.211",
+    date: "2026-08-22",
+    title: "Warren Telegram on Profile for OneLogin users",
+    titleTranslations: {
+      es: "Warren en Telegram en Perfil para usuarios OneLogin",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Profile → Account now shows the Warren on Telegram connect card for unified OneLogin users (it was hidden behind the IdP account redirect).",
+        translations: {
+          es: "Perfil → Cuenta ahora muestra la tarjeta para vincular Warren en Telegram a usuarios unificados con OneLogin (antes quedaba oculta tras el redireccionamiento a la cuenta IdP).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.210",
     date: "2026-08-22",
     title: "Admin AI prompts catalog",
@@ -41,6 +58,13 @@ export const releaseNotes: ReleaseEntry[] = [
       es: "Catálogo de prompts IA en admin",
     },
     changes: [
+      {
+        type: "fix",
+        text: "Warren investor-relations research now resolves cross-listing aliases (NOVO-B.CO → NVO / Novo Nordisk) and falls back to public web plus earnings excerpts when the IR extract is empty, instead of a generic company story.",
+        translations: {
+          es: "La investigación de investor relations de Warren ahora resuelve alias de cotización (NOVO-B.CO → NVO / Novo Nordisk) y, si el extracto IR viene vacío, usa web pública y earnings en el mismo turno en vez de un relato genérico de la empresa.",
+        },
+      },
       {
         type: "improvement",
         text: "Admin panel adds an AI Prompts page listing canonical system prompts for Warren, screening agents, portfolio tools, digests, and sister agents Clara and Will.",
