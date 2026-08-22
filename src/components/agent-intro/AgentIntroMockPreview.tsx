@@ -124,6 +124,7 @@ export default function AgentIntroMockPreview() {
             key={`mock-conv-${playKey}`}
             playKey={playKey}
             contained
+            dashboardReady
             onComplete={() => setBehindVisible(true)}
             onSkip={() => setBehindVisible(true)}
           />
@@ -132,6 +133,7 @@ export default function AgentIntroMockPreview() {
             key={`mock-brief-${playKey}`}
             playKey={playKey}
             contained
+            dashboardReady
             onComplete={() => setBehindVisible(true)}
             onSkip={() => setBehindVisible(true)}
           />

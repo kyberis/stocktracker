@@ -64,6 +64,20 @@ export function AgentIntroLogoBlock({ tagline }: { tagline: string }) {
   );
 }
 
+export function AgentIntroLoadingBlock({ label, visible }: { label: string; visible: boolean }) {
+  return (
+    <div
+      className={[styles.loadingBlock, visible ? styles.loadingBlockVisible : ""].filter(Boolean).join(" ")}
+      role="status"
+      aria-live="polite"
+      aria-busy={visible}
+    >
+      <div className={styles.loadingSpinner} aria-hidden="true" />
+      <p className={styles.loadingLabel}>{label}</p>
+    </div>
+  );
+}
+
 export function overlayShellClass(contained: boolean, hidden: boolean): string {
   return [
     contained ? styles.containedOverlay : styles.productionOverlay,

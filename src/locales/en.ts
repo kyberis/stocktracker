@@ -2119,6 +2119,7 @@ const en: TranslationStrings = {
   agentIntroBriefingLogoTagline: "Warren and Clara, coordinated on trefolio",
   agentIntroConvergenceAria: "Animated intro — Convergence",
   agentIntroBriefingAria: "Animated intro — Team briefing",
+  agentIntroLoading: "Loading your portfolio…",
 
   landingDevDocsEyebrow: "Developers & AI",
   landingDevDocsHeading: "Connect Cursor, Claude Code, and your agents",

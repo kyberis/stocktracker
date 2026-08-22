@@ -390,7 +390,7 @@ export default function HomeV2Dashboard() {
       <AgentIntroGate
         isEmpty={isEmpty}
         demoMode={demoMode}
-        isReady={!isInitializing}
+        dashboardReady={!isInitializing}
         onIntroDismissed={() => setIntroDismissed(true)}
       />
       <main className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-4 lg:px-6">

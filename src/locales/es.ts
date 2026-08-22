@@ -2116,6 +2116,7 @@ const es: TranslationStrings = {
   agentIntroBriefingLogoTagline: "Warren y Clara, coordinados en trefolio",
   agentIntroConvergenceAria: "Intro animada — Convergencia",
   agentIntroBriefingAria: "Intro animada — Briefing en equipo",
+  agentIntroLoading: "Cargando tu cartera…",
 
   landingDevDocsEyebrow: "Desarrolladores e IA",
   landingDevDocsHeading: "Conecta Cursor, Claude Code y tus agentes",

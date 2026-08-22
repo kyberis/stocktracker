@@ -65,6 +65,17 @@ export function markAgentIntroPostActionRecorded(): void {
   }
 }
 
+/** Reset per-visit engagement tracking when a new intro starts. */
+export function resetAgentIntroEngagementSession(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(ENGAGEMENT_READY_KEY);
+    window.sessionStorage.removeItem(POST_ACTION_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 export function prefersReducedMotionIntro(): boolean {
   if (typeof window === "undefined") return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
