@@ -482,7 +482,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
 
     analyzeValuation: tool({
       description:
-        "Fetch share-level fundamentals (FMP or Yahoo, cached for all users) and return valuation metrics plus a cheap/fair/expensive label. Use when the user asks whether a stock looks expensive or cheap, wants fundamentals, P/E analysis, or portfolio valuation. Explain the label in prose citing metrics and fetchedAt — do not invent ratios.",
+        "Fetch share-level valuation metrics (P/E, ROE, cheap/fair/expensive label) for portfolio holdings. Overview-only fetch — fast. Call ONCE per turn when the user asks whether stocks look expensive or cheap. Do not call screenMoatStocks for this.",
       inputSchema: z.object({
         tickers: z
           .array(z.string().min(1).max(20))

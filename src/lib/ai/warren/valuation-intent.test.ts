@@ -1,13 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { wantsValuationIntent } from "./valuation-intent";
+import { buildValuationPrefetchAppendix, wantsValuationIntent } from "./valuation-intent";
 
 vi.mock("@/lib/db", () => ({
   listHoldings: vi.fn(),
-}));
-
-vi.mock("@/lib/services/warren-valuation", () => ({
-  analyzeValuationForWarren: vi.fn(),
 }));
 
 describe("valuation-intent", () => {
@@ -25,5 +21,25 @@ describe("valuation-intent", () => {
 
   it("ignores unrelated portfolio questions", () => {
     expect(wantsValuationIntent("What is my total portfolio value?")).toBe(false);
+  });
+
+  it("buildValuationPrefetchAppendix returns instructions without fetching market data", async () => {
+    const appendix = await buildValuationPrefetchAppendix("qué stocks parecen caras", {
+      userId: "u1",
+      snapshot: {
+        baseCurrency: "EUR",
+        totals: { value: 1, cost: 1, gainLoss: 0, gainLossPct: 0, dayChange: 0 },
+        holdingsCount: 2,
+        topHoldings: [
+          { ticker: "AAPL", value: 100, weight: 60 },
+          { ticker: "MSFT", value: 50, weight: 40 },
+        ],
+        allocation: [],
+        cashSummary: {},
+      },
+    });
+    expect(appendix).toContain("analyzeValuation");
+    expect(appendix).toContain("AAPL");
+    expect(appendix).toContain("Do NOT call");
   });
 });

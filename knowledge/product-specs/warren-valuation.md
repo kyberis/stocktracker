@@ -29,7 +29,7 @@ When a user asks whether a stock looks expensive or cheap, or requests fundament
 
 ## 5. Business logic
 
-1. User asks valuation question → Warren calls `analyzeValuation`.
+1. User asks valuation question → Warren calls `analyzeValuation` once (overview-only fetch; no blocking prefetch).
 2. `ensureShareFundamentals` loads fresh cache or fetches via `resolveFundamentalsProvider`.
 3. `scoreValuation` applies [`scoreCheap`](../../src/lib/screening/scoring/categories.ts) on P/E multiples.
 4. Warren cites `valuationLabel`, `metrics`, `fetchedAt`, and `provider`; adds disclaimer when discussing a specific ticker.

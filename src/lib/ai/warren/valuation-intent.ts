@@ -1,5 +1,4 @@
 import { listHoldings as dbListHoldings } from "@/lib/db";
-import { analyzeValuationForWarren } from "@/lib/services/warren-valuation";
 import type { PortfolioSnapshot } from "./tools";
 
 /** User asks whether holdings look expensive/cheap — NOT moat screener stock ideas. */
@@ -38,6 +37,10 @@ async function resolveValuationSymbols(
   return holdings.slice(0, max).map((h) => h.ticker.toUpperCase());
 }
 
+/**
+ * Lightweight intent appendix — no market-data fetch here (that blocks the stream
+ * and duplicated the analyzeValuation tool). The tool fetches overview-only data.
+ */
 export async function buildValuationPrefetchAppendix(
   message: string,
   opts: { userId: string; portfolioId?: string; snapshot?: PortfolioSnapshot },
@@ -45,50 +48,16 @@ export async function buildValuationPrefetchAppendix(
   if (!wantsValuationIntent(message)) return null;
 
   const symbols = await resolveValuationSymbols(opts);
-  if (symbols.length === 0) {
-    return [
-      "TASK OVERRIDE — Valuation request detected:",
-      'User asked whether stocks look expensive/cheap. Call `analyzeValuation` with `scope: "portfolio"` or explicit tickers.',
-      "Do NOT call `screenMoatStocks` — that searches the global moat database for new ideas, not the user's holdings.",
-    ].join("\n");
-  }
+  const tickerLine =
+    symbols.length > 0
+      ? `Holdings to value: ${symbols.join(", ")}.`
+      : "Use the active portfolio holdings.";
 
-  try {
-    const result = await analyzeValuationForWarren(opts.userId, symbols);
-    if (!result.ok) {
-      return [
-        "TASK OVERRIDE — Valuation request detected:",
-        `Prefetch could not load fundamentals: ${result.error}`,
-        'Try `analyzeValuation` with `scope: "portfolio"` or name specific tickers. Do NOT call `screenMoatStocks`.',
-      ].join("\n");
-    }
-
-    const lines = result.results.map(
-      (r) =>
-        `${r.symbol} (${r.companyName}): label=${r.valuationLabel}, P/E=${r.metrics.peRatio ?? "n/a"}, forward P/E=${r.metrics.forwardPE ?? "n/a"}, ROE=${r.metrics.returnOnEquity ?? "n/a"} — ${r.valuationSummary} [${r.provider}, ${r.fetchedAt}]`,
-    );
-
-    const errors =
-      result.errors.length > 0
-        ? `No data for: ${result.errors.map((e) => `${e.symbol} (${e.error})`).join("; ")}`
-        : "";
-
-    return [
-      "TASK OVERRIDE — Portfolio valuation request detected:",
-      "User asked which stocks look expensive/cheap. Use the prefetch below (or call `analyzeValuation` with the same tickers).",
-      "Do NOT call `screenMoatStocks` — that is for discovering new moat-screener ideas, not valuing holdings the user already owns.",
-      "Answer in prose: group expensive vs fair vs cheap; cite P/E and fetchedAt; do not invent ratios.",
-      ...lines,
-      errors,
-    ]
-      .filter(Boolean)
-      .join("\n");
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "Unknown error";
-    return [
-      "TASK OVERRIDE — Valuation request detected:",
-      `Prefetch failed unexpectedly: ${msg}`,
-      'Call `analyzeValuation` with `scope: "portfolio"`. Do NOT call `screenMoatStocks`.',
-    ].join("\n");
-  }
+  return [
+    "TASK OVERRIDE — Portfolio valuation request detected:",
+    tickerLine,
+    'Call `analyzeValuation` ONCE with `scope: "portfolio"` (or the tickers above).',
+    "Do NOT call `screenMoatStocks` — that searches the global moat database for new ideas.",
+    "After the tool returns, group holdings as expensive / fair / cheap; cite P/E, valuationLabel, fetchedAt, and provider. Do not invent ratios.",
+  ].join("\n");
 }

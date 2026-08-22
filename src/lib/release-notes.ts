@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.202",
+    date: "2026-08-22",
+    title: "Warren portfolio valuation performance",
+    titleTranslations: {
+      es: "Rendimiento de valoración de cartera en Warren",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren portfolio valuation now fetches overview-only metrics (not full financial statements) and skips blocking server prefetch — fixes timeouts and “Load failed” when asking which holdings look expensive.",
+        translations: {
+          es: "La valoración de cartera en Warren ahora obtiene solo métricas de overview (no estados financieros completos) y evita prefetch bloqueante — corrige timeouts y «Load failed» al preguntar qué posiciones parecen caras.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.201",
     date: "2026-08-22",
     title: "Warren valuation routing fix",

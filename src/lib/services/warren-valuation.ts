@@ -155,7 +155,7 @@ export async function analyzeValuationForWarren(
 
   const batch = await ensureShareFundamentalsBatch(userId, normalized, {
     fresh: opts?.fresh,
-    concurrency: 3,
+    scope: "valuation",
   });
 
   const results: WarrenValuationItem[] = [];

@@ -25,6 +25,8 @@ import { checkFmpRateLimit } from "@/lib/rate-limit";
 import { deferTask } from "@/lib/task-runner";
 import { findUserById } from "@/lib/db";
 
+export type ShareFundamentalsScope = "full" | "valuation";
+
 export const FUNDAMENTALS_MAX_AGE_DAYS = 7;
 
 export const SHARE_FUNDAMENTALS_TYPES = [
@@ -147,10 +149,14 @@ async function persistType(
   await upsertFundamentalsCache(symbol, type, data, providerTag);
 }
 
+function typesForScope(scope: ShareFundamentalsScope): readonly ShareFundamentalsType[] {
+  return scope === "valuation" ? ["overview"] : SHARE_FUNDAMENTALS_TYPES;
+}
+
 export async function ensureShareFundamentals(
   userId: string,
   symbolInput: string,
-  opts?: { fresh?: boolean },
+  opts?: { fresh?: boolean; scope?: ShareFundamentalsScope },
 ): Promise<ShareFundamentalsResult<ShareFundamentalsBundle>> {
   const symbol = normalizeSymbol(symbolInput);
   if (!symbol) {
@@ -161,11 +167,13 @@ export async function ensureShareFundamentals(
   if (!user) return { ok: false, error: "User not found", code: "user_not_found" };
 
   const fresh = opts?.fresh === true;
+  const scope = opts?.scope ?? "full";
+  const types = typesForScope(scope);
   const cachedParts: Partial<Record<ShareFundamentalsType, CachedPayload>> = {};
   const updatedAts: string[] = [];
   let providerTag: FundamentalsCacheProvider | null = null;
 
-  for (const type of SHARE_FUNDAMENTALS_TYPES) {
+  for (const type of types) {
     const cached = await readCachedType<CachedPayload>(symbol, type, fresh);
     if (cached.data) {
       cachedParts[type] = cached.data;
@@ -174,7 +182,7 @@ export async function ensureShareFundamentals(
     }
   }
 
-  const missingTypes = SHARE_FUNDAMENTALS_TYPES.filter((type) => !cachedParts[type]);
+  const missingTypes = types.filter((type) => !cachedParts[type]);
   let didFetch = false;
 
   if (missingTypes.length > 0) {
@@ -254,10 +262,10 @@ export async function ensureShareFundamentals(
 export async function ensureShareFundamentalsBatch(
   userId: string,
   symbols: string[],
-  opts?: { fresh?: boolean; concurrency?: number },
+  opts?: { fresh?: boolean; concurrency?: number; scope?: ShareFundamentalsScope },
 ): Promise<ShareFundamentalsResult<ShareFundamentalsBundle>[]> {
   const unique = [...new Set(symbols.map(normalizeSymbol).filter(Boolean))];
-  const concurrency = opts?.concurrency ?? 3;
+  const concurrency = opts?.concurrency ?? (opts?.scope === "valuation" ? 5 : 3);
   const results: ShareFundamentalsResult<ShareFundamentalsBundle>[] = [];
 
   for (let i = 0; i < unique.length; i += concurrency) {
