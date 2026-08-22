@@ -16,7 +16,9 @@ import {
 } from "@/lib/db/fundamentals-cache";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { isCacheableFundamentalData, isCacheableOverview } from "@/lib/fundamentals/cache-quality";
+import { hasValuationMetrics } from "@/lib/fundamentals/overview-quality";
 import { fetchResolvedOverview } from "@/lib/fundamentals/resolve-overview";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
 import {
   resolveFundamentalsProvider,
   type FundamentalsDataBackend,
@@ -207,11 +209,19 @@ export async function ensureShareFundamentals(
 
   for (const type of types) {
     const cached = await readCachedType<CachedPayload>(symbol, type, fresh);
-    if (cached.data) {
-      cachedParts[type] = cached.data;
-      if (cached.updatedAt) updatedAts.push(cached.updatedAt);
-      providerTag = providerTag ?? cached.provider;
+    if (!cached.data) continue;
+    // Valuation needs P/E (or forward/PEG). A fresh-looking FMP row with only
+    // ROE/revenue must not short-circuit the Yahoo enrichment path.
+    if (
+      type === "overview" &&
+      scope === "valuation" &&
+      !hasValuationMetrics(cached.data as CompanyOverview)
+    ) {
+      continue;
     }
+    cachedParts[type] = cached.data;
+    if (cached.updatedAt) updatedAts.push(cached.updatedAt);
+    providerTag = providerTag ?? cached.provider;
   }
 
   const missingTypes = types.filter((type) => !cachedParts[type]);
@@ -253,12 +263,10 @@ export async function ensureShareFundamentals(
       } else {
         result = await fetchType(provider, backend, symbol, type);
         if (!result.data && backend === "fmp") {
-          const yahooResolved = await resolveFundamentalsProvider(null);
-          if (yahooResolved.backend === "yahoo") {
-            result = await fetchType(yahooResolved.provider, "yahoo", symbol, type);
-            provider = yahooResolved.provider;
-            backend = "yahoo";
-          }
+          const yahooProvider = new YahooProvider();
+          result = await fetchType(yahooProvider, "yahoo", symbol, type);
+          provider = yahooProvider;
+          backend = "yahoo";
         }
       }
 

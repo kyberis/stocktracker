@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.208",
+    date: "2026-08-22",
+    title: "Warren valuation Yahoo fallback",
+    titleTranslations: {
+      es: "Fallback Yahoo en valoración Warren",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren portfolio valuation now falls back to Yahoo (not FMP again) when FMP returns sparse overviews without P/E, and ignores cached overviews that lack valuation multiples — fixes missing ratios for GOOGL, UBER, and other liquid tickers on Folio.",
+        translations: {
+          es: "La valoración de cartera en Warren ahora recurre a Yahoo (no otra vez a FMP) cuando FMP devuelve overviews sin P/E, e ignora cachés sin múltiplos de valoración — corrige ratios ausentes en GOOGL, UBER y otros tickers líquidos en Folio.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.207",
     date: "2026-08-22",
     title: "Agent intro full-screen overlay",
