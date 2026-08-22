@@ -107,4 +107,5 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `users` | [`src/lib/db/ai-logs.ts`](../../src/lib/db/ai-logs.ts) |
 | `watchlist` | [`src/lib/db/email-template-seeds.ts`](../../src/lib/db/email-template-seeds.ts) |
 | `weekly_digests` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `widget_tokens` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `yahoo_historical_cache` | [`src/lib/db/historical-cache.ts`](../../src/lib/db/historical-cache.ts) |
