@@ -1,5 +1,8 @@
 import { httpRequestsTotal, httpRequestDuration } from "./metrics";
 import { pushRequestMetric } from "./grafana-push";
+import { normalizeApiRoute } from "./traffic/normalize";
+import { resolveTrafficSource } from "./traffic/resolve-source";
+import { trackTrafficEdge } from "./traffic/track";
 
 type RouteHandler<T extends Request = Request> = (
   req: T,
@@ -51,6 +54,10 @@ export function withMetrics<T extends Request>(
       httpRequestsTotal.inc({ route, method, status_code: String(statusCode) });
       const durationSeconds = (performance.now() - start) / 1000;
       pushRequestMetric(route, method, statusCode, durationSeconds);
+
+      const source = resolveTrafficSource(req);
+      const apiGroup = normalizeApiRoute(route);
+      trackTrafficEdge("source_api", source, apiGroup);
     }
   };
 }

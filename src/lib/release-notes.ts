@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.209",
+    date: "2026-08-22",
+    title: "Admin traffic graph",
+    titleTranslations: {
+      es: "Grafo de tráfico en admin",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "New admin Traffic panel shows an interactive graph of which screens and origins call which internal API groups, with line thickness proportional to request volume (Redis counters, no per-request DB writes).",
+        translations: {
+          es: "Nuevo panel Traffic en admin: grafo interactivo de qué pantallas y orígenes llaman a qué grupos de API internas, con grosor de línea proporcional al volumen (contadores Redis, sin escrituras DB por request).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.208",
     date: "2026-08-22",
     title: "Warren valuation Yahoo fallback",
