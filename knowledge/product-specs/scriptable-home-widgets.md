@@ -1,10 +1,10 @@
 # Scriptable home screen widgets
 
-> iOS home-screen widgets via Scriptable: portfolio summary and top-movers variants.
+> iOS home-screen widgets via Scriptable: portfolio summary, top-movers, and by-asset-type variants.
 
 ## 1. Summary
 
-Authenticated users copy a ready-made Scriptable script from `/widget/setup`, paste it into the free Scriptable iOS app, and pin a live portfolio widget. Two script versions ship: portfolio summary (value + day change) and top movers (two gainers + one loser by day %).
+Authenticated users copy a ready-made Scriptable script from `/widget/setup`, paste it into the free Scriptable iOS app, and pin a live portfolio widget. Three script versions ship: portfolio summary (value + day change), top movers (two gainers + one loser by day %), and by asset type (value + day change per Stocks / ETFs / Crypto / Funds / Fixed return sleeve).
 
 ## 2. Status
 
@@ -23,6 +23,7 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 | Nav | Dashboard More menu + menu search | Always lists “Home screen widget” |
 | Static | [`public/widget/trefolio-scriptable.js`](../../public/widget/trefolio-scriptable.js) | Portfolio summary Scriptable script |
 | Static | [`public/widget/trefolio-scriptable-movers.js`](../../public/widget/trefolio-scriptable-movers.js) | Top movers Scriptable script |
+| Static | [`public/widget/trefolio-scriptable-by-type.js`](../../public/widget/trefolio-scriptable-by-type.js) | By asset type Scriptable script |
 | API | [`src/app/api/portfolio/summary/route.ts`](../../src/app/api/portfolio/summary/route.ts) | Bearer widget token; `?full=true` for prices |
 | API | [`src/app/api/widget-token/route.ts`](../../src/app/api/widget-token/route.ts) | Issue / revoke widget token |
 | Profile | [`src/components/ProfilePage.tsx`](../../src/components/ProfilePage.tsx) | **Widget & devices** tab (always visible) → primary “Set up widget” CTA |
@@ -32,24 +33,27 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 - `users.widget_token_hash` — hashed bearer token for Scriptable / Widget View.
 - `users.device_portfolio_id` — portfolio scope for widget token requests (Profile → Device & Widget).
 - Summary `topHoldings[]`: `ticker`, `name`, `weight`, `dayChange`; with `full=true` also `shares`, `price`, `currency`.
+- Summary `byAssetType[]`: `key` (`stock`|`etf`|`fund`|`crypto`|`fixed_return`), `value`, `allocationPercent`, `dayChange`, `dayChangePercent`, `totalGainLoss`, `totalGainLossPercent`. Built via [`src/lib/widget/build-by-asset-type.ts`](../../src/lib/widget/build-by-asset-type.ts) using the same totals + day-change pipeline as the dashboard.
 
 ## 5. API surface
 
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
-| GET | `/api/portfolio/summary` | session / widget token / device passkey | Free | Portfolio totals + top holdings |
+| GET | `/api/portfolio/summary` | session / widget token / device passkey | Free | Portfolio totals + top holdings + `byAssetType[]` |
 | GET | `/api/portfolio/summary?full=true` | same | Free | Up to 30 holdings including price (movers script) |
 | GET/POST/DELETE | `/api/widget-token` | session | Free | Token status / issue / revoke |
 
 ## 6. UI surface
 
-- Setup page: platform tabs (iOS / Android), token controls, **script version** radiogroup (Portfolio summary | Top movers), copy-ready preview.
+- Setup page: platform tabs (iOS / Android), token controls, **script version** radiogroup (Portfolio summary | Top movers | By asset type), copy-ready preview.
 - Scripts are loaded from `/widget/*.js` so the public files remain the single source of truth.
+- By asset type script reads `config.widgetFamily` and adapts: **Small** (total + top 2 types), **Medium** (total + up to 4 types), **Large** (total + up to 5 types with allocation % and day €).
 - Movers Scriptable script reads `config.widgetFamily` and adapts: **Small** (compact, no company name, tiny spark), **Medium** (3 rows + names), **Large** (7 rows: prefer 4 gainers + 3 losers).
 
 ## 7. Business logic
 
 - Mover selection: [`src/lib/widget/pick-top-movers.ts`](../../src/lib/widget/pick-top-movers.ts) — prefer N gainers + M losers by day % (Medium/Small default 2+1; Large 4+3). If one side is short, fill remaining slots from the other side / absolute movers, then sort by `|dayChange|` desc.
+- By asset type rows: [`src/lib/widget/build-by-asset-type.ts`](../../src/lib/widget/build-by-asset-type.ts) + [`computeDayChangeByType`](../../src/lib/day-change-pct.ts) — same math as dashboard breakdown pills / performance table.
 - The movers Scriptable script inlines the same algorithm (Scriptable cannot import app modules).
 - Sparklines: Scriptable fetches Yahoo 5m/1d chart closes on-device; falls back to a synthetic path from `dayChange` when Yahoo is unavailable.
 - Layout avoids fixed column widths that clipped on Small; uses natural widths + a trailing spacer.
@@ -88,7 +92,7 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 
 ## 14. Tests
 
-- Unit: [`src/lib/widget/pick-top-movers.test.ts`](../../src/lib/widget/pick-top-movers.test.ts)
+- Unit: [`src/lib/widget/pick-top-movers.test.ts`](../../src/lib/widget/pick-top-movers.test.ts), [`src/lib/widget/build-by-asset-type.test.ts`](../../src/lib/widget/build-by-asset-type.test.ts)
 - E2E: [`e2e/widget-setup.spec.ts`](../../e2e/widget-setup.spec.ts)
 - Manual: copy movers script into Scriptable, pin Medium widget, confirm two green + one red when the book has both sides.
 

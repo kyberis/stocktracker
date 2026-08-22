@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.198",
+    date: "2026-08-22",
+    title: "Home screen widget by asset type",
+    titleTranslations: {
+      es: "Widget de inicio por tipo de activo",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "A new Scriptable home-screen widget shows portfolio value and day change per asset type — Stocks, ETFs, Crypto, Funds, and Fixed return — with Small, Medium, and Large layouts. Copy it from Widget setup. Informational only — not investment advice.",
+        translations: {
+          es: "Un nuevo widget Scriptable para la pantalla de inicio muestra valor y variación diaria por tipo de activo — acciones, ETFs, cripto, fondos y renta fija — con tamaños Pequeño, Mediano y Grande. Cópialo desde Configurar widget. Solo informativo, no es consejo de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.197",
     date: "2026-08-22",
     title: "Holdings explorer and Warren on the landing page",
