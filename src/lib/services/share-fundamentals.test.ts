@@ -113,4 +113,76 @@ describe("ensureShareFundamentals", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.code).toBe("invalid_input");
   });
+
+  it("refetches valuation overview when cache lacks P/E multiples", async () => {
+    const cache = await import("@/lib/db/fundamentals-cache");
+    const guards = await import("@/lib/auth/guards");
+    const resolve = await import("@/lib/market-data/resolve-provider");
+    const { YahooProvider } = await import("@/lib/api-providers/yahoo");
+
+    const updatedAt = new Date().toISOString().replace("T", " ").slice(0, 19);
+    const sparseCached = {
+      symbol: "GOOGL",
+      name: "Alphabet Inc.",
+      description: "",
+      exchange: "NASDAQ",
+      currency: "USD",
+      sector: "Technology",
+      industry: "Internet",
+      peRatio: null,
+      pegRatio: null,
+      eps: null,
+      dividendPerShare: null,
+      dividendYield: null,
+      beta: null,
+      profitMargin: 0.25,
+      returnOnEquity: 0.3,
+      revenueTTM: 300_000_000_000,
+      analystTargetPrice: null,
+      analystRatings: null,
+      fiftyDayMA: null,
+      twoHundredDayMA: null,
+      sharesOutstanding: null,
+      forwardPE: null,
+    };
+
+    vi.mocked(cache.getFundamentalsCache).mockResolvedValue({
+      symbol: "GOOGL",
+      type: "overview",
+      dataJson: JSON.stringify(sparseCached),
+      provider: "fmp",
+      createdAt: updatedAt,
+      updatedAt,
+    });
+    vi.mocked(guards.requireFeatureQuotaByUserId).mockResolvedValue({
+      allowed: true,
+    } as never);
+    const rateLimit = await import("@/lib/rate-limit");
+    vi.mocked(rateLimit.checkFmpRateLimit).mockResolvedValue({
+      allowed: true,
+    } as never);
+    vi.mocked(resolve.resolveFundamentalsProvider).mockResolvedValue({
+      provider: {
+        name: "fmp",
+        getOverview: vi.fn().mockResolvedValue(sparseCached),
+        getQuote: vi.fn(),
+        search: vi.fn(),
+        getHistorical: vi.fn(),
+        getExchangeRate: vi.fn(),
+      },
+      backend: "fmp",
+    } as never);
+
+    const richYahoo = { ...sparseCached, peRatio: 17.3, forwardPE: 23.2 };
+    vi.spyOn(YahooProvider.prototype, "getOverview").mockResolvedValue(richYahoo as never);
+
+    const result = await ensureShareFundamentals("u1", "GOOGL", { scope: "valuation" });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.cached).toBe(false);
+      expect(result.data.overview?.peRatio).toBe(17.3);
+      expect(result.data.provider).toBe("yahoo");
+    }
+    expect(guards.requireFeatureQuotaByUserId).toHaveBeenCalled();
+  });
 });

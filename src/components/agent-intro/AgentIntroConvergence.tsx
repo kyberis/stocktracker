@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAgentIntroDismissWhenReady } from "@/hooks/useAgentIntroDismissWhenReady";
+import { useIntroBodyScrollLock } from "@/hooks/useIntroBodyScrollLock";
 import { useI18n } from "@/lib/i18n";
 import styles from "./agent-intro.module.css";
 import {
   AgentAvatarImage,
   AgentIntroLoadingBlock,
   AgentIntroLogoBlock,
-  overlayShellClass,
+  AgentIntroOverlayShell,
   type IntroPhase,
 } from "./AgentIntroShared";
 
@@ -71,6 +72,7 @@ export default function AgentIntroConvergence({
 
   const overlayVisible = !dismissed;
   const waitingForDashboard = phase === "reveal" && !dashboardReady;
+  useIntroBodyScrollLock(!contained && overlayVisible);
 
   const stageClass = [
     styles.convergenceStage,
@@ -83,8 +85,9 @@ export default function AgentIntroConvergence({
     .join(" ");
 
   const panel = (
-    <div
-      className={overlayShellClass(contained, fading || dismissed)}
+    <AgentIntroOverlayShell
+      contained={contained}
+      hidden={fading || dismissed}
       role="dialog"
       aria-modal="true"
       aria-label={t("agentIntroConvergenceAria")}
@@ -124,7 +127,7 @@ export default function AgentIntroConvergence({
           <AgentIntroLoadingBlock label={t("agentIntroLoading")} visible={waitingForDashboard} />
         </div>
       </div>
-    </div>
+    </AgentIntroOverlayShell>
   );
 
   if (!mounted || !overlayVisible) return null;

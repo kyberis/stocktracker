@@ -31,8 +31,10 @@ When a user asks whether a stock looks expensive or cheap, or requests fundament
 
 1. User asks valuation question → Warren calls `analyzeValuation`.
 2. `ensureShareFundamentals` loads fresh cache or fetches via `resolveFundamentalsProvider`.
-3. `scoreValuation` applies [`scoreCheap`](../../src/lib/screening/scoring/categories.ts) on P/E multiples.
-4. Warren cites `valuationLabel`, `metrics`, `fetchedAt`, and `provider`; adds disclaimer when discussing a specific ticker.
+3. When the primary backend is FMP and the overview lacks P/E (or forward/PEG), `fetchResolvedOverview` calls `YahooProvider` explicitly — never `resolveFundamentalsProvider(null)`, which can still resolve to FMP when the global FMP flag is on.
+4. Valuation-scope cache hits that lack valuation multiples are treated as misses so the Yahoo enrichment path can run.
+5. `scoreValuation` applies [`scoreCheap`](../../src/lib/screening/scoring/categories.ts) on P/E multiples.
+6. Warren cites `valuationLabel`, `metrics`, `fetchedAt`, and `provider`; adds disclaimer when discussing a specific ticker.
 
 ## 6. Related specs
 

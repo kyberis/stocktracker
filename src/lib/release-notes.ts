@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.207",
+    version: "2.5.208",
     date: "2026-08-22",
     title: "Warren valuation Yahoo fallback",
     titleTranslations: {
@@ -26,9 +26,26 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "fix",
-        text: "Warren portfolio valuation now falls back to Yahoo (not FMP again) when FMP returns sparse overviews without P/E — fixes missing ratios for GOOGL, UBER, and other liquid tickers on Folio.",
+        text: "Warren portfolio valuation now falls back to Yahoo (not FMP again) when FMP returns sparse overviews without P/E, and ignores cached overviews that lack valuation multiples — fixes missing ratios for GOOGL, UBER, and other liquid tickers on Folio.",
         translations: {
-          es: "La valoración de cartera en Warren ahora recurre a Yahoo (no otra vez a FMP) cuando FMP devuelve overviews sin P/E — corrige ratios ausentes en GOOGL, UBER y otros tickers líquidos en Folio.",
+          es: "La valoración de cartera en Warren ahora recurre a Yahoo (no otra vez a FMP) cuando FMP devuelve overviews sin P/E, e ignora cachés sin múltiplos de valoración — corrige ratios ausentes en GOOGL, UBER y otros tickers líquidos en Folio.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.207",
+    date: "2026-08-22",
+    title: "Agent intro full-screen overlay",
+    titleTranslations: {
+      es: "Overlay a pantalla completa en intro de agentes",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Agent intro overlay is truly full-screen (fixed shell no longer overridden by absolute positioning), hides the home dashboard while visible, and no longer flashes the empty-portfolio state for users who already have holdings.",
+        translations: {
+          es: "El overlay de la intro de agentes cubre toda la pantalla (el contenedor fixed ya no queda anulado por position absolute), oculta el dashboard mientras está visible y deja de mostrar el empty state a usuarios que ya tienen posiciones.",
         },
       },
     ],

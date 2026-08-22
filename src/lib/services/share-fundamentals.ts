@@ -16,6 +16,7 @@ import {
 } from "@/lib/db/fundamentals-cache";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { isCacheableFundamentalData, isCacheableOverview } from "@/lib/fundamentals/cache-quality";
+import { hasValuationMetrics } from "@/lib/fundamentals/overview-quality";
 import { fetchResolvedOverview } from "@/lib/fundamentals/resolve-overview";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import {
@@ -208,11 +209,19 @@ export async function ensureShareFundamentals(
 
   for (const type of types) {
     const cached = await readCachedType<CachedPayload>(symbol, type, fresh);
-    if (cached.data) {
-      cachedParts[type] = cached.data;
-      if (cached.updatedAt) updatedAts.push(cached.updatedAt);
-      providerTag = providerTag ?? cached.provider;
+    if (!cached.data) continue;
+    // Valuation needs P/E (or forward/PEG). A fresh-looking FMP row with only
+    // ROE/revenue must not short-circuit the Yahoo enrichment path.
+    if (
+      type === "overview" &&
+      scope === "valuation" &&
+      !hasValuationMetrics(cached.data as CompanyOverview)
+    ) {
+      continue;
     }
+    cachedParts[type] = cached.data;
+    if (cached.updatedAt) updatedAts.push(cached.updatedAt);
+    providerTag = providerTag ?? cached.provider;
   }
 
   const missingTypes = types.filter((type) => !cachedParts[type]);
