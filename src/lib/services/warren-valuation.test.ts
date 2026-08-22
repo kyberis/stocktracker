@@ -2,12 +2,16 @@ import { describe, it, expect } from "vitest";
 
 import type { CompanyOverview } from "@/lib/api-providers/types";
 import {
-  buildValuationSnapshot,
-  scoreValuation,
-  demoValuationItems,
   analyzeValuationForWarren,
+  attachValuationQuoteUpside,
+  buildValuationSnapshot,
+  computeUpsideToTarget,
+  demoValuationItems,
+  enrichValuationItemsWithQuotes,
   filterWarrenValuationSymbols,
   isEligibleForWarrenValuation,
+  LIMITED_UPSIDE_THRESHOLD_PCT,
+  scoreValuation,
   WARREN_VALUATION_MAX_SYMBOLS,
 } from "@/lib/services/warren-valuation";
 
@@ -126,6 +130,58 @@ describe("filterWarrenValuationSymbols", () => {
     expect(filtered).not.toContain("BTC-EUR");
     expect(filtered.length).toBe(WARREN_VALUATION_MAX_SYMBOLS);
     expect(filtered[0]).toBe("UBER");
+  });
+});
+
+describe("computeUpsideToTarget", () => {
+  it("computes percent upside and flags limited room", () => {
+    expect(computeUpsideToTarget(100, 110)).toEqual({
+      currentPrice: 100,
+      upsideToTargetPct: 10,
+      hasLimitedUpside: false,
+    });
+    expect(computeUpsideToTarget(100, 102)).toEqual({
+      currentPrice: 100,
+      upsideToTargetPct: 2,
+      hasLimitedUpside: true,
+    });
+    expect(computeUpsideToTarget(100, 90)).toEqual({
+      currentPrice: 100,
+      upsideToTargetPct: -10,
+      hasLimitedUpside: true,
+    });
+  });
+
+  it("returns null upside when price or target is missing", () => {
+    expect(computeUpsideToTarget(null, 110)).toEqual({
+      currentPrice: null,
+      upsideToTargetPct: null,
+      hasLimitedUpside: false,
+    });
+    expect(computeUpsideToTarget(0, 110).upsideToTargetPct).toBeNull();
+    expect(computeUpsideToTarget(100, null).upsideToTargetPct).toBeNull();
+  });
+
+  it("uses the limited-upside threshold", () => {
+    expect(LIMITED_UPSIDE_THRESHOLD_PCT).toBe(5);
+    expect(computeUpsideToTarget(100, 104.9).hasLimitedUpside).toBe(true);
+    expect(computeUpsideToTarget(100, 105).hasLimitedUpside).toBe(false);
+  });
+});
+
+describe("enrichValuationItemsWithQuotes", () => {
+  it("attaches quote upside onto valuation items", () => {
+    const [demo] = demoValuationItems(["KO"]);
+    const withTarget = attachValuationQuoteUpside(
+      { ...demo!, metrics: { ...demo!.metrics, analystTargetPrice: 70 } },
+      65,
+    );
+    expect(withTarget.currentPrice).toBe(65);
+    expect(withTarget.upsideToTargetPct).toBeCloseTo(7.7, 1);
+    expect(withTarget.hasLimitedUpside).toBe(false);
+
+    const [enriched] = enrichValuationItemsWithQuotes([demo!], { KO: 50 });
+    expect(enriched?.currentPrice).toBe(50);
   });
 });
 

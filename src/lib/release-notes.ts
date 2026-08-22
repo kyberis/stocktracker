@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.210",
+    version: "2.5.211",
     date: "2026-08-22",
     title: "Admin traffic graph — external providers",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Admin Traffic graph now shows a third column for external services (Yahoo, FMP, AI Gateway, Stripe, Resend, SnapTrade, Clara, Will, ProdOps, Tavily) linked to the API routes that call them.",
         translations: {
           es: "El grafo Traffic en admin ahora muestra una tercera columna de servicios externos (Yahoo, FMP, AI Gateway, Stripe, Resend, SnapTrade, Clara, Will, ProdOps, Tavily) vinculados a las rutas API que los invocan.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.210",
+    date: "2026-08-22",
+    title: "Admin AI prompts catalog",
+    titleTranslations: {
+      es: "Catálogo de prompts IA en admin",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Admin panel adds an AI Prompts page listing canonical system prompts for Warren, screening agents, portfolio tools, digests, and sister agents Clara and Will.",
+        translations: {
+          es: "El panel de admin incluye una página AI Prompts con los system prompts canónicos de Warren, los agentes de screening, herramientas de cartera, digests y los agentes hermanos Clara y Will.",
         },
       },
     ],
@@ -58,6 +75,13 @@ export const releaseNotes: ReleaseEntry[] = [
       es: "Fallback Yahoo en valoración Warren",
     },
     changes: [
+      {
+        type: "feature",
+        text: "Warren now advances the conversation instead of repeating the same valuation recap: follow-ups like “yes, rank by least upside” get a ranking and a new next step, not the same expensive/fair grouping again.",
+        translations: {
+          es: "Warren ahora avanza la conversación en vez de repetir el mismo resumen de valoración: si dices “sí, ordénalas por menor margen de subida”, responde con un ranking y un paso extra, no con el mismo agrupado de caras/justas.",
+        },
+      },
       {
         type: "fix",
         text: "Warren portfolio valuation now falls back to Yahoo (not FMP again) when FMP returns sparse overviews without P/E, and ignores cached overviews that lack valuation multiples — fixes missing ratios for GOOGL, UBER, and other liquid tickers on Folio.",
