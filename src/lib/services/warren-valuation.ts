@@ -52,7 +52,16 @@ export interface ValuationMetrics {
   histPeYears: number | null;
 }
 
-export interface WarrenValuationItem {
+/** Analyst-target upside below this percent is treated as limited. */
+export const LIMITED_UPSIDE_THRESHOLD_PCT = 5;
+
+export interface QuoteUpsideFields {
+  currentPrice: number | null;
+  upsideToTargetPct: number | null;
+  hasLimitedUpside: boolean;
+}
+
+export interface WarrenValuationItem extends QuoteUpsideFields {
   symbol: string;
   companyName: string;
   provider: string;
@@ -155,6 +164,46 @@ function valuationSummaryForLabel(
   }
 }
 
+export function computeUpsideToTarget(
+  currentPrice: number | null | undefined,
+  targetPrice: number | null | undefined,
+): QuoteUpsideFields {
+  const price =
+    typeof currentPrice === "number" && Number.isFinite(currentPrice) && currentPrice > 0
+      ? currentPrice
+      : null;
+  const target =
+    typeof targetPrice === "number" && Number.isFinite(targetPrice) && targetPrice > 0
+      ? targetPrice
+      : null;
+  if (price == null || target == null) {
+    return { currentPrice: price, upsideToTargetPct: null, hasLimitedUpside: false };
+  }
+  const pct = Math.round(((target - price) / price) * 1000) / 10;
+  return {
+    currentPrice: price,
+    upsideToTargetPct: pct,
+    hasLimitedUpside: pct < LIMITED_UPSIDE_THRESHOLD_PCT,
+  };
+}
+
+export function attachValuationQuoteUpside(
+  item: WarrenValuationItem,
+  currentPrice: number | null | undefined,
+): WarrenValuationItem {
+  return { ...item, ...computeUpsideToTarget(currentPrice, item.metrics.analystTargetPrice) };
+}
+
+export function enrichValuationItemsWithQuotes(
+  items: WarrenValuationItem[],
+  pricesBySymbol: Record<string, number | null | undefined>,
+): WarrenValuationItem[] {
+  return items.map((item) => {
+    const price = pricesBySymbol[item.symbol] ?? pricesBySymbol[item.symbol.toUpperCase()];
+    return attachValuationQuoteUpside(item, price);
+  });
+}
+
 export function mapShareFundamentalsToValuation(bundle: ShareFundamentalsBundle): WarrenValuationItem {
   const metrics = buildValuationSnapshot(bundle.overview!, bundle.income, bundle.earnings);
   const scored = scoreValuation(metrics);
@@ -169,6 +218,7 @@ export function mapShareFundamentalsToValuation(bundle: ShareFundamentalsBundle)
     valuationLabel: scored.label,
     valuationSummary: scored.summary,
     dataGaps: scored.dataGaps,
+    ...computeUpsideToTarget(null, metrics.analystTargetPrice),
   };
 }
 
@@ -257,6 +307,7 @@ export function demoValuationItems(tickers: string[]): WarrenValuationItem[] {
       valuationLabel: scored.label,
       valuationSummary: scored.summary,
       dataGaps: ["demo mode — not live market data"],
+      ...computeUpsideToTarget(null, metrics.analystTargetPrice),
     };
   });
 }
