@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.198: Scriptable by-asset-type widget is a setup-page variant, not a new landing-page capability"
+  "notes": "2.5.199: Warren valuation uses existing Warren drawer capability — landing already showcases Warren; no new top-level marketing feature"
 }

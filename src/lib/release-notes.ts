@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.199",
+    date: "2026-08-22",
+    title: "Warren shared fundamentals and valuation",
+    titleTranslations: {
+      es: "Warren: fundamentales compartidos y valoración",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Warren can fetch share-level fundamentals (FMP or Yahoo, cached for all users) and say whether a stock looks cheap, fair, or expensive — for one ticker or your portfolio. Still AI-generated, not investment advice.",
+        translations: {
+          es: "Warren puede obtener fundamentales compartidos por acción (FMP o Yahoo, en caché para todos) y decir si una acción parece barata, justa o cara — para un ticker o tu cartera. Sigue siendo IA, no es consejo de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.198",
     date: "2026-08-22",
     title: "Home screen widget by asset type",

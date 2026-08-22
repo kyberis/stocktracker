@@ -4,7 +4,7 @@
 
 ## 1. Summary
 
-Fundamentals power the stock detail **Financials** and **Earnings** tabs. Data is fetched from **FMP** when configured, with **Yahoo Finance** as fallback. Responses are stored permanently in `fundamentals_cache` (write-through, no TTL). Moat evaluation uses the same FMP provider (not Alpha Vantage).
+Fundamentals power the stock detail **Financials** and **Earnings** tabs and Warren's **`analyzeValuation`** tool. Data is fetched from **FMP** when configured, with **Yahoo Finance** as fallback. Responses are stored in `fundamentals_cache` (write-through). The REST API returns cached rows permanently on hit; Warren applies a **7-day staleness** check before re-fetching. Moat evaluation uses the same FMP provider (not Alpha Vantage).
 
 ## 2. Status
 
@@ -25,7 +25,7 @@ Fundamentals power the stock detail **Financials** and **Earnings** tabs. Data i
 
 ## 4. Data model
 
-- `fundamentals_cache(symbol, type, data_json, provider, created_at, updated_at)` — `type` ∈ `income|balance|cashflow|earnings`, `provider` ∈ `fmp|yahoo`.
+- `fundamentals_cache(symbol, type, data_json, provider, created_at, updated_at)` — `type` ∈ `overview|income|balance|cashflow|earnings`, `provider` ∈ `fmp|yahoo`.
 - `moat_cache` — separate; moat scores derived from fundamentals + overview.
 
 ## 5. API surface

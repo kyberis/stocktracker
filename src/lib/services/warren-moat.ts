@@ -18,7 +18,11 @@ import {
 import type { MoatScreenerFilters } from "@/lib/db/moat-cache";
 import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { evaluateMoat } from "@/lib/moat-evaluator";
-import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
+import {
+  resolveFundamentalsProvider,
+  resolvePremiumStockDataProvider,
+} from "@/lib/market-data/resolve-provider";
+import { persistShareFundamentalsFromMoatFetch } from "@/lib/services/share-fundamentals";
 import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import { languageCodeToName } from "@/lib/languages";
 import {
@@ -108,8 +112,12 @@ export async function getWarrenMoatEvaluation(
     };
   }
 
-  const resolved = await resolvePremiumStockDataProvider(userId, "fundamentals");
-  if (!resolved) {
+  const premium = await resolvePremiumStockDataProvider(userId, "fundamentals");
+  const fundamentals = await resolveFundamentalsProvider(userId);
+  const provider = premium?.provider ?? fundamentals.provider;
+  const backend = premium?.backend ?? fundamentals.backend;
+
+  if (!provider.getOverview) {
     await refundFeatureQuota(userId, "stock_evaluation");
     return {
       ok: false,
@@ -117,9 +125,8 @@ export async function getWarrenMoatEvaluation(
       code: "not_configured",
     };
   }
-  const { provider, backend } = resolved;
 
-  if (user.role !== "admin") {
+  if (backend === "fmp" && user.role !== "admin") {
     const rl = await checkFmpRateLimit(userId);
     if (!rl.allowed) {
       await refundFeatureQuota(userId, "stock_evaluation");
@@ -163,8 +170,22 @@ export async function getWarrenMoatEvaluation(
       console.error("[warren-moat] Cache write failed:", err instanceof Error ? err.message : err);
     });
 
-    if (provider.callCount) {
-      deferTask(() => recordMarketDataUsageAsync(userId, backend, provider.callCount!));
+    persistShareFundamentalsFromMoatFetch(symbol, {
+      overview,
+      income,
+      balance,
+      cashflow,
+      earnings,
+      provider: backend === "fmp" ? "fmp" : "yahoo",
+    }).catch((err) => {
+      console.error(
+        "[warren-moat] Fundamentals cache write failed:",
+        err instanceof Error ? err.message : err,
+      );
+    });
+
+    if (provider.callCount && backend === "fmp") {
+      deferTask(() => recordMarketDataUsageAsync(userId, "fmp", provider.callCount!));
     }
 
     return { ok: true, data: enriched as unknown as Record<string, unknown> };

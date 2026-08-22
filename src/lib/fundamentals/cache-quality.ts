@@ -1,5 +1,16 @@
+import type { CompanyOverview } from "@/lib/api-providers/types";
 import type { FundamentalData } from "@/lib/types";
 import type { FundamentalsCacheType, FundamentalsCacheProvider } from "@/lib/db/fundamentals-cache";
+
+export function isCacheableOverview(data: CompanyOverview | null | undefined): boolean {
+  if (!data?.symbol?.trim()) return false;
+  return (
+    Boolean(data.name?.trim()) ||
+    data.peRatio != null ||
+    data.forwardPE != null ||
+    data.returnOnEquity != null
+  );
+}
 
 function allPeriods<T>(data: FundamentalData<T>): T[] {
   return [...data.annual, ...data.quarterly];
@@ -40,11 +51,15 @@ function hasEarningsSparsePattern(data: FundamentalData<unknown>): boolean {
 
 export function isCacheableFundamentalData(
   type: FundamentalsCacheType,
-  data: FundamentalData<unknown> | null,
+  data: FundamentalData<unknown> | CompanyOverview | null,
   _provider: FundamentalsCacheProvider
 ): boolean {
+  if (type === "overview") {
+    return isCacheableOverview(data as CompanyOverview | null);
+  }
   if (!data) return false;
-  if (data.annual.length === 0 && data.quarterly.length === 0) return false;
+  const statementData = data as FundamentalData<unknown>;
+  if (statementData.annual.length === 0 && statementData.quarterly.length === 0) return false;
 
   switch (type) {
     case "income":
@@ -62,7 +77,7 @@ export function isCacheableFundamentalData(
         data as FundamentalData<{ operatingCashflow: number | null }>
       );
     case "earnings":
-      return !hasEarningsSparsePattern(data);
+      return !hasEarningsSparsePattern(statementData);
     default:
       return false;
   }
