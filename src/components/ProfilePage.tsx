@@ -1458,6 +1458,7 @@ export default function ProfilePage() {
           className="space-y-6"
         >
         {user?.accountEditingOnIdp && user?.unifiedAccountUrl ? (
+          <>
           <div className="card space-y-4 border border-emerald-500/18 bg-emerald-500/[0.06] p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("profileSettings")}</h2>
             <p className="text-sm text-gray-600 dark:text-slate-400">
@@ -1489,6 +1490,11 @@ export default function ProfilePage() {
               ) : null}
             </div>
           </div>
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--muted)]">{t("profileSectionAccess")}</h2>
+          </div>
+          <TelegramConnectCard />
+          </>
         ) : (
           <>
         <div>
