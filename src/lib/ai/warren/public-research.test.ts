@@ -71,7 +71,8 @@ describe("warren public research", () => {
           url: "https://investor.fluor.com/q2.pdf",
           title: "Q2 results",
           asOf: "2026-08-01",
-          excerpt: "Backlog grew.",
+          excerpt:
+            "Backlog grew in the quarter as Fluor booked several new infrastructure awards and restated full-year guidance.",
           role: "document",
           format: "pdf",
         },
@@ -89,8 +90,72 @@ describe("warren public research", () => {
       searchHits: [],
     });
     const out = await warrenFetchInvestorRelations({ ticker: "FLR", companyName: "Fluor" });
+    expect(mockedIr).toHaveBeenCalledWith(
+      expect.objectContaining({ ticker: "FLR", companyName: "Fluor" }),
+    );
     expect(out.documents).toHaveLength(1);
     expect(out.irPageUrl).toContain("fluor");
+    expect(out.fallback).toBe("none");
+  });
+
+  it("searches Novo via NVO / Novo Nordisk and falls back to web when IR is empty", async () => {
+    mockedIr.mockResolvedValue({
+      ticker: "NVO",
+      irPageUrl: null,
+      documents: [],
+      hasUsefulContent: false,
+      searchCredits: 0,
+      extractCredits: 0,
+      errors: ["no_ir_candidates"],
+      provider: null,
+      serperQueries: 0,
+      jinaUrls: 0,
+      searchQueries: [],
+      extractQueries: [],
+      extractUrls: [],
+      searchHits: [],
+    });
+    mockedFmp.mockResolvedValue({
+      ticker: "NVO",
+      transcript: {
+        year: 2026,
+        quarter: 1,
+        date: "2026-05-01",
+        excerpt: "Obesity franchise growth continued.",
+      },
+      news: [],
+      insiders: [],
+      requestCount: 1,
+      errors: [],
+    });
+    mockedSearch.mockResolvedValue({
+      results: [
+        {
+          title: "Novo Q1",
+          url: "https://investors.novonordisk.com/q1",
+          content: "Sales grew in GLP-1.",
+          publishedDate: "2026-05-02",
+          source: "novonordisk.com",
+        },
+      ],
+      errors: [],
+    });
+
+    const out = await warrenFetchInvestorRelations({ ticker: "NOVO-B.CO" });
+    expect(mockedIr).toHaveBeenCalledWith(
+      expect.objectContaining({ ticker: "NVO", companyName: "Novo Nordisk" }),
+    );
+    expect(mockedFmp).toHaveBeenCalledWith({ ticker: "NVO" });
+    expect(mockedSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: expect.stringContaining("Novo Nordisk NVO"),
+      }),
+    );
+    expect(out.documents).toHaveLength(0);
+    expect(out.fallback).toBe("web_earnings");
+    expect(out.web).toHaveLength(1);
+    expect(out.transcript?.excerpt).toContain("Obesity");
+    expect(out.errors).toContain("ir_empty_used_web_fallback");
   });
 
   it("combines transcript and web for earnings", async () => {

@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "fix",
+        text: "Warren investor-relations research now resolves cross-listing aliases (NOVO-B.CO → NVO / Novo Nordisk) and falls back to public web plus earnings excerpts when the IR extract is empty, instead of a generic company story.",
+        translations: {
+          es: "La investigación de investor relations de Warren ahora resuelve alias de cotización (NOVO-B.CO → NVO / Novo Nordisk) y, si el extracto IR viene vacío, usa web pública y earnings en el mismo turno en vez de un relato genérico de la empresa.",
+        },
+      },
+      {
         type: "improvement",
         text: "Admin panel adds an AI Prompts page listing canonical system prompts for Warren, screening agents, portfolio tools, digests, and sister agents Clara and Will.",
         translations: {
