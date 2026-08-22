@@ -4,13 +4,14 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAgentIntroDismissWhenReady } from "@/hooks/useAgentIntroDismissWhenReady";
+import { useIntroBodyScrollLock } from "@/hooks/useIntroBodyScrollLock";
 import { useI18n } from "@/lib/i18n";
 import styles from "./agent-intro.module.css";
 import {
   AgentAvatarImage,
   AgentIntroLoadingBlock,
   AgentIntroLogoBlock,
-  overlayShellClass,
+  AgentIntroOverlayShell,
 } from "./AgentIntroShared";
 
 type BriefPhase = "idle" | "chat" | "bridge" | "merge" | "reveal";
@@ -73,6 +74,7 @@ export default function AgentIntroBriefing({
 
   const overlayVisible = !dismissed;
   const waitingForDashboard = phase === "reveal" && !dashboardReady;
+  useIntroBodyScrollLock(!contained && overlayVisible);
 
   const stageClass = [
     styles.briefingStage,
@@ -86,12 +88,15 @@ export default function AgentIntroBriefing({
     .filter(Boolean)
     .join(" ");
 
-  const overlayClass = overlayShellClass(contained, fading || dismissed).concat(
-    phase === "reveal" ? ` ${styles.briefingOverlayReveal}` : "",
-  );
-
   const panel = (
-    <div className={overlayClass} role="dialog" aria-modal="true" aria-label={t("agentIntroBriefingAria")}>
+    <AgentIntroOverlayShell
+      contained={contained}
+      hidden={fading || dismissed}
+      className={phase === "reveal" ? styles.briefingOverlayReveal : undefined}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("agentIntroBriefingAria")}
+    >
       <button type="button" className={styles.skipBtn} onClick={onSkip}>
         {t("agentIntroSkip")}
       </button>
@@ -142,7 +147,7 @@ export default function AgentIntroBriefing({
           {t("landingAgentsClaraName")}
         </span>
       </div>
-    </div>
+    </AgentIntroOverlayShell>
   );
 
   if (!mounted || !overlayVisible) return null;

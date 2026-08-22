@@ -1,5 +1,6 @@
 "use client";
 
+import type { HTMLAttributes, ReactNode } from "react";
 import Image from "next/image";
 import { useId } from "react";
 import styles from "./agent-intro.module.css";
@@ -78,6 +79,41 @@ export function AgentIntroLoadingBlock({ label, visible }: { label: string; visi
   );
 }
 
+export function AgentIntroOverlayShell({
+  contained,
+  hidden,
+  children,
+  className,
+  ...props
+}: {
+  contained: boolean;
+  hidden: boolean;
+  children: ReactNode;
+} & HTMLAttributes<HTMLDivElement>) {
+  const innerClass = [styles.overlay, hidden ? styles.overlayHidden : "", className]
+    .filter(Boolean)
+    .join(" ");
+
+  if (contained) {
+    return (
+      <div className={[styles.containedOverlay, hidden ? styles.overlayHidden : ""].filter(Boolean).join(" ")}>
+        <div className={innerClass} {...props}>
+          {children}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={[styles.productionOverlay, hidden ? styles.overlayHidden : ""].filter(Boolean).join(" ")}>
+      <div className={innerClass} {...props}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** @deprecated Use AgentIntroOverlayShell — single-class shell breaks fullscreen (absolute overrides fixed). */
 export function overlayShellClass(contained: boolean, hidden: boolean): string {
   return [
     contained ? styles.containedOverlay : styles.productionOverlay,

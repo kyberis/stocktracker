@@ -25,6 +25,7 @@ export default function AgentIntroGate({
   forceVariant,
   contained = false,
   onIntroDismissed,
+  onIntroVisibilityChange,
 }: {
   isEmpty: boolean;
   demoMode: boolean;
@@ -32,6 +33,7 @@ export default function AgentIntroGate({
   forceVariant?: "convergence" | "briefing";
   contained?: boolean;
   onIntroDismissed?: () => void;
+  onIntroVisibilityChange?: (visible: boolean) => void;
 }) {
   const experiment = useExperiment(AGENT_INTRO_EXPERIMENT_KEY, {
     enabled: !demoMode && !forceVariant,
@@ -71,6 +73,10 @@ export default function AgentIntroGate({
       setPlayKey((k) => k + 1);
     }
   }, [shouldShow, variant]);
+
+  useEffect(() => {
+    onIntroVisibilityChange?.(shouldShow);
+  }, [onIntroVisibilityChange, shouldShow]);
 
   const finish = useCallback(
     (outcome: "completed" | "skipped") => {

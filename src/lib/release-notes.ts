@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.207",
+    date: "2026-08-22",
+    title: "Agent intro full-screen overlay",
+    titleTranslations: {
+      es: "Overlay a pantalla completa en intro de agentes",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Agent intro overlay is truly full-screen (fixed shell no longer overridden by absolute positioning), hides the home dashboard while visible, and no longer flashes the empty-portfolio state for users who already have holdings.",
+        translations: {
+          es: "El overlay de la intro de agentes cubre toda la pantalla (el contenedor fixed ya no queda anulado por position absolute), oculta el dashboard mientras está visible y deja de mostrar el empty state a usuarios que ya tienen posiciones.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.206",
     date: "2026-08-22",
     title: "Agent intro splash timing",
