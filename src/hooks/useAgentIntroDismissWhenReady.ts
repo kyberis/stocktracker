@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-const FADE_MS = 520;
-const MIN_VISIBLE_MS = 1200;
+const FADE_MS = 640;
+const MIN_VISIBLE_MS = 2800;
 
 /** Hold the intro until the dashboard is ready and the animation reaches reveal. */
 export function useAgentIntroDismissWhenReady({
