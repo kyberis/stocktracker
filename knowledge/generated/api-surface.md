@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-317 routes.
+318 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -80,6 +80,7 @@
 | `/api/admin/support-chat` | GET | [`src/app/api/admin/support-chat/route.ts`](../../src/app/api/admin/support-chat/route.ts) |
 | `/api/admin/support-chat-config` | GET, PUT | [`src/app/api/admin/support-chat-config/route.ts`](../../src/app/api/admin/support-chat-config/route.ts) |
 | `/api/admin/support-chat/[id]` | GET, PUT | [`src/app/api/admin/support-chat/[id]/route.ts`](../../src/app/api/admin/support-chat/[id]/route.ts) |
+| `/api/admin/traffic-graph` | GET | [`src/app/api/admin/traffic-graph/route.ts`](../../src/app/api/admin/traffic-graph/route.ts) |
 | `/api/admin/unsubscribes` | GET | [`src/app/api/admin/unsubscribes/route.ts`](../../src/app/api/admin/unsubscribes/route.ts) |
 | `/api/admin/users` | GET, POST, DELETE | [`src/app/api/admin/users/route.ts`](../../src/app/api/admin/users/route.ts) |
 | `/api/admin/users/[userId]/data` | GET | [`src/app/api/admin/users/[userId]/data/route.ts`](../../src/app/api/admin/users/[userId]/data/route.ts) |
