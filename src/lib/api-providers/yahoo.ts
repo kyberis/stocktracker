@@ -356,13 +356,13 @@ export class YahooProvider implements StockDataProvider {
 
       return {
         symbol,
-        name: profile?.longBusinessSummary ? symbol : symbol,
+        name: profile?.longName ?? profile?.shortName ?? symbol,
         description: profile?.longBusinessSummary ?? "",
-        exchange: "",
+        exchange: profile?.exchange ?? "",
         currency: fin?.financialCurrency ?? detail?.currency ?? "USD",
         sector: profile?.sector ?? "",
         industry: profile?.industry ?? "",
-        peRatio: detail?.trailingPE ?? null,
+        peRatio: detail?.trailingPE ?? stats?.trailingPE ?? null,
         pegRatio: stats?.pegRatio ?? null,
         eps: fin?.revenuePerShare ?? null,
         dividendPerShare: detail?.dividendRate ?? null,
@@ -378,7 +378,7 @@ export class YahooProvider implements StockDataProvider {
         fiftyDayMA: detail?.fiftyDayAverage ?? null,
         twoHundredDayMA: detail?.twoHundredDayAverage ?? null,
         sharesOutstanding: stats?.sharesOutstanding ?? null,
-        forwardPE: stats?.forwardPE ?? null,
+        forwardPE: stats?.forwardPE ?? detail?.forwardPE ?? fin?.forwardPE ?? null,
       };
     } catch {
       return null;

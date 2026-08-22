@@ -1,5 +1,6 @@
 import type { CompanyOverview, EarningsReport, IncomeStatementReport } from "@/lib/api-providers/types";
 import type { FundamentalData } from "@/lib/types";
+import { isCryptoAssetRoute } from "@/lib/asset-detail-href";
 import { scoreCheap, type CheapLabel } from "@/lib/screening/scoring/categories";
 import {
   ensureShareFundamentalsBatch,
@@ -153,16 +154,36 @@ export async function analyzeValuationForWarren(
     return { ok: false, error: "Maximum 10 tickers per valuation request", code: "invalid_input" };
   }
 
-  const batch = await ensureShareFundamentalsBatch(userId, normalized, {
+  const eligible: string[] = [];
+  const errors: Array<{ symbol: string; error: string }> = [];
+  for (const symbol of normalized) {
+    if (isCryptoAssetRoute(symbol)) {
+      errors.push({
+        symbol,
+        error: "Valuation multiples (P/E) do not apply to crypto — skipped.",
+      });
+      continue;
+    }
+    eligible.push(symbol);
+  }
+
+  if (eligible.length === 0) {
+    return {
+      ok: false,
+      error: errors[0]?.error ?? "No equity tickers to value",
+      code: "invalid_input",
+    };
+  }
+
+  const batch = await ensureShareFundamentalsBatch(userId, eligible, {
     fresh: opts?.fresh,
     scope: "valuation",
   });
 
   const results: WarrenValuationItem[] = [];
-  const errors: Array<{ symbol: string; error: string }> = [];
 
   batch.forEach((entry, index) => {
-    const symbol = normalized[index]!;
+    const symbol = eligible[index]!;
     if (entry.ok) {
       results.push(mapShareFundamentalsToValuation(entry.data));
       return;

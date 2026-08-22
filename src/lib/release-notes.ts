@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.203",
+    date: "2026-08-22",
+    title: "Warren valuation fundamentals data",
+    titleTranslations: {
+      es: "Datos de fundamentales para valoración en Warren",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren portfolio valuation now resolves Yahoo cross-listing aliases (e.g. NOVO-B.CO → NVO), merges FMP/Yahoo overview data, ignores sparse cached overviews without P/E, and skips crypto when scoring expensive vs cheap.",
+        translations: {
+          es: "La valoración de cartera en Warren ahora resuelve alias de cotización en Yahoo (p. ej. NOVO-B.CO → NVO), combina overview de FMP/Yahoo, ignora cachés sin P/E y excluye cripto al clasificar caro vs barato.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.202",
     date: "2026-08-22",
     title: "Warren portfolio valuation performance",
