@@ -30,7 +30,7 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 
 ## 4. Data model
 
-- `users.widget_token_hash` — hashed bearer token for Scriptable / Widget View.
+- `widget_tokens` — multiple hashed bearer tokens per user (AES-256-GCM encrypted plaintext for script copy); legacy `users.widget_token_hash` kept in sync with the newest active token.
 - `users.device_portfolio_id` — portfolio scope for widget token requests (Profile → Device & Widget).
 - Summary `topHoldings[]`: `ticker`, `name`, `weight`, `dayChange`; with `full=true` also `shares`, `price`, `currency`.
 - Summary `byAssetType[]`: `key` (`stock`|`etf`|`fund`|`crypto`|`fixed_return`), `value`, `allocationPercent`, `dayChange`, `dayChangePercent`, `totalGainLoss`, `totalGainLossPercent`. Built via [`src/lib/widget/build-by-asset-type.ts`](../../src/lib/widget/build-by-asset-type.ts) using the same totals + day-change pipeline as the dashboard.
@@ -41,11 +41,11 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 |--------|-------|------|------|-------------|
 | GET | `/api/portfolio/summary` | session / widget token / device passkey | Free | Portfolio totals + top holdings + `byAssetType[]` |
 | GET | `/api/portfolio/summary?full=true` | same | Free | Up to 30 holdings including price (movers script) |
-| GET/POST/DELETE | `/api/widget-token` | session | Free | Token status / issue / revoke |
+| GET/POST/DELETE | `/api/widget-token` | session | Free | List active tokens + latest copyable token / issue new / revoke one or all |
 
 ## 6. UI surface
 
-- Setup page: platform tabs (iOS / Android), token controls, **script version** radiogroup (Portfolio summary | Top movers | By asset type), copy-ready preview.
+- Setup page: platform tabs (iOS / Android), **token list** with per-token revoke, **latest valid token auto-embedded** on script copy, **script version** radiogroup (Portfolio summary | Top movers | By asset type), copy-ready preview.
 - Scripts are loaded from `/widget/*.js` so the public files remain the single source of truth.
 - By asset type script reads `config.widgetFamily` and adapts: **Small** (total + top 2 types), **Medium** (total + up to 4 types), **Large** (total + up to 5 types with allocation % and day €).
 - Movers Scriptable script reads `config.widgetFamily` and adapts: **Small** (compact, no company name, tiny spark), **Medium** (3 rows + names), **Large** (7 rows: prefer 4 gainers + 3 losers).

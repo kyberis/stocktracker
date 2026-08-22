@@ -4383,6 +4383,43 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 147,
+    description: "widget_tokens table for reusable Scriptable widget bearer tokens",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS widget_tokens (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          token_hash TEXT NOT NULL,
+          token_encrypted TEXT NOT NULL DEFAULT '',
+          token_prefix TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          revoked_at TEXT NOT NULL DEFAULT '',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_widget_tokens_user ON widget_tokens(user_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_widget_tokens_hash ON widget_tokens(token_hash);
+      `);
+
+      await client.execute(`
+        INSERT INTO widget_tokens (id, user_id, token_hash, token_encrypted, token_prefix, created_at, revoked_at)
+        SELECT
+          lower(hex(randomblob(16))),
+          id,
+          widget_token_hash,
+          '',
+          'Legacy token',
+          datetime('now'),
+          ''
+        FROM users
+        WHERE widget_token_hash != ''
+          AND NOT EXISTS (
+            SELECT 1 FROM widget_tokens wt WHERE wt.user_id = users.id AND wt.token_hash = users.widget_token_hash
+          )
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
