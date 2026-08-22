@@ -9,6 +9,7 @@ import { requireFeatureQuota } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 import { runWarrenTurn, serializeWarrenPromptUserLog } from "@/lib/ai/warren/run-turn";
 import { buildWarrenPrefetchAppendix } from "@/lib/ai/warren/warren-prefetch-appendix";
+import { warrenThreadFromModelMessages } from "@/lib/ai/warren/conversation-progress-intent";
 import { resolveOfficeIdentity } from "@/lib/ai/office/office-identity";
 import {
   buildWarrenMultimodalUserContent,
@@ -206,6 +207,7 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
         userId: session.userId,
         portfolioId: serverPortfolioId,
         snapshot: body.portfolioContext,
+        recentMessages: warrenThreadFromModelMessages(modelMessages),
       });
   const selectionAppendix =
     !emptyAddStockOnly && body.selectionContext

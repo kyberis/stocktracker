@@ -3,21 +3,23 @@ import { filterWarrenValuationSymbols } from "@/lib/services/warren-valuation";
 import type { PortfolioSnapshot } from "./tools";
 
 /** User asks whether holdings look expensive/cheap — NOT moat screener stock ideas. */
+const VALUATION_CUE =
+  /(?:car[oa]s?|barat[oa]s?|expensive|cheap|fair|valoraci[oó]n|fundamental|infravalorad|sobrevalorad|m[uú]ltiplo|overvalued|undervalued|precio\s*justo)/i;
+
+/** Post-valuation decision: sell / rank / least upside — still not a moat screener. */
+const POST_VALUATION_DECISION =
+  /(?:margen\s+de\s+subida|menor\s+margen|menos\s+margen|upside|decidir\s+cu[aá]l|(?:vender|sell).{0,40}(?:margen|primero|upside|cu[aá]l)|(?:cu[aá]l|which).{0,40}(?:vender|sell))/i;
+
+const MOAT_SCREENER_CUE =
+  /moat\s*screener|screener\s*moat|ideas.*(?:invert|inversi|stock|moat)|stock\s*ideas|wide\s*moat|buenas\s*ideas.*invert/i;
+
+export function wantsPostValuationDecisionIntent(message: string): boolean {
+  return POST_VALUATION_DECISION.test(message) && !MOAT_SCREENER_CUE.test(message);
+}
+
 export function wantsValuationIntent(message: string): boolean {
-  const valuationCue =
-    /(?:car[oa]s?|barat[oa]s?|expensive|cheap|fair|valoraci[oó]n|fundamental|infravalorad|sobrevalorad|m[uú]ltiplo|overvalued|undervalued|precio\s*justo)/i.test(
-      message,
-    );
-  if (!valuationCue) return false;
-
-  // Moat screener discovery prompts stay on screenMoatStocks.
-  if (/moat\s*screener|screener\s*moat|ideas.*(?:invert|inversi|stock|moat)|stock\s*ideas|wide\s*moat|buenas\s*ideas.*invert/i.test(
-    message,
-  )) {
-    return false;
-  }
-
-  return true;
+  if (MOAT_SCREENER_CUE.test(message)) return false;
+  return VALUATION_CUE.test(message) || wantsPostValuationDecisionIntent(message);
 }
 
 async function resolveValuationSymbols(
@@ -63,11 +65,16 @@ export async function buildValuationPrefetchAppendix(
       ? `Holdings to value: ${symbols.join(", ")}.`
       : "Use the active portfolio holdings.";
 
+  const decision = wantsPostValuationDecisionIntent(message);
+  const afterTool = decision
+    ? "If this thread already has valuation numbers, do NOT re-call `analyzeValuation`. Rank by upsideToTargetPct (lowest = least upside) and explain the bottom names — do not regroup expensive / fair / cheap."
+    : "After the tool returns, group holdings as expensive / fair / cheap; cite P/E, valuationLabel, currentPrice, upsideToTargetPct, fetchedAt, and provider. Do not invent ratios.";
+
   return [
     "TASK OVERRIDE — Portfolio valuation request detected:",
     tickerLine,
-    'Call `analyzeValuation` ONCE with `scope: "portfolio"` (or the tickers above).',
+    'Call `analyzeValuation` ONCE with `scope: "portfolio"` (or the tickers above) unless valuation numbers are already in this thread.',
     "Do NOT call `screenMoatStocks` — that searches the global moat database for new ideas.",
-    "After the tool returns, group holdings as expensive / fair / cheap; cite P/E, valuationLabel, fetchedAt, and provider. Do not invent ratios.",
+    afterTool,
   ].join("\n");
 }
