@@ -26,6 +26,13 @@ import HomePortfolioTotalCard from "./HomePortfolioTotalCard";
 import HomeRecommendationCard from "./HomeRecommendationCard";
 import HomeHoldingsExplorerCta from "./HomeHoldingsExplorerCta";
 import ScreeningBetaBanner from "@/components/screening/ScreeningBetaBanner";
+import AgentIntroGate from "@/components/agent-intro/AgentIntroGate";
+import { AGENT_INTRO_EXPERIMENT_KEY } from "@/lib/agent-intro";
+import { useExperiment } from "@/lib/use-experiment";
+import {
+  useAgentIntroEngagementReady,
+  useAgentIntroPostAction,
+} from "@/hooks/useAgentIntroPostAction";
 
 type HeroMode = "simple" | "advanced";
 const HERO_MODE_KEY = "home_v2_hero_mode";
@@ -86,6 +93,7 @@ export default function HomeV2Dashboard() {
   const [warrenPrompt, setWarrenPrompt] = useState<string | undefined>();
   const [heroMode, setHeroMode] = useState<HeroMode>("simple");
   const [showFeedback, setShowFeedback] = useState(false);
+  const [introDismissed, setIntroDismissed] = useState(false);
   const pageViewSent = useRef(false);
   const visitMarked = useRef(false);
   const returnTracked = useRef(false);
@@ -108,6 +116,23 @@ export default function HomeV2Dashboard() {
   // Empty only when there are no holdings and no cash/manual assets.
   // Fixed-return (and other Assets & Accounts) must not hide behind EmptyPortfolio.
   const isEmpty = holdings.length === 0 && cashEntries.length === 0;
+
+  const introExperiment = useExperiment(AGENT_INTRO_EXPERIMENT_KEY, {
+    enabled: aidEnabled,
+  });
+  const engagementReady = useAgentIntroEngagementReady({
+    enabled: aidEnabled,
+    introDismissed,
+    variant: introExperiment.variant,
+    status: introExperiment.status,
+    assigned: introExperiment.assigned,
+    loading: introExperiment.loading,
+  });
+  const { recordPostIntroAction } = useAgentIntroPostAction({
+    enabled: aidEnabled,
+    isEmpty,
+    engagementReady,
+  });
 
   useEffect(() => {
     if (!aidEnabled || pageViewSent.current) return;
@@ -181,6 +206,7 @@ export default function HomeV2Dashboard() {
           status={aidStatus.data}
           loading={aidStatus.loading}
           onCatchUp={() => {
+            recordPostIntroAction("aid_catch_up");
             void aidStatus.markVisited();
             document.getElementById("home-v2-highlights")?.scrollIntoView({ behavior: "smooth" });
           }}
@@ -190,11 +216,16 @@ export default function HomeV2Dashboard() {
       {isEmpty ? (
         <EmptyPortfolio
           demoMode={demoMode}
-          onAddStock={openAdd}
+          onAddStock={() => {
+            recordPostIntroAction("add");
+            openAdd();
+          }}
+          onEngagementAction={recordPostIntroAction}
           onAskWarren={
             demoMode
               ? undefined
               : (prompt) => {
+                  recordPostIntroAction("warren");
                   setWarrenPrompt(prompt);
                   setAiOpen(true);
                 }
@@ -211,7 +242,10 @@ export default function HomeV2Dashboard() {
                 costBasis={totals.totalCostEUR}
                 totalReturnPct={totals.totalGainLossPercent}
                 holdingsCount={holdings.length}
-                onAdvanced={() => setAndPersistHeroMode("advanced")}
+                onAdvanced={() => {
+                  recordPostIntroAction("hero_advanced");
+                  setAndPersistHeroMode("advanced");
+                }}
               />
             ) : (
               <PortfolioHeroCard
@@ -221,7 +255,10 @@ export default function HomeV2Dashboard() {
                 refreshKey={refreshKey}
                 onRecalculate={handleRecalculate}
                 recalculating={recalculating}
-                onOpenAi={() => setAiOpen(true)}
+                onOpenAi={() => {
+                  recordPostIntroAction("warren");
+                  setAiOpen(true);
+                }}
                 totalValue={totals.totalCurrentEUR}
                 investedValue={investedValueBase}
                 cashValue={cashValueBase}
@@ -273,7 +310,13 @@ export default function HomeV2Dashboard() {
             {isMobile ? (
               <PortfolioCards holdings={holdings} />
             ) : (
-              <PortfolioTable holdings={holdings} onAddStock={openAdd} />
+              <PortfolioTable
+                holdings={holdings}
+                onAddStock={() => {
+                  recordPostIntroAction("add");
+                  openAdd();
+                }}
+              />
             )}
           </div>
 
@@ -286,13 +329,17 @@ export default function HomeV2Dashboard() {
           {isMobile && (
             <>
               <WarrenTrigger
-                onOpen={() => setAiOpen(true)}
+                onOpen={() => {
+                  recordPostIntroAction("warren");
+                  setAiOpen(true);
+                }}
                 href={demoMode ? "/signup" : undefined}
               />
               {aidStatus.data?.warrenNudge && (
                 <AidWarrenNudge
                   nudge={aidStatus.data.warrenNudge}
                   onAsk={(prompt) => {
+                    recordPostIntroAction("warren");
                     setWarrenPrompt(prompt);
                     setAiOpen(true);
                   }}
@@ -309,11 +356,18 @@ export default function HomeV2Dashboard() {
   const rail = (
     <aside className="flex flex-col gap-3">
       <AllocationTabs holdings={holdings} cashEntries={cashEntries} />
-      <WarrenTrigger onOpen={() => setAiOpen(true)} href={demoMode ? "/signup" : undefined} />
+      <WarrenTrigger
+        onOpen={() => {
+          recordPostIntroAction("warren");
+          setAiOpen(true);
+        }}
+        href={demoMode ? "/signup" : undefined}
+      />
       {aidStatus.data?.warrenNudge && (
         <AidWarrenNudge
           nudge={aidStatus.data.warrenNudge}
           onAsk={(prompt) => {
+            recordPostIntroAction("warren");
             setWarrenPrompt(prompt);
             setAiOpen(true);
           }}
@@ -332,7 +386,14 @@ export default function HomeV2Dashboard() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-4 lg:px-6">
+    <>
+      <AgentIntroGate
+        isEmpty={isEmpty}
+        demoMode={demoMode}
+        isReady={!isInitializing}
+        onIntroDismissed={() => setIntroDismissed(true)}
+      />
+      <main className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-4 lg:px-6">
       {isMobile || isEmpty ? (
         main
       ) : (
@@ -371,5 +432,6 @@ export default function HomeV2Dashboard() {
         </div>
       )}
     </main>
+    </>
   );
 }

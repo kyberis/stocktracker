@@ -105,6 +105,8 @@ function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/u/")) return true;
   // Trial activation page is public so email links work before login
   if (pathname.startsWith("/trial/")) return true;
+  // Static design previews (no user data)
+  if (pathname.startsWith("/preview/")) return true;
   // Public stock research: search + report page (free data; paid-API sections
   // are redacted server-side for anonymous requests, see /api/company-analysis)
   if (pathname === "/analisis" || pathname.startsWith("/analisis/")) return true;

@@ -219,10 +219,13 @@ function ExploreMiniCard({
 export default function EmptyPortfolio({
   onAddStock,
   onAskWarren,
+  onEngagementAction,
   demoMode = false,
 }: {
   onAddStock: () => void;
   onAskWarren?: (prompt: string) => void;
+  /** Fires agent_intro post-splash success metric (once per session). */
+  onEngagementAction?: (action: string) => void;
   demoMode?: boolean;
 }) {
   const { t } = useI18n();
@@ -235,6 +238,7 @@ export default function EmptyPortfolio({
 
   const trackCta = (cta: string) => {
     if (demoMode) return;
+    onEngagementAction?.(cta);
     void trackExperimentEvent("empty_activation_cta", {
       experiment: EMPTY_ACTIVATION_KEY,
       variant,
