@@ -69,6 +69,7 @@ export function useAgentIntroEngagementReady({
   introDismissed: boolean;
   variant: string;
   status: string;
+  assigned: boolean;
   loading: boolean;
 }): boolean {
   useEffect(() => {

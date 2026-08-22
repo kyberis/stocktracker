@@ -28,7 +28,6 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 | DAL | `src/lib/db/experiments.ts` | Assignment hash, stats SQL |
 | Script | `scripts/create-experiment.ts` | Seed draft from CLI |
 | Consumer | `src/components/EmptyPortfolio.tsx` | `empty_activation` A/B/C |
-| Consumer | `src/components/agent-intro/AgentIntroGate.tsx` | `agent_intro` A/B/C (control / convergence / briefing) |
 
 ## 4. Data model
 
@@ -52,7 +51,6 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 - Admin metrics catalog: `/admin/experiments/metrics` (events that land in `analytics_events`)
 - Admin treatment preview: `/admin/experiments/preview?key=…&variant=…` (client-only; no DB assignment)
 - Product: empty home via `EmptyPortfolio` when holdings empty
-- Product: signed-in home via `AgentIntroGate` on `/` (once per session when experiment running)
 
 ## 7. Business logic
 
@@ -81,7 +79,7 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 ## 12. Telemetry
 
 - `experiment_exposure` (server on assign)
-- Experiment-defined metrics (e.g. `agent_intro_post_action`, `empty_activation_cta`, `holding_add`)
+- Experiment-defined metrics (e.g. `empty_activation_cta`, `holding_add`)
 
 ## 13. Edge cases & gotchas
 
