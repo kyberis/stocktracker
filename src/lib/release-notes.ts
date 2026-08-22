@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "The landing page now showcases Holdings explorer and asking Warren about a highlighted figure — including public IR and earnings-call research. Copy stays informational: AI-generated, not investment advice.",
         translations: {
           es: "La landing ahora destaca el explorador de posiciones y preguntar a Warren por una cifra — incluida la consulta de IR y earnings calls. El texto sigue siendo informativo: generado por IA, no es consejo de inversión.",
