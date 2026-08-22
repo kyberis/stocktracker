@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.205",
+    version: "2.5.206",
     date: "2026-08-22",
     title: "Agent intro splash timing",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Warren + Clara home intro now shows on every visit and stays full-screen until the dashboard finishes loading (instead of once per session on a fixed timer). If the animation finishes first, a loading indicator appears until portfolio data arrives.",
         translations: {
           es: "La intro de Warren y Clara en el home se muestra en cada visita y permanece a pantalla completa hasta que el dashboard termina de cargar (en lugar de una vez por sesión con un temporizador fijo). Si la animación termina antes, aparece un indicador de carga hasta que lleguen los datos de la cartera.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.205",
+    date: "2026-08-22",
+    title: "Warren valuation stream stability",
+    titleTranslations: {
+      es: "Estabilidad del stream de valoración en Warren",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren portfolio valuation skips crypto, caps batch size, and times out slow fundamental fetches — fixes browser “Load failed” when comparing many holdings.",
+        translations: {
+          es: "La valoración de cartera en Warren omite cripto, limita el lote y corta fetchs lentos de fundamentales — corrige el «Load failed» del navegador al comparar muchas posiciones.",
         },
       },
     ],

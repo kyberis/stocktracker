@@ -25,6 +25,10 @@ import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import { checkFmpRateLimit } from "@/lib/rate-limit";
 import { deferTask } from "@/lib/task-runner";
 import { findUserById } from "@/lib/db";
+import { isCryptoAssetRoute } from "@/lib/asset-detail-href";
+
+/** Per-type provider timeout — prevents hung FMP/Yahoo calls from stalling Warren chat streams. */
+export const FUNDAMENTALS_FETCH_TIMEOUT_MS = 8_000;
 
 export type ShareFundamentalsScope = "full" | "valuation";
 
@@ -126,6 +130,22 @@ const FETCH_INVOKERS: Record<ShareFundamentalsType, FetchInvoker> = {
   earnings: (provider, symbol) => provider.getEarnings?.(symbol) ?? Promise.resolve(null),
 };
 
+async function withFundamentalsFetchTimeout<T>(promise: Promise<T>): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), FUNDAMENTALS_FETCH_TIMEOUT_MS);
+      }),
+    ]);
+  } catch {
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 async function fetchType(
   provider: StockDataProvider,
   backend: FundamentalsDataBackend,
@@ -133,7 +153,7 @@ async function fetchType(
   type: ShareFundamentalsType,
 ): Promise<{ data: CachedPayload | null; backend: FundamentalsDataBackend }> {
   try {
-    const data = await FETCH_INVOKERS[type](provider, symbol);
+    const data = await withFundamentalsFetchTimeout(FETCH_INVOKERS[type](provider, symbol));
     return { data, backend };
   } catch (err) {
     console.error(
@@ -166,6 +186,13 @@ export async function ensureShareFundamentals(
   const symbol = normalizeSymbol(symbolInput);
   if (!symbol) {
     return { ok: false, error: "symbol is required", code: "invalid_input" };
+  }
+  if (isCryptoAssetRoute(symbol)) {
+    return {
+      ok: false,
+      error: `No equity fundamentals for ${symbol}`,
+      code: "not_found",
+    };
   }
 
   const user = await findUserById(userId);
@@ -282,7 +309,7 @@ export async function ensureShareFundamentalsBatch(
   opts?: { fresh?: boolean; concurrency?: number; scope?: ShareFundamentalsScope },
 ): Promise<ShareFundamentalsResult<ShareFundamentalsBundle>[]> {
   const unique = [...new Set(symbols.map(normalizeSymbol).filter(Boolean))];
-  const concurrency = opts?.concurrency ?? (opts?.scope === "valuation" ? 5 : 3);
+  const concurrency = opts?.concurrency ?? (opts?.scope === "valuation" ? 6 : 3);
   const results: ShareFundamentalsResult<ShareFundamentalsBundle>[] = [];
 
   for (let i = 0; i < unique.length; i += concurrency) {

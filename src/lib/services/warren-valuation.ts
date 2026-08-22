@@ -1,11 +1,42 @@
 import type { CompanyOverview, EarningsReport, IncomeStatementReport } from "@/lib/api-providers/types";
-import type { FundamentalData } from "@/lib/types";
+import type { FundamentalData, HoldingAssetType } from "@/lib/types";
 import { isCryptoAssetRoute } from "@/lib/asset-detail-href";
+import { holdingNeedsFundamentals } from "@/lib/holdings-research";
 import { scoreCheap, type CheapLabel } from "@/lib/screening/scoring/categories";
 import {
   ensureShareFundamentalsBatch,
   type ShareFundamentalsBundle,
 } from "@/lib/services/share-fundamentals";
+
+/** Cap portfolio valuation batch size so Warren tool steps finish before the chat stream idles out. */
+export const WARREN_VALUATION_MAX_SYMBOLS = 6;
+
+export function isEligibleForWarrenValuation(
+  ticker: string,
+  assetType?: string | null,
+): boolean {
+  const type = (assetType ?? "stock") as HoldingAssetType;
+  if (!holdingNeedsFundamentals({ assetType: type })) return false;
+  if (isCryptoAssetRoute(ticker)) return false;
+  return true;
+}
+
+export function filterWarrenValuationSymbols(
+  symbols: string[],
+  assetTypes?: Map<string, string | undefined>,
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of symbols) {
+    const symbol = raw.trim().toUpperCase();
+    if (!symbol || seen.has(symbol)) continue;
+    if (!isEligibleForWarrenValuation(symbol, assetTypes?.get(symbol))) continue;
+    seen.add(symbol);
+    out.push(symbol);
+    if (out.length >= WARREN_VALUATION_MAX_SYMBOLS) break;
+  }
+  return out;
+}
 
 export interface ValuationMetrics {
   peRatio: number | null;
@@ -150,40 +181,24 @@ export async function analyzeValuationForWarren(
   if (normalized.length === 0) {
     return { ok: false, error: "At least one ticker is required", code: "invalid_input" };
   }
-  if (normalized.length > 10) {
-    return { ok: false, error: "Maximum 10 tickers per valuation request", code: "invalid_input" };
-  }
-
-  const eligible: string[] = [];
-  const errors: Array<{ symbol: string; error: string }> = [];
-  for (const symbol of normalized) {
-    if (isCryptoAssetRoute(symbol)) {
-      errors.push({
-        symbol,
-        error: "Valuation multiples (P/E) do not apply to crypto — skipped.",
-      });
-      continue;
-    }
-    eligible.push(symbol);
-  }
-
-  if (eligible.length === 0) {
+  if (normalized.length > WARREN_VALUATION_MAX_SYMBOLS) {
     return {
       ok: false,
-      error: errors[0]?.error ?? "No equity tickers to value",
+      error: `Maximum ${WARREN_VALUATION_MAX_SYMBOLS} tickers per valuation request`,
       code: "invalid_input",
     };
   }
 
-  const batch = await ensureShareFundamentalsBatch(userId, eligible, {
+  const batch = await ensureShareFundamentalsBatch(userId, normalized, {
     fresh: opts?.fresh,
     scope: "valuation",
   });
 
   const results: WarrenValuationItem[] = [];
+  const errors: Array<{ symbol: string; error: string }> = [];
 
   batch.forEach((entry, index) => {
-    const symbol = eligible[index]!;
+    const symbol = normalized[index]!;
     if (entry.ok) {
       results.push(mapShareFundamentalsToValuation(entry.data));
       return;
