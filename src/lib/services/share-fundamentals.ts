@@ -220,8 +220,8 @@ export async function ensureShareFundamentals(
       }
     }
 
-    if (didFetch && provider.callCount) {
-      deferTask(() => recordMarketDataUsageAsync(userId, backend, provider.callCount!));
+    if (didFetch && provider.callCount && backend === "fmp") {
+      deferTask(() => recordMarketDataUsageAsync(userId, "fmp", provider.callCount!));
     }
   }
 

@@ -77,7 +77,7 @@ export function isCacheableFundamentalData(
         data as FundamentalData<{ operatingCashflow: number | null }>
       );
     case "earnings":
-      return !hasEarningsSparsePattern(data);
+      return !hasEarningsSparsePattern(statementData);
     default:
       return false;
   }
