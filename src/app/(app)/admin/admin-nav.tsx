@@ -44,6 +44,7 @@ const TAB_GROUPS: { category: string; tabs: Tab[] }[] = [
       { slug: "feature-flags", label: "Feature Flags" },
       { slug: "experiments", label: "Experiments" },
       { slug: "analytics", label: "Analytics" },
+      { slug: "traffic", label: "Traffic" },
       { slug: "acquisition", label: "Acquisition" },
       { slug: "mcp-analytics", label: "MCP Analytics" },
       { slug: "ai-logs", label: "AI Logs" },

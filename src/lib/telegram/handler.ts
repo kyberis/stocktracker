@@ -46,6 +46,7 @@ import {
 import type { ModelMessage, UserContent } from "ai";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
 import { buildWarrenPrefetchAppendix } from "@/lib/ai/warren/warren-prefetch-appendix";
+import { warrenThreadFromModelMessages } from "@/lib/ai/warren/conversation-progress-intent";
 import { resolveOfficeIdentity } from "@/lib/ai/office/office-identity";
 import {
   buildWarrenMultimodalUserContent,
@@ -746,6 +747,7 @@ async function runWarrenForText(
         userId,
         portfolioId: activePortfolioId || undefined,
         snapshot,
+        recentMessages: warrenThreadFromModelMessages(messages),
       });
 
   let result;

@@ -6,6 +6,7 @@ import { checkWarrenEmptyAddRateLimit } from "@/lib/rate-limit";
 import { WARREN_EMPTY_ADD_MAX_CONSULTS } from "@/lib/ai/warren/empty-add-stock";
 import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
 import { buildWarrenPrefetchAppendix } from "@/lib/ai/warren/warren-prefetch-appendix";
+import { warrenThreadFromModelMessages } from "@/lib/ai/warren/conversation-progress-intent";
 import { runWarrenTurn } from "@/lib/ai/warren/run-turn";
 import type { SubscriptionPlan } from "@/lib/types";
 import { listOfficeMessages, appendOfficeMessage, type OfficeMessageRow } from "@/lib/db/agent-office";
@@ -95,6 +96,7 @@ export async function handleGeneralOfficeQuery(
         userId: input.userId,
         portfolioId: input.portfolioId,
         snapshot,
+        recentMessages: warrenThreadFromModelMessages(messages),
       });
 
   try {

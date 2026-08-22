@@ -14,7 +14,9 @@ import { getWarrenMoatEvaluation, mapWarrenMoatEvaluationForTool } from "@/lib/s
 import {
   analyzeValuationForWarren,
   demoValuationItems,
+  enrichValuationItemsWithQuotes,
   filterWarrenValuationSymbols,
+  type WarrenValuationItem,
   WARREN_VALUATION_MAX_SYMBOLS,
 } from "@/lib/services/warren-valuation";
 import { createProvider } from "@/lib/api-providers";
@@ -107,6 +109,27 @@ const ALLOC_COLORS: Record<string, string> = {
   Savings: "#06b6d4",
   Pension: "#8b5cf6",
 };
+
+async function attachLiveQuoteUpside(
+  symbols: string[],
+  items: WarrenValuationItem[],
+  emitStep: (label: string) => void,
+): Promise<WarrenValuationItem[]> {
+  emitStep(`Fetching quotes for ${symbols.join(", ")}…`);
+  const provider = createProvider("yahoo");
+  const pricesBySymbol: Record<string, number | null> = {};
+  await Promise.all(
+    symbols.map(async (symbol) => {
+      try {
+        const quote = await provider.getQuote(symbol);
+        pricesBySymbol[symbol] = quote.regularMarketPrice ?? null;
+      } catch {
+        pricesBySymbol[symbol] = null;
+      }
+    }),
+  );
+  return enrichValuationItemsWithQuotes(items, pricesBySymbol);
+}
 
 export function buildWarrenTools(ctx: WarrenToolContext) {
   const sisterTools = sisterAgentToolsEnabled(ctx) ? buildSisterAgentTools(ctx) : {};
@@ -487,7 +510,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
 
     analyzeValuation: tool({
       description:
-        "Fetch share-level valuation metrics (P/E, ROE, cheap/fair/expensive label) for portfolio holdings. Overview-only fetch — fast. Call ONCE per turn when the user asks whether stocks look expensive or cheap. Do not call screenMoatStocks for this.",
+        "Fetch share-level valuation metrics (P/E, ROE, cheap/fair/expensive label) plus currentPrice and upsideToTargetPct vs the analyst target. Call ONCE per turn when the user asks whether stocks look expensive or cheap. Do not re-call on a follow-up unless they asked for fresh data or new tickers. Do not call screenMoatStocks for this.",
       inputSchema: z.object({
         tickers: z
           .array(z.string().min(1).max(20))
@@ -550,7 +573,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
               results: demoValuationItems(symbols),
               errors: [] as const,
               replyHint:
-                "Demo mode — explain each valuationLabel using metrics and note data is illustrative. Not investment advice.",
+                "Demo mode — explain each valuationLabel using metrics and note data is illustrative. If the user asked to rank or decide, sort by upsideToTargetPct. Not investment advice.",
             };
           }
 
@@ -568,12 +591,14 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
             return { found: false, note: result.error };
           }
 
+          const results = await attachLiveQuoteUpside(symbols, result.results, ctx.emitStep);
+
           return {
             found: true,
-            results: result.results,
+            results,
             errors: result.errors,
             replyHint:
-              "Ground the answer in valuationLabel, metrics, fetchedAt, and provider for each ticker. Mention dataGaps when present. Not investment advice.",
+              "Ground the answer in valuationLabel, metrics, currentPrice, upsideToTargetPct, fetchedAt, and provider. If the user asked to rank, decide, or sell, sort by upsideToTargetPct (lowest first for limited upside) and explain the bottom names — do not regroup expensive/fair/cheap. Mention dataGaps when present. Not investment advice.",
           };
         } catch (err) {
           console.error("[warren/analyzeValuation]", err instanceof Error ? err.message : err);

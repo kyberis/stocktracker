@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.209",
+    version: "2.5.210",
     date: "2026-08-22",
     title: "Warren Telegram on Profile for OneLogin users",
     titleTranslations: {
@@ -34,6 +34,23 @@ export const releaseNotes: ReleaseEntry[] = [
     ],
   },
   {
+    version: "2.5.209",
+    date: "2026-08-22",
+    title: "Admin traffic graph",
+    titleTranslations: {
+      es: "Grafo de tráfico en admin",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "New admin Traffic panel shows an interactive graph of which screens and origins call which internal API groups, with line thickness proportional to request volume (Redis counters, no per-request DB writes).",
+        translations: {
+          es: "Nuevo panel Traffic en admin: grafo interactivo de qué pantallas y orígenes llaman a qué grupos de API internas, con grosor de línea proporcional al volumen (contadores Redis, sin escrituras DB por request).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.208",
     date: "2026-08-22",
     title: "Warren valuation Yahoo fallback",
@@ -41,6 +58,13 @@ export const releaseNotes: ReleaseEntry[] = [
       es: "Fallback Yahoo en valoración Warren",
     },
     changes: [
+      {
+        type: "feature",
+        text: "Warren now advances the conversation instead of repeating the same valuation recap: follow-ups like “yes, rank by least upside” get a ranking and a new next step, not the same expensive/fair grouping again.",
+        translations: {
+          es: "Warren ahora avanza la conversación en vez de repetir el mismo resumen de valoración: si dices “sí, ordénalas por menor margen de subida”, responde con un ranking y un paso extra, no con el mismo agrupado de caras/justas.",
+        },
+      },
       {
         type: "fix",
         text: "Warren portfolio valuation now falls back to Yahoo (not FMP again) when FMP returns sparse overviews without P/E, and ignores cached overviews that lack valuation multiples — fixes missing ratios for GOOGL, UBER, and other liquid tickers on Folio.",
