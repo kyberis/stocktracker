@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.210",
+    version: "2.5.211",
     date: "2026-08-22",
     title: "Warren Telegram on Profile for OneLogin users",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Profile → Account now shows the Warren on Telegram connect card for unified OneLogin users (it was hidden behind the IdP account redirect).",
         translations: {
           es: "Perfil → Cuenta ahora muestra la tarjeta para vincular Warren en Telegram a usuarios unificados con OneLogin (antes quedaba oculta tras el redireccionamiento a la cuenta IdP).",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.210",
+    date: "2026-08-22",
+    title: "Admin AI prompts catalog",
+    titleTranslations: {
+      es: "Catálogo de prompts IA en admin",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Admin panel adds an AI Prompts page listing canonical system prompts for Warren, screening agents, portfolio tools, digests, and sister agents Clara and Will.",
+        translations: {
+          es: "El panel de admin incluye una página AI Prompts con los system prompts canónicos de Warren, los agentes de screening, herramientas de cartera, digests y los agentes hermanos Clara y Will.",
         },
       },
     ],

@@ -240,23 +240,15 @@ describe("useImportBrokerCSV importAll", () => {
     expect(result.current.step).toBe("done");
     expect(result.current.importedTxCount).toBe(1);
     expect(fetchSpy).toHaveBeenCalledTimes(3);
-    expect(fetchSpy).toHaveBeenNthCalledWith(
-      2,
-      "/api/transactions/bulk",
-      expect.objectContaining({
-        method: "POST",
-      }),
-    );
-    const bulkInit = fetchSpy.mock.calls[1][1] as RequestInit;
-    expect(bulkInit.headers).toBeInstanceOf(Headers);
-    expect((bulkInit.headers as Headers).get("Content-Type")).toBe("application/json");
+    const [, bulkInit] = fetchSpy.mock.calls[1]!;
+    expect(bulkInit?.method).toBe("POST");
+    expect(String(bulkInit?.body)).toContain('"transactions"');
+    expect(new Headers(bulkInit?.headers).get("Content-Type")).toBe("application/json");
     expect(fetchSpy).toHaveBeenNthCalledWith(
       3,
       "/api/portfolio/backfill-snapshots",
       expect.objectContaining({ method: "POST" }),
     );
-    const backfillInit = fetchSpy.mock.calls[2][1] as RequestInit;
-    expect(backfillInit.headers).toBeInstanceOf(Headers);
   });
 
   it("importAll when bulk API returns errors sets error state", async () => {

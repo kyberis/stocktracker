@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-318 routes.
+319 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -15,6 +15,7 @@
 | `/api/admin/ai-compare` | POST | [`src/app/api/admin/ai-compare/route.ts`](../../src/app/api/admin/ai-compare/route.ts) |
 | `/api/admin/ai-logs` | GET | [`src/app/api/admin/ai-logs/route.ts`](../../src/app/api/admin/ai-logs/route.ts) |
 | `/api/admin/ai-models` | GET, PUT | [`src/app/api/admin/ai-models/route.ts`](../../src/app/api/admin/ai-models/route.ts) |
+| `/api/admin/ai-prompts` | GET, POST | [`src/app/api/admin/ai-prompts/route.ts`](../../src/app/api/admin/ai-prompts/route.ts) |
 | `/api/admin/alert-dispatch` | GET | [`src/app/api/admin/alert-dispatch/route.ts`](../../src/app/api/admin/alert-dispatch/route.ts) |
 | `/api/admin/analytics` | GET | [`src/app/api/admin/analytics/route.ts`](../../src/app/api/admin/analytics/route.ts) |
 | `/api/admin/anomalies` | GET, POST | [`src/app/api/admin/anomalies/route.ts`](../../src/app/api/admin/anomalies/route.ts) |
