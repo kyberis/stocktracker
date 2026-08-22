@@ -11,7 +11,12 @@ import {
   queryMoatCache,
 } from "@/lib/db";
 import { getWarrenMoatEvaluation, mapWarrenMoatEvaluationForTool } from "@/lib/services/warren-moat";
-import { analyzeValuationForWarren, demoValuationItems } from "@/lib/services/warren-valuation";
+import {
+  analyzeValuationForWarren,
+  demoValuationItems,
+  filterWarrenValuationSymbols,
+  WARREN_VALUATION_MAX_SYMBOLS,
+} from "@/lib/services/warren-valuation";
 import { createProvider } from "@/lib/api-providers";
 import type { WarrenPart, WarrenProposal, StockSnapshotData } from "./types";
 import type {
@@ -487,13 +492,15 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
         tickers: z
           .array(z.string().min(1).max(20))
           .min(1)
-          .max(10)
+          .max(WARREN_VALUATION_MAX_SYMBOLS)
           .optional()
-          .describe("Explicit tickers to analyze (1–10). Omit when scope is portfolio."),
+          .describe("Explicit tickers to analyze (1–6). Omit when scope is portfolio."),
         scope: z
           .enum(["portfolio"])
           .optional()
-          .describe("When set and tickers omitted, analyze top holdings in the active portfolio (max 10 by weight)."),
+          .describe(
+            `When set and tickers omitted, analyze top holdings in the active portfolio (max ${WARREN_VALUATION_MAX_SYMBOLS} by weight).`,
+          ),
         fresh: z
           .boolean()
           .optional()
@@ -502,22 +509,36 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
       execute: async ({ tickers, scope, fresh }) => {
         try {
           let symbols = tickers?.map((t) => t.toUpperCase()) ?? [];
+          const assetTypes = new Map<string, string | undefined>();
+
           if (symbols.length === 0 && scope === "portfolio") {
-            symbols =
+            const fromSnapshot =
               ctx.snapshot?.topHoldings
                 ?.slice()
-                .sort((a, b) => b.weight - a.weight)
-                .slice(0, 10)
-                .map((h) => h.ticker.toUpperCase()) ?? [];
-            if (symbols.length === 0 && ctx.activePortfolioId) {
+                .sort((a, b) => b.weight - a.weight) ?? [];
+
+            for (const h of fromSnapshot) {
+              const sym = h.ticker.toUpperCase();
+              assetTypes.set(sym, h.assetType);
+            }
+
+            if (fromSnapshot.length > 0) {
+              symbols = fromSnapshot.map((h) => h.ticker.toUpperCase());
+            } else if (ctx.activePortfolioId) {
               const holdings = await dbListHoldings(ctx.userId, ctx.activePortfolioId);
-              symbols = holdings.slice(0, 10).map((h) => h.ticker.toUpperCase());
+              for (const h of holdings) {
+                assetTypes.set(h.ticker.toUpperCase(), h.assetType);
+              }
+              symbols = holdings.map((h) => h.ticker.toUpperCase());
             }
           }
+
+          symbols = filterWarrenValuationSymbols(symbols, assetTypes);
+
           if (symbols.length === 0) {
             return {
               found: false,
-              note: "No tickers to analyze. Pass tickers or scope portfolio with holdings loaded.",
+              note: "No equity tickers to analyze. Crypto and funds are skipped — pass stock/ETF tickers or add equity holdings.",
             };
           }
 

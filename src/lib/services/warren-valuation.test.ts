@@ -6,6 +6,9 @@ import {
   scoreValuation,
   demoValuationItems,
   analyzeValuationForWarren,
+  filterWarrenValuationSymbols,
+  isEligibleForWarrenValuation,
+  WARREN_VALUATION_MAX_SYMBOLS,
 } from "@/lib/services/warren-valuation";
 
 const baseOverview: CompanyOverview = {
@@ -93,12 +96,45 @@ describe("demoValuationItems", () => {
   });
 });
 
+describe("isEligibleForWarrenValuation", () => {
+  it("rejects crypto tickers and funds", () => {
+    expect(isEligibleForWarrenValuation("BTC-EUR")).toBe(false);
+    expect(isEligibleForWarrenValuation("AAPL", "crypto")).toBe(false);
+    expect(isEligibleForWarrenValuation("VWCE", "fund")).toBe(false);
+  });
+
+  it("accepts stocks and etfs", () => {
+    expect(isEligibleForWarrenValuation("GOOGL", "stock")).toBe(true);
+    expect(isEligibleForWarrenValuation("VWCE", "etf")).toBe(true);
+  });
+});
+
+describe("filterWarrenValuationSymbols", () => {
+  it("skips crypto and caps batch size", () => {
+    const symbols = [
+      "UBER",
+      "BTC-EUR",
+      "GOOGL",
+      "SRB.L",
+      "OXY",
+      "NOVO-B.CO",
+      "W9C.DE",
+      "ITX.MC",
+      "MSFT",
+    ];
+    const filtered = filterWarrenValuationSymbols(symbols);
+    expect(filtered).not.toContain("BTC-EUR");
+    expect(filtered.length).toBe(WARREN_VALUATION_MAX_SYMBOLS);
+    expect(filtered[0]).toBe("UBER");
+  });
+});
+
 describe("analyzeValuationForWarren", () => {
   it("rejects crypto-only symbol lists", async () => {
     const result = await analyzeValuationForWarren("u1", ["BTC-EUR"]);
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.error).toContain("crypto");
+      expect(result.error.toLowerCase()).toMatch(/equity|fundamental|valuation/);
     }
   });
 });

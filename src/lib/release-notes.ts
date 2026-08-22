@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.205",
+    date: "2026-08-22",
+    title: "Warren valuation stream stability",
+    titleTranslations: {
+      es: "Estabilidad del stream de valoración en Warren",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren portfolio valuation skips crypto, caps batch size, and times out slow fundamental fetches — fixes browser “Load failed” when comparing many holdings.",
+        translations: {
+          es: "La valoración de cartera en Warren omite cripto, limita el lote y corta fetchs lentos de fundamentales — corrige el «Load failed» del navegador al comparar muchas posiciones.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.204",
     date: "2026-08-22",
     title: "Warren and Clara home intro A/B test",

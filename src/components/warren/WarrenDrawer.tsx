@@ -5,7 +5,7 @@ import AiMarkdown from "@/components/AiMarkdown";
 import WarrenAvatar from "./WarrenAvatar";
 import RenderPart from "./RenderPart";
 import ActionCard from "./ActionCard";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, type TranslationKey } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { usePlatform } from "@/lib/platform-context";
 import { useStealthMode } from "@/lib/stealth-context";
@@ -279,7 +279,7 @@ export default function WarrenDrawer({
           } catch {
             // ignore
           }
-          appendError(setBubbles, assistantId, err);
+          appendError(setBubbles, assistantId, humanizeWarrenStreamError(err, t));
           return;
         }
 
@@ -297,7 +297,7 @@ export default function WarrenDrawer({
             if (!line) continue;
             try {
               const frame = JSON.parse(line) as WarrenStreamFrame;
-              applyFrame(setBubbles, assistantId, frame);
+              applyFrame(setBubbles, assistantId, frame, t);
             } catch {
               // ignore malformed line
             }
@@ -308,7 +308,7 @@ export default function WarrenDrawer({
         appendError(
           setBubbles,
           assistantId,
-          err instanceof Error ? err.message : "Connection error",
+          humanizeWarrenStreamError(err instanceof Error ? err.message : "Connection error", t),
         );
       } finally {
         setStreaming(false);
@@ -673,10 +673,18 @@ export default function WarrenDrawer({
   );
 }
 
+function humanizeWarrenStreamError(message: string, t: (key: TranslationKey) => string): string {
+  if (/load failed|failed to fetch|networkerror/i.test(message)) {
+    return t("aiErrorConnection");
+  }
+  return message;
+}
+
 function applyFrame(
   setBubbles: React.Dispatch<React.SetStateAction<Bubble[]>>,
   assistantId: string,
   frame: WarrenStreamFrame,
+  t: (key: TranslationKey) => string,
 ) {
   if (frame.kind === "text") {
     setBubbles((prev) => {
@@ -700,7 +708,7 @@ function applyFrame(
     setBubbles((prev) => {
       const updated = [...prev];
       const idx = updated.findIndex((b) => b.id === assistantId);
-      const errorMsg = `⚠️ ${frame.message}`;
+      const errorMsg = `⚠️ ${humanizeWarrenStreamError(frame.message, t)}`;
       if (idx >= 0 && updated[idx].kind === "text-assistant") {
         updated[idx] = { ...updated[idx], content: errorMsg };
       }
