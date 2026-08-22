@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.210",
+    date: "2026-08-22",
+    title: "Admin AI prompts catalog",
+    titleTranslations: {
+      es: "Catálogo de prompts IA en admin",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Admin panel adds an AI Prompts page listing canonical system prompts for Warren, screening agents, portfolio tools, digests, and sister agents Clara and Will.",
+        translations: {
+          es: "El panel de admin incluye una página AI Prompts con los system prompts canónicos de Warren, los agentes de screening, herramientas de cartera, digests y los agentes hermanos Clara y Will.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.209",
     date: "2026-08-22",
     title: "Admin traffic graph",
