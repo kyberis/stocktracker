@@ -4,14 +4,14 @@ import { JsonLd } from "@/components/JsonLd";
 import { isCommerceEnabled } from "@/lib/commerce-server";
 
 const DESCRIPTION_COMMERCE =
-  "trefolio is the portfolio tracker built for European investors. EU tax reports (DE/FR/ES/NL/IT), stock screener, net worth tracking, broker sync, AI analysis in 35 languages, and dividend projections. Free to start, Trefolio for €7.99/month.";
+  "trefolio is the portfolio tracker built for European investors. EU tax reports (DE/FR/ES/NL/IT), stock screener, holdings explorer with Warren, net worth tracking, broker sync, AI analysis in 35 languages, and dividend projections. Free to start, Trefolio for €7.99/month.";
 const DESCRIPTION_NO_COMMERCE =
-  "trefolio is the portfolio tracker built for European investors. EU tax reports (DE/FR/ES/NL/IT), stock screener, net worth tracking, broker sync, AI analysis in 35 languages, and dividend projections. Free to start.";
+  "trefolio is the portfolio tracker built for European investors. EU tax reports (DE/FR/ES/NL/IT), stock screener, holdings explorer with Warren, net worth tracking, broker sync, AI analysis in 35 languages, and dividend projections. Free to start.";
 
 const OG_DESCRIPTION_COMMERCE =
-  "The European investor's portfolio tracker. EU tax reports, stock screener, net worth tracking, AI analysis in 35 languages, and dividend projections — free to start, Trefolio for €7.99/month.";
+  "The European investor's portfolio tracker. EU tax reports, stock screener, holdings explorer with Warren, net worth tracking, AI analysis in 35 languages, and dividend projections — free to start, Trefolio for €7.99/month.";
 const OG_DESCRIPTION_NO_COMMERCE =
-  "The European investor's portfolio tracker. EU tax reports, stock screener, net worth tracking, AI analysis in 35 languages, and dividend projections.";
+  "The European investor's portfolio tracker. EU tax reports, stock screener, holdings explorer with Warren, net worth tracking, AI analysis in 35 languages, and dividend projections.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const commerceEnabled = await isCommerceEnabled();
@@ -164,6 +164,7 @@ export const SOFTWARE_APP_SCHEMA = {
   featureList: [
     "European tax reports for Germany, France, Spain, Netherlands, and Italy with AI Tax Assistant",
     "Stock screener with 600+ stocks, 6 filter dimensions, and preset strategies",
+    "Holdings explorer to rank your own positions and ask Warren about a figure (AI-generated; not investment advice)",
     "Net worth tracking for real estate, savings, and pension assets",
     "Real-time stock quotes from NYSE, NASDAQ, XETRA, LSE, and more",
     "Broker import and auto-sync from 20+ brokerages via SnapTrade",

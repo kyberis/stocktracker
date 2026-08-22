@@ -1702,6 +1702,16 @@ const de: TranslationStrings = {
   landingFeatureScreeningPoint4: "Banner Verified / Flagged, nachdem QA Zahlen und Quellen geprüft hat",
   landingFeatureScreeningCta: "Screening öffnen",
 
+  landingFeatureHoldingsExplorerTag: "Holdings-Explorer",
+  landingFeatureHoldingsExplorerTitle: "Ordnen Sie Ihre Positionen. Fragen Sie Warren zu jeder Zahl.",
+  landingFeatureHoldingsExplorerDesc:
+    "Sortieren Sie die Aktien und ETFs, die Sie schon halten, nach KGV, Dividendenrendite, Gewicht und Qualität. Klicken Sie eine Zelle — Warren erklärt die Zahl und kann öffentliche Investor-Relations-Dokumente und Earnings-Call-Transkripte nachschlagen. KI-generiert, nur zur Information. trefolio ist kein Finanzberater.",
+  landingFeatureHoldingsExplorerPoint1: "Ihre Positionen, sortiert — kein Markt-Tickerdump",
+  landingFeatureHoldingsExplorerPoint2: "Klicken Sie KGV, ROE, Rendite oder Gewicht, um Warren genau diese Zahl zu fragen",
+  landingFeatureHoldingsExplorerPoint3: "Vollbild-Chat; Warren kann IR-Seiten, PDFs und Earnings Calls durchsuchen",
+  landingFeatureHoldingsExplorerPoint4: "KI-generierte Antworten. Keine Anlageberatung. Zahlen können verzögert oder unvollständig sein.",
+  landingFeatureHoldingsExplorerCta: "Mit Ihrem Portfolio starten",
+
   landingFeatureWarrenTag: "Telegram",
   landingFeatureWarrenTitle: "Warren auf Telegram (jetzt mit Sprache)",
   landingFeatureWarrenDesc: "Verbinden Sie sich einmal über Ihr Profil und chatten Sie mit Warren auf Telegram — derselbe KI-Portfolio-Begleiter, dieselbe Schreibsicherheit mit Bestätigung, auf Handy oder Desktop. Tippen oder senden Sie eine Sprachnotiz: Warren transkribiert, antwortet und kann die Antwort vorsprechen. Fragen Sie nach Charts, News, Dividenden, Allokation, Performance oder schlagen Sie Käufe, Verkäufe, Cash oder Alerts mit einem Tippen auf Bestätigen vor. Warren erklärt auch die Konzepte hinter den Zahlen — Sicherheitsmarge, Drawdown, Payout — in klarer Sprache aus einer Value-Investing-Wissensbasis.",
@@ -1732,6 +1742,8 @@ const de: TranslationStrings = {
   landingCardTaxDesc: "Länderspezifische Steuerzusammenfassungen für Deutschland, Frankreich, Spanien, die Niederlande und Italien mit KI-Steuerassistent",
   landingCardScreenerTitle: "Aktien-Screener",
   landingCardScreenerDesc: "Filtern Sie über 680 Aktien nach Dividendenrendite, KGV, Sektor und Marktkapitalisierung mit vordefinierten Strategien — ein Fundamentalfilter, keine KI-Recherche",
+  landingCardHoldingsExplorerTitle: "Holdings-Explorer + Warren",
+  landingCardHoldingsExplorerDesc: "Ordnen Sie Ihre Positionen nach KGV und Rendite und fragen Sie Warren zu einer Zelle. Gestützt auf öffentliche Unterlagen. Keine Anlageberatung.",
   landingCardMoatTitle: "Moat-Screener",
   landingCardMoatDesc: "Über 680 Aktien, die nach 8 Buffett-Stil-Kriterien bewertet wurden – Ertragskonstanz, Margen, ROE, Schulden und mehr. Vorab bewertet und durchsuchbar.",
   landingCardVerifiedTitle: "KI-Investment-Screening",

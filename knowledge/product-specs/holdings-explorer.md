@@ -45,6 +45,7 @@ Query: `portfolioId` (optional). Response: `{ rows, metricsPartial, staleAt }`. 
 ## 6. UI surface
 
 - Page: `/tools/holdings-explorer`
+- Landing: hero feature + summary card on `/landing` (screenshot `public/screenshots/holdings-explorer-warren.png`)
 - Component: `HoldingsExplorer`
 - Context: `PortfolioProvider` (quotes, FX, holdings), `StockDetailDrawer` on name click (when not inspecting)
 - Hub: Tools → Analysis, Pro badge

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.197",
+    date: "2026-08-22",
+    title: "Holdings explorer and Warren on the landing page",
+    titleTranslations: {
+      es: "Explorador de posiciones y Warren en la landing",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The landing page now showcases Holdings explorer and asking Warren about a highlighted figure — including public IR and earnings-call research. Copy stays informational: AI-generated, not investment advice.",
+        translations: {
+          es: "La landing ahora destaca el explorador de posiciones y preguntar a Warren por una cifra — incluida la consulta de IR y earnings calls. El texto sigue siendo informativo: generado por IA, no es consejo de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.196",
     date: "2026-08-22",
     title: "Warren full screen and public-company research",
