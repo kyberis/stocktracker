@@ -2,6 +2,7 @@ import { getIdpServiceToken } from "@/lib/idp/config";
 import type { OfficeIdentity } from "./office-identity";
 import { normalizeSisterAppBaseUrl } from "./sister-app-url";
 import type { ClaraSavingsSummary } from "./types";
+import { trackExternalProvider } from "@/lib/traffic/provider-track";
 
 const TIMEOUT_MS = 8_000;
 
@@ -71,6 +72,7 @@ export async function fetchClaraSavingsSummary(identity: OfficeIdentity): Promis
       signal: controller.signal,
       cache: "no-store",
     });
+    trackExternalProvider("clara");
 
     if (res.status === 404) {
       return {
@@ -125,6 +127,7 @@ export async function proposeClaraSavingsRelease(
       signal: controller.signal,
       cache: "no-store",
     });
+    trackExternalProvider("clara");
 
     if (!res.ok) {
       const err = await res.text().catch(() => "");

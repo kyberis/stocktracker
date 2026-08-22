@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/auth/guards";
-import { getTrafficGraph } from "@/lib/traffic/track";
+import { getFullTrafficGraph } from "@/lib/traffic/track";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/admin/traffic-graph", async (req: NextRequest) => {
@@ -13,6 +13,6 @@ export const GET = withMetrics("/api/admin/traffic-graph", async (req: NextReque
   const hours = Math.min(Math.max(hoursParam, 1), 168);
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 50, 10), 200);
 
-  const data = await getTrafficGraph(hours, "source_api", limit);
+  const data = await getFullTrafficGraph(hours, limit);
   return NextResponse.json(data);
 });

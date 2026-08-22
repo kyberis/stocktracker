@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.212",
+    date: "2026-08-22",
+    title: "Admin traffic graph — external providers",
+    titleTranslations: {
+      es: "Grafo de tráfico admin — proveedores externos",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Admin Traffic graph now shows a third column for external services (Yahoo, FMP, AI Gateway, Stripe, Resend, SnapTrade, Clara, Will, ProdOps, Tavily) linked to the API routes that call them.",
+        translations: {
+          es: "El grafo Traffic en admin ahora muestra una tercera columna de servicios externos (Yahoo, FMP, AI Gateway, Stripe, Resend, SnapTrade, Clara, Will, ProdOps, Tavily) vinculados a las rutas API que los invocan.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.211",
     date: "2026-08-22",
     title: "Warren Telegram on Profile for OneLogin users",

@@ -18,7 +18,8 @@ import type {
   EconDataPoint,
   DividendEvent,
 } from "./types";
-import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
+import { providerRequestDuration } from "@/lib/metrics";
+import { recordProviderRequest } from "@/lib/traffic/provider-track";
 import { parseQuoteTimestamp } from "@/lib/quote-time";
 
 const AV_BASE = "https://www.alphavantage.co/query";
@@ -102,10 +103,10 @@ export class AlphaVantageProvider implements StockDataProvider {
       const end = providerRequestDuration.startTimer({ provider: "alphavantage", operation });
       try {
         const result = await avFetchRaw({ ...params, apikey: this.apiKey });
-        providerRequestsTotal.inc({ provider: "alphavantage", operation, status: "success" });
+        recordProviderRequest("alphavantage", operation, "success");
         return result;
       } catch (err) {
-        providerRequestsTotal.inc({ provider: "alphavantage", operation, status: "error" });
+        recordProviderRequest("alphavantage", operation, "error");
         throw err;
       } finally {
         end();
@@ -719,10 +720,10 @@ export class AlphaVantageProvider implements StockDataProvider {
         const res = await fetch(`${AV_BASE}?${params}`);
         if (!res.ok) throw new Error(`AV ${func}: ${res.status}`);
         const json = await res.json();
-        providerRequestsTotal.inc({ provider: "alphavantage", operation, status: "success" });
+        recordProviderRequest("alphavantage", operation, "success");
         return json;
       } catch (err) {
-        providerRequestsTotal.inc({ provider: "alphavantage", operation, status: "error" });
+        recordProviderRequest("alphavantage", operation, "error");
         throw err;
       } finally {
         end();

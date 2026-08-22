@@ -16,7 +16,7 @@ import {
   formatTrafficNodeLabel,
   trafficNodeKind,
 } from "@/lib/traffic/normalize";
-import type { TrafficGraphData } from "@/lib/traffic/track";
+import type { FullTrafficGraphData, TrafficEdge } from "@/lib/traffic/track";
 
 import { StatCard } from "../shared";
 
@@ -30,106 +30,127 @@ const NODE_COLORS: Record<string, string> = {
   screen: "#6366f1",
   system: "#f59e0b",
   api: "#64748b",
+  provider: "#10b981",
   unknown: "#94a3b8",
 };
+
+const COL_ORIGIN = 0;
+const COL_API = 380;
+const COL_PROVIDER = 820;
 
 function nodeColor(id: string): string {
   return NODE_COLORS[trafficNodeKind(id)] ?? NODE_COLORS.unknown;
 }
 
-function buildFlowGraph(data: TrafficGraphData): { nodes: Node[]; edges: Edge[] } {
-  const sourceTotals = new Map<string, number>();
-  const targetTotals = new Map<string, number>();
+function makeNode(
+  id: string,
+  total: number,
+  x: number,
+  y: number,
+  column: "origin" | "api" | "provider",
+  width: number,
+): Node {
+  return {
+    id,
+    type: "default",
+    position: { x, y },
+    data: {
+      label: (
+        <div className="text-left">
+          <div className="text-[11px] font-semibold leading-tight break-all">
+            {formatTrafficNodeLabel(id)}
+          </div>
+          <div className="text-[10px] text-[color:var(--muted)] tabular-nums">
+            {total.toLocaleString()} calls
+          </div>
+        </div>
+      ),
+    },
+    ...(column === "origin" || column === "api" ? { sourcePosition: Position.Right } : {}),
+    ...(column === "api" || column === "provider" ? { targetPosition: Position.Left } : {}),
+    style: {
+      borderColor: nodeColor(id),
+      borderWidth: 2,
+      borderRadius: 10,
+      padding: "6px 10px",
+      fontSize: 11,
+      width,
+      background: "var(--card, #fff)",
+    },
+  };
+}
 
-  for (const edge of data.edges) {
-    sourceTotals.set(edge.source, (sourceTotals.get(edge.source) ?? 0) + edge.count);
-    targetTotals.set(edge.target, (targetTotals.get(edge.target) ?? 0) + edge.count);
+function buildFlowGraph(data: FullTrafficGraphData): { nodes: Node[]; edges: Edge[] } {
+  const originTotals = new Map<string, number>();
+  const apiTotals = new Map<string, number>();
+  const providerTotals = new Map<string, number>();
+
+  for (const edge of data.sourceApi.edges) {
+    originTotals.set(edge.source, (originTotals.get(edge.source) ?? 0) + edge.count);
+    apiTotals.set(edge.target, (apiTotals.get(edge.target) ?? 0) + edge.count);
+  }
+  for (const edge of data.apiProvider.edges) {
+    apiTotals.set(edge.source, (apiTotals.get(edge.source) ?? 0) + edge.count);
+    providerTotals.set(edge.target, (providerTotals.get(edge.target) ?? 0) + edge.count);
   }
 
-  const sources = [...sourceTotals.entries()].sort((a, b) => b[1] - a[1]);
-  const targets = [...targetTotals.entries()].sort((a, b) => b[1] - a[1]);
-  const maxCount = data.edges[0]?.count ?? 1;
+  const origins = [...originTotals.entries()].sort((a, b) => b[1] - a[1]);
+  const apis = [...apiTotals.entries()].sort((a, b) => b[1] - a[1]);
+  const providers = [...providerTotals.entries()].sort((a, b) => b[1] - a[1]);
+
+  const allEdges: TrafficEdge[] = [
+    ...data.sourceApi.edges,
+    ...data.apiProvider.edges,
+  ];
+  const maxCount = allEdges.reduce((max, e) => Math.max(max, e.count), 1);
 
   const nodes: Node[] = [
-    ...sources.map(([id, total], index) => ({
-      id,
-      type: "default" as const,
-      position: { x: 0, y: index * 72 },
-      data: {
-        label: (
-          <div className="text-left">
-            <div className="text-[11px] font-semibold leading-tight">
-              {formatTrafficNodeLabel(id)}
-            </div>
-            <div className="text-[10px] text-[color:var(--muted)] tabular-nums">
-              {total.toLocaleString()} req
-            </div>
-          </div>
-        ),
-      },
-      sourcePosition: Position.Right,
-      style: {
-        borderColor: nodeColor(id),
-        borderWidth: 2,
-        borderRadius: 10,
-        padding: "6px 10px",
-        fontSize: 11,
-        width: 180,
-        background: "var(--card, #fff)",
-      },
-    })),
-    ...targets.map(([id, total], index) => ({
-      id,
-      type: "default" as const,
-      position: { x: 420, y: index * 72 },
-      data: {
-        label: (
-          <div className="text-left">
-            <div className="text-[11px] font-semibold leading-tight break-all">
-              {formatTrafficNodeLabel(id)}
-            </div>
-            <div className="text-[10px] text-[color:var(--muted)] tabular-nums">
-              {total.toLocaleString()} req
-            </div>
-          </div>
-        ),
-      },
-      targetPosition: Position.Left,
-      style: {
-        borderColor: nodeColor(id),
-        borderWidth: 2,
-        borderRadius: 10,
-        padding: "6px 10px",
-        fontSize: 11,
-        width: 220,
-        background: "var(--card, #fff)",
-      },
-    })),
+    ...origins.map(([id, total], index) =>
+      makeNode(id, total, COL_ORIGIN, index * 72, "origin", 180),
+    ),
+    ...apis.map(([id, total], index) =>
+      makeNode(id, total, COL_API, index * 72, "api", 220),
+    ),
+    ...providers.map(([id, total], index) =>
+      makeNode(id, total, COL_PROVIDER, index * 72, "provider", 180),
+    ),
   ];
 
-  const edges: Edge[] = data.edges.map((edge, index) => {
-    const width = Math.max(1, Math.round((edge.count / maxCount) * 12));
-    return {
-      id: `e-${index}`,
+  const flowEdges: Edge[] = [
+    ...data.sourceApi.edges.map((edge, index) => ({
+      id: `sa-${index}`,
       source: edge.source,
       target: edge.target,
       label: edge.count.toLocaleString(),
       labelStyle: { fontSize: 10, fill: "var(--muted, #64748b)" },
       style: {
         stroke: "#6366f1",
-        strokeWidth: width,
+        strokeWidth: Math.max(1, Math.round((edge.count / maxCount) * 12)),
         opacity: 0.85,
       },
       animated: edge.count >= maxCount * 0.5,
-    };
-  });
+    })),
+    ...data.apiProvider.edges.map((edge, index) => ({
+      id: `ap-${index}`,
+      source: edge.source,
+      target: edge.target,
+      label: edge.count.toLocaleString(),
+      labelStyle: { fontSize: 10, fill: "var(--muted, #64748b)" },
+      style: {
+        stroke: "#10b981",
+        strokeWidth: Math.max(1, Math.round((edge.count / maxCount) * 12)),
+        opacity: 0.85,
+      },
+      animated: edge.count >= maxCount * 0.5,
+    })),
+  ];
 
-  return { nodes, edges };
+  return { nodes, edges: flowEdges };
 }
 
 export default function TrafficGraphTab() {
   const [hours, setHours] = useState(24);
-  const [data, setData] = useState<TrafficGraphData | null>(null);
+  const [data, setData] = useState<FullTrafficGraphData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -139,7 +160,7 @@ export default function TrafficGraphTab() {
     void fetch(`/api/admin/traffic-graph?hours=${hours}&limit=50`)
       .then(async (res) => {
         if (!res.ok) throw new Error("fetch_failed");
-        return res.json() as Promise<TrafficGraphData>;
+        return res.json() as Promise<FullTrafficGraphData>;
       })
       .then(setData)
       .catch(() => setError("Could not load traffic graph."))
@@ -156,11 +177,17 @@ export default function TrafficGraphTab() {
   );
 
   const uniqueSources = useMemo(
-    () => new Set(data?.edges.map((e) => e.source) ?? []).size,
+    () => new Set(data?.sourceApi.edges.map((e) => e.source) ?? []).size,
     [data],
   );
-  const uniqueApis = useMemo(
-    () => new Set(data?.edges.map((e) => e.target) ?? []).size,
+  const uniqueApis = useMemo(() => {
+    const apis = new Set<string>();
+    data?.sourceApi.edges.forEach((e) => apis.add(e.target));
+    data?.apiProvider.edges.forEach((e) => apis.add(e.source));
+    return apis.size;
+  }, [data]);
+  const uniqueProviders = useMemo(
+    () => new Set(data?.apiProvider.edges.map((e) => e.target) ?? []).size,
     [data],
   );
 
@@ -170,7 +197,7 @@ export default function TrafficGraphTab() {
         <div>
           <h2 className="text-lg font-semibold text-[color:var(--foreground)]">Traffic graph</h2>
           <p className="text-sm text-[color:var(--muted)]">
-            Origins (screens, crons, webhooks) → internal APIs. Line thickness = request volume.
+            Origins → internal APIs → external services. Line thickness = call volume.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -208,14 +235,15 @@ export default function TrafficGraphTab() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Total requests (top edges)" value={loading ? "—" : (data?.totalRequests ?? 0)} />
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <StatCard label="HTTP requests (top edges)" value={loading ? "—" : (data?.totalRequests ?? 0)} />
+        <StatCard label="Provider calls (top edges)" value={loading ? "—" : (data?.totalProviderCalls ?? 0)} />
         <StatCard label="Unique origins" value={loading ? "—" : uniqueSources} />
         <StatCard label="Unique API groups" value={loading ? "—" : uniqueApis} />
-        <StatCard label="Edges shown" value={loading ? "—" : (data?.edges.length ?? 0)} />
+        <StatCard label="External services" value={loading ? "—" : uniqueProviders} />
       </div>
 
-      <div className="card p-2" style={{ height: 520 }}>
+      <div className="card p-2" style={{ height: 560 }}>
         {loading ? (
           <div className="flex h-full items-center justify-center text-sm text-[color:var(--muted)]">
             Loading traffic graph…
@@ -230,7 +258,7 @@ export default function TrafficGraphTab() {
               nodes={nodes}
               edges={edges}
               fitView
-              minZoom={0.3}
+              minZoom={0.25}
               maxZoom={1.5}
               nodesDraggable={false}
               nodesConnectable={false}
@@ -258,53 +286,78 @@ export default function TrafficGraphTab() {
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-3 h-3 rounded-full bg-slate-500" /> API group
         </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-full bg-emerald-500" /> External provider
+        </span>
       </div>
 
       <div className="card overflow-hidden">
         <div className="px-4 py-3 border-b border-[color:var(--border)]">
-          <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Top traffic edges</h3>
-          <p className="text-xs text-[color:var(--muted)]">Accessible table view of the graph data.</p>
+          <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Origin → API</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wide text-[color:var(--muted)] border-b border-[color:var(--border)]">
-                <th className="px-4 py-2 font-medium">Origin</th>
-                <th className="px-4 py-2 font-medium">API</th>
-                <th className="px-4 py-2 font-medium text-right">Requests</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={3} className="px-4 py-6 text-center text-[color:var(--muted)]">
-                    Loading…
-                  </td>
-                </tr>
-              ) : data?.edges.length ? (
-                data.edges.map((edge) => (
-                  <tr
-                    key={`${edge.source}-${edge.target}`}
-                    className="border-b border-[color:var(--border)]/50 hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
-                  >
-                    <td className="px-4 py-2 font-mono text-xs">{edge.source}</td>
-                    <td className="px-4 py-2 font-mono text-xs">{edge.target}</td>
-                    <td className="px-4 py-2 text-right tabular-nums font-medium">
-                      {edge.count.toLocaleString()}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={3} className="px-4 py-6 text-center text-[color:var(--muted)]">
-                    No data for this period.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <EdgeTable loading={loading} edges={data?.sourceApi.edges ?? []} col1="Origin" col2="API" />
       </div>
+
+      <div className="card overflow-hidden">
+        <div className="px-4 py-3 border-b border-[color:var(--border)]">
+          <h3 className="text-sm font-semibold text-[color:var(--foreground)]">API → External service</h3>
+        </div>
+        <EdgeTable loading={loading} edges={data?.apiProvider.edges ?? []} col1="API" col2="Provider" />
+      </div>
+    </div>
+  );
+}
+
+function EdgeTable({
+  loading,
+  edges,
+  col1,
+  col2,
+}: {
+  loading: boolean;
+  edges: TrafficEdge[];
+  col1: string;
+  col2: string;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-[11px] uppercase tracking-wide text-[color:var(--muted)] border-b border-[color:var(--border)]">
+            <th className="px-4 py-2 font-medium">{col1}</th>
+            <th className="px-4 py-2 font-medium">{col2}</th>
+            <th className="px-4 py-2 font-medium text-right">Calls</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
+            <tr>
+              <td colSpan={3} className="px-4 py-6 text-center text-[color:var(--muted)]">
+                Loading…
+              </td>
+            </tr>
+          ) : edges.length ? (
+            edges.map((edge) => (
+              <tr
+                key={`${edge.source}-${edge.target}`}
+                className="border-b border-[color:var(--border)]/50 hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
+              >
+                <td className="px-4 py-2 font-mono text-xs">{edge.source}</td>
+                <td className="px-4 py-2 font-mono text-xs">{edge.target}</td>
+                <td className="px-4 py-2 text-right tabular-nums font-medium">
+                  {edge.count.toLocaleString()}
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={3} className="px-4 py-6 text-center text-[color:var(--muted)]">
+                No data for this period.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }

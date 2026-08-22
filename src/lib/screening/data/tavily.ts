@@ -2,6 +2,7 @@ import { z } from "zod";
 import { recordTavilyScreeningRequest } from "@/lib/screening/metrics";
 import { accrueScreeningTavilySearchCost } from "@/lib/screening/cost";
 import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
+import { trackExternalProvider } from "@/lib/traffic/provider-track";
 
 /**
  * Screening-scoped Tavily search. Reuses the same TAVILY_API_KEY as AID /
@@ -75,6 +76,7 @@ export async function fetchTavilySearch(
   }
 
   try {
+    trackExternalProvider("tavily");
     const res = await fetchImpl(TAVILY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", accept: "application/json" },

@@ -163,12 +163,17 @@ export function formatTrafficNodeLabel(id: string): string {
       return `internal · ${name}`;
     case "ops":
       return `ops · ${name}`;
+    case "provider":
+      return name;
     default:
       return id;
   }
 }
 
-export function trafficNodeKind(id: string): "screen" | "system" | "api" | "unknown" {
+export function trafficNodeKind(
+  id: string,
+): "screen" | "system" | "api" | "provider" | "unknown" {
+  if (id.startsWith("provider:")) return "provider";
   if (id.startsWith("screen:")) return "screen";
   if (id.startsWith("api:")) return "api";
   if (

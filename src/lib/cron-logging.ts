@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { json401 } from "@/lib/log-unauthorized";
 import { ensureInitialized } from "@/lib/db/client";
 import { str, num } from "@/lib/db/helpers";
+import { runWithTrafficApiGroupAsync } from "@/lib/traffic/request-context";
+import { trackTrafficEdge } from "@/lib/traffic/track";
 
 /* ── DB helpers for cron_executions table ── */
 
@@ -36,6 +38,9 @@ export function withCronLogging(
   handler: () => Promise<Record<string, unknown>>,
 ) {
   return async () => {
+    const apiGroup = `api:cron.${jobName}`;
+    return runWithTrafficApiGroupAsync(apiGroup, async () => {
+    trackTrafficEdge("source_api", `cron:${jobName}`, apiGroup);
     const execId = randomUUID();
     const start = Date.now();
     console.info(`[cron:${jobName}] Starting (exec=${execId})`);
@@ -65,6 +70,7 @@ export function withCronLogging(
       console.error(`[cron:${jobName}] FAILED ${elapsed}ms:`, msg);
       return NextResponse.json({ error: msg }, { status: 500 });
     }
+    });
   };
 }
 

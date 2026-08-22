@@ -157,3 +157,31 @@ export async function getTrafficGraph(
     redisAvailable: true,
   };
 }
+
+export interface FullTrafficGraphData {
+  hours: number;
+  redisAvailable: boolean;
+  sourceApi: TrafficGraphData;
+  apiProvider: TrafficGraphData;
+  totalRequests: number;
+  totalProviderCalls: number;
+}
+
+export async function getFullTrafficGraph(
+  hours: number,
+  limit = 50,
+): Promise<FullTrafficGraphData> {
+  const [sourceApi, apiProvider] = await Promise.all([
+    getTrafficGraph(hours, "source_api", limit),
+    getTrafficGraph(hours, "api_provider", limit),
+  ]);
+
+  return {
+    hours,
+    redisAvailable: sourceApi.redisAvailable && apiProvider.redisAvailable,
+    sourceApi,
+    apiProvider,
+    totalRequests: sourceApi.totalRequests,
+    totalProviderCalls: apiProvider.totalRequests,
+  };
+}

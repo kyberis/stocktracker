@@ -10,6 +10,7 @@ import type { ExtractedTransaction, ExtractedHolding, CashBalance } from "@/hook
 import { inferAssetType } from "@/lib/infer-asset-type";
 import { insertSnapTradeLog } from "@/lib/db/snaptrade-logs";
 import { canonicalExchangeCode } from "@/lib/db/helpers";
+import { trackExternalProvider } from "@/lib/traffic/provider-track";
 
 let _client: Snaptrade | null = null;
 
@@ -38,6 +39,7 @@ async function logSnapTradeCall<T>(
   fn: () => Promise<T>,
 ): Promise<T> {
   const start = Date.now();
+  trackExternalProvider("snaptrade");
   try {
     const result = await fn();
     const durationMs = Date.now() - start;
