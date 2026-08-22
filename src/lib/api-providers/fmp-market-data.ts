@@ -23,6 +23,7 @@ import type {
 import { providerRequestDuration } from "@/lib/metrics";
 import { recordProviderRequest } from "@/lib/traffic/provider-track";
 import { parseQuoteTimestamp } from "@/lib/quote-time";
+import { sanitizeOverviewPe } from "@/lib/fundamentals/normalize-overview-pe";
 
 function parseFloat0(val: unknown): number {
   if (val === undefined || val === null || val === "None" || val === "-") return 0;
@@ -209,7 +210,7 @@ export class FmpMarketDataProvider implements StockDataProvider {
     const p = rows[0];
     if (!p) return null;
 
-    return {
+    return sanitizeOverviewPe({
       symbol: String(p.symbol ?? symbol),
       name: String(p.companyName ?? p.name ?? symbol),
       description: String(p.description ?? ""),
@@ -232,7 +233,7 @@ export class FmpMarketDataProvider implements StockDataProvider {
       twoHundredDayMA: parseFloatOrNull(p.movingAverage200),
       sharesOutstanding: parseFloatOrNull(p.sharesOutstanding),
       forwardPE: parseFloatOrNull(p.forwardPE),
-    };
+    });
   }
 
   private mapIncomeRow(r: Record<string, unknown>): IncomeStatementReport {

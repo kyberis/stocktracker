@@ -598,7 +598,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
             results,
             errors: result.errors,
             replyHint:
-              "Ground the answer in valuationLabel, metrics, currentPrice, upsideToTargetPct, fetchedAt, and provider. If the user asked to rank, decide, or sell, sort by upsideToTargetPct (lowest first for limited upside) and explain the bottom names — do not regroup expensive/fair/cheap. Mention dataGaps when present. Not investment advice.",
+              "Ground the answer in valuationLabel, metrics (peRatio trailing, forwardPE, histPeAvg), currentPrice, upsideToTargetPct, fetchedAt, and provider. valuationLabel is from multiples; upsideToTargetPct is analyst target vs price — cite both and note when they diverge. If the user asked to rank, decide, or sell, sort by upsideToTargetPct (lowest first for limited upside) and explain the bottom names — do not regroup expensive/fair/cheap. Mention dataGaps when present. Not investment advice.",
           };
         } catch (err) {
           console.error("[warren/analyzeValuation]", err instanceof Error ? err.message : err);

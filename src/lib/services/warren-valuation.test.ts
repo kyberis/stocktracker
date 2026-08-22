@@ -12,6 +12,7 @@ import {
   isEligibleForWarrenValuation,
   LIMITED_UPSIDE_THRESHOLD_PCT,
   scoreValuation,
+  type ValuationMetrics,
   WARREN_VALUATION_MAX_SYMBOLS,
 } from "@/lib/services/warren-valuation";
 
@@ -46,6 +47,8 @@ describe("buildValuationSnapshot", () => {
     expect(metrics.peRatio).toBe(24);
     expect(metrics.forwardPE).toBe(22);
     expect(metrics.returnOnEquity).toBe(0.4);
+    expect(metrics.histPeAvg).toBeNull();
+    expect(metrics.histPeYears).toBeNull();
   });
 });
 
@@ -61,7 +64,7 @@ describe("scoreValuation", () => {
     expect(scored.summary).toContain("expensive");
   });
 
-  it("labels low P/E as cheap", () => {
+  it("labels low trailing P/E as cheap when no multi-year history", () => {
     const metrics = buildValuationSnapshot({
       ...baseOverview,
       peRatio: 12,
@@ -69,6 +72,50 @@ describe("scoreValuation", () => {
     });
     const scored = scoreValuation(metrics);
     expect(scored.label).toBe("cheap");
+  });
+
+  it("does not label GOOGL-like names expensive when forward is below multi-year avg", () => {
+    const metrics: ValuationMetrics = {
+      ...buildValuationSnapshot(baseOverview),
+      peRatio: 17.3,
+      forwardPE: 23.3,
+      histPeAvg: 22.5,
+      histPeYears: 5,
+    };
+    const scored = scoreValuation(metrics);
+    expect(scored.label).toBe("fair");
+    expect(scored.summary).toContain("Forward P/E");
+    expect(scored.summary).toContain("22.5");
+  });
+
+  it("labels Serabi-like names cheap when forward P/E is provider garbage", () => {
+    const metrics: ValuationMetrics = {
+      ...buildValuationSnapshot({
+        ...baseOverview,
+        symbol: "SRB.L",
+        peRatio: 5,
+        forwardPE: 216.3,
+      }),
+      histPeAvg: null,
+      histPeYears: null,
+    };
+    const scored = scoreValuation(metrics, { rawForwardPE: 216.3 });
+    expect(scored.label).toBe("cheap");
+    expect(scored.dataGaps.some((g) => g.includes("forward P/E omitted"))).toBe(true);
+    expect(scored.summary).not.toContain("216");
+  });
+
+  it("does not compare forward to trailing when multi-year history is missing", () => {
+    const metrics: ValuationMetrics = {
+      ...buildValuationSnapshot(baseOverview),
+      peRatio: 17.3,
+      forwardPE: 23.3,
+      histPeAvg: null,
+      histPeYears: null,
+    };
+    const scored = scoreValuation(metrics);
+    expect(scored.label).toBe("fair");
+    expect(scored.summary).toContain("forward 23.3x");
   });
 
   it("returns unknown when no multiples exist", () => {
