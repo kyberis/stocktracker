@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.208: Warren conversation progression is a quality improvement to existing chat — landing already showcases Warren; no new top-level marketing surface"
+  "notes": "2.5.220: Home latency bootstrap is an internal cold-path optimization — no new customer-facing capability for the landing page"
 }
