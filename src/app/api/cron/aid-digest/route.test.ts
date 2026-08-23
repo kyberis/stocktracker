@@ -17,6 +17,7 @@ vi.mock("@/lib/db", () => ({
   getUserSettings: vi.fn().mockResolvedValue({ language: "en" }),
   listPortfolios: vi.fn().mockResolvedValue([{ id: "p1" }]),
   listHoldings: vi.fn().mockResolvedValue([{ ticker: "AAPL", shares: 1 }]),
+  listAidNewsCacheForUser: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@/lib/aid/build-digest", () => ({
@@ -60,7 +61,7 @@ describe("GET /api/cron/aid-digest", () => {
     );
 
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ warmed: 1, candidates: 1 });
+    expect(await res.json()).toEqual({ warmed: 1, skippedFresh: 0, candidates: 1 });
     expect(buildAidDigest).toHaveBeenCalledOnce();
   });
 });

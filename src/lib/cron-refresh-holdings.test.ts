@@ -11,8 +11,13 @@ vi.mock("@/lib/cron-quotes", () => ({
   shouldFetchLiveMarketData: vi.fn(),
 }));
 
+vi.mock("@/lib/coverage-gaps", () => ({
+  recordCoverageGaps: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { listDistinctHoldingTickers, batchUpdateValueInEur, resolveStaleTickersViaFigi } from "@/lib/db";
 import { fetchSharedQuotesAndRates, shouldFetchLiveMarketData } from "@/lib/cron-quotes";
+import { recordCoverageGaps } from "@/lib/coverage-gaps";
 import { runRefreshHoldingsJob } from "./cron-refresh-holdings";
 
 function quote(symbol: string, price: number, currency = "USD") {
@@ -93,7 +98,10 @@ describe("runRefreshHoldingsJob", () => {
       updated: 3,
       errors: 0,
       figiResolved: 0,
+      uncoveredTickers: [],
+      coverageGaps: 0,
     });
+    expect(recordCoverageGaps).toHaveBeenCalledWith([]);
     expect(batchUpdateValueInEur).toHaveBeenCalledWith([
       expect.objectContaining({
         ticker: "AAPL",
@@ -138,5 +146,6 @@ describe("runRefreshHoldingsJob", () => {
     expect(result.figiResolved).toBe(1);
     expect(result.quoted).toBe(1);
     expect(result.updated).toBe(1);
+    expect(result.uncoveredTickers).toEqual([]);
   });
 });

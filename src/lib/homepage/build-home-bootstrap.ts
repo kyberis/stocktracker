@@ -1,4 +1,4 @@
-import { listHoldings, getUserSettings } from "@/lib/db";
+import { listCashEntries, listHoldings, getUserSettings } from "@/lib/db";
 import { fetchProviderQuotesForHoldingsWithStats } from "@/lib/holding-quotes";
 import { buildAidStatus } from "@/lib/aid/build-status";
 import {
@@ -36,16 +36,18 @@ export type HomeBootstrapPayload = {
 /**
  * Single holdings + quotes pass for Home above-the-fold sections.
  * AID briefing LLM is intentionally omitted (client fetches lazily).
- * Recommendations prefer weekly cache only — no live quote recompute.
+ * Recommendations prefer this week's cache; on miss they compute live from
+ * the quotes/FX already fetched here (no second Yahoo pass).
  * Quotes + FX are returned so the client can hydrate PortfolioProvider.
  */
 export async function buildHomeBootstrap(args: {
   userId: string;
   portfolioId?: string;
 }): Promise<HomeBootstrapPayload> {
-  const [holdings, settings] = await Promise.all([
+  const [holdings, settings, cashEntries] = await Promise.all([
     listHoldings(args.userId, args.portfolioId),
     getUserSettings(args.userId),
+    listCashEntries(args.userId, args.portfolioId),
   ]);
 
   const { quotes: providerQuotes, stats: quoteStats } =
@@ -81,7 +83,10 @@ export async function buildHomeBootstrap(args: {
     resolveRecommendationQueue({
       userId: args.userId,
       portfolioId: args.portfolioId,
-      cacheOnly: true,
+      holdings,
+      cashEntries,
+      quotes,
+      exchangeRates,
     })
       .then((r) => ({
         current: r.current,

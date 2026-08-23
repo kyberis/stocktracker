@@ -1,5 +1,7 @@
-import { listDistinctHoldingTickers, batchUpdateValueInEur, resolveStaleTickersViaFigi } from "@/lib/db";
+import { listDistinctHoldingTickers, batchUpdateValueInEur } from "@/lib/db";
 import { fetchSharedQuotesAndRates, shouldFetchLiveMarketData } from "@/lib/cron-quotes";
+import { healFailedHoldingQuotes, quotesFromShared } from "@/lib/holding-quote-coverage";
+import { recordCoverageGaps } from "@/lib/coverage-gaps";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
 import type { ExchangeRates } from "@/lib/types";
 
@@ -25,66 +27,18 @@ export async function runRefreshHoldingsJob(): Promise<Record<string, unknown>> 
     currencies: distinctTickers.map((h) => h.displayCurrency),
   });
 
-  const quotes: Record<string, { price: number; currency: string }> = {};
-  const failedTickers = new Set<string>();
-  for (const ticker of uniqueTickers) {
-    const q = shared.quotes[ticker];
-    if (q && q.regularMarketPrice > 0) {
-      quotes[ticker] = { price: q.regularMarketPrice, currency: q.currency };
-    } else {
-      failedTickers.add(ticker);
-    }
-  }
-
+  const { quotes, failedTickers } = quotesFromShared(uniqueTickers, shared.quotes);
   let exchangeRates: ExchangeRates = shared.exchangeRates;
   let errorCount = shared.quoteErrors;
 
-  let figiResolved = 0;
-  if (failedTickers.size > 0) {
-    const staleWithFigi = distinctTickers
-      .filter((h) => failedTickers.has(h.ticker) && h.figiShareClass)
-      .reduce((acc, h) => {
-        if (!acc.some((a) => a.figiShareClass === h.figiShareClass)) {
-          acc.push({ ticker: h.ticker, exchange: h.exchange, figiShareClass: h.figiShareClass });
-        }
-        return acc;
-      }, [] as { ticker: string; exchange: string; figiShareClass: string }[]);
-
-    if (staleWithFigi.length > 0) {
-      try {
-        const renames = await resolveStaleTickersViaFigi(staleWithFigi);
-        figiResolved = renames.length;
-
-        for (const { oldTicker, newTicker } of renames) {
-          for (const h of distinctTickers) {
-            if (h.ticker.toUpperCase() === oldTicker.toUpperCase()) {
-              h.ticker = newTicker;
-            }
-          }
-        }
-
-        if (renames.length > 0) {
-          const healed = await fetchSharedQuotesAndRates({
-            tickers: renames.map((r) => r.newTicker),
-            currencies: [
-              ...distinctTickers.map((h) => h.displayCurrency),
-              ...Object.values(quotes).map((q) => q.currency),
-            ],
-          });
-          for (const { newTicker } of renames) {
-            const q = healed.quotes[newTicker];
-            if (q && q.regularMarketPrice > 0) {
-              quotes[newTicker] = { price: q.regularMarketPrice, currency: q.currency };
-              errorCount = Math.max(0, errorCount - 1);
-            }
-          }
-          exchangeRates = { ...exchangeRates, ...healed.exchangeRates };
-        }
-      } catch (err) {
-        console.warn("[refresh-holdings] OpenFIGI fallback failed:", err instanceof Error ? err.message : err);
-      }
-    }
-  }
+  const healed = await healFailedHoldingQuotes({
+    distinctTickers,
+    failedTickers,
+    quotes,
+    exchangeRates,
+  });
+  exchangeRates = healed.exchangeRates;
+  errorCount = Math.max(healed.stillFailed.length, errorCount - healed.figiResolved);
 
   const tickerCurrencyMap = new Map<string, Set<string>>();
   for (const h of distinctTickers) {
@@ -99,7 +53,7 @@ export async function runRefreshHoldingsJob(): Promise<Record<string, unknown>> 
   const updates: { ticker: string; pricePerShareEur: Record<string, number> }[] = [];
 
   for (const [ticker, currencies] of tickerCurrencyMap) {
-    const quote = quotes[ticker];
+    const quote = healed.quotes[ticker];
     if (!quote) continue;
 
     const pricePerShareEur: Record<string, number> = {};
@@ -118,12 +72,16 @@ export async function runRefreshHoldingsJob(): Promise<Record<string, unknown>> 
 
   const totalUpdated = updates.length > 0 ? await batchUpdateValueInEur(updates) : 0;
 
+  await recordCoverageGaps(healed.stillFailed);
+
   return {
     tickers: uniqueTickers.length,
-    quoted: Object.keys(quotes).length,
+    quoted: Object.keys(healed.quotes).length,
     fxPairs: Object.keys(exchangeRates).length,
     updated: totalUpdated,
     errors: errorCount,
-    figiResolved,
+    figiResolved: healed.figiResolved,
+    uncoveredTickers: healed.stillFailed.slice(0, 100),
+    coverageGaps: healed.stillFailed.length,
   };
 }

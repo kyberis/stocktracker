@@ -554,6 +554,8 @@ export {
   upsertScreenerCache,
   getScreenerCacheBySymbols,
   getScreenerCacheCount,
+  listHotScreenerSymbols,
+  listStaleOrMissingScreenerSymbols,
   getScreenerDistinctSectors,
   getScreenerDistinctCountries,
   getScreenerDistinctExchanges,

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import {
   getUserSettings,
+  listAidNewsCacheForUser,
   listHoldings,
   listPortfolios,
 } from "@/lib/db";
@@ -12,6 +13,9 @@ import { getQuotesWithCache } from "@/lib/quote-cache";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
+/** Skip Tavily/LLM warm when the 24h digest cache is still fresh. */
+const FRESH_WITHIN_MS = 20 * 3600 * 1000;
+
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
@@ -22,8 +26,17 @@ const runAidDigest = withCronLogging("aid-digest", async () => {
   }
 
   let warmed = 0;
+  let skippedFresh = 0;
   for (const userId of userIds) {
     try {
+      const existing = await listAidNewsCacheForUser(userId, 1);
+      const fetchedAt = existing[0]?.fetchedAt;
+      const fetchedMs = fetchedAt ? Date.parse(fetchedAt) : NaN;
+      if (Number.isFinite(fetchedMs) && Date.now() - fetchedMs < FRESH_WITHIN_MS) {
+        skippedFresh += 1;
+        continue;
+      }
+
       const settings = await getUserSettings(userId);
       const portfolios = await listPortfolios(userId);
       const portfolioId = portfolios[0]?.id;
@@ -57,11 +70,21 @@ const runAidDigest = withCronLogging("aid-digest", async () => {
     }
   }
 
-  return { warmed, candidates: userIds.length };
+  return { warmed, skippedFresh, candidates: userIds.length };
 });
 
+function authorize(req: NextRequest) {
+  return verifyCronAuth("aid-digest", req);
+}
+
 export async function GET(req: NextRequest) {
-  const authError = verifyCronAuth("aid-digest", req);
-  if (authError) return authError;
+  const denied = authorize(req);
+  if (denied) return denied;
+  return runAidDigest();
+}
+
+export async function POST(req: NextRequest) {
+  const denied = authorize(req);
+  if (denied) return denied;
   return runAidDigest();
 }

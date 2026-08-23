@@ -30,8 +30,8 @@ function interpolate(
 
 type Props = {
   /**
-   * Bootstrap cache-only tip. When present with a current tip, skip the live
-   * recommendations fetch on first paint. When null/empty, fall back to GET.
+   * Bootstrap tip (cache hit or live compute from Home quotes). When present,
+   * skip the follow-up GET on first paint — including an empty queue.
    */
   initialRecommendation?: ApiPayload | null;
   bootstrapSettled?: boolean;
@@ -45,11 +45,12 @@ export default function HomeRecommendationCard({
   const track = useTrack();
   const { activePortfolioId, demoMode, holdings } = usePortfolio();
   const [data, setData] = useState<ApiPayload | null>(initialRecommendation ?? null);
-  const [loading, setLoading] = useState(!initialRecommendation?.current);
+  const [loading, setLoading] = useState(!initialRecommendation);
   const [busy, setBusy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const viewedKey = useRef<string | null>(null);
+  const liveAttempted = useRef(false);
 
   const qs = activePortfolioId
     ? `?portfolioId=${encodeURIComponent(activePortfolioId)}`
@@ -67,11 +68,11 @@ export default function HomeRecommendationCard({
     });
   }, []);
 
-  const load = useCallback(async (opts?: { cacheOnly?: boolean }) => {
+  const load = useCallback(async (opts?: { cacheOnly?: boolean }): Promise<ApiPayload | null> => {
     if (demoMode || holdings.length === 0) {
       setData(null);
       setLoading(false);
-      return;
+      return null;
     }
     setLoading(true);
     try {
@@ -81,26 +82,50 @@ export default function HomeRecommendationCard({
       const res = await fetch(`/api/home-v2/recommendations?${params}`, { cache: "no-store" });
       if (!res.ok) {
         setData(null);
-        return;
+        return null;
       }
-      applyPayload((await res.json()) as ApiPayload);
+      const json = (await res.json()) as ApiPayload;
+      applyPayload(json);
+      return json;
     } catch {
       setData(null);
+      return null;
     } finally {
       setLoading(false);
     }
   }, [applyPayload, demoMode, holdings.length, activePortfolioId]);
 
   useEffect(() => {
-    if (initialRecommendation?.current) {
+    liveAttempted.current = false;
+  }, [activePortfolioId]);
+
+  useEffect(() => {
+    if (demoMode || holdings.length === 0) {
+      setData(null);
+      setLoading(false);
+      return;
+    }
+    if (initialRecommendation) {
       applyPayload(initialRecommendation);
       setLoading(false);
       return;
     }
     if (!bootstrapSettled) return;
-    // Cold Home: cache-only — never live-recompute quotes on mount.
-    void load({ cacheOnly: true });
-  }, [load, initialRecommendation, bootstrapSettled, applyPayload]);
+
+    let cancelled = false;
+    void (async () => {
+      // No bootstrap payload: prefer weekly cache, then live-compute on miss.
+      const cached = await load({ cacheOnly: true });
+      if (cancelled || liveAttempted.current) return;
+      if (!cached?.current) {
+        liveAttempted.current = true;
+        await load();
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [load, initialRecommendation, bootstrapSettled, applyPayload, demoMode, holdings.length]);
 
   const current = data?.current ?? null;
   const canManualRefresh = data?.canManualRefresh !== false;
