@@ -178,21 +178,31 @@ describe("Upstash Redis chaos", () => {
     });
   });
 
-  describe("rate limiter error propagation", () => {
-    it("checkAvRateLimit propagates limiter.limit() rejection", async () => {
+  describe("rate limiter Redis failure fallback", () => {
+    it("checkAvRateLimit falls back to Turso when limiter.limit() rejects", async () => {
       vi.resetModules();
 
       const mockLimit = vi.fn().mockRejectedValue(new Error("Redis connection lost"));
+      const turso = vi.fn().mockResolvedValue({
+        allowed: true,
+        remaining: 8,
+        resetAt: "2026-01-01T00:01:00Z",
+      });
       vi.doMock("@/lib/upstash", () => ({
         avRateLimiter: () => ({ limit: mockLimit }),
+        fmpRateLimiter: () => null,
         aiImportRateLimiter: () => null,
         signupRateLimiter: () => null,
         loginRateLimiter: () => null,
         deviceAuthRateLimiter: () => null,
+        publicSearchRateLimiter: () => null,
+        publicAnalysisReadRateLimiter: () => null,
+        publicAnalysisBuildRateLimiter: () => null,
       }));
 
       vi.doMock("@/lib/db", () => ({
-        checkAndIncrementRateLimit: vi.fn(),
+        checkAndIncrementRateLimit: turso,
+        checkAndIncrementBurstCooldown: vi.fn(),
         recordRateLimitUsage: vi.fn(),
         getDailyAiUsage: vi.fn(),
         getPlatformSetting: vi.fn().mockResolvedValue(""),
@@ -200,26 +210,38 @@ describe("Upstash Redis chaos", () => {
       }));
 
       const { checkAvRateLimit } = await import("@/lib/rate-limit");
+      const result = await checkAvRateLimit("user-1");
 
-      await expect(checkAvRateLimit("user-1")).rejects.toThrow(
-        "Redis connection lost",
-      );
+      expect(mockLimit).toHaveBeenCalled();
+      expect(turso).toHaveBeenCalled();
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(8);
     });
 
-    it("checkAiImportRateLimit propagates limiter.limit() rejection", async () => {
+    it("checkAiImportRateLimit falls back to Turso when limiter.limit() rejects", async () => {
       vi.resetModules();
 
       const mockLimit = vi.fn().mockRejectedValue(new Error("Redis timeout"));
+      const turso = vi.fn().mockResolvedValue({
+        allowed: true,
+        remaining: 2,
+        resetAt: "2026-01-01T00:01:00Z",
+      });
       vi.doMock("@/lib/upstash", () => ({
         avRateLimiter: () => null,
+        fmpRateLimiter: () => null,
         aiImportRateLimiter: () => ({ limit: mockLimit }),
         signupRateLimiter: () => null,
         loginRateLimiter: () => null,
         deviceAuthRateLimiter: () => null,
+        publicSearchRateLimiter: () => null,
+        publicAnalysisReadRateLimiter: () => null,
+        publicAnalysisBuildRateLimiter: () => null,
       }));
 
       vi.doMock("@/lib/db", () => ({
-        checkAndIncrementRateLimit: vi.fn(),
+        checkAndIncrementRateLimit: turso,
+        checkAndIncrementBurstCooldown: vi.fn(),
         recordRateLimitUsage: vi.fn(),
         getDailyAiUsage: vi.fn(),
         getPlatformSetting: vi.fn().mockResolvedValue(""),
@@ -227,10 +249,50 @@ describe("Upstash Redis chaos", () => {
       }));
 
       const { checkAiImportRateLimit } = await import("@/lib/rate-limit");
+      const result = await checkAiImportRateLimit("user-2");
 
-      await expect(checkAiImportRateLimit("user-2")).rejects.toThrow(
-        "Redis timeout",
+      expect(mockLimit).toHaveBeenCalled();
+      expect(turso).toHaveBeenCalled();
+      expect(result.allowed).toBe(true);
+    });
+
+    it("checkSignupRateLimit falls back to Turso when limiter.limit() rejects", async () => {
+      vi.resetModules();
+
+      const mockLimit = vi.fn().mockRejectedValue(
+        new Error("ERR max requests limit exceeded"),
       );
+      const turso = vi.fn().mockResolvedValue({
+        allowed: true,
+        remaining: 4,
+        resetAt: "2026-01-01T01:00:00Z",
+      });
+      vi.doMock("@/lib/upstash", () => ({
+        avRateLimiter: () => null,
+        fmpRateLimiter: () => null,
+        aiImportRateLimiter: () => null,
+        signupRateLimiter: () => ({ limit: mockLimit }),
+        loginRateLimiter: () => null,
+        deviceAuthRateLimiter: () => null,
+        publicSearchRateLimiter: () => null,
+        publicAnalysisReadRateLimiter: () => null,
+        publicAnalysisBuildRateLimiter: () => null,
+      }));
+
+      vi.doMock("@/lib/db", () => ({
+        checkAndIncrementRateLimit: turso,
+        checkAndIncrementBurstCooldown: vi.fn(),
+        recordRateLimitUsage: vi.fn(),
+        getDailyAiUsage: vi.fn(),
+        getPlatformSetting: vi.fn().mockResolvedValue(""),
+        setPlatformSetting: vi.fn(),
+      }));
+
+      const { checkSignupRateLimit } = await import("@/lib/rate-limit");
+      const result = await checkSignupRateLimit("203.0.113.1");
+
+      expect(result.allowed).toBe(true);
+      expect(turso).toHaveBeenCalled();
     });
   });
 

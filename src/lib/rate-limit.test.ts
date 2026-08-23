@@ -10,10 +10,14 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/lib/upstash", () => ({
   avRateLimiter: vi.fn().mockReturnValue(null),
+  fmpRateLimiter: vi.fn().mockReturnValue(null),
   aiImportRateLimiter: vi.fn().mockReturnValue(null),
   signupRateLimiter: vi.fn().mockReturnValue(null),
   loginRateLimiter: vi.fn().mockReturnValue(null),
   deviceAuthRateLimiter: vi.fn().mockReturnValue(null),
+  publicSearchRateLimiter: vi.fn().mockReturnValue(null),
+  publicAnalysisReadRateLimiter: vi.fn().mockReturnValue(null),
+  publicAnalysisBuildRateLimiter: vi.fn().mockReturnValue(null),
 }));
 
 const {
@@ -88,6 +92,22 @@ describe("rate-limit", () => {
       expect(result.allowed).toBe(true);
       expect(result.limit).toBe(15);
       expect(result.remaining).toBe(14);
+    });
+    it("when Upstash throws (e.g. quota), falls back to Turso", async () => {
+      vi.mocked(avRateLimiter).mockReturnValue({
+        limit: vi.fn().mockRejectedValue(new Error("ERR max requests limit exceeded")),
+      } as never);
+      vi.mocked(checkAndIncrementRateLimit).mockResolvedValue({
+        allowed: true,
+        remaining: 10,
+        resetAt: new Date(Date.now() + 60000).toISOString(),
+      });
+
+      const result = await checkAvRateLimit("user-1");
+
+      expect(checkAndIncrementRateLimit).toHaveBeenCalled();
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(10);
     });
   });
 

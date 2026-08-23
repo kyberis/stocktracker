@@ -54,9 +54,16 @@ async function rateLimitedHandler(request: Request, context: unknown): Promise<R
   if (authResult.ok) {
     const lim = mcpUserRateLimiter();
     if (lim) {
-      const { success } = await lim.limit(authResult.auth.userId);
-      if (!success) {
-        return withMcpCors(NextResponse.json({ error: "rate_limited" }, { status: 429 }));
+      try {
+        const { success } = await lim.limit(authResult.auth.userId);
+        if (!success) {
+          return withMcpCors(NextResponse.json({ error: "rate_limited" }, { status: 429 }));
+        }
+      } catch (err) {
+        console.error(
+          "MCP Upstash rate limit failed, allowing request:",
+          err instanceof Error ? err.message : err,
+        );
       }
     }
   } else {
@@ -66,9 +73,16 @@ async function rateLimitedHandler(request: Request, context: unknown): Promise<R
       "unknown";
     const lim = mcpUserUnauthRateLimiter();
     if (lim) {
-      const { success } = await lim.limit(ip);
-      if (!success) {
-        return withMcpCors(NextResponse.json({ error: "rate_limited" }, { status: 429 }));
+      try {
+        const { success } = await lim.limit(ip);
+        if (!success) {
+          return withMcpCors(NextResponse.json({ error: "rate_limited" }, { status: 429 }));
+        }
+      } catch (err) {
+        console.error(
+          "MCP unauth Upstash rate limit failed, allowing request:",
+          err instanceof Error ? err.message : err,
+        );
       }
     }
     if (

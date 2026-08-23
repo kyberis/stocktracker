@@ -111,6 +111,7 @@ same ticker. See [`src/lib/company-analysis/redact.ts`](../src/lib/company-analy
 | OpenAI | AI endpoints return 503 with retry-after. | UI shows "AI temporarily unavailable." |
 | Stripe | Checkout returns 503; webhooks queue at Stripe. | Admin warned via Grafana. |
 | Resend | Emails fail; mailer logs. | Idempotent resend on next cron. |
+| Upstash Redis | Quote cache miss (Yahoo fallback); rate limits use Turso. | Upgrade off Free 500k/mo cap; rate-limit code falls back to Turso on Redis errors. |
 | Turso | Hard outage — app read-only via caches where possible. | Vercel ISR + SWR for cached reads. |
 
 ## SLOs (targets, not contracts)
