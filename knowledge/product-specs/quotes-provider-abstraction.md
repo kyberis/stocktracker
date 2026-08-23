@@ -24,7 +24,7 @@ A single `getQuote(ticker, exchange)` abstraction chooses the right provider and
 
 ## 4. Data model
 
-- No DB storage for live quotes (Redis TTL cache, 90s for quotes and FX so overlapping crons share one Yahoo pass, plus in-memory coalescing).
+- No DB storage for live quotes (Redis TTL cache + in-memory Yahoo TTL).
 - `QuoteData` / `ProviderQuoteResult` include optional `regularMarketTime` (epoch ms, last trade / session).
 - Historical quotes cached in `yahoo_historical_cache`.
 

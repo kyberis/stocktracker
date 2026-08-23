@@ -30,8 +30,6 @@ Each cron job is registered in `src/lib/cron-registry.ts` with cadence, timeout,
 ## 7. Business logic
 - Jobs are idempotent; `lockName` prevents overlap.
 - Failure alerts when ratio > threshold.
-- Quote crons (`portfolio-snapshots`, `refresh-holdings`, `check-alerts`) share Redis via `fetchSharedQuotesAndRates` and skip Yahoo when no relevant market is open.
-- Queue crons (`prodops-dispatch`, `feedback-pipeline`) are hourly backups; primary drain is kick-on-write.
 
 ## 8. External dependencies
 - Vercel Cron.
@@ -57,7 +55,6 @@ Each cron job is registered in `src/lib/cron-registry.ts` with cadence, timeout,
 ## 15. Related skills and rules
 - [`engineer-data`](../../.cursor/skills/engineer-data/SKILL.md)
 - Related specs: [admin-cron-stats](admin-cron-stats.md), [portfolio-snapshots-cron](portfolio-snapshots-cron.md), [quotes-provider-abstraction](quotes-provider-abstraction.md).
-- Exec plan: [`../exec-plans/active/cron-cost-reduction.md`](../exec-plans/active/cron-cost-reduction.md).
 
 ## 16. Open questions / planned work
 - Central retry policy.

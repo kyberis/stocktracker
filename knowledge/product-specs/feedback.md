@@ -30,7 +30,6 @@ Floating feedback button that captures issues/ideas, optionally with AI-drafted 
 
 ## 7. Business logic
 - Rate-limited; AI-drafted ack with human-in-loop reply.
-- Submit kicks the feedback pipeline immediately (`kickFeedbackPipeline`); `/api/cron/feedback-pipeline` is an hourly backup. New Linear issues still wait until the row is 6h old.
 
 ## 8. External dependencies
 - Resend (ack email).

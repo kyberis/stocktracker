@@ -54,7 +54,7 @@ Schema source: migration `v114` in [`src/lib/db/migrations.ts`](../../src/lib/db
 | DELETE | `/api/admin/prodops-config/link` | admin | Admin | Unlink the current Telegram recipient |
 | POST | `/api/admin/prodops-config/link/complete` | HMAC signed | Admin | Redeem the `/start` token and persist the linked recipient |
 | POST | `/api/admin/prodops-config/test` | admin | Admin | Queue a test notification |
-| GET/POST | `/api/cron/prodops-dispatch` | cron bearer | Admin | Hourly backup dispatch of queued outbox items to ProdOps |
+| POST | `/api/cron/prodops-dispatch` | cron bearer | Admin | Dispatch queued outbox items to ProdOps |
 | POST | `/api/internal/prodops-query` | HMAC signed | Admin | Staff Telegram queries (`nl` classifies then runs a closed intent) |
 | GET | `/api/internal/ops-metrics` | Bearer `IDP_SERVICE_TOKEN` | Admin | Aggregate-only ecosystem metrics |
 
@@ -66,8 +66,7 @@ Schema source: migration `v114` in [`src/lib/db/migrations.ts`](../../src/lib/db
 ## 7. Business logic
 
 - Product routes enqueue events but never call Telegram directly.
-- Enqueue kicks `dispatchPendingProdOpsEvents` via `waitUntil` so staff alerts leave immediately; `/api/cron/prodops-dispatch` is an hourly GET/POST backup (Vercel Cron uses GET).
-- The dispatcher resolves the current admin config at send time, so destination changes apply to queued items too.
+- The cron dispatcher resolves the current admin config at send time, so destination changes apply to queued items too.
 - Recipient routing is two-layered: global enabled event types plus per-recipient event-type filters.
 - Recipient link uses a short-lived Telegram deep link (`t.me/<bot>?start=<token>`). `trefolio-prodops` receives `/start`, then calls back into trefolio with the shared secret to complete the binding.
 - Once linked, the same ProdOps Telegram DM can answer staff queries in natural language (English or Spanish) as well as slash commands (`/snapshot`, `/experiments`). A closed intent catalog maps the question; SQL still supplies the numbers. Supported intents: latest signup, latest feedbacks, latest user interaction, ecosystem digest, and experiment assignment counts per treatment.
