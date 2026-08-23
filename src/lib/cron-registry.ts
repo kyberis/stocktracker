@@ -51,7 +51,8 @@ export const CRON_REGISTRY: CronJob[] = [
     name: "screener-sync",
     path: "/api/cron/screener-sync",
     schedule: "0 3 * * *",
-    description: "Refresh stock screener cache with latest Yahoo Finance quotes",
+    description:
+      "Refresh screener cache for holdings ∪ hot mega-caps (UI fills missing/stale symbols on demand)",
   },
   {
     name: "tax-rules-review",
@@ -117,7 +118,8 @@ export const CRON_REGISTRY: CronJob[] = [
     name: "portfolio-recommendations",
     path: "/api/cron/portfolio-recommendations",
     schedule: "0 7 * * 1",
-    description: "Weekly portfolio tip analysis for active non-test users (last_active within 30d, ≥1 holding); cache Home recommendation queue",
+    description:
+      "Weekly prefetch of Home tip queues for users active in the last 7 days; Home computes the rest on cache miss",
   },
   {
     name: "digest-email",
@@ -129,8 +131,9 @@ export const CRON_REGISTRY: CronJob[] = [
   {
     name: "moat-sync",
     path: "/api/cron/moat-sync",
-    schedule: "0 */4 * * *",
-    description: "Evaluate stale/missing moat scores for screener-universe stocks using Alpha Vantage fundamentals",
+    schedule: "0 5 * * *",
+    description:
+      "Daily evaluate stale/missing moat scores (7-day max age); ensure-moat fills on demand",
   },
   {
     name: "compact-snapshots",
@@ -162,20 +165,23 @@ export const CRON_REGISTRY: CronJob[] = [
   {
     name: "aid-digest",
     path: "/api/cron/aid-digest",
-    schedule: "0 */6 * * *",
-    description: "Pre-warm AID news digest cache for aid_beta users (earnings + portfolio news summaries)",
+    schedule: "0 8 * * *",
+    description:
+      "Daily pre-warm of AID news digest for aid_beta users; skips users whose 24h cache is still fresh",
   },
   {
     name: "aid-finpulse",
     path: "/api/cron/aid-finpulse",
-    schedule: "*/30 * * * *",
-    description: "Ingest FinPulse X influencer posts via Tavily for AID beta",
+    schedule: "0 */6 * * *",
+    description:
+      "Ingest FinPulse X posts via Tavily every 6h (24h TTL; on-read if cache empty/stale)",
   },
   {
     name: "coverage-reconcile",
     path: "/api/cron/coverage-reconcile",
-    schedule: "15 2 * * *",
-    description: "Overnight scan: flag holdings that lost Yahoo/alias quote coverage (TRF-104)",
+    schedule: "15 2 * * 0",
+    description:
+      "Weekly backup: flag holdings without Yahoo/FIGI quote coverage (primary heal is refresh-holdings)",
   },
   {
     name: "portfolio-anomaly-scan",

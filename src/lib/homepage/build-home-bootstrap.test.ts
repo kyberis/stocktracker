@@ -5,7 +5,7 @@ vi.mock("@/lib/db", () => ({
   getUserSettings: vi.fn(),
   getRecommendationCache: vi.fn(),
   listRecommendationStates: vi.fn(),
-  listCashEntries: vi.fn(),
+  listCashEntries: vi.fn().mockResolvedValue([]),
   upsertRecommendationCache: vi.fn(),
 }));
 
@@ -27,7 +27,14 @@ vi.mock("@/lib/quote-cache", () => ({
   getRatesWithCache: vi.fn().mockResolvedValue({ EURUSD: 1.1 }),
 }));
 
-import { listHoldings, getUserSettings, getRecommendationCache, listRecommendationStates } from "@/lib/db";
+import {
+  listHoldings,
+  getUserSettings,
+  getRecommendationCache,
+  listRecommendationStates,
+  listCashEntries,
+  upsertRecommendationCache,
+} from "@/lib/db";
 import { fetchProviderQuotesForHoldingsWithStats } from "@/lib/holding-quotes";
 import { buildAidStatus } from "@/lib/aid/build-status";
 import { buildDayHighlightsPayload } from "@/lib/homepage/build-day-highlights";
@@ -52,6 +59,9 @@ beforeEach(() => {
       shares: 1,
       exchange: "NMS",
       displayCurrency: "USD",
+      valueInEUR: 100,
+      name: "Apple",
+      sector: "Technology",
     },
   ] as never);
   mockedSettings.mockResolvedValue({ language: "en", defaultCurrency: "EUR" } as never);
@@ -88,6 +98,8 @@ beforeEach(() => {
   });
   mockedStates.mockResolvedValue([]);
   mockedCache.mockResolvedValue(null);
+  vi.mocked(listCashEntries).mockResolvedValue([]);
+  vi.mocked(upsertRecommendationCache).mockResolvedValue(undefined as never);
 });
 
 describe("buildHomeBootstrap", () => {
@@ -104,6 +116,8 @@ describe("buildHomeBootstrap", () => {
     expect(payload.quotes.AAPL?.regularMarketPrice).toBe(100);
     expect(payload.quoteStats).toEqual({ hitCount: 1, missCount: 0 });
     expect(payload.holdingsCount).toBe(1);
+    expect(payload.recommendation?.source).toBe("live");
+    expect(upsertRecommendationCache).toHaveBeenCalled();
     expect(mockedHighlights).toHaveBeenCalledWith(
       expect.objectContaining({
         providerQuotes: expect.any(Object),

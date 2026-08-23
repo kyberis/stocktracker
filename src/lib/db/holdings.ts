@@ -780,7 +780,7 @@ export async function listUserIdsWithHoldings(): Promise<string[]> {
 
 /**
  * Users with ≥1 holding who are eligible for weekly recommendation cron:
- * active within the last `activeWithinDays` (default 30) and not a test email.
+ * active within the last `activeWithinDays` (cron uses 7; Home fills misses).
  */
 export async function listRecommendationCronCandidates(
   activeWithinDays = 30,

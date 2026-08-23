@@ -13,7 +13,7 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `snaptrade-cleanup` | `30 23 * * *` | `/api/cron/snaptrade-cleanup` | Delete pending/inactive SnapTrade connections and prune old logs |
 | `snaptrade-sync` | `0 * * * *` | `/api/cron/snaptrade-sync` | Sync all active SnapTrade broker connections — transactions, holdings, cash |
 | `event-sync` | `0 6 * * *` | `/api/cron/event-sync` | Fetch earnings (AV and/or FMP per flags), economic events, IPO, and splits from FMP |
-| `screener-sync` | `0 3 * * *` | `/api/cron/screener-sync` | Refresh stock screener cache with latest Yahoo Finance quotes |
+| `screener-sync` | `0 3 * * *` | `/api/cron/screener-sync` | Refresh screener cache for holdings ∪ hot mega-caps (UI fills missing/stale symbols on demand) |
 | `tax-rules-review` | `0 9 2 1 *` | `/api/cron/tax-rules-review` | Check NL/DE tax rules are current for the year, notify if review needed |
 | `x-post` | `*/15 * * * *` | `/api/cron/x-post` | Publish scheduled X/Twitter posts via the X API (includes auto-generated market digest posts) |
 | `refresh-holdings` | `*/15 * * * *` | `/api/cron/refresh-holdings` | Update holding valuations and FX rates from Yahoo Finance |
@@ -24,15 +24,15 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `lifecycle-winback` | `0 11 * * *` | `/api/cron/lifecycle-winback` | Re-engage verified users inactive 14+ days who have holdings (feature-ai-analysis) |
 | `commerce-complimentary-renewal` | `0 2 * * *` | `/api/cron/commerce-complimentary-renewal` | Renew 30-day complimentary Trefolio Pro while commerce_enabled is off |
 | `weekly-digest` | `0 8 * * 1` | `/api/cron/weekly-digest` | Generate and send AI-powered weekly portfolio digest to Pro users every Monday |
-| `portfolio-recommendations` | `0 7 * * 1` | `/api/cron/portfolio-recommendations` | Weekly portfolio tip analysis for active non-test users (last_active within 30d, ≥1 holding); cache Home recommendation queue |
+| `portfolio-recommendations` | `0 7 * * 1` | `/api/cron/portfolio-recommendations` | Weekly prefetch of Home tip queues for users active in the last 7 days; Home computes the rest on cache miss |
 | `digest-email` | **paused** (was `*/15 * * * *`) | `/api/cron/digest-email` | PAUSED — market digests no longer processed (was: poll Gmail, AI rewrite, store drafts) |
-| `moat-sync` | `0 */4 * * *` | `/api/cron/moat-sync` | Evaluate stale/missing moat scores for screener-universe stocks using Alpha Vantage fundamentals |
+| `moat-sync` | `0 5 * * *` | `/api/cron/moat-sync` | Daily evaluate stale/missing moat scores (7-day max age); ensure-moat fills on demand |
 | `compact-snapshots` | `0 4 * * *` | `/api/cron/compact-snapshots` | Compact old hourly portfolio snapshots into daily (and weekly) rows to bound storage |
 | `feedback-pipeline` | `0 * * * *` | `/api/cron/feedback-pipeline` | Hourly backup: process queued user feedback into Linear issues (kick-on-write from /api/feedback) |
 | `prodops-dispatch` | `0 * * * *` | `/api/cron/prodops-dispatch` | Hourly backup: dispatch queued ProdOps Telegram events (kick-on-enqueue from product routes) |
 | `support-return-watch` | `0 * * * *` | `/api/cron/support-return-watch` | Hourly backup: alert ProdOps when a holdings-restore email recipient returns (primary path is last-active event) |
-| `aid-digest` | `0 */6 * * *` | `/api/cron/aid-digest` | Pre-warm AID news digest cache for aid_beta users (earnings + portfolio news summaries) |
-| `aid-finpulse` | `*/30 * * * *` | `/api/cron/aid-finpulse` | Ingest FinPulse X influencer posts via Tavily for AID beta |
-| `coverage-reconcile` | `15 2 * * *` | `/api/cron/coverage-reconcile` | Overnight scan: flag holdings that lost Yahoo/alias quote coverage (TRF-104) |
+| `aid-digest` | `0 8 * * *` | `/api/cron/aid-digest` | Daily pre-warm of AID news digest for aid_beta users; skips users whose 24h cache is still fresh |
+| `aid-finpulse` | `0 */6 * * *` | `/api/cron/aid-finpulse` | Ingest FinPulse X posts via Tavily every 6h (24h TTL; on-read if cache empty/stale) |
+| `coverage-reconcile` | `15 2 * * 0` | `/api/cron/coverage-reconcile` | Weekly backup: flag holdings without Yahoo/FIGI quote coverage (primary heal is refresh-holdings) |
 | `portfolio-anomaly-scan` | `15 3 * * *` | `/api/cron/portfolio-anomaly-scan` | Scan portfolios with ≥1 holding for data anomalies; persist findings, LLM explain, enqueue ProdOps alerts |
 | `screening-recover` | `*/5 * * * *` | `/api/cron/screening-recover` | Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain |

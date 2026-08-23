@@ -11,8 +11,22 @@ import { withFinPulseImpactScore, sortByImpactScore } from "@/lib/aid/impact-sco
 import { languageCodeToName } from "@/lib/languages";
 import type { AidFinPulseItem } from "@/lib/types";
 
-const CACHE_TTL_MS = 24 * 3600 * 1000;
+export const FINPULSE_CACHE_TTL_MS = 24 * 3600 * 1000;
+const CACHE_TTL_MS = FINPULSE_CACHE_TTL_MS;
+/** On-read and cron skip Tavily+LLM while the 24h cache is still valid. */
+export const FINPULSE_ON_READ_STALE_MS = FINPULSE_CACHE_TTL_MS;
 const MAX_GENERATE_PER_RUN = 8;
+
+export function finPulseNeedsIngest(
+  newestFetchedAt: string | undefined,
+  now = Date.now(),
+  staleMs = FINPULSE_ON_READ_STALE_MS,
+): boolean {
+  if (!newestFetchedAt) return true;
+  const t = Date.parse(newestFetchedAt);
+  if (Number.isNaN(t)) return true;
+  return now - t >= staleMs;
+}
 
 function postKeyFromUrl(url: string): string {
   return createHash("sha256").update(url).digest("hex").slice(0, 32);
@@ -124,7 +138,8 @@ export async function buildFinPulseForUser(args: {
   maxGenerate?: number;
 }): Promise<{ items: AidFinPulseItem[]; generated: number }> {
   const langName = languageCodeToName(args.language);
-  if ((await listAidSocialPosts(1)).length === 0) {
+  const existing = await listAidSocialPosts(1);
+  if (finPulseNeedsIngest(existing[0]?.fetchedAt)) {
     await ingestFinPulseFromTavily(args.maxGenerate ?? 4);
   }
 

@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.223",
+    date: "2026-08-23",
+    title: "Leaner cache-warm crons",
+    titleTranslations: {
+      es: "Crons de caché menos frecuentes",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Nightly screener sync now refreshes holdings and hot mega-caps instead of the full 687-ticker universe; missing rows fill on demand in holdings research.",
+        translations: {
+          es: "El sync nocturno del screener ahora refresca posiciones y mega-caps calientes en vez del universo de 687 tickers; las filas que faltan se rellenan bajo demanda en holdings research.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "AID digest warms daily (skips a still-fresh 24h cache). FinPulse cron dropped from every 30 minutes to every 6 hours and skips Tavily when the 24h cache is fresh; on-read also warms. Moat sync is daily; quote-coverage reconcile is a weekly backup after refresh-holdings FIGI heal.",
+        translations: {
+          es: "AID digest se precalienta a diario (omite caché de 24h aún válida). El cron de FinPulse pasa de cada 30 minutos a cada 6 horas y no llama a Tavily si la caché de 24h sigue fresca; también se calienta al leer. Moat sync es diario; coverage-reconcile es respaldo semanal tras el heal FIGI de refresh-holdings.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Home portfolio tips prefetch only users active in the last 7 days; a cache miss on Home computes the queue live from the bootstrap quote pass instead of staying empty until the next weekly cron.",
+        translations: {
+          es: "Los tips de Home se precalculan solo para usuarios activos en 7 días; si falta caché en Home, la cola se calcula en vivo con el pase de cotizaciones del bootstrap en vez de quedarse vacía hasta el cron semanal.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.222",
     date: "2026-08-23",
     title: "Leaner cron quotes and queue kicks",

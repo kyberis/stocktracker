@@ -14,7 +14,7 @@ import {
 } from "@/lib/homepage/build-portfolio-recommendations";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import { getQuotesWithCache, getRatesWithCache } from "@/lib/quote-cache";
-import type { ExchangeRates } from "@/lib/types";
+import type { CashEntry, ExchangeRates, Holding, QuoteData } from "@/lib/types";
 
 export type RecommendationQueueResult = {
   current: PortfolioRecommendation | null;
@@ -45,18 +45,29 @@ async function loadRatesForHoldings(
 export async function computeLiveRecommendationQueue(args: {
   userId: string;
   portfolioId?: string;
+  holdings?: Holding[];
+  cashEntries?: CashEntry[];
+  quotes?: Record<string, QuoteData>;
+  exchangeRates?: ExchangeRates;
 }): Promise<PortfolioRecommendation[]> {
   const portfolioId = args.portfolioId || undefined;
   const [holdings, cashEntries, settings] = await Promise.all([
-    listHoldings(args.userId, portfolioId),
-    listCashEntries(args.userId, portfolioId),
+    args.holdings
+      ? Promise.resolve(args.holdings)
+      : listHoldings(args.userId, portfolioId),
+    args.cashEntries
+      ? Promise.resolve(args.cashEntries)
+      : listCashEntries(args.userId, portfolioId),
     getUserSettings(args.userId),
   ]);
   if (holdings.length === 0) return [];
 
   const tickers = [...new Set(holdings.map((h) => h.ticker))];
-  const quotes = tickers.length > 0 ? await getQuotesWithCache(tickers) : {};
-  const exchangeRates = await loadRatesForHoldings(holdings, quotes);
+  const quotes =
+    args.quotes ??
+    (tickers.length > 0 ? await getQuotesWithCache(tickers) : {});
+  const exchangeRates =
+    args.exchangeRates ?? (await loadRatesForHoldings(holdings, quotes));
 
   return buildPortfolioRecommendations({
     holdings,
@@ -79,10 +90,14 @@ export async function resolveRecommendationQueue(args: {
   /** When forceRefresh from user CTA, stamp last_manual_at for weekly cooldown. */
   markManual?: boolean;
   /**
-   * Home bootstrap: return empty queue when weekly cache misses instead of
-   * live quote recompute (avoids a second full-book Yahoo pass on cold load).
+   * Skip live compute on cache miss. Prefer passing prefetched quotes instead
+   * so Home can fill the weekly cache without a second Yahoo pass.
    */
   cacheOnly?: boolean;
+  holdings?: Holding[];
+  cashEntries?: CashEntry[];
+  quotes?: Record<string, QuoteData>;
+  exchangeRates?: ExchangeRates;
 }): Promise<RecommendationQueueResult> {
   const weekKey = currentRecommendationWeekKey();
   const portfolioKey = args.portfolioId || "";

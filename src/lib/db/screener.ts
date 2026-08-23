@@ -264,6 +264,40 @@ export async function getScreenerCacheCount(): Promise<number> {
   return num(result.rows[0]?.cnt);
 }
 
+/** Popular names to keep warm when the nightly sync no longer sweeps the full universe. */
+export async function listHotScreenerSymbols(
+  limit = 80,
+  minMarketCap = 10_000_000_000,
+): Promise<string[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT symbol FROM screener_cache
+          WHERE market_cap IS NOT NULL AND market_cap >= ?
+          ORDER BY market_cap DESC
+          LIMIT ?`,
+    args: [minMarketCap, Math.max(1, Math.min(limit, 200))],
+  });
+  return result.rows.map((r) => str(r.symbol).toUpperCase()).filter(Boolean);
+}
+
+/** Symbols that are missing from cache or older than `maxAgeHours`. */
+export async function listStaleOrMissingScreenerSymbols(
+  symbols: readonly string[],
+  maxAgeHours = 24,
+): Promise<string[]> {
+  const unique = [...new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean))];
+  if (unique.length === 0) return [];
+
+  const cache = await getScreenerCacheBySymbols(unique);
+  const cutoffMs = Date.now() - Math.max(0, maxAgeHours) * 3600 * 1000;
+  return unique.filter((symbol) => {
+    const row = cache.get(symbol);
+    if (!row) return true;
+    const t = Date.parse(row.updatedAt);
+    return Number.isNaN(t) || t < cutoffMs;
+  });
+}
+
 export async function getScreenerDistinctSectors(): Promise<string[]> {
   const client = await ensureInitialized();
   const result = await client.execute("SELECT DISTINCT sector FROM screener_cache WHERE sector != '' ORDER BY sector");

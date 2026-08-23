@@ -19,8 +19,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const CONCURRENCY = 4;
-/** Skip users who have not been active for this many days. */
-const ACTIVE_WITHIN_DAYS = 30;
+/** Prefetch only recently active users; Home computes the rest on cache miss. */
+const ACTIVE_WITHIN_DAYS = 7;
 
 async function processPortfolio(
   userId: string,
@@ -122,8 +122,18 @@ const runPortfolioRecommendations = withCronLogging(
   },
 );
 
+function authorize(req: NextRequest) {
+  return verifyCronAuth("portfolio-recommendations", req);
+}
+
 export async function GET(req: NextRequest) {
-  const authError = verifyCronAuth("portfolio-recommendations", req);
-  if (authError) return authError;
+  const denied = authorize(req);
+  if (denied) return denied;
+  return runPortfolioRecommendations();
+}
+
+export async function POST(req: NextRequest) {
+  const denied = authorize(req);
+  if (denied) return denied;
   return runPortfolioRecommendations();
 }

@@ -3036,7 +3036,7 @@ function MoatAutoGenCard() {
             />
           </div>
           <p className="text-[10px] text-gray-500 dark:text-slate-400">
-            {coveragePct}% coverage — cron runs every 4h, 30 stocks/batch, 7-day TTL
+            {coveragePct}% coverage — cron runs daily, 30 stocks/batch, 7-day TTL
           </p>
 
           <div className="space-y-2">

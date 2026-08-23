@@ -1,37 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireFeatureQuota } from "@/lib/auth/guards";
 import { getScreenerCacheBySymbols, listHoldings, trackEvent } from "@/lib/db";
-import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { marketDataSymbolForHolding } from "@/lib/market-symbol";
+import { ensureScreenerSymbols } from "@/lib/screener-sync";
 import { withMetrics } from "@/lib/with-metrics";
 import {
   OVERVIEW_FETCH_CAP,
   emptyFundamentals,
   fundamentalsFromCache,
-  fundamentalsFromOverview,
   holdingNeedsFundamentals,
   type HoldingsResearchApiRow,
-  type HoldingsResearchFundamentals,
   type HoldingsResearchResponse,
 } from "@/lib/holdings-research";
 
 export const dynamic = "force-dynamic";
-
-const yahoo = new YahooProvider();
-
-async function fetchOverview(symbol: string): Promise<HoldingsResearchFundamentals | null> {
-  try {
-    const overview = await yahoo.getOverview?.(symbol);
-    if (!overview) return null;
-    return fundamentalsFromOverview(overview);
-  } catch (err) {
-    console.error(
-      `[holdings-research] overview failed for ${symbol}:`,
-      err instanceof Error ? err.message : err,
-    );
-    return null;
-  }
-}
 
 export const GET = withMetrics("/api/holdings-research", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "screener");
@@ -79,18 +61,21 @@ export const GET = withMetrics("/api/holdings-research", async (request: NextReq
     }
   }
 
-  const toFetch = misses.slice(0, OVERVIEW_FETCH_CAP);
   const leftover = misses.length > OVERVIEW_FETCH_CAP;
 
-  if (toFetch.length > 0) {
-    const fetched = await Promise.all(toFetch.map((m) => fetchOverview(m.symbol)));
+  if (misses.length > 0) {
+    const toFetch = misses.slice(0, OVERVIEW_FETCH_CAP);
+    await ensureScreenerSymbols(
+      toFetch.map((m) => m.symbol),
+      { maxSync: OVERVIEW_FETCH_CAP },
+    );
+    const filled = await getScreenerCacheBySymbols(toFetch.map((m) => m.symbol));
     const byId = new Map(rows.map((r) => [r.holdingId, r]));
-    for (let i = 0; i < toFetch.length; i++) {
-      const fund = fetched[i];
-      const miss = toFetch[i];
-      if (!fund || !miss) continue;
+    for (const miss of toFetch) {
       const row = byId.get(miss.holdingId);
-      if (row) row.fundamentals = fund;
+      if (!row) continue;
+      const cached = filled.get(miss.symbol.trim().toUpperCase());
+      if (cached) row.fundamentals = fundamentalsFromCache(cached);
     }
   }
 

@@ -28,4 +28,11 @@ describe("CRON_REGISTRY", () => {
     expect(CRON_REGISTRY.find((j) => j.name === "support-return-watch")?.schedule).toBe("0 * * * *");
     expect(CRON_REGISTRY.find((j) => j.name === "screening-recover")?.schedule).toBe("*/5 * * * *");
   });
+
+  it("uses lazy/less-frequent schedules for warmer crons", () => {
+    expect(CRON_REGISTRY.find((j) => j.name === "moat-sync")?.schedule).toBe("0 5 * * *");
+    expect(CRON_REGISTRY.find((j) => j.name === "aid-digest")?.schedule).toBe("0 8 * * *");
+    expect(CRON_REGISTRY.find((j) => j.name === "aid-finpulse")?.schedule).toBe("0 */6 * * *");
+    expect(CRON_REGISTRY.find((j) => j.name === "coverage-reconcile")?.schedule).toBe("15 2 * * 0");
+  });
 });
