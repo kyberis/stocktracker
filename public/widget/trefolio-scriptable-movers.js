@@ -98,11 +98,14 @@ function layoutFor(family) {
 async function fetchData() {
   const req = new Request(API_URL);
   req.headers = { Authorization: `Bearer ${String(TOKEN).trim()}` };
-  req.timeoutInterval = 15;
+  req.timeoutInterval = 25;
   const body = await req.loadString();
   const status = req.response.statusCode;
   if (status < 200 || status >= 300) {
     let detail = `HTTP ${status}`;
+    const looksLikeChallenge =
+      typeof body === "string" &&
+      (body.includes("Just a moment") || body.includes("cf-browser-verification") || body.includes("Attention Required"));
     try {
       const parsed = JSON.parse(body);
       if (parsed && typeof parsed.error === "string" && parsed.error) {
@@ -111,7 +114,9 @@ async function fetchData() {
         detail = `${detail}: rate limited — wait a few minutes`;
       }
     } catch {
-      /* non-JSON body (e.g. CDN challenge) */
+      if (looksLikeChallenge) {
+        detail = `${detail}: network challenge — retry on Wi‑Fi or cellular`;
+      }
     }
     if (status === 401) {
       detail = `${detail} — regenerate token at trefolio.com → Profile → Widget Access`;

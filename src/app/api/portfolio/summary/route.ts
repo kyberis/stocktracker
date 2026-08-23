@@ -18,6 +18,13 @@ import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import { fetchQuoteMapForHoldings } from "@/lib/holding-quotes";
 import { getRatesWithCache } from "@/lib/quote-cache";
 
+/** Scriptable widgets abort around 15–25s; leave headroom for auth + JSON. */
+export const maxDuration = 30;
+
+/** Cap live Yahoo work so large books (e.g. admin) still return under widget timeout. */
+const WIDGET_QUOTE_DEADLINE_MS = 12_000;
+const WIDGET_QUOTE_CONCURRENCY = 8;
+
 type AuthMethod = "session" | DeviceBearerMethod;
 
 interface AuthContext {
@@ -121,10 +128,15 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
   }
 
   // Same resolution path + shared cache as the dashboard/AID routes (ISIN
-  // resolve, HK padding, DE/PA exchange fallbacks, Yahoo aliases), instead of
-  // a bare per-symbol getQuote call that silently drops unresolved holdings
-  // to stale valueInEUR and samples FX independently of the web.
-  const quotes = await fetchQuoteMapForHoldings(holdings);
+  // resolve, HK padding, DE/PA exchange fallbacks, Yahoo aliases). When Redis
+  // quote cache is cold/over-quota, unbounded parallel Yahoo calls can exceed
+  // Scriptable's client timeout on large portfolios — budget + concurrency cap
+  // return partial quotes; calculatePortfolioTotals falls back to valueInEUR.
+  const quoteOpts =
+    authContext.method === "widget_token" || authContext.method === "device_passkey"
+      ? { concurrency: WIDGET_QUOTE_CONCURRENCY, deadlineMs: WIDGET_QUOTE_DEADLINE_MS }
+      : { concurrency: WIDGET_QUOTE_CONCURRENCY };
+  const quotes = await fetchQuoteMapForHoldings(holdings, quoteOpts);
 
   // Resolve portfolio currency for base-currency conversion
   let portfolioCurrency = "EUR";
@@ -144,7 +156,7 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     ...Object.values(quotes).map((q) => q.currency),
     portfolioCurrency,
   ]);
-  const fetchedRates = await getRatesWithCache(fxPairs);
+  const fetchedRates = await getRatesWithCache(fxPairs, quoteOpts);
   const exchangeRates: ExchangeRates = {};
   for (const [pair, rate] of Object.entries(fetchedRates)) {
     if (rate > 0) exchangeRates[pair] = rate;

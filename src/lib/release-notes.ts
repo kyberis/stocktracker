@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.219",
+    date: "2026-08-23",
+    title: "iOS widgets load for large portfolios",
+    titleTranslations: {
+      es: "Widgets iOS cargan en carteras grandes",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Home-screen Scriptable widgets no longer hang on large portfolios when the Redis quote cache is cold or over quota — the summary API caps Yahoo concurrency, returns within a deadline (falling back to stored values), and scripts wait up to 25s with clearer CDN-challenge errors.",
+        translations: {
+          es: "Los widgets Scriptable de la pantalla de inicio ya no se cuelgan en carteras grandes cuando la caché Redis de cotizaciones está fría o sin cuota: la API de resumen limita la concurrencia de Yahoo, responde dentro de un deadline (con valores guardados) y los scripts esperan hasta 25s con errores más claros si hay challenge del CDN.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.218",
     date: "2026-08-23",
     title: "Rate limits survive Redis outages",
