@@ -30,11 +30,7 @@ import {
 import type { ExchangeRates, SubscriptionPlan } from "@/lib/types";
 import { getEmailLocale } from "@/lib/email-i18n";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
-import { YahooProvider } from "@/lib/api-providers/yahoo";
-import { resolveYahooQuote } from "@/lib/resolve-yahoo-quote";
-import { getCachedQuotes, setCachedQuotes } from "@/lib/quote-cache";
-import { fetchExchangeRatesForCurrencies } from "@/lib/import-quality/repairs";
-import type { ProviderQuoteResult } from "@/lib/api-providers/types";
+import { fetchSharedQuotesAndRates, shouldFetchLiveMarketData } from "@/lib/cron-quotes";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -51,12 +47,11 @@ function buildContext(alert: CronAlert): AlertDispatchContext {
   };
 }
 
-async function loadQuotes(tickers: string[]): Promise<Record<string, AlertQuote>> {
+function toAlertQuotes(
+  providerQuotes: Record<string, { regularMarketPrice: number; regularMarketChangePercent: number; currency: string }>,
+): Record<string, AlertQuote> {
   const quotes: Record<string, AlertQuote> = {};
-  if (tickers.length === 0) return quotes;
-
-  const { hits, misses } = await getCachedQuotes(tickers);
-  for (const [symbol, quote] of Object.entries(hits)) {
+  for (const [symbol, quote] of Object.entries(providerQuotes)) {
     if (quote.regularMarketPrice > 0) {
       quotes[symbol] = {
         regularMarketPrice: quote.regularMarketPrice,
@@ -65,35 +60,6 @@ async function loadQuotes(tickers: string[]): Promise<Record<string, AlertQuote>
       };
     }
   }
-
-  if (misses.length > 0) {
-    const yahoo = new YahooProvider();
-    const toCache: Record<string, ProviderQuoteResult> = {};
-    await Promise.all(
-      misses.map(async (symbol) => {
-        try {
-          const quote = await resolveYahooQuote(yahoo, symbol);
-          if (quote && quote.regularMarketPrice > 0) {
-            quotes[symbol] = {
-              regularMarketPrice: quote.regularMarketPrice,
-              regularMarketChangePercent: quote.regularMarketChangePercent,
-              currency: quote.currency,
-            };
-            toCache[symbol] = quote;
-          }
-        } catch (err) {
-          console.error(
-            `[check-alerts] quote failed for ${symbol}:`,
-            err instanceof Error ? err.message : err,
-          );
-        }
-      }),
-    );
-    if (Object.keys(toCache).length > 0) {
-      setCachedQuotes(toCache).catch(() => {});
-    }
-  }
-
   return quotes;
 }
 
@@ -202,18 +168,31 @@ const runCheckAlerts = withCronLogging("check-alerts", async () => {
     }
   }
 
-  const quotes = await loadQuotes([...allTickers]);
+  const marketHoldings = [
+    ...Object.values(holdingsCache).flat(),
+    ...perStockAlerts.filter((a) => a.ticker).map(() => ({})),
+  ];
+  if (!shouldFetchLiveMarketData(marketHoldings)) {
+    return {
+      checked: alerts.length,
+      triggered: 0,
+      fired: 0,
+      failed: 0,
+      skipped: 0,
+      skippedMarketsClosed: true,
+      tickers: allTickers.size,
+    };
+  }
+
+  const shared = await fetchSharedQuotesAndRates({
+    tickers: [...allTickers],
+    currencies,
+  });
+  const quotes = toAlertQuotes(shared.quotes);
   for (const q of Object.values(quotes)) {
     if (q.currency) currencies.add(q.currency.toUpperCase());
   }
-
-  let rates: ExchangeRates = {};
-  try {
-    const yahoo = new YahooProvider();
-    rates = await fetchExchangeRatesForCurrencies(yahoo, currencies);
-  } catch (err) {
-    console.error("[check-alerts] FX fetch failed:", err instanceof Error ? err.message : err);
-  }
+  const rates: ExchangeRates = shared.exchangeRates;
 
   let triggered = 0;
   let fired = 0;

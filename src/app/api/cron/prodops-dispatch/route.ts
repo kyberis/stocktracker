@@ -7,8 +7,18 @@ const runProdOpsDispatch = withCronLogging("prodops-dispatch", async () => {
   return dispatchPendingProdOpsEvents();
 });
 
+function authorize(req: NextRequest) {
+  return verifyCronAuth("prodops-dispatch", req);
+}
+
+export async function GET(req: NextRequest) {
+  const denied = authorize(req);
+  if (denied) return denied;
+  return runProdOpsDispatch();
+}
+
 export async function POST(req: NextRequest) {
-  const denied = verifyCronAuth("prodops-dispatch", req);
+  const denied = authorize(req);
   if (denied) return denied;
   return runProdOpsDispatch();
 }

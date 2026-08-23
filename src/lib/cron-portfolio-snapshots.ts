@@ -6,17 +6,13 @@ import {
   listHoldings,
   listDistinctPortfolioIdsForUser,
 } from "@/lib/db";
-import type { DistinctHoldingTicker } from "@/lib/db/holdings";
-import { YahooProvider } from "@/lib/api-providers/yahoo";
-import type { ProviderQuoteResult } from "@/lib/api-providers/types";
+import { providerQuotesToQuoteMap } from "@/lib/aid/quotes-map";
+import { fetchSharedQuotesAndRates, shouldFetchLiveMarketData } from "@/lib/cron-quotes";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { computeValueByAssetType } from "@/lib/portfolio-summary";
 import { generateId } from "@/lib/utils";
 import { isAnyMarketActive } from "@/lib/market-hours";
 import type { CashEntry, ExchangeRates, Holding, QuoteData } from "@/lib/types";
-import { buildNeededFxPairs } from "@/lib/fx-pairs";
-
-const QUOTE_BATCH_SIZE = 15;
 
 /** 5-minute UTC bucket aligned with POST /api/portfolio/snapshot */
 export function snapshotDateBucketUtc(): string {
@@ -25,82 +21,22 @@ export function snapshotDateBucketUtc(): string {
   return floored.toISOString().slice(0, 16).replace("T", " ") + ":00";
 }
 
-function toQuoteData(q: ProviderQuoteResult): QuoteData {
-  return {
-    symbol: q.symbol,
-    shortName: q.shortName,
-    regularMarketPrice: q.regularMarketPrice,
-    regularMarketChange: q.regularMarketChange,
-    regularMarketChangePercent: q.regularMarketChangePercent,
-    currency: q.currency,
-    regularMarketPreviousClose: q.regularMarketPreviousClose,
-    fiftyTwoWeekHigh: q.fiftyTwoWeekHigh,
-    fiftyTwoWeekLow: q.fiftyTwoWeekLow,
-    marketCap: q.marketCap,
-    trailingAnnualDividendRate: q.trailingAnnualDividendRate,
-    trailingAnnualDividendYield: q.trailingAnnualDividendYield,
-    regularMarketTime: q.regularMarketTime,
-  };
-}
-
-/**
- * Batch-fetch Yahoo quotes + FX (same strategy as refresh-holdings), return QuoteData map by ticker key.
- */
-async function buildQuotesAndExchangeRates(distinctTickers: DistinctHoldingTicker[]): Promise<{
+async function loadSharedQuotes(
+  distinctTickers: Array<{ ticker: string; displayCurrency: string }>,
+): Promise<{
   quotes: Record<string, QuoteData>;
   exchangeRates: ExchangeRates;
   quoteErrors: number;
 }> {
-  const exchangeRates: ExchangeRates = {};
-  const quotes: Record<string, QuoteData> = {};
-
-  if (distinctTickers.length === 0) {
-    return { quotes, exchangeRates, quoteErrors: 0 };
-  }
-
-  const yahoo = new YahooProvider();
-  const uniqueTickers = [...new Set(distinctTickers.map((h) => h.ticker))];
-
-  let errorCount = 0;
-
-  for (let i = 0; i < uniqueTickers.length; i += QUOTE_BATCH_SIZE) {
-    const batch = uniqueTickers.slice(i, i + QUOTE_BATCH_SIZE);
-    const results = await Promise.allSettled(
-      batch.map(async (ticker) => {
-        const yahooTicker = ticker.includes(" ") ? ticker.replace(/\s+/g, "-") : ticker;
-        const q = await yahoo.getQuote(yahooTicker);
-        return { ticker, q };
-      }),
-    );
-    for (const r of results) {
-      if (r.status === "fulfilled" && r.value.q.regularMarketPrice > 0) {
-        const { ticker, q } = r.value;
-        quotes[ticker] = toQuoteData(q);
-      } else {
-        errorCount++;
-      }
-    }
-  }
-
-  const neededPairs = buildNeededFxPairs([
-    ...distinctTickers.map((h) => h.displayCurrency),
-    ...Object.values(quotes).map((q) => q.currency),
-  ]);
-  const rateResults = await Promise.allSettled(
-    neededPairs.map(async (pair) => {
-      const from = pair.substring(0, 3);
-      const to = pair.substring(3);
-      const rate = await yahoo.getExchangeRate(from, to);
-      return { pair, rate };
-    }),
-  );
-  for (const r of rateResults) {
-    if (r.status === "fulfilled" && r.value.rate > 0) {
-      exchangeRates[r.value.pair] = r.value.rate;
-    }
-  }
-
-  return { quotes, exchangeRates, quoteErrors: errorCount };
+  const { quotes, exchangeRates, quoteErrors } = await fetchSharedQuotesAndRates({
+    tickers: distinctTickers.map((h) => h.ticker),
+    currencies: distinctTickers.map((h) => h.displayCurrency),
+  });
+  return {
+    quotes: providerQuotesToQuoteMap(quotes),
+    exchangeRates,
+    quoteErrors,
+  };
 }
 
 /**
@@ -213,7 +149,7 @@ async function writeLiveSnapshotsForUser(
 export async function materializeCurrentSnapshotsForUser(userId: string): Promise<{ snapshots: number }> {
   const distinctTickers = await listDistinctHoldingTickersForUser(userId);
   if (distinctTickers.length === 0) return { snapshots: 0 };
-  const { quotes, exchangeRates } = await buildQuotesAndExchangeRates(distinctTickers);
+  const { quotes, exchangeRates } = await loadSharedQuotes(distinctTickers);
   const dateBucket = snapshotDateBucketUtc();
   const snapshots = await writeLiveSnapshotsForUser(userId, quotes, exchangeRates, dateBucket);
   return { snapshots };
@@ -242,7 +178,20 @@ export async function runPortfolioSnapshotsJob(): Promise<Record<string, unknown
     };
   }
 
-  const { quotes, exchangeRates, quoteErrors } = await buildQuotesAndExchangeRates(distinctTickers);
+  if (!shouldFetchLiveMarketData(distinctTickers)) {
+    return {
+      users: 0,
+      snapshots: 0,
+      skippedMarketsClosed: true,
+      quoteErrors: 0,
+      userErrors: 0,
+      uniqueTickers: [...new Set(distinctTickers.map((d) => d.ticker))].length,
+      capped: maxUsers > 0 && userIds.length > maxUsers,
+      totalUsersInDb: userIds.length,
+    };
+  }
+
+  const { quotes, exchangeRates, quoteErrors } = await loadSharedQuotes(distinctTickers);
   const dateBucket = snapshotDateBucketUtc();
 
   let snapshots = 0;

@@ -171,14 +171,14 @@
 | `/api/cron/portfolio-anomaly-scan` | GET, POST | [`src/app/api/cron/portfolio-anomaly-scan/route.ts`](../../src/app/api/cron/portfolio-anomaly-scan/route.ts) |
 | `/api/cron/portfolio-recommendations` | GET | [`src/app/api/cron/portfolio-recommendations/route.ts`](../../src/app/api/cron/portfolio-recommendations/route.ts) |
 | `/api/cron/portfolio-snapshots` | GET, POST | [`src/app/api/cron/portfolio-snapshots/route.ts`](../../src/app/api/cron/portfolio-snapshots/route.ts) |
-| `/api/cron/prodops-dispatch` | POST | [`src/app/api/cron/prodops-dispatch/route.ts`](../../src/app/api/cron/prodops-dispatch/route.ts) |
+| `/api/cron/prodops-dispatch` | GET, POST | [`src/app/api/cron/prodops-dispatch/route.ts`](../../src/app/api/cron/prodops-dispatch/route.ts) |
 | `/api/cron/push-gauges` | GET | [`src/app/api/cron/push-gauges/route.ts`](../../src/app/api/cron/push-gauges/route.ts) |
 | `/api/cron/refresh-holdings` | GET | [`src/app/api/cron/refresh-holdings/route.ts`](../../src/app/api/cron/refresh-holdings/route.ts) |
 | `/api/cron/screener-sync` | GET | [`src/app/api/cron/screener-sync/route.ts`](../../src/app/api/cron/screener-sync/route.ts) |
 | `/api/cron/screening-recover` | GET | [`src/app/api/cron/screening-recover/route.ts`](../../src/app/api/cron/screening-recover/route.ts) |
 | `/api/cron/snaptrade-cleanup` | GET, POST | [`src/app/api/cron/snaptrade-cleanup/route.ts`](../../src/app/api/cron/snaptrade-cleanup/route.ts) |
 | `/api/cron/snaptrade-sync` | GET | [`src/app/api/cron/snaptrade-sync/route.ts`](../../src/app/api/cron/snaptrade-sync/route.ts) |
-| `/api/cron/support-return-watch` | POST | [`src/app/api/cron/support-return-watch/route.ts`](../../src/app/api/cron/support-return-watch/route.ts) |
+| `/api/cron/support-return-watch` | GET, POST | [`src/app/api/cron/support-return-watch/route.ts`](../../src/app/api/cron/support-return-watch/route.ts) |
 | `/api/cron/tax-rules-review` | GET | [`src/app/api/cron/tax-rules-review/route.ts`](../../src/app/api/cron/tax-rules-review/route.ts) |
 | `/api/cron/trial-expiration` | GET, POST | [`src/app/api/cron/trial-expiration/route.ts`](../../src/app/api/cron/trial-expiration/route.ts) |
 | `/api/cron/trial-invitations` | GET, POST | [`src/app/api/cron/trial-invitations/route.ts`](../../src/app/api/cron/trial-invitations/route.ts) |

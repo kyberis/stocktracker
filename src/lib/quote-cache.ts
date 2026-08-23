@@ -3,8 +3,9 @@ import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { resolveYahooQuote } from "@/lib/resolve-yahoo-quote";
 import type { ProviderQuoteResult } from "@/lib/api-providers/types";
 
-const QUOTE_TTL = 30;
-const FX_TTL = 60;
+/** Long enough for overlapping cron ticks (snapshots/refresh/alerts) to share one Yahoo pass. */
+export const QUOTE_CACHE_TTL_SECONDS = 90;
+export const FX_CACHE_TTL_SECONDS = 90;
 
 /** Default parallel Yahoo quote fetches when Redis misses (cold or over quota). */
 export const DEFAULT_QUOTE_FETCH_CONCURRENCY = 8;
@@ -106,7 +107,7 @@ export async function setCachedQuotes(
   try {
     const pipeline = redis.pipeline();
     for (const [symbol, data] of Object.entries(results)) {
-      pipeline.set(`quote:${symbol}`, data, { ex: QUOTE_TTL });
+      pipeline.set(`quote:${symbol}`, data, { ex: QUOTE_CACHE_TTL_SECONDS });
     }
     await pipeline.exec();
   } catch (err) {
@@ -124,7 +125,7 @@ export async function setCachedRate(
   const redis = getRedisClient();
   if (!redis) return;
   try {
-    await redis.set(`fx:${pair}`, rate, { ex: FX_TTL });
+    await redis.set(`fx:${pair}`, rate, { ex: FX_CACHE_TTL_SECONDS });
   } catch (err) {
     console.error(
       "Redis setCachedRate failed:",
@@ -276,7 +277,7 @@ export async function getRatesWithCache(
     try {
       const pipeline = redis.pipeline();
       for (const [pair, rate] of Object.entries(fetched)) {
-        pipeline.set(`fx:${pair}`, rate, { ex: FX_TTL });
+        pipeline.set(`fx:${pair}`, rate, { ex: FX_CACHE_TTL_SECONDS });
       }
       await pipeline.exec();
     } catch {

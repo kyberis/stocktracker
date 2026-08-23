@@ -59,8 +59,10 @@ The same rule applies on **trefolio-accounts**: `/snapshot` product metrics must
 ```mermaid
 flowchart LR
   businessRoute["signup / billing / feedback / broker / trial route"] --> outbox["ops_event_outbox"]
-  outbox --> cronDispatcher["/api/cron/prodops-dispatch"]
-  cronDispatcher -->|"HMAC signed POST"| prodops["external/prodops /api/intake"]
+  outbox --> kick["kickProdOpsDispatch (waitUntil)"]
+  outbox --> cronDispatcher["/api/cron/prodops-dispatch hourly backup"]
+  kick -->|"HMAC signed POST"| prodops["external/prodops /api/intake"]
+  cronDispatcher -->|"HMAC signed POST"| prodops
   prodops --> telegram["Telegram Bot API"]
 ```
 

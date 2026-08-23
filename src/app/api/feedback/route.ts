@@ -5,6 +5,7 @@ import { parseBody } from "@/lib/api-response";
 import { createFeedbackSchema, replyFeedbackSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
 import { enqueueProdOpsFeedbackReceivedEvent } from "@/lib/prodops";
+import { kickFeedbackPipeline } from "@/lib/cron-kick";
 
 export const GET = withMetrics("/api/feedback", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -53,6 +54,7 @@ export const POST = withMetrics("/api/feedback", async (req: NextRequest) => {
     subject: entry.subject,
     type: entry.type,
   });
+  kickFeedbackPipeline();
   return NextResponse.json(entry, { status: 201 });
 });
 
