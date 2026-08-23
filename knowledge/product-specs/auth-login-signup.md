@@ -54,6 +54,7 @@ Primary sign-in surface. Accepts email + password, Google OAuth, or Apple OAuth.
 - Session creation: [`src/lib/auth/session.ts`](../../src/lib/auth/session.ts) + [`session-secret.ts`](../../src/lib/auth/session-secret.ts) (JOSE).
 - Server-side session read: [`src/lib/auth/server-session.ts`](../../src/lib/auth/server-session.ts).
 - Middleware: [`src/middleware.ts`](../../src/middleware.ts) redirects unauthenticated users on protected routes.
+- After a successful password, passkey, OIDC, Google, or Apple login, [`maybeExpireTrialOnLogin`](../../src/lib/trial-expiration.ts) persists a due Pro-trial downgrade so the session cookie is free without waiting for the daily `trial-expiration` cron. No new user data is collected.
 
 ## 8. External dependencies
 

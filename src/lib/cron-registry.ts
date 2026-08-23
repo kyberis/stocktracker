@@ -79,28 +79,18 @@ export const CRON_REGISTRY: CronJob[] = [
     description: "Compute and store portfolio value snapshots for all users (every 5 min for dense intraday charts)",
   },
   {
-    name: "trial-invitations",
-    path: "/api/cron/trial-invitations",
+    name: "lifecycle-emails",
+    path: "/api/cron/lifecycle-emails",
     schedule: "0 10 * * *",
-    description: "Invite eligible free users to 7-day Pro trial after 1 week of activity",
+    description:
+      "Daily: trial invitations, welcome-no-stocks activation, and 14-day winback (legacy /api/cron/trial-invitations|lifecycle-activation|lifecycle-winback aliases remain)",
   },
   {
     name: "trial-expiration",
     path: "/api/cron/trial-expiration",
-    schedule: "0 * * * *",
-    description: "Downgrade expired trial users to free and send expiration email",
-  },
-  {
-    name: "lifecycle-activation",
-    path: "/api/cron/lifecycle-activation",
-    schedule: "30 10 * * *",
-    description: "Send welcome-no-stocks to verified users 48–72h after signup with zero holdings",
-  },
-  {
-    name: "lifecycle-winback",
-    path: "/api/cron/lifecycle-winback",
-    schedule: "0 11 * * *",
-    description: "Re-engage verified users inactive 14+ days who have holdings (feature-ai-analysis)",
+    schedule: "0 9 * * *",
+    description:
+      "Daily backup: downgrade expired trial users and send expiration email (primary path is check-on-login)",
   },
   {
     name: "commerce-complimentary-renewal",
@@ -125,7 +115,8 @@ export const CRON_REGISTRY: CronJob[] = [
     name: "digest-email",
     path: "/api/cron/digest-email",
     schedule: "*/15 * * * *",
-    description: "PAUSED — market digests no longer processed (was: poll Gmail, AI rewrite, store drafts)",
+    description:
+      "ARCHIVED — market digest Gmail pipeline removed; stub is a no-op (was: poll Gmail, AI rewrite, store drafts)",
     paused: true,
   },
   {

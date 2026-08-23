@@ -58,7 +58,7 @@ first.
   CSV. Value is visible in < 3 minutes.
 - Pro-gated UI uses `BlurredProSection` to show the shape of the feature, not
   a locked door.
-- Trial invitation cron ([`/api/cron/trial-invitations`](../src/app/api/cron/trial-invitations))
+- Trial invitation cron ([`/api/cron/lifecycle-emails`](../src/app/api/cron/lifecycle-emails))
   offers 7-day Trefolio to users with real holdings and a week of activity.
 
 ## Pricing psychology

@@ -26,6 +26,7 @@ import { FIRST_TOUCH_ATTRIBUTION_COOKIE, normalizeAttribution, parseFirstTouchAt
 import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
 import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
 import { grantCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
+import { maybeExpireTrialOnLogin } from "@/lib/trial-expiration";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -368,13 +369,14 @@ async function handleLoginFlow(
       return errorRedirect(req, "Google authentication failed.");
     }
 
+    const trial = isNewSignup ? { plan: dbUser.plan } : await maybeExpireTrialOnLogin(dbUser);
     const sessionToken = await createSessionToken({
       userId: dbUser.id,
       username: dbUser.username,
       email: dbUser.email,
       role: dbUser.role,
       mustChangePassword: false,
-      plan: dbUser.plan,
+      plan: trial.plan,
       emailVerified: dbUser.email_verified === 1,
       onboardingCompleted: dbUser.onboarding_completed === 1,
     });

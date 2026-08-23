@@ -3,7 +3,7 @@
 > Cron registry + runner.
 
 ## 1. Summary
-Each cron job is registered in `src/lib/cron-registry.ts` with cadence, timeout, and SLA. Vercel scheduled functions call the corresponding `/api/cron/*` routes; runs are logged in `cron_run_logs`.
+Each cron job is registered in `src/lib/cron-registry.ts` with cadence and description. Vercel scheduled functions call the corresponding `/api/cron/*` routes; runs are logged in `cron_executions` via `withCronLogging`.
 
 ## 2. Status
 - **Tier:** system
@@ -15,11 +15,11 @@ Each cron job is registered in `src/lib/cron-registry.ts` with cadence, timeout,
 | Type | Path | Notes |
 |------|------|-------|
 | Library | [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts) | Source of truth. |
-| Routes | [`src/app/api/cron/`](../../src/app/api/cron) | Per-job handlers. |
-| DB | [`src/lib/db/cron-runs.ts`](../../src/lib/db/cron-runs.ts) | Logs. |
+| Routes | [`src/app/api/cron/`](../../src/app/api/cron) | Per-job handlers. Archived stub: [`digest-email/route.ts`](../../src/app/api/cron/digest-email/route.ts). |
+| DB | [`src/lib/cron-logging.ts`](../../src/lib/cron-logging.ts) | `cron_executions` writes. |
 
 ## 4. Data model
-- `cron_run_logs`: name, started_at, ended_at, status, details.
+- `cron_executions`: job_name, started_at, finished_at, status, result, error_message, duration_ms.
 
 ## 5. API surface
 - Per-job endpoints; authenticated by CRON secret.
@@ -28,7 +28,8 @@ Each cron job is registered in `src/lib/cron-registry.ts` with cadence, timeout,
 - Admin cron-stats.
 
 ## 7. Business logic
-- Jobs are idempotent; `lockName` prevents overlap.
+- Jobs are idempotent. Overlap is tolerated; domain writes use existing claim/dedupe keys.
+- Lifecycle marketing is one daily `lifecycle-emails` job. `digest-email` is an archived no-op stub.
 - Failure alerts when ratio > threshold.
 
 ## 8. External dependencies

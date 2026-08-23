@@ -37,6 +37,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/cron/refresh-holdings",
   "/api/cron/portfolio-snapshots",
   "/api/cron/x-post",
+  "/api/cron/lifecycle-emails",
   "/api/cron/trial-invitations",
   "/api/cron/trial-expiration",
   "/api/cron/lifecycle-activation",

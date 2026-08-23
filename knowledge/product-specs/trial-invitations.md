@@ -4,7 +4,7 @@
 
 ## 1. Summary
 
-`/api/cron/trial-invitations` runs at 10:00 daily. It queries for Free users who are trial-eligible and have not been invited in the cooldown window, then sends them a localized invitation email with a claim link.
+`/api/cron/lifecycle-emails` runs at 10:00 daily and includes the trial-invite leg (legacy alias `/api/cron/trial-invitations`). It queries for Free users who are trial-eligible and have not been invited in the cooldown window, then sends them a localized invitation email with a claim link.
 
 ## 2. Status
 
@@ -17,7 +17,8 @@
 
 | Type | Path | Notes |
 |------|------|-------|
-| Cron | [`src/app/api/cron/trial-invitations/route.ts`](../../src/app/api/cron/trial-invitations/route.ts) | Registered in [`cron-registry.ts`](../../src/lib/cron-registry.ts) and `vercel.json`. |
+| Cron | [`src/app/api/cron/lifecycle-emails/route.ts`](../../src/app/api/cron/lifecycle-emails/route.ts) | Scheduled job. Invite logic in [`cron-lifecycle-emails.ts`](../../src/lib/cron-lifecycle-emails.ts). |
+| Alias | [`src/app/api/cron/trial-invitations/route.ts`](../../src/app/api/cron/trial-invitations/route.ts) | Manual/legacy invite-only trigger. |
 | UI | [`src/app/onboarding/page.tsx`](../../src/app/onboarding/page.tsx) | Last onboarding step when `pro_trial_enabled` — tokenless activation via [`POST /api/auth/onboarding`](../../src/app/api/auth/onboarding/route.ts). |
 | API | [`POST /api/auth/onboarding/trial-shown`](../../src/app/api/auth/onboarding/trial-shown/route.ts) | Tracks `onboarding_trial_shown` and sets `trial_invited_at`. |
 
@@ -30,7 +31,8 @@
 
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
-| GET | `/api/cron/trial-invitations` | cron | system | Triggered by Vercel cron. |
+| GET, POST | `/api/cron/lifecycle-emails` | cron | system | Daily merged lifecycle job. |
+| GET, POST | `/api/cron/trial-invitations` | cron | system | Invite-only alias (not scheduled). |
 
 ## 6. UI surface
 

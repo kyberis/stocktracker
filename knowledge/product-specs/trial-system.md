@@ -15,6 +15,8 @@ New users and invitees can run a time-limited Pro trial. Admins issue trial invi
 | Type | Path | Notes |
 |------|------|-------|
 | API | [`src/app/api/trial/`](../../src/app/api/trial) | Accept/check. |
+| Cron | [`src/app/api/cron/trial-expiration/route.ts`](../../src/app/api/cron/trial-expiration/route.ts) | Daily backup downgrade + email. |
+| Library | [`src/lib/trial-expiration.ts`](../../src/lib/trial-expiration.ts) | Shared expire + check-on-login. |
 | DB | [`src/lib/db/trials.ts`](../../src/lib/db/trials.ts), `trial-invitations.ts` | Storage. |
 
 ## 4. Data model
@@ -29,7 +31,7 @@ New users and invitees can run a time-limited Pro trial. Admins issue trial invi
 
 ## 7. Business logic
 - Merges into tier resolver with higher precedence than free.
-- Expires → automatic downgrade + notification.
+- Expires → automatic downgrade + notification via daily `trial-expiration` cron and check-on-login (`maybeExpireTrialOnLogin`). Entitlement reads already treat a past `plan_expires_at` as free.
 
 ## 8. External dependencies
 - None.

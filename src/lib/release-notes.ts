@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.224",
+    date: "2026-08-24",
+    title: "Fewer lifecycle crons",
+    titleTranslations: {
+      es: "Menos crons de ciclo de vida",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Trial invites, activation, and winback emails now run in one daily lifecycle-emails job. Trial expiration is a daily backup plus a check on login. The paused digest-email Gmail pipeline is archived to a no-op stub.",
+        translations: {
+          es: "Las invitaciones a trial, la activación y el winback ahora corren en un único cron diario lifecycle-emails. La caducidad del trial es un respaldo diario más un chequeo al iniciar sesión. El pipeline Gmail de digest-email queda archivado como un stub sin trabajo.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.223",
     date: "2026-08-23",
     title: "Leaner cache-warm crons",

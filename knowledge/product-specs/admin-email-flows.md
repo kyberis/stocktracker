@@ -99,7 +99,7 @@ Input/output: GET JSON `{ flows, flags, crons, templates, nodeEnabled, codePrevi
 
 - Skills: [`automated-user-comms`](../../.cursor/skills/automated-user-comms/SKILL.md), [`ux-writer`](../../.cursor/skills/ux-writer/SKILL.md), [`accessibility-reviewer`](../../.cursor/skills/accessibility-reviewer/SKILL.md)
 - Rules: [`.cursor/rules/release-notes.mdc`](../../.cursor/rules/release-notes.mdc), [`.cursor/rules/knowledge-base.mdc`](../../.cursor/rules/knowledge-base.mdc)
-- Related specs: [email-system](email-system.md), [weekly-digest](weekly-digest.md), [trial-invitations](trial-invitations.md), [admin-sub-tools](admin-sub-tools.md)
+- Related specs: [email-system](email-system.md), [weekly-digest](weekly-digest.md), [trial-invitations](trial-invitations.md), [lifecycle-emails](lifecycle-emails.md), [admin-sub-tools](admin-sub-tools.md)
 
 ## 16. Open questions / planned work
 

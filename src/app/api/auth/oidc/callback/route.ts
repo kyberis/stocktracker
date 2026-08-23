@@ -41,6 +41,7 @@ import {
 import { ensureTrefolioAdminRoleForUser } from "@/lib/auth/admin-allowlist";
 import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
 import { grantCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
+import { maybeExpireTrialOnLogin } from "@/lib/trial-expiration";
 
 /**
  * GET /api/auth/oidc/callback
@@ -318,6 +319,7 @@ export async function GET(req: NextRequest) {
 
   await ensureTrefolioAdminRoleForUser(dbUser.id, claims.email || dbUser.email);
   const finalUser = (await findUserById(dbUser.id)) ?? dbUser;
+  const trial = isNewSignup ? { plan: finalUser.plan } : await maybeExpireTrialOnLogin(finalUser);
 
   const sessionToken = await createSessionToken({
     userId: finalUser.id,
@@ -325,7 +327,7 @@ export async function GET(req: NextRequest) {
     email: finalUser.email,
     role: finalUser.role,
     mustChangePassword: false,
-    plan: finalUser.plan,
+    plan: trial.plan,
     emailVerified: finalUser.email_verified === 1 || claims.email_verified,
     onboardingCompleted: finalUser.onboarding_completed === 1,
   });

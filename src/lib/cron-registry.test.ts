@@ -35,4 +35,28 @@ describe("CRON_REGISTRY", () => {
     expect(CRON_REGISTRY.find((j) => j.name === "aid-finpulse")?.schedule).toBe("0 */6 * * *");
     expect(CRON_REGISTRY.find((j) => j.name === "coverage-reconcile")?.schedule).toBe("15 2 * * 0");
   });
+
+  it("merges lifecycle emails daily and keeps trial-expiration as a daily backup", () => {
+    expect(CRON_REGISTRY.find((j) => j.name === "lifecycle-emails")?.schedule).toBe("0 10 * * *");
+    expect(CRON_REGISTRY.find((j) => j.name === "trial-expiration")?.schedule).toBe("0 9 * * *");
+    expect(CRON_REGISTRY.some((j) => j.name === "trial-invitations")).toBe(false);
+    expect(CRON_REGISTRY.some((j) => j.name === "lifecycle-activation")).toBe(false);
+    expect(CRON_REGISTRY.some((j) => j.name === "lifecycle-winback")).toBe(false);
+    expect(CRON_REGISTRY.find((j) => j.name === "digest-email")?.paused).toBe(true);
+  });
+
+  it("lists every registry path in middleware PUBLIC_API_ROUTES", () => {
+    const middleware = readFileSync(join(root, "src/middleware.ts"), "utf8");
+    for (const job of CRON_REGISTRY) {
+      expect(middleware.includes(`"${job.path}"`), job.path).toBe(true);
+    }
+    for (const alias of [
+      "/api/cron/trial-invitations",
+      "/api/cron/lifecycle-activation",
+      "/api/cron/lifecycle-winback",
+    ]) {
+      expect(middleware.includes(`"${alias}"`), alias).toBe(true);
+    }
+  });
 });
+

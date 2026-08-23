@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-320 routes.
+321 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -162,10 +162,11 @@
 | `/api/cron/commerce-complimentary-renewal` | GET, POST | [`src/app/api/cron/commerce-complimentary-renewal/route.ts`](../../src/app/api/cron/commerce-complimentary-renewal/route.ts) |
 | `/api/cron/compact-snapshots` | GET, POST | [`src/app/api/cron/compact-snapshots/route.ts`](../../src/app/api/cron/compact-snapshots/route.ts) |
 | `/api/cron/coverage-reconcile` | GET, POST | [`src/app/api/cron/coverage-reconcile/route.ts`](../../src/app/api/cron/coverage-reconcile/route.ts) |
-| `/api/cron/digest-email` | GET | [`src/app/api/cron/digest-email/route.ts`](../../src/app/api/cron/digest-email/route.ts) |
+| `/api/cron/digest-email` | GET, POST | [`src/app/api/cron/digest-email/route.ts`](../../src/app/api/cron/digest-email/route.ts) |
 | `/api/cron/event-sync` | GET | [`src/app/api/cron/event-sync/route.ts`](../../src/app/api/cron/event-sync/route.ts) |
 | `/api/cron/feedback-pipeline` | GET, POST | [`src/app/api/cron/feedback-pipeline/route.ts`](../../src/app/api/cron/feedback-pipeline/route.ts) |
 | `/api/cron/lifecycle-activation` | GET, POST | [`src/app/api/cron/lifecycle-activation/route.ts`](../../src/app/api/cron/lifecycle-activation/route.ts) |
+| `/api/cron/lifecycle-emails` | GET, POST | [`src/app/api/cron/lifecycle-emails/route.ts`](../../src/app/api/cron/lifecycle-emails/route.ts) |
 | `/api/cron/lifecycle-winback` | GET, POST | [`src/app/api/cron/lifecycle-winback/route.ts`](../../src/app/api/cron/lifecycle-winback/route.ts) |
 | `/api/cron/moat-sync` | GET, POST | [`src/app/api/cron/moat-sync/route.ts`](../../src/app/api/cron/moat-sync/route.ts) |
 | `/api/cron/portfolio-anomaly-scan` | GET, POST | [`src/app/api/cron/portfolio-anomaly-scan/route.ts`](../../src/app/api/cron/portfolio-anomaly-scan/route.ts) |

@@ -25,6 +25,7 @@ import { FIRST_TOUCH_ATTRIBUTION_COOKIE, normalizeAttribution, parseFirstTouchAt
 import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
 import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
 import { grantCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
+import { maybeExpireTrialOnLogin } from "@/lib/trial-expiration";
 
 const APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
 const APPLE_JWKS_URL = new URL("https://appleid.apple.com/auth/keys");
@@ -297,13 +298,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const trial = isNewSignup ? { plan: dbUser.plan } : await maybeExpireTrialOnLogin(dbUser);
     const token = await createSessionToken({
       userId: dbUser.id,
       username: dbUser.username,
       email: dbUser.email,
       role: dbUser.role,
       mustChangePassword: false,
-      plan: dbUser.plan,
+      plan: trial.plan,
       emailVerified: dbUser.email_verified === 1,
       onboardingCompleted: dbUser.onboarding_completed === 1,
     });
