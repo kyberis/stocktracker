@@ -5,7 +5,9 @@ import { runFeedbackPipelineWork } from "@/lib/feedback-pipeline";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-const runFeedbackPipeline = withCronLogging("feedback-pipeline", runFeedbackPipelineWork);
+const runFeedbackPipeline = withCronLogging("feedback-pipeline", async () => {
+  return { ...(await runFeedbackPipelineWork()) };
+});
 
 function authorize(req: NextRequest) {
   return verifyCronAuth("feedback-pipeline", req);
