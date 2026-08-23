@@ -18,14 +18,12 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `x-post` | `*/15 * * * *` | `/api/cron/x-post` | Publish scheduled X/Twitter posts via the X API (includes auto-generated market digest posts) |
 | `refresh-holdings` | `*/15 * * * *` | `/api/cron/refresh-holdings` | Update holding valuations and FX rates from Yahoo Finance |
 | `portfolio-snapshots` | `*/5 * * * *` | `/api/cron/portfolio-snapshots` | Compute and store portfolio value snapshots for all users (every 5 min for dense intraday charts) |
-| `trial-invitations` | `0 10 * * *` | `/api/cron/trial-invitations` | Invite eligible free users to 7-day Pro trial after 1 week of activity |
-| `trial-expiration` | `0 * * * *` | `/api/cron/trial-expiration` | Downgrade expired trial users to free and send expiration email |
-| `lifecycle-activation` | `30 10 * * *` | `/api/cron/lifecycle-activation` | Send welcome-no-stocks to verified users 48–72h after signup with zero holdings |
-| `lifecycle-winback` | `0 11 * * *` | `/api/cron/lifecycle-winback` | Re-engage verified users inactive 14+ days who have holdings (feature-ai-analysis) |
+| `lifecycle-emails` | `0 10 * * *` | `/api/cron/lifecycle-emails` | Daily: trial invitations, welcome-no-stocks activation, and 14-day winback (legacy /api/cron/trial-invitations|lifecycle-activation|lifecycle-winback aliases remain) |
+| `trial-expiration` | `0 9 * * *` | `/api/cron/trial-expiration` | Daily backup: downgrade expired trial users and send expiration email (primary path is check-on-login) |
 | `commerce-complimentary-renewal` | `0 2 * * *` | `/api/cron/commerce-complimentary-renewal` | Renew 30-day complimentary Trefolio Pro while commerce_enabled is off |
 | `weekly-digest` | `0 8 * * 1` | `/api/cron/weekly-digest` | Generate and send AI-powered weekly portfolio digest to Pro users every Monday |
 | `portfolio-recommendations` | `0 7 * * 1` | `/api/cron/portfolio-recommendations` | Weekly prefetch of Home tip queues for users active in the last 7 days; Home computes the rest on cache miss |
-| `digest-email` | **paused** (was `*/15 * * * *`) | `/api/cron/digest-email` | PAUSED — market digests no longer processed (was: poll Gmail, AI rewrite, store drafts) |
+| `digest-email` | **paused** (was `*/15 * * * *`) | `/api/cron/digest-email` | ARCHIVED — market digest Gmail pipeline removed; stub is a no-op (was: poll Gmail, AI rewrite, store drafts) |
 | `moat-sync` | `0 5 * * *` | `/api/cron/moat-sync` | Daily evaluate stale/missing moat scores (7-day max age); ensure-moat fills on demand |
 | `compact-snapshots` | `0 4 * * *` | `/api/cron/compact-snapshots` | Compact old hourly portfolio snapshots into daily (and weekly) rows to bound storage |
 | `feedback-pipeline` | `0 * * * *` | `/api/cron/feedback-pipeline` | Hourly backup: process queued user feedback into Linear issues (kick-on-write from /api/feedback) |

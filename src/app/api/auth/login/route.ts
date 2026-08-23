@@ -15,6 +15,7 @@ import { verifyTurnstileToken } from "@/lib/turnstile";
 import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
 import { isIdpEnabled } from "@/lib/idp/config";
 import { json401 } from "@/lib/log-unauthorized";
+import { maybeExpireTrialOnLogin } from "@/lib/trial-expiration";
 
 export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
   ensureSessionSecret();
@@ -83,20 +84,27 @@ export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
       return json401(req, { source: "api/auth/login", reason: "invalid_credentials", tags: { phase: "password" } }, { error: "Invalid credentials." });
     }
 
+    const trial = await maybeExpireTrialOnLogin(user);
     const token = await createSessionToken({
       userId: user.id,
       username: user.username,
       email: user.email,
       role: user.role,
       mustChangePassword: user.must_change_password === 1,
-      plan: user.plan,
+      plan: trial.plan,
       emailVerified: user.email_verified === 1,
       onboardingCompleted: user.onboarding_completed === 1,
     });
 
     trackEvent(user.id, "login");
     authEventsTotal.inc({ event: "login_success" });
-    const response = NextResponse.json({ user: toPublicUser(user) });
+    const response = NextResponse.json({
+      user: toPublicUser({
+        ...user,
+        plan: trial.plan,
+        plan_expires_at: trial.expired ? "" : user.plan_expires_at,
+      }),
+    });
     response.cookies.set(getSessionCookieConfig(token));
     return response;
   } catch (error) {

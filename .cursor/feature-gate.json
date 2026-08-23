@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.220: Home latency bootstrap is an internal cold-path optimization — no new customer-facing capability for the landing page"
+  "notes": "2.5.224: Cron housekeeping (merged lifecycle emails, daily trial-expiration, archived digest-email stub) — no customer-facing landing capability"
 }

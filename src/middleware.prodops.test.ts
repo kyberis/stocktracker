@@ -72,6 +72,20 @@ describe("middleware prodops routes", () => {
     expect(response.status).not.toBe(401);
   });
 
+  it("allows lifecycle-emails cron without a session cookie", async () => {
+    const { middleware } = await import("./middleware");
+    const response = await middleware(
+      new NextRequest("http://localhost/api/cron/lifecycle-emails", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer cron-secret",
+        },
+      }),
+    );
+
+    expect(response.status).not.toBe(401);
+  });
+
   it("allows prodops dispatch cron without a session cookie", async () => {
     const { middleware } = await import("./middleware");
     const response = await middleware(

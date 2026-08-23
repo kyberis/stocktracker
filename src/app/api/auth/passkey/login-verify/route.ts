@@ -12,6 +12,7 @@ import { ensureSessionSecret } from "@/lib/auth/session-secret";
 import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
 import { json401 } from "@/lib/log-unauthorized";
+import { maybeExpireTrialOnLogin } from "@/lib/trial-expiration";
 
 export const POST = withMetrics("/api/auth/passkey/login-verify", async (req: NextRequest) => {
   ensureSessionSecret();
@@ -67,13 +68,14 @@ export const POST = withMetrics("/api/auth/passkey/login-verify", async (req: Ne
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
+  const trial = await maybeExpireTrialOnLogin(user);
   const token = await createSessionToken({
     userId: user.id,
     username: user.username,
     email: user.email,
     role: user.role,
     mustChangePassword: user.must_change_password === 1,
-    plan: user.plan,
+    plan: trial.plan,
     emailVerified: user.email_verified === 1,
     onboardingCompleted: user.onboarding_completed === 1,
   });
@@ -81,7 +83,13 @@ export const POST = withMetrics("/api/auth/passkey/login-verify", async (req: Ne
   trackEvent(user.id, "login");
   authEventsTotal.inc({ event: "login_success" });
 
-  const response = NextResponse.json({ user: toPublicUser(user) });
+  const response = NextResponse.json({
+    user: toPublicUser({
+      ...user,
+      plan: trial.plan,
+      plan_expires_at: trial.expired ? "" : user.plan_expires_at,
+    }),
+  });
   response.cookies.set(getSessionCookieConfig(token));
   response.cookies.set(getExpiredChallengeCookieConfig());
   return response;

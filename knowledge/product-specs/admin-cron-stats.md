@@ -18,7 +18,7 @@ Per-cron last-run, next-run, duration, status. Drives an alerting banner in admi
 | Library | [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts) | Registry. |
 
 ## 4. Data model
-- `cron_run_logs`.
+- `cron_executions` (via [`src/lib/cron-logging.ts`](../../src/lib/cron-logging.ts)).
 
 ## 5. API surface
 - GET aggregated stats.

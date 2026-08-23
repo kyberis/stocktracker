@@ -38,7 +38,7 @@ order a new user encounters them.
 | **Landing & Marketing** | landing page, blog (10 locales), demo, onboarding, pricing, SEO | [`seo-specialist`](.cursor/skills/seo-specialist/SKILL.md), [`sales`](.cursor/skills/sales/SKILL.md) |
 | **Snapshots & Math** | portfolio snapshots, TTWROR/XIRR, materialization, backfill | [`engineer-tools`](.cursor/skills/engineer-tools/SKILL.md), [`financial-calculations`](.cursor/skills/financial-calculations/SKILL.md) |
 | **Data Layer** | Turso/libSQL, schema, migrations | [`engineer-data`](.cursor/skills/engineer-data/SKILL.md) |
-| **Cron & Reliability** | 15 scheduled jobs, cron_executions logging, Grafana push | [`analytics-instrumentation`](.cursor/skills/analytics-instrumentation/SKILL.md) |
+| **Cron & Reliability** | Scheduled jobs in [`src/lib/cron-registry.ts`](src/lib/cron-registry.ts), cron_executions logging, Grafana push | [`analytics-instrumentation`](.cursor/skills/analytics-instrumentation/SKILL.md) |
 | **Device (trefolio Leaf)** | ESP32-S3 firmware, LVGL UI, OTA, pairing, interest waitlist | [`engineer-device`](.cursor/skills/engineer-device/SKILL.md), [`firmware-release`](.cursor/skills/firmware-release/SKILL.md) |
 | **Mobile** | Capacitor hosted mode, iOS/Android shells, PWA | [`engineer-mobile`](.cursor/skills/engineer-mobile/SKILL.md) |
 | **Platform** | i18n, theming, legal pages, release process | [`theme-parity`](.cursor/skills/theme-parity/SKILL.md), [`release-manager`](.cursor/skills/release-manager/SKILL.md) |

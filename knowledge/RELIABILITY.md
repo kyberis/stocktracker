@@ -30,10 +30,10 @@ must match `vercel.json`. Current set:
 | `x-post` | `*/15 * * * *` | Publish scheduled X/Twitter posts. |
 | `refresh-holdings` | `*/15 * * * *` | Update holding valuations and FX. |
 | `portfolio-snapshots` | `10 * * * *` | Compute and store portfolio value snapshots. |
-| `trial-invitations` | `0 10 * * *` | Invite eligible free users to 7-day Pro trial. |
-| `trial-expiration` | `0 * * * *` | Downgrade expired trials, send expiration email. |
+| `lifecycle-emails` | `0 10 * * *` | Trial invites + activation + winback in one daily job. |
+| `trial-expiration` | `0 9 * * *` | Daily backup: downgrade expired trials (primary path is check-on-login). |
 | `weekly-digest` | `0 8 * * 1` | AI-powered weekly portfolio digest (Mondays). |
-| `digest-email` | **paused** | Market digests no longer processed (was Gmail poll + AI rewrite). |
+| `digest-email` | **archived** | No-op stub; Gmail market-digest pipeline removed. |
 | `moat-sync` | `0 5 * * *` | Daily evaluate stale moat scores (on-demand `ensure-moat`). |
 
 All cron routes wrap their work in `withCronLogging()` which records a row in
