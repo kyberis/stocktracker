@@ -25,6 +25,9 @@ try {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Blog/docs SSG can exceed the default 60s under provider/Redis load; avoid
+  // killing the whole production build on a single slow page worker.
+  staticPageGenerationTimeout: 180,
   // react$ → shim adds React.cache for Next 14.2 dedupe-fetch on React 18. Do not alias react-dom
   // (Next maps it for ReactDOM.preload; forcing node_modules/react-dom breaks prerender).
   webpack: (config) => {

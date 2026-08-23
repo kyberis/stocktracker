@@ -3,6 +3,9 @@ import { randomUUID } from "crypto";
 import { verifySessionToken } from "@/lib/auth/session";
 import { isFeatureEnabled } from "@/lib/db";
 
+/** Avoid build-time SSG of this route (hits Turso via isFeatureEnabled). */
+export const dynamic = "force-dynamic";
+
 const APPLE_AUTH_URL = "https://appleid.apple.com/auth/authorize";
 
 function getRedirectUri(req: NextRequest): string {

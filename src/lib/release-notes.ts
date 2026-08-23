@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.219",
+    date: "2026-08-23",
+    title: "Production build SSG timeout fix",
+    titleTranslations: {
+      es: "Fix de timeout SSG en el build de producción",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Production deploys no longer fail when static generation of auth/blog pages exceeds 60s — force-dynamic on Apple/Google auth routes and a higher static generation timeout.",
+        translations: {
+          es: "Los deploys de producción ya no fallan cuando la generación estática de auth/blog supera 60s — force-dynamic en rutas Apple/Google y más tiempo de SSG.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.218",
     date: "2026-08-23",
     title: "Rate limits survive Redis outages",
