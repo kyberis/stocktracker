@@ -45,6 +45,7 @@ interface Props {
   refreshKey?: number;
   activeFilter?: AssetFilter;
   dayChangePctByType?: Partial<Record<AssetFilter, number>>;
+  allowPerTickerHistorical?: boolean;
 }
 
 function cellColor(cell: MatrixCell): string {
@@ -78,6 +79,7 @@ export default function PortfolioPerformanceMatrix({
   refreshKey,
   activeFilter = "all",
   dayChangePctByType,
+  allowPerTickerHistorical = true,
 }: Props) {
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
@@ -106,6 +108,7 @@ export default function PortfolioPerformanceMatrix({
     cashEntries,
     refreshKey,
     dayChangePctByType,
+    allowPerTickerHistorical,
   });
 
   const columns = useMemo(

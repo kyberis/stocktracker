@@ -67,7 +67,7 @@ export default function HomeRecommendationCard({
     });
   }, []);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { cacheOnly?: boolean }) => {
     if (demoMode || holdings.length === 0) {
       setData(null);
       setLoading(false);
@@ -75,7 +75,10 @@ export default function HomeRecommendationCard({
     }
     setLoading(true);
     try {
-      const res = await fetch(`/api/home-v2/recommendations${qs}`, { cache: "no-store" });
+      const params = new URLSearchParams();
+      if (activePortfolioId) params.set("portfolioId", activePortfolioId);
+      if (opts?.cacheOnly) params.set("cacheOnly", "1");
+      const res = await fetch(`/api/home-v2/recommendations?${params}`, { cache: "no-store" });
       if (!res.ok) {
         setData(null);
         return;
@@ -86,7 +89,7 @@ export default function HomeRecommendationCard({
     } finally {
       setLoading(false);
     }
-  }, [applyPayload, demoMode, holdings.length, qs]);
+  }, [applyPayload, demoMode, holdings.length, activePortfolioId]);
 
   useEffect(() => {
     if (initialRecommendation?.current) {
@@ -95,7 +98,8 @@ export default function HomeRecommendationCard({
       return;
     }
     if (!bootstrapSettled) return;
-    void load();
+    // Cold Home: cache-only — never live-recompute quotes on mount.
+    void load({ cacheOnly: true });
   }, [load, initialRecommendation, bootstrapSettled, applyPayload]);
 
   const current = data?.current ?? null;

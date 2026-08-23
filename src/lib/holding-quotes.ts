@@ -1,4 +1,8 @@
-import { getQuotesWithCache, type QuoteFetchOptions } from "@/lib/quote-cache";
+import {
+  getQuotesWithCache,
+  type QuoteCacheStats,
+  type QuoteFetchOptions,
+} from "@/lib/quote-cache";
 import { marketDataSymbolForHolding } from "@/lib/market-symbol";
 import { providerQuotesToQuoteMap } from "@/lib/aid/quotes-map";
 import type { ProviderQuoteResult } from "@/lib/api-providers/types";
@@ -10,6 +14,11 @@ type HoldingQuoteInput = {
   isin?: string | null;
 };
 
+export type ProviderQuotesForHoldingsResult = {
+  quotes: Record<string, ProviderQuoteResult>;
+  stats: QuoteCacheStats;
+};
+
 /**
  * Fetch Yahoo quotes for holdings using market-data symbols (HK pad, exchange
  * suffixes), then re-key results by the holding's stored `ticker` so AID /
@@ -19,21 +28,38 @@ export async function fetchProviderQuotesForHoldings(
   holdings: HoldingQuoteInput[],
   opts?: QuoteFetchOptions,
 ): Promise<Record<string, ProviderQuoteResult>> {
-  if (holdings.length === 0) return {};
+  const { quotes } = await fetchProviderQuotesForHoldingsWithStats(holdings, opts);
+  return quotes;
+}
+
+export async function fetchProviderQuotesForHoldingsWithStats(
+  holdings: HoldingQuoteInput[],
+  opts?: QuoteFetchOptions,
+): Promise<ProviderQuotesForHoldingsResult> {
+  if (holdings.length === 0) {
+    return { quotes: {}, stats: { hitCount: 0, missCount: 0 } };
+  }
 
   const pairs = holdings.map((h) => ({
     ticker: h.ticker,
     fetchKey: marketDataSymbolForHolding(h),
   }));
   const unique = [...new Set(pairs.flatMap((p) => [p.fetchKey, p.ticker].filter(Boolean)))];
-  const fetched = await getQuotesWithCache(unique, opts);
+  let stats: QuoteCacheStats = { hitCount: 0, missCount: 0 };
+  const fetched = await getQuotesWithCache(unique, {
+    ...opts,
+    onStats: (s) => {
+      stats = s;
+      opts?.onStats?.(s);
+    },
+  });
 
   const out: Record<string, ProviderQuoteResult> = {};
   for (const { ticker, fetchKey } of pairs) {
     const q = fetched[fetchKey] ?? fetched[ticker];
     if (q) out[ticker] = { ...q, symbol: ticker };
   }
-  return out;
+  return { quotes: out, stats };
 }
 
 export async function fetchQuoteMapForHoldings(

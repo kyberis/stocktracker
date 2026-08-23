@@ -38,12 +38,6 @@ import {
 type HeroMode = "simple" | "advanced";
 const HERO_MODE_KEY = "home_v2_hero_mode";
 
-function readHeroMode(): HeroMode {
-  if (typeof window === "undefined") return "simple";
-  const stored = window.localStorage.getItem(HERO_MODE_KEY);
-  return stored === "advanced" ? "advanced" : "simple";
-}
-
 const PortfolioHeroCard = dynamic(() => import("@/components/portfolio-v2/PortfolioHeroCard"), {
   ssr: false,
   loading: () => <div className="card h-[280px] animate-pulse rounded-xl bg-[color:var(--surface-soft)]" />,
@@ -83,7 +77,7 @@ export default function HomeV2Dashboard() {
   const { t } = useI18n();
   const track = useTrack();
   const isMobile = useIsMobileViewport();
-  const { holdings, cashEntries, isInitializing, demoMode } = usePortfolio();
+  const { holdings, cashEntries, isInitializing, demoMode, hydrateMarketData } = usePortfolio();
   const { gatedAdd } = usePortfolioCommand();
   // Aid briefing/feed/day-highlights all require a real session; demo has none.
   const aidEnabled = !isInitializing && !demoMode;
@@ -99,17 +93,23 @@ export default function HomeV2Dashboard() {
   const home = usePortfolioHomeData({ holdings, cashEntries: investmentCash });
   const [aiOpen, setAiOpen] = useState(false);
   const [warrenPrompt, setWarrenPrompt] = useState<string | undefined>();
+  // Always start simple — do not restore advanced from localStorage on mount
+  // (avoids history=all + txs on cold load). Preference is written on click.
   const [heroMode, setHeroMode] = useState<HeroMode>("simple");
   const [showFeedback, setShowFeedback] = useState(false);
   const [introDismissed, setIntroDismissed] = useState(false);
   const pageViewSent = useRef(false);
   const visitMarked = useRef(false);
   const returnTracked = useRef(false);
+  const hydratedBootstrapAsOf = useRef<string | null>(null);
   const showClassicLink = isLoaded && !!flags.classic_home;
 
   useEffect(() => {
-    setHeroMode(readHeroMode());
-  }, []);
+    const payload = bootstrap.data;
+    if (!payload?.quotes || hydratedBootstrapAsOf.current === payload.asOf) return;
+    hydratedBootstrapAsOf.current = payload.asOf;
+    hydrateMarketData(payload.quotes, payload.exchangeRates);
+  }, [bootstrap.data, hydrateMarketData]);
 
   function setAndPersistHeroMode(mode: HeroMode) {
     setHeroMode(mode);
@@ -267,6 +267,7 @@ export default function HomeV2Dashboard() {
                 refreshKey={refreshKey}
                 onRecalculate={handleRecalculate}
                 recalculating={recalculating}
+                allowPerTickerHistorical={false}
                 onOpenAi={() => {
                   recordPostIntroAction("warren");
                   setAiOpen(true);

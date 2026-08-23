@@ -53,6 +53,10 @@ beforeEach(() => {
       warrenNudge: null,
     },
     recommendation: null,
+    quotes: {},
+    exchangeRates: {},
+    quoteStats: { hitCount: 0, missCount: 0 },
+    holdingsCount: 0,
     asOf: "2026-08-23T00:00:00.000Z",
   });
 });
@@ -65,6 +69,7 @@ describe("GET /api/home-v2/bootstrap", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.aidStatus.briefing).toBeNull();
+    expect(res.headers.get("Server-Timing")).toContain("quoteHits");
     expect(mockedBootstrap).toHaveBeenCalledWith({
       userId: "u1",
       portfolioId: "p1",

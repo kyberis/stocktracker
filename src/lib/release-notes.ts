@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.221",
+    date: "2026-08-23",
+    title: "Home skips duplicate quote fetches",
+    titleTranslations: {
+      es: "Home evita cotizaciones duplicadas",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Home bootstrap now seeds PortfolioProvider quotes and FX so large portfolios avoid a second cold Yahoo fan-out; recommendations stay cache-only on mount, name enrichment is idle-batched, Advanced hero no longer auto-loads history on entry, and bootstrap exposes Server-Timing hit/miss counts.",
+        translations: {
+          es: "El bootstrap de Home ahora hidrata cotizaciones y FX en PortfolioProvider para que las carteras grandes no disparen un segundo fan-out frío de Yahoo; las recomendaciones quedan solo en caché al montar, el enriquecimiento de nombres va en lotes idle, el hero Advanced ya no carga historial al entrar, y bootstrap expone Server-Timing con hits/misses.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.220",
     date: "2026-08-23",
     title: "Faster Home for large portfolios",

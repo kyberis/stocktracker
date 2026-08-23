@@ -74,6 +74,14 @@ interface PortfolioContextType {
   refreshQuotes: () => Promise<void>;
   refreshSingleQuote: (ticker: string) => Promise<void>;
   refreshAlertedTickers: () => Promise<void>;
+  /**
+   * Seed quotes/FX from `/api/home-v2/bootstrap` so Home skips a duplicate
+   * foreground Yahoo fan-out when coverage is high enough.
+   */
+  hydrateMarketData: (
+    incomingQuotes: Record<string, QuoteData>,
+    incomingRates?: ExchangeRates,
+  ) => void;
   lastUpdated: Date | null;
   holdingsLastFetchedAt: Date | null;
   demoMode: boolean;
@@ -196,6 +204,10 @@ export function PortfolioProvider({
     if (stored) setActivePortfolio(stored);
   }, [demoMode, setActivePortfolio]);
   const fetchingRef = useRef(false);
+  /** When true, discard in-flight foreground fetchQuotes results (bootstrap won). */
+  const bootstrapHydratedRef = useRef(false);
+  const bootstrapBgRefreshTimer = useRef<number | null>(null);
+  const HYDRATE_COVERAGE_THRESHOLD = 0.9;
   const fetchPortfolios = useCallback(async (): Promise<PortfolioInfo[]> => {
     try {
       const res = await fetchWithAuthRedirect("/api/portfolios", { cache: "no-store" });
@@ -424,8 +436,10 @@ export function PortfolioProvider({
   );
 
   const fetchQuotes = useCallback(async (tickers: string[], options?: { background?: boolean }) => {
-    if (fetchingRef.current || tickers.length === 0) return;
+    if (tickers.length === 0) return;
     const { background = false } = options ?? {};
+    if (!background && bootstrapHydratedRef.current) return;
+    if (fetchingRef.current) return;
     fetchingRef.current = true;
     setIsRefreshing(true);
     if (!background) setError(null);
@@ -459,6 +473,9 @@ export function PortfolioProvider({
         Object.assign(allQuotes, data);
       }
 
+      // Bootstrap hydration won the race — keep bootstrap quotes for hero paint.
+      if (!background && bootstrapHydratedRef.current) return;
+
       const stockQuotes: Record<string, QuoteData> = {};
       const now = Date.now();
       const updatedAtByTicker: Record<string, number> = {};
@@ -473,6 +490,8 @@ export function PortfolioProvider({
       // Fetch FX after quotes so quote.currency (e.g. HKD) is included — not only displayCurrency
       const rates = await fetchExchangeRates(holdings, stockQuotes);
 
+      if (!background && bootstrapHydratedRef.current) return;
+
       setQuotes(stockQuotes);
       setQuoteUpdatedAt(updatedAtByTicker);
       setExchangeRates(rates);
@@ -480,7 +499,7 @@ export function PortfolioProvider({
       saveToStorage(RATES_CACHE_KEY, rates);
       setLastUpdated(new Date());
     } catch (err) {
-      if (!background) {
+      if (!background && !bootstrapHydratedRef.current) {
         const msg = err instanceof Error ? err.message : "Failed to fetch quotes";
         setError(msg === "rate_limited" ? "Rate limit reached. Retrying shortly..." : msg);
       }
@@ -489,7 +508,65 @@ export function PortfolioProvider({
       setIsRefreshing(false);
       fetchingRef.current = false;
     }
-  }, [getApiHeaders, buildFetchUrl, fetchExchangeRates, quoteRequestSymbol]);
+  }, [getApiHeaders, buildFetchUrl, fetchExchangeRates, quoteRequestSymbol, holdings]);
+
+  const hydrateMarketData = useCallback(
+    (incomingQuotes: Record<string, QuoteData>, incomingRates?: ExchangeRates) => {
+      if (demoMode) return;
+      const tickers = [...new Set(holdings.map((h) => h.ticker))];
+      const covered =
+        tickers.length === 0
+          ? 1
+          : tickers.filter((t) => incomingQuotes[t]?.regularMarketPrice != null).length /
+            tickers.length;
+
+      const now = Date.now();
+      const stamped: Record<string, QuoteData> = {};
+      const updatedAtByTicker: Record<string, number> = {};
+      for (const [ticker, q] of Object.entries(incomingQuotes)) {
+        stamped[ticker] = { ...q, fetchedAt: q.fetchedAt ?? now };
+        updatedAtByTicker[ticker] = stamped[ticker].fetchedAt!;
+      }
+
+      setQuotes((prev) => {
+        const next = { ...prev, ...stamped };
+        saveToStorage(QUOTES_CACHE_KEY, next);
+        return next;
+      });
+      setQuoteUpdatedAt((prev) => ({ ...prev, ...updatedAtByTicker }));
+      if (incomingRates && Object.keys(incomingRates).length > 0) {
+        setExchangeRates((prev) => {
+          const next = { ...prev, ...incomingRates };
+          saveToStorage(RATES_CACHE_KEY, next);
+          return next;
+        });
+      }
+      setLastUpdated(new Date());
+      setIsInitializing(false);
+      setIsRefreshing(false);
+
+      if (covered >= HYDRATE_COVERAGE_THRESHOLD) {
+        bootstrapHydratedRef.current = true;
+        if (bootstrapBgRefreshTimer.current != null) {
+          window.clearTimeout(bootstrapBgRefreshTimer.current);
+        }
+        bootstrapBgRefreshTimer.current = window.setTimeout(() => {
+          bootstrapHydratedRef.current = false;
+          const nextTickers = [...new Set(holdings.map((h) => h.ticker))];
+          if (nextTickers.length > 0) void fetchQuotes(nextTickers, { background: true });
+        }, 30_000);
+      }
+    },
+    [demoMode, holdings, fetchQuotes],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (bootstrapBgRefreshTimer.current != null) {
+        window.clearTimeout(bootstrapBgRefreshTimer.current);
+      }
+    };
+  }, []);
 
   const refreshQuotes = useCallback(async () => {
     const tickers = [...new Set(holdings.map((h) => h.ticker))];
@@ -721,6 +798,7 @@ export function PortfolioProvider({
   }, [cashEntries]);
 
   const enrichedNamesRef = useRef<Set<string>>(new Set());
+  const NAME_ENRICH_BATCH = 10;
 
   useEffect(() => {
     if (demoMode) return;
@@ -729,15 +807,57 @@ export function PortfolioProvider({
         !enrichedNamesRef.current.has(h.id) &&
         h.name === h.ticker &&
         quotes[h.ticker]?.shortName &&
-        quotes[h.ticker].shortName !== h.ticker
+        quotes[h.ticker].shortName !== h.ticker,
     );
     if (enrichable.length === 0) return;
 
-    for (const h of enrichable) {
-      enrichedNamesRef.current.add(h.id);
-      updateHolding(h.id, { name: quotes[h.ticker].shortName });
+    let cancelled = false;
+    let idleId: number | undefined;
+    let timeoutId: number | undefined;
+
+    const runBatch = () => {
+      if (cancelled) return;
+      const batch = enrichable.slice(0, NAME_ENRICH_BATCH);
+      for (const h of batch) {
+        enrichedNamesRef.current.add(h.id);
+        void updateHolding(h.id, { name: quotes[h.ticker].shortName });
+      }
+      const rest = enrichable.slice(NAME_ENRICH_BATCH);
+      if (rest.length === 0) return;
+      // Schedule remaining batches on subsequent idle slots.
+      const scheduleMore = () => {
+        if (cancelled) return;
+        const next = rest.filter((h) => !enrichedNamesRef.current.has(h.id));
+        if (next.length === 0) return;
+        const chunk = next.slice(0, NAME_ENRICH_BATCH);
+        for (const h of chunk) {
+          enrichedNamesRef.current.add(h.id);
+          void updateHolding(h.id, { name: quotes[h.ticker].shortName });
+        }
+        if (next.length > NAME_ENRICH_BATCH) {
+          const ric = window.requestIdleCallback?.bind(window);
+          if (ric) ric(scheduleMore, { timeout: 4000 });
+          else window.setTimeout(scheduleMore, 500);
+        }
+      };
+      const ric = window.requestIdleCallback?.bind(window);
+      if (ric) ric(scheduleMore, { timeout: 4000 });
+      else window.setTimeout(scheduleMore, 500);
+    };
+
+    const ric = window.requestIdleCallback?.bind(window);
+    if (ric) {
+      idleId = ric(runBatch, { timeout: 2500 });
+    } else {
+      timeoutId = window.setTimeout(runBatch, 800);
     }
-  }, [quotes, holdings, updateHolding]);
+
+    return () => {
+      cancelled = true;
+      if (idleId != null && window.cancelIdleCallback) window.cancelIdleCallback(idleId);
+      if (timeoutId != null) window.clearTimeout(timeoutId);
+    };
+  }, [quotes, holdings, updateHolding, demoMode]);
 
   const refreshAlertedTickers = useCallback(async () => {
     try {
@@ -854,6 +974,7 @@ export function PortfolioProvider({
       refreshQuotes: demoMode ? noop : refreshQuotes,
       refreshSingleQuote: demoMode ? noop : refreshSingleQuote,
       refreshAlertedTickers: demoMode ? noop : refreshAlertedTickers,
+      hydrateMarketData: demoMode ? () => {} : hydrateMarketData,
       lastUpdated,
       holdingsLastFetchedAt,
       demoMode: !!demoMode,
@@ -869,7 +990,7 @@ export function PortfolioProvider({
       isLoading, isInitializing, isRefreshing, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, mutationVersion, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, moveToPortfolio, refreshHoldings, refreshQuotes, refreshSingleQuote,
-      refreshAlertedTickers, lastUpdated, holdingsLastFetchedAt, demoMode, noop, noopGoal,
+      refreshAlertedTickers, hydrateMarketData, lastUpdated, holdingsLastFetchedAt, demoMode, noop, noopGoal,
       goals, saveGoalCb, deleteGoalCb, fetchGoals,
     ]
   );

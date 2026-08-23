@@ -23,36 +23,41 @@ Baseline inventory of what authenticated Home (`/`) loads on entry, and which wo
 1. `GET /api/portfolios`
 2. `GET /api/holdings` + `GET /api/cash` (unbounded)
 3. `GET /api/alerts/tickers`, `GET /api/goals` (fire-and-forget)
-4. Quote batches via `GET /api/quote` → then FX
+4. Quote batches via `GET /api/quote` → then FX — **skipped on Home cold path when bootstrap hydrates ≥90% coverage**
 5. localStorage quotes/FX for fast revisit paint
+6. Name enrichment: idle + batches of ≤10 `PUT`s (not a synchronous storm)
 
 ### Home bootstrap (preferred path)
 
-`GET /api/home-v2/bootstrap?portfolioId=` — **one** holdings list + **one** quote map, then:
+`GET /api/home-v2/bootstrap?portfolioId=` — **one** holdings list + **one** quote map + FX, then:
 
 - Day highlights (reuse quotes)
 - AID status **without** LLM briefing
 - Recommendation tip **from weekly cache only** (no live quote recompute)
+- Returns `quotes` + `exchangeRates` for `PortfolioProvider.hydrateMarketData`
+- `Server-Timing`: `dur`, `quoteHits`, `quoteMisses`, `holdings`
+
+Contract: Home calls `hydrateMarketData` on bootstrap success; if coverage ≥ 90%, discard competing foreground `/api/quote` fan-out and schedule a background refresh at 30s.
 
 Lazy follow-ups:
 
 - `GET /api/aid/status?includeBriefing=1` — LLM summary (Redis day cache)
 - `GET /api/aid/feed` — deferred until idle / near viewport
 - `GET /api/portfolio-news` — same deferral on Home compact feed
+- Recommendations cold GET uses `?cacheOnly=1` (live only via manual refresh CTA)
 - Catalysts / digests / MarketAndCash remain section-local
 
 ### Advanced hero only
 
-`range=all` history + full transactions (+ optional per-ticker historical). Not on simple hero default.
+Starts **simple** each session (does not restore advanced from localStorage on mount). History `range=all` + txs load only after the user clicks Advanced. Aggregated “all portfolios” view on Home skips N× `/api/historical` (`allowPerTickerHistorical={false}`).
 
 ## Ranked bottlenecks (large N tickers)
 
-1. Repeated full-book quote fetches across parallel home APIs (mitigated by bootstrap + `/api/quote` → `getQuotesWithCache` coalesce)
-2. Cold Yahoo O(N) per symbol (Redis TTL 30s; in-flight coalesce per isolate)
-3. LLM on every AID status visit (deferred + day cache)
-4. Cold AID feed generation (deferred off critical path)
-5. Unbounded holdings/alerts payloads
-6. Name-enrichment PATCH storms after first quote load
+1. Cold Yahoo O(N) per symbol on bootstrap (Redis TTL 30s; in-flight coalesce) — single dominant fan-out when hydrate wins
+2. LLM briefing (deferred + day cache)
+3. Cold AID feed generation (deferred off critical path)
+4. Unbounded holdings/alerts payloads
+5. Advanced hero history/txs (session-gated)
 
 ## Related
 

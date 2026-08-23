@@ -18,15 +18,25 @@ export const GET = withMetrics("/api/home-v2/bootstrap", async (req: NextRequest
   }
 
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
+  const started = Date.now();
   const payload = await buildHomeBootstrap({
     userId: session.userId,
     portfolioId,
   });
+  const dur = Date.now() - started;
+
+  const timing = [
+    `home-bootstrap;dur=${dur};desc="home-v2 bootstrap"`,
+    `quoteHits;desc="redis quote hits";dur=${payload.quoteStats.hitCount}`,
+    `quoteMisses;desc="redis quote misses";dur=${payload.quoteStats.missCount}`,
+    `holdings;desc="holdings count";dur=${payload.holdingsCount}`,
+  ].join(", ");
 
   return NextResponse.json(payload, {
     headers: {
       "Cache-Control": "private, no-store",
-      "Server-Timing": `home-bootstrap;desc="home-v2 bootstrap"`,
+      "Server-Timing": timing,
+      "Access-Control-Expose-Headers": "Server-Timing",
     },
   });
 });

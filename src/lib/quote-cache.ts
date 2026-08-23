@@ -12,6 +12,13 @@ export const DEFAULT_QUOTE_FETCH_CONCURRENCY = 8;
 const inflightQuotes = new Map<string, Promise<ProviderQuoteResult>>();
 const inflightRates = new Map<string, Promise<number>>();
 
+export type QuoteCacheStats = {
+  /** Symbols found in Redis before Yahoo. */
+  hitCount: number;
+  /** Symbols that needed a Yahoo resolution (including failed). */
+  missCount: number;
+};
+
 export type QuoteFetchOptions = {
   /** Max in-flight Yahoo resolutions. Default {@link DEFAULT_QUOTE_FETCH_CONCURRENCY}. */
   concurrency?: number;
@@ -21,6 +28,8 @@ export type QuoteFetchOptions = {
    * callers can fall back to stored `valueInEUR` for the rest.
    */
   deadlineMs?: number;
+  /** Optional callback with Redis hit/miss counts for Server-Timing. */
+  onStats?: (stats: QuoteCacheStats) => void;
 };
 
 // ---------------------------------------------------------------------------
@@ -175,9 +184,13 @@ export async function getQuotesWithCache(
   tickers: string[],
   opts?: QuoteFetchOptions,
 ): Promise<Record<string, ProviderQuoteResult>> {
-  if (tickers.length === 0) return {};
+  if (tickers.length === 0) {
+    opts?.onStats?.({ hitCount: 0, missCount: 0 });
+    return {};
+  }
 
   const { hits, misses } = await getCachedQuotes(tickers);
+  opts?.onStats?.({ hitCount: Object.keys(hits).length, missCount: misses.length });
   if (misses.length === 0) return hits;
 
   const yahoo = new YahooProvider();

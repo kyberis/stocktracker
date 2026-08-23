@@ -41,9 +41,11 @@ export const GET = withMetrics("/api/home-v2/recommendations", async (req: NextR
   if (!session) return json401(req, { source: "api/home-v2/recommendations", reason: "no_session" });
 
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
+  const cacheOnly = req.nextUrl.searchParams.get("cacheOnly") === "1";
   const result = await resolveRecommendationQueue({
     userId: session.userId,
     portfolioId,
+    cacheOnly,
   });
 
   return NextResponse.json(await withManualMeta(session.userId, portfolioId, result));
