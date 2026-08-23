@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.220",
+    date: "2026-08-23",
+    title: "Faster page loads under DB latency",
+    titleTranslations: {
+      es: "Páginas más rápidas con latencia de BD",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Platform settings (ads/GA) used by every page now use a short timeout and in-memory cache, so Turso latency no longer stalls login, landing, or portfolio shell load.",
+        translations: {
+          es: "Los settings de plataforma (ads/GA) de cada página usan timeout corto y caché en memoria, para que la latencia de Turso no bloquee login, landing ni la carga del shell de cartera.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.219",
     date: "2026-08-23",
     title: "Production build SSG timeout fix",

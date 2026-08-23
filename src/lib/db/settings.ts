@@ -423,19 +423,52 @@ export function getGlobalOpenAIApiKey(): string {
   );
 }
 
+const PLATFORM_SETTING_CACHE_TTL_MS = 60_000;
+const PLATFORM_SETTING_TIMEOUT_MS = 1_500;
+
+const platformSettingCache = new Map<string, { value: string; expiresAt: number }>();
+
+/** Test/admin helper — drop in-memory settings cache. */
+export function clearPlatformSettingCache(): void {
+  platformSettingCache.clear();
+}
+
+/**
+ * Fast, fail-soft platform settings read.
+ * Root layout calls this on every HTML page — if Turso hangs, pages stall until
+ * the function timeout. Cache + short race keep landing/login/home responsive.
+ */
 export async function getPlatformSetting(key: string): Promise<string> {
+  const cached = platformSettingCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
   try {
-    const client = await ensureInitialized();
-    const result = await client.execute({
-      sql: "SELECT value FROM platform_settings WHERE key = ?",
-      args: [key],
+    const value = await Promise.race([
+      (async () => {
+        const client = await ensureInitialized();
+        const result = await client.execute({
+          sql: "SELECT value FROM platform_settings WHERE key = ?",
+          args: [key],
+        });
+        if (result.rows.length === 0) return "";
+        return str(result.rows[0].value);
+      })(),
+      new Promise<string>((_, reject) => {
+        setTimeout(() => reject(new Error("platform_setting_timeout")), PLATFORM_SETTING_TIMEOUT_MS);
+      }),
+    ]);
+    platformSettingCache.set(key, {
+      value,
+      expiresAt: Date.now() + PLATFORM_SETTING_CACHE_TTL_MS,
     });
-    if (result.rows.length === 0) return "";
-    return str(result.rows[0].value);
+    return value;
   } catch {
     /* During `next build` static generation, many pages load the root layout in parallel and
-     * can overwhelm or drop the Turso connection (ECONNRESET). Fall back to env defaults
-     * via empty string so prerender can complete; runtime requests retry on the next request. */
+     * can overwhelm or drop the Turso connection (ECONNRESET). Also covers hangs/timeouts:
+     * prefer stale cache, else empty so prerender/runtime can complete with env defaults. */
+    if (cached) return cached.value;
     return "";
   }
 }
@@ -446,6 +479,10 @@ export async function setPlatformSetting(key: string, value: string): Promise<vo
     sql: `INSERT INTO platform_settings (key, value) VALUES (?, ?)
           ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
     args: [key, value],
+  });
+  platformSettingCache.set(key, {
+    value,
+    expiresAt: Date.now() + PLATFORM_SETTING_CACHE_TTL_MS,
   });
 }
 

@@ -24,6 +24,7 @@ vi.mock("@/lib/crypto", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mockExecute.mockReset();
+  settings.clearPlatformSettingCache();
 });
 
 const DEFAULT_SETTINGS = {
@@ -355,6 +356,24 @@ describe("settings", () => {
       const result = await settings.getPlatformSetting("missing_key");
 
       expect(result).toBe("");
+    });
+
+    it("returns stale cache when Turso hangs past timeout", async () => {
+      vi.useFakeTimers();
+      try {
+        mockExecute.mockResolvedValue({ rows: [{ value: "cached-value" }] });
+        expect(await settings.getPlatformSetting("hang_key")).toBe("cached-value");
+
+        // Expire TTL so the next read must revalidate, but keep the stale entry.
+        vi.advanceTimersByTime(61_000);
+        mockExecute.mockImplementation(() => new Promise(() => {}));
+
+        const pending = settings.getPlatformSetting("hang_key");
+        await vi.advanceTimersByTimeAsync(1_600);
+        expect(await pending).toBe("cached-value");
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
