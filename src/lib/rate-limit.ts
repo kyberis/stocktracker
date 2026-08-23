@@ -37,6 +37,41 @@ function dayWindowKey(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * Prefer Upstash when configured; on any Redis failure (quota, timeout,
+ * network) fall back to Turso so auth and API routes stay available.
+ */
+async function withUpstashFallback(
+  label: string,
+  upstash: () => Promise<RateLimitResult | null>,
+  turso: () => Promise<RateLimitResult>,
+): Promise<RateLimitResult> {
+  try {
+    const result = await upstash();
+    if (result) return result;
+  } catch (err) {
+    console.error(
+      `Upstash rate limit failed (${label}), falling back to Turso:`,
+      err instanceof Error ? err.message : err,
+    );
+  }
+  return turso();
+}
+
+function fromUpstashResult(result: {
+  success: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+}): RateLimitResult {
+  return {
+    allowed: result.success,
+    remaining: result.remaining,
+    limit: result.limit,
+    resetAt: new Date(result.reset).toISOString(),
+  };
+}
+
 // ── Alpha Vantage ────────────────────────────────────────────────
 
 async function checkAvRateLimitTurso(userId: string): Promise<RateLimitResult> {
@@ -52,17 +87,15 @@ async function checkAvRateLimitTurso(userId: string): Promise<RateLimitResult> {
 }
 
 export async function checkAvRateLimit(userId: string): Promise<RateLimitResult> {
-  const limiter = avRateLimiter();
-  if (limiter) {
-    const { success, limit, remaining, reset } = await limiter.limit(userId);
-    return {
-      allowed: success,
-      remaining,
-      limit,
-      resetAt: new Date(reset).toISOString(),
-    };
-  }
-  return checkAvRateLimitTurso(userId);
+  return withUpstashFallback(
+    "av",
+    async () => {
+      const limiter = avRateLimiter();
+      if (!limiter) return null;
+      return fromUpstashResult(await limiter.limit(userId));
+    },
+    () => checkAvRateLimitTurso(userId),
+  );
 }
 
 /**
@@ -88,17 +121,15 @@ async function checkFmpRateLimitTurso(userId: string): Promise<RateLimitResult> 
 }
 
 export async function checkFmpRateLimit(userId: string): Promise<RateLimitResult> {
-  const limiter = fmpRateLimiter();
-  if (limiter) {
-    const { success, limit, remaining, reset } = await limiter.limit(userId);
-    return {
-      allowed: success,
-      remaining,
-      limit,
-      resetAt: new Date(reset).toISOString(),
-    };
-  }
-  return checkFmpRateLimitTurso(userId);
+  return withUpstashFallback(
+    "fmp",
+    async () => {
+      const limiter = fmpRateLimiter();
+      if (!limiter) return null;
+      return fromUpstashResult(await limiter.limit(userId));
+    },
+    () => checkFmpRateLimitTurso(userId),
+  );
 }
 
 export async function recordFmpUsageAsync(userId: string, callCount: number): Promise<void> {
@@ -158,17 +189,15 @@ async function checkAiImportRateLimitTurso(userId: string): Promise<RateLimitRes
 }
 
 export async function checkAiImportRateLimit(userId: string): Promise<RateLimitResult> {
-  const limiter = aiImportRateLimiter();
-  if (limiter) {
-    const { success, limit, remaining, reset } = await limiter.limit(userId);
-    return {
-      allowed: success,
-      remaining,
-      limit,
-      resetAt: new Date(reset).toISOString(),
-    };
-  }
-  return checkAiImportRateLimitTurso(userId);
+  return withUpstashFallback(
+    "ai-import",
+    async () => {
+      const limiter = aiImportRateLimiter();
+      if (!limiter) return null;
+      return fromUpstashResult(await limiter.limit(userId));
+    },
+    () => checkAiImportRateLimitTurso(userId),
+  );
 }
 
 // ── Support Chat ──────────────────────────────────────────────
@@ -216,24 +245,26 @@ export function getClientIp(req: NextRequest): string {
   );
 }
 
-export async function checkSignupRateLimit(ip: string): Promise<RateLimitResult> {
-  const limiter = signupRateLimiter();
-  if (limiter) {
-    const { success, limit, remaining, reset } = await limiter.limit(ip);
-    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
-  }
+async function checkSignupRateLimitTurso(ip: string): Promise<RateLimitResult> {
   const limit = PLATFORM_LIMITS.AUTH_SIGNUP_PER_IP_PER_HOUR;
   const windowKey = `signup:${new Date().toISOString().slice(0, 13)}`;
   const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "alphavantage", limit, windowKey);
   return { allowed, remaining, limit, resetAt };
 }
 
-export async function checkLoginRateLimit(ip: string): Promise<RateLimitResult> {
-  const limiter = loginRateLimiter();
-  if (limiter) {
-    const { success, limit, remaining, reset } = await limiter.limit(ip);
-    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
-  }
+export async function checkSignupRateLimit(ip: string): Promise<RateLimitResult> {
+  return withUpstashFallback(
+    "signup",
+    async () => {
+      const limiter = signupRateLimiter();
+      if (!limiter) return null;
+      return fromUpstashResult(await limiter.limit(ip));
+    },
+    () => checkSignupRateLimitTurso(ip),
+  );
+}
+
+async function checkLoginRateLimitTurso(ip: string): Promise<RateLimitResult> {
   const limit = PLATFORM_LIMITS.AUTH_LOGIN_PER_IP_PER_15MIN;
   const now = new Date();
   const quarter = Math.floor(now.getMinutes() / 15);
@@ -242,20 +273,39 @@ export async function checkLoginRateLimit(ip: string): Promise<RateLimitResult> 
   return { allowed, remaining, limit, resetAt };
 }
 
+export async function checkLoginRateLimit(ip: string): Promise<RateLimitResult> {
+  return withUpstashFallback(
+    "login",
+    async () => {
+      const limiter = loginRateLimiter();
+      if (!limiter) return null;
+      return fromUpstashResult(await limiter.limit(ip));
+    },
+    () => checkLoginRateLimitTurso(ip),
+  );
+}
+
 // ── Device bearer-token auth rate limiting ──────────────────
 
-export async function checkDeviceAuthRateLimit(ip: string): Promise<RateLimitResult> {
-  const limiter = deviceAuthRateLimiter();
-  if (limiter) {
-    const { success, limit, remaining, reset } = await limiter.limit(ip);
-    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
-  }
+async function checkDeviceAuthRateLimitTurso(ip: string): Promise<RateLimitResult> {
   const limit = PLATFORM_LIMITS.DEVICE_AUTH_PER_IP_PER_15MIN;
   const now = new Date();
   const quarter = Math.floor(now.getMinutes() / 15);
   const windowKey = `device-auth:${now.toISOString().slice(0, 13)}:${quarter}`;
   const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "alphavantage", limit, windowKey);
   return { allowed, remaining, limit, resetAt };
+}
+
+export async function checkDeviceAuthRateLimit(ip: string): Promise<RateLimitResult> {
+  return withUpstashFallback(
+    "device-auth",
+    async () => {
+      const limiter = deviceAuthRateLimiter();
+      if (!limiter) return null;
+      return fromUpstashResult(await limiter.limit(ip));
+    },
+    () => checkDeviceAuthRateLimitTurso(ip),
+  );
 }
 
 // ── Global OpenAI monthly call cap ──────────────────────────
@@ -293,41 +343,62 @@ export async function incrementGlobalAiTokens(tokens: number): Promise<void> {
 
 // ── Public (unauthenticated) /analisis rate limiting ────────────
 
-export async function checkPublicSearchRateLimit(ip: string): Promise<RateLimitResult> {
-  const limiter = publicSearchRateLimiter();
-  if (limiter) {
-    const { success, limit, remaining, reset } = await limiter.limit(ip);
-    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
-  }
+async function checkPublicSearchRateLimitTurso(ip: string): Promise<RateLimitResult> {
   const limit = PLATFORM_LIMITS.PUBLIC_SEARCH_PER_IP_PER_MINUTE;
   const windowKey = `public-search:${minuteWindowKey()}`;
   const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "public_search", limit, windowKey);
   return { allowed, remaining, limit, resetAt };
 }
 
-export async function checkPublicAnalysisReadRateLimit(ip: string): Promise<RateLimitResult> {
-  const limiter = publicAnalysisReadRateLimiter();
-  if (limiter) {
-    const { success, limit, remaining, reset } = await limiter.limit(ip);
-    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
-  }
+export async function checkPublicSearchRateLimit(ip: string): Promise<RateLimitResult> {
+  return withUpstashFallback(
+    "public-search",
+    async () => {
+      const limiter = publicSearchRateLimiter();
+      if (!limiter) return null;
+      return fromUpstashResult(await limiter.limit(ip));
+    },
+    () => checkPublicSearchRateLimitTurso(ip),
+  );
+}
+
+async function checkPublicAnalysisReadRateLimitTurso(ip: string): Promise<RateLimitResult> {
   const limit = PLATFORM_LIMITS.PUBLIC_ANALYSIS_READ_PER_IP_PER_MINUTE;
   const windowKey = `public-analysis-read:${minuteWindowKey()}`;
   const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "public_analysis_read", limit, windowKey);
   return { allowed, remaining, limit, resetAt };
 }
 
-export async function checkPublicAnalysisBuildRateLimit(ip: string): Promise<RateLimitResult> {
-  const limiter = publicAnalysisBuildRateLimiter();
-  if (limiter) {
-    const { success, limit, remaining, reset } = await limiter.limit(ip);
-    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
-  }
+export async function checkPublicAnalysisReadRateLimit(ip: string): Promise<RateLimitResult> {
+  return withUpstashFallback(
+    "public-analysis-read",
+    async () => {
+      const limiter = publicAnalysisReadRateLimiter();
+      if (!limiter) return null;
+      return fromUpstashResult(await limiter.limit(ip));
+    },
+    () => checkPublicAnalysisReadRateLimitTurso(ip),
+  );
+}
+
+async function checkPublicAnalysisBuildRateLimitTurso(ip: string): Promise<RateLimitResult> {
   const limit = PLATFORM_LIMITS.PUBLIC_ANALYSIS_BUILD_PER_IP_PER_HOUR;
   const now = new Date();
   const windowKey = `public-analysis-build:${now.toISOString().slice(0, 13)}`;
   const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "public_analysis_build", limit, windowKey);
   return { allowed, remaining, limit, resetAt };
+}
+
+export async function checkPublicAnalysisBuildRateLimit(ip: string): Promise<RateLimitResult> {
+  return withUpstashFallback(
+    "public-analysis-build",
+    async () => {
+      const limiter = publicAnalysisBuildRateLimiter();
+      if (!limiter) return null;
+      return fromUpstashResult(await limiter.limit(ip));
+    },
+    () => checkPublicAnalysisBuildRateLimitTurso(ip),
+  );
 }
 
 // ── Global daily budget for anonymous first-time ticker builds ──
