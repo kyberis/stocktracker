@@ -292,7 +292,8 @@ async function checkDeviceAuthRateLimitTurso(ip: string): Promise<RateLimitResul
   const now = new Date();
   const quarter = Math.floor(now.getMinutes() / 15);
   const windowKey = `device-auth:${now.toISOString().slice(0, 13)}:${quarter}`;
-  const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "alphavantage", limit, windowKey);
+  // Dedicated provider key — do not share "alphavantage" with AV user quotas.
+  const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "device_auth", limit, windowKey);
   return { allowed, remaining, limit, resetAt };
 }
 

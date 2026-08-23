@@ -6,8 +6,22 @@ import type { ProviderQuoteResult } from "@/lib/api-providers/types";
 const QUOTE_TTL = 30;
 const FX_TTL = 60;
 
+/** Default parallel Yahoo quote fetches when Redis misses (cold or over quota). */
+export const DEFAULT_QUOTE_FETCH_CONCURRENCY = 8;
+
 const inflightQuotes = new Map<string, Promise<ProviderQuoteResult>>();
 const inflightRates = new Map<string, Promise<number>>();
+
+export type QuoteFetchOptions = {
+  /** Max in-flight Yahoo resolutions. Default {@link DEFAULT_QUOTE_FETCH_CONCURRENCY}. */
+  concurrency?: number;
+  /**
+   * Stop starting new Yahoo fetches after this many ms from call start.
+   * Already in-flight work still finishes. Partial results are returned so
+   * callers can fall back to stored `valueInEUR` for the rest.
+   */
+  deadlineMs?: number;
+};
 
 // ---------------------------------------------------------------------------
 // Cache read primitives
@@ -126,13 +140,40 @@ function coalesce<T>(
   return promise;
 }
 
+/**
+ * Run `worker` over `items` with at most `concurrency` in flight.
+ * `shouldStop` is checked before starting each item (in-flight keep running).
+ */
+export async function mapPool<T>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T) => Promise<void>,
+  shouldStop?: () => boolean,
+): Promise<void> {
+  if (items.length === 0) return;
+  const limit = Math.max(1, Math.min(concurrency, items.length));
+  let next = 0;
+
+  async function runWorker(): Promise<void> {
+    while (true) {
+      if (shouldStop?.()) return;
+      const i = next++;
+      if (i >= items.length) return;
+      await worker(items[i]!);
+    }
+  }
+
+  await Promise.all(Array.from({ length: limit }, () => runWorker()));
+}
+
 // ---------------------------------------------------------------------------
 // Full fetch-through helpers (cache → Yahoo → write-through)
 // Used by server-side rendering in Phase 2; includes coalescing.
 // ---------------------------------------------------------------------------
 
 export async function getQuotesWithCache(
-  tickers: string[]
+  tickers: string[],
+  opts?: QuoteFetchOptions,
 ): Promise<Record<string, ProviderQuoteResult>> {
   if (tickers.length === 0) return {};
 
@@ -141,9 +182,16 @@ export async function getQuotesWithCache(
 
   const yahoo = new YahooProvider();
   const fetched: Record<string, ProviderQuoteResult> = {};
+  const concurrency = opts?.concurrency ?? DEFAULT_QUOTE_FETCH_CONCURRENCY;
+  const deadlineAt =
+    typeof opts?.deadlineMs === "number" && opts.deadlineMs > 0
+      ? Date.now() + opts.deadlineMs
+      : Infinity;
 
-  await Promise.all(
-    misses.map(async (symbol) => {
+  await mapPool(
+    misses,
+    concurrency,
+    async (symbol) => {
       try {
         const quote = await coalesce(symbol, inflightQuotes, async () => {
           const resolved = await resolveYahooQuote(yahoo, symbol);
@@ -159,7 +207,8 @@ export async function getQuotesWithCache(
           err instanceof Error ? err.message : err
         );
       }
-    })
+    },
+    () => Date.now() >= deadlineAt,
   );
 
   if (Object.keys(fetched).length > 0) {
@@ -170,7 +219,8 @@ export async function getQuotesWithCache(
 }
 
 export async function getRatesWithCache(
-  pairs: string[]
+  pairs: string[],
+  opts?: QuoteFetchOptions,
 ): Promise<Record<string, number>> {
   if (pairs.length === 0) return {};
 
@@ -179,9 +229,16 @@ export async function getRatesWithCache(
 
   const yahoo = new YahooProvider();
   const fetched: Record<string, number> = {};
+  const concurrency = opts?.concurrency ?? DEFAULT_QUOTE_FETCH_CONCURRENCY;
+  const deadlineAt =
+    typeof opts?.deadlineMs === "number" && opts.deadlineMs > 0
+      ? Date.now() + opts.deadlineMs
+      : Infinity;
 
-  await Promise.all(
-    misses.map(async (pair) => {
+  await mapPool(
+    misses,
+    concurrency,
+    async (pair) => {
       const from = pair.substring(0, 3).toUpperCase();
       const to = pair.substring(3).toUpperCase();
       if (from.length !== 3 || to.length !== 3) return;
@@ -197,7 +254,8 @@ export async function getRatesWithCache(
           err instanceof Error ? err.message : err
         );
       }
-    })
+    },
+    () => Date.now() >= deadlineAt,
   );
 
   const redis = getRedisClient();
