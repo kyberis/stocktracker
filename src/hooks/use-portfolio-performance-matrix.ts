@@ -25,6 +25,11 @@ export interface UsePortfolioPerformanceMatrixArgs {
   cashEntries: CashEntry[];
   refreshKey?: number;
   dayChangePctByType?: Partial<Record<AssetFilter, number>>;
+  /**
+   * When false, skip O(N) per-ticker historical fetches for the aggregated
+   * "all portfolios" view. Default true.
+   */
+  allowPerTickerHistorical?: boolean;
 }
 
 export function usePortfolioPerformanceMatrix({
@@ -32,6 +37,7 @@ export function usePortfolioPerformanceMatrix({
   cashEntries,
   refreshKey = 0,
   dayChangePctByType: dayChangePctProp,
+  allowPerTickerHistorical = true,
 }: UsePortfolioPerformanceMatrixArgs) {
   const { exchangeRates, quotes, activePortfolioCurrency, activePortfolioId, demoMode } = usePortfolio();
   const { user } = useAuth();
@@ -176,7 +182,12 @@ export function usePortfolioPerformanceMatrix({
   const [historicalRows, setHistoricalRows] = useState<MatrixRow[] | null>(null);
 
   useEffect(() => {
-    if (demoMode || activePortfolioId != null || holdings.length === 0) {
+    if (
+      demoMode ||
+      !allowPerTickerHistorical ||
+      activePortfolioId != null ||
+      holdings.length === 0
+    ) {
       setHistoricalRows(null);
       return;
     }
@@ -220,6 +231,7 @@ export function usePortfolioPerformanceMatrix({
     };
   }, [
     activePortfolioId,
+    allowPerTickerHistorical,
     holdings,
     exchangeRates,
     baseCurrency,

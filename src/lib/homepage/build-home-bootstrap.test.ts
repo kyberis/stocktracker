@@ -11,6 +11,7 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/lib/holding-quotes", () => ({
   fetchProviderQuotesForHoldings: vi.fn(),
+  fetchProviderQuotesForHoldingsWithStats: vi.fn(),
 }));
 
 vi.mock("@/lib/aid/build-status", () => ({
@@ -23,19 +24,21 @@ vi.mock("@/lib/homepage/build-day-highlights", () => ({
 
 vi.mock("@/lib/quote-cache", () => ({
   getQuotesWithCache: vi.fn(),
-  getRatesWithCache: vi.fn(),
+  getRatesWithCache: vi.fn().mockResolvedValue({ EURUSD: 1.1 }),
 }));
 
 import { listHoldings, getUserSettings, getRecommendationCache, listRecommendationStates } from "@/lib/db";
-import { fetchProviderQuotesForHoldings } from "@/lib/holding-quotes";
+import { fetchProviderQuotesForHoldingsWithStats } from "@/lib/holding-quotes";
 import { buildAidStatus } from "@/lib/aid/build-status";
 import { buildDayHighlightsPayload } from "@/lib/homepage/build-day-highlights";
+import { getRatesWithCache } from "@/lib/quote-cache";
 import { buildHomeBootstrap } from "./build-home-bootstrap";
 import { resolveRecommendationQueue } from "./resolve-recommendation-queue";
 
 const mockedHoldings = vi.mocked(listHoldings);
 const mockedSettings = vi.mocked(getUserSettings);
-const mockedQuotes = vi.mocked(fetchProviderQuotesForHoldings);
+const mockedQuotes = vi.mocked(fetchProviderQuotesForHoldingsWithStats);
+const mockedRates = vi.mocked(getRatesWithCache);
 const mockedStatus = vi.mocked(buildAidStatus);
 const mockedHighlights = vi.mocked(buildDayHighlightsPayload);
 const mockedCache = vi.mocked(getRecommendationCache);
@@ -53,19 +56,23 @@ beforeEach(() => {
   ] as never);
   mockedSettings.mockResolvedValue({ language: "en", defaultCurrency: "EUR" } as never);
   mockedQuotes.mockResolvedValue({
-    AAPL: {
-      symbol: "AAPL",
-      shortName: "Apple",
-      regularMarketPrice: 100,
-      regularMarketChange: 1,
-      regularMarketChangePercent: 1,
-      currency: "USD",
-      regularMarketPreviousClose: 99,
-      fiftyTwoWeekHigh: 200,
-      fiftyTwoWeekLow: 50,
-      marketCap: 1,
+    quotes: {
+      AAPL: {
+        symbol: "AAPL",
+        shortName: "Apple",
+        regularMarketPrice: 100,
+        regularMarketChange: 1,
+        regularMarketChangePercent: 1,
+        currency: "USD",
+        regularMarketPreviousClose: 99,
+        fiftyTwoWeekHigh: 200,
+        fiftyTwoWeekLow: 50,
+        marketCap: 1,
+      },
     },
+    stats: { hitCount: 1, missCount: 0 },
   });
+  mockedRates.mockResolvedValue({ EURUSD: 1.1 });
   mockedHighlights.mockResolvedValue({
     highlights: [],
     language: "en",
@@ -94,6 +101,9 @@ describe("buildHomeBootstrap", () => {
       }),
     );
     expect(payload.aidStatus.briefing).toBeNull();
+    expect(payload.quotes.AAPL?.regularMarketPrice).toBe(100);
+    expect(payload.quoteStats).toEqual({ hitCount: 1, missCount: 0 });
+    expect(payload.holdingsCount).toBe(1);
     expect(mockedHighlights).toHaveBeenCalledWith(
       expect.objectContaining({
         providerQuotes: expect.any(Object),

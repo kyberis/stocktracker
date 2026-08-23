@@ -31,6 +31,11 @@ interface Props {
   /** When true, hide the footer link to /portfolio chart (e.g. already on /portfolio) */
   hideViewChartLink?: boolean;
   cashEntries?: import("@/lib/types").CashEntry[];
+  /**
+   * When false, skip O(N) per-ticker `/api/historical` for the aggregated
+   * "all portfolios" view (Home Advanced). Default true for AID / portfolio pages.
+   */
+  allowPerTickerHistorical?: boolean;
 }
 
 export default function PortfolioHeroCard({
@@ -51,6 +56,7 @@ export default function PortfolioHeroCard({
   headerAction,
   hideViewChartLink = false,
   cashEntries = [],
+  allowPerTickerHistorical = true,
 }: Props) {
   const { activePortfolioCurrency, quotes, refreshingTickers, isRefreshing } = usePortfolio();
   const { stealthMode } = useStealthMode();
@@ -199,6 +205,7 @@ export default function PortfolioHeroCard({
         refreshKey={refreshKey}
         activeFilter={assetFilter}
         dayChangePctByType={dayChangePctByType}
+        allowPerTickerHistorical={allowPerTickerHistorical}
       />
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-[color:var(--border)] px-5 py-3 text-[11px] text-[color:var(--muted)]">
