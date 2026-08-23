@@ -89,8 +89,6 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 - Yahoo sparkline failures → synthetic sparkline; widget still shows price + %.
 - Small / Medium / Large are all supported; Small hides company names and uses a compact sparkline.
 - Large prefers 4 positives + 3 negatives; if fewer than 3 negatives exist, extra positives fill (and vice versa).
-- **Large books + Redis miss:** `/api/portfolio/summary` caps Yahoo concurrency and applies a ~12s quote deadline for widget/device bearer auth so Scriptable’s client timeout is not exceeded; unfinished tickers use stored `valueInEUR`. Scripts use a 25s request timeout. Upgrade Upstash off Free 500k/mo so quote cache stays warm (see [`RELIABILITY.md`](../RELIABILITY.md)).
-- Cloudflare Bot Fight on `trefolio.com` can return HTML “Just a moment…” to some networks; scripts surface that as a network-challenge hint.
 
 ## 14. Tests
 
