@@ -32,14 +32,33 @@ function reasonLabel(r: HomeDayHighlightReason, t: (k: string) => string): strin
   }
 }
 
-export default function HomeDayHighlights() {
+type Props = {
+  /** From `/api/home-v2/bootstrap` — skips a second day-highlights fetch. */
+  highlights?: HomeDayHighlight[] | null;
+  loading?: boolean;
+};
+
+export default function HomeDayHighlights({
+  highlights: seededHighlights,
+  loading: seededLoading,
+}: Props = {}) {
   const { t } = useI18n();
   const track = useTrack();
   const { activePortfolioId, demoMode } = usePortfolio();
-  const [highlights, setHighlights] = useState<HomeDayHighlight[]>([]);
-  const [loading, setLoading] = useState(!demoMode);
+  const useSeed = seededHighlights !== undefined;
+  const [highlights, setHighlights] = useState<HomeDayHighlight[]>(
+    seededHighlights ?? [],
+  );
+  const [loading, setLoading] = useState(
+    useSeed ? !!seededLoading : !demoMode,
+  );
 
   useEffect(() => {
+    if (useSeed) {
+      setHighlights(seededHighlights ?? []);
+      setLoading(!!seededLoading);
+      return;
+    }
     if (demoMode) {
       setHighlights([]);
       setLoading(false);
@@ -63,7 +82,7 @@ export default function HomeDayHighlights() {
     return () => {
       cancelled = true;
     };
-  }, [demoMode, activePortfolioId]);
+  }, [demoMode, activePortfolioId, useSeed, seededHighlights, seededLoading]);
 
   if (loading) {
     return (

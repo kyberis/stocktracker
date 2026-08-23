@@ -24,7 +24,8 @@
 | Classic | `src/app/(app)/classic/page.tsx` | Requires `classic_home` |
 | CTA | Home → Classic | Header link when `classic_home` |
 | API | `GET /api/home-v2/day-highlights` | Scored per-ticker chips (`home_v2`) |
-| AID reuse | `/api/aid/{status,feed,digest,earnings-recap}` | Guard: `aid_beta \|\| home_v2` |
+| API | `GET /api/home-v2/bootstrap` | One holdings+quotes pass → highlights + AID status (no LLM) + cached recommendation |
+| AID reuse | `/api/aid/{status,feed,digest,earnings-recap}` | Guard: `aid_beta \|\| home_v2`; briefing via `?includeBriefing=1` |
 | Components | `src/components/homepage/*` | Composition layer |
 | Lib | `src/lib/homepage/score-day-highlights.ts` | Pure scoring |
 
@@ -40,7 +41,8 @@ No new tables in MVP.
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | GET | `/api/home-v2/day-highlights` | user + `home_v2` | Top ≤8 ticker highlights for today |
-| GET/POST | `/api/aid/status` | user + (`aid_beta` \| `home_v2`) | Brief counts + mark visit |
+| GET | `/api/home-v2/bootstrap` | user + `home_v2` | Single quote pass: highlights + AID status (no LLM) + cached recommendation |
+| GET/POST | `/api/aid/status` | user + (`aid_beta` \| `home_v2`) | Brief counts + mark visit; `?includeBriefing=1` for LLM summary |
 | GET | `/api/aid/feed` | same | Priority teaser |
 | GET | `/api/aid/digest` | same | News bullets for highlight enrichment |
 | GET | `/api/aid/earnings-recap` | same | Post-earnings context |
@@ -159,3 +161,4 @@ type HomeDayHighlight = {
 - [`trefolio-mcp-user.md`](trefolio-mcp-user.md)
 - [`dashboard-shell.md`](dashboard-shell.md)
 - [`event-calendar.md`](event-calendar.md)
+- [`../design-docs/home-cold-path-latency.md`](../design-docs/home-cold-path-latency.md) — cold-path inventory and latency mitigations

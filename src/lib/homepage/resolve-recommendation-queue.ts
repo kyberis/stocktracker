@@ -78,6 +78,11 @@ export async function resolveRecommendationQueue(args: {
   forceRefresh?: boolean;
   /** When forceRefresh from user CTA, stamp last_manual_at for weekly cooldown. */
   markManual?: boolean;
+  /**
+   * Home bootstrap: return empty queue when weekly cache misses instead of
+   * live quote recompute (avoids a second full-book Yahoo pass on cold load).
+   */
+  cacheOnly?: boolean;
 }): Promise<RecommendationQueueResult> {
   const weekKey = currentRecommendationWeekKey();
   const portfolioKey = args.portfolioId || "";
@@ -106,6 +111,18 @@ export async function resolveRecommendationQueue(args: {
         weekKey,
       };
     }
+  }
+
+  if (args.cacheOnly) {
+    return {
+      current: null,
+      remaining: 0,
+      total: 0,
+      rawTotal: 0,
+      queue: [],
+      source: "cache",
+      weekKey,
+    };
   }
 
   const queue = await computeLiveRecommendationQueue(args);

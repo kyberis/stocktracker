@@ -28,12 +28,24 @@ function interpolate(
   );
 }
 
-export default function HomeRecommendationCard() {
+type Props = {
+  /**
+   * Bootstrap cache-only tip. When present with a current tip, skip the live
+   * recommendations fetch on first paint. When null/empty, fall back to GET.
+   */
+  initialRecommendation?: ApiPayload | null;
+  bootstrapSettled?: boolean;
+};
+
+export default function HomeRecommendationCard({
+  initialRecommendation,
+  bootstrapSettled = true,
+}: Props = {}) {
   const { t } = useI18n();
   const track = useTrack();
   const { activePortfolioId, demoMode, holdings } = usePortfolio();
-  const [data, setData] = useState<ApiPayload | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<ApiPayload | null>(initialRecommendation ?? null);
+  const [loading, setLoading] = useState(!initialRecommendation?.current);
   const [busy, setBusy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
@@ -77,8 +89,14 @@ export default function HomeRecommendationCard() {
   }, [applyPayload, demoMode, holdings.length, qs]);
 
   useEffect(() => {
+    if (initialRecommendation?.current) {
+      applyPayload(initialRecommendation);
+      setLoading(false);
+      return;
+    }
+    if (!bootstrapSettled) return;
     void load();
-  }, [load]);
+  }, [load, initialRecommendation, bootstrapSettled, applyPayload]);
 
   const current = data?.current ?? null;
   const canManualRefresh = data?.canManualRefresh !== false;
