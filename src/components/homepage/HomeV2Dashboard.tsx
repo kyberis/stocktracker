@@ -119,7 +119,7 @@ export default function HomeV2Dashboard() {
   const isEmpty =
     !isInitializing && holdings.length === 0 && cashEntries.length === 0;
 
-  const [introVisible, setIntroVisible] = useState(false);
+  const [introVisible, setIntroVisible] = useState(!demoMode);
 
   const introExperiment = useExperiment(AGENT_INTRO_EXPERIMENT_KEY, {
     enabled: aidEnabled,

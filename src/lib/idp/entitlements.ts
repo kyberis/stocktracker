@@ -6,6 +6,7 @@ import { isIdpEnabled } from "./config";
 import { isLocalTrialActive } from "@/lib/trial-activation";
 import { isCommerceComplimentaryActive } from "@/lib/commerce-complimentary-pro";
 import { effectivePlan } from "@/lib/subscription";
+import { shouldPushLocalPlanToIdp, syncLocalPlanToIdp } from "@/lib/idp/sync-plan";
 
 /**
  * Bridge between the IdP entitlement payload and trefolio's local
@@ -89,6 +90,13 @@ export async function syncEntitlementsForUser(userId: string): Promise<UserPlan 
     !payload.entitlements.trefolio_pro
   ) {
     return user.plan;
+  }
+
+  if (shouldPushLocalPlanToIdp(user, payload.entitlements.trefolio_pro)) {
+    if (user.email) {
+      await syncLocalPlanToIdp(userId, user.email, "pro", user.plan_expires_at);
+    }
+    return "pro";
   }
 
   if (user.plan !== nextPlan || user.plan_expires_at !== nextExpiresAt) {

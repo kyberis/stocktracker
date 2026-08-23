@@ -45,7 +45,6 @@ export default function AgentIntroBriefing({
 }) {
   const { t } = useI18n();
   const [phase, setPhase] = useState<BriefPhase>("idle");
-  const [mounted, setMounted] = useState(false);
 
   const { fading, dismissed } = useAgentIntroDismissWhenReady({
     playKey,
@@ -53,10 +52,6 @@ export default function AgentIntroBriefing({
     animationReady: phase === "reveal",
     onComplete,
   });
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     setPhase("chat");
@@ -150,7 +145,8 @@ export default function AgentIntroBriefing({
     </AgentIntroOverlayShell>
   );
 
-  if (!mounted || !overlayVisible) return null;
+  if (!overlayVisible) return null;
   if (contained) return panel;
+  if (typeof document === "undefined") return null;
   return createPortal(panel, document.body);
 }

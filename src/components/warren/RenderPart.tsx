@@ -5,6 +5,7 @@ import {
   AllocationCard,
   SummaryCard,
   StockPickCard,
+  TradeGuidanceCard,
 } from "@/components/chat-cards";
 import MoatSummaryCard from "@/components/chat-cards/MoatSummaryCard";
 import { formatChatCardNumber } from "@/components/chat-cards/types";
@@ -22,6 +23,8 @@ export default function RenderPart({ part }: { part: WarrenPart }) {
       return <StockPickCard data={part.data} />;
     case "moatSummary":
       return <MoatSummaryCard data={part.data} />;
+    case "tradeGuidance":
+      return <TradeGuidanceCard data={part.data} />;
     case "stockSnapshot":
       return <StockSnapshot data={part.data} />;
     default:

@@ -229,6 +229,30 @@ describe("telegram/format · renderWarrenPart", () => {
     expect(md).toContain("Tesla");
     expect(md).toContain("52w");
   });
+
+  it("renders trade guidance with valuation and disclaimer", () => {
+    const part: WarrenPart = {
+      kind: "tradeGuidance",
+      data: {
+        ticker: "UBER",
+        name: "Uber Technologies",
+        action: "trim",
+        currentPrice: 72.5,
+        currency: "USD",
+        changePct: -1.2,
+        valuationLabel: "fair",
+        upsideToTargetPct: 4.5,
+        suggestedShares: 25,
+        suggestedAmount: 1812.5,
+        rationale: "Limited upside to analyst target; trimming half reduces concentration.",
+      },
+    };
+    const md = renderWarrenPart(part);
+    expect(md).toContain("Trim guidance");
+    expect(md).toContain("UBER");
+    expect(md).toContain("fair");
+    expect(md).toContain("does not execute trades");
+  });
 });
 
 describe("telegram/format · renderWarrenProposal", () => {

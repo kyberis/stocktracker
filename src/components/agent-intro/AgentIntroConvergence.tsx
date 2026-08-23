@@ -43,7 +43,6 @@ export default function AgentIntroConvergence({
 }) {
   const { t } = useI18n();
   const [phase, setPhase] = useState<IntroPhase>("idle");
-  const [mounted, setMounted] = useState(false);
 
   const { fading, dismissed } = useAgentIntroDismissWhenReady({
     playKey,
@@ -51,10 +50,6 @@ export default function AgentIntroConvergence({
     animationReady: phase === "reveal",
     onComplete,
   });
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     setPhase("enter");
@@ -130,7 +125,8 @@ export default function AgentIntroConvergence({
     </AgentIntroOverlayShell>
   );
 
-  if (!mounted || !overlayVisible) return null;
+  if (!overlayVisible) return null;
   if (contained) return panel;
+  if (typeof document === "undefined") return null;
   return createPortal(panel, document.body);
 }

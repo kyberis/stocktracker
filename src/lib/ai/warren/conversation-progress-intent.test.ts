@@ -81,6 +81,8 @@ describe("buildConversationProgressAppendix", () => {
     ]);
     expect(appendix).toContain("Do NOT call `analyzeValuation` again");
     expect(appendix).toContain("Do NOT repeat the expensive/fair/cheap");
+    expect(appendix).toContain("renderTradeGuidanceCard");
+    expect(appendix).toContain("NEVER `proposeAddCash`");
   });
 
   it("returns null on a first-turn valuation question", () => {

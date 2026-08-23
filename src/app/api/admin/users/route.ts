@@ -20,6 +20,7 @@ import { adminUserActionSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
 import { grantsAndTrialsRedirectToIdp } from "@/lib/idp/config";
 import { inviteMembershipGrantViaIdp } from "@/lib/idp/client";
+import { syncLocalPlanToIdp } from "@/lib/idp/sync-plan";
 
 export const GET = withMetrics("/api/admin/users", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);
@@ -67,6 +68,9 @@ export const POST = withMetrics("/api/admin/users", async (req: NextRequest) => 
       ? new Date(Date.now() + 365 * 86400000).toISOString()
       : "";
     await updateUserSubscription(user.id, { plan: data.plan, planExpiresAt });
+    if (user.email) {
+      await syncLocalPlanToIdp(user.id, user.email, data.plan, planExpiresAt);
+    }
     return NextResponse.json({ ok: true });
   }
 

@@ -4,6 +4,7 @@ import type {
   SummaryCardData,
   StockPickCardData,
   MoatSummaryCardData,
+  TradeGuidanceCardData,
 } from "@/components/chat-cards/types";
 
 export type WarrenPart =
@@ -12,6 +13,7 @@ export type WarrenPart =
   | { kind: "summary"; data: SummaryCardData }
   | { kind: "stockPick"; data: StockPickCardData }
   | { kind: "moatSummary"; data: MoatSummaryCardData }
+  | { kind: "tradeGuidance"; data: TradeGuidanceCardData }
   | { kind: "stockSnapshot"; data: StockSnapshotData }
   | { kind: "chart"; data: ChartPartData };
 

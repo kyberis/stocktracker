@@ -143,6 +143,8 @@ export function renderWarrenPart(part: WarrenPart): string {
       return renderSnapshot(part.data);
     case "stockPick":
       return renderStockPick(part.data);
+    case "tradeGuidance":
+      return renderTradeGuidance(part.data);
     default:
       return "";
   }
@@ -265,6 +267,48 @@ function renderStockPick(data: { ticker: string; name?: string; rationale?: stri
   const title = data.name ? `${data.ticker} — ${data.name}` : data.ticker;
   lines.push(bold(title));
   if (data.rationale) lines.push(escapeMarkdown(data.rationale));
+  return lines.join("\n");
+}
+
+function renderTradeGuidance(data: {
+  ticker: string;
+  name?: string;
+  action: "buy" | "sell" | "trim" | "hold";
+  currentPrice?: number;
+  currency?: string;
+  changePct?: number;
+  valuationLabel?: "expensive" | "fair" | "cheap";
+  upsideToTargetPct?: number;
+  suggestedShares?: number;
+  suggestedAmount?: number;
+  rationale: string;
+}): string {
+  const actionLabel = { buy: "Buy", sell: "Sell", trim: "Trim", hold: "Hold" }[data.action];
+  const lines: string[] = [bold(`${actionLabel} guidance — ${data.ticker}`)];
+  if (data.name) lines.push(escapeMarkdown(data.name));
+  if (typeof data.currentPrice === "number") {
+    let priceLine = `Price: ${escapeMarkdown(fmtMoney(data.currentPrice, data.currency || "EUR"))}`;
+    if (typeof data.changePct === "number") {
+      priceLine += ` \\(${escapeMarkdown(fmtSignedPct(data.changePct))}\\)`;
+    }
+    lines.push(priceLine);
+  }
+  if (data.valuationLabel) {
+    lines.push(`Valuation: ${escapeMarkdown(data.valuationLabel)}`);
+  }
+  if (typeof data.upsideToTargetPct === "number") {
+    lines.push(`Upside to target: ${escapeMarkdown(fmtSignedPct(data.upsideToTargetPct))}`);
+  }
+  if (typeof data.suggestedShares === "number") {
+    lines.push(`Suggested size: ${escapeMarkdown(fmtNumber(data.suggestedShares, 4))} shares`);
+  }
+  if (typeof data.suggestedAmount === "number") {
+    lines.push(
+      `Est. value: ${escapeMarkdown(fmtMoney(data.suggestedAmount, data.currency || "EUR"))}`,
+    );
+  }
+  lines.push(escapeMarkdown(data.rationale));
+  lines.push(italic("Analysis only — trefolio does not execute trades."));
   return lines.join("\n");
 }
 
