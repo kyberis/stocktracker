@@ -1,0 +1,112 @@
+import {
+  applyFeedbackPipelineDbUpdate,
+  listFeedbackPendingAckEmail,
+  listFeedbackReadyForAutoPipeline,
+  markFeedbackAckEmailSent,
+} from "@/lib/db/feedback";
+import { findUserById, getUserSettings } from "@/lib/db";
+import {
+  buildFeedbackAutoAckAdminReply,
+  feedbackMailLocaleFromAppLanguage,
+  sendFeedbackAutoAckEmail,
+} from "@/lib/email";
+import { createLinearFeedbackIssue, isLinearConfigured } from "@/lib/linear";
+
+export interface FeedbackPipelineResult {
+  ackRetries: number;
+  ackRetryErrors: number;
+  pipelines: number;
+  pipelineErrors: number;
+  skippedNewPipeline: boolean;
+  reason?: string;
+}
+
+export async function runFeedbackPipelineWork(): Promise<FeedbackPipelineResult> {
+  let ackRetries = 0;
+  let ackRetryErrors = 0;
+  let pipelines = 0;
+  let pipelineErrors = 0;
+
+  const pendingAck = await listFeedbackPendingAckEmail();
+  for (const row of pendingAck) {
+    try {
+      const user = await findUserById(row.userId);
+      if (!user?.email) {
+        await markFeedbackAckEmailSent(row.id);
+        continue;
+      }
+      const settings = await getUserSettings(row.userId);
+      const locale = feedbackMailLocaleFromAppLanguage(settings.language);
+      const sent = await sendFeedbackAutoAckEmail(user.email, row.userId, row.subject, locale);
+      if (sent.success) {
+        await markFeedbackAckEmailSent(row.id);
+        ackRetries++;
+      } else {
+        ackRetryErrors++;
+      }
+    } catch (e) {
+      console.error(`[cron:feedback-pipeline] ack retry ${row.id}:`, e);
+      ackRetryErrors++;
+    }
+  }
+
+  if (!isLinearConfigured()) {
+    return {
+      ackRetries,
+      ackRetryErrors,
+      pipelines: 0,
+      pipelineErrors: 0,
+      skippedNewPipeline: true,
+      reason: "LINEAR_API_KEY / LINEAR_TEAM_ID not set",
+    };
+  }
+
+  const ready = await listFeedbackReadyForAutoPipeline();
+  for (const row of ready) {
+    try {
+      const user = await findUserById(row.userId);
+      const settings = await getUserSettings(row.userId);
+      const locale = feedbackMailLocaleFromAppLanguage(settings.language);
+      const adminReply = buildFeedbackAutoAckAdminReply(locale, row.subject);
+
+      const linear = await createLinearFeedbackIssue({
+        feedbackId: row.id,
+        subject: row.subject,
+        message: row.message,
+        type: row.type,
+      });
+
+      const updated = await applyFeedbackPipelineDbUpdate({
+        feedbackId: row.id,
+        adminReply,
+        linearIssueId: linear.issueId,
+        linearIssueUrl: linear.url,
+      });
+      if (!updated) {
+        continue;
+      }
+
+      if (!user?.email) {
+        console.warn(
+          `[cron:feedback-pipeline] ${row.id}: Linear created; no user email for ack (marking ack queue cleared)`,
+        );
+        await markFeedbackAckEmailSent(row.id);
+        pipelines++;
+        continue;
+      }
+
+      const sent = await sendFeedbackAutoAckEmail(user.email, row.userId, row.subject, locale);
+      if (sent.success) {
+        await markFeedbackAckEmailSent(row.id);
+        pipelines++;
+      } else {
+        pipelineErrors++;
+      }
+    } catch (e) {
+      console.error(`[cron:feedback-pipeline] pipeline ${row.id}:`, e);
+      pipelineErrors++;
+    }
+  }
+
+  return { ackRetries, ackRetryErrors, pipelines, pipelineErrors, skippedNewPipeline: false };
+}

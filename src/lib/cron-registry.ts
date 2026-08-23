@@ -141,20 +141,23 @@ export const CRON_REGISTRY: CronJob[] = [
   {
     name: "feedback-pipeline",
     path: "/api/cron/feedback-pipeline",
-    schedule: "*/15 * * * *",
-    description: "Process queued user feedback into Linear issues via the feedback pipeline",
+    schedule: "0 * * * *",
+    description:
+      "Hourly backup: process queued user feedback into Linear issues (kick-on-write from /api/feedback)",
   },
   {
     name: "prodops-dispatch",
     path: "/api/cron/prodops-dispatch",
-    schedule: "*/5 * * * *",
-    description: "Dispatch queued staff ops notifications to the external ProdOps Telegram service",
+    schedule: "0 * * * *",
+    description:
+      "Hourly backup: dispatch queued ProdOps Telegram events (kick-on-enqueue from product routes)",
   },
   {
     name: "support-return-watch",
     path: "/api/cron/support-return-watch",
-    schedule: "*/5 * * * *",
-    description: "Alert ProdOps when a holdings-restore email recipient returns to the app",
+    schedule: "0 * * * *",
+    description:
+      "Hourly backup: alert ProdOps when a holdings-restore email recipient returns (primary path is last-active event)",
   },
   {
     name: "aid-digest",
@@ -184,7 +187,7 @@ export const CRON_REGISTRY: CronJob[] = [
   {
     name: "screening-recover",
     path: "/api/cron/screening-recover",
-    schedule: "*/2 * * * *",
+    schedule: "*/5 * * * *",
     description:
       "Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain",
   },

@@ -19,6 +19,7 @@ import {
 import { getProdOpsConfig, getProdOpsSharedSecret } from "@/lib/db/settings";
 import { str } from "@/lib/db/helpers";
 import { trackExternalProvider } from "@/lib/traffic/provider-track";
+import { kickProdOpsDispatch } from "@/lib/cron-kick";
 
 const PRODOPS_SOURCE_APP = "trefolio" as const;
 const PRODOPS_MAX_ATTEMPTS = 8;
@@ -336,6 +337,7 @@ export async function enqueueProdOpsIngestEvent(input: {
     payload: input.metadata,
     sourceApp: input.sourceApp,
   });
+  kickProdOpsDispatch();
   return { id: created.id, deduped: false };
 }
 
@@ -347,6 +349,8 @@ async function createNamedProdOpsEvent(input: {
   adminPath: string;
   metadata: Record<string, unknown>;
 }): Promise<void> {
+  const existing = await getProdOpsEventByDedupeKey(input.dedupeKey);
+  if (existing) return;
   await createProdOpsEvent({
     eventType: input.eventType,
     userId: input.userId,
@@ -356,6 +360,7 @@ async function createNamedProdOpsEvent(input: {
     payload: input.metadata,
     sourceApp: PRODOPS_SOURCE_APP,
   });
+  kickProdOpsDispatch();
 }
 
 function chooseUserLabel(user: Awaited<ReturnType<typeof findUserById>>): string {

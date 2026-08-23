@@ -7,8 +7,18 @@ const run = withCronLogging("support-return-watch", async () => {
   return processDueUserReturnWatches();
 });
 
+function authorize(req: NextRequest) {
+  return verifyCronAuth("support-return-watch", req);
+}
+
+export async function GET(req: NextRequest) {
+  const denied = authorize(req);
+  if (denied) return denied;
+  return run();
+}
+
 export async function POST(req: NextRequest) {
-  const denied = verifyCronAuth("support-return-watch", req);
+  const denied = authorize(req);
   if (denied) return denied;
   return run();
 }

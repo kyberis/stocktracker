@@ -19,7 +19,7 @@ vi.mock("@/lib/prodops", () => ({
   }),
 }));
 
-describe("POST /api/cron/prodops-dispatch", () => {
+describe("GET/POST /api/cron/prodops-dispatch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -54,6 +54,20 @@ describe("POST /api/cron/prodops-dispatch", () => {
       failed: 1,
       skipped: 0,
     });
+    expect(dispatchPendingProdOpsEvents).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts GET so Vercel Cron can invoke the hourly backup", async () => {
+    const { dispatchPendingProdOpsEvents } = await import("@/lib/prodops");
+    const { GET } = await import("./route");
+
+    const response = await GET(
+      new NextRequest("http://localhost/api/cron/prodops-dispatch", {
+        headers: { Authorization: "Bearer test" },
+      }),
+    );
+
+    expect(response.status).toBe(200);
     expect(dispatchPendingProdOpsEvents).toHaveBeenCalledTimes(1);
   });
 });

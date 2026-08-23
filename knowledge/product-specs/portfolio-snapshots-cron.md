@@ -37,7 +37,8 @@ None; consumers are charts and summaries.
 ## 7. Business logic
 
 - Upserts on `(user_id, portfolio_id, timestamp)` to avoid duplicates on re-run.
-- Uses `refresh-holdings` output (latest quotes) when both crons overlap.
+- Reuses the shared Redis quote/FX cache (`fetchSharedQuotesAndRates`) so overlapping `refresh-holdings` and `check-alerts` ticks do not each hit Yahoo.
+- Early-exits before any provider fetch when no relevant market is open (crypto stays live). User-triggered `materializeCurrentSnapshotsForUser` still fetches so charts get a point after import/move.
 - Wrapped in `withCronLogging()`.
 
 ## 8. External dependencies
@@ -66,7 +67,7 @@ N/A.
 ## 13. Edge cases & gotchas
 
 - Very large users batched to avoid function timeout.
-- Holidays/weekends still record snapshots (last-known price).
+- Holidays/weekends skip the scheduled Yahoo fetch; last-known chart points remain until the next open session (or a user-triggered materialize).
 
 ## 14. Tests
 

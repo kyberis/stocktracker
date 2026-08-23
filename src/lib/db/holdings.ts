@@ -745,17 +745,18 @@ export interface DistinctHoldingTicker {
   displayCurrency: string;
   exchange: string;
   figiShareClass: string;
+  assetType: HoldingAssetType;
 }
 
 /**
  * Returns all distinct (ticker, display_currency) pairs across all users' holdings.
  * Used by the refresh-holdings cron to batch-fetch quotes per ticker instead of per user.
- * Includes exchange and figi_share_class for stale-ticker resolution via OpenFIGI.
+ * Includes exchange, asset type, and figi_share_class for market-hours gating and OpenFIGI heal.
  */
 export async function listDistinctHoldingTickers(): Promise<DistinctHoldingTicker[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: `SELECT DISTINCT ticker, display_currency, exchange, figi_share_class FROM holdings WHERE shares > 0 AND ticker != ''`,
+    sql: `SELECT DISTINCT ticker, display_currency, exchange, figi_share_class, asset_type FROM holdings WHERE shares > 0 AND ticker != ''`,
     args: [],
   });
   return result.rows.map((r) => ({
@@ -763,6 +764,7 @@ export async function listDistinctHoldingTickers(): Promise<DistinctHoldingTicke
     displayCurrency: str(r.display_currency),
     exchange: str(r.exchange),
     figiShareClass: str(r.figi_share_class),
+    assetType: holdingAssetType(r.asset_type),
   }));
 }
 
@@ -815,7 +817,7 @@ export async function listDistinctPortfolioIdsForUser(userId: string): Promise<s
 export async function listDistinctHoldingTickersForUser(userId: string): Promise<DistinctHoldingTicker[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: `SELECT DISTINCT ticker, display_currency, exchange, figi_share_class FROM holdings WHERE user_id = ? AND shares > 0 AND ticker != ''`,
+    sql: `SELECT DISTINCT ticker, display_currency, exchange, figi_share_class, asset_type FROM holdings WHERE user_id = ? AND shares > 0 AND ticker != ''`,
     args: [userId],
   });
   return result.rows.map((r) => ({
@@ -823,6 +825,7 @@ export async function listDistinctHoldingTickersForUser(userId: string): Promise
     displayCurrency: str(r.display_currency),
     exchange: str(r.exchange),
     figiShareClass: str(r.figi_share_class),
+    assetType: holdingAssetType(r.asset_type),
   }));
 }
 

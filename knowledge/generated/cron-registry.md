@@ -28,11 +28,11 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `digest-email` | **paused** (was `*/15 * * * *`) | `/api/cron/digest-email` | PAUSED — market digests no longer processed (was: poll Gmail, AI rewrite, store drafts) |
 | `moat-sync` | `0 */4 * * *` | `/api/cron/moat-sync` | Evaluate stale/missing moat scores for screener-universe stocks using Alpha Vantage fundamentals |
 | `compact-snapshots` | `0 4 * * *` | `/api/cron/compact-snapshots` | Compact old hourly portfolio snapshots into daily (and weekly) rows to bound storage |
-| `feedback-pipeline` | `*/15 * * * *` | `/api/cron/feedback-pipeline` | Process queued user feedback into Linear issues via the feedback pipeline |
-| `prodops-dispatch` | `*/5 * * * *` | `/api/cron/prodops-dispatch` | Dispatch queued staff ops notifications to the external ProdOps Telegram service |
-| `support-return-watch` | `*/5 * * * *` | `/api/cron/support-return-watch` | Alert ProdOps when a holdings-restore email recipient returns to the app |
+| `feedback-pipeline` | `0 * * * *` | `/api/cron/feedback-pipeline` | Hourly backup: process queued user feedback into Linear issues (kick-on-write from /api/feedback) |
+| `prodops-dispatch` | `0 * * * *` | `/api/cron/prodops-dispatch` | Hourly backup: dispatch queued ProdOps Telegram events (kick-on-enqueue from product routes) |
+| `support-return-watch` | `0 * * * *` | `/api/cron/support-return-watch` | Hourly backup: alert ProdOps when a holdings-restore email recipient returns (primary path is last-active event) |
 | `aid-digest` | `0 */6 * * *` | `/api/cron/aid-digest` | Pre-warm AID news digest cache for aid_beta users (earnings + portfolio news summaries) |
 | `aid-finpulse` | `*/30 * * * *` | `/api/cron/aid-finpulse` | Ingest FinPulse X influencer posts via Tavily for AID beta |
 | `coverage-reconcile` | `15 2 * * *` | `/api/cron/coverage-reconcile` | Overnight scan: flag holdings that lost Yahoo/alias quote coverage (TRF-104) |
 | `portfolio-anomaly-scan` | `15 3 * * *` | `/api/cron/portfolio-anomaly-scan` | Scan portfolios with ≥1 holding for data anomalies; persist findings, LLM explain, enqueue ProdOps alerts |
-| `screening-recover` | `*/2 * * * *` | `/api/cron/screening-recover` | Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain |
+| `screening-recover` | `*/5 * * * *` | `/api/cron/screening-recover` | Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain |

@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.222",
+    date: "2026-08-23",
+    title: "Leaner cron quotes and queue kicks",
+    titleTranslations: {
+      es: "Crons de cotizaciones unificados y colas por evento",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Portfolio snapshots, holding refresh, and price alerts now share one Redis-backed Yahoo quote/FX pass and skip the fetch when no relevant market is open.",
+        translations: {
+          es: "Los snapshots de cartera, el refresco de posiciones y las alertas de precio comparten un único pase Yahoo/FX en Redis y no llaman al proveedor si no hay mercado abierto.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "ProdOps and feedback queues dispatch on write instead of polling every few minutes; return-watch and screening-recover backup crons run less often.",
+        translations: {
+          es: "Las colas de ProdOps y feedback se disparan al escribir en vez de sondear cada pocos minutos; los crons de respaldo de return-watch y screening-recover corren con menos frecuencia.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.221",
     date: "2026-08-23",
     title: "Home skips duplicate quote fetches",

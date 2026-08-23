@@ -7,6 +7,7 @@ vi.mock("@/lib/db/settings", () => ({
 
 vi.mock("@/lib/db/ops-events", () => ({
   createProdOpsEvent: vi.fn(),
+  getProdOpsEventByDedupeKey: vi.fn(),
   listProdOpsEventsReady: vi.fn(),
   markProdOpsEventDropped: vi.fn(),
   markProdOpsEventSent: vi.fn(),
@@ -17,10 +18,16 @@ vi.mock("@/lib/db/users", () => ({
   findUserById: vi.fn(),
 }));
 
+vi.mock("@/lib/cron-kick", () => ({
+  kickProdOpsDispatch: vi.fn(),
+}));
+
 describe("prodops", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
+    const { getProdOpsEventByDedupeKey } = await import("@/lib/db/ops-events");
+    vi.mocked(getProdOpsEventByDedupeKey).mockResolvedValue(null);
   });
 
   it("signs payloads with sha256 HMAC", async () => {
@@ -146,8 +153,9 @@ describe("prodops", () => {
   });
 
   it("builds a user registration outbox event", async () => {
-    const { createProdOpsEvent } = await import("@/lib/db/ops-events");
+    const { createProdOpsEvent, getProdOpsEventByDedupeKey } = await import("@/lib/db/ops-events");
     const { findUserById } = await import("@/lib/db/users");
+    vi.mocked(getProdOpsEventByDedupeKey).mockResolvedValue(null);
     vi.mocked(findUserById).mockResolvedValue({
       id: "user_3",
       email: "new@example.com",
@@ -169,5 +177,29 @@ describe("prodops", () => {
         sourceApp: "trefolio",
       }),
     );
+    const { kickProdOpsDispatch } = await import("./cron-kick");
+    expect(kickProdOpsDispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not kick ProdOps when the outbox event already exists", async () => {
+    const { createProdOpsEvent, getProdOpsEventByDedupeKey } = await import("@/lib/db/ops-events");
+    const { findUserById } = await import("@/lib/db/users");
+    vi.mocked(getProdOpsEventByDedupeKey).mockResolvedValue({
+      id: "evt_existing",
+    } as never);
+    vi.mocked(findUserById).mockResolvedValue({
+      id: "user_3",
+      email: "new@example.com",
+    } as never);
+
+    const { enqueueProdOpsUserRegisteredEvent } = await import("./prodops");
+    await enqueueProdOpsUserRegisteredEvent({
+      userId: "user_3",
+      method: "apple",
+    });
+
+    expect(createProdOpsEvent).not.toHaveBeenCalled();
+    const { kickProdOpsDispatch } = await import("./cron-kick");
+    expect(kickProdOpsDispatch).not.toHaveBeenCalled();
   });
 });
