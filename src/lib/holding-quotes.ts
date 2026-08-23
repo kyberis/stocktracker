@@ -1,4 +1,4 @@
-import { getQuotesWithCache } from "@/lib/quote-cache";
+import { getQuotesWithCache, type QuoteFetchOptions } from "@/lib/quote-cache";
 import { marketDataSymbolForHolding } from "@/lib/market-symbol";
 import { providerQuotesToQuoteMap } from "@/lib/aid/quotes-map";
 import type { ProviderQuoteResult } from "@/lib/api-providers/types";
@@ -17,6 +17,7 @@ type HoldingQuoteInput = {
  */
 export async function fetchProviderQuotesForHoldings(
   holdings: HoldingQuoteInput[],
+  opts?: QuoteFetchOptions,
 ): Promise<Record<string, ProviderQuoteResult>> {
   if (holdings.length === 0) return {};
 
@@ -25,7 +26,7 @@ export async function fetchProviderQuotesForHoldings(
     fetchKey: marketDataSymbolForHolding(h),
   }));
   const unique = [...new Set(pairs.flatMap((p) => [p.fetchKey, p.ticker].filter(Boolean)))];
-  const fetched = await getQuotesWithCache(unique);
+  const fetched = await getQuotesWithCache(unique, opts);
 
   const out: Record<string, ProviderQuoteResult> = {};
   for (const { ticker, fetchKey } of pairs) {
@@ -37,6 +38,7 @@ export async function fetchProviderQuotesForHoldings(
 
 export async function fetchQuoteMapForHoldings(
   holdings: HoldingQuoteInput[],
+  opts?: QuoteFetchOptions,
 ): Promise<Record<string, QuoteData>> {
-  return providerQuotesToQuoteMap(await fetchProviderQuotesForHoldings(holdings));
+  return providerQuotesToQuoteMap(await fetchProviderQuotesForHoldings(holdings, opts));
 }
