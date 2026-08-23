@@ -204,9 +204,16 @@ export function PortfolioProvider({
     if (stored) setActivePortfolio(stored);
   }, [demoMode, setActivePortfolio]);
   const fetchingRef = useRef(false);
-  /** When true, discard in-flight foreground fetchQuotes results (bootstrap won). */
-  const bootstrapHydratedRef = useRef(false);
+  /**
+   * Bumped on bootstrap hydrate (and user refresh) so in-flight quote fetches
+   * discard their apply. Does NOT block new user-initiated refreshQuotes.
+   */
+  const quoteEpochRef = useRef(0);
+  /** When true, init-sourced fetchQuotes no-ops (bootstrap already seeded). */
+  const suppressInitQuotesRef = useRef(false);
   const bootstrapBgRefreshTimer = useRef<number | null>(null);
+  const holdingsRef = useRef(holdings);
+  holdingsRef.current = holdings;
   const HYDRATE_COVERAGE_THRESHOLD = 0.9;
   const fetchPortfolios = useCallback(async (): Promise<PortfolioInfo[]> => {
     try {
@@ -337,12 +344,12 @@ export function PortfolioProvider({
       const allTickers = [...new Set(holdingsData.map((h: Holding) => h.ticker))];
       if (allTickers.length > 0 && !hasServerQuotes) {
         if (hasCachedQuotes) setIsInitializing(false);
-        fetchQuotes(allTickers, { background: hasCachedQuotes });
+        fetchQuotes(allTickers, { background: hasCachedQuotes, fromInit: true });
       } else {
         setIsInitializing(false);
         if (hasServerQuotes && allTickers.length > 0) {
           setTimeout(() => {
-            if (!fetchingRef.current) fetchQuotes(allTickers, { background: true });
+            if (!fetchingRef.current) fetchQuotes(allTickers, { background: true, fromInit: true });
           }, 30_000);
         }
       }
@@ -377,6 +384,9 @@ export function PortfolioProvider({
         setCashEntriesEnriched(cashData);
         setHoldingsLastFetchedAt(new Date());
 
+        // Portfolio switch: never inherit Home bootstrap suppress — load this book.
+        suppressInitQuotesRef.current = false;
+        quoteEpochRef.current += 1;
         const tickers = [...new Set(holdingsData.map((h) => h.ticker))];
         if (tickers.length > 0) {
           fetchQuotes(tickers, { background: true });
@@ -435,11 +445,16 @@ export function PortfolioProvider({
     [holdings],
   );
 
-  const fetchQuotes = useCallback(async (tickers: string[], options?: { background?: boolean }) => {
+  const fetchQuotes = useCallback(async (
+    tickers: string[],
+    options?: { background?: boolean; fromInit?: boolean },
+  ) => {
     if (tickers.length === 0) return;
-    const { background = false } = options ?? {};
-    if (!background && bootstrapHydratedRef.current) return;
+    const { background = false, fromInit = false } = options ?? {};
+    // Only suppress the PortfolioProvider init/switch fan-out — never user refresh.
+    if (fromInit && suppressInitQuotesRef.current) return;
     if (fetchingRef.current) return;
+    const epochAtStart = quoteEpochRef.current;
     fetchingRef.current = true;
     setIsRefreshing(true);
     if (!background) setError(null);
@@ -473,8 +488,8 @@ export function PortfolioProvider({
         Object.assign(allQuotes, data);
       }
 
-      // Bootstrap hydration won the race — keep bootstrap quotes for hero paint.
-      if (!background && bootstrapHydratedRef.current) return;
+      // Bootstrap hydrate (or a newer refresh) superseded this fetch — discard apply.
+      if (quoteEpochRef.current !== epochAtStart) return;
 
       const stockQuotes: Record<string, QuoteData> = {};
       const now = Date.now();
@@ -488,9 +503,9 @@ export function PortfolioProvider({
       }
 
       // Fetch FX after quotes so quote.currency (e.g. HKD) is included — not only displayCurrency
-      const rates = await fetchExchangeRates(holdings, stockQuotes);
+      const rates = await fetchExchangeRates(holdingsRef.current, stockQuotes);
 
-      if (!background && bootstrapHydratedRef.current) return;
+      if (quoteEpochRef.current !== epochAtStart) return;
 
       setQuotes(stockQuotes);
       setQuoteUpdatedAt(updatedAtByTicker);
@@ -499,24 +514,29 @@ export function PortfolioProvider({
       saveToStorage(RATES_CACHE_KEY, rates);
       setLastUpdated(new Date());
     } catch (err) {
-      if (!background && !bootstrapHydratedRef.current) {
+      if (!background && quoteEpochRef.current === epochAtStart) {
         const msg = err instanceof Error ? err.message : "Failed to fetch quotes";
         setError(msg === "rate_limited" ? "Rate limit reached. Retrying shortly..." : msg);
       }
     } finally {
-      setIsInitializing(false);
-      setIsRefreshing(false);
+      if (quoteEpochRef.current === epochAtStart) {
+        setIsInitializing(false);
+        setIsRefreshing(false);
+      }
       fetchingRef.current = false;
     }
-  }, [getApiHeaders, buildFetchUrl, fetchExchangeRates, quoteRequestSymbol, holdings]);
+  }, [getApiHeaders, buildFetchUrl, fetchExchangeRates, quoteRequestSymbol]);
 
   const hydrateMarketData = useCallback(
     (incomingQuotes: Record<string, QuoteData>, incomingRates?: ExchangeRates) => {
       if (demoMode) return;
-      const tickers = [...new Set(holdings.map((h) => h.ticker))];
+      const currentHoldings = holdingsRef.current;
+      const tickers = [...new Set(currentHoldings.map((h) => h.ticker))];
       const covered =
         tickers.length === 0
-          ? 1
+          ? Object.keys(incomingQuotes).length > 0
+            ? 1
+            : 0
           : tickers.filter((t) => incomingQuotes[t]?.regularMarketPrice != null).length /
             tickers.length;
 
@@ -527,6 +547,9 @@ export function PortfolioProvider({
         stamped[ticker] = { ...q, fetchedAt: q.fetchedAt ?? now };
         updatedAtByTicker[ticker] = stamped[ticker].fetchedAt!;
       }
+
+      // Invalidate in-flight init/background applies (foreground + background).
+      quoteEpochRef.current += 1;
 
       setQuotes((prev) => {
         const next = { ...prev, ...stamped };
@@ -546,18 +569,18 @@ export function PortfolioProvider({
       setIsRefreshing(false);
 
       if (covered >= HYDRATE_COVERAGE_THRESHOLD) {
-        bootstrapHydratedRef.current = true;
+        suppressInitQuotesRef.current = true;
         if (bootstrapBgRefreshTimer.current != null) {
           window.clearTimeout(bootstrapBgRefreshTimer.current);
         }
         bootstrapBgRefreshTimer.current = window.setTimeout(() => {
-          bootstrapHydratedRef.current = false;
-          const nextTickers = [...new Set(holdings.map((h) => h.ticker))];
+          suppressInitQuotesRef.current = false;
+          const nextTickers = [...new Set(holdingsRef.current.map((h) => h.ticker))];
           if (nextTickers.length > 0) void fetchQuotes(nextTickers, { background: true });
         }, 30_000);
       }
     },
-    [demoMode, holdings, fetchQuotes],
+    [demoMode, fetchQuotes],
   );
 
   useEffect(() => {
@@ -569,6 +592,9 @@ export function PortfolioProvider({
   }, []);
 
   const refreshQuotes = useCallback(async () => {
+    // User refresh must never be blocked by bootstrap suppress.
+    suppressInitQuotesRef.current = false;
+    quoteEpochRef.current += 1;
     const tickers = [...new Set(holdings.map((h) => h.ticker))];
     await fetchQuotes(tickers);
   }, [holdings, fetchQuotes]);

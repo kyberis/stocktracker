@@ -26,9 +26,9 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
-        text: "Home bootstrap now seeds PortfolioProvider quotes and FX so large portfolios avoid a second cold Yahoo fan-out; recommendations stay cache-only on mount, name enrichment is idle-batched, Advanced hero no longer auto-loads history on entry, and bootstrap exposes Server-Timing hit/miss counts.",
+        text: "Home bootstrap now seeds PortfolioProvider quotes and FX in parallel with init (without blocking manual refresh), keeps recommendations cache-only on mount, idle-batches name enrichment, defers Advanced hero history on entry, and exposes Server-Timing hit/miss counts.",
         translations: {
-          es: "El bootstrap de Home ahora hidrata cotizaciones y FX en PortfolioProvider para que las carteras grandes no disparen un segundo fan-out frío de Yahoo; las recomendaciones quedan solo en caché al montar, el enriquecimiento de nombres va en lotes idle, el hero Advanced ya no carga historial al entrar, y bootstrap expone Server-Timing con hits/misses.",
+          es: "El bootstrap de Home ahora hidrata cotizaciones y FX en PortfolioProvider en paralelo al init (sin bloquear el refresh manual), mantiene recomendaciones solo en caché al montar, enriquece nombres en lotes idle, aplaza el historial del hero Advanced al entrar, y expone Server-Timing con hits/misses.",
         },
       },
     ],
