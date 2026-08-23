@@ -37,7 +37,12 @@ Baseline inventory of what authenticated Home (`/`) loads on entry, and which wo
 - Returns `quotes` + `exchangeRates` for `PortfolioProvider.hydrateMarketData`
 - `Server-Timing`: `dur`, `quoteHits`, `quoteMisses`, `holdings`
 
-Contract: Home calls `hydrateMarketData` on bootstrap success; if coverage ≥ 90%, discard competing foreground `/api/quote` fan-out and schedule a background refresh at 30s.
+Contract: Home starts `/api/home-v2/bootstrap` immediately (does not wait for
+`PortfolioProvider` quote init). On success it calls `hydrateMarketData`, which
+bumps a quote epoch (discarding in-flight init/background applies) and, when
+coverage ≥ 90%, sets `suppressInitQuotes` so further *init-sourced* fan-outs
+no-op. User `refreshQuotes` always clears suppress and runs. A background
+refresh is scheduled at 30s.
 
 Lazy follow-ups:
 

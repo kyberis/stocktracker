@@ -77,12 +77,15 @@ export default function HomeV2Dashboard() {
   const { t } = useI18n();
   const track = useTrack();
   const isMobile = useIsMobileViewport();
-  const { holdings, cashEntries, isInitializing, demoMode, hydrateMarketData } = usePortfolio();
+  const { holdings, cashEntries, isInitializing, demoMode, hydrateMarketData, activePortfolioId } =
+    usePortfolio();
   const { gatedAdd } = usePortfolioCommand();
-  // Aid briefing/feed/day-highlights all require a real session; demo has none.
-  const aidEnabled = !isInitializing && !demoMode;
-  const bootstrap = useHomeBootstrap(aidEnabled);
+  // Bootstrap must start immediately (not wait for quote init) so it can win the
+  // cold-path race and seed PortfolioProvider via hydrateMarketData.
+  const bootstrap = useHomeBootstrap(!demoMode);
   const bootstrapSettled = !bootstrap.loading;
+  // AID shell/briefing still needs a real session; demo has none.
+  const aidEnabled = !demoMode;
   const aidStatus = useAidStatus(aidEnabled, {
     includeBriefing: false,
     seed: bootstrap.data?.aidStatus ?? null,
@@ -101,15 +104,22 @@ export default function HomeV2Dashboard() {
   const pageViewSent = useRef(false);
   const visitMarked = useRef(false);
   const returnTracked = useRef(false);
-  const hydratedBootstrapAsOf = useRef<string | null>(null);
+  const hydratedBootstrapKey = useRef<string | null>(null);
   const showClassicLink = isLoaded && !!flags.classic_home;
+
+  const holdingsTickerSig = useMemo(
+    () => holdings.map((h) => h.ticker.trim().toUpperCase()).sort().join(","),
+    [holdings],
+  );
 
   useEffect(() => {
     const payload = bootstrap.data;
-    if (!payload?.quotes || hydratedBootstrapAsOf.current === payload.asOf) return;
-    hydratedBootstrapAsOf.current = payload.asOf;
+    if (!payload?.quotes) return;
+    const key = `${payload.asOf}|${holdingsTickerSig}|${activePortfolioId ?? ""}`;
+    if (hydratedBootstrapKey.current === key) return;
+    hydratedBootstrapKey.current = key;
     hydrateMarketData(payload.quotes, payload.exchangeRates);
-  }, [bootstrap.data, hydrateMarketData]);
+  }, [bootstrap.data, hydrateMarketData, holdingsTickerSig, activePortfolioId]);
 
   function setAndPersistHeroMode(mode: HeroMode) {
     setHeroMode(mode);
