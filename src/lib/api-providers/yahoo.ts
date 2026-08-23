@@ -24,6 +24,34 @@ import { sanitizeOverviewPe } from "@/lib/fundamentals/normalize-overview-pe";
 const yahooFinance = new YahooFinance();
 
 /**
+ * Yahoo's client has no built-in request timeout. Cron jobs (refresh-holdings,
+ * portfolio-snapshots, check-alerts, moat-sync, screener-sync) fetch quotes in
+ * concurrent batches with Promise.allSettled — but a single stalled Yahoo
+ * request still blocks its whole batch indefinitely, which can push the
+ * cron past its `maxDuration` and get it killed by Vercel (504) even though
+ * every other ticker in the batch resolved fine. Bound each call so a stall
+ * fails fast (counted as a normal per-ticker error) instead of eating the
+ * cron's whole time budget.
+ */
+const QUOTE_TIMEOUT_MS = 8_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
+/**
  * In-memory TTL cache for Yahoo API results. Avoids redundant calls when
  * multiple users hold the same ticker and the cron / materialize runs
  * overlap, or when a user refreshes shortly after data was fetched.
@@ -80,7 +108,7 @@ export class YahooProvider implements StockDataProvider {
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "quote" });
     let ok = false;
     try {
-      const quote = await yahooFinance.quote(symbol);
+      const quote = await withTimeout(yahooFinance.quote(symbol), QUOTE_TIMEOUT_MS, `quote(${symbol})`);
       if (!quote || typeof quote !== "object") {
         throw new Error(`No quote data for ${symbol}`);
       }
@@ -328,7 +356,7 @@ export class YahooProvider implements StockDataProvider {
     let ok = false;
     try {
       const symbol = `${from}${to}=X`;
-      const quote = await yahooFinance.quote(symbol);
+      const quote = await withTimeout(yahooFinance.quote(symbol), QUOTE_TIMEOUT_MS, `rate(${symbol})`);
       ok = true;
       const rate = quote.regularMarketPrice ?? 0;
       if (rate > 0) setCache(cacheKey, rate);
