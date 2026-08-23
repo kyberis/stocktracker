@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.220",
+    date: "2026-08-23",
+    title: "Faster Home for large portfolios",
+    titleTranslations: {
+      es: "Home más rápida en carteras grandes",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Home loads with a single bootstrap quote pass for day highlights and AID status, defers the AI briefing and below-the-fold feeds, shares the market ticker-bar fetch, and routes quote requests through in-flight coalescing — cutting duplicate Yahoo work on large portfolios.",
+        translations: {
+          es: "Home carga con un único pase de cotizaciones (bootstrap) para highlights y estado AID, aplaza el briefing de IA y los feeds bajo el pliegue, unifica el ticker-bar y enruta las cotizaciones con coalescing in-flight — menos trabajo duplicado de Yahoo en carteras grandes.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.219",
     date: "2026-08-23",
     title: "iOS widgets load for large portfolios",

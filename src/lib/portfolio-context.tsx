@@ -432,7 +432,7 @@ export function PortfolioProvider({
 
     try {
       const allQuotes: Record<string, QuoteData> = {};
-      const batchSize = 10;
+      const batchSize = 40;
       const headers = getApiHeaders();
 
       const requestByTicker = new Map(

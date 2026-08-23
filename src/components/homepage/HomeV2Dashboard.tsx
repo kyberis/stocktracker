@@ -10,6 +10,7 @@ import { usePortfolioCommand } from "@/contexts/portfolio-command-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { useAidStatus } from "@/hooks/useAidStatus";
+import { useHomeBootstrap } from "@/hooks/useHomeBootstrap";
 import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
 import { usePortfolioHomeData } from "@/components/dashboard-v2/use-portfolio-home-data";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
@@ -86,7 +87,14 @@ export default function HomeV2Dashboard() {
   const { gatedAdd } = usePortfolioCommand();
   // Aid briefing/feed/day-highlights all require a real session; demo has none.
   const aidEnabled = !isInitializing && !demoMode;
-  const aidStatus = useAidStatus(aidEnabled);
+  const bootstrap = useHomeBootstrap(aidEnabled);
+  const bootstrapSettled = !bootstrap.loading;
+  const aidStatus = useAidStatus(aidEnabled, {
+    includeBriefing: false,
+    seed: bootstrap.data?.aidStatus ?? null,
+    // Wait for bootstrap; on failure fall back to a direct status fetch.
+    autoFetch: bootstrapSettled && (!!bootstrap.data || bootstrap.error),
+  });
   const investmentCash = useMemo(() => investmentCashEntries(cashEntries), [cashEntries]);
   const home = usePortfolioHomeData({ holdings, cashEntries: investmentCash });
   const [aiOpen, setAiOpen] = useState(false);
@@ -294,7 +302,19 @@ export default function HomeV2Dashboard() {
 
           <ScreeningBetaBanner />
 
-          <HomeRecommendationCard />
+          <HomeRecommendationCard
+            initialRecommendation={
+              bootstrap.data?.recommendation
+                ? {
+                    current: bootstrap.data.recommendation.current,
+                    remaining: bootstrap.data.recommendation.remaining,
+                    total: bootstrap.data.recommendation.total,
+                    rawTotal: bootstrap.data.recommendation.rawTotal,
+                  }
+                : null
+            }
+            bootstrapSettled={bootstrapSettled}
+          />
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <HomeMoversCard holdings={holdings} />
@@ -302,7 +322,14 @@ export default function HomeV2Dashboard() {
           </div>
 
           <div id="home-v2-highlights">
-            <HomeDayHighlights />
+            <HomeDayHighlights
+              highlights={
+                bootstrap.error
+                  ? undefined
+                  : (bootstrap.data?.dayHighlights.highlights ?? null)
+              }
+              loading={bootstrap.loading}
+            />
           </div>
 
           {isMobile && (
@@ -328,7 +355,7 @@ export default function HomeV2Dashboard() {
 
           <HomeFinPulseTeaser enabled={aidEnabled} />
 
-          <PortfolioNewsFeed variant="compact" maxItems={10} />
+          <PortfolioNewsFeed variant="compact" maxItems={10} deferNetwork />
 
           {isMobile && (
             <>

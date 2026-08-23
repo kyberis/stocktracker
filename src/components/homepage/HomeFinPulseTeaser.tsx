@@ -3,14 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
+import { useDeferredNetwork } from "@/hooks/useDeferredNetwork";
 import type { AidFeedItem } from "@/lib/types";
 
 export default function HomeFinPulseTeaser({ enabled }: { enabled: boolean }) {
   const { t } = useI18n();
+  const deferred = useDeferredNetwork(enabled);
   const [item, setItem] = useState<AidFeedItem | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !deferred) return;
     let cancelled = false;
     fetch("/api/aid/feed", { credentials: "include", cache: "no-store" })
       .then((r) => (r.ok ? r.json() : { items: [] }))
@@ -25,7 +27,7 @@ export default function HomeFinPulseTeaser({ enabled }: { enabled: boolean }) {
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, deferred]);
 
   if (!item) return null;
 

@@ -22,6 +22,9 @@ export const GET = withMetrics("/api/aid/status", async (req: NextRequest) => {
 
   const settings = await getUserSettings(session.userId);
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
+  // Default off: Home bootstrap + lazy `?includeBriefing=1` avoid LLM on critical path.
+  // AID dashboard still passes includeBriefing=1 on first paint.
+  const includeBriefing = req.nextUrl.searchParams.get("includeBriefing") === "1";
   const holdings = await listHoldings(session.userId, portfolioId);
   const quotes = await fetchQuoteMapForHoldings(holdings);
 
@@ -30,6 +33,8 @@ export const GET = withMetrics("/api/aid/status", async (req: NextRequest) => {
     portfolioId,
     language: settings.language || "en",
     quotes,
+    holdings,
+    includeBriefing,
   });
 
   return NextResponse.json(status);

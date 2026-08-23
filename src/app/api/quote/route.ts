@@ -1,9 +1,6 @@
 import { NextRequest } from "next/server";
-import { YahooProvider } from "@/lib/api-providers/yahoo";
-import { resolveYahooQuote } from "@/lib/resolve-yahoo-quote";
 import { withMetrics } from "@/lib/with-metrics";
-import { getCachedQuotes, setCachedQuotes } from "@/lib/quote-cache";
-import type { ProviderQuoteResult } from "@/lib/api-providers/types";
+import { getQuotesWithCache } from "@/lib/quote-cache";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -35,37 +32,15 @@ export const GET = withMetrics("/api/quote", async (request: NextRequest) => {
   }
 
   const stockSymbols = symbols.split(",").map((s) => s.trim()).filter(Boolean);
+  const fetched = await getQuotesWithCache(stockSymbols);
+
   const results: Record<string, unknown> = {};
-
-  const { hits, misses } = await getCachedQuotes(stockSymbols);
-  for (const [symbol, quote] of Object.entries(hits)) {
-    results[symbol] = { ...quote, providerUsed: "yahoo" };
-  }
-
-  if (misses.length > 0) {
-    const yahoo = new YahooProvider();
-    const toCache: Record<string, ProviderQuoteResult> = {};
-
-    const stockPromises = misses.map(async (symbol) => {
-      try {
-        const quote = await resolveYahooQuote(yahoo, symbol);
-        if (quote) {
-          results[symbol] = { ...quote, providerUsed: "yahoo" };
-          toCache[symbol] = quote;
-        } else {
-          console.error(`Failed to fetch quote for ${symbol}: No quote data`);
-          results[symbol] = errorQuote(symbol);
-        }
-      } catch (err) {
-        console.error(`Failed to fetch quote for ${symbol}:`, err instanceof Error ? err.message : err);
-        results[symbol] = errorQuote(symbol);
-      }
-    });
-
-    await Promise.all(stockPromises);
-
-    if (Object.keys(toCache).length > 0) {
-      setCachedQuotes(toCache).catch(() => {});
+  for (const symbol of stockSymbols) {
+    const quote = fetched[symbol];
+    if (quote) {
+      results[symbol] = { ...quote, providerUsed: "yahoo" };
+    } else {
+      results[symbol] = errorQuote(symbol);
     }
   }
 

@@ -9,6 +9,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useCommerceEnabled } from "@/lib/commerce";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useDeferredNetwork } from "@/hooks/useDeferredNetwork";
 import EmptyState from "@/components/EmptyState";
 import type { NewsArticle } from "@/lib/types";
 import demoArticles from "../../data/demo-portfolio-news.json";
@@ -41,12 +42,21 @@ interface Props {
   variant?: "full" | "compact";
   maxItems?: number;
   onViewAll?: () => void;
+  /** When true, wait for idle/scroll before hitting `/api/portfolio-news`. */
+  deferNetwork?: boolean;
 }
 
-export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAll }: Props) {
+export default function PortfolioNewsFeed({
+  variant = "full",
+  maxItems,
+  onViewAll,
+  deferNetwork = false,
+}: Props) {
   const { getApiHeaders } = useSettings();
   const { holdings, activePortfolioId, demoMode } = usePortfolio();
   const { t } = useI18n();
+  const networkReady = useDeferredNetwork(!demoMode && deferNetwork && holdings.length > 0);
+  const allowFetch = !deferNetwork || networkReady;
 
   const [articles, setArticles] = useState<NewsArticle[] | null>(null);
   const [status, setStatus] = useState<FeedStatus>("idle");
@@ -72,6 +82,10 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
     }
     if (holdings.length === 0) {
       setArticles(null);
+      setStatus("idle");
+      return;
+    }
+    if (!allowFetch) {
       setStatus("idle");
       return;
     }
@@ -114,7 +128,14 @@ export default function PortfolioNewsFeed({ variant = "full", maxItems, onViewAl
       });
 
     return () => ac.abort();
-  }, [demoMode, holdings.length, getApiHeaders, activePortfolioId, holdingsTickerSignature]);
+  }, [
+    demoMode,
+    holdings.length,
+    getApiHeaders,
+    activePortfolioId,
+    holdingsTickerSignature,
+    allowFetch,
+  ]);
 
   const displayArticles = useMemo(() => {
     if (!articles) return [];
