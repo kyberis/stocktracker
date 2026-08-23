@@ -73,6 +73,9 @@ describe("warren chat persistence", () => {
     saveWarrenChatBubbles(key, bubbles);
     const loaded = loadWarrenChatBubbles(key);
     expect(loaded).toHaveLength(WARREN_CHAT_MAX_BUBBLES);
-    expect(loaded[0]?.content).toBe("msg-5");
+    expect(loaded[0]?.kind).toBe("text-user");
+    if (loaded[0]?.kind === "text-user") {
+      expect(loaded[0].content).toBe("msg-5");
+    }
   });
 });
