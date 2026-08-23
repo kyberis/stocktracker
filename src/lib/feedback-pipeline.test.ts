@@ -71,6 +71,7 @@ describe("runFeedbackPipelineWork", () => {
     vi.mocked(findUserById).mockResolvedValue({ email: "b@c.com" } as never);
     vi.mocked(createLinearFeedbackIssue).mockResolvedValue({
       issueId: "lin_1",
+      identifier: "TRE-1",
       url: "https://linear.app/i/1",
     });
     vi.mocked(applyFeedbackPipelineDbUpdate).mockResolvedValue(true);
@@ -116,6 +117,7 @@ describe("runFeedbackPipelineWork", () => {
     vi.mocked(findUserById).mockResolvedValue({ email: "d@e.com" } as never);
     vi.mocked(createLinearFeedbackIssue).mockResolvedValue({
       issueId: "lin_2",
+      identifier: "TRE-2",
       url: "https://linear.app/i/2",
     });
     vi.mocked(applyFeedbackPipelineDbUpdate).mockResolvedValue(false);

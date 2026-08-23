@@ -97,16 +97,8 @@ describe("fetchSharedQuotesAndRates", () => {
       const out: Record<string, { regularMarketPrice: number; currency: string }> = {};
       for (const t of tickers) {
         out[t] = {
-          symbol: t,
-          shortName: t,
           regularMarketPrice: 1,
-          regularMarketChange: 0,
-          regularMarketChangePercent: 0,
           currency: "USD",
-          regularMarketPreviousClose: 1,
-          fiftyTwoWeekHigh: 1,
-          fiftyTwoWeekLow: 1,
-          marketCap: 1,
         };
       }
       return out as never;
