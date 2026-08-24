@@ -20,6 +20,7 @@ const EVENT_TYPES: ProdOpsEventType[] = [
   "trial_activated",
   "portfolio_anomaly",
   "screening_provider_quota",
+  "yahoo_historical_payload_invalid",
 ];
 
 const DEFAULT_CONFIG: ProdOpsConfig = {
@@ -39,6 +40,7 @@ const EVENT_LABELS: Record<ProdOpsEventType, string> = {
   trial_activated: "Trial activated",
   portfolio_anomaly: "Portfolio anomaly",
   screening_provider_quota: "Screening provider quota",
+  yahoo_historical_payload_invalid: "Yahoo historical payload invalid",
   support_user_returned: "Support user returned",
   ops_digest: "Ops digest",
   test_notification: "Test notification",
