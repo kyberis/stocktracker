@@ -81,6 +81,7 @@ const PortfolioGrowthPeriods = dynamic(() => import("@/components/PortfolioGrowt
 const PerformanceMetrics = dynamic(() => import("@/components/PerformanceMetrics"), { ssr: false, loading: () => <CardSkeleton /> });
 const GoalCelebration = dynamic(() => import("@/components/GoalCelebration"), { ssr: false });
 const WarrenTrigger = dynamic(() => import("@/components/warren/WarrenTrigger"), { ssr: false });
+const ClaraCta = dynamic(() => import("@/components/clara/ClaraCta"), { ssr: false });
 const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
 
 export default function MobileDashboard() {
@@ -345,6 +346,7 @@ export default function MobileDashboard() {
                 )}
 
                 <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
+                <ClaraCta href={demoMode ? "/signup" : undefined} />
                 <DailyDigestsTeaserCard />
                 <WeeklyDigestCard position="promoted" />
                 <CompactReferralCard onShare={() => setShowReferralModal(true)} />

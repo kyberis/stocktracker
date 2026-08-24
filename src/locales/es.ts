@@ -3168,6 +3168,24 @@ const es: TranslationStrings = {
   warrenAttachAria:
     "Adjunta imágenes, PDF, CSV o audio (máx. 5 archivos; hay límites por tipo)",
 
+  // ── Clara (CTA de la app hermana de finanzas personales) ─
+  claraName: "Clara",
+  claraTriggerSub: "Gastos, presupuestos y ahorro",
+  claraModalTitle: "Conoce a Clara",
+  claraModalRole: "Finanzas personales",
+  claraModalIntro:
+    "Clara te ayuda a seguir gastos, presupuestos, metas de ahorro y pagos recurrentes — por chat, en la web y en Telegram. Misma cuenta de trefolio; sin contraseña nueva.",
+  claraModalBullet1: "Registra gastos y planifica el mes en lenguaje natural",
+  claraModalBullet2: "Presupuestos, metas de ahorro y fondo de emergencia",
+  claraModalBullet3: "Conexión bancaria opcional y bot de Telegram",
+  claraModalBullet4: "Coordina con Warren en la Oficina de agentes si eres Pro",
+  claraModalFreeNote: "Gratis: 30 mensajes/día. Trefolio Pro: 200/día.",
+  claraModalCreateAccount: "Crear mi espacio en Clara",
+  claraModalOpenChat: "Abrir chat de Clara",
+  claraModalSisterNote: "Abre clara.trefolio.com en una pestaña nueva — el mismo inicio de sesión que trefolio.",
+  claraModalDisclaimer:
+    "Clara es una app hermana. La ayuda generada por IA no es asesoramiento financiero.",
+
   // ── Home v2 (preview homepage diaria) ──
   homeV2BetaBadge: "Home",
   homeV2Title: "Home",

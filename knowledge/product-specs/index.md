@@ -40,6 +40,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 ## Portfolio Core
 
 - [advanced-investor-dashboard](advanced-investor-dashboard.md) — AID beta control panel (`/aid`), home CTA, Warren/Will/Clara column.
+- [clara-home-cta](clara-home-cta.md) — Clara card beside Warren: mini-landing modal → SSO / open Clara chat.
 - [unified-homepage](unified-homepage.md) — Default daily home at `/` (`home_v2` on by default); Classic at `/classic` (`classic_home`).
 - [home-portfolio-recommendations](home-portfolio-recommendations.md) — Home tip card queue + diversify sector research.
 - [accounts-manager](accounts-manager.md) — user-visible accounts/brokers.

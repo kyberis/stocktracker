@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.228",
+    date: "2026-08-24",
+    title: "Clara beside Warren",
+    titleTranslations: {
+      es: "Clara al lado de Warren",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "A Clara card now sits next to Warren on Home, Classic, and mobile. Open a short intro, create your Clara space with the same trefolio login, and jump to Clara chat in a new tab.",
+        translations: {
+          es: "Una tarjeta de Clara aparece junto a Warren en Home, Classic y móvil. Abre una intro breve, crea tu espacio en Clara con el mismo login de trefolio y salta al chat de Clara en una pestaña nueva.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.227",
     date: "2026-08-24",
     title: "Safer SnapTrade broker disconnect",

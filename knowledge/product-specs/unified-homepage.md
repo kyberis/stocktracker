@@ -74,7 +74,7 @@ type HomeDayHighlight = {
 
 **Portfolio recommendation card:** Deterministic tip queue (diversify / concentration / cash / FX). Hide when empty or demo. Diversify CTA → `/recommendations/diversify`. Spec: [home-portfolio-recommendations.md](home-portfolio-recommendations.md).
 
-**Rail (~320px):** Allocation (CTA → `/tools/taxonomy` to fix unclassified) → Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats. Hidden when empty (no holdings). On mobile, Allocation stays in the main column above holdings.
+**Rail (~320px):** Allocation (CTA → `/tools/taxonomy` to fix unclassified) → Warren → **Clara CTA** (mini-landing modal → clara.trefolio.com) → Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats. Hidden when empty (no holdings). On mobile, Allocation stays in the main column above holdings.
 
 **Empty (no holdings):** Same `EmptyPortfolio` CTA as Classic `/` (import + add stock). Cash-only still counts as empty for this gate. When `onAskWarren` is wired (Home v2), Warren is **add-stock only** with a 10-consult / 15-minute cooldown — see [warren-empty-add-stock.md](warren-empty-add-stock.md).
 
@@ -124,6 +124,7 @@ type HomeDayHighlight = {
 | `home_v2_section_viewed` | Scroll into section |
 | `home_v2_highlight_clicked` | Chip click (`kind`, `ticker`) |
 | `home_v2_mcp_cta_clicked` | MCP card CTA |
+| `clara_cta_opened` / `clara_modal_cta_clicked` | Clara sister-app CTA beside Warren (see [clara-home-cta](clara-home-cta.md)) |
 | `home_v2_holdings_explorer_cta_clicked` | Holdings-list CTA → `/tools/holdings-explorer` |
 | `home_rec_viewed` / `home_rec_next` / `home_rec_acted` | Recommendation card lifecycle |
 | `home_rec_diversify_opened` / `home_rec_candidate_clicked` | Diversify research funnel |

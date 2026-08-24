@@ -37,6 +37,7 @@ const CompactDividendCard = dynamic(() => import("./CompactDividendCard"), { ssr
 const CompactEarningsCard = dynamic(() => import("./CompactEarningsCard"), { ssr: false, loading: () => <CardSkeleton /> });
 const PortfolioScoreCard = dynamic(() => import("./PortfolioScoreCard"), { ssr: false, loading: () => <CardSkeleton /> });
 const WarrenTrigger = dynamic(() => import("@/components/warren/WarrenTrigger"), { ssr: false });
+const ClaraCta = dynamic(() => import("@/components/clara/ClaraCta"), { ssr: false });
 const WeeklyDigestCard = dynamic(() => import("./WeeklyDigestCard"), { ssr: false });
 const DailyDigestsTeaserCard = dynamic(() => import("./DailyDigestsTeaserCard"), { ssr: false });
 const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
@@ -146,6 +147,7 @@ function V2Dashboard(props: Props) {
         </div>
         <div className="flex flex-col gap-3">
           <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
+          <ClaraCta />
           <OnboardingChecklist onOpenAddStock={onAddStock} />
           <DailyDigestsTeaserCard />
           <WeeklyDigestCard position="promoted" />
