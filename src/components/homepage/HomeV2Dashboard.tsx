@@ -358,7 +358,7 @@ export default function HomeV2Dashboard() {
               highlights={
                 bootstrap.error
                   ? undefined
-                  : (bootstrap.data?.dayHighlights.highlights ?? null)
+                  : (bootstrap.data?.dayHighlights?.highlights ?? null)
               }
               loading={sectionsLoading && !bootstrap.data?.dayHighlights}
             />
