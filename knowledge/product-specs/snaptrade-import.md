@@ -54,9 +54,6 @@ Users connect their broker through SnapTrade; we fetch positions and transaction
 ## 13. Edge cases & gotchas
 - Expired connection → prompt user to re-auth.
 - Broker-side corporate actions not always reflected.
-- Single-broker disconnect detaches only that broker’s SnapTrade holdings (live positions, else tickers from local `broker_name` txs). Sole-broker disconnect with unknown lots still detaches all.
-- SnapTrade `removeBrokerageAuthorization` / `deleteSnapTradeUser` HTTP 404 is treated as already disconnected (idempotent).
-- Disconnect removes that broker’s `snaptrade` cash rows (`NAME LIKE '<BROKER>%'`).
 
 ## 14. Tests
 - Integration with mocked client.

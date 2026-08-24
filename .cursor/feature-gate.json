@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.224: Cron housekeeping (merged lifecycle emails, daily trial-expiration, archived digest-email stub) — no customer-facing landing capability"
+  "notes": "2.5.227: SnapTrade disconnect hardening is a fix, not a landing-page feature"
 }
