@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.225",
+    date: "2026-08-24",
+    title: "Faster Home first paint",
+    titleTranslations: {
+      es: "Home carga más rápido",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Home bootstrap now splits into a fast core phase (holdings, cash, quotes, FX) and a deferred sections phase so the portfolio total can render sooner on large books.",
+        translations: {
+          es: "El bootstrap de Home ahora se divide en una fase core rápida (posiciones, efectivo, cotizaciones, FX) y otra de secciones diferida para que el total de cartera aparezca antes en carteras grandes.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Home seeds holdings from bootstrap core, restores the active portfolio from localStorage on first paint, defers duplicate init quote fetches while bootstrap is pending, and shows skeletons instead of a blank screen.",
+        translations: {
+          es: "Home hidrata posiciones desde el core del bootstrap, restaura la cartera activa desde localStorage en el primer render, aplaza cotizaciones duplicadas del init mientras el bootstrap está en curso y muestra skeletons en lugar de pantalla en blanco.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.224",
     date: "2026-08-24",
     title: "Fewer lifecycle crons",

@@ -34,6 +34,7 @@ import {
   useAgentIntroEngagementReady,
   useAgentIntroPostAction,
 } from "@/hooks/useAgentIntroPostAction";
+import { HeroSkeleton, TableSkeleton } from "@/components/Skeleton";
 
 type HeroMode = "simple" | "advanced";
 const HERO_MODE_KEY = "home_v2_hero_mode";
@@ -77,13 +78,14 @@ export default function HomeV2Dashboard() {
   const { t } = useI18n();
   const track = useTrack();
   const isMobile = useIsMobileViewport();
-  const { holdings, cashEntries, isInitializing, demoMode, hydrateMarketData, activePortfolioId } =
+  const { holdings, cashEntries, isInitializing, demoMode, hydrateMarketData, hydratePortfolioBook, activePortfolioId } =
     usePortfolio();
   const { gatedAdd } = usePortfolioCommand();
   // Bootstrap must start immediately (not wait for quote init) so it can win the
   // cold-path race and seed PortfolioProvider via hydrateMarketData.
   const bootstrap = useHomeBootstrap(!demoMode);
   const bootstrapSettled = !bootstrap.loading;
+  const sectionsLoading = bootstrap.sectionsLoading;
   // AID shell/briefing still needs a real session; demo has none.
   const aidEnabled = !demoMode;
   const aidStatus = useAidStatus(aidEnabled, {
@@ -104,7 +106,8 @@ export default function HomeV2Dashboard() {
   const pageViewSent = useRef(false);
   const visitMarked = useRef(false);
   const returnTracked = useRef(false);
-  const hydratedBootstrapKey = useRef<string | null>(null);
+  const hydratedBookKey = useRef<string | null>(null);
+  const hydratedQuotesKey = useRef<string | null>(null);
   const showClassicLink = isLoaded && !!flags.classic_home;
 
   const holdingsTickerSig = useMemo(
@@ -114,10 +117,19 @@ export default function HomeV2Dashboard() {
 
   useEffect(() => {
     const payload = bootstrap.data;
+    if (!payload?.holdings) return;
+    const bookKey = `${payload.asOf}|${activePortfolioId ?? ""}`;
+    if (hydratedBookKey.current === bookKey) return;
+    hydratedBookKey.current = bookKey;
+    hydratePortfolioBook(payload.holdings, payload.cashEntries ?? [], activePortfolioId);
+  }, [bootstrap.data, hydratePortfolioBook, activePortfolioId]);
+
+  useEffect(() => {
+    const payload = bootstrap.data;
     if (!payload?.quotes) return;
-    const key = `${payload.asOf}|${holdingsTickerSig}|${activePortfolioId ?? ""}`;
-    if (hydratedBootstrapKey.current === key) return;
-    hydratedBootstrapKey.current = key;
+    const quotesKey = `${payload.asOf}|${holdingsTickerSig}|${activePortfolioId ?? ""}`;
+    if (hydratedQuotesKey.current === quotesKey) return;
+    hydratedQuotesKey.current = quotesKey;
     hydrateMarketData(payload.quotes, payload.exchangeRates);
   }, [bootstrap.data, hydrateMarketData, holdingsTickerSig, activePortfolioId]);
 
@@ -235,7 +247,16 @@ export default function HomeV2Dashboard() {
         />
       )}
 
-      {isInitializing ? null : isEmpty ? (
+      {isInitializing ? (
+        <div className="flex flex-col gap-4" role="status" aria-label={t("loading")}>
+          <HeroSkeleton />
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="card h-40 animate-pulse rounded-xl bg-[color:var(--surface-soft)]" />
+            <div className="card h-40 animate-pulse rounded-xl bg-[color:var(--surface-soft)]" />
+          </div>
+          <TableSkeleton rows={4} />
+        </div>
+      ) : isEmpty ? (
         <EmptyPortfolio
           demoMode={demoMode}
           onAddStock={() => {
@@ -339,7 +360,7 @@ export default function HomeV2Dashboard() {
                   ? undefined
                   : (bootstrap.data?.dayHighlights.highlights ?? null)
               }
-              loading={bootstrap.loading}
+              loading={sectionsLoading && !bootstrap.data?.dayHighlights}
             />
           </div>
 
