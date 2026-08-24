@@ -98,6 +98,7 @@ export {
   resetUserHoldings,
   rebuildHoldings,
   upsertHoldingsFromPositions,
+  reconcileSnapTradeHoldingsAfterBulkImport,
   detachSnapTradeHoldings,
   listSnapTradeTickersForBroker,
   deleteAllHoldings,

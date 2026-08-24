@@ -223,23 +223,23 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
         // Upsert holdings to all mapped portfolios.
         // When any connection is disabled, positions data is incomplete — skip
         // stale cleanup so we don't delete holdings we simply couldn't fetch.
-        if (holdingsResult.holdings.length > 0) {
-          for (const targetPId of targetPortfolios) {
-            await upsertHoldingsFromPositions(conn.userId, holdingsResult.holdings, targetPId, {
-              skipStaleCleanup: disabledConns.length > 0,
-            });
-            await linkUnlinkedTransactionsToHoldings(conn.userId, targetPId);
-          }
+        // Always run upsert (even when positions is empty) so full exits remove
+        // stale snaptrade rows instead of leaving orphaned holdings.
+        for (const targetPId of targetPortfolios) {
+          await upsertHoldingsFromPositions(conn.userId, holdingsResult.holdings, targetPId, {
+            skipStaleCleanup: disabledConns.length > 0,
+          });
+          await linkUnlinkedTransactionsToHoldings(conn.userId, targetPId);
+        }
 
-          if (hadHoldingsBefore === 0) {
-            const holdingsAfter = await countHoldings(conn.userId);
-            if (shouldNotifyFirstSync({ hadHoldingsBefore, holdingsAfter })) {
-              const claimed = await claimFirstSyncNotification(conn.userId);
-              if (claimed) {
-                sendFirstSyncCompleteHoldingsNotification(conn.userId).catch((err) =>
-                  console.error(`[snaptrade-sync] first-sync notification failed for user ${conn.userId}:`, err),
-                );
-              }
+        if (hadHoldingsBefore === 0) {
+          const holdingsAfter = await countHoldings(conn.userId);
+          if (shouldNotifyFirstSync({ hadHoldingsBefore, holdingsAfter })) {
+            const claimed = await claimFirstSyncNotification(conn.userId);
+            if (claimed) {
+              sendFirstSyncCompleteHoldingsNotification(conn.userId).catch((err) =>
+                console.error(`[snaptrade-sync] first-sync notification failed for user ${conn.userId}:`, err),
+              );
             }
           }
         }
