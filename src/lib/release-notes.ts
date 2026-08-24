@@ -31,6 +31,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Las invitaciones a trial, la activación y el winback ahora corren en un único cron diario lifecycle-emails. La caducidad del trial es un respaldo diario más un chequeo al iniciar sesión. El pipeline Gmail de digest-email queda archivado como un stub sin trabajo.",
         },
       },
+      {
+        type: "fix",
+        text: "Production builds no longer time out statically generating /api/auth/apple (force-dynamic).",
+        translations: {
+          es: "El build de producción ya no se agota generando estáticamente /api/auth/apple (force-dynamic).",
+        },
+      },
     ],
   },
   {

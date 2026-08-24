@@ -27,6 +27,8 @@ import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
 import { grantCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
 import { maybeExpireTrialOnLogin } from "@/lib/trial-expiration";
 
+export const dynamic = "force-dynamic";
+
 const APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
 const APPLE_JWKS_URL = new URL("https://appleid.apple.com/auth/keys");
 
