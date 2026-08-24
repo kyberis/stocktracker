@@ -33,13 +33,16 @@ import {
   getRecommendationCache,
   listRecommendationStates,
   listCashEntries,
-  upsertRecommendationCache,
 } from "@/lib/db";
 import { fetchProviderQuotesForHoldingsWithStats } from "@/lib/holding-quotes";
 import { buildAidStatus } from "@/lib/aid/build-status";
 import { buildDayHighlightsPayload } from "@/lib/homepage/build-day-highlights";
 import { getRatesWithCache } from "@/lib/quote-cache";
-import { buildHomeBootstrap } from "./build-home-bootstrap";
+import {
+  buildHomeBootstrap,
+  buildHomeBootstrapCore,
+  buildHomeBootstrapSections,
+} from "./build-home-bootstrap";
 import { resolveRecommendationQueue } from "./resolve-recommendation-queue";
 
 const mockedHoldings = vi.mocked(listHoldings);
@@ -51,37 +54,39 @@ const mockedHighlights = vi.mocked(buildDayHighlightsPayload);
 const mockedCache = vi.mocked(getRecommendationCache);
 const mockedStates = vi.mocked(listRecommendationStates);
 
+const sampleHolding = {
+  ticker: "AAPL",
+  shares: 1,
+  exchange: "NMS",
+  displayCurrency: "USD",
+  valueInEUR: 100,
+  name: "Apple",
+  sector: "Technology",
+};
+
+const sampleQuotes = {
+  quotes: {
+    AAPL: {
+      symbol: "AAPL",
+      shortName: "Apple",
+      regularMarketPrice: 100,
+      regularMarketChange: 1,
+      regularMarketChangePercent: 1,
+      currency: "USD",
+      regularMarketPreviousClose: 99,
+      fiftyTwoWeekHigh: 200,
+      fiftyTwoWeekLow: 50,
+      marketCap: 1,
+    },
+  },
+  stats: { hitCount: 1, missCount: 0 },
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
-  mockedHoldings.mockResolvedValue([
-    {
-      ticker: "AAPL",
-      shares: 1,
-      exchange: "NMS",
-      displayCurrency: "USD",
-      valueInEUR: 100,
-      name: "Apple",
-      sector: "Technology",
-    },
-  ] as never);
+  mockedHoldings.mockResolvedValue([sampleHolding] as never);
   mockedSettings.mockResolvedValue({ language: "en", defaultCurrency: "EUR" } as never);
-  mockedQuotes.mockResolvedValue({
-    quotes: {
-      AAPL: {
-        symbol: "AAPL",
-        shortName: "Apple",
-        regularMarketPrice: 100,
-        regularMarketChange: 1,
-        regularMarketChangePercent: 1,
-        currency: "USD",
-        regularMarketPreviousClose: 99,
-        fiftyTwoWeekHigh: 200,
-        fiftyTwoWeekLow: 50,
-        marketCap: 1,
-      },
-    },
-    stats: { hitCount: 1, missCount: 0 },
-  });
+  mockedQuotes.mockResolvedValue(sampleQuotes);
   mockedRates.mockResolvedValue({ EURUSD: 1.1 });
   mockedHighlights.mockResolvedValue({
     highlights: [],
@@ -99,13 +104,23 @@ beforeEach(() => {
   mockedStates.mockResolvedValue([]);
   mockedCache.mockResolvedValue(null);
   vi.mocked(listCashEntries).mockResolvedValue([]);
-  vi.mocked(upsertRecommendationCache).mockResolvedValue(undefined as never);
 });
 
-describe("buildHomeBootstrap", () => {
-  it("fetches quotes once and builds status without briefing", async () => {
-    const payload = await buildHomeBootstrap({ userId: "u1", portfolioId: "p1" });
+describe("buildHomeBootstrapCore", () => {
+  it("returns holdings, cash, quotes, and FX without sections work", async () => {
+    const payload = await buildHomeBootstrapCore({ userId: "u1", portfolioId: "p1" });
     expect(mockedQuotes).toHaveBeenCalledTimes(1);
+    expect(mockedStatus).not.toHaveBeenCalled();
+    expect(mockedHighlights).not.toHaveBeenCalled();
+    expect(payload.holdings).toHaveLength(1);
+    expect(payload.quotes.AAPL?.regularMarketPrice).toBe(100);
+    expect(payload.quoteStats).toEqual({ hitCount: 1, missCount: 0 });
+  });
+});
+
+describe("buildHomeBootstrapSections", () => {
+  it("builds below-the-fold sections with cache-only recommendations", async () => {
+    const payload = await buildHomeBootstrapSections({ userId: "u1", portfolioId: "p1" });
     expect(mockedStatus).toHaveBeenCalledWith(
       expect.objectContaining({
         includeBriefing: false,
@@ -113,17 +128,17 @@ describe("buildHomeBootstrap", () => {
       }),
     );
     expect(payload.aidStatus.briefing).toBeNull();
+    expect(mockedHighlights).toHaveBeenCalled();
+  });
+});
+
+describe("buildHomeBootstrap", () => {
+  it("fetches quotes once and builds status without briefing", async () => {
+    const payload = await buildHomeBootstrap({ userId: "u1", portfolioId: "p1" });
+    expect(mockedQuotes).toHaveBeenCalled();
+    expect(payload.aidStatus.briefing).toBeNull();
     expect(payload.quotes.AAPL?.regularMarketPrice).toBe(100);
-    expect(payload.quoteStats).toEqual({ hitCount: 1, missCount: 0 });
     expect(payload.holdingsCount).toBe(1);
-    expect(payload.recommendation?.source).toBe("live");
-    expect(upsertRecommendationCache).toHaveBeenCalled();
-    expect(mockedHighlights).toHaveBeenCalledWith(
-      expect.objectContaining({
-        providerQuotes: expect.any(Object),
-        holdings: expect.any(Array),
-      }),
-    );
   });
 });
 

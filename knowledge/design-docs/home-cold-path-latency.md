@@ -29,20 +29,29 @@ Baseline inventory of what authenticated Home (`/`) loads on entry, and which wo
 
 ### Home bootstrap (preferred path)
 
-`GET /api/home-v2/bootstrap?portfolioId=` — **one** holdings list + **one** quote map + FX, then:
+`GET /api/home-v2/bootstrap?portfolioId=` — two phases on the client:
 
-- Day highlights (reuse quotes)
-- AID status **without** LLM briefing
-- Recommendation tip **from weekly cache only** (no live quote recompute)
-- Returns `quotes` + `exchangeRates` for `PortfolioProvider.hydrateMarketData`
-- `Server-Timing`: `dur`, `quoteHits`, `quoteMisses`, `holdings`
+1. **`phase=core`** (critical path): holdings + cash + one quote map + FX → hydrates
+   `PortfolioProvider` book + market data immediately.
+2. **`phase=sections`** (deferred): day highlights, AID status (no LLM), cache-only
+   recommendation tip.
 
-Contract: Home starts `/api/home-v2/bootstrap` immediately (does not wait for
-`PortfolioProvider` quote init). On success it calls `hydrateMarketData`, which
-bumps a quote epoch (discarding in-flight init/background applies) and, when
-coverage ≥ 90%, sets `suppressInitQuotes` so further *init-sourced* fan-outs
-no-op. User `refreshQuotes` always clears suppress and runs. A background
-refresh is scheduled at 30s.
+Full bootstrap (`phase` omitted) remains for tests and single-round-trip callers.
+
+Contract: Home starts core bootstrap immediately (does not wait for
+`PortfolioProvider` quote init). On core success it calls `hydratePortfolioBook`
+and `hydrateMarketData`, which bumps a quote epoch (discarding in-flight init
+applies) and, when coverage ≥ 90%, sets `suppressInitQuotes` so further
+*init-sourced* fan-outs no-op. `activePortfolioId` is read synchronously from
+localStorage so the first core request targets the right book. While bootstrap is
+pending, init skips duplicate holdings/cash fetches (when hydrated) and defers
+init quote fan-out with a 10s fallback. User `refreshQuotes` always clears
+suppress and runs. A background refresh is scheduled at 30s.
+
+Returns `quotes` + `exchangeRates` + `holdings` + `cashEntries` for hydration.
+`Server-Timing`: `dur`, `quoteHits`, `quoteMisses`, `holdings`
+
+UI: skeleton placeholders during `isInitializing` (no blank screen).
 
 Lazy follow-ups:
 

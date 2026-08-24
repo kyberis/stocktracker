@@ -8,6 +8,11 @@ import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 import { marketDataSymbolForHolding } from "@/lib/market-symbol";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import { enrichCashEntries } from "@/lib/fixed-return-cash";
+import {
+  isHomeBootstrapPending,
+  markHomeBootstrapBookHydrated,
+  wasHomeBootstrapBookHydrated,
+} from "@/lib/home-bootstrap-pending";
 
 const QUOTES_CACHE_KEY = "trefolio-quotes-v3";
 const RATES_CACHE_KEY = "trefolio-rates-v1";
@@ -36,6 +41,12 @@ function buildFxPairs(
 }
 
 const ACTIVE_PORTFOLIO_KEY = "trefolio-active-portfolio";
+const BOOTSTRAP_QUOTE_FALLBACK_MS = 10_000;
+
+function readStoredPortfolioId(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(ACTIVE_PORTFOLIO_KEY);
+}
 
 interface PortfolioContextType {
   holdings: Holding[];
@@ -81,6 +92,12 @@ interface PortfolioContextType {
   hydrateMarketData: (
     incomingQuotes: Record<string, QuoteData>,
     incomingRates?: ExchangeRates,
+  ) => void;
+  /** Seed holdings/cash from Home bootstrap core (skips duplicate init fetch). */
+  hydratePortfolioBook: (
+    incomingHoldings: Holding[],
+    incomingCash: CashEntry[],
+    portfolioId: string | null,
   ) => void;
   lastUpdated: Date | null;
   holdingsLastFetchedAt: Date | null;
@@ -171,7 +188,9 @@ export function PortfolioProvider({
     [],
   );
   const [portfolios, setPortfolios] = useState<PortfolioInfo[]>(initialPortfolios ?? []);
-  const [activePortfolioId, setActivePortfolioId] = useState<string | null>(null);
+  const [activePortfolioId, setActivePortfolioId] = useState<string | null>(() =>
+    demoMode ? null : readStoredPortfolioId(),
+  );
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>(initialQuotes ?? {});
   const [quoteUpdatedAt, setQuoteUpdatedAt] = useState<Record<string, number>>({});
   const [refreshingTickers, setRefreshingTickers] = useState<Set<string>>(new Set());
@@ -212,6 +231,7 @@ export function PortfolioProvider({
   /** When true, init-sourced fetchQuotes no-ops (bootstrap already seeded). */
   const suppressInitQuotesRef = useRef(false);
   const bootstrapBgRefreshTimer = useRef<number | null>(null);
+  const initQuoteFallbackTimer = useRef<number | null>(null);
   const holdingsRef = useRef(holdings);
   holdingsRef.current = holdings;
   const HYDRATE_COVERAGE_THRESHOLD = 0.9;
@@ -288,8 +308,9 @@ export function PortfolioProvider({
       const serverCoversResolved = hasServerData &&
         (!resolvedPortfolioId || resolvedPortfolioId === defaultP?.id);
       const needsFetch = !serverCoversResolved;
-      let holdingsData: Holding[] = initialHoldings ?? [];
-      if (needsFetch) {
+      const bootstrapBookHydrated = wasHomeBootstrapBookHydrated(resolvedPortfolioId ?? null);
+      let holdingsData: Holding[] = initialHoldings ?? holdingsRef.current;
+      if (needsFetch && !bootstrapBookHydrated) {
         const qp = resolvedPortfolioId ? `?portfolioId=${encodeURIComponent(resolvedPortfolioId)}` : "";
         const [holdingsRes, cashRes] = await Promise.all([
           fetchWithAuthRedirect(`/api/holdings${qp}`, { cache: "no-store" }),
@@ -344,7 +365,16 @@ export function PortfolioProvider({
       const allTickers = [...new Set(holdingsData.map((h: Holding) => h.ticker))];
       if (allTickers.length > 0 && !hasServerQuotes) {
         if (hasCachedQuotes) setIsInitializing(false);
-        fetchQuotes(allTickers, { background: hasCachedQuotes, fromInit: true });
+        const bootstrapPending = isHomeBootstrapPending();
+        if (!bootstrapPending) {
+          fetchQuotes(allTickers, { background: hasCachedQuotes, fromInit: true });
+        } else if (!hasCachedQuotes) {
+          initQuoteFallbackTimer.current = window.setTimeout(() => {
+            if (!suppressInitQuotesRef.current) {
+              fetchQuotes(allTickers, { fromInit: true });
+            }
+          }, BOOTSTRAP_QUOTE_FALLBACK_MS);
+        }
       } else {
         setIsInitializing(false);
         if (hasServerQuotes && allTickers.length > 0) {
@@ -527,6 +557,17 @@ export function PortfolioProvider({
     }
   }, [getApiHeaders, buildFetchUrl, fetchExchangeRates, quoteRequestSymbol]);
 
+  const hydratePortfolioBook = useCallback(
+    (incomingHoldings: Holding[], incomingCash: CashEntry[], portfolioId: string | null) => {
+      if (demoMode) return;
+      setHoldings(incomingHoldings);
+      setCashEntriesEnriched(incomingCash);
+      setHoldingsLastFetchedAt(new Date());
+      markHomeBootstrapBookHydrated(portfolioId);
+    },
+    [demoMode, setCashEntriesEnriched],
+  );
+
   const hydrateMarketData = useCallback(
     (incomingQuotes: Record<string, QuoteData>, incomingRates?: ExchangeRates) => {
       if (demoMode) return;
@@ -587,6 +628,9 @@ export function PortfolioProvider({
     return () => {
       if (bootstrapBgRefreshTimer.current != null) {
         window.clearTimeout(bootstrapBgRefreshTimer.current);
+      }
+      if (initQuoteFallbackTimer.current != null) {
+        window.clearTimeout(initQuoteFallbackTimer.current);
       }
     };
   }, []);
@@ -1001,6 +1045,7 @@ export function PortfolioProvider({
       refreshSingleQuote: demoMode ? noop : refreshSingleQuote,
       refreshAlertedTickers: demoMode ? noop : refreshAlertedTickers,
       hydrateMarketData: demoMode ? () => {} : hydrateMarketData,
+      hydratePortfolioBook: demoMode ? () => {} : hydratePortfolioBook,
       lastUpdated,
       holdingsLastFetchedAt,
       demoMode: !!demoMode,
@@ -1016,7 +1061,7 @@ export function PortfolioProvider({
       isLoading, isInitializing, isRefreshing, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, mutationVersion, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, moveToPortfolio, refreshHoldings, refreshQuotes, refreshSingleQuote,
-      refreshAlertedTickers, hydrateMarketData, lastUpdated, holdingsLastFetchedAt, demoMode, noop, noopGoal,
+      refreshAlertedTickers, hydrateMarketData, hydratePortfolioBook, lastUpdated, holdingsLastFetchedAt, demoMode, noop, noopGoal,
       goals, saveGoalCb, deleteGoalCb, fetchGoals,
     ]
   );
