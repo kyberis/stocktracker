@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { verifySessionToken } from "@/lib/auth/session";
 
+export const dynamic = "force-dynamic";
+
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 
 function getRedirectUri(req: NextRequest): string {

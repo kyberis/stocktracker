@@ -33,9 +33,9 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "fix",
-        text: "Production builds no longer time out statically generating /api/auth/apple (force-dynamic).",
+        text: "Marked Apple and Google auth start routes as dynamic so production builds do not prerender them and hit the 60s static-generation timeout.",
         translations: {
-          es: "El build de producción ya no se agota generando estáticamente /api/auth/apple (force-dynamic).",
+          es: "Las rutas de inicio de Apple y Google Sign-In son dinámicas para que el build de producción no las prerenderice y no se agote a los 60s.",
         },
       },
     ],
