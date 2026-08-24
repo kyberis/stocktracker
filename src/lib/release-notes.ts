@@ -26,9 +26,9 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "fix",
-        text: "Home and chart surfaces no longer fail when Yahoo returns an invalid historical payload for a symbol; `/api/historical` now degrades to empty data and the Yahoo chart call skips strict schema validation.",
+        text: "Home and chart surfaces no longer fail when Yahoo returns an invalid historical payload for a symbol; `/api/historical` now degrades to empty data, the Yahoo chart call skips strict schema validation, and ProdOps alerts staff when this payload breakage appears.",
         translations: {
-          es: "Home y las superficies de gráficos ya no fallan cuando Yahoo devuelve un payload histórico inválido para un símbolo; `/api/historical` ahora degrada a datos vacíos y la llamada chart de Yahoo omite la validación estricta del esquema.",
+          es: "Home y las superficies de gráficos ya no fallan cuando Yahoo devuelve un payload histórico inválido para un símbolo; `/api/historical` ahora degrada a datos vacíos, la llamada chart de Yahoo omite la validación estricta del esquema y ProdOps avisa al equipo cuando aparece esta rotura de payload.",
         },
       },
     ],

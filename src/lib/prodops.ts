@@ -85,6 +85,7 @@ function isAlwaysEnabledProdOpsEvent(eventType: ProdOpsEventType): boolean {
     eventType === "test_notification" ||
     eventType === "ops_digest" ||
     eventType === "screening_provider_quota" ||
+    eventType === "yahoo_historical_payload_invalid" ||
     eventType === "support_user_returned"
   );
 }
@@ -511,6 +512,32 @@ export async function enqueueProdOpsScreeningProviderQuotaEvent(params: {
       detail: params.detail.slice(0, 300),
       trippedAt: params.trippedAt,
       generation: params.generation,
+    },
+  });
+}
+
+export async function enqueueProdOpsYahooHistoricalPayloadInvalidEvent(params: {
+  symbol: string;
+  ticker: string;
+  period: string;
+  detail: string;
+}): Promise<void> {
+  const hourKey = new Date().toISOString().slice(0, 13);
+  const cleanSymbol = params.symbol.trim().toUpperCase();
+  const cleanTicker = params.ticker.trim().toUpperCase();
+  await createNamedProdOpsEvent({
+    eventType: "yahoo_historical_payload_invalid",
+    userId: "system",
+    dedupeKey: `yahoo_hist_payload_invalid:${cleanTicker}:${params.period}:${hourKey}`,
+    summary: `Yahoo historical payload invalid for ${cleanSymbol} (${params.period}); degraded to empty data.`,
+    adminPath: `/analisis/${encodeURIComponent(cleanTicker || cleanSymbol)}`,
+    metadata: {
+      provider: "yahoo",
+      symbol: cleanSymbol,
+      ticker: cleanTicker,
+      period: params.period,
+      detail: params.detail.slice(0, 400),
+      observedAtHour: hourKey,
     },
   });
 }

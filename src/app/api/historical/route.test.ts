@@ -9,6 +9,15 @@ vi.mock("@/lib/api-providers/isin-resolver", () => ({
   resolveIsinToTicker: vi.fn(async (_yahoo: unknown, symbol: string) => symbol),
 }));
 
+const { mockEnqueueProdOpsYahooHistoricalPayloadInvalidEvent } = vi.hoisted(() => ({
+  mockEnqueueProdOpsYahooHistoricalPayloadInvalidEvent: vi.fn(),
+}));
+
+vi.mock("@/lib/prodops", () => ({
+  enqueueProdOpsYahooHistoricalPayloadInvalidEvent:
+    mockEnqueueProdOpsYahooHistoricalPayloadInvalidEvent,
+}));
+
 const mockGetHistorical = vi.fn();
 
 vi.mock("@/lib/api-providers/yahoo", () => ({
@@ -22,6 +31,7 @@ import { GET } from "./route";
 describe("GET /api/historical", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockEnqueueProdOpsYahooHistoricalPayloadInvalidEvent.mockResolvedValue(undefined);
   });
 
   it("returns historical data when yahoo succeeds", async () => {
@@ -54,6 +64,12 @@ describe("GET /api/historical", () => {
       data: [],
       providerUsed: "yahoo",
       degraded: true,
+    });
+    expect(mockEnqueueProdOpsYahooHistoricalPayloadInvalidEvent).toHaveBeenCalledWith({
+      symbol: "BAD",
+      ticker: "BAD",
+      period: "all",
+      detail: "The following result did not validate with schema",
     });
   });
 });
