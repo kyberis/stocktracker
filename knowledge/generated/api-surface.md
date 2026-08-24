@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-321 routes.
+322 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -153,6 +153,7 @@
 | `/api/chat/[token]/reactions` | POST | [`src/app/api/chat/[token]/reactions/route.ts`](../../src/app/api/chat/[token]/reactions/route.ts) |
 | `/api/chat/[token]/typing` | POST | [`src/app/api/chat/[token]/typing/route.ts`](../../src/app/api/chat/[token]/typing/route.ts) |
 | `/api/chats` | GET | [`src/app/api/chats/route.ts`](../../src/app/api/chats/route.ts) |
+| `/api/clara/status` | GET | [`src/app/api/clara/status/route.ts`](../../src/app/api/clara/status/route.ts) |
 | `/api/company-analysis` | GET | [`src/app/api/company-analysis/route.ts`](../../src/app/api/company-analysis/route.ts) |
 | `/api/company-analysis/narrative` | POST | [`src/app/api/company-analysis/narrative/route.ts`](../../src/app/api/company-analysis/narrative/route.ts) |
 | `/api/contact` | POST | [`src/app/api/contact/route.ts`](../../src/app/api/contact/route.ts) |
