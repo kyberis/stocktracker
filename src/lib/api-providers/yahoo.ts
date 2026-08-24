@@ -1,4 +1,6 @@
 import YahooFinance from "yahoo-finance2";
+import type { ChartResultArray } from "yahoo-finance2/modules/chart";
+import type { Quote as YahooQuote } from "yahoo-finance2/modules/quote";
 import type {
   StockDataProvider,
   ProviderQuoteResult,
@@ -108,7 +110,11 @@ export class YahooProvider implements StockDataProvider {
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "quote" });
     let ok = false;
     try {
-      const quote = await withTimeout(yahooFinance.quote(symbol), QUOTE_TIMEOUT_MS, `quote(${symbol})`);
+      const quote = await withTimeout(
+        yahooFinance.quote(symbol),
+        QUOTE_TIMEOUT_MS,
+        `quote(${symbol})`,
+      ) as YahooQuote;
       if (!quote || typeof quote !== "object") {
         throw new Error(`No quote data for ${symbol}`);
       }
@@ -272,14 +278,7 @@ export class YahooProvider implements StockDataProvider {
         symbol,
         { period1, period2, interval },
         { validateResult: false },
-      ) as { quotes?: Array<{
-        date: Date;
-        open?: number | null;
-        high?: number | null;
-        low?: number | null;
-        close?: number | null;
-        volume?: number | null;
-      }> };
+      ) as ChartResultArray;
       ok = true;
       const quotes = result.quotes ?? [];
       const points = quotes
