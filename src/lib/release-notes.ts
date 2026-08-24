@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.229",
+    date: "2026-08-24",
+    title: "Transaction deduplication",
+    titleTranslations: {
+      es: "Deduplicación de transacciones",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Broker import and auto-sync now skip duplicate transactions when date, type, quantity, and amount match — even from different sources. Existing duplicates are cleaned up on deploy.",
+        translations: {
+          es: "La importación de broker y la auto-sincronización omiten transacciones duplicadas cuando coinciden fecha, tipo, cantidad e importe — aunque vengan de fuentes distintas. Los duplicados existentes se limpian al desplegar.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.228",
     date: "2026-08-24",
     title: "SnapTrade sell sync fixes holdings",

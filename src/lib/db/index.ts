@@ -149,6 +149,7 @@ export {
   deleteAllTransactions,
   listTransactionSourceRefs,
   listTransactionTradeFingerprints,
+  listTransactionContentFingerprints,
   mapTransactionsToPortfolio,
   mapTransactionsBySourceRef,
   removeTransactionPortfolioMappings,

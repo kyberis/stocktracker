@@ -12,6 +12,7 @@ import { insertSnapTradeLog } from "@/lib/db/snaptrade-logs";
 import { canonicalExchangeCode } from "@/lib/db/helpers";
 import { extractSnapTradeHttpStatus, isSnapTradeNotFound } from "@/lib/snaptrade-http";
 import { trackExternalProvider } from "@/lib/traffic/provider-track";
+import { snapTradeTradeFingerprint } from "@/lib/transaction-fingerprint";
 
 let _client: Snaptrade | null = null;
 
@@ -376,15 +377,7 @@ export interface SnapTradeHoldingsResult {
   orderTransactions: ExtractedTransaction[];
 }
 
-/** Content fingerprint for deduping activities vs orders vs existing ledger rows. */
-export function snapTradeTradeFingerprint(tx: {
-  date: string;
-  type: string;
-  ticker: string;
-  shares: number;
-}): string {
-  return `${tx.date}|${tx.type}|${tx.ticker.toUpperCase()}|${Math.round(Math.abs(tx.shares) * 1000)}`;
-}
+export { snapTradeTradeFingerprint } from "@/lib/transaction-fingerprint";
 
 /**
  * Merge activity history with recent EXECUTED orders.

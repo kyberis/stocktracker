@@ -14,6 +14,7 @@ import {
 import type { Transaction } from "@/lib/types";
 import { resolvePortfolioId } from "./portfolios";
 import { normalizeHkYahooSymbol } from "@/lib/market-symbol";
+import { transactionContentFingerprint } from "@/lib/transaction-fingerprint";
 
 export async function listTransactions(userId: string, holdingId?: string, portfolioId?: string): Promise<Transaction[]> {
   const client = await ensureInitialized();
@@ -271,14 +272,22 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
   const exchange = canonicalExchangeCode(tx.exchange) || (tx.exchange || "").toUpperCase();
   const ticker = normalizeHkYahooSymbol(normalizeTickerForExchange(tx.ticker, exchange));
   const sourceRef = tx.sourceRef || "";
+  const contentFingerprint = transactionContentFingerprint({
+    date: tx.date,
+    type: tx.type,
+    ticker,
+    shares: tx.shares,
+    totalAmount: total,
+    pricePerShare: tx.pricePerShare,
+  });
 
   try {
     await client.execute({
       sql: `INSERT INTO transactions (
               id, user_id, holding_id, ticker, name, exchange, isin, asset_type, account_id,
-              type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, exchange_rate_eur, notes, source_ref, portfolio_id
+              type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, exchange_rate_eur, notes, source_ref, portfolio_id, content_fingerprint
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         id, userId, tx.holdingId || "", ticker, tx.name || "", exchange,
         tx.isin || "", tx.assetType || "stock", tx.accountId || "",
@@ -287,12 +296,14 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
         tx.displayCurrency || tx.currency || "EUR", tx.exchangeRateEur ?? null,
         tx.notes || "", sourceRef,
         resolved,
+        contentFingerprint,
       ],
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (sourceRef && msg.includes("UNIQUE constraint failed")) {
-      return null;
+    if (msg.includes("UNIQUE constraint failed")) {
+      if (sourceRef && msg.includes("source_ref")) return null;
+      if (contentFingerprint && msg.includes("content_fingerprint")) return null;
     }
     throw err;
   }
@@ -357,13 +368,21 @@ export async function addTransactionsBulk(
       const exchange = canonicalExchangeCode(tx.exchange) || (tx.exchange || "").toUpperCase();
       const ticker = normalizeHkYahooSymbol(normalizeTickerForExchange(tx.ticker, exchange));
       const sourceRef = tx.sourceRef || "";
+      const contentFingerprint = transactionContentFingerprint({
+        date: tx.date,
+        type: tx.type,
+        ticker,
+        shares: tx.shares,
+        totalAmount: total,
+        pricePerShare: tx.pricePerShare,
+      });
 
       return {
         sql: `INSERT OR IGNORE INTO transactions (
                 id, user_id, holding_id, ticker, name, exchange, isin, asset_type, account_id,
-                type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, exchange_rate_eur, notes, source_ref, broker_name, portfolio_id
+                type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, exchange_rate_eur, notes, source_ref, broker_name, portfolio_id, content_fingerprint
               )
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           id, userId, tx.holdingId || "", ticker, tx.name || "", exchange,
           tx.isin || "", tx.assetType || "stock", tx.accountId || "",
@@ -372,6 +391,7 @@ export async function addTransactionsBulk(
           tx.displayCurrency || tx.currency || "EUR", tx.exchangeRateEur ?? null,
           tx.notes || "", sourceRef, (tx as Record<string, unknown>).brokerName || "",
           resolved,
+          contentFingerprint,
         ] as InValue[],
       };
     });
@@ -573,7 +593,17 @@ export async function listTransactionSourceRefs(userId: string, portfolioId?: st
   return new Set(result.rows.map((r) => str(r.source_ref)));
 }
 
-/** date|type|TICKER|sharesMillis — used to avoid double-importing SnapTrade orders vs activities. */
+/** Content fingerprints (date|type|ticker|shares|amount) for cross-source dedup. */
+export async function listTransactionContentFingerprints(userId: string): Promise<Set<string>> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT content_fingerprint FROM transactions WHERE user_id = ? AND content_fingerprint != ''`,
+    args: [userId],
+  });
+  return new Set(result.rows.map((r) => str(r.content_fingerprint)));
+}
+
+/** @deprecated Use listTransactionContentFingerprints — kept for SnapTrade activity/order merge. */
 export async function listTransactionTradeFingerprints(userId: string): Promise<Set<string>> {
   const client = await ensureInitialized();
   const result = await client.execute({
