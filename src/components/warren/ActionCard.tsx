@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import type { WarrenProposal } from "@/lib/ai/warren/types";
+import ImportPreviewCard from "./ImportPreviewCard";
 
 interface Props {
   proposal: WarrenProposal;
   onConfirmed?: (entityId?: string, message?: string) => void;
 }
 
-const KIND_LABEL: Record<WarrenProposal["kind"], string> = {
+const KIND_LABEL: Record<Exclude<WarrenProposal["kind"], "importTransactions">, string> = {
   addHolding: "Add holding",
   removeHolding: "Remove holding",
   addCash: "Add cash",
@@ -17,6 +18,9 @@ const KIND_LABEL: Record<WarrenProposal["kind"], string> = {
 };
 
 export default function ActionCard({ proposal, onConfirmed }: Props) {
+  if (proposal.kind === "importTransactions") {
+    return <ImportPreviewCard proposal={proposal} onConfirmed={onConfirmed} />;
+  }
   const [status, setStatus] = useState<"pending" | "submitting" | "confirmed" | "cancelled" | "error">(
     "pending",
   );

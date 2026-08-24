@@ -51,6 +51,7 @@ export type OfficeStreamFrame =
   | { kind: "warren_part"; part: import("@/lib/ai/warren/types").WarrenPart }
   | { kind: "warren_proposal"; proposal: import("@/lib/ai/warren/types").WarrenProposal }
   | { kind: "warren_tool_step"; label: string }
+  | { kind: "client_action"; action: "open_snaptrade"; url: string }
   | { kind: "coordination"; lines: OfficeCoordinationLine[] }
   | { kind: "mission"; mission: AgentMissionRecord }
   | { kind: "error"; message: string };

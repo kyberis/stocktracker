@@ -274,7 +274,7 @@ export default function EmptyPortfolio({
       </div>
       <p className="mb-2 text-[11px] leading-snug text-amber-800/80 dark:text-amber-200/70">
         {t("emptyStateWarrenChatHint") ||
-          "Warren can only help add stocks here — up to 10 messages, then a 15-minute break."}
+          "Tell Warren a ticker to add, or ask to import your portfolio. Up to 10 messages, then a 15-minute break."}
       </p>
       <form
         onSubmit={(e) => {

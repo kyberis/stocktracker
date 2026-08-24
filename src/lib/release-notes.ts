@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.232",
+    date: "2026-08-24",
+    title: "Import your portfolio with Warren",
+    titleTranslations: {
+      es: "Importa tu cartera con Warren",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Ask Warren to import your portfolio: choose broker CSV/Excel, SnapTrade broker sync, or AI from a screenshot. Warren shows a preview and only saves after you confirm — the same pipelines as /import.",
+        translations: {
+          es: "Pídele a Warren importar tu cartera: CSV/Excel del bróker, sincronización SnapTrade o IA desde una captura. Warren enseña una vista previa y solo guarda cuando confirmas — las mismas rutas que /import.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.231",
     date: "2026-08-24",
     title: "Safer SnapTrade empty-position sync",

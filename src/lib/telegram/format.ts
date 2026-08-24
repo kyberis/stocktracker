@@ -145,9 +145,20 @@ export function renderWarrenPart(part: WarrenPart): string {
       return renderStockPick(part.data);
     case "tradeGuidance":
       return renderTradeGuidance(part.data);
+    case "importOptions":
+      return renderImportOptions();
     default:
       return "";
   }
+}
+
+function renderImportOptions(): string {
+  const lines: string[] = [];
+  lines.push(bold("Import your portfolio"));
+  lines.push(escapeMarkdown("CSV / Excel — send the broker export as a file."));
+  lines.push(escapeMarkdown("Broker sync — open /import in the web app to connect SnapTrade."));
+  lines.push(escapeMarkdown("AI — send a screenshot or a generic CSV."));
+  return lines.join("\n");
 }
 
 function renderSummary(data: {

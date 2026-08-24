@@ -1,10 +1,10 @@
 # Warren empty-portfolio add-stock mode
 
-> When a portfolio has no holdings, Warren only helps add stocks — with a 10-chat burst and a 15-minute cooldown.
+> When a portfolio has no holdings, Warren helps add stocks or import a portfolio — with a 10-chat burst and a 15-minute cooldown.
 
 ## 1. Summary
 
-New users see Warren on the empty portfolio CTA (`EmptyPortfolio`) to manually add stocks by chat. To stop off-topic / high-cost AI use before the first holding exists, Warren is restricted to add-stock tools only and limited to 10 consults, then a 15-minute break before the next burst. Applies to web drawer, Telegram, and Agent Office when holdings count is zero.
+New users see Warren on the empty portfolio CTA (`EmptyPortfolio`) to add stocks by chat or import a portfolio (CSV, SnapTrade, AI). Off-topic / high-cost tools stay blocked until the first holding exists. Limited to 10 consults, then a 15-minute break. Applies to web drawer, Telegram, and Agent Office when holdings count is zero.
 
 ## 2. Status
 
@@ -44,14 +44,14 @@ No new tables or migrations.
 
 ## 6. UI surface
 
-- `EmptyPortfolio`: title, hint (“only add stocks / 10 then 15 min”), placeholder example.
-- `WarrenDrawer`: empty greeting, add-stock suggestion chips, “Add-stock mode” context line.
+- `EmptyPortfolio`: title, hint (add or import / 10 then 15 min), placeholder example.
+- `WarrenDrawer`: empty greeting, add-stock + import chips, “Add-stock mode” context line.
 - Persistent Warren disclaimer footer unchanged.
 
 ## 7. Business logic
 
 - **Empty detection:** server `countHoldings(userId, portfolioId) === 0` (web); snapshot `holdingsCount` / `countHoldings` (Telegram/Office). Demo skips empty-add burst.
-- **Tools allowlist:** `getQuote`, `listPortfolios`, `proposeAddHolding`, `renderStockSnapshot`. Sister tools (Clara/Will) disabled.
+- **Tools allowlist:** `getQuote`, `listPortfolios`, `proposeAddHolding`, `renderStockSnapshot`, plus import tools (`presentImportOptions`, `parseBrokerCsvImport`, `extractAiPortfolioImport`, `startSnapTradeConnect`, `fetchSnapTradeImport`). Sister tools (Clara/Will) disabled.
 - **Burst:** 10 consults → 15-minute cooldown → new burst of 10. Admins bypass.
 - **Constants:** `PLATFORM_LIMITS.WARREN_EMPTY_ADD_MAX_CONSULTS` / `WARREN_EMPTY_ADD_COOLDOWN_MS`.
 
@@ -66,7 +66,7 @@ No new tables or migrations.
 
 ## 10. i18n
 
-- EN + ES keys: `emptyStateWarrenChatHint`, `warrenGreetingEmptyAdd`, `warrenConnectedEmptyAdd`, `warrenChipAddExample1..3`.
+- EN + ES keys: `emptyStateWarrenChatHint`, `warrenGreetingEmptyAdd`, `warrenConnectedEmptyAdd`, `warrenChipAddExample1..3`, `warrenChipImportPortfolio`.
 
 ## 11. Permissions / tier gating / rate limits
 
@@ -82,7 +82,7 @@ No new tables or migrations.
 
 - Cash-only portfolios still count as empty (`holdings.length === 0`).
 - After the first confirmed holding, next Warren turn uses full tools (no empty-add limiter).
-- Multipart attachments still allowed by the route but empty-add tools cannot use vision/knowledge tools — prefer text add-stock prompts.
+- Multipart attachments are used for CSV / screenshot import in empty-add mode.
 - Admins bypass the burst limiter.
 
 ## 14. Tests
@@ -95,7 +95,7 @@ No new tables or migrations.
 ## 15. Related skills and rules
 
 - Skills: engineer-dashboard, legal-advisor (AI scope change; existing disclaimer)
-- Specs: [unified-homepage](unified-homepage.md), [warren-telegram-bot](warren-telegram-bot.md)
+- Specs: [unified-homepage](unified-homepage.md), [warren-telegram-bot](warren-telegram-bot.md), [warren-import](warren-import.md)
 
 ## 16. Open questions / planned work
 

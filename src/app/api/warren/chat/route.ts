@@ -84,6 +84,7 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
   const contentType = req.headers.get("content-type") || "";
   let modelMessages: ModelMessage[];
   let body: z.infer<typeof requestSchema> | z.infer<typeof multipartMetaSchema>;
+  let turnAttachments: RawAttachment[] = [];
 
   try {
     if (contentType.includes("multipart/form-data")) {
@@ -106,6 +107,7 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
           filename: f.name || "attachment",
         });
       }
+      turnAttachments = raw;
 
       if (raw.length === 0 && !userText.trim()) {
         return Response.json({ error: "No message or attachments" }, { status: 400 });
@@ -242,6 +244,8 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
           emptyAddStockOnly,
           onFrame: send,
           subscriptionPlan,
+          attachments: turnAttachments,
+          userRole: session.role,
         });
       } catch {
         // runWarrenTurn already emitted an "error" frame and logged.

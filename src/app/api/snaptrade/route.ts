@@ -1,28 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isDuplicateAgainstLedger } from "@/lib/transaction-fingerprint";
 import { requireSession } from "@/lib/auth/guards";
 import {
   findUserById,
   getSnapTradeConnection,
   getSnapTradeConnectionSecret,
   saveSnapTradeConnection,
-  updateSnapTradeLastSynced,
   deleteSnapTradeConnection,
-  listTransactionSourceRefs,
-  listTransactionTradeFingerprints,
-  listTransactionContentFingerprints,
-  addCashEntry,
-  removeCashEntriesBySourceAndBrokers,
-  upsertHoldingsFromPositions,
   detachSnapTradeHoldings,
   trackEvent,
   getSnapTradeBrokerSyncs,
-  upsertSnapTradeBrokerSync,
-  ensureSnapTradeBrokerSyncPlaceholder,
-  linkUnlinkedTransactionsToHoldings,
   setSnapTradeNeedsAttention,
   getSnapTradeNeedsAttention,
-  addBrokerPortfolioMapping,
   getAllBrokerPortfolioMappings,
   removeAllBrokerPortfolioMappings,
   mapTransactionsBySourceRef,
@@ -31,20 +19,13 @@ import {
   registerUser,
   deleteUser,
   generateConnectionPortalUrl,
-  fetchAllHoldings,
-  fetchActivities,
-  mergeSnapTradeTransactions,
   listBrokerageConnections,
-  listAccounts,
   listBrokerages,
-  refreshBrokerageConnection,
   SnapTradeClientError,
 } from "@/lib/snaptrade-client";
 import { disconnectSnapTradeBroker } from "@/lib/snaptrade-disconnect";
-import type { ExtractedTransaction } from "@/hooks/import-types";
-import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { runSnapTradeFetch } from "@/lib/snaptrade-fetch";
 import { withMetrics } from "@/lib/with-metrics";
-import { portfolioImportsTotal } from "@/lib/metrics";
 import { effectivePlan, getSnapTradeConnectionLimit } from "@/lib/subscription";
 import { deferTask, retryAsync } from "@/lib/task-runner";
 import type { SubscriptionPlan } from "@/lib/types";
@@ -261,8 +242,6 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
 
   /* ── Fetch transaction history + cash from all connected brokers ── */
   if (action === "fetch") {
-    const conn = await getSnapTradeConnection(session.userId);
-    const userSecret = conn ? await getSnapTradeConnectionSecret(session.userId) : null;
     const portfolioId = (formData.get("portfolioId") as string) || undefined;
     const customStartDate = (formData.get("startDate") as string) || undefined;
     let brokerDateOverrides: Record<string, string> = {};
@@ -271,290 +250,29 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       if (raw) brokerDateOverrides = JSON.parse(raw);
     } catch { /* ignore parse errors */ }
 
-    if (!conn || !userSecret) {
+    const result = await runSnapTradeFetch(session.userId, {
+      portfolioId,
+      customStartDate,
+      brokerDateOverrides,
+    });
+    if (!result.ok) {
       return NextResponse.json(
-        { error: "No SnapTrade connection found. Please connect a brokerage first." },
-        { status: 400 },
+        {
+          error: result.error,
+          needsReconnect: result.needsReconnect,
+          disabledConnections: result.disabledConnections,
+        },
+        { status: result.status },
       );
     }
-
-    try {
-      const brokerageConns = await listBrokerageConnections(conn.snapTradeUserId, userSecret);
-      const disabledConns = brokerageConns
-        .filter((c) => c.disabled)
-        .map(({ id, brokerageName, disabledDate }) => ({ id, brokerageName, disabledDate }));
-
-      if (brokerageConns.every((c) => c.disabled) && disabledConns.length > 0) {
-        return NextResponse.json(
-          {
-            error: "All brokerage connections have expired. Please reconnect to continue syncing.",
-            needsReconnect: true,
-            disabledConnections: disabledConns,
-          },
-          { status: 502 },
-        );
-      }
-
-      const accounts = await listAccounts(conn.snapTradeUserId, userSecret);
-      const activeBrokerIds = new Set(brokerageConns.filter((c) => !c.disabled).map((c) => c.id));
-      const allActiveAccounts = accounts.filter((a) => activeBrokerIds.has(a.brokerageAuthorizationId));
-      const activeAccounts = allActiveAccounts;
-
-      const brokerSyncs = await getSnapTradeBrokerSyncs(session.userId);
-      // Only apply incremental startDate when we previously imported txs for
-      // this authorization (last_imported_at set). Do NOT use JOIN tx counts —
-      // after reconnect, old broker_name rows would incorrectly advance the cursor.
-      const syncMap = new Map(
-        brokerSyncs
-          .filter((s) => !!s.lastImportedAt)
-          .map((s) => [s.brokerageAuthorizationId, s.lastImportedAt]),
-      );
-
-      // Refresh ALL active broker connections so SnapTrade pulls latest data
-      // from each broker before we read positions/activities.
-      await Promise.allSettled(
-        [...activeBrokerIds].map((bId) =>
-          refreshBrokerageConnection(conn.snapTradeUserId, userSecret, bId)
-        )
-      );
-
-      const allTransactions: ExtractedTransaction[] = [];
-      const fetchedBrokers: { id: string; name: string }[] = [];
-      const truncatedBrokers: string[] = [];
-      const seenBrokerIds = new Set<string>();
-
-      for (const acct of activeAccounts) {
-        const brokerId = acct.brokerageAuthorizationId;
-        let startDate: string | undefined;
-        if (customStartDate) {
-          startDate = customStartDate;
-        } else if (brokerId in brokerDateOverrides) {
-          startDate = brokerDateOverrides[brokerId] || undefined;
-        } else {
-          startDate = syncMap.get(brokerId) || undefined;
-        }
-        const result = await fetchActivities({
-          userId: conn.snapTradeUserId,
-          userSecret,
-          accountId: acct.id,
-          startDate,
-        });
-        for (const tx of result.transactions) {
-          tx.brokerName = acct.institution;
-        }
-        allTransactions.push(...result.transactions);
-
-        if (!seenBrokerIds.has(acct.brokerageAuthorizationId)) {
-          seenBrokerIds.add(acct.brokerageAuthorizationId);
-          fetchedBrokers.push({ id: acct.brokerageAuthorizationId, name: acct.institution });
-        }
-
-        if (result.possiblyTruncated) {
-          truncatedBrokers.push(`${acct.institution} (${acct.name})`);
-          console.warn(
-            `[SnapTrade] Activities hit 10k limit for account "${acct.name}" (user=${session.userId}, startDate=${startDate || "none"})`,
-          );
-        }
-      }
-
-      // Per-broker refresh: if a broker returned 0 activities across all its
-      // accounts and has no sync record yet, trigger a one-time refresh so
-      // SnapTrade starts pulling transaction history for that broker.
-      // Do NOT set last_imported_at — that would skip the activity lag window.
-      const refreshedBrokerIds: string[] = [];
-      const allSyncedIds = new Set(brokerSyncs.map((s) => s.brokerageAuthorizationId));
-      const brokersWithActivities = new Set(allTransactions.map((tx) => tx.brokerName));
-      for (const bId of seenBrokerIds) {
-        if (allSyncedIds.has(bId)) continue;
-        const brokerInfo = fetchedBrokers.find((b) => b.id === bId);
-        if (brokerInfo && brokersWithActivities.has(brokerInfo.name)) continue;
-        await refreshBrokerageConnection(conn.snapTradeUserId, userSecret, bId);
-        await ensureSnapTradeBrokerSyncPlaceholder(session.userId, bId, brokerInfo?.name || "Unknown");
-        refreshedBrokerIds.push(bId);
-      }
-
-      const existingRefs = await listTransactionSourceRefs(session.userId);
-      const existingContentFingerprints = await listTransactionContentFingerprints(session.userId);
-      const existingTradeFingerprints = await listTransactionTradeFingerprints(session.userId);
-
-      const allActiveAccountIds = new Set(allActiveAccounts.map((a) => a.id));
-      const institutionMap = new Map(allActiveAccounts.map((a) => [a.id, a.institution]));
-      const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, allActiveAccountIds, institutionMap);
-
-      // Fill activity lag / empty post-reconnect caches with EXECUTED orders.
-      const mergedFresh = mergeSnapTradeTransactions(
-        allTransactions,
-        holdingsResult.orderTransactions,
-      );
-      const mergedTransactions = mergeSnapTradeTransactions(
-        allTransactions,
-        holdingsResult.orderTransactions,
-        { existingFingerprints: existingTradeFingerprints },
-      );
-
-      const deduped = mergedTransactions.filter(
-        (tx) => !isDuplicateAgainstLedger(tx, existingContentFingerprints, existingRefs, tx.sourceRef),
-      );
-
-      // Record broker↔portfolio mapping for the current portfolio so
-      // future auto-syncs and manual re-syncs update all linked portfolios.
-      if (portfolioId) {
-        for (const brokerId of seenBrokerIds) {
-          await addBrokerPortfolioMapping(session.userId, brokerId, portfolioId);
-        }
-      }
-
-      // Collect all portfolios that should receive holdings/cash updates.
-      // This includes the current portfolio plus any previously mapped ones.
-      const brokerPortfolioMap = await getAllBrokerPortfolioMappings(session.userId);
-      const allTargetPortfolioIds = new Set<string>();
-      if (portfolioId) allTargetPortfolioIds.add(portfolioId);
-      for (const pIds of brokerPortfolioMap.values()) {
-        for (const pId of pIds) allTargetPortfolioIds.add(pId);
-      }
-      const targetPortfolios = allTargetPortfolioIds.size > 0
-        ? [...allTargetPortfolioIds]
-        : [portfolioId]; // fallback to current/default
-
-      // Upsert holdings directly from broker positions — this is the source of
-      // truth for what the user currently owns. Transactions are imported
-      // separately for tax/performance but don't drive the holdings table.
-      // When any connection is disabled, positions data is incomplete — skip
-      // stale cleanup so we don't delete holdings we simply couldn't fetch.
-      // Always run upsert (even when positions is empty) so full exits remove
-      // stale snaptrade rows instead of leaving orphaned holdings.
-      for (const targetPId of targetPortfolios) {
-        await upsertHoldingsFromPositions(session.userId, holdingsResult.holdings, targetPId, {
-          skipStaleCleanup: disabledConns.length > 0,
-        });
-        // Positions may arrive before the user imports txs (manual sync) or
-        // after (cron). Re-link so /analisis can find SnapTrade order fills.
-        await linkUnlinkedTransactionsToHoldings(session.userId, targetPId);
-      }
-
-      const summary = {
-        total: deduped.length,
-        buys: deduped.filter((t) => t.type === "buy").length,
-        sells: deduped.filter((t) => t.type === "sell").length,
-        dividends: deduped.filter((t) => t.type === "dividend").length,
-        fees: deduped.filter((t) => t.type === "fee").length,
-        cashBalances: holdingsResult.cashBalances,
-        accounts: holdingsResult.accounts,
-        duplicatesRemoved: mergedFresh.length - deduped.length,
-        truncatedBrokers,
-      };
-
-      let cashImported = 0;
-      if (holdingsResult.cashBalances.length > 0) {
-        const aggregated = new Map<string, { broker: string; currency: string; amount: number }>();
-        for (const b of holdingsResult.cashBalances) {
-          const key = `${b.broker || ""}::${b.currency}`;
-          const existing = aggregated.get(key);
-          if (existing) {
-            existing.amount += b.amount;
-          } else {
-            aggregated.set(key, { broker: b.broker || "", currency: b.currency, amount: b.amount });
-          }
-        }
-
-        const fetchedBrokerPrefixes = [...new Set(
-          [...aggregated.values()].map((e) => e.broker ? e.broker.toUpperCase() : "Cash"),
-        )];
-
-        const yahoo = new YahooProvider();
-        const cashEntries: { name: string; amountEUR: number; displayCurrency: string; displayAmount: number }[] = [];
-        for (const entry of aggregated.values()) {
-          const { broker, currency } = entry;
-          const displayAmount = entry.amount;
-          let amountEUR = displayAmount;
-          if (currency !== "EUR") {
-            try {
-              const rate = await yahoo.getExchangeRate(currency, "EUR");
-              if (rate > 0) amountEUR = +(displayAmount * rate).toFixed(2);
-            } catch {
-              // keep original amount if FX conversion fails
-            }
-          }
-          const label = broker ? `${broker.toUpperCase()} \u2013 ${currency}` : `Cash ${currency}`;
-          cashEntries.push({ name: label, amountEUR, displayCurrency: currency, displayAmount });
-        }
-
-        for (const targetPId of targetPortfolios) {
-          await removeCashEntriesBySourceAndBrokers(session.userId, "snaptrade", fetchedBrokerPrefixes, targetPId);
-          for (const ce of cashEntries) {
-            await addCashEntry(session.userId, {
-              name: ce.name,
-              amountEUR: ce.amountEUR,
-              source: "snaptrade",
-              displayCurrency: ce.displayCurrency,
-              displayAmount: ce.displayAmount,
-            }, targetPId);
-            cashImported++;
-          }
-        }
-      }
-
-      for (const broker of fetchedBrokers) {
-        const hasTxForBroker = deduped.some((tx) => tx.brokerName === broker.name);
-        if (hasTxForBroker) {
-          await upsertSnapTradeBrokerSync(session.userId, broker.id, broker.name);
-        }
-      }
-
-      await updateSnapTradeLastSynced(session.userId);
-      if (truncatedBrokers.length > 0) {
-        trackEvent(session.userId, "snaptrade_activities_truncated", {
-          brokers: truncatedBrokers.join(","),
-        });
-      }
-      trackEvent(session.userId, "snaptrade_fetch", {
-        accounts: String(activeAccounts.length),
-        activities: String(deduped.length),
-        cash: String(cashImported),
-        incremental: String(brokerSyncs.length > 0),
-        truncated: String(truncatedBrokers.length > 0),
-      });
-      portfolioImportsTotal.inc({ source: "snaptrade", status: "success" });
-
-      // Clear needs_attention if no disabled connections remain
-      if (disabledConns.length === 0) {
-        await setSnapTradeNeedsAttention(session.userId, false);
-      }
-
-      return NextResponse.json({
-        transactions: deduped,
-        summary,
-        cashImported,
-        ...(refreshedBrokerIds.length > 0 ? { syncTriggered: true, refreshedBrokerIds } : {}),
-      });
-    } catch (err) {
-      const msg = err instanceof SnapTradeClientError ? err.message : "Failed to fetch from SnapTrade.";
-      portfolioImportsTotal.inc({ source: "snaptrade", status: "error" });
-
-      let disabledConnections: { id: string; brokerageName: string; disabledDate: string | null }[] = [];
-      try {
-        const brokerageConns = await listBrokerageConnections(conn.snapTradeUserId, userSecret);
-        disabledConnections = brokerageConns
-          .filter((c) => c.disabled)
-          .map(({ id, brokerageName, disabledDate }) => ({ id, brokerageName, disabledDate }));
-      } catch (checkErr) {
-        console.warn("[SnapTrade] Failed to check disabled status after fetch error:", checkErr instanceof Error ? checkErr.message : checkErr);
-      }
-
-      if (disabledConnections.length > 0) {
-        await setSnapTradeNeedsAttention(session.userId, true);
-      }
-
-      trackEvent(session.userId, "import_error", {
-        method: "broker_sync",
-        reason: disabledConnections.length > 0 ? "needs_reconnect" : "fetch_failed",
-      });
-
-      return NextResponse.json(
-        { error: msg, needsReconnect: disabledConnections.length > 0, disabledConnections },
-        { status: 502 },
-      );
-    }
+    return NextResponse.json({
+      transactions: result.transactions,
+      summary: result.summary,
+      cashImported: result.cashImported,
+      ...(result.refreshedBrokerIds?.length
+        ? { syncTriggered: true, refreshedBrokerIds: result.refreshedBrokerIds }
+        : {}),
+    });
   }
 
   /* ── Map imported transactions to additional portfolios ── */

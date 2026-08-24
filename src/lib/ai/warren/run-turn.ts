@@ -15,6 +15,7 @@ import {
 } from "./tools";
 import type { WarrenPart, WarrenProposal, WarrenStreamFrame } from "./types";
 import type { OfficeIdentity } from "@/lib/ai/office/office-identity";
+import type { RawAttachment } from "./preprocess-attachments";
 import {
   buildWarrenEmptyAddStockAppendix,
   pickWarrenEmptyAddTools,
@@ -50,6 +51,9 @@ export interface RunWarrenTurnOptions {
   onSisterAgentMessage?: (role: "clara" | "will", content: string) => void;
   /** Called for every NDJSON-style frame: text deltas, parts, proposals, errors. */
   onFrame?: (frame: WarrenStreamFrame) => void;
+  /** Raw files from this turn so import tools can parse CSV/Excel/images. */
+  attachments?: RawAttachment[];
+  userRole?: string;
 }
 
 /** Plain-text summary of the last user turn for AI logs (no binary). */
@@ -143,6 +147,12 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
       emit({ kind: "proposal", proposal });
     },
     emitStep: (label) => emit({ kind: "tool_step", label }),
+    emitClientAction: (action) => emit({ kind: "client_action", ...action }),
+    attachments: opts.attachments,
+    channel,
+    gatewayHeaders: opts.gatewayHeaders,
+    subscriptionPlan: opts.subscriptionPlan,
+    userRole: opts.userRole,
     emitSisterCoordination: opts.emptyAddStockOnly ? undefined : opts.onSisterCoordination,
     emitSisterAgentMessage: opts.emptyAddStockOnly ? undefined : opts.onSisterAgentMessage,
   };

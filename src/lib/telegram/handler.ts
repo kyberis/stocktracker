@@ -347,6 +347,7 @@ async function handlePhotoOrDocumentWarren(
 
     await runWarrenForText(bot, link, built.persistSummary, message.from?.language_code, {
       lastUserModelContent: built.content,
+      attachments: raw,
     });
   } catch (e) {
     if (e instanceof WarrenAttachmentError) {
@@ -617,6 +618,7 @@ interface RunWarrenForTextOptions {
   replyAsVoice?: boolean;
   /** Multimodal replacement for the latest user turn (DB row stays plain text). */
   lastUserModelContent?: UserContent;
+  attachments?: RawAttachment[];
 }
 
 async function runWarrenForText(
@@ -766,6 +768,7 @@ async function runWarrenForText(
       subscriptionPlan,
       systemAppendix: systemAppendix ?? undefined,
       emptyAddStockOnly,
+      attachments: options.attachments,
       onFrame: statusMessageId
         ? (frame) => {
             // Only the per-tool labels drive the visible status. We ignore

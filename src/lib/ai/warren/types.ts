@@ -7,6 +7,19 @@ import type {
   TradeGuidanceCardData,
 } from "@/components/chat-cards/types";
 
+export type WarrenImportMethodId = "csv" | "snaptrade" | "ai";
+
+export interface WarrenImportMethodOption {
+  id: WarrenImportMethodId;
+  available: boolean;
+  requiresPro?: boolean;
+  upgradeHint?: string;
+}
+
+export interface ImportOptionsPartData {
+  methods: WarrenImportMethodOption[];
+}
+
 export type WarrenPart =
   | { kind: "holding"; data: HoldingCardData }
   | { kind: "allocation"; data: AllocationCardData }
@@ -15,7 +28,8 @@ export type WarrenPart =
   | { kind: "moatSummary"; data: MoatSummaryCardData }
   | { kind: "tradeGuidance"; data: TradeGuidanceCardData }
   | { kind: "stockSnapshot"; data: StockSnapshotData }
-  | { kind: "chart"; data: ChartPartData };
+  | { kind: "chart"; data: ChartPartData }
+  | { kind: "importOptions"; data: ImportOptionsPartData };
 
 /**
  * Channel-agnostic chart payload. The web client renders this with Recharts;
@@ -52,7 +66,8 @@ export type WarrenProposalKind =
   | "removeHolding"
   | "addCash"
   | "createAlert"
-  | "addWatchlist";
+  | "addWatchlist"
+  | "importTransactions";
 
 export interface WarrenProposalBase {
   id: string;
@@ -104,17 +119,64 @@ export interface AddWatchlistProposalData {
   exchange?: string;
 }
 
+export type WarrenImportSource = "broker_csv" | "ai_import" | "snaptrade_api";
+
+export interface ImportTransactionRow {
+  date: string;
+  type: "buy" | "sell" | "dividend" | "fee";
+  ticker: string;
+  name: string;
+  isin?: string;
+  shares: number;
+  pricePerShare: number;
+  totalAmount: number;
+  fees: number;
+  taxes?: number;
+  currency: string;
+  assetType?: "stock" | "etf" | "fund" | "crypto";
+  sourceRef?: string;
+  brokerName?: string;
+  exchange?: string;
+}
+
+export interface ImportCashBalanceRow {
+  currency: string;
+  amount: number;
+  broker?: string;
+}
+
+export interface ImportTransactionsProposalData {
+  source: WarrenImportSource;
+  detectedBroker?: string;
+  transactions: ImportTransactionRow[];
+  cashBalances?: ImportCashBalanceRow[];
+  summary: {
+    total: number;
+    buys: number;
+    sells: number;
+    dividends: number;
+    fees: number;
+    duplicatesRemoved?: number;
+    unmapped?: string[];
+  };
+  portfolioId?: string;
+}
+
 export type WarrenProposal =
   | (WarrenProposalBase & { kind: "addHolding"; data: AddHoldingProposalData })
   | (WarrenProposalBase & { kind: "removeHolding"; data: RemoveHoldingProposalData })
   | (WarrenProposalBase & { kind: "addCash"; data: AddCashProposalData })
   | (WarrenProposalBase & { kind: "createAlert"; data: CreateAlertProposalData })
-  | (WarrenProposalBase & { kind: "addWatchlist"; data: AddWatchlistProposalData });
+  | (WarrenProposalBase & { kind: "addWatchlist"; data: AddWatchlistProposalData })
+  | (WarrenProposalBase & { kind: "importTransactions"; data: ImportTransactionsProposalData });
+
+export type WarrenClientAction = { action: "open_snaptrade"; url: string };
 
 export type WarrenStreamFrame =
   | { kind: "text"; delta: string }
   | { kind: "part"; part: WarrenPart }
   | { kind: "proposal"; proposal: WarrenProposal }
   | { kind: "tool_step"; label: string }
+  | { kind: "client_action"; action: "open_snaptrade"; url: string }
   | { kind: "error"; message: string }
   | { kind: "done" };

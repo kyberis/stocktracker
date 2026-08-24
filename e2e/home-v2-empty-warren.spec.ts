@@ -33,7 +33,7 @@ test.describe("Home v2 empty Warren add-stock", () => {
 
     const warrenBox = page.getByTestId("empty-warren-chat");
     await expect(warrenBox).toBeVisible({ timeout: 20_000 });
-    await expect(warrenBox.getByText(/only help add stocks|solo puede ayudarte a añadir/i)).toBeVisible();
+    await expect(warrenBox.getByText(/import your portfolio|importar tu cartera/i)).toBeVisible();
     await expect(warrenBox.getByText(/10|15/)).toBeVisible();
   });
 });

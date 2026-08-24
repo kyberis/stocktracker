@@ -135,6 +135,8 @@ export async function handleGeneralOfficeQuery(
           emitFrame({ kind: "warren_proposal", proposal: frame.proposal });
         } else if (frame.kind === "tool_step") {
           emitFrame({ kind: "warren_tool_step", label: frame.label });
+        } else if (frame.kind === "client_action") {
+          emitFrame({ kind: "client_action", action: frame.action, url: frame.url });
         }
       },
     });

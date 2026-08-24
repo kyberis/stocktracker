@@ -30,20 +30,11 @@ function shouldDecodeAsSpreadsheet(buf: Uint8Array, filename: string): boolean {
   return isZipMagic(buf) || isOleMagic(buf);
 }
 
-/**
- * Reads an uploaded broker file as UTF-8 text suitable for CSV parsers.
- * Binary Excel (.xls / .xlsx) is converted via SheetJS to CSV (first sheet only).
- */
-export async function blobToUtf8CsvOrPlainText(blob: Blob, filename = ""): Promise<string> {
-  const buf = new Uint8Array(await blob.arrayBuffer());
+/** Decode a broker CSV/Excel buffer to UTF-8 CSV text (first sheet only for Excel). */
+export function bufferToUtf8CsvOrPlainText(buf: Uint8Array, filename = ""): string {
   if (buf.length === 0) return "";
 
-  const name =
-    filename ||
-    (typeof File !== "undefined" && blob instanceof File ? blob.name : "") ||
-    "";
-
-  if (shouldDecodeAsSpreadsheet(buf, name)) {
+  if (shouldDecodeAsSpreadsheet(buf, filename)) {
     const wb = XLSX.read(buf, { type: "array", cellDates: true });
     const sheetName = wb.SheetNames[0];
     if (!sheetName) return "";
@@ -56,4 +47,17 @@ export async function blobToUtf8CsvOrPlainText(blob: Blob, filename = ""): Promi
   } catch {
     return "";
   }
+}
+
+/**
+ * Reads an uploaded broker file as UTF-8 text suitable for CSV parsers.
+ * Binary Excel (.xls / .xlsx) is converted via SheetJS to CSV (first sheet only).
+ */
+export async function blobToUtf8CsvOrPlainText(blob: Blob, filename = ""): Promise<string> {
+  const buf = new Uint8Array(await blob.arrayBuffer());
+  const name =
+    filename ||
+    (typeof File !== "undefined" && blob instanceof File ? blob.name : "") ||
+    "";
+  return bufferToUtf8CsvOrPlainText(buf, name);
 }

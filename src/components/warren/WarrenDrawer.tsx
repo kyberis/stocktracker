@@ -16,6 +16,7 @@ import {
 } from "@/lib/portfolio-summary";
 import { formatCurrency } from "@/lib/utils";
 import type {
+  WarrenImportMethodId,
   WarrenPart,
   WarrenProposal,
   WarrenStreamFrame,
@@ -38,6 +39,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { Maximize2, Minimize2, Paperclip } from "lucide-react";
 import type { HoldingsExplorerSelection } from "@/lib/holdings-research";
+import { isStandaloneDisplay, openSnapTradePortalPopup } from "@/lib/snaptrade-portal";
 
 type Bubble =
   | { id: string; kind: "text-user"; content: string }
@@ -168,6 +170,7 @@ export default function WarrenDrawer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const sendMessageRef = useRef<(text: string) => Promise<void>>(async () => {});
   const [expanded, setExpanded] = useState(false);
   const canExpand = mode !== "embedded";
   const loadedStorageKeyRef = useRef<string | null>(null);
@@ -273,6 +276,7 @@ export default function WarrenDrawer({
       abortRef.current?.abort();
       const ac = new AbortController();
       abortRef.current = ac;
+      let snapTradeUrl: string | null = null;
 
       try {
         let res: Response;
@@ -340,10 +344,43 @@ export default function WarrenDrawer({
             if (!line) continue;
             try {
               const frame = JSON.parse(line) as WarrenStreamFrame;
+              if (frame.kind === "client_action" && frame.action === "open_snaptrade") {
+                snapTradeUrl = frame.url;
+                continue;
+              }
               applyFrame(setBubbles, assistantId, frame, t);
             } catch {
               // ignore malformed line
             }
+          }
+        }
+
+        if (snapTradeUrl) {
+          if (isStandaloneDisplay()) {
+            try {
+              const urlForm = new FormData();
+              urlForm.append("action", "connect-url");
+              urlForm.append("customRedirect", `${window.location.origin}/snaptrade/callback`);
+              const urlRes = await fetch("/api/snaptrade", { method: "POST", body: urlForm });
+              const urlData = await urlRes.json();
+              if (urlRes.ok && urlData.redirectUrl) {
+                window.location.href = urlData.redirectUrl;
+              } else {
+                window.location.href = snapTradeUrl;
+              }
+            } catch {
+              window.location.href = snapTradeUrl;
+            }
+          } else {
+            openSnapTradePortalPopup(
+              snapTradeUrl,
+              () => {
+                void sendMessageRef.current(t("warrenImportConnectedFollowup"));
+              },
+              (msg) => {
+                appendError(setBubbles, assistantId, msg);
+              },
+            );
           }
         }
       } catch (err) {
@@ -371,8 +408,11 @@ export default function WarrenDrawer({
       activePortfolioCurrency,
       demoMode,
       selectionContext,
+      t,
     ],
   );
+
+  sendMessageRef.current = sendMessage;
 
   const lastTriggerRef = useRef<string | null>(null);
 
@@ -385,6 +425,23 @@ export default function WarrenDrawer({
     void sendMessage(triggerPrompt);
   }, [triggerPrompt, streaming, sendMessage, onTriggerPromptConsumed]);
 
+  const onImportMethod = useCallback(
+    (id: WarrenImportMethodId) => {
+      if (id === "csv") {
+        fileInputRef.current?.click();
+        void sendMessage(t("warrenImportCsvPrompt"));
+        return;
+      }
+      if (id === "ai") {
+        fileInputRef.current?.click();
+        void sendMessage(t("warrenImportAiPrompt"));
+        return;
+      }
+      void sendMessage(t("warrenImportBrokerPrompt"));
+    },
+    [sendMessage, t],
+  );
+
   const onProposalConfirmed = useCallback(() => {
     refreshHoldings?.();
     refreshAlertedTickers?.();
@@ -393,6 +450,7 @@ export default function WarrenDrawer({
   const quickPrompts = suggestionPrompts ?? (
     holdings.length === 0
       ? [
+          t("warrenChipImportPortfolio"),
           t("warrenChipAddExample1"),
           t("warrenChipAddExample2"),
           t("warrenChipAddExample3"),
@@ -539,7 +597,11 @@ export default function WarrenDrawer({
             if (b.kind === "part") {
               return (
                 <div key={b.id} className="pl-9">
-                  <RenderPart part={b.part} />
+                  <RenderPart
+                    part={b.part}
+                    onImportChoose={onImportMethod}
+                    importDisabled={streaming}
+                  />
                 </div>
               );
             }
@@ -596,7 +658,7 @@ export default function WarrenDrawer({
             type="file"
             className="hidden"
             multiple
-            accept="image/*,application/pdf,text/csv,.csv,audio/*"
+            accept="image/*,application/pdf,text/csv,.csv,.xls,.xlsx,.xlsm,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,audio/*"
             onChange={(e) => {
               const list = e.target.files;
               if (!list?.length) return;
