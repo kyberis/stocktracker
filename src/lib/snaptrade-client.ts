@@ -10,6 +10,7 @@ import type { ExtractedTransaction, ExtractedHolding, CashBalance } from "@/hook
 import { inferAssetType } from "@/lib/infer-asset-type";
 import { insertSnapTradeLog } from "@/lib/db/snaptrade-logs";
 import { canonicalExchangeCode } from "@/lib/db/helpers";
+import { extractSnapTradeHttpStatus, isSnapTradeNotFound } from "@/lib/snaptrade-http";
 import { trackExternalProvider } from "@/lib/traffic/provider-track";
 
 let _client: Snaptrade | null = null;
@@ -81,7 +82,13 @@ export async function registerUser(userId: string): Promise<{ snapTradeUserId: s
 export async function deleteUser(userId: string): Promise<void> {
   return logSnapTradeCall("deleteUser", userId, { userId }, async () => {
     const client = getClient();
-    await client.authentication.deleteSnapTradeUser({ userId });
+    try {
+      await client.authentication.deleteSnapTradeUser({ userId });
+    } catch (err: unknown) {
+      // Already deregistered — treat as success so disconnect stays idempotent.
+      if (isSnapTradeNotFound(err)) return;
+      throw err;
+    }
   });
 }
 
@@ -100,7 +107,7 @@ export async function removeBrokerageConnection(
   userId: string,
   userSecret: string,
   connectionId: string,
-): Promise<void> {
+): Promise<{ alreadyRemoved: boolean }> {
   return logSnapTradeCall("removeBrokerageConnection", userId, { userId, connectionId }, async () => {
     const client = getClient();
     try {
@@ -109,9 +116,17 @@ export async function removeBrokerageConnection(
         userId,
         userSecret,
       });
+      return { alreadyRemoved: false };
     } catch (err: unknown) {
+      // Authorization already gone on SnapTrade (common after portal reconnect).
+      if (isSnapTradeNotFound(err)) {
+        return { alreadyRemoved: true };
+      }
       const msg = err instanceof Error ? err.message : String(err);
-      throw new SnapTradeClientError(`Failed to remove brokerage connection: ${msg}`);
+      throw new SnapTradeClientError(
+        `Failed to remove brokerage connection: ${msg}`,
+        extractSnapTradeHttpStatus(err),
+      );
     }
   });
 }

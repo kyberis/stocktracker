@@ -542,4 +542,39 @@ describe("holdings", () => {
       expect(result).toBe(0);
     });
   });
+
+  describe("detachSnapTradeHoldings", () => {
+    it("detaches all snaptrade holdings when tickers omitted", async () => {
+      mockExecute.mockResolvedValueOnce({ rowsAffected: 5 });
+
+      const n = await holdings.detachSnapTradeHoldings("user-1");
+
+      expect(n).toBe(5);
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("SET source = 'transaction'"),
+        args: ["user-1"],
+      });
+      expect(mockExecute.mock.calls[0][0].sql).not.toContain("UPPER(ticker) IN");
+    });
+
+    it("detaches only requested tickers", async () => {
+      mockExecute.mockResolvedValueOnce({ rowsAffected: 2 });
+
+      const n = await holdings.detachSnapTradeHoldings("user-1", undefined, {
+        tickers: ["aapl", "ITX.MC", ""],
+      });
+
+      expect(n).toBe(2);
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("UPPER(ticker) IN (?,?)"),
+        args: ["user-1", "AAPL", "ITX.MC"],
+      });
+    });
+
+    it("detaches nothing when tickers array is empty", async () => {
+      const n = await holdings.detachSnapTradeHoldings("user-1", undefined, { tickers: [] });
+      expect(n).toBe(0);
+      expect(mockExecute).not.toHaveBeenCalled();
+    });
+  });
 });
