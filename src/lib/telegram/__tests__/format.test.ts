@@ -253,6 +253,24 @@ describe("telegram/format · renderWarrenPart", () => {
     expect(md).toContain("fair");
     expect(md).toContain("does not execute trades");
   });
+
+  it("renders import options as text with the three methods", () => {
+    const part: WarrenPart = {
+      kind: "importOptions",
+      data: {
+        methods: [
+          { id: "csv", available: true },
+          { id: "snaptrade", available: true },
+          { id: "ai", available: true },
+        ],
+      },
+    };
+    const md = renderWarrenPart(part);
+    expect(md).toContain("Import your portfolio");
+    expect(md).toContain("CSV");
+    expect(md).toContain("/import");
+    expect(md).toContain("screenshot");
+  });
 });
 
 describe("telegram/format · renderWarrenProposal", () => {

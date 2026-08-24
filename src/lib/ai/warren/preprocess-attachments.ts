@@ -11,6 +11,7 @@ import {
   type WarrenRejectReason,
 } from "@/lib/ai/warren/upload-limits";
 import { extractPdfText } from "@/lib/pdf/extract-text";
+import { bufferToUtf8CsvOrPlainText } from "@/lib/spreadsheet-to-csv";
 
 export class WarrenAttachmentError extends Error {
   constructor(
@@ -33,6 +34,14 @@ export interface RawAttachment {
 function extLower(name: string): string {
   const i = name.lastIndexOf(".");
   return i >= 0 ? name.slice(i).toLowerCase() : "";
+}
+
+function isSpreadsheetLike(mime: string, filename: string): boolean {
+  const m = mime.toLowerCase().split(";")[0]?.trim() ?? "";
+  const lower = filename.toLowerCase();
+  if (m === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") return true;
+  if (m === "application/vnd.ms-excel") return true;
+  return lower.endsWith(".xlsx") || lower.endsWith(".xls") || lower.endsWith(".xlsm");
 }
 
 function isCsvLike(mime: string, filename: string): boolean {
@@ -84,7 +93,7 @@ export function validateRawAttachments(files: RawAttachment[]): void {
     if (isImage(mime)) max = WARREN_MAX_ATTACHMENT_BYTES.image;
     else if (isAudio(mime)) max = WARREN_MAX_ATTACHMENT_BYTES.audio;
     else if (isPdf(mime, f.filename)) max = WARREN_MAX_ATTACHMENT_BYTES.pdf;
-    else if (isCsvLike(mime, f.filename)) max = WARREN_MAX_ATTACHMENT_BYTES.csv;
+    else if (isCsvLike(mime, f.filename) || isSpreadsheetLike(mime, f.filename)) max = WARREN_MAX_ATTACHMENT_BYTES.csv;
 
     if (f.buffer.length > max) {
       throw new WarrenAttachmentError(`File too large: ${f.filename}`, "file_too_large");
@@ -185,14 +194,15 @@ export async function buildWarrenMultimodalUserContent(args: {
       continue;
     }
 
-    if (isCsvLike(mime, file.filename)) {
-      const raw = file.buffer.toString("utf8");
+    if (isCsvLike(mime, file.filename) || isSpreadsheetLike(mime, file.filename)) {
+      const raw = bufferToUtf8CsvOrPlainText(new Uint8Array(file.buffer), file.filename);
       const truncated = raw.length > WARREN_CSV_TEXT_MAX_CHARS;
       const slice = raw.slice(0, WARREN_CSV_TEXT_MAX_CHARS);
+      const kind = isSpreadsheetLike(mime, file.filename) ? "Spreadsheet" : "CSV";
       const block =
-        `CSV "${label}"${truncated ? " (truncated)" : ""}:\n\n\`\`\`csv\n${slice}\n\`\`\``;
+        `${kind} "${label}"${truncated ? " (truncated)" : ""}:\n\n\`\`\`csv\n${slice}\n\`\`\``;
       multi.push({ type: "text", text: block });
-      persistBits.push(`[CSV ${fi}: ${label}${truncated ? ", truncated" : ""}]`);
+      persistBits.push(`[${kind} ${fi}: ${label}${truncated ? ", truncated" : ""}]`);
       continue;
     }
 

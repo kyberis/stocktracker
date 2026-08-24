@@ -1,9 +1,9 @@
 /**
- * Empty-portfolio “add stock” mode for Warren.
+ * Empty-portfolio mode for Warren.
  *
  * When the active portfolio has no holdings, Warren is restricted to helping
- * the user add stocks (cost control + clear UX). Burst limit: 10 consults,
- * then a 15-minute cooldown before the next burst.
+ * the user add stocks or import a portfolio (cost control + clear UX). Burst
+ * limit: 10 consults, then a 15-minute cooldown before the next burst.
  */
 
 export const WARREN_EMPTY_ADD_PROVIDER = "warren_empty_add";
@@ -16,6 +16,11 @@ export const WARREN_EMPTY_ADD_TOOL_NAMES = [
   "listPortfolios",
   "proposeAddHolding",
   "renderStockSnapshot",
+  "presentImportOptions",
+  "parseBrokerCsvImport",
+  "extractAiPortfolioImport",
+  "startSnapTradeConnect",
+  "fetchSnapTradeImport",
 ] as const;
 
 export type WarrenEmptyAddToolName = (typeof WARREN_EMPTY_ADD_TOOL_NAMES)[number];
@@ -29,13 +34,14 @@ export function buildWarrenEmptyAddStockAppendix(): string {
   return [
     "TASK OVERRIDE — Empty portfolio add-stock mode:",
     "The user's portfolio has no holdings yet.",
-    "You may ONLY help them add stocks via `proposeAddHolding`.",
-    "Allowed tools: `getQuote`, `listPortfolios`, `proposeAddHolding`, `renderStockSnapshot`.",
-    "If details are missing (ticker, shares, purchase price, currency, optional date), ask briefly for what you need — then propose.",
+    "You may help them add stocks via `proposeAddHolding` OR import a portfolio via the import tools.",
+    "Allowed tools: `getQuote`, `listPortfolios`, `proposeAddHolding`, `renderStockSnapshot`, `presentImportOptions`, `parseBrokerCsvImport`, `extractAiPortfolioImport`, `startSnapTradeConnect`, `fetchSnapTradeImport`.",
+    "If they want to import (CSV, broker, screenshot): call `presentImportOptions` first, then the matching import tool. Never invent rows.",
+    "If details are missing for a manual add (ticker, shares, purchase price, currency, optional date), ask briefly for what you need — then propose.",
     "Use `getQuote` to verify a ticker or suggest a current price when helpful; never invent prices.",
     "If the user asks for anything else (analysis, news, Clara, Will, screener, education, alerts, cash, removals), politely refuse and redirect:",
-    '"Right now I can only help you add stocks to your empty portfolio. Tell me a ticker, shares, and purchase price."',
-    "Never claim a holding was saved until the user confirms the proposal card.",
+    '"Right now I can help you add stocks or import your portfolio. Tell me a ticker, or say import."',
+    "Never claim a holding was saved or an import finished until the user confirms the proposal card.",
   ].join("\n");
 }
 

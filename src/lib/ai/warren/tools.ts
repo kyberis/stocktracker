@@ -37,6 +37,11 @@ import {
 } from "./public-research";
 import type { OfficeIdentity } from "@/lib/ai/office/office-identity";
 import { buildSisterAgentTools, sisterAgentToolsEnabled } from "./sister-agent-tools";
+import { buildWarrenImportTools } from "./import-tools";
+import type { RawAttachment } from "./preprocess-attachments";
+import type { WarrenChannel } from "./system-prompt";
+import type { SubscriptionPlan } from "@/lib/types";
+import type { WarrenClientAction } from "./types";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { ensureTickerNews } from "@/lib/services/ensure-ticker-news";
 
@@ -95,6 +100,13 @@ export interface WarrenToolContext {
   emitPart: (part: WarrenPart) => void;
   emitProposal: (proposal: WarrenProposal) => void;
   emitStep: (label: string) => void;
+  emitClientAction?: (action: WarrenClientAction) => void;
+  /** Raw uploads for this turn (CSV/Excel/image) so import tools do not rely on inlined text. */
+  attachments?: RawAttachment[];
+  channel?: WarrenChannel;
+  gatewayHeaders?: Headers;
+  subscriptionPlan?: SubscriptionPlan;
+  userRole?: string;
   /** Office UI: show Warren → Clara/Will coordination lines when sister tools run. */
   emitSisterCoordination?: (line: { from: "warren"; to: "clara" | "will"; summary: string }) => void;
   /** Office UI: optional direct Clara/Will chat bubbles. */
@@ -137,6 +149,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
 
   return {
     ...sisterTools,
+    ...buildWarrenImportTools(ctx),
     // ──────────────── READ TOOLS ────────────────
     getPortfolioSummary: tool({
       description:

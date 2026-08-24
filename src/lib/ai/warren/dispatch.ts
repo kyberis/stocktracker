@@ -2,18 +2,27 @@ import { z } from "zod";
 import {
   addCashEntry,
   addTransaction,
+  addTransactionsBulk,
   addWatchlistItem,
   countActiveAlerts,
   createAlert,
   findUserById,
   isFeatureEnabled,
   listHoldings,
+  rebuildHoldings,
+  removeCashEntriesBySource,
   removeHolding,
   trackEvent,
   insertAiLog,
 } from "@/lib/db";
 import { getAlertLimit, getHoldingsLimit } from "@/lib/subscription";
 import type { WarrenProposalKind } from "./types";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { inferAssetType } from "@/lib/infer-asset-type";
+import { deferTask } from "@/lib/task-runner";
+import { runBackfillForUser } from "@/lib/backfill-snapshots";
+import { materializeCurrentSnapshotsForUser } from "@/lib/cron-portfolio-snapshots";
+import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
 
 export const addHoldingDataSchema = z.object({
   ticker: z.string().min(1).max(20),
@@ -56,6 +65,51 @@ export const addWatchlistDataSchema = z.object({
   exchange: z.string().optional(),
 });
 
+const importTxRowSchema = z.object({
+  date: z.string().min(1),
+  type: z.enum(["buy", "sell", "dividend", "fee"]),
+  ticker: z.string().min(1),
+  name: z.string().optional().default(""),
+  isin: z.string().optional(),
+  shares: z.number().optional().default(0),
+  pricePerShare: z.number().optional().default(0),
+  totalAmount: z.number().optional().default(0),
+  fees: z.number().optional().default(0),
+  taxes: z.number().optional().default(0),
+  currency: z.string().optional().default("EUR"),
+  assetType: z.enum(["stock", "etf", "fund", "crypto"]).optional(),
+  sourceRef: z.string().optional(),
+  brokerName: z.string().optional(),
+  exchange: z.string().optional(),
+});
+
+export const importTransactionsDataSchema = z.object({
+  source: z.enum(["broker_csv", "ai_import", "snaptrade_api"]),
+  detectedBroker: z.string().optional(),
+  transactions: z.array(importTxRowSchema).min(1).max(2000),
+  cashBalances: z
+    .array(
+      z.object({
+        currency: z.string().min(1),
+        amount: z.number(),
+        broker: z.string().optional(),
+      }),
+    )
+    .optional(),
+  summary: z
+    .object({
+      total: z.number().optional(),
+      buys: z.number().optional(),
+      sells: z.number().optional(),
+      dividends: z.number().optional(),
+      fees: z.number().optional(),
+      duplicatesRemoved: z.number().optional(),
+      unmapped: z.array(z.string()).optional(),
+    })
+    .passthrough(),
+  portfolioId: z.string().optional(),
+});
+
 export type DispatchResult =
   | { ok: true; entityId?: string; message: string }
   | { ok: false; status: number; error: string; reason?: string };
@@ -77,6 +131,8 @@ export async function dispatchProposal(
         return await runCreateAlert(userId, rawData);
       case "addWatchlist":
         return await runAddWatchlist(userId, rawData);
+      case "importTransactions":
+        return await runImportTransactions(userId, rawData);
       default:
         return { ok: false, status: 400, error: "Unknown proposal kind" };
     }
@@ -241,4 +297,115 @@ async function runAddWatchlist(userId: string, raw: unknown): Promise<DispatchRe
   });
   trackEvent(userId, "warren_action", { action: "addWatchlist", ticker: item.ticker });
   return { ok: true, entityId: item.id, message: `${item.ticker} added to watchlist.` };
+}
+
+async function runImportTransactions(userId: string, raw: unknown): Promise<DispatchResult> {
+  const parsed = importTransactionsDataSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, status: 400, error: "Invalid importTransactions payload" };
+  const data = parsed.data;
+  const portfolioId = data.portfolioId;
+  const note =
+    data.source === "snaptrade_api"
+      ? "SnapTrade import"
+      : data.source === "ai_import"
+        ? "AI import"
+        : `${data.detectedBroker || "Broker CSV"} import`;
+
+  const CHUNK = 50;
+  let inserted = 0;
+  let skipped = 0;
+  for (let i = 0; i < data.transactions.length; i += CHUNK) {
+    const chunk = data.transactions.slice(i, i + CHUNK);
+    const payload = chunk
+      .filter((tx) => tx.type !== "buy" || !!tx.ticker)
+      .map((tx) => ({
+        holdingId: "",
+        ticker: tx.ticker || tx.isin || (tx.type === "fee" ? "FEE" : "UNKNOWN"),
+        name: tx.name || "",
+        exchange: tx.exchange || "",
+        isin: tx.isin || "",
+        assetType:
+          tx.assetType === "etf" || tx.assetType === "fund" || tx.assetType === "crypto"
+            ? tx.assetType
+            : inferAssetType({ name: tx.name }),
+        accountId: "",
+        type: tx.type,
+        date: tx.date,
+        shares: tx.shares,
+        pricePerShare: tx.pricePerShare,
+        totalAmount: tx.totalAmount || tx.shares * tx.pricePerShare,
+        fees: tx.fees,
+        taxes: tx.taxes || 0,
+        currency: tx.currency,
+        displayCurrency: tx.currency,
+        notes: note,
+        sourceRef: tx.sourceRef || "",
+        brokerName: tx.brokerName || "",
+      }));
+    if (payload.length === 0) continue;
+    const result = await addTransactionsBulk(userId, payload, portfolioId);
+    inserted += result.inserted;
+    skipped += result.skipped;
+  }
+
+  if (inserted > 0 && data.source !== "snaptrade_api") {
+    await rebuildHoldings(userId, portfolioId);
+    enrichHoldingClassifications(userId).catch(() => {});
+  }
+
+  if (data.source !== "snaptrade_api" && data.cashBalances && data.cashBalances.length > 0) {
+    const broker = data.detectedBroker || "broker";
+    await removeCashEntriesBySource(userId, broker, portfolioId);
+    const yahoo = new YahooProvider();
+    for (const balance of data.cashBalances) {
+      let amountEUR = balance.amount;
+      if (balance.currency !== "EUR") {
+        try {
+          const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
+          if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
+        } catch {
+          // keep original
+        }
+      }
+      await addCashEntry(
+        userId,
+        {
+          name: `${(balance.broker || broker).toUpperCase()} – ${balance.currency}`,
+          amountEUR,
+          source: broker,
+          displayCurrency: balance.currency,
+          displayAmount: balance.amount,
+        },
+        portfolioId,
+      );
+    }
+  }
+
+  if (inserted > 0) {
+    deferTask(async () => {
+      try {
+        if (data.source === "snaptrade_api") {
+          await rebuildHoldings(userId, portfolioId);
+          await enrichHoldingClassifications(userId).catch(() => {});
+        }
+        await runBackfillForUser(userId);
+        await materializeCurrentSnapshotsForUser(userId);
+      } catch (err) {
+        console.warn("[warren/dispatch] import snapshot pipeline failed:", err);
+      }
+    });
+  }
+
+  trackEvent(userId, "warren_action", {
+    action: "importTransactions",
+    source: data.source,
+    inserted: String(inserted),
+  });
+  return {
+    ok: true,
+    message:
+      inserted === 0
+        ? "No new transactions were added (they may already be in your ledger)."
+        : `Imported ${inserted} transaction${inserted === 1 ? "" : "s"}${skipped ? ` (${skipped} skipped)` : ""}.`,
+  };
 }

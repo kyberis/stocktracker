@@ -8,7 +8,14 @@ import { withMetrics } from "@/lib/with-metrics";
 
 const confirmSchema = z.object({
   proposalId: z.string().min(1),
-  kind: z.enum(["addHolding", "removeHolding", "addCash", "createAlert", "addWatchlist"]),
+  kind: z.enum([
+    "addHolding",
+    "removeHolding",
+    "addCash",
+    "createAlert",
+    "addWatchlist",
+    "importTransactions",
+  ]),
   data: z.record(z.string(), z.unknown()),
 });
 

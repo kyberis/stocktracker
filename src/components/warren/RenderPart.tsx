@@ -9,9 +9,18 @@ import {
 } from "@/components/chat-cards";
 import MoatSummaryCard from "@/components/chat-cards/MoatSummaryCard";
 import { formatChatCardNumber } from "@/components/chat-cards/types";
-import type { WarrenPart } from "@/lib/ai/warren/types";
+import type { WarrenImportMethodId, WarrenPart } from "@/lib/ai/warren/types";
+import ImportOptionsCard from "./ImportOptionsCard";
 
-export default function RenderPart({ part }: { part: WarrenPart }) {
+export default function RenderPart({
+  part,
+  onImportChoose,
+  importDisabled,
+}: {
+  part: WarrenPart;
+  onImportChoose?: (id: WarrenImportMethodId) => void;
+  importDisabled?: boolean;
+}) {
   switch (part.kind) {
     case "holding":
       return <HoldingCard data={part.data} />;
@@ -27,6 +36,14 @@ export default function RenderPart({ part }: { part: WarrenPart }) {
       return <TradeGuidanceCard data={part.data} />;
     case "stockSnapshot":
       return <StockSnapshot data={part.data} />;
+    case "importOptions":
+      return (
+        <ImportOptionsCard
+          data={part.data}
+          disabled={importDisabled}
+          onChoose={onImportChoose ?? (() => {})}
+        />
+      );
     default:
       return null;
   }

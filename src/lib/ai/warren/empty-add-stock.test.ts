@@ -13,6 +13,11 @@ describe("empty-add-stock", () => {
       "listPortfolios",
       "proposeAddHolding",
       "renderStockSnapshot",
+      "presentImportOptions",
+      "parseBrokerCsvImport",
+      "extractAiPortfolioImport",
+      "startSnapTradeConnect",
+      "fetchSnapTradeImport",
     ]);
     expect(isWarrenEmptyAddToolName("proposeAddHolding")).toBe(true);
     expect(isWarrenEmptyAddToolName("consultClaraSavings")).toBe(false);
@@ -24,6 +29,7 @@ describe("empty-add-stock", () => {
       proposeAddHolding: { id: "a" },
       listPortfolios: { id: "p" },
       renderStockSnapshot: { id: "s" },
+      presentImportOptions: { id: "i" },
       consultClaraSavings: { id: "c" },
       getPortfolioSummary: { id: "g" },
     };
@@ -32,6 +38,7 @@ describe("empty-add-stock", () => {
       proposeAddHolding: { id: "a" },
       listPortfolios: { id: "p" },
       renderStockSnapshot: { id: "s" },
+      presentImportOptions: { id: "i" },
     });
   });
 
@@ -39,6 +46,7 @@ describe("empty-add-stock", () => {
     const appendix = buildWarrenEmptyAddStockAppendix();
     expect(appendix).toMatch(/Empty portfolio add-stock mode/i);
     expect(appendix).toMatch(/proposeAddHolding/);
-    expect(appendix).toMatch(/only help you add stocks/i);
+    expect(appendix).toMatch(/presentImportOptions/);
+    expect(appendix).toMatch(/import your portfolio/i);
   });
 });

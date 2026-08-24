@@ -8,8 +8,9 @@ import RenderPart from "@/components/warren/RenderPart";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
-import type { WarrenPart, WarrenProposal } from "@/lib/ai/warren/types";
+import type { WarrenImportMethodId, WarrenPart, WarrenProposal } from "@/lib/ai/warren/types";
 import type { AgentMissionRecord, AgentMissionStep, OfficeCoordinationLine, OfficeStreamFrame } from "@/lib/ai/office/types";
+import { isStandaloneDisplay, openSnapTradePortalPopup } from "@/lib/snaptrade-portal";
 import styles from "./office.module.css";
 
 export type OfficeAgentId = "warren" | "clara" | "will";
@@ -145,7 +146,7 @@ function stepNumClass(step: AgentMissionStep): string {
 export default function OfficeExperienceLive() {
   const { t, language } = useI18n();
   const { stealthMode, toggleStealth } = useStealthMode();
-  const { activePortfolioId, activePortfolioCurrency } = usePortfolio();
+  const { activePortfolioId, activePortfolioCurrency, refreshHoldings } = usePortfolio();
 
   const [hostAgent, setHostAgent] = useState<OfficeAgentId>("warren");
   const [timeline, setTimeline] = useState<OfficeTimelineItem[]>([]);
@@ -156,6 +157,7 @@ export default function OfficeExperienceLive() {
   const [sending, setSending] = useState(false);
   const [actionStep, setActionStep] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const sendMessageRef = useRef<(text: string) => Promise<void>>(async () => {});
 
   const activeMission = missions.find((m) => m.status === "active") ?? null;
 
@@ -315,6 +317,7 @@ export default function OfficeExperienceLive() {
 
       const now = new Date().toISOString();
       const pendingWarrenId = `${PENDING_WARREN_PREFIX}${Date.now()}`;
+      let snapTradeUrl: string | undefined;
 
       setSending(true);
       setCoordination(null);
@@ -368,10 +371,43 @@ export default function OfficeExperienceLive() {
             if (!line.trim()) continue;
             try {
               const frame = JSON.parse(line) as OfficeStreamFrame;
+              if (frame.kind === "client_action" && frame.action === "open_snaptrade") {
+                snapTradeUrl = frame.url;
+                continue;
+              }
               applyStreamFrame(frame);
             } catch {
               /* ignore partial JSON */
             }
+          }
+        }
+
+        if (snapTradeUrl) {
+          if (isStandaloneDisplay()) {
+            try {
+              const urlForm = new FormData();
+              urlForm.append("action", "connect-url");
+              urlForm.append("customRedirect", `${window.location.origin}/snaptrade/callback`);
+              const urlRes = await fetch("/api/snaptrade", { method: "POST", body: urlForm });
+              const urlData = await urlRes.json();
+              if (urlRes.ok && urlData.redirectUrl) {
+                window.location.href = urlData.redirectUrl;
+              } else {
+                window.location.href = snapTradeUrl;
+              }
+            } catch {
+              window.location.href = snapTradeUrl;
+            }
+          } else {
+            openSnapTradePortalPopup(
+              snapTradeUrl,
+              () => {
+                void sendMessageRef.current(t("warrenImportConnectedFollowup"));
+              },
+              () => {
+                /* portal errors surface in the popup; user can retry from chat */
+              },
+            );
           }
         }
       } catch {
@@ -391,6 +427,27 @@ export default function OfficeExperienceLive() {
     },
     [activePortfolioCurrency, activePortfolioId, applyStreamFrame, language, sending, t],
   );
+
+  sendMessageRef.current = sendMessage;
+
+  const onImportMethod = useCallback(
+    (id: WarrenImportMethodId) => {
+      if (id === "csv") {
+        void sendMessage(t("warrenImportCsvPrompt"));
+        return;
+      }
+      if (id === "ai") {
+        void sendMessage(t("warrenImportAiPrompt"));
+        return;
+      }
+      void sendMessage(t("warrenImportBrokerPrompt"));
+    },
+    [sendMessage, t],
+  );
+
+  const onProposalConfirmed = useCallback(() => {
+    refreshHoldings?.();
+  }, [refreshHoldings]);
 
   const onChip = useCallback(
     (text: string) => {
@@ -553,7 +610,11 @@ export default function OfficeExperienceLive() {
                   return (
                     <div key={item.id} className={agentMsgClass("warren")}>
                       <div className={styles.richCardWrap}>
-                        <RenderPart part={item.part} />
+                        <RenderPart
+                          part={item.part}
+                          onImportChoose={onImportMethod}
+                          importDisabled={sending}
+                        />
                       </div>
                     </div>
                   );
@@ -561,7 +622,7 @@ export default function OfficeExperienceLive() {
                 if (item.kind === "warren-proposal") {
                   return (
                     <div key={item.id} className={styles.richCardWrap}>
-                      <ActionCard proposal={item.proposal} />
+                      <ActionCard proposal={item.proposal} onConfirmed={onProposalConfirmed} />
                     </div>
                   );
                 }

@@ -157,4 +157,36 @@ describe("handleGeneralOfficeQuery", () => {
       expect.any(String),
     );
   });
+
+  it("forwards Warren SnapTrade client_action frames", async () => {
+    vi.mocked(runWarrenTurn).mockImplementation(async (input) => {
+      input.onFrame?.({
+        kind: "client_action",
+        action: "open_snaptrade",
+        url: "https://example.com/connect",
+      });
+      return {
+        text: "Connect your broker.",
+        parts: [],
+        proposals: [],
+        totalTokens: 4,
+        durationMs: 50,
+      };
+    });
+
+    const frames: unknown[] = [];
+    await handleGeneralOfficeQuery(
+      { ...baseInput, userMessage: "import from broker", language: "en" },
+      "en",
+      () => "2026-05-23T15:01:00Z",
+      vi.fn(),
+      (frame) => frames.push(frame),
+    );
+
+    expect(frames).toContainEqual({
+      kind: "client_action",
+      action: "open_snaptrade",
+      url: "https://example.com/connect",
+    });
+  });
 });

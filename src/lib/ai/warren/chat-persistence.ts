@@ -39,7 +39,14 @@ const bubbleSchema = z.discriminatedUnion("kind", [
     proposal: z
       .object({
         id: z.string(),
-        kind: z.enum(["addHolding", "removeHolding", "addCash", "createAlert", "addWatchlist"]),
+        kind: z.enum([
+          "addHolding",
+          "removeHolding",
+          "addCash",
+          "createAlert",
+          "addWatchlist",
+          "importTransactions",
+        ]),
         title: z.string(),
         summary: z.string(),
         destructive: z.boolean().optional(),
