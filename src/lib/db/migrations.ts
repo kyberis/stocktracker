@@ -4456,6 +4456,44 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 149,
+    description: "Transaction content_fingerprint for cross-source dedup (date|type|ticker|shares|amount)",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE transactions ADD COLUMN content_fingerprint TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+
+      await client.execute({
+        sql: `UPDATE transactions SET content_fingerprint =
+              date || '|' || type || '|' || UPPER(ticker) || '|' ||
+              CAST(ROUND(ABS(shares) * 1000) AS INTEGER) || '|' ||
+              CAST(ROUND(ABS(COALESCE(NULLIF(total_amount, 0), shares * price_per_share, 0)) * 100) AS INTEGER)
+              WHERE content_fingerprint = ''`,
+      });
+
+      await client.execute({
+        sql: `DELETE FROM transactions
+              WHERE content_fingerprint != ''
+                AND id NOT IN (
+                  SELECT MIN(id) FROM transactions
+                  WHERE content_fingerprint != ''
+                  GROUP BY user_id, content_fingerprint
+                )`,
+      });
+
+      await client.execute({
+        sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_user_content_fp
+              ON transactions(user_id, content_fingerprint)
+              WHERE content_fingerprint != ''`,
+      });
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

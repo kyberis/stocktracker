@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDuplicateAgainstLedger } from "@/lib/transaction-fingerprint";
 import {
   listActiveSnapTradeConnections,
   getSnapTradeConnectionSecret,
@@ -11,6 +12,7 @@ import {
   claimFirstSyncNotification,
   listTransactionSourceRefs,
   listTransactionTradeFingerprints,
+  listTransactionContentFingerprints,
   addCashEntry,
   removeCashEntriesBySourceAndBrokers,
   upsertHoldingsFromPositions,
@@ -138,13 +140,16 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       }
 
       const existingRefs = await listTransactionSourceRefs(conn.userId);
-      const existingFingerprints = await listTransactionTradeFingerprints(conn.userId);
+      const existingFingerprints = await listTransactionContentFingerprints(conn.userId);
+      const existingTradeFingerprints = await listTransactionTradeFingerprints(conn.userId);
       const merged = mergeSnapTradeTransactions(
         activityTx,
         holdingsResult?.orderTransactions ?? [],
-        { existingFingerprints },
+        { existingFingerprints: existingTradeFingerprints },
       );
-      const newTx = merged.filter((tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef));
+      const newTx = merged.filter(
+        (tx) => !isDuplicateAgainstLedger(tx, existingFingerprints, existingRefs, tx.sourceRef),
+      );
       totalNewTx += newTx.length;
 
       // Import transactions to the first portfolio, then map to additional ones

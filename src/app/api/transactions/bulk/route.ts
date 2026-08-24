@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSession } from "@/lib/auth/guards";
-import { addTransactionsBulk, rebuildHoldings, listHoldings, findUserById, listDistinctBuyTickers, trackEvent } from "@/lib/db";
+import { addTransactionsBulk, rebuildHoldings, listHoldings, findUserById, listDistinctBuyTickers, trackEvent, listTransactionContentFingerprints } from "@/lib/db";
+import { filterNewTransactions } from "@/lib/transaction-fingerprint";
 import { baseTickerName } from "@/lib/db/helpers";
 import { withMetrics } from "@/lib/with-metrics";
 import { transactionsOpsTotal } from "@/lib/metrics";
@@ -177,13 +178,17 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
     });
   }
 
+  const existingFingerprints = await listTransactionContentFingerprints(userId);
+  const skippedByLimit = transactions.length - filtered.length;
+  const { kept: dedupedFiltered, removed: duplicatesSkipped } = filterNewTransactions(filtered, existingFingerprints);
+  filtered = dedupedFiltered;
+
   const enriched = filtered.map((tx) => {
     const cur = (tx.currency || "EUR").toUpperCase();
     const exchangeRateEur = tx.exchangeRateEur ?? fxRates[cur];
     return { ...tx, exchange: getExchange(tx), exchangeRateEur };
   });
 
-  const skippedByLimit = transactions.length - filtered.length;
   const { inserted, skipped } = await addTransactionsBulk(userId, enriched, portfolioId);
 
   if (finalize && inserted > 0 && !skipRebuild) {
@@ -193,7 +198,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
     );
     trackEvent(userId, "portfolio_import_committed", {
       inserted: String(inserted),
-      skipped: String(skipped + skippedByLimit),
+      skipped: String(skipped + skippedByLimit + duplicatesSkipped),
       portfolioId: portfolioId || "default",
     });
   }
@@ -225,7 +230,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
 
   transactionsOpsTotal.inc({ operation: "add" }, inserted);
   return NextResponse.json(
-    { inserted, skipped: skipped + skippedByLimit, holdingsCapped },
+    { inserted, skipped: skipped + skippedByLimit + duplicatesSkipped, holdingsCapped },
     { status: 201 },
   );
 });
