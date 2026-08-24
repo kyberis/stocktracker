@@ -44,12 +44,59 @@ beforeEach(() => {
 });
 
 describe("upsertHoldingsFromPositions stale cleanup", () => {
-  it("deletes snaptrade holdings when broker returns zero stock positions", async () => {
+  it("does not wipe snaptrade holdings when broker transiently returns zero positions", async () => {
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          id: "h-sold",
+          ticker: "ASML.AS",
+          exchange: "AMS",
+          name: "ASML",
+          isin: "",
+          asset_type: "stock",
+          sector: "",
+          region: "",
+          asset_class: "",
+          account_id: "",
+          source: "snaptrade",
+          value_in_eur: 1000,
+          figi_share_class: "",
+          tags: "[]",
+        },
+      ],
+    });
+
+    await upsertHoldingsFromPositions("user-1", [], "portfolio-1");
+
+    expect(mockExecute).toHaveBeenCalledTimes(1); // SELECT only — no DELETE
+    expect(mockExecute).not.toHaveBeenCalledWith({
+      sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
+      args: ["h-sold", "user-1"],
+    });
+  });
+
+  it("removes stale snaptrade tickers when a non-empty snapshot omits them", async () => {
     mockExecute
       .mockResolvedValueOnce({
         rows: [
           {
-            id: "h-sold",
+            id: "h-kept",
+            ticker: "O",
+            exchange: "NYSE",
+            name: "Realty Income",
+            isin: "",
+            asset_type: "stock",
+            sector: "",
+            region: "",
+            asset_class: "",
+            account_id: "",
+            source: "snaptrade",
+            value_in_eur: 2000,
+            figi_share_class: "",
+            tags: "[]",
+          },
+          {
+            id: "h-stale",
             ticker: "ASML.AS",
             exchange: "AMS",
             name: "ASML",
@@ -66,13 +113,29 @@ describe("upsertHoldingsFromPositions stale cleanup", () => {
           },
         ],
       })
-      .mockResolvedValueOnce({ rowsAffected: 1 }); // DELETE
+      .mockResolvedValueOnce({ rowsAffected: 1 }) // UPDATE kept
+      .mockResolvedValueOnce({ rowsAffected: 1 }) // DELETE stale
+      .mockResolvedValueOnce({ rowsAffected: 1 }); // value_in_eur update
 
-    await upsertHoldingsFromPositions("user-1", [], "portfolio-1");
+    await upsertHoldingsFromPositions(
+      "user-1",
+      [
+        {
+          name: "Realty Income",
+          ticker: "O",
+          shares: 49,
+          purchasePrice: 50,
+          displayCurrency: "USD",
+          exchange: "NYSE",
+          assetType: "stock",
+        },
+      ],
+      "portfolio-1",
+    );
 
     expect(mockExecute).toHaveBeenCalledWith({
       sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
-      args: ["h-sold", "user-1"],
+      args: ["h-stale", "user-1"],
     });
   });
 });

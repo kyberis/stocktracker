@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.231",
+    date: "2026-08-24",
+    title: "Safer SnapTrade empty-position sync",
+    titleTranslations: {
+      es: "Sincronización SnapTrade más segura con posiciones vacías",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Auto-sync no longer deletes all broker holdings when SnapTrade transiently returns an empty positions list. Full exits are still cleaned up on the next non-empty snapshot or via sell reconciliation.",
+        translations: {
+          es: "La auto-sincronización ya no borra todos los holdings del broker cuando SnapTrade devuelve momentáneamente una lista de posiciones vacía. Las salidas totales se limpian en el siguiente snapshot con datos o vía reconciliación de ventas.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.230",
     date: "2026-08-24",
     title: "Clara beside Warren",

@@ -578,13 +578,23 @@ export async function upsertHoldingsFromPositions(
   // Remove stale snaptrade holdings that no longer appear in broker positions.
   // Skip when data may be incomplete (e.g. a broker connection is disabled/expired)
   // to avoid deleting legitimate holdings we simply couldn't fetch.
+  //
+  // Never treat an empty positions array as "everything sold". SnapTrade
+  // intermittently returns positions=[] + balances=[] while the account is
+  // still funded (observed on DEGIRO 2026-08-24); wiping on that signal
+  // destroyed the whole portfolio. Full exits are handled by sell-tx
+  // reconciliation and by stale cleanup on later non-empty snapshots that
+  // omit closed tickers.
   const snaptradeHoldingCount = [...existingByKey.values()].filter((m) => m.source === "snaptrade").length;
   const partialSnapshotOk =
     touchedKeys.size > 0 && touchedKeys.size >= snaptradeHoldingCount * 0.5;
-  const allStockPositionsClosed =
-    positions.length === 0 && touchedKeys.size === 0 && snaptradeHoldingCount > 0;
   const shouldRunStaleCleanup =
-    !options?.skipStaleCleanup && snaptradeHoldingCount > 0 && (partialSnapshotOk || allStockPositionsClosed);
+    !options?.skipStaleCleanup && snaptradeHoldingCount > 0 && partialSnapshotOk;
+  if (positions.length === 0 && snaptradeHoldingCount > 0 && !options?.skipStaleCleanup) {
+    console.warn(
+      `[upsertHoldingsFromPositions] Empty positions for user ${userId} with ${snaptradeHoldingCount} existing snaptrade holdings — skipping wipe`,
+    );
+  }
   if (shouldRunStaleCleanup) {
     for (const [key, meta] of existingByKey) {
       if (meta.source === "snaptrade" && !touchedKeys.has(key)) {
