@@ -385,6 +385,8 @@ export async function addTransactionsBulk(
 
   if (inserted > 0) {
     await linkUnlinkedTransactionsToHoldings(userId, resolved);
+    const { reconcileSnapTradeHoldingsAfterBulkImport } = await import("./holdings");
+    await reconcileSnapTradeHoldingsAfterBulkImport(userId, txs, resolved);
   }
 
   return { inserted, skipped };

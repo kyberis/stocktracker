@@ -576,11 +576,16 @@ export async function upsertHoldingsFromPositions(
   }
 
   // Remove stale snaptrade holdings that no longer appear in broker positions.
-  // Skip when data may be incomplete (e.g. a broker connection is disabled/expired,
-  // or the API returned 0 actionable positions — likely an auth expiry returning
-  // null units) to avoid deleting legitimate holdings we simply couldn't fetch.
+  // Skip when data may be incomplete (e.g. a broker connection is disabled/expired)
+  // to avoid deleting legitimate holdings we simply couldn't fetch.
   const snaptradeHoldingCount = [...existingByKey.values()].filter((m) => m.source === "snaptrade").length;
-  if (!options?.skipStaleCleanup && touchedKeys.size > 0 && touchedKeys.size >= snaptradeHoldingCount * 0.5) {
+  const partialSnapshotOk =
+    touchedKeys.size > 0 && touchedKeys.size >= snaptradeHoldingCount * 0.5;
+  const allStockPositionsClosed =
+    positions.length === 0 && touchedKeys.size === 0 && snaptradeHoldingCount > 0;
+  const shouldRunStaleCleanup =
+    !options?.skipStaleCleanup && snaptradeHoldingCount > 0 && (partialSnapshotOk || allStockPositionsClosed);
+  if (shouldRunStaleCleanup) {
     for (const [key, meta] of existingByKey) {
       if (meta.source === "snaptrade" && !touchedKeys.has(key)) {
         await client.execute({
@@ -614,6 +619,107 @@ export async function upsertHoldingsFromPositions(
   }
 
   return upserted;
+}
+
+function holdingVenueKey(ticker: string, exchange: string): string {
+  const ex = canonicalExchangeCode(exchange) || (exchange || "").toUpperCase();
+  return `${normalizeHkYahooSymbol(normalizeTickerForExchange(ticker, ex)).toUpperCase()}|${ex}`;
+}
+
+/**
+ * After SnapTrade bulk-imports new sell rows, broker positions can still lag
+ * (common on DEGIRO). Positions are normally source-of-truth, but when freshly
+ * imported sells explain the gap between ledger-derived shares and the stored
+ * holding, align the holding to the ledger so dashboard counts match history.
+ */
+export async function reconcileSnapTradeHoldingsAfterBulkImport(
+  userId: string,
+  batchTxs: Array<{ ticker: string; exchange?: string; type: string; shares?: number; sourceRef?: string }>,
+  portfolioId?: string,
+): Promise<number> {
+  const snapTradeSells = batchTxs.filter(
+    (tx) =>
+      tx.type === "sell" &&
+      typeof tx.sourceRef === "string" &&
+      tx.sourceRef.startsWith("snaptrade-") &&
+      (tx.shares ?? 0) > 0,
+  );
+  if (snapTradeSells.length === 0) return 0;
+
+  const client = await ensureInitialized();
+  const resolved = await resolvePortfolioId(userId, portfolioId);
+
+  const newSellSharesByKey = new Map<string, number>();
+  for (const tx of snapTradeSells) {
+    const key = holdingVenueKey(tx.ticker, tx.exchange || "");
+    newSellSharesByKey.set(key, (newSellSharesByKey.get(key) ?? 0) + (tx.shares ?? 0));
+  }
+
+  const holdingRows = await client.execute({
+    sql: `SELECT id, ticker, exchange, shares, purchase_price, source
+          FROM holdings WHERE user_id = ? AND portfolio_id = ?`,
+    args: [userId, resolved],
+  });
+  if (holdingRows.rows.length === 0) return 0;
+
+  const metadataByKey = new Map<string, {
+    id: string; name: string; isin: string; assetType: HoldingAssetType;
+    displayCurrency: string; sector: string; region: string; assetClass: string; accountId: string;
+    tags: string[];
+  }>();
+  const holdingSharesByKey = new Map<string, { id: string; shares: number; purchasePrice: number }>();
+
+  for (const row of holdingRows.rows) {
+    const ticker = normalizeHkYahooSymbol(str(row.ticker));
+    const exchange = canonicalExchangeCode(str(row.exchange)) || str(row.exchange);
+    const key = `${ticker.toUpperCase()}|${exchange}`;
+    if (!metadataByKey.has(key)) {
+      metadataByKey.set(key, {
+        id: str(row.id), name: ticker, isin: "", assetType: "stock",
+        displayCurrency: "EUR", sector: "", region: "", assetClass: "", accountId: "",
+        tags: [],
+      });
+    }
+    holdingSharesByKey.set(key, {
+      id: str(row.id),
+      shares: num(row.shares),
+      purchasePrice: num(row.purchase_price),
+    });
+  }
+
+  const transactions = await listTransactions(userId, undefined, portfolioId);
+  const derived = deriveHoldingsFromTransactions(transactions, metadataByKey);
+  const derivedByKey = new Map(
+    derived.map((h) => [`${h.ticker.toUpperCase()}|${canonicalExchangeCode(h.exchange)}`, h]),
+  );
+
+  let updated = 0;
+  for (const [key, newSellShares] of newSellSharesByKey) {
+    const holding = holdingSharesByKey.get(key);
+    if (!holding) continue;
+
+    const ledger = derivedByKey.get(key);
+    const ledgerShares = ledger?.shares ?? 0;
+    if (ledgerShares >= holding.shares - 1e-6) continue;
+
+    const gap = holding.shares - ledgerShares;
+    if (gap > newSellShares + 1e-6) continue;
+
+    if (ledgerShares <= 0) {
+      await client.execute({
+        sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
+        args: [holding.id, userId],
+      });
+    } else {
+      await client.execute({
+        sql: "UPDATE holdings SET shares = ?, purchase_price = ?, source = 'snaptrade' WHERE id = ? AND user_id = ?",
+        args: [ledgerShares, ledger?.purchasePrice ?? holding.purchasePrice, holding.id, userId],
+      });
+    }
+    updated++;
+  }
+
+  return updated;
 }
 
 export async function rebuildHoldings(userId: string, portfolioId?: string): Promise<Holding[]> {

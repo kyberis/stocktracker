@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.228",
+    version: "2.5.229",
     date: "2026-08-24",
     title: "Clara beside Warren",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "A Clara card now sits next to Warren on Home, Classic, and mobile. Open a short intro, create your Clara space with the same trefolio login, and jump to Clara chat in a new tab.",
         translations: {
           es: "Una tarjeta de Clara aparece junto a Warren en Home, Classic y móvil. Abre una intro breve, crea tu espacio en Clara con el mismo login de trefolio y salta al chat de Clara en una pestaña nueva.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.228",
+    date: "2026-08-24",
+    title: "SnapTrade sell sync fixes holdings",
+    titleTranslations: {
+      es: "Las ventas de SnapTrade actualizan los holdings",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Re-importing a SnapTrade sell (common on DEGIRO when positions lag activities) now updates or removes the matching holding instead of leaving stale share counts. Full exits also clear snaptrade holdings when the broker returns zero stock positions.",
+        translations: {
+          es: "Al reimportar una venta de SnapTrade (frecuente en DEGIRO cuando las posiciones van detrás de las activities) ahora se actualiza o elimina el holding correspondiente en lugar de dejar acciones obsoletas. Las salidas totales también limpian holdings de snaptrade cuando el broker devuelve cero posiciones.",
         },
       },
     ],
