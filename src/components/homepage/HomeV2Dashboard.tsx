@@ -68,6 +68,7 @@ const WeeklyDigestCard = dynamic(() => import("@/components/dashboard-v2/WeeklyD
   ssr: false,
 });
 const WarrenTrigger = dynamic(() => import("@/components/warren/WarrenTrigger"), { ssr: false });
+const ClaraCta = dynamic(() => import("@/components/clara/ClaraCta"), { ssr: false });
 const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
 const StatsGrid = dynamic(() => import("@/components/dashboard-v2/StatsGrid"), { ssr: false });
 const PortfolioNewsFeed = dynamic(() => import("@/components/PortfolioNewsFeed"), { ssr: false });
@@ -398,6 +399,7 @@ export default function HomeV2Dashboard() {
                 }}
                 href={demoMode ? "/signup" : undefined}
               />
+              <ClaraCta href={demoMode ? "/signup" : undefined} />
               {aidStatus.data?.warrenNudge && (
                 <AidWarrenNudge
                   nudge={aidStatus.data.warrenNudge}
@@ -426,6 +428,7 @@ export default function HomeV2Dashboard() {
         }}
         href={demoMode ? "/signup" : undefined}
       />
+      <ClaraCta href={demoMode ? "/signup" : undefined} />
       {aidStatus.data?.warrenNudge && (
         <AidWarrenNudge
           nudge={aidStatus.data.warrenNudge}
