@@ -73,9 +73,9 @@ beforeEach(() => {
     error: null,
   } as never);
   mockedFlag.mockResolvedValue(true);
-  mockedBootstrap.mockResolvedValue({ ...corePayload, ...sectionsPayload });
-  mockedCore.mockResolvedValue(corePayload);
-  mockedSections.mockResolvedValue(sectionsPayload);
+  mockedBootstrap.mockResolvedValue({ ...corePayload, ...sectionsPayload } as never);
+  mockedCore.mockResolvedValue(corePayload as never);
+  mockedSections.mockResolvedValue(sectionsPayload as never);
 });
 
 describe("GET /api/home-v2/bootstrap", () => {
