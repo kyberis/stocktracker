@@ -418,15 +418,15 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       // separately for tax/performance but don't drive the holdings table.
       // When any connection is disabled, positions data is incomplete — skip
       // stale cleanup so we don't delete holdings we simply couldn't fetch.
-      if (holdingsResult.holdings.length > 0) {
-        for (const targetPId of targetPortfolios) {
-          await upsertHoldingsFromPositions(session.userId, holdingsResult.holdings, targetPId, {
-            skipStaleCleanup: disabledConns.length > 0,
-          });
-          // Positions may arrive before the user imports txs (manual sync) or
-          // after (cron). Re-link so /analisis can find SnapTrade order fills.
-          await linkUnlinkedTransactionsToHoldings(session.userId, targetPId);
-        }
+      // Always run upsert (even when positions is empty) so full exits remove
+      // stale snaptrade rows instead of leaving orphaned holdings.
+      for (const targetPId of targetPortfolios) {
+        await upsertHoldingsFromPositions(session.userId, holdingsResult.holdings, targetPId, {
+          skipStaleCleanup: disabledConns.length > 0,
+        });
+        // Positions may arrive before the user imports txs (manual sync) or
+        // after (cron). Re-link so /analisis can find SnapTrade order fills.
+        await linkUnlinkedTransactionsToHoldings(session.userId, targetPId);
       }
 
       const summary = {
