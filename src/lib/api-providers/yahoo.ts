@@ -268,7 +268,18 @@ export class YahooProvider implements StockDataProvider {
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "historical" });
     let ok = false;
     try {
-      const result = await yahooFinance.chart(symbol, { period1, period2, interval });
+      const result = await yahooFinance.chart(
+        symbol,
+        { period1, period2, interval },
+        { validateResult: false },
+      ) as { quotes?: Array<{
+        date: Date;
+        open?: number | null;
+        high?: number | null;
+        low?: number | null;
+        close?: number | null;
+        volume?: number | null;
+      }> };
       ok = true;
       const quotes = result.quotes ?? [];
       const points = quotes

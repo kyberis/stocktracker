@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.226",
+    date: "2026-08-24",
+    title: "Historical fallback hardening",
+    titleTranslations: {
+      es: "Fallback más robusto para históricos",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Home and chart surfaces no longer fail when Yahoo returns an invalid historical payload for a symbol; `/api/historical` now degrades to empty data and the Yahoo chart call skips strict schema validation.",
+        translations: {
+          es: "Home y las superficies de gráficos ya no fallan cuando Yahoo devuelve un payload histórico inválido para un símbolo; `/api/historical` ahora degrada a datos vacíos y la llamada chart de Yahoo omite la validación estricta del esquema.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.225",
     date: "2026-08-24",
     title: "Faster Home first paint",

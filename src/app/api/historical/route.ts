@@ -63,7 +63,10 @@ export const GET = withMetrics("/api/historical", async (request: NextRequest) =
     const fb = await tryExchangeHistoricalFallback(yahoo, ticker, period);
     if (fb) return Response.json({ data: fb, providerUsed: "yahoo" });
 
-    console.error(`Failed to fetch historical data for ${symbol}:`, err instanceof Error ? err.message : err);
-    return Response.json({ error: "Failed to fetch historical data" }, { status: 500 });
+    console.warn(
+      `Historical data degraded for ${symbol}:`,
+      err instanceof Error ? err.message : err,
+    );
+    return Response.json({ data: [], providerUsed: "yahoo", degraded: true });
   }
 });
