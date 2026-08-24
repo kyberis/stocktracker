@@ -725,19 +725,64 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
 }
 
 /**
- * Convert all `source='snaptrade'` holdings to `source='transaction'` so they
- * are preserved after a broker disconnect and won't be deleted by the stale-
+ * Convert `source='snaptrade'` holdings to `source='transaction'` so they are
+ * preserved after a broker disconnect and won't be deleted by the stale-
  * position cleanup in {@link upsertHoldingsFromPositions}.
+ *
+ * When `tickers` is provided, only those tickers are detached (case-insensitive).
+ * An empty `tickers` array detaches nothing — callers that cannot identify the
+ * disconnected broker's lots must pass `undefined` to detach all, or `[]` to
+ * skip detach intentionally.
  */
-export async function detachSnapTradeHoldings(userId: string, portfolioId?: string): Promise<number> {
+export async function detachSnapTradeHoldings(
+  userId: string,
+  portfolioId?: string,
+  options?: { tickers?: string[] },
+): Promise<number> {
   const client = await ensureInitialized();
   const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
   const portfolioArgs = portfolioId ? [portfolioId] : [];
+
+  if (options?.tickers) {
+    const tickers = [...new Set(options.tickers.map((t) => t.trim().toUpperCase()).filter(Boolean))];
+    if (tickers.length === 0) return 0;
+    const placeholders = tickers.map(() => "?").join(",");
+    const result = await client.execute({
+      sql: `UPDATE holdings SET source = 'transaction'
+            WHERE user_id = ? AND source = 'snaptrade'${portfolioFilter}
+              AND UPPER(ticker) IN (${placeholders})`,
+      args: [userId, ...portfolioArgs, ...tickers],
+    });
+    return Number(result.rowsAffected ?? 0);
+  }
+
   const result = await client.execute({
     sql: `UPDATE holdings SET source = 'transaction' WHERE user_id = ? AND source = 'snaptrade'${portfolioFilter}`,
     args: [userId, ...portfolioArgs],
   });
   return Number(result.rowsAffected ?? 0);
+}
+
+/** Distinct tickers seen on SnapTrade-imported transactions for a broker name. */
+export async function listSnapTradeTickersForBroker(
+  userId: string,
+  brokerageName: string,
+): Promise<string[]> {
+  const name = brokerageName.trim();
+  if (!name) return [];
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT DISTINCT UPPER(ticker) AS ticker
+          FROM transactions
+          WHERE user_id = ?
+            AND ticker != ''
+            AND (
+              UPPER(broker_name) = UPPER(?)
+              OR UPPER(notes) LIKE '%' || UPPER(?) || '%'
+            )`,
+    args: [userId, name, name],
+  });
+  return result.rows.map((r) => str(r.ticker)).filter(Boolean);
 }
 
 export interface DistinctHoldingTicker {

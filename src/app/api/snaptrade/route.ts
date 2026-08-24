@@ -17,13 +17,11 @@ import {
   getSnapTradeBrokerSyncs,
   upsertSnapTradeBrokerSync,
   ensureSnapTradeBrokerSyncPlaceholder,
-  deleteSnapTradeBrokerSync,
   linkUnlinkedTransactionsToHoldings,
   setSnapTradeNeedsAttention,
   getSnapTradeNeedsAttention,
   addBrokerPortfolioMapping,
   getAllBrokerPortfolioMappings,
-  removeBrokerPortfolioMappings,
   removeAllBrokerPortfolioMappings,
   mapTransactionsBySourceRef,
 } from "@/lib/db";
@@ -37,10 +35,10 @@ import {
   listBrokerageConnections,
   listAccounts,
   listBrokerages,
-  removeBrokerageConnection,
   refreshBrokerageConnection,
   SnapTradeClientError,
 } from "@/lib/snaptrade-client";
+import { disconnectSnapTradeBroker } from "@/lib/snaptrade-disconnect";
 import type { ExtractedTransaction } from "@/hooks/import-types";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
@@ -613,17 +611,12 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     const snapTradeUserId = conn.snapTradeUserId;
 
     deferTask(async () => {
-      await detachSnapTradeHoldings(userId);
-      try {
-        await retryAsync(() =>
-          removeBrokerageConnection(snapTradeUserId, userSecret, brokerConnectionId),
-        );
-      } catch {
-        console.warn("[SnapTrade] removeBrokerageConnection failed after retries:", brokerConnectionId);
-      }
-      await deleteSnapTradeBrokerSync(userId, brokerConnectionId);
-      await removeBrokerPortfolioMappings(userId, brokerConnectionId);
-      trackEvent(userId, "snaptrade_disconnect_broker", { brokerConnectionId });
+      await disconnectSnapTradeBroker({
+        userId,
+        snapTradeUserId,
+        userSecret,
+        brokerConnectionId,
+      });
     });
 
     return NextResponse.json({ disconnected: true, brokerConnectionId });

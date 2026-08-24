@@ -99,6 +99,7 @@ export {
   rebuildHoldings,
   upsertHoldingsFromPositions,
   detachSnapTradeHoldings,
+  listSnapTradeTickersForBroker,
   deleteAllHoldings,
   countHoldings,
   listDistinctHoldingTickers,

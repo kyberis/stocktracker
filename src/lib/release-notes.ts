@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.227",
+    date: "2026-08-24",
+    title: "Safer SnapTrade broker disconnect",
+    titleTranslations: {
+      es: "Desconexión de broker SnapTrade más segura",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Disconnecting one SnapTrade broker now detaches only that broker’s holdings and cash, instead of re-tagging every SnapTrade position. SnapTrade 404 on remove/delete is treated as already disconnected.",
+        translations: {
+          es: "Al desconectar un broker de SnapTrade solo se despegan las posiciones y el cash de ese broker, no todas las de SnapTrade. Un 404 al borrar en SnapTrade se trata como ya desconectado.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.226",
     date: "2026-08-24",
     title: "Historical fallback hardening",
