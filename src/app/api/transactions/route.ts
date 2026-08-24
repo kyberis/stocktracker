@@ -76,7 +76,7 @@ export const POST = withMetrics("/api/transactions", async (req: NextRequest) =>
 
   const created = await addTransaction(session.userId, txData, portfolioId);
   if (!created) {
-    return NextResponse.json({ skipped: true, reason: "duplicate_source_ref" }, { status: 200 });
+    return NextResponse.json({ skipped: true, reason: "duplicate_transaction" }, { status: 200 });
   }
   transactionsOpsTotal.inc({ operation: "add" });
 

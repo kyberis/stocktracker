@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listHoldings, addTransaction, trackEvent, addCashEntry, removeCashEntriesBySource, listTransactionSourceRefs, rebuildHoldings, findUserById, findOrCreateBrokerAccount } from "@/lib/db";
+import { listHoldings, addTransaction, trackEvent, addCashEntry, removeCashEntriesBySource, listTransactionSourceRefs, listTransactionContentFingerprints, rebuildHoldings, findUserById, findOrCreateBrokerAccount } from "@/lib/db";
+import { dedupeParsedAgainstLedger } from "@/lib/transaction-fingerprint";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal } from "@/lib/metrics";
 import { buildIsinMap } from "@/lib/degiro-parser";
@@ -295,8 +296,11 @@ async function importTransactions(
   brokerLabel?: string,
   portfolioId?: string,
 ): Promise<{ imported: number; cashImported: number; holdingsCapped?: number }> {
-  const existingRefs = await listTransactionSourceRefs(userId);
-  const toImport = parsed.filter((tx) => !existingRefs.has(tx.sourceRef));
+  const [existingRefs, existingFingerprints] = await Promise.all([
+    listTransactionSourceRefs(userId),
+    listTransactionContentFingerprints(userId),
+  ]);
+  const { deduped: toImport } = dedupeParsedAgainstLedger(parsed, existingRefs, existingFingerprints);
 
   const sorted = [...toImport].sort((a, b) => a.date.localeCompare(b.date));
 
@@ -458,9 +462,11 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     const parsed = parseSimpleCSV(csv);
 
     if (action === "parse") {
-      const existingRefs = await listTransactionSourceRefs(session.userId);
-      const deduped = parsed.filter((tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef));
-      const duplicatesRemoved = parsed.length - deduped.length;
+      const [existingRefs, existingFingerprints] = await Promise.all([
+        listTransactionSourceRefs(session.userId),
+        listTransactionContentFingerprints(session.userId),
+      ]);
+      const { deduped, duplicatesRemoved } = dedupeParsedAgainstLedger(parsed, existingRefs, existingFingerprints);
       const summary = {
         total: deduped.length,
         buys: deduped.filter((t) => t.type === "buy").length,
@@ -566,9 +572,11 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   }
 
   if (action === "parse") {
-    const existingRefs = await listTransactionSourceRefs(session.userId);
-    const deduped = parsed.filter((tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef));
-    const duplicatesRemoved = parsed.length - deduped.length;
+    const [existingRefs, existingFingerprints] = await Promise.all([
+      listTransactionSourceRefs(session.userId),
+      listTransactionContentFingerprints(session.userId),
+    ]);
+    const { deduped, duplicatesRemoved } = dedupeParsedAgainstLedger(parsed, existingRefs, existingFingerprints);
     const cashBalances = parser.parseCashBalances?.(csv) || [];
 
     const holdingsLimit = getHoldingsLimit(plan);

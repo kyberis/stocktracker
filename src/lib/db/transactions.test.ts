@@ -217,6 +217,14 @@ describe("transactions", () => {
       });
     });
 
+    it("returns null when content_fingerprint duplicate (UNIQUE constraint failed)", async () => {
+      mockExecute.mockRejectedValueOnce(new Error("UNIQUE constraint failed: transactions.content_fingerprint"));
+
+      const result = await transactions.addTransaction("user-1", buyTx);
+
+      expect(result).toBeNull();
+    });
+
     it("returns null when source_ref duplicate (UNIQUE constraint failed)", async () => {
       mockExecute.mockRejectedValueOnce(new Error("UNIQUE constraint failed: transactions.source_ref"));
 

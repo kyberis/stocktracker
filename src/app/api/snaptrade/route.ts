@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDuplicateAgainstLedger } from "@/lib/transaction-fingerprint";
 import { requireSession } from "@/lib/auth/guards";
 import {
   findUserById,
@@ -9,6 +10,7 @@ import {
   deleteSnapTradeConnection,
   listTransactionSourceRefs,
   listTransactionTradeFingerprints,
+  listTransactionContentFingerprints,
   addCashEntry,
   removeCashEntriesBySourceAndBrokers,
   upsertHoldingsFromPositions,
@@ -372,7 +374,8 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       }
 
       const existingRefs = await listTransactionSourceRefs(session.userId);
-      const existingFingerprints = await listTransactionTradeFingerprints(session.userId);
+      const existingContentFingerprints = await listTransactionContentFingerprints(session.userId);
+      const existingTradeFingerprints = await listTransactionTradeFingerprints(session.userId);
 
       const allActiveAccountIds = new Set(allActiveAccounts.map((a) => a.id));
       const institutionMap = new Map(allActiveAccounts.map((a) => [a.id, a.institution]));
@@ -386,11 +389,11 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       const mergedTransactions = mergeSnapTradeTransactions(
         allTransactions,
         holdingsResult.orderTransactions,
-        { existingFingerprints },
+        { existingFingerprints: existingTradeFingerprints },
       );
 
       const deduped = mergedTransactions.filter(
-        (tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef),
+        (tx) => !isDuplicateAgainstLedger(tx, existingContentFingerprints, existingRefs, tx.sourceRef),
       );
 
       // Record broker↔portfolio mapping for the current portfolio so
