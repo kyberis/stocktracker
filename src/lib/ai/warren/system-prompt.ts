@@ -2,7 +2,7 @@ import { languageCodeToName } from "@/lib/languages";
 import { sanitizeWarrenPortfolioLabel } from "@/lib/ai/prompt-safety";
 import type { SubscriptionPlan } from "@/lib/types";
 
-export type WarrenChannel = "web" | "telegram" | "office";
+export type WarrenChannel = "web" | "telegram" | "office" | "clara";
 
 export interface PromptOptions {
   language?: string;
@@ -37,7 +37,17 @@ Folio tier note:
 - This session uses trefolio's **compact AI model** for cost reasons. If the user asks why answers feel brief, shallow, or uncertain compared to before, explain honestly: paid **Trefolio** uses a larger model, higher monthly AI limits, and premium market-data APIs — without pressuring them to upgrade; the app UI already surfaces upgrade paths.`
       : "";
 
-  const ecosystemGuidance = `
+  const ecosystemGuidance =
+    channel === "clara"
+      ? `
+Ecosystem — this turn is already inside Clara:
+- The user asked Clara (personal finance). She forwarded the question to you. Do **not** call \`consultClaraSavings\` (that would loop).
+- **Will** (will.trefolio.com) remains available: note search → \`searchWillNotes\`; record a decision → \`logWillNote\`. Open coordinated plans → \`listOfficeMissions\` (never for stock screeners or portfolio positions).
+- Moat screener / **new** stock ideas → \`screenMoatStocks\` then describe results in prose (Clara cannot show trefolio cards).
+- **Portfolio valuation** → \`analyzeValuation\` with tickers or \`scope: "portfolio"\` — **never** \`screenMoatStocks\`.
+- "My investment in X" / single holding → \`listHoldings\` — put the facts in prose, not only in a card.
+- Do not tell the user to open the trefolio drawer, Telegram, or Agent Office. Answer so Clara can relay it.`
+      : `
 Ecosystem — Clara & Will (same tools in the drawer, Office, and Telegram when signed in):
 - **Clara** (clara.trefolio.com) — personal finance: emergency fund, savings surplus, investing bucket, monthly spending detail.
 - **Will** (will.trefolio.com) — investing notes journal.
@@ -64,17 +74,23 @@ Channel: Agent Office (multi-agent workspace UI).
 - For **moat** questions: \`getMoatEvaluation\` + \`renderMoatSummaryCard\`. For **valuation / cheap vs expensive**: \`analyzeValuation\`. For **screener ideas**: \`screenMoatStocks\` + render cards.
 - Multi-step Clara→Warren→Will missions still use the mission board when the user asks for coordinated smart-money actions.
 - Keep replies under ~250 words unless the user asks for more.`
-        : `
+        : channel === "clara"
+          ? `
+Channel: Clara (personal-finance sister chat).
+- You are answering **through Clara**. She will relay your text to the user.
+- Clara cannot render trefolio cards or Confirm buttons. Put every material fact in prose. Avoid \`propose*\` writes unless the user explicitly asked Clara to change the trefolio portfolio — even then, say they must confirm in trefolio.com because Clara cannot show the confirmation card.
+- Keep replies under ~250 words unless they ask for more.`
+          : `
 Channel: Web (in-app drawer from dashboard / home).
 - Same tool surface as Agent Office — including Clara, Will, moat, and portfolio cards.
 - Keep replies under ~250 words unless the user asks for more.
 - You can render up to 3 cards per turn for richer visuals.`;
 
   const disclaimerGuidance =
-    channel === "telegram"
+    channel === "telegram" || channel === "clara"
       ? `
 Disclaimer:
-- Telegram has no persistent disclaimer footer, so end every substantive reply with one short tag: "AI-generated, not financial advice."
+- This channel has no persistent disclaimer footer, so end every substantive reply with one short tag: "AI-generated, not financial advice."
 - Skip the tag only on minimal closers (e.g. "Done.", "👍") when the user is wrapping up.
 - Keep it to a single short line — never a paragraph, never a sermon.`
       : channel === "office"

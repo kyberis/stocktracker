@@ -75,6 +75,7 @@ Warren calls Clara/Will via **`/api/internal/office/*`** with `IDP_SERVICE_TOKEN
 |-----|-------|----------------|
 | Clara | `GET /api/internal/office/savings-summary` | `external/etracker/src/app/api/internal/office/savings-summary/route.ts` |
 | Clara | `POST /api/internal/office/propose-release` | `external/etracker/src/app/api/internal/office/propose-release/route.ts` |
+| trefolio | `POST /api/internal/office/warren-chat` | `src/app/api/internal/office/warren-chat/route.ts` — Clara asks Warren; `billingSource: "clara"` skips `ai_consult` |
 | Will | `POST /api/internal/office/search-notes` | `external/notetaker/src/app/api/internal/office/search-notes/route.ts` |
 | Will | `POST /api/internal/office/log-note` | `external/notetaker/src/app/api/internal/office/log-note/route.ts` |
 
