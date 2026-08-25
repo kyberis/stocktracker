@@ -44,14 +44,14 @@ export default function AidModalShell({ open, onClose, title, ariaLabel, childre
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel ?? title}
-        className="relative z-[121] flex max-h-[min(92vh,720px)] w-full sm:max-w-lg flex-col overflow-hidden rounded-t-[var(--radius-card)] sm:rounded-[var(--radius-card)] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-2xl"
+        className="glass-overlay relative z-[121] flex max-h-[min(92vh,720px)] w-full sm:max-w-lg flex-col overflow-hidden rounded-t-[var(--radius-card)] sm:rounded-[var(--radius-card)] shadow-2xl"
       >
         <div className="flex items-center justify-between gap-3 border-b border-[color:var(--border)] px-4 py-3 shrink-0">
           <h2 id="aid-modal-title" className="text-sm font-semibold text-[color:var(--foreground)]">{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="min-h-11 min-w-11 rounded-xl border border-[color:var(--border)] text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
+            className="min-h-11 min-w-11 rounded-xl border border-[color:var(--border)] text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
             aria-label={t("close")}
           >
             ×
