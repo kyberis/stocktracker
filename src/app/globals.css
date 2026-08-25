@@ -238,7 +238,7 @@ html.theme-studio {
   --nav-text: #fafafa;
   --surface-strong: rgba(16, 24, 40, 0.84);
   --surface-soft: rgba(255,255,255,0.05);
-  --surface-overlay: rgba(9, 9, 11, 0.9);
+  --surface-overlay: rgba(9, 9, 11, 0.965);
   --surface-highlight: rgba(255,255,255,0.1);
   --surface-highlight-strong: rgba(255,255,255,0.16);
   --glass-blur: 18px;
