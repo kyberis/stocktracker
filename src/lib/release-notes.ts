@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.235",
+    date: "2026-08-25",
+    title: "Readable engagement report tables",
+    titleTranslations: {
+      es: "Tablas del informe de engagement legibles",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Engagement report HTML now forces light document colors so tables and cards stay readable in dark-mode admin (no more near-invisible light text on white boxes).",
+        translations: {
+          es: "El HTML del informe de engagement fuerza colores claros para que tablas y tarjetas se lean bien en el admin en modo oscuro (ya no hay texto claro casi invisible sobre cajas blancas).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.234",
     date: "2026-08-25",
     title: "Admin engagement report & survey campaigns",
