@@ -279,9 +279,9 @@ export async function getAllFeatureQuotas(
     args: [userId, ...providers],
   });
 
-  const rowByProvider = new Map<string, { call_count: unknown; window_start: unknown }>();
+  const rowByProvider = new Map<string, Record<string, unknown>>();
   for (const row of result.rows) {
-    rowByProvider.set(str(row.provider), row);
+    rowByProvider.set(str(row.provider), row as Record<string, unknown>);
   }
 
   const out = {} as Record<FeatureQuotaKey, FeatureQuotaUsage>;
