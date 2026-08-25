@@ -17,9 +17,8 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.233",
+    version: "2.5.234",
     date: "2026-08-25",
-<<<<<<< HEAD
     title: "Admin engagement report & survey campaigns",
     titleTranslations: {
       es: "Informe de engagement y campañas de encuesta (admin)",
@@ -30,7 +29,13 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Admins can generate an HTML engagement report (KPIs, AI narrative, named cohorts, CSAT/feedback crossover) and confirm one-click email surveys (winback, missing tool, NPS) with AI-drafted questions in each user’s language.",
         translations: {
           es: "Los admins pueden generar un informe HTML de engagement (KPIs, narrativa IA, cohortes con nombres, cruce CSAT/feedback) y confirmar encuestas por email en un clic (winback, herramienta faltante, NPS) con preguntas redactadas por IA en el idioma de cada usuario.",
-=======
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.233",
+    date: "2026-08-25",
     title: "Readable Clara and AID modals on mobile",
     titleTranslations: {
       es: "Modales de Clara y AID legibles en móvil",
@@ -41,7 +46,6 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Clara and AID bottom-sheet modals now use the solid glass-overlay surface so body text, bullets, and fine print stay readable on mobile instead of showing through a transparent panel.",
         translations: {
           es: "Los modales de Clara y AID en móvil usan ahora la superficie glass-overlay opaca para que el texto, las viñetas y las notas pequeñas se lean bien, sin que se vea el contenido de detrás.",
->>>>>>> origin/main
         },
       },
     ],
