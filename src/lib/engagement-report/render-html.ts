@@ -94,24 +94,25 @@ export function renderEngagementReportHtml(
   <meta charset="utf-8" />
   <title>trefolio engagement report — ${snapshot.periodDays}d</title>
   <style>
-    :root { color-scheme: light dark; }
+    /* Force light document colors: iframe inherits OS dark preference otherwise,
+       leaving light text on white tables (near-invisible). */
+    :root { color-scheme: light only; }
     body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; padding: 32px; line-height: 1.5; color: #0f172a; background: #f8fafc; }
-    @media (prefers-color-scheme: dark) { body { color: #e2e8f0; background: #0b1220; } table { background: #111827; } th { background: #1f2937; } .card { background: #111827; border-color: #334155; } }
-    h1 { margin: 0 0 8px; font-size: 1.75rem; }
-    h2 { margin-top: 2rem; font-size: 1.25rem; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; }
-    h3 { margin-top: 1.25rem; font-size: 1.05rem; }
-    .muted { color: #64748b; }
+    h1 { margin: 0 0 8px; font-size: 1.75rem; color: #0f172a; }
+    h2 { margin-top: 2rem; font-size: 1.25rem; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; color: #0f172a; }
+    h3, h4 { margin-top: 1.25rem; font-size: 1.05rem; color: #0f172a; }
+    p, li { color: #0f172a; }
+    .muted { color: #475569; }
     .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 24px; }
-    .kpi { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; }
-    @media (prefers-color-scheme: dark) { .kpi { background: #111827; border-color: #334155; } }
-    .kpi .n { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .kpi .l { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; }
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; margin: 8px 0 16px; }
-    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; vertical-align: top; }
-    th { background: #f1f5f9; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; }
-    .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin: 12px 0; background: #fff; }
+    .kpi { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; color: #0f172a; }
+    .kpi .n { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #0f172a; }
+    .kpi .l { font-size: 0.75rem; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; }
+    table { width: 100%; border-collapse: collapse; background: #fff; color: #0f172a; border-radius: 12px; overflow: hidden; margin: 8px 0 16px; border: 1px solid #e2e8f0; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; vertical-align: top; color: #0f172a; background: #fff; }
+    th { background: #f1f5f9; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; color: #334155; }
+    .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin: 12px 0; background: #fff; color: #0f172a; }
     .pill { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 999px; background: #e0e7ff; color: #3730a3; margin-left: 6px; }
-    footer { margin-top: 40px; font-size: 0.8rem; color: #64748b; }
+    footer { margin-top: 40px; font-size: 0.8rem; color: #475569; }
     @media print { body { background: #fff; padding: 0; } .kpi, .card, table { break-inside: avoid; } }
   </style>
 </head>
