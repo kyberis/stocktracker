@@ -28,3 +28,28 @@ describe("sisterAgentToolsEnabled", () => {
     expect(sisterAgentToolsEnabled(baseCtx())).toBe(false);
   });
 });
+
+describe("buildSisterAgentTools", () => {
+  it("omits consultClaraSavings on the clara channel", async () => {
+    const { buildSisterAgentTools } = await import("./sister-agent-tools");
+    const tools = buildSisterAgentTools(
+      baseCtx({
+        channel: "clara",
+        officeIdentity: { idpSub: "sub1", email: "a@test.com", trefolioUserId: "u1" },
+      }),
+    );
+    expect("consultClaraSavings" in tools).toBe(false);
+    expect("searchWillNotes" in tools).toBe(true);
+  });
+
+  it("includes consultClaraSavings on web", async () => {
+    const { buildSisterAgentTools } = await import("./sister-agent-tools");
+    const tools = buildSisterAgentTools(
+      baseCtx({
+        channel: "web",
+        officeIdentity: { idpSub: "sub1", email: "a@test.com", trefolioUserId: "u1" },
+      }),
+    );
+    expect("consultClaraSavings" in tools).toBe(true);
+  });
+});

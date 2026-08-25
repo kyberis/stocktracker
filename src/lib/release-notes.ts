@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.236",
+    date: "2026-08-26",
+    title: "Clara can consult Warren",
+    titleTranslations: {
+      es: "Clara puede consultar a Warren",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Clara can ask Warren about a linked trefolio portfolio (and get a signup link if there is no account). That consult uses Clara’s daily quota, not Warren’s monthly ai_consult.",
+        translations: {
+          es: "Clara puede preguntarle a Warren por una cartera de trefolio vinculada (y te pasa el alta si no hay cuenta). Cuenta contra el cupo diario de Clara, no contra el ai_consult mensual de Warren.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.235",
     date: "2026-08-25",
     title: "Readable engagement report tables",

@@ -91,6 +91,8 @@ In Clara's Vercel project:
 
 - Production URL goes into trefolio's `CLARA_BASE_URL` env var (Settings → Environment Variables) when trefolio actually starts calling Clara.
 
+Clara → Warren (the reverse call) uses `TREFOLIO_BASE_URL` on Clara (default `https://trefolio.com` in production) and `POST /api/internal/office/warren-chat` with the same `IDP_SERVICE_TOKEN`. `billingSource: "clara"` skips trefolio's `ai_consult` quota — the turn already consumed Clara's daily cap.
+
 ### Review checklist
 
 When reviewing a PR that touches anything Clara-adjacent:

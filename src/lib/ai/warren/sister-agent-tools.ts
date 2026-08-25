@@ -24,8 +24,7 @@ function sisterUnavailable(ctx: WarrenToolContext) {
 export function buildSisterAgentTools(ctx: WarrenToolContext) {
   const identity = ctx.officeIdentity;
 
-  return {
-    consultClaraSavings: tool({
+  const consultClaraSavings = tool({
       description:
         "Ask Clara (personal finance app) for savings summary: emergency fund balance/target, safe surplus, and investing-bucket cash. Use for spending questions, savings capacity, or before proposing investments.",
       inputSchema: z.object({}),
@@ -55,8 +54,9 @@ export function buildSisterAgentTools(ctx: WarrenToolContext) {
         ctx.emitSisterCoordination?.({ from: "warren", to: "clara", summary: hint });
         return { available: false, note: hint };
       },
-    }),
+    });
 
+  const withoutClaraLoop = {
     searchWillNotes: tool({
       description:
         "Search Will (investing notes journal) for notes matching a query. Use when the user asks about past decisions, journal entries, or 'search my notes'.",
@@ -132,6 +132,12 @@ export function buildSisterAgentTools(ctx: WarrenToolContext) {
       },
     }),
   } as const;
+
+  if (ctx.channel === "clara") {
+    return withoutClaraLoop;
+  }
+
+  return { consultClaraSavings, ...withoutClaraLoop };
 }
 
 export function sisterAgentToolsEnabled(ctx: WarrenToolContext): boolean {

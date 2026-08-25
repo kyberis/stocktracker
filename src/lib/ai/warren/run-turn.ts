@@ -56,6 +56,13 @@ export interface RunWarrenTurnOptions {
   userRole?: string;
 }
 
+function warrenAuditSource(channel: WarrenChannel): string {
+  if (channel === "telegram") return "warren_telegram";
+  if (channel === "office") return "warren_office";
+  if (channel === "clara") return "warren_clara_sister";
+  return "warren_chat";
+}
+
 /** Plain-text summary of the last user turn for AI logs (no binary). */
 export function serializeWarrenPromptUserLog(messages: ModelMessage[]): string {
   const last = messages[messages.length - 1];
@@ -203,7 +210,7 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
     const durationMs = Date.now() - startedAt;
     insertAiLog({
       userId: opts.userId,
-      source: channel === "telegram" ? "warren_telegram" : channel === "office" ? "warren_office" : "warren_chat",
+      source: warrenAuditSource(channel),
       model,
       promptSystem: systemPrompt,
       promptUser: lastUserMsg,
@@ -228,7 +235,7 @@ export async function runWarrenTurn(opts: RunWarrenTurnOptions): Promise<RunWarr
     emit({ kind: "error", message });
     insertAiLog({
       userId: opts.userId,
-      source: channel === "telegram" ? "warren_telegram" : channel === "office" ? "warren_office" : "warren_chat",
+      source: warrenAuditSource(channel),
       model,
       promptSystem: systemPrompt,
       promptUser: lastUserMsg,
