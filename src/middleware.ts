@@ -108,6 +108,8 @@ function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/u/")) return true;
   // Trial activation page is public so email links work before login
   if (pathname.startsWith("/trial/")) return true;
+  // Engagement survey magic-link pages (token is the auth)
+  if (pathname.startsWith("/survey/")) return true;
   // Static design previews (no user data)
   if (pathname.startsWith("/preview/")) return true;
   // Public stock research: search + report page (free data; paid-API sections
@@ -132,6 +134,10 @@ export async function middleware(req: NextRequest) {
 
   // Public portfolio share API (dynamic route)
   if (pathname.startsWith("/api/p/")) {
+    return NextResponse.next();
+  }
+  // Engagement survey API (token auth)
+  if (pathname.startsWith("/api/survey/")) {
     return NextResponse.next();
   }
   // Public LLM integration docs (OpenAPI + section guides)

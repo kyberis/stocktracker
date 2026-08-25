@@ -193,6 +193,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 
 - [admin-ai-logs](admin-ai-logs.md) — AI usage + cost logs.
 - [admin-analytics](admin-analytics.md) — internal analytics dashboards.
+- [admin-engagement-report](admin-engagement-report.md) — HTML engagement report + confirm-to-send survey campaigns.
 - [admin-cron-stats](admin-cron-stats.md) — cron observability.
 - [admin-email-flows](admin-email-flows.md) — read-only email automation map.
 - [admin-feature-flags](admin-feature-flags.md) — manage flags.

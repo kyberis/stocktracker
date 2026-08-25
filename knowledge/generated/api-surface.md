@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-322 routes.
+326 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -39,6 +39,7 @@
 | `/api/admin/email-templates/[id]` | GET, PUT, DELETE | [`src/app/api/admin/email-templates/[id]/route.ts`](../../src/app/api/admin/email-templates/[id]/route.ts) |
 | `/api/admin/email-templates/preview` | GET | [`src/app/api/admin/email-templates/preview/route.ts`](../../src/app/api/admin/email-templates/preview/route.ts) |
 | `/api/admin/email-templates/send` | POST | [`src/app/api/admin/email-templates/send/route.ts`](../../src/app/api/admin/email-templates/send/route.ts) |
+| `/api/admin/engagement-report` | GET, POST | [`src/app/api/admin/engagement-report/route.ts`](../../src/app/api/admin/engagement-report/route.ts) |
 | `/api/admin/experiments` | GET, POST | [`src/app/api/admin/experiments/route.ts`](../../src/app/api/admin/experiments/route.ts) |
 | `/api/admin/experiments/[id]` | GET, PUT | [`src/app/api/admin/experiments/[id]/route.ts`](../../src/app/api/admin/experiments/[id]/route.ts) |
 | `/api/admin/experiments/[id]/reset` | POST | [`src/app/api/admin/experiments/[id]/reset/route.ts`](../../src/app/api/admin/experiments/[id]/reset/route.ts) |
@@ -81,6 +82,8 @@
 | `/api/admin/support-chat` | GET | [`src/app/api/admin/support-chat/route.ts`](../../src/app/api/admin/support-chat/route.ts) |
 | `/api/admin/support-chat-config` | GET, PUT | [`src/app/api/admin/support-chat-config/route.ts`](../../src/app/api/admin/support-chat-config/route.ts) |
 | `/api/admin/support-chat/[id]` | GET, PUT | [`src/app/api/admin/support-chat/[id]/route.ts`](../../src/app/api/admin/support-chat/[id]/route.ts) |
+| `/api/admin/survey-campaigns` | GET, POST | [`src/app/api/admin/survey-campaigns/route.ts`](../../src/app/api/admin/survey-campaigns/route.ts) |
+| `/api/admin/survey-campaigns/[id]` | GET, POST | [`src/app/api/admin/survey-campaigns/[id]/route.ts`](../../src/app/api/admin/survey-campaigns/[id]/route.ts) |
 | `/api/admin/traffic-graph` | GET | [`src/app/api/admin/traffic-graph/route.ts`](../../src/app/api/admin/traffic-graph/route.ts) |
 | `/api/admin/unsubscribes` | GET | [`src/app/api/admin/unsubscribes/route.ts`](../../src/app/api/admin/unsubscribes/route.ts) |
 | `/api/admin/users` | GET, POST, DELETE | [`src/app/api/admin/users/route.ts`](../../src/app/api/admin/users/route.ts) |
@@ -312,6 +315,7 @@
 | `/api/strategies` | GET, POST, DELETE | [`src/app/api/strategies/route.ts`](../../src/app/api/strategies/route.ts) |
 | `/api/support-chat` | POST | [`src/app/api/support-chat/route.ts`](../../src/app/api/support-chat/route.ts) |
 | `/api/support-chat/config` | GET | [`src/app/api/support-chat/config/route.ts`](../../src/app/api/support-chat/config/route.ts) |
+| `/api/survey/[token]` | GET, POST | [`src/app/api/survey/[token]/route.ts`](../../src/app/api/survey/[token]/route.ts) |
 | `/api/tax/report` | GET | [`src/app/api/tax/report/route.ts`](../../src/app/api/tax/report/route.ts) |
 | `/api/ticker-bar` | GET | [`src/app/api/ticker-bar/route.ts`](../../src/app/api/ticker-bar/route.ts) |
 | `/api/transactions` | GET, POST, PATCH, DELETE | [`src/app/api/transactions/route.ts`](../../src/app/api/transactions/route.ts) |

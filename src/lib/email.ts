@@ -1548,6 +1548,76 @@ export async function sendFeedbackCompletionEmail(
   return result;
 }
 
+export async function sendEngagementSurveyEmail(
+  email: string,
+  userId: string,
+  displayName: string,
+  surveyUrl: string,
+  surveyTitle: string,
+  locale: EmailLocale = "en",
+): Promise<{ success: boolean; error?: string; suppressed?: boolean }> {
+  if (isTestEmail(email)) return { success: true };
+
+  const isEs = locale === "es";
+  const name = displayName || (isEs ? "hola" : "there");
+  const subject = isEs
+    ? `Tu opinión sobre trefolio: ${surveyTitle}`.slice(0, 58)
+    : `Quick trefolio survey: ${surveyTitle}`.slice(0, 58);
+  const html = `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 16px;color:#0f172a;">
+  <p style="font-size:16px;">${isEs ? `Hola ${name},` : `Hi ${name},`}</p>
+  <p style="font-size:15px;line-height:1.55;">
+    ${isEs
+      ? "Estamos mejorando trefolio y nos gustaría tu opinión en una encuesta corta (2–3 minutos). Tus respuestas nos ayudan a priorizar qué construir."
+      : "We're improving trefolio and would value your input in a short survey (2–3 minutes). Your answers help us prioritize what to build next."}
+  </p>
+  <p style="margin:28px 0;">
+    <a href="${surveyUrl}" style="display:inline-block;background:#4f46e5;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600;">
+      ${isEs ? "Responder la encuesta" : "Take the survey"}
+    </a>
+  </p>
+  <p style="font-size:13px;color:#64748b;">
+    ${isEs
+      ? "Si el botón no funciona, copia este enlace:"
+      : "If the button does not work, copy this link:"}
+    <br/><a href="${surveyUrl}" style="color:#4f46e5;word-break:break-all;">${surveyUrl}</a>
+  </p>
+  <p style="font-size:12px;color:#94a3b8;margin-top:32px;">
+    ${isEs
+      ? 'Recibes este mensaje porque tienes una cuenta en trefolio. Puedes '
+      : "You're receiving this because you have a trefolio account. You can "}
+    <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">${isEs ? "darte de baja" : "unsubscribe"}</a>
+    ${isEs ? " de emails de producto." : " from product emails."}
+  </p>
+</div>`;
+
+  const result = await sendEmail({
+    to: email,
+    subject,
+    html,
+    userId,
+    transactional: false,
+    automationKey: "engagement-survey",
+  });
+  if (!result.success) console.error("Failed to send engagement survey email:", result.error);
+
+  try {
+    await logEmailSend({
+      resendId: result.messageId || "",
+      templateId: "",
+      userId,
+      emailTo: email,
+      subject,
+      bodyHtml: html,
+      bodyText: htmlToPlainText(html),
+      status: result.suppressed ? "suppressed" : result.success ? "sent" : "failed",
+    });
+  } catch (e) {
+    console.error("[engagement-survey] logEmailSend:", e);
+  }
+
+  return result;
+}
+
 export function getCodeOwnedEmailPreview(
   sender: import("@/lib/email-flows/registry").HardcodedEmailSender,
   locale: EmailLocale = "en",
@@ -1679,6 +1749,15 @@ export function getCodeOwnedEmailPreview(
       return {
         subject: "Your Weekly Portfolio Digest — 2026-08-03 to 2026-08-10",
         html: "<p>See weekly-digest preview in enrich.</p>",
+      };
+    }
+    case "sendEngagementSurveyEmail": {
+      const url = `${base}/survey/PREVIEW`;
+      return {
+        subject: locale === "es" ? "Tu opinión sobre trefolio" : "Quick trefolio survey",
+        html: locale === "es"
+          ? `<p>Hola Alex — responde esta encuesta corta: <a href="${url}">${url}</a></p>`
+          : `<p>Hi Alex — please take this short survey: <a href="${url}">${url}</a></p>`,
       };
     }
     default: {

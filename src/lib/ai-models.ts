@@ -27,6 +27,7 @@ export const AI_FLOW_KEYS = [
   "support_chat",
   "weekly_digest",
   "weekly_digest_admin",
+  "engagement_report",
   "digest_email",
   "digest_x_post",
   "news_article_summary",
@@ -113,6 +114,13 @@ export const AI_FLOW_META: Record<AiFlowKey, AiFlowMeta> = {
     description: "Weekly digest triggered from admin panel",
     maxTokens: 300,
     temperature: 0.4,
+  },
+  engagement_report: {
+    label: "Engagement Report (Admin)",
+    description: "Admin HTML engagement narrative + survey question drafts",
+    maxTokens: 3500,
+    temperature: 0.35,
+    responseFormat: "json_object",
   },
   digest_email: {
     label: "Market Digest Email",

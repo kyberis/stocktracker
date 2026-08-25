@@ -20,6 +20,7 @@ export const HARDCODED_EMAIL_SENDERS = [
   "sendFeedbackCompletionEmail",
   "sendAccountDeletionEmail",
   "buildWeeklyDigestEmailHtml",
+  "sendEngagementSurveyEmail",
 ] as const;
 
 export type HardcodedEmailSender = (typeof HARDCODED_EMAIL_SENDERS)[number];
@@ -468,6 +469,17 @@ export const EMAIL_FLOWS: EmailFlow[] = [
         bodySource: "code",
         transactional: false,
         logsToEmailSends: false,
+      },
+      {
+        id: "engagement-survey",
+        kind: "email",
+        label: "Engagement survey invite",
+        description: "Admin-confirmed product research survey from the engagement report tool.",
+        purpose: "Invite selected users to answer a short in-app survey (winback, missing tool, or NPS).",
+        hardcodedSender: "sendEngagementSurveyEmail",
+        bodySource: "code",
+        transactional: false,
+        logsToEmailSends: true,
       },
       {
         id: "account-delete",
