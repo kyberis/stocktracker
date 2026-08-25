@@ -258,8 +258,8 @@ export default function AppLayoutClient({
       <AuthProvider>
         <FeatureFlagProvider>
           <PlatformBridge>
-            <I18nProvider>
-              <SettingsProvider>
+            <SettingsProvider>
+              <I18nProvider>
                 <StealthProvider>
                   <PortfolioProvider>
                     <PortfolioCommandProvider>
@@ -269,8 +269,8 @@ export default function AppLayoutClient({
                   </PortfolioProvider>
                   <ThemeWizard />
                 </StealthProvider>
-              </SettingsProvider>
-            </I18nProvider>
+              </I18nProvider>
+            </SettingsProvider>
           </PlatformBridge>
         </FeatureFlagProvider>
       </AuthProvider>

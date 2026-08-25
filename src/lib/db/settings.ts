@@ -423,21 +423,51 @@ export function getGlobalOpenAIApiKey(): string {
   );
 }
 
-export async function getPlatformSetting(key: string): Promise<string> {
+let _platformSettingsCache: { settings: Record<string, string>; ts: number } | null = null;
+const PLATFORM_SETTINGS_CACHE_TTL_MS = 60_000;
+
+/** Clears the in-process platform_settings cache (admin writes, tests). */
+export function invalidatePlatformSettingsCache(): void {
+  _platformSettingsCache = null;
+}
+
+export function resolveFeatureEnabledFromSettingsMap(
+  feature: PlatformFeature,
+  settings: Record<string, string>,
+): boolean {
+  if (feature in settings) return settings[feature] === "true";
+  return DEFAULT_ENABLED_FLAGS.has(feature);
+}
+
+export async function getAllPlatformSettings(): Promise<Record<string, string>> {
+  if (
+    _platformSettingsCache &&
+    Date.now() - _platformSettingsCache.ts < PLATFORM_SETTINGS_CACHE_TTL_MS
+  ) {
+    return _platformSettingsCache.settings;
+  }
+
   try {
     const client = await ensureInitialized();
-    const result = await client.execute({
-      sql: "SELECT value FROM platform_settings WHERE key = ?",
-      args: [key],
-    });
-    if (result.rows.length === 0) return "";
-    return str(result.rows[0].value);
+    const result = await client.execute("SELECT key, value FROM platform_settings");
+    const settings: Record<string, string> = {};
+    for (const row of result.rows) {
+      settings[str(row.key)] = str(row.value);
+    }
+    _platformSettingsCache = { settings, ts: Date.now() };
+    return settings;
   } catch {
     /* During `next build` static generation, many pages load the root layout in parallel and
      * can overwhelm or drop the Turso connection (ECONNRESET). Fall back to env defaults
      * via empty string so prerender can complete; runtime requests retry on the next request. */
-    return "";
+    if (_platformSettingsCache) return _platformSettingsCache.settings;
+    return {};
   }
+}
+
+export async function getPlatformSetting(key: string): Promise<string> {
+  const settings = await getAllPlatformSettings();
+  return settings[key] ?? "";
 }
 
 export async function setPlatformSetting(key: string, value: string): Promise<void> {
@@ -447,12 +477,12 @@ export async function setPlatformSetting(key: string, value: string): Promise<vo
           ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
     args: [key, value],
   });
+  invalidatePlatformSettingsCache();
 }
 
 export async function isFeatureEnabled(feature: PlatformFeature): Promise<boolean> {
-  const val = await getPlatformSetting(feature);
-  if (!val) return DEFAULT_ENABLED_FLAGS.has(feature);
-  return val === "true";
+  const settings = await getAllPlatformSettings();
+  return resolveFeatureEnabledFromSettingsMap(feature, settings);
 }
 
 export async function setFeatureEnabled(feature: PlatformFeature, enabled: boolean): Promise<void> {
@@ -533,13 +563,10 @@ export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: 
 
 export async function resolveAllFlagsForUser(userId: string): Promise<Record<PlatformFeature, boolean>> {
   const client = await ensureInitialized();
-  const [allSettings, userOverrides] = await Promise.all([
-    client.execute("SELECT key, value FROM platform_settings"),
+  const [globalMap, userOverrides] = await Promise.all([
+    getAllPlatformSettings(),
     client.execute({ sql: "SELECT flag, enabled FROM feature_flag_overrides WHERE user_id = ?", args: [userId] }),
   ]);
-
-  const globalMap: Record<string, string> = {};
-  for (const row of allSettings.rows) globalMap[str(row.key)] = str(row.value);
 
   const overrideMap: Record<string, boolean> = {};
   for (const row of userOverrides.rows) overrideMap[str(row.flag)] = num(row.enabled) === 1;
@@ -548,10 +575,8 @@ export async function resolveAllFlagsForUser(userId: string): Promise<Record<Pla
   for (const feature of ALL_PLATFORM_FEATURES) {
     if (feature in overrideMap) {
       result[feature] = overrideMap[feature];
-    } else if (feature in globalMap) {
-      result[feature] = globalMap[feature] === "true";
     } else {
-      result[feature] = DEFAULT_ENABLED_FLAGS.has(feature);
+      result[feature] = resolveFeatureEnabledFromSettingsMap(feature, globalMap);
     }
   }
   return result;
@@ -1477,12 +1502,3 @@ export async function setScreeningProviderCircuit(
   await setPlatformSetting(SCREENING_PROVIDER_CIRCUIT_KEY, JSON.stringify(circuit));
 }
 
-export async function getAllPlatformSettings(): Promise<Record<string, string>> {
-  const client = await ensureInitialized();
-  const result = await client.execute("SELECT key, value FROM platform_settings");
-  const settings: Record<string, string> = {};
-  for (const row of result.rows) {
-    settings[str(row.key)] = str(row.value);
-  }
-  return settings;
-}

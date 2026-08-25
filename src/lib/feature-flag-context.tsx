@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
-const POLL_INTERVAL_MS = 60_000;
+const POLL_INTERVAL_MS = 300_000;
 
 interface FeatureFlagContextValue {
   flags: Record<string, boolean>;

@@ -31,6 +31,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "El HTML del informe de engagement fuerza colores claros para que tablas y tarjetas se lean bien en el admin en modo oscuro (ya no hay texto claro casi invisible sobre cajas blancas).",
         },
       },
+      {
+        type: "improvement",
+        text: "Reduced Turso row reads: cached platform settings (60s), batched quota lookups on /api/auth/me, slower feature-flag and notification polling, and one fewer /api/user-settings fetch on app load.",
+        translations: {
+          es: "Menos lecturas en Turso: caché de platform settings (60s), quotas en batch en /api/auth/me, polling más lento de flags y notificaciones, y un fetch menos de /api/user-settings al cargar la app.",
+        },
+      },
     ],
   },
   {

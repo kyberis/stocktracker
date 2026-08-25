@@ -6,6 +6,7 @@ import { isValidLanguage } from "./languages";
 import type { TranslationStrings } from "@/locales/types";
 import en from "@/locales/en";
 import { setTrefolioUiLocaleCookieClient } from "@/lib/idp/trefolio-ui-locale-cookie.client";
+import { useSettingsSafe } from "@/lib/settings-context";
 
 export type TranslationKey = keyof typeof en;
 
@@ -75,11 +76,25 @@ interface I18nContextType {
 const I18nContext = createContext<I18nContextType | null>(null);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const settings = useSettingsSafe();
   const [language, setLanguageState] = useState<Language>("en");
   const [strings, setStrings] = useState<TranslationStrings>(en);
   const loadingRef = useRef(false);
+  const standaloneLoadedRef = useRef(false);
 
   useEffect(() => {
+    if (!settings?.settingsReady) return;
+    const resolved: Language = isValidLanguage(settings.language) ? settings.language : "en";
+    setLanguageState(resolved);
+    loadLocale(resolved).then((strs) => {
+      setStrings(strs);
+      setTrefolioUiLocaleCookieClient(resolved);
+    });
+  }, [settings?.settingsReady, settings?.language, settings]);
+
+  useEffect(() => {
+    if (settings || standaloneLoadedRef.current) return;
+    standaloneLoadedRef.current = true;
     const loadLanguage = async () => {
       try {
         const res = await fetch("/api/user-settings", { cache: "no-store" });
@@ -97,7 +112,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       }
     };
     loadLanguage();
-  }, []);
+  }, [settings]);
 
   const setLanguage = useCallback(async (lang: Language) => {
     if (loadingRef.current) return;
@@ -110,12 +125,16 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     } finally {
       loadingRef.current = false;
     }
-    fetch("/api/user-settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ language: lang }),
-    }).catch(() => {});
-  }, []);
+    if (settings) {
+      void settings.setLanguage(lang);
+    } else {
+      fetch("/api/user-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: lang }),
+      }).catch(() => {});
+    }
+  }, [settings]);
 
   const t = useCallback(
     (key: TranslationKey): string => {
