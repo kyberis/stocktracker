@@ -24,6 +24,7 @@ vi.mock("@/lib/crypto", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mockExecute.mockReset();
+  settings.invalidatePlatformSettingsCache();
 });
 
 const DEFAULT_SETTINGS = {
@@ -338,14 +339,11 @@ describe("settings", () => {
 
   describe("getPlatformSetting", () => {
     it("returns value when row found", async () => {
-      mockExecute.mockResolvedValue({ rows: [{ value: "my-value" }] });
+      mockExecute.mockResolvedValue({ rows: [{ key: "my_key", value: "my-value" }] });
 
       const result = await settings.getPlatformSetting("my_key");
 
-      expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT value FROM platform_settings WHERE key = ?",
-        args: ["my_key"],
-      });
+      expect(mockExecute).toHaveBeenCalledWith("SELECT key, value FROM platform_settings");
       expect(result).toBe("my-value");
     });
 
@@ -355,6 +353,27 @@ describe("settings", () => {
       const result = await settings.getPlatformSetting("missing_key");
 
       expect(result).toBe("");
+    });
+
+    it("reuses the in-process cache within the TTL", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ key: "my_key", value: "cached" }] });
+
+      await settings.getPlatformSetting("my_key");
+      await settings.getPlatformSetting("my_key");
+
+      expect(mockExecute).toHaveBeenCalledTimes(1);
+    });
+
+    it("refetches after cache invalidation", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ key: "my_key", value: "v1" }] });
+      await settings.getPlatformSetting("my_key");
+      settings.invalidatePlatformSettingsCache();
+      mockExecute.mockResolvedValue({ rows: [{ key: "my_key", value: "v2" }] });
+
+      const result = await settings.getPlatformSetting("my_key");
+
+      expect(mockExecute).toHaveBeenCalledTimes(2);
+      expect(result).toBe("v2");
     });
   });
 
@@ -373,7 +392,7 @@ describe("settings", () => {
 
   describe("isFeatureEnabled", () => {
     it("returns true when platform setting is 'true'", async () => {
-      mockExecute.mockResolvedValue({ rows: [{ value: "true" }] });
+      mockExecute.mockResolvedValue({ rows: [{ key: "telegram_enabled", value: "true" }] });
 
       const result = await settings.isFeatureEnabled("telegram_enabled");
 
@@ -381,7 +400,7 @@ describe("settings", () => {
     });
 
     it("returns false when platform setting is 'false'", async () => {
-      mockExecute.mockResolvedValue({ rows: [{ value: "false" }] });
+      mockExecute.mockResolvedValue({ rows: [{ key: "telegram_enabled", value: "false" }] });
 
       const result = await settings.isFeatureEnabled("telegram_enabled");
 
@@ -471,14 +490,11 @@ describe("settings", () => {
 
   describe("getGlobalResendApiKey", () => {
     it("returns decrypted value when resend_api_key is set", async () => {
-      mockExecute.mockResolvedValue({ rows: [{ value: "stored-key" }] });
+      mockExecute.mockResolvedValue({ rows: [{ key: "resend_api_key", value: "stored-key" }] });
 
       const result = await settings.getGlobalResendApiKey();
 
-      expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT value FROM platform_settings WHERE key = ?",
-        args: ["resend_api_key"],
-      });
+      expect(mockExecute).toHaveBeenCalledWith("SELECT key, value FROM platform_settings");
       expect(result).toBe("stored-key");
     });
 
@@ -552,14 +568,13 @@ describe("settings", () => {
 
   describe("getStripePriceConfig", () => {
     it("returns db value when platform setting exists", async () => {
-      mockExecute.mockResolvedValue({ rows: [{ value: "price_abc123" }] });
+      mockExecute.mockResolvedValue({
+        rows: [{ key: "stripe_price_pro_monthly", value: "price_abc123" }],
+      });
 
       const result = await settings.getStripePriceConfig("stripe_price_pro_monthly");
 
-      expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT value FROM platform_settings WHERE key = ?",
-        args: ["stripe_price_pro_monthly"],
-      });
+      expect(mockExecute).toHaveBeenCalledWith("SELECT key, value FROM platform_settings");
       expect(result).toBe("price_abc123");
     });
 
@@ -607,16 +622,16 @@ describe("settings", () => {
 
       const result = await settings.getPromoBannerConfig();
 
-      expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT value FROM platform_settings WHERE key = ?",
-        args: ["promo_banner_config"],
-      });
+      expect(mockExecute).toHaveBeenCalledWith("SELECT key, value FROM platform_settings");
       expect(result).toMatchObject({ enabled: false, title: expect.any(String) });
     });
 
     it("returns merged config when valid JSON", async () => {
       mockExecute.mockResolvedValue({
-        rows: [{ value: JSON.stringify({ enabled: true, title: "Custom Promo" }) }],
+        rows: [{
+          key: "promo_banner_config",
+          value: JSON.stringify({ enabled: true, title: "Custom Promo" }),
+        }],
       });
 
       const result = await settings.getPromoBannerConfig();
@@ -626,7 +641,7 @@ describe("settings", () => {
     });
 
     it("returns DEFAULT_PROMO_BANNER when JSON parse fails", async () => {
-      mockExecute.mockResolvedValue({ rows: [{ value: "not-valid-json" }] });
+      mockExecute.mockResolvedValue({ rows: [{ key: "promo_banner_config", value: "not-valid-json" }] });
 
       const result = await settings.getPromoBannerConfig();
 
@@ -637,7 +652,9 @@ describe("settings", () => {
   describe("setPromoBannerConfig", () => {
     it("merges config and persists via setPlatformSetting", async () => {
       mockExecute
-        .mockResolvedValueOnce({ rows: [{ value: JSON.stringify({ enabled: false }) }] })
+        .mockResolvedValueOnce({
+          rows: [{ key: "promo_banner_config", value: JSON.stringify({ enabled: false }) }],
+        })
         .mockResolvedValueOnce({ rows: [] });
 
       const result = await settings.setPromoBannerConfig({ enabled: true });
@@ -653,14 +670,11 @@ describe("settings", () => {
 
   describe("getGaMeasurementId", () => {
     it("returns db value when platform setting exists", async () => {
-      mockExecute.mockResolvedValue({ rows: [{ value: "G-ABC123" }] });
+      mockExecute.mockResolvedValue({ rows: [{ key: "ga_measurement_id", value: "G-ABC123" }] });
 
       const result = await settings.getGaMeasurementId();
 
-      expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT value FROM platform_settings WHERE key = ?",
-        args: ["ga_measurement_id"],
-      });
+      expect(mockExecute).toHaveBeenCalledWith("SELECT key, value FROM platform_settings");
       expect(result).toBe("G-ABC123");
     });
 
@@ -697,10 +711,7 @@ describe("settings", () => {
 
       const result = await settings.getAdConfig();
 
-      expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT value FROM platform_settings WHERE key = ?",
-        args: ["ad_config"],
-      });
+      expect(mockExecute).toHaveBeenCalledWith("SELECT key, value FROM platform_settings");
       expect(result.clientId).toBe("ca-pub-env");
       expect(result.globalEnabled).toBe(false);
       expect(result.slots).toHaveProperty("dashboard-summary");
@@ -710,6 +721,7 @@ describe("settings", () => {
     it("returns parsed config with merged slots when valid JSON", async () => {
       mockExecute.mockResolvedValue({
         rows: [{
+          key: "ad_config",
           value: JSON.stringify({
             clientId: "ca-pub-db",
             globalEnabled: true,
@@ -726,7 +738,7 @@ describe("settings", () => {
     });
 
     it("returns default config when JSON parse fails", async () => {
-      mockExecute.mockResolvedValue({ rows: [{ value: "invalid" }] });
+      mockExecute.mockResolvedValue({ rows: [{ key: "ad_config", value: "invalid" }] });
 
       const result = await settings.getAdConfig();
 
@@ -738,7 +750,7 @@ describe("settings", () => {
       const origEnv = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
       process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = "ca-pub-fallback";
       mockExecute.mockResolvedValue({
-        rows: [{ value: JSON.stringify({ clientId: "", globalEnabled: true }) }],
+        rows: [{ key: "ad_config", value: JSON.stringify({ clientId: "", globalEnabled: true }) }],
       });
 
       const result = await settings.getAdConfig();
@@ -892,19 +904,20 @@ describe("settings", () => {
       const prodOpsLink = await import("@/lib/prodops-link");
       vi.spyOn(prodOpsLink, "hashProdOpsLinkToken").mockReturnValue("ignored");
 
+      const prodOpsConfigRow = {
+        key: "prodops_config",
+        value: JSON.stringify({
+          enabled: true,
+          baseUrl: "https://ops.trefolio.com",
+          botUsername: "trefolio_prodops_bot",
+          enabledEventTypes: ["user_registered"],
+          recipient: null,
+          pendingLink: null,
+        }),
+      };
+
       mockExecute
-        .mockResolvedValueOnce({
-          rows: [{
-            value: JSON.stringify({
-              enabled: true,
-              baseUrl: "https://ops.trefolio.com",
-              botUsername: "trefolio_prodops_bot",
-              enabledEventTypes: ["user_registered"],
-              recipient: null,
-              pendingLink: null,
-            }),
-          }],
-        })
+        .mockResolvedValueOnce({ rows: [prodOpsConfigRow] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] });
 
@@ -915,40 +928,26 @@ describe("settings", () => {
       expect(token).toMatch(/^[0-9a-f]{12}$/);
       expect(expiresAt).toBeTruthy();
 
+      settings.invalidatePlatformSettingsCache();
       mockExecute.mockReset();
+      const pendingProdOpsConfigRow = {
+        key: "prodops_config",
+        value: JSON.stringify({
+          enabled: true,
+          baseUrl: "https://ops.trefolio.com",
+          botUsername: "trefolio_prodops_bot",
+          enabledEventTypes: ["user_registered"],
+          recipient: null,
+          pendingLink: {
+            tokenHash: "ignored",
+            tokenIssuedAt: "2026-05-26T00:00:00.000Z",
+            tokenExpiresAt: "2999-05-26T00:15:00.000Z",
+          },
+        }),
+      };
       mockExecute
-        .mockResolvedValueOnce({
-          rows: [{
-            value: JSON.stringify({
-              enabled: true,
-              baseUrl: "https://ops.trefolio.com",
-              botUsername: "trefolio_prodops_bot",
-              enabledEventTypes: ["user_registered"],
-              recipient: null,
-              pendingLink: {
-                tokenHash: "ignored",
-                tokenIssuedAt: "2026-05-26T00:00:00.000Z",
-                tokenExpiresAt: "2999-05-26T00:15:00.000Z",
-              },
-            }),
-          }],
-        })
-        .mockResolvedValueOnce({
-          rows: [{
-            value: JSON.stringify({
-              enabled: true,
-              baseUrl: "https://ops.trefolio.com",
-              botUsername: "trefolio_prodops_bot",
-              enabledEventTypes: ["user_registered"],
-              recipient: null,
-              pendingLink: {
-                tokenHash: "ignored",
-                tokenIssuedAt: "2026-05-26T00:00:00.000Z",
-                tokenExpiresAt: "2999-05-26T00:15:00.000Z",
-              },
-            }),
-          }],
-        })
+        .mockResolvedValueOnce({ rows: [pendingProdOpsConfigRow] })
+        .mockResolvedValueOnce({ rows: [pendingProdOpsConfigRow] })
         .mockResolvedValueOnce({ rows: [] });
 
       const recipient = await settings.completeProdOpsRecipientLink({

@@ -13,6 +13,7 @@ vi.mock("@/lib/db/client", () => ({
 import {
   checkAndIncrementFeatureQuota,
   getFeatureQuotaUsage,
+  getAllFeatureQuotas,
   refundFeatureQuota,
   currentWindowKey,
   isoWeekWindowKey,
@@ -90,6 +91,28 @@ describe("feature-quotas", () => {
 
       expect(usage.used).toBe(5);
       expect(usage.remaining).toBe(FEATURE_QUOTAS.fundamentals.free - 5);
+    });
+  });
+
+  describe("getAllFeatureQuotas", () => {
+    it("loads all quota features in a single query", async () => {
+      const windowKey = currentWindowKey("month");
+      mockExecute.mockResolvedValueOnce({
+        rows: [
+          { provider: "quota:fundamentals", call_count: 5, window_start: windowKey },
+          { provider: "quota:screener", call_count: 2, window_start: windowKey },
+        ],
+      });
+
+      const quotas = await getAllFeatureQuotas(USER_ID, "free");
+
+      expect(Object.keys(quotas)).toHaveLength(Object.keys(FEATURE_QUOTAS).length);
+      expect(quotas.fundamentals.used).toBe(5);
+      expect(quotas.screener.used).toBe(2);
+      expect(quotas.intelligence.used).toBe(0);
+      expect(mockExecute).toHaveBeenCalledTimes(1);
+      const sql = mockExecute.mock.calls[0][0].sql as string;
+      expect(sql).toContain("provider IN");
     });
   });
 

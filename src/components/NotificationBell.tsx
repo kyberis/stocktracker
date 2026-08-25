@@ -5,6 +5,8 @@ import NotificationCenter from "./NotificationCenter";
 import { useTrack } from "@/lib/use-track";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 
+const NOTIFICATION_POLL_INTERVAL_MS = 180_000;
+
 export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -25,7 +27,7 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchCount();
-    intervalRef.current = setInterval(fetchCount, 60_000);
+    intervalRef.current = setInterval(fetchCount, NOTIFICATION_POLL_INTERVAL_MS);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };

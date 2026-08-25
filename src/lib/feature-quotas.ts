@@ -270,8 +270,40 @@ export async function getAllFeatureQuotas(
   plan: SubscriptionPlan,
 ): Promise<Record<FeatureQuotaKey, FeatureQuotaUsage>> {
   const keys = Object.keys(FEATURE_QUOTAS) as FeatureQuotaKey[];
-  const entries = await Promise.all(
-    keys.map(async (k) => [k, await getFeatureQuotaUsage(userId, k, plan)] as const),
-  );
-  return Object.fromEntries(entries) as Record<FeatureQuotaKey, FeatureQuotaUsage>;
+  const providers = keys.map((k) => providerKey(k));
+
+  const client = await ensureInitialized();
+  const placeholders = providers.map(() => "?").join(", ");
+  const result = await client.execute({
+    sql: `SELECT provider, call_count, window_start FROM rate_limits WHERE user_id = ? AND provider IN (${placeholders})`,
+    args: [userId, ...providers],
+  });
+
+  const rowByProvider = new Map<string, Record<string, unknown>>();
+  for (const row of result.rows) {
+    rowByProvider.set(str(row.provider), row as Record<string, unknown>);
+  }
+
+  const out = {} as Record<FeatureQuotaKey, FeatureQuotaUsage>;
+  for (const feature of keys) {
+    const cfg = FEATURE_QUOTAS[feature];
+    const limit = getQuotaLimit(feature, plan);
+    const windowKey = currentWindowKey(cfg.window);
+    const resetAt = nextResetAt(cfg.window);
+    let used = 0;
+    const row = rowByProvider.get(providerKey(feature));
+    if (row && str(row.window_start) === windowKey) {
+      used = num(row.call_count);
+    }
+    out[feature] = {
+      feature,
+      plan,
+      used,
+      limit,
+      remaining: Math.max(0, limit - used),
+      resetAt,
+      window: cfg.window,
+    };
+  }
+  return out;
 }

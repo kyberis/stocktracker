@@ -1,8 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react";
-import type { RefreshInterval, LayoutTheme } from "./types";
+import type { RefreshInterval, LayoutTheme, Language } from "./types";
 import { useTheme } from "./theme-context";
+import { isValidLanguage } from "./languages";
+import { setTrefolioUiLocaleCookieClient } from "@/lib/idp/trefolio-ui-locale-cookie.client";
 
 const VALID_LAYOUT_THEMES = new Set<string>(["default", "terminal", "canvas", "studio"]);
 
@@ -19,6 +21,7 @@ function getInitialLayoutTheme(): LayoutTheme {
 }
 
 interface SettingsContextType {
+  language: Language;
   refreshInterval: RefreshInterval;
   dashboardTheme: LayoutTheme;
   defaultCurrency: string;
@@ -37,6 +40,7 @@ interface SettingsContextType {
   toolWatchlistEnabled: boolean;
   /** True after the initial /api/user-settings fetch completes (success or failure). */
   settingsReady: boolean;
+  setLanguage: (language: Language) => void;
   setRefreshInterval: (interval: RefreshInterval) => void;
   setDashboardTheme: (theme: LayoutTheme) => void;
   setDefaultCurrency: (currency: string) => void;
@@ -54,6 +58,7 @@ export function SettingsProvider({
   demoMode?: boolean;
 }) {
   const { setLayoutTheme } = useTheme();
+  const [language, setLanguageState] = useState<Language>("en");
   const [refreshInterval, setRefreshIntervalState] = useState<RefreshInterval>(15);
   const [dashboardTheme, setDashboardThemeState] = useState<LayoutTheme>(getInitialLayoutTheme);
   const [hasPremiumMarketData, setHasPremiumMarketData] = useState(false);
@@ -78,6 +83,10 @@ export function SettingsProvider({
         const res = await fetch("/api/user-settings", { cache: "no-store" });
         if (res.ok) {
           const settings = await res.json();
+          if (settings.language && isValidLanguage(settings.language)) {
+            setLanguageState(settings.language);
+            setTrefolioUiLocaleCookieClient(settings.language);
+          }
           if ([15, 30, 60].includes(settings.refreshInterval)) {
             setRefreshIntervalState(settings.refreshInterval);
           }
@@ -143,6 +152,21 @@ export function SettingsProvider({
     load();
   }, [demoMode, setLayoutTheme]);
 
+  const setLanguage = useCallback(async (next: Language) => {
+    setLanguageState(next);
+    setTrefolioUiLocaleCookieClient(next);
+    if (demoMode) return;
+    try {
+      await fetch("/api/user-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: next }),
+      });
+    } catch {
+      // Keep optimistic UI state.
+    }
+  }, [demoMode]);
+
   const setRefreshInterval = useCallback(async (interval: RefreshInterval) => {
     setRefreshIntervalState(interval);
     if (demoMode) return;
@@ -204,6 +228,7 @@ export function SettingsProvider({
 
   const value = useMemo(
     () => ({
+      language,
       refreshInterval,
       dashboardTheme,
       defaultCurrency,
@@ -220,6 +245,7 @@ export function SettingsProvider({
       toolAccountsEnabled,
       toolWatchlistEnabled,
       settingsReady,
+      setLanguage,
       setRefreshInterval,
       setDashboardTheme,
       setDefaultCurrency,
@@ -227,11 +253,11 @@ export function SettingsProvider({
       getApiParams,
     }),
     [
-      refreshInterval, dashboardTheme, defaultCurrency, hasPremiumMarketData, alertsEnabled, csvExportEnabled, deviceEnabled,
+      language, refreshInterval, dashboardTheme, defaultCurrency, hasPremiumMarketData, alertsEnabled, csvExportEnabled, deviceEnabled,
       telegramEnabled, toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
       toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
       settingsReady,
-      setRefreshInterval, setDashboardTheme, setDefaultCurrency, getApiHeaders, getApiParams,
+      setLanguage, setRefreshInterval, setDashboardTheme, setDefaultCurrency, getApiHeaders, getApiParams,
     ]
   );
 

@@ -203,6 +203,8 @@ export {
   getGlobalOpenAIApiKey,
   getPlatformSetting,
   setPlatformSetting,
+  invalidatePlatformSettingsCache,
+  resolveFeatureEnabledFromSettingsMap,
   getScreeningProviderCircuit,
   setScreeningProviderCircuit,
   EMPTY_SCREENING_PROVIDER_CIRCUIT,
