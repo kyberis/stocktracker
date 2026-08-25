@@ -158,5 +158,8 @@ describe("renderEngagementReportHtml", () => {
     expect(html).toContain(SURVEY_TEMPLATES.nps.label);
     expect(html).toContain("Story");
     expect(html).toContain("fallback");
+    expect(html).toContain("color-scheme: light only");
+    expect(html).toContain("th, td");
+    expect(html).toMatch(/th, td[^}]*color: #0f172a/);
   });
 });
