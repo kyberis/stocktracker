@@ -37,7 +37,7 @@ No new tables. Link status inferred from Clara `GET /api/internal/office/savings
 ## 6. UI surface
 
 - Sky-accent card matching Warren layout (avatar, name, subtitle, chevron).
-- Modal via `AidModalShell` (focus trap, Escape, backdrop).
+- Modal via `AidModalShell` (focus trap, Escape, backdrop, `glass-overlay` panel for readable contrast on mobile).
 - Demo mode: trigger links to `/signup` (same as Warren).
 
 ## 7. Business logic

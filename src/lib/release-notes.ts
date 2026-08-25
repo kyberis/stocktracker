@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.233",
+    date: "2026-08-25",
+    title: "Readable Clara and AID modals on mobile",
+    titleTranslations: {
+      es: "Modales de Clara y AID legibles en móvil",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Clara and AID bottom-sheet modals now use the solid glass-overlay surface so body text, bullets, and fine print stay readable on mobile instead of showing through a transparent panel.",
+        translations: {
+          es: "Los modales de Clara y AID en móvil usan ahora la superficie glass-overlay opaca para que el texto, las viñetas y las notas pequeñas se lean bien, sin que se vea el contenido de detrás.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.232",
     date: "2026-08-24",
     title: "Import your portfolio with Warren",
