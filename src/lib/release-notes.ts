@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.233",
+    date: "2026-08-25",
+    title: "Admin engagement report & survey campaigns",
+    titleTranslations: {
+      es: "Informe de engagement y campañas de encuesta (admin)",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Admins can generate an HTML engagement report (KPIs, AI narrative, named cohorts, CSAT/feedback crossover) and confirm one-click email surveys (winback, missing tool, NPS) with AI-drafted questions in each user’s language.",
+        translations: {
+          es: "Los admins pueden generar un informe HTML de engagement (KPIs, narrativa IA, cohortes con nombres, cruce CSAT/feedback) y confirmar encuestas por email en un clic (winback, herramienta faltante, NPS) con preguntas redactadas por IA en el idioma de cada usuario.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.232",
     date: "2026-08-24",
     title: "Import your portfolio with Warren",

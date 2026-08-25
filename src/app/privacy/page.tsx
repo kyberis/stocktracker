@@ -197,6 +197,24 @@ export default function PrivacyPolicyPage() {
               </li>
             </ul>
 
+            <h3>Product research surveys</h3>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                <strong className="text-slate-800">In-app satisfaction ratings</strong> —
+                after meaningful product use we may ask for a 1–5 star rating and optional comment.
+                Ratings and comments are stored with your account to improve the product and,
+                for high ratings, to send an optional Trustpilot invitation email.
+              </li>
+              <li>
+                <strong className="text-slate-800">Admin-initiated engagement surveys</strong> —
+                our team may email you a link to a short product-research survey (for example winback,
+                missing-tool, or NPS 0–10 questions). Survey questions may be drafted with AI assistance
+                for our staff; your answers are stored with your account and used only for product
+                improvement. These emails honor your email-notification preference and unsubscribe link.
+                Opening the survey link uses a one-time token in the URL as access control.
+              </li>
+            </ul>
+
             <h3>Notification Data</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
@@ -278,6 +296,11 @@ export default function PrivacyPolicyPage() {
               <li>Authenticate your account and maintain your session.</li>
               <li>Display your portfolio, performance metrics, and market data.</li>
               <li>Process AI analysis requests (portfolio data is sent to OpenAI for analysis; see Section 5).</li>
+              <li>
+                Generate staff-only engagement reports and draft product-research survey questions
+                (aggregated usage metrics, feedback snippets, and satisfaction ratings may be sent to OpenAI;
+                survey emails are reviewed by an admin before send).
+              </li>
               <li>
                 Suggest holding classifications (sector, region, asset class) when you use Auto-fix on Tools → Classification
                 (ticker, name, and related metadata are sent to OpenAI; see Section 5).
@@ -557,6 +580,11 @@ export default function PrivacyPolicyPage() {
                 <strong className="text-slate-800">Analytics events</strong> — 
                 anonymous, aggregated usage events are automatically purged after
                 90 days.
+              </li>
+              <li>
+                <strong className="text-slate-800">Survey responses</strong> —
+                in-app satisfaction ratings and engagement-survey answers are retained while
+                your account is active and deleted with your account.
               </li>
               <li>
                 <strong className="text-slate-800">Contact form submissions</strong> — 

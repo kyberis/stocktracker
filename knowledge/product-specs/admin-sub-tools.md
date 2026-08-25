@@ -92,6 +92,12 @@
 - API: `/api/admin/satisfaction`
 - Purpose: user satisfaction aggregation.
 
+## admin-engagement-report
+- Page: `/admin/engagement-report`
+- API: `/api/admin/engagement-report`, `/api/admin/survey-campaigns`, `/api/survey/[token]`
+- Purpose: HTML engagement report + confirm-to-send survey campaigns.
+- Spec: [admin-engagement-report](admin-engagement-report.md)
+
 ## admin-seed-notifications
 - API: `/api/admin/seed-notifications`
 - Purpose: test-data notifications.

@@ -4494,6 +4494,76 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       });
     },
   },
+  {
+    version: 150,
+    description: "Engagement reports + admin survey campaigns (email invites)",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS engagement_reports (
+          id TEXT PRIMARY KEY,
+          period_days INTEGER NOT NULL DEFAULT 30,
+          snapshot_json TEXT NOT NULL DEFAULT '{}',
+          html TEXT NOT NULL DEFAULT '',
+          survey_proposals_json TEXT NOT NULL DEFAULT '[]',
+          narrative_json TEXT NOT NULL DEFAULT '{}',
+          created_by TEXT NOT NULL DEFAULT '',
+          used_fallback INTEGER NOT NULL DEFAULT 0,
+          model TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS survey_campaigns (
+          id TEXT PRIMARY KEY,
+          template_id TEXT NOT NULL,
+          title TEXT NOT NULL DEFAULT '',
+          rationale TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'draft'
+            CHECK(status IN ('draft', 'confirmed', 'sending', 'sent', 'cancelled')),
+          report_id TEXT,
+          created_by TEXT NOT NULL DEFAULT '',
+          questions_en_json TEXT NOT NULL DEFAULT '[]',
+          questions_es_json TEXT NOT NULL DEFAULT '[]',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          confirmed_at TEXT,
+          sent_at TEXT,
+          FOREIGN KEY(report_id) REFERENCES engagement_reports(id) ON DELETE SET NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS survey_invites (
+          id TEXT PRIMARY KEY,
+          campaign_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          token TEXT NOT NULL UNIQUE,
+          language TEXT NOT NULL DEFAULT 'en',
+          questions_json TEXT NOT NULL DEFAULT '[]',
+          email_status TEXT NOT NULL DEFAULT 'pending'
+            CHECK(email_status IN ('pending', 'sent', 'suppressed', 'failed', 'skipped')),
+          opened_at TEXT,
+          completed_at TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(campaign_id) REFERENCES survey_campaigns(id) ON DELETE CASCADE,
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS survey_responses (
+          id TEXT PRIMARY KEY,
+          invite_id TEXT NOT NULL UNIQUE,
+          user_id TEXT NOT NULL,
+          answers_json TEXT NOT NULL DEFAULT '{}',
+          nps_score INTEGER,
+          submitted_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(invite_id) REFERENCES survey_invites(id) ON DELETE CASCADE,
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_engagement_reports_created ON engagement_reports(created_at);
+        CREATE INDEX IF NOT EXISTS idx_survey_campaigns_created ON survey_campaigns(created_at);
+        CREATE INDEX IF NOT EXISTS idx_survey_invites_campaign ON survey_invites(campaign_id);
+        CREATE INDEX IF NOT EXISTS idx_survey_invites_user ON survey_invites(user_id);
+        CREATE INDEX IF NOT EXISTS idx_survey_responses_user ON survey_responses(user_id);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

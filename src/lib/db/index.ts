@@ -745,6 +745,36 @@ export {
   getAllSurveysPaginated,
 } from "./satisfaction";
 
+export type { EngagementReportRow, EngagementReportSummary } from "./engagement-reports";
+export {
+  insertEngagementReport,
+  getEngagementReport,
+  listEngagementReports,
+} from "./engagement-reports";
+
+export type {
+  SurveyCampaign,
+  SurveyCampaignStatus,
+  SurveyInvite,
+  SurveyInviteEmailStatus,
+  SurveyResponseRow,
+} from "./survey-campaigns";
+export {
+  createSurveyCampaign,
+  getSurveyCampaign,
+  listSurveyCampaigns,
+  confirmSurveyCampaign,
+  setSurveyCampaignStatus,
+  listSurveyInvites,
+  updateInviteEmailStatus,
+  getSurveyInviteByToken,
+  markSurveyInviteOpened,
+  submitSurveyResponse,
+  listSurveyResponses,
+  listSurveyDataForUserExport,
+  newSurveyToken,
+} from "./survey-campaigns";
+
 export type { WeeklyDigestRow, WeeklyDigestStats } from "./weekly-digest";
 export {
   getLatestDigest,
