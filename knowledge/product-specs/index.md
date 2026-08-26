@@ -152,6 +152,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [import-hub](import-hub.md) — unified `/import` page.
 - [import-data-quality](import-data-quality.md) — market cross-check + auto-repair on import / existing holdings.
 - [snaptrade-import](snaptrade-import.md) — OAuth broker connections.
+- [broker-mark-reconciliation](broker-mark-reconciliation.md) — SnapTrade last vs market last; Home banner + in-app notify.
 - [trade-republic-import](trade-republic-import.md) — Trade Republic CSV + flag-gated broker picker.
 
 ## Alerts & Notifications

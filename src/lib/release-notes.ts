@@ -17,6 +17,47 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.240",
+    date: "2026-08-26",
+    title: "Home: invested vs cash, and broker vs market marks",
+    titleTranslations: {
+      es: "Inicio: invertido vs efectivo, y marcas del bróker vs mercado",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "When a connected broker’s last price differs from the live market last (for example an illiquid ETF), trefolio keeps using market prices and tells you — in-app notification plus a dismissible Home banner. Informational only, not investment advice.",
+        translations: {
+          es: "Si el último precio del bróker conectado no coincide con el último de mercado (por ejemplo un ETF ilíquido), trefolio sigue usando precios de mercado y te lo indica: aviso in-app y un banner en Inicio. Solo informativo, no es un consejo de inversión.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Home now shows invested assets and liquid cash on the compact total card, without opening Advanced.",
+        translations: {
+          es: "Inicio ahora muestra invertido y efectivo líquido en la tarjeta compacta, sin abrir Avanzado.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.239",
+    date: "2026-08-26",
+    title: "Broker sync: smoother first IBKR import",
+    titleTranslations: {
+      es: "Sync de bróker: primera importación IBKR más fluida",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Broker Sync now auto-fetches after OAuth (with a 30s retry when SnapTrade is still pulling broker data), refreshes the dashboard immediately, shows how many positions were imported even when transaction history is empty, and sends email, in-app, and push notifications the first time holdings appear — including via the hourly auto-sync cron.",
+        translations: {
+          es: "Sincronizar bróker ahora importa solo tras OAuth (con reintento a los 30 s si SnapTrade aún tira datos), refresca el dashboard al instante, muestra cuántas posiciones se importaron aunque no haya transacciones, y envía email, aviso in-app y push la primera vez que aparecen posiciones — también vía el cron horario.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.238",
     date: "2026-08-26",
     title: "Broker picker and Trade Republic CSV",

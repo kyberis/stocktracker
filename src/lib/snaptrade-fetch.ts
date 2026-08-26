@@ -2,6 +2,7 @@ import { isDuplicateAgainstLedger } from "@/lib/transaction-fingerprint";
 import {
   addCashEntry,
   addBrokerPortfolioMapping,
+  countHoldings,
   ensureSnapTradeBrokerSyncPlaceholder,
   getAllBrokerPortfolioMappings,
   getSnapTradeBrokerSyncs,
@@ -30,6 +31,8 @@ import {
 import type { ExtractedTransaction } from "@/hooks/import-types";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { portfolioImportsTotal } from "@/lib/metrics";
+import { maybeNotifyFirstSyncHoldings } from "@/lib/snaptrade-first-sync";
+import { reconcileSnapTradeMarksAndNotify } from "@/lib/snaptrade-mark-gap-notify";
 
 export interface SnapTradeFetchOk {
   ok: true;
@@ -46,6 +49,7 @@ export interface SnapTradeFetchOk {
     truncatedBrokers: string[];
   };
   cashImported: number;
+  positionsSynced: number;
   syncTriggered?: boolean;
   refreshedBrokerIds?: string[];
 }
@@ -75,6 +79,8 @@ export async function runSnapTradeFetch(
   if (!conn || !userSecret) {
     return { ok: false, status: 400, error: "No SnapTrade connection found. Please connect a brokerage first." };
   }
+
+  const hadHoldingsBefore = await countHoldings(userId);
 
   try {
     const brokerageConns = await listBrokerageConnections(conn.snapTradeUserId, userSecret);
@@ -192,12 +198,22 @@ export async function runSnapTradeFetch(
     }
     const targetPortfolios = allTargetPortfolioIds.size > 0 ? [...allTargetPortfolioIds] : [portfolioId];
 
+    let lastUpserted: Awaited<ReturnType<typeof upsertHoldingsFromPositions>> = [];
     for (const targetPId of targetPortfolios) {
-      await upsertHoldingsFromPositions(userId, holdingsResult.holdings, targetPId, {
+      lastUpserted = await upsertHoldingsFromPositions(userId, holdingsResult.holdings, targetPId, {
         skipStaleCleanup: disabledConns.length > 0,
       });
       await linkUnlinkedTransactionsToHoldings(userId, targetPId);
     }
+
+    await reconcileSnapTradeMarksAndNotify(
+      userId,
+      holdingsResult.holdings,
+      lastUpserted,
+      holdingsResult.brokerNavEUR,
+    ).catch((err) =>
+      console.error(`[SnapTrade] mark reconciliation failed for user ${userId}:`, err),
+    );
 
     const summary = {
       total: deduped.length,
@@ -291,11 +307,16 @@ export async function runSnapTradeFetch(
       await setSnapTradeNeedsAttention(userId, false);
     }
 
+    maybeNotifyFirstSyncHoldings(userId, hadHoldingsBefore).catch((err) =>
+      console.error(`[SnapTrade] first-sync notification failed for user ${userId}:`, err),
+    );
+
     return {
       ok: true,
       transactions: deduped,
       summary,
       cashImported,
+      positionsSynced: holdingsResult.holdings.length,
       ...(refreshedBrokerIds.length > 0 ? { syncTriggered: true, refreshedBrokerIds } : {}),
     };
   } catch (err) {

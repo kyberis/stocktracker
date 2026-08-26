@@ -27,6 +27,7 @@ import { ImportDataQualityPanel } from "@/components/ImportDataQualityPanel";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 import type { ImportQualityReport } from "@/lib/import-quality";
 import type { BrokerFormat } from "@/hooks/import-types";
+import { consumeSnapTradeOAuthPending } from "@/lib/snaptrade-oauth-client";
 
 type ImportMethod = "broker_csv" | "snaptrade_api" | "ai_import" | "manual";
 
@@ -168,8 +169,15 @@ export default function ImportPageContent() {
   // Import hooks
   const brokerCSV = useImportBrokerCSV();
   const aiImport = useImportAI();
-  const snapTradeApi = useSnapTradeApi();
+  const snapTradeApi = useSnapTradeApi({
+    portfolioId: activePortfolioId,
+    onAfterFetch: async () => {
+      await refreshHoldings();
+      await refreshQuotes();
+    },
+  });
   const [snapTradeStartDate, setSnapTradeStartDate] = useState<Record<string, string>>({});
+  const [oauthAutoFetchPending, setOauthAutoFetchPending] = useState(false);
   const [repairReport, setRepairReport] = useState<ImportQualityReport | null>(null);
   const [repairBusy, setRepairBusy] = useState(false);
 
@@ -215,6 +223,9 @@ export default function ImportPageContent() {
     }
 
     snapTradeApi.loadConnection();
+    if (consumeSnapTradeOAuthPending()) {
+      setOauthAutoFetchPending(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -231,11 +242,25 @@ export default function ImportPageContent() {
       if (aiImport.step === "done") setStep("done");
     }
     if (method === "snaptrade_api") {
-      if (snapTradeApi.step === "preview" && snapTradeApi.transactions.length > 0) setStep("preview");
+      if (
+        snapTradeApi.step === "preview" &&
+        (snapTradeApi.transactions.length > 0 || snapTradeApi.lastFetchPositionsSynced > 0)
+      ) {
+        setStep("preview");
+      }
       if (snapTradeApi.step === "backfilling") setStep("backfilling");
       if (snapTradeApi.step === "done") setStep("done");
     }
-  }, [method, brokerCSV.step, aiImport.step, snapTradeApi.step, snapTradeApi.transactions.length]);
+  }, [method, brokerCSV.step, aiImport.step, snapTradeApi.step, snapTradeApi.transactions.length, snapTradeApi.lastFetchPositionsSynced]);
+
+  // After PWA OAuth redirect, auto-fetch once the connection is live.
+  useEffect(() => {
+    if (!oauthAutoFetchPending) return;
+    if (method !== "snaptrade_api") return;
+    if (!snapTradeApi.connection?.connected || snapTradeApi.needsReconnect) return;
+    setOauthAutoFetchPending(false);
+    void snapTradeApi.fetchAfterOAuth();
+  }, [oauthAutoFetchPending, method, snapTradeApi.connection?.connected, snapTradeApi.needsReconnect, snapTradeApi.fetchAfterOAuth]);
 
   // The CSV parser couldn't identify (or couldn't usefully parse) the
   // uploaded file — retry it through AI extraction automatically, with no
@@ -1129,6 +1154,33 @@ function SnapTradeContent({
   }
 
   if (snapTradeApi.step === "preview" && snapTradeApi.transactions.length === 0) {
+    if (snapTradeApi.lastFetchPositionsSynced > 0) {
+      const positionsLabel = (t("brokerSyncPositionsImported") || "{count} position(s) imported from your brokerage.")
+        .replace("{count}", String(snapTradeApi.lastFetchPositionsSynced));
+      return (
+        <div className="py-6 space-y-4 text-center">
+          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
+            <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-gray-700 dark:text-slate-200">{positionsLabel}</p>
+          <p className="text-xs text-gray-500 dark:text-slate-400 max-w-sm mx-auto">
+            {snapTradeApi.lastFetchSyncTriggered
+              ? (t("brokerSyncPositionsImportedPendingTx") || "Your holdings are in trefolio. Transaction history is still syncing and may take a few minutes.")
+              : (t("brokerSyncPositionsImportedNoTx") || "Your holdings are in trefolio. No new transactions were found in this sync.")}
+          </p>
+          <div className="flex flex-col items-center gap-2">
+            <a href="/" className="btn-primary text-sm min-h-[44px] inline-flex items-center gap-2">
+              {t("viewPortfolio") || "View Portfolio"}
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+            </a>
+            <button onClick={snapTradeApi.reset} className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 underline underline-offset-2 min-h-[44px]">{t("close")}</button>
+          </div>
+        </div>
+      );
+    }
+
     if (snapTradeApi.lastFetchSyncTriggered) {
       return (
         <div className="py-6 space-y-4 text-center">

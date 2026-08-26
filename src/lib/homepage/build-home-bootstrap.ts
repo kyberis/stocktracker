@@ -1,4 +1,4 @@
-import { listCashEntries, listHoldings, getUserSettings } from "@/lib/db";
+import { listCashEntries, listHoldings, getUserSettings, getSnapTradeMarkReconciliation } from "@/lib/db";
 import { fetchProviderQuotesForHoldingsWithStats } from "@/lib/holding-quotes";
 import { buildAidStatus } from "@/lib/aid/build-status";
 import {
@@ -15,6 +15,8 @@ import { getRatesWithCache, type QuoteCacheStats } from "@/lib/quote-cache";
 import type { AidStatusPayload, CashEntry, ExchangeRates, Holding, QuoteData } from "@/lib/types";
 import type { PortfolioRecommendation } from "@/lib/homepage/build-portfolio-recommendations";
 import type { ProviderQuoteResult } from "@/lib/api-providers/types";
+import type { MarkReconciliation } from "@/lib/snaptrade-mark-reconciliation";
+import { parseStoredMarkReconciliation } from "@/lib/snaptrade-mark-reconciliation";
 
 export type HomeBootstrapCorePayload = {
   holdings: Holding[];
@@ -36,6 +38,7 @@ export type HomeBootstrapSectionsPayload = {
     rawTotal: number;
     source: RecommendationQueueResult["source"];
   } | null;
+  markGap: MarkReconciliation | null;
 };
 
 export type HomeBootstrapPayload = HomeBootstrapCorePayload & HomeBootstrapSectionsPayload;
@@ -120,7 +123,7 @@ export async function buildHomeBootstrapSections(args: {
     settings.defaultCurrency || "EUR",
   );
 
-  const [dayHighlights, aidStatus, recommendation] = await Promise.all([
+  const [dayHighlights, aidStatus, recommendation, markGap] = await Promise.all([
     buildDayHighlightsPayload({
       userId: args.userId,
       portfolioId: args.portfolioId,
@@ -152,9 +155,12 @@ export async function buildHomeBootstrapSections(args: {
         source: r.source,
       }))
       .catch(() => null),
+    getSnapTradeMarkReconciliation(args.userId)
+      .then((row) => parseStoredMarkReconciliation(row?.json ?? ""))
+      .catch(() => null),
   ]);
 
-  return { dayHighlights, aidStatus, recommendation };
+  return { dayHighlights, aidStatus, recommendation, markGap };
 }
 
 /**

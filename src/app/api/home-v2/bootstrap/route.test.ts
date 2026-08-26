@@ -55,6 +55,7 @@ const sectionsPayload = {
     warrenNudge: null,
   },
   recommendation: null,
+  markGap: null,
 };
 
 beforeEach(() => {

@@ -163,6 +163,68 @@ export async function claimFirstSyncNotification(userId: string): Promise<boolea
   return (result.rowsAffected ?? 0) > 0;
 }
 
+export async function getSnapTradeMarkReconciliation(userId: string): Promise<{
+  json: string;
+  at: string;
+  lastFingerprint: string;
+  lastNotifiedAt: string;
+} | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT mark_reconciliation_json, mark_reconciliation_at,
+                 mark_gap_notified_fingerprint, mark_gap_notified_at
+          FROM snaptrade_connections WHERE user_id = ? LIMIT 1`,
+    args: [userId],
+  });
+  if (result.rows.length === 0) return null;
+  const r = result.rows[0];
+  return {
+    json: str(r.mark_reconciliation_json),
+    at: str(r.mark_reconciliation_at),
+    lastFingerprint: str(r.mark_gap_notified_fingerprint),
+    lastNotifiedAt: str(r.mark_gap_notified_at),
+  };
+}
+
+export async function saveSnapTradeMarkReconciliation(
+  userId: string,
+  payload: { json: string; fingerprint: string; notify: boolean },
+): Promise<void> {
+  const client = await ensureInitialized();
+  if (payload.notify) {
+    await client.execute({
+      sql: `UPDATE snaptrade_connections
+            SET mark_reconciliation_json = ?,
+                mark_reconciliation_at = datetime('now'),
+                mark_gap_notified_fingerprint = ?,
+                mark_gap_notified_at = datetime('now')
+            WHERE user_id = ?`,
+      args: [payload.json, payload.fingerprint, userId],
+    });
+    return;
+  }
+  await client.execute({
+    sql: `UPDATE snaptrade_connections
+          SET mark_reconciliation_json = ?,
+              mark_reconciliation_at = datetime('now')
+          WHERE user_id = ?`,
+    args: [payload.json, userId],
+  });
+}
+
+export async function clearSnapTradeMarkReconciliation(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `UPDATE snaptrade_connections
+          SET mark_reconciliation_json = '',
+              mark_reconciliation_at = datetime('now'),
+              mark_gap_notified_fingerprint = '',
+              mark_gap_notified_at = ''
+          WHERE user_id = ?`,
+    args: [userId],
+  });
+}
+
 export async function getConnectionsAllDisabledOver24h(): Promise<PendingSnapTradeDeletion[]> {
   const client = await ensureInitialized();
   const result = await client.execute({

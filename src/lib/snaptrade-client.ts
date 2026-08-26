@@ -359,6 +359,8 @@ function positionToHolding(pos: Position): ExtractedHolding | null {
   const inferred = inferAssetType({ name: sym.description, brokerType: sym.type?.code });
   const assetType = inferred === "crypto" ? "stock" : inferred;
 
+  const brokerPrice = typeof pos.price === "number" && Number.isFinite(pos.price) ? pos.price : undefined;
+
   return {
     name: sym.description || ticker,
     ticker,
@@ -368,6 +370,7 @@ function positionToHolding(pos: Position): ExtractedHolding | null {
     exchange: canonicalExchangeCode(exchange || sym.exchange?.code || "") || exchange || sym.exchange?.code || "",
     assetType,
     ...(figiShareClass ? { figiShareClass } : {}),
+    ...(brokerPrice != null && brokerPrice > 0 ? { brokerPrice } : {}),
   };
 }
 
@@ -377,6 +380,8 @@ export interface SnapTradeHoldingsResult {
   accounts: { id: string; name: string; institution: string }[];
   /** EXECUTED buy/sell orders from holdings (intraday; fills activity lag). */
   orderTransactions: ExtractedTransaction[];
+  /** Broker-reported NAV when SnapTrade sends `total_value` in EUR. */
+  brokerNavEUR?: number | null;
 }
 
 export { snapTradeTradeFingerprint } from "@/lib/transaction-fingerprint";
@@ -530,6 +535,7 @@ export async function fetchAllHoldings(
     const cashBalances: CashBalance[] = [];
     const accounts: { id: string; name: string; institution: string }[] = [];
     const orderTransactions: ExtractedTransaction[] = [];
+    let brokerNavEUR: number | null = null;
 
     for (const acctHoldings of allAccountHoldings) {
       const acct = acctHoldings.account;
@@ -537,6 +543,18 @@ export async function fetchAllHoldings(
       if (filterAccountIds && acctId && !filterAccountIds.has(acctId)) continue;
 
       const institution = String(acct?.institution_name || "") || accountInstitutionMap?.get(acctId) || "";
+
+      const rawNav = (acctHoldings as AccountHoldings & {
+        total_value?: { currency?: string; value?: number };
+      }).total_value;
+      if (
+        rawNav &&
+        typeof rawNav.value === "number" &&
+        Number.isFinite(rawNav.value) &&
+        String(rawNav.currency || "").toUpperCase() === "EUR"
+      ) {
+        brokerNavEUR = (brokerNavEUR ?? 0) + rawNav.value;
+      }
 
       if (acct) {
         accounts.push({
@@ -566,6 +584,11 @@ export async function fetchAllHoldings(
             const totalShares = existing.shares + holding.shares;
             existing.purchasePrice =
               (existing.purchasePrice * existing.shares + holding.purchasePrice * holding.shares) / totalShares;
+            if ((existing.brokerPrice ?? 0) > 0 || (holding.brokerPrice ?? 0) > 0) {
+              existing.brokerPrice =
+                ((existing.brokerPrice ?? 0) * existing.shares + (holding.brokerPrice ?? 0) * holding.shares) /
+                totalShares;
+            }
             existing.shares = totalShares;
           } else {
             holdingsByTicker.set(holding.ticker, holding);
@@ -602,6 +625,7 @@ export async function fetchAllHoldings(
       cashBalances,
       accounts,
       orderTransactions,
+      brokerNavEUR,
     };
   });
 }

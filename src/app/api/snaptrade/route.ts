@@ -271,6 +271,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       transactions: result.transactions,
       summary: result.summary,
       cashImported: result.cashImported,
+      positionsSynced: result.positionsSynced,
       ...(result.refreshedBrokerIds?.length
         ? { syncTriggered: true, refreshedBrokerIds: result.refreshedBrokerIds }
         : {}),

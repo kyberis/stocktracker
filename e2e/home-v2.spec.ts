@@ -103,6 +103,8 @@ test.describe("Home v2 recommendations", () => {
     const cta = page.getByTestId("home-holdings-explorer-cta");
     await expect(cta).toBeVisible({ timeout: 20_000 });
     await expect(cta).toHaveAttribute("href", "/tools/holdings-explorer");
+    await expect(page.getByTestId("home-invested-value")).toBeVisible();
+    await expect(page.getByTestId("home-liquid-cash")).toBeVisible();
     await cta.click();
     await page.waitForURL(/\/tools\/holdings-explorer/);
     await expect(page.getByTestId("holdings-explorer")).toBeVisible({ timeout: 20_000 });

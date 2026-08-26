@@ -8,6 +8,8 @@ import DayMoveAsOf from "@/components/DayMoveAsOf";
 
 interface Props {
   totalValue: number;
+  investedValue?: number;
+  cashValue?: number;
   dayGainLoss: number;
   dayGainLossPercent: number;
   costBasis: number;
@@ -18,6 +20,8 @@ interface Props {
 
 export default function HomePortfolioTotalCard({
   totalValue,
+  investedValue,
+  cashValue,
   dayGainLoss,
   dayGainLossPercent,
   costBasis,
@@ -29,6 +33,9 @@ export default function HomePortfolioTotalCard({
   const { stealthMode } = useStealthMode();
   const { t } = useI18n();
 
+  const invested = investedValue ?? totalValue;
+  const liquid = cashValue ?? 0;
+  const showSplit = investedValue != null;
   const isPositiveDay = dayGainLoss >= 0;
   const isFlatDay = Math.abs(dayGainLoss) < 0.005 && Math.abs(dayGainLossPercent) < 0.005;
   const isPositiveReturn = totalReturnPct >= 0;
@@ -99,6 +106,32 @@ export default function HomePortfolioTotalCard({
               <DayMoveAsOf />
             </span>
           </div>
+          {showSplit && (
+            <dl className="mt-4 grid grid-cols-2 gap-3 sm:max-w-md">
+              <div>
+                <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--muted)]">
+                  {t("homeV2Invested")}
+                </dt>
+                <dd
+                  data-testid="home-invested-value"
+                  className="mt-0.5 text-sm font-semibold tabular-nums text-[color:var(--foreground)]"
+                >
+                  {stealthMode ? "•••••" : formatCurrency(invested, activePortfolioCurrency)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--muted)]">
+                  {t("homeV2LiquidCash")}
+                </dt>
+                <dd
+                  data-testid="home-liquid-cash"
+                  className="mt-0.5 text-sm font-semibold tabular-nums text-[color:var(--foreground)]"
+                >
+                  {stealthMode ? "•••••" : formatCurrency(liquid, activePortfolioCurrency)}
+                </dd>
+              </div>
+            </dl>
+          )}
         </div>
 
         <button

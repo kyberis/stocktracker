@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import type {
   SnapTradeConnectionInfo,
   DisabledBrokerageConnection,
@@ -9,6 +9,10 @@ import type {
 } from "./import-types";
 import { inferAssetType } from "@/lib/infer-asset-type";
 import { trackImportError } from "@/lib/track-import-error";
+import {
+  SNAPTRADE_OAUTH_RETRY_DELAY_MS,
+  markSnapTradeOAuthPending,
+} from "@/lib/snaptrade-oauth-client";
 
 export type { SnapTradeConnectionInfo, ExtractedTransaction, BrokerSyncInfo };
 
@@ -21,6 +25,17 @@ export interface MergedBrokerInfo {
   connectedAt?: string;
   transactionCount?: number;
   hasSyncRecord: boolean;
+}
+
+export interface SnapTradeFetchResult {
+  syncTriggered: boolean;
+  positionsSynced: number;
+  transactionCount: number;
+}
+
+export interface UseSnapTradeApiOptions {
+  portfolioId?: string | null;
+  onAfterFetch?: () => void | Promise<void>;
 }
 
 export interface UseSnapTradeApiReturn {
@@ -41,10 +56,12 @@ export interface UseSnapTradeApiReturn {
   lastFetchHadDateFilter: boolean;
   lastFetchSummary: { total: number; duplicatesRemoved: number } | null;
   lastFetchSyncTriggered: boolean;
+  lastFetchPositionsSynced: number;
   loadConnection: () => Promise<void>;
   connect: (brokerSlug?: string) => Promise<void>;
   reconnect: (connectionId: string) => Promise<void>;
-  fetchPortfolio: (portfolioId?: string | null, startDate?: string | null, brokerStartDates?: Record<string, string> | null) => Promise<void>;
+  fetchPortfolio: (portfolioId?: string | null, startDate?: string | null, brokerStartDates?: Record<string, string> | null) => Promise<SnapTradeFetchResult | null>;
+  fetchAfterOAuth: () => Promise<void>;
   resync: () => Promise<void>;
   disconnect: () => Promise<void>;
   disconnectBroker: (brokerConnectionId: string) => Promise<void>;
@@ -130,7 +147,26 @@ function normalizeTransaction(tx: Record<string, unknown>): ExtractedTransaction
   };
 }
 
-export function useSnapTradeApi(): UseSnapTradeApiReturn {
+function persistSyncConfidence(positions: number, newTx: number, brokerNames: string[]) {
+  try {
+    sessionStorage.setItem("syncConfidenceResult", JSON.stringify({
+      variant: "manual",
+      positions,
+      newTx,
+      brokerNames,
+      ts: new Date().toISOString(),
+    }));
+  } catch {
+    // private browsing or storage quota exceeded
+  }
+}
+
+export function useSnapTradeApi(options: UseSnapTradeApiOptions = {}): UseSnapTradeApiReturn {
+  const { portfolioId: defaultPortfolioId = null, onAfterFetch } = options;
+  const onAfterFetchRef = useRef(onAfterFetch);
+  onAfterFetchRef.current = onAfterFetch;
+  const oauthRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [connection, setConnection] = useState<SnapTradeConnectionInfo | null>(null);
   const [brokerSyncs, setBrokerSyncs] = useState<BrokerSyncInfo[]>([]);
   const [brokerageConnections, setBrokerageConnections] = useState<BrokerageConnection[]>([]);
@@ -148,6 +184,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
   const [lastFetchHadDateFilter, setLastFetchHadDateFilter] = useState(false);
   const [lastFetchSummary, setLastFetchSummary] = useState<{ total: number; duplicatesRemoved: number } | null>(null);
   const [lastFetchSyncTriggered, setLastFetchSyncTriggered] = useState(false);
+  const [lastFetchPositionsSynced, setLastFetchPositionsSynced] = useState(0);
 
   const mergedBrokers = useMemo<MergedBrokerInfo[]>(() => {
     const syncById = new Map(brokerSyncs.map((s) => [s.brokerageAuthorizationId, s]));
@@ -194,8 +231,6 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       const res = await fetch("/api/snaptrade", { method: "POST", body: form });
       if (res.ok) {
         const data = await res.json();
-        // The server couldn't verify live brokerage status this time (transient
-        // SnapTrade API error) — retry once rather than accepting a blank state.
         if (data.statusCheckFailed && !isRetry) {
           await new Promise((r) => setTimeout(r, 2000));
           return loadConnection(true);
@@ -213,6 +248,98 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       // ignore
     }
   }, []);
+
+  const fetchPortfolio = useCallback(async (
+    portfolioId?: string | null,
+    startDate?: string | null,
+    brokerStartDates?: Record<string, string> | null,
+  ): Promise<SnapTradeFetchResult | null> => {
+    setErrorMsg("");
+    setIsFetching(true);
+    setStep("fetching");
+
+    const hasExplicitDateFilter = !!startDate ||
+      (brokerStartDates ? Object.values(brokerStartDates).some((v) => v !== "") : false);
+    const hasSyncMapDefaults = !startDate && !brokerStartDates && brokerSyncs.some((bs) => bs.lastImportedAt);
+    setLastFetchHadDateFilter(hasExplicitDateFilter || hasSyncMapDefaults);
+
+    try {
+      const form = new FormData();
+      form.append("action", "fetch");
+      const effectivePortfolioId = portfolioId ?? defaultPortfolioId;
+      if (effectivePortfolioId) form.append("portfolioId", effectivePortfolioId);
+      if (startDate) form.append("startDate", startDate);
+      if (brokerStartDates && Object.keys(brokerStartDates).length > 0) {
+        form.append("brokerStartDates", JSON.stringify(brokerStartDates));
+      }
+      const res = await fetch("/api/snaptrade", { method: "POST", body: form });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMsg(data.error || "Failed to fetch portfolio.");
+        if (data.needsReconnect && data.disabledConnections?.length > 0) {
+          setNeedsReconnect(true);
+          setDisabledConnections(data.disabledConnections);
+        }
+        setStep("error");
+        return null;
+      }
+
+      const normalized = (data.transactions || []).map((tx: Record<string, unknown>) =>
+        normalizeTransaction(tx),
+      );
+      const positionsSynced = Number(data.positionsSynced) || 0;
+      const syncTriggered = !!data.syncTriggered;
+
+      setTransactions(normalized);
+      setLastFetchSummary(data.summary ?? null);
+      setLastFetchSyncTriggered(syncTriggered);
+      setLastFetchPositionsSynced(positionsSynced);
+      setStep("preview");
+
+      await onAfterFetchRef.current?.();
+
+      if (positionsSynced > 0 && normalized.length === 0) {
+        persistSyncConfidence(positionsSynced, 0, []);
+      }
+
+      return {
+        syncTriggered,
+        positionsSynced,
+        transactionCount: normalized.length,
+      };
+    } catch {
+      trackImportError("broker_sync", "network");
+      setErrorMsg("Failed to fetch portfolio.");
+      setStep("error");
+      return null;
+    } finally {
+      setIsFetching(false);
+    }
+  }, [brokerSyncs, defaultPortfolioId]);
+
+  const fetchAfterOAuth = useCallback(async () => {
+    if (oauthRetryTimerRef.current) {
+      clearTimeout(oauthRetryTimerRef.current);
+      oauthRetryTimerRef.current = null;
+    }
+
+    const first = await fetchPortfolio(defaultPortfolioId);
+    if (!first?.syncTriggered) return;
+
+    await new Promise<void>((resolve) => {
+      oauthRetryTimerRef.current = setTimeout(() => {
+        oauthRetryTimerRef.current = null;
+        resolve();
+      }, SNAPTRADE_OAUTH_RETRY_DELAY_MS);
+    });
+    await fetchPortfolio(defaultPortfolioId);
+  }, [defaultPortfolioId, fetchPortfolio]);
+
+  const runPostOAuthFlow = useCallback(async () => {
+    await loadConnection();
+    await fetchAfterOAuth();
+  }, [loadConnection, fetchAfterOAuth]);
 
   const connect = useCallback(async (brokerSlug?: string) => {
     setErrorMsg("");
@@ -248,6 +375,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       }
 
       if (pwa) {
+        markSnapTradeOAuthPending();
         window.location.href = urlData.redirectUrl;
         return;
       }
@@ -255,7 +383,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       openPortalPopup(
         urlData.redirectUrl,
         "snaptrade-connect",
-        async () => { await loadConnection(); setStep("idle"); },
+        runPostOAuthFlow,
         (msg) => { trackImportError("broker_sync", "oauth_popup_error"); setErrorMsg(msg); setStep("error"); },
       );
     } catch {
@@ -263,7 +391,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       setErrorMsg("Failed to connect to SnapTrade.");
       setStep("error");
     }
-  }, [loadConnection]);
+  }, [runPostOAuthFlow]);
 
   const reconnect = useCallback(async (connectionId: string) => {
     setErrorMsg("");
@@ -286,6 +414,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       }
 
       if (pwa) {
+        markSnapTradeOAuthPending();
         window.location.href = data.redirectUrl;
         return;
       }
@@ -293,7 +422,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       openPortalPopup(
         data.redirectUrl,
         "snaptrade-reconnect",
-        async () => { await loadConnection(); setStep("idle"); },
+        runPostOAuthFlow,
         (msg) => { trackImportError("broker_sync", "oauth_popup_error"); setErrorMsg(msg); setStep("error"); },
       );
     } catch {
@@ -301,58 +430,11 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       setErrorMsg("Failed to reconnect to SnapTrade.");
       setStep("error");
     }
-  }, [loadConnection]);
-
-  const fetchPortfolio = useCallback(async (portfolioId?: string | null, startDate?: string | null, brokerStartDates?: Record<string, string> | null) => {
-    setErrorMsg("");
-    setIsFetching(true);
-    setStep("fetching");
-
-    const hasExplicitDateFilter = !!startDate ||
-      (brokerStartDates ? Object.values(brokerStartDates).some((v) => v !== "") : false);
-    const hasSyncMapDefaults = !startDate && !brokerStartDates && brokerSyncs.some((bs) => bs.lastImportedAt);
-    setLastFetchHadDateFilter(hasExplicitDateFilter || hasSyncMapDefaults);
-
-    try {
-      const form = new FormData();
-      form.append("action", "fetch");
-      if (portfolioId) form.append("portfolioId", portfolioId);
-      if (startDate) form.append("startDate", startDate);
-      if (brokerStartDates && Object.keys(brokerStartDates).length > 0) {
-        form.append("brokerStartDates", JSON.stringify(brokerStartDates));
-      }
-      const res = await fetch("/api/snaptrade", { method: "POST", body: form });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setErrorMsg(data.error || "Failed to fetch portfolio.");
-        if (data.needsReconnect && data.disabledConnections?.length > 0) {
-          setNeedsReconnect(true);
-          setDisabledConnections(data.disabledConnections);
-        }
-        setStep("error");
-        return;
-      }
-
-      const normalized = (data.transactions || []).map((tx: Record<string, unknown>) =>
-        normalizeTransaction(tx),
-      );
-      setTransactions(normalized);
-      setLastFetchSummary(data.summary ?? null);
-      setLastFetchSyncTriggered(!!data.syncTriggered);
-      setStep("preview");
-    } catch {
-      trackImportError("broker_sync", "network");
-      setErrorMsg("Failed to fetch portfolio.");
-      setStep("error");
-    } finally {
-      setIsFetching(false);
-    }
-  }, [brokerSyncs]);
+  }, [runPostOAuthFlow]);
 
   const resync = useCallback(async () => {
-    await fetchPortfolio();
-  }, [fetchPortfolio]);
+    await fetchPortfolio(defaultPortfolioId);
+  }, [fetchPortfolio, defaultPortfolioId]);
 
   const disconnect = useCallback(async () => {
     try {
@@ -396,16 +478,19 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
   }, []);
 
   const reset = useCallback(() => {
+    if (oauthRetryTimerRef.current) {
+      clearTimeout(oauthRetryTimerRef.current);
+      oauthRetryTimerRef.current = null;
+    }
     setStep("idle");
     setTransactions([]);
     setImportedCount(0);
     setErrorMsg("");
-    // needsReconnect/disabledConnections reflect live external connection
-    // state, not wizard-step state — only loadConnection() should change them.
     setImportProgress({ current: 0, total: 0, errors: 0 });
     setHoldingsCapped(0);
     setLastFetchSummary(null);
     setLastFetchSyncTriggered(false);
+    setLastFetchPositionsSynced(0);
   }, []);
 
   const importAll = useCallback(async (portfolioId?: string | null) => {
@@ -422,6 +507,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     const CHUNK_SIZE = 50;
     let limitReached = false;
     let totalHoldingsCapped = 0;
+    const effectivePortfolioId = portfolioId ?? defaultPortfolioId;
 
     for (let i = 0; i < validTransactions.length; i += CHUNK_SIZE) {
       const chunk = validTransactions.slice(i, i + CHUNK_SIZE);
@@ -449,8 +535,8 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       }));
 
       try {
-        const bulkUrl = portfolioId
-          ? `/api/transactions/bulk?portfolioId=${encodeURIComponent(portfolioId)}`
+        const bulkUrl = effectivePortfolioId
+          ? `/api/transactions/bulk?portfolioId=${encodeURIComponent(effectivePortfolioId)}`
           : "/api/transactions/bulk";
         const res = await fetch(bulkUrl, {
           method: "POST",
@@ -478,8 +564,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     setHoldingsCapped(totalHoldingsCapped);
     setImportedCount(txCount);
 
-    // Map imported transactions to additional broker-linked portfolios
-    if (txCount > 0 && portfolioId) {
+    if (txCount > 0 && effectivePortfolioId) {
       const sourceRefs = validTransactions
         .map((tx) => tx.sourceRef || "")
         .filter(Boolean);
@@ -487,7 +572,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         try {
           const mapForm = new FormData();
           mapForm.append("action", "map-transactions");
-          mapForm.append("portfolioId", portfolioId);
+          mapForm.append("portfolioId", effectivePortfolioId);
           mapForm.append("sourceRefs", JSON.stringify(sourceRefs));
           await fetch("/api/snaptrade", { method: "POST", body: mapForm });
         } catch { /* mapping is best-effort; auto-sync will catch up */ }
@@ -499,32 +584,22 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       setErrorMsg("Import failed.");
       setStep("error");
     } else {
-      // Persist sync result so SyncConfidenceBanner can display it after navigation
       const brokerNames = [...new Set(
         transactions.map((tx) => tx.brokerName).filter(Boolean) as string[]
       )];
-      const positionCount = [...new Set(
-        transactions.filter((tx) => tx.type === "buy" || tx.type === "sell").map((tx) => tx.ticker)
-      )].length;
-      try {
-        sessionStorage.setItem("syncConfidenceResult", JSON.stringify({
-          variant: "manual",
-          positions: positionCount,
-          newTx: txCount,
-          brokerNames,
-          ts: new Date().toISOString(),
-        }));
-      } catch { /* private browsing or storage quota exceeded */ }
-      // Recalculate portfolio history from transactions so the evolution chart
-      // reflects the newly imported data. The server-side deferTask may not run
-      // (e.g. when inserted === 0 because sourceRefs already existed) so we
-      // trigger a client-side backfill as a reliable fallback.
+      const positionCount = Math.max(
+        lastFetchPositionsSynced,
+        [...new Set(
+          transactions.filter((tx) => tx.type === "buy" || tx.type === "sell").map((tx) => tx.ticker)
+        )].length,
+      );
+      persistSyncConfidence(positionCount, txCount, brokerNames);
       setStep("backfilling");
       fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
         .catch(() => {})
         .finally(() => setStep("done"));
     }
-  }, [transactions]);
+  }, [transactions, defaultPortfolioId, lastFetchPositionsSynced]);
 
   return {
     connection,
@@ -544,10 +619,12 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     lastFetchHadDateFilter,
     lastFetchSummary,
     lastFetchSyncTriggered,
+    lastFetchPositionsSynced,
     loadConnection,
     connect,
     reconnect,
     fetchPortfolio,
+    fetchAfterOAuth,
     resync,
     disconnect,
     disconnectBroker,
