@@ -26,6 +26,7 @@ import PortfolioPickerModal from "@/components/PortfolioPickerModal";
 import { ImportDataQualityPanel } from "@/components/ImportDataQualityPanel";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 import type { ImportQualityReport } from "@/lib/import-quality";
+import type { BrokerFormat } from "@/hooks/import-types";
 import { consumeSnapTradeOAuthPending } from "@/lib/snaptrade-oauth-client";
 
 type ImportMethod = "broker_csv" | "snaptrade_api" | "ai_import" | "manual";
