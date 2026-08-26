@@ -109,7 +109,9 @@ export async function POST(req: NextRequest) {
       : [{ role: "user", content: body.message }];
 
   const identity = await resolveOfficeIdentity(userId);
-  const claraCash = await fetchClaraSavingsSummary(identity);
+  const claraCash = identity
+    ? await fetchClaraSavingsSummary(identity)
+    : { available: false as const, note: "Missing trefolio identity for Clara snapshot" };
 
   try {
     const result = await runWarrenTurn({
