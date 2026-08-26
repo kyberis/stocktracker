@@ -18,7 +18,7 @@ After a broker sync, trefolio still values holdings with live market last (Yahoo
 | Type | Path | Notes |
 |------|------|-------|
 | Lib | [`src/lib/snaptrade-mark-reconciliation.ts`](../../src/lib/snaptrade-mark-reconciliation.ts) | Pure compare + fingerprint + notify cooldown. |
-| Lib | [`src/lib/snaptrade-namesake-remap.ts`](../../src/lib/snaptrade-namesake-remap.ts) | Broker-last identity check: persist European ISIN, keep Yahoo NAV. |
+| Lib | [`src/lib/snaptrade-mark-gap-notify.ts`](../../src/lib/snaptrade-mark-gap-notify.ts) | Persist + in-app notification after sync. |
 | Sync | [`src/lib/snaptrade-fetch.ts`](../../src/lib/snaptrade-fetch.ts) | Manual/OAuth fetch. |
 | Cron | [`src/app/api/cron/snaptrade-sync/route.ts`](../../src/app/api/cron/snaptrade-sync/route.ts) | Hourly auto-sync. |
 | Home | [`src/components/homepage/HomeBrokerMarkGapBanner.tsx`](../../src/components/homepage/HomeBrokerMarkGapBanner.tsx) | Dismissible status banner. |
@@ -53,8 +53,6 @@ Notify when fingerprint (sorted tickers) is new **or** last notify ≥ 24h. Clea
 
 trefolio does **not** switch valuation to the broker last. Market last remains source of truth for displayed totals.
 
-When the gap is a **US/EU ticker namesake** (unsuffixed Yahoo symbol, no non-US ISIN, European listing last matches broker last much better than the US namesake), sync persists that listing’s ISIN and re-quotes via Yahoo. Sticky ISIN survives the next SnapTrade payload that still omits ISIN. True stale Flex prints (US last already near broker last, or no European match) stay notify-only.
-
 ## 8. External dependencies
 
 - SnapTrade holdings `price` + optional `total_value` (EUR NAV)
@@ -76,18 +74,17 @@ SnapTrade users only (Trefolio broker sync). No extra rate limit. Notify cooldow
 
 - `snaptrade_mark_gap_notified` — `{ tickers, count, delta_eur }`
 - `snaptrade_mark_gap_detected` — gap present but cooldown skipped
-- `snaptrade_namesake_remapped` — `{ ticker, isin, symbol }` after a broker-last listing remap
 
 ## 13. Edge cases & gotchas
 
 - Empty positions: clear stored JSON; do not wipe holdings (existing SnapTrade empty-snapshot guard).
-- **Namesake vs stale Flex:** IBKR BITC at ~$65 vs NYSE Bitwise ~$35 is CoinShares Physical Bitcoin (`GB00BLD4ZL17`), not a stale Flex print. Remap stores the ISIN and Yahoo NAV; the banner should clear. A true illiquid US last that already matches broker last stays a banner-only gap.
+- Illiquid ETF last (e.g. BITC Flex ~$65 vs NYSE ~$40) is the canonical case — banner explains market last vs broker last.
 - Demo / no SnapTrade connection: `markGap` null, no banner.
 - Banner dismiss is session-scoped so a later fingerprint still shows.
 
 ## 14. Tests
 
-- Unit: [`src/lib/snaptrade-mark-reconciliation.test.ts`](../../src/lib/snaptrade-mark-reconciliation.test.ts), [`src/lib/snaptrade-namesake-remap.test.ts`](../../src/lib/snaptrade-namesake-remap.test.ts)
+- Unit: [`src/lib/snaptrade-mark-reconciliation.test.ts`](../../src/lib/snaptrade-mark-reconciliation.test.ts)
 - Bootstrap mock includes `getSnapTradeMarkReconciliation`
 - E2E: Home compact card exposes invested vs liquid (`e2e/home-v2.spec.ts`)
 

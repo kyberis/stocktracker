@@ -52,19 +52,18 @@ Users connect their broker through SnapTrade; we fetch positions and transaction
 
 ## 12. Telemetry
 - `snaptrade_sync_total`, `snaptrade_errors_total`.
-- `snaptrade_mark_gap_notified`, `snaptrade_mark_gap_detected`, `snaptrade_namesake_remapped`.
+- `snaptrade_mark_gap_notified`, `snaptrade_mark_gap_detected`.
 
 ## 13. Edge cases & gotchas
 - Expired connection → prompt user to re-auth.
 - Broker-side corporate actions not always reflected.
-- Same-ticker US/EU namesakes (SnapTrade omits ISIN, US MIC/FIGI): after the first Yahoo enrich, broker last is used as an **identity check** to persist the matching European listing’s ISIN. Yahoo remains NAV. FIGI rename must not unsuffix a sticky non-US ISIN. See [broker-mark-reconciliation](broker-mark-reconciliation.md).
 
 ## 14. Tests
 - Integration with mocked client.
 
 ## 15. Related skills and rules
 - [`engineer-integrations`](../../.cursor/skills/engineer-integrations/SKILL.md)
-- Related specs: [import-hub](import-hub.md), [ibkr-flex](ibkr-flex.md), [broker-integration-requests](broker-integration-requests.md), [broker-mark-reconciliation](broker-mark-reconciliation.md).
+- Related specs: [import-hub](import-hub.md), [ibkr-flex](ibkr-flex.md), [broker-integration-requests](broker-integration-requests.md).
 
 ## 16. Open questions / planned work
 - Real-time position updates via webhooks.
