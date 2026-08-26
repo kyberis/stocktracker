@@ -71,7 +71,8 @@ export type PlatformFeature =
   | "screening_thesis_pipeline_enabled"
   | "portfolio_anomaly_agent"
   | "display_invariants"
-  | "theme_studio_enabled";
+  | "theme_studio_enabled"
+  | "import_broker_picker_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_enabled",
@@ -540,6 +541,7 @@ export const ALL_PLATFORM_FEATURES = [
   "portfolio_anomaly_agent",
   "display_invariants",
   "theme_studio_enabled",
+  "import_broker_picker_enabled",
 ] as const satisfies readonly PlatformFeature[];
 
 type MissingPlatformFeature = Exclude<

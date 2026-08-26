@@ -435,6 +435,7 @@ describe("settings", () => {
           "lifecycle_activation_email_enabled",
           "lifecycle_winback_email_enabled",
           "mcp_fmp_proxy",
+          "import_broker_picker_enabled",
         ]),
       );
     });

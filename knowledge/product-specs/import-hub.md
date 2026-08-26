@@ -7,7 +7,7 @@ All import methods live on one page under `/import` — CSV/PDF from brokers, Sn
 
 ## 2. Status
 - **Tier:** Free
-- **Feature flag:** `BROKER_INTEGRATIONS` (admin)
+- **Feature flag:** `import_broker_picker_enabled` for the Broker Sync grid (default off). CSV parsers remain ungated.
 - **Health:** B
 - **Owning skill:** [`pm-import`](../../.cursor/skills/pm-import/SKILL.md), [`engineer-integrations`](../../.cursor/skills/engineer-integrations/SKILL.md)
 
@@ -30,6 +30,7 @@ All import methods live on one page under `/import` — CSV/PDF from brokers, Sn
 ## 6. UI surface
 - Tabbed interface with inline how-to guides (guide-code coupling — see skill).
 - Preview table before commit with edit-in-place.
+- Flag-gated broker picker: see [trade-republic-import](trade-republic-import.md) and [snaptrade-import](snaptrade-import.md).
 
 ## 7. Business logic
 - Parsers in `src/lib/broker-parsers/`.

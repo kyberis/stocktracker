@@ -11,7 +11,7 @@ import { useTrack } from "@/lib/use-track";
 import { useImportBrokerCSV } from "@/hooks/useImportBrokerCSV";
 import { useImportAI } from "@/hooks/useImportAI";
 import { useSnapTradeApi } from "@/hooks/useSnapTradeApi";
-import { IMPORT_GUIDES, type ImportGuide } from "@/lib/import-guides";
+import { IMPORT_GUIDES, getGuide, type ImportGuide } from "@/lib/import-guides";
 import { downloadImportTemplate } from "@/lib/download-import-template";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
@@ -20,6 +20,8 @@ import AdSlot from "@/components/AdSlot";
 import AddStockModal from "@/components/AddStockModal";
 import DataUpgradeNudge from "@/components/DataUpgradeNudge";
 import { useCommerceEnabled } from "@/lib/commerce";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
+import { BrokerPickerGrid } from "@/components/import/BrokerPickerGrid";
 import PortfolioPickerModal from "@/components/PortfolioPickerModal";
 import { ImportDataQualityPanel } from "@/components/ImportDataQualityPanel";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
@@ -58,6 +60,7 @@ const BROKER_OPTIONS: { id: BrokerFormat; label: string; guideId: string }[] = [
   { id: "questrade", label: "Questrade", guideId: "questrade" },
   { id: "firstrade", label: "Firstrade", guideId: "firstrade" },
   { id: "myinvestor", label: "MyInvestor", guideId: "myinvestor" },
+  { id: "trade_republic", label: "Trade Republic", guideId: "trade_republic" },
   { id: "simple", label: "Simple CSV", guideId: "simple_csv" },
 ];
 
@@ -157,6 +160,10 @@ export default function ImportPageContent() {
   const [missingBrokerSubmitting, setMissingBrokerSubmitting] = useState(false);
   const [missingBrokerMessage, setMissingBrokerMessage] = useState("");
   const [missingBrokerError, setMissingBrokerError] = useState("");
+  const pickerEnabled = useFeatureFlag("import_broker_picker_enabled");
+  const [csvFromPicker, setCsvFromPicker] = useState(false);
+  const [csvGuideId, setCsvGuideId] = useState("");
+  const [forcedBrokerFormat, setForcedBrokerFormat] = useState<BrokerFormat | "">("");
 
   // Import hooks
   const brokerCSV = useImportBrokerCSV();
@@ -289,10 +296,30 @@ export default function ImportPageContent() {
     }
   }, [missingBrokerName, missingBrokerNote, missingBrokerSubmitting, t, track]);
 
+  const resetCsvPicker = () => {
+    setCsvFromPicker(false);
+    setCsvGuideId("");
+    setForcedBrokerFormat("");
+  };
+
+  const openCsvFromPicker = (guideId: string, format: BrokerFormat | "", brokerName?: string) => {
+    setCsvFromPicker(true);
+    setCsvGuideId(guideId);
+    setForcedBrokerFormat(format);
+    if (brokerName) setMissingBrokerName(brokerName);
+    setMethod("broker_csv");
+    setStep("upload");
+  };
+
   const goBack = () => {
     if (step === "upload") {
       if (method === "broker_csv") {
         brokerCSV.reset();
+        if (csvFromPicker) {
+          resetCsvPicker();
+          setMethod("snaptrade_api");
+          return;
+        }
       } else {
         aiImport.reset();
       }
@@ -306,6 +333,7 @@ export default function ImportPageContent() {
 
   const resetAll = () => {
     setStep("method");
+    resetCsvPicker();
     brokerCSV.reset();
     aiImport.reset();
     snapTradeApi.reset();
@@ -321,8 +349,8 @@ export default function ImportPageContent() {
       await aiImport.processFile(file);
       return;
     }
-    await brokerCSV.parseFile(file, undefined, activePortfolioId);
-  }, [brokerCSV, aiImport, track, activePortfolioId]);
+    await brokerCSV.parseFile(file, forcedBrokerFormat || undefined, activePortfolioId);
+  }, [brokerCSV, aiImport, track, activePortfolioId, forcedBrokerFormat]);
 
   const handleBrokerFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -521,7 +549,16 @@ export default function ImportPageContent() {
               <WizardHeader
                 title={t("importSectionBrokerCsv")}
                 subtitle={t("importDescBrokerCsv")}
-                onBack={() => { setStep("method"); brokerCSV.reset(); }}
+                onBack={() => {
+                  if (csvFromPicker) {
+                    brokerCSV.reset();
+                    resetCsvPicker();
+                    setMethod("snaptrade_api");
+                    return;
+                  }
+                  setStep("method");
+                  brokerCSV.reset();
+                }}
               />
 
               {(brokerCSV.step === "idle" || brokerCSV.step === "parsing" || brokerCSV.step === "fallback_to_ai") && (
@@ -536,6 +573,11 @@ export default function ImportPageContent() {
                   {t("downloadTemplate")}
                 </button>
               )}
+
+              {brokerCSV.step === "idle" && csvGuideId && (() => {
+                const csvGuide = getGuide(csvGuideId);
+                return csvGuide ? <InlineGuide guide={csvGuide} locale={locale} /> : null;
+              })()}
 
               {brokerCSV.step === "idle" && (
                 <UploadZone
@@ -638,6 +680,11 @@ export default function ImportPageContent() {
                   onImportAll={handleSnapTradeImportAll}
                   track={track}
                   onManualAdd={() => setShowAddStockModal(true)}
+                  pickerEnabled={pickerEnabled}
+                  onSelectSync={(slug) => snapTradeApi.connect(slug)}
+                  onSelectTradeRepublic={() => openCsvFromPicker("trade_republic", "trade_republic")}
+                  onCsvFallback={(name) => openCsvFromPicker("simple_csv", "", name)}
+                  onRequestBroker={(name) => openCsvFromPicker("simple_csv", "", name)}
                 />
               )}
             </div>
@@ -1040,6 +1087,11 @@ function SnapTradeContent({
   onImportAll,
   track,
   onManualAdd,
+  pickerEnabled,
+  onSelectSync,
+  onSelectTradeRepublic,
+  onCsvFallback,
+  onRequestBroker,
 }: {
   snapTradeApi: ReturnType<typeof useSnapTradeApi>;
   snapTradeStartDate: Record<string, string>;
@@ -1051,6 +1103,11 @@ function SnapTradeContent({
   onImportAll: () => Promise<void>;
   track: (event: string, metadata?: Record<string, string>) => void;
   onManualAdd: () => void;
+  pickerEnabled: boolean;
+  onSelectSync: (slug: string) => void;
+  onSelectTradeRepublic: () => void;
+  onCsvFallback: (typedName: string) => void;
+  onRequestBroker: (typedName: string) => void;
 }) {
   const commerceEnabled = useCommerceEnabled();
   if (snapTradeApi.step === "connecting") return <LoadingSpinner label={t("brokerSyncConnecting")} />;
@@ -1147,7 +1204,7 @@ function SnapTradeContent({
   // idle state — show connection UI
   return (
     <>
-      {snapTradeGuide && snapTradeApi.step === "idle" && <InlineGuide guide={snapTradeGuide} locale={locale} />}
+      {snapTradeGuide && snapTradeApi.step === "idle" && !pickerEnabled && <InlineGuide guide={snapTradeGuide} locale={locale} />}
 
       {snapTradeApi.connection?.connected ? (
         <>
@@ -1308,7 +1365,7 @@ function SnapTradeContent({
                       {snapTradeApi.isFetching ? t("brokerSyncFetching") : t("brokerSyncResync")}
                     </button>
                   )}
-                  {snapTradeApi.activeBrokerCount < snapTradeApi.connectionLimit && (
+                  {snapTradeApi.activeBrokerCount < snapTradeApi.connectionLimit && !pickerEnabled && (
                     <button onClick={() => snapTradeApi.connect()} className="btn-secondary text-xs px-4 py-2 min-h-[44px] inline-flex items-center gap-1.5">
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                       {t("brokerSyncAddBrokerage")}
@@ -1326,9 +1383,33 @@ function SnapTradeContent({
                   </div>
                 )}
               </div>
+
+              {pickerEnabled && (
+                <div className="space-y-2 pt-2">
+                  <p className="text-xs font-semibold text-gray-700 dark:text-slate-300">{t("brokerPickerTitle")}</p>
+                  <BrokerPickerGrid
+                    t={t}
+                    onSelectSync={onSelectSync}
+                    onSelectTradeRepublic={onSelectTradeRepublic}
+                    onCsvFallback={onCsvFallback}
+                    onRequestBroker={onRequestBroker}
+                  />
+                </div>
+              )}
             </>
           )}
         </>
+      ) : pickerEnabled ? (
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">{t("brokerPickerTitle")}</p>
+          <BrokerPickerGrid
+            t={t}
+            onSelectSync={onSelectSync}
+            onSelectTradeRepublic={onSelectTradeRepublic}
+            onCsvFallback={onCsvFallback}
+            onRequestBroker={onRequestBroker}
+          />
+        </div>
       ) : (
         <div className="bg-white dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
           <div className="text-center px-5 py-8">

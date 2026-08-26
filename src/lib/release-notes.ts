@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.238",
+    date: "2026-08-26",
+    title: "Broker picker and Trade Republic CSV",
+    titleTranslations: {
+      es: "Selector de brókers e importación CSV de Trade Republic",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Broker Sync can show a searchable broker list with logos: SnapTrade connections open on that broker, Trade Republic uses a guided CSV export, and unknown brokers fall back to CSV. Rolling out behind a feature flag.",
+        translations: {
+          es: "Sincronizar bróker puede mostrar una lista con logos y búsqueda: SnapTrade abre ese bróker, Trade Republic usa un CSV guiado, y si no aparece puedes importar CSV. Se activa con un feature flag.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.237",
     date: "2026-08-26",
     title: "Warren uses Clara cashflow when answering from Clara",

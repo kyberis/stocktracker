@@ -546,6 +546,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "portfolio_anomaly_agent",
   "display_invariants",
   "theme_studio_enabled",
+  "import_broker_picker_enabled",
 ]);
 
 export const featureFlagSchema = z.object({

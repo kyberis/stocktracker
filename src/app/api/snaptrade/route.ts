@@ -189,11 +189,13 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
 
     try {
       const customRedirect = (formData.get("customRedirect") as string) || undefined;
+      const broker = ((formData.get("broker") as string) || "").trim() || undefined;
       const { redirectUrl, sessionId } = await generateConnectionPortalUrl(
         conn.snapTradeUserId,
         userSecret,
         undefined,
         customRedirect,
+        broker,
       );
       return NextResponse.json({ redirectUrl, sessionId });
     } catch (err) {

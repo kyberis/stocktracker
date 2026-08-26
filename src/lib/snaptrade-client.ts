@@ -179,11 +179,12 @@ export async function generateConnectionPortalUrl(
   userSecret: string,
   reconnectConnectionId?: string,
   customRedirect?: string,
+  broker?: string,
 ): Promise<{ redirectUrl: string; sessionId?: string }> {
   return logSnapTradeCall(
     "generateConnectionPortalUrl",
     userId,
-    { userId, reconnectConnectionId: reconnectConnectionId ?? null },
+    { userId, reconnectConnectionId: reconnectConnectionId ?? null, broker: broker ?? null },
     async () => {
       const client = getClient();
       const res = await client.authentication.loginSnapTradeUser({
@@ -191,6 +192,7 @@ export async function generateConnectionPortalUrl(
         userSecret,
         ...(reconnectConnectionId ? { reconnect: reconnectConnectionId } : {}),
         ...(customRedirect ? { customRedirect } : {}),
+        ...(broker ? { broker, immediateRedirect: true } : {}),
       });
       const data = res.data as { redirectURI?: string; sessionId?: string };
       if (!data.redirectURI) {

@@ -538,6 +538,27 @@ describe("useSnapTradeApi connect", () => {
     const secondForm = secondCall[1]?.body as FormData;
     expect(secondForm.get("action")).toBe("connect-url");
   });
+
+  it("connect with broker slug sends broker on connect-url FormData", async () => {
+    fetchSpy
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({}),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ error: "URL error" }),
+      });
+
+    const { result } = renderHook(() => useSnapTradeApi());
+    await act(async () => {
+      await result.current.connect("ALPACA");
+    });
+
+    const secondForm = fetchSpy.mock.calls[1][1]?.body as FormData;
+    expect(secondForm.get("action")).toBe("connect-url");
+    expect(secondForm.get("broker")).toBe("ALPACA");
+  });
 });
 
 describe("useSnapTradeApi reconnect", () => {

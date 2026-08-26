@@ -29,7 +29,7 @@ interface ImportSummary {
   unmapped: string[];
 }
 
-type Broker = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "myinvestor";
+type Broker = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "myinvestor" | "trade_republic";
 type Step = "upload" | "preview" | "importing" | "done";
 
 const TYPE_COLORS: Record<TransactionType, string> = {
@@ -54,6 +54,7 @@ const BROKERS: { id: Broker; label: string; desc: string; descEs: string; server
   { id: "questrade", label: "Questrade", desc: "Account Activity CSV", descEs: "CSV de actividad de cuenta", serverParsed: true },
   { id: "firstrade", label: "Firstrade", desc: "Account History CSV", descEs: "Historial de cuenta CSV", serverParsed: true },
   { id: "myinvestor", label: "MyInvestor", desc: "Inversis operations Excel export", descEs: "Excel de operaciones Inversis", serverParsed: true },
+  { id: "trade_republic", label: "Trade Republic", desc: "Transaction Report CSV", descEs: "Informe de transacciones CSV", serverParsed: true },
 ];
 
 function mapTx(tx: Record<string, unknown>): ParsedTx {
@@ -280,6 +281,14 @@ export default function BrokerImport() {
               <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">MyInvestor / Inversis</p>
               <p className="text-[10px] text-blue-600 dark:text-blue-400">
                 Chrome → inversis.com/cbmyinvestor → Investments → Stocks → Operations enquiry → download Excel. Upload without re-saving the file.
+              </p>
+            </div>
+          )}
+          {broker === "trade_republic" && (
+            <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
+              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Trade Republic</p>
+              <p className="text-[10px] text-blue-600 dark:text-blue-400">
+                App → Profile → Account Statements → Transaction Report → Share → Create. Upload the CSV here.
               </p>
             </div>
           )}

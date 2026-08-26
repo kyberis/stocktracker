@@ -42,7 +42,7 @@ export interface UseSnapTradeApiReturn {
   lastFetchSummary: { total: number; duplicatesRemoved: number } | null;
   lastFetchSyncTriggered: boolean;
   loadConnection: () => Promise<void>;
-  connect: () => Promise<void>;
+  connect: (brokerSlug?: string) => Promise<void>;
   reconnect: (connectionId: string) => Promise<void>;
   fetchPortfolio: (portfolioId?: string | null, startDate?: string | null, brokerStartDates?: Record<string, string> | null) => Promise<void>;
   resync: () => Promise<void>;
@@ -214,7 +214,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     }
   }, []);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (brokerSlug?: string) => {
     setErrorMsg("");
     setStep("connecting");
     try {
@@ -232,6 +232,9 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       const pwa = isStandalone();
       const urlForm = new FormData();
       urlForm.append("action", "connect-url");
+      if (brokerSlug) {
+        urlForm.append("broker", brokerSlug);
+      }
       if (pwa) {
         urlForm.append("customRedirect", `${window.location.origin}/snaptrade/callback`);
       }

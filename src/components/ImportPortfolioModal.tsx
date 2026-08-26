@@ -10,7 +10,7 @@ import { mergeHoldingsIntoTransactions } from "@/lib/merge-ai-import-rows";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 import { canUseBrokerSync } from "@/lib/subscription";
 
-type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "myinvestor" | "simple" | "ai_import";
+type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "myinvestor" | "trade_republic" | "simple" | "ai_import";
 
 interface ImportPortfolioModalProps {
   isOpen: boolean;
@@ -326,7 +326,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
       revolut: "Revolut", charles_schwab: "Charles Schwab", fidelity: "Fidelity",
       nordnet: "Nordnet", tastytrade: "Tastytrade", freetrade: "Freetrade",
       etoro: "eToro", wealthsimple: "Wealthsimple", questrade: "Questrade",
-      firstrade: "Firstrade", myinvestor: "MyInvestor", simple: "CSV", ai_import: "AI",
+      firstrade: "Firstrade", myinvestor: "MyInvestor", trade_republic: "Trade Republic", simple: "CSV", ai_import: "AI",
     };
     const importSource = isImageImport ? "Image import" : `${formatLabels[csvFormat]} import`;
 

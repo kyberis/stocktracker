@@ -28,6 +28,7 @@ const FORMAT_LABELS: Record<BrokerFormat, string> = {
   questrade: "Questrade",
   firstrade: "Firstrade",
   myinvestor: "MyInvestor",
+  trade_republic: "Trade Republic",
   simple: "CSV",
 };
 
