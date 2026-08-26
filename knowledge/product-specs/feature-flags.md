@@ -35,6 +35,7 @@ Feature flags registered in code, with per-user overrides stored in DB. Both cli
 - **`display_invariants`** (default off): sampled home-screen numeric consistency checks; see [display-invariants](display-invariants.md).
 - **`theme_studio_enabled`** (default off): Studio dashboard theme in Settings; when off, Studio is hidden and users on Studio fall back to Default.
 - **`import_broker_picker_enabled`** (default off): Broker Sync grid with logos, search, SnapTrade deep-link, and Trade Republic CSV. See [trade-republic-import](trade-republic-import.md).
+- **`real_estate_screening_enabled`** (default off): Portugal zone screening at `/real-estate/screening`. See [real-estate-screening](real-estate-screening.md).
 - **`portfolio_anomaly_agent`** (default off): staff portfolio anomaly scan; see [portfolio-anomaly-agent](portfolio-anomaly-agent.md).
 
 ## 7. Business logic

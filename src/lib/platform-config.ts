@@ -149,6 +149,8 @@ export type FeatureQuotaKey =
   | "screener"
   /** Investment screening runs (beta). Distinct from the classic `screener` filter. */
   | "investment_screening"
+  /** Portugal real-estate zone screening runs (beta). */
+  | "real_estate_screening"
   | "stock_evaluation"
   | "company_analysis"
   | "crypto_pro"
@@ -192,6 +194,12 @@ export const FEATURE_QUOTAS: Record<FeatureQuotaKey, FeatureQuotaConfig> = {
     pro: 3,
     window: "week",
     label: "Investment screenings",
+  },
+  real_estate_screening: {
+    free: 2,
+    pro: 10,
+    window: "week",
+    label: "Real-estate zone screenings",
   },
   stock_evaluation: { free: 15, pro: 300, window: "month", label: "Stock evaluations" },
   company_analysis: { free: 5, pro: 200, window: "month", label: "Company analysis reports" },

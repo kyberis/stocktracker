@@ -105,6 +105,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "Screening flow at /screening: sector exposure entry, intake chat, brief, run progress, and HTML report. Stage E0 — the report comes from a typed fixture, no agents or market data yet. Off by default.",
     group: "Features",
   },
+  real_estate_screening_enabled: {
+    label: "Real-estate zone screening (Portugal)",
+    description:
+      "Zone screening at /real-estate/screening: INE catalogue, user-selected budget/mortgage params, async report. Off by default. Portal scraping is stubbed until the ADR is approved.",
+    group: "Features",
+  },
   screening_new_runs_enabled: {
     label: "Screening: new runs",
     description:

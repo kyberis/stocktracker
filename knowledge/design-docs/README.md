@@ -20,6 +20,8 @@ Cross-cutting patterns, principles, and non-obvious contracts that apply across 
 - [kyberis-agent-os.md](kyberis-agent-os.md) — The shared agent platform (`@kyberis/agent-os`): duplication audit, module boundaries, design rules, adoption status.
 - [thesis-metric-integrity.md](thesis-metric-integrity.md) — Thesis notes never receive a naked number: every metric has a unit, period label, and H1–H5 validation before copy.
 - [home-cold-path-latency.md](home-cold-path-latency.md) — What Home loads on entry, large-portfolio bottlenecks, and the bootstrap / deferred-LLM contract.
+- [legal-real-estate-screening.md](legal-real-estate-screening.md) — Legal review for Portugal zone screening (disclaimers, INE, stub listings).
+- [real-estate-portal-data-source.md](real-estate-portal-data-source.md) — ADR: listing data must not be live-scraped in production until approved.
 
 ## Cursor skills
 

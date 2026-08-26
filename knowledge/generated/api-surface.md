@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-327 routes.
+333 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -178,6 +178,8 @@
 | `/api/cron/portfolio-snapshots` | GET, POST | [`src/app/api/cron/portfolio-snapshots/route.ts`](../../src/app/api/cron/portfolio-snapshots/route.ts) |
 | `/api/cron/prodops-dispatch` | GET, POST | [`src/app/api/cron/prodops-dispatch/route.ts`](../../src/app/api/cron/prodops-dispatch/route.ts) |
 | `/api/cron/push-gauges` | GET | [`src/app/api/cron/push-gauges/route.ts`](../../src/app/api/cron/push-gauges/route.ts) |
+| `/api/cron/re-screening-recover` | GET | [`src/app/api/cron/re-screening-recover/route.ts`](../../src/app/api/cron/re-screening-recover/route.ts) |
+| `/api/cron/re-zona-sync` | GET | [`src/app/api/cron/re-zona-sync/route.ts`](../../src/app/api/cron/re-zona-sync/route.ts) |
 | `/api/cron/refresh-holdings` | GET | [`src/app/api/cron/refresh-holdings/route.ts`](../../src/app/api/cron/refresh-holdings/route.ts) |
 | `/api/cron/screener-sync` | GET | [`src/app/api/cron/screener-sync/route.ts`](../../src/app/api/cron/screener-sync/route.ts) |
 | `/api/cron/screening-recover` | GET | [`src/app/api/cron/screening-recover/route.ts`](../../src/app/api/cron/screening-recover/route.ts) |
@@ -282,6 +284,10 @@
 | `/api/portfolios/move` | POST | [`src/app/api/portfolios/move/route.ts`](../../src/app/api/portfolios/move/route.ts) |
 | `/api/promo-banner` | GET | [`src/app/api/promo-banner/route.ts`](../../src/app/api/promo-banner/route.ts) |
 | `/api/quote` | GET | [`src/app/api/quote/route.ts`](../../src/app/api/quote/route.ts) |
+| `/api/real-estate/screening` | GET, POST | [`src/app/api/real-estate/screening/route.ts`](../../src/app/api/real-estate/screening/route.ts) |
+| `/api/real-estate/screening/[runId]` | GET | [`src/app/api/real-estate/screening/[runId]/route.ts`](../../src/app/api/real-estate/screening/[runId]/route.ts) |
+| `/api/real-estate/screening/[runId]/resume` | POST | [`src/app/api/real-estate/screening/[runId]/resume/route.ts`](../../src/app/api/real-estate/screening/[runId]/resume/route.ts) |
+| `/api/real-estate/zones` | GET | [`src/app/api/real-estate/zones/route.ts`](../../src/app/api/real-estate/zones/route.ts) |
 | `/api/rebalance-targets` | GET, POST, DELETE | [`src/app/api/rebalance-targets/route.ts`](../../src/app/api/rebalance-targets/route.ts) |
 | `/api/referral/code` | GET | [`src/app/api/referral/code/route.ts`](../../src/app/api/referral/code/route.ts) |
 | `/api/referral/validate` | POST | [`src/app/api/referral/validate/route.ts`](../../src/app/api/referral/validate/route.ts) |

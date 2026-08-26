@@ -125,6 +125,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [warren-telegram-bot](warren-telegram-bot.md) — Warren accessible via Telegram (text + voice).
 - [agent-office](agent-office.md) — Pro workspace where Warren, Clara, and Will coordinate missions (`/office`).
 - [investment-screening](investment-screening.md) — `/screening` exposure → intake chat → brief → run → HTML candidate report (flag `investment_screening_enabled`, stage E0 fixture).
+- [real-estate-screening](real-estate-screening.md) — Portugal zone screening at `/real-estate/screening` (INE catalogue + user params; flag `real_estate_screening_enabled`).
 - [trefolio-mcp-user](trefolio-mcp-user.md) — HTTP MCP read API for portfolio data (`tfp_pat_` via IdP).
 
 ## Tools
@@ -137,6 +138,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [net-worth-tracking](net-worth-tracking.md) — combined net worth view.
 - [rebalance-targets](rebalance-targets.md) — allocation targets + suggested trades.
 - [holdings-explorer](holdings-explorer.md) — sort your own holdings by P/E, yield, weight, sector.
+- [real-estate-screening](real-estate-screening.md) — Portugal zone screening: INE prices + cash-flow report (`/real-estate/screening`).
 - [stock-screener](stock-screener.md) — 600-stock filter UI.
 - [strategies](strategies.md) — saved investment ideas + auto-alerts.
 - [tax-reports](tax-reports.md) — year-end tax reports per country.

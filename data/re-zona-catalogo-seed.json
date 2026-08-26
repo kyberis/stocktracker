@@ -1,0 +1,92 @@
+[
+  {
+    "geocod": "1A",
+    "nombre": "Grande Lisboa",
+    "tipo": "nuts3",
+    "parentGeocod": "1",
+    "distrito": "Grande Lisboa",
+    "amMetropolitana": true,
+    "tieneDatosVenta": true,
+    "tieneDatosRenta": true
+  },
+  {
+    "geocod": "1A01106",
+    "nombre": "Lisboa",
+    "tipo": "concelho",
+    "parentGeocod": "1A",
+    "distrito": "Grande Lisboa",
+    "amMetropolitana": true,
+    "tieneDatosVenta": true,
+    "tieneDatosRenta": true
+  },
+  {
+    "geocod": "11A",
+    "nombre": "Área Metropolitana do Porto",
+    "tipo": "nuts3",
+    "parentGeocod": "11",
+    "distrito": "Área Metropolitana do Porto",
+    "amMetropolitana": true,
+    "tieneDatosVenta": true,
+    "tieneDatosRenta": true
+  },
+  {
+    "geocod": "11A1312",
+    "nombre": "Porto",
+    "tipo": "concelho",
+    "parentGeocod": "11A",
+    "distrito": "Área Metropolitana do Porto",
+    "amMetropolitana": true,
+    "tieneDatosVenta": true,
+    "tieneDatosRenta": true
+  },
+  {
+    "geocod": "1B",
+    "nombre": "Península de Setúbal",
+    "tipo": "nuts3",
+    "parentGeocod": "1",
+    "distrito": "Península de Setúbal",
+    "amMetropolitana": true,
+    "tieneDatosVenta": true,
+    "tieneDatosRenta": true
+  },
+  {
+    "geocod": "1B01512",
+    "nombre": "Setúbal",
+    "tipo": "concelho",
+    "parentGeocod": "1B",
+    "distrito": "Península de Setúbal",
+    "amMetropolitana": true,
+    "tieneDatosVenta": true,
+    "tieneDatosRenta": true
+  },
+  {
+    "geocod": "111",
+    "nombre": "Alto Minho",
+    "tipo": "nuts3",
+    "parentGeocod": "11",
+    "distrito": "Alto Minho",
+    "amMetropolitana": false,
+    "tieneDatosVenta": true,
+    "tieneDatosRenta": true
+  },
+  {
+    "geocod": "1111601",
+    "nombre": "Arcos de Valdevez",
+    "tipo": "concelho",
+    "parentGeocod": "111",
+    "distrito": "Alto Minho",
+    "amMetropolitana": false,
+    "tieneDatosVenta": true,
+    "tieneDatosRenta": true
+  },
+  {
+    "geocod": "2004901",
+    "nombre": "Corvo",
+    "tipo": "concelho",
+    "parentGeocod": "20",
+    "distrito": "Açores",
+    "amMetropolitana": false,
+    "tieneDatosVenta": false,
+    "tieneDatosRenta": false
+  }
+]

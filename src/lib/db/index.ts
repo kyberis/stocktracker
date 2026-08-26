@@ -1026,3 +1026,31 @@ export {
   getLatestQaVerdictForRun,
   getLatestQaIssuesForAgentTicker,
 } from "./screening-qa";
+
+export type { ReZonaRow, ReScreeningRunRow, ReStepRow } from "./real-estate-screening";
+export {
+  upsertZonaCatalogo,
+  countZonaCatalogo,
+  getZonasByGeocods,
+  listZonaCatalogo,
+  zonaToApi,
+  upsertIneCache,
+  getIneCache,
+  upsertListingCache,
+  buildIdempotencyKey,
+  findRunByIdempotencyKey,
+  createReScreeningRun,
+  getReScreeningRun,
+  getReScreeningRunUnscoped,
+  listReScreeningRunsByUser,
+  updateReScreeningRun,
+  insertReSteps,
+  listReStepsForRun,
+  leaseNextReStep,
+  completeReStep,
+  failReStep,
+  recoverExpiredReLeases,
+  countPendingReSteps,
+  upsertReResult,
+  getReResult,
+} from "./real-estate-screening";

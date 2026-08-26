@@ -58,6 +58,7 @@ export type PlatformFeature =
   | "tool_simulator_enabled"
   | "tool_planning_enabled"
   | "investment_screening_enabled"
+  | "real_estate_screening_enabled"
   | "screening_new_runs_enabled"
   | "screening_dev_lab_enabled"
   | "screening_pipeline_real_enabled"
@@ -527,6 +528,7 @@ export const ALL_PLATFORM_FEATURES = [
   "tool_simulator_enabled",
   "tool_planning_enabled",
   "investment_screening_enabled",
+  "real_estate_screening_enabled",
   "screening_new_runs_enabled",
   "screening_dev_lab_enabled",
   "screening_pipeline_real_enabled",

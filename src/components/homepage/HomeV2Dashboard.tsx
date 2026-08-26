@@ -28,6 +28,7 @@ import HomeBrokerMarkGapBanner from "./HomeBrokerMarkGapBanner";
 import HomeRecommendationCard from "./HomeRecommendationCard";
 import HomeHoldingsExplorerCta from "./HomeHoldingsExplorerCta";
 import ScreeningBetaBanner from "@/components/screening/ScreeningBetaBanner";
+import { RealEstateScreeningCta } from "@/components/real-estate-screening/RealEstateScreeningCta";
 import AgentIntroGate from "@/components/agent-intro/AgentIntroGate";
 import { AGENT_INTRO_EXPERIMENT_KEY } from "@/lib/agent-intro";
 import { useExperiment } from "@/lib/use-experiment";
@@ -259,23 +260,26 @@ export default function HomeV2Dashboard() {
           <TableSkeleton rows={4} />
         </div>
       ) : isEmpty ? (
-        <EmptyPortfolio
-          demoMode={demoMode}
-          onAddStock={() => {
-            recordPostIntroAction("add");
-            openAdd();
-          }}
-          onEngagementAction={recordPostIntroAction}
-          onAskWarren={
-            demoMode
-              ? undefined
-              : (prompt) => {
-                  recordPostIntroAction("warren");
-                  setWarrenPrompt(prompt);
-                  setAiOpen(true);
-                }
-          }
-        />
+        <>
+          <RealEstateScreeningCta />
+          <EmptyPortfolio
+            demoMode={demoMode}
+            onAddStock={() => {
+              recordPostIntroAction("add");
+              openAdd();
+            }}
+            onEngagementAction={recordPostIntroAction}
+            onAskWarren={
+              demoMode
+                ? undefined
+                : (prompt) => {
+                    recordPostIntroAction("warren");
+                    setWarrenPrompt(prompt);
+                    setAiOpen(true);
+                  }
+            }
+          />
+        </>
       ) : (
         <>
           <HomeBrokerMarkGapBanner markGap={bootstrap.data?.markGap} />
@@ -338,6 +342,7 @@ export default function HomeV2Dashboard() {
           </ErrorBoundary>
 
           <ScreeningBetaBanner />
+          <RealEstateScreeningCta />
 
           <HomeRecommendationCard
             initialRecommendation={

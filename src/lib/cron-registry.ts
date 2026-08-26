@@ -188,6 +188,19 @@ export const CRON_REGISTRY: CronJob[] = [
     description:
       "Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain",
   },
+  {
+    name: "re-zona-sync",
+    path: "/api/cron/re-zona-sync",
+    schedule: "0 4 1 1,4,7,10 *",
+    description:
+      "Sync Portugal INE geography catalogue (sale/rent coverage flags) for real-estate zone screening",
+  },
+  {
+    name: "re-screening-recover",
+    path: "/api/cron/re-screening-recover",
+    schedule: "*/5 * * * *",
+    description: "Real-estate zone screening: recover expired step leases and drain pending phases",
+  },
 ];
 
 export function getCronJob(name: string): CronJob | undefined {

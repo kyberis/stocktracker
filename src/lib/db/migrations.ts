@@ -4592,6 +4592,86 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 152,
+    description: "Portugal real-estate zone screening tables (re_*)",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS re_zona_catalogo (
+          geocod TEXT PRIMARY KEY,
+          nombre TEXT NOT NULL,
+          tipo TEXT NOT NULL CHECK(tipo IN ('nuts2', 'nuts3', 'concelho', 'freguesia')),
+          parent_geocod TEXT NOT NULL DEFAULT '',
+          distrito TEXT NOT NULL DEFAULT '',
+          am_metropolitana INTEGER NOT NULL DEFAULT 0,
+          tiene_datos_venta INTEGER NOT NULL DEFAULT 0,
+          tiene_datos_renta INTEGER NOT NULL DEFAULT 0,
+          synced_at TEXT NOT NULL DEFAULT ''
+        );
+        CREATE INDEX IF NOT EXISTS idx_re_zona_nombre ON re_zona_catalogo(nombre);
+        CREATE INDEX IF NOT EXISTS idx_re_zona_distrito ON re_zona_catalogo(distrito);
+
+        CREATE TABLE IF NOT EXISTS re_ine_cache (
+          varcd TEXT NOT NULL,
+          geocod TEXT NOT NULL,
+          periodo TEXT NOT NULL,
+          valor REAL,
+          fetched_at TEXT NOT NULL DEFAULT '',
+          PRIMARY KEY (varcd, geocod, periodo)
+        );
+
+        CREATE TABLE IF NOT EXISTS re_listing_cache (
+          portal TEXT NOT NULL,
+          listing_id TEXT NOT NULL,
+          payload_json TEXT NOT NULL DEFAULT '{}',
+          fetched_at TEXT NOT NULL DEFAULT '',
+          PRIMARY KEY (portal, listing_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS re_screening_runs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          zonas_json TEXT NOT NULL DEFAULT '[]',
+          params_json TEXT NOT NULL DEFAULT '{}',
+          status TEXT NOT NULL DEFAULT 'pending',
+          phase TEXT NOT NULL DEFAULT '',
+          progress_json TEXT NOT NULL DEFAULT '[]',
+          idempotency_key TEXT NOT NULL DEFAULT '',
+          error TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          finished_at TEXT NOT NULL DEFAULT '',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_re_runs_user ON re_screening_runs(user_id, created_at);
+        CREATE INDEX IF NOT EXISTS idx_re_runs_idem ON re_screening_runs(user_id, idempotency_key);
+
+        CREATE TABLE IF NOT EXISTS re_screening_steps (
+          id TEXT PRIMARY KEY,
+          run_id TEXT NOT NULL,
+          phase TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          attempts INTEGER NOT NULL DEFAULT 0,
+          lease_owner TEXT NOT NULL DEFAULT '',
+          lease_expires_at TEXT NOT NULL DEFAULT '',
+          depends_on TEXT NOT NULL DEFAULT '[]',
+          error_message TEXT NOT NULL DEFAULT '',
+          payload_json TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(run_id) REFERENCES re_screening_runs(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_re_steps_run ON re_screening_steps(run_id, status);
+
+        CREATE TABLE IF NOT EXISTS re_screening_results (
+          run_id TEXT PRIMARY KEY,
+          payload_json TEXT NOT NULL DEFAULT '{}',
+          cobertura_json TEXT NOT NULL DEFAULT '{}',
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(run_id) REFERENCES re_screening_runs(id) ON DELETE CASCADE
+        );
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
