@@ -70,7 +70,7 @@ type HomeDayHighlight = {
 
 **Main column (desktop):** Morning brief → Portfolio hero → **Portfolio recommendation card** → Movers \| Catalysts → Day highlights → Holdings (CTA → `/tools/holdings-explorer`) → FinPulse teaser → Portfolio News (compact, round-robin diversified across holdings with publish date/time).
 
-**Portfolio hero modes:** Default is a compact **Portfolio total** card (total value in display currency, day P&L, cost basis, total return %, holdings count) with an **Advanced** CTA. Advanced swaps in-place to the existing `PortfolioHeroCard` (invested assets, breakdown, performance matrix). **Summary** restores the compact card. Preference persisted as `home_v2_hero_mode` (`simple` | `advanced`).
+**Portfolio hero modes:** Default is a compact **Portfolio total** card (combined value in display currency, labeled **Invested** vs **Liquid cash**, day P&L, cost basis, total return %, holdings count) with an **Advanced** CTA. Advanced swaps in-place to the existing `PortfolioHeroCard` (invested assets as headline, cash chip, breakdown, performance matrix). **Summary** restores the compact card. Preference persisted as `home_v2_hero_mode` (`simple` | `advanced`). When SnapTrade broker last and market last diverge, a dismissible banner sits above the hero — [broker-mark-reconciliation](broker-mark-reconciliation.md).
 
 **Portfolio recommendation card:** Deterministic tip queue (diversify / concentration / cash / FX). Hide when empty or demo. Diversify CTA → `/recommendations/diversify`. Spec: [home-portfolio-recommendations.md](home-portfolio-recommendations.md).
 

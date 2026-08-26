@@ -36,6 +36,7 @@ Users connect their broker through SnapTrade; we fetch positions and transaction
 ## 7. Business logic
 - Idempotency keys on synced transactions to prevent duplication.
 - Currency/FX preserved from provider.
+- After positions upsert, compare SnapTrade `price` vs Yahoo `valueInEUR` and notify on material gaps — [broker-mark-reconciliation](broker-mark-reconciliation.md).
 
 ## 8. External dependencies
 - SnapTrade API (server secret in env).
@@ -51,6 +52,7 @@ Users connect their broker through SnapTrade; we fetch positions and transaction
 
 ## 12. Telemetry
 - `snaptrade_sync_total`, `snaptrade_errors_total`.
+- `snaptrade_mark_gap_notified`, `snaptrade_mark_gap_detected`.
 
 ## 13. Edge cases & gotchas
 - Expired connection → prompt user to re-auth.

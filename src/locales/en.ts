@@ -568,6 +568,10 @@ const en: TranslationStrings = {
   notifFirstSyncTitle: "Your portfolio is ready",
   notifFirstSyncMessage: "We finished syncing your broker — {0} position(s) are now in trefolio.",
   notifFirstSyncCta: "View my portfolio",
+  notifBrokerMarkGapTitle: "Broker prices differ from the market",
+  notifBrokerMarkGapMessage:
+    "{0}: trefolio uses live market last prices, so the total can differ from your broker. Difference about €{1}. Informational only — not investment advice.",
+  notifBrokerMarkGapCta: "View portfolio",
   manageSubscription: "Manage subscription",
   billingRedirecting: "Redirecting...",
   billingCheckoutError: "Could not open checkout. Please try again.",
@@ -1604,6 +1608,9 @@ const en: TranslationStrings = {
   brokerSyncUpToDateDesc: "All transactions from your brokerage have already been imported. There is nothing new to sync.",
   brokerSyncDataSyncTriggered: "Data sync initiated",
   brokerSyncDataSyncTriggeredDesc: "Your broker's transaction history is being synced for the first time. This usually takes a few minutes. Please try syncing again shortly.",
+  brokerSyncPositionsImported: "{count} position(s) imported from your brokerage.",
+  brokerSyncPositionsImportedNoTx: "Your holdings are in trefolio. No new transactions were found in this sync.",
+  brokerSyncPositionsImportedPendingTx: "Your holdings are in trefolio. Transaction history is still syncing and may take a few minutes.",
   brokerSyncUpToDateStats: "0 new transactions found. {count} already imported from your brokerage.",
   brokerSyncLastImported: "Last imported",
   brokerSyncNeverImported: "Never imported — will fetch all transactions",
@@ -3263,10 +3270,16 @@ const en: TranslationStrings = {
   homeV2FinPulseSubtitle: "Top impact item from your briefing feed",
   homeV2SeeBriefing: "Open briefing",
   homeV2PortfolioTotal: "Portfolio total",
+  homeV2Invested: "Invested",
+  homeV2LiquidCash: "Liquid cash",
   homeV2AdvancedCta: "Advanced",
   homeV2SimpleCta: "Summary",
   homeV2TotalReturn: "Total return",
   homeV2HoldingsExplorerCta: "Explore by P/E & yield",
+  homeBrokerMarkGapTitle: "Broker marks differ from the market",
+  homeBrokerMarkGapBody:
+    "trefolio values holdings with live market last prices, not your broker's last. {ticker} differs by about {delta}.{extra} Informational only — not investment advice.",
+  homeBrokerMarkGapExtra: " {count} more also differ.",
 
   // ── Home portfolio recommendations ──
   homeRecEyebrow: "Portfolio tip",

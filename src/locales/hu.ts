@@ -1118,6 +1118,10 @@ const hu: TranslationStrings = {
   notifFirstSyncTitle: "Your portfolio is ready",
   notifFirstSyncMessage: "We finished syncing your broker — {0} position(s) are now in trefolio.",
   notifFirstSyncCta: "View my portfolio",
+  notifBrokerMarkGapTitle: "Broker prices differ from the market",
+  notifBrokerMarkGapMessage:
+    "{0}: trefolio uses live market last prices, so the total can differ from your broker. Difference about €{1}. Informational only — not investment advice.",
+  notifBrokerMarkGapCta: "View portfolio",
 };
 
 export default hu;

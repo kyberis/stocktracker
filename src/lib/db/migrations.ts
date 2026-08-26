@@ -4564,6 +4564,34 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 151,
+    description: "SnapTrade mark reconciliation snapshot (broker last vs market last)",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(snaptrade_connections)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("mark_reconciliation_json")) {
+        await client.execute(
+          "ALTER TABLE snaptrade_connections ADD COLUMN mark_reconciliation_json TEXT NOT NULL DEFAULT ''",
+        );
+      }
+      if (!colNames.has("mark_reconciliation_at")) {
+        await client.execute(
+          "ALTER TABLE snaptrade_connections ADD COLUMN mark_reconciliation_at TEXT NOT NULL DEFAULT ''",
+        );
+      }
+      if (!colNames.has("mark_gap_notified_fingerprint")) {
+        await client.execute(
+          "ALTER TABLE snaptrade_connections ADD COLUMN mark_gap_notified_fingerprint TEXT NOT NULL DEFAULT ''",
+        );
+      }
+      if (!colNames.has("mark_gap_notified_at")) {
+        await client.execute(
+          "ALTER TABLE snaptrade_connections ADD COLUMN mark_gap_notified_at TEXT NOT NULL DEFAULT ''",
+        );
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

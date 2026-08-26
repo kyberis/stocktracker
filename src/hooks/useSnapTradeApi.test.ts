@@ -628,6 +628,7 @@ describe("useSnapTradeApi fetchPortfolio", () => {
             },
           ],
           summary: { total: 1, duplicatesRemoved: 0 },
+          positionsSynced: 0,
           syncTriggered: true,
         }),
     });
@@ -642,6 +643,69 @@ describe("useSnapTradeApi fetchPortfolio", () => {
     expect(result.current.transactions[0].ticker).toBe("MSFT");
     expect(result.current.lastFetchSummary).toEqual({ total: 1, duplicatesRemoved: 0 });
     expect(result.current.lastFetchSyncTriggered).toBe(true);
+    expect(result.current.lastFetchPositionsSynced).toBe(0);
+  });
+
+  it("fetchPortfolio records positionsSynced when holdings arrive without transactions", async () => {
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          transactions: [],
+          summary: { total: 0, duplicatesRemoved: 0 },
+          positionsSynced: 12,
+        }),
+    });
+
+    const { result } = renderHook(() => useSnapTradeApi());
+    await act(async () => {
+      await result.current.fetchPortfolio();
+    });
+
+    expect(result.current.lastFetchPositionsSynced).toBe(12);
+    expect(result.current.step).toBe("preview");
+  });
+
+  it("fetchPortfolio calls onAfterFetch when provided", async () => {
+    const onAfterFetch = vi.fn().mockResolvedValue(undefined);
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ transactions: [], summary: null, positionsSynced: 3 }),
+    });
+
+    const { result } = renderHook(() => useSnapTradeApi({ onAfterFetch }));
+    await act(async () => {
+      await result.current.fetchPortfolio();
+    });
+
+    expect(onAfterFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("fetchAfterOAuth retries once when syncTriggered", async () => {
+    vi.useFakeTimers();
+    fetchSpy
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ transactions: [], summary: null, positionsSynced: 0, syncTriggered: true }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ transactions: [], summary: null, positionsSynced: 5 }),
+      });
+
+    const { result } = renderHook(() => useSnapTradeApi());
+    let promise: Promise<void>;
+    act(() => {
+      promise = result.current.fetchAfterOAuth();
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000);
+      await promise!;
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(result.current.lastFetchPositionsSynced).toBe(5);
+    vi.useRealTimers();
   });
 
   it("fetchPortfolio when res not ok sets error and step", async () => {

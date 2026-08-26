@@ -7,6 +7,7 @@ vi.mock("@/lib/db", () => ({
   listRecommendationStates: vi.fn(),
   listCashEntries: vi.fn().mockResolvedValue([]),
   upsertRecommendationCache: vi.fn(),
+  getSnapTradeMarkReconciliation: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("@/lib/holding-quotes", () => ({

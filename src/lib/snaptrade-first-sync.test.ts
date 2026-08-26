@@ -1,5 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { shouldNotifyFirstSync } from "./snaptrade-first-sync";
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  shouldNotifyFirstSync,
+  consumeSnapTradeOAuthPending,
+  markSnapTradeOAuthPending,
+} from "./snaptrade-first-sync";
 
 describe("shouldNotifyFirstSync", () => {
   it("returns true on the 0 -> N holdings transition", () => {
@@ -16,5 +21,18 @@ describe("shouldNotifyFirstSync", () => {
 
   it("returns false for an N -> M transition (already had holdings, count changed)", () => {
     expect(shouldNotifyFirstSync({ hadHoldingsBefore: 2, holdingsAfter: 5 })).toBe(false);
+  });
+});
+
+describe("SnapTrade OAuth pending flag", () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
+  it("mark and consume round-trip once", () => {
+    expect(consumeSnapTradeOAuthPending()).toBe(false);
+    markSnapTradeOAuthPending();
+    expect(consumeSnapTradeOAuthPending()).toBe(true);
+    expect(consumeSnapTradeOAuthPending()).toBe(false);
   });
 });

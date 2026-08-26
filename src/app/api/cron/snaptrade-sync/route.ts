@@ -9,7 +9,6 @@ import {
   setSnapTradeNeedsAttention,
   setAllDisabledSince,
   clearAllDisabledSince,
-  claimFirstSyncNotification,
   listTransactionSourceRefs,
   listTransactionTradeFingerprints,
   listTransactionContentFingerprints,
@@ -22,7 +21,8 @@ import {
   mapTransactionsBySourceRef,
   linkUnlinkedTransactionsToHoldings,
 } from "@/lib/db";
-import { shouldNotifyFirstSync, sendFirstSyncCompleteHoldingsNotification } from "@/lib/snaptrade-first-sync";
+import { maybeNotifyFirstSyncHoldings } from "@/lib/snaptrade-first-sync";
+import { reconcileSnapTradeMarksAndNotify } from "@/lib/snaptrade-mark-gap-notify";
 import {
   listBrokerageConnections,
   listAccounts,
@@ -230,23 +230,27 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
         // stale cleanup so we don't delete holdings we simply couldn't fetch.
         // Always run upsert (even when positions is empty) so full exits remove
         // stale snaptrade rows instead of leaving orphaned holdings.
+        let lastUpserted: Awaited<ReturnType<typeof upsertHoldingsFromPositions>> = [];
         for (const targetPId of targetPortfolios) {
-          await upsertHoldingsFromPositions(conn.userId, holdingsResult.holdings, targetPId, {
+          lastUpserted = await upsertHoldingsFromPositions(conn.userId, holdingsResult.holdings, targetPId, {
             skipStaleCleanup: disabledConns.length > 0,
           });
           await linkUnlinkedTransactionsToHoldings(conn.userId, targetPId);
         }
 
+        await reconcileSnapTradeMarksAndNotify(
+          conn.userId,
+          holdingsResult.holdings,
+          lastUpserted,
+          holdingsResult.brokerNavEUR,
+        ).catch((err) =>
+          console.error(`[snaptrade-sync] mark reconciliation failed for user ${conn.userId}:`, err),
+        );
+
         if (hadHoldingsBefore === 0) {
-          const holdingsAfter = await countHoldings(conn.userId);
-          if (shouldNotifyFirstSync({ hadHoldingsBefore, holdingsAfter })) {
-            const claimed = await claimFirstSyncNotification(conn.userId);
-            if (claimed) {
-              sendFirstSyncCompleteHoldingsNotification(conn.userId).catch((err) =>
-                console.error(`[snaptrade-sync] first-sync notification failed for user ${conn.userId}:`, err),
-              );
-            }
-          }
+          await maybeNotifyFirstSyncHoldings(conn.userId, hadHoldingsBefore).catch((err) =>
+            console.error(`[snaptrade-sync] first-sync notification failed for user ${conn.userId}:`, err),
+          );
         }
 
         if (holdingsResult.cashBalances.length > 0) {

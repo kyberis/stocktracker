@@ -54,3 +54,14 @@ export function firstSyncCompleteNotification(positionCount: number): CreateNoti
     linkLabel: "i18n:notifFirstSyncCta",
   };
 }
+
+/** Broker last vs live market last — informational, not advice. */
+export function brokerMarkGapNotification(tickers: string, deltaEurRounded: number): CreateNotificationInput {
+  return {
+    type: "info",
+    title: "i18n:notifBrokerMarkGapTitle",
+    message: `i18n:notifBrokerMarkGapMessage|${tickers}|${deltaEurRounded}`,
+    link: "/",
+    linkLabel: "i18n:notifBrokerMarkGapCta",
+  };
+}

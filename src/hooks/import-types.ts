@@ -45,6 +45,8 @@ export interface ExtractedHolding {
   exchange: string;
   assetType: ImportAssetType;
   figiShareClass?: string;
+  /** SnapTrade/broker last price in `displayCurrency` (not Yahoo). */
+  brokerPrice?: number;
 }
 
 export interface CashBalance {

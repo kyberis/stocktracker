@@ -24,6 +24,7 @@ import HomeDayHighlights from "./HomeDayHighlights";
 import HomeMcpCta from "./HomeMcpCta";
 import HomeFinPulseTeaser from "./HomeFinPulseTeaser";
 import HomePortfolioTotalCard from "./HomePortfolioTotalCard";
+import HomeBrokerMarkGapBanner from "./HomeBrokerMarkGapBanner";
 import HomeRecommendationCard from "./HomeRecommendationCard";
 import HomeHoldingsExplorerCta from "./HomeHoldingsExplorerCta";
 import ScreeningBetaBanner from "@/components/screening/ScreeningBetaBanner";
@@ -277,10 +278,13 @@ export default function HomeV2Dashboard() {
         />
       ) : (
         <>
+          <HomeBrokerMarkGapBanner markGap={bootstrap.data?.markGap} />
           <ErrorBoundary>
             {heroMode === "simple" ? (
               <HomePortfolioTotalCard
                 totalValue={totals.totalCurrentEUR}
+                investedValue={investedValueBase}
+                cashValue={cashValueBase}
                 dayGainLoss={dayGainLoss}
                 dayGainLossPercent={dayGainLossPercent}
                 costBasis={totals.totalCostEUR}
