@@ -12,6 +12,7 @@ type HoldingQuoteInput = {
   ticker: string;
   exchange: string;
   isin?: string | null;
+  name?: string | null;
 };
 
 export type ProviderQuotesForHoldingsResult = {

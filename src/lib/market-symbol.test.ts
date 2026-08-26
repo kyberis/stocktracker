@@ -6,6 +6,8 @@ import {
   toYahooFinanceQuoteUrl,
   yahooSymbolAliases,
   yahooSymbolFromTickerExchange,
+  disambiguateListing,
+  isListingCollisionRemap,
 } from "./market-symbol";
 
 describe("isTickerExchangeCollision", () => {
@@ -57,7 +59,7 @@ describe("marketDataSymbolForHolding", () => {
     ).toBe("IE00BK5BQT80");
   });
 
-  it("keeps normal tickers", () => {
+  it("keeps exchange-suffixed tickers even when an ISIN is present", () => {
     expect(
       marketDataSymbolForHolding({
         ticker: "VWCE",
@@ -65,6 +67,40 @@ describe("marketDataSymbolForHolding", () => {
         isin: "IE00BK5BQT80",
       }),
     ).toBe("VWCE.DE");
+  });
+
+  it("quotes unsuffixed tickers with a non-US ISIN via ISIN, not the US namesake", () => {
+    expect(
+      marketDataSymbolForHolding({
+        ticker: "SHOP",
+        exchange: "",
+        isin: "CA21037X1006",
+      }),
+    ).toBe("CA21037X1006");
+    expect(
+      marketDataSymbolForHolding({
+        ticker: "SAP",
+        exchange: "",
+        isin: "DE0007164600",
+      }),
+    ).toBe("DE0007164600");
+    expect(
+      marketDataSymbolForHolding({
+        ticker: "ITX",
+        exchange: "",
+        isin: "ES0148396007",
+      }),
+    ).toBe("ES0148396007");
+  });
+
+  it("leaves unsuffixed US listings on the ticker even when a US ISIN is stored", () => {
+    expect(
+      marketDataSymbolForHolding({
+        ticker: "AAPL",
+        exchange: "NASDAQ",
+        isin: "US0378331005",
+      }),
+    ).toBe("AAPL");
   });
 
   it("pads unpadded Hong Kong tickers for Yahoo", () => {
@@ -113,9 +149,74 @@ describe("marketDataSymbolForHolding with a missing exchange", () => {
   });
 });
 
+describe("CoinShares BITC vs NYSE BITC namesake", () => {
+  it("quotes CoinShares Physical Bitcoin by ISIN, not NYSE BITC", () => {
+    expect(
+      marketDataSymbolForHolding({
+        ticker: "BITC",
+        exchange: "",
+        name: "CoinShares Physical Bitcoin",
+      }),
+    ).toBe("GB00BLD4ZL17");
+    expect(
+      marketDataSymbolForHolding({
+        ticker: "BITC",
+        exchange: "XET",
+        isin: "GB00BLD4ZL17",
+      }),
+    ).toBe("GB00BLD4ZL17");
+  });
+
+  it("leaves the NYSE Bitwise ETF on the unsuffixed ticker", () => {
+    expect(
+      marketDataSymbolForHolding({
+        ticker: "BITC",
+        exchange: "NYSE",
+        name: "Bitwise Bitcoin Strategy Optimum Roll ETF",
+      }),
+    ).toBe("BITC");
+  });
+});
+
 describe("isTickerExchangeCollision with a missing exchange", () => {
   it("returns false instead of throwing", () => {
     expect(isTickerExchangeCollision("AAPL", undefined)).toBe(false);
     expect(isTickerExchangeCollision("AAPL", null)).toBe(false);
+  });
+});
+
+describe("disambiguateListing", () => {
+  it("maps CoinShares BITC to the Xetra display ticker and ISIN", () => {
+    expect(
+      disambiguateListing({
+        ticker: "BITC",
+        name: "CoinShares Physical Bitcoin",
+        currency: "USD",
+      }),
+    ).toEqual({
+      ticker: "BITC.DE",
+      exchange: "XET",
+      isin: "GB00BLD4ZL17",
+    });
+  });
+
+  it("does not remap the US Bitwise ETF", () => {
+    expect(
+      disambiguateListing({
+        ticker: "BITC",
+        exchange: "NYSE",
+        name: "Bitwise Bitcoin Strategy Optimum Roll ETF",
+        currency: "USD",
+      }),
+    ).toEqual({
+      ticker: "BITC",
+      exchange: "NYSE",
+      isin: "",
+    });
+  });
+
+  it("treats BITC → BITC.DE as a listing remap", () => {
+    expect(isListingCollisionRemap("BITC", "BITC.DE")).toBe(true);
+    expect(isListingCollisionRemap("AAPL", "AAPL.DE")).toBe(false);
   });
 });

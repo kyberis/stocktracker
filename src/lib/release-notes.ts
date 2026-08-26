@@ -32,6 +32,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "fix",
+        text: "When a holding has a non-US ISIN and an unsuffixed ticker, quotes use the ISIN so Yahoo does not pick a same-ticker US namesake (for example IBKR BITC / CoinShares vs NYSE Bitwise).",
+        translations: {
+          es: "Si una posición tiene ISIN no estadounidense y un ticker sin sufijo, las cotizaciones usan la ISIN para que Yahoo no elija un homónimo USA (por ejemplo BITC de IBKR / CoinShares vs Bitwise de NYSE).",
+        },
+      },
+      {
         type: "improvement",
         text: "Home now shows invested assets and liquid cash on the compact total card, without opening Advanced.",
         translations: {

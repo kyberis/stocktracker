@@ -9,7 +9,12 @@ vi.mock("./client", () => ({
   ensureInitialized: vi.fn().mockResolvedValue(mockClient),
 }));
 
-import { claimFirstSyncNotification } from "./snaptrade-connections";
+import {
+  claimFirstSyncNotification,
+  clearSnapTradeMarkReconciliation,
+  getSnapTradeMarkReconciliation,
+  saveSnapTradeMarkReconciliation,
+} from "./snaptrade-connections";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -48,5 +53,49 @@ describe("claimFirstSyncNotification", () => {
 
     expect(first).toBe(true);
     expect(second).toBe(false);
+  });
+});
+
+describe("SnapTrade mark reconciliation persistence", () => {
+  it("reads the stored snapshot", async () => {
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          mark_reconciliation_json: '{"gaps":[]}',
+          mark_reconciliation_at: "2026-08-26T00:00:00.000Z",
+          mark_gap_notified_fingerprint: "BITC",
+          mark_gap_notified_at: "2026-08-26T00:00:00.000Z",
+        },
+      ],
+    });
+    const row = await getSnapTradeMarkReconciliation("user-1");
+    expect(row?.lastFingerprint).toBe("BITC");
+    expect(row?.json).toContain("gaps");
+  });
+
+  it("persists fingerprint when notifying", async () => {
+    mockExecute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
+    await saveSnapTradeMarkReconciliation("user-1", {
+      json: "{}",
+      fingerprint: "BITC",
+      notify: true,
+    });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sql: expect.stringContaining("mark_gap_notified_fingerprint"),
+        args: ["{}", "BITC", "user-1"],
+      }),
+    );
+  });
+
+  it("clears snapshot and notify fingerprint", async () => {
+    mockExecute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
+    await clearSnapTradeMarkReconciliation("user-1");
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sql: expect.stringContaining("mark_reconciliation_json = ''"),
+        args: ["user-1"],
+      }),
+    );
   });
 });

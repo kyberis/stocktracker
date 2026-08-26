@@ -19,7 +19,7 @@ import { findOrCreateBrokerAccount } from "./accounts";
 import { resolvePortfolioId, healEmptyPortfolioIds, getDefaultPortfolio } from "./portfolios";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
-import { marketDataSymbolForHolding, normalizeHkYahooSymbol } from "@/lib/market-symbol";
+import { marketDataSymbolForHolding, normalizeHkYahooSymbol, isListingCollisionRemap } from "@/lib/market-symbol";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import { convertToEUR, hasExchangeRate, resolveQuoteCurrency } from "@/lib/utils";
 
@@ -448,7 +448,7 @@ export async function resetUserHoldings(
  */
 export async function upsertHoldingsFromPositions(
   userId: string,
-  positions: { name: string; ticker: string; shares: number; purchasePrice: number; displayCurrency: string; exchange: string; assetType: string; figiShareClass?: string }[],
+  positions: { name: string; ticker: string; shares: number; purchasePrice: number; displayCurrency: string; exchange: string; assetType: string; figiShareClass?: string; isin?: string }[],
   portfolioId?: string,
   options?: { skipStaleCleanup?: boolean },
 ): Promise<Holding[]> {
@@ -498,58 +498,65 @@ export async function upsertHoldingsFromPositions(
 
     let existing = existingByKey.get(key);
 
+    const remapExisting = async (match: ExistingMeta, reason: string) => {
+      const oldTicker = match.ticker;
+      const oldExchange = match.exchange;
+      console.log(`[upsertHoldingsFromPositions] Ticker rename detected (${reason}): ${oldTicker} → ${ticker} (user ${userId})`);
+      await client.execute({
+        sql: `UPDATE holdings SET ticker = ?, exchange = ? WHERE id = ? AND user_id = ?`,
+        args: [ticker, exchange, match.id, userId],
+      });
+      await client.execute({
+        sql: `UPDATE transactions SET ticker = ?, exchange = ?, name = CASE WHEN name = ? THEN ? ELSE name END
+              WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND portfolio_id = ?`,
+        args: [ticker, exchange, oldTicker, pos.name, userId, oldTicker, resolved],
+      });
+      const oldKey = `${oldTicker.toUpperCase()}|${canonicalExchangeCode(oldExchange)}`;
+      existingByKey.delete(oldKey);
+      match.ticker = ticker;
+      match.exchange = exchange;
+      existingByKey.set(key, match);
+      touchedKeys.add(key);
+      return match;
+    };
+
     // FIGI-based ticker rename detection: if no direct match but the FIGI
     // matches an existing holding, the security was renamed (e.g. VG → VGn).
-    // Update the holding's ticker in-place and propagate to transactions.
     if (!existing && pos.figiShareClass) {
       const figiMatch = existingByFigi.get(pos.figiShareClass);
       if (figiMatch) {
-        const oldTicker = figiMatch.ticker;
-        const oldExchange = figiMatch.exchange;
-        console.log(`[upsertHoldingsFromPositions] Ticker rename detected via FIGI ${pos.figiShareClass}: ${oldTicker} → ${ticker} (user ${userId})`);
+        existing = await remapExisting(figiMatch, `FIGI ${pos.figiShareClass}`);
+      }
+    }
 
-        await client.execute({
-          sql: `UPDATE holdings SET ticker = ?, exchange = ? WHERE id = ? AND user_id = ?`,
-          args: [ticker, exchange, figiMatch.id, userId],
-        });
-        await client.execute({
-          sql: `UPDATE transactions SET ticker = ?, exchange = ?, name = CASE WHEN name = ? THEN ? ELSE name END
-                WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND portfolio_id = ?`,
-          args: [ticker, exchange, oldTicker, pos.name, userId, oldTicker, resolved],
-        });
-
-        // Update maps so stale cleanup sees the new key
-        const oldKey = `${oldTicker.toUpperCase()}|${canonicalExchangeCode(oldExchange)}`;
-        existingByKey.delete(oldKey);
-        figiMatch.ticker = ticker;
-        figiMatch.exchange = exchange;
-        existingByKey.set(key, figiMatch);
-        touchedKeys.add(key);
-
-        existing = figiMatch;
+    // US/EU ticker namesake: BITC (NYSE Bitwise) vs BITC.DE (CoinShares ETP).
+    if (!existing) {
+      for (const meta of existingByKey.values()) {
+        if (isListingCollisionRemap(meta.ticker, ticker)) {
+          existing = await remapExisting(meta, "listing collision");
+          break;
+        }
       }
     }
 
     if (existing) {
       const figi = pos.figiShareClass || "";
-      const updateFigi = figi && figi !== existing.figiShareClass;
+      const nextIsin = pos.isin || existing.isin;
       await client.execute({
-        sql: updateFigi
-          ? `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?, exchange = ?,
+        sql: `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?, exchange = ?,
+              isin = ?, ticker = ?,
               name = CASE WHEN name = ticker THEN ? ELSE name END,
-              source = 'snaptrade', figi_share_class = ?
-              WHERE id = ? AND user_id = ?`
-          : `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?, exchange = ?,
-              name = CASE WHEN name = ticker THEN ? ELSE name END,
-              source = 'snaptrade'
+              source = 'snaptrade',
+              figi_share_class = CASE WHEN ? != '' THEN ? ELSE figi_share_class END
               WHERE id = ? AND user_id = ?`,
-        args: updateFigi
-          ? [pos.shares, pos.purchasePrice, pos.displayCurrency, exchange, pos.name, figi, existing.id, userId]
-          : [pos.shares, pos.purchasePrice, pos.displayCurrency, exchange, pos.name, existing.id, userId],
+        args: [
+          pos.shares, pos.purchasePrice, pos.displayCurrency, exchange,
+          nextIsin, ticker, pos.name, figi, figi, existing.id, userId,
+        ],
       });
       upserted.push({
         id: existing.id, name: existing.name === ticker ? pos.name : existing.name,
-        ticker, isin: existing.isin, assetType: holdingAssetType(pos.assetType),
+        ticker, isin: nextIsin, assetType: holdingAssetType(pos.assetType),
         shares: pos.shares, purchasePrice: pos.purchasePrice,
         displayCurrency: pos.displayCurrency, exchange,
         valueInEUR: 0, sector: existing.sector, region: existing.region,
@@ -558,16 +565,17 @@ export async function upsertHoldingsFromPositions(
       });
     } else {
       const id = randomUUID();
+      const nextIsin = pos.isin || "";
       await client.execute({
         sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price,
               display_currency, exchange, value_in_eur, portfolio_id, source, figi_share_class)
-              VALUES (?, ?, ?, ?, '', ?, ?, ?, ?, ?, 0, ?, 'snaptrade', ?)`,
-        args: [id, userId, pos.name, ticker, pos.assetType || "stock",
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'snaptrade', ?)`,
+        args: [id, userId, pos.name, ticker, nextIsin, pos.assetType || "stock",
                pos.shares, pos.purchasePrice, pos.displayCurrency, exchange, resolved,
                pos.figiShareClass || ""],
       });
       upserted.push({
-        id, name: pos.name, ticker, isin: "", assetType: holdingAssetType(pos.assetType),
+        id, name: pos.name, ticker, isin: nextIsin, assetType: holdingAssetType(pos.assetType),
         shares: pos.shares, purchasePrice: pos.purchasePrice,
         displayCurrency: pos.displayCurrency, exchange, valueInEUR: 0,
         tags: [],

@@ -90,13 +90,16 @@ export function compareBrokerMarks(
     const absPct = denom > 0 ? Math.abs(deltaEUR) / denom : 0;
     if (Math.abs(deltaEUR) < MARK_GAP_ABS_EUR || absPct < MARK_GAP_REL_THRESHOLD) continue;
 
+    const resolvedMarketPrice =
+      marketPrice > 0 ? marketPrice : pos.shares > 0 ? marketEUR / pos.shares : 0;
+
     gaps.push({
       ticker,
       name: pos.name || ticker,
       shares: pos.shares,
       currency: ccy,
       brokerPrice,
-      marketPrice,
+      marketPrice: resolvedMarketPrice,
       brokerValueEUR: brokerEUR,
       marketValueEUR: marketEUR,
       deltaEUR,

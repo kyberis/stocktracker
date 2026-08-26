@@ -34,6 +34,7 @@ import {
   getRecommendationCache,
   listRecommendationStates,
   listCashEntries,
+  getSnapTradeMarkReconciliation,
 } from "@/lib/db";
 import { fetchProviderQuotesForHoldingsWithStats } from "@/lib/holding-quotes";
 import { buildAidStatus } from "@/lib/aid/build-status";
@@ -130,6 +131,21 @@ describe("buildHomeBootstrapSections", () => {
     );
     expect(payload.aidStatus.briefing).toBeNull();
     expect(mockedHighlights).toHaveBeenCalled();
+    expect(payload.markGap).toBeNull();
+  });
+
+  it("parses stored broker mark gaps for the Home banner", async () => {
+    vi.mocked(getSnapTradeMarkReconciliation).mockResolvedValue({
+      json: JSON.stringify({
+        asOf: "2026-08-26T00:00:00.000Z",
+        gaps: [{ ticker: "BITC", deltaEUR: 5500 }],
+      }),
+      at: "2026-08-26T00:00:00.000Z",
+      lastFingerprint: "BITC",
+      lastNotifiedAt: "2026-08-26T00:00:00.000Z",
+    });
+    const payload = await buildHomeBootstrapSections({ userId: "u1", portfolioId: "p1" });
+    expect(payload.markGap?.gaps[0].ticker).toBe("BITC");
   });
 });
 
