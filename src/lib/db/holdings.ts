@@ -456,7 +456,7 @@ export async function upsertHoldingsFromPositions(
   const resolved = await resolvePortfolioId(userId, portfolioId);
 
   const existingRows = await client.execute({
-    sql: `SELECT id, ticker, exchange, name, isin, asset_type, sector, region, asset_class, account_id, source, value_in_eur, figi_share_class, tags
+    sql: `SELECT id, ticker, exchange, name, isin, asset_type, sector, region, asset_class, account_id, source, value_in_eur, figi_share_class, tags, purchase_price
           FROM holdings WHERE user_id = ? AND portfolio_id = ?`,
     args: [userId, resolved],
   });
@@ -465,6 +465,7 @@ export async function upsertHoldingsFromPositions(
     id: string; name: string; isin: string; sector: string; region: string;
     assetClass: string; accountId: string; source: string; valueInEUR: number;
     ticker: string; exchange: string; figiShareClass: string; tags: string[];
+    purchasePrice: number;
   }
 
   const existingByKey = new Map<string, ExistingMeta>();
@@ -479,6 +480,7 @@ export async function upsertHoldingsFromPositions(
       ticker: normalizeHkYahooSymbol(str(row.ticker)), exchange: canonicalExchangeCode(str(row.exchange)) || str(row.exchange),
       figiShareClass: str(row.figi_share_class),
       tags: parseHoldingTagsJson(row.tags),
+      purchasePrice: num(row.purchase_price),
     };
     const key = `${meta.ticker.toUpperCase()}|${canonicalExchangeCode(meta.exchange)}`;
     existingByKey.set(key, meta);
@@ -542,6 +544,8 @@ export async function upsertHoldingsFromPositions(
     if (existing) {
       const figi = pos.figiShareClass || "";
       const nextIsin = pos.isin || existing.isin;
+      const nextPurchasePrice =
+        pos.purchasePrice > 0 ? pos.purchasePrice : existing.purchasePrice;
       await client.execute({
         sql: `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?, exchange = ?,
               isin = ?, ticker = ?,
@@ -550,14 +554,14 @@ export async function upsertHoldingsFromPositions(
               figi_share_class = CASE WHEN ? != '' THEN ? ELSE figi_share_class END
               WHERE id = ? AND user_id = ?`,
         args: [
-          pos.shares, pos.purchasePrice, pos.displayCurrency, exchange,
+          pos.shares, nextPurchasePrice, pos.displayCurrency, exchange,
           nextIsin, ticker, pos.name, figi, figi, existing.id, userId,
         ],
       });
       upserted.push({
         id: existing.id, name: existing.name === ticker ? pos.name : existing.name,
         ticker, isin: nextIsin, assetType: holdingAssetType(pos.assetType),
-        shares: pos.shares, purchasePrice: pos.purchasePrice,
+        shares: pos.shares, purchasePrice: nextPurchasePrice,
         displayCurrency: pos.displayCurrency, exchange,
         valueInEUR: 0, sector: existing.sector, region: existing.region,
         assetClass: existing.assetClass, accountId: existing.accountId,
