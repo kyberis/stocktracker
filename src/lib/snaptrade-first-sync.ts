@@ -24,31 +24,6 @@ export function shouldNotifyFirstSync(input: {
   return input.hadHoldingsBefore === 0 && input.holdingsAfter > 0;
 }
 
-/** Delay before re-fetching when SnapTrade triggers an async broker pull. */
-export const SNAPTRADE_OAUTH_RETRY_DELAY_MS = 30_000;
-
-const OAUTH_PENDING_KEY = "snaptrade_oauth_pending";
-
-export function markSnapTradeOAuthPending(): void {
-  if (typeof window === "undefined") return;
-  try {
-    sessionStorage.setItem(OAUTH_PENDING_KEY, "1");
-  } catch {
-    // private browsing or quota exceeded
-  }
-}
-
-export function consumeSnapTradeOAuthPending(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    if (sessionStorage.getItem(OAUTH_PENDING_KEY) !== "1") return false;
-    sessionStorage.removeItem(OAUTH_PENDING_KEY);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Sends email, in-app, and browser push once when a sync run creates the
  * user's first holdings (0 → N). Safe to call from cron or manual fetch.
@@ -65,11 +40,8 @@ export async function maybeNotifyFirstSyncHoldings(
 }
 
 /**
- * Sends the one-time "your portfolio is ready" nudge (email + in-app) the
- * first time a newly-connected broker sync produces holdings. Callers must
- * have already claimed the notification via claimFirstSyncNotification so
- * this never double-sends. Fire-and-forget from the caller's perspective —
- * failures are logged, not thrown, so they never block the sync cron.
+ * Sends the one-time "your portfolio is ready" nudge (email + in-app + push).
+ * Callers must have already claimed via claimFirstSyncNotification.
  */
 export async function sendFirstSyncCompleteHoldingsNotification(userId: string): Promise<void> {
   const user = await findUserById(userId);

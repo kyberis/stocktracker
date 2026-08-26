@@ -12,7 +12,7 @@ import { trackImportError } from "@/lib/track-import-error";
 import {
   SNAPTRADE_OAUTH_RETRY_DELAY_MS,
   markSnapTradeOAuthPending,
-} from "@/lib/snaptrade-first-sync";
+} from "@/lib/snaptrade-oauth-client";
 
 export type { SnapTradeConnectionInfo, ExtractedTransaction, BrokerSyncInfo };
 
