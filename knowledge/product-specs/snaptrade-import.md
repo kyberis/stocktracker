@@ -57,6 +57,7 @@ Users connect their broker through SnapTrade; we fetch positions and transaction
 ## 13. Edge cases & gotchas
 - Expired connection → prompt user to re-auth.
 - Broker-side corporate actions not always reflected.
+- Ticker namesakes: an unsuffixed ticker plus a non-US ISIN is quoted by ISIN (Yahoo would otherwise treat the bare ticker as US). Known fallback when ISIN is missing: SnapTrade `BITC` + CoinShares name maps to `BITC.DE` / `GB00BLD4ZL17` (not NYSE Bitwise `BITC`).
 
 ## 14. Tests
 - Integration with mocked client.

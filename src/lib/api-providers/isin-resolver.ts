@@ -5,6 +5,25 @@ export { looksLikeIsin };
 
 const isinCache = new Map<string, string>();
 
+const EUROPEAN_YAHOO_SUFFIX = /\.(DE|SG|F|AS|PA|MI|SW|L|CO|HE|ST|OL|VI|BR|LS)$/i;
+
+/**
+ * Pick a Yahoo listing for an ISIN. Prefer a symbol that *is* the ISIN plus a
+ * venue suffix (e.g. GB00BLD4ZL17.SG) so we don't land on a same-ticker US ETF.
+ */
+export function pickYahooSymbolForIsin(
+  isin: string,
+  results: { symbol: string }[],
+): string | null {
+  if (results.length === 0) return null;
+  const upper = isin.trim().toUpperCase();
+  const exact = results.find((r) => r.symbol.toUpperCase().startsWith(`${upper}.`));
+  if (exact) return exact.symbol;
+  const european = results.find((r) => EUROPEAN_YAHOO_SUFFIX.test(r.symbol));
+  if (european) return european.symbol;
+  return results[0].symbol;
+}
+
 /**
  * Resolve an ISIN to a Yahoo ticker symbol via search.
  * Returns the resolved ticker, or the original symbol if resolution fails.
@@ -21,8 +40,8 @@ export async function resolveIsinToTicker(
 
   try {
     const results = await yahoo.search(symbol);
-    if (results.length > 0) {
-      const resolved = results[0].symbol;
+    const resolved = pickYahooSymbolForIsin(symbol, results);
+    if (resolved) {
       isinCache.set(symbol, resolved);
       return resolved;
     }

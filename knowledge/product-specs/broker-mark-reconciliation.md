@@ -78,7 +78,7 @@ SnapTrade users only (Trefolio broker sync). No extra rate limit. Notify cooldow
 ## 13. Edge cases & gotchas
 
 - Empty positions: clear stored JSON; do not wipe holdings (existing SnapTrade empty-snapshot guard).
-- Illiquid ETF last (e.g. BITC Flex ~$65 vs NYSE ~$40) is the canonical case — banner explains market last vs broker last.
+- Same ticker, different security: unsuffixed ticker + non-US ISIN is quoted by ISIN (e.g. IBKR `BITC` / CoinShares `GB00BLD4ZL17` vs NYSE Bitwise). Do not treat that gap as a stale Flex mark.
 - Demo / no SnapTrade connection: `markGap` null, no banner.
 - Banner dismiss is session-scoped so a later fingerprint still shows.
 

@@ -1,6 +1,7 @@
-import { looksLikeIsin } from "@/lib/api-providers/isin-resolver";
+import { isNonUsIsin, looksLikeIsin } from "@/lib/isin";
 import {
   baseTickerName,
+  canonicalExchangeCode,
   normalizeCryptoTicker,
   normalizeTickerForExchange,
   EXCHANGE_SUFFIX_MAP,
@@ -61,6 +62,9 @@ const YAHOO_SYMBOL_ALIASES: Record<string, string[]> = {
   NA9: ["NA9.DE", "NA9.F"],
   "NA9.DE": ["NA9.F"],
   "NA9.F": ["NA9.DE"],
+  // CoinShares Physical Bitcoin (GB00BLD4ZL17) — not NYSE BITC
+  "BITC.DE": ["GB00BLD4ZL17.SG", "BITC.SW"],
+  "GB00BLD4ZL17.SG": ["BITC.SW"],
   // Hysan / numeric HK bases after news-ticker strip
   "215": ["0215.HK"],
   "215.HK": ["0215.HK"],
@@ -121,17 +125,144 @@ export function yahooSymbolFromTickerExchange(
 }
 
 /**
+ * Known US/EU ticker namesakes used when SnapTrade omits ISIN.
+ * Yahoo's unsuffixed `BITC` is the NYSE Bitwise ETF (~$40); IBKR/JustETF BITC
+ * is CoinShares Physical Bitcoin (ISIN GB00BLD4ZL17, ~€65).
+ * The general quote path is ISIN-first for any unsuffixed ticker + non-US ISIN.
+ */
+export const COINSHARES_BITC_ISIN = "GB00BLD4ZL17";
+
+const LISTING_COLLISIONS: {
+  baseTicker: string;
+  displayTicker: string;
+  displayExchange: string;
+  isin: string;
+  namePattern: RegExp;
+}[] = [
+  {
+    baseTicker: "BITC",
+    displayTicker: "BITC.DE",
+    displayExchange: "XET",
+    isin: COINSHARES_BITC_ISIN,
+    namePattern: /coinshares/i,
+  },
+];
+
+const EUROPEAN_VENUES = new Set([
+  "XET", "XETR", "GER", "FRA", "AMS", "MIL", "EPA", "PAR", "PA", "AS", "MI",
+  "SWX", "LSE", "TDG", "TGD", "GETTEX", "STU",
+]);
+
+function listingCollisionFor(input: {
+  ticker: string;
+  isin?: string | null;
+  name?: string | null;
+}) {
+  const base = baseTickerName(input.ticker).toUpperCase();
+  const isin = (input.isin ?? "").trim().toUpperCase();
+  return LISTING_COLLISIONS.find((c) => c.baseTicker === base || (isin !== "" && c.isin === isin));
+}
+
+export function isListingCollisionRemap(fromTicker: string, toTicker: string): boolean {
+  const from = fromTicker.trim().toUpperCase();
+  const to = toTicker.trim().toUpperCase();
+  return LISTING_COLLISIONS.some(
+    (c) =>
+      (from === c.baseTicker && to === c.displayTicker) ||
+      (from === c.displayTicker && to === c.baseTicker),
+  );
+}
+
+/**
+ * When SnapTrade/Yahoo would map a European listing onto a US namesake, rewrite
+ * to the European display ticker and canonical ISIN.
+ */
+export function disambiguateListing(input: {
+  ticker: string;
+  exchange?: string | null;
+  name?: string | null;
+  currency?: string | null;
+  isin?: string | null;
+}): { ticker: string; exchange: string; isin: string } {
+  const ticker = input.ticker.trim();
+  const exchange = (input.exchange ?? "").trim();
+  const isinIn = (input.isin ?? "").trim().toUpperCase();
+  const collision = listingCollisionFor({ ticker, isin: isinIn, name: input.name });
+  if (!collision) {
+    return { ticker, exchange, isin: isinIn };
+  }
+
+  const venue = (canonicalExchangeCode(exchange) || exchange).toUpperCase();
+  const currency = (input.currency ?? "").trim().toUpperCase();
+  const alreadyEuropean = ticker.toUpperCase() === collision.displayTicker;
+  const isEuropean =
+    alreadyEuropean ||
+    isinIn === collision.isin ||
+    collision.namePattern.test(input.name ?? "") ||
+    currency === "EUR" ||
+    EUROPEAN_VENUES.has(venue);
+
+  if (!isEuropean) {
+    return { ticker, exchange, isin: isinIn };
+  }
+
+  return {
+    ticker: collision.displayTicker,
+    exchange: collision.displayExchange,
+    isin: isinIn || collision.isin,
+  };
+}
+
+/** Yahoo treats symbols with no `.` suffix as US listings. */
+function yahooSymbolIsUnsuffixed(ticker: string, exchange: string | null | undefined): boolean {
+  return !yahooSymbolFromTickerExchange(ticker, exchange).includes(".");
+}
+
+function shouldQuoteByIsin(h: {
+  ticker: string;
+  exchange: string | null | undefined;
+  isin?: string | null;
+  name?: string | null;
+}): boolean {
+  if (isTickerExchangeCollision(h.ticker, h.exchange)) return true;
+
+  const collision = listingCollisionFor(h);
+  if (collision) {
+    const venue = (canonicalExchangeCode(h.exchange ?? "") || h.exchange || "").toUpperCase();
+    return (
+      collision.namePattern.test(h.name ?? "") ||
+      (h.isin ?? "").trim().toUpperCase() === collision.isin ||
+      h.ticker.toUpperCase() === collision.displayTicker ||
+      EUROPEAN_VENUES.has(venue)
+    );
+  }
+
+  // Same ticker, different security: unsuffixed Yahoo lookup is the US namesake.
+  const isin = (h.isin ?? "").trim();
+  return isNonUsIsin(isin) && yahooSymbolIsUnsuffixed(h.ticker, h.exchange);
+}
+
+/**
  * Symbol to send to quote/history providers for a holding.
- * Uses ISIN when the ticker collides with the exchange code.
+ * Uses ISIN when the ticker collides with the exchange code, when a known
+ * US/EU namesake would otherwise quote the wrong security, or whenever an
+ * unsuffixed ticker carries a non-US ISIN (Yahoo would treat it as US).
  */
 export function marketDataSymbolForHolding(h: {
   ticker: string;
   exchange: string | null | undefined;
   isin?: string | null;
+  name?: string | null;
 }): string {
-  const isin = (h.isin ?? "").trim();
-  if (isin && looksLikeIsin(isin) && isTickerExchangeCollision(h.ticker, h.exchange)) {
+  const disambiguated = disambiguateListing(h);
+  const isin = disambiguated.isin || (h.isin ?? "").trim();
+  const exchange = disambiguated.exchange || h.exchange;
+  if (
+    isin &&
+    looksLikeIsin(isin) &&
+    shouldQuoteByIsin({ ...h, ticker: disambiguated.ticker, exchange, isin })
+  ) {
     return isin;
   }
-  return yahooSymbolFromTickerExchange(h.ticker, h.exchange);
+  return yahooSymbolFromTickerExchange(disambiguated.ticker, exchange);
 }

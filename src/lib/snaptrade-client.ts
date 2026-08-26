@@ -13,6 +13,8 @@ import { canonicalExchangeCode } from "@/lib/db/helpers";
 import { extractSnapTradeHttpStatus, isSnapTradeNotFound } from "@/lib/snaptrade-http";
 import { trackExternalProvider } from "@/lib/traffic/provider-track";
 import { snapTradeTradeFingerprint } from "@/lib/transaction-fingerprint";
+import { disambiguateListing } from "@/lib/market-symbol";
+import { extractIsinFromUnknown } from "@/lib/isin";
 
 let _client: Snaptrade | null = null;
 
@@ -352,23 +354,32 @@ function positionToHolding(pos: Position): ExtractedHolding | null {
   if (!rawTicker) return null;
 
   const exchangeMic = sym.exchange?.mic_code || "";
-  const { ticker, exchange } = normalizeSnapTradeTicker(rawTicker, exchangeMic);
-  if (!ticker) return null;
+  const { ticker: mappedTicker, exchange: mappedExchange } = normalizeSnapTradeTicker(rawTicker, exchangeMic);
+  if (!mappedTicker) return null;
 
   const figiShareClass = sym.figi_instrument?.figi_share_class || "";
   const inferred = inferAssetType({ name: sym.description, brokerType: sym.type?.code });
   const assetType = inferred === "crypto" ? "stock" : inferred;
 
   const brokerPrice = typeof pos.price === "number" && Number.isFinite(pos.price) ? pos.price : undefined;
+  const currency = pos.currency?.code || sym.currency?.code || "USD";
+  const listing = disambiguateListing({
+    ticker: mappedTicker,
+    exchange: mappedExchange || sym.exchange?.code || "",
+    name: sym.description,
+    currency,
+    isin: extractIsinFromUnknown(sym),
+  });
 
   return {
-    name: sym.description || ticker,
-    ticker,
+    name: sym.description || listing.ticker,
+    ticker: listing.ticker,
     shares: pos.units ?? 0,
     purchasePrice: pos.average_purchase_price ?? 0,
-    displayCurrency: sym.currency?.code || "USD",
-    exchange: canonicalExchangeCode(exchange || sym.exchange?.code || "") || exchange || sym.exchange?.code || "",
+    displayCurrency: currency,
+    exchange: canonicalExchangeCode(listing.exchange) || listing.exchange,
     assetType,
+    ...(listing.isin ? { isin: listing.isin } : {}),
     ...(figiShareClass ? { figiShareClass } : {}),
     ...(brokerPrice != null && brokerPrice > 0 ? { brokerPrice } : {}),
   };
@@ -590,6 +601,7 @@ export async function fetchAllHoldings(
                 totalShares;
             }
             existing.shares = totalShares;
+            if (holding.isin && !existing.isin) existing.isin = holding.isin;
           } else {
             holdingsByTicker.set(holding.ticker, holding);
           }

@@ -105,8 +105,66 @@ test.describe("Home v2 recommendations", () => {
     await expect(cta).toHaveAttribute("href", "/tools/holdings-explorer");
     await expect(page.getByTestId("home-invested-value")).toBeVisible();
     await expect(page.getByTestId("home-liquid-cash")).toBeVisible();
+    await expect(page.getByTestId("home-broker-mark-gap-banner")).toHaveCount(0);
     await cta.click();
     await page.waitForURL(/\/tools\/holdings-explorer/);
     await expect(page.getByTestId("holdings-explorer")).toBeVisible({ timeout: 20_000 });
+  });
+
+  test("broker mark-gap banner appears when bootstrap sections include a gap", async ({ page }) => {
+    const login = await page.request.post("/api/auth/login", {
+      data: { identifier: "admin", password: "admin" },
+    });
+    if (login.status() !== 200) {
+      const alt = await page.request.post("/api/auth/login", {
+        data: { identifier: "admin", password: "Admin123!" },
+      });
+      if (alt.status() !== 200) {
+        test.skip(true, "Local admin login unavailable (IdP-only environment).");
+        return;
+      }
+    }
+
+    await page.route("**/api/home-v2/bootstrap**", async (route) => {
+      const url = route.request().url();
+      if (!url.includes("phase=sections")) {
+        await route.continue();
+        return;
+      }
+      const response = await route.fetch();
+      const json = (await response.json()) as Record<string, unknown>;
+      json.markGap = {
+        asOf: "2026-08-26T00:00:00.000Z",
+        gaps: [
+          {
+            ticker: "BITC",
+            name: "BITC",
+            shares: 257,
+            currency: "USD",
+            brokerPrice: 65.45,
+            marketPrice: 40.66,
+            brokerValueEUR: 15000,
+            marketValueEUR: 9500,
+            deltaEUR: 5500,
+            absPct: 0.57,
+          },
+        ],
+        brokerHoldingsEUR: 15000,
+        marketHoldingsEUR: 9500,
+        totalDeltaEUR: 5500,
+        brokerNavEUR: null,
+      };
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(json),
+      });
+    });
+
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/");
+    await dismissOverlays(page);
+    await expect(page.getByTestId("home-broker-mark-gap-banner")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("home-broker-mark-gap-banner")).toContainText("BITC");
   });
 });
