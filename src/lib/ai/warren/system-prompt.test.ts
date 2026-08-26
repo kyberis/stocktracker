@@ -11,6 +11,8 @@ describe("buildWarrenSystemPrompt — clara channel", () => {
     expect(prompt).toContain("through Clara");
     expect(prompt).toContain("consultClaraSavings");
     expect(prompt).toContain("Do **not** call");
+    expect(prompt).toContain("cash capacity");
+    expect(prompt).toContain("not a licensed advisor");
     expect(prompt).not.toContain("in-app drawer from dashboard");
   });
 });
