@@ -34,6 +34,7 @@ Feature flags registered in code, with per-user overrides stored in DB. Both cli
 - **`commerce_enabled`** (default off): hides subscription pricing, upsell/compare cards, checkout CTAs, and new purchase API paths on trefolio. Existing Pro users keep billing portal access. See payments spec.
 - **`display_invariants`** (default off): sampled home-screen numeric consistency checks; see [display-invariants](display-invariants.md).
 - **`theme_studio_enabled`** (default off): Studio dashboard theme in Settings; when off, Studio is hidden and users on Studio fall back to Default.
+- **`import_broker_picker_enabled`** (default off): Broker Sync grid with logos, search, SnapTrade deep-link, and Trade Republic CSV. See [trade-republic-import](trade-republic-import.md).
 - **`portfolio_anomaly_agent`** (default off): staff portfolio anomaly scan; see [portfolio-anomaly-agent](portfolio-anomaly-agent.md).
 
 ## 7. Business logic

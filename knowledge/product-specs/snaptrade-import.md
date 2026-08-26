@@ -7,7 +7,7 @@ Users connect their broker through SnapTrade; we fetch positions and transaction
 
 ## 2. Status
 - **Tier:** Trefolio (broker integrations).
-- **Feature flag:** `BROKER_INTEGRATIONS`
+- **Feature flag:** `import_broker_picker_enabled` (broker grid + slug deep-link; default off). SnapTrade connect itself is unchanged when the flag is off.
 - **Health:** B
 - **Owning skill:** [`engineer-integrations`](../../.cursor/skills/engineer-integrations/SKILL.md)
 
@@ -31,6 +31,7 @@ Users connect their broker through SnapTrade; we fetch positions and transaction
 
 ## 6. UI surface
 - OAuth flow + "Connected" status cards.
+- When `import_broker_picker_enabled`: searchable grid of SnapTrade brokerages (logos + `broker` deep-link). Trade Republic is CSV-only — see [trade-republic-import](trade-republic-import.md).
 
 ## 7. Business logic
 - Idempotency keys on synced transactions to prevent duplication.

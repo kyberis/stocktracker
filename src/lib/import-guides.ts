@@ -346,6 +346,27 @@ export const IMPORT_GUIDES: ImportGuide[] = [
     ],
   },
   {
+    id: "trade_republic",
+    titleEn: "Trade Republic — Transaction Report CSV",
+    titleEs: "Trade Republic — Informe de transacciones CSV",
+    stepsEn: [
+      "Open the Trade Republic mobile app.",
+      "Tap your profile picture.",
+      "Go to Account Statements → Transaction Report.",
+      "Tap Share → Create and pick the longest date range.",
+      "Upload the downloaded CSV file here.",
+    ],
+    stepsEs: [
+      "Abre la app de Trade Republic en el móvil.",
+      "Toca tu foto de perfil.",
+      "Ve a Extractos de cuenta → Informe de transacciones.",
+      "Toca Compartir → Crear y elige el rango de fechas más largo.",
+      "Sube el archivo CSV descargado aquí.",
+    ],
+    noteEn: "Savings-plan executions import as buys. Fractional shares are supported.",
+    noteEs: "Las ejecuciones de planes de ahorro se importan como compras. Se admiten fracciones.",
+  },
+  {
     id: "snaptrade_api",
     titleEn: "Broker Sync — Automatic Import",
     titleEs: "Sincronización de Bróker — Importación Automática",

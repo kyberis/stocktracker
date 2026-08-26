@@ -13,6 +13,7 @@ export type BrokerFormat =
   | "questrade"
   | "firstrade"
   | "myinvestor"
+  | "trade_republic"
   | "simple";
 
 export type ImportAssetType = "stock" | "etf" | "fund";

@@ -13,6 +13,7 @@ import { wealthsimpleParser } from "./wealthsimple";
 import { questradeParser } from "./questrade";
 import { firsttradeParser } from "./firstrade";
 import { myinvestorParser } from "./myinvestor";
+import { tradeRepublicParser } from "./trade-republic";
 
 export type { BrokerParser, ParsedTransaction, CashBalance } from "./types";
 
@@ -31,6 +32,7 @@ const PARSERS: BrokerParser[] = [
   questradeParser,
   firsttradeParser,
   myinvestorParser,
+  tradeRepublicParser,
 ];
 
 const parserMap = new Map<string, BrokerParser>(

@@ -152,6 +152,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [import-hub](import-hub.md) — unified `/import` page.
 - [import-data-quality](import-data-quality.md) — market cross-check + auto-repair on import / existing holdings.
 - [snaptrade-import](snaptrade-import.md) — OAuth broker connections.
+- [trade-republic-import](trade-republic-import.md) — Trade Republic CSV + flag-gated broker picker.
 
 ## Alerts & Notifications
 
@@ -246,7 +247,8 @@ domain engineer:
 
 - **Import & Brokers** — candidates still thin: Bitpanda, Plus500, Freedom24,
   XTB. Covered: [broker-parsers](broker-parsers.md),
-  [myinvestor-import](myinvestor-import.md), [import-hub](import-hub.md).
+  [myinvestor-import](myinvestor-import.md), [import-hub](import-hub.md),
+  [trade-republic-import](trade-republic-import.md).
 - **AI** — prompt/response schema docs per AI endpoint; today only feature-level
   specs exist (`ai-analysis`, `ai-compare`, etc.). Consider extracting a
   `ai-prompts-registry` spec from the code in `src/lib/ai-prompts.ts`.

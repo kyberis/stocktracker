@@ -14,7 +14,7 @@ const GLOBAL_BROKERS: CountryBroker[] = [
 const COUNTRY_BROKER_MAP: Record<string, CountryBroker[]> = {
   DE: [
     { name: "Scalable Capital", hasSnapTrade: true },
-    { name: "Trade Republic", hasSnapTrade: false },
+    { name: "Trade Republic", csvFormat: "trade_republic", hasSnapTrade: false },
     { name: "DEGIRO", csvFormat: "degiro", hasSnapTrade: false },
     ...GLOBAL_BROKERS,
   ],

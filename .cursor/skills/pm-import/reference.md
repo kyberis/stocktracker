@@ -17,6 +17,7 @@ When any file in the **Code** column changes, the corresponding **Guide** locati
 | `src/lib/broker-parsers/trading-212.ts` | Import page — Trading 212 how-to | Export menu path |
 | `src/lib/broker-parsers/revolut.ts` | Import page — Revolut how-to | Export menu path, file format |
 | `src/lib/broker-parsers/myinvestor.ts` | Import page — MyInvestor how-to | Inversis portal path, Excel format |
+| `src/lib/broker-parsers/trade-republic.ts` | Import page — Trade Republic how-to | App path: Profile → Account Statements → Transaction Report |
 | `src/lib/broker-parsers/index.ts` | Import page — broker selector options | Broker list, labels |
 | `src/app/api/transactions/import-broker/route.ts` | Import page — all broker guides | Parse/import behavior, error messages |
 | `src/app/api/import-portfolio/route.ts` | Import page — AI import guide | Supported formats, rate limits |
@@ -101,6 +102,19 @@ Steps:
 3. Select Statements → Account statement.
 4. Choose Excel or CSV format and download.
 5. Upload the downloaded file here.
+```
+
+### Trade Republic
+
+```
+Title: Trade Republic — Transaction Report CSV
+Steps:
+1. Open the Trade Republic mobile app.
+2. Tap your profile picture.
+3. Go to Account Statements → Transaction Report.
+4. Tap Share → Create and pick the longest date range.
+5. Upload the downloaded CSV file here.
+Note: Savings-plan executions import as buys. Fractional shares are supported.
 ```
 
 ### Simple CSV

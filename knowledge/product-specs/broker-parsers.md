@@ -3,7 +3,7 @@
 > Broker-specific CSV/PDF parsers.
 
 ## 1. Summary
-Parsers normalize exports from Interactive Brokers, DeGiro, Trading212, Revolut, eToro, MEXEM, Scalable Capital, Comdirect, ING, Consorsbank, Binance, Kraken, Coinbase, etc. into our shared transaction schema.
+Parsers normalize exports from Interactive Brokers, DeGiro, Trading212, Revolut, eToro, Trade Republic, MyInvestor, and others into our shared transaction schema.
 
 ## 2. Status
 - **Tier:** Free

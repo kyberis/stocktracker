@@ -17,6 +17,7 @@ Flags from `ALL_PLATFORM_FEATURES` in [`src/lib/db/settings.ts`](../../src/lib/d
 - `device_enabled`
 - `display_invariants`
 - `home_v2`
+- `import_broker_picker_enabled`
 - `investment_screening_enabled`
 - `lifecycle_activation_email_enabled`
 - `lifecycle_winback_email_enabled`
