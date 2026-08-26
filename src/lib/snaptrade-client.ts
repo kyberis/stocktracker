@@ -347,6 +347,55 @@ function normalizeSnapTradeTicker(
   };
 }
 
+/**
+ * Cost basis per share from SnapTrade position fields.
+ * Prefer broker-reported average; fall back to open P/L vs last price when IBKR omits average_purchase_price.
+ */
+export function resolveSnapTradePurchasePrice(pos: Position): number {
+  const units = pos.units ?? 0;
+  if (!(units > 0)) return 0;
+
+  const avg = pos.average_purchase_price;
+  if (typeof avg === "number" && Number.isFinite(avg) && avg > 0) {
+    return avg;
+  }
+
+  const price = pos.price;
+  const openPnl = pos.open_pnl;
+  if (
+    typeof price === "number" &&
+    Number.isFinite(price) &&
+    price > 0 &&
+    typeof openPnl === "number" &&
+    Number.isFinite(openPnl)
+  ) {
+    const totalCost = units * price - openPnl;
+    if (totalCost > 0) {
+      const derived = totalCost / units;
+      if (Number.isFinite(derived) && derived > 0) return derived;
+    }
+  }
+
+  return 0;
+}
+
+/** Weighted average cost when merging lots; keeps a known cost if the other lot is missing it. */
+export function mergeSnapTradePurchasePrices(
+  aPrice: number,
+  aShares: number,
+  bPrice: number,
+  bShares: number,
+): number {
+  const totalShares = aShares + bShares;
+  if (!(totalShares > 0)) return 0;
+  if (aPrice > 0 && bPrice > 0) {
+    return (aPrice * aShares + bPrice * bShares) / totalShares;
+  }
+  if (aPrice > 0) return aPrice;
+  if (bPrice > 0) return bPrice;
+  return 0;
+}
+
 function positionToHolding(pos: Position): ExtractedHolding | null {
   const sym = pos.symbol?.symbol;
   if (!sym) return null;
@@ -375,7 +424,7 @@ function positionToHolding(pos: Position): ExtractedHolding | null {
     name: sym.description || listing.ticker,
     ticker: listing.ticker,
     shares: pos.units ?? 0,
-    purchasePrice: pos.average_purchase_price ?? 0,
+    purchasePrice: resolveSnapTradePurchasePrice(pos),
     displayCurrency: currency,
     exchange: canonicalExchangeCode(listing.exchange) || listing.exchange,
     assetType,
@@ -592,9 +641,14 @@ export async function fetchAllHoldings(
 
           const existing = holdingsByTicker.get(holding.ticker);
           if (existing) {
-            const totalShares = existing.shares + holding.shares;
-            existing.purchasePrice =
-              (existing.purchasePrice * existing.shares + holding.purchasePrice * holding.shares) / totalShares;
+            const prevShares = existing.shares;
+            const totalShares = prevShares + holding.shares;
+            existing.purchasePrice = mergeSnapTradePurchasePrices(
+              existing.purchasePrice,
+              prevShares,
+              holding.purchasePrice,
+              holding.shares,
+            );
             if ((existing.brokerPrice ?? 0) > 0 || (holding.brokerPrice ?? 0) > 0) {
               existing.brokerPrice =
                 ((existing.brokerPrice ?? 0) * existing.shares + (holding.brokerPrice ?? 0) * holding.shares) /

@@ -25,6 +25,13 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
+        type: "improvement",
+        text: "Broker sync now preserves average purchase price for gain/loss: SnapTrade cost basis is kept when the broker omits it on a later sync, and open P/L is used as a fallback when average_purchase_price is missing.",
+        translations: {
+          es: "La sincronización con el bróker conserva el precio medio de compra para calcular ganancias/pérdidas: se mantiene el coste si el bróker no lo envía en una sync posterior, y se usa el P/L abierto como respaldo cuando falta average_purchase_price.",
+        },
+      },
+      {
         type: "feature",
         text: "When a connected broker’s last price differs from the live market last (for example an illiquid ETF), trefolio keeps using market prices and tells you — in-app notification plus a dismissible Home banner. Informational only, not investment advice.",
         translations: {
