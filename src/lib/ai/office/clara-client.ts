@@ -92,6 +92,17 @@ export async function fetchClaraSavingsSummary(identity: OfficeIdentity): Promis
       emergencyTargetEur: data.emergencyTargetEur,
       surplusEur: data.surplusEur,
       freeInInvestingBucketEur: data.freeInInvestingBucketEur,
+      monthKey: data.monthKey,
+      dayOfMonth: data.dayOfMonth,
+      daysInMonth: data.daysInMonth,
+      hasMonthRecord: data.hasMonthRecord,
+      currency: data.currency,
+      incomeReceived: data.incomeReceived,
+      incomeExpected: data.incomeExpected,
+      plannedExpenses: data.plannedExpenses,
+      paidExpenses: data.paidExpenses,
+      remainingExpenses: data.remainingExpenses,
+      monthBalance: data.monthBalance,
       note: data.note,
     };
   } catch {

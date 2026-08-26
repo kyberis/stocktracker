@@ -31,6 +31,18 @@ vi.mock("@/lib/ai/warren/run-turn", () => ({
 vi.mock("@/lib/ai/office/office-identity", () => ({
   resolveOfficeIdentity: (...args: unknown[]) => mockResolveIdentity(...args),
 }));
+vi.mock("@/lib/ai/office/clara-client", () => ({
+  fetchClaraSavingsSummary: vi.fn(async () => ({
+    available: true,
+    emergencyBalanceEur: 1000,
+    surplusEur: 200,
+    monthKey: "2026-08",
+    dayOfMonth: 26,
+    daysInMonth: 31,
+    hasMonthRecord: true,
+    currency: "EUR",
+  })),
+}));
 vi.mock("@/lib/subscription", () => ({
   effectivePlan: () => mockEffectivePlan(),
 }));
@@ -115,6 +127,7 @@ describe("POST /api/internal/office/warren-chat", () => {
         userId: "u1",
         channel: "clara",
         language: "es",
+        systemAppendix: expect.stringContaining("Clara cashflow snapshot"),
       }),
     );
   });

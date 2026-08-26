@@ -62,6 +62,17 @@ export interface ClaraSavingsSummary {
   emergencyTargetEur?: number;
   surplusEur?: number;
   freeInInvestingBucketEur?: number;
+  monthKey?: string;
+  dayOfMonth?: number;
+  daysInMonth?: number;
+  hasMonthRecord?: boolean;
+  currency?: string;
+  incomeReceived?: number;
+  incomeExpected?: number;
+  plannedExpenses?: number;
+  paidExpenses?: number;
+  remainingExpenses?: number;
+  monthBalance?: number;
   note?: string;
 }
 

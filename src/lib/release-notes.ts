@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.237",
+    date: "2026-08-26",
+    title: "Warren uses Clara cashflow when answering from Clara",
+    titleTranslations: {
+      es: "Warren usa la caja de Clara al responder desde Clara",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "When Clara asks Warren about investments, Warren gets an aggregated snapshot of this month’s cash (income, spend, surplus, day of month) plus the portfolio, talks capacity not what to buy, and states he is not a licensed advisor.",
+        translations: {
+          es: "Cuando Clara le pregunta a Warren por inversiones, Warren recibe un resumen de la caja del mes (ingresos, gastos, sobrante, día) más la cartera, habla de capacidad y no de qué comprar, y aclara que no es un asesor autorizado.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.236",
     date: "2026-08-26",
     title: "Clara can consult Warren",

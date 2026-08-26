@@ -5,6 +5,8 @@ import type { ModelMessage } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+import { formatClaraCashflowAppendix } from "@/lib/ai/office/clara-cashflow-appendix";
+import { fetchClaraSavingsSummary } from "@/lib/ai/office/clara-client";
 import { resolveOfficeIdentity } from "@/lib/ai/office/office-identity";
 import {
   resolveClaraWarrenUser,
@@ -107,6 +109,7 @@ export async function POST(req: NextRequest) {
       : [{ role: "user", content: body.message }];
 
   const identity = await resolveOfficeIdentity(userId);
+  const claraCash = await fetchClaraSavingsSummary(identity);
 
   try {
     const result = await runWarrenTurn({
@@ -121,6 +124,7 @@ export async function POST(req: NextRequest) {
       messages,
       gatewayHeaders: req.headers,
       subscriptionPlan,
+      systemAppendix: formatClaraCashflowAppendix(claraCash),
     });
 
     return NextResponse.json({

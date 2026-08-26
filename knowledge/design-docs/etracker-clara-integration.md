@@ -91,7 +91,7 @@ In Clara's Vercel project:
 
 - Production URL goes into trefolio's `CLARA_BASE_URL` env var (Settings → Environment Variables) when trefolio actually starts calling Clara.
 
-Clara → Warren (the reverse call) uses `TREFOLIO_BASE_URL` on Clara (default `https://trefolio.com` in production) and `POST /api/internal/office/warren-chat` with the same `IDP_SERVICE_TOKEN`. `billingSource: "clara"` skips trefolio's `ai_consult` quota — the turn already consumed Clara's daily cap.
+Clara → Warren (the reverse call) uses `TREFOLIO_BASE_URL` on Clara (production should use the Vercel origin alias when `trefolio.com` is Cloudflare-proxied) and `POST /api/internal/office/warren-chat` with the same `IDP_SERVICE_TOKEN`. `billingSource: "clara"` skips trefolio's `ai_consult` quota — the turn already consumed Clara's daily cap. Before `runWarrenTurn`, trefolio prefetches `GET {CLARA_BASE_URL}/api/internal/office/savings-summary` and injects an aggregated cashflow appendix (income/expenses/surplus/day of month — not line items) so Warren can talk capacity vs the portfolio. The `clara` channel omits `consultClaraSavings` to avoid a loop.
 
 ### Review checklist
 
