@@ -154,7 +154,7 @@ function persistSyncConfidence(positions: number, newTx: number, brokerNames: st
       positions,
       newTx,
       brokerNames,
-      ts: new Date().toISO.stringify(),
+      ts: new Date().toISOString(),
     }));
   } catch {
     // private browsing or storage quota exceeded
