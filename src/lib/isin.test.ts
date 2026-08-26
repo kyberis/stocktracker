@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractIsinFromUnknown, isNonUsIsin, looksLikeIsin } from "./isin";
+import { extractIsinFromUnknown, isinFromYahooSymbol, isNonUsIsin, looksLikeIsin } from "./isin";
 
 describe("looksLikeIsin", () => {
   it("accepts a 12-character ISIN", () => {
@@ -24,6 +24,14 @@ describe("isNonUsIsin", () => {
   it("is false for US ISINs and junk", () => {
     expect(isNonUsIsin("US0378331005")).toBe(false);
     expect(isNonUsIsin("BITC")).toBe(false);
+  });
+});
+
+describe("isinFromYahooSymbol", () => {
+  it("extracts a non-US ISIN from a venue-suffixed Yahoo symbol", () => {
+    expect(isinFromYahooSymbol("GB00BLD4ZL17.SG")).toBe("GB00BLD4ZL17");
+    expect(isinFromYahooSymbol("BITC.SW")).toBe("");
+    expect(isinFromYahooSymbol("US0378331005")).toBe("");
   });
 });
 

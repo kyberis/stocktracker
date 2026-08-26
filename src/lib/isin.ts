@@ -11,6 +11,12 @@ export function isNonUsIsin(isin: string): boolean {
   return looksLikeIsin(upper) && !upper.startsWith("US");
 }
 
+/** ISIN embedded in a Yahoo symbol (`GB00BLD4ZL17.SG` → `GB00BLD4ZL17`). */
+export function isinFromYahooSymbol(symbol: string): string {
+  const base = symbol.trim().split(".")[0] ?? "";
+  return isNonUsIsin(base) ? base.toUpperCase() : "";
+}
+
 /**
  * Pull an ISIN from broker/provider payloads. Prefers keys named `isin`/`ISIN`
  * at any depth (SnapTrade often nests it under `figi_instrument`).

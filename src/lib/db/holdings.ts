@@ -19,7 +19,12 @@ import { findOrCreateBrokerAccount } from "./accounts";
 import { resolvePortfolioId, healEmptyPortfolioIds, getDefaultPortfolio } from "./portfolios";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
-import { marketDataSymbolForHolding, normalizeHkYahooSymbol, isListingCollisionRemap } from "@/lib/market-symbol";
+import {
+  marketDataSymbolForHolding,
+  normalizeHkYahooSymbol,
+  isListingCollisionRemap,
+  shouldPreserveListingAgainstFigiRename,
+} from "@/lib/market-symbol";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import { convertToEUR, hasExchangeRate, resolveQuoteCurrency } from "@/lib/utils";
 
@@ -115,6 +120,36 @@ async function enrichValueInEUR(derived: Holding[]): Promise<void> {
           h.valueInEUR = costEUR;
         }
       }
+    }
+  }
+}
+
+export async function persistHoldingIsin(
+  userId: string,
+  holdingId: string,
+  isin: string,
+): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE holdings SET isin = ? WHERE id = ? AND user_id = ?",
+    args: [isin, holdingId, userId],
+  });
+}
+
+/** Re-quote after a sticky-ISIN remap and persist `value_in_eur`. */
+export async function reenrichHoldingsValueInEUR(
+  userId: string,
+  holdings: Holding[],
+): Promise<void> {
+  if (holdings.length === 0) return;
+  await enrichValueInEUR(holdings);
+  const client = await ensureInitialized();
+  for (const h of holdings) {
+    if (h.valueInEUR > 0) {
+      await client.execute({
+        sql: "UPDATE holdings SET value_in_eur = ? WHERE id = ? AND user_id = ?",
+        args: [h.valueInEUR, h.id, userId],
+      });
     }
   }
 }
@@ -522,12 +557,25 @@ export async function upsertHoldingsFromPositions(
       return match;
     };
 
+    const preserveListing = (match: ExistingMeta) =>
+      shouldPreserveListingAgainstFigiRename({
+        existingIsin: match.isin,
+        incomingTicker: ticker,
+        incomingExchange: exchange,
+      });
+
     // FIGI-based ticker rename detection: if no direct match but the FIGI
     // matches an existing holding, the security was renamed (e.g. VG → VGn).
+    // Do not unsuffix a row that already has a sticky non-US ISIN.
     if (!existing && pos.figiShareClass) {
       const figiMatch = existingByFigi.get(pos.figiShareClass);
       if (figiMatch) {
-        existing = await remapExisting(figiMatch, `FIGI ${pos.figiShareClass}`);
+        if (preserveListing(figiMatch)) {
+          existing = figiMatch;
+          touchedKeys.add(`${figiMatch.ticker.toUpperCase()}|${canonicalExchangeCode(figiMatch.exchange)}`);
+        } else {
+          existing = await remapExisting(figiMatch, `FIGI ${pos.figiShareClass}`);
+        }
       }
     }
 
@@ -535,7 +583,12 @@ export async function upsertHoldingsFromPositions(
     if (!existing) {
       for (const meta of existingByKey.values()) {
         if (isListingCollisionRemap(meta.ticker, ticker)) {
-          existing = await remapExisting(meta, "listing collision");
+          if (preserveListing(meta)) {
+            existing = meta;
+            touchedKeys.add(`${meta.ticker.toUpperCase()}|${canonicalExchangeCode(meta.exchange)}`);
+          } else {
+            existing = await remapExisting(meta, "listing collision");
+          }
           break;
         }
       }
@@ -543,6 +596,9 @@ export async function upsertHoldingsFromPositions(
 
     if (existing) {
       const figi = pos.figiShareClass || "";
+      const keepListing = preserveListing(existing);
+      const nextTicker = keepListing ? existing.ticker : ticker;
+      const nextExchange = keepListing ? existing.exchange : exchange;
       const nextIsin = pos.isin || existing.isin;
       const nextPurchasePrice =
         pos.purchasePrice > 0 ? pos.purchasePrice : existing.purchasePrice;
@@ -554,15 +610,15 @@ export async function upsertHoldingsFromPositions(
               figi_share_class = CASE WHEN ? != '' THEN ? ELSE figi_share_class END
               WHERE id = ? AND user_id = ?`,
         args: [
-          pos.shares, nextPurchasePrice, pos.displayCurrency, exchange,
-          nextIsin, ticker, pos.name, figi, figi, existing.id, userId,
+          pos.shares, nextPurchasePrice, pos.displayCurrency, nextExchange,
+          nextIsin, nextTicker, pos.name, figi, figi, existing.id, userId,
         ],
       });
       upserted.push({
-        id: existing.id, name: existing.name === ticker ? pos.name : existing.name,
-        ticker, isin: nextIsin, assetType: holdingAssetType(pos.assetType),
+        id: existing.id, name: existing.name === nextTicker ? pos.name : existing.name,
+        ticker: nextTicker, isin: nextIsin, assetType: holdingAssetType(pos.assetType),
         shares: pos.shares, purchasePrice: nextPurchasePrice,
-        displayCurrency: pos.displayCurrency, exchange,
+        displayCurrency: pos.displayCurrency, exchange: nextExchange,
         valueInEUR: 0, sector: existing.sector, region: existing.region,
         assetClass: existing.assetClass, accountId: existing.accountId,
         tags: existing.tags,

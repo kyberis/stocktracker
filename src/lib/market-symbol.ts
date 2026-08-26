@@ -163,6 +163,11 @@ function listingCollisionFor(input: {
   return LISTING_COLLISIONS.find((c) => c.baseTicker === base || (isin !== "" && c.isin === isin));
 }
 
+/** Known non-US ISIN for a namesake base ticker (e.g. BITC → CoinShares). */
+export function knownNonUsIsinForBaseTicker(ticker: string): string {
+  return listingCollisionFor({ ticker })?.isin ?? "";
+}
+
 export function isListingCollisionRemap(fromTicker: string, toTicker: string): boolean {
   const from = fromTicker.trim().toUpperCase();
   const to = toTicker.trim().toUpperCase();
@@ -214,8 +219,23 @@ export function disambiguateListing(input: {
 }
 
 /** Yahoo treats symbols with no `.` suffix as US listings. */
-function yahooSymbolIsUnsuffixed(ticker: string, exchange: string | null | undefined): boolean {
+export function yahooSymbolIsUnsuffixed(ticker: string, exchange: string | null | undefined): boolean {
   return !yahooSymbolFromTickerExchange(ticker, exchange).includes(".");
+}
+
+/**
+ * FIGI share-class match must not unsuffix a row that already has a non-US ISIN
+ * (broker-last namesake remap). Incoming SnapTrade ticker is the US namesake.
+ */
+export function shouldPreserveListingAgainstFigiRename(input: {
+  existingIsin: string;
+  incomingTicker: string;
+  incomingExchange: string;
+}): boolean {
+  return (
+    isNonUsIsin(input.existingIsin) &&
+    yahooSymbolIsUnsuffixed(input.incomingTicker, input.incomingExchange)
+  );
 }
 
 function shouldQuoteByIsin(h: {

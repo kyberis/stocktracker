@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.241",
+    date: "2026-08-27",
+    title: "Broker sync: map European namesakes by last price",
+    titleTranslations: {
+      es: "Sync de bróker: mapear homónimos europeos por último precio",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "When a broker last matches a European listing but Yahoo would quote a same-ticker US namesake (for example IBKR BITC / CoinShares vs NYSE Bitwise), trefolio stores that listing’s ISIN and keeps using the market last — not the broker last — for portfolio value.",
+        translations: {
+          es: "Si el último del bróker coincide con una cotización europea pero Yahoo cotizaría un homónimo USA con el mismo ticker (por ejemplo BITC de IBKR / CoinShares vs Bitwise de NYSE), trefolio guarda la ISIN de esa cotización y sigue usando el último de mercado — no el del bróker — para el valor de la cartera.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.240",
     date: "2026-08-26",
     title: "Home: invested vs cash, and broker vs market marks",
