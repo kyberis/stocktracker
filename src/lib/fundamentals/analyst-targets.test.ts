@@ -40,7 +40,6 @@ const overviewWithTarget = (price: number): CompanyOverview => ({
   twoHundredDayMA: null,
   sharesOutstanding: null,
   forwardPE: null,
-  histPeAvg: null,
 });
 
 beforeEach(() => {

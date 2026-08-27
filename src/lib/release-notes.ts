@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.246",
+    date: "2026-08-27",
+    title: "Warren: price moves + earnings catalysts",
+    titleTranslations: {
+      es: "Warren: movimientos de precio + catalizadores de resultados",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren no longer reports a stock price of 0 with a fabricated 52-week range when Yahoo has no valid quote, and for “why did X drop?” questions it resolves portfolio listings (e.g. Serabi → SRB.L), checks the earnings calendar / next report date, and grounds the answer in quote + news + catalysts.",
+        translations: {
+          es: "Warren ya no reporta precio 0 con un rango de 52 semanas inventado cuando Yahoo no tiene cotización válida, y ante “¿por qué bajó X?” resuelve el ticker del portfolio (p. ej. Serabi → SRB.L), consulta el calendario de resultados / próxima fecha de earnings y basa la respuesta en cotización + noticias + catalizadores.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.245",
     date: "2026-08-27",
     title: "Analyst target on home holdings",
@@ -25,7 +42,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "Home holdings list now shows the shared analyst consensus target price next to each stock or ETF, sourced from the global fundamentals cache.",
         translations: {
           es: "La lista de holdings en la home muestra ahora el precio objetivo de consenso de analistas junto a cada acción o ETF, desde la caché global de fundamentals.",
