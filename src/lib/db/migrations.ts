@@ -4672,6 +4672,53 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 153,
+    description:
+      "Pause empty_activation, seed warren_first_stock draft, enable lifecycle activation email",
+    up: async (client: Client) => {
+      await client.execute(`
+        UPDATE experiments
+           SET status = 'paused', updated_at = datetime('now')
+         WHERE key = 'empty_activation'
+           AND status IN ('draft', 'running')
+      `);
+
+      const existing = await client.execute({
+        sql: "SELECT id FROM experiments WHERE key = ?",
+        args: ["warren_first_stock"],
+      });
+      if (existing.rows.length === 0) {
+        await client.execute({
+          sql: `INSERT INTO experiments (
+                  id, key, name, description, status, variants_json, metrics_json
+                ) VALUES (?, ?, ?, ?, 'draft', ?, ?)`,
+          args: [
+            "exp_warren_first_stock",
+            "warren_first_stock",
+            "Warren first-stock activation",
+            "Control (current empty import/add) vs Warren left panel with a prefilled add-stock example after onboarding skip. Leave draft until Launch in admin.",
+            JSON.stringify([
+              { key: "control", weight: 30 },
+              { key: "warren_first_stock", weight: 70 },
+            ]),
+            JSON.stringify([
+              "first_stock_activation_shown",
+              "first_stock_example_sent",
+              "holding_add",
+              "portfolio_import",
+            ]),
+          ],
+        });
+      }
+
+      await client.execute({
+        sql: `INSERT INTO platform_settings (key, value) VALUES (?, ?)
+              ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        args: ["lifecycle_activation_email_enabled", "true"],
+      });
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -9,7 +9,7 @@
 ## 2. Status
 
 - **Tier:** system (cron)
-- **Feature flag:** `commerce_enabled` + `pro_trial_enabled` (invites); `lifecycle_activation_email_enabled`; `lifecycle_winback_email_enabled`
+- **Feature flag:** `commerce_enabled` + `pro_trial_enabled` (invites); `lifecycle_activation_email_enabled` (on by default); `lifecycle_winback_email_enabled`
 - **Health:** green
 - **Owning skill:** [`engineer-payments-subscriptions`](../../.cursor/skills/engineer-payments-subscriptions/SKILL.md)
 

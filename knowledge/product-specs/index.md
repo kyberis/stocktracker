@@ -122,6 +122,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [warren-investing-knowledge](warren-investing-knowledge.md) — curated investing-concepts library exposed to Warren as a tool.
 - [warren-valuation](warren-valuation.md) — share-level fundamentals cache + cheap/fair/expensive label for Warren.
 - [warren-empty-add-stock](warren-empty-add-stock.md) — empty-portfolio Warren: add-stock + import tools + 10-chat / 15-min cooldown.
+- [warren-first-stock](warren-first-stock.md) — A/B post-onboarding skip: control empty home vs left Warren with a prefilled first-stock example.
 - [warren-import](warren-import.md) — import CSV / SnapTrade / AI through Warren using the same `/import` pipelines.
 - [warren-telegram-bot](warren-telegram-bot.md) — Warren accessible via Telegram (text + voice).
 - [agent-office](agent-office.md) — Pro workspace where Warren, Clara, and Will coordinate missions (`/office`).

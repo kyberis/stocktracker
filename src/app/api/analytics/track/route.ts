@@ -19,6 +19,8 @@ const ALLOWED_EVENTS = new Set([
   "agent_intro_skipped",
   "agent_intro_post_action",
   "display_invariant_violation",
+  "first_stock_activation_shown",
+  "first_stock_example_sent",
 ]);
 
 const schema = z.object({

@@ -7,6 +7,8 @@ import { ThemeProvider } from "@/lib/theme-context";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { I18nProvider, useI18n } from "@/lib/i18n";
 import { FeatureFlagProvider, useFeatureFlag, useFeatureFlagContext } from "@/lib/feature-flag-context";
+import { shouldRedirectCompletedOnboarding } from "@/lib/onboarding-import-phase";
+import { skipOnboardingHomePath } from "@/lib/warren-first-stock";
 import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
 import { COUNTRIES } from "@/lib/countries";
 import { getBrokersForCountry } from "@/lib/country-brokers";
@@ -523,7 +525,7 @@ const IMPORT_REDIRECTS: Record<ImportChoice, string> = {
   broker_sync: "/import?method=snaptrade_api",
   csv: "/import?method=broker_csv",
   ai: "/import?method=ai_import",
-  skip: "/",
+  skip: skipOnboardingHomePath(),
 };
 
 type OnboardingPhase = "wizard" | "importProposal";
@@ -545,6 +547,7 @@ function OnboardingContent() {
   const [referralSource, setReferralSource] = useState<ReferralSourceOption | "">("");
   const [saving, setSaving] = useState(false);
   const autoCompleteRef = useRef(false);
+  const stayingForImportRef = useRef(false);
 
   const showTrialStep = flagsLoaded && trialEnabled && commerceEnabled && !user?.trialActivatedAt;
 
@@ -553,7 +556,13 @@ function OnboardingContent() {
   }, [user?.displayName]);
 
   useEffect(() => {
-    if (user?.onboardingCompleted && phase !== "importProposal") {
+    if (
+      shouldRedirectCompletedOnboarding({
+        onboardingCompleted: !!user?.onboardingCompleted,
+        phase,
+        stayingForImport: stayingForImportRef.current,
+      })
+    ) {
       router.replace("/");
     }
   }, [user?.onboardingCompleted, phase, router]);
@@ -578,8 +587,9 @@ function OnboardingContent() {
         body: JSON.stringify(body),
       });
       if (res.ok) {
-        await refreshUser();
+        stayingForImportRef.current = true;
         setPhase("importProposal");
+        await refreshUser();
       }
     } catch {
       // Allow retry
@@ -603,6 +613,7 @@ function OnboardingContent() {
   }, [phase, step, flagsLoaded, showTrialStep, saving, completeOnboarding]);
 
   const handleImportChoice = useCallback(async (importMethod: ImportChoice) => {
+    stayingForImportRef.current = false;
     await fetch("/api/analytics/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

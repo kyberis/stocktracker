@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.248",
+    date: "2026-08-27",
+    title: "First-stock activation experiment",
+    titleTranslations: {
+      es: "Experimento de activación de la primera acción",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Onboarding no longer skips the import chooser after setup completes (race between session refresh and the import step).",
+        translations: {
+          es: "El onboarding ya no salta el selector de importación al terminar el setup (carrera entre refrescar la sesión y el paso de importar).",
+        },
+      },
+      {
+        type: "feature",
+        text: "New A/B experiment warren_first_stock (draft until Launch): control keeps the empty import/add home; treatment opens Warren on the left with a prefilled “add 7 shares of Apple” example after onboarding skip. Warren may ask which market, then saves the holding. Not financial advice. The previous empty_activation A/B/C is paused. Users with no holdings ~48h after signup now receive the welcome-no-stocks email.",
+        translations: {
+          es: "Nuevo experimento A/B warren_first_stock (borrador hasta Launch): el control mantiene el empty de importar/añadir; el treatment abre Warren a la izquierda con un ejemplo de “añade 7 acciones de Apple” tras saltar el import. Warren puede preguntar el mercado y luego guarda la posición. No es asesoramiento financiero. El A/B/C empty_activation queda en pausa. Quien no tenga holdings ~48h después del alta recibe el email welcome-no-stocks.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.247",
     date: "2026-08-27",
     title: "ETF analysis landings",

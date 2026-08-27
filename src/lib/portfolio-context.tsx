@@ -59,6 +59,7 @@ interface PortfolioContextType {
   isInitializing: boolean;
   isRefreshing: boolean;
   error: string | null;
+  clearError: () => void;
   portfolios: PortfolioInfo[];
   activePortfolioId: string | null;
   activePortfolioCurrency: string;
@@ -203,6 +204,7 @@ export function PortfolioProvider({
   const [isInitializing, setIsInitializing] = useState(!demoMode && !hasInitialQuotes);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const clearError = useCallback(() => setError(null), []);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(demoMode ? new Date() : null);
   const [holdingsLastFetchedAt, setHoldingsLastFetchedAt] = useState<Date | null>(
     (demoMode || initialHoldings) ? new Date() : null
@@ -1042,6 +1044,7 @@ export function PortfolioProvider({
       isInitializing,
       isRefreshing,
       error,
+      clearError,
       portfolios,
       activePortfolioId,
       activePortfolioCurrency,
@@ -1076,7 +1079,7 @@ export function PortfolioProvider({
     }),
     [
       holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,
-      isLoading, isInitializing, isRefreshing, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, mutationVersion, setActivePortfolio, fetchPortfolios,
+      isLoading, isInitializing, isRefreshing, error, clearError, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, mutationVersion, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, moveToPortfolio, refreshHoldings, refreshQuotes, refreshSingleQuote,
       refreshAlertedTickers, hydrateMarketData, hydratePortfolioBook, hydrateAnalystTargets,

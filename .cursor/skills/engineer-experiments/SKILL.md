@@ -108,4 +108,6 @@ Demo / unauthenticated: pass `forceVariant: "control"` or `enabled: false`.
 > When `draft`/`archived`, resolve returns **control**. When `paused`, sticky is kept but new users are not assigned. Launch when ready to measure.
 ## Reference consumer
 
-`empty_activation` — `src/components/EmptyPortfolio.tsx` variants `control` | `portfolio_first` | `job_chooser`, metrics `empty_activation_cta`, `holding_add`.
+`empty_activation` — paused. `EmptyPortfolio` now always renders the control import/add layout.
+
+`warren_first_stock` — `src/components/homepage/HomeV2Dashboard.tsx` variants `control` (30) | `warren_first_stock` (70), metrics `first_stock_activation_shown`, `first_stock_example_sent`, `holding_add`, `portfolio_import`. Leave draft until Launch.

@@ -52,7 +52,7 @@ Internal dashboards built on `analytics_events`. Shows counts and trends; comple
 
 ## 15. Related skills and rules
 - [`analytics-instrumentation`](../../.cursor/skills/analytics-instrumentation/SKILL.md)
-- Related specs: [admin-ai-logs](admin-ai-logs.md).
+- Related specs: [admin-ai-logs](admin-ai-logs.md), [warren-first-stock](warren-first-stock.md).
 
 ## 16. Open questions / planned work
 - Cohort retention charts.

@@ -181,6 +181,38 @@ function AdminExperimentPreviewInner() {
             onAskWarren={(prompt) => showToast(`Preview Warren: ${prompt.slice(0, 80)}`)}
           />
         </div>
+      ) : keyParam === "warren_first_stock" ? (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-600 dark:text-slate-300">
+            {variantParam === "warren_first_stock" ? (
+              <>
+                Treatment preview: open{" "}
+                <Link
+                  href="/?activateFirstStock=1"
+                  className="text-indigo-600 dark:text-indigo-400"
+                >
+                  Home with first-stock flag
+                </Link>{" "}
+                in this tab (session override is already set). Warren opens on the left with a
+                prefilled Apple example. Does not auto-send.
+              </>
+            ) : (
+              <>
+                Control is the current empty import/add surface. Preview override is set — open{" "}
+                <Link href="/" className="text-indigo-600 dark:text-indigo-400">
+                  Home
+                </Link>{" "}
+                or use the empty state below.
+              </>
+            )}
+          </p>
+          <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-2 sm:p-4">
+            <EmptyPortfolio
+              onAddStock={() => showToast("Preview: Add stock (no-op)")}
+              onAskWarren={(prompt) => showToast(`Preview Warren: ${prompt.slice(0, 80)}`)}
+            />
+          </div>
+        </div>
       ) : keyParam === "agent_intro" && (variantParam === "convergence" || variantParam === "briefing") ? (
         <div className="space-y-3">
           <p className="text-sm text-gray-600 dark:text-slate-300">

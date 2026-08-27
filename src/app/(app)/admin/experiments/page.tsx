@@ -74,8 +74,8 @@ export default function AdminExperimentsPage() {
     key: "",
     name: "",
     description: "",
-    variantsText: "control:34\nportfolio_first:33\njob_chooser:33",
-    metricsText: "empty_activation_cta,holding_add",
+    variantsText: "control:30\nwarren_first_stock:70",
+    metricsText: "first_stock_activation_shown,first_stock_example_sent,holding_add,portfolio_import",
   });
 
   const [editName, setEditName] = useState("");

@@ -262,7 +262,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       client.execute({
         sql: `SELECT event, COUNT(DISTINCT user_id) as cnt
               FROM analytics_events
-              WHERE event IN ('signup', 'paywall_shown', 'upgrade_compare_shown', 'upgrade_compare_clicked', 'billing_checkout_started', 'billing_checkout_completed', 'onboarding_trial_shown', 'onboarding_trial_activated', 'onboarding_trial_skipped', 'account_delete_started', 'account_deleted')
+              WHERE event IN ('signup', 'paywall_shown', 'upgrade_compare_shown', 'upgrade_compare_clicked', 'billing_checkout_started', 'billing_checkout_completed', 'onboarding_trial_shown', 'onboarding_trial_activated', 'onboarding_trial_skipped', 'account_delete_started', 'account_deleted', 'onboarding_import_method', 'first_stock_activation_shown', 'empty_activation_cta', 'holding_add', 'portfolio_import')
                 AND created_at >= datetime('now', ?)
               GROUP BY event`,
         args: [daysArg],
@@ -442,6 +442,11 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
     },
     funnel: [
       { stage: "Signups", count: funnelMap.get("signup") ?? 0 },
+      { stage: "Onboarding import choice", count: funnelMap.get("onboarding_import_method") ?? 0 },
+      { stage: "First-stock shown", count: funnelMap.get("first_stock_activation_shown") ?? 0 },
+      { stage: "Empty activation CTA", count: funnelMap.get("empty_activation_cta") ?? 0 },
+      { stage: "Holding added", count: funnelMap.get("holding_add") ?? 0 },
+      { stage: "Portfolio imported", count: funnelMap.get("portfolio_import") ?? 0 },
       { stage: "Trial Offer Shown", count: funnelMap.get("onboarding_trial_shown") ?? 0 },
       { stage: "Trial Activated", count: funnelMap.get("onboarding_trial_activated") ?? 0 },
       { stage: "Trial Skipped", count: funnelMap.get("onboarding_trial_skipped") ?? 0 },

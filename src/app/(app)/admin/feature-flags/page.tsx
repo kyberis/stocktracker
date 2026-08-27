@@ -51,7 +51,7 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
   },
   lifecycle_activation_email_enabled: {
     label: "Lifecycle: activation email",
-    description: "Sends the welcome-no-stocks email to users with 0 holdings ~48h after signup. Off by default.",
+    description: "Sends the welcome-no-stocks email to users with 0 holdings ~48h after signup. On by default.",
     group: "Features",
   },
   lifecycle_winback_email_enabled: {

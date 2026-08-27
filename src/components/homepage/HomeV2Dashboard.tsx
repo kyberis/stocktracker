@@ -31,7 +31,15 @@ import ScreeningBetaBanner from "@/components/screening/ScreeningBetaBanner";
 import { RealEstateScreeningCta } from "@/components/real-estate-screening/RealEstateScreeningCta";
 import AgentIntroGate from "@/components/agent-intro/AgentIntroGate";
 import { AGENT_INTRO_EXPERIMENT_KEY } from "@/lib/agent-intro";
-import { useExperiment } from "@/lib/use-experiment";
+import { useExperiment, trackExperimentEvent } from "@/lib/use-experiment";
+import {
+  DEFAULT_FIRST_STOCK_PRICE,
+  WARREN_FIRST_STOCK_EXPERIMENT_KEY,
+  formatFirstStockExample,
+  readActivateFirstStockFlag,
+  shouldOpenWarrenFirstStock,
+  stripActivateFirstStockSearch,
+} from "@/lib/warren-first-stock";
 import {
   useAgentIntroEngagementReady,
   useAgentIntroPostAction,
@@ -81,7 +89,7 @@ export default function HomeV2Dashboard() {
   const { t } = useI18n();
   const track = useTrack();
   const isMobile = useIsMobileViewport();
-  const { holdings, cashEntries, isInitializing, demoMode, hydrateMarketData, hydratePortfolioBook, hydrateAnalystTargets, activePortfolioId } =
+  const { holdings, cashEntries, quotes, isInitializing, demoMode, hydrateMarketData, hydratePortfolioBook, hydrateAnalystTargets, activePortfolioId } =
     usePortfolio();
   const { gatedAdd } = usePortfolioCommand();
   // Bootstrap must start immediately (not wait for quote init) so it can win the
@@ -101,6 +109,9 @@ export default function HomeV2Dashboard() {
   const home = usePortfolioHomeData({ holdings, cashEntries: investmentCash });
   const [aiOpen, setAiOpen] = useState(false);
   const [warrenPrompt, setWarrenPrompt] = useState<string | undefined>();
+  const [activateFirstStockFlag, setActivateFirstStockFlag] = useState(false);
+  const [warrenSide, setWarrenSide] = useState<"left" | "right">("right");
+  const firstStockShownRef = useRef(false);
   // Always start simple — do not restore advanced from localStorage on mount
   // (avoids history=all + txs on cold load). Preference is written on click.
   const [heroMode, setHeroMode] = useState<HeroMode>("simple");
@@ -161,6 +172,40 @@ export default function HomeV2Dashboard() {
   // Empty only after portfolio data is loaded — avoids EmptyPortfolio flash while holdings fetch.
   const isEmpty =
     !isInitializing && holdings.length === 0 && cashEntries.length === 0;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!readActivateFirstStockFlag(window.location.search)) return;
+    setActivateFirstStockFlag(true);
+    const stripped = stripActivateFirstStockSearch(window.location.search);
+    window.history.replaceState(null, "", `${window.location.pathname}${stripped}`);
+  }, []);
+
+  const firstStockExperiment = useExperiment(WARREN_FIRST_STOCK_EXPERIMENT_KEY, {
+    enabled: aidEnabled && isEmpty,
+  });
+  const firstStockMode = shouldOpenWarrenFirstStock({
+    demoMode,
+    isEmpty,
+    activateFlag: activateFirstStockFlag,
+    variant: firstStockExperiment.variant,
+    loading: firstStockExperiment.loading,
+  });
+
+  const applePrice = quotes.AAPL?.regularMarketPrice ?? DEFAULT_FIRST_STOCK_PRICE;
+  const firstStockExample = formatFirstStockExample(t("warrenFirstStockExample"), applePrice);
+
+  useEffect(() => {
+    if (!firstStockMode) return;
+    setAiOpen(true);
+    setWarrenSide("left");
+    if (firstStockShownRef.current || firstStockExperiment.previewing) return;
+    firstStockShownRef.current = true;
+    void trackExperimentEvent("first_stock_activation_shown", {
+      experiment: WARREN_FIRST_STOCK_EXPERIMENT_KEY,
+      variant: firstStockExperiment.variant,
+    });
+  }, [firstStockMode, firstStockExperiment.previewing, firstStockExperiment.variant]);
 
   const [introVisible, setIntroVisible] = useState(!demoMode);
 
@@ -474,7 +519,7 @@ export default function HomeV2Dashboard() {
     <>
       <AgentIntroGate
         isEmpty={isEmpty}
-        demoMode={demoMode}
+        demoMode={demoMode || firstStockMode}
         dashboardReady={!isInitializing}
         onIntroDismissed={() => setIntroDismissed(true)}
         onIntroVisibilityChange={setIntroVisible}
@@ -494,9 +539,25 @@ export default function HomeV2Dashboard() {
       )}
       <WarrenDrawer
         isOpen={aiOpen}
+        side={warrenSide}
+        emptyGreeting={warrenSide === "left" ? t("warrenFirstStockGreeting") : undefined}
+        initialComposerValue={warrenSide === "left" ? firstStockExample : undefined}
+        pinnedExamplePrompt={warrenSide === "left" ? firstStockExample : undefined}
+        pinnedExampleLabel={warrenSide === "left" ? t("warrenFirstStockTryExample") : undefined}
+        onPinnedExampleSend={
+          warrenSide === "left"
+            ? () => {
+                void trackExperimentEvent("first_stock_example_sent", {
+                  experiment: WARREN_FIRST_STOCK_EXPERIMENT_KEY,
+                  variant: firstStockExperiment.variant,
+                });
+              }
+            : undefined
+        }
         onClose={() => {
           setAiOpen(false);
           setWarrenPrompt(undefined);
+          setWarrenSide("right");
         }}
         triggerPrompt={warrenPrompt}
         onTriggerPromptConsumed={() => setWarrenPrompt(undefined)}
