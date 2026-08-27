@@ -12,7 +12,12 @@ vi.mock("./portfolio-holding-intent", () => ({
   buildPortfolioHoldingPrefetchAppendix: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock("./price-move-intent", () => ({
+  buildPriceMovePrefetchAppendix: vi.fn().mockResolvedValue(null),
+}));
+
 import { buildWarrenPrefetchAppendix } from "./warren-prefetch-appendix";
+import { buildPriceMovePrefetchAppendix } from "./price-move-intent";
 
 describe("buildWarrenPrefetchAppendix", () => {
   it("prefers conversation-progress over a fresh valuation fetch", async () => {
@@ -37,5 +42,15 @@ describe("buildWarrenPrefetchAppendix", () => {
       userId: "u1",
     });
     expect(appendix).toContain("Call `analyzeValuation` ONCE");
+  });
+
+  it("injects price-move appendix when that intent fires", async () => {
+    vi.mocked(buildPriceMovePrefetchAppendix).mockResolvedValueOnce(
+      "TASK OVERRIDE — Price-move / catalyst question detected:\nCall getMarketCatalysts",
+    );
+    const appendix = await buildWarrenPrefetchAppendix("Porque Sarabi gold bajo?", {
+      userId: "u1",
+    });
+    expect(appendix).toContain("getMarketCatalysts");
   });
 });
