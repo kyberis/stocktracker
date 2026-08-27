@@ -1,0 +1,44 @@
+{
+  "year": 2026,
+  "currency": "EUR",
+  "vacancia": 0.07,
+  "mantenimientoSobreRenta": 0.05,
+  "impostoSeloPct": 0.008,
+  "gastosRegistroEur": 2000,
+  "imiPctSobrePrecio": 0.003,
+  "seguroAnualEur": 250,
+  "condominioMensualEur": 80,
+  "rendaModeradaTasa": 0.1,
+  "rsaaTasa": 0,
+  "irsGeralTasa": 0.28,
+  "rsaaTopeSobreMedianaM2": 0.8,
+  "tipos": {
+    "variavel": 0.035,
+    "fixa": 0.042,
+    "stressAddPp": 0.02
+  },
+  "tirEscenariosPct": [4, 2, 0, -10],
+  "imtSegundaVivienda": {
+    "brackets": [
+      { "upTo": 101917, "rate": 0.01, "deduct": 0 },
+      { "upTo": 139412, "rate": 0.02, "deduct": 1019.17 },
+      { "upTo": 190086, "rate": 0.05, "deduct": 5201.53 },
+      { "upTo": 316772, "rate": 0.07, "deduct": 9003.25 },
+      { "upTo": 633453, "rate": 0.08, "deduct": 12170.97 },
+      { "upTo": 1102920, "rate": 0.06, "deduct": 0 },
+      { "upTo": null, "rate": 0.075, "deduct": 0 }
+    ]
+  },
+  "imtPrimeraVivienda": {
+    "brackets": [
+      { "upTo": 101917, "rate": 0, "deduct": 0 },
+      { "upTo": 139412, "rate": 0.02, "deduct": 2038.34 },
+      { "upTo": 190086, "rate": 0.05, "deduct": 6220.7 },
+      { "upTo": 316772, "rate": 0.07, "deduct": 10022.42 },
+      { "upTo": 607628, "rate": 0.08, "deduct": 13190.14 },
+      { "upTo": 1102920, "rate": 0.06, "deduct": 0 },
+      { "upTo": null, "rate": 0.075, "deduct": 0 }
+    ]
+  },
+  "notes": "Update each fiscal year. IMT brackets follow AT tables for urban dwellings; 0.8% stamp duty is Imposto do Selo. RSAA 0% requires rent at or below 80% of the municipal INE median €/m² × area."
+}

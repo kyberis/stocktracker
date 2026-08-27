@@ -34,3 +34,5 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `coverage-reconcile` | `15 2 * * 0` | `/api/cron/coverage-reconcile` | Weekly backup: flag holdings without Yahoo/FIGI quote coverage (primary heal is refresh-holdings) |
 | `portfolio-anomaly-scan` | `15 3 * * *` | `/api/cron/portfolio-anomaly-scan` | Scan portfolios with ≥1 holding for data anomalies; persist findings, LLM explain, enqueue ProdOps alerts |
 | `screening-recover` | `*/5 * * * *` | `/api/cron/screening-recover` | Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain |
+| `re-zona-sync` | `0 4 1 1,4,7,10 *` | `/api/cron/re-zona-sync` | Sync Portugal INE geography catalogue (sale/rent coverage flags) for real-estate zone screening |
+| `re-screening-recover` | `*/5 * * * *` | `/api/cron/re-screening-recover` | Real-estate zone screening: recover expired step leases and drain pending phases |

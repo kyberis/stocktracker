@@ -54,6 +54,8 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/cron/aid-finpulse",
   "/api/cron/coverage-reconcile",
   "/api/cron/screening-recover",
+  "/api/cron/re-zona-sync",
+  "/api/cron/re-screening-recover",
   "/api/cron/support-return-watch",
   "/api/cron/portfolio-anomaly-scan",
   // ProdOps Telegram /start callback — HMAC auth is enforced inside the route.

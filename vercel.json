@@ -26,6 +26,8 @@
     { "path": "/api/cron/aid-finpulse", "schedule": "0 */6 * * *" },
     { "path": "/api/cron/coverage-reconcile", "schedule": "15 2 * * 0" },
     { "path": "/api/cron/portfolio-anomaly-scan", "schedule": "15 3 * * *" },
-    { "path": "/api/cron/screening-recover", "schedule": "*/5 * * * *" }
+    { "path": "/api/cron/screening-recover", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/re-zona-sync", "schedule": "0 4 1 1,4,7,10 *" },
+    { "path": "/api/cron/re-screening-recover", "schedule": "*/5 * * * *" }
   ]
 }

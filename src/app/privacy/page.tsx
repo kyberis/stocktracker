@@ -311,6 +311,12 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>Provide AI-powered support chat (your messages and optional portfolio summary are sent to OpenAI; see Section 5). Support chat conversations are stored for up to 90 days to enable admin review and improve support quality.</li>
               <li>
+                When you use optional Portugal real-estate zone screening, we store the zones you
+                selected, the budget and mortgage parameters you entered, and the resulting
+                analysis so you can reopen the report. We fetch public INE statistics using
+                geography codes only — we do not send your account identifiers to INE.
+              </li>
+              <li>
                 When you connect an MCP client to trefolio using a personal access token,
                 we validate that token with our identity service over TLS, map it to your
                 local account, and return portfolio or tool data you request via MCP
@@ -453,6 +459,14 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3 pr-6">Yahoo Finance</td>
                     <td className="py-3 pr-6">Market data</td>
                     <td className="py-3">Stock ticker symbols requested</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">Statistics Portugal (INE)</td>
+                    <td className="py-3 pr-6">Official local housing price and rent medians for optional zone screening</td>
+                    <td className="py-3">
+                      Public geography codes (geocod) and indicator identifiers only. No account
+                      identifiers, email, or portfolio holdings are sent.
+                    </td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Alpha Vantage</td>

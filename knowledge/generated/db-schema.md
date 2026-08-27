@@ -73,6 +73,12 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `private_chat_rooms` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `push_subscriptions` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `rate_limits` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `re_ine_cache` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `re_listing_cache` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `re_screening_results` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `re_screening_runs` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `re_screening_steps` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `re_zona_catalogo` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `rebalance_targets` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `referrals` | [`src/lib/db/email-template-seeds.ts`](../../src/lib/db/email-template-seeds.ts) |
 | `refund_requests` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
