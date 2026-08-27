@@ -37,6 +37,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
     refreshingTickers,
     exchangeRates,
     activePortfolioCurrency,
+    analystTargets,
   } = usePortfolio();
   const { t } = useI18n();
   const { layoutTheme } = useTheme();
@@ -151,13 +152,26 @@ function StockRow({ holding, onSelect }: StockRowProps) {
   }, [handleClick]);
 
   const awaitingQuote = !hasQuote && !isCashHolding;
-  const priceInfo = `${holding.exchange ? `${holding.exchange} | ` : ""}${holding.ticker} | ${hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × ${holding.shares}`;
+  const analystTarget = analystTargets[holding.ticker];
+  const analystTargetSegment = analystTarget
+    ? t("homeAnalystTargetInline").replace(
+        "{price}",
+        formatCurrency(analystTarget.price, analystTarget.currency),
+      )
+    : null;
+  const priceInfo = [
+    `${holding.exchange ? `${holding.exchange} | ` : ""}${holding.ticker} | ${hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × ${holding.shares}`,
+    analystTargetSegment,
+  ]
+    .filter(Boolean)
+    .join(" | ");
   // Same info but with bullet separators; used by the default (clean) layout so
   // the row sits on a single visual baseline with the hero/column headers.
   const priceInfoDefault = [
     holding.ticker,
     holding.exchange || null,
     `${hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × ${holding.shares}`,
+    analystTargetSegment,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -171,7 +185,12 @@ function StockRow({ holding, onSelect }: StockRowProps) {
         ? `${formatPercent(totalReturnPct)}`
         : `${totalReturnIsPositive ? "+" : ""}${formatCurrency(totalReturnAbsBase, baseCurrency)}`
     : "--";
-  const rowLabel = `${holding.name}, ${formatCurrency(totalValueBase, baseCurrency)}, ${dayText}`;
+  const rowLabel = [
+    `${holding.name}, ${formatCurrency(totalValueBase, baseCurrency)}, ${dayText}`,
+    analystTargetSegment ? `${t("analystTarget")}: ${formatCurrency(analystTarget!.price, analystTarget!.currency)}` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
   const assetTypeBadge = holding.assetType === "crypto" ? (
     <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 shrink-0">CRYPTO</span>
   ) : holding.assetType === "etf" ? (
@@ -251,7 +270,10 @@ function StockRow({ holding, onSelect }: StockRowProps) {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-2xl font-bold text-slate-900">{awaitingQuote ? <span className="inline-block h-7 w-24 rounded bg-slate-200 animate-pulse align-middle" /> : formatCurrency(totalValueBase, baseCurrency)}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × {holding.shares}</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × {holding.shares}
+              {analystTargetSegment ? ` · ${analystTargetSegment}` : ""}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Sparkline ticker={holding.ticker} width={56} height={20} positive={hasQuote ? dayIsPositive : undefined} className="shrink-0" />

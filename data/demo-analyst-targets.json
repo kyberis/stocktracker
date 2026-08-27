@@ -1,0 +1,21 @@
+{
+  "ADBE": { "price": 550, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "NVO": { "price": 140, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "TSM": { "price": 220, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "GOOGL": { "price": 210, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "AMZN": { "price": 240, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "BRK-B": { "price": 480, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "CVX": { "price": 175, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "KHC": { "price": 38, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "MAIN": { "price": 48, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "NNN": { "price": 46, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "OXY": { "price": 68, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "PFE": { "price": 32, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "O": { "price": 62, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "VZ": { "price": 48, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "IB01": { "price": 118, "currency": "USD", "updatedAt": "2026-01-15 12:00:00" },
+  "ITX.MC": { "price": 42, "currency": "EUR", "updatedAt": "2026-01-15 12:00:00" },
+  "NA9.DE": { "price": 95, "currency": "EUR", "updatedAt": "2026-01-15 12:00:00" },
+  "NOVO-B.CO": { "price": 620, "currency": "DKK", "updatedAt": "2026-01-15 12:00:00" },
+  "SRB.L": { "price": 520, "currency": "GBp", "updatedAt": "2026-01-15 12:00:00" }
+}

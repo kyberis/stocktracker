@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.245",
+    date: "2026-08-27",
+    title: "Analyst target on home holdings",
+    titleTranslations: {
+      es: "Precio objetivo en holdings de la home",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Home holdings list now shows the shared analyst consensus target price next to each stock or ETF, sourced from the global fundamentals cache.",
+        translations: {
+          es: "La lista de holdings en la home muestra ahora el precio objetivo de consenso de analistas junto a cada acción o ETF, desde la caché global de fundamentals.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.244",
     date: "2026-08-27",
     title: "Analysis page: CoinShares BITC, not NYSE Bitwise",

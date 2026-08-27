@@ -81,7 +81,7 @@ export default function HomeV2Dashboard() {
   const { t } = useI18n();
   const track = useTrack();
   const isMobile = useIsMobileViewport();
-  const { holdings, cashEntries, isInitializing, demoMode, hydrateMarketData, hydratePortfolioBook, activePortfolioId } =
+  const { holdings, cashEntries, isInitializing, demoMode, hydrateMarketData, hydratePortfolioBook, hydrateAnalystTargets, activePortfolioId } =
     usePortfolio();
   const { gatedAdd } = usePortfolioCommand();
   // Bootstrap must start immediately (not wait for quote init) so it can win the
@@ -111,6 +111,7 @@ export default function HomeV2Dashboard() {
   const returnTracked = useRef(false);
   const hydratedBookKey = useRef<string | null>(null);
   const hydratedQuotesKey = useRef<string | null>(null);
+  const hydratedAnalystTargetsKey = useRef<string | null>(null);
   const showClassicLink = isLoaded && !!flags.classic_home;
 
   const holdingsTickerSig = useMemo(
@@ -135,6 +136,15 @@ export default function HomeV2Dashboard() {
     hydratedQuotesKey.current = quotesKey;
     hydrateMarketData(payload.quotes, payload.exchangeRates);
   }, [bootstrap.data, hydrateMarketData, holdingsTickerSig, activePortfolioId]);
+
+  useEffect(() => {
+    const payload = bootstrap.data;
+    if (!payload?.analystTargets) return;
+    const key = `${payload.asOf}|${holdingsTickerSig}|${activePortfolioId ?? ""}|analyst`;
+    if (hydratedAnalystTargetsKey.current === key) return;
+    hydratedAnalystTargetsKey.current = key;
+    hydrateAnalystTargets(payload.analystTargets);
+  }, [bootstrap.data, hydrateAnalystTargets, holdingsTickerSig, activePortfolioId]);
 
   function setAndPersistHeroMode(mode: HeroMode) {
     setHeroMode(mode);
