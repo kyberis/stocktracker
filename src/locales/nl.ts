@@ -133,6 +133,7 @@ const nl: TranslationStrings = {
   profitMargin: "Winstmarge",
   returnOnEquity: "ROE",
   analystTarget: "Analistentarget",
+  homeAnalystTargetInline: "Doel {price}",
   analystRatings: "Analistenbeoordelingen",
   forwardPE: "Forward KGV",
   fiftyDayMA: "50D MA",
