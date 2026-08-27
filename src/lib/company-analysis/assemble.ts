@@ -1,6 +1,7 @@
 import type {
   CompanyOverview,
   EarningsReport,
+  ETFHoldingsData,
   FundamentalData,
   IncomeStatementReport,
   InsiderTransaction,
@@ -25,8 +26,11 @@ import type {
   CompanyAnalysisReport,
   CompanyAnalysisSource,
   CompanyAnalysisTechnicals,
+  CompanyAnalysisEtf,
+  CompanyAnalysisInstrumentKind,
   FundamentalRow,
 } from "./types";
+import { isEtfInstrument } from "./instrument";
 
 function daysAgo(n: number): Date {
   const d = new Date();
@@ -63,6 +67,7 @@ export function mapQuote(
     ma50: overview?.fiftyDayMA ?? null,
     ma200: overview?.twoHundredDayMA ?? null,
     currency: q?.currency ?? overview?.currency ?? null,
+    quoteType: q?.quoteType ?? null,
   };
 }
 
@@ -289,6 +294,7 @@ export function buildNews(
   ticker: string,
   companyName: string | null,
   fundamentals: CompanyAnalysisFundamentals,
+  opts?: { includeEarnings?: boolean },
 ): { status: "ok" | "unavailable"; items: CompanyAnalysisNewsItem[] } {
   if (!articles) return { status: "unavailable", items: [] };
 
@@ -344,7 +350,13 @@ export function buildNews(
     });
   }
 
-  return { status: "ok", items: [earningsItem, ...others].slice(0, 3) };
+  return {
+    status: "ok",
+    items:
+      opts?.includeEarnings === false
+        ? others.slice(0, 3)
+        : [earningsItem, ...others].slice(0, 3),
+  };
 }
 
 export function buildInsiders(
@@ -469,6 +481,7 @@ export function collectSources(parts: {
   usedFmp: boolean;
   newsUrls: (string | null)[];
   congressUrls: (string | null)[];
+  skipSecEdgar?: boolean;
 }): CompanyAnalysisSource[] {
   const sources: CompanyAnalysisSource[] = [];
   if (parts.usedYahoo) {
@@ -480,7 +493,9 @@ export function collectSources(parts: {
       url: "https://financialmodelingprep.com",
     });
   }
-  sources.push({ name: "SEC EDGAR", url: "https://www.sec.gov/edgar" });
+  if (!parts.skipSecEdgar) {
+    sources.push({ name: "SEC EDGAR", url: "https://www.sec.gov/edgar" });
+  }
   for (const u of [...parts.newsUrls, ...parts.congressUrls]) {
     const clean = sanitizeHttpUrl(u);
     if (!clean) continue;
@@ -510,6 +525,24 @@ function isUsEquityListing(ticker: string, exchange?: string | null): boolean {
   return true;
 }
 
+function mapEtfSlice(
+  holdings: ETFHoldingsData | null | undefined,
+  isin: string | null,
+): CompanyAnalysisEtf {
+  return {
+    isin: isin || null,
+    fundFamily: holdings?.fundFamily || null,
+    category: holdings?.category || null,
+    legalType: holdings?.legalType || null,
+    expenseRatio: holdings?.expenseRatio ?? null,
+    inceptionDate: holdings?.inceptionDate ?? null,
+    totalAssets: holdings?.totalAssets ?? null,
+    holdings: holdings?.holdings ?? [],
+    sectorWeightings: holdings?.sectorWeightings ?? [],
+    assetClassWeightings: holdings?.assetClassWeightings ?? [],
+  };
+}
+
 export function assembleReport(input: {
   ticker: string;
   /** Actual symbol used by the provider (may differ when resolved via alias). */
@@ -529,31 +562,61 @@ export function assembleReport(input: {
   peers: CompanyAnalysisPeer[];
   usedYahoo: boolean;
   usedFmp: boolean;
+  instrumentKind?: CompanyAnalysisInstrumentKind;
+  etfHoldings?: ETFHoldingsData | null;
+  isin?: string | null;
 }): CompanyAnalysisReport {
   const quote = mapQuote(input.quote, input.overview);
   const profile = mapProfile(input.overview);
-  const fundamentals = buildFundamentals(input.income, input.earnings, input.nextQuarter);
-  const technicals = buildTechnicals(input.history, quote, fundamentals.nextReportDate);
+  const instrumentKind: CompanyAnalysisInstrumentKind =
+    input.instrumentKind ??
+    (isEtfInstrument({
+      quoteType: input.quote?.quoteType,
+      name: profile?.name ?? input.quote?.shortName,
+    })
+      ? "etf"
+      : "equity");
+  const isEtf = instrumentKind === "etf";
+  const fundamentals = isEtf
+    ? buildFundamentals(null, null, null)
+    : buildFundamentals(input.income, input.earnings, input.nextQuarter);
+  const technicals = buildTechnicals(input.history, quote, isEtf ? null : fundamentals.nextReportDate);
   const news = buildNews(
     input.news,
     input.ticker,
     profile?.name ?? null,
     fundamentals,
+    { includeEarnings: !isEtf },
   );
   // TRF-019: Form 4 / STOCK Act only for US listings — do not surface empty foreign noise.
-  const usListing = isUsEquityListing(input.ticker, profile?.exchange);
+  const usListing = !isEtf && isUsEquityListing(input.ticker, profile?.exchange);
   const insiders = usListing ? buildInsiders(input.insiders) : { status: "unavailable" as const, items: [] };
   const congress = usListing ? buildCongress(input.congress) : { status: "unavailable" as const, items: [] };
   const subjectDist =
     peerDistanceTo52wHigh(quote?.price ?? null, quote?.fiftyTwoWeekHigh ?? null) ??
     technicals.distanceToCloseHigh12mPct;
-  const alternative = pickSectorAlternative(input.ticker, subjectDist, input.peers);
+  const alternative = isEtf
+    ? {
+        status: "unavailable" as const,
+        ticker: null,
+        name: null,
+        tagline: null,
+        why: null,
+        distanceTo52wHighPct: null,
+        price: null,
+        peersConsidered: [] as CompanyAnalysisPeer[],
+      }
+    : pickSectorAlternative(input.ticker, subjectDist, input.peers);
 
   const symbolUsed =
     input.symbolUsed && input.symbolUsed !== input.ticker ? input.symbolUsed : undefined;
 
+  const etf = isEtf ? mapEtfSlice(input.etfHoldings, input.isin ?? null) : null;
+
   return {
     ticker: input.ticker,
+    instrumentKind,
+    ...(etf ? { etf } : {}),
     generatedAt: input.generatedAt ?? input.updatedAt,
     updatedAt: input.updatedAt,
     cached: input.cached,
@@ -568,9 +631,10 @@ export function assembleReport(input: {
     alternative,
     sources: collectSources({
       usedYahoo: input.usedYahoo,
-      usedFmp: input.usedFmp,
+      usedFmp: isEtf ? false : input.usedFmp,
       newsUrls: news.items.map((n) => n.url),
       congressUrls: congress.items.map((c) => c.url),
+      skipSecEdgar: isEtf,
     }),
   };
 }

@@ -7,6 +7,7 @@ import {
 import { analisisCryptoRedirectHref } from "@/lib/asset-detail-href";
 import { parseIsinParam, parseTicker } from "@/lib/company-analysis/ticker";
 import type { CompanyAnalysisReport } from "@/lib/company-analysis/types";
+import { isLegacyEquityCacheForEtf } from "@/lib/company-analysis/instrument";
 import {
   analisisTickerUrl,
   buildAnalisisTickerDescription,
@@ -23,11 +24,15 @@ interface PageProps {
 
 async function loadCachedReport(ticker: string): Promise<CompanyAnalysisReport | null> {
   try {
-    const row = await getCompanyAnalysisDbCache(companyAnalysisReportCacheKey(ticker));
-    if (!row) return null;
-    const report = JSON.parse(row.payloadJson) as CompanyAnalysisReport;
-    if (!report?.ticker) return null;
-    return report;
+    for (const kind of ["etf", "equity"] as const) {
+      const row = await getCompanyAnalysisDbCache(companyAnalysisReportCacheKey(ticker, kind));
+      if (!row) continue;
+      const report = JSON.parse(row.payloadJson) as CompanyAnalysisReport;
+      if (!report?.ticker) continue;
+      if (kind === "equity" && isLegacyEquityCacheForEtf(report)) continue;
+      return report;
+    }
+    return null;
   } catch {
     return null;
   }

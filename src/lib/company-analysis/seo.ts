@@ -37,8 +37,9 @@ export function buildAnalisisHubMetadata() {
  */
 export function buildAnalisisTickerTitle(ticker: string, report: CompanyAnalysisReport | null): string {
   const name = report?.profile?.name?.trim();
-  if (name) return `${name} (${ticker}) stock analysis — trefolio`;
-  return `${ticker} stock analysis — trefolio`;
+  const kind = report?.instrumentKind === "etf" ? "ETF analysis" : "stock analysis";
+  if (name) return `${name} (${ticker}) ${kind} — trefolio`;
+  return `${ticker} ${kind} — trefolio`;
 }
 
 export function buildAnalisisTickerDescription(
@@ -46,16 +47,26 @@ export function buildAnalisisTickerDescription(
   report: CompanyAnalysisReport | null,
 ): string {
   const name = report?.profile?.name?.trim() || ticker;
+  const isEtf = report?.instrumentKind === "etf";
   const sector = report?.profile?.sector?.trim();
   const industry = report?.profile?.industry?.trim();
-  const bits = [
-    `${name} company analysis on trefolio`,
-    sector ? `Sector: ${sector}` : null,
-    industry ? `Industry: ${industry}` : null,
-    "Fundamentals, technicals, news, and AI narrative for European investors",
-    "Informational only — not investment advice. Free to start.",
-  ].filter(Boolean);
-  return bits.join(". ") + ".";
+  const family = report?.etf?.fundFamily?.trim();
+  const bits = isEtf
+    ? [
+        `${name} ETF analysis on trefolio`,
+        family ? `Provider: ${family}` : null,
+        sector ? `Category: ${sector}` : null,
+        "Fund facts, holdings weights, technicals, news, and AI narrative for European investors",
+        "Informational only — not investment advice. Free to start.",
+      ]
+    : [
+        `${name} company analysis on trefolio`,
+        sector ? `Sector: ${sector}` : null,
+        industry ? `Industry: ${industry}` : null,
+        "Fundamentals, technicals, news, and AI narrative for European investors",
+        "Informational only — not investment advice. Free to start.",
+      ];
+  return bits.filter(Boolean).join(". ") + ".";
 }
 
 export function buildAnalisisTickerJsonLd(args: {
@@ -65,20 +76,35 @@ export function buildAnalisisTickerJsonLd(args: {
   const { ticker, report } = args;
   const url = analisisTickerUrl(ticker);
   const name = report?.profile?.name?.trim() || ticker;
+  const isEtf = report?.instrumentKind === "etf";
   const description =
     report?.profile?.description?.trim() ||
-    `${name} (${ticker}) stock analysis on trefolio — fundamentals, technicals, and AI narrative. Not investment advice.`;
+    (isEtf
+      ? `${name} (${ticker}) ETF analysis on trefolio — fund facts, holdings, technicals, and AI narrative. Not investment advice.`
+      : `${name} (${ticker}) stock analysis on trefolio — fundamentals, technicals, and AI narrative. Not investment advice.`);
 
-  const corporation: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "Corporation",
-    name,
-    tickerSymbol: ticker,
-    description: description.slice(0, 500),
-    url,
-  };
+  const about: Record<string, unknown> = isEtf
+    ? {
+        "@context": "https://schema.org",
+        "@type": "InvestmentFund",
+        name,
+        tickerSymbol: ticker,
+        description: description.slice(0, 500),
+        url,
+      }
+    : {
+        "@context": "https://schema.org",
+        "@type": "Corporation",
+        name,
+        tickerSymbol: ticker,
+        description: description.slice(0, 500),
+        url,
+      };
   if (report?.profile?.exchange) {
-    corporation.exchange = report.profile.exchange;
+    about.exchange = report.profile.exchange;
+  }
+  if (isEtf && report?.etf?.isin) {
+    about.identifier = report.etf.isin;
   }
 
   const webPage: Record<string, unknown> = {
@@ -101,7 +127,7 @@ export function buildAnalisisTickerJsonLd(args: {
       {
         "@type": "ListItem",
         position: 1,
-        name: "Stock analysis",
+        name: isEtf ? "ETF analysis" : "Stock analysis",
         item: ANALISIS_HUB_URL,
       },
       {
@@ -113,7 +139,7 @@ export function buildAnalisisTickerJsonLd(args: {
     ],
   };
 
-  return [corporation, webPage, breadcrumb];
+  return [about, webPage, breadcrumb];
 }
 
 export const ANALISIS_FINANCIAL_DISCLAIMER =

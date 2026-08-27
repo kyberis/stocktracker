@@ -1,4 +1,12 @@
+import type {
+  ETFAssetClassWeight,
+  ETFHoldingEntry,
+  ETFSectorWeight,
+} from "@/lib/api-providers/types";
 import type { InsiderSignalTag } from "./insider-tags";
+import type { CompanyAnalysisInstrumentKind } from "./instrument";
+
+export type { CompanyAnalysisInstrumentKind };
 
 export type SectionStatus = "ok" | "unavailable";
 
@@ -22,6 +30,21 @@ export interface CompanyAnalysisQuote {
   ma50: number | null;
   ma200: number | null;
   currency: string | null;
+  quoteType?: string | null;
+}
+
+/** Yahoo fund profile + top holdings for ETF/ETP analysis landings. */
+export interface CompanyAnalysisEtf {
+  isin: string | null;
+  fundFamily: string | null;
+  category: string | null;
+  legalType: string | null;
+  expenseRatio: number | null;
+  inceptionDate: string | null;
+  totalAssets: number | null;
+  holdings: ETFHoldingEntry[];
+  sectorWeightings: ETFSectorWeight[];
+  assetClassWeightings: ETFAssetClassWeight[];
 }
 
 export interface CompanyAnalysisProfile {
@@ -138,6 +161,8 @@ export interface CompanyAnalysisSource {
 
 export interface CompanyAnalysisReport {
   ticker: string;
+  instrumentKind?: CompanyAnalysisInstrumentKind;
+  etf?: CompanyAnalysisEtf | null;
   /** When this analysis payload was first successfully generated (stable across day cache). */
   generatedAt: string;
   /** Last time any section was written (full build or gap fill). */

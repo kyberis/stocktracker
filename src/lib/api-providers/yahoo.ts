@@ -22,6 +22,7 @@ import { getCachedHistorical, cacheHistoricalPoints } from "@/lib/db/historical-
 import { parseQuoteTimestamp } from "@/lib/quote-time";
 import { augmentCryptoSearchWithEurPairs } from "@/lib/crypto-search-eur";
 import { sanitizeOverviewPe } from "@/lib/fundamentals/normalize-overview-pe";
+import { mapYahooEtfProfileExtras } from "@/lib/api-providers/etf-profile-map";
 
 const yahooFinance = new YahooFinance();
 
@@ -675,12 +676,17 @@ export class YahooProvider implements StockDataProvider {
     let ok = false;
     try {
       const result = await yahooFinance.quoteSummary(symbol, {
-        modules: ["topHoldings", "fundProfile"],
-      });
+        modules: ["topHoldings", "fundProfile", "defaultKeyStatistics"],
+      }).catch(() =>
+        yahooFinance.quoteSummary(symbol, {
+          modules: ["topHoldings", "fundProfile"],
+        }),
+      );
       ok = true;
 
       const th = result.topHoldings;
       const fp = result.fundProfile;
+      const extras = mapYahooEtfProfileExtras(fp, result.defaultKeyStatistics);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const holdings = (th?.holdings ?? []).map((h: any) => ({
@@ -724,6 +730,9 @@ export class YahooProvider implements StockDataProvider {
         category: String(fp?.categoryName ?? ""),
         fundFamily: String(fp?.family ?? ""),
         legalType: String(fp?.legalType ?? ""),
+        expenseRatio: extras.expenseRatio,
+        inceptionDate: extras.inceptionDate,
+        totalAssets: extras.totalAssets,
       };
     } catch {
       return null;

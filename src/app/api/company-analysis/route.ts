@@ -26,6 +26,7 @@ import { COMPANY_ANALYSIS_RESPONSE_HEADERS } from "@/lib/company-analysis/http";
 import { redactPaidSections } from "@/lib/company-analysis/redact";
 import { parseIsinParam, parseTicker } from "@/lib/company-analysis/ticker";
 import type { CompanyAnalysisReport } from "@/lib/company-analysis/types";
+import { isLegacyEquityCacheForEtf } from "@/lib/company-analysis/instrument";
 import {
   companyAnalysisReportCacheKey,
   deleteCompanyAnalysisDbCacheForTicker,
@@ -49,8 +50,12 @@ import {
 import { deferTask } from "@/lib/task-runner";
 import { withMetrics } from "@/lib/with-metrics";
 
-function memCacheKey(ticker: string): string {
-  return `company-analysis:${ticker}`;
+function memCacheKey(ticker: string, kind: "equity" | "etf" = "equity"): string {
+  return kind === "etf" ? `company-analysis:etf:${ticker}` : `company-analysis:${ticker}`;
+}
+
+function reportKind(report: CompanyAnalysisReport): "equity" | "etf" {
+  return report.instrumentKind === "etf" ? "etf" : "equity";
 }
 
 function expiresAtIso(fromMs = Date.now()): string {
@@ -74,31 +79,38 @@ async function loadDurableReport(ticker: string): Promise<{
   generatedAt: string;
   expiresAt: string;
 } | null> {
-  const mem = getCompanyAnalysisCache<CompanyAnalysisReport>(memCacheKey(ticker));
-  if (mem?.generatedAt) {
-    return {
-      report: mem,
-      generatedAt: mem.generatedAt,
-      expiresAt: expiresAtIso(Date.parse(mem.generatedAt) || Date.now()),
-    };
+  for (const kind of ["etf", "equity"] as const) {
+    const mem = getCompanyAnalysisCache<CompanyAnalysisReport>(memCacheKey(ticker, kind));
+    if (mem?.generatedAt) {
+      if (kind === "equity" && isLegacyEquityCacheForEtf(mem)) continue;
+      return {
+        report: mem,
+        generatedAt: mem.generatedAt,
+        expiresAt: expiresAtIso(Date.parse(mem.generatedAt) || Date.now()),
+      };
+    }
   }
 
-  const row = await getCompanyAnalysisDbCache(companyAnalysisReportCacheKey(ticker));
-  if (!row) return null;
-  try {
-    const report = JSON.parse(row.payloadJson) as CompanyAnalysisReport;
-    if (!report?.ticker || !report?.fundamentals) return null;
-    const generatedAt = report.generatedAt || row.generatedAt;
-    const normalized = {
-      ...report,
-      generatedAt,
-      updatedAt: report.updatedAt || row.updatedAt,
-    };
-    setCompanyAnalysisCache(memCacheKey(ticker), normalized, COMPANY_ANALYSIS_L1_TTL_MS);
-    return { report: normalized, generatedAt, expiresAt: row.expiresAt };
-  } catch {
-    return null;
+  for (const kind of ["etf", "equity"] as const) {
+    const row = await getCompanyAnalysisDbCache(companyAnalysisReportCacheKey(ticker, kind));
+    if (!row) continue;
+    try {
+      const report = JSON.parse(row.payloadJson) as CompanyAnalysisReport;
+      if (!report?.ticker || !report?.fundamentals) continue;
+      if (kind === "equity" && isLegacyEquityCacheForEtf(report)) continue;
+      const generatedAt = report.generatedAt || row.generatedAt;
+      const normalized = {
+        ...report,
+        generatedAt,
+        updatedAt: report.updatedAt || row.updatedAt,
+      };
+      setCompanyAnalysisCache(memCacheKey(ticker, reportKind(normalized)), normalized, COMPANY_ANALYSIS_L1_TTL_MS);
+      return { report: normalized, generatedAt, expiresAt: row.expiresAt };
+    } catch {
+      continue;
+    }
   }
+  return null;
 }
 
 async function persistReport(
@@ -106,9 +118,10 @@ async function persistReport(
   generatedAt: string,
   expiresAt: string,
 ): Promise<void> {
-  setCompanyAnalysisCache(memCacheKey(report.ticker), report, COMPANY_ANALYSIS_L1_TTL_MS);
+  const kind = reportKind(report);
+  setCompanyAnalysisCache(memCacheKey(report.ticker, kind), report, COMPANY_ANALYSIS_L1_TTL_MS);
   await upsertCompanyAnalysisDbCache({
-    cacheKey: companyAnalysisReportCacheKey(report.ticker),
+    cacheKey: companyAnalysisReportCacheKey(report.ticker, kind),
     ticker: report.ticker,
     kind: "report",
     payload: report,
@@ -127,11 +140,13 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
     );
   }
 
-  const ticker = disambiguateListing({
+  const listing = disambiguateListing({
     ticker: requested,
     exchange: searchParams.get("exchange"),
     isin: parseIsinParam(searchParams.get("isin")),
-  }).ticker;
+  });
+  const ticker = listing.ticker;
+  const listingIsin = listing.isin;
 
   const fresh = searchParams.get("fresh") === "1";
   const session = await getSessionFromRequest(request);
@@ -190,6 +205,10 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
             usedFmp: Boolean(premiumResolved) || hasFmpKey(),
           },
           durable.generatedAt,
+          {
+            instrumentKind: durable.report.instrumentKind,
+            isin: durable.report.etf?.isin ?? listingIsin,
+          },
         );
         const merged = withCacheFlag(
           {
@@ -224,14 +243,15 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
 
   // Cache miss (or fresh=1, which already required a session above).
   if (!session) {
-    return buildForAnonymousVisitor(request, ticker);
+    return buildForAnonymousVisitor(request, ticker, listingIsin);
   }
 
   const { error } = await requireFeatureQuota(request, "company_analysis");
   if (error) return error;
 
   if (fresh) {
-    deleteCompanyAnalysisCacheKey(memCacheKey(ticker));
+    deleteCompanyAnalysisCacheKey(memCacheKey(ticker, "equity"));
+    deleteCompanyAnalysisCacheKey(memCacheKey(ticker, "etf"));
     await deleteCompanyAnalysisDbCacheForTicker(ticker);
   }
 
@@ -257,6 +277,7 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
         usedFmp: Boolean(premiumResolved) || hasFmpKey(),
       },
       generatedAt,
+      { isin: listingIsin },
     );
 
     if (!report) {
@@ -293,7 +314,11 @@ export const GET = withMetrics("/api/company-analysis", async (request: NextRequ
  * IP rate limit plus a global daily budget instead — the shared cache this
  * writes to benefits every future visitor, logged in or not.
  */
-async function buildForAnonymousVisitor(request: NextRequest, ticker: string): Promise<Response> {
+async function buildForAnonymousVisitor(
+  request: NextRequest,
+  ticker: string,
+  isin?: string | null,
+): Promise<Response> {
   const ip = getClientIp(request);
 
   const ipLimit = await checkPublicAnalysisBuildRateLimit(ip);
@@ -328,6 +353,7 @@ async function buildForAnonymousVisitor(request: NextRequest, ticker: string): P
         usedFmp: Boolean(premiumResolved) || hasFmpKey(),
       },
       generatedAt,
+      { isin },
     );
 
     if (!report) {

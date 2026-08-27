@@ -118,6 +118,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [portfolio-review](portfolio-review.md) — AI portfolio review.
 - [stock-evaluation](stock-evaluation.md) — rules + AI valuation.
 - [company-analysis](company-analysis.md) — `/analisis` multi-section company report (fundamentals, technicals, news, Form 4, Congress).
+- [etf-analysis](etf-analysis.md) — same `/analisis/[ticker]` URL; ETF/ETP fund profile (facts + holdings) instead of company EPS/insiders.
 - [warren-investing-knowledge](warren-investing-knowledge.md) — curated investing-concepts library exposed to Warren as a tool.
 - [warren-valuation](warren-valuation.md) — share-level fundamentals cache + cheap/fair/expensive label for Warren.
 - [warren-empty-add-stock](warren-empty-add-stock.md) — empty-portfolio Warren: add-stock + import tools + 10-chat / 15-min cooldown.

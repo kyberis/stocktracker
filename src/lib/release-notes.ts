@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.247",
+    date: "2026-08-27",
+    title: "ETF analysis landings",
+    titleTranslations: {
+      es: "Fichas de análisis para ETF",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "/analisis shows a fund profile for ETFs and ETPs (facts, TER when Yahoo has it, holdings and weights) instead of company EPS, insiders, and Congress. Same URL as stocks. Informational only — not investment advice.",
+        translations: {
+          es: "/analisis muestra un perfil de fondo para ETF y ETP (datos, TER si Yahoo lo tiene, participaciones y pesos) en lugar de BPA, insiders y Congreso. Misma URL que las acciones. Solo informativo — no es asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.246",
     date: "2026-08-27",
     title: "Warren: price moves + earnings catalysts",
