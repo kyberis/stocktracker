@@ -13,6 +13,7 @@ import {
   normalizeCurrency,
   hasExchangeRate,
 } from "@/lib/utils";
+import { formatAnalystTargetPrice } from "@/lib/fundamentals/format-analyst-target";
 import type { Holding, QuoteData } from "@/lib/types";
 import { holdingDetailHref } from "@/lib/asset-detail-href";
 import AlertBadge from "@/components/AlertBadge";
@@ -67,7 +68,7 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
   const analystTargetLabel = analystTarget
     ? t("homeAnalystTargetInline").replace(
         "{price}",
-        formatCurrency(analystTarget.price, analystTarget.currency),
+        formatAnalystTargetPrice(analystTarget, baseCurrency, exchangeRates),
       )
     : null;
 

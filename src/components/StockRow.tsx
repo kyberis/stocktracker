@@ -13,6 +13,7 @@ import {
   resolveQuoteCurrency,
   hasExchangeRate,
 } from "@/lib/utils";
+import { formatAnalystTargetPrice } from "@/lib/fundamentals/format-analyst-target";
 import { getMarketStatus } from "@/lib/market-hours";
 import type { Holding, QuoteData } from "@/lib/types";
 import { holdingDetailHref } from "@/lib/asset-detail-href";
@@ -153,11 +154,11 @@ function StockRow({ holding, onSelect }: StockRowProps) {
 
   const awaitingQuote = !hasQuote && !isCashHolding;
   const analystTarget = analystTargets[holding.ticker];
-  const analystTargetSegment = analystTarget
-    ? t("homeAnalystTargetInline").replace(
-        "{price}",
-        formatCurrency(analystTarget.price, analystTarget.currency),
-      )
+  const analystTargetFormatted = analystTarget
+    ? formatAnalystTargetPrice(analystTarget, baseCurrency, exchangeRates)
+    : null;
+  const analystTargetSegment = analystTargetFormatted
+    ? t("homeAnalystTargetInline").replace("{price}", analystTargetFormatted)
     : null;
   const priceInfo = [
     `${holding.exchange ? `${holding.exchange} | ` : ""}${holding.ticker} | ${hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × ${holding.shares}`,
@@ -187,7 +188,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
     : "--";
   const rowLabel = [
     `${holding.name}, ${formatCurrency(totalValueBase, baseCurrency)}, ${dayText}`,
-    analystTargetSegment ? `${t("analystTarget")}: ${formatCurrency(analystTarget!.price, analystTarget!.currency)}` : null,
+    analystTargetSegment ? `${t("analystTarget")}: ${analystTargetFormatted}` : null,
   ]
     .filter(Boolean)
     .join(", ");

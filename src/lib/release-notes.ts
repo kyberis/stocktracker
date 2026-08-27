@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.248",
+    date: "2026-08-27",
+    title: "Analyst targets in your currency",
+    titleTranslations: {
+      es: "Objetivos de analistas en tu moneda",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Home holdings list shows analyst target prices converted to your portfolio currency (still cached in the instrument's native currency).",
+        translations: {
+          es: "El listado de acciones muestra el precio objetivo de analistas convertido a la moneda de tu portafolio (se sigue cacheando en la moneda original del instrumento).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.247",
     date: "2026-08-27",
     title: "ETF analysis landings",
