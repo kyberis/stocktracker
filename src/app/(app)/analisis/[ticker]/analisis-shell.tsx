@@ -22,6 +22,8 @@ import NewsPanel from "@/components/company-analysis/panels/NewsPanel";
 import AnalysisNarrativePanel from "@/components/company-analysis/panels/AnalysisNarrativePanel";
 import InsidersFlowPanel from "@/components/company-analysis/panels/InsidersFlowPanel";
 import FundamentalsTablePanel from "@/components/company-analysis/panels/FundamentalsTablePanel";
+import EtfFactsPanel from "@/components/company-analysis/panels/EtfFactsPanel";
+import EtfCompositionPanel from "@/components/company-analysis/panels/EtfCompositionPanel";
 
 function ExternalQuoteLinks({ ticker, exchange }: { ticker: string; exchange: string }) {
   const tvTicker = /\.(DE|F|SW)$/i.test(ticker) ? baseTickerName(ticker) : ticker;
@@ -148,12 +150,18 @@ export default function AnalisisShell({
     listing.exchange || exchange || holding?.exchange || data.report?.profile?.exchange || "";
   const marketStatus = resolvedExchange ? getMarketStatus(resolvedExchange, now) : null;
 
-  const tabs: TabRailItem<TabId>[] = [
-    { id: "summary", label: t("analisisTabSummary"), icon: LayoutDashboard },
-    { id: "details", label: t("fundamentals"), icon: BarChart3, locked: !user },
-    { id: "intelligence", label: t("intelligence"), icon: Sparkles, locked: !user },
-    { id: "evaluation", label: t("analisisTabEvaluation"), icon: ShieldCheck, locked: !user },
-  ];
+  const isEtf = data.report?.instrumentKind === "etf";
+  const tabs: TabRailItem<TabId>[] = isEtf
+    ? [
+        { id: "summary", label: t("analisisTabSummary"), icon: LayoutDashboard },
+        { id: "details", label: t("fundamentals"), icon: BarChart3, locked: !user },
+      ]
+    : [
+        { id: "summary", label: t("analisisTabSummary"), icon: LayoutDashboard },
+        { id: "details", label: t("fundamentals"), icon: BarChart3, locked: !user },
+        { id: "intelligence", label: t("intelligence"), icon: Sparkles, locked: !user },
+        { id: "evaluation", label: t("analisisTabEvaluation"), icon: ShieldCheck, locked: !user },
+      ];
 
   if (data.error || (!data.loading && !data.report)) {
     return (
@@ -277,6 +285,12 @@ export default function AnalisisShell({
               {visited.has("summary") && (
                 <div hidden={activeTab !== "summary"} className="space-y-6">
                   <SummaryPanel data={data} />
+                  {isEtf && (
+                    <>
+                      <EtfFactsPanel report={report} listingIsin={listing.isin || isin} />
+                      <EtfCompositionPanel etf={report.etf} />
+                    </>
+                  )}
                   {user && holding && (
                     <TransactionHistory
                       holdingId={holding.id}
@@ -288,25 +302,45 @@ export default function AnalisisShell({
                     />
                   )}
                   <AnalysisNarrativePanel data={data} />
-                  <FundamentalsTablePanel data={data} />
+                  {!isEtf && <FundamentalsTablePanel data={data} />}
                   <NewsPanel data={data} />
-                  <InsidersFlowPanel data={data} />
+                  {!isEtf && <InsidersFlowPanel data={data} />}
                 </div>
               )}
               {activeTab === "details" && !user && <LockedTabPanel ticker={ticker} />}
               {visited.has("details") && user && (
                 <div hidden={activeTab !== "details"}>
-                  <StockDetail ticker={listing.ticker} exchange={resolvedExchange} embedded />
+                  <StockDetail
+                    ticker={listing.ticker}
+                    exchange={resolvedExchange}
+                    embedded
+                    forceAssetType={isEtf ? "etf" : undefined}
+                    initialEtfHoldings={
+                      isEtf && report.etf
+                        ? {
+                            holdings: report.etf.holdings,
+                            sectorWeightings: report.etf.sectorWeightings,
+                            assetClassWeightings: report.etf.assetClassWeightings,
+                            category: report.etf.category ?? "",
+                            fundFamily: report.etf.fundFamily ?? "",
+                            legalType: report.etf.legalType ?? "",
+                            expenseRatio: report.etf.expenseRatio,
+                            inceptionDate: report.etf.inceptionDate,
+                            totalAssets: report.etf.totalAssets,
+                          }
+                        : undefined
+                    }
+                  />
                 </div>
               )}
-              {activeTab === "intelligence" && !user && <LockedTabPanel ticker={ticker} />}
-              {visited.has("intelligence") && user && (
+              {!isEtf && activeTab === "intelligence" && !user && <LockedTabPanel ticker={ticker} />}
+              {!isEtf && visited.has("intelligence") && user && (
                 <div hidden={activeTab !== "intelligence"}>
                   <StockIntelligence ticker={listing.ticker} exchange={resolvedExchange} embedded />
                 </div>
               )}
-              {activeTab === "evaluation" && !user && <LockedTabPanel ticker={ticker} />}
-              {visited.has("evaluation") && user && (
+              {!isEtf && activeTab === "evaluation" && !user && <LockedTabPanel ticker={ticker} />}
+              {!isEtf && visited.has("evaluation") && user && (
                 <div hidden={activeTab !== "evaluation"}>
                   <StockEvaluation
                     ticker={listing.ticker}

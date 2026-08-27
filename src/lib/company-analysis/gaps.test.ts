@@ -95,6 +95,29 @@ describe("findReportGaps", () => {
     expect(gaps).toContain("earnings");
     expect(gaps).toContain("nextQuarter");
   });
+
+  it("does not flag equity gaps on an ETF report", () => {
+    const report = baseReport({
+      instrumentKind: "etf",
+      fundamentals: { ...baseReport().fundamentals, status: "unavailable", lastEps: null },
+      insiders: { status: "unavailable", items: [] },
+      congress: { status: "unavailable", items: [] },
+      alternative: { ...baseReport().alternative, status: "unavailable", ticker: null },
+      etf: {
+        isin: "GB00BLD4ZL17",
+        fundFamily: "CoinShares",
+        category: "Digital Assets",
+        legalType: "ETP",
+        expenseRatio: null,
+        inceptionDate: null,
+        totalAssets: null,
+        holdings: [{ symbol: "BTC", name: "Bitcoin", weight: 100 }],
+        sectorWeightings: [],
+        assetClassWeightings: [],
+      },
+    });
+    expect(findReportGaps(report)).toEqual([]);
+  });
 });
 
 describe("mergeReportFill", () => {

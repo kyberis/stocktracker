@@ -18,6 +18,7 @@ export default function SummaryPanel({ data }: { data: CompanyAnalysisData }) {
   const { report, narrative, fundamentals, narrativePending } = data;
   if (!report || !fundamentals) return null;
 
+  const isEtf = report.instrumentKind === "etf";
   const currency = report.quote?.currency || "USD";
   const aliasNote = report.symbolUsed && report.symbolUsed !== report.ticker
     ? report.symbolUsed
@@ -33,8 +34,8 @@ export default function SummaryPanel({ data }: { data: CompanyAnalysisData }) {
 
   const showQuoteCard = priceStr != null;
   const showMcapCard = mcap != null;
-  const showRevenueCard = fundamentals.lastRevenueYoyPct != null || fundamentals.lastRevenue != null;
-  const showEpsCard = fundamentals.lastEps != null;
+  const showRevenueCard = !isEtf && (fundamentals.lastRevenueYoyPct != null || fundamentals.lastRevenue != null);
+  const showEpsCard = !isEtf && fundamentals.lastEps != null;
   const showDistCard = distFormatted != null;
 
   return (
@@ -64,7 +65,11 @@ export default function SummaryPanel({ data }: { data: CompanyAnalysisData }) {
             />
           )}
           {showMcapCard && (
-            <StatCard label={t("companyAnalysisMarketCap")} value={mcap} noSnippet />
+            <StatCard
+              label={isEtf ? t("etfAnalysisFundSize") : t("companyAnalysisMarketCap")}
+              value={mcap}
+              noSnippet
+            />
           )}
           {showRevenueCard && (
             <StatCard
@@ -120,7 +125,7 @@ export default function SummaryPanel({ data }: { data: CompanyAnalysisData }) {
       {showBusiness && (
         <section className="card space-y-3 p-6" aria-labelledby="ca-desc">
           <h2 id="ca-desc" className="text-xl font-semibold text-[color:var(--foreground)]">
-            {t("companyAnalysisBusiness")}
+            {t(isEtf ? "etfAnalysisObjective" : "companyAnalysisBusiness")}
           </h2>
           {descriptionText ? (
             <p className="text-sm leading-relaxed text-[color:var(--foreground)]">{descriptionText}</p>

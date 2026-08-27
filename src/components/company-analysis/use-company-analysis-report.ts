@@ -113,12 +113,14 @@ export function useCompanyAnalysisReport(ticker: string) {
             language,
             ticker: report.ticker,
             fresh,
+            instrumentKind: report.instrumentKind,
             profile: report.profile,
             quote: report.quote,
             fundamentals: report.fundamentals,
             technicals: report.technicals,
             insiders: report.insiders,
             alternative: report.alternative,
+            etf: report.etf ?? null,
           }),
         });
         if (!res.ok || cancelled) return;

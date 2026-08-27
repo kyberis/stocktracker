@@ -520,6 +520,9 @@ export interface ETFHoldingsData {
   category: string;
   fundFamily: string;
   legalType: string;
+  expenseRatio?: number | null;
+  inceptionDate?: string | null;
+  totalAssets?: number | null;
 }
 
 export interface HistoricalDataPoint {

@@ -24,6 +24,7 @@ import type {
   StockDataProvider,
 } from "@/lib/api-providers/types";
 import { assembleReport, peerDistanceTo52wHigh } from "@/lib/company-analysis/assemble";
+import { isEtfInstrument } from "@/lib/company-analysis/instrument";
 import {
   mergeNextQuarterConsensus,
   pickNextQuarterFromEarningsRows,
@@ -55,12 +56,13 @@ export async function settled<T>(p: Promise<T>): Promise<T | null> {
 async function fetchQuoteAndOverview(
   ticker: string,
   provider: StockDataProvider,
+  isin?: string | null,
 ): Promise<{
   symbolUsed: string;
   quote: ProviderQuoteResult | null;
   overview: CompanyOverview | null;
 }> {
-  const listing = disambiguateListing({ ticker });
+  const listing = disambiguateListing({ ticker, isin: isin ?? undefined });
   const ordered = [listing.ticker, ...yahooSymbolAliases(listing.ticker)];
   if (listing.isin) {
     ordered.push(`${listing.isin}.SG`, listing.isin);
@@ -153,19 +155,70 @@ export interface BuildProviders {
   usedFmp: boolean;
 }
 
+export interface BuildReportOpts {
+  isin?: string | null;
+  instrumentKind?: "equity" | "etf";
+}
+
 export async function buildFullReport(
   ticker: string,
   providers: BuildProviders,
   generatedAt: string,
+  opts?: BuildReportOpts,
 ): Promise<CompanyAnalysisReport | null> {
   const { provider, intelProvider, usedYahoo, usedFmp } = providers;
-  const analysisTicker = disambiguateListing({ ticker }).ticker;
+  const listing = disambiguateListing({ ticker, isin: opts?.isin ?? undefined });
+  const analysisTicker = listing.ticker;
+  const isin = listing.isin || opts?.isin || null;
   const yahooOutlook = new YahooProvider();
   const { symbolUsed, quote: quoteRes, overview: overviewRes } = await fetchQuoteAndOverview(
     analysisTicker,
     provider,
+    isin,
   );
   const dataSymbol = symbolUsed;
+
+  if (!quoteRes && !overviewRes) return null;
+
+  const instrumentKind =
+    opts?.instrumentKind ??
+    (isEtfInstrument({
+      quoteType: quoteRes?.quoteType,
+      name: overviewRes?.name ?? quoteRes?.shortName,
+    })
+      ? "etf"
+      : "equity");
+
+  if (instrumentKind === "etf") {
+    const [historyRes, newsRes, etfHoldings] = await Promise.all([
+      settled(provider.getHistorical(dataSymbol, "1y")),
+      settled(intelProvider.getNewsSentiment?.(dataSymbol) ?? Promise.resolve([])),
+      settled(yahooOutlook.getETFHoldings(dataSymbol)),
+    ]);
+    return assembleReport({
+      ticker: analysisTicker,
+      symbolUsed: dataSymbol !== ticker ? dataSymbol : undefined,
+      generatedAt,
+      updatedAt: generatedAt,
+      cached: false,
+      quote: quoteRes,
+      overview: overviewRes,
+      history: historyRes,
+      income: null,
+      earnings: null,
+      nextQuarter: null,
+      news: newsRes,
+      insiders: null,
+      congress: null,
+      peers: [],
+      usedYahoo: true,
+      usedFmp: false,
+      instrumentKind: "etf",
+      etfHoldings,
+      isin,
+    });
+  }
+
   const [
     historyRes,
     incomeRes,
@@ -185,8 +238,6 @@ export async function buildFullReport(
     settled(yahooOutlook.getNextQuarterConsensus(dataSymbol)),
     loadFmpEarnings(dataSymbol),
   ]);
-
-  if (!quoteRes && !overviewRes) return null;
 
   const fmpEarningsData = fmpEarningsRows
     ? fmpEarningsToFundamentalData(fmpEarningsRows)
@@ -226,6 +277,8 @@ export async function buildFullReport(
     peers,
     usedYahoo,
     usedFmp,
+    instrumentKind: "equity",
+    isin,
   });
 }
 
@@ -235,14 +288,18 @@ export async function buildGapFillReport(
   gaps: ReportGap[],
   providers: BuildProviders,
   generatedAt: string,
+  opts?: BuildReportOpts,
 ): Promise<CompanyAnalysisReport> {
   const { provider, intelProvider, usedYahoo, usedFmp } = providers;
+  const instrumentKind = opts?.instrumentKind ?? "equity";
+  const isEtf = instrumentKind === "etf";
   const needCore = gaps.includes("core");
-  const needEarnings = gaps.includes("earnings") || gaps.includes("nextQuarter") || needCore;
+  const needEarnings = !isEtf && (gaps.includes("earnings") || gaps.includes("nextQuarter") || needCore);
   const needNews = gaps.includes("news");
-  const needInsiders = gaps.includes("insiders");
-  const needCongress = gaps.includes("congress");
-  const needAlt = gaps.includes("alternative");
+  const needInsiders = !isEtf && gaps.includes("insiders");
+  const needCongress = !isEtf && gaps.includes("congress");
+  const needAlt = !isEtf && gaps.includes("alternative");
+  const needEtf = isEtf && (gaps.includes("etf") || needCore);
 
   let quote: ProviderQuoteResult | null = null;
   let overview: CompanyOverview | null = null;
@@ -254,6 +311,7 @@ export async function buildGapFillReport(
   let congress: FmpCongressTrade[] | null = null;
   let peers: CompanyAnalysisPeer[] = [];
   let nextQuarter: NextQuarterConsensus | null = null;
+  let etfHoldings: Awaited<ReturnType<YahooProvider["getETFHoldings"]>> = null;
 
   const tasks: Promise<void>[] = [];
 
@@ -264,7 +322,9 @@ export async function buildGapFillReport(
           settled(provider.getQuote(ticker)),
           settled(provider.getOverview?.(ticker) ?? Promise.resolve(null)),
           settled(provider.getHistorical(ticker, "1y")),
-          settled(provider.getIncomeStatement?.(ticker) ?? Promise.resolve(null)),
+          isEtf
+            ? Promise.resolve(null)
+            : settled(provider.getIncomeStatement?.(ticker) ?? Promise.resolve(null)),
         ]);
         quote = q;
         overview = o;
@@ -338,6 +398,15 @@ export async function buildGapFillReport(
     );
   }
 
+  if (needEtf) {
+    tasks.push(
+      (async () => {
+        const yahoo = new YahooProvider();
+        etfHoldings = await settled(yahoo.getETFHoldings(ticker));
+      })(),
+    );
+  }
+
   await Promise.all(tasks);
 
   return assembleReport({
@@ -356,6 +425,9 @@ export async function buildGapFillReport(
     congress,
     peers,
     usedYahoo,
-    usedFmp,
+    usedFmp: isEtf ? false : usedFmp,
+    instrumentKind,
+    etfHoldings,
+    isin: opts?.isin ?? null,
   });
 }

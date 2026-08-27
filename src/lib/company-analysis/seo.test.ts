@@ -115,6 +115,43 @@ describe("company-analysis seo", () => {
     expect(analisisTickerUrl("msft")).toBe("https://trefolio.com/analisis/MSFT");
   });
 
+  it("emits InvestmentFund JSON-LD and ETF title for funds", () => {
+    const report = minimalReport({
+      ticker: "BITC.DE",
+      instrumentKind: "etf",
+      profile: {
+        name: "CoinShares Physical Bitcoin",
+        sector: "",
+        industry: "",
+        description: "Bitcoin ETP",
+        exchange: "XETRA",
+        ipoDate: null,
+      },
+      etf: {
+        isin: "GB00BLD4ZL17",
+        fundFamily: "CoinShares",
+        category: "Digital Assets",
+        legalType: "ETP",
+        expenseRatio: 0.0098,
+        inceptionDate: "2021-01-01",
+        totalAssets: 1e9,
+        holdings: [],
+        sectorWeightings: [],
+        assetClassWeightings: [],
+      },
+    });
+    expect(buildAnalisisTickerTitle("BITC", report)).toBe(
+      "CoinShares Physical Bitcoin (BITC) ETF analysis — trefolio",
+    );
+    const desc = buildAnalisisTickerDescription("BITC", report);
+    expect(desc).toContain("ETF analysis");
+    expect(desc).toContain("CoinShares");
+    expect(desc.toLowerCase()).toContain("not investment advice");
+    const schemas = buildAnalisisTickerJsonLd({ ticker: "BITC", report });
+    expect(schemas[0]["@type"]).toBe("InvestmentFund");
+    expect(schemas[0].identifier).toBe("GB00BLD4ZL17");
+  });
+
   it("emits Corporation + WebPage + BreadcrumbList JSON-LD", () => {
     const schemas = buildAnalisisTickerJsonLd({ ticker: "AAPL", report: minimalReport() });
     expect(schemas).toHaveLength(3);

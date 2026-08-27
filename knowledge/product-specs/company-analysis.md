@@ -30,7 +30,7 @@ Back from a ticker report always goes to `/` (landing for anonymous, dashboard w
 
 ## 4. Data model
 
-Durable Turso table `company_analysis_cache` (migration 121) keyed by `report:TICKER` / `narrative:TICKER:lang`, with `generated_at`, `expires_at` (1 day), and `last_gap_retry_at` for narrative AI gap fills. In-process L1 mirror in `src/lib/company-analysis/cache.ts`. Quota key `company_analysis` in `src/lib/platform-config.ts` (charged on full report build only). Live quote overlays on cache hits via `withLiveQuote` (not written into the day cache).
+- Durable Turso table `company_analysis_cache` (migration 121) keyed by `report:TICKER` / `report:etf:TICKER` / `narrative:TICKER:lang` / `narrative:etf:TICKER:lang`, with `generated_at`, `expires_at` (1 day), and `last_gap_retry_at` for narrative AI gap fills. In-process L1 mirror in `src/lib/company-analysis/cache.ts`. Quota key `company_analysis` in `src/lib/platform-config.ts` (charged on full report build only). Live quote overlays on cache hits via `withLiveQuote` (not written into the day cache).
 
 ## 5. API surface
 
@@ -61,6 +61,7 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 - Congress: FMP `senate-trades` + `house-trades`; empty state when none in 12 months.
 - Sector alternative: peer with better distance-to-52w-high than subject; editorial disclaimer required.
 - Outbound URLs sanitized to `http:`/`https:` only.
+- **ETF/ETP branch:** when Yahoo `quoteType` is a fund (or name heuristics match), the same URL renders a fund profile — see [etf-analysis](etf-analysis.md). Cache keys are `report:etf:TICKER`. Equity EPS/insider/Congress/moat chrome is omitted.
 
 ## 8. External dependencies
 

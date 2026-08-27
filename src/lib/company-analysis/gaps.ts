@@ -12,7 +12,8 @@ export type ReportGap =
   | "news"
   | "insiders"
   | "congress"
-  | "alternative";
+  | "alternative"
+  | "etf";
 
 const NARRATIVE_TEXT_KEYS = [
   "description",
@@ -23,9 +24,30 @@ const NARRATIVE_TEXT_KEYS = [
   "insiderReading",
 ] as const;
 
+const ETF_NARRATIVE_TEXT_KEYS = [
+  "description",
+  "sectorOutlook",
+  "risks",
+  "technicalReading",
+] as const;
+
 export type NarrativeTextKey = (typeof NARRATIVE_TEXT_KEYS)[number];
 
 export function findReportGaps(report: CompanyAnalysisReport): ReportGap[] {
+  if (report.instrumentKind === "etf") {
+    const gaps: ReportGap[] = [];
+    if (!report.quote && !report.profile) gaps.push("core");
+    if (report.news.status === "unavailable") gaps.push("news");
+    const etf = report.etf;
+    const hasComposition =
+      Boolean(etf?.fundFamily) ||
+      Boolean(etf?.category) ||
+      (etf?.holdings?.length ?? 0) > 0 ||
+      (etf?.sectorWeightings?.length ?? 0) > 0;
+    if (!hasComposition) gaps.push("etf");
+    return gaps;
+  }
+
   const gaps: ReportGap[] = [];
   if (!report.quote && !report.profile) gaps.push("core");
   if (report.fundamentals.status === "unavailable") gaps.push("core");
@@ -42,6 +64,37 @@ export function findReportGaps(report: CompanyAnalysisReport): ReportGap[] {
   if (report.congress.status === "unavailable") gaps.push("congress");
   if (report.alternative.status === "unavailable") gaps.push("alternative");
   return gaps;
+}
+
+function mergeEtfSlice(
+  base: CompanyAnalysisReport["etf"],
+  fill: CompanyAnalysisReport["etf"],
+): CompanyAnalysisReport["etf"] {
+  if (!base) return fill ?? null;
+  if (!fill) return base;
+  const baseThin =
+    !base.fundFamily &&
+    !base.category &&
+    (base.holdings?.length ?? 0) === 0 &&
+    (base.sectorWeightings?.length ?? 0) === 0;
+  if (baseThin) return { ...base, ...fill, isin: base.isin || fill.isin };
+  return {
+    ...base,
+    isin: base.isin || fill.isin,
+    fundFamily: base.fundFamily || fill.fundFamily,
+    category: base.category || fill.category,
+    legalType: base.legalType || fill.legalType,
+    expenseRatio: base.expenseRatio ?? fill.expenseRatio,
+    inceptionDate: base.inceptionDate ?? fill.inceptionDate,
+    totalAssets: base.totalAssets ?? fill.totalAssets,
+    holdings: (base.holdings?.length ?? 0) > 0 ? base.holdings : fill.holdings,
+    sectorWeightings:
+      (base.sectorWeightings?.length ?? 0) > 0 ? base.sectorWeightings : fill.sectorWeightings,
+    assetClassWeightings:
+      (base.assetClassWeightings?.length ?? 0) > 0
+        ? base.assetClassWeightings
+        : fill.assetClassWeightings,
+  };
 }
 
 export function mergeReportFill(
@@ -117,6 +170,8 @@ export function mergeReportFill(
 
   return {
     ...base,
+    instrumentKind: base.instrumentKind ?? fill.instrumentKind,
+    etf: mergeEtfSlice(base.etf, fill.etf),
     quote: base.quote ?? fill.quote,
     profile: base.profile ?? fill.profile,
     fundamentals,
@@ -135,13 +190,15 @@ export function mergeReportFill(
 
 export function findNarrativeGaps(
   narrative: Record<string, unknown>,
-  opts?: { needLastEps?: boolean; needGuidance?: boolean },
+  opts?: { needLastEps?: boolean; needGuidance?: boolean; etf?: boolean },
 ): string[] {
   const gaps: string[] = [];
-  for (const key of NARRATIVE_TEXT_KEYS) {
+  const keys = opts?.etf ? ETF_NARRATIVE_TEXT_KEYS : NARRATIVE_TEXT_KEYS;
+  for (const key of keys) {
     const v = narrative[key];
     if (typeof v !== "string" || !v.trim()) gaps.push(key);
   }
+  if (opts?.etf) return gaps;
   if (opts?.needLastEps) {
     if (narrative.lastEps == null || !narrative.lastEpsSourceUrl) gaps.push("lastEps");
   }

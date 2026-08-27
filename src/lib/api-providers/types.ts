@@ -192,6 +192,12 @@ export interface ETFHoldingsData {
   category: string;
   fundFamily: string;
   legalType: string;
+  /** Annual expense ratio as a fraction when Yahoo provides it (e.g. 0.0007 = 0.07%). */
+  expenseRatio?: number | null;
+  /** ISO date `YYYY-MM-DD` when Yahoo provides fund inception. */
+  inceptionDate?: string | null;
+  /** Fund AUM when Yahoo provides totalAssets / totalNetAssets. */
+  totalAssets?: number | null;
 }
 
 /* ── Economic Indicators types ───────────────────────────── */

@@ -30,15 +30,24 @@ function rowToCache(row: Record<string, unknown>): CompanyAnalysisCacheRow {
   };
 }
 
-export function companyAnalysisReportCacheKey(ticker: string): string {
-  return `report:${ticker.toUpperCase()}`;
+export function companyAnalysisReportCacheKey(
+  ticker: string,
+  instrumentKind: "equity" | "etf" = "equity",
+): string {
+  const t = ticker.toUpperCase();
+  return instrumentKind === "etf" ? `report:etf:${t}` : `report:${t}`;
 }
 
 export function companyAnalysisNarrativeCacheKey(
   ticker: string,
   language: string,
+  instrumentKind: "equity" | "etf" = "equity",
 ): string {
-  return `narrative:${ticker.toUpperCase()}:${(language || "en").toLowerCase()}`;
+  const t = ticker.toUpperCase();
+  const lang = (language || "en").toLowerCase();
+  return instrumentKind === "etf"
+    ? `narrative:etf:${t}:${lang}`
+    : `narrative:${t}:${lang}`;
 }
 
 export async function getCompanyAnalysisDbCache(

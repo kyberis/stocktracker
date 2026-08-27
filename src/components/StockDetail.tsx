@@ -53,9 +53,20 @@ interface StockDetailProps {
   fromScreener?: boolean;
   /** When true, renders as a panel inside another page's layout: no outer <main>, no back button/identity header. */
   embedded?: boolean;
+  /** Override holding-based asset type (analysis ETF landings without a portfolio row). */
+  forceAssetType?: HoldingAssetType;
+  /** Seed holdings so Details does not charge `/api/etf-holdings`. */
+  initialEtfHoldings?: ETFHoldingsData | null;
 }
 
-export default function StockDetail({ ticker, exchange, fromScreener = false, embedded = false }: StockDetailProps) {
+export default function StockDetail({
+  ticker,
+  exchange,
+  fromScreener = false,
+  embedded = false,
+  forceAssetType,
+  initialEtfHoldings = null,
+}: StockDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { hasPremiumMarketData, getApiHeaders } = useSettings();
@@ -101,7 +112,7 @@ export default function StockDetail({ ticker, exchange, fromScreener = false, em
   const [cashflowLoading, setCashflowLoading] = useState(false);
   const [earningsLoading, setEarningsLoading] = useState(false);
 
-  const [etfHoldings, setEtfHoldings] = useState<ETFHoldingsData | null>(null);
+  const [etfHoldings, setEtfHoldings] = useState<ETFHoldingsData | null>(initialEtfHoldings);
   const [etfHoldingsLoading, setEtfHoldingsLoading] = useState(false);
   const [assetTypeDraft, setAssetTypeDraft] = useState<HoldingAssetType>("stock");
   const [assetTypeSaving, setAssetTypeSaving] = useState(false);
@@ -293,7 +304,7 @@ export default function StockDetail({ ticker, exchange, fromScreener = false, em
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mainTab, financialSub, canAccessPremium]);
 
-  const assetType: HoldingAssetType = holding?.assetType ?? "stock";
+  const assetType: HoldingAssetType = forceAssetType ?? holding?.assetType ?? "stock";
 
   const mainTabs: { key: MainTab; label: string }[] =
     assetType === "etf"

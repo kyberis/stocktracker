@@ -12,6 +12,7 @@ export default function AnalysisNarrativePanel({ data }: { data: CompanyAnalysis
   const { report, narrative, narrativePending } = data;
   if (!report) return null;
 
+  const isEtf = report.instrumentKind === "etf";
   const competitiveFallback = [
     report.profile?.sector ? `${t("companyAnalysisSector")}: ${report.profile.sector}` : null,
     report.profile?.industry ? `${t("companyAnalysisIndustry")}: ${report.profile.industry}` : null,
@@ -22,10 +23,10 @@ export default function AnalysisNarrativePanel({ data }: { data: CompanyAnalysis
   const sectorOutlookText = narrative?.sectorOutlook?.trim() || "";
   const risksText = narrative?.risks?.trim() || "";
 
-  const showCompetitive = shouldShowNarrativeSection(narrativePending, competitiveText);
+  const showCompetitive = !isEtf && shouldShowNarrativeSection(narrativePending, competitiveText);
   const showSector = shouldShowNarrativeSection(narrativePending, sectorOutlookText, risksText);
   const showAlternative =
-    report.alternative.status !== "unavailable" && Boolean(report.alternative.ticker);
+    !isEtf && report.alternative.status !== "unavailable" && Boolean(report.alternative.ticker);
 
   return (
     <div className="space-y-6">
@@ -51,7 +52,7 @@ export default function AnalysisNarrativePanel({ data }: { data: CompanyAnalysis
         <section className="card space-y-3 p-6" aria-labelledby="ca-sector">
           <div className="flex flex-wrap items-center gap-2">
             <h2 id="ca-sector" className="text-xl font-semibold text-[color:var(--foreground)]">
-              {t("companyAnalysisSectorOutlook")}
+              {t(isEtf ? "etfAnalysisExposure" : "companyAnalysisSectorOutlook")}
             </h2>
             <span className="rounded bg-[color:var(--accent-light)] px-2 py-0.5 text-[11px] font-semibold uppercase text-[color:var(--accent)]">
               {t("companyAnalysisInterpretationBadge")}

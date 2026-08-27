@@ -22,10 +22,13 @@ export default function AnalisisSeoContent({
   /** When false (logged-in app shell), hide signup/login teaser. */
   showAuthCta?: boolean;
 }) {
+  const isEtf = report?.instrumentKind === "etf";
   const name = report?.profile?.name?.trim() || ticker;
   const description =
     report?.profile?.description?.trim() ||
-    `${name} (${ticker}) company analysis on trefolio — fundamentals, technicals, news, and AI narrative for European investors.`;
+    (isEtf
+      ? `${name} (${ticker}) ETF analysis on trefolio — fund facts, holdings weights, technicals, news, and AI narrative for European investors.`
+      : `${name} (${ticker}) company analysis on trefolio — fundamentals, technicals, news, and AI narrative for European investors.`);
   const sector = report?.profile?.sector?.trim();
   const industry = report?.profile?.industry?.trim();
   const exchange = report?.profile?.exchange?.trim();
@@ -41,7 +44,7 @@ export default function AnalisisSeoContent({
           <ol className="flex flex-wrap items-center gap-1.5">
             <li>
               <Link href={ANALISIS_HUB_URL} className="underline-offset-2 hover:underline">
-                Stock analysis
+                {isEtf ? "ETF analysis" : "Stock analysis"}
               </Link>
             </li>
             <li aria-hidden="true">/</li>
@@ -51,7 +54,7 @@ export default function AnalisisSeoContent({
           </ol>
         </nav>
         <h1 className="text-xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-2xl">
-          {name === ticker ? ticker : `${name} (${ticker})`} stock analysis
+          {name === ticker ? ticker : `${name} (${ticker})`} {isEtf ? "ETF analysis" : "stock analysis"}
         </h1>
         <p className="max-w-3xl text-sm leading-relaxed text-[color:var(--muted)]">
           {description.length > 600 ? `${description.slice(0, 597)}…` : description}
