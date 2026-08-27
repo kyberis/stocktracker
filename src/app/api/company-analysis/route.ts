@@ -24,7 +24,7 @@ import {
 import { withLiveQuote } from "@/lib/company-analysis/live-quote";
 import { COMPANY_ANALYSIS_RESPONSE_HEADERS } from "@/lib/company-analysis/http";
 import { redactPaidSections } from "@/lib/company-analysis/redact";
-import { parseTicker } from "@/lib/company-analysis/ticker";
+import { parseIsinParam, parseTicker } from "@/lib/company-analysis/ticker";
 import type { CompanyAnalysisReport } from "@/lib/company-analysis/types";
 import {
   companyAnalysisReportCacheKey,
@@ -33,6 +33,7 @@ import {
   upsertCompanyAnalysisDbCache,
 } from "@/lib/db";
 import { json401 } from "@/lib/log-unauthorized";
+import { disambiguateListing } from "@/lib/market-symbol";
 import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import {
   resolveFundamentalsProvider,
@@ -118,13 +119,19 @@ async function persistReport(
 
 export const GET = withMetrics("/api/company-analysis", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
-  const ticker = parseTicker(searchParams.get("symbol") ?? searchParams.get("ticker"));
-  if (!ticker) {
+  const requested = parseTicker(searchParams.get("symbol") ?? searchParams.get("ticker"));
+  if (!requested) {
     return Response.json(
       { error: "Valid ticker required (pattern ^[A-Z0-9.\\-]{1,10}$)" },
       { status: 400 },
     );
   }
+
+  const ticker = disambiguateListing({
+    ticker: requested,
+    exchange: searchParams.get("exchange"),
+    isin: parseIsinParam(searchParams.get("isin")),
+  }).ticker;
 
   const fresh = searchParams.get("fresh") === "1";
   const session = await getSessionFromRequest(request);

@@ -11,7 +11,8 @@ import { buildLoginRedirectHref } from "@/lib/auth/client-redirect";
 import { getMarketStatus } from "@/lib/market-hours";
 import { formatAnalysisNumber } from "@/lib/company-analysis/format";
 import { toTradingViewChartUrl } from "@/lib/company-analysis/tradingview";
-import { toYahooFinanceQuoteUrl } from "@/lib/market-symbol";
+import { baseTickerName } from "@/lib/db/helpers";
+import { disambiguateListing, toYahooFinanceQuoteUrl } from "@/lib/market-symbol";
 import { useTabUrl } from "@/lib/use-tab-url";
 import VerticalTabRail, { type TabRailItem } from "@/components/ui/VerticalTabRail";
 import { useCompanyAnalysisReport } from "@/components/company-analysis/use-company-analysis-report";
@@ -23,7 +24,8 @@ import InsidersFlowPanel from "@/components/company-analysis/panels/InsidersFlow
 import FundamentalsTablePanel from "@/components/company-analysis/panels/FundamentalsTablePanel";
 
 function ExternalQuoteLinks({ ticker, exchange }: { ticker: string; exchange: string }) {
-  const tradingViewUrl = toTradingViewChartUrl(ticker, exchange);
+  const tvTicker = /\.(DE|F|SW)$/i.test(ticker) ? baseTickerName(ticker) : ticker;
+  const tradingViewUrl = toTradingViewChartUrl(tvTicker, exchange);
   const yahooUrl = toYahooFinanceQuoteUrl(ticker, exchange);
   const linkClass =
     "inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-2.5 py-1.5 text-xs font-semibold text-[color:var(--foreground)] transition-colors hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]";
@@ -90,10 +92,12 @@ export default function AnalisisShell({
   ticker,
   exchange,
   reportId,
+  isin,
 }: {
   ticker: string;
   exchange: string;
   reportId?: string;
+  isin?: string;
 }) {
   const { t, language } = useI18n();
   const { user } = useAuth();
@@ -114,16 +118,34 @@ export default function AnalisisShell({
     return () => clearInterval(id);
   }, []);
 
-  const holding = useMemo(
-    () =>
-      holdings.find(
-        (h) => h.ticker.toUpperCase() === ticker.toUpperCase() && (!exchange || h.exchange.toUpperCase() === exchange.toUpperCase()),
-      ) || holdings.find((h) => h.ticker.toUpperCase() === ticker.toUpperCase()),
-    [holdings, ticker, exchange],
+  const listing = useMemo(
+    () => disambiguateListing({ ticker, exchange, isin }),
+    [ticker, exchange, isin],
   );
 
-  const data = useCompanyAnalysisReport(ticker);
-  const resolvedExchange = exchange || holding?.exchange || data.report?.profile?.exchange || "";
+  const holding = useMemo(() => {
+    const isinWant = (isin || listing.isin || "").toUpperCase();
+    if (isinWant) {
+      const byIsin = holdings.find((h) => (h.isin || "").toUpperCase() === isinWant);
+      if (byIsin) return byIsin;
+    }
+    const want = ticker.toUpperCase();
+    const base = baseTickerName(ticker).toUpperCase();
+    return (
+      holdings.find(
+        (h) =>
+          h.ticker.toUpperCase() === want &&
+          (!exchange || h.exchange.toUpperCase() === exchange.toUpperCase()),
+      ) ||
+      holdings.find((h) => h.ticker.toUpperCase() === want) ||
+      holdings.find((h) => h.ticker.toUpperCase() === listing.ticker.toUpperCase()) ||
+      holdings.find((h) => baseTickerName(h.ticker).toUpperCase() === base)
+    );
+  }, [holdings, ticker, exchange, isin, listing.isin, listing.ticker]);
+
+  const data = useCompanyAnalysisReport(listing.ticker);
+  const resolvedExchange =
+    listing.exchange || exchange || holding?.exchange || data.report?.profile?.exchange || "";
   const marketStatus = resolvedExchange ? getMarketStatus(resolvedExchange, now) : null;
 
   const tabs: TabRailItem<TabId>[] = [
@@ -184,7 +206,7 @@ export default function AnalisisShell({
             </p>
             {resolvedExchange && (
               <span className="rounded-lg border border-[color:var(--accent)] px-2.5 py-1 text-sm font-semibold text-[color:var(--accent)]">
-                {resolvedExchange} · {ticker}
+                {resolvedExchange} · {listing.ticker}
               </span>
             )}
             {marketStatus && (
@@ -225,7 +247,7 @@ export default function AnalisisShell({
               {report?.cached ? ` · ${t("companyAnalysisCached")}` : ""}
             </p>
           )}
-          <ExternalQuoteLinks ticker={ticker} exchange={resolvedExchange} />
+          <ExternalQuoteLinks ticker={listing.ticker} exchange={resolvedExchange} />
         </div>
         {priceFormatted != null && (
           <div className="text-right" data-nosnippet>
@@ -274,20 +296,20 @@ export default function AnalisisShell({
               {activeTab === "details" && !user && <LockedTabPanel ticker={ticker} />}
               {visited.has("details") && user && (
                 <div hidden={activeTab !== "details"}>
-                  <StockDetail ticker={ticker} exchange={resolvedExchange} embedded />
+                  <StockDetail ticker={listing.ticker} exchange={resolvedExchange} embedded />
                 </div>
               )}
               {activeTab === "intelligence" && !user && <LockedTabPanel ticker={ticker} />}
               {visited.has("intelligence") && user && (
                 <div hidden={activeTab !== "intelligence"}>
-                  <StockIntelligence ticker={ticker} exchange={resolvedExchange} embedded />
+                  <StockIntelligence ticker={listing.ticker} exchange={resolvedExchange} embedded />
                 </div>
               )}
               {activeTab === "evaluation" && !user && <LockedTabPanel ticker={ticker} />}
               {visited.has("evaluation") && user && (
                 <div hidden={activeTab !== "evaluation"}>
                   <StockEvaluation
-                    ticker={ticker}
+                    ticker={listing.ticker}
                     exchange={resolvedExchange}
                     reportId={reportId}
                     embedded

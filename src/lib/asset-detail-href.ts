@@ -1,4 +1,5 @@
 import type { Holding } from "@/lib/types";
+import { looksLikeIsin } from "@/lib/isin";
 import {
   CRYPTO_PAGE_SUPPORTED_SYMBOLS,
   yahooCryptoSymbolToBase,
@@ -50,6 +51,8 @@ export function holdingDetailHref(h: Holding): string {
   }
   const q = new URLSearchParams();
   if (h.exchange) q.set("exchange", h.exchange);
+  const isin = (h.isin || "").trim().toUpperCase();
+  if (looksLikeIsin(isin)) q.set("isin", isin);
   const qs = q.toString();
   return `/analisis/${encodeURIComponent(h.ticker)}${qs ? `?${qs}` : ""}`;
 }

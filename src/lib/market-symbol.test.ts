@@ -178,6 +178,12 @@ describe("CoinShares BITC vs NYSE BITC namesake", () => {
       }),
     ).toBe("BITC");
   });
+
+  it("defaults unsuffixed BITC without a US identity to CoinShares", () => {
+    expect(marketDataSymbolForHolding({ ticker: "BITC", exchange: "" })).toBe("GB00BLD4ZL17");
+    expect(marketDataSymbolForHolding({ ticker: "BITC", exchange: "ARCA" })).toBe("GB00BLD4ZL17");
+    expect(marketDataSymbolForHolding({ ticker: "BITC", exchange: "NYSE" })).toBe("GB00BLD4ZL17");
+  });
 });
 
 describe("isTickerExchangeCollision with a missing exchange", () => {
@@ -214,6 +220,48 @@ describe("disambiguateListing", () => {
       ticker: "BITC",
       exchange: "NYSE",
       isin: "",
+    });
+  });
+
+  it("defaults public /analisis/BITC and SnapTrade ARCA without ISIN to CoinShares", () => {
+    expect(disambiguateListing({ ticker: "BITC" })).toEqual({
+      ticker: "BITC.DE",
+      exchange: "XET",
+      isin: "GB00BLD4ZL17",
+    });
+    expect(disambiguateListing({ ticker: "BITC", exchange: "ARCA" })).toEqual({
+      ticker: "BITC.DE",
+      exchange: "XET",
+      isin: "GB00BLD4ZL17",
+    });
+  });
+
+  it("keeps a US ISIN on the unsuffixed namesake", () => {
+    expect(
+      disambiguateListing({
+        ticker: "BITC",
+        exchange: "NYSE",
+        isin: "US09173C2017",
+      }),
+    ).toEqual({
+      ticker: "BITC",
+      exchange: "NYSE",
+      isin: "US09173C2017",
+    });
+  });
+
+  it("maps a GB ISIN even when SnapTrade sends the Bitwise namesake", () => {
+    expect(
+      disambiguateListing({
+        ticker: "BITC",
+        exchange: "ARCA",
+        name: "Bitwise Trendwise Bitcoin and Treasuries Rotation Strategy ETF",
+        isin: "GB00BLD4ZL17",
+      }),
+    ).toEqual({
+      ticker: "BITC.DE",
+      exchange: "XET",
+      isin: "GB00BLD4ZL17",
     });
   });
 
