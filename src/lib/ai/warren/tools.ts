@@ -8,6 +8,7 @@ import {
   listCashEntries,
   listWatchlist as dbListWatchlist,
   listPortfolios as dbListPortfolios,
+  listCalendarEvents,
   queryMoatCache,
 } from "@/lib/db";
 import { getWarrenMoatEvaluation, mapWarrenMoatEvaluationForTool } from "@/lib/services/warren-moat";
@@ -20,6 +21,8 @@ import {
   WARREN_VALUATION_MAX_SYMBOLS,
 } from "@/lib/services/warren-valuation";
 import { createProvider } from "@/lib/api-providers";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { resolveTickerAgainstHoldings } from "./price-move-intent";
 import type { WarrenPart, WarrenProposal, StockSnapshotData } from "./types";
 import type {
   HoldingCardData,
@@ -258,7 +261,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
 
     getTickerNews: tool({
       description:
-        "Load recent news headlines for one or more specific tickers (e.g. UBER, AAPL). ALWAYS call this (and usually getQuote) when the user asks why a stock or sector moved, what happened to a company, catalysts, or recent press about a named ticker — do NOT ask permission and do NOT answer with generic market-factor lists until you have tried this tool. Refreshes stale cache when a provider is configured. Summarize 2-4 themes from the headlines; never invent catalysts not supported by the results.",
+        "Load recent news headlines for one or more specific tickers (e.g. UBER, AAPL). ALWAYS call this with getQuote and getMarketCatalysts when the user asks why a stock or sector moved, what happened to a company, catalysts, or recent press about a named ticker — do NOT ask permission and do NOT answer with generic market-factor lists until you have tried these tools. Refreshes stale cache when a provider is configured. Summarize 2-4 themes from the headlines; never invent catalysts not supported by the results.",
       inputSchema: z.object({
         tickers: z
           .array(z.string().min(1).max(20))
@@ -311,32 +314,123 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
 
     getQuote: tool({
       description:
-        "Get the current quote for one or more tickers from Yahoo Finance: price, day change percent, currency, 52-week high/low.",
+        "Get the current quote for one or more tickers from Yahoo Finance: price, day change percent, currency, 52-week high/low. Prefer venue-suffixed portfolio tickers (e.g. SRB.L). If price is unavailable, the tool returns an error — never invent a price.",
       inputSchema: z.object({
         tickers: z.array(z.string().min(1).max(20)).min(1).max(10),
       }),
       execute: async ({ tickers }) => {
         ctx.emitStep(`Fetching quotes for ${tickers.join(", ")}…`);
         const provider = createProvider("yahoo");
+        const holdings =
+          ctx.snapshot?.topHoldings?.map((h) => ({ ticker: h.ticker })) ??
+          (await dbListHoldings(ctx.userId, ctx.activePortfolioId)).map((h) => ({
+            ticker: h.ticker,
+          }));
         const results = await Promise.all(
-          tickers.map(async (t) => {
+          tickers.map(async (raw) => {
+            const t = resolveTickerAgainstHoldings(raw, holdings);
             try {
               const q = await provider.getQuote(t);
+              const price = q.regularMarketPrice;
+              if (price == null || !(price > 0)) {
+                return {
+                  ticker: t,
+                  requested: raw,
+                  error: "Quote unavailable (no valid price)",
+                };
+              }
               return {
                 ticker: t,
-                price: q.regularMarketPrice,
+                requested: raw !== t ? raw : undefined,
+                price,
                 changePct: q.regularMarketChangePercent,
                 currency: q.currency,
-                fiftyTwoWeekHigh: q.fiftyTwoWeekHigh,
-                fiftyTwoWeekLow: q.fiftyTwoWeekLow,
+                fiftyTwoWeekHigh:
+                  q.fiftyTwoWeekHigh > 0 ? q.fiftyTwoWeekHigh : undefined,
+                fiftyTwoWeekLow:
+                  q.fiftyTwoWeekLow > 0 ? q.fiftyTwoWeekLow : undefined,
                 name: q.shortName,
               };
             } catch {
-              return { ticker: t, error: "Quote unavailable" };
+              return { ticker: t, requested: raw !== t ? raw : undefined, error: "Quote unavailable" };
             }
           }),
         );
         return results;
+      },
+    }),
+
+    getMarketCatalysts: tool({
+      description:
+        "Look up earnings and other calendar catalysts for tickers (trefolio event calendar ± a few days, plus Yahoo next-earnings date when available). ALWAYS call this together with getQuote and getTickerNews when the user asks why a stock moved, what is happening today, or about upcoming results. Prefer portfolio venue tickers (SRB.L).",
+      inputSchema: z.object({
+        tickers: z.array(z.string().min(1).max(20)).min(1).max(10),
+      }),
+      execute: async ({ tickers }) => {
+        ctx.emitStep(`Checking catalysts for ${tickers.join(", ")}…`);
+        if (ctx.isDemo) {
+          return {
+            catalysts: [],
+            note: "Demo mode has no live earnings calendar.",
+          };
+        }
+        const holdings =
+          ctx.snapshot?.topHoldings?.map((h) => ({ ticker: h.ticker })) ??
+          (await dbListHoldings(ctx.userId, ctx.activePortfolioId)).map((h) => ({
+            ticker: h.ticker,
+          }));
+        const resolved = tickers.map((raw) => resolveTickerAgainstHoldings(raw, holdings));
+        const today = new Date().toISOString().slice(0, 10);
+        const from = new Date();
+        from.setUTCDate(from.getUTCDate() - 3);
+        const to = new Date();
+        to.setUTCDate(to.getUTCDate() + 7);
+        const fromIso = from.toISOString().slice(0, 10);
+        const toIso = to.toISOString().slice(0, 10);
+
+        const symbolSet = new Set(resolved.map((t) => t.toUpperCase()));
+        for (const t of resolved) {
+          const base = t.toUpperCase().replace(/\.[A-Z]{1,4}$/, "");
+          symbolSet.add(base);
+        }
+
+        const calendar = await listCalendarEvents({
+          types: ["earnings", "splits"],
+          from: fromIso,
+          to: toIso,
+          symbols: [...symbolSet],
+        });
+
+        const yahoo = new YahooProvider();
+        const yahooNext = await Promise.all(
+          resolved.map(async (t) => {
+            try {
+              const outlook = await yahoo.getNextQuarterConsensus(t);
+              return {
+                ticker: t,
+                nextReportDate: outlook?.nextReportDate ?? null,
+                nextQuarterLabel: outlook?.nextQuarterLabel ?? null,
+              };
+            } catch {
+              return { ticker: t, nextReportDate: null, nextQuarterLabel: null };
+            }
+          }),
+        );
+
+        return {
+          today,
+          calendar: calendar.map((e) => ({
+            type: e.event_type,
+            symbol: e.symbol,
+            name: e.name,
+            date: e.event_date,
+            time: e.event_time,
+            isToday: e.event_date === today,
+          })),
+          yahooNextEarnings: yahooNext,
+          replyHint:
+            "If an earnings date is today or this week, mention it as a possible catalyst. Do not invent results that are not in the calendar or news. Not investment advice.",
+        };
       },
     }),
 
