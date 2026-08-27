@@ -33,8 +33,9 @@
 
 No new tables in MVP.
 
-- Reuse: holdings, quotes, cash, calendar events, alerts, `aid_news_cache`, `user_settings.last_aid_visit_at` (visit mark shared with AID during beta), **`fundamentals_cache` overview** (analyst consensus target per ticker, shared globally).
+- Reuse: holdings, quotes, cash, calendar events, alerts, `aid_news_cache`, `user_settings.last_aid_visit_at` (visit mark shared with AID during beta), **`fundamentals_cache` overview** (analyst consensus target per ticker, shared globally in the instrument's native currency).
 - Types: `HomeDayHighlight` (+ reason discriminated union) in `src/lib/homepage/types.ts` or `src/lib/types.ts`; `AnalystTargetSnapshot` in `src/lib/types.ts`.
+- Display: holdings list (`StockRow` / `PortfolioCards`) converts cached targets into the portfolio/user currency via FX rates so they compare with holding values; cache stays in the original currency.
 
 ## 5. API surface
 
