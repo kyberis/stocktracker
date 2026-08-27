@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.242",
+    date: "2026-08-27",
+    title: "Investor Briefing portfolio total parity",
+    titleTranslations: {
+      es: "Paridad del total del portfolio en Investor Briefing",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Investor Briefing (/aid) portfolio total now includes fixed-return cash positions, matching the home dashboard total.",
+        translations: {
+          es: "El total del portfolio en Investor Briefing (/aid) incluye ahora posiciones de renta fija en efectivo, igual que en la home.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.241",
     date: "2026-08-27",
     title: "Broker sync: map European namesakes by last price",
