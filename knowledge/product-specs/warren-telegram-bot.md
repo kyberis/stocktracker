@@ -76,13 +76,6 @@ the web Warren drawer is maintained:
 2. [`runWarrenTurn`](../../src/lib/ai/warren/run-turn.ts) — runs `streamText` with the full Warren tool kit (`buildWarrenTools`) and the channel-aware system prompt (`channel: "telegram"`).
 3. [`dispatchProposal`](../../src/lib/ai/warren/dispatch.ts) — same write-path used by the web `/api/warren/confirm` route. Plan limits are enforced inside.
 
-Price-move questions ("por qué bajó X?", "why did Uber drop?") share the same
-path: [`buildPriceMovePrefetchAppendix`](../../src/lib/ai/warren/price-move-intent.ts)
-resolves fuzzy company names to portfolio venue tickers (e.g. Sarabi → SRB.L),
-surfaces calendar earnings for today/this week, and the turn must call
-`getQuote` + `getTickerNews` + `getMarketCatalysts`. Quotes with price ≤ 0 are
-returned as errors so Warren never narrates "USD 0".
-
 Web `/api/warren/chat` is unchanged in behavior; it now delegates to the same
 `runWarrenTurn` core.
 
