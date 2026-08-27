@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   upsertHoldingsFromPositions,
   reconcileSnapTradeHoldingsAfterBulkImport,
+  persistHoldingIsin,
+  reenrichHoldingsValueInEUR,
 } from "./holdings";
 
 const { mockExecute, mockBatch, mockClient } = vi.hoisted(() => {
@@ -10,6 +12,8 @@ const { mockExecute, mockBatch, mockClient } = vi.hoisted(() => {
   const mockClient = { execute: mockExecute, batch: mockBatch };
   return { mockExecute, mockBatch, mockClient };
 });
+
+import { marketDataSymbolForHolding } from "@/lib/market-symbol";
 
 vi.mock("@/lib/db/client", () => ({
   ensureInitialized: vi.fn().mockResolvedValue(mockClient),
@@ -29,15 +33,21 @@ vi.mock("./transactions", () => ({
 
 vi.mock("@/lib/api-providers/yahoo", () => ({
   YahooProvider: vi.fn().mockImplementation(() => ({
+    search: vi.fn().mockResolvedValue([{ symbol: "GB00BLD4ZL17.SG" }]),
     getQuote: vi.fn().mockResolvedValue({ regularMarketPrice: 10, currency: "EUR" }),
     getExchangeRate: vi.fn().mockResolvedValue(1),
   })),
 }));
 
-vi.mock("@/lib/utils", () => ({
-  convertToEUR: vi.fn((val: number) => val),
-  resolveQuoteCurrency: vi.fn((_display: string, quote: string) => quote || "EUR"),
-}));
+vi.mock("@/lib/utils", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/utils")>();
+  return {
+    ...actual,
+    convertToEUR: vi.fn((val: number) => val),
+    resolveQuoteCurrency: vi.fn((_display: string, quote: string) => quote || "EUR"),
+    hasExchangeRate: vi.fn(() => true),
+  };
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -282,5 +292,110 @@ describe("reconcileSnapTradeHoldingsAfterBulkImport", () => {
 
     expect(updated).toBe(0);
     expect(mockExecute).toHaveBeenCalledTimes(1);
+  });
+});
+
+const bitcExistingRow = {
+  id: "h-bitc",
+  ticker: "BITC",
+  exchange: "ARCX",
+  name: "Bitwise Trendwise",
+  isin: "GB00BLD4ZL17",
+  asset_type: "etf",
+  sector: "",
+  region: "",
+  asset_class: "",
+  account_id: "",
+  source: "snaptrade",
+  value_in_eur: 16000,
+  figi_share_class: "BBG01FZQP6S8",
+  tags: "[]",
+  purchase_price: 40,
+};
+
+const incomingBitc = {
+  name: "Bitwise Trendwise Bitcoin and Treasuries Rotation Strategy ETF",
+  ticker: "BITC",
+  shares: 257,
+  purchasePrice: 0,
+  displayCurrency: "USD",
+  exchange: "ARCX",
+  assetType: "etf",
+  figiShareClass: "BBG01FZQP6S8",
+  isin: "",
+};
+
+describe("upsertHoldingsFromPositions sticky namesake ISIN", () => {
+  it("keeps a discovered non-US ISIN when SnapTrade omits it on the next sync", async () => {
+    mockExecute.mockImplementation(async (q: { sql?: string }) => {
+      if (String(q.sql || "").includes("SELECT id, ticker")) {
+        return { rows: [bitcExistingRow] };
+      }
+      return { rows: [], rowsAffected: 1 };
+    });
+
+    const upserted = await upsertHoldingsFromPositions("user-1", [incomingBitc], "portfolio-1");
+    expect(upserted[0].isin).toBe("GB00BLD4ZL17");
+    expect(upserted[0].ticker).toBe("BITC");
+    expect(marketDataSymbolForHolding(upserted[0])).toBe("GB00BLD4ZL17");
+
+    const shareUpdate = mockExecute.mock.calls.find((c) =>
+      String(c[0]?.sql || "").includes("isin = ?"),
+    );
+    expect(shareUpdate?.[0].args).toContain("GB00BLD4ZL17");
+    expect(shareUpdate?.[0].args).toContain("BITC");
+  });
+
+  it("does not FIGI-unsuffix BITC.DE when a sticky non-US ISIN is already stored", async () => {
+    mockExecute.mockImplementation(async (q: { sql?: string }) => {
+      if (String(q.sql || "").includes("SELECT id, ticker")) {
+        return {
+          rows: [{ ...bitcExistingRow, ticker: "BITC.DE", exchange: "XET" }],
+        };
+      }
+      return { rows: [], rowsAffected: 1 };
+    });
+
+    const upserted = await upsertHoldingsFromPositions("user-1", [incomingBitc], "portfolio-1");
+    expect(upserted[0].ticker).toBe("BITC.DE");
+    expect(upserted[0].isin).toBe("GB00BLD4ZL17");
+    expect(upserted[0].exchange).toBe("XET");
+
+    const rename = mockExecute.mock.calls.find((c) =>
+      String(c[0]?.sql || "").startsWith("UPDATE holdings SET ticker = ?, exchange = ?"),
+    );
+    expect(rename).toBeUndefined();
+  });
+
+  it("persistHoldingIsin updates only the ISIN column", async () => {
+    mockExecute.mockResolvedValue({ rows: [], rowsAffected: 1 });
+    await persistHoldingIsin("user-1", "h-bitc", "GB00BLD4ZL17");
+    expect(mockExecute).toHaveBeenCalledWith({
+      sql: "UPDATE holdings SET isin = ? WHERE id = ? AND user_id = ?",
+      args: ["GB00BLD4ZL17", "h-bitc", "user-1"],
+    });
+  });
+
+  it("reenrichHoldingsValueInEUR writes quoted value_in_eur", async () => {
+    mockExecute.mockResolvedValue({ rows: [], rowsAffected: 1 });
+    const holding = {
+      id: "h-bitc",
+      name: "BITC",
+      ticker: "BITC",
+      isin: "GB00BLD4ZL17",
+      assetType: "etf" as const,
+      shares: 257,
+      purchasePrice: 40,
+      displayCurrency: "USD",
+      exchange: "ARCX",
+      valueInEUR: 0,
+      tags: [],
+    };
+    await reenrichHoldingsValueInEUR("user-1", [holding]);
+    expect(holding.valueInEUR).toBe(2570);
+    expect(mockExecute).toHaveBeenCalledWith({
+      sql: "UPDATE holdings SET value_in_eur = ? WHERE id = ? AND user_id = ?",
+      args: [2570, "h-bitc", "user-1"],
+    });
   });
 });

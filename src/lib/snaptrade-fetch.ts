@@ -33,6 +33,7 @@ import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { portfolioImportsTotal } from "@/lib/metrics";
 import { maybeNotifyFirstSyncHoldings } from "@/lib/snaptrade-first-sync";
 import { reconcileSnapTradeMarksAndNotify } from "@/lib/snaptrade-mark-gap-notify";
+import { remapNamesakesFromBrokerMarks } from "@/lib/snaptrade-namesake-remap";
 
 export interface SnapTradeFetchOk {
   ok: true;
@@ -205,6 +206,15 @@ export async function runSnapTradeFetch(
       });
       await linkUnlinkedTransactionsToHoldings(userId, targetPId);
     }
+
+    lastUpserted = await remapNamesakesFromBrokerMarks(
+      userId,
+      holdingsResult.holdings,
+      lastUpserted,
+    ).catch((err) => {
+      console.warn(`[SnapTrade] namesake remap failed for user ${userId}:`, err);
+      return lastUpserted;
+    });
 
     await reconcileSnapTradeMarksAndNotify(
       userId,

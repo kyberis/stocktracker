@@ -8,6 +8,8 @@ import {
   yahooSymbolFromTickerExchange,
   disambiguateListing,
   isListingCollisionRemap,
+  knownNonUsIsinForBaseTicker,
+  shouldPreserveListingAgainstFigiRename,
 } from "./market-symbol";
 
 describe("isTickerExchangeCollision", () => {
@@ -218,5 +220,31 @@ describe("disambiguateListing", () => {
   it("treats BITC → BITC.DE as a listing remap", () => {
     expect(isListingCollisionRemap("BITC", "BITC.DE")).toBe(true);
     expect(isListingCollisionRemap("AAPL", "AAPL.DE")).toBe(false);
+  });
+});
+
+describe("knownNonUsIsinForBaseTicker", () => {
+  it("returns the CoinShares ISIN for BITC", () => {
+    expect(knownNonUsIsinForBaseTicker("BITC")).toBe("GB00BLD4ZL17");
+    expect(knownNonUsIsinForBaseTicker("AAPL")).toBe("");
+  });
+});
+
+describe("shouldPreserveListingAgainstFigiRename", () => {
+  it("is true only for a non-US ISIN plus an unsuffixed incoming ticker", () => {
+    expect(
+      shouldPreserveListingAgainstFigiRename({
+        existingIsin: "GB00BLD4ZL17",
+        incomingTicker: "BITC",
+        incomingExchange: "ARCX",
+      }),
+    ).toBe(true);
+    expect(
+      shouldPreserveListingAgainstFigiRename({
+        existingIsin: "GB00BLD4ZL17",
+        incomingTicker: "BITC.DE",
+        incomingExchange: "XET",
+      }),
+    ).toBe(false);
   });
 });

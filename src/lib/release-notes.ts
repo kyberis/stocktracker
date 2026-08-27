@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.241",
+    version: "2.5.242",
     date: "2026-08-27",
     title: "Portugal real-estate zone screening (beta)",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Behind the real_estate_screening_enabled flag: pick Portugal zones from the official INE catalogue, set budget, down payment, size and mortgage term, and run an async cash-flow report. Informational only — not investment advice. Listing portals stay stubbed until a data-source ADR is approved.",
         translations: {
           es: "Detrás del flag real_estate_screening_enabled: elige zonas de Portugal del catálogo oficial del INE, fija presupuesto, entrada, superficie y plazo, y lanza un informe de caja asíncrono. Solo informativo — no es consejo de inversión. Los portales de anuncios siguen en stub hasta aprobar el ADR de fuente de datos.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.241",
+    date: "2026-08-27",
+    title: "Broker sync: map European namesakes by last price",
+    titleTranslations: {
+      es: "Sync de bróker: mapear homónimos europeos por último precio",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "When a broker last matches a European listing but Yahoo would quote a same-ticker US namesake (for example IBKR BITC / CoinShares vs NYSE Bitwise), trefolio stores that listing’s ISIN and keeps using the market last — not the broker last — for portfolio value.",
+        translations: {
+          es: "Si el último del bróker coincide con una cotización europea pero Yahoo cotizaría un homónimo USA con el mismo ticker (por ejemplo BITC de IBKR / CoinShares vs Bitwise de NYSE), trefolio guarda la ISIN de esa cotización y sigue usando el último de mercado — no el del bróker — para el valor de la cartera.",
         },
       },
     ],

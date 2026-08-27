@@ -110,6 +110,8 @@ export {
   listDistinctHoldingTickersForUser,
   batchUpdateValueInEur,
   resolveStaleTickersViaFigi,
+  persistHoldingIsin,
+  reenrichHoldingsValueInEUR,
 } from "./holdings";
 
 export {
