@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.242",
+    version: "2.5.243",
     date: "2026-08-27",
     title: "Portugal real-estate zone screening (beta)",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Behind the real_estate_screening_enabled flag: pick Portugal zones from the official INE catalogue, set budget, down payment, size and mortgage term, and run an async cash-flow report. Informational only — not investment advice. Listing portals stay stubbed until a data-source ADR is approved.",
         translations: {
           es: "Detrás del flag real_estate_screening_enabled: elige zonas de Portugal del catálogo oficial del INE, fija presupuesto, entrada, superficie y plazo, y lanza un informe de caja asíncrono. Solo informativo — no es consejo de inversión. Los portales de anuncios siguen en stub hasta aprobar el ADR de fuente de datos.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.242",
+    date: "2026-08-27",
+    title: "Investor Briefing portfolio total parity",
+    titleTranslations: {
+      es: "Paridad del total del portfolio en Investor Briefing",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Investor Briefing (/aid) portfolio total now includes fixed-return cash positions, matching the home dashboard total.",
+        translations: {
+          es: "El total del portfolio en Investor Briefing (/aid) incluye ahora posiciones de renta fija en efectivo, igual que en la home.",
         },
       },
     ],
