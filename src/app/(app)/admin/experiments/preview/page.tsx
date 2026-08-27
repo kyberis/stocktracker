@@ -193,7 +193,7 @@ function AdminExperimentPreviewInner() {
                 >
                   Home with first-stock flag
                 </Link>{" "}
-                in this tab (session override is already set). Warren opens on the left with a
+                in this tab (session override is already set). Warren opens on the right with a
                 prefilled Apple example. Does not auto-send.
               </>
             ) : (

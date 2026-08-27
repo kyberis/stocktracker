@@ -8,7 +8,13 @@ import RenderPart from "@/components/warren/RenderPart";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
-import type { WarrenImportMethodId, WarrenPart, WarrenProposal } from "@/lib/ai/warren/types";
+import type { WarrenPart, WarrenProposal } from "@/lib/ai/warren/types";
+import {
+  isImportOptionsPart,
+  isWarrenImportIntent,
+  WARREN_IMPORT_OPTIONS_PART,
+} from "@/lib/ai/warren/import-intent";
+import { useNavigateToImport } from "@/hooks/useNavigateToImport";
 import type { AgentMissionRecord, AgentMissionStep, OfficeCoordinationLine, OfficeStreamFrame } from "@/lib/ai/office/types";
 import { isStandaloneDisplay, openSnapTradePortalPopup } from "@/lib/snaptrade-portal";
 import styles from "./office.module.css";
@@ -147,6 +153,7 @@ export default function OfficeExperienceLive() {
   const { t, language } = useI18n();
   const { stealthMode, toggleStealth } = useStealthMode();
   const { activePortfolioId, activePortfolioCurrency, refreshHoldings } = usePortfolio();
+  const importNav = useNavigateToImport();
 
   const [hostAgent, setHostAgent] = useState<OfficeAgentId>("warren");
   const [timeline, setTimeline] = useState<OfficeTimelineItem[]>([]);
@@ -285,9 +292,19 @@ export default function OfficeExperienceLive() {
         ];
       });
     } else if (frame.kind === "warren_part") {
-      setTimeline((prev) =>
-        insertBeforePendingWarren(prev, { id: makeTimelineId(), kind: "warren-part", part: frame.part }),
-      );
+      setTimeline((prev) => {
+        if (
+          isImportOptionsPart(frame.part) &&
+          prev.some((item) => item.kind === "warren-part" && isImportOptionsPart(item.part))
+        ) {
+          return prev;
+        }
+        return insertBeforePendingWarren(prev, {
+          id: makeTimelineId(),
+          kind: "warren-part",
+          part: frame.part,
+        });
+      });
     } else if (frame.kind === "warren_proposal") {
       setTimeline((prev) =>
         insertBeforePendingWarren(prev, {
@@ -331,6 +348,15 @@ export default function OfficeExperienceLive() {
           content: trimmed,
           createdAt: now,
         },
+        ...(isWarrenImportIntent(trimmed)
+          ? [
+              {
+                id: makeTimelineId(),
+                kind: "warren-part" as const,
+                part: WARREN_IMPORT_OPTIONS_PART,
+              },
+            ]
+          : []),
         {
           id: pendingWarrenId,
           kind: "text",
@@ -429,21 +455,6 @@ export default function OfficeExperienceLive() {
   );
 
   sendMessageRef.current = sendMessage;
-
-  const onImportMethod = useCallback(
-    (id: WarrenImportMethodId) => {
-      if (id === "csv") {
-        void sendMessage(t("warrenImportCsvPrompt"));
-        return;
-      }
-      if (id === "ai") {
-        void sendMessage(t("warrenImportAiPrompt"));
-        return;
-      }
-      void sendMessage(t("warrenImportBrokerPrompt"));
-    },
-    [sendMessage, t],
-  );
 
   const onProposalConfirmed = useCallback(() => {
     refreshHoldings?.();
@@ -612,7 +623,7 @@ export default function OfficeExperienceLive() {
                       <div className={styles.richCardWrap}>
                         <RenderPart
                           part={item.part}
-                          onImportChoose={onImportMethod}
+                          onImportNav={importNav}
                           importDisabled={sending}
                         />
                       </div>

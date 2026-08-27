@@ -76,7 +76,9 @@ type HomeDayHighlight = {
 
 **Rail (~320px):** Allocation (CTA → `/tools/taxonomy` to fix unclassified) → Warren → **Clara CTA** (mini-landing modal → clara.trefolio.com) → Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats. Hidden when empty (no holdings). On mobile, Allocation stays in the main column above holdings.
 
-**Empty (no holdings):** Control `EmptyPortfolio` (import + add stock). Cash-only still counts as empty for this gate. When `onAskWarren` is wired (Home v2), Warren is **add-stock only** with a 10-consult / 15-minute cooldown — see [warren-empty-add-stock.md](warren-empty-add-stock.md). Experiment `warren_first_stock` (draft until Launch): treatment opens left Warren with a prefilled example after onboarding skip — see [warren-first-stock.md](warren-first-stock.md). Legacy `empty_activation` A/B/C is paused.
+**Empty (no holdings):** Control `EmptyPortfolio` (import + add stock). Cash-only still counts as empty for this gate. When `onAskWarren` is wired (Home v2), Warren is **add-stock only** with a 10-consult / 15-minute cooldown — see [warren-empty-add-stock.md](warren-empty-add-stock.md). Experiment `warren_first_stock` (draft until Launch): treatment opens right Warren with a prefilled example after onboarding skip — see [warren-first-stock.md](warren-first-stock.md). Legacy `empty_activation` A/B/C is paused.
+
+**Agent intro (`agent_intro`):** Treatment variants play a full-screen Warren + Clara splash **once per local calendar day** on Home. Returning to `/` the same day (client navigation or refresh) must not replay it. Persistence is module memory + `localStorage` (`trefolio:agent_intro_shown_day`) + essential cookie `trefolio_agent_intro_day` (date only, no user id). Admin experiment preview (`forceVariant`) always plays. First-stock visits still suppress the splash.
 
 **Mobile:** Same order stacked; MCP CTA after holdings; touch targets ≥44px.
 
@@ -139,7 +141,7 @@ type HomeDayHighlight = {
 
 ## 13. Testing
 
-- Unit: `src/lib/homepage/score-day-highlights.test.ts`, `src/lib/homepage/build-portfolio-recommendations.test.ts`
+- Unit: `src/lib/homepage/score-day-highlights.test.ts`, `src/lib/homepage/build-portfolio-recommendations.test.ts`, `src/lib/agent-intro.test.ts` (once-per-day splash)
 - Theme + responsive gates per `engineer-homepage` / `engineer-dashboard`
 - E2E: `e2e/home-v2.spec.ts` (empty/demo hide explorer CTA; holdings CTA → `/tools/holdings-explorer`)
 

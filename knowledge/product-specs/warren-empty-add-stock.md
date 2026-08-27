@@ -4,7 +4,7 @@
 
 ## 1. Summary
 
-New users see Warren on the empty portfolio CTA (`EmptyPortfolio`) to add stocks by chat or import a portfolio (CSV, SnapTrade, AI). Off-topic / high-cost tools stay blocked until the first holding exists. Limited to 10 consults, then a 15-minute break. Applies to web drawer, Telegram, and Agent Office when holdings count is zero. Post-onboarding skip may open the left-panel first-stock treatment when `warren_first_stock` is running — see [warren-first-stock.md](warren-first-stock.md).
+New users see Warren on the empty portfolio CTA (`EmptyPortfolio`) to add stocks by chat or import a portfolio (CSV, SnapTrade, AI). Off-topic / high-cost tools stay blocked until the first holding exists. Limited to 10 consults, then a 15-minute break. Applies to web drawer, Telegram, and Agent Office when holdings count is zero. Post-onboarding skip may open the right-panel first-stock treatment when `warren_first_stock` is running — see [warren-first-stock.md](warren-first-stock.md).
 
 ## 2. Status
 
@@ -45,7 +45,7 @@ No new tables or migrations.
 ## 6. UI surface
 
 - `EmptyPortfolio`: title, hint (add or import / 10 then 15 min), placeholder example.
-- `WarrenDrawer`: empty greeting, add-stock + import chips, “Add-stock mode” context line.
+- `WarrenDrawer`: empty greeting, add-stock + import chips, “Add-stock mode” context line. Import intent mounts `BrokerPickerGrid` (same as `/import`).
 - Persistent Warren disclaimer footer unchanged.
 
 ## 7. Business logic

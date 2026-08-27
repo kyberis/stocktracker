@@ -36,7 +36,7 @@ export function buildWarrenEmptyAddStockAppendix(): string {
     "The user's portfolio has no holdings yet.",
     "You may help them add stocks via `proposeAddHolding` OR import a portfolio via the import tools.",
     "Allowed tools: `getQuote`, `listPortfolios`, `proposeAddHolding`, `renderStockSnapshot`, `presentImportOptions`, `parseBrokerCsvImport`, `extractAiPortfolioImport`, `startSnapTradeConnect`, `fetchSnapTradeImport`.",
-    "If they want to import (CSV, broker, screenshot): call `presentImportOptions` first, then the matching import tool. Never invent rows.",
+    "If they want to import (CSV, broker, screenshot): you MUST call `presentImportOptions` in the same turn — never only say you will show options. On web the client also mounts the /import broker picker. Never invent rows.",
     "If details are missing for a manual add (ticker, shares, purchase price, currency, optional date), ask briefly for what you need — then propose.",
     "If the stock market / exchange is missing or ambiguous (e.g. Apple on NASDAQ vs a listing on another venue), ask which market before calling `proposeAddHolding`.",
     "Use `getQuote` to verify a ticker or suggest a current price when helpful; never invent prices.",

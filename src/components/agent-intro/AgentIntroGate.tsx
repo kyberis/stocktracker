@@ -1,13 +1,17 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   AGENT_INTRO_EXPERIMENT_KEY,
+  hasAgentIntroShownToday,
   isAgentIntroTreatment,
   markAgentIntroEngagementReady,
+  markAgentIntroShownToday,
   prefersReducedMotionIntro,
   resetAgentIntroEngagementSession,
+  shouldBlockAgentIntro,
+  shouldPlayAgentIntroAnimation,
 } from "@/lib/agent-intro";
 import { trackExperimentEvent, useExperiment } from "@/lib/use-experiment";
 import AgentIntroSplashShell from "./AgentIntroSplashShell";
@@ -23,7 +27,8 @@ const AgentIntroBriefing = dynamic(() => import("./AgentIntroBriefing"), {
 
 /**
  * A/B gate for Warren + Clara home intro (`agent_intro` experiment).
- * Control: no overlay. Treatments: full-screen intro on every home visit until the dashboard loads.
+ * Control: no overlay. Treatments: full-screen intro once per local calendar day.
+ * Admin `forceVariant` always plays. Navigating around the app does not replay it.
  */
 export default function AgentIntroGate({
   isEmpty,
@@ -31,6 +36,7 @@ export default function AgentIntroGate({
   dashboardReady,
   forceVariant,
   contained = false,
+  alreadyShownToday = false,
   onIntroDismissed,
   onIntroVisibilityChange,
 }: {
@@ -39,6 +45,7 @@ export default function AgentIntroGate({
   dashboardReady: boolean;
   forceVariant?: "convergence" | "briefing";
   contained?: boolean;
+  alreadyShownToday?: boolean;
   onIntroDismissed?: () => void;
   onIntroVisibilityChange?: (visible: boolean) => void;
 }) {
@@ -47,52 +54,44 @@ export default function AgentIntroGate({
     forceVariant,
   });
 
-  const [dismissed, setDismissed] = useState(false);
+  const skipToday = Boolean(!forceVariant && alreadyShownToday);
+  const [dismissed, setDismissed] = useState(skipToday);
   const [playKey, setPlayKey] = useState(0);
+  const playingThisVisitRef = useRef(false);
 
   const dest = isEmpty ? "empty" : "portfolio";
   const variant = forceVariant ?? experiment.variant;
   const treatment = isAgentIntroTreatment(variant);
-
-  const blocksDashboard = useMemo(() => {
-    if (demoMode || dismissed) return false;
-    if (!forceVariant && prefersReducedMotionIntro()) return false;
-
-    if (forceVariant) return isAgentIntroTreatment(forceVariant);
-
-    if (experiment.loading) return true;
-    if (experiment.previewing && treatment) return true;
-    if (experiment.status !== "running" || !treatment) return false;
-    return true;
-  }, [
+  const reducedMotion = !forceVariant && prefersReducedMotionIntro();
+  const gateInput = {
     demoMode,
     dismissed,
-    experiment.loading,
-    experiment.previewing,
-    experiment.status,
     forceVariant,
+    reducedMotion,
+    experimentLoading: experiment.loading,
+    experimentPreviewing: experiment.previewing,
+    experimentStatus: experiment.status,
     treatment,
-  ]);
+    alreadyShownToday: skipToday,
+  };
 
-  const showAnimation = useMemo(() => {
-    if (demoMode || dismissed) return false;
-    if (!forceVariant && prefersReducedMotionIntro()) return false;
+  const blocksDashboard = shouldBlockAgentIntro(gateInput);
+  const showAnimation = shouldPlayAgentIntroAnimation(gateInput);
 
-    if (forceVariant) return true;
-
-    if (experiment.loading) return false;
-    if (experiment.previewing && treatment) return true;
-    if (experiment.status !== "running" || !treatment) return false;
-    return true;
-  }, [
-    demoMode,
-    dismissed,
-    experiment.loading,
-    experiment.previewing,
-    experiment.status,
-    forceVariant,
-    treatment,
-  ]);
+  useLayoutEffect(() => {
+    if (forceVariant || demoMode) return;
+    if (playingThisVisitRef.current) return;
+    if (alreadyShownToday || hasAgentIntroShownToday()) {
+      markAgentIntroEngagementReady();
+      onIntroDismissed?.();
+      setDismissed(true);
+      return;
+    }
+    if (blocksDashboard) {
+      playingThisVisitRef.current = true;
+      markAgentIntroShownToday();
+    }
+  }, [alreadyShownToday, blocksDashboard, demoMode, forceVariant, onIntroDismissed]);
 
   useEffect(() => {
     if (showAnimation) {

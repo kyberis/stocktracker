@@ -3196,6 +3196,7 @@ const en: TranslationStrings = {
   warrenChipImportPortfolio: "Import my portfolio",
   warrenImportOptionsEyebrow: "Import",
   warrenImportOptionsTitle: "How do you want to import?",
+  warrenImportManualCta: "Add manually",
   warrenImportCsvTitle: "Broker CSV / Excel",
   warrenImportCsvDesc: "Upload an export from DEGIRO, IBKR, Trading 212, and others.",
   warrenImportBrokerTitle: "Connect your broker",

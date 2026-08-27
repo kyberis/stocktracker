@@ -1,10 +1,10 @@
 # warren-first-stock
 
-> A/B: after onboarding skip, control keeps the empty import/add home; treatment opens Warren on the left with a prefilled first-stock example.
+> A/B: after onboarding skip, control keeps the empty import/add home; treatment opens Warren on the right with a prefilled first-stock example.
 
 ## 1. Summary
 
-New users who skip import during onboarding land on Home. While `warren_first_stock` is **draft**, everyone sees the control empty state. After a human **Launch**, 70% see Warren docked on the left with a composer prefilled like “Add 7 shares of Apple at {price} USD”. Warren may ask which market, then `proposeAddHolding`; on confirm the dashboard shows the holding and Warren stays open. Not financial advice — existing Warren disclaimer remains visible.
+New users who skip import during onboarding land on Home. While `warren_first_stock` is **draft**, everyone sees the control empty state. After a human **Launch**, 70% see Warren docked on the right (same as Home) with a composer prefilled like “Add 7 shares of Apple at {price} USD”. Warren may ask which market, then `proposeAddHolding`; on confirm the dashboard shows the holding and Warren stays open. Not financial advice — existing Warren disclaimer remains visible.
 
 ## 2. Status
 
@@ -18,7 +18,7 @@ New users who skip import during onboarding land on Home. While `warren_first_st
 | Type | Path | Notes |
 |------|------|-------|
 | Onboarding skip | `src/app/onboarding/page.tsx` | Redirects to `/?activateFirstStock=1` |
-| Home | `src/components/homepage/HomeV2Dashboard.tsx` | Resolves experiment; treatment opens left Warren |
+| Home | `src/components/homepage/HomeV2Dashboard.tsx` | Resolves experiment; treatment opens right Warren |
 | Drawer | `src/components/warren/WarrenDrawer.tsx` | `side`, `initialComposerValue`, try-example chip |
 | Empty control | `src/components/EmptyPortfolio.tsx` | Import + add only (no `empty_activation` A/B/C) |
 | Experiment seed | migration v153 | Draft 30/70 (control / treatment); `empty_activation` paused |
@@ -40,7 +40,7 @@ New users who skip import during onboarding land on Home. While `warren_first_st
 
 ## 6. UI surface
 
-- Treatment: left Warren overlay, prefilled composer (not auto-sent), “Try this example” chip, empty greeting.
+- Treatment: right Warren overlay (same as Home), prefilled composer (not auto-sent), “Try this example” chip, empty greeting.
 - Control: `EmptyPortfolio` import + add + compact Warren chat box.
 - Agent intro splash is suppressed for the first-stock visit.
 
@@ -80,7 +80,7 @@ New users who skip import during onboarding land on Home. While `warren_first_st
 
 - Draft/paused/archived resolve to control — safe in production until Launch.
 - Query flag is stripped from the URL after read; returning later without the flag does not reopen the panel.
-- Closing Warren after a holding is added keeps the dashboard; drawer side resets to right on close.
+- Closing Warren after a holding is added keeps the dashboard; drawer stays on the right.
 - Legal: `warrenDisclaimer` stays on the composer (“not financial advice”).
 
 ## 14. Tests

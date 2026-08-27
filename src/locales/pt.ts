@@ -2916,6 +2916,7 @@ const pt: TranslationStrings = {
   warrenChipImportPortfolio: "Importar a minha carteira",
   warrenImportOptionsEyebrow: "Importar",
   warrenImportOptionsTitle: "Como queres importar?",
+  warrenImportManualCta: "Adicionar manualmente",
   warrenImportCsvTitle: "CSV / Excel do corretor",
   warrenImportCsvDesc: "Carrega um export do DEGIRO, IBKR, Trading 212 e outros.",
   warrenImportBrokerTitle: "Ligar o teu corretor",

@@ -28,7 +28,8 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 | DAL | `src/lib/db/experiments.ts` | Assignment hash, stats SQL |
 | Script | `scripts/create-experiment.ts` | Seed draft from CLI |
 | Consumer | `src/components/EmptyPortfolio.tsx` | Control empty layout (legacy `empty_activation` paused) |
-| Consumer | `src/components/homepage/HomeV2Dashboard.tsx` | `warren_first_stock` control vs left-Warren treatment |
+| Consumer | `src/components/homepage/HomeV2Dashboard.tsx` | `warren_first_stock` control vs right-Warren treatment |
+| Consumer | `src/components/agent-intro/AgentIntroGate.tsx` | `agent_intro` splash once per local calendar day |
 
 ## 4. Data model
 
@@ -52,6 +53,7 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 - Admin metrics catalog: `/admin/experiments/metrics` (events that land in `analytics_events`)
 - Admin treatment preview: `/admin/experiments/preview?key=…&variant=…` (client-only; no DB assignment)
 - Product: empty home via `EmptyPortfolio` (control). Treatment: Warren first-stock on Home (`warren_first_stock`).
+- Product: Home agent intro via `AgentIntroGate` (`agent_intro` — convergence / briefing). Plays **once per local calendar day**; navigating around the app does not replay it. Admin Preview always plays.
 
 ## 7. Business logic
 
@@ -90,6 +92,7 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 - Preview overrides are tab-scoped (sessionStorage) and do not change sticky assignments
 - Empty activation moat/screener variants are retired (`empty_activation` paused)
 - Current empty experiment: `warren_first_stock` (draft until Launch)
+- `agent_intro` treatments persist “shown today” (`YYYY-MM-DD`) so Home does not replay the splash on the same local calendar day
 - Experiment conversion metrics must be Turso `analytics_events` names — not `useTrack`/GA-only. Catalog: `src/lib/experiment-metrics-catalog.ts`
 - Staff ProdOps Telegram (`/experiments` or NL) reads assignment counts via `listExperimentAssignmentOverview` — aggregates only, no user ids
 
@@ -97,6 +100,7 @@ Admins (and LLM agents during development) create **draft** multi-variant experi
 
 - Unit: `src/lib/db/experiments.test.ts` (hash / weights / validation)
 - Unit: `src/lib/experiment-preview.test.ts` (sessionStorage override helper)
+- Unit: `src/lib/agent-intro.test.ts` (once-per-day splash skip; `forceVariant` still blocks)
 
 ## 15. Related skills and rules
 

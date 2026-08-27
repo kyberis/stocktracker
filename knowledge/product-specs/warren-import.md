@@ -1,10 +1,10 @@
 # Warren portfolio import
 
-> Import a portfolio through Warren using the same CSV, SnapTrade, and AI paths as `/import`.
+> Import a portfolio through Warren by opening the same `/import` broker picker, SnapTrade, CSV, and manual-add wizard.
 
 ## 1. Summary
 
-Users can ask Warren to import their portfolio. Warren presents the three `/import` methods, runs the existing parsers / SnapTrade fetch / AI extract, shows a preview card, and only writes after Confirm. Telegram cannot open SnapTrade; it sends a deep-link to `/import`.
+Users can ask Warren to import their portfolio. On web, import intent mounts the existing `BrokerPickerGrid` (search provider; CSV or request-broker if unmatched; manual add). Choosing a path navigates to `/import` so SnapTrade connect, preview of how many holdings, confirm, and recalculation are the live import wizard — not a parallel pipeline. File attachments in chat can still use the existing parse/AI tools. Telegram cannot open SnapTrade; it sends a deep-link to `/import`.
 
 ## 2. Status
 
@@ -17,8 +17,12 @@ Users can ask Warren to import their portfolio. Warren presents the three `/impo
 
 | Type | Path | Notes |
 |------|------|-------|
-| Component | `src/components/warren/WarrenDrawer.tsx` | Options card, preview card, SnapTrade popup |
-| Component | `src/components/warren/ImportOptionsCard.tsx` | CSV / broker / AI choices |
+| Component | `src/components/warren/WarrenDrawer.tsx` | Detects import intent; mounts picker; navigates to `/import` |
+| Component | `src/components/warren/ImportOptionsCard.tsx` | Reuses `BrokerPickerGrid` + manual add |
+| Component | `src/components/import/BrokerPickerGrid.tsx` | Same chooser as `/import` |
+| Page | `src/app/(app)/import/import-page-content.tsx` | Wizard; honors `?broker=` / `?guide=` from Warren |
+| Lib | `src/lib/import-entry.ts` | Deep-link builder/parser |
+| Lib | `src/lib/ai/warren/import-intent.ts` | Client intent detector |
 | Component | `src/components/warren/ImportPreviewCard.tsx` | Review + confirm |
 | API | `src/app/api/warren/chat/route.ts` | Tools + attachment buffers |
 | API | `src/app/api/warren/confirm/route.ts` | `kind: importTransactions` |
@@ -45,19 +49,17 @@ No new HTTP routes.
 
 ## 6. UI surface
 
-- `ImportOptionsCard` in the Warren drawer, Agent Office, and Telegram as text (+ `/import` link for SnapTrade).
-- `ImportPreviewCard` extends the proposal/confirm pattern (`ActionCard`).
-- File input accepts CSV/Excel/images.
+- `ImportOptionsCard` in the Warren drawer and Agent Office: first-party `BrokerPickerGrid` (search) + manual add. Clicks go to `/import`.
+- Telegram: text + `/import` link (no SnapTrade popup).
 - Persistent Warren disclaimer footer unchanged.
 
 ## 7. Business logic
 
-1. Intent “import my portfolio” → `presentImportOptions`.
-2. CSV/Excel → `parseBrokerCsvImport` (same parsers as `/import`). Unknown format → `extractAiPortfolioImport`.
-3. Broker sync → `startSnapTradeConnect` emits `client_action: open_snaptrade`; after connect, `fetchSnapTradeImport` (holdings/cash upsert on fetch, txs previewed).
-4. AI screenshot/CSV → `extractAiPortfolioImport` (same extraction prompt/limits as `/api/import-portfolio`).
-5. User confirms → `dispatchProposal` chunks `addTransactionsBulk`, optional cash, snapshot backfill.
-6. Writes never auto-apply.
+1. Intent “import my portfolio” (client `isWarrenImportIntent`, plus `presentImportOptions`) → mount `BrokerPickerGrid`.
+2. Provider click → `/import?method=snaptrade_api&broker=…` → existing SnapTrade connect, fetch, preview count, confirm, `refreshHoldings`.
+3. No match / Trade Republic → `/import?method=broker_csv` (same CSV wizard). Manual → `/import?method=manual`.
+4. File attached in chat (not via the picker) → `parseBrokerCsvImport` / `extractAiPortfolioImport` then confirm card.
+5. Writes never auto-apply.
 
 ## 8. External dependencies
 
@@ -73,7 +75,7 @@ No new HTTP routes.
 
 ## 10. i18n
 
-- EN + ES: `warrenImport*` keys, `warrenChipImportPortfolio`, empty-state import hint.
+- EN + ES: `warrenImport*` keys, `warrenImportManualCta`, `warrenChipImportPortfolio`, empty-state import hint. Broker picker strings reused (`brokerPicker*`).
 
 ## 11. Permissions / tier gating / rate limits
 
@@ -96,7 +98,7 @@ No new HTTP routes.
 
 ## 14. Tests
 
-- Unit: `src/lib/ai/warren/import-parse.test.ts`, `src/lib/ai/warren/dispatch.import.test.ts`, `src/lib/ai/warren/empty-add-stock.test.ts`
+- Unit: `src/lib/ai/warren/import-intent.test.ts`, `src/lib/import-entry.test.ts`, `src/lib/ai/warren/import-parse.test.ts`, `src/lib/ai/warren/dispatch.import.test.ts`, `src/lib/ai/warren/empty-add-stock.test.ts`
 - E2E: `e2e/home-v2-empty-warren.spec.ts` (empty-state copy mentions import)
 
 ## 15. Related skills and rules

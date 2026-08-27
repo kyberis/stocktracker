@@ -9,16 +9,24 @@ import {
 } from "@/components/chat-cards";
 import MoatSummaryCard from "@/components/chat-cards/MoatSummaryCard";
 import { formatChatCardNumber } from "@/components/chat-cards/types";
-import type { WarrenImportMethodId, WarrenPart } from "@/lib/ai/warren/types";
+import type { WarrenPart } from "@/lib/ai/warren/types";
 import ImportOptionsCard from "./ImportOptionsCard";
+
+export type WarrenImportNavHandlers = {
+  onSelectSync: (slug: string) => void;
+  onSelectTradeRepublic: () => void;
+  onCsvFallback: (typedName: string) => void;
+  onRequestBroker: (typedName: string) => void;
+  onManualAdd: () => void;
+};
 
 export default function RenderPart({
   part,
-  onImportChoose,
+  onImportNav,
   importDisabled,
 }: {
   part: WarrenPart;
-  onImportChoose?: (id: WarrenImportMethodId) => void;
+  onImportNav?: WarrenImportNavHandlers;
   importDisabled?: boolean;
 }) {
   switch (part.kind) {
@@ -37,11 +45,16 @@ export default function RenderPart({
     case "stockSnapshot":
       return <StockSnapshot data={part.data} />;
     case "importOptions":
+      if (!onImportNav) return null;
       return (
         <ImportOptionsCard
           data={part.data}
           disabled={importDisabled}
-          onChoose={onImportChoose ?? (() => {})}
+          onSelectSync={onImportNav.onSelectSync}
+          onSelectTradeRepublic={onImportNav.onSelectTradeRepublic}
+          onCsvFallback={onImportNav.onCsvFallback}
+          onRequestBroker={onImportNav.onRequestBroker}
+          onManualAdd={onImportNav.onManualAdd}
         />
       );
     default:

@@ -16,11 +16,16 @@ import {
 } from "@/lib/portfolio-summary";
 import { formatCurrency } from "@/lib/utils";
 import type {
-  WarrenImportMethodId,
   WarrenPart,
   WarrenProposal,
   WarrenStreamFrame,
 } from "@/lib/ai/warren/types";
+import {
+  isImportOptionsPart,
+  isWarrenImportIntent,
+  WARREN_IMPORT_OPTIONS_PART,
+} from "@/lib/ai/warren/import-intent";
+import { useNavigateToImport } from "@/hooks/useNavigateToImport";
 import { buildTopHoldingRow } from "@/lib/ai/warren/snapshot-shared";
 import {
   WARREN_MAX_COMBINED_ATTACHMENT_BYTES,
@@ -71,7 +76,7 @@ interface Props {
   selectionChipText?: string | null;
   onClearSelection?: () => void;
   emptyGreeting?: string;
-  /** Drawer slides from the left (first-stock activation). Default right. */
+  /** Drawer slides from the right (Home default). Left is unused. */
   side?: "left" | "right";
   /** Prefill composer when empty; does not auto-send. */
   initialComposerValue?: string;
@@ -168,6 +173,7 @@ export default function WarrenDrawer({
   } = usePortfolio();
   const { stealthMode } = useStealthMode();
   const { user, isLoading: authLoading } = useAuth();
+  const importNav = useNavigateToImport();
 
   const chatStorageKey = useMemo(
     () => (demoMode ? null : warrenChatStorageKey(user?.id, activePortfolioId)),
@@ -258,7 +264,15 @@ export default function WarrenDrawer({
         kind: "text-assistant",
         content: "",
       };
-      setBubbles((prev) => [...prev, userBubble, assistantBubble]);
+      const importChooser: Bubble | null = isWarrenImportIntent(trimmed)
+        ? { id: makeId(), kind: "part", part: WARREN_IMPORT_OPTIONS_PART }
+        : null;
+      setBubbles((prev) => [
+        ...prev,
+        userBubble,
+        ...(importChooser ? [importChooser] : []),
+        assistantBubble,
+      ]);
       setInput("");
       setPendingFiles([]);
       setStreaming(true);
@@ -443,23 +457,6 @@ export default function WarrenDrawer({
     void sendMessage(triggerPrompt);
   }, [triggerPrompt, streaming, sendMessage, onTriggerPromptConsumed]);
 
-  const onImportMethod = useCallback(
-    (id: WarrenImportMethodId) => {
-      if (id === "csv") {
-        fileInputRef.current?.click();
-        void sendMessage(t("warrenImportCsvPrompt"));
-        return;
-      }
-      if (id === "ai") {
-        fileInputRef.current?.click();
-        void sendMessage(t("warrenImportAiPrompt"));
-        return;
-      }
-      void sendMessage(t("warrenImportBrokerPrompt"));
-    },
-    [sendMessage, t],
-  );
-
   const onProposalConfirmed = useCallback(() => {
     refreshHoldings?.();
     refreshAlertedTickers?.();
@@ -620,7 +617,7 @@ export default function WarrenDrawer({
                 <div key={b.id} className="pl-9">
                   <RenderPart
                     part={b.part}
-                    onImportChoose={onImportMethod}
+                    onImportNav={importNav}
                     importDisabled={streaming}
                   />
                 </div>
@@ -847,7 +844,15 @@ function applyFrame(
   } else if (frame.kind === "tool_step") {
     setBubbles((prev) => insertBefore(prev, assistantId, { id: makeId(), kind: "tool-step", label: frame.label }));
   } else if (frame.kind === "part") {
-    setBubbles((prev) => insertBefore(prev, assistantId, { id: makeId(), kind: "part", part: frame.part }));
+    setBubbles((prev) => {
+      if (
+        isImportOptionsPart(frame.part) &&
+        prev.some((b) => b.kind === "part" && isImportOptionsPart(b.part))
+      ) {
+        return prev;
+      }
+      return insertBefore(prev, assistantId, { id: makeId(), kind: "part", part: frame.part });
+    });
   } else if (frame.kind === "proposal") {
     setBubbles((prev) => insertBefore(prev, assistantId, { id: makeId(), kind: "proposal", proposal: frame.proposal }));
   } else if (frame.kind === "error") {
