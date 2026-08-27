@@ -133,6 +133,7 @@ const en: TranslationStrings = {
   profitMargin: "Profit Margin",
   returnOnEquity: "ROE",
   analystTarget: "Analyst Target",
+  homeAnalystTargetInline: "Target {price}",
   analystRatings: "Analyst Ratings",
   forwardPE: "Forward P/E",
   fiftyDayMA: "50D MA",

@@ -30,7 +30,8 @@ interface PortfolioCardsProps {
 
 const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleReturn, showDayChange }: { holding: Holding; returnMode: ReturnDisplayMode; onToggleReturn: () => void; showDayChange: boolean }) {
   const router = useRouter();
-  const { quotes, exchangeRates, alertedTickers, activePortfolioCurrency } = usePortfolio();
+  const { t } = useI18n();
+  const { quotes, exchangeRates, alertedTickers, activePortfolioCurrency, analystTargets } = usePortfolio();
   const baseCurrency = activePortfolioCurrency;
 
   const quote: QuoteData | undefined = quotes[holding.ticker];
@@ -62,6 +63,13 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
   const isAlerted = alertedTickers.has(holding.ticker);
   const isCrypto = holding.assetType === "crypto";
   const typeLabel = isCrypto ? "CRYPTO" : holding.assetType === "etf" ? "ETF" : "";
+  const analystTarget = analystTargets[holding.ticker];
+  const analystTargetLabel = analystTarget
+    ? t("homeAnalystTargetInline").replace(
+        "{price}",
+        formatCurrency(analystTarget.price, analystTarget.currency),
+      )
+    : null;
 
   const returnText = showDayChange
     ? returnMode === "pct"
@@ -123,6 +131,7 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
         <div className="flex gap-4 text-xs text-gray-500 dark:text-slate-400 min-w-0">
           <span>{holding.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} shares</span>
           <span>{hasRate ? formatCurrency(priceInBase, baseCurrency) : "--"}/ea</span>
+          {analystTargetLabel ? <span title={t("analystTarget")}>{analystTargetLabel}</span> : null}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span

@@ -23,6 +23,10 @@ vi.mock("@/lib/homepage/build-day-highlights", () => ({
   buildDayHighlightsPayload: vi.fn(),
 }));
 
+vi.mock("@/lib/fundamentals/analyst-targets", () => ({
+  resolveAnalystTargetsForHoldings: vi.fn(),
+}));
+
 vi.mock("@/lib/quote-cache", () => ({
   getQuotesWithCache: vi.fn(),
   getRatesWithCache: vi.fn().mockResolvedValue({ EURUSD: 1.1 }),
@@ -39,6 +43,7 @@ import {
 import { fetchProviderQuotesForHoldingsWithStats } from "@/lib/holding-quotes";
 import { buildAidStatus } from "@/lib/aid/build-status";
 import { buildDayHighlightsPayload } from "@/lib/homepage/build-day-highlights";
+import { resolveAnalystTargetsForHoldings } from "@/lib/fundamentals/analyst-targets";
 import { getRatesWithCache } from "@/lib/quote-cache";
 import {
   buildHomeBootstrap,
@@ -53,6 +58,7 @@ const mockedQuotes = vi.mocked(fetchProviderQuotesForHoldingsWithStats);
 const mockedRates = vi.mocked(getRatesWithCache);
 const mockedStatus = vi.mocked(buildAidStatus);
 const mockedHighlights = vi.mocked(buildDayHighlightsPayload);
+const mockedAnalystTargets = vi.mocked(resolveAnalystTargetsForHoldings);
 const mockedCache = vi.mocked(getRecommendationCache);
 const mockedStates = vi.mocked(listRecommendationStates);
 
@@ -105,6 +111,10 @@ beforeEach(() => {
   });
   mockedStates.mockResolvedValue([]);
   mockedCache.mockResolvedValue(null);
+  mockedAnalystTargets.mockResolvedValue({
+    targets: { AAPL: { price: 220, currency: "USD", updatedAt: "2026-01-10 00:00:00" } },
+    partial: false,
+  });
   vi.mocked(listCashEntries).mockResolvedValue([]);
 });
 
@@ -132,6 +142,8 @@ describe("buildHomeBootstrapSections", () => {
     expect(payload.aidStatus.briefing).toBeNull();
     expect(mockedHighlights).toHaveBeenCalled();
     expect(payload.markGap).toBeNull();
+    expect(payload.analystTargets.AAPL?.price).toBe(220);
+    expect(payload.analystTargetsPartial).toBe(false);
   });
 
   it("parses stored broker mark gaps for the Home banner", async () => {

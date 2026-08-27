@@ -14,13 +14,14 @@ import AppNav from "@/components/AppNav";
 import MarketTickerBar from "@/components/MarketTickerBar";
 import MobileTabBar from "@/components/MobileTabBar";
 import { CURRENT_VERSION } from "@/lib/release-version";
-import type { Holding, CashEntry, QuoteData, ExchangeRates, Goal } from "@/lib/types";
+import type { Holding, CashEntry, QuoteData, ExchangeRates, Goal, AnalystTargetSnapshot } from "@/lib/types";
 
 interface Props {
   initialHoldings: Holding[];
   initialCash: CashEntry[];
   initialQuotes: Record<string, QuoteData>;
   initialExchangeRates: ExchangeRates;
+  initialAnalystTargets?: Record<string, AnalystTargetSnapshot>;
 }
 
 const DEMO_GOAL: Goal = {
@@ -53,7 +54,7 @@ const DEMO_GOAL: Goal = {
 };
 
 export default function DemoShell({
-  initialHoldings, initialCash, initialQuotes, initialExchangeRates,
+  initialHoldings, initialCash, initialQuotes, initialExchangeRates, initialAnalystTargets,
 }: Props) {
   return (
     <ThemeProvider>
@@ -68,6 +69,7 @@ export default function DemoShell({
                   demoMode
                   initialQuotes={initialQuotes}
                   initialExchangeRates={initialExchangeRates}
+                  initialAnalystTargets={initialAnalystTargets}
                   initialGoal={DEMO_GOAL}
                 >
                   <PortfolioCommandProvider>

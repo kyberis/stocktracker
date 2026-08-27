@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
-import type { CashEntry, Holding, QuoteData, ExchangeRates, Goal } from "./types";
+import type { CashEntry, Holding, QuoteData, ExchangeRates, Goal, AnalystTargetSnapshot } from "./types";
 import { generateId } from "./utils";
 import { useSettings } from "./settings-context";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
@@ -99,6 +99,9 @@ interface PortfolioContextType {
     incomingCash: CashEntry[],
     portfolioId: string | null,
   ) => void;
+  /** Seed analyst consensus targets from Home bootstrap sections. */
+  analystTargets: Record<string, AnalystTargetSnapshot>;
+  hydrateAnalystTargets: (targets: Record<string, AnalystTargetSnapshot>) => void;
   lastUpdated: Date | null;
   holdingsLastFetchedAt: Date | null;
   demoMode: boolean;
@@ -162,13 +165,14 @@ export interface PortfolioProviderProps {
   demoMode?: boolean;
   initialQuotes?: Record<string, QuoteData>;
   initialExchangeRates?: ExchangeRates;
+  initialAnalystTargets?: Record<string, AnalystTargetSnapshot>;
   initialGoal?: Goal | null;
   initialPortfolios?: PortfolioInfo[];
 }
 
 export function PortfolioProvider({
   children, initialHoldings, initialCash,
-  demoMode, initialQuotes, initialExchangeRates, initialGoal,
+  demoMode, initialQuotes, initialExchangeRates, initialAnalystTargets, initialGoal,
   initialPortfolios,
 }: PortfolioProviderProps) {
   const { getApiHeaders } = useSettings();
@@ -206,6 +210,9 @@ export function PortfolioProvider({
   const [alertedTickers, setAlertedTickers] = useState<Set<string>>(new Set());
   const [mutationVersion, setMutationVersion] = useState(0);
   const [goals, setGoals] = useState<Goal[]>(initialGoal ? [initialGoal] : []);
+  const [analystTargets, setAnalystTargets] = useState<Record<string, AnalystTargetSnapshot>>(
+    initialAnalystTargets ?? {},
+  );
 
   const setActivePortfolio = useCallback((id: string | null) => {
     setActivePortfolioId(id);
@@ -566,6 +573,15 @@ export function PortfolioProvider({
       markHomeBootstrapBookHydrated(portfolioId);
     },
     [demoMode, setCashEntriesEnriched],
+  );
+
+  const hydrateAnalystTargets = useCallback(
+    (incoming: Record<string, AnalystTargetSnapshot>) => {
+      if (demoMode) return;
+      if (!incoming || Object.keys(incoming).length === 0) return;
+      setAnalystTargets((prev) => ({ ...prev, ...incoming }));
+    },
+    [demoMode],
   );
 
   const hydrateMarketData = useCallback(
@@ -1046,6 +1062,8 @@ export function PortfolioProvider({
       refreshAlertedTickers: demoMode ? noop : refreshAlertedTickers,
       hydrateMarketData: demoMode ? () => {} : hydrateMarketData,
       hydratePortfolioBook: demoMode ? () => {} : hydratePortfolioBook,
+      analystTargets,
+      hydrateAnalystTargets: demoMode ? () => {} : hydrateAnalystTargets,
       lastUpdated,
       holdingsLastFetchedAt,
       demoMode: !!demoMode,
@@ -1061,7 +1079,8 @@ export function PortfolioProvider({
       isLoading, isInitializing, isRefreshing, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, mutationVersion, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, moveToPortfolio, refreshHoldings, refreshQuotes, refreshSingleQuote,
-      refreshAlertedTickers, hydrateMarketData, hydratePortfolioBook, lastUpdated, holdingsLastFetchedAt, demoMode, noop, noopGoal,
+      refreshAlertedTickers, hydrateMarketData, hydratePortfolioBook, hydrateAnalystTargets,
+      analystTargets, lastUpdated, holdingsLastFetchedAt, demoMode, noop, noopGoal,
       goals, saveGoalCb, deleteGoalCb, fetchGoals,
     ]
   );

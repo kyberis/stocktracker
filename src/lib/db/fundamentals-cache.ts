@@ -41,6 +41,41 @@ export async function getFundamentalsCache(
   };
 }
 
+/** Lookup cached fundamentals rows for a set of symbols (one type, case-insensitive). */
+export async function getFundamentalsCacheBySymbols(
+  symbols: readonly string[],
+  type: FundamentalsCacheType,
+): Promise<Map<string, FundamentalsCacheRow>> {
+  const out = new Map<string, FundamentalsCacheRow>();
+  const unique = [...new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean))];
+  if (unique.length === 0) return out;
+
+  const client = await ensureInitialized();
+  const CHUNK = 80;
+  for (let i = 0; i < unique.length; i += CHUNK) {
+    const chunk = unique.slice(i, i + CHUNK);
+    const placeholders = chunk.map(() => "?").join(",");
+    const result = await client.execute({
+      sql: `SELECT symbol, type, data_json, provider, created_at, updated_at
+            FROM fundamentals_cache
+            WHERE type = ? AND UPPER(symbol) IN (${placeholders})`,
+      args: [type, ...chunk],
+    });
+    for (const row of result.rows) {
+      const sym = String(row.symbol).toUpperCase();
+      out.set(sym, {
+        symbol: sym,
+        type,
+        dataJson: String(row.data_json),
+        provider: String(row.provider) as FundamentalsCacheProvider,
+        createdAt: String(row.created_at),
+        updatedAt: String(row.updated_at),
+      });
+    }
+  }
+  return out;
+}
+
 export async function upsertFundamentalsCache(
   symbol: string,
   type: FundamentalsCacheType,

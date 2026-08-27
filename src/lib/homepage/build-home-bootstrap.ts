@@ -17,6 +17,11 @@ import type { PortfolioRecommendation } from "@/lib/homepage/build-portfolio-rec
 import type { ProviderQuoteResult } from "@/lib/api-providers/types";
 import type { MarkReconciliation } from "@/lib/snaptrade-mark-reconciliation";
 import { parseStoredMarkReconciliation } from "@/lib/snaptrade-mark-reconciliation";
+import {
+  resolveAnalystTargetsForHoldings,
+  type ResolveAnalystTargetsResult,
+} from "@/lib/fundamentals/analyst-targets";
+import type { AnalystTargetSnapshot } from "@/lib/types";
 
 export type HomeBootstrapCorePayload = {
   holdings: Holding[];
@@ -39,6 +44,8 @@ export type HomeBootstrapSectionsPayload = {
     source: RecommendationQueueResult["source"];
   } | null;
   markGap: MarkReconciliation | null;
+  analystTargets: Record<string, AnalystTargetSnapshot>;
+  analystTargetsPartial: boolean;
 };
 
 export type HomeBootstrapPayload = HomeBootstrapCorePayload & HomeBootstrapSectionsPayload;
@@ -123,7 +130,7 @@ export async function buildHomeBootstrapSections(args: {
     settings.defaultCurrency || "EUR",
   );
 
-  const [dayHighlights, aidStatus, recommendation, markGap] = await Promise.all([
+  const [dayHighlights, aidStatus, recommendation, markGap, analystTargetResult] = await Promise.all([
     buildDayHighlightsPayload({
       userId: args.userId,
       portfolioId: args.portfolioId,
@@ -158,9 +165,19 @@ export async function buildHomeBootstrapSections(args: {
     getSnapTradeMarkReconciliation(args.userId)
       .then((row) => parseStoredMarkReconciliation(row?.json ?? ""))
       .catch(() => null),
+    resolveAnalystTargetsForHoldings(args.userId, holdings).catch(
+      (): ResolveAnalystTargetsResult => ({ targets: {}, partial: false }),
+    ),
   ]);
 
-  return { dayHighlights, aidStatus, recommendation, markGap };
+  return {
+    dayHighlights,
+    aidStatus,
+    recommendation,
+    markGap,
+    analystTargets: analystTargetResult.targets,
+    analystTargetsPartial: analystTargetResult.partial,
+  };
 }
 
 /**

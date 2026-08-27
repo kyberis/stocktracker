@@ -378,6 +378,13 @@ export interface Goal {
   updatedAt: string;
 }
 
+/** Analyst consensus target price — per-ticker, shared via fundamentals_cache. */
+export interface AnalystTargetSnapshot {
+  price: number;
+  currency: string;
+  updatedAt: string;
+}
+
 export interface QuoteData {
   symbol: string;
   shortName: string;

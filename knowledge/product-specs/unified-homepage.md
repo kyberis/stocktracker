@@ -24,7 +24,7 @@
 | Classic | `src/app/(app)/classic/page.tsx` | Requires `classic_home` |
 | CTA | Home → Classic | Header link when `classic_home` |
 | API | `GET /api/home-v2/day-highlights` | Scored per-ticker chips (`home_v2`) |
-| API | `GET /api/home-v2/bootstrap` | One holdings+quotes pass → highlights + AID status (no LLM) + cached recommendation |
+| API | `GET /api/home-v2/bootstrap` | Holdings+quotes (`phase=core`); sections add highlights, AID status, recommendation, **analyst targets** (`phase=sections`) |
 | AID reuse | `/api/aid/{status,feed,digest,earnings-recap}` | Guard: `aid_beta \|\| home_v2`; briefing via `?includeBriefing=1` |
 | Components | `src/components/homepage/*` | Composition layer |
 | Lib | `src/lib/homepage/score-day-highlights.ts` | Pure scoring |
@@ -33,8 +33,8 @@
 
 No new tables in MVP.
 
-- Reuse: holdings, quotes, cash, calendar events, alerts, `aid_news_cache`, `user_settings.last_aid_visit_at` (visit mark shared with AID during beta).
-- Types: `HomeDayHighlight` (+ reason discriminated union) in `src/lib/homepage/types.ts` or `src/lib/types.ts`.
+- Reuse: holdings, quotes, cash, calendar events, alerts, `aid_news_cache`, `user_settings.last_aid_visit_at` (visit mark shared with AID during beta), **`fundamentals_cache` overview** (analyst consensus target per ticker, shared globally).
+- Types: `HomeDayHighlight` (+ reason discriminated union) in `src/lib/homepage/types.ts` or `src/lib/types.ts`; `AnalystTargetSnapshot` in `src/lib/types.ts`.
 
 ## 5. API surface
 

@@ -677,6 +677,7 @@ export type {
 } from "./fundamentals-cache";
 export {
   getFundamentalsCache,
+  getFundamentalsCacheBySymbols,
   upsertFundamentalsCache,
   deleteFundamentalsCache,
 } from "./fundamentals-cache";
