@@ -71,6 +71,14 @@ interface Props {
   selectionChipText?: string | null;
   onClearSelection?: () => void;
   emptyGreeting?: string;
+  /** Drawer slides from the left (first-stock activation). Default right. */
+  side?: "left" | "right";
+  /** Prefill composer when empty; does not auto-send. */
+  initialComposerValue?: string;
+  /** Prominent CTA that sends `pinnedExamplePrompt` once. */
+  pinnedExamplePrompt?: string;
+  pinnedExampleLabel?: string;
+  onPinnedExampleSend?: () => void;
 }
 
 function makeId(): string {
@@ -138,6 +146,11 @@ export default function WarrenDrawer({
   selectionChipText,
   onClearSelection,
   emptyGreeting,
+  side = "right",
+  initialComposerValue,
+  pinnedExamplePrompt,
+  pinnedExampleLabel,
+  onPinnedExampleSend,
 }: Props) {
   const mode = placement ?? (embedded ? "embedded" : "drawer");
   const { t, language } = useI18n();
@@ -208,6 +221,11 @@ export default function WarrenDrawer({
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 320);
     else setExpanded(false);
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !initialComposerValue?.trim()) return;
+    setInput((prev) => (prev.trim() ? prev : initialComposerValue));
+  }, [isOpen, initialComposerValue]);
 
   useEffect(() => {
     if (!isOpen || !expanded) return;
@@ -491,8 +509,10 @@ export default function WarrenDrawer({
         ? `fixed bottom-20 sm:bottom-6 right-6 z-50 w-[min(360px,calc(100vw-1.5rem))] h-[min(480px,70vh)] rounded-2xl border border-gray-200 dark:border-amber-500/15 shadow-2xl ${chrome} ${
             isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           }`
-        : `fixed top-0 right-0 z-[101] w-[460px] max-w-[calc(100vw-1rem)] h-full shadow-2xl border-l border-gray-200 dark:border-amber-500/15 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${chrome} ${
-            isOpen ? "translate-x-0" : "translate-x-full"
+        : `fixed top-0 ${side === "left" ? "left-0" : "right-0"} z-[101] w-[460px] max-w-[calc(100vw-1rem)] h-full shadow-2xl ${
+            side === "left" ? "border-r" : "border-l"
+          } border-gray-200 dark:border-amber-500/15 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${chrome} ${
+            isOpen ? "translate-x-0" : side === "left" ? "-translate-x-full" : "translate-x-full"
           }`;
 
   const panel = (
@@ -502,6 +522,7 @@ export default function WarrenDrawer({
         aria-label={t("warrenName")}
         aria-hidden={mode === "embedded" ? undefined : !isOpen}
         data-warren-expanded={expanded ? "true" : "false"}
+        data-warren-side={mode === "drawer" ? side : undefined}
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-amber-500/10 bg-gradient-to-r from-amber-500/[0.05] to-transparent shrink-0">
@@ -636,6 +657,20 @@ export default function WarrenDrawer({
 
         {!streaming && bubbles.length === 0 && chatHydrated && (
           <div className="flex flex-wrap gap-1.5 px-4 pb-3 shrink-0">
+            {pinnedExamplePrompt ? (
+              <button
+                type="button"
+                data-testid="warren-first-stock-try-example"
+                onClick={() => {
+                  onPinnedExampleSend?.();
+                  setPendingFiles([]);
+                  void sendMessage(pinnedExamplePrompt);
+                }}
+                className="text-xs font-semibold text-amber-950 bg-amber-400 border border-amber-500/40 rounded-full px-3 py-1.5 hover:bg-amber-300 transition-colors"
+              >
+                {pinnedExampleLabel || pinnedExamplePrompt}
+              </button>
+            ) : null}
             {quickPrompts.map((q) => (
               <button
                 key={q}

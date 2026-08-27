@@ -3180,6 +3180,10 @@ const en: TranslationStrings = {
     "Good to see you. I have access to your portfolio. Ask me anything — or tell me what to add, remove, or watch. I'll always confirm before changing your data.",
   warrenGreetingEmptyAdd:
     "Your portfolio is empty. Tell me a stock to add — ticker, shares, and purchase price — or ask me to import your portfolio (CSV, broker, or a screenshot). I can only help with adding or importing until you have holdings (10 chats, then a 15-minute break).",
+  warrenFirstStockGreeting:
+    "Let's add your first stock. Edit the example below or type your own. I may ask which market it trades on before saving.",
+  warrenFirstStockExample: "Add 7 shares of Apple at {price} USD",
+  warrenFirstStockTryExample: "Try this example",
   warrenChipSummary: "Summarise my portfolio",
   warrenChipConcentration: "Am I too concentrated?",
   warrenChipDividends: "Estimated dividend income?",

@@ -17,11 +17,14 @@ describe("experiment-metrics-catalog", () => {
     expect(getExperimentMetric("holding_add")?.recommendedFor).toContain("agent_intro");
   });
 
-  it("includes empty_activation defaults", () => {
-    expect(getExperimentMetric("empty_activation_cta")?.recommendedFor).toContain(
-      "empty_activation",
+  it("includes warren_first_stock defaults", () => {
+    expect(getExperimentMetric("first_stock_activation_shown")?.recommendedFor).toContain(
+      "warren_first_stock",
     );
-    expect(getExperimentMetric("holding_add")?.recommendedFor).toContain("empty_activation");
+    expect(getExperimentMetric("first_stock_example_sent")?.recommendedFor).toContain(
+      "warren_first_stock",
+    );
+    expect(getExperimentMetric("holding_add")?.recommendedFor).toContain("warren_first_stock");
   });
 
   it("groups by category without empty buckets", () => {

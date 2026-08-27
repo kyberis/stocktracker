@@ -35,6 +35,8 @@ Own feature instrumentation and observability readiness.
   - `theme_toggled`
   - `experiment_exposure` (also written server-side on assign)
   - `empty_activation_cta`
+  - `first_stock_activation_shown`
+  - `first_stock_example_sent`
 - Server-side usage (current examples):
   - `signup`
   - `login`

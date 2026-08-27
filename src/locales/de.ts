@@ -2900,6 +2900,10 @@ const de: TranslationStrings = {
     "Schön, dich zu sehen. Ich habe Zugriff auf dein Portfolio. Frag mich alles oder sag mir, was ich hinzufügen, entfernen oder beobachten soll. Ich frage immer nach, bevor ich Daten ändere.",
   warrenGreetingEmptyAdd:
     "Dein Portfolio ist leer. Nenne mir eine Aktie zum Hinzufügen — Ticker, Stückzahl und Kaufpreis — und ich bereite die Bestätigung vor. Ich kann nur beim Hinzufügen von Aktien helfen, bis du Positionen hast (10 Chats, dann 15 Minuten Pause).",
+  warrenFirstStockGreeting:
+    "Lass uns deine erste Aktie hinzufügen. Bearbeite das Beispiel unten oder schreibe dein eigenes. Ich kann fragen, an welcher Börse sie gehandelt wird, bevor ich speichere.",
+  warrenFirstStockExample: "Füge 7 Apple-Aktien zu {price} USD hinzu",
+  warrenFirstStockTryExample: "Dieses Beispiel ausprobieren",
   warrenChipSummary: "Fasse mein Portfolio zusammen",
   warrenChipConcentration: "Bin ich zu konzentriert?",
   warrenChipDividends: "Erwartete Dividendenerträge?",

@@ -76,7 +76,7 @@ type HomeDayHighlight = {
 
 **Rail (~320px):** Allocation (CTA → `/tools/taxonomy` to fix unclassified) → Warren → **Clara CTA** (mini-landing modal → clara.trefolio.com) → Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats. Hidden when empty (no holdings). On mobile, Allocation stays in the main column above holdings.
 
-**Empty (no holdings):** Same `EmptyPortfolio` CTA as Classic `/` (import + add stock). Cash-only still counts as empty for this gate. When `onAskWarren` is wired (Home v2), Warren is **add-stock only** with a 10-consult / 15-minute cooldown — see [warren-empty-add-stock.md](warren-empty-add-stock.md).
+**Empty (no holdings):** Control `EmptyPortfolio` (import + add stock). Cash-only still counts as empty for this gate. When `onAskWarren` is wired (Home v2), Warren is **add-stock only** with a 10-consult / 15-minute cooldown — see [warren-empty-add-stock.md](warren-empty-add-stock.md). Experiment `warren_first_stock` (draft until Launch): treatment opens left Warren with a prefilled example after onboarding skip — see [warren-first-stock.md](warren-first-stock.md). Legacy `empty_activation` A/B/C is paused.
 
 **Mobile:** Same order stacked; MCP CTA after holdings; touch targets ≥44px.
 

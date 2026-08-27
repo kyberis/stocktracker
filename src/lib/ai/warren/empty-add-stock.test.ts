@@ -48,5 +48,6 @@ describe("empty-add-stock", () => {
     expect(appendix).toMatch(/proposeAddHolding/);
     expect(appendix).toMatch(/presentImportOptions/);
     expect(appendix).toMatch(/import your portfolio/i);
+    expect(appendix).toMatch(/stock market \/ exchange/i);
   });
 });

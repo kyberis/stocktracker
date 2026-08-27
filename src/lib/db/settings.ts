@@ -88,6 +88,7 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "mcp_fmp_proxy",
   "weekly_digest_enabled",
   "telegram_bot_enabled",
+  "lifecycle_activation_email_enabled",
   // Default authenticated home (morning brief / day-highlights APIs). Classic is opt-in via classic_home.
   "home_v2",
   // trefolio evaluate step after shortlist research (requires pipeline real + screening flags).

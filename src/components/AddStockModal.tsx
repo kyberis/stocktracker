@@ -23,7 +23,7 @@ interface AddStockModalProps {
 }
 
 export default function AddStockModal({ isOpen, onClose, initialAssetType }: AddStockModalProps) {
-  const { addHolding, holdings } = usePortfolio();
+  const { addHolding, holdings, error, clearError } = usePortfolio();
   const { user } = useAuth();
   const { getApiHeaders } = useSettings();
   const { t } = useI18n();
@@ -73,6 +73,7 @@ export default function AddStockModal({ isOpen, onClose, initialAssetType }: Add
       setExchange("");
       setAssetType("");
       setPurchaseDate(todayLocal());
+      clearError();
     }
   }, [isOpen, initialAssetType]); // eslint-disable-line react-hooks/exhaustive-deps -- track once per open
 
@@ -195,6 +196,16 @@ export default function AddStockModal({ isOpen, onClose, initialAssetType }: Add
                     {t("holdingsUsage").replace("{used}", String(holdings.length)).replace("{limit}", String(holdingsLimit))}
                   </p>
                 )}
+
+                {error ? (
+                  <p
+                    role="alert"
+                    data-testid="add-stock-error"
+                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-950/40 dark:text-red-300"
+                  >
+                    {error}
+                  </p>
+                ) : null}
 
                 {/* Search */}
                 <div className="relative">

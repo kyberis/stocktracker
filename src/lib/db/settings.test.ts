@@ -412,9 +412,11 @@ describe("settings", () => {
 
       const resultEnabled = await settings.isFeatureEnabled("telegram_enabled");
       const resultDisabled = await settings.isFeatureEnabled("alerts_enabled");
+      const lifecycleActivation = await settings.isFeatureEnabled("lifecycle_activation_email_enabled");
 
       expect(resultEnabled).toBe(true);
       expect(resultDisabled).toBe(false);
+      expect(lifecycleActivation).toBe(true);
     });
 
     it("defaults portfolio_anomaly_agent and display_invariants off", async () => {

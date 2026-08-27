@@ -2900,6 +2900,10 @@ const fr: TranslationStrings = {
     "Heureux de vous voir. J'ai accès à votre portefeuille. Demandez-moi ce que vous voulez ou dites-moi ce que je dois ajouter, retirer ou surveiller. Je vous demanderai toujours confirmation avant de modifier vos données.",
   warrenGreetingEmptyAdd:
     "Votre portefeuille est vide. Indiquez une action à ajouter — ticker, quantité et prix d’achat — et je préparerai la confirmation. Je ne peux vous aider qu’à ajouter des actions tant que vous n’avez pas de positions (10 chats, puis 15 minutes de pause).",
+  warrenFirstStockGreeting:
+    "Ajoutons votre première action. Modifiez l’exemple ci-dessous ou saisissez le vôtre. Je peux demander sur quel marché elle cote avant d’enregistrer.",
+  warrenFirstStockExample: "Ajoute 7 actions Apple à {price} USD",
+  warrenFirstStockTryExample: "Essayer cet exemple",
   warrenChipSummary: "Résume mon portefeuille",
   warrenChipConcentration: "Suis-je trop concentré ?",
   warrenChipDividends: "Revenu de dividendes estimé ?",

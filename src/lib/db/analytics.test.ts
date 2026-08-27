@@ -49,6 +49,21 @@ beforeEach(() => {
 });
 
 describe("getAnalyticsSummary — paywall_shown funnel/attribution", () => {
+  it("includes activation funnel stages after signups", async () => {
+    const summary = await getAnalyticsSummary(30);
+    const names = summary.funnel.map((s) => s.stage);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        "Onboarding import choice",
+        "First-stock shown",
+        "Empty activation CTA",
+        "Holding added",
+        "Portfolio imported",
+        "Paywall Shown",
+      ]),
+    );
+  });
+
   it("includes a Paywall Shown stage sourced from the paywall_shown event count", async () => {
     const summary = await getAnalyticsSummary(30);
 

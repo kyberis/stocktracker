@@ -55,12 +55,33 @@ export const EXPERIMENT_METRICS_CATALOG: ExperimentMetricDefinition[] = [
     key: "empty_activation_cta",
     title: "Empty activation CTA click",
     description:
-      "User clicked a CTA on the empty portfolio welcome (import, add, moat, screener, Warren).",
+      "User clicked a CTA on the empty portfolio welcome (import, add, Warren).",
     where: "src/components/EmptyPortfolio.tsx → trackExperimentEvent",
     source: "client_allowlist",
     category: "activation",
-    metadataKeys: ["experiment", "variant", "cta"],
-    recommendedFor: ["empty_activation"],
+    metadataKeys: ["cta", "experiment", "variant"],
+    recommendedFor: ["empty_activation", "warren_first_stock"],
+  },
+  {
+    key: "first_stock_activation_shown",
+    title: "Warren first-stock panel shown",
+    description:
+      "Treatment: left Warren panel opened after onboarding skip with a prefilled add-stock example.",
+    where: "src/components/homepage/HomeV2Dashboard.tsx",
+    source: "client_allowlist",
+    category: "activation",
+    metadataKeys: ["experiment", "variant"],
+    recommendedFor: ["warren_first_stock"],
+  },
+  {
+    key: "first_stock_example_sent",
+    title: "Warren first-stock example sent",
+    description: "User sent the prefilled Apple example (or the Try this example chip) to Warren.",
+    where: "src/components/homepage/HomeV2Dashboard.tsx → WarrenDrawer",
+    source: "client_allowlist",
+    category: "activation",
+    metadataKeys: ["experiment", "variant"],
+    recommendedFor: ["warren_first_stock"],
   },
   {
     key: "agent_intro_post_action",
@@ -103,7 +124,7 @@ export const EXPERIMENT_METRICS_CATALOG: ExperimentMetricDefinition[] = [
     source: "server",
     category: "portfolio",
     metadataKeys: ["ticker"],
-    recommendedFor: ["empty_activation", "agent_intro"],
+    recommendedFor: ["empty_activation", "agent_intro", "warren_first_stock"],
   },
   {
     key: "holding_delete",
@@ -123,7 +144,7 @@ export const EXPERIMENT_METRICS_CATALOG: ExperimentMetricDefinition[] = [
     source: "server",
     category: "ai",
     metadataKeys: ["action", "ticker"],
-    recommendedFor: ["empty_activation"],
+    recommendedFor: ["empty_activation", "warren_first_stock"],
   },
   {
     key: "portfolio_import",
@@ -133,7 +154,7 @@ export const EXPERIMENT_METRICS_CATALOG: ExperimentMetricDefinition[] = [
     source: "server",
     category: "import",
     metadataKeys: ["method", "broker", "count"],
-    recommendedFor: ["empty_activation"],
+    recommendedFor: ["empty_activation", "warren_first_stock"],
   },
   {
     key: "import_error",
