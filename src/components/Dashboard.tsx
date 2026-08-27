@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, Suspense } from "react";
+import { useState, useMemo, useRef, Suspense } from "react";
 import { useDashboardTabUrl, type DashboardTab } from "@/lib/use-dashboard-tab-url";
 import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n";
@@ -35,12 +35,10 @@ const RebalancingView = dynamic(() => import("./RebalancingView"), { ssr: false 
 const DividendSummary = dynamic(() => import("./DividendSummary"), { ssr: false });
 const PerformancePage = dynamic(() => import("./PerformancePage"), { ssr: false });
 const GrowthTab = dynamic(() => import("./GrowthTab"), { ssr: false });
-const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
 const LeafPromoBanner = dynamic(() => import("./LeafPromoBanner"), { ssr: false });
 const SnapTradeReconnectBanner = dynamic(() => import("./SnapTradeReconnectBanner"), { ssr: false });
 const EventCalendar = dynamic(() => import("./EventCalendar"), { ssr: false });
-const SupportChatWidget = dynamic(() => import("./SupportChatWidget"), { ssr: false });
 const ReferralShareModal = dynamic(() => import("./ReferralShareModal"), { ssr: false });
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import SampleDataBanner from "./SampleDataBanner";
@@ -99,11 +97,7 @@ const DashboardPortfolioV2 = dynamic(() => import("./dashboard-v2/DashboardPortf
 });
 
 function DesktopDashboard() {
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [showSupportChat, setShowSupportChat] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
-  const [supportChatEnabled, setSupportChatEnabled] = useState(false);
-  const [supportChatWelcome, setSupportChatWelcome] = useState("");
   const { t } = useI18n();
   const { holdings, cashEntries, isInitializing, demoMode } = usePortfolio();
   usePortfolioSnapshotSync({ demoMode });
@@ -111,23 +105,6 @@ function DesktopDashboard() {
   const { gatedAdd } = usePortfolioCommand();
   const track = useTrack();
   const { layoutTheme } = useTheme();
-
-
-  useEffect(() => {
-    if (demoMode) return;
-    const timer = setTimeout(() => {
-      fetch("/api/support-chat/config")
-        .then((r) => r.ok ? r.json() : null)
-        .then((data) => {
-          if (data) {
-            setSupportChatEnabled(data.enabled);
-            setSupportChatWelcome(data.welcomeMessage || "");
-          }
-        })
-        .catch(() => {});
-    }, 3_000);
-    return () => clearTimeout(timer);
-  }, [demoMode]);
 
   const investmentCashOnly = useMemo(
     () => investmentCashEntries(cashEntries),
@@ -337,57 +314,12 @@ function DesktopDashboard() {
         )}
       </main>
 
-      {showFeedback && (
-        <FeedbackModal
-          isOpen={showFeedback}
-          onClose={() => setShowFeedback(false)}
-        />
-      )}
-
-      {showSupportChat && (
-        <SupportChatWidget
-          isOpen={showSupportChat}
-          onClose={() => setShowSupportChat(false)}
-          onEscalate={() => {
-            setShowSupportChat(false);
-            setShowFeedback(true);
-          }}
-          welcomeMessage={supportChatWelcome}
-        />
-      )}
-
       {showReferralModal && (
         <ReferralShareModal
           isOpen={showReferralModal}
           onClose={() => setShowReferralModal(false)}
         />
       )}
-
-      {/* Floating buttons */}
-      <div className="fixed bottom-20 sm:bottom-6 right-6 z-30 flex flex-col gap-2 items-end">
-        {supportChatEnabled && (user?.plan === "pro") && (
-          <button
-            onClick={() => setShowSupportChat((v) => !v)}
-            className="glass-overlay flex min-h-11 items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/[0.16] px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-colors hover:bg-blue-500/[0.24]"
-            title={t("supportChatTitle")}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-            <span className="hidden sm:inline">{t("supportChatTitle")}</span>
-          </button>
-        )}
-        <button
-          onClick={() => setShowFeedback(true)}
-          className="glass-overlay flex min-h-11 items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/[0.16] px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-colors hover:bg-emerald-500/[0.24]"
-          title={t("feedback")}
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-          <span className="hidden sm:inline">{t("feedback")}</span>
-        </button>
-      </div>
     </>
   );
 }

@@ -1151,6 +1151,10 @@ const it: TranslationStrings = {
   notifBrokerMarkGapMessage:
     "{0}: trefolio uses live market last prices, so the total can differ from your broker. Difference about €{1}. Informational only — not investment advice.",
   notifBrokerMarkGapCta: "View portfolio",
+  agentDockSheetLabel: "Agents and actions",
+  agentDockOpenMenu: "Open Warren, Clara, and actions",
+  agentDockCloseMenu: "Close agent menu",
+  agentDockCloseHint: "Tap outside or the button to close",
 };
 
 export default it;

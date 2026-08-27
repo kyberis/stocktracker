@@ -26,7 +26,8 @@ Floating feedback button that captures issues/ideas, optionally with AI-drafted 
 | POST | `/api/feedback` | user | Free | Submit. |
 
 ## 6. UI surface
-- Floating button + drawer form.
+- Agent dock Feedback chip / mobile sheet → [`FeedbackModal`](../../src/components/FeedbackModal.tsx) (see [agent-dock](agent-dock.md)).
+- No page-local floating Feedback button.
 
 ## 7. Business logic
 - Rate-limited; AI-drafted ack with human-in-loop reply.
@@ -54,7 +55,7 @@ Floating feedback button that captures issues/ideas, optionally with AI-drafted 
 
 ## 15. Related skills and rules
 - [`automated-user-comms`](../../.cursor/skills/automated-user-comms/SKILL.md)
-- Related specs: [support-chat](support-chat.md).
+- Related specs: [support-chat](support-chat.md), [agent-dock](agent-dock.md).
 
 ## 16. Open questions / planned work
 - Clustered themes dashboard.

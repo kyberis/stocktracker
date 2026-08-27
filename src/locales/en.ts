@@ -3667,6 +3667,10 @@ const en: TranslationStrings = {
   alertAlreadyExists: "An identical alert already exists.",
   yieldOutOfRangeTooltip: "Yield above 15% is unreliable (often cross-currency) and is hidden.",
   crossListingMergedTooltip: "Same issuer listings grouped: {tickers}",
+  agentDockSheetLabel: "Agents and actions",
+  agentDockOpenMenu: "Open Warren, Clara, and actions",
+  agentDockCloseMenu: "Close agent menu",
+  agentDockCloseHint: "Tap outside or the button to close",
 };
 
 export default en;

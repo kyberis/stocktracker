@@ -25,7 +25,7 @@ Renders the production `Dashboard` component with seeded holdings/cash and `demo
 - None.
 
 ## 6. UI surface
-- Full dashboard + demo banner.
+- Full dashboard + demo banner + [agent-dock](agent-dock.md) (Warren/Clara → `/signup`; no Feedback/Support).
 
 ## 7. Business logic
 - `demoMode={true}` on `PortfolioProvider` disables fetches, auto-refresh, localStorage, and mutations.

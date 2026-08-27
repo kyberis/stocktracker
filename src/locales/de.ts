@@ -3556,6 +3556,10 @@ const de: TranslationStrings = {
   claraModalOpenChat: "Open Clara chat",
   claraModalSisterNote: "Opens clara.trefolio.com in a new tab — same login as trefolio.",
   claraModalDisclaimer: "Clara is a sister app. AI-generated help is not financial advice.",
+  agentDockSheetLabel: "Agents and actions",
+  agentDockOpenMenu: "Open Warren, Clara, and actions",
+  agentDockCloseMenu: "Close agent menu",
+  agentDockCloseHint: "Tap outside or the button to close",
 };
 
 export default de;

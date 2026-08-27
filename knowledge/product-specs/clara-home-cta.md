@@ -39,6 +39,7 @@ No new tables. Link status inferred from Clara `GET /api/internal/office/savings
 - Sky-accent card matching Warren layout (avatar, name, subtitle, chevron).
 - Modal via `AidModalShell` (focus trap, Escape, backdrop).
 - Demo mode: trigger links to `/signup` (same as Warren).
+- Global [agent-dock](agent-dock.md) chip also opens this modal.
 
 ## 7. Business logic
 
@@ -80,3 +81,4 @@ Authenticated only (dashboard). No Pro gate for the CTA itself; Clara message li
 - [clara-idp-integration](../design-docs/clara-idp-integration.md)
 - [unified-homepage](unified-homepage.md)
 - [agent-office](agent-office.md)
+- [agent-dock](agent-dock.md)

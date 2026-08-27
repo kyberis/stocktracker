@@ -59,7 +59,6 @@ const AddManualAssetModal = dynamic(() => import("@/components/AddManualAssetMod
 const ProCompareCard = dynamic(() => import("@/components/ProCompareCard"), { ssr: false });
 const EventCalendar = dynamic(() => import("@/components/EventCalendar"), { ssr: false });
 const ReferralShareModal = dynamic(() => import("@/components/ReferralShareModal"), { ssr: false });
-const FeedbackModal = dynamic(() => import("@/components/FeedbackModal"), { ssr: false });
 const SnapTradeReconnectBanner = dynamic(() => import("@/components/SnapTradeReconnectBanner"), { ssr: false });
 const LeafPromoBanner = dynamic(() => import("@/components/LeafPromoBanner"), { ssr: false });
 const DashboardUpgradeNudge = dynamic(() => import("@/components/DashboardUpgradeNudge"), { ssr: false });
@@ -94,7 +93,6 @@ export default function MobileDashboard() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallSurface, setPaywallSurface] = useState<string>("tab_gate");
   const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
   const { t } = useI18n();
@@ -602,28 +600,6 @@ export default function MobileDashboard() {
             {t("upgradeToAddMoreHoldings")}
           </button>
         </div>
-      )}
-
-      {/* Floating feedback button — web mobile only */}
-      {!isNative && (
-        <div className="fixed bottom-20 right-4 z-30">
-          <button
-            onClick={() => setShowFeedback(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-lg transition-colors"
-            title={t("feedback")}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
-          </button>
-        </div>
-      )}
-
-      {showFeedback && (
-        <FeedbackModal
-          isOpen={showFeedback}
-          onClose={() => setShowFeedback(false)}
-        />
       )}
 
       <WarrenDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />

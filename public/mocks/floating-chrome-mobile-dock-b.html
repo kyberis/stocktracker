@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>trefolio · Dock B · Mobile (min → expand)</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #152033;
+      --border: rgba(148, 163, 184, 0.18);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: radial-gradient(900px 500px at 50% -20%, #1a2740 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+    a.back {
+      color: #6ee7b7;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 10px 0 6px;
+    }
+    .lead {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      max-width: 60ch;
+      margin: 0 0 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; justify-items: center; }
+      .panel { width: 100%; max-width: 420px; }
+    }
+    .phone-shell {
+      width: 375px;
+      border-radius: 36px;
+      border: 1px solid var(--border);
+      background: #020617;
+      box-shadow: 0 30px 60px rgba(0,0,0,.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .notch {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 600;
+      position: relative;
+    }
+    .notch::before {
+      content: "";
+      position: absolute;
+      top: 8px;
+      width: 96px;
+      height: 18px;
+      background: #0b1220;
+      border-radius: 12px;
+    }
+    .screen {
+      position: relative;
+      height: 680px;
+      background: linear-gradient(180deg, #0f172a, #0b1220);
+      overflow: hidden;
+    }
+    .nav {
+      height: 48px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      background: rgba(15, 23, 42, 0.9);
+    }
+    .brand { font-weight: 700; letter-spacing: -0.03em; }
+    .nav-meta { color: var(--muted); font-size: 0.72rem; }
+    .content {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .block {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(30,41,59,.85), rgba(15,23,42,.45));
+      height: 88px;
+    }
+    .block.tall { height: 150px; }
+    .tabbar {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: calc(56px + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
+      border-top: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(12px);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      z-index: 30;
+    }
+    .tabbar .item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--muted);
+      font-size: 0.62rem;
+    }
+    .tabbar .item .ico {
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      background: rgba(148,163,184,.18);
+    }
+    .tabbar .item.on { color: #6ee7b7; }
+    .tabbar .item.on .ico { background: rgba(16,185,129,.35); }
+
+    .scrim {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.45);
+      z-index: 35;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+    .scrim.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Minimized FAB */
+    .fab {
+      position: absolute;
+      right: 14px;
+      bottom: calc(68px + var(--safe-bottom));
+      z-index: 50;
+      width: 56px;
+      height: 56px;
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(245,158,11,.45), transparent 55%),
+        radial-gradient(circle at 70% 70%, rgba(56,189,248,.4), transparent 55%),
+        rgba(15, 23, 42, 0.95);
+      box-shadow: 0 12px 28px rgba(0,0,0,.5);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.72rem;
+      letter-spacing: -0.02em;
+      transition: transform .18s ease, box-shadow .18s ease;
+      padding: 0;
+    }
+    .fab:hover { transform: scale(1.04); }
+    .fab:active { transform: scale(0.96); }
+    .fab.open {
+      transform: rotate(45deg) scale(0.92);
+      border-color: rgba(148,163,184,.35);
+      background: rgba(30, 41, 59, 0.95);
+    }
+    .fab .faces {
+      display: flex;
+      align-items: center;
+      margin-left: -2px;
+    }
+    .fab.open .faces { display: none; }
+    .fab .close-x {
+      display: none;
+      font-size: 1.25rem;
+      font-weight: 400;
+      line-height: 1;
+      color: var(--muted);
+    }
+    .fab.open .close-x { display: block; }
+    .fab .face {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 0.62rem;
+      font-weight: 800;
+      border: 1.5px solid #0b1220;
+      margin-left: -6px;
+    }
+    .fab .face:first-child { margin-left: 0; }
+    .fab .face.w { background: rgba(245,158,11,.55); }
+    .fab .face.c { background: rgba(56,189,248,.55); }
+    .fab .badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      border-radius: 999px;
+      background: #f59e0b;
+      color: #111;
+      font-size: 0.62rem;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      border: 2px solid #0b1220;
+    }
+    .fab.open .badge { display: none; }
+
+    /* Expanded sheet */
+    .sheet {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: calc(64px + var(--safe-bottom));
+      z-index: 45;
+      border-radius: 20px;
+      background: rgba(15, 23, 42, 0.97);
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 40px rgba(0,0,0,.55);
+      padding: 12px;
+      transform-origin: bottom right;
+      transform: translateY(12px) scale(0.92);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .2s cubic-bezier(0.32, 0.72, 0, 1), opacity .18s ease;
+    }
+    .sheet.open {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .sheet .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .agent-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 0 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+    }
+    .agent-btn.w { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.35); color: #fcd34d; }
+    .agent-btn.c { background: rgba(56,189,248,.1); border-color: rgba(56,189,248,.35); color: #7dd3fc; }
+    .agent-btn .big {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: grid; place-items: center; font-size: 0.72rem; font-weight: 800; color: #fff;
+      flex-shrink: 0;
+    }
+    .agent-btn.w .big { background: rgba(245,158,11,.45); }
+    .agent-btn.c .big { background: rgba(56,189,248,.45); }
+    .tools {
+      display: flex;
+      gap: 8px;
+    }
+    .tool {
+      flex: 1;
+      min-height: 44px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      background: transparent;
+      color: inherit;
+    }
+    .tool.a { background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.28); color: #fbbf24; }
+    .tool.f { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.3); color: #6ee7b7; }
+    .hint {
+      margin-top: 8px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.68rem;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+    }
+    .panel h2 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+    }
+    .panel p {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.55;
+      margin: 0 0 12px;
+    }
+    .steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+    .steps li {
+      font-size: 0.82rem;
+      line-height: 1.4;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+    }
+    .steps strong { color: #e2e8f0; }
+    .rec {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(16,185,129,.08);
+      border: 1px solid rgba(16,185,129,.25);
+      font-size: 0.8rem;
+      color: #a7f3d0;
+      line-height: 1.45;
+    }
+    .state-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .state-pill .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #64748b;
+    }
+    .state-pill.expanded .dot { background: #34d399; }
+    .state-pill.expanded { color: #a7f3d0; border-color: rgba(16,185,129,.35); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="back" href="./floating-chrome-options.html">← Todas las opciones</a>
+    <h1>Mobile · Dock B minimizado → expand</h1>
+    <p class="lead">
+      Decisión: en mobile el dock arranca colapsado (FAB W·C + badge).
+      Un tap lo abre; tap fuera o en el FAB lo cierra. Desktop sigue con dock expandido.
+    </p>
+
+    <div class="grid">
+      <div class="phone-shell">
+        <div class="notch">9:41</div>
+        <div class="screen">
+          <div class="nav">
+            <div class="brand">trefolio</div>
+            <div class="nav-meta">Home</div>
+          </div>
+          <div class="content">
+            <div class="block tall"></div>
+            <div class="block"></div>
+            <div class="block"></div>
+            <div class="block"></div>
+          </div>
+
+          <div class="scrim" id="scrim" aria-hidden="true"></div>
+
+          <div class="sheet" id="sheet" role="dialog" aria-label="Agents y acciones">
+            <div class="row">
+              <button type="button" class="agent-btn w"><span class="big">W</span> Warren</button>
+              <button type="button" class="agent-btn c"><span class="big">C</span> Clara</button>
+            </div>
+            <div class="tools">
+              <button type="button" class="tool a">⚡ Alertas · 1</button>
+              <button type="button" class="tool f">💬 Feedback</button>
+            </div>
+            <div class="hint">Toca fuera o el FAB para cerrar</div>
+          </div>
+
+          <button type="button" class="fab" id="fab" aria-expanded="false" aria-label="Abrir Warren, Clara y acciones">
+            <span class="faces">
+              <span class="face w">W</span>
+              <span class="face c">C</span>
+            </span>
+            <span class="close-x" aria-hidden="true">×</span>
+            <span class="badge">1</span>
+          </button>
+
+          <nav class="tabbar" aria-label="Mobile tabs">
+            <div class="item on"><div class="ico"></div>Home</div>
+            <div class="item"><div class="ico"></div>Port</div>
+            <div class="item"><div class="ico"></div>Office</div>
+            <div class="item"><div class="ico"></div>More</div>
+          </nav>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <div class="state-pill" id="statePill"><span class="dot"></span> <span id="stateLabel">Minimizado</span></div>
+        <h2>Comportamiento</h2>
+        <p>Un solo ancla bottom-right. Nada se solapa con Feedback porque Feedback solo vive dentro del sheet expandido.</p>
+        <ol class="steps">
+          <li><strong>Reposo:</strong> FAB dual W·C + badge de alertas. Tab bar libre.</li>
+          <li><strong>Tap FAB:</strong> sheet con Warren, Clara, Alertas y Feedback (targets ≥44px).</li>
+          <li><strong>Cerrar:</strong> tap FAB otra vez, tap en scrim, o Escape.</li>
+        </ol>
+        <div class="rec">
+          Spec locked: mobile = min → expand (este mock). Desktop = dock siempre expandido (opción B).
+          Toca el FAB en el teléfono para probar.
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const fab = document.getElementById("fab");
+    const sheet = document.getElementById("sheet");
+    const scrim = document.getElementById("scrim");
+    const statePill = document.getElementById("statePill");
+    const stateLabel = document.getElementById("stateLabel");
+    let open = false;
+
+    function setOpen(next) {
+      open = next;
+      fab.classList.toggle("open", open);
+      sheet.classList.toggle("open", open);
+      scrim.classList.toggle("open", open);
+      fab.setAttribute("aria-expanded", open ? "true" : "false");
+      fab.setAttribute("aria-label", open ? "Cerrar menú de agents" : "Abrir Warren, Clara y acciones");
+      statePill.classList.toggle("expanded", open);
+      stateLabel.textContent = open ? "Expandido" : "Minimizado";
+    }
+
+    fab.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setOpen(!open);
+    });
+    scrim.addEventListener("click", () => setOpen(false));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && open) setOpen(false);
+    });
+  </script>
+</body>
+</html>
