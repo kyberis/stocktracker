@@ -28,6 +28,7 @@ import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 import type { ImportQualityReport } from "@/lib/import-quality";
 import type { BrokerFormat } from "@/hooks/import-types";
 import { consumeSnapTradeOAuthPending } from "@/lib/snaptrade-oauth-client";
+import { parseImportEntrySearch } from "@/lib/import-entry";
 
 type ImportMethod = "broker_csv" | "snaptrade_api" | "ai_import" | "manual";
 
@@ -209,17 +210,30 @@ export default function ImportPageContent() {
   // AI file handling
   const aiFileRef = useRef<HTMLInputElement>(null);
   const [aiDragOver, setAiDragOver] = useState(false);
+  const pendingBrokerConnectRef = useRef<string | null>(null);
+  const autoConnectStartedRef = useRef(false);
 
-  // Restore last used method from localStorage
+  // Restore last used method from localStorage / Warren deep-link
   useEffect(() => {
     track("import_page_viewed");
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlMethod = urlParams.get("method") as ImportMethod | null;
-    if (urlMethod && METHOD_CARDS.some((m) => m.key === urlMethod)) {
-      setMethod(urlMethod);
+    const entry = parseImportEntrySearch(window.location.search);
+    if (entry.method && METHOD_CARDS.some((m) => m.key === entry.method)) {
+      setMethod(entry.method);
       setStep("upload");
-      localStorage.setItem("trefolio_last_import_method", urlMethod);
+      localStorage.setItem("trefolio_last_import_method", entry.method);
+    }
+
+    if (entry.method === "snaptrade_api" && entry.brokerSlug) {
+      pendingBrokerConnectRef.current = entry.brokerSlug;
+    }
+
+    if (entry.method === "broker_csv" && (entry.csvGuideId || entry.csvFormat || entry.csvQuery)) {
+      setCsvFromPicker(true);
+      setCsvGuideId(entry.csvGuideId);
+      const matchedFormat = BROKER_OPTIONS.find((b) => b.id === entry.csvFormat);
+      setForcedBrokerFormat(matchedFormat ? matchedFormat.id : "");
+      if (entry.csvQuery) setMissingBrokerName(entry.csvQuery);
     }
 
     snapTradeApi.loadConnection();
@@ -228,6 +242,16 @@ export default function ImportPageContent() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const slug = pendingBrokerConnectRef.current;
+    if (!slug || autoConnectStartedRef.current) return;
+    if (method !== "snaptrade_api" || step !== "upload") return;
+    if (authLoading || !brokerSyncAllowed) return;
+    autoConnectStartedRef.current = true;
+    pendingBrokerConnectRef.current = null;
+    void snapTradeApi.connect(slug);
+  }, [authLoading, brokerSyncAllowed, method, snapTradeApi.connect, step]);
 
   // Auto-advance to preview/done/backfilling when hook state changes
   useEffect(() => {

@@ -50,7 +50,7 @@ export function buildWarrenImportTools(ctx: WarrenToolContext) {
   return {
     presentImportOptions: tool({
       description:
-        "Show the three ways to import a portfolio: broker CSV/Excel, live broker sync (SnapTrade), or AI from a screenshot/generic CSV. Call this whenever the user asks to import their portfolio, upload holdings, or bring in a broker statement — before parsing any file.",
+        "Show the broker search chooser (same UI as /import). Call this whenever the user asks to import their portfolio, upload holdings, or connect a broker — even if you already described the options in text. On web, picking a broker opens the existing /import SnapTrade/CSV/manual wizard. Do not invent holdings.",
       inputSchema: z.object({}),
       execute: async () => {
         ctx.emitStep("Preparing import options…");

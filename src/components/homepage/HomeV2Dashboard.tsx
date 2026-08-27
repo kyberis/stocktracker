@@ -84,7 +84,11 @@ const StatsGrid = dynamic(() => import("@/components/dashboard-v2/StatsGrid"), {
 const PortfolioNewsFeed = dynamic(() => import("@/components/PortfolioNewsFeed"), { ssr: false });
 const FeedbackModal = dynamic(() => import("@/components/FeedbackModal"), { ssr: false });
 
-export default function HomeV2Dashboard() {
+export default function HomeV2Dashboard({
+  agentIntroAlreadyShownToday = false,
+}: {
+  agentIntroAlreadyShownToday?: boolean;
+}) {
   const { flags, isLoaded } = useFeatureFlagContext();
   const { t } = useI18n();
   const track = useTrack();
@@ -110,13 +114,12 @@ export default function HomeV2Dashboard() {
   const [aiOpen, setAiOpen] = useState(false);
   const [warrenPrompt, setWarrenPrompt] = useState<string | undefined>();
   const [activateFirstStockFlag, setActivateFirstStockFlag] = useState(false);
-  const [warrenSide, setWarrenSide] = useState<"left" | "right">("right");
   const firstStockShownRef = useRef(false);
   // Always start simple — do not restore advanced from localStorage on mount
   // (avoids history=all + txs on cold load). Preference is written on click.
   const [heroMode, setHeroMode] = useState<HeroMode>("simple");
   const [showFeedback, setShowFeedback] = useState(false);
-  const [introDismissed, setIntroDismissed] = useState(false);
+  const [introDismissed, setIntroDismissed] = useState(agentIntroAlreadyShownToday);
   const pageViewSent = useRef(false);
   const visitMarked = useRef(false);
   const returnTracked = useRef(false);
@@ -198,7 +201,6 @@ export default function HomeV2Dashboard() {
   useEffect(() => {
     if (!firstStockMode) return;
     setAiOpen(true);
-    setWarrenSide("left");
     if (firstStockShownRef.current || firstStockExperiment.previewing) return;
     firstStockShownRef.current = true;
     void trackExperimentEvent("first_stock_activation_shown", {
@@ -207,7 +209,7 @@ export default function HomeV2Dashboard() {
     });
   }, [firstStockMode, firstStockExperiment.previewing, firstStockExperiment.variant]);
 
-  const [introVisible, setIntroVisible] = useState(!demoMode);
+  const [introVisible, setIntroVisible] = useState(!demoMode && !agentIntroAlreadyShownToday);
 
   const introExperiment = useExperiment(AGENT_INTRO_EXPERIMENT_KEY, {
     enabled: aidEnabled,
@@ -521,6 +523,7 @@ export default function HomeV2Dashboard() {
         isEmpty={isEmpty}
         demoMode={demoMode || firstStockMode}
         dashboardReady={!isInitializing}
+        alreadyShownToday={agentIntroAlreadyShownToday}
         onIntroDismissed={() => setIntroDismissed(true)}
         onIntroVisibilityChange={setIntroVisible}
       />
@@ -539,13 +542,13 @@ export default function HomeV2Dashboard() {
       )}
       <WarrenDrawer
         isOpen={aiOpen}
-        side={warrenSide}
-        emptyGreeting={warrenSide === "left" ? t("warrenFirstStockGreeting") : undefined}
-        initialComposerValue={warrenSide === "left" ? firstStockExample : undefined}
-        pinnedExamplePrompt={warrenSide === "left" ? firstStockExample : undefined}
-        pinnedExampleLabel={warrenSide === "left" ? t("warrenFirstStockTryExample") : undefined}
+        side="right"
+        emptyGreeting={firstStockMode ? t("warrenFirstStockGreeting") : undefined}
+        initialComposerValue={firstStockMode ? firstStockExample : undefined}
+        pinnedExamplePrompt={firstStockMode ? firstStockExample : undefined}
+        pinnedExampleLabel={firstStockMode ? t("warrenFirstStockTryExample") : undefined}
         onPinnedExampleSend={
-          warrenSide === "left"
+          firstStockMode
             ? () => {
                 void trackExperimentEvent("first_stock_example_sent", {
                   experiment: WARREN_FIRST_STOCK_EXPERIMENT_KEY,
@@ -557,7 +560,6 @@ export default function HomeV2Dashboard() {
         onClose={() => {
           setAiOpen(false);
           setWarrenPrompt(undefined);
-          setWarrenSide("right");
         }}
         triggerPrompt={warrenPrompt}
         onTriggerPromptConsumed={() => setWarrenPrompt(undefined)}

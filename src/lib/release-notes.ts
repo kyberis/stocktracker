@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.250",
+    date: "2026-08-28",
+    title: "Warren import chooser + once-a-day agent intro",
+    titleTranslations: {
+      es: "Selector de importación de Warren e intro de agentes una vez al día",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Asking Warren to import your portfolio now shows the same broker search as /import (CSV or add manually if the provider is missing). Picking a broker opens SnapTrade and the live import wizard, including how many holdings will be imported and a portfolio recalculation. Empty-home / first-stock Warren opens on the right like Home. Not financial advice.",
+        translations: {
+          es: "Pedirle a Warren que importe tu cartera ahora muestra el mismo buscador de brókers que /import (CSV o añadir a mano si no está el proveedor). Elegir un bróker abre SnapTrade y el asistente de importación real, con cuántas posiciones se importarán y el recálculo de la cartera. Warren en el empty / primera acción se abre a la derecha, como en Home. No es asesoramiento financiero.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "The Warren + Clara home intro plays once per local calendar day. Navigating around the app no longer replays the splash the same day.",
+        translations: {
+          es: "La intro de Warren y Clara en Home se muestra una vez por día local. Navegar por la app ya no vuelve a reproducir el splash el mismo día.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.249",
     date: "2026-08-27",
     title: "First-stock activation experiment",

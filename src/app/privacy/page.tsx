@@ -725,6 +725,14 @@ export default function PrivacyPolicyPage() {
                 This cookie is classified as strictly necessary (bot protection)
                 and contains no personal identifiers.
               </li>
+              <li>
+                <strong className="text-slate-800">Agent intro day</strong> — a
+                first-party cookie (<code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">trefolio_agent_intro_day</code>)
+                that stores only a local calendar date (<code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">YYYY-MM-DD</code>)
+                so the Warren + Clara home intro plays once per day. It contains
+                no user id. Expires after 48 hours. Classified as strictly
+                necessary (prevent repeating a blocking animation).
+              </li>
             </ul>
 
             <h3>Analytics Cookies (optional, consent required)</h3>
