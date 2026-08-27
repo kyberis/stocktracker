@@ -5,7 +5,7 @@ export { looksLikeIsin };
 
 const isinCache = new Map<string, string>();
 
-const EUROPEAN_YAHOO_SUFFIX = /\.(DE|SG|F|AS|PA|MI|SW|L|CO|HE|ST|OL|VI|BR|LS)$/i;
+export const EUROPEAN_YAHOO_SUFFIX = /\.(DE|SG|F|AS|PA|MI|SW|L|CO|HE|ST|OL|VI|BR|LS)$/i;
 
 /**
  * Pick a Yahoo listing for an ISIN. Prefer a symbol that *is* the ISIN plus a

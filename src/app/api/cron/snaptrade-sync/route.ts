@@ -23,6 +23,7 @@ import {
 } from "@/lib/db";
 import { maybeNotifyFirstSyncHoldings } from "@/lib/snaptrade-first-sync";
 import { reconcileSnapTradeMarksAndNotify } from "@/lib/snaptrade-mark-gap-notify";
+import { remapNamesakesFromBrokerMarks } from "@/lib/snaptrade-namesake-remap";
 import {
   listBrokerageConnections,
   listAccounts,
@@ -237,6 +238,15 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
           });
           await linkUnlinkedTransactionsToHoldings(conn.userId, targetPId);
         }
+
+        lastUpserted = await remapNamesakesFromBrokerMarks(
+          conn.userId,
+          holdingsResult.holdings,
+          lastUpserted,
+        ).catch((err) => {
+          console.warn(`[snaptrade-sync] namesake remap failed for user ${conn.userId}:`, err);
+          return lastUpserted;
+        });
 
         await reconcileSnapTradeMarksAndNotify(
           conn.userId,
