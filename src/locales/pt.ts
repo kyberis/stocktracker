@@ -2900,6 +2900,10 @@ const pt: TranslationStrings = {
     "Que bom ver-te. Tenho acesso à tua carteira. Pergunta-me o que quiseres ou diz-me o que adicionar, remover ou vigiar. Vou sempre pedir confirmação antes de alterar dados.",
   warrenGreetingEmptyAdd:
     "A tua carteira está vazia. Diz-me uma ação para adicionar — ticker, quantidade e preço de compra — e preparo a confirmação. Só posso ajudar a adicionar ações até teres posições (10 chats, depois 15 minutos de pausa).",
+  warrenFirstStockGreeting:
+    "Vamos adicionar a tua primeira ação. Edita o exemplo abaixo ou escreve o teu. Posso perguntar em que mercado cotiza antes de guardar.",
+  warrenFirstStockExample: "Adiciona 7 ações da Apple a {price} USD",
+  warrenFirstStockTryExample: "Experimentar este exemplo",
   warrenChipSummary: "Resume a minha carteira",
   warrenChipConcentration: "Estou demasiado concentrado?",
   warrenChipDividends: "Rendimento de dividendos estimado?",

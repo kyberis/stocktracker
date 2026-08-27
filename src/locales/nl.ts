@@ -2899,6 +2899,10 @@ const nl: TranslationStrings = {
     "Fijn je te zien. Ik heb toegang tot je portefeuille. Vraag me alles of vertel me wat ik moet toevoegen, verwijderen of in de gaten houden. Ik vraag altijd om bevestiging voordat ik gegevens wijzig.",
   warrenGreetingEmptyAdd:
     "Je portefeuille is leeg. Noem een aandeel om toe te voegen — ticker, aantal en aankoopprijs — en ik bereid de bevestiging voor. Ik kan alleen helpen aandelen toe te voegen tot je posities hebt (10 chats, daarna 15 minuten pauze).",
+  warrenFirstStockGreeting:
+    "Laten we je eerste aandeel toevoegen. Bewerk het voorbeeld hieronder of typ je eigen tekst. Ik kan vragen op welke beurs het noteert voordat ik opsla.",
+  warrenFirstStockExample: "Voeg 7 aandelen Apple toe tegen {price} USD",
+  warrenFirstStockTryExample: "Dit voorbeeld proberen",
   warrenChipSummary: "Vat mijn portefeuille samen",
   warrenChipConcentration: "Ben ik te geconcentreerd?",
   warrenChipDividends: "Verwachte dividendinkomsten?",
