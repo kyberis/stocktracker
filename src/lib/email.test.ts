@@ -3,10 +3,18 @@ import { webcrypto } from "crypto";
 
 vi.stubGlobal("crypto", webcrypto);
 
-const { mockSend, mockGetGlobalResendApiKey, mockCheckAndIncrementRateLimit } = vi.hoisted(() => ({
+const {
+  mockSend,
+  mockGetGlobalResendApiKey,
+  mockCheckAndIncrementRateLimit,
+  mockFindUserByEmail,
+  mockGetUserSettings,
+} = vi.hoisted(() => ({
   mockSend: vi.fn(),
   mockGetGlobalResendApiKey: vi.fn(),
   mockCheckAndIncrementRateLimit: vi.fn(),
+  mockFindUserByEmail: vi.fn(),
+  mockGetUserSettings: vi.fn(),
 }));
 
 vi.mock("resend", () => ({
@@ -27,6 +35,10 @@ vi.mock("@/lib/db", async (importOriginal) => {
     ...actual,
     getGlobalResendApiKey: mockGetGlobalResendApiKey,
     checkAndIncrementRateLimit: mockCheckAndIncrementRateLimit,
+    // Marketing emails (welcome / upgrades) look up the recipient when userId
+    // is omitted — never hit the real DB from this unit suite.
+    findUserByEmail: mockFindUserByEmail,
+    getUserSettings: mockGetUserSettings,
   };
 });
 
@@ -59,6 +71,10 @@ describe("email", () => {
     mockSend.mockResolvedValue({ data: { id: "email-1" }, error: null });
     mockCheckAndIncrementRateLimit.mockReset();
     mockCheckAndIncrementRateLimit.mockResolvedValue({ allowed: true, remaining: 0, resetAt: "" });
+    mockFindUserByEmail.mockReset();
+    mockFindUserByEmail.mockResolvedValue(null);
+    mockGetUserSettings.mockReset();
+    mockGetUserSettings.mockResolvedValue({ emailNotificationsEnabled: true });
     vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
