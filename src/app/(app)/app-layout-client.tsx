@@ -9,6 +9,7 @@ import { PlatformProvider } from "@/lib/platform-context";
 import { FeatureFlagProvider } from "@/lib/feature-flag-context";
 import { PortfolioProvider } from "@/lib/portfolio-context";
 import { PortfolioCommandProvider } from "@/contexts/portfolio-command-context";
+import { AgentChromeProvider } from "@/contexts/agent-chrome-context";
 import { useIsNative } from "@/lib/use-native";
 import NavigationProgress from "@/components/NavigationProgress";
 import AppNav from "@/components/AppNav";
@@ -25,6 +26,7 @@ import MobileTabBar from "@/components/MobileTabBar";
 import InstallPrompt from "@/components/InstallPrompt";
 import MarketMoveToast from "@/components/MarketMoveToast";
 import SatisfactionSurvey from "@/components/SatisfactionSurvey";
+import AgentChromeHost from "@/components/AgentChromeHost";
 import CapacitorBridge from "@/components/CapacitorBridge";
 import NativePushBridge from "@/components/NativePushBridge";
 import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
@@ -201,6 +203,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
           <MobileTabBar />
           <InstallPrompt />
           <MarketMoveToast />
+          <AgentChromeHost />
           <SatisfactionSurvey />
           <CapacitorBridge />
           <NativePushBridge />
@@ -229,6 +232,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <MobileTabBar />
       <InstallPrompt />
       <MarketMoveToast />
+      <AgentChromeHost />
       <SatisfactionSurvey />
       <CapacitorBridge />
       <NativePushBridge />
@@ -263,8 +267,10 @@ export default function AppLayoutClient({
                 <StealthProvider>
                   <PortfolioProvider>
                     <PortfolioCommandProvider>
+                      <AgentChromeProvider>
                       <NavigationProgress />
                       <AppShell>{children}</AppShell>
+                      </AgentChromeProvider>
                     </PortfolioCommandProvider>
                   </PortfolioProvider>
                   <ThemeWizard />

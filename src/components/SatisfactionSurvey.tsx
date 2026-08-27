@@ -48,7 +48,7 @@ export default function SatisfactionSurvey({ demoMode = false }: Props) {
   });
 
   const checkToastOverlap = useCallback(() => {
-    const el = document.querySelector("[data-market-toast]");
+    const el = document.querySelector("[data-agent-dock], [data-market-toast]");
     setToastVisible(!!el);
   }, []);
 
@@ -176,7 +176,7 @@ export default function SatisfactionSurvey({ demoMode = false }: Props) {
   if (!visible || demoMode) return null;
 
   const bottomClass = toastVisible
-    ? "bottom-[200px] sm:bottom-[160px]"
+    ? "bottom-[220px] sm:bottom-[120px]"
     : "bottom-20 sm:bottom-6";
 
   return (

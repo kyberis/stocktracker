@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.250: Warren import chooser and once-a-day agent intro are in-app Home/Warren flows, not landing-page capabilities"
+  "notes": "2.5.251: agent dock is in-app chrome (Warren/Clara/feedback/alerts), not a landing-page capability"
 }

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.251",
+    date: "2026-08-28",
+    title: "Global agent dock",
+    titleTranslations: {
+      es: "Dock global de agentes",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Warren and Clara follow you in a bottom-right dock (always open on desktop; a compact W·C button on mobile that expands on tap). Market alerts, Feedback, and Pro AI Support share that same control so they no longer overlap. Not financial advice.",
+        translations: {
+          es: "Warren y Clara te siguen en un dock inferior derecho (siempre abierto en escritorio; en móvil un botón W·C que se expande al tocarlo). Las alertas de mercado, Feedback y el soporte IA Pro comparten ese control y ya no se solapan. No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.250",
     date: "2026-08-28",
     title: "Warren import chooser + once-a-day agent intro",

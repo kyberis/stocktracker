@@ -9,7 +9,9 @@ import { StealthProvider } from "@/lib/stealth-context";
 import { FeatureFlagProvider } from "@/lib/feature-flag-context";
 import { PortfolioProvider } from "@/lib/portfolio-context";
 import { PortfolioCommandProvider } from "@/contexts/portfolio-command-context";
+import { AgentChromeProvider } from "@/contexts/agent-chrome-context";
 import HomeV2Dashboard from "@/components/homepage/HomeV2Dashboard";
+import AgentChromeHost from "@/components/AgentChromeHost";
 import AppNav from "@/components/AppNav";
 import MarketTickerBar from "@/components/MarketTickerBar";
 import MobileTabBar from "@/components/MobileTabBar";
@@ -73,6 +75,7 @@ export default function DemoShell({
                   initialGoal={DEMO_GOAL}
                 >
                   <PortfolioCommandProvider>
+                    <AgentChromeProvider>
                     <div
                       className="min-h-screen pb-14 sm:pb-0"
                       style={{
@@ -88,7 +91,9 @@ export default function DemoShell({
                       </main>
                       <DemoFooter />
                       <MobileTabBar />
+                      <AgentChromeHost />
                     </div>
+                    </AgentChromeProvider>
                   </PortfolioCommandProvider>
                 </PortfolioProvider>
               </FeatureFlagProvider>

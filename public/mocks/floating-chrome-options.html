@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>trefolio · Floating chrome options</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --bg2: #111a2b;
+      --card: #152033;
+      --border: rgba(148, 163, 184, 0.18);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --warren: #f59e0b;
+      --clara: #38bdf8;
+      --feedback: #059669;
+      --alert: #1e293b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: radial-gradient(1200px 600px at 70% -10%, #1a2740 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+    h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 6px;
+    }
+    .lead {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      max-width: 62ch;
+      margin: 0 0 22px;
+    }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .tab {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .tab:hover { background: rgba(255,255,255,0.06); }
+    .tab.active {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: rgba(16, 185, 129, 0.45);
+      color: #6ee7b7;
+    }
+    .tab.broken.active {
+      background: rgba(239, 68, 68, 0.14);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1.35fr 0.9fr;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .stage-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,.35);
+    }
+    .stage-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,.18);
+    }
+    .stage-toolbar .dots { display: flex; gap: 6px; }
+    .stage-toolbar .dots span {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: #334155;
+    }
+    .viewport-toggle {
+      display: flex;
+      gap: 4px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      padding: 3px;
+    }
+    .viewport-toggle button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .viewport-toggle button.on {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+    }
+    .stage {
+      position: relative;
+      height: 520px;
+      background:
+        linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
+      overflow: hidden;
+      margin: 0 auto;
+      transition: width .25s ease;
+    }
+    .stage.desktop { width: 100%; }
+    .stage.mobile {
+      width: 375px;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    .fake-nav {
+      height: 48px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+    }
+    .brand { font-weight: 700; letter-spacing: -0.03em; }
+    .nav-pills { display: flex; gap: 8px; }
+    .nav-pill {
+      font-size: 0.7rem;
+      color: var(--muted);
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+    }
+    .nav-pill.on {
+      color: #a7f3d0;
+      border-color: rgba(16,185,129,.3);
+      background: rgba(16,185,129,.1);
+    }
+    .fake-content {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+    .cardish {
+      height: 78px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(30,41,59,.8), rgba(15,23,42,.5));
+    }
+    .cardish.tall { height: 140px; }
+    .mobile-tabbar {
+      display: none;
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 56px;
+      border-top: 1px solid var(--border);
+      background: rgba(15,23,42,.92);
+      backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: space-around;
+      padding-bottom: 4px;
+      z-index: 20;
+    }
+    .stage.mobile .mobile-tabbar { display: flex; }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      color: var(--muted);
+      font-size: 0.62rem;
+    }
+    .tab-item .ico {
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      background: rgba(148,163,184,.15);
+    }
+    .tab-item.active { color: #6ee7b7; }
+    .tab-item.active .ico { background: rgba(16,185,129,.35); }
+
+    /* Floating chrome pieces */
+    .fab {
+      position: absolute;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #fff;
+      cursor: default;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      z-index: 40;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .fab.icon-only {
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      justify-content: center;
+      border-radius: 50%;
+    }
+    .fab .avatar {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 0.65rem;
+      font-weight: 800;
+    }
+    .fab.feedback {
+      background: rgba(5, 150, 105, 0.55);
+      border-color: rgba(52, 211, 153, 0.35);
+      backdrop-filter: blur(8px);
+    }
+    .fab.alert {
+      background: #1e293b;
+      border-color: rgba(148,163,184,.25);
+      border-left: 3px solid var(--amber);
+      border-radius: 12px;
+      min-height: 36px;
+      padding: 0 10px;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #fcd34d;
+      z-index: 50;
+    }
+    .fab.alert .bolt {
+      width: 18px; height: 18px;
+      border-radius: 6px;
+      background: rgba(245,158,11,.2);
+      display: grid;
+      place-items: center;
+      font-size: 0.7rem;
+    }
+    .fab.warren {
+      background: rgba(245, 158, 11, 0.18);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fcd34d;
+    }
+    .fab.warren .avatar { background: rgba(245,158,11,.35); color: #fff; }
+    .fab.clara {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #7dd3fc;
+    }
+    .fab.clara .avatar { background: rgba(56,189,248,.35); color: #fff; }
+    .dock {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 40px rgba(0,0,0,.45);
+      backdrop-filter: blur(12px);
+      z-index: 45;
+    }
+    .dock .sep {
+      width: 1px;
+      height: 24px;
+      background: var(--border);
+      margin: 0 2px;
+    }
+    .dock .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 40px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 650;
+      border: 1px solid transparent;
+    }
+    .dock .chip.w { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.35); color: #fcd34d; }
+    .dock .chip.c { background: rgba(56,189,248,.12); border-color: rgba(56,189,248,.35); color: #7dd3fc; }
+    .dock .chip.a { background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.25); color: #fbbf24; }
+    .dock .chip.f { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.3); color: #6ee7b7; }
+    .rail {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px 8px;
+      border-radius: 18px;
+      background: rgba(15,23,42,.9);
+      border: 1px solid var(--border);
+      z-index: 45;
+      box-shadow: 0 12px 30px rgba(0,0,0,.4);
+    }
+    .rail .agent {
+      width: 44px; height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 0.78rem;
+    }
+    .rail .agent.w { background: rgba(245,158,11,.2); color: #fcd34d; border: 1px solid rgba(245,158,11,.35); }
+    .rail .agent.c { background: rgba(56,189,248,.18); color: #7dd3fc; border: 1px solid rgba(56,189,248,.35); }
+    .nav-agents {
+      display: none;
+      gap: 6px;
+      align-items: center;
+    }
+    .nav-agents.show { display: flex; }
+    .nav-agents .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    .nav-agents .pill.w { color: #fcd34d; background: rgba(245,158,11,.12); }
+    .nav-agents .pill.c { color: #7dd3fc; background: rgba(56,189,248,.1); }
+    .toast-top {
+      position: absolute;
+      top: 60px;
+      right: 14px;
+      z-index: 50;
+      display: none;
+    }
+    .toast-top.show { display: block; }
+    .collision {
+      position: absolute;
+      inset: auto 8px 72px auto;
+      width: 160px;
+      height: 70px;
+      border: 2px dashed rgba(239,68,68,.7);
+      border-radius: 16px;
+      pointer-events: none;
+      z-index: 60;
+      display: none;
+    }
+    .collision.show { display: block; }
+    .collision label {
+      position: absolute;
+      top: -22px;
+      right: 0;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #fca5a5;
+      background: rgba(127,29,29,.5);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px 18px 16px;
+    }
+    .panel h2 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+    .panel .desc {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.55;
+      margin: 0 0 14px;
+    }
+    .pros, .cons {
+      margin: 0 0 12px;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 6px;
+    }
+    .pros li, .cons li {
+      font-size: 0.82rem;
+      line-height: 1.4;
+      padding-left: 18px;
+      position: relative;
+      color: var(--text);
+    }
+    .pros li::before { content: "+"; position: absolute; left: 0; color: #34d399; font-weight: 800; }
+    .cons li::before { content: "−"; position: absolute; left: 0; color: #f87171; font-weight: 800; }
+    .rec {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(16,185,129,.08);
+      border: 1px solid rgba(16,185,129,.25);
+      font-size: 0.8rem;
+      color: #a7f3d0;
+      line-height: 1.45;
+    }
+    .rec.warn {
+      background: rgba(239,68,68,.08);
+      border-color: rgba(239,68,68,.28);
+      color: #fecaca;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .swatch {
+      width: 10px; height: 10px; border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Floating chrome · opciones de layout</h1>
+    <p class="lead">
+      Hoy Feedback y el toast de alertas de mercado comparten la esquina inferior derecha
+      (<code>bottom-20 / bottom-6</code>) y se pisan. Además Warren/Clara no están siempre a un toque
+      fuera de Home/Office. Elige una opción; el mock es interactivo (desktop / mobile).
+      Preferida: <strong>B</strong> —
+      <a href="./floating-chrome-mobile-dock-b.html" style="color:#6ee7b7">ver variantes mobile de B →</a>
+    </p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab broken active" data-opt="now">0 · Hoy (roto)</button>
+      <button class="tab" data-opt="a">A · Stack vertical</button>
+      <button class="tab" data-opt="b">B · Dock unificado</button>
+      <button class="tab" data-opt="c">C · Agents first</button>
+      <button class="tab" data-opt="d">D · Rail lateral</button>
+      <button class="tab" data-opt="e">E · Nav + overflow</button>
+    </div>
+
+    <div class="layout">
+      <div class="stage-wrap">
+        <div class="stage-toolbar">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="viewport-toggle">
+            <button type="button" id="vpDesktop" class="on">Desktop</button>
+            <button type="button" id="vpMobile">Mobile</button>
+          </div>
+        </div>
+        <div class="stage desktop" id="stage">
+          <div class="fake-nav">
+            <div class="brand">trefolio</div>
+            <div class="nav-pills">
+              <span class="nav-pill on">Home</span>
+              <span class="nav-pill">Portfolio</span>
+              <span class="nav-pill">Office</span>
+            </div>
+            <div class="nav-agents" id="navAgents">
+              <span class="pill w">W Warren</span>
+              <span class="pill c">C Clara</span>
+            </div>
+          </div>
+          <div class="fake-content">
+            <div class="cardish tall"></div>
+            <div class="cardish"></div>
+            <div class="cardish"></div>
+          </div>
+
+          <div class="collision" id="collision"><label>overlap</label></div>
+          <div class="toast-top" id="toastTop">
+            <div class="fab alert" style="position:relative; right:0; bottom:0;">
+              <span class="bolt">⚡</span> 1
+              <span style="opacity:.5">⌃</span>
+            </div>
+          </div>
+
+          <!-- Pieces repositioned by JS -->
+          <div class="fab feedback" id="fabFeedback">
+            <span>💬</span> <span class="lbl">Feedback</span>
+          </div>
+          <div class="fab alert" id="fabAlert">
+            <span class="bolt">⚡</span> 1
+            <span style="opacity:.55;font-size:.7rem">⌃</span>
+          </div>
+          <div class="fab warren" id="fabWarren">
+            <span class="avatar">W</span> <span class="lbl">Warren</span>
+          </div>
+          <div class="fab clara" id="fabClara">
+            <span class="avatar">C</span> <span class="lbl">Clara</span>
+          </div>
+          <div class="dock" id="dock" hidden>
+            <span class="chip w"><span class="avatar" style="width:18px;height:18px;border-radius:50%;background:rgba(245,158,11,.35);display:grid;place-items:center;font-size:.6rem;font-weight:800">W</span> Warren</span>
+            <span class="chip c"><span class="avatar" style="width:18px;height:18px;border-radius:50%;background:rgba(56,189,248,.35);display:grid;place-items:center;font-size:.6rem;font-weight:800">C</span> Clara</span>
+            <span class="sep"></span>
+            <span class="chip a">⚡ 1</span>
+            <span class="chip f">💬</span>
+          </div>
+          <div class="rail" id="rail" hidden>
+            <div class="agent w">W</div>
+            <div class="agent c">C</div>
+          </div>
+
+          <div class="mobile-tabbar" id="mobileTabbar">
+            <div class="tab-item active"><div class="ico"></div>Home</div>
+            <div class="tab-item"><div class="ico"></div>Port</div>
+            <div class="tab-item" id="tabWarren"><div class="ico" style="background:rgba(245,158,11,.35)"></div>Warren</div>
+            <div class="tab-item" id="tabClara"><div class="ico" style="background:rgba(56,189,248,.35)"></div>Clara</div>
+            <div class="tab-item"><div class="ico"></div>More</div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel" id="panel">
+        <h2 id="optTitle">0 · Hoy (roto)</h2>
+        <p class="desc" id="optDesc"></p>
+        <ul class="pros" id="optPros"></ul>
+        <ul class="cons" id="optCons"></ul>
+        <div class="rec" id="optRec"></div>
+        <div class="legend">
+          <span><i class="swatch" style="background:#f59e0b"></i> Warren</span>
+          <span><i class="swatch" style="background:#38bdf8"></i> Clara</span>
+          <span><i class="swatch" style="background:#059669"></i> Feedback</span>
+          <span><i class="swatch" style="background:#fbbf24"></i> Alertas mercado</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const OPTIONS = {
+      now: {
+        title: "0 · Hoy (roto)",
+        desc: "Feedback FAB y MarketMoveToast colapsado usan casi la misma ancla (bottom-right). El toast (z-60) tapa el botón Feedback (z-30). Warren/Clara solo en Home, Holdings Explorer, AID u Office — no te siguen.",
+        pros: ["Cero trabajo (estado actual)"],
+        cons: ["Click conflict / Feedback ilegible", "Agents no persistentes", "Peor en mobile por encima del tab bar"],
+        rec: "No ship — es el bug que viste en el screenshot.",
+        warn: true,
+      },
+      a: {
+        title: "A · Stack vertical",
+        desc: "Una sola columna fija bottom-right: Alertas → Warren → Clara → Feedback, con gap consistente. Todos los chrome flotan juntos y se apilan sin solaparse. En mobile sube por encima del tab bar.",
+        pros: ["Fix mínimo del overlap", "Agents siempre visibles", "Patrón familiar tipo Intercom"],
+        cons: ["Ocupa bastante altura en mobile", "4 FABs = ruido visual"],
+        rec: "Bueno como quick-win si quieres persistencia inmediata de agents + fix del bug.",
+      },
+      b: {
+        title: "B · Dock unificado",
+        desc: "Un único dock inferior derecho: [Warren][Clara] | [⚡][💬]. Un solo ancla, un solo z-index. Expandir/colapsar el dock. Alertas y feedback viven dentro del mismo chrome.",
+        pros: ["Máxima claridad de ownership", "Escalable (añadir Will luego)", "Se ve premium / intencional"],
+        cons: ["Más trabajo de componente", "Necesita micro-interacciones"],
+        rec: "Recomendada para producto a medio plazo — un “Agent Dock” global en AppShell.",
+      },
+      c: {
+        title: "C · Agents first",
+        desc: "Warren + Clara son los FABs primarios (derecha). Alertas flotan encima del cluster. Feedback se mueve a la izquierda (o al menú Help). Prioriza lo que quieres que uses siempre.",
+        pros: ["Agents siempre a 1 tap", "Feedback deja de competir por atención", "Fix limpio del overlap"],
+        cons: ["Feedback menos descubrible", "Dos anclas (izq/der)"],
+        rec: "Buena si el objetivo es “Clara y Warren te siguen” como first-class.",
+      },
+      d: {
+        title: "D · Rail lateral",
+        desc: "Rail fijo en el borde derecho con avatares W/C (como Agent Office). Alertas pasan a toast top-right (o al ticker). Feedback vive en menú / settings. Cero competencia en el bottom.",
+        pros: ["Bottom libre (mobile tab bar feliz)", "Agents persistentes y elegantes", "Align con Office visual language"],
+        cons: ["Menos visible en mobile landscape", "Feedback más escondido"],
+        rec: "Ideal si quieres un look “studio / office” coherente en toda la app.",
+      },
+      e: {
+        title: "E · Nav + overflow",
+        desc: "Warren/Clara en la nav (desktop) y en el MobileTabBar. Sin FABs de agents. Alertas en el ticker o toast top. Feedback solo en menú “Help / Feedback”. Bottom-right queda vacío.",
+        pros: ["Cero clutter flotante", "Agents en chrome nativo", "Accesible y predecible"],
+        cons: ["Menos “presence” de agents", "Cambios en nav + tab bar"],
+        rec: "La más limpia a largo plazo si no quieres FABs flotantes.",
+      },
+    };
+
+    const stage = document.getElementById("stage");
+    const fabFeedback = document.getElementById("fabFeedback");
+    const fabAlert = document.getElementById("fabAlert");
+    const fabWarren = document.getElementById("fabWarren");
+    const fabClara = document.getElementById("fabClara");
+    const dock = document.getElementById("dock");
+    const rail = document.getElementById("rail");
+    const collision = document.getElementById("collision");
+    const toastTop = document.getElementById("toastTop");
+    const navAgents = document.getElementById("navAgents");
+    const tabWarren = document.getElementById("tabWarren");
+    const tabClara = document.getElementById("tabClara");
+
+    let opt = "now";
+    let mobile = false;
+
+    function hideAllFloats() {
+      [fabFeedback, fabAlert, fabWarren, fabClara, dock, rail].forEach((el) => {
+        el.hidden = true;
+        el.style.display = "none";
+      });
+      collision.classList.remove("show");
+      toastTop.classList.remove("show");
+      navAgents.classList.remove("show");
+      tabWarren.style.opacity = "0.35";
+      tabClara.style.opacity = "0.35";
+    }
+
+    function show(el, styles = {}) {
+      el.hidden = false;
+      el.style.display = el.classList.contains("dock") || el.classList.contains("rail")
+        ? "flex"
+        : "inline-flex";
+      Object.assign(el.style, styles);
+    }
+
+    function bottomPad() {
+      return mobile ? "76px" : "24px";
+    }
+
+    function apply() {
+      hideAllFloats();
+      const meta = OPTIONS[opt];
+      document.getElementById("optTitle").textContent = meta.title;
+      document.getElementById("optDesc").textContent = meta.desc;
+      document.getElementById("optPros").innerHTML = meta.pros.map((p) => `<li>${p}</li>`).join("");
+      document.getElementById("optCons").innerHTML = meta.cons.map((c) => `<li>${c}</li>`).join("");
+      const rec = document.getElementById("optRec");
+      rec.textContent = meta.rec;
+      rec.className = "rec" + (meta.warn ? " warn" : "");
+
+      const b = bottomPad();
+      const right = mobile ? "14px" : "24px";
+
+      if (opt === "now") {
+        show(fabFeedback, { right, bottom: b, left: "auto", top: "auto" });
+        show(fabAlert, {
+          right: mobile ? "12px" : "16px",
+          bottom: mobile ? "78px" : "20px",
+          left: "auto",
+          top: "auto",
+        });
+        collision.classList.add("show");
+        collision.style.bottom = mobile ? "68px" : "12px";
+        collision.style.right = "8px";
+      }
+
+      if (opt === "a") {
+        // stack: alert, warren, clara, feedback from top of stack
+        const items = [
+          [fabAlert, 0],
+          [fabWarren, 48],
+          [fabClara, 104],
+          [fabFeedback, 160],
+        ];
+        const base = mobile ? 76 : 24;
+        items.forEach(([el, offset]) => {
+          show(el, { right, bottom: `${base + offset}px`, left: "auto", top: "auto" });
+        });
+        if (mobile) {
+          fabWarren.querySelector(".lbl").style.display = "none";
+          fabClara.querySelector(".lbl").style.display = "none";
+          fabFeedback.querySelector(".lbl").style.display = "none";
+        } else {
+          fabWarren.querySelector(".lbl").style.display = "";
+          fabClara.querySelector(".lbl").style.display = "";
+          fabFeedback.querySelector(".lbl").style.display = "";
+        }
+      }
+
+      if (opt === "b") {
+        show(dock, { right, bottom: b, left: "auto", top: "auto" });
+        if (mobile) {
+          dock.style.maxWidth = "calc(100% - 28px)";
+          dock.style.flexWrap = "wrap";
+          dock.style.borderRadius = "18px";
+        } else {
+          dock.style.maxWidth = "";
+          dock.style.flexWrap = "";
+          dock.style.borderRadius = "999px";
+        }
+      }
+
+      if (opt === "c") {
+        show(fabClara, { right, bottom: b, left: "auto", top: "auto" });
+        show(fabWarren, {
+          right,
+          bottom: mobile ? "132px" : "80px",
+          left: "auto",
+          top: "auto",
+        });
+        show(fabAlert, {
+          right,
+          bottom: mobile ? "188px" : "136px",
+          left: "auto",
+          top: "auto",
+        });
+        show(fabFeedback, {
+          left: mobile ? "14px" : "24px",
+          right: "auto",
+          bottom: b,
+          top: "auto",
+        });
+      }
+
+      if (opt === "d") {
+        show(rail, {});
+        toastTop.classList.add("show");
+        // tiny feedback affordance in corner as icon only, low priority
+        show(fabFeedback, {
+          right: mobile ? "14px" : "24px",
+          bottom: b,
+          left: "auto",
+          top: "auto",
+        });
+        fabFeedback.querySelector(".lbl").style.display = mobile ? "none" : "";
+        fabFeedback.classList.toggle("icon-only", mobile);
+      } else {
+        fabFeedback.classList.remove("icon-only");
+      }
+
+      if (opt === "e") {
+        navAgents.classList.add("show");
+        toastTop.classList.add("show");
+        tabWarren.style.opacity = "1";
+        tabClara.style.opacity = "1";
+        // feedback only as subtle icon in more — show nothing floating
+      }
+    }
+
+    document.querySelectorAll(".tab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        opt = btn.dataset.opt;
+        apply();
+      });
+    });
+
+    document.getElementById("vpDesktop").addEventListener("click", () => {
+      mobile = false;
+      stage.classList.add("desktop");
+      stage.classList.remove("mobile");
+      document.getElementById("vpDesktop").classList.add("on");
+      document.getElementById("vpMobile").classList.remove("on");
+      apply();
+    });
+    document.getElementById("vpMobile").addEventListener("click", () => {
+      mobile = true;
+      stage.classList.add("mobile");
+      stage.classList.remove("desktop");
+      document.getElementById("vpMobile").classList.add("on");
+      document.getElementById("vpDesktop").classList.remove("on");
+      apply();
+    });
+
+    apply();
+  </script>
+</body>
+</html>

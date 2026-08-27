@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useTickerBar, type BigMover } from "@/lib/hooks/use-ticker-bar";
 import { useI18n } from "@/lib/i18n";
+import { useAgentChromeOptional } from "@/contexts/agent-chrome-context";
 import type { QuoteData } from "@/lib/types";
 
 const DISMISS_KEY = "market_move_toast_dismissed";
@@ -101,6 +102,10 @@ interface Props {
 
 export default function MarketMoveToast({ demoMode = false }: Props) {
   const { t } = useI18n();
+  const chrome = useAgentChromeOptional();
+  const setAlertCount = chrome?.setAlertCount;
+  const setAlertsExpanded = chrome?.setAlertsExpanded;
+  const dockMode = Boolean(chrome);
   const { bigMovers, loading } = useTickerBar(demoMode);
   const [dismissed, setDismissed] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -111,6 +116,10 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
 
   const hasAlerts = bigMovers.length > 0 || holdingMovers.length > 0;
   const totalMovers = bigMovers.length + holdingMovers.length;
+
+  useEffect(() => {
+    setAlertCount?.(dismissed || !hasAlerts ? 0 : totalMovers);
+  }, [setAlertCount, dismissed, hasAlerts, totalMovers]);
 
   useEffect(() => {
     try {
@@ -134,33 +143,41 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
     if (alreadyShownToday) {
       setExpanded(false);
       setCollapsed(true);
+      setAlertsExpanded?.(false);
       return;
     }
 
     setExpanded(true);
     setCollapsed(false);
+    setAlertsExpanded?.(true);
     try { localStorage.setItem(SHOWN_KEY, todayStr()); } catch { /* ignore */ }
 
     timerRef.current = setTimeout(() => {
       setExpanded(false);
       setCollapsed(true);
+      setAlertsExpanded?.(false);
     }, AUTO_DISMISS_MS);
     sendBrowserNotification(bigMovers, holdingMovers, t("marketAlertTitle") || "Market Alert");
 
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [bigMovers, holdingMovers, hasAlerts, loading, dismissed, t]);
+  }, [bigMovers, holdingMovers, hasAlerts, loading, dismissed, t, setAlertsExpanded]);
 
   function dismiss() {
     setExpanded(false);
     setCollapsed(false);
     setDismissed(true);
+    setAlertsExpanded?.(false);
+    setAlertCount?.(0);
     try { localStorage.setItem(DISMISS_KEY, todayStr()); } catch { /* ignore */ }
     if (timerRef.current) clearTimeout(timerRef.current);
   }
 
   if (dismissed || !hasAlerts) return null;
 
-  if (collapsed && !expanded) {
+  const showPanel = dockMode ? Boolean(chrome?.alertsExpanded) : expanded;
+  const showCollapsedChip = !dockMode && collapsed && !expanded;
+
+  if (showCollapsedChip) {
     return (
       <button
         onClick={() => { setCollapsed(false); setExpanded(true); }}
@@ -183,13 +200,13 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
     );
   }
 
-  if (!expanded) return null;
+  if (!showPanel) return null;
 
   return (
     <div
       role="alert"
       data-market-toast
-      className="fixed bottom-36 sm:bottom-24 right-4 z-[60] w-72 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 border-l-4 border-l-amber-500 rounded-xl shadow-lg animate-slide-in-right"
+      className="fixed bottom-36 sm:bottom-28 right-4 z-[60] w-72 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 border-l-4 border-l-amber-500 rounded-xl shadow-lg animate-slide-in-right"
     >
       <div className="p-3.5">
         <div className="flex items-center justify-between mb-2.5">

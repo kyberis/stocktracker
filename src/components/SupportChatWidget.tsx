@@ -158,7 +158,7 @@ export default function SupportChatWidget({
   const greeting = welcomeMessage || t("supportChatWelcome");
 
   return (
-    <div className="fixed bottom-20 sm:bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)]">
+    <div className="fixed bottom-36 sm:bottom-24 right-4 sm:right-6 z-[55] w-[360px] max-w-[calc(100vw-2rem)]">
       <div
         ref={focusTrapRef}
         role="dialog"
