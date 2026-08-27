@@ -94,6 +94,7 @@ describe("assembleReport ETF branch", () => {
             ebitda: 45,
             researchAndDevelopment: null,
             sellingGeneralAndAdmin: null,
+            interestExpense: null,
           },
         ],
         quarterly: [],
