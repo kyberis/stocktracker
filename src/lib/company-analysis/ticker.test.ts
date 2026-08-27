@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseTicker, TICKER_PATTERN } from "./ticker";
+import { parseIsinParam, parseTicker, TICKER_PATTERN } from "./ticker";
 
 describe("parseTicker", () => {
   it("accepts valid tickers", () => {
@@ -19,5 +19,13 @@ describe("parseTicker", () => {
   it("pattern matches spec", () => {
     expect(TICKER_PATTERN.test("AAPL")).toBe(true);
     expect(TICKER_PATTERN.test("aapl")).toBe(false);
+  });
+});
+
+describe("parseIsinParam", () => {
+  it("accepts a valid ISIN and rejects junk", () => {
+    expect(parseIsinParam("gb00bld4zl17")).toBe("GB00BLD4ZL17");
+    expect(parseIsinParam("BITC")).toBeUndefined();
+    expect(parseIsinParam("")).toBeUndefined();
   });
 });

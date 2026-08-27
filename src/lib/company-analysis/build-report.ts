@@ -36,7 +36,7 @@ import {
 import type { ReportGap } from "@/lib/company-analysis/gaps";
 import type { CompanyAnalysisPeer, CompanyAnalysisReport } from "@/lib/company-analysis/types";
 import { getGlobalFmpApiKey } from "@/lib/db";
-import { yahooSymbolAliases } from "@/lib/market-symbol";
+import { disambiguateListing, yahooSymbolAliases } from "@/lib/market-symbol";
 
 export function hasFmpKey(): boolean {
   return Boolean(getGlobalFmpApiKey() || process.env.FMP_API_KEY);
@@ -60,7 +60,20 @@ async function fetchQuoteAndOverview(
   quote: ProviderQuoteResult | null;
   overview: CompanyOverview | null;
 }> {
-  const candidates = [ticker, ...yahooSymbolAliases(ticker)];
+  const listing = disambiguateListing({ ticker });
+  const ordered = [listing.ticker, ...yahooSymbolAliases(listing.ticker)];
+  if (listing.isin) {
+    ordered.push(`${listing.isin}.SG`, listing.isin);
+  }
+  const candidates: string[] = [];
+  const seen = new Set<string>();
+  for (const sym of ordered) {
+    const key = sym.trim().toUpperCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    candidates.push(sym.trim());
+  }
+
   let lastQuote: ProviderQuoteResult | null = null;
   let lastOverview: CompanyOverview | null = null;
   for (const sym of candidates) {
@@ -74,7 +87,7 @@ async function fetchQuoteAndOverview(
     lastQuote = quote;
     lastOverview = overview;
   }
-  return { symbolUsed: ticker, quote: lastQuote, overview: lastOverview };
+  return { symbolUsed: listing.ticker, quote: lastQuote, overview: lastOverview };
 }
 
 export async function loadCongress(symbol: string): Promise<FmpCongressTrade[] | null> {
@@ -146,9 +159,10 @@ export async function buildFullReport(
   generatedAt: string,
 ): Promise<CompanyAnalysisReport | null> {
   const { provider, intelProvider, usedYahoo, usedFmp } = providers;
+  const analysisTicker = disambiguateListing({ ticker }).ticker;
   const yahooOutlook = new YahooProvider();
   const { symbolUsed, quote: quoteRes, overview: overviewRes } = await fetchQuoteAndOverview(
-    ticker,
+    analysisTicker,
     provider,
   );
   const dataSymbol = symbolUsed;
@@ -195,7 +209,7 @@ export async function buildFullReport(
   const nextQuarter = mergeNextQuarterConsensus(fmpNext, yahooNext);
 
   return assembleReport({
-    ticker, // keep request ticker for URLs/cache key
+    ticker: analysisTicker,
     symbolUsed: dataSymbol !== ticker ? dataSymbol : undefined,
     generatedAt,
     updatedAt: generatedAt,

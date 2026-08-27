@@ -25,6 +25,9 @@ const EXCHANGE_TO_TV: Record<string, string> = {
   "NYSE AMERICAN": "AMEX",
   BATS: "BATS",
   BTS: "BATS",
+  XET: "XETR",
+  XETR: "XETR",
+  GER: "XETR",
 };
 
 function normalizeExchange(exchange: string | null | undefined): string {

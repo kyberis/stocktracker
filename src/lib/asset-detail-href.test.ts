@@ -57,6 +57,14 @@ describe("holdingDetailHref", () => {
       "/analisis/AAPL?exchange=NMS",
     );
   });
+
+  it("passes ISIN so namesake tickers keep the European listing", () => {
+    expect(
+      holdingDetailHref(
+        holding({ ticker: "BITC", exchange: "ARCA", isin: "GB00BLD4ZL17" }),
+      ),
+    ).toBe("/analisis/BITC?exchange=ARCA&isin=GB00BLD4ZL17");
+  });
 });
 
 describe("analisisCryptoRedirectHref", () => {

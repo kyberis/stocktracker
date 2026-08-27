@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.244",
+    date: "2026-08-27",
+    title: "Analysis page: CoinShares BITC, not NYSE Bitwise",
+    titleTranslations: {
+      es: "Análisis: BITC de CoinShares, no Bitwise de NYSE",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Public /analisis/BITC now opens CoinShares Physical Bitcoin (Xetra / ISIN GB00BLD4ZL17, around €65), not the NYSE Bitwise ETF that Yahoo quotes for unsuffixed BITC (~$40).",
+        translations: {
+          es: "La ficha pública /analisis/BITC abre ahora CoinShares Physical Bitcoin (Xetra / ISIN GB00BLD4ZL17, unos 65 €), no el ETF Bitwise de NYSE que Yahoo cotiza para BITC sin sufijo (~40 $).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.243",
     date: "2026-08-27",
     title: "Portugal real-estate zone screening (beta)",

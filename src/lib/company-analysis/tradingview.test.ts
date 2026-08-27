@@ -18,6 +18,13 @@ describe("toTradingViewSymbol", () => {
   it("falls back to bare ticker when exchange unknown", () => {
     expect(toTradingViewSymbol("NOW", "")).toBe("NOW");
   });
+
+  it("maps Xetra CoinShares BITC", () => {
+    expect(toTradingViewSymbol("BITC", "XET")).toBe("XETR:BITC");
+    expect(toTradingViewChartUrl("BITC", "XET")).toBe(
+      "https://www.tradingview.com/symbols/XETR-BITC/",
+    );
+  });
 });
 
 describe("toTradingViewChartUrl", () => {

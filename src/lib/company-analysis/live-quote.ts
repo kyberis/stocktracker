@@ -1,5 +1,6 @@
 import { mapQuote } from "@/lib/company-analysis/assemble";
 import type { CompanyAnalysisReport } from "@/lib/company-analysis/types";
+import { marketDataSymbolForHolding } from "@/lib/market-symbol";
 import { getQuotesWithCache } from "@/lib/quote-cache";
 
 /**
@@ -10,8 +11,13 @@ export async function withLiveQuote(
   report: CompanyAnalysisReport,
 ): Promise<CompanyAnalysisReport> {
   try {
-    const quotes = await getQuotesWithCache([report.ticker]);
-    const providerQuote = quotes[report.ticker];
+    const symbol = marketDataSymbolForHolding({
+      ticker: report.ticker,
+      exchange: report.profile?.exchange,
+      name: report.profile?.name,
+    });
+    const quotes = await getQuotesWithCache([symbol]);
+    const providerQuote = quotes[symbol] ?? quotes[report.ticker];
     if (!providerQuote || !(providerQuote.regularMarketPrice > 0)) {
       return report;
     }

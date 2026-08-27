@@ -138,6 +138,7 @@ const LISTING_COLLISIONS: {
   displayExchange: string;
   isin: string;
   namePattern: RegExp;
+  usNamePattern: RegExp;
 }[] = [
   {
     baseTicker: "BITC",
@@ -145,6 +146,7 @@ const LISTING_COLLISIONS: {
     displayExchange: "XET",
     isin: COINSHARES_BITC_ISIN,
     namePattern: /coinshares/i,
+    usNamePattern: /bitwise/i,
   },
 ];
 
@@ -178,9 +180,24 @@ export function isListingCollisionRemap(fromTicker: string, toTicker: string): b
   );
 }
 
+function isUsNamesakeIdentity(
+  collision: (typeof LISTING_COLLISIONS)[number],
+  input: { name?: string | null; isin?: string },
+): boolean {
+  const isin = (input.isin ?? "").trim().toUpperCase();
+  if (looksLikeIsin(isin) && isin.startsWith("US")) return true;
+  const name = input.name ?? "";
+  if (!name || collision.namePattern.test(name)) return false;
+  return collision.usNamePattern.test(name);
+}
+
 /**
  * When SnapTrade/Yahoo would map a European listing onto a US namesake, rewrite
  * to the European display ticker and canonical ISIN.
+ *
+ * Known namesakes default to the European listing (public `/analisis/BITC`,
+ * SnapTrade ARCA/NYSE without ISIN). Keep the US namesake only with a US ISIN
+ * or a US product name (e.g. Bitwise). Venue alone is not a US identity signal.
  */
 export function disambiguateListing(input: {
   ticker: string;
@@ -207,7 +224,10 @@ export function disambiguateListing(input: {
     currency === "EUR" ||
     EUROPEAN_VENUES.has(venue);
 
-  if (!isEuropean) {
+  if (
+    !isEuropean &&
+    isUsNamesakeIdentity(collision, { name: input.name, isin: isinIn })
+  ) {
     return { ticker, exchange, isin: isinIn };
   }
 

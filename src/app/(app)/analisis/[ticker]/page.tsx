@@ -5,19 +5,20 @@ import {
   getCompanyAnalysisDbCache,
 } from "@/lib/db";
 import { analisisCryptoRedirectHref } from "@/lib/asset-detail-href";
-import { parseTicker } from "@/lib/company-analysis/ticker";
+import { parseIsinParam, parseTicker } from "@/lib/company-analysis/ticker";
 import type { CompanyAnalysisReport } from "@/lib/company-analysis/types";
 import {
   analisisTickerUrl,
   buildAnalisisTickerDescription,
   buildAnalisisTickerTitle,
 } from "@/lib/company-analysis/seo";
+import { disambiguateListing } from "@/lib/market-symbol";
 import AnalisisSeoContent from "@/components/company-analysis/AnalisisSeoContent";
 import AnalisisShell from "./analisis-shell";
 
 interface PageProps {
   params: Promise<{ ticker: string }>;
-  searchParams: Promise<{ exchange?: string; reportId?: string }>;
+  searchParams: Promise<{ exchange?: string; reportId?: string; isin?: string }>;
 }
 
 async function loadCachedReport(ticker: string): Promise<CompanyAnalysisReport | null> {
@@ -32,8 +33,9 @@ async function loadCachedReport(ticker: string): Promise<CompanyAnalysisReport |
   }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { ticker: raw } = await params;
+  const { exchange, isin: isinRaw } = await searchParams;
   const ticker = parseTicker(decodeURIComponent(raw));
   if (!ticker) {
     return {
@@ -42,7 +44,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const report = await loadCachedReport(ticker);
+  const listing = disambiguateListing({
+    ticker,
+    exchange,
+    isin: parseIsinParam(isinRaw),
+  });
+  const report = await loadCachedReport(listing.ticker);
   const title = buildAnalisisTickerTitle(ticker, report);
   const description = buildAnalisisTickerDescription(ticker, report);
   const url = analisisTickerUrl(ticker);
@@ -68,7 +75,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CompanyAnalysisTickerPage({ params, searchParams }: PageProps) {
-  const [{ ticker: raw }, { exchange, reportId }] = await Promise.all([params, searchParams]);
+  const [{ ticker: raw }, { exchange, reportId, isin: isinRaw }] = await Promise.all([
+    params,
+    searchParams,
+  ]);
   const decoded = decodeURIComponent(raw);
   const cryptoHref = analisisCryptoRedirectHref(decoded, exchange);
   if (cryptoHref) redirect(cryptoHref);
@@ -85,12 +95,19 @@ export default async function CompanyAnalysisTickerPage({ params, searchParams }
     );
   }
 
-  const report = await loadCachedReport(ticker);
+  const isin = parseIsinParam(isinRaw);
+  const listing = disambiguateListing({ ticker, exchange, isin });
+  const report = await loadCachedReport(listing.ticker);
 
   return (
     <>
       <AnalisisSeoContent ticker={ticker} report={report} showAuthCta={false} />
-      <AnalisisShell ticker={ticker} exchange={exchange || ""} reportId={reportId} />
+      <AnalisisShell
+        ticker={ticker}
+        exchange={exchange || ""}
+        reportId={reportId}
+        isin={isin}
+      />
     </>
   );
 }
