@@ -8,6 +8,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
+import { investmentCashEntries } from "@/lib/portfolio-summary-cash";
 import { useAidStatus } from "@/hooks/useAidStatus";
 import { useAidEngagementMetrics } from "@/hooks/useAidEngagementMetrics";
 import { useAidLayout } from "@/hooks/useAidLayout";
@@ -61,10 +62,7 @@ export default function AidDashboard() {
   const visitMarked = useRef(false);
   const [warrenPrompt, setWarrenPrompt] = useState<string | null>(null);
 
-  const investmentCash = useMemo(
-    () => cashEntries.filter((c) => !c.type || c.type === "cash"),
-    [cashEntries],
-  );
+  const investmentCash = useMemo(() => investmentCashEntries(cashEntries), [cashEntries]);
 
   const isEmpty = holdings.length === 0 && cashEntries.length === 0;
   const hasHoldings = holdings.length > 0 || investmentCash.length > 0;
