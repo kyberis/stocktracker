@@ -28,6 +28,10 @@ vi.mock("@/lib/alert-dispatcher", () => ({
   normalizeAlertChannels: vi.fn((c: string) => [c]),
 }));
 
+vi.mock("@/lib/agent-board/run-cron", () => ({
+  executeAgentBoardCron: vi.fn().mockResolvedValue({ disabled: true }),
+}));
+
 vi.mock("@/lib/cron-quotes", () => ({
   fetchSharedQuotesAndRates: vi.fn(),
   shouldFetchLiveMarketData: vi.fn(),
