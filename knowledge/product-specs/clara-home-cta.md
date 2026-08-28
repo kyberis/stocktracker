@@ -109,6 +109,7 @@ Authenticated only (dashboard). Money desk requires `home_money_desk`. No Pro ga
 - [unified-homepage](unified-homepage.md)
 - [agent-office](agent-office.md)
 - [agent-dock](agent-dock.md)
+- [onboarding](onboarding.md) — optional Clara SSO step in the signup wizard
 
 ## 15. Open questions
 

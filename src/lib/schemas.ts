@@ -199,6 +199,7 @@ export const onboardingSchema = z.object({
   useCase: z.array(z.enum(["track_portfolio", "dividend_income", "tax_reporting", "research_stocks"])).optional(),
   referralSource: z.enum(["google", "social_media", "twitter", "youtube", "reddit", "friend", "other"]).optional(),
   activateTrial: z.boolean().optional(),
+  claraActivation: z.enum(["linked", "skipped"]).optional(),
 });
 
 /* ── Holdings ──────────────────────────────────────────────── */

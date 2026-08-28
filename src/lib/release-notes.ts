@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.263",
+    version: "2.5.264",
     date: "2026-08-28",
     title: "Warren Berkshire valuation",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Warren can value Berkshire again when the ticker is BRK.B (FMP) vs BRK-B (Yahoo), and searches the web for insider / Form 4 / buyback questions instead of saying he has no data.",
         translations: {
           es: "Warren vuelve a poder valorar Berkshire con BRK.B (FMP) o BRK-B (Yahoo), y busca en la web preguntas de insider / Form 4 / recompras en lugar de decir que no tiene datos.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.263",
+    date: "2026-08-28",
+    title: "Clara in onboarding",
+    titleTranslations: {
+      es: "Clara en el alta",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "After signup, onboarding now offers an optional Clara step: activate with the same account (new tab) or skip. Home still lets you create Clara later. Not financial advice.",
+        translations: {
+          es: "Tras registrarte, el alta ahora incluye un paso opcional de Clara: actívala con la misma cuenta (pestaña nueva) o sáltalo. En Home puedes crear Clara más tarde. No es asesoramiento financiero.",
         },
       },
     ],
