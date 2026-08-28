@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "The public landing now presents Clover as trefolio’s default AI assistant — one chat that orchestrates Warren (portfolio) and Clara (personal finance), with a not-financial-advice disclaimer.",
         translations: {
           es: "La landing pública presenta a Clover como el asistente IA por defecto de trefolio: un chat que orquesta a Warren (cartera) y Clara (finanzas personales), con aviso de que no es asesoramiento financiero.",
