@@ -7,13 +7,14 @@ import { usePortfolioCommand } from "@/contexts/portfolio-command-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
 import { useTrack } from "@/lib/use-track";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { buildPathWithTab } from "@/lib/dashboard-tab-url";
 import { useDashboardTabUrl, type DashboardTab } from "@/lib/use-dashboard-tab-url";
 import DashboardToolbar from "@/components/DashboardToolbar";
 
 /**
- * Site-wide portfolio command row (matches former DashboardToolbar): portfolio, Holdings/Tools/…, Sync, Add.
- * Renders inside AppNav header. Hidden on mobile home/demo where MobileDashboard shows the same strip.
+ * Site-wide portfolio command row. With `jobs_nav`, QuickLinks become Add/Review/Discover
+ * chips. Mobile Home still hides the strip unless that flag is on (compact jobs only).
  */
 function AppPortfolioCommandStripInner() {
   const pathname = usePathname();
@@ -23,11 +24,14 @@ function AppPortfolioCommandStripInner() {
   const { holdings } = usePortfolio();
   const { user } = useAuth();
   const { gatedAdd, openSettings } = usePortfolioCommand();
+  const jobsNav = useFeatureFlag("jobs_nav");
 
   const holdingsCount = holdings.length;
   const isDashboardRoute = pathname === "/" || pathname === "/demo";
   const isClassicRoute = pathname === "/classic";
-  const hideOnMobileHome = isMobileViewport && isDashboardRoute;
+  const hideOnMobileHome = isMobileViewport && isDashboardRoute && !jobsNav;
+  const compactMobile = jobsNav && isMobileViewport && isDashboardRoute;
+  const stacked = jobsNav && isMobileViewport;
 
   const { activeTab: urlActiveTab, navigateToTab } = useDashboardTabUrl({
     holdingsCount,
@@ -76,11 +80,18 @@ function AppPortfolioCommandStripInner() {
       onAddCrypto={() => gatedAdd("crypto")}
       onAddAsset={() => gatedAdd("asset")}
       onOpenSettings={openSettings}
-      quickNav={{
-        activeTab: displayActiveTab,
-        onSelectTab,
-        holdingsCount,
-      }}
+      quickNav={
+        jobsNav
+          ? undefined
+          : {
+              activeTab: displayActiveTab,
+              onSelectTab,
+              holdingsCount,
+            }
+      }
+      jobsNav={jobsNav}
+      compactMobile={compactMobile}
+      stacked={stacked}
     />
   );
 }

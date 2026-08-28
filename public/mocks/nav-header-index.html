@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>trefolio · Nav header · Prioridades</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #152033;
+      --border: rgba(148, 163, 184, 0.18);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: radial-gradient(1000px 500px at 50% -15%, #1a2740 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .page { max-width: 920px; margin: 0 auto; padding: 28px 18px 64px; }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 8px; }
+    .lead { color: var(--muted); font-size: 0.95rem; line-height: 1.55; max-width: 68ch; margin: 0 0 22px; }
+    h2 { font-size: 1.05rem; margin: 28px 0 10px; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 0.84rem;
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+    }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { background: rgba(0,0,0,.25); color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: .05em; }
+    tr:last-child td { border-bottom: 0; }
+    td strong { color: var(--text); }
+    .rank { font-weight: 800; color: #6ee7b7; }
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+    @media (max-width: 720px) { .cards { grid-template-columns: 1fr; } }
+    .card {
+      display: block; text-decoration: none; color: inherit;
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px;
+      transition: border-color .15s, background .15s;
+    }
+    .card:hover { border-color: rgba(16,185,129,.4); background: #18263b; }
+    .card .tag {
+      display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    .card.a .tag { background: rgba(16,185,129,.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,.35); }
+    .card.b .tag { background: rgba(56,189,248,.15); color: #7dd3fc; border: 1px solid rgba(56,189,248,.35); }
+    .card h3 { margin: 0 0 6px; font-size: 1rem; }
+    .card p { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.45; }
+    .note {
+      margin-top: 22px; padding: 14px 16px; border-radius: 12px;
+      border: 1px solid var(--border); background: rgba(255,255,255,.03);
+      color: var(--muted); font-size: 0.82rem; line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Prioridades de nav / header</h1>
+    <p class="lead">
+      Objetivo: que las herramientas más usadas para <strong>dar de alta</strong>, <strong>evaluar</strong>
+      y <strong>hacer screening</strong> vivan a 1 tap — no enterradas en Tools → More.
+      Hoy el chrome prioriza logo + search + destinos genéricos; Alertas, Screener y Moat quedan secundarios.
+    </p>
+
+    <h2>Ranking por objetivo</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Herramienta</th>
+          <th>Alta</th>
+          <th>Evaluar</th>
+          <th>Screening</th>
+          <th>Chrome propuesto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rank">1</td>
+          <td><strong>Buscar asset</strong> (⌘K)</td>
+          <td>★★★</td><td>★★</td><td>★★★</td>
+          <td>Header siempre</td>
+        </tr>
+        <tr>
+          <td class="rank">2</td>
+          <td><strong>Importar</strong></td>
+          <td>★★★</td><td>★</td><td>—</td>
+          <td>Header / job Alta / FAB</td>
+        </tr>
+        <tr>
+          <td class="rank">3</td>
+          <td><strong>Añadir</strong> (manual)</td>
+          <td>★★★</td><td>★</td><td>—</td>
+          <td>CTA / FAB sheet</td>
+        </tr>
+        <tr>
+          <td class="rank">4</td>
+          <td><strong>Home</strong> (pulse)</td>
+          <td>★</td><td>★★★</td><td>★</td>
+          <td>Destino + dock</td>
+        </tr>
+        <tr>
+          <td class="rank">5</td>
+          <td><strong>Alertas</strong></td>
+          <td>—</td><td>★★★</td><td>★</td>
+          <td>Chrome con badge</td>
+        </tr>
+        <tr>
+          <td class="rank">6</td>
+          <td><strong>Portfolio</strong></td>
+          <td>★</td><td>★★★</td><td>★</td>
+          <td>Destino primario</td>
+        </tr>
+        <tr>
+          <td class="rank">7</td>
+          <td><strong>Screener</strong></td>
+          <td>—</td><td>★</td><td>★★★</td>
+          <td>Header A o job Descubrir</td>
+        </tr>
+        <tr>
+          <td class="rank">8</td>
+          <td><strong>Moat / screening</strong></td>
+          <td>—</td><td>★</td><td>★★★</td>
+          <td>Job Descubrir / pills</td>
+        </tr>
+        <tr>
+          <td class="rank">9</td>
+          <td>Tools / allocation</td>
+          <td>★</td><td>★★</td><td>★</td>
+          <td>Secundario</td>
+        </tr>
+        <tr>
+          <td class="rank">10</td>
+          <td>Análisis / Explore / Office / Digests</td>
+          <td>—</td><td>★</td><td>★★</td>
+          <td>Más / overflow</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Dos propuestas</h2>
+    <div class="cards">
+      <a class="card a" href="/mocks/nav-header-a-toolkit.html">
+        <span class="tag">A · Toolkit</span>
+        <h3>Acciones en el chrome</h3>
+        <p>Importar · Alertas · Screener · Añadir fijos en header. Destinos en franja. Mobile: FAB central de alta.</p>
+      </a>
+      <a class="card b" href="/mocks/nav-header-b-jobs.html">
+        <span class="tag">B · Jobs</span>
+        <h3>Navegación por objetivo</h3>
+        <p>Switcher Alta / Evaluar / Descubrir con chips contextuales. Search global. Mobile: job + dock estable.</p>
+      </a>
+    </div>
+
+    <div class="note">
+      <strong style="color:var(--text)">Recomendación de partida:</strong>
+      A es más barata de shippear sobre el AppNav actual (search ya existe; solo reordenar acciones).
+      B escala mejor si Screening/Moat crecen como producto propio.
+      En ambos casos: Alertas fuera de Tools, Import y Search a 1 tap, Screener/Moat visibles sin More.
+    </div>
+  </div>
+</body>
+</html>

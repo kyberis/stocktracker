@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.251: agent dock is in-app chrome (Warren/Clara/feedback/alerts), not a landing-page capability"
+  "notes": "2.5.252: Jobs nav is flagged command-strip IA, not a customer-facing landing capability."
 }
