@@ -17,20 +17,8 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.255",
+    version: "2.5.256",
     date: "2026-08-28",
-<<<<<<< HEAD
-    title: "Clover talks to Clara",
-    titleTranslations: {
-      es: "Clover habla con Clara",
-    },
-    changes: [
-      {
-        type: "feature",
-        text: "Clover and Warren can now ask Clara in chat — spending, cashflow, and savings detail — the same way Clara already asks Warren about your portfolio. If you don’t have Clara yet, they still offer to create your space. Counts against trefolio AI consults, not Clara’s daily cap. Not financial advice.",
-        translations: {
-          es: "Clover y Warren ya pueden preguntar a Clara en el chat — gastos, caja y ahorros — igual que Clara ya pregunta a Warren por tu cartera. Si aún no tienes Clara, te proponen crear tu espacio. Cuenta contra las consultas IA de trefolio, no contra el tope diario de Clara. No es asesoramiento financiero.",
-=======
     title: "Money desk behind a flag",
     titleTranslations: {
       es: "Mesa de dinero detrás de un flag",
@@ -41,7 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "The Home Warren × Clara money desk is gated by feature flag home_money_desk (off by default). When off, separate Warren and Clara cards stay on Home.",
         translations: {
           es: "La mesa de dinero Warren × Clara en Home queda detrás del feature flag home_money_desk (apagado por defecto). Si está off, Home sigue con las tarjetas separadas de Warren y Clara.",
->>>>>>> 51df137d (Gate Home money desk behind home_money_desk flag)
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.255",
+    date: "2026-08-28",
+    title: "Clover talks to Clara",
+    titleTranslations: {
+      es: "Clover habla con Clara",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Clover and Warren can now ask Clara in chat — spending, cashflow, and savings detail — the same way Clara already asks Warren about your portfolio. If you don’t have Clara yet, they still offer to create your space. Counts against trefolio AI consults, not Clara’s daily cap. Not financial advice.",
+        translations: {
+          es: "Clover y Warren ya pueden preguntar a Clara en el chat — gastos, caja y ahorros — igual que Clara ya pregunta a Warren por tu cartera. Si aún no tienes Clara, te proponen crear tu espacio. Cuenta contra las consultas IA de trefolio, no contra el tope diario de Clara. No es asesoramiento financiero.",
         },
       },
     ],
