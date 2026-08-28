@@ -102,6 +102,8 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   // Client mirror of the screening provider circuit. Server enforcement uses the circuit JSON.
   "screening_new_runs_enabled",
   "screening_thesis_pipeline_enabled",
+  // Scriptable Pizarra — Warren notes when something matters for the portfolio.
+  "agent_board_enabled",
 ]);
 
 const VALID_THEMES = new Set(["default", "terminal", "canvas", "studio"]);
