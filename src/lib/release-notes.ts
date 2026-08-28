@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.263",
+    date: "2026-08-28",
+    title: "Clara in onboarding",
+    titleTranslations: {
+      es: "Clara en el alta",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "After signup, onboarding now offers an optional Clara step: activate with the same account (new tab) or skip. Home still lets you create Clara later. Not financial advice.",
+        translations: {
+          es: "Tras registrarte, el alta ahora incluye un paso opcional de Clara: actívala con la misma cuenta (pestaña nueva) o sáltalo. En Home puedes crear Clara más tarde. No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.262",
     date: "2026-08-28",
     title: "Pizarra is not a notification",

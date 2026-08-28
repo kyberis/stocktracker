@@ -11,6 +11,8 @@ const ALLOWED_EVENTS = new Set([
   "people_search",
   "feed_view",
   "onboarding_import_method",
+  "onboarding_clara_step_viewed",
+  "onboarding_clara_activate_clicked",
   "account_delete_started",
   "import_error",
   "experiment_exposure",
