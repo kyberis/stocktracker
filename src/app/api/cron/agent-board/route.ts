@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const CONCURRENCY = 3;
-const MAX_MESSAGES_PER_DAY = 8;
+const MAX_MESSAGES_PER_DAY = 5;
 
 async function processUser(userId: string, email: string): Promise<"ok" | "skip" | "error"> {
   try {

@@ -727,6 +727,15 @@ export interface AidStatusPayload {
   } | null;
 }
 
+/* ── Agent board (Pizarra) ─────────────────────────────────── */
+
+export type {
+  AgentBoardAgent,
+  AgentBoardKind,
+  AgentBoardMessage,
+  AgentBoardSignal,
+} from "@/lib/agent-board/types";
+
 /* ── Alpha Intelligence types ──────────────────────────────── */
 
 export type {

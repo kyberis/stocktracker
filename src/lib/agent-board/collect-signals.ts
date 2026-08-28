@@ -19,7 +19,7 @@ import { hasAgentBoardContextKey } from "@/lib/db/agent-board";
 import type { AgentBoardSignal } from "@/lib/agent-board/types";
 import type { CashEntry, ExchangeRates, Holding, QuoteData } from "@/lib/types";
 
-const MOVER_THRESHOLD = 2.5;
+const MOVER_THRESHOLD = 3;
 const NEWS_IMPACT_MIN = 3;
 const FINPULSE_LOOKBACK_MS = 24 * 3600 * 1000;
 

@@ -29,7 +29,7 @@ function parseComposeJson(raw: string): ComposeOutput | null {
   }
 }
 
-function fallbackCompose(
+export function fallbackCompose(
   signals: AgentBoardSignal[],
   language: string,
 ): AgentBoardComposeResult[] {

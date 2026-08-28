@@ -3272,6 +3272,8 @@ const es: TranslationStrings = {
   pizarraEmpty: "No hay mensajes nuevos. Warren y Clara publicarán cuando cambie algo importante.",
   pizarraDismiss: "Descartar",
   pizarraDisclaimer: "No es asesoramiento financiero. Resúmenes generados por IA solo con fines informativos.",
+  pizarraSettingsLabel: "Pizarra de agentes",
+  pizarraSettingsDesc: "Warren y Clara publican avisos proactivos en Home cuando cambia algo importante.",
   homeMoneyDeskWarrenEmptyNudge: "Añade tu primera acción o pide a Warren que importe un bróker.",
   homeMoneyDeskClaraNudge: "Gastos cotidianos, presupuestos y ahorro — junto a tu cartera.",
   homeMoneyDeskClaraOnboardNudge: "Sigue el gasto cotidiano junto a tu cartera. El mismo inicio de sesión de trefolio.",

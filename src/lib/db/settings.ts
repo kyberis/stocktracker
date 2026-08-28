@@ -557,6 +557,7 @@ export const ALL_PLATFORM_FEATURES = [
   "import_broker_picker_enabled",
   "jobs_nav",
   "home_money_desk",
+  "agent_board_enabled",
 ] as const satisfies readonly PlatformFeature[];
 
 type MissingPlatformFeature = Exclude<

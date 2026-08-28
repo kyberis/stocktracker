@@ -13,7 +13,7 @@ import { withMetrics } from "@/lib/with-metrics";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const MAX_MESSAGES_PER_DAY = 8;
+const MAX_MESSAGES_PER_DAY = 5;
 
 export const POST = withMetrics("/api/agent-board/refresh", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
