@@ -5,12 +5,14 @@ import {
   listPushSubscriptions,
   deletePushSubscription,
   createDeviceNotification,
+  createNotification,
   getTelegramQuota,
   incrementTelegramCounter,
   isFeatureEnabled,
   trackEvent,
   hasRecentFiredEmailDispatch,
 } from "@/lib/db";
+import { priceAlertNotification } from "@/lib/notification-templates";
 import type { NotificationChannel, SubscriptionPlan, PercentBasis } from "@/lib/types";
 import type { AlertHeadline } from "@/lib/alert-context";
 
@@ -21,6 +23,11 @@ export const ALERT_DELIVERY_CHANNELS: readonly NotificationChannel[] = [
   "telegram",
   "device",
 ] as const;
+
+/** Always-on in-app center channel (not a user preference toggle). */
+export type AlertAlwaysOnChannel = "in_app";
+
+export type AlertDispatchChannel = NotificationChannel | AlertAlwaysOnChannel;
 
 export interface AlertDispatchContext {
   userId: string;
@@ -60,18 +67,19 @@ export interface PercentAlertPayload {
 export type AlertPayload = ThresholdAlertPayload | PercentAlertPayload;
 
 export interface ChannelSkip {
-  channel: NotificationChannel;
+  channel: AlertDispatchChannel;
   reason: string;
 }
 
 export interface ChannelFail {
-  channel: NotificationChannel;
+  channel: AlertDispatchChannel;
   reason: string;
 }
 
 export interface AlertDispatchResult {
   channelsRequested: NotificationChannel[];
-  channelsSent: NotificationChannel[];
+  /** Includes always-on `in_app` when the notification center write succeeds. */
+  channelsSent: AlertDispatchChannel[];
   channelsSkipped: ChannelSkip[];
   channelsFailed: ChannelFail[];
 }
@@ -125,17 +133,28 @@ export function buildPushBody(payload: AlertPayload): string {
 }
 
 /**
- * Dispatch to exactly the channels the user selected (email / push / telegram / device).
- * WhatsApp is not a delivery path.
+ * Dispatch to the notification center always, plus exactly the channels the user
+ * selected (email / push / telegram / device). WhatsApp is not a delivery path.
  */
 export async function dispatchAlert(
   ctx: AlertDispatchContext,
   payload: AlertPayload,
 ): Promise<AlertDispatchResult> {
   const channelsRequested = normalizeAlertChannels(ctx.alertChannels);
-  const channelsSent: NotificationChannel[] = [];
+  const channelsSent: AlertDispatchChannel[] = [];
   const channelsSkipped: ChannelSkip[] = [];
   const channelsFailed: ChannelFail[] = [];
+
+  // In-app notification center is always-on — independent of channel prefs.
+  try {
+    await createNotification(ctx.userId, priceAlertNotification(payload));
+    channelsSent.push("in_app");
+    trackEvent(ctx.userId, "alert_inapp_sent", { ticker: payload.ticker });
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    console.error("Alert in-app notification failed:", err);
+    channelsFailed.push({ channel: "in_app", reason });
+  }
 
   for (const channel of channelsRequested) {
     try {

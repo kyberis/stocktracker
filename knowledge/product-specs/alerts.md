@@ -3,7 +3,7 @@
 > Price and percentage alerts delivered on user-selected channels.
 
 ## 1. Summary
-Users create threshold or percent-change alerts (per ticker or portfolio-wide). The `check-alerts` cron evaluates them every 15 minutes and dispatches to the channels the user selected (email, Telegram, push, device). WhatsApp is not supported.
+Users create threshold or percent-change alerts (per ticker or portfolio-wide). The `check-alerts` cron evaluates them every 15 minutes and always writes to the in-app notification center, then dispatches to the optional channels the user selected (email, Telegram, push, device). WhatsApp is not supported.
 
 ## 2. Status
 - **Tier:** Soft caps — Free 25 active alerts, Pro 500 (`SOFT_CAPS.alerts`).
@@ -35,15 +35,15 @@ Users create threshold or percent-change alerts (per ticker or portfolio-wide). 
 
 ## 6. UI surface
 - Alert builder (threshold / % / portfolio-wide) in Tools → Alerts and inline forms.
-- Notification channel prefs: email, Telegram, push, device (no WhatsApp).
+- Notification channel prefs: email, Telegram, push, device (no WhatsApp). The in-app notification center always receives fired alerts; channel prefs are extras.
 - Admin → Messaging → Price Alerts.
 
 ## 7. Business logic
 1. Cron loads active alerts + holdings, fetches quotes via Yahoo/cache (skips invalid/zero quotes).
 2. Threshold compare uses FX when alert currency ≠ quote currency; skips cycle if FX missing.
-3. `dispatchAlert` sends **only** to selected channels; maps legacy `whatsapp` → `telegram`.
+3. `dispatchAlert` **always** creates an in-app notification (`in_app` / type `alert`), then sends to selected optional channels; maps legacy `whatsapp` → `telegram`.
 4. One-shot (threshold + per-ticker percent): `claimAlertForOneShotDispatch` deactivates **before** send so overlapping cron runs cannot both email. Failed send after claim is logged as `dispatch_failed` and is **not** reactivated. Email is also skipped if `alert_dispatch_log` already has `fired` + `email` for that `alert_id` **and ticker** in the last 24h (ticker-scoped so a portfolio-wide alert can still email a second holding).
-5. All alert emails include up to 3 recent headlines from the portfolio news cache (48h lookback) plus a “context only, not advice” disclaimer. Telegram, push, and device include the top headline (title + http(s) link on Telegram). No live web/X/AI call at fire time.
+5. All alert emails include up to 3 recent headlines from the portfolio news cache (48h lookback) plus a “context only, not advice” disclaimer. Telegram, push, and device include the top headline (title + http(s) link on Telegram). In-app uses a short localized summary with the same “not advice” disclaimer. No live web/X/AI call at fire time.
 6. Portfolio-wide: `last_notified_ticker` is a comma-separated list for the current UTC day. `claimPortfolioWideTickerNotify` atomically appends a ticker; overlapping crons cannot re-notify the same ticker the same day. A later holding (e.g. MSFT after AAPL) can still fire. Failed send after claim is **not** retried that day.
 
 ## 8. External dependencies
@@ -60,8 +60,8 @@ Users create threshold or percent-change alerts (per ticker or portfolio-wide). 
 - Soft alert count caps; Telegram has daily/monthly quotas.
 
 ## 12. Telemetry
-- `alert_triggered`, `alert_dispatch`, `alert_email_sent`, `alert_telegram_sent`, `alert_push_sent`, `alert_device_sent`.
-- Durable rows in `alert_dispatch_log` (admin panel).
+- `alert_triggered`, `alert_dispatch`, `alert_inapp_sent`, `alert_email_sent`, `alert_telegram_sent`, `alert_push_sent`, `alert_device_sent`.
+- Durable rows in `alert_dispatch_log` (admin panel); `channels_sent` includes `in_app` when the notification center write succeeds.
 
 ## 13. Edge cases & gotchas
 - Quote outage / zero price → no fire (alert stays active).

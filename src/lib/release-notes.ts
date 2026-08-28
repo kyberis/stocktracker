@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.259",
+    date: "2026-08-28",
+    title: "Alerts always in the notification center",
+    titleTranslations: {
+      es: "Las alertas siempre en el centro de notificaciones",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Fired price alerts always appear in the in-app notification center (bell), in addition to any email, push, Telegram, or device channels you enable. Optional channel prefs no longer gate the in-app copy.",
+        translations: {
+          es: "Las alertas de precio activadas siempre aparecen en el centro de notificaciones (campana), además de los canales de email, push, Telegram o dispositivo que tengas activados. Las preferencias de canal opcionales ya no bloquean la copia in-app.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.258",
     date: "2026-08-28",
     title: "Agent board (Pizarra)",

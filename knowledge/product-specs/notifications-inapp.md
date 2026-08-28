@@ -31,6 +31,8 @@ Bell icon top-right opens a drawer with notification list (unread, read, archive
 
 ## 7. Business logic
 - Batched unread counts (60s polling) to avoid thundering herd.
+- Price alerts always create an in-app row on fire (`type: alert`), regardless of email/push/Telegram/device preferences.
+- Other system events (welcome, upgrade, social, broker sync) already write via `createNotification`.
 
 ## 8. External dependencies
 - None.
@@ -58,4 +60,4 @@ Bell icon top-right opens a drawer with notification list (unread, read, archive
 - Related specs: [alerts](alerts.md), [push-notifications](push-notifications.md), [email-system](email-system.md).
 
 ## 16. Open questions / planned work
-- Preference matrix (alerts on/off by kind).
+- Preference matrix for optional channels by kind (in-app remains always-on).

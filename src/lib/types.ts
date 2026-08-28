@@ -197,7 +197,7 @@ export interface DeviceNotification {
   createdAt: string;
 }
 
-export type NotificationType = "welcome" | "upgrade" | "downgrade" | "admin" | "info";
+export type NotificationType = "welcome" | "upgrade" | "downgrade" | "admin" | "info" | "alert";
 
 export interface AppNotification {
   id: string;

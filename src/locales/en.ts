@@ -585,6 +585,20 @@ const en: TranslationStrings = {
   notifBrokerMarkGapMessage:
     "{0}: trefolio uses live market last prices, so the total can differ from your broker. Difference about €{1}. Informational only — not investment advice.",
   notifBrokerMarkGapCta: "View portfolio",
+  notifPriceAlertTitle: "{0} price alert",
+  notifPriceAlertAboveMessage:
+    "{0} rose above {1} {2} — now {1} {3}. Informational only — not investment advice.",
+  notifPriceAlertBelowMessage:
+    "{0} dropped below {1} {2} — now {1} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentUpTodayMessage:
+    "{0} is up {1}% today — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentDownTodayMessage:
+    "{0} is down {1}% today — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentUpSincePurchaseMessage:
+    "{0} is up {1}% since purchase — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentDownSincePurchaseMessage:
+    "{0} is down {1}% since purchase — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertCta: "View alerts",
   manageSubscription: "Manage subscription",
   billingRedirecting: "Redirecting...",
   billingCheckoutError: "Could not open checkout. Please try again.",
@@ -1286,6 +1300,8 @@ const en: TranslationStrings = {
   alertEmailEnabled: "Email notifications enabled for triggered alerts.",
   alertEmailVerifyHint: "Verify your email in Profile to receive alert emails.",
   notificationChannels: "Notification Channels",
+  notificationCenterAlwaysOn:
+    "Triggered alerts and system messages always appear in the in-app notification center (bell). The channels below are optional extras.",
   emailNotificationsLabel: "Email Notifications",
   emailNotificationsDesc: "Receive marketing and template emails. Transactional emails (verification, alerts) are always sent.",
   channelEmail: "Email",
