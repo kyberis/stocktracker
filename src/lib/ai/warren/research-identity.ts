@@ -28,6 +28,10 @@ const RESEARCH_ISSUER_NAMES: Record<string, string> = {
   NA9: "Nagarro",
   "NA9.DE": "Nagarro",
   "NA9.F": "Nagarro",
+  "BRK-B": "Berkshire Hathaway",
+  "BRK.B": "Berkshire Hathaway",
+  "BRK-A": "Berkshire Hathaway",
+  "BRK.A": "Berkshire Hathaway",
 };
 
 export interface WarrenResearchIdentity {

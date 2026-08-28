@@ -34,6 +34,15 @@ describe("overviewSymbolCandidates", () => {
     expect(candidates).toContain("CSU.TO");
   });
 
+  it("includes BRK.B ↔ BRK-B share-class aliases for Berkshire", () => {
+    expect(overviewSymbolCandidates("BRK.B")).toEqual(
+      expect.arrayContaining(["BRK.B", "BRK-B"]),
+    );
+    expect(overviewSymbolCandidates("BRK-B")).toEqual(
+      expect.arrayContaining(["BRK-B", "BRK.B"]),
+    );
+  });
+
   it("deduplicates candidates", () => {
     const candidates = overviewSymbolCandidates("GOOGL");
     expect(new Set(candidates).size).toBe(candidates.length);

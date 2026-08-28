@@ -11,7 +11,11 @@ import {
   resolveFundamentalsProvider,
   type FundamentalsDataBackend,
 } from "@/lib/market-data/resolve-provider";
-import { normalizeHkYahooSymbol, yahooSymbolAliases } from "@/lib/market-symbol";
+import {
+  normalizeHkYahooSymbol,
+  usShareClassSymbolAliases,
+  yahooSymbolAliases,
+} from "@/lib/market-symbol";
 
 async function settledOverview(
   provider: StockDataProvider,
@@ -38,6 +42,9 @@ export function overviewSymbolCandidates(requestedSymbol: string): string[] {
 
   for (const key of new Set([primary, requestedSymbol.trim().toUpperCase()])) {
     for (const alias of yahooSymbolAliases(key)) {
+      out.push(normalizeHkYahooSymbol(alias));
+    }
+    for (const alias of usShareClassSymbolAliases(key)) {
       out.push(normalizeHkYahooSymbol(alias));
     }
   }

@@ -28,3 +28,12 @@ describe("buildWarrenSystemPrompt — clover channel", () => {
     expect(prompt).toContain("Do not tell them to open clara.trefolio.com when the tool returns text");
   });
 });
+
+describe("buildWarrenSystemPrompt — research tools", () => {
+  it("requires search for insider / buyback / Buffett-buy questions", () => {
+    const prompt = buildWarrenSystemPrompt({ baseCurrency: "EUR" });
+    expect(prompt).toContain("insider / Form 4 / buybacks");
+    expect(prompt).toContain("searchPublicWeb");
+    expect(prompt).toContain("Do not answer \"I don't have that information\" without searching");
+  });
+});
