@@ -14,6 +14,7 @@ import { captureFirstTouchAttributionFromWindow } from "@/lib/attribution";
 import CloverToLogo from "@/components/CloverToLogo";
 import QuotaCompareTable from "@/components/QuotaCompareTable";
 import MarketTickerBar from "@/components/MarketTickerBar";
+import CloverSection from "@/components/landing/CloverSection";
 
 function useLandingCommerceEnabled() {
   const [enabled, setEnabled] = useState(false);
@@ -259,7 +260,7 @@ function getFaqItems(t: T) {
   }));
   return [
     ...base,
-    { q: t("landingFaqOfficeQ"), a: t("landingFaqOfficeA") },
+    { q: t("landingFaqCloverQ"), a: t("landingFaqCloverA") },
   ];
 }
 
@@ -848,11 +849,11 @@ function AgentsTeamSection() {
             <span className="text-emerald-500">{t("landingAgentsHeadingAccent")}</span>
           </h2>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-            {commerceEnabled ? t("landingAgentsSubtitle") : t("landingAgentsOfficeBridge")}
+            {commerceEnabled ? t("landingAgentsSubtitle") : t("landingAgentsCloverBridge")}
           </p>
           {commerceEnabled && (
           <p className="text-base text-slate-600 max-w-2xl mx-auto mt-4">
-            {t("landingAgentsOfficeBridge")}
+            {t("landingAgentsCloverBridge")}
           </p>
           )}
         </div>
@@ -2471,6 +2472,7 @@ export default function LandingPage() {
       <main id="main-content">
       <HeroSection />
       <StatsBar />
+      <CloverSection />
       <AgentsTeamSection />
       <DeveloperDocsSection />
       <FeaturesSection />

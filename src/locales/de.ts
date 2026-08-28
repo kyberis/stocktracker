@@ -3079,6 +3079,57 @@ const de: TranslationStrings = {
   landingAgentsFreeNote: "Free tier: 30 messages/day on each of Clara and Will, forever. Pro raises every limit to 200/day.",
   landingAgentsSeeAllStudio: "See all five agents →",
 
+  landingCloverEyebrow: "Meet Clover",
+  landingCloverName: "Clover",
+  landingCloverHeading: "Clover is trefolio’s default AI assistant for portfolio",
+  landingCloverHeadingAccent: "and personal finance",
+  landingCloverLede:
+    "One conversation inside trefolio. You talk to Clover; it orchestrates Warren (investments) and Clara (cashflow) behind the scenes — same account, one answer.",
+  landingCloverHubAria: "Clover integrates Warren and Clara",
+  landingCloverWarrenRole: "Portfolio · holdings · dividends · allocation",
+  landingCloverClaraRole: "Personal finance · expenses · budgets · savings",
+  landingCloverCoreRole: "trefolio AI integrator",
+  landingCloverBadge: "trefolio AI · default assistant",
+  landingCloverCardSub: "Your single chat — Warren & Clara work with you behind the scenes",
+  landingCloverValue1Title: "One chat, both worlds",
+  landingCloverValue1Desc:
+    "Portfolio questions and personal-finance questions — same in-app chat, same Telegram bot.",
+  landingCloverValue2Title: "Context that crosses over",
+  landingCloverValue2Desc:
+    "Clover asks Clara for surplus and Warren for allocation — so “can I contribute?” gets a real answer.",
+  landingCloverValue3Title: "Same login, no setup maze",
+  landingCloverValue3Desc:
+    "No Clara yet? Clover proposes creating your space with the same trefolio account.",
+  landingCloverOrchestrates: "Orchestrates",
+  landingCloverWarrenChip: "Warren · portfolio",
+  landingCloverClaraChip: "Clara · personal finance",
+  landingCloverChatHeader: "Clover · trefolio AI",
+  landingCloverChatYou: "You",
+  landingCloverChatUser: "Can I contribute €400 to VWCE this month?",
+  landingCloverChatReply:
+    "Clara shows about €640 surplus after fixed costs, and Warren has your DCA plan at €400. That leaves buffer. Tech is already a large share of the portfolio.",
+  landingCloverViaClara: "via Clara · surplus",
+  landingCloverViaWarren: "via Warren · allocation",
+  landingCloverVisualLabel: "What Clover pulls together · your money, two sides",
+  landingCloverClaraPane: "Clara · cashflow",
+  landingCloverWarrenPane: "Warren · portfolio",
+  landingCloverSurplus: "+€640",
+  landingCloverSurplusSub: "estimated surplus · this month",
+  landingCloverPortfolioValue: "€47.2k",
+  landingCloverPortfolioSub: "+2.71% · 12 holdings",
+  landingCloverIncome: "Income",
+  landingCloverExpenses: "Expenses",
+  landingCloverStocksEtfs: "Stocks / ETFs",
+  landingCloverCash: "Cash",
+  landingCloverAddedValue: "The added value:",
+  landingCloverDisclaimer:
+    "you don’t juggle apps — Clover orchestrates both sides and answers in plain language. Clara shares an aggregated savings snapshot, not every receipt. Informational only — not financial advice.",
+  landingAgentsCloverBridge:
+    "Clover is trefolio’s default assistant — it orchestrates Warren (portfolio) and Clara (personal finance) behind the scenes. Will stays available for notes.",
+  landingFaqCloverQ: "How do Clover, Warren, and Clara work together?",
+  landingFaqCloverA:
+    "Clover is trefolio’s default AI assistant. You ask one question; Clover brings in Warren for holdings, dividends, and allocation, and Clara for spending, cashflow, and savings (an aggregated snapshot — not every receipt). If you do not have Clara yet, Clover can propose creating your Clara space with the same login. Informational only — not financial advice.",
+
   agentIntroSkip: "Skip",
   agentIntroWarrenTagline: "Your portfolio, analyzed.",
   agentIntroClaraTagline: "Your finances, under control.",
