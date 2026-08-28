@@ -4723,10 +4723,17 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
     version: 154,
     description: "Agent board (Pizarra) messages + user opt-in",
     up: async (client: Client) => {
-      await client.execute(`
-        ALTER TABLE user_settings ADD COLUMN agent_board_enabled INTEGER NOT NULL DEFAULT 0;
-      `);
-      await client.execute(`
+      try {
+        await client.execute(
+          "ALTER TABLE user_settings ADD COLUMN agent_board_enabled INTEGER NOT NULL DEFAULT 0",
+        );
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column") && !msg.includes("already exists")) {
+          throw e;
+        }
+      }
+      await client.executeMultiple(`
         CREATE TABLE IF NOT EXISTS agent_board_messages (
           id TEXT PRIMARY KEY,
           user_id TEXT NOT NULL,
