@@ -1,4 +1,8 @@
 {
   "landingPageReviewed": true,
+<<<<<<< HEAD
   "notes": "2.5.255: Clover→Clara chat is in-app orchestration, not a landing-page capability"
+=======
+  "notes": "2.5.255: Money desk flag is in-app Home chrome gating, not a landing-page capability."
+>>>>>>> 51df137d (Gate Home money desk behind home_money_desk flag)
 }

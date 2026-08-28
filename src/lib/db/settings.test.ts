@@ -439,8 +439,15 @@ describe("settings", () => {
           "mcp_fmp_proxy",
           "import_broker_picker_enabled",
           "jobs_nav",
+          "home_money_desk",
         ]),
       );
+    });
+
+    it("defaults home_money_desk off", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      expect(await settings.isFeatureEnabled("home_money_desk")).toBe(false);
     });
   });
 

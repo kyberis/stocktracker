@@ -39,16 +39,16 @@ Own the **daily check-in homepage** experience that merges Classic portfolio dep
 6. Holdings table/cards
 7. FinPulse / priority teaser (compact)
 8. Portfolio News (compact feed)
-9. Rail: Allocation · **Money desk (Warren × Clara)** · Warren nudge · Claude MCP CTA · digests
+9. Rail: Allocation · **Money desk** (`home_money_desk`) or Warren + Clara cards · Warren nudge · Claude MCP CTA · digests
 
-Empty (no holdings): reuse Classic `EmptyPortfolio` (import + add). **Money desk first** (mobile and empty). Mobile: Allocation above holdings; MCP after holdings.
+Empty (no holdings): reuse Classic `EmptyPortfolio` (import + add). **Money desk first** when flagged (mobile and empty). Mobile: Allocation above holdings; MCP after holdings.
 
 Related: [home-portfolio-recommendations](../../knowledge/product-specs/home-portfolio-recommendations.md), `HomeRecommendationCard`, `/api/home-v2/recommendations`, `/recommendations/diversify`.
 
 ## Implementation rules
 
 - **Compose, don’t fork** — import `PortfolioHeroCard`, `AllocationTabs`, `PortfolioTable` / `PortfolioCards`, AID brief/nudge helpers.
-- **Flag gate** — default home is ungated UI; day-highlights / AID data: `home_v2` (default on) or `aid_beta`. Classic UI: `classic_home`.
+- **Flag gate** — default home is ungated UI; day-highlights / AID data: `home_v2` (default on) or `aid_beta`. Classic UI: `classic_home`. Money desk: `home_money_desk` (default off); when off, show `WarrenTrigger` + `ClaraCta`.
 - **Empty states** — hide day-highlights / movers / catalysts when no rows; empty portfolio gets add-holding CTA.
 - **Design system** — semantic tokens, `.card`, glass chrome; no hard-coded purple marketing gradients on app home.
 - **i18n** — all strings via locales; EN + ES required.

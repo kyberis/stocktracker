@@ -79,6 +79,8 @@ const WeeklyDigestCard = dynamic(() => import("@/components/dashboard-v2/WeeklyD
   ssr: false,
 });
 const HomeMoneyDesk = dynamic(() => import("./HomeMoneyDesk"), { ssr: false });
+const WarrenTrigger = dynamic(() => import("@/components/warren/WarrenTrigger"), { ssr: false });
+const ClaraCta = dynamic(() => import("@/components/clara/ClaraCta"), { ssr: false });
 const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
 const StatsGrid = dynamic(() => import("@/components/dashboard-v2/StatsGrid"), { ssr: false });
 const PortfolioNewsFeed = dynamic(() => import("@/components/PortfolioNewsFeed"), { ssr: false });
@@ -102,13 +104,14 @@ export default function HomeV2Dashboard({
   const sectionsLoading = bootstrap.sectionsLoading;
   // AID shell/briefing still needs a real session; demo has none.
   const aidEnabled = !demoMode;
+  const moneyDeskEnabled = isLoaded && !!flags.home_money_desk;
   const aidStatus = useAidStatus(aidEnabled, {
     includeBriefing: false,
     seed: bootstrap.data?.aidStatus ?? null,
     // Wait for bootstrap; on failure fall back to a direct status fetch.
     autoFetch: bootstrapSettled && (!!bootstrap.data || bootstrap.error),
   });
-  const claraDesk = useClaraDeskStatus(!demoMode);
+  const claraDesk = useClaraDeskStatus(!demoMode && moneyDeskEnabled);
   const investmentCash = useMemo(() => investmentCashEntries(cashEntries), [cashEntries]);
   const home = usePortfolioHomeData({ holdings, cashEntries: investmentCash });
   const [aiOpen, setAiOpen] = useState(false);
@@ -275,19 +278,33 @@ export default function HomeV2Dashboard({
 
   const openAdd = () => gatedAdd("stock");
   const hasHoldings = holdings.length > 0 || cashEntries.length > 0;
-  const moneyDesk = !isInitializing ? (
-    <HomeMoneyDesk
-      dayGainLoss={dayGainLoss}
-      displayCurrency={activePortfolioCurrency}
-      hasHoldings={hasHoldings}
-      demoMode={demoMode}
-      clara={claraDesk.status}
-      claraLoading={claraDesk.loading}
-      onOpenWarren={() => {
-        recordPostIntroAction("warren");
-        setAiOpen(true);
-      }}
-    />
+  const moneyDesk =
+    moneyDeskEnabled && !isInitializing ? (
+      <HomeMoneyDesk
+        dayGainLoss={dayGainLoss}
+        displayCurrency={activePortfolioCurrency}
+        hasHoldings={hasHoldings}
+        demoMode={demoMode}
+        clara={claraDesk.status}
+        claraLoading={claraDesk.loading}
+        onOpenWarren={() => {
+          recordPostIntroAction("warren");
+          setAiOpen(true);
+        }}
+      />
+    ) : null;
+
+  const warrenClaraCards = !moneyDeskEnabled ? (
+    <>
+      <WarrenTrigger
+        onOpen={() => {
+          recordPostIntroAction("warren");
+          setAiOpen(true);
+        }}
+        href={demoMode ? "/signup" : undefined}
+      />
+      <ClaraCta href={demoMode ? "/signup" : undefined} />
+    </>
   ) : null;
 
   const main = (
@@ -474,6 +491,7 @@ export default function HomeV2Dashboard({
 
           {isMobile && (
             <>
+              {warrenClaraCards}
               {aidStatus.data?.warrenNudge && (
                 <AidWarrenNudge
                   nudge={aidStatus.data.warrenNudge}
@@ -496,6 +514,7 @@ export default function HomeV2Dashboard({
     <aside className="flex flex-col gap-3">
       <AllocationTabs holdings={holdings} cashEntries={cashEntries} />
       {moneyDesk}
+      {warrenClaraCards}
       {aidStatus.data?.warrenNudge && (
         <AidWarrenNudge
           nudge={aidStatus.data.warrenNudge}

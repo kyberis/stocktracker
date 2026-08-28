@@ -75,7 +75,8 @@ export type PlatformFeature =
   | "display_invariants"
   | "theme_studio_enabled"
   | "import_broker_picker_enabled"
-  | "jobs_nav";
+  | "jobs_nav"
+  | "home_money_desk";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_enabled",
@@ -550,6 +551,7 @@ export const ALL_PLATFORM_FEATURES = [
   "theme_studio_enabled",
   "import_broker_picker_enabled",
   "jobs_nav",
+  "home_money_desk",
 ] as const satisfies readonly PlatformFeature[];
 
 type MissingPlatformFeature = Exclude<
