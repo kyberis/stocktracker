@@ -24,6 +24,14 @@ describe("landing JSON-LD structured data", () => {
     expect(json).toContain("Trefolio");
   });
 
+  it("FAQ_SCHEMA includes the Clover / Warren / Clara FAQ matching visible copy", () => {
+    const json = JSON.stringify(FAQ_SCHEMA);
+    expect(json).toContain("How do Clover, Warren, and Clara work together?");
+    expect(json).toContain("Clover is trefolio");
+    expect(json).toContain("not financial advice");
+    expect(json).not.toContain("What is the Agent Office?");
+  });
+
   it("SOFTWARE_APP_SCHEMA.offers has exactly the 2 real plans (Folio, Trefolio), no stale references", () => {
     const json = JSON.stringify(SOFTWARE_APP_SCHEMA.offers);
     assertNoStaleStrings(json);

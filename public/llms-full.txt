@@ -1,10 +1,10 @@
 # trefolio — Full Product Information
 
-> The European investor's portfolio tracker — EU tax reports, stock screener, AI insights, and net worth tracking in 35 languages.
+> The European investor's portfolio tracker — Clover AI (Warren + Clara), EU tax reports, stock screener, AI insights, and net worth tracking in 35 languages.
 
 ## What is trefolio?
 
-trefolio is a web-based portfolio tracking application designed for European retail investors. It provides a clean, modern dashboard to track stock, ETF, and crypto holdings across multiple exchanges, with real-time quotes, EU-specific tax reports, a stock screener, net worth tracking, dividend tracking, performance metrics, and AI-powered analysis in 35 European languages.
+trefolio is a web-based portfolio tracking application designed for European retail investors. Clover is the default in-app AI assistant: you ask one question; Clover orchestrates Warren (investments) and Clara (personal-finance cashflow snapshot). It provides a clean, modern dashboard to track stock, ETF, and crypto holdings across multiple exchanges, with real-time quotes, EU-specific tax reports, a stock screener, net worth tracking, dividend tracking, performance metrics, and AI-powered analysis in 35 European languages. Informational only — not financial advice.
 
 ## Target Audience
 
@@ -73,6 +73,7 @@ trefolio is a web-based portfolio tracking application designed for European ret
 - Country-aware broker suggestions during onboarding
 
 ### AI Analysis (Pro)
+- Clover is the default in-app assistant (and Telegram @cloveraiassistant_bot when configured): one chat that routes portfolio work through Warren and personal finance through Clara (`consultClara` / savings snapshot). Clara shares an aggregated cashflow snapshot, not line-item receipts. If Clara is not linked, Clover can propose creating a Clara space with the same trefolio login. Informational only — not financial advice.
 - AI Portfolio Review with personalized recommendations
 - AI Tax Assistant with country-specific optimization suggestions
 - Plain-language stock fundamentals analysis
@@ -235,8 +236,9 @@ When you import a broker CSV or connect via SnapTrade, dividends, withholding ta
 
 Sister open-source products from the same maintainer (Trefolio):
 
+- **Clover** — default AI inside trefolio (https://trefolio.com/landing#clover). Orchestrates Warren (portfolio) and Clara (personal finance). Telegram: @cloveraiassistant_bot. Not financial advice.
 - **Will** — https://will.trefolio.com — AI note-taking assistant: capture via Telegram (text, voice, photo, PDF), reminders, tagging. Repo: https://github.com/kyberis/notetaker
-- **Clara** — https://clara.trefolio.com — AI personal finance assistant: chat and Telegram, bank PDFs, categories, monthly balance, MCP for Claude/Cursor. Repo: https://github.com/kyberis/etracker
+- **Clara** — https://clara.trefolio.com — AI personal finance assistant: chat and Telegram, bank PDFs, categories, monthly balance, MCP for Claude/Cursor. Repo: https://github.com/kyberis/etracker. Inside trefolio, Clara is reached via Clover as an aggregated savings snapshot (not every receipt).
 
 ## Blog Articles
 

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.265",
+    date: "2026-08-28",
+    title: "Clover on the landing page",
+    titleTranslations: {
+      es: "Clover en la página de inicio",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The public landing now presents Clover as trefolio’s default AI assistant — one chat that orchestrates Warren (portfolio) and Clara (personal finance), with a not-financial-advice disclaimer.",
+        translations: {
+          es: "La landing pública presenta a Clover como el asistente IA por defecto de trefolio: un chat que orquesta a Warren (cartera) y Clara (finanzas personales), con aviso de que no es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.264",
     date: "2026-08-28",
     title: "Warren Berkshire valuation",

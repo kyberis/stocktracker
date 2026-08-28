@@ -4,21 +4,21 @@ import { JsonLd } from "@/components/JsonLd";
 import { isCommerceEnabled } from "@/lib/commerce-server";
 
 const DESCRIPTION_COMMERCE =
-  "trefolio is the portfolio tracker built for European investors. EU tax reports (DE/FR/ES/NL/IT), stock screener, holdings explorer with Warren, net worth tracking, broker sync, AI analysis in 35 languages, and dividend projections. Free to start, Trefolio for €7.99/month.";
+  "trefolio is the portfolio tracker for European investors with Clover, the default AI assistant that unifies investments (Warren) and personal-finance cashflow (Clara). EU tax reports (DE/FR/ES/NL/IT), stock screener, broker sync, AI analysis in 35 languages, and dividend projections. Free to start, Trefolio for €7.99/month.";
 const DESCRIPTION_NO_COMMERCE =
-  "trefolio is the portfolio tracker built for European investors. EU tax reports (DE/FR/ES/NL/IT), stock screener, holdings explorer with Warren, net worth tracking, broker sync, AI analysis in 35 languages, and dividend projections. Free to start.";
+  "trefolio is the portfolio tracker for European investors with Clover, the default AI assistant that unifies investments (Warren) and personal-finance cashflow (Clara). EU tax reports (DE/FR/ES/NL/IT), stock screener, broker sync, AI analysis in 35 languages, and dividend projections. Free to start.";
 
 const OG_DESCRIPTION_COMMERCE =
-  "The European investor's portfolio tracker. EU tax reports, stock screener, holdings explorer with Warren, net worth tracking, AI analysis in 35 languages, and dividend projections — free to start, Trefolio for €7.99/month.";
+  "The European investor's portfolio tracker with Clover AI — Warren for holdings, Clara for cashflow. EU tax reports, stock screener, and dividend projections. Free to start, Trefolio for €7.99/month.";
 const OG_DESCRIPTION_NO_COMMERCE =
-  "The European investor's portfolio tracker. EU tax reports, stock screener, holdings explorer with Warren, net worth tracking, AI analysis in 35 languages, and dividend projections.";
+  "The European investor's portfolio tracker with Clover AI — Warren for holdings, Clara for cashflow. EU tax reports, stock screener, and dividend projections.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const commerceEnabled = await isCommerceEnabled();
   const description = commerceEnabled ? DESCRIPTION_COMMERCE : DESCRIPTION_NO_COMMERCE;
   const ogDescription = commerceEnabled ? OG_DESCRIPTION_COMMERCE : OG_DESCRIPTION_NO_COMMERCE;
   return {
-    title: "trefolio — Portfolio Tracking, EU Tax Reports & AI Insights",
+    title: "trefolio — Clover AI, EU Tax Reports & Portfolio Tracking",
     description,
     alternates: {
       canonical: "https://trefolio.com",
@@ -62,7 +62,7 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     openGraph: {
-      title: "trefolio — Portfolio Tracking, EU Tax Reports & AI Insights",
+      title: "trefolio — Clover AI, EU Tax Reports & Portfolio Tracking",
       description: ogDescription,
       url: "https://trefolio.com",
       siteName: "trefolio",
@@ -79,7 +79,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: "trefolio — Portfolio Tracking, EU Tax Reports & AI Insights",
+      title: "trefolio — Clover AI, EU Tax Reports & Portfolio Tracking",
       description: ogDescription,
       images: ["/screenshots/dashboard-overview.png"],
     },
@@ -92,7 +92,7 @@ const WEBSITE_SCHEMA = {
   name: "trefolio",
   url: "https://trefolio.com",
   description:
-    "Portfolio tracking with EU tax reports, stock screener, AI insights, and net worth tracking for European investors in 35 languages",
+    "European portfolio tracker with Clover, the default AI assistant that orchestrates Warren (investments) and Clara (personal finance), plus EU tax reports, stock screener, and net worth tracking in 35 languages",
   inLanguage: [
     "en", "es", "fr", "de", "it", "pt", "nl", "pl", "cs", "sk",
     "hu", "ro", "bg", "hr", "sl", "el", "sv", "da", "fi", "et",
@@ -113,7 +113,7 @@ const ORGANIZATION_SCHEMA = {
   url: "https://trefolio.com",
   logo: "https://trefolio.com/icon.svg",
   description:
-    "Portfolio tracking with EU tax reports, stock screener, AI insights, and net worth tracking for European investors in 35 languages",
+    "European portfolio tracker with Clover, the default AI assistant that orchestrates Warren (investments) and Clara (personal finance), plus EU tax reports, stock screener, and net worth tracking in 35 languages",
   email: "support@trefolio.com",
   foundingDate: "2025",
   contactPoint: [
@@ -159,11 +159,12 @@ export const SOFTWARE_APP_SCHEMA = {
   operatingSystem: "Web, iOS, Android",
   url: "https://trefolio.com",
   description:
-    "Portfolio tracker with EU tax reports, stock screener, net worth tracking, broker imports, AI analysis, and dividend projections for European investors.",
+    "Portfolio tracker with Clover, trefolio’s default AI assistant that orchestrates Warren (investments) and Clara (personal-finance cashflow snapshot). EU tax reports, stock screener, net worth tracking, broker imports, and dividend projections for European investors. Informational only — not investment advice.",
   screenshot: "https://trefolio.com/screenshots/dashboard-overview.png",
   featureList: [
     "European tax reports for Germany, France, Spain, Netherlands, and Italy with AI Tax Assistant",
     "Stock screener with 600+ stocks, 6 filter dimensions, and preset strategies",
+    "Clover default AI assistant that orchestrates Warren (portfolio) and Clara (personal-finance snapshot — not line items; not investment advice)",
     "Holdings explorer to rank your own positions and ask Warren about a figure (AI-generated; not investment advice)",
     "Net worth tracking for real estate, savings, and pension assets",
     "Real-time stock quotes from NYSE, NASDAQ, XETRA, LSE, and more",
@@ -221,7 +222,7 @@ export const FAQ_SCHEMA = {
       name: "How do I import my portfolio?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Go to the /import page to access all import methods: 14 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, and more), AI Import for screenshots or unsupported formats, and manual entry. Each method has a built-in step-by-step guide. All users can use Broker Sync to connect their brokerage directly and import automatically — privacy-first, read-only access via SnapTrade.",
+        text: "Go to the /import page to access all import methods: 14 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, and more), AI Import for screenshots or unsupported formats, and manual entry. Each method has a built-in step-by-step guide. Trefolio subscribers can use Broker Sync to connect their brokerage directly and import automatically — privacy-first, read-only access via SnapTrade.",
       },
     },
     {
@@ -229,7 +230,7 @@ export const FAQ_SCHEMA = {
       name: "What CSV formats are supported?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "14 broker CSV formats: DEGIRO, Interactive Brokers, Trading 212, Revolut, Charles Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, plus a Simple CSV format. For any other format, use AI Import — upload a screenshot or paste your file and AI will parse it. All users can also use Broker Sync for automatic one-click import from 20+ brokerages.",
+        text: "14 broker CSV formats: DEGIRO, Interactive Brokers, Trading 212, Revolut, Charles Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, plus a Simple CSV format. For any other format, use AI Import — upload a screenshot or paste your file and AI will parse it. Trefolio subscribers can also use Broker Sync for automatic one-click import from 20+ brokerages.",
       },
     },
     {
@@ -261,7 +262,7 @@ export const FAQ_SCHEMA = {
       name: "What's the difference between the plans?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Both plans get every feature — fundamentals, intelligence, screener, moat reports, EU tax reports, AI analysis, exports, share links, and more. Folio (Free) has conservative monthly quotas designed for casual investors: 100 holdings, 15 AI consultations, 30 stock-intelligence lookups, etc. Trefolio (from €7.99/month with launch discount) keeps all the same features but multiplies the quotas roughly 20x so power users never hit a wall. Try Trefolio free for 7 days — no credit card required.",
+        text: "Both plans get every feature — fundamentals, intelligence, screener, moat reports, EU tax reports, AI analysis, exports, share links, and more. Folio (Free) has conservative monthly quotas designed for casual investors: 100 holdings, 15 AI consultations, 30 stock-intelligence lookups, etc. Trefolio (from €7.99/month with launch discount) keeps all the same features but multiplies the quotas roughly 20× so power users never hit a wall. Try Trefolio free for 7 days — no credit card required.",
       },
     },
     {
@@ -278,6 +279,14 @@ export const FAQ_SCHEMA = {
       acceptedAnswer: {
         "@type": "Answer",
         text: "When you import a broker CSV (DEGIRO, IBKR, Trading 212, or Revolut), dividends, withholding taxes, and broker fees are parsed automatically. For Simple CSV imports, use the type column with 'dividend' or 'fee' values. All transactions are stored in your ledger and reflected in performance metrics.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How do Clover, Warren, and Clara work together?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Clover is trefolio’s default AI assistant. You ask one question; Clover brings in Warren for holdings, dividends, and allocation, and Clara for spending, cashflow, and savings (an aggregated snapshot — not every receipt). If you do not have Clara yet, Clover can propose creating your Clara space with the same login. Informational only — not financial advice.",
       },
     },
   ],

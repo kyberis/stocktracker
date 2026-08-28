@@ -1,10 +1,10 @@
 # trefolio
 
-> The European investor's portfolio tracker — EU tax reports, stock screener, AI insights, and net worth tracking in 35 languages.
+> The European investor's portfolio tracker — Clover AI (Warren + Clara), EU tax reports, stock screener, and net worth tracking in 35 languages.
 
 ## What is trefolio?
 
-trefolio is a web-based portfolio tracker built for European retail investors. It offers tax reports for 17 countries (Germany, France, Spain, Netherlands, Italy, UK, US, Switzerland, Austria, Portugal, Belgium, Ireland, Sweden, Denmark, Norway, Finland, Poland) with AI Tax Assistant, a stock screener covering 600+ stocks, a Holdings explorer to rank your own positions by P/E, yield, and weight (ask Warren about a highlighted figure; AI-generated, not investment advice), net worth tracking (real estate, savings, pensions), broker auto-sync via SnapTrade (20+ brokerages), 14 broker CSV import formats, AI-powered analysis in your native language, dividend tracking and projections, performance metrics (TTWROR, XIRR, Sharpe, Max Drawdown), portfolio simulator (backtesting, what-if, stress testing), and 4 dashboard themes. Available in 35 European languages with 21-currency support.
+trefolio is a web-based portfolio tracker built for European retail investors. In-app, Clover is the default AI assistant: one chat that orchestrates Warren (portfolio: holdings, dividends, allocation) and Clara (personal finance: aggregated cashflow/savings snapshot, not line items). It offers tax reports for 17 countries (Germany, France, Spain, Netherlands, Italy, UK, US, Switzerland, Austria, Portugal, Belgium, Ireland, Sweden, Denmark, Norway, Finland, Poland) with AI Tax Assistant, a stock screener covering 600+ stocks, a Holdings explorer to rank your own positions by P/E, yield, and weight (ask Warren about a highlighted figure; AI-generated, not investment advice), net worth tracking (real estate, savings, pensions), broker auto-sync via SnapTrade (20+ brokerages), 14 broker CSV import formats, AI-powered analysis in your native language, dividend tracking and projections, performance metrics (TTWROR, XIRR, Sharpe, Max Drawdown), portfolio simulator (backtesting, what-if, stress testing), and 4 dashboard themes. Available in 35 European languages with 21-currency support. Informational only — not financial advice.
 
 ## Pricing
 
@@ -30,8 +30,9 @@ trefolio is a web-based portfolio tracker built for European retail investors. I
 Public stock pages at `/analisis/{TICKER}` show fundamentals, technicals, news, and an AI narrative for researched tickers. Live quotes refresh on each visit; the broader company report is cached for one day and rebuilt when a visitor opens an expired ticker. Informational only — not investment advice.
 ## Trefolio ecosystem
 
+- Clover (in-app default assistant): one conversation in trefolio that orchestrates Warren (portfolio) and Clara (personal finance). Telegram: @cloveraiassistant_bot when configured.
 - Will (AI notes): https://will.trefolio.com — Telegram-first open-source AI note-taking assistant (MIT).
-- Clara (personal finance): https://clara.trefolio.com — Chat-first open-source AI expense assistant with public and per-user MCP servers (MIT).
+- Clara (personal finance): https://clara.trefolio.com — Chat-first open-source AI expense assistant with public and per-user MCP servers (MIT). Clara also appears behind Clover inside trefolio (aggregated savings snapshot, not every receipt).
 
 ## Blog Articles
 

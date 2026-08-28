@@ -23,6 +23,7 @@ Signed-in users talk to **Clover**. Clover routes portfolio work through Warren 
 | Telegram webhook | `POST /api/webhooks/telegram/clover/[secret]` |
 | Profile | `CloverTelegramConnectCard` |
 | Link API | `/api/integrations/telegram/clover/link` |
+| Landing | `/landing#clover` — `CloverSection` (default integrator; Warren + Clara specialists) |
 
 ## 4. Env (server)
 

@@ -15,7 +15,8 @@ Primary marketing page. Hero feature blocks, feature-card grid, pricing tiers, s
 | Type | Path | Notes |
 |------|------|-------|
 | Page | [`src/app/landing/page.tsx`](../../src/app/landing/page.tsx) | Main landing. |
-| Copy | [`src/locales/en.ts`](../../src/locales/en.ts) / [`es.ts`](../../src/locales/es.ts) | `landingFeature*` / `landingCard*` keys. |
+| Copy | [`src/locales/en.ts`](../../src/locales/en.ts) / [`es.ts`](../../src/locales/es.ts) | `landingClover*` / `landingFeature*` / `landingCard*` keys. |
+| Component | [`src/components/landing/CloverSection.tsx`](../../src/components/landing/CloverSection.tsx) | Clover integrator section after StatsBar. |
 | Screenshots | [`public/screenshots/`](../../public/screenshots/) | Dark-theme PNGs; screening hero uses `investment-screening.png`. |
 
 ## 4. Data model
@@ -26,7 +27,7 @@ Primary marketing page. Hero feature blocks, feature-card grid, pricing tiers, s
 - [`src/app/api/landing/stats/`](../../src/app/api/landing/stats/) — public stats for social proof.
 
 ## 6. UI surface
-- Market ticker, nav (`NavAssetSearch` `variant="landing"` → `/analisis/[ticker]`), hero, agents, features (6 hero blocks + card grid), pricing (Folio / Trefolio + quota table), FAQ, PWA / mobile / device, footer.
+- Market ticker, nav (`NavAssetSearch` `variant="landing"` → `/analisis/[ticker]`), hero, stats, **Clover section** (`#clover` — default AI integrator, Warren + Clara), agents team, features (6 hero blocks + card grid), pricing (Folio / Trefolio + quota table), FAQ, PWA / mobile / device, footer.
 - Hero order: Portfolio → Dividends → AI Insights → **Investment Screening** → Import → Warren Telegram.
 - Screening CTA: `/screening`. Not tier-badged (flag-gated in-app, same weekly quota on Folio and Trefolio).
 
@@ -48,7 +49,7 @@ Primary marketing page. Hero feature blocks, feature-card grid, pricing tiers, s
 - Public. In-app screening remains behind `investment_screening_enabled`.
 
 ## 12. Telemetry
-- `landing_view_total`, CTA clicks per section (`feature_screening` for the screening hero CTA).
+- `landing_page_view`, `landing_section_view` (`section: "clover"` after stats, `agents_team`, …), CTA clicks per section (`feature_screening` for the screening hero CTA).
 
 ## 13. Edge cases & gotchas
 - Update `getHeroFeatures` / `getFeatureCards` (and EN/ES copy) when a new user-visible capability ships.
@@ -62,7 +63,7 @@ Primary marketing page. Hero feature blocks, feature-card grid, pricing tiers, s
 - [`.cursor/rules/landing-page.mdc`](../../.cursor/rules/landing-page.mdc)
 - [`seo-specialist`](../../.cursor/skills/seo-specialist/SKILL.md)
 - [`legal-advisor`](../../.cursor/skills/legal-advisor/SKILL.md) — marketing copy + financial disclaimer
-- Related specs: [demo-page](demo-page.md), [pricing](pricing.md), [investment-screening](investment-screening.md), [stock-screener](stock-screener.md).
+- Related specs: [demo-page](demo-page.md), [pricing](pricing.md), [investment-screening](investment-screening.md), [stock-screener](stock-screener.md), [clover-assistant](clover-assistant.md), [seo-metadata](seo-metadata.md).
 
 ## 16. Open questions / planned work
 - A/B hero variants.
