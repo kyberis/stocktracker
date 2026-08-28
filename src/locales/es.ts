@@ -3273,7 +3273,7 @@ const es: TranslationStrings = {
   pizarraDismiss: "Descartar",
   pizarraDisclaimer: "No es asesoramiento financiero. Resúmenes generados por IA solo con fines informativos.",
   pizarraSettingsLabel: "Pizarra de agentes",
-  pizarraSettingsDesc: "Warren y Clara publican avisos proactivos en Home cuando cambia algo importante.",
+  pizarraSettingsDesc: "Widget Scriptable en la pantalla de inicio: Warren y Clara publican avisos cuando cambia algo importante. Configúralo en Widget Setup.",
   homeMoneyDeskWarrenEmptyNudge: "Añade tu primera acción o pide a Warren que importe un bróker.",
   homeMoneyDeskClaraNudge: "Gastos cotidianos, presupuestos y ahorro — junto a tu cartera.",
   homeMoneyDeskClaraOnboardNudge: "Sigue el gasto cotidiano junto a tu cartera. El mismo inicio de sesión de trefolio.",

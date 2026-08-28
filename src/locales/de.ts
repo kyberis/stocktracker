@@ -3618,7 +3618,7 @@ const de: TranslationStrings = {
   pizarraDismiss: "Dismiss",
   pizarraDisclaimer: "Not financial advice. AI-generated summaries for information only.",
   pizarraSettingsLabel: "Agent board (Pizarra)",
-  pizarraSettingsDesc: "Warren and Clara post proactive updates on your Home dashboard when something important changes.",
+  pizarraSettingsDesc: "Scriptable home-screen widget: Warren and Clara post proactive updates when something important changes. Set up at Widget Setup.",
 };
 
 export default de;

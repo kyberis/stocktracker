@@ -46,7 +46,7 @@ const SCRIPT_VARIANTS: Record<
     file: "/widget/trefolio-scriptable-pizarra.js",
     filename: "trefolio-scriptable-pizarra.js",
     label: "Pizarra (agent board)",
-    description: "Warren and Clara notes from Home. Enable the board in trefolio first. Not financial advice.",
+    description: "Warren and Clara notes on your home screen. Enable Pizarra in Profile → Notifications first. Not financial advice.",
   },
 };
 

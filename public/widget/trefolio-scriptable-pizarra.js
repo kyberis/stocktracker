@@ -114,7 +114,7 @@ function createWidget(data, icon, family) {
   w.addSpacer(6);
 
   if (!data.enabled) {
-    const empty = w.addText("Turn on Pizarra in trefolio Home to see Warren and Clara notes here.");
+    const empty = w.addText("Turn on Pizarra in trefolio Profile → Notifications, then refresh this widget.");
     empty.font = Font.regularSystemFont(layout.bodyFont);
     empty.textColor = MUTED;
     empty.lineLimit = 4;

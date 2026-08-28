@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.260",
+    date: "2026-08-28",
+    title: "Pizarra is Scriptable-only",
+    titleTranslations: {
+      es: "Pizarra solo en Scriptable",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Pizarra no longer appears on Home — it is only the Scriptable home-screen widget on /widget/setup. Enable it under Profile → Notifications. Not financial advice.",
+        translations: {
+          es: "La Pizarra ya no aparece en Home: solo es el widget Scriptable de pantalla de inicio en /widget/setup. Actívala en Perfil → Notificaciones. No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.259",
     date: "2026-08-28",
     title: "Pizarra on the home screen",

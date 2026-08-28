@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.259: Scriptable Pizarra on widget setup is an extra surface of the existing Home board, not a landing headline"
+  "notes": "2.5.260: Pizarra Scriptable-only is not a landing headline; Home surface removed"
 }
