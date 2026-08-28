@@ -716,6 +716,19 @@ export {
   setAidWarrenNudgeDate,
 } from "./aid-user-state";
 
+export type { AgentBoardMessage } from "@/lib/agent-board/types";
+export {
+  listAgentBoardMessages,
+  listAgentBoardMessagesForComposer,
+  countAgentBoardMessagesToday,
+  hasAgentBoardContextKey,
+  insertAgentBoardMessage,
+  markAgentBoardMessageRead,
+  dismissAgentBoardMessage,
+  purgeExpiredAgentBoardMessages,
+  listAgentBoardCronCandidates,
+} from "./agent-board";
+
 export type { AidSocialPostRow } from "@/lib/types";
 export {
   getAidSocialPost,

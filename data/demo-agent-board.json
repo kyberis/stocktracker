@@ -1,0 +1,35 @@
+[
+  {
+    "id": "demo-pizarra-1",
+    "agent": "warren",
+    "kind": "mover",
+    "body": "NVDA moved +4.2% today — one of your largest positions. Worth a quick check on what's driving it.",
+    "chipLabel": "Ask Warren",
+    "chipPrompt": "What should I know about NVDA today?",
+    "priority": 1,
+    "readAt": null,
+    "createdAt": "2026-08-28T08:00:00.000Z"
+  },
+  {
+    "id": "demo-pizarra-2",
+    "agent": "warren",
+    "kind": "news",
+    "body": "Fresh headline on AAPL: suppliers signal steady iPhone demand into the holiday quarter.",
+    "chipLabel": "AAPL news",
+    "chipPrompt": "Tell me more about this AAPL news and how it affects my holding.",
+    "priority": 2,
+    "readAt": null,
+    "createdAt": "2026-08-28T07:30:00.000Z"
+  },
+  {
+    "id": "demo-pizarra-3",
+    "agent": "clara",
+    "kind": "clara_surplus",
+    "body": "You ended August with a small surplus in Clara. If investing is on your mind, Warren can help you think it through.",
+    "chipLabel": "Open Clara",
+    "chipPrompt": "",
+    "priority": 3,
+    "readAt": null,
+    "createdAt": "2026-08-28T07:00:00.000Z"
+  }
+]

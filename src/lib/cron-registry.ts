@@ -201,6 +201,14 @@ export const CRON_REGISTRY: CronJob[] = [
     schedule: "*/5 * * * *",
     description: "Real-estate zone screening: recover expired step leases and drain pending phases",
   },
+  {
+    name: "agent-board",
+    path: "/api/cron/agent-board",
+    schedule: "*/15 * * * *",
+    description:
+      "Compose proactive Warren/Clara Pizarra messages from portfolio news, movers, catalysts, alerts, and Clara savings; piggybacks on check-alerts (Vercel cron cap)",
+    paused: true,
+  },
 ];
 
 export function getCronJob(name: string): CronJob | undefined {

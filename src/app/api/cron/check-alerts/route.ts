@@ -29,11 +29,12 @@ import {
 } from "@/lib/alert-evaluation";
 import type { ExchangeRates, SubscriptionPlan } from "@/lib/types";
 import { getEmailLocale } from "@/lib/email-i18n";
+import { executeAgentBoardCron } from "@/lib/agent-board/run-cron";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 import { fetchSharedQuotesAndRates, shouldFetchLiveMarketData } from "@/lib/cron-quotes";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 function buildContext(alert: CronAlert): AlertDispatchContext {
   return {
@@ -127,6 +128,12 @@ async function finalizeDispatch(
 }
 
 const runCheckAlerts = withCronLogging("check-alerts", async () => {
+  const alertsResult = await runAlertChecks();
+  const agentBoard = await executeAgentBoardCron();
+  return { ...alertsResult, agentBoard };
+});
+
+async function runAlertChecks(): Promise<Record<string, unknown>> {
   if (!(await isFeatureEnabled("alerts_enabled"))) {
     return { checked: 0, triggered: 0, disabled: true };
   }
@@ -183,7 +190,6 @@ const runCheckAlerts = withCronLogging("check-alerts", async () => {
       tickers: allTickers.size,
     };
   }
-
   const shared = await fetchSharedQuotesAndRates({
     tickers: [...allTickers],
     currencies,
@@ -367,7 +373,7 @@ const runCheckAlerts = withCronLogging("check-alerts", async () => {
     fxUnavailable,
     tickers: allTickers.size,
   };
-});
+}
 
 export async function GET(req: NextRequest) {
   const denied = verifyCronAuth("check-alerts", req);

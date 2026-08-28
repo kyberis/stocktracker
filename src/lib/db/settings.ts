@@ -76,7 +76,8 @@ export type PlatformFeature =
   | "theme_studio_enabled"
   | "import_broker_picker_enabled"
   | "jobs_nav"
-  | "home_money_desk";
+  | "home_money_desk"
+  | "agent_board_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "telegram_enabled",
@@ -142,12 +143,13 @@ const DEFAULT_SETTINGS: UserSettings = {
   defaultCurrency: "EUR",
   emailNotificationsEnabled: true,
   favoriteToolIds: [],
+  agentBoardEnabled: false,
 };
 
 export async function getUserSettings(userId: string): Promise<UserSettings> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT language, refresh_interval, alert_channels, telegram_chat_id, telegram_link_token, telegram_link_expires_at, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids FROM user_settings WHERE user_id = ?",
+    sql: "SELECT language, refresh_interval, alert_channels, telegram_chat_id, telegram_link_token, telegram_link_expires_at, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids, agent_board_enabled FROM user_settings WHERE user_id = ?",
     args: [userId],
   });
 
@@ -173,6 +175,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
     defaultCurrency: parseCurrency(row.default_currency),
     emailNotificationsEnabled: row.email_notifications_enabled === undefined ? true : num(row.email_notifications_enabled) !== 0,
     favoriteToolIds: parseFavoriteToolIdsColumn(row.favorite_tool_ids),
+    agentBoardEnabled: num(row.agent_board_enabled) === 1,
   };
 }
 
@@ -193,6 +196,7 @@ export async function updateUserSettings(
     defaultCurrency: updates.defaultCurrency ?? current.defaultCurrency,
     emailNotificationsEnabled: updates.emailNotificationsEnabled ?? current.emailNotificationsEnabled,
     favoriteToolIds: updates.favoriteToolIds ?? current.favoriteToolIds,
+    agentBoardEnabled: updates.agentBoardEnabled ?? current.agentBoardEnabled,
   };
 
   const client = await ensureInitialized();
@@ -200,7 +204,7 @@ export async function updateUserSettings(
     sql: `UPDATE user_settings SET language = ?, refresh_interval = ?,
           alert_channels = ?, telegram_chat_id = ?, telegram_link_token = ?, telegram_link_expires_at = ?, alert_device_enabled = ?,
           dashboard_theme = ?, default_currency = ?, email_notifications_enabled = ?,
-          favorite_tool_ids = ?
+          favorite_tool_ids = ?, agent_board_enabled = ?
           WHERE user_id = ?`,
     args: [
       next.language, next.refreshInterval,
@@ -208,6 +212,7 @@ export async function updateUserSettings(
       next.alertDeviceEnabled ? 1 : 0, next.dashboardTheme, next.defaultCurrency,
       next.emailNotificationsEnabled ? 1 : 0,
       JSON.stringify(next.favoriteToolIds),
+      next.agentBoardEnabled ? 1 : 0,
       userId,
     ],
   });
@@ -552,6 +557,7 @@ export const ALL_PLATFORM_FEATURES = [
   "import_broker_picker_enabled",
   "jobs_nav",
   "home_money_desk",
+  "agent_board_enabled",
 ] as const satisfies readonly PlatformFeature[];
 
 type MissingPlatformFeature = Exclude<

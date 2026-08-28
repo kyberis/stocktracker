@@ -3606,6 +3606,18 @@ const nl: TranslationStrings = {
   cloverProposeClaraTitle: "Create your Clara space",
   cloverProposeClaraBody: "Clover can check savings and cashflow once Clara is linked with the same login.",
   cloverProposeClaraCta: "Create Clara",
+  pizarraTitle: "Agent board",
+  pizarraSubtitle: "Important notes from Warren and Clara",
+  pizarraToggle: "Toggle agent board",
+  pizarraOn: "On",
+  pizarraOff: "Off",
+  pizarraDisabledHint: "Turn on the board to get proactive market and money updates from Warren and Clara.",
+  pizarraLoading: "Loading messages…",
+  pizarraEmpty: "No new messages right now. Warren and Clara will post when something important changes.",
+  pizarraDismiss: "Dismiss",
+  pizarraDisclaimer: "Not financial advice. AI-generated summaries for information only.",
+  pizarraSettingsLabel: "Agent board (Pizarra)",
+  pizarraSettingsDesc: "Warren and Clara post proactive updates on your Home dashboard when something important changes.",
 };
 
 export default nl;
