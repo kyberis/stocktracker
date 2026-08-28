@@ -206,6 +206,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "Broker Sync shows our broker grid with logos and search (SnapTrade deep-link + Trade Republic CSV). Off by default for beta via per-user overrides.",
     group: "Features",
   },
+  jobs_nav: {
+    label: "Jobs navigation (Add / Review / Discover)",
+    description:
+      "Replaces command-strip quick links with a goal switcher (Add / Review / Discover) and contextual chips. Off by default — enable for admins first. Studio theme unchanged.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

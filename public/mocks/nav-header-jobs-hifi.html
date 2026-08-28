@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>trefolio · Jobs nav · high-fidelity</title>
+  <style>
+    :root {
+      --foreground: #edf4ff;
+      --border: rgba(154, 174, 209, 0.14);
+      --muted: #8ea1bf;
+      --nav-bg: rgba(7, 13, 23, 0.94);
+      --surface-strong: rgba(10, 17, 27, 0.92);
+      --surface-soft: rgba(255, 255, 255, 0.03);
+      --card: rgba(10, 16, 26, 0.9);
+      --page-gradient:
+        radial-gradient(circle at 18% 10%, rgba(59, 130, 246, 0.09), transparent 22%),
+        radial-gradient(circle at 82% 12%, rgba(88, 104, 132, 0.1), transparent 18%);
+      --page-background: linear-gradient(180deg, #07111d 0%, #0b1627 100%);
+      --glass-shadow: 0 16px 34px rgba(1, 6, 16, 0.42);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--page-gradient), var(--page-background);
+      color: var(--foreground);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 48px; }
+    .meta { margin-bottom: 14px; }
+    .meta a { color: #6ee7b7; text-decoration: none; font-size: 0.8rem; font-weight: 600; }
+    .meta h1 { margin: 8px 0 4px; font-size: 1.25rem; letter-spacing: -0.02em; }
+    .meta p { margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.45; max-width: 72ch; }
+    .toolbar-out {
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 14px 0 12px;
+    }
+    .toolbar-out button {
+      border: 1px solid var(--border); background: var(--surface-soft); color: var(--muted);
+      border-radius: 999px; padding: 7px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+    }
+    .toolbar-out button.on { color: #6ee7b7; border-color: rgba(29,209,161,.4); background: rgba(29,209,161,.12); }
+
+    .frame {
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,.45);
+      background: #07111d;
+      margin: 0 auto;
+      transition: width .2s ease;
+      position: relative;
+    }
+    .frame.desktop { width: 100%; max-width: 1120px; }
+    .frame.mobile {
+      width: min(390px, 100%);
+      max-height: 820px;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .feedback {
+      height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 600; color: #a7f3d0;
+      background: rgba(5, 150, 105, 0.35);
+      border-bottom: 1px solid rgba(16,185,129,.25);
+    }
+
+    header.app-nav {
+      position: sticky; top: 0; z-index: 40;
+      border-bottom: 1px solid var(--border);
+      background: var(--nav-bg);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 26px rgba(1, 6, 16, 0.18);
+    }
+    .nav-inner { max-width: 80rem; margin: 0 auto; padding: 10px 24px 8px; }
+    .frame.mobile .nav-inner { padding: 8px 12px 6px; }
+
+    .nav-top-m { display: none; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .frame.mobile .nav-top-m { display: flex; }
+
+    .nav-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+    }
+    .frame.mobile .nav-row { display: block; }
+    .frame.mobile .logo-desk,
+    .frame.mobile .actions-desk { display: none !important; }
+
+    .logo { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .logo svg { width: 28px; height: 28px; border-radius: 8px; }
+    .logo span { font-size: 1rem; font-weight: 700; }
+    .frame.mobile .nav-top-m .logo span { display: none; }
+
+    .search {
+      display: flex; align-items: center; gap: 8px; min-width: 0; width: 100%;
+      height: 42px; padding: 0 8px 0 12px; border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface-strong);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .frame.mobile .search { height: 40px; border-radius: 12px; }
+    .search input {
+      flex: 1; min-width: 0; border: 0; background: transparent; outline: none;
+      color: var(--foreground); font-size: 0.875rem;
+    }
+    .search input::placeholder { color: #64748b; }
+    .search .go {
+      border: 0; border-radius: 10px; padding: 6px 12px;
+      background: #059669; color: #fff; font-size: 11px; font-weight: 600; cursor: pointer;
+    }
+
+    .actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .icon-btn {
+      width: 44px; height: 44px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--surface-soft);
+      color: var(--muted); display: grid; place-items: center; cursor: pointer; position: relative;
+    }
+    .frame.mobile .icon-btn { width: 40px; height: 40px; }
+    .icon-btn .dot {
+      position: absolute; top: 8px; right: 9px; width: 7px; height: 7px;
+      border-radius: 50%; background: #ef4444; border: 1.5px solid #07111d;
+    }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #1e293b; border: 1px solid var(--border);
+      display: grid; place-items: center; font-size: 0.7rem; font-weight: 700; color: #94a3b8;
+    }
+
+    /* Command strip */
+    .cmd { border-bottom: 1px solid var(--border); background: var(--nav-bg); }
+    .cmd-inner {
+      max-width: 80rem; margin: 0 auto; padding: 8px 24px 10px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+    }
+
+    .portfolio-sel {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 36px; padding: 0 10px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--surface-soft);
+      font-size: 0.8rem; font-weight: 600; color: var(--foreground); cursor: pointer;
+    }
+    .portfolio-sel svg { width: 14px; height: 14px; color: var(--muted); }
+
+    .jobs {
+      display: inline-flex; gap: 3px; padding: 3px; border-radius: 12px;
+      border: 1px solid var(--border); background: rgba(255,255,255,0.025);
+      flex-shrink: 0;
+    }
+    .job {
+      height: 30px; padding: 0 10px; border: 0; border-radius: 9px;
+      background: transparent; color: var(--muted); font-size: 0.72rem; font-weight: 700;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+    }
+    .job .jdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .job.on { background: rgba(255,255,255,0.07); color: var(--foreground); }
+    .job[data-job="alta"].on { box-shadow: inset 0 0 0 1px rgba(16,185,129,.35); color: #6ee7b7; }
+    .job[data-job="evaluar"].on { box-shadow: inset 0 0 0 1px rgba(56,189,248,.35); color: #7dd3fc; }
+    .job[data-job="descubrir"].on { box-shadow: inset 0 0 0 1px rgba(245,158,11,.4); color: #fcd34d; }
+
+    .chips {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; flex: 1;
+    }
+    .chip {
+      height: 30px; padding: 0 11px; border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.28);
+      background: transparent; color: #cbd5e1;
+      font-size: 0.72rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+    .chip.on { border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.12); color: #6ee7b7; }
+    .chip.accent { border-color: rgba(16,185,129,.4); background: rgba(16,185,129,.14); color: #6ee7b7; }
+    .chip.warn { border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.1); color: #fcd34d; }
+    .chip.sky { border-color: rgba(56,189,248,.35); background: rgba(56,189,248,.1); color: #7dd3fc; }
+
+    .cmd-bottom { display: contents; }
+    .frame.desktop .portfolio-sel { order: 0; }
+    .frame.desktop .jobs { order: 1; }
+    .frame.desktop .chips { order: 2; }
+    .frame.desktop .cmd-right { order: 3; }
+    .cmd-right {
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto;
+    }
+    .ghost-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 40px; padding: 0 12px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--surface-soft);
+      color: var(--foreground); font-size: 0.8rem; font-weight: 500; cursor: pointer;
+    }
+    .ghost-btn.icon { width: 40px; padding: 0; justify-content: center; color: var(--muted); }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 36px; padding: 0 12px; border-radius: 10px; border: 0;
+      background: #059669; color: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    }
+    .sync-label { display: inline; }
+
+    /* Mobile: 3 clear stacked rows */
+    .frame.mobile .cmd-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      flex-wrap: nowrap;
+      gap: 8px;
+      padding: 8px 12px 10px;
+    }
+    .frame.mobile .search .go { display: none; }
+    .frame.mobile .cmd-bottom { display: none; }
+    .frame.mobile .jobs {
+      order: 1;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .frame.mobile .job {
+      justify-content: center;
+      height: 36px;
+      padding: 0 2px;
+      font-size: 0.72rem;
+    }
+    .frame.mobile .chips {
+      order: 2;
+      flex: none;
+      width: 100%;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      gap: 6px;
+      padding: 1px 0 2px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .frame.mobile .chips::-webkit-scrollbar { display: none; }
+    .frame.mobile .chip { flex: 0 0 auto; height: 32px; }
+    .frame.mobile .ctx-banner { display: none; }
+
+    .main { padding: 16px; min-height: 480px; }
+    .frame.desktop .main {
+      padding: 20px 24px 28px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 16px;
+      align-items: start;
+    }
+    .frame.mobile .main { padding: 12px 12px 88px; }
+    .frame.mobile .rail { display: none; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--glass-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero { padding: 20px 22px 18px; }
+    .frame.mobile .hero { padding: 16px 14px 14px; }
+    .hero::before {
+      content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: 3px;
+      border-radius: 999px; background: #10b981;
+    }
+    .hero .lbl {
+      font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .hero .val {
+      font-size: 34px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; tabular-nums;
+    }
+    .frame.mobile .hero .val { font-size: 28px; }
+    .hero .row {
+      display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 12px;
+      font-size: 0.82rem; color: var(--muted);
+    }
+    .hero .up { color: #34d399; font-weight: 600; }
+    .twin { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .frame.mobile .twin { grid-template-columns: 1fr; }
+    .mini { padding: 14px 16px; }
+    .mini h3 { margin: 0 0 6px; font-size: 0.8rem; font-weight: 600; }
+    .mini p { margin: 0; font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+    .ctx-banner {
+      margin-bottom: 12px; padding: 10px 14px; border-radius: 14px;
+      border: 1px dashed rgba(154,174,209,.25);
+      background: rgba(255,255,255,0.02);
+      font-size: 0.78rem; color: var(--muted); line-height: 1.45;
+    }
+    .ctx-banner strong { color: var(--foreground); }
+    .rail .card { padding: 14px 16px; margin-bottom: 10px; }
+    .rail h3 { margin: 0 0 6px; font-size: 0.8rem; }
+    .rail p { margin: 0; font-size: 0.75rem; color: var(--muted); line-height: 1.4; }
+
+    .tabbar {
+      display: none;
+      position: sticky; bottom: 0; z-index: 40;
+      border-top: 1px solid var(--border);
+      background: rgba(8, 14, 24, 0.98);
+      backdrop-filter: blur(12px);
+      padding-bottom: var(--safe-bottom);
+    }
+    .frame.mobile .tabbar { display: flex; }
+    .tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 8px 4px 10px; color: var(--muted); font-size: 10px; font-weight: 500;
+      border: 0; background: transparent; cursor: pointer;
+    }
+    .tab svg { width: 20px; height: 20px; }
+    .tab.on { color: #34d399; }
+
+    .note {
+      margin-top: 14px; max-width: 1120px; margin-left: auto; margin-right: auto;
+      font-size: 0.8rem; color: var(--muted); line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="meta">
+      <a href="/mocks/nav-header-index.html">← Prioridades</a>
+      · <a href="/mocks/nav-header-b-jobs.html">B abstracto</a>
+      <h1>Jobs nav · high-fidelity (chrome actual)</h1>
+      <p>
+        Mobile: logo + search → jobs full-width → chips scroll. Sin fila Sync/Add (como el strip oculto en Home mobile hoy; Add vive en job Alta + tab Import).
+      </p>
+    </div>
+
+    <div class="toolbar-out">
+      <button type="button" class="on" data-vp="desktop">Desktop</button>
+      <button type="button" data-vp="mobile">Mobile</button>
+    </div>
+
+    <div class="frame desktop" id="frame">
+      <div class="feedback">Got feedback? Tap here — 30 seconds</div>
+
+      <header class="app-nav">
+        <div class="nav-inner">
+          <div class="nav-top-m">
+            <div class="logo">
+              <svg viewBox="0 0 32 32" aria-hidden="true">
+                <rect width="32" height="32" rx="7" fill="#0f172a"/>
+                <g transform="translate(16,16) rotate(45)">
+                  <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#10b981"/>
+                  <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#059669" transform="rotate(90)"/>
+                  <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#047857" transform="rotate(180)"/>
+                  <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#34d399" transform="rotate(270)"/>
+                </g>
+              </svg>
+              <span>trefolio</span>
+            </div>
+            <div class="actions">
+              <button class="icon-btn" type="button" title="Notifications"><span class="dot"></span>
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1"/></svg>
+              </button>
+              <div class="avatar">MS</div>
+            </div>
+          </div>
+
+          <div class="nav-row">
+            <div class="logo logo-desk">
+              <svg viewBox="0 0 32 32" aria-hidden="true">
+                <rect width="32" height="32" rx="7" fill="#0f172a"/>
+                <g transform="translate(16,16) rotate(45)">
+                  <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#10b981"/>
+                  <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#059669" transform="rotate(90)"/>
+                  <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#047857" transform="rotate(180)"/>
+                  <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#34d399" transform="rotate(270)"/>
+                </g>
+              </svg>
+              <span>trefolio</span>
+            </div>
+            <form class="search" role="search" onsubmit="return false">
+              <svg width="16" height="16" fill="none" stroke="#64748b" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M21 21l-5.2-5.2m0 0A7.5 7.5 0 105.2 5.2a7.5 7.5 0 0010.6 10.6z"/></svg>
+              <input type="search" placeholder="Search tickers, ETFs, crypto…" />
+              <button class="go" type="submit">Search</button>
+            </form>
+            <div class="actions actions-desk">
+              <button class="icon-btn" type="button" title="Notifications"><span class="dot"></span>
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1"/></svg>
+              </button>
+              <button class="icon-btn" type="button" title="Stealth">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
+              <button class="icon-btn" type="button" title="Theme">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+              </button>
+              <div class="avatar">MS</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cmd">
+          <div class="cmd-inner">
+            <div class="jobs" role="tablist" aria-label="Objetivo">
+              <button class="job" type="button" data-job="alta"><span class="jdot" style="background:#10b981"></span>Alta</button>
+              <button class="job on" type="button" data-job="evaluar"><span class="jdot" style="background:#38bdf8"></span>Evaluar</button>
+              <button class="job" type="button" data-job="descubrir"><span class="jdot" style="background:#f59e0b"></span>Descubrir</button>
+            </div>
+
+            <div class="chips" id="chips" aria-label="Herramientas del objetivo"></div>
+
+            <div class="cmd-bottom">
+              <button class="portfolio-sel" type="button">
+                Main portfolio
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div class="cmd-right">
+                <button class="ghost-btn icon" type="button" title="Settings">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </button>
+                <button class="ghost-btn" type="button" title="Sync">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  <span class="sync-label">Sync</span>
+                </button>
+                <button class="btn-primary" type="button">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="main">
+        <div>
+          <div class="ctx-banner" id="ctx-banner"></div>
+          <section class="card hero">
+            <div class="lbl">Portfolio total · EUR</div>
+            <div class="val">€128.420</div>
+            <div class="row">
+              <span class="up">▲ +€1.582 · +1,24% hoy</span>
+              <span>Invested €119.200</span>
+              <span>Cash €9.220</span>
+              <span>24 holdings</span>
+            </div>
+          </section>
+          <div class="twin">
+            <div class="card mini">
+              <h3>Movers</h3>
+              <p>ASML +3,1% · SAP −1,8% · AAPL +0,6%</p>
+            </div>
+            <div class="card mini">
+              <h3>Catalysts</h3>
+              <p>NVDA earnings mañana · ex-div ITX en 5d</p>
+            </div>
+          </div>
+          <div class="card mini" style="margin-top:10px">
+            <h3>Holdings</h3>
+            <p>Tabla / cards como hoy — el chrome de jobs no cambia el body de Home.</p>
+          </div>
+        </div>
+        <aside class="rail">
+          <div class="card">
+            <h3>Allocation</h3>
+            <p>Equity 72% · Funds 18% · Cash 10%</p>
+          </div>
+          <div class="card">
+            <h3>Warren</h3>
+            <p>Nudge diario — sin cambios vs Home v2.</p>
+          </div>
+        </aside>
+      </div>
+
+      <nav class="tabbar" aria-label="Mobile">
+        <button class="tab on" type="button">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Home
+        </button>
+        <button class="tab" type="button">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Portfolio
+        </button>
+        <button class="tab" type="button">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          Import
+        </button>
+        <button class="tab" type="button">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          Tools
+        </button>
+        <button class="tab" type="button">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          More
+        </button>
+      </nav>
+    </div>
+
+    <p class="note">
+      Mobile: logo + search → jobs full-width → chips scroll. Sin Sync/Add (Add en job Alta + tab Import).
+      Tab bar abajo como hoy.
+    </p>
+  </div>
+
+  <script>
+    const JOBS = {
+      alta: {
+        banner: "<strong>Alta</strong> — Import, search→add y alta manual. Add del strip sigue siendo el CTA primario.",
+        chips: [
+          { label: "+ Add", cls: "accent" },
+          { label: "Import", cls: "accent" },
+          { label: "Warren", cls: "" },
+        ],
+      },
+      evaluar: {
+        banner: "<strong>Evaluar</strong> — check-in diario. Home activo; Alertas con badge; Portfolio / Allocation a 1 tap.",
+        chips: [
+          { label: "Home", cls: "on sky" },
+          { label: "Alerts · 2", cls: "sky" },
+          { label: "Portfolio", cls: "" },
+          { label: "Allocation", cls: "" },
+          { label: "Tools", cls: "" },
+        ],
+      },
+      descubrir: {
+        banner: "<strong>Descubrir</strong> — research. Screener y Moat suben al strip.",
+        chips: [
+          { label: "Screener", cls: "warn" },
+          { label: "Moat", cls: "warn" },
+          { label: "Analysis", cls: "" },
+          { label: "Explore", cls: "" },
+        ],
+      },
+    };
+
+    function setJob(key) {
+      document.querySelectorAll(".job").forEach((b) => b.classList.toggle("on", b.dataset.job === key));
+      const job = JOBS[key];
+      document.getElementById("chips").innerHTML = job.chips
+        .map((c) => `<button class="chip ${c.cls}" type="button">${c.label}</button>`)
+        .join("");
+      document.getElementById("ctx-banner").innerHTML = job.banner;
+    }
+
+    document.querySelectorAll(".job").forEach((btn) => {
+      btn.addEventListener("click", () => setJob(btn.dataset.job));
+    });
+    setJob("evaluar");
+
+    const frame = document.getElementById("frame");
+    document.querySelectorAll("[data-vp]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-vp]").forEach((b) => b.classList.remove("on"));
+        btn.classList.add("on");
+        frame.className = "frame " + btn.dataset.vp;
+      });
+    });
+
+    // Open in mobile by default if narrow
+    if (window.matchMedia("(max-width: 640px)").matches) {
+      document.querySelector('[data-vp="mobile"]').click();
+    }
+  </script>
+</body>
+</html>

@@ -549,6 +549,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "display_invariants",
   "theme_studio_enabled",
   "import_broker_picker_enabled",
+  "jobs_nav",
 ]);
 
 export const featureFlagSchema = z.object({

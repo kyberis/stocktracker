@@ -19,6 +19,7 @@ Flags from `ALL_PLATFORM_FEATURES` in [`src/lib/db/settings.ts`](../../src/lib/d
 - `home_v2`
 - `import_broker_picker_enabled`
 - `investment_screening_enabled`
+- `jobs_nav`
 - `lifecycle_activation_email_enabled`
 - `lifecycle_winback_email_enabled`
 - `market_data_alpha_vantage`

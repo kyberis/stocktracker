@@ -85,6 +85,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [dashboard-shell](dashboard-shell.md) — the top-level dashboard container.
 - [dashboard-tabs](dashboard-tabs.md) — tabbed navigation within the dashboard.
 - [dashboard-toolbar](dashboard-toolbar.md) — toolbar with filters + portfolio selector.
+- [jobs-nav](jobs-nav.md) — command-strip goal switcher (Add / Review / Discover) behind `jobs_nav`.
 - [growth-tab](growth-tab.md) — projected-growth tab.
 - [market-and-cash](market-and-cash.md) — market / cash summary widget.
 - [metrics-tab](metrics-tab.md) — KPI metrics tab.

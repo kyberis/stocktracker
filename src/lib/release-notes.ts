@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.252",
+    version: "2.5.253",
     date: "2026-08-28",
     title: "Clover — one assistant",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Meet Clover, trefolio’s default AI assistant: one chat that orchestrates Warren (portfolio) and Clara (personal finance) behind the scenes. New users see only Clover; if you already used Warren, both stay available. Connect @cloveraiassistant_bot from Profile when configured — Telegram is Warren + Clara through Clover. If you don’t have Clara yet, Clover proposes creating your Clara space. Not financial advice.",
         translations: {
           es: "Conoce a Clover, el asistente IA por defecto de trefolio: un solo chat que orquesta a Warren (cartera) y Clara (finanzas personales) por detrás. Los usuarios nuevos solo ven Clover; si ya usabas Warren, siguen ambos. Conecta @cloveraiassistant_bot desde Perfil cuando esté configurado — en Telegram tienes Warren y Clara a través de Clover. Si aún no tienes Clara, Clover te propone crear tu espacio. No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.252",
+    date: "2026-08-28",
+    title: "Jobs navigation (flagged)",
+    titleTranslations: {
+      es: "Navegación por objetivo (con flag)",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Optional command-strip navigation by goal (Add / Review / Discover) with shortcuts for import, alerts, screener, and moat. Off by default behind jobs_nav. Not financial advice.",
+        translations: {
+          es: "Navegación opcional del command strip por objetivo (Alta / Evaluar / Descubrir) con accesos a importar, alertas, screener y moat. Desactivada por defecto detrás de jobs_nav. No es asesoramiento financiero.",
         },
       },
     ],

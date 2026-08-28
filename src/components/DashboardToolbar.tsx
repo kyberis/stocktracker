@@ -9,6 +9,8 @@ import { useTheme } from "@/lib/theme-context";
 import type { DashboardTab } from "@/lib/use-dashboard-tab-url";
 import DashboardTabBarQuickLinks, { type DashboardTabBarQuickVariant } from "./DashboardTabBarQuickLinks";
 import GlobalPortfolioSelector from "./GlobalPortfolioSelector";
+import JobsNavSwitcher from "./JobsNavSwitcher";
+import JobsNavChips from "./JobsNavChips";
 
 function AddMenu({
   onAddStock,
@@ -127,6 +129,12 @@ interface DashboardToolbarProps {
   onResetPortfolio?: () => void;
   /** Desktop dashboard shortcuts (Holdings, Tools, Views, …); when set, renders in this bar next to Sync / Add. */
   quickNav?: DashboardToolbarQuickNavProps;
+  /** Flag-gated jobs strip (Add / Review / Discover) replaces QuickLinks. */
+  jobsNav?: boolean;
+  /** Stack jobs + chips and hide Sync/Add/settings (mobile Home). */
+  compactMobile?: boolean;
+  /** Column layout for jobs switcher (viewport ≤640). */
+  stacked?: boolean;
 }
 
 export default function DashboardToolbar({
@@ -137,6 +145,9 @@ export default function DashboardToolbar({
   onOpenSettings,
   onResetPortfolio,
   quickNav,
+  jobsNav = false,
+  compactMobile = false,
+  stacked = false,
 }: DashboardToolbarProps) {
   const router = useRouter();
   const { isLoading, refreshQuotes } = usePortfolio();
@@ -180,27 +191,52 @@ export default function DashboardToolbar({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div
-          className={`flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 py-2 sm:gap-x-3 ${quickNav ? "justify-between" : "justify-end"}`}
+          className={
+            stacked
+              ? "flex min-w-0 flex-col gap-2 py-2"
+              : `flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 py-2 sm:gap-x-3 ${quickNav || jobsNav ? "justify-between" : "justify-end"}`
+          }
         >
-          {quickNav && (
-            <div className="flex min-w-0 flex-1 basis-0 items-center gap-2 sm:gap-3">
-              {layoutTheme !== "studio" && (
+          {jobsNav ? (
+            <div
+              className={
+                stacked
+                  ? "flex min-w-0 flex-col gap-2"
+                  : "flex min-w-0 flex-1 basis-0 items-center gap-2 sm:gap-3"
+              }
+            >
+              {!compactMobile && layoutTheme !== "studio" && (
                 <div className="shrink-0" data-tour="portfolio-switcher">
                   <GlobalPortfolioSelector />
                 </div>
               )}
-              <div className="min-w-0 flex-1">
-                <DashboardTabBarQuickLinks
-                  variant={quickNavVariant}
-                  activeTab={quickNav.activeTab}
-                  onSelectTab={quickNav.onSelectTab}
-                  holdingsCount={quickNav.holdingsCount}
-                  dataTestId={tabbarTestId}
-                  dataTour="tabs"
-                />
+              <JobsNavSwitcher stacked={stacked} />
+              <div className="min-w-0 w-full flex-1">
+                <JobsNavChips />
               </div>
             </div>
+          ) : (
+            quickNav && (
+              <div className="flex min-w-0 flex-1 basis-0 items-center gap-2 sm:gap-3">
+                {layoutTheme !== "studio" && (
+                  <div className="shrink-0" data-tour="portfolio-switcher">
+                    <GlobalPortfolioSelector />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <DashboardTabBarQuickLinks
+                    variant={quickNavVariant}
+                    activeTab={quickNav.activeTab}
+                    onSelectTab={quickNav.onSelectTab}
+                    holdingsCount={quickNav.holdingsCount}
+                    dataTestId={tabbarTestId}
+                    dataTour="tabs"
+                  />
+                </div>
+              </div>
+            )
           )}
+          {!compactMobile && (
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5" data-tour="actions">
           <button
             onClick={onOpenSettings}
@@ -252,6 +288,7 @@ export default function DashboardToolbar({
 
           <AddMenu onAddStock={onAddStock} onAddFund={onAddFund} onAddCrypto={onAddCrypto} onAddAsset={onAddAsset} />
           </div>
+          )}
         </div>
       </div>
     </div>

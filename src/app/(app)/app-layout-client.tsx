@@ -9,6 +9,7 @@ import { PlatformProvider } from "@/lib/platform-context";
 import { FeatureFlagProvider } from "@/lib/feature-flag-context";
 import { PortfolioProvider } from "@/lib/portfolio-context";
 import { PortfolioCommandProvider } from "@/contexts/portfolio-command-context";
+import { JobsNavProvider } from "@/contexts/jobs-nav-context";
 import { AgentChromeProvider } from "@/contexts/agent-chrome-context";
 import { useIsNative } from "@/lib/use-native";
 import NavigationProgress from "@/components/NavigationProgress";
@@ -267,10 +268,12 @@ export default function AppLayoutClient({
                 <StealthProvider>
                   <PortfolioProvider>
                     <PortfolioCommandProvider>
+                      <JobsNavProvider>
                       <AgentChromeProvider>
                       <NavigationProgress />
                       <AppShell>{children}</AppShell>
                       </AgentChromeProvider>
+                      </JobsNavProvider>
                     </PortfolioCommandProvider>
                   </PortfolioProvider>
                   <ThemeWizard />
