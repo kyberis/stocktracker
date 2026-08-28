@@ -1269,6 +1269,8 @@ const de: TranslationStrings = {
   alertEmailEnabled: "E-Mail-Benachrichtigungen für ausgelöste Alarme aktiviert.",
   alertEmailVerifyHint: "Verifizieren Sie Ihre E-Mail im Profil, um Alarm-E-Mails zu erhalten.",
   notificationChannels: "Benachrichtigungskanäle",
+  notificationCenterAlwaysOn:
+    "Triggered alerts and system messages always appear in the in-app notification center (bell). The channels below are optional extras.",
   emailNotificationsLabel: "E-Mail-Benachrichtigungen",
   emailNotificationsDesc: "Erhalten Sie Marketing- und Vorlagen-E-Mails. Transaktionale E-Mails (Verifizierung, Alarme) werden immer gesendet.",
   channelEmail: "E-Mail",
@@ -3521,6 +3523,20 @@ const de: TranslationStrings = {
   notifBrokerMarkGapMessage:
     "{0}: trefolio uses live market last prices, so the total can differ from your broker. Difference about €{1}. Informational only — not investment advice.",
   notifBrokerMarkGapCta: "View portfolio",
+  notifPriceAlertTitle: "{0} price alert",
+  notifPriceAlertAboveMessage:
+    "{0} rose above {1} {2} — now {1} {3}. Informational only — not investment advice.",
+  notifPriceAlertBelowMessage:
+    "{0} dropped below {1} {2} — now {1} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentUpTodayMessage:
+    "{0} is up {1}% today — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentDownTodayMessage:
+    "{0} is down {1}% today — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentUpSincePurchaseMessage:
+    "{0} is up {1}% since purchase — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentDownSincePurchaseMessage:
+    "{0} is down {1}% since purchase — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertCta: "View alerts",
   importDetectedBroker: "Detected: {broker}",
   calculatingPortfolioValue: "Calculating\u2026",
   calculatingPortfolioValueHint: "Fetching live prices for your holdings",

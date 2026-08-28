@@ -7,6 +7,7 @@ const {
   sendPushNotification,
   listPushSubscriptions,
   createDeviceNotification,
+  createNotification,
   getTelegramQuota,
   incrementTelegramCounter,
   isFeatureEnabled,
@@ -19,6 +20,7 @@ const {
   sendPushNotification: vi.fn(),
   listPushSubscriptions: vi.fn(),
   createDeviceNotification: vi.fn(),
+  createNotification: vi.fn(),
   getTelegramQuota: vi.fn(),
   incrementTelegramCounter: vi.fn(),
   isFeatureEnabled: vi.fn(),
@@ -40,6 +42,7 @@ vi.mock("@/lib/db", () => ({
   listPushSubscriptions,
   deletePushSubscription: vi.fn(),
   createDeviceNotification,
+  createNotification,
   getTelegramQuota,
   incrementTelegramCounter,
   isFeatureEnabled,
@@ -54,13 +57,14 @@ describe("dispatchAlert channels", () => {
     vi.clearAllMocks();
     sendAlertEmail.mockResolvedValue({ success: true });
     sendTelegramAlert.mockResolvedValue({ success: true });
+    createNotification.mockResolvedValue({ id: "n1" });
     isFeatureEnabled.mockResolvedValue(true);
     getTelegramQuota.mockResolvedValue({ allowed: true });
     listPushSubscriptions.mockResolvedValue([]);
     hasRecentFiredEmailDispatch.mockResolvedValue(false);
   });
 
-  it("sends only email when email is selected", async () => {
+  it("always writes to the in-app notification center even when only email is selected", async () => {
     const result = await dispatchAlert(
       {
         userId: "u1",
@@ -83,8 +87,44 @@ describe("dispatchAlert channels", () => {
 
     expect(sendAlertEmail).toHaveBeenCalledTimes(1);
     expect(sendTelegramAlert).not.toHaveBeenCalled();
-    expect(result.channelsSent).toEqual(["email"]);
+    expect(createNotification).toHaveBeenCalledTimes(1);
+    expect(createNotification).toHaveBeenCalledWith(
+      "u1",
+      expect.objectContaining({
+        type: "alert",
+        title: "i18n:notifPriceAlertTitle|AAPL",
+      }),
+    );
+    expect(result.channelsSent).toEqual(["in_app", "email"]);
     expect(result.channelsRequested).toEqual(["email"]);
+    expect(trackEvent).toHaveBeenCalledWith("u1", "alert_inapp_sent", { ticker: "AAPL" });
+  });
+
+  it("still delivers in-app when no optional channels are selected", async () => {
+    const result = await dispatchAlert(
+      {
+        userId: "u1",
+        email: "a@example.com",
+        emailVerified: true,
+        plan: "free",
+        alertChannels: [],
+        telegramChatId: "",
+      },
+      {
+        type: "threshold",
+        ticker: "MSFT",
+        name: "Microsoft",
+        condition: "below",
+        threshold: 100,
+        currentPrice: 90,
+        currency: "USD",
+      },
+    );
+
+    expect(createNotification).toHaveBeenCalledTimes(1);
+    expect(sendAlertEmail).not.toHaveBeenCalled();
+    expect(result.channelsSent).toEqual(["in_app"]);
+    expect(result.channelsRequested).toEqual([]);
   });
 
   it("sends email and telegram when both selected", async () => {
@@ -110,7 +150,7 @@ describe("dispatchAlert channels", () => {
 
     expect(sendAlertEmail).toHaveBeenCalledTimes(1);
     expect(sendTelegramAlert).toHaveBeenCalledTimes(1);
-    expect(result.channelsSent).toEqual(["email", "telegram"]);
+    expect(result.channelsSent).toEqual(["in_app", "email", "telegram"]);
   });
 
   it("skips telegram when not linked and does not invent whatsapp", async () => {

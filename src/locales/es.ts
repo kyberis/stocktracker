@@ -1279,6 +1279,8 @@ const es: TranslationStrings = {
   alertEmailEnabled: "Notificaciones por email activadas para alertas.",
   alertEmailVerifyHint: "Verifica tu email en Perfil para recibir alertas por correo.",
   notificationChannels: "Canales de Notificación",
+  notificationCenterAlwaysOn:
+    "Las alertas activadas y los avisos del sistema siempre aparecen en el centro de notificaciones (campana). Los canales de abajo son extras opcionales.",
   emailNotificationsLabel: "Notificaciones por Email",
   emailNotificationsDesc: "Recibe emails de marketing y plantillas. Los emails transaccionales (verificación, alertas) siempre se envían.",
   channelEmail: "Email",
@@ -3718,6 +3720,20 @@ const es: TranslationStrings = {
   notifBrokerMarkGapMessage:
     "{0}: trefolio usa el último precio de mercado, así que el total puede diferir del bróker. Diferencia de unos €{1}. Solo informativo — no es un consejo de inversión.",
   notifBrokerMarkGapCta: "Ver cartera",
+  notifPriceAlertTitle: "Alerta de precio {0}",
+  notifPriceAlertAboveMessage:
+    "{0} subió por encima de {1} {2} — ahora {1} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertBelowMessage:
+    "{0} bajó por debajo de {1} {2} — ahora {1} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertPercentUpTodayMessage:
+    "{0} sube un {1}% hoy — ahora {2} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertPercentDownTodayMessage:
+    "{0} baja un {1}% hoy — ahora {2} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertPercentUpSincePurchaseMessage:
+    "{0} sube un {1}% desde la compra — ahora {2} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertPercentDownSincePurchaseMessage:
+    "{0} baja un {1}% desde la compra — ahora {2} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertCta: "Ver alertas",
   importDetectedBroker: "Detected: {broker}",
 };
 
