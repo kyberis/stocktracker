@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-337 routes.
+336 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -227,7 +227,6 @@
 | `/api/holdings/ai-classify` | POST | [`src/app/api/holdings/ai-classify/route.ts`](../../src/app/api/holdings/ai-classify/route.ts) |
 | `/api/holdings/autofill-classification` | POST | [`src/app/api/holdings/autofill-classification/route.ts`](../../src/app/api/holdings/autofill-classification/route.ts) |
 | `/api/holdings/normalize-classifications` | POST | [`src/app/api/holdings/normalize-classifications/route.ts`](../../src/app/api/holdings/normalize-classifications/route.ts) |
-| `/api/home-v2/analyst-targets` | GET | [`src/app/api/home-v2/analyst-targets/route.ts`](../../src/app/api/home-v2/analyst-targets/route.ts) |
 | `/api/home-v2/bootstrap` | GET | [`src/app/api/home-v2/bootstrap/route.ts`](../../src/app/api/home-v2/bootstrap/route.ts) |
 | `/api/home-v2/day-highlights` | GET | [`src/app/api/home-v2/day-highlights/route.ts`](../../src/app/api/home-v2/day-highlights/route.ts) |
 | `/api/home-v2/diversify-research` | GET | [`src/app/api/home-v2/diversify-research/route.ts`](../../src/app/api/home-v2/diversify-research/route.ts) |
