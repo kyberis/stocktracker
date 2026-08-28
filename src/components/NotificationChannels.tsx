@@ -218,6 +218,7 @@ export default function NotificationChannels() {
   return (
     <div className="card p-6 space-y-4">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("notificationChannels")}</h2>
+      <p className="text-xs text-gray-500 dark:text-slate-400 -mt-2">{t("notificationCenterAlwaysOn")}</p>
 
       <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-slate-700">
         <div className="flex items-center gap-3">

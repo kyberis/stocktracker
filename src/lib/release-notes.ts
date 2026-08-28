@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.256",
+    version: "2.5.263",
     date: "2026-08-28",
     title: "Warren Berkshire valuation",
     titleTranslations: {
@@ -29,6 +29,139 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Warren can value Berkshire again when the ticker is BRK.B (FMP) vs BRK-B (Yahoo), and searches the web for insider / Form 4 / buyback questions instead of saying he has no data.",
         translations: {
           es: "Warren vuelve a poder valorar Berkshire con BRK.B (FMP) o BRK-B (Yahoo), y busca en la web preguntas de insider / Form 4 / recompras en lugar de decir que no tiene datos.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.262",
+    date: "2026-08-28",
+    title: "Pizarra is not a notification",
+    titleTranslations: {
+      es: "La Pizarra no es una notificación",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Pizarra is not under Profile → Notifications. Set it up on /widget/setup; the widget auto-arms when you select Pizarra or refresh with your token. If Warren has nothing new, it shows the last note or “Nothing new in the market for your holdings.” Not financial advice.",
+        translations: {
+          es: "La Pizarra ya no está en Perfil → Notificaciones. Configúrala en /widget/setup; el widget se activa al elegir Pizarra o al refrescar con tu token. Si Warren no tiene nada nuevo, muestra la última nota o “Nothing new in the market for your holdings.” No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.261",
+    date: "2026-08-28",
+    title: "Alerts always in the notification center",
+    titleTranslations: {
+      es: "Las alertas siempre en el centro de notificaciones",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Fired price alerts always appear in the in-app notification center (bell), in addition to any email, push, Telegram, or device channels you enable. Optional channel prefs no longer gate the in-app copy.",
+        translations: {
+          es: "Las alertas de precio activadas siempre aparecen en el centro de notificaciones (campana), además de los canales de email, push, Telegram o dispositivo que tengas activados. Las preferencias de canal opcionales ya no bloquean la copia in-app.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.260",
+    date: "2026-08-28",
+    title: "Pizarra is Scriptable-only",
+    titleTranslations: {
+      es: "Pizarra solo en Scriptable",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Pizarra no longer appears on Home — it is only the Scriptable home-screen widget on /widget/setup. Enable it under Profile → Notifications. Not financial advice.",
+        translations: {
+          es: "La Pizarra ya no aparece en Home: solo es el widget Scriptable de pantalla de inicio en /widget/setup. Actívala en Perfil → Notificaciones. No es asesoramiento financiero.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Slimmed Pizarra code: dropped unused read/dismiss APIs, Home chips/i18n, and chip prompts; batched context-key dedupe; shared cron/refresh compose path.",
+        translations: {
+          es: "Se redujo el código de Pizarra: sin APIs read/dismiss, chips/i18n de Home ni chip prompts; dedupe de context-key en un query; compose compartido entre cron y refresh.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.259",
+    date: "2026-08-28",
+    title: "Pizarra on the home screen",
+    titleTranslations: {
+      es: "Pizarra en la pantalla de inicio",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Pizarra is now a Scriptable home-screen widget on /widget/setup (Small, Medium, or Large). Uses your existing widget token; enable the board in Home first. Not financial advice.",
+        translations: {
+          es: "La Pizarra ahora es un widget de pantalla de inicio Scriptable en /widget/setup (pequeño, mediano o grande). Usa tu token de widget existente; activa la pizarra en Home primero. No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.258",
+    date: "2026-08-28",
+    title: "Agent board (Pizarra)",
+    titleTranslations: {
+      es: "Pizarra de agentes",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "New opt-in Home Pizarra widget: Warren and Clara post AI-picked updates from your portfolio news, movers, catalysts, alerts, FinPulse, recommendations, market digests, and Clara savings — with history so messages do not repeat. Runs on a cron only when the board is enabled. Not financial advice.",
+        translations: {
+          es: "Nueva Pizarra opt-in en Home: Warren y Clara publican avisos elegidos por IA a partir de noticias de tu cartera, movimientos, catalizadores, alertas, FinPulse, recomendaciones, resúmenes de mercado y ahorros en Clara — con historial para no repetir mensajes. Solo corre en cron si la pizarra está activada. No es asesoramiento financiero.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Pizarra cron piggybacks on check-alerts (every 15 minutes) instead of a separate Vercel cron; the standalone route remains for manual runs.",
+        translations: {
+          es: "El cron de Pizarra se ejecuta junto a check-alerts (cada 15 minutos) en lugar de un cron Vercel aparte; la ruta independiente sigue disponible para ejecuciones manuales.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.257",
+    date: "2026-08-28",
+    title: "Clara month balance on Home",
+    titleTranslations: {
+      es: "Balance del mes de Clara en Home",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The Home money desk Clara pulse now shows month balance (income minus planned expenses) instead of emergency-fund surplus. Setup and on-track states replace ambiguous €0.00. Safe surplus still powers the Warren handoff.",
+        translations: {
+          es: "El pulso de Clara en la mesa de dinero de Home muestra el balance del mes (ingresos menos gastos planificados) en lugar del superávit del colchón. Los estados de configuración y en equilibrio sustituyen el €0,00 ambiguo. El superávit seguro sigue alimentando el handoff de Warren.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.256",
+    date: "2026-08-28",
+    title: "Money desk behind a flag",
+    titleTranslations: {
+      es: "Mesa de dinero detrás de un flag",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The Home Warren × Clara money desk is gated by feature flag home_money_desk (off by default). When off, separate Warren and Clara cards stay on Home.",
+        translations: {
+          es: "La mesa de dinero Warren × Clara en Home queda detrás del feature flag home_money_desk (apagado por defecto). Si está off, Home sigue con las tarjetas separadas de Warren y Clara.",
         },
       },
     ],

@@ -10,6 +10,7 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 |-------|--------------------|
 | `accounts` | [`src/lib/db/accounts.ts`](../../src/lib/db/accounts.ts) |
 | `acquisition_decision_memos` | [`src/lib/db/channel-spend.ts`](../../src/lib/db/channel-spend.ts) |
+| `agent_board_messages` | [`src/lib/db/agent-board.ts`](../../src/lib/db/agent-board.ts) |
 | `agent_missions` | [`src/lib/db/agent-office.ts`](../../src/lib/db/agent-office.ts) |
 | `agent_office_messages` | [`src/lib/db/agent-office.ts`](../../src/lib/db/agent-office.ts) |
 | `ai_logs` | [`src/lib/db/ai-logs.ts`](../../src/lib/db/ai-logs.ts) |
@@ -112,9 +113,9 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `unsubscribe_tokens` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `user_connections` | [`src/lib/db/feed.ts`](../../src/lib/db/feed.ts) |
 | `user_return_watches` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
-| `user_settings` | [`src/lib/db/aid-user-state.ts`](../../src/lib/db/aid-user-state.ts) |
+| `user_settings` | [`src/lib/db/agent-board.ts`](../../src/lib/db/agent-board.ts) |
 | `user_settings_new` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
-| `users` | [`src/lib/db/ai-logs.ts`](../../src/lib/db/ai-logs.ts) |
+| `users` | [`src/lib/db/agent-board.ts`](../../src/lib/db/agent-board.ts) |
 | `watchlist` | [`src/lib/db/email-template-seeds.ts`](../../src/lib/db/email-template-seeds.ts) |
 | `weekly_digests` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `widget_tokens` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |

@@ -1269,6 +1269,8 @@ const fr: TranslationStrings = {
   alertEmailEnabled: "Notifications par e-mail activées pour les alertes déclenchées.",
   alertEmailVerifyHint: "Vérifiez votre e-mail dans le Profil pour recevoir les alertes par e-mail.",
   notificationChannels: "Canaux de notification",
+  notificationCenterAlwaysOn:
+    "Triggered alerts and system messages always appear in the in-app notification center (bell). The channels below are optional extras.",
   emailNotificationsLabel: "Notifications par email",
   emailNotificationsDesc: "Recevez des emails marketing et des modèles. Les emails transactionnels (vérification, alertes) sont toujours envoyés.",
   channelEmail: "Email",
@@ -3521,6 +3523,20 @@ const fr: TranslationStrings = {
   notifBrokerMarkGapMessage:
     "{0}: trefolio uses live market last prices, so the total can differ from your broker. Difference about €{1}. Informational only — not investment advice.",
   notifBrokerMarkGapCta: "View portfolio",
+  notifPriceAlertTitle: "{0} price alert",
+  notifPriceAlertAboveMessage:
+    "{0} rose above {1} {2} — now {1} {3}. Informational only — not investment advice.",
+  notifPriceAlertBelowMessage:
+    "{0} dropped below {1} {2} — now {1} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentUpTodayMessage:
+    "{0} is up {1}% today — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentDownTodayMessage:
+    "{0} is down {1}% today — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentUpSincePurchaseMessage:
+    "{0} is up {1}% since purchase — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertPercentDownSincePurchaseMessage:
+    "{0} is down {1}% since purchase — now {2} {3}. Informational only — not investment advice.",
+  notifPriceAlertCta: "View alerts",
   importDetectedBroker: "Detected: {broker}",
   calculatingPortfolioValue: "Calculating\u2026",
   calculatingPortfolioValueHint: "Fetching live prices for your holdings",
@@ -3570,8 +3586,11 @@ const fr: TranslationStrings = {
   homeMoneyDeskTitle: "Your money desk",
   homeMoneyDeskSubtitle: "Warren watches markets · Clara watches everyday spending · together, your real capacity",
   homeMoneyDeskDuo: "Duo",
-  homeMoneyDeskPulseLabel: "Markets today and month surplus",
+  homeMoneyDeskPulseLabel: "Markets today and month balance",
   homeMoneyDeskMarketsToday: "Markets today",
+  homeMoneyDeskMonthBalance: "Month balance",
+  homeMoneyDeskClaraSetupMonth: "Set up this month in Clara",
+  homeMoneyDeskMonthOnTrack: "On track",
   homeMoneyDeskSurplusMonth: "Month surplus",
   homeMoneyDeskNoPortfolio: "No portfolio yet",
   homeMoneyDeskWarrenRole: "Portfolio & markets",
@@ -3587,7 +3606,7 @@ const fr: TranslationStrings = {
   homeMoneyDeskClaraCreateCta: "Create Clara account",
   homeMoneyDeskHandoffLabel: "Handoff:",
   homeMoneyDeskHandoffSurplus:
-    "Warren used Clara's summary — with this month's surplus ({amount}) you could add to the portfolio without touching the emergency cushion. Not financial advice.",
+    "Warren used Clara's summary — with this safe surplus ({amount}) you could add to the portfolio without touching the emergency cushion. Not financial advice.",
   homeMoneyDeskHandoffAddFirst:
     "Clara is ready. Add your first stock so Warren can relate markets to your everyday surplus.",
   homeMoneyDeskDisclaimer: "AI-generated help. Not financial advice.",

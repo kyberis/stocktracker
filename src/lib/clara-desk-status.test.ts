@@ -6,6 +6,7 @@ import {
   mapClaraSavingsToDeskStatus,
   parseClaraDeskStatus,
   remainingDaysInMonth,
+  resolveClaraPulseDisplay,
   resolveMoneyDeskHandoff,
 } from "./clara-desk-status";
 
@@ -24,6 +25,8 @@ describe("mapClaraSavingsToDeskStatus", () => {
       dayOfMonth: 16,
       daysInMonth: 28,
       monthBalance: 120,
+      hasMonthRecord: true,
+      remainingExpenses: 300,
     };
     expect(mapClaraSavingsToDeskStatus(clara)).toEqual({
       linked: true,
@@ -32,6 +35,8 @@ describe("mapClaraSavingsToDeskStatus", () => {
       dayOfMonth: 16,
       daysInMonth: 28,
       monthBalance: 120,
+      hasMonthRecord: true,
+      remainingExpenses: 300,
     });
   });
 
@@ -55,6 +60,8 @@ describe("parseClaraDeskStatus", () => {
         dayOfMonth: 2,
         daysInMonth: 30,
         monthBalance: 10,
+        hasMonthRecord: true,
+        remainingExpenses: 50,
       }),
     ).toEqual({
       linked: true,
@@ -63,6 +70,8 @@ describe("parseClaraDeskStatus", () => {
       dayOfMonth: 2,
       daysInMonth: 30,
       monthBalance: 10,
+      hasMonthRecord: true,
+      remainingExpenses: 50,
     });
   });
 
@@ -93,6 +102,41 @@ describe("resolveMoneyDeskHandoff", () => {
 
   it("is silent when both are empty", () => {
     expect(resolveMoneyDeskHandoff({ hasHoldings: false, linked: false })).toBeNull();
+  });
+});
+
+describe("resolveClaraPulseDisplay", () => {
+  it("returns unlinked when Clara is not linked", () => {
+    expect(resolveClaraPulseDisplay(null)).toEqual({ kind: "unlinked", tone: "neutral" });
+    expect(resolveClaraPulseDisplay({ linked: false })).toEqual({ kind: "unlinked", tone: "neutral" });
+  });
+
+  it("returns setup when linked but month is not configured", () => {
+    expect(resolveClaraPulseDisplay({ linked: true, hasMonthRecord: false })).toEqual({
+      kind: "setup",
+      tone: "neutral",
+    });
+    expect(resolveClaraPulseDisplay({ linked: true })).toEqual({ kind: "setup", tone: "neutral" });
+  });
+
+  it("returns balance tones for positive, zero, and negative month balance", () => {
+    expect(
+      resolveClaraPulseDisplay({ linked: true, hasMonthRecord: true, monthBalance: 120 }),
+    ).toEqual({ kind: "balance", value: 120, tone: "positive" });
+    expect(
+      resolveClaraPulseDisplay({ linked: true, hasMonthRecord: true, monthBalance: 0 }),
+    ).toEqual({ kind: "zero", value: 0, tone: "neutral" });
+    expect(
+      resolveClaraPulseDisplay({ linked: true, hasMonthRecord: true, monthBalance: -45 }),
+    ).toEqual({ kind: "balance", value: -45, tone: "negative" });
+  });
+
+  it("infers month record from monthBalance when hasMonthRecord is omitted", () => {
+    expect(resolveClaraPulseDisplay({ linked: true, monthBalance: 25 })).toEqual({
+      kind: "balance",
+      value: 25,
+      tone: "positive",
+    });
   });
 });
 

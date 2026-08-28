@@ -197,7 +197,7 @@ export interface DeviceNotification {
   createdAt: string;
 }
 
-export type NotificationType = "welcome" | "upgrade" | "downgrade" | "admin" | "info";
+export type NotificationType = "welcome" | "upgrade" | "downgrade" | "admin" | "info" | "alert";
 
 export interface AppNotification {
   id: string;
@@ -726,6 +726,15 @@ export interface AidStatusPayload {
     prompt: string;
   } | null;
 }
+
+/* ── Agent board (Pizarra) ─────────────────────────────────── */
+
+export type {
+  AgentBoardAgent,
+  AgentBoardKind,
+  AgentBoardMessage,
+  AgentBoardSignal,
+} from "@/lib/agent-board/types";
 
 /* ── Alpha Intelligence types ──────────────────────────────── */
 

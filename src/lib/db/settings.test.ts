@@ -39,6 +39,7 @@ const DEFAULT_SETTINGS = {
   defaultCurrency: "EUR",
   emailNotificationsEnabled: true,
   favoriteToolIds: [] as string[],
+  agentBoardEnabled: false,
 };
 
 const settingsRow = {
@@ -65,7 +66,7 @@ describe("settings", () => {
       const result = await settings.getUserSettings("u1");
 
       expect(mockExecute).toHaveBeenNthCalledWith(1, {
-        sql: "SELECT language, refresh_interval, alert_channels, telegram_chat_id, telegram_link_token, telegram_link_expires_at, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids FROM user_settings WHERE user_id = ?",
+        sql: "SELECT language, refresh_interval, alert_channels, telegram_chat_id, telegram_link_token, telegram_link_expires_at, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids, agent_board_enabled FROM user_settings WHERE user_id = ?",
         args: ["u1"],
       });
       expect(mockExecute).toHaveBeenNthCalledWith(2, {
@@ -81,7 +82,7 @@ describe("settings", () => {
       const result = await settings.getUserSettings("u1");
 
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT language, refresh_interval, alert_channels, telegram_chat_id, telegram_link_token, telegram_link_expires_at, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids FROM user_settings WHERE user_id = ?",
+        sql: "SELECT language, refresh_interval, alert_channels, telegram_chat_id, telegram_link_token, telegram_link_expires_at, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids, agent_board_enabled FROM user_settings WHERE user_id = ?",
         args: ["u1"],
       });
       expect(result).toEqual(DEFAULT_SETTINGS);
@@ -117,6 +118,7 @@ describe("settings", () => {
         defaultCurrency: "USD",
         emailNotificationsEnabled: true,
         favoriteToolIds: [],
+        agentBoardEnabled: false,
       });
     });
 
@@ -166,7 +168,7 @@ describe("settings", () => {
       expect(mockExecute).toHaveBeenCalledTimes(2);
       expect(mockExecute).toHaveBeenNthCalledWith(2, {
         sql: expect.stringContaining("UPDATE user_settings SET"),
-        args: expect.arrayContaining(["es", 30, "email", "", "", "", 0, "default", "EUR", 1, "[]", "u1"]),
+        args: expect.arrayContaining(["es", 30, "email", "", "", "", 0, "default", "EUR", 1, "[]", 0, "u1"]),
       });
       expect(result).toMatchObject({
         language: "es",
@@ -439,8 +441,15 @@ describe("settings", () => {
           "mcp_fmp_proxy",
           "import_broker_picker_enabled",
           "jobs_nav",
+          "home_money_desk",
         ]),
       );
+    });
+
+    it("defaults home_money_desk off", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      expect(await settings.isFeatureEnabled("home_money_desk")).toBe(false);
     });
   });
 

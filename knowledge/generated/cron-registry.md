@@ -36,3 +36,4 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `screening-recover` | `*/5 * * * *` | `/api/cron/screening-recover` | Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain |
 | `re-zona-sync` | `0 4 1 1,4,7,10 *` | `/api/cron/re-zona-sync` | Sync Portugal INE geography catalogue (sale/rent coverage flags) for real-estate zone screening |
 | `re-screening-recover` | `*/5 * * * *` | `/api/cron/re-screening-recover` | Real-estate zone screening: recover expired step leases and drain pending phases |
+| `agent-board` | **paused** (was `*/15 * * * *`) | `/api/cron/agent-board` | Compose proactive Warren/Clara Pizarra messages from portfolio news, movers, catalysts, alerts, and Clara savings; piggybacks on check-alerts (Vercel cron cap) |

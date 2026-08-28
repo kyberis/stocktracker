@@ -212,6 +212,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
       "Replaces command-strip quick links with a goal switcher (Add / Review / Discover) and contextual chips. Off by default — enable for admins first. Studio theme unchanged.",
     group: "Features",
   },
+  home_money_desk: {
+    label: "Home money desk (Warren × Clara)",
+    description:
+      "On Home, replaces separate Warren and Clara cards with the money desk (day P&L × month surplus, agent tiles, Clara onboarding). Off by default — enable for admins first.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

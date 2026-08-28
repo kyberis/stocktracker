@@ -550,6 +550,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "theme_studio_enabled",
   "import_broker_picker_enabled",
   "jobs_nav",
+  "home_money_desk",
 ]);
 
 export const featureFlagSchema = z.object({

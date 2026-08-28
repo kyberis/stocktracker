@@ -1279,6 +1279,8 @@ const es: TranslationStrings = {
   alertEmailEnabled: "Notificaciones por email activadas para alertas.",
   alertEmailVerifyHint: "Verifica tu email en Perfil para recibir alertas por correo.",
   notificationChannels: "Canales de Notificación",
+  notificationCenterAlwaysOn:
+    "Las alertas activadas y los avisos del sistema siempre aparecen en el centro de notificaciones (campana). Los canales de abajo son extras opcionales.",
   emailNotificationsLabel: "Notificaciones por Email",
   emailNotificationsDesc: "Recibe emails de marketing y plantillas. Los emails transaccionales (verificación, alertas) siempre se envían.",
   channelEmail: "Email",
@@ -3252,8 +3254,11 @@ const es: TranslationStrings = {
   homeMoneyDeskTitle: "Tu mesa de dinero",
   homeMoneyDeskSubtitle: "Warren mira mercados · Clara mira el día a día · juntos, tu capacidad real",
   homeMoneyDeskDuo: "Dúo",
-  homeMoneyDeskPulseLabel: "Mercados de hoy y superávit del mes",
+  homeMoneyDeskPulseLabel: "Mercados de hoy y balance del mes",
   homeMoneyDeskMarketsToday: "Mercados hoy",
+  homeMoneyDeskMonthBalance: "Balance del mes",
+  homeMoneyDeskClaraSetupMonth: "Configura el mes en Clara",
+  homeMoneyDeskMonthOnTrack: "En equilibrio",
   homeMoneyDeskSurplusMonth: "Superávit mes",
   homeMoneyDeskNoPortfolio: "Sin cartera aún",
   homeMoneyDeskWarrenRole: "Cartera y mercados",
@@ -3269,7 +3274,7 @@ const es: TranslationStrings = {
   homeMoneyDeskClaraCreateCta: "Crear cuenta en Clara",
   homeMoneyDeskHandoffLabel: "Handoff:",
   homeMoneyDeskHandoffSurplus:
-    "Warren usó el resumen de Clara — con este superávit del mes ({amount}) podrías aportar a la cartera sin tocar el colchón. No es asesoramiento financiero.",
+    "Warren usó el resumen de Clara — con este superávit seguro ({amount}) podrías aportar a la cartera sin tocar el colchón. No es asesoramiento financiero.",
   homeMoneyDeskHandoffAddFirst:
     "Clara está lista. Añade tu primera acción para que Warren relacione mercados con tu superávit cotidiano.",
   homeMoneyDeskDisclaimer: "Ayuda generada por IA. No es asesoramiento financiero.",
@@ -3713,6 +3718,20 @@ const es: TranslationStrings = {
   notifBrokerMarkGapMessage:
     "{0}: trefolio usa el último precio de mercado, así que el total puede diferir del bróker. Diferencia de unos €{1}. Solo informativo — no es un consejo de inversión.",
   notifBrokerMarkGapCta: "Ver cartera",
+  notifPriceAlertTitle: "Alerta de precio {0}",
+  notifPriceAlertAboveMessage:
+    "{0} subió por encima de {1} {2} — ahora {1} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertBelowMessage:
+    "{0} bajó por debajo de {1} {2} — ahora {1} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertPercentUpTodayMessage:
+    "{0} sube un {1}% hoy — ahora {2} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertPercentDownTodayMessage:
+    "{0} baja un {1}% hoy — ahora {2} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertPercentUpSincePurchaseMessage:
+    "{0} sube un {1}% desde la compra — ahora {2} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertPercentDownSincePurchaseMessage:
+    "{0} baja un {1}% desde la compra — ahora {2} {3}. Solo informativo — no es un consejo de inversión.",
+  notifPriceAlertCta: "Ver alertas",
   importDetectedBroker: "Detected: {broker}",
 };
 
