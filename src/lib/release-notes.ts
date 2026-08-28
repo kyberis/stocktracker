@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.259",
+    date: "2026-08-28",
+    title: "Pizarra on the home screen",
+    titleTranslations: {
+      es: "Pizarra en la pantalla de inicio",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Pizarra is now a Scriptable home-screen widget on /widget/setup (Small, Medium, or Large). Uses your existing widget token; enable the board in Home first. Not financial advice.",
+        translations: {
+          es: "La Pizarra ahora es un widget de pantalla de inicio Scriptable en /widget/setup (pequeño, mediano o grande). Usa tu token de widget existente; activa la pizarra en Home primero. No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.258",
     date: "2026-08-28",
     title: "Agent board (Pizarra)",
@@ -36,13 +53,6 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Pizarra cron piggybacks on check-alerts (every 15 minutes) instead of a separate Vercel cron; the standalone route remains for manual runs.",
         translations: {
           es: "El cron de Pizarra se ejecuta junto a check-alerts (cada 15 minutos) en lugar de un cron Vercel aparte; la ruta independiente sigue disponible para ejecuciones manuales.",
-        },
-      },
-      {
-        type: "improvement",
-        text: "Pizarra is now a Scriptable home-screen widget on /widget/setup (Small, Medium, or Large). Uses your existing widget token; enable the board in Home first. Not financial advice.",
-        translations: {
-          es: "La Pizarra ahora es un widget de pantalla de inicio Scriptable en /widget/setup (pequeño, mediano o grande). Usa tu token de widget existente; activa la pizarra en Home primero. No es asesoramiento financiero.",
         },
       },
     ],
