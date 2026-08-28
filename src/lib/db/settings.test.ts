@@ -438,6 +438,7 @@ describe("settings", () => {
           "lifecycle_winback_email_enabled",
           "mcp_fmp_proxy",
           "import_broker_picker_enabled",
+          "jobs_nav",
         ]),
       );
     });

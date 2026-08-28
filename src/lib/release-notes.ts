@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.252",
+    date: "2026-08-28",
+    title: "Jobs navigation (flagged)",
+    titleTranslations: {
+      es: "Navegación por objetivo (con flag)",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Optional command-strip navigation by goal (Add / Review / Discover) with shortcuts for import, alerts, screener, and moat. Off by default behind jobs_nav. Not financial advice.",
+        translations: {
+          es: "Navegación opcional del command strip por objetivo (Alta / Evaluar / Descubrir) con accesos a importar, alertas, screener y moat. Desactivada por defecto detrás de jobs_nav. No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.251",
     date: "2026-08-28",
     title: "Global agent dock",

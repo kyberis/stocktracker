@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>trefolio · Nav A · Toolkit header</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --bg2: #111a2b;
+      --card: #152033;
+      --border: rgba(148, 163, 184, 0.18);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --sky: #38bdf8;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: radial-gradient(1200px 600px at 70% -10%, #1a2740 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .page { max-width: 1220px; margin: 0 auto; padding: 24px 18px 56px; }
+    a.back { color: #6ee7b7; text-decoration: none; font-size: 0.8rem; font-weight: 600; }
+    h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; margin: 10px 0 6px; }
+    .lead { color: var(--muted); font-size: 0.92rem; line-height: 1.5; max-width: 70ch; margin: 0 0 18px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700;
+      background: rgba(16,185,129,.14); border: 1px solid rgba(16,185,129,.35); color: #6ee7b7;
+      margin-bottom: 8px;
+    }
+    .priorities {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0 0 22px;
+    }
+    @media (max-width: 900px) { .priorities { grid-template-columns: 1fr; } }
+    .prio {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 14px 12px;
+    }
+    .prio h3 { margin: 0 0 8px; font-size: 0.88rem; display: flex; align-items: center; gap: 8px; }
+    .prio .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .prio ol { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.8rem; line-height: 1.55; }
+    .prio ol strong { color: var(--text); font-weight: 600; }
+    .layout { display: grid; grid-template-columns: 1.45fr 0.85fr; gap: 18px; align-items: start; }
+    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+    .stage-wrap {
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,.35);
+    }
+    .stage-toolbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 14px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,.18);
+    }
+    .dots { display: flex; gap: 6px; }
+    .dots span { width: 9px; height: 9px; border-radius: 50%; background: #334155; }
+    .viewport-toggle {
+      display: flex; gap: 4px; background: rgba(255,255,255,.04); border-radius: 10px; padding: 3px;
+    }
+    .viewport-toggle button {
+      border: 0; background: transparent; color: var(--muted); font-size: 0.75rem; font-weight: 600;
+      padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    }
+    .viewport-toggle button.on { background: rgba(255,255,255,.08); color: var(--text); }
+    .stage {
+      position: relative; height: 560px; margin: 0 auto;
+      background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
+      overflow: hidden; transition: width .25s ease;
+    }
+    .stage.desktop { width: 100%; }
+    .stage.mobile { width: 375px; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+
+    /* ——— Desktop chrome ——— */
+    .d-header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(10px);
+    }
+    .d-row1 {
+      display: flex; align-items: center; gap: 14px; padding: 10px 16px;
+    }
+    .logo { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .logo-mark {
+      width: 28px; height: 28px; border-radius: 8px; background: #0f172a;
+      display: grid; place-items: center; border: 1px solid rgba(16,185,129,.35);
+      color: var(--emerald); font-weight: 800; font-size: 0.7rem;
+    }
+    .logo-word { font-weight: 700; font-size: 0.95rem; }
+    .search {
+      flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
+      height: 40px; padding: 0 12px; border-radius: 12px;
+      border: 1px solid var(--border); background: rgba(255,255,255,.04);
+      color: var(--muted); font-size: 0.82rem;
+    }
+    .search kbd {
+      margin-left: auto; font-size: 0.68rem; padding: 2px 6px; border-radius: 6px;
+      border: 1px solid var(--border); color: var(--muted);
+    }
+    .tool-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .tool-btn {
+      display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 11px;
+      border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,.03);
+      color: var(--text); font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space:nowrap;
+    }
+    .tool-btn:hover { background: rgba(255,255,255,.06); }
+    .tool-btn.alert { position: relative; }
+    .tool-btn.alert::after {
+      content: "2"; position: absolute; top: -4px; right: -4px;
+      width: 16px; height: 16px; border-radius: 50%; background: #ef4444;
+      font-size: 0.62rem; display: grid; place-items: center; font-weight: 700;
+    }
+    .tool-btn.primary {
+      background: rgba(16,185,129,.18); border-color: rgba(16,185,129,.45); color: #6ee7b7;
+    }
+    .icon-only {
+      width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+      background: rgba(255,255,255,.03); display: grid; place-items: center; color: var(--muted);
+    }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%; background: #1e293b;
+      display: grid; place-items: center; font-size: 0.7rem; font-weight: 700; color: #94a3b8;
+      border: 1px solid var(--border);
+    }
+    .d-row2 {
+      display: flex; align-items: center; gap: 6px; padding: 6px 16px 10px;
+      border-top: 1px solid rgba(148,163,184,.08);
+      overflow-x: auto;
+    }
+    .pill {
+      height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid transparent;
+      background: transparent; color: var(--muted); font-size: 0.75rem; font-weight: 600;
+      white-space: nowrap; cursor: pointer;
+    }
+    .pill.on {
+      border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.12); color: #6ee7b7;
+    }
+    .pill:hover:not(.on) { color: var(--text); background: rgba(255,255,255,.04); }
+
+    /* content fake */
+    .content { padding: 16px; }
+    .hero {
+      border: 1px solid var(--border); border-radius: 16px; padding: 16px;
+      background: rgba(255,255,255,.03);
+    }
+    .hero .label { color: var(--muted); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+    .hero .val { font-size: 1.55rem; font-weight: 700; margin: 4px 0; letter-spacing: -0.02em; }
+    .hero .pnl { color: #6ee7b7; font-size: 0.85rem; font-weight: 600; }
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .mini {
+      border: 1px solid var(--border); border-radius: 12px; padding: 12px;
+      background: rgba(0,0,0,.18); font-size: 0.78rem; color: var(--muted);
+    }
+    .mini strong { display: block; color: var(--text); margin-bottom: 4px; font-size: 0.82rem; }
+
+    /* ——— Mobile ——— */
+    .m-only { display: none; }
+    .stage.mobile .d-only { display: none; }
+    .stage.mobile .m-only { display: block; }
+    .m-header {
+      padding: 10px 12px 8px; border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.95);
+    }
+    .m-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .m-search {
+      display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px;
+      border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,.04);
+      color: var(--muted); font-size: 0.8rem;
+    }
+    .m-content { padding: 12px; padding-bottom: 88px; }
+    .dock {
+      position: absolute; left: 12px; right: 12px; bottom: calc(10px + var(--safe-bottom));
+      height: 62px; border-radius: 18px; border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: space-around; padding: 0 6px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.4);
+    }
+    .dock-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      color: var(--muted); font-size: 0.62rem; font-weight: 600; min-width: 52px;
+    }
+    .dock-item.on { color: #6ee7b7; }
+    .dock-item svg { width: 20px; height: 20px; }
+    .dock-fab {
+      width: 46px; height: 46px; border-radius: 14px; margin-top: -18px;
+      background: linear-gradient(160deg, #34d399, #059669);
+      display: grid; place-items: center; color: #042f1a; box-shadow: 0 8px 20px rgba(16,185,129,.35);
+      border: 2px solid rgba(255,255,255,.15);
+    }
+    .dock-fab svg { width: 22px; height: 22px; }
+
+    .panel {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px;
+    }
+    .panel h2 { margin: 0 0 8px; font-size: 0.95rem; }
+    .panel p, .panel li { color: var(--muted); font-size: 0.82rem; line-height: 1.5; }
+    .panel ul { margin: 8px 0 0; padding-left: 18px; }
+    .panel .why {
+      margin-top: 12px; padding: 10px 12px; border-radius: 10px;
+      background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.2);
+      color: #a7f3d0; font-size: 0.8rem;
+    }
+    .links { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .links a {
+      color: #6ee7b7; text-decoration: none; font-size: 0.8rem; font-weight: 600;
+      border: 1px solid rgba(16,185,129,.3); padding: 6px 10px; border-radius: 999px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="back" href="/mocks/nav-header-index.html">← Prioridades + índice</a>
+    <div class="badge">Propuesta A · Toolkit header</div>
+    <h1>Acciones primarias en el chrome</h1>
+    <p class="lead">
+      Buscar, Importar, Alertas y Añadir viven en el header (siempre visibles).
+      La navegación de destinos (Home, Portfolio, Tools, Discover) baja a una franja secundaria.
+      En mobile: dock con FAB central de alta.
+    </p>
+
+    <div class="priorities">
+      <div class="prio">
+        <h3><span class="dot" style="background:#10b981"></span> Alta de assets</h3>
+        <ol>
+          <li><strong>Importar</strong> (CSV / broker / AI)</li>
+          <li><strong>Buscar asset</strong> → add</li>
+          <li><strong>Añadir</strong> manual (stock/fund/crypto)</li>
+          <li>Warren “add stock” (empty)</li>
+        </ol>
+      </div>
+      <div class="prio">
+        <h3><span class="dot" style="background:#38bdf8"></span> Evaluar portfolio</h3>
+        <ol>
+          <li><strong>Home</strong> (pulse diario)</li>
+          <li><strong>Alertas</strong> (triggered)</li>
+          <li><strong>Portfolio</strong> performance</li>
+          <li>Tools / allocation / holdings</li>
+        </ol>
+      </div>
+      <div class="prio">
+        <h3><span class="dot" style="background:#f59e0b"></span> Screening / descubrir</h3>
+        <ol>
+          <li><strong>Screener</strong></li>
+          <li><strong>Moat / screening</strong></li>
+          <li>Company analysis</li>
+          <li>Explore / digests</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="stage-wrap">
+        <div class="stage-toolbar">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="viewport-toggle">
+            <button type="button" class="on" data-vp="desktop">Desktop</button>
+            <button type="button" data-vp="mobile">Mobile</button>
+          </div>
+        </div>
+        <div class="stage desktop" id="stage">
+          <!-- DESKTOP -->
+          <div class="d-only">
+            <header class="d-header">
+              <div class="d-row1">
+                <div class="logo">
+                  <div class="logo-mark">t</div>
+                  <span class="logo-word">trefolio</span>
+                </div>
+                <div class="search">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                  Buscar ticker, ISIN o nombre…
+                  <kbd>⌘K</kbd>
+                </div>
+                <div class="tool-actions">
+                  <button class="tool-btn" type="button">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 3v12m0 0l4-4m-4 4l-4-4"/></svg>
+                    Importar
+                  </button>
+                  <button class="tool-btn alert" type="button">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1"/></svg>
+                    Alertas
+                  </button>
+                  <button class="tool-btn" type="button">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    Screener
+                  </button>
+                  <button class="tool-btn primary" type="button">+ Añadir</button>
+                  <div class="icon-only" title="Notificaciones">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5"/></svg>
+                  </div>
+                  <div class="avatar">MS</div>
+                </div>
+              </div>
+              <nav class="d-row2" aria-label="Destinos">
+                <button class="pill on" type="button">Home</button>
+                <button class="pill" type="button">Portfolio</button>
+                <button class="pill" type="button">Tools</button>
+                <button class="pill" type="button">Moat</button>
+                <button class="pill" type="button">Office</button>
+                <button class="pill" type="button">Más ▾</button>
+              </nav>
+            </header>
+            <div class="content">
+              <div class="hero">
+                <div class="label">Portfolio total</div>
+                <div class="val">€128.420</div>
+                <div class="pnl">▲ +1,24% hoy · +€1.582</div>
+              </div>
+              <div class="cards">
+                <div class="mini"><strong>Movers</strong> ASML +3,1% · SAP −1,8%</div>
+                <div class="mini"><strong>Catalysts</strong> NVDA earnings mañana</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MOBILE -->
+          <div class="m-only">
+            <header class="m-header">
+              <div class="m-top">
+                <div class="logo">
+                  <div class="logo-mark">t</div>
+                  <span class="logo-word">trefolio</span>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <button class="tool-btn alert" type="button" style="padding:0 10px">Alertas</button>
+                  <div class="avatar">MS</div>
+                </div>
+              </div>
+              <div class="m-search">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                Buscar asset…
+              </div>
+            </header>
+            <div class="m-content">
+              <div class="hero">
+                <div class="label">Portfolio total</div>
+                <div class="val">€128.420</div>
+                <div class="pnl">▲ +1,24% hoy</div>
+              </div>
+              <div class="mini" style="margin-top:10px"><strong>2 alertas activas</strong> AAPL &gt; 210 · BTC &lt; 95k</div>
+            </div>
+            <nav class="dock" aria-label="Principal">
+              <div class="dock-item on">
+                <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10"/></svg>
+                Home
+              </div>
+              <div class="dock-item">
+                <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                Portfolio
+              </div>
+              <div class="dock-fab" title="Añadir / Importar">
+                <svg fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              </div>
+              <div class="dock-item">
+                <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5"/></svg>
+                Alertas
+              </div>
+              <div class="dock-item">
+                <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                Discover
+              </div>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2>Qué resuelve A</h2>
+        <ul>
+          <li>Las 4 herramientas de alta/monitoreo no compiten con destinos.</li>
+          <li>Search es el ancla del header (comando único).</li>
+          <li>Mobile FAB = sheet: Importar · Buscar · Añadir manual.</li>
+          <li>Alertas sale de Tools y gana badge en chrome.</li>
+          <li>Screener/Moat suben a 1 tap (desktop) o Discover (mobile).</li>
+        </ul>
+        <div class="why">Trade-off: header más denso en desktop; en mobile el dock pierde un slot de “Tools” genérico a favor de Alertas + Discover.</div>
+        <div class="links">
+          <a href="/mocks/nav-header-b-jobs.html">Ver propuesta B →</a>
+          <a href="/mocks/nav-header-index.html">Índice prioridades</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <script>
+    const stage = document.getElementById("stage");
+    document.querySelectorAll("[data-vp]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-vp]").forEach((b) => b.classList.remove("on"));
+        btn.classList.add("on");
+        stage.className = "stage " + btn.dataset.vp;
+      });
+    });
+  </script>
+</body>
+</html>

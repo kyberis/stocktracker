@@ -7,7 +7,7 @@ A sticky toolbar on the dashboard surfaces the most common actions. Emits comman
 
 ## 2. Status
 - **Tier:** Free
-- **Feature flag:** _none_
+- **Feature flag:** `jobs_nav` (optional overlay; see [jobs-nav](jobs-nav.md)) or _none_
 - **Health:** green
 - **Owning skill:** [`engineer-dashboard`](../../.cursor/skills/engineer-dashboard/SKILL.md)
 
