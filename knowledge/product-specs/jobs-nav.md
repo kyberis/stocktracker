@@ -70,7 +70,7 @@ Chip destinations:
 
 ## 10. i18n
 
-- Keys in [`src/locales/en.ts`](../../src/locales/en.ts) and [`src/locales/es.ts`](../../src/locales/es.ts): `jobsNavAlta`, `jobsNavEvaluar`, `jobsNavDescubrir`, chip short labels. Other locales fall back to English.
+- Keys in [`src/locales/en.ts`](../../src/locales/en.ts) and [`src/locales/es.ts`](../../src/locales/es.ts): `jobsNavAlta`, `jobsNavEvaluar`, `jobsNavDescubrir`, chip short labels. Full locales (`fr`, `de`, `pt`, `nl`) have matching keys; others inherit English via `...en`.
 
 ## 11. Permissions / tier gating / rate limits
 
