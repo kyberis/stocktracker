@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.259: In-app alert delivery already claimed on landing (in-app + email + push); this PR wires the always-on notification center path"
+  "notes": "2.5.261: In-app alert delivery already claimed on landing (in-app + email + push); this PR wires the always-on notification center path"
 }

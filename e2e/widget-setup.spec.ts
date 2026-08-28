@@ -106,4 +106,39 @@ test.describe("Widget setup Scriptable variants", () => {
     expect(body).toContain("losers: 3");
     expect(body).toContain("YOUR_TOKEN_HERE");
   });
+
+  test("user can switch to Pizarra script and see the agent-board file preview", async ({
+    page,
+    request,
+    context,
+  }) => {
+    await createTestUser(request);
+    await adoptApiSessionInBrowser(request, context);
+    await page.goto("/widget/setup");
+    await dismissOverlays(page);
+    await expect(page.getByRole("heading", { name: /Widget Setup/i })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole("tab", { name: /^iOS$/ }).click();
+    const pizarraRadio = page.getByRole("radio", { name: /Pizarra \(agent board\)/i });
+    await expect(pizarraRadio).toBeVisible();
+    await pizarraRadio.click();
+    await expect(pizarraRadio).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByText("trefolio-scriptable-pizarra.js")).toBeVisible();
+    await expect(
+      page.getByText(/Pizarra \(Agent Board\) Widget for Scriptable/i).first(),
+    ).toBeVisible({ timeout: 10_000 });
+  });
+
+  test("pizarra script file is served publicly", async ({ request }) => {
+    const res = await request.get("/widget/trefolio-scriptable-pizarra.js");
+    expect(res.status()).toBe(200);
+    const body = await res.text();
+    expect(body).toContain("Pizarra (Agent Board) Widget for Scriptable");
+    expect(body).toContain("/api/agent-board/messages");
+    expect(body).toContain("widgetFamily");
+    expect(body).toContain("YOUR_TOKEN_HERE");
+    expect(body).toContain("Not financial advice");
+  });
 });

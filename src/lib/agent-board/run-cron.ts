@@ -1,44 +1,19 @@
 import {
-  countAgentBoardMessagesToday,
-  getUserSettings,
   isFeatureEnabled,
   listAgentBoardCronCandidates,
-  listAgentBoardMessagesForComposer,
   purgeExpiredAgentBoardMessages,
 } from "@/lib/db";
-import { collectAgentBoardSignals } from "@/lib/agent-board/collect-signals";
-import { composeAgentBoardMessages, persistComposedMessages } from "@/lib/agent-board/compose-messages";
+import { runAgentBoardForUser } from "@/lib/agent-board/run-user";
 import { withCronLogging } from "@/lib/cron-logging";
 import { isTestAccountEmail } from "@/lib/email";
 
 const CONCURRENCY = 3;
-const MAX_MESSAGES_PER_DAY = 5;
 
 async function processUser(userId: string, email: string): Promise<"ok" | "skip" | "error"> {
   try {
     if (isTestAccountEmail(email)) return "skip";
-
-    const settings = await getUserSettings(userId);
-    if (!settings.agentBoardEnabled) return "skip";
-
-    const todayCount = await countAgentBoardMessagesToday(userId);
-    if (todayCount >= MAX_MESSAGES_PER_DAY) return "skip";
-
-    const signals = await collectAgentBoardSignals({ userId });
-    if (signals.length === 0) return "skip";
-
-    const history = await listAgentBoardMessagesForComposer(userId, 15);
-    const composed = await composeAgentBoardMessages({
-      userId,
-      language: settings.language,
-      signals,
-      history,
-    });
-
-    const remaining = MAX_MESSAGES_PER_DAY - todayCount;
-    const toPersist = composed.slice(0, remaining);
-    await persistComposedMessages(userId, toPersist);
-    return "ok";
+    const result = await runAgentBoardForUser(userId);
+    return result.inserted > 0 ? "ok" : "skip";
   } catch (e) {
     console.error(`[agent-board] user=${userId}`, e);
     return "error";

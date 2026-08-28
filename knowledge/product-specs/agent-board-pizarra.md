@@ -1,27 +1,27 @@
 # Agent board (Pizarra)
 
-> Opt-in Home widget where Warren and Clara post AI-selected proactive messages from portfolio and personal-finance signals.
+> Opt-in **Scriptable** home-screen widget where Warren and Clara post AI-selected proactive messages from portfolio and personal-finance signals.
 
 ## 1. Summary
 
-The **Pizarra** (agent board) is an opt-in Home rail widget. When enabled, a cron job collects signals (news, movers, catalysts, alerts, FinPulse, recommendations, market digests, Clara savings, Office missions, etc.), an LLM picks up to three non-repetitive messages using recent history, and the UI shows them with chips to open Warren or Clara.
+The **Pizarra** (agent board) is an opt-in iOS Scriptable widget (not shown on the in-app Home). When enabled in Profile → Notifications, a cron collects signals (news, movers, catalysts, alerts, FinPulse, recommendations, market digests, Clara savings, Office missions, etc.), an LLM picks up to three non-repetitive messages using recent history, and Scriptable shows them on the lock/home screen.
 
 ## 2. Status
 
-- **Tier:** Free (proactive surface; chat chips use existing quotas)
+- **Tier:** Free
 - **Feature flag:** `agent_board_enabled` (platform, default off) + `user_settings.agent_board_enabled`
 - **Health:** yellow (new)
-- **Owning skill:** [`.cursor/skills/engineer-homepage/SKILL.md`](../../.cursor/skills/engineer-homepage/SKILL.md)
+- **Owning skill:** [`.cursor/skills/engineer-mobile/SKILL.md`](../../.cursor/skills/engineer-mobile/SKILL.md)
 
 ## 3. Entry points
 
 | Type | Path | Notes |
 |------|------|-------|
-| UI | `src/components/agent-board/PizarraWidget.tsx` | Home v2 rail + mobile footer |
-| Hook | `src/hooks/useAgentBoard.ts` | Fetch/toggle/dismiss |
-| Cron | `/api/cron/agent-board` | Manual/admin; production runs piggyback on `check-alerts` every 15 min |
-| API | `/api/agent-board/*` | messages, settings, refresh |
-| Lib | `src/lib/agent-board/*` | collect-signals, compose-messages |
+| Scriptable | `/widget/setup` + `public/widget/trefolio-scriptable-pizarra.js` | Primary UI — Small / Medium / Large |
+| Settings | Profile → Notifications | Opt-in toggle + refresh on enable |
+| Cron | `/api/cron/agent-board` | Manual/admin; production piggybacks on `check-alerts` every 15 min |
+| API | `/api/agent-board/*` | messages (widget token), settings, refresh |
+| Lib | `src/lib/agent-board/*` | collect-signals, compose-messages, run-user, run-cron |
 
 ## 4. Data model
 
@@ -32,11 +32,9 @@ The **Pizarra** (agent board) is an opt-in Home rail widget. When enabled, a cro
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
-| GET | `/api/agent-board/messages` | session | Active messages |
-| POST | `/api/agent-board/messages/[id]/read` | session | Mark read |
-| POST | `/api/agent-board/messages/[id]/dismiss` | session | Dismiss |
+| GET | `/api/agent-board/messages` | session or widget token | Active messages for Scriptable (id, agent, kind, body, priority, createdAt) |
 | GET/PUT | `/api/agent-board/settings` | session | Opt-in toggle |
-| POST | `/api/agent-board/refresh` | session | On-demand compose after enable |
+| POST | `/api/agent-board/refresh` | session | On-demand compose after enable (shares `runAgentBoardForUser` with cron) |
 
 ## 6. Signal sources (collect-signals)
 
@@ -49,13 +47,13 @@ Clara: savings surplus, emergency fund gap, negative month balance, end-of-month
 - Max 8 messages/user/day; compose picks ≤3 per run
 - `context_key` UNIQUE prevents duplicate topics
 - LLM receives last 15 messages to avoid thematic repetition
-- When Pizarra enabled, Home suppresses `AidWarrenNudge`
-- Disclaimer on widget; no buy/sell advice in prompts
+- No in-app Home surface — Scriptable only
+- Disclaimer on Scriptable widget; no buy/sell advice in prompts
 
 ## 8. i18n
 
-Keys `pizarra*` in EN + ES; message bodies generated in user language.
+Keys `pizarra*` in EN + ES for Profile settings; Scriptable setup page copy is English (same as other widget scripts). Message bodies generated in user language.
 
 ## 9. Demo
 
-Static messages in `data/demo-agent-board.json`; demo Home shows board enabled.
+N/A — not shown on `/demo` Home.

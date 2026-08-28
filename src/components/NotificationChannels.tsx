@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
@@ -283,7 +284,12 @@ export default function NotificationChannels() {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">{t("pizarraSettingsLabel")}</p>
-              <p className="text-[10px] text-gray-400 dark:text-slate-500">{t("pizarraSettingsDesc")}</p>
+              <p className="text-[10px] text-gray-400 dark:text-slate-500">
+                {t("pizarraSettingsDesc")}{" "}
+                <Link href="/widget/setup" className="text-emerald-600 dark:text-emerald-400 underline">
+                  /widget/setup
+                </Link>
+              </p>
             </div>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
