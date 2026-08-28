@@ -1,10 +1,12 @@
 import { getIdpServiceToken } from "@/lib/idp/config";
+import { getClaraLoginUrl } from "@/lib/clara-public-url";
 import type { OfficeIdentity } from "./office-identity";
 import { normalizeSisterAppBaseUrl } from "./sister-app-url";
 import type { ClaraSavingsSummary } from "./types";
 import { trackExternalProvider } from "@/lib/traffic/provider-track";
 
 const TIMEOUT_MS = 8_000;
+const CHAT_TIMEOUT_MS = 90_000;
 
 function getClaraBaseUrl(): string | null {
   const base = process.env.CLARA_BASE_URL?.trim();
@@ -149,6 +151,91 @@ export async function proposeClaraSavingsRelease(
     return { ok: true, message: data.message || "Savings marked for investing" };
   } catch {
     return { ok: false, message: "Clara unreachable" };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export type ClaraConsultResult =
+  | { available: true; text: string; note?: string }
+  | { available: false; proposeClara?: boolean; loginUrl?: string; note?: string };
+
+export async function fetchClaraReply(input: {
+  identity: OfficeIdentity;
+  message: string;
+  language?: string;
+}): Promise<ClaraConsultResult> {
+  const base = getClaraBaseUrl();
+  const token = getIdpServiceToken();
+  const loginUrl = getClaraLoginUrl();
+
+  if (!canCallSisterApp(input.identity)) {
+    return {
+      available: false,
+      proposeClara: true,
+      loginUrl,
+      note: "Missing IdP identity — sign in with your unified trefolio account",
+    };
+  }
+
+  if (!base || !token) {
+    if (process.env.NODE_ENV === "development") {
+      return {
+        available: true,
+        text: "Dev stub (Clara not configured): no live cashflow.",
+        note: "Dev stub",
+      };
+    }
+    return { available: false, note: "Clara not configured" };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
+
+  try {
+    const res = await fetch(`${base}/api/internal/office/clara-chat`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-Trefolio-User-Id": input.identity.trefolioUserId,
+      },
+      body: JSON.stringify({
+        billingSource: "trefolio",
+        ...identityPayload(input.identity),
+        message: input.message,
+        language: input.language,
+      }),
+      signal: controller.signal,
+      cache: "no-store",
+    });
+    trackExternalProvider("clara");
+
+    if (res.status === 404) {
+      const data = (await res.json().catch(() => ({}))) as {
+        loginUrl?: string;
+        note?: string;
+      };
+      return {
+        available: false,
+        proposeClara: true,
+        loginUrl: data.loginUrl || loginUrl,
+        note: data.note || "No Clara account linked to this identity",
+      };
+    }
+
+    if (!res.ok) {
+      return { available: false, note: `Clara HTTP ${res.status}` };
+    }
+
+    const data = (await res.json()) as { available?: boolean; text?: string; note?: string };
+    if (data.available && data.text) {
+      return { available: true, text: data.text, note: data.note };
+    }
+    return { available: false, note: data.note || "Clara returned no text" };
+  } catch {
+    return { available: false, note: "Clara unreachable" };
   } finally {
     clearTimeout(timer);
   }

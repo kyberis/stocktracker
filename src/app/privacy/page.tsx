@@ -447,8 +447,8 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Clara (clara.trefolio.com)</td>
-                    <td className="py-3 pr-6">Optional savings summary on Investor Briefing when you use the same trefolio account</td>
-                    <td className="py-3 pr-6">Server-to-server request with your IdP subject identifier; returns aggregated savings bucket amounts only when you have a linked Clara account</td>
+                    <td className="py-3 pr-6">Optional savings snapshot and in-chat Clara replies when Clover or Warren consults your linked Clara account (same trefolio login)</td>
+                    <td className="py-3 pr-6">Server-to-server request with your IdP subject identifier and the question you asked Clover/Warren; returns aggregated savings amounts or Clara’s text reply. No new account data is stored on trefolio beyond the chat you already see</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Will (will.trefolio.com)</td>

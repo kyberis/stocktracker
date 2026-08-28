@@ -16,3 +16,15 @@ describe("buildWarrenSystemPrompt — clara channel", () => {
     expect(prompt).not.toContain("in-app drawer from dashboard");
   });
 });
+
+describe("buildWarrenSystemPrompt — clover channel", () => {
+  it("tells Clover to use consultClara for spending detail", () => {
+    const prompt = buildWarrenSystemPrompt({
+      baseCurrency: "EUR",
+      channel: "clover",
+    });
+    expect(prompt).toContain("consultClara");
+    expect(prompt).toContain("consultClaraSavings");
+    expect(prompt).toContain("Do not tell them to open clara.trefolio.com when the tool returns text");
+  });
+});
