@@ -39,6 +39,7 @@ describe("buildSisterAgentTools", () => {
       }),
     );
     expect("consultClaraSavings" in tools).toBe(false);
+    expect("consultClara" in tools).toBe(false);
     expect("searchWillNotes" in tools).toBe(true);
   });
 
@@ -51,5 +52,6 @@ describe("buildSisterAgentTools", () => {
       }),
     );
     expect("consultClaraSavings" in tools).toBe(true);
+    expect("consultClara" in tools).toBe(true);
   });
 });

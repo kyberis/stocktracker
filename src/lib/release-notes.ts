@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.255",
+    date: "2026-08-28",
+    title: "Clover talks to Clara",
+    titleTranslations: {
+      es: "Clover habla con Clara",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Clover and Warren can now ask Clara in chat — spending, cashflow, and savings detail — the same way Clara already asks Warren about your portfolio. If you don’t have Clara yet, they still offer to create your space. Counts against trefolio AI consults, not Clara’s daily cap. Not financial advice.",
+        translations: {
+          es: "Clover y Warren ya pueden preguntar a Clara en el chat — gastos, caja y ahorros — igual que Clara ya pregunta a Warren por tu cartera. Si aún no tienes Clara, te proponen crear tu espacio. Cuenta contra las consultas IA de trefolio, no contra el tope diario de Clara. No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.254",
     date: "2026-08-28",
     title: "Home money desk",

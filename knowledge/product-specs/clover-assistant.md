@@ -4,7 +4,7 @@
 
 ## 1. Summary
 
-Signed-in users talk to **Clover**. Clover routes portfolio work through Warren tools and personal-finance through Clara (`consultClaraSavings`). If Clara is not linked, Clover proposes creating a Clara space (SSO). Telegram bot `@cloveraiassistant_bot` uses the same orchestration when env is configured.
+Signed-in users talk to **Clover**. Clover routes portfolio work through Warren tools and personal-finance through Clara (`consultClara` full chat + `consultClaraSavings` snapshot). If Clara is not linked, Clover proposes creating a Clara space (SSO). Telegram bot `@cloveraiassistant_bot` uses the same orchestration when env is configured.
 
 ## 2. Status
 
@@ -41,5 +41,16 @@ Avatar for BotFather: `public/avatars/clover-telegram-botfather.png`
 ## 6. Tests
 
 - `src/lib/ai/clover/user-has-warren.test.ts`
-- System prompt channel `clover` identity
+- System prompt channel `clover` identity + `consultClara`
+- `src/lib/ai/office/clara-client.test.ts` (`fetchClaraReply`)
 - E2E agent-dock (flexible selectors)
+
+## 7. Sister chat
+
+| Direction | Route | Tool |
+|-----------|-------|------|
+| Clover/Warren → Clara | `POST {CLARA_BASE_URL}/api/internal/office/clara-chat` | `consultClara` |
+| Clover/Warren → Clara snapshot | `GET {CLARA_BASE_URL}/api/internal/office/savings-summary` | `consultClaraSavings` |
+| Clara → Warren | `POST /api/internal/office/warren-chat` | Clara's `consultWarren` |
+
+`channel: "clara"` omits both Clara tools (anti-loop). Clara `clara-chat` omits `consultWarren`. Billing: trefolio `ai_consult` for Clover/Warren turns; Clara quota is not consumed on inbound `clara-chat`.

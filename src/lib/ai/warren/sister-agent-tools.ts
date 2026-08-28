@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 
-import { fetchClaraSavingsSummary } from "@/lib/ai/office/clara-client";
+import { fetchClaraReply, fetchClaraSavingsSummary } from "@/lib/ai/office/clara-client";
 import type { OfficeIdentity } from "@/lib/ai/office/office-identity";
 import { createWillOfficeNote, searchWillNotes } from "@/lib/ai/office/will-client";
 import { listActiveAgentMissions } from "@/lib/db/agent-office";
@@ -26,7 +26,7 @@ export function buildSisterAgentTools(ctx: WarrenToolContext) {
 
   const consultClaraSavings = tool({
       description:
-        "Ask Clara (personal finance app) for savings summary: emergency fund balance/target, safe surplus, and investing-bucket cash. Use for spending questions, savings capacity, or before proposing investments.",
+        "Ask Clara (personal finance app) for a fast savings snapshot: emergency fund balance/target, safe surplus, and investing-bucket cash. Use for capacity checks before proposing investments. For spending detail or 'how much did I spend', use consultClara instead.",
       inputSchema: z.object({}),
       execute: async () => {
         if (!hasSisterIdentity(identity)) return sisterUnavailable(ctx);
@@ -45,7 +45,7 @@ export function buildSisterAgentTools(ctx: WarrenToolContext) {
             emergencyTargetEur: clara.emergencyTargetEur,
             surplusEur: clara.surplusEur,
             freeInInvestingBucketEur: clara.freeInInvestingBucketEur,
-            note: "For detailed monthly spending breakdown, the user can open clara.trefolio.com.",
+            note: "For detailed monthly spending, call consultClara with the user's question.",
           };
         }
         const hint =
@@ -57,6 +57,48 @@ export function buildSisterAgentTools(ctx: WarrenToolContext) {
           proposeClara: true,
           note: hint,
           loginUrl: "https://clara.trefolio.com/login",
+        };
+      },
+    });
+
+  const consultClara = tool({
+      description: [
+        "Ask Clara (personal finance) a freeform question about spending, cashflow, savings, monthly detail, or logging expenses.",
+        "Use when consultClaraSavings aggregates are not enough — e.g. 'how much did I spend', 'what did I pay this month', category breakdowns.",
+        "Pass the user's full question as `question`. Relay Clara's text; do not invent amounts.",
+        "If the result includes proposeClara / loginUrl, invite them to create a Clara space with the same login.",
+      ].join(" "),
+      inputSchema: z.object({
+        question: z
+          .string()
+          .min(1)
+          .max(4000)
+          .describe("The user's personal-finance question, in their language."),
+      }),
+      execute: async ({ question }) => {
+        if (!hasSisterIdentity(identity)) return sisterUnavailable(ctx);
+        ctx.emitStep("Asking Clara…");
+        const clara = await fetchClaraReply({
+          identity,
+          message: question,
+          language: ctx.language,
+        });
+        if (clara.available) {
+          ctx.emitSisterCoordination?.({
+            from: "warren",
+            to: "clara",
+            summary: clara.text.slice(0, 160),
+          });
+          ctx.emitSisterAgentMessage?.("clara", clara.text);
+          return { available: true, text: clara.text, note: clara.note };
+        }
+        const hint = clara.note || "Clara account not linked.";
+        ctx.emitSisterCoordination?.({ from: "warren", to: "clara", summary: hint });
+        return {
+          available: false,
+          proposeClara: clara.proposeClara ?? true,
+          note: hint,
+          loginUrl: clara.loginUrl || "https://clara.trefolio.com/login",
         };
       },
     });
@@ -142,7 +184,7 @@ export function buildSisterAgentTools(ctx: WarrenToolContext) {
     return withoutClaraLoop;
   }
 
-  return { consultClaraSavings, ...withoutClaraLoop };
+  return { consultClaraSavings, consultClara, ...withoutClaraLoop };
 }
 
 export function sisterAgentToolsEnabled(ctx: WarrenToolContext): boolean {
