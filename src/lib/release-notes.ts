@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "fix",
+        type: "feature",
         text: "Fired price alerts always appear in the in-app notification center (bell), in addition to any email, push, Telegram, or device channels you enable. Optional channel prefs no longer gate the in-app copy.",
         translations: {
           es: "Las alertas de precio activadas siempre aparecen en el centro de notificaciones (campana), además de los canales de email, push, Telegram o dispositivo que tengas activados. Las preferencias de canal opcionales ya no bloquean la copia in-app.",
