@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-342 routes.
+340 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -98,8 +98,6 @@
 | `/api/admin/x-posts/post` | POST | [`src/app/api/admin/x-posts/post/route.ts`](../../src/app/api/admin/x-posts/post/route.ts) |
 | `/api/admin/x-posts/seed` | POST | [`src/app/api/admin/x-posts/seed/route.ts`](../../src/app/api/admin/x-posts/seed/route.ts) |
 | `/api/agent-board/messages` | GET | [`src/app/api/agent-board/messages/route.ts`](../../src/app/api/agent-board/messages/route.ts) |
-| `/api/agent-board/messages/[id]/dismiss` | POST | [`src/app/api/agent-board/messages/[id]/dismiss/route.ts`](../../src/app/api/agent-board/messages/[id]/dismiss/route.ts) |
-| `/api/agent-board/messages/[id]/read` | POST | [`src/app/api/agent-board/messages/[id]/read/route.ts`](../../src/app/api/agent-board/messages/[id]/read/route.ts) |
 | `/api/agent-board/refresh` | POST | [`src/app/api/agent-board/refresh/route.ts`](../../src/app/api/agent-board/refresh/route.ts) |
 | `/api/agent-board/settings` | GET, PUT | [`src/app/api/agent-board/settings/route.ts`](../../src/app/api/agent-board/settings/route.ts) |
 | `/api/ai-analysis` | POST | [`src/app/api/ai-analysis/route.ts`](../../src/app/api/ai-analysis/route.ts) |
