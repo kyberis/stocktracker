@@ -28,7 +28,6 @@ export interface AgentBoardSignal {
   priority: number;
   /** Structured payload for the AI composer */
   payload: Record<string, string | number | boolean | null | string[]>;
-  suggestedChipPrompt?: string;
 }
 
 export interface AgentBoardMessage {
@@ -38,11 +37,7 @@ export interface AgentBoardMessage {
   kind: AgentBoardKind;
   contextKey: string;
   body: string;
-  chipLabel: string;
-  chipPrompt: string;
   priority: number;
-  readAt: string | null;
-  dismissedAt: string | null;
   createdAt: string;
   expiresAt: string | null;
 }
@@ -52,8 +47,6 @@ export interface AgentBoardComposeResult {
   kind: AgentBoardKind;
   contextKey: string;
   body: string;
-  chipLabel: string;
-  chipPrompt: string;
   priority: number;
   signalsJson: string;
 }

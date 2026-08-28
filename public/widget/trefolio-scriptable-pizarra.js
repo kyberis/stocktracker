@@ -1,7 +1,7 @@
 // trefolio — Pizarra (Agent Board) Widget for Scriptable
 // Paste this script in the Scriptable app, then add a Scriptable widget to your home screen.
 // Shows AI-picked notes from Warren and Clara. Not financial advice.
-// Enable the board in trefolio Home first. Token: trefolio.com → Profile → Widget Access.
+// Enable under Profile → Notifications. Token: trefolio.com → Profile → Widget Access.
 // Adapts layout for Small / Medium / Large (config.widgetFamily).
 
 const TOKEN = "YOUR_TOKEN_HERE";

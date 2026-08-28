@@ -15,7 +15,7 @@ import { getMarketStatus } from "@/lib/market-hours";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import { getQuotesWithCache, getRatesWithCache } from "@/lib/quote-cache";
 import { remainingDaysInMonth } from "@/lib/clara-desk-status";
-import { hasAgentBoardContextKey } from "@/lib/db/agent-board";
+import { existingAgentBoardContextKeys } from "@/lib/db/agent-board";
 import type { AgentBoardSignal } from "@/lib/agent-board/types";
 import type { CashEntry, ExchangeRates, Holding, QuoteData } from "@/lib/types";
 
@@ -27,21 +27,16 @@ function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function expiresInHours(h: number): string {
-  return new Date(Date.now() + h * 3600 * 1000).toISOString();
-}
 
 async function filterNewSignals(
   userId: string,
   signals: AgentBoardSignal[],
 ): Promise<AgentBoardSignal[]> {
-  const out: AgentBoardSignal[] = [];
-  for (const s of signals) {
-    if (!(await hasAgentBoardContextKey(userId, s.contextKey))) {
-      out.push(s);
-    }
-  }
-  return out;
+  const existing = await existingAgentBoardContextKeys(
+    userId,
+    signals.map((s) => s.contextKey),
+  );
+  return signals.filter((s) => !existing.has(s.contextKey));
 }
 
 function collectMarketOpenSignals(
@@ -64,9 +59,7 @@ function collectMarketOpenSignals(
     kind: "market_open" as const,
     contextKey: `market_open:${ex}:${day}`,
     priority: 2,
-    payload: { exchange: ex, label },
-    suggestedChipPrompt: `What should I watch today with ${label} now open?`,
-  }));
+    payload: { exchange: ex, label }
 }
 
 function collectMoverSignals(
@@ -88,9 +81,7 @@ function collectMoverSignals(
     kind: "mover" as const,
     contextKey: `mover:${m.ticker}:${day}`,
     priority: m.pct! >= 5 || m.pct! <= -5 ? 1 : 2,
-    payload: { ticker: m.ticker, movePct: m.pct! },
-    suggestedChipPrompt: `What should I know about ${m.ticker} today? It moved ${m.pct! >= 0 ? "+" : ""}${m.pct!.toFixed(1)}%.`,
-  }));
+    payload: { ticker: m.ticker, movePct: m.pct! }
 }
 
 function collectNear52wSignals(
@@ -119,9 +110,6 @@ function collectNear52wSignals(
         price,
         level: nearHigh ? high : low,
       },
-      suggestedChipPrompt: nearHigh
-        ? `${h.ticker} is near its 52-week high. What should I consider?`
-        : `${h.ticker} is near its 52-week low. What context matters here?`,
     });
   }
   return signals.slice(0, 2);
@@ -158,10 +146,6 @@ async function collectCatalystSignals(
         eventDate: e.event_date,
         name: e.name ?? "",
       },
-      suggestedChipPrompt:
-        type === "earnings"
-          ? `Summarize what I should watch for ${sym} earnings on ${e.event_date}.`
-          : `What does the upcoming ${type} for ${sym} mean for my portfolio?`,
     };
   });
 }
@@ -181,9 +165,7 @@ function collectRecommendationSignals(
       ticker: r.ticker ?? "",
       pct: r.pct ?? 0,
       sectors: (r.sectors ?? []).join(", "),
-    },
-    suggestedChipPrompt: `Explain this portfolio tip: ${r.kind} (${r.key}).`,
-  }));
+    }
 }
 
 function collectNewsSignals(
@@ -212,7 +194,6 @@ function collectNewsSignals(
         impact: summary.impact,
         bullets: summary.bullets.slice(0, 2).join(" | "),
       },
-      suggestedChipPrompt: `Tell me more about this news for ${row.ticker}: ${summary.headline}`,
     });
     if (signals.length >= 5) break;
   }
@@ -244,9 +225,7 @@ function collectFinPulseSignals(
         handle: p.handle,
         headline: p.headline,
         tickers: p.tickersJson,
-      },
-      suggestedChipPrompt: `How does this FinPulse post relate to my portfolio? ${p.headline}`,
-    }));
+      }
 }
 
 function collectAlertSignals(
@@ -266,9 +245,7 @@ function collectAlertSignals(
         name: a.name,
         condition: a.condition,
         threshold: a.threshold,
-      },
-      suggestedChipPrompt: `My alert for ${a.ticker} just fired. What should I look at next?`,
-    }));
+      }
 }
 
 function collectConcentrationSignal(
@@ -288,9 +265,7 @@ function collectConcentrationSignal(
     payload: {
       topTicker: c.topTickers[0],
       topThreePercent: c.topThreePercent,
-    },
-    suggestedChipPrompt: `Am I too concentrated? My top 3 holdings are ${c.topThreePercent.toFixed(0)}% of the portfolio.`,
-  };
+    }
 }
 
 async function collectMarketDigestSignals(
@@ -315,7 +290,6 @@ async function collectMarketDigestSignals(
         summary: d.rawText?.slice(0, 200) ?? "",
         tickers: mentioned.join(", "),
       },
-      suggestedChipPrompt: `How does today's market digest affect my holdings (${mentioned.join(", ")})?`,
     });
     if (signals.length >= 2) break;
   }
@@ -336,9 +310,7 @@ async function collectWeeklyDigestSignal(
     payload: {
       summary: digest.summaryText.slice(0, 240),
       weekEnd: digest.weekEnd,
-    },
-    suggestedChipPrompt: "Summarize my week in the portfolio and what to watch next.",
-  };
+    }
 }
 
 async function collectClaraSignals(
@@ -361,9 +333,7 @@ async function collectClaraSignals(
       kind: "clara_surplus",
       contextKey: `clara_surplus:${day}`,
       priority: 3,
-      payload: { surplusEur: surplus, currency: clara.currency ?? "EUR" },
-      suggestedChipPrompt: "I have monthly surplus in Clara. How could I put it to work?",
-    });
+      payload: { surplusEur: surplus, currency: clara.currency ?? "EUR" }
   }
 
   if (
@@ -379,9 +349,7 @@ async function collectClaraSignals(
       payload: {
         balance: clara.emergencyBalanceEur,
         target: clara.emergencyTargetEur,
-      },
-      suggestedChipPrompt: "My emergency fund is below target. What should I prioritize?",
-    });
+      }
   }
 
   if (typeof monthBalance === "number" && monthBalance < 0) {
@@ -390,9 +358,7 @@ async function collectClaraSignals(
       kind: "clara_month",
       contextKey: `clara_month_negative:${day}`,
       priority: 2,
-      payload: { monthBalance, currency: clara.currency ?? "EUR" },
-      suggestedChipPrompt: "My month balance in Clara is negative. What should I adjust?",
-    });
+      payload: { monthBalance, currency: clara.currency ?? "EUR" }
   }
 
   if (
@@ -407,7 +373,6 @@ async function collectClaraSignals(
       contextKey: `clara_end_month:${day}`,
       priority: 2,
       payload: { daysLeft, remainingExpenses: clara.remainingExpenses },
-      suggestedChipPrompt: `With ${daysLeft} days left in the month, help me plan remaining expenses.`,
     });
   }
 
@@ -428,10 +393,7 @@ async function collectWillSignals(userId: string, day: string): Promise<AgentBoa
       payload: {
         tags: will.tags.slice(0, 5).map((t) => t.label).join(", "),
         excerpt: will.excerpt?.slice(0, 160) ?? "",
-      },
-      suggestedChipPrompt: "Summarize my recent Will notes related to money decisions.",
-    },
-  ];
+      }
 }
 
 async function collectOfficeMissionSignals(userId: string, day: string): Promise<AgentBoardSignal[]> {
@@ -450,9 +412,7 @@ async function collectOfficeMissionSignals(userId: string, day: string): Promise
       missionTitle: mission.title,
       stepAction: step.action,
       stepKind: step.kind,
-    },
-    suggestedChipPrompt: `Help me with my Office mission step: ${step.action}`,
-  }));
+    }
 }
 
 export async function collectAgentBoardSignals(args: {
@@ -518,4 +478,3 @@ export async function collectAgentBoardSignals(args: {
   return filterNewSignals(args.userId, raw);
 }
 
-export { expiresInHours, todayKey };

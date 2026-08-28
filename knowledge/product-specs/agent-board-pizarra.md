@@ -21,7 +21,7 @@ The **Pizarra** (agent board) is an opt-in iOS Scriptable widget (not shown on t
 | Settings | Profile → Notifications | Opt-in toggle + refresh on enable |
 | Cron | `/api/cron/agent-board` | Manual/admin; production piggybacks on `check-alerts` every 15 min |
 | API | `/api/agent-board/*` | messages (widget token), settings, refresh |
-| Lib | `src/lib/agent-board/*` | collect-signals, compose-messages |
+| Lib | `src/lib/agent-board/*` | collect-signals, compose-messages, run-user, run-cron |
 
 ## 4. Data model
 
@@ -32,11 +32,9 @@ The **Pizarra** (agent board) is an opt-in iOS Scriptable widget (not shown on t
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
-| GET | `/api/agent-board/messages` | session or widget token | Active messages for Scriptable |
-| POST | `/api/agent-board/messages/[id]/read` | session | Mark read (optional; Scriptable is display-only) |
-| POST | `/api/agent-board/messages/[id]/dismiss` | session | Dismiss |
+| GET | `/api/agent-board/messages` | session or widget token | Active messages for Scriptable (id, agent, kind, body, priority, createdAt) |
 | GET/PUT | `/api/agent-board/settings` | session | Opt-in toggle |
-| POST | `/api/agent-board/refresh` | session | On-demand compose after enable |
+| POST | `/api/agent-board/refresh` | session | On-demand compose after enable (shares `runAgentBoardForUser` with cron) |
 
 ## 6. Signal sources (collect-signals)
 

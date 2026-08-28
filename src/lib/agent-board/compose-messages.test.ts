@@ -11,13 +11,11 @@ describe("fallbackCompose", () => {
         contextKey: "mover:NVDA:2026-08-28",
         priority: 1,
         payload: { ticker: "NVDA", movePct: 4.2 },
-        suggestedChipPrompt: "Tell me about NVDA",
       },
     ];
     const out = fallbackCompose(signals, "en");
     expect(out).toHaveLength(1);
     expect(out[0]?.body).toContain("NVDA");
-    expect(out[0]?.chipLabel).toBe("NVDA");
   });
 
   it("builds Clara surplus message in Spanish", () => {

@@ -74,11 +74,7 @@ describe("GET /api/agent-board/messages", () => {
         kind: "news",
         contextKey: "news:AAPL",
         body: "AAPL jumped 4% on earnings.",
-        chipLabel: "Ask Warren",
-        chipPrompt: "What happened to AAPL?",
         priority: 1,
-        readAt: null,
-        dismissedAt: null,
         createdAt: "2026-08-28T12:00:00.000Z",
         expiresAt: null,
       },
@@ -89,10 +85,12 @@ describe("GET /api/agent-board/messages", () => {
     });
     const res = await GET(req);
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toMatchObject({
+    const body = await res.json();
+    expect(body).toMatchObject({
       enabled: true,
       messages: [{ id: "m1", agent: "warren", body: "AAPL jumped 4% on earnings." }],
     });
+    expect(body.messages[0]).not.toHaveProperty("chipPrompt");
   });
 
   it("returns enabled false when the user has not opted in", async () => {

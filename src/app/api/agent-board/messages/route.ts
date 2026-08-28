@@ -53,7 +53,7 @@ export const GET = withMetrics("/api/agent-board/messages", async (req: NextRequ
     return NextResponse.json({ enabled: false, messages: [] });
   }
 
-  const messages = await listAgentBoardMessages(auth.userId, 15);
+  const messages = await listAgentBoardMessages(auth.userId, 8);
   return NextResponse.json({
     enabled: true,
     messages: messages.map((m) => ({
@@ -61,10 +61,7 @@ export const GET = withMetrics("/api/agent-board/messages", async (req: NextRequ
       agent: m.agent,
       kind: m.kind,
       body: m.body,
-      chipLabel: m.chipLabel,
-      chipPrompt: m.chipPrompt,
       priority: m.priority,
-      readAt: m.readAt,
       createdAt: m.createdAt,
     })),
   });
