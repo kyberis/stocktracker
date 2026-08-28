@@ -9,6 +9,7 @@ import {
   formatSignedCurrency,
   isUsableSurplus,
   remainingDaysInMonth,
+  resolveClaraPulseDisplay,
   resolveMoneyDeskHandoff,
   type ClaraDeskStatus,
 } from "@/lib/clara-desk-status";
@@ -45,6 +46,7 @@ export default function HomeMoneyDesk({
   const surplus = clara?.surplusEur;
   const claraCurrency = clara?.currency || "EUR";
   const daysLeft = remainingDaysInMonth(clara?.dayOfMonth, clara?.daysInMonth);
+  const pulse = resolveClaraPulseDisplay(clara);
   const handoff = resolveMoneyDeskHandoff({
     hasHoldings,
     linked,
@@ -69,11 +71,27 @@ export default function HomeMoneyDesk({
   const marketPositive = hasHoldings && dayGainLoss > 0.005;
   const marketNegative = hasHoldings && dayGainLoss < -0.005;
 
-  const surplusValue = stealthMode
-    ? "•••••"
-    : linked && typeof surplus === "number" && Number.isFinite(surplus)
-      ? formatCurrency(surplus, claraCurrency)
-      : "—";
+  const claraPulseValue = (() => {
+    if (stealthMode) return "•••••";
+    if (claraLoading) return "…";
+    switch (pulse.kind) {
+      case "unlinked":
+        return "—";
+      case "setup":
+        return t("homeMoneyDeskClaraSetupMonth");
+      case "zero":
+        return formatCurrency(0, claraCurrency);
+      case "balance":
+        return formatSignedCurrency(pulse.value ?? 0, claraCurrency);
+      default:
+        return "—";
+    }
+  })();
+
+  const claraPulsePositive = !stealthMode && !claraLoading && pulse.tone === "positive";
+  const claraPulseNegative = !stealthMode && !claraLoading && pulse.tone === "negative";
+  const showClaraOnTrack =
+    !stealthMode && !claraLoading && pulse.kind === "zero" && linked;
 
   const warrenNudge = hasHoldings
     ? t("homeMoneyDeskWarrenNudge")
@@ -205,14 +223,25 @@ export default function HomeMoneyDesk({
         </div>
         <div className="text-center">
           <div className="text-[10px] uppercase tracking-wide text-[color:var(--muted)]">
-            {t("homeMoneyDeskSurplusMonth")}
+            {t("homeMoneyDeskMonthBalance")}
           </div>
           <div
-            className="mt-0.5 text-base font-bold tabular-nums text-sky-700 dark:text-sky-300"
-            aria-label={`${t("homeMoneyDeskSurplusMonth")}: ${surplusValue}`}
+            className={`mt-0.5 text-base font-bold tabular-nums ${
+              pulse.kind === "setup"
+                ? "text-xs font-semibold leading-snug text-sky-700 dark:text-sky-300"
+                : claraPulsePositive
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : claraPulseNegative
+                    ? "text-red-500 dark:text-red-400"
+                    : "text-sky-700 dark:text-sky-300"
+            }`}
+            aria-label={`${t("homeMoneyDeskMonthBalance")}: ${claraPulseValue}`}
           >
-            {claraLoading ? "…" : surplusValue}
+            {claraPulseValue}
           </div>
+          {showClaraOnTrack && (
+            <div className="mt-0.5 text-[10px] text-[color:var(--muted)]">{t("homeMoneyDeskMonthOnTrack")}</div>
+          )}
         </div>
       </div>
 

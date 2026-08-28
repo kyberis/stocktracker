@@ -4,7 +4,7 @@
 
 ## 1. Summary
 
-**Home v2 (`/`):** when `home_money_desk` is on, signed-in users see a **money desk** (`HomeMoneyDesk`) that pairs Warren (markets / portfolio) with Clara (everyday spending). Dual pulse (day P&L × month surplus), agent tiles, Clara onboarding, and a deterministic handoff when both sides have data. On **mobile and empty portfolio**, the desk is the first block after the Home title. When the flag is **off**, Home keeps the separate Warren + Clara cards (same as Classic / mobile dashboard).
+**Home v2 (`/`):** when `home_money_desk` is on, signed-in users see a **money desk** (`HomeMoneyDesk`) that pairs Warren (markets / portfolio) with Clara (everyday spending). Dual pulse (day P&L × **month balance**), agent tiles, Clara onboarding, and a deterministic handoff when both sides have data. On **mobile and empty portfolio**, the desk is the first block after the Home title. When the flag is **off**, Home keeps the separate Warren + Clara cards (same as Classic / mobile dashboard).
 
 **Classic dashboard and `MobileDashboard`:** still show a **Clara** card beside **Warren**. Clicking opens a modal that explains Clara (personal finance sister app). The CTA either opens Clara chat (`/app`) when the IdP identity is already linked, or starts Clara login (`/login`) so the shared IdP account lazy-creates the Clara local user — then the user lands in Clara chat in a **new tab**.
 
@@ -31,13 +31,15 @@
 
 ## 4. Data model
 
-No new tables. Link status inferred from Clara `GET /api/internal/office/savings-summary` (404 → unlinked). Desk shows only aggregated fields already on `ClaraSavingsSummary` (`surplusEur`, `currency`, `dayOfMonth`, `daysInMonth`, `monthBalance`). No line items.
+No new tables. Link status inferred from Clara `GET /api/internal/office/savings-summary` (404 → unlinked). Desk shows only aggregated fields already on `ClaraSavingsSummary` (`surplusEur`, `currency`, `dayOfMonth`, `daysInMonth`, `monthBalance`, `hasMonthRecord`, `remainingExpenses`). No line items.
+
+**Pulse vs handoff:** the Clara pulse displays **`monthBalance`** (effective income − planned expenses). **`surplusEur`** (emergency-fund surplus above target) powers the Warren handoff only when `surplusEur > 0`.
 
 ## 5. API surface
 
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
-| GET | `/api/clara/status` | session | Free | `{ linked, surplusEur?, currency?, dayOfMonth?, daysInMonth?, monthBalance? }` |
+| GET | `/api/clara/status` | session | Free | `{ linked, surplusEur?, currency?, dayOfMonth?, daysInMonth?, monthBalance?, hasMonthRecord?, remainingExpenses? }` |
 
 `linked` remains the contract for the modal. Extra fields are omitted when unlinked.
 
@@ -46,13 +48,14 @@ No new tables. Link status inferred from Clara `GET /api/internal/office/savings
 **Money desk (Home v2, `home_money_desk` on):**
 
 - Header “Your money desk” + dual pulse + Warren / Clara tiles + optional handoff + “Not financial advice”.
+- **Clara pulse states:** unlinked (`—`), month not set up (“Set up this month in Clara”), zero balance (`€0.00` + “On track”), positive/negative balance with signed color.
 - **Mobile / empty:** first in the main column (above `EmptyPortfolio` / brief). `EmptyPortfolio` stays below for import/add.
 - **Desktop with holdings:** rail, replacing the separate Warren + Clara cards. `AidWarrenNudge` stays under the desk.
 - Matrix: holdings × Clara linked — pulse, tile CTAs, and handoff (surplus handoff only when `surplusEur > 0`; empty + linked shows a soft “add first stock” line).
 - Unlinked Clara tile: **Create Clara account** → same landing modal (SSO `/login`).
 - Linked Clara tile: modal → open chat.
 - Demo: both tiles → `/signup`.
-- Touch targets ≥44px. Day P&L uses +/− not color alone.
+- Touch targets ≥44px. Day P&L and month balance use +/− not color alone.
 
 **When `home_money_desk` is off:** Home rail / mobile footer use `WarrenTrigger` + `ClaraCta` (same cards as Classic).
 
@@ -67,7 +70,7 @@ No new tables. Link status inferred from Clara `GET /api/internal/office/savings
 
 - Account “creation” = Clara OIDC first sign-in with the same IdP `sub` (lazy upsert). No new credentials in the modal.
 - Chat opens with `window.open(..., "_blank", "noopener,noreferrer")` — not embedded (Clara is a separate deploy).
-- Handoff v1 is deterministic i18n copy (no LLM). Generic surplus wording — not a ticker-specific recommendation.
+- Handoff v1 is deterministic i18n copy (no LLM). Uses **safe surplus** (`surplusEur`) — not month balance — and generic wording (not a ticker-specific recommendation).
 
 ## 8. External dependencies
 
@@ -77,7 +80,7 @@ No new tables. Link status inferred from Clara `GET /api/internal/office/savings
 ## 9. Currency / FX / tax implications
 
 - Day P&L formatted in the active portfolio display currency (same as Home hero).
-- Clara surplus formatted in Clara’s `currency` (fallback EUR). No mid-calc FX conversion in v1.
+- Clara month balance and safe surplus formatted in Clara’s `currency` (fallback EUR). No mid-calc FX conversion in v1.
 
 ## 10. i18n
 

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.257",
+    date: "2026-08-28",
+    title: "Clara month balance on Home",
+    titleTranslations: {
+      es: "Balance del mes de Clara en Home",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The Home money desk Clara pulse now shows month balance (income minus planned expenses) instead of emergency-fund surplus. Setup and on-track states replace ambiguous €0.00. Safe surplus still powers the Warren handoff.",
+        translations: {
+          es: "El pulso de Clara en la mesa de dinero de Home muestra el balance del mes (ingresos menos gastos planificados) en lugar del superávit del colchón. Los estados de configuración y en equilibrio sustituyen el €0,00 ambiguo. El superávit seguro sigue alimentando el handoff de Warren.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.256",
     date: "2026-08-28",
     title: "Money desk behind a flag",

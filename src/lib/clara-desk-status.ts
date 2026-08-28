@@ -8,9 +8,21 @@ export type ClaraDeskStatus = {
   dayOfMonth?: number;
   daysInMonth?: number;
   monthBalance?: number;
+  hasMonthRecord?: boolean;
+  remainingExpenses?: number;
 };
 
 export type MoneyDeskHandoffKind = "surplus" | "add_first" | null;
+
+export type ClaraPulseDisplayKind = "unlinked" | "setup" | "balance" | "zero";
+
+export type ClaraPulseTone = "positive" | "negative" | "neutral";
+
+export type ClaraPulseDisplay = {
+  kind: ClaraPulseDisplayKind;
+  value?: number;
+  tone: ClaraPulseTone;
+};
 
 function finiteNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
@@ -47,6 +59,8 @@ export function mapClaraSavingsToDeskStatus(clara: ClaraSavingsSummary): ClaraDe
     dayOfMonth: finiteNumber(clara.dayOfMonth),
     daysInMonth: finiteNumber(clara.daysInMonth),
     monthBalance: finiteNumber(clara.monthBalance),
+    hasMonthRecord: clara.hasMonthRecord === true ? true : clara.hasMonthRecord === false ? false : undefined,
+    remainingExpenses: finiteNumber(clara.remainingExpenses),
   };
 }
 
@@ -61,7 +75,34 @@ export function parseClaraDeskStatus(raw: unknown): ClaraDeskStatus {
     dayOfMonth: finiteNumber(o.dayOfMonth),
     daysInMonth: finiteNumber(o.daysInMonth),
     monthBalance: finiteNumber(o.monthBalance),
+    hasMonthRecord: o.hasMonthRecord === true ? true : o.hasMonthRecord === false ? false : undefined,
+    remainingExpenses: finiteNumber(o.remainingExpenses),
   };
+}
+
+export function resolveClaraPulseDisplay(status: ClaraDeskStatus | null): ClaraPulseDisplay {
+  if (!status?.linked) {
+    return { kind: "unlinked", tone: "neutral" };
+  }
+
+  const hasRecord =
+    status.hasMonthRecord === true ||
+    (status.hasMonthRecord !== false &&
+      typeof status.monthBalance === "number" &&
+      Number.isFinite(status.monthBalance));
+
+  if (!hasRecord) {
+    return { kind: "setup", tone: "neutral" };
+  }
+
+  const balance = status.monthBalance ?? 0;
+  if (Math.abs(balance) < 0.005) {
+    return { kind: "zero", value: 0, tone: "neutral" };
+  }
+  if (balance > 0) {
+    return { kind: "balance", value: balance, tone: "positive" };
+  }
+  return { kind: "balance", value: balance, tone: "negative" };
 }
 
 export function resolveMoneyDeskHandoff(opts: {

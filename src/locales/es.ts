@@ -3252,8 +3252,11 @@ const es: TranslationStrings = {
   homeMoneyDeskTitle: "Tu mesa de dinero",
   homeMoneyDeskSubtitle: "Warren mira mercados · Clara mira el día a día · juntos, tu capacidad real",
   homeMoneyDeskDuo: "Dúo",
-  homeMoneyDeskPulseLabel: "Mercados de hoy y superávit del mes",
+  homeMoneyDeskPulseLabel: "Mercados de hoy y balance del mes",
   homeMoneyDeskMarketsToday: "Mercados hoy",
+  homeMoneyDeskMonthBalance: "Balance del mes",
+  homeMoneyDeskClaraSetupMonth: "Configura el mes en Clara",
+  homeMoneyDeskMonthOnTrack: "En equilibrio",
   homeMoneyDeskSurplusMonth: "Superávit mes",
   homeMoneyDeskNoPortfolio: "Sin cartera aún",
   homeMoneyDeskWarrenRole: "Cartera y mercados",
@@ -3269,7 +3272,7 @@ const es: TranslationStrings = {
   homeMoneyDeskClaraCreateCta: "Crear cuenta en Clara",
   homeMoneyDeskHandoffLabel: "Handoff:",
   homeMoneyDeskHandoffSurplus:
-    "Warren usó el resumen de Clara — con este superávit del mes ({amount}) podrías aportar a la cartera sin tocar el colchón. No es asesoramiento financiero.",
+    "Warren usó el resumen de Clara — con este superávit seguro ({amount}) podrías aportar a la cartera sin tocar el colchón. No es asesoramiento financiero.",
   homeMoneyDeskHandoffAddFirst:
     "Clara está lista. Añade tu primera acción para que Warren relacione mercados con tu superávit cotidiano.",
   homeMoneyDeskDisclaimer: "Ayuda generada por IA. No es asesoramiento financiero.",
