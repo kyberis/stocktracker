@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-333 routes.
+337 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -157,6 +157,7 @@
 | `/api/chat/[token]/typing` | POST | [`src/app/api/chat/[token]/typing/route.ts`](../../src/app/api/chat/[token]/typing/route.ts) |
 | `/api/chats` | GET | [`src/app/api/chats/route.ts`](../../src/app/api/chats/route.ts) |
 | `/api/clara/status` | GET | [`src/app/api/clara/status/route.ts`](../../src/app/api/clara/status/route.ts) |
+| `/api/clover/bootstrap` | GET | [`src/app/api/clover/bootstrap/route.ts`](../../src/app/api/clover/bootstrap/route.ts) |
 | `/api/company-analysis` | GET | [`src/app/api/company-analysis/route.ts`](../../src/app/api/company-analysis/route.ts) |
 | `/api/company-analysis/narrative` | POST | [`src/app/api/company-analysis/narrative/route.ts`](../../src/app/api/company-analysis/narrative/route.ts) |
 | `/api/contact` | POST | [`src/app/api/contact/route.ts`](../../src/app/api/contact/route.ts) |
@@ -226,12 +227,14 @@
 | `/api/holdings/ai-classify` | POST | [`src/app/api/holdings/ai-classify/route.ts`](../../src/app/api/holdings/ai-classify/route.ts) |
 | `/api/holdings/autofill-classification` | POST | [`src/app/api/holdings/autofill-classification/route.ts`](../../src/app/api/holdings/autofill-classification/route.ts) |
 | `/api/holdings/normalize-classifications` | POST | [`src/app/api/holdings/normalize-classifications/route.ts`](../../src/app/api/holdings/normalize-classifications/route.ts) |
+| `/api/home-v2/analyst-targets` | GET | [`src/app/api/home-v2/analyst-targets/route.ts`](../../src/app/api/home-v2/analyst-targets/route.ts) |
 | `/api/home-v2/bootstrap` | GET | [`src/app/api/home-v2/bootstrap/route.ts`](../../src/app/api/home-v2/bootstrap/route.ts) |
 | `/api/home-v2/day-highlights` | GET | [`src/app/api/home-v2/day-highlights/route.ts`](../../src/app/api/home-v2/day-highlights/route.ts) |
 | `/api/home-v2/diversify-research` | GET | [`src/app/api/home-v2/diversify-research/route.ts`](../../src/app/api/home-v2/diversify-research/route.ts) |
 | `/api/home-v2/recommendations` | GET, POST | [`src/app/api/home-v2/recommendations/route.ts`](../../src/app/api/home-v2/recommendations/route.ts) |
 | `/api/import-portfolio` | POST | [`src/app/api/import-portfolio/route.ts`](../../src/app/api/import-portfolio/route.ts) |
 | `/api/import/quality-repair` | POST | [`src/app/api/import/quality-repair/route.ts`](../../src/app/api/import/quality-repair/route.ts) |
+| `/api/integrations/telegram/clover/link` | GET, POST, DELETE | [`src/app/api/integrations/telegram/clover/link/route.ts`](../../src/app/api/integrations/telegram/clover/link/route.ts) |
 | `/api/integrations/telegram/link` | GET, POST, DELETE | [`src/app/api/integrations/telegram/link/route.ts`](../../src/app/api/integrations/telegram/link/route.ts) |
 | `/api/intelligence` | GET | [`src/app/api/intelligence/route.ts`](../../src/app/api/intelligence/route.ts) |
 | `/api/internal/account-deleted` | POST | [`src/app/api/internal/account-deleted/route.ts`](../../src/app/api/internal/account-deleted/route.ts) |
@@ -339,5 +342,6 @@
 | `/api/webhooks/resend` | POST | [`src/app/api/webhooks/resend/route.ts`](../../src/app/api/webhooks/resend/route.ts) |
 | `/api/webhooks/telegram` | GET, POST | [`src/app/api/webhooks/telegram/route.ts`](../../src/app/api/webhooks/telegram/route.ts) |
 | `/api/webhooks/telegram/[secret]` | POST | [`src/app/api/webhooks/telegram/[secret]/route.ts`](../../src/app/api/webhooks/telegram/[secret]/route.ts) |
+| `/api/webhooks/telegram/clover/[secret]` | POST | [`src/app/api/webhooks/telegram/clover/[secret]/route.ts`](../../src/app/api/webhooks/telegram/clover/[secret]/route.ts) |
 | `/api/weekly-digest` | GET | [`src/app/api/weekly-digest/route.ts`](../../src/app/api/weekly-digest/route.ts) |
 | `/api/widget-token` | GET, POST, DELETE | [`src/app/api/widget-token/route.ts`](../../src/app/api/widget-token/route.ts) |
