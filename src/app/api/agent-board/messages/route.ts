@@ -3,7 +3,9 @@ import { getSessionFromRequest } from "@/lib/auth/session";
 import {
   isFeatureEnabledForUser,
   listAgentBoardMessages,
+  listAgentBoardMessagesForComposer,
   getUserSettings,
+  updateUserSettings,
 } from "@/lib/db";
 import {
   authenticateDeviceBearer,
@@ -11,6 +13,7 @@ import {
 } from "@/lib/device-bearer-auth";
 import { json401 } from "@/lib/log-unauthorized";
 import { withMetrics } from "@/lib/with-metrics";
+import type { AgentBoardMessage } from "@/lib/agent-board/types";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +33,17 @@ async function resolveUserId(req: NextRequest): Promise<{
   return { userId: null };
 }
 
+function mapMessages(messages: AgentBoardMessage[]) {
+  return messages.map((m) => ({
+    id: m.id,
+    agent: m.agent,
+    kind: m.kind,
+    body: m.body,
+    priority: m.priority,
+    createdAt: m.createdAt,
+  }));
+}
+
 export const GET = withMetrics("/api/agent-board/messages", async (req: NextRequest) => {
   const auth = await resolveUserId(req);
   if (auth.rateLimited) {
@@ -43,26 +57,43 @@ export const GET = withMetrics("/api/agent-board/messages", async (req: NextRequ
     });
   }
 
-  const enabled = await isFeatureEnabledForUser("agent_board_enabled", auth.userId);
-  if (!enabled) {
-    return NextResponse.json({ enabled: false, messages: [] });
+  const platformEnabled = await isFeatureEnabledForUser("agent_board_enabled", auth.userId);
+  if (!platformEnabled) {
+    return NextResponse.json({
+      enabled: false,
+      status: "unavailable",
+      messages: [],
+    });
   }
 
+  // Installing the Scriptable widget is the opt-in — not Profile → Notifications.
   const settings = await getUserSettings(auth.userId);
   if (!settings.agentBoardEnabled) {
-    return NextResponse.json({ enabled: false, messages: [] });
+    await updateUserSettings(auth.userId, { agentBoardEnabled: true });
   }
 
-  const messages = await listAgentBoardMessages(auth.userId, 8);
+  const active = await listAgentBoardMessages(auth.userId, 8);
+  if (active.length > 0) {
+    return NextResponse.json({
+      enabled: true,
+      status: "ok",
+      messages: mapMessages(active),
+    });
+  }
+
+  // Nothing new right now — show the last notes Warren/Clara left, if any.
+  const latest = await listAgentBoardMessagesForComposer(auth.userId, 3);
+  if (latest.length > 0) {
+    return NextResponse.json({
+      enabled: true,
+      status: "stale",
+      messages: mapMessages(latest),
+    });
+  }
+
   return NextResponse.json({
     enabled: true,
-    messages: messages.map((m) => ({
-      id: m.id,
-      agent: m.agent,
-      kind: m.kind,
-      body: m.body,
-      priority: m.priority,
-      createdAt: m.createdAt,
-    })),
+    status: "nothing_new",
+    messages: [],
   });
 });

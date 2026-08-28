@@ -1,7 +1,7 @@
 // trefolio — Pizarra (Agent Board) Widget for Scriptable
 // Paste this script in the Scriptable app, then add a Scriptable widget to your home screen.
-// Shows AI-picked notes from Warren and Clara. Not financial advice.
-// Enable under Profile → Notifications. Token: trefolio.com → Profile → Widget Access.
+// Shows Warren notes when something matters for your holdings. Not financial advice.
+// Set up at trefolio.com → Profile → Widget Access / Widget Setup. Token goes below.
 // Adapts layout for Small / Medium / Large (config.widgetFamily).
 
 const TOKEN = "YOUR_TOKEN_HERE";
@@ -114,7 +114,7 @@ function createWidget(data, icon, family) {
   w.addSpacer(6);
 
   if (!data.enabled) {
-    const empty = w.addText("Turn on Pizarra in trefolio Profile → Notifications, then refresh this widget.");
+    const empty = w.addText("Pizarra is not available for this account yet.");
     empty.font = Font.regularSystemFont(layout.bodyFont);
     empty.textColor = MUTED;
     empty.lineLimit = 4;
@@ -124,7 +124,7 @@ function createWidget(data, icon, family) {
 
   const messages = Array.isArray(data.messages) ? data.messages : [];
   if (messages.length === 0) {
-    const empty = w.addText("No new notes. Warren and Clara will post when something important changes.");
+    const empty = w.addText("Nothing new in the market for your holdings.");
     empty.font = Font.regularSystemFont(layout.bodyFont);
     empty.textColor = MUTED;
     empty.lineLimit = 4;
