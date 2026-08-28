@@ -128,7 +128,7 @@ export interface TelegramClient {
   getMe(): Promise<TelegramApiResult<{ id: number; username: string; first_name: string }>>;
 }
 
-class HttpTelegramClient implements TelegramClient {
+export class HttpTelegramClient implements TelegramClient {
   constructor(private readonly token: string) {}
 
   private get baseUrl(): string {

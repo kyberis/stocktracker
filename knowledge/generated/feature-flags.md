@@ -11,6 +11,7 @@ Flags from `ALL_PLATFORM_FEATURES` in [`src/lib/db/settings.ts`](../../src/lib/d
 - `alerts_enabled`
 - `apple_signin_enabled`
 - `classic_home`
+- `clover_assistant`
 - `commerce_enabled`
 - `csv_export_enabled`
 - `daily_digests_enabled`

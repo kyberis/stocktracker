@@ -524,6 +524,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "lifecycle_winback_email_enabled",
   "daily_digests_enabled",
   "telegram_bot_enabled",
+  "clover_assistant",
   "aid_beta",
   "home_v2",
   "classic_home",

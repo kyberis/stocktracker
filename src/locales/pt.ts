@@ -3569,6 +3569,15 @@ const pt: TranslationStrings = {
   agentDockOpenMenu: "Open Warren, Clara, and actions",
   agentDockCloseMenu: "Close agent menu",
   agentDockCloseHint: "Tap outside or the button to close",
+  cloverName: "Clover",
+  cloverSubtitle: "Your trefolio assistant — Warren & Clara behind the scenes",
+  cloverGreeting: "Hi — I'm Clover. Ask about your portfolio or personal finances; I'll bring in Warren or Clara when needed. Not financial advice.",
+  cloverTelegramTitle: "Clover on Telegram",
+  cloverTelegramSubtitle: "Chat with Clover on Telegram — Warren (portfolio) and Clara (personal finance) work with you behind the scenes.",
+  cloverTelegramHint: "A secure link opens @cloveraiassistant_bot. Tap Start to connect this account.",
+  cloverProposeClaraTitle: "Create your Clara space",
+  cloverProposeClaraBody: "Clover can check savings and cashflow once Clara is linked with the same login.",
+  cloverProposeClaraCta: "Create Clara",
 };
 
 export default pt;

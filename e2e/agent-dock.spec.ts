@@ -34,7 +34,7 @@ async function signupOrSkip(request: APIRequestContext, context: BrowserContext)
 test.describe("Agent dock", () => {
   test.describe.configure({ timeout: 90_000 });
 
-  test("desktop dock opens Warren and Feedback", async ({ page, request, context }) => {
+  test("desktop dock opens Clover and Feedback", async ({ page, request, context }) => {
     await signupOrSkip(request, context);
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/");
@@ -43,13 +43,13 @@ test.describe("Agent dock", () => {
 
     const dock = page.getByTestId("agent-dock");
     await expect(dock).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByTestId("agent-dock-warren")).toBeVisible();
-    await expect(page.getByTestId("agent-dock-clara")).toBeVisible();
+    await expect(page.getByTestId("agent-dock-clover")).toBeVisible();
+    await expect(page.getByTestId("agent-dock-clara")).toHaveCount(0);
     await expect(page.getByTestId("agent-dock-feedback")).toBeVisible();
     await expect(page.getByTestId("agent-dock-support")).toHaveCount(0);
 
-    await page.getByTestId("agent-dock-warren").click();
-    await expect(page.getByRole("dialog", { name: /Warren/i }).first()).toBeVisible({ timeout: 15_000 });
+    await page.getByTestId("agent-dock-clover").click();
+    await expect(page.getByRole("dialog", { name: /Clover/i }).first()).toBeVisible({ timeout: 15_000 });
     await page.keyboard.press("Escape");
 
     await page.getByTestId("agent-dock-feedback").click();
@@ -69,20 +69,19 @@ test.describe("Agent dock", () => {
     await page.getByTestId("agent-dock-fab").click();
     const sheet = page.getByTestId("agent-dock-sheet");
     await expect(sheet).toBeVisible();
-    await expect(sheet.getByRole("button", { name: /Warren/i })).toBeVisible();
-    await expect(sheet.getByRole("button", { name: /Clara/i })).toBeVisible();
+    await expect(sheet.getByRole("button", { name: /Clover/i })).toBeVisible();
 
     await sheet.getByRole("button", { name: /Feedback/i }).click();
     await expect(page.getByRole("dialog", { name: /Feedback/i })).toBeVisible({ timeout: 10_000 });
   });
 
-  test("demo dock sends Warren to signup", async ({ page }) => {
+  test("demo dock sends Clover to signup", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/demo");
     await dismissOverlays(page);
     await expect(page.getByTestId("agent-dock")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId("agent-dock-feedback")).toHaveCount(0);
-    await page.getByTestId("agent-dock-warren").click();
+    await page.getByTestId("agent-dock-clover").click();
     await expect(page).toHaveURL(/\/signup/);
   });
 });

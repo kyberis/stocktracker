@@ -52,6 +52,8 @@ const sharedPayload = {
   isDemo: z.boolean().optional(),
   portfolioContext: warrenPortfolioSnapshotSchema.optional(),
   selectionContext: holdingsExplorerSelectionSchema.optional(),
+  /** Clover drawer uses channel "clover"; default remains web Warren. */
+  channel: z.enum(["web", "clover"]).optional(),
 };
 
 const requestSchema = z
@@ -231,7 +233,7 @@ export const POST = withMetrics("/api/warren/chat", async (req: NextRequest) => 
         await runWarrenTurn({
           userId: session.userId,
           isDemo: !!body.isDemo,
-          channel: "web",
+          channel: body.channel === "clover" ? "clover" : "web",
           language: body.language,
           baseCurrency: body.baseCurrency,
           activePortfolioId: serverPortfolioId,

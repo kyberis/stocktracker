@@ -127,6 +127,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [warren-first-stock](warren-first-stock.md) — A/B post-onboarding skip: control empty home vs right Warren with a prefilled first-stock example.
 - [warren-import](warren-import.md) — import CSV / SnapTrade / AI through Warren using the same `/import` pipelines.
 - [warren-telegram-bot](warren-telegram-bot.md) — Warren accessible via Telegram (text + voice).
+- [clover-assistant](clover-assistant.md) — Clover default orchestrator (Warren + Clara behind the scenes; Telegram @cloveraiassistant_bot).
 - [agent-office](agent-office.md) — Pro workspace where Warren, Clara, and Will coordinate missions (`/office`).
 - [investment-screening](investment-screening.md) — `/screening` exposure → intake chat → brief → run → HTML candidate report (flag `investment_screening_enabled`, stage E0 fixture).
 - [real-estate-screening](real-estate-screening.md) — Portugal zone screening at `/real-estate/screening` (INE catalogue + user params; flag `real_estate_screening_enabled`).

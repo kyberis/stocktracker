@@ -15,6 +15,8 @@ export default function AgentChromeHost() {
     demoMode,
     warrenOpen,
     closeWarren,
+    cloverOpen,
+    closeClover,
     claraOpen,
     closeClara,
     feedbackOpen,
@@ -31,7 +33,15 @@ export default function AgentChromeHost() {
     <>
       <AgentDock />
       {!demoMode && (
-        <WarrenDrawer isOpen={warrenOpen} onClose={closeWarren} side="right" />
+        <WarrenDrawer
+          isOpen={cloverOpen}
+          onClose={closeClover}
+          side="right"
+          persona="clover"
+        />
+      )}
+      {!demoMode && (
+        <WarrenDrawer isOpen={warrenOpen} onClose={closeWarren} side="right" persona="warren" />
       )}
       {!demoMode && <ClaraLandingModal open={claraOpen} onClose={closeClara} />}
       {showFeedbackChip && feedbackOpen && (
