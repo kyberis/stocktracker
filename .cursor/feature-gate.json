@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.251: agent dock is in-app chrome (Warren/Clara/feedback/alerts), not a landing-page capability"
+  "notes": "2.5.252: Clover is in-app orchestrator; Studio lists Clover first; landing AgentsTeam still highlights Warren/Clara/Will specialists"
 }

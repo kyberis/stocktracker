@@ -52,7 +52,12 @@ export function buildSisterAgentTools(ctx: WarrenToolContext) {
           clara.note ||
           "Clara account not linked — use the same email at clara.trefolio.com.";
         ctx.emitSisterCoordination?.({ from: "warren", to: "clara", summary: hint });
-        return { available: false, note: hint };
+        return {
+          available: false,
+          proposeClara: true,
+          note: hint,
+          loginUrl: "https://clara.trefolio.com/login",
+        };
       },
     });
 

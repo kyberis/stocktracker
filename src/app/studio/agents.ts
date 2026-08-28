@@ -14,10 +14,20 @@ export type StudioAgent = {
 
 export const STUDIO_AGENTS: StudioAgent[] = [
   {
+    name: "Clover",
+    role: "trefolio assistant",
+    description:
+      "One chat for portfolio and personal finance — Clover orchestrates Warren and Clara behind the scenes so you never pick which agent to ask.",
+    accent: "emerald",
+    iconSrc: "/avatars/clover-512.png",
+    href: "/signup",
+    cta: "Open trefolio",
+  },
+  {
     name: "Warren",
     role: "Investment analyst",
     description:
-      "Portfolio analysis, MOAT research, and AI insights inside trefolio — the flagship product for European investors.",
+      "Portfolio analysis, MOAT research, and AI insights inside trefolio — the specialist Clover calls for holdings and markets.",
     accent: "emerald",
     iconSrc: "/avatars/warren-512.png",
     href: "/signup",

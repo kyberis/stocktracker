@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import AiMarkdown from "@/components/AiMarkdown";
 import WarrenAvatar from "./WarrenAvatar";
+import CloverAvatar from "@/components/clover/CloverAvatar";
+import { getClaraLoginUrl } from "@/lib/clara-public-url";
 import RenderPart from "./RenderPart";
 import ActionCard from "./ActionCard";
 import { useI18n, type TranslationKey } from "@/lib/i18n";
@@ -51,9 +53,13 @@ type Bubble =
   | { id: string; kind: "text-assistant"; content: string }
   | { id: string; kind: "tool-step"; label: string }
   | { id: string; kind: "part"; part: WarrenPart }
-  | { id: string; kind: "proposal"; proposal: WarrenProposal };
+  | { id: string; kind: "proposal"; proposal: WarrenProposal }
+  | { id: string; kind: "propose-clara"; note?: string };
 
 function bubbleToPersisted(bubble: Bubble): PersistedWarrenBubble {
+  if (bubble.kind === "propose-clara") {
+    return { id: bubble.id, kind: "text-assistant", content: bubble.note || "" };
+  }
   return bubble as PersistedWarrenBubble;
 }
 
@@ -84,6 +90,8 @@ interface Props {
   pinnedExamplePrompt?: string;
   pinnedExampleLabel?: string;
   onPinnedExampleSend?: () => void;
+  /** Clover = orchestrator brand; warren = specialist (default). */
+  persona?: "warren" | "clover";
 }
 
 function makeId(): string {
@@ -156,7 +164,9 @@ export default function WarrenDrawer({
   pinnedExamplePrompt,
   pinnedExampleLabel,
   onPinnedExampleSend,
+  persona = "warren",
 }: Props) {
+  const isClover = persona === "clover";
   const mode = placement ?? (embedded ? "embedded" : "drawer");
   const { t, language } = useI18n();
   const { userPlan } = usePlatform();
@@ -324,6 +334,7 @@ export default function WarrenDrawer({
               isDemo: !!demoMode,
               portfolioContext: snapshot,
               selectionContext: selectionContext ?? undefined,
+              channel: isClover ? "clover" : "web",
             }),
           );
           fd.append("userText", trimmed);
@@ -346,6 +357,7 @@ export default function WarrenDrawer({
               isDemo: !!demoMode,
               portfolioContext: snapshot,
               selectionContext: selectionContext ?? undefined,
+              channel: isClover ? "clover" : "web",
             }),
           });
         }
@@ -480,7 +492,13 @@ export default function WarrenDrawer({
 
   const greeting =
     emptyGreeting ||
-    (holdings.length === 0 ? t("warrenGreetingEmptyAdd") || t("warrenGreeting") : t("warrenGreeting"));
+    (isClover
+      ? t("cloverGreeting")
+      : holdings.length === 0
+        ? t("warrenGreetingEmptyAdd") || t("warrenGreeting")
+        : t("warrenGreeting"));
+
+  const AgentFace = isClover ? CloverAvatar : WarrenAvatar;
 
   const contextLine = stealthMode
     ? t("warrenConnected")
@@ -516,21 +534,22 @@ export default function WarrenDrawer({
       <aside
         className={panelClass}
         role={mode === "embedded" ? "region" : "dialog"}
-        aria-label={t("warrenName")}
+        aria-label={isClover ? t("cloverName") : t("warrenName")}
         aria-hidden={mode === "embedded" ? undefined : !isOpen}
         data-warren-expanded={expanded ? "true" : "false"}
         data-warren-side={mode === "drawer" ? side : undefined}
+        data-persona={persona}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-amber-500/10 bg-gradient-to-r from-amber-500/[0.05] to-transparent shrink-0">
-          <WarrenAvatar size={42} thinking={streaming} />
+        <div className={`flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-amber-500/10 bg-gradient-to-r ${isClover ? "from-emerald-500/[0.08]" : "from-amber-500/[0.05]"} to-transparent shrink-0`}>
+          {isClover ? <CloverAvatar size={42} thinking={streaming} /> : <WarrenAvatar size={42} thinking={streaming} />}
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-[16px] leading-tight tracking-tight text-amber-700 dark:text-amber-200">
-              {t("warrenName")}
+            <div className={`font-bold text-[16px] leading-tight tracking-tight ${isClover ? "text-emerald-800 dark:text-emerald-200" : "text-amber-700 dark:text-amber-200"}`}>
+              {isClover ? t("cloverName") : t("warrenName")}
             </div>
             <div className="text-[11px] text-gray-500 dark:text-amber-300/60 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              {t("warrenSubtitle")}
+              {isClover ? t("cloverSubtitle") : t("warrenSubtitle")}
             </div>
           </div>
           {canExpand && (
@@ -584,7 +603,7 @@ export default function WarrenDrawer({
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
           {bubbles.length === 0 && chatHydrated && (
             <div className="flex gap-2 items-start">
-              <WarrenAvatar size={28} />
+              <AgentFace size={28} />
               <div className="text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-amber-500/[0.06] border border-amber-500/15 text-gray-800 dark:text-amber-50 max-w-[82%]">
                 {greeting}
               </div>
@@ -626,9 +645,25 @@ export default function WarrenDrawer({
             if (b.kind === "proposal") {
               return <ActionCard key={b.id} proposal={b.proposal} onConfirmed={onProposalConfirmed} />;
             }
+            if (b.kind === "propose-clara") {
+              return (
+                <div key={b.id} className="pl-9 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] p-3 space-y-2 max-w-[82%]">
+                  <p className="text-[13px] font-semibold text-emerald-800 dark:text-emerald-200">{t("cloverProposeClaraTitle")}</p>
+                  <p className="text-[12px] text-gray-600 dark:text-slate-300">{b.note || t("cloverProposeClaraBody")}</p>
+                  <a
+                    href={getClaraLoginUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary text-xs inline-flex"
+                  >
+                    {t("cloverProposeClaraCta")}
+                  </a>
+                </div>
+              );
+            }
             return (
               <div key={b.id} className="flex gap-2 items-start">
-                <WarrenAvatar size={28} />
+                <AgentFace size={28} />
                 <div className="text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-amber-500/[0.06] border border-amber-500/15 text-gray-800 dark:text-amber-50 max-w-[82%]">
                   {b.content ? (
                     <AiMarkdown text={b.content} compact />

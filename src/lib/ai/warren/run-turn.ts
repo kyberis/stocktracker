@@ -58,6 +58,8 @@ export interface RunWarrenTurnOptions {
 
 function warrenAuditSource(channel: WarrenChannel): string {
   if (channel === "telegram") return "warren_telegram";
+  if (channel === "clover_telegram") return "clover_telegram";
+  if (channel === "clover") return "clover_chat";
   if (channel === "office") return "warren_office";
   if (channel === "clara") return "warren_clara_sister";
   return "warren_chat";

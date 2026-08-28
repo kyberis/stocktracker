@@ -74,7 +74,29 @@ import {
   getTelegramClient,
   type TelegramClient,
 } from "./client";
+import {
+  getCloverTelegramBotUsername,
+  getCloverTelegramClient,
+} from "./clover-client";
 import { localizeTelegram, type TelegramLocale } from "./i18n";
+import type { WarrenChannel } from "@/lib/ai/warren/system-prompt";
+
+type TelegramBotKind = "warren" | "clover";
+let activeTelegramBot: TelegramBotKind = "warren";
+
+function resolveTelegramClient(): TelegramClient {
+  return activeTelegramBot === "clover" ? getCloverTelegramClient() : getTelegramClient();
+}
+
+function resolveTelegramBotUsername(): string {
+  return activeTelegramBot === "clover"
+    ? getCloverTelegramBotUsername()
+    : getTelegramBotUsername();
+}
+
+function resolveTelegramChannel(): WarrenChannel {
+  return activeTelegramBot === "clover" ? "clover_telegram" : "telegram";
+}
 import { buildPortfolioAllocationChart, sendChartPart } from "./chart-render";
 import { transcribeVoice } from "@/lib/ai/transcribe";
 import { synthesizeSpeech } from "@/lib/ai/tts";
@@ -150,12 +172,15 @@ const VOICE_MAX_BYTES = 4 * 1024 * 1024;
  * Always returns a resolved promise — never throws — so the webhook can
  * always return 200 to Telegram and avoid retry storms.
  */
-export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void> {
+export async function handleTelegramUpdate(
+  update: TelegramUpdate,
+  opts?: { bot?: "warren" | "clover" },
+): Promise<void> {
+  activeTelegramBot = opts?.bot ?? "warren";
   try {
-    const enabled = await isFeatureEnabled(TELEGRAM_FLAG);
+    const flag = activeTelegramBot === "clover" ? "clover_assistant" : TELEGRAM_FLAG;
+    const enabled = await isFeatureEnabled(flag);
     if (!enabled) {
-      // Silently drop updates if the platform flag is off. Operators may
-      // disable globally without redeploying.
       return;
     }
 
@@ -167,6 +192,8 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
     if (message) await handleMessage(message);
   } catch (err) {
     console.error("[telegram] handleTelegramUpdate failed", err);
+  } finally {
+    activeTelegramBot = "warren";
   }
 }
 
@@ -176,7 +203,7 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
   const chatId = String(message.chat.id);
   const text = (message.text || "").trim();
 
-  const bot = getTelegramClient();
+  const bot = resolveTelegramClient();
   const link = await getChatLinkByChatId(chatId);
   if (link) await touchChatLastSeen(chatId);
 
@@ -185,7 +212,7 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
     if (!link) {
       const langGuess = inferLocale(message.from?.language_code);
       const i = localizeTelegram(langGuess);
-      await sendMd(bot, chatId, escapeMarkdown(i.notLinked(getTelegramBotUsername())));
+      await sendMd(bot, chatId, escapeMarkdown(i.notLinked(resolveTelegramBotUsername())));
       return;
     }
     await handleVoiceMessage(bot, message, link);
@@ -196,7 +223,7 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
     if (!link) {
       const langGuess = inferLocale(message.from?.language_code);
       const i = localizeTelegram(langGuess);
-      await sendMd(bot, chatId, escapeMarkdown(i.notLinked(getTelegramBotUsername())));
+      await sendMd(bot, chatId, escapeMarkdown(i.notLinked(resolveTelegramBotUsername())));
       return;
     }
     await handlePhotoOrDocumentWarren(bot, message, link);
@@ -207,7 +234,7 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
     if (!link) {
       const langGuess = inferLocale(message.from?.language_code);
       const i = localizeTelegram(langGuess);
-      await sendMd(bot, chatId, escapeMarkdown(i.notLinked(getTelegramBotUsername())));
+      await sendMd(bot, chatId, escapeMarkdown(i.notLinked(resolveTelegramBotUsername())));
       return;
     }
     await handlePhotoOrDocumentWarren(bot, message, link);
@@ -226,7 +253,7 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
   if (!link) {
     const langGuess = inferLocale(message.from?.language_code);
     const i = localizeTelegram(langGuess);
-    await sendMd(bot, chatId, escapeMarkdown(i.notLinked(getTelegramBotUsername())));
+    await sendMd(bot, chatId, escapeMarkdown(i.notLinked(resolveTelegramBotUsername())));
     return;
   }
 
@@ -380,7 +407,7 @@ async function handleCommand(
   // For all other commands the chat must already be linked.
   if (!link) {
     const i = localizeTelegram(inferLocale(message.from?.language_code));
-    await sendMd(bot, chatId, escapeMarkdown(i.notLinked(getTelegramBotUsername())));
+    await sendMd(bot, chatId, escapeMarkdown(i.notLinked(resolveTelegramBotUsername())));
     return;
   }
 
@@ -550,7 +577,7 @@ async function handleStartCommand(
     if (existing) {
       await sendMd(bot, chatId, renderHelpMenu(buildHelp(i)));
     } else {
-      await sendMd(bot, chatId, escapeMarkdown(i.notLinked(getTelegramBotUsername())));
+      await sendMd(bot, chatId, escapeMarkdown(i.notLinked(resolveTelegramBotUsername())));
     }
     return;
   }
@@ -757,7 +784,7 @@ async function runWarrenForText(
     result = await runWarrenTurn({
       userId,
       isDemo: false,
-      channel: "telegram",
+      channel: resolveTelegramChannel(),
       language,
       baseCurrency,
       activePortfolioId: activePortfolioId || undefined,
@@ -880,7 +907,7 @@ async function maybeSendVoiceReply(
 // ────────────────────────────── Callbacks ──────────────────────────────
 
 async function handleCallbackQuery(query: TelegramCallbackQuery): Promise<void> {
-  const bot = getTelegramClient();
+  const bot = resolveTelegramClient();
   const data = query.data || "";
   const chatId = String(query.message?.chat?.id || "");
   const messageId = query.message?.message_id;

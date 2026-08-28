@@ -16,6 +16,7 @@ import TierFeatureBadge from "@/components/TierFeatureBadge";
 import { Smartphone, Monitor, Copy, Check, Trash2, User, Users, CreditCard, Bell, FolderOpen, Gift, Share2, Eye, EyeOff, Globe, Bot } from "lucide-react";
 import NotificationChannels from "@/components/NotificationChannels";
 import TelegramConnectCard from "@/components/profile/TelegramConnectCard";
+import CloverTelegramConnectCard from "@/components/profile/CloverTelegramConnectCard";
 import ProfileMcpSection from "@/components/profile/ProfileMcpSection";
 import { COUNTRIES } from "@/lib/countries";
 import { resolveBillingPortalHref } from "@/lib/idp/config";
@@ -1493,6 +1494,7 @@ export default function ProfilePage() {
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--muted)]">{t("profileSectionAccess")}</h2>
           </div>
+          <CloverTelegramConnectCard />
           <TelegramConnectCard />
           </>
         ) : (
@@ -1618,7 +1620,8 @@ export default function ProfilePage() {
           {googleError && <p className="text-xs text-red-500 dark:text-red-400" role="alert">{googleError}</p>}
         </div>
 
-        {/* Warren on Telegram */}
+        {/* Clover + Warren on Telegram */}
+        <CloverTelegramConnectCard />
         <TelegramConnectCard />
 
         {/* Passkeys */}

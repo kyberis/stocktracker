@@ -50,6 +50,7 @@ export type PlatformFeature =
   | "lifecycle_winback_email_enabled"
   | "daily_digests_enabled"
   | "telegram_bot_enabled"
+  | "clover_assistant"
   | "aid_beta"
   | "home_v2"
   | "classic_home"
@@ -88,6 +89,7 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "mcp_fmp_proxy",
   "weekly_digest_enabled",
   "telegram_bot_enabled",
+  "clover_assistant",
   "lifecycle_activation_email_enabled",
   // Default authenticated home (morning brief / day-highlights APIs). Classic is opt-in via classic_home.
   "home_v2",
@@ -521,6 +523,7 @@ export const ALL_PLATFORM_FEATURES = [
   "lifecycle_winback_email_enabled",
   "daily_digests_enabled",
   "telegram_bot_enabled",
+  "clover_assistant",
   "aid_beta",
   "home_v2",
   "classic_home",

@@ -15,6 +15,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 export type AgentChromeContextValue = {
   demoMode: boolean;
   warrenOpen: boolean;
+  cloverOpen: boolean;
   claraOpen: boolean;
   feedbackOpen: boolean;
   supportChatOpen: boolean;
@@ -25,8 +26,13 @@ export type AgentChromeContextValue = {
   supportChatWelcome: string;
   showSupportChip: boolean;
   showFeedbackChip: boolean;
+  cloverEnabled: boolean;
+  showWarrenChip: boolean;
+  showClaraChip: boolean;
   openWarren: () => void;
   closeWarren: () => void;
+  openClover: () => void;
+  closeClover: () => void;
   openClara: () => void;
   closeClara: () => void;
   openFeedback: () => void;
@@ -58,6 +64,7 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
   const [warrenOpen, setWarrenOpen] = useState(false);
+  const [cloverOpen, setCloverOpen] = useState(false);
   const [claraOpen, setClaraOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [supportChatOpen, setSupportChatOpen] = useState(false);
@@ -66,6 +73,9 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
   const [alertCount, setAlertCount] = useState(0);
   const [supportChatEnabled, setSupportChatEnabled] = useState(false);
   const [supportChatWelcome, setSupportChatWelcome] = useState("");
+  const [cloverEnabled, setCloverEnabled] = useState(true);
+  const [showWarrenChip, setShowWarrenChip] = useState(false);
+  const [showClaraChip, setShowClaraChip] = useState(false);
 
   useEffect(() => {
     if (demoMode || !user) return;
@@ -83,6 +93,29 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [demoMode, user]);
 
+  useEffect(() => {
+    if (demoMode) {
+      setCloverEnabled(true);
+      setShowWarrenChip(false);
+      setShowClaraChip(false);
+      return;
+    }
+    if (!user) return;
+    let cancelled = false;
+    fetch("/api/clover/bootstrap")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        setCloverEnabled(Boolean(data.cloverEnabled));
+        setShowWarrenChip(Boolean(data.showWarrenChip));
+        setShowClaraChip(Boolean(data.showClaraChip));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [demoMode, user]);
+
   const closeOverlays = useCallback(() => {
     setClaraOpen(false);
     setFeedbackOpen(false);
@@ -93,13 +126,23 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
 
   const openWarren = useCallback(() => {
     closeOverlays();
+    setCloverOpen(false);
     setWarrenOpen(true);
   }, [closeOverlays]);
 
   const closeWarren = useCallback(() => setWarrenOpen(false), []);
 
+  const openClover = useCallback(() => {
+    closeOverlays();
+    setWarrenOpen(false);
+    setCloverOpen(true);
+  }, [closeOverlays]);
+
+  const closeClover = useCallback(() => setCloverOpen(false), []);
+
   const openClara = useCallback(() => {
     setWarrenOpen(false);
+    setCloverOpen(false);
     setFeedbackOpen(false);
     setSupportChatOpen(false);
     setAlertsExpanded(false);
@@ -111,6 +154,7 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
 
   const openFeedback = useCallback(() => {
     setWarrenOpen(false);
+    setCloverOpen(false);
     setClaraOpen(false);
     setSupportChatOpen(false);
     setAlertsExpanded(false);
@@ -122,6 +166,7 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
 
   const openSupportChat = useCallback(() => {
     setWarrenOpen(false);
+    setCloverOpen(false);
     setClaraOpen(false);
     setFeedbackOpen(false);
     setAlertsExpanded(false);
@@ -133,6 +178,7 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
 
   const toggleAlerts = useCallback(() => {
     setWarrenOpen(false);
+    setCloverOpen(false);
     setClaraOpen(false);
     setFeedbackOpen(false);
     setSupportChatOpen(false);
@@ -147,6 +193,7 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
     () => ({
       demoMode,
       warrenOpen,
+      cloverOpen,
       claraOpen,
       feedbackOpen,
       supportChatOpen,
@@ -157,8 +204,13 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
       supportChatWelcome,
       showSupportChip,
       showFeedbackChip,
+      cloverEnabled,
+      showWarrenChip,
+      showClaraChip,
       openWarren,
       closeWarren,
+      openClover,
+      closeClover,
       openClara,
       closeClara,
       openFeedback,
@@ -173,6 +225,7 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
     [
       demoMode,
       warrenOpen,
+      cloverOpen,
       claraOpen,
       feedbackOpen,
       supportChatOpen,
@@ -183,8 +236,13 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
       supportChatWelcome,
       showSupportChip,
       showFeedbackChip,
+      cloverEnabled,
+      showWarrenChip,
+      showClaraChip,
       openWarren,
       closeWarren,
+      openClover,
+      closeClover,
       openClara,
       closeClara,
       openFeedback,
