@@ -43,6 +43,8 @@ Events tracked via a single helper (`track(name, payload)`) and stored in `analy
 
 ## 12. Telemetry
 - `agent_dock_open`, `agent_dock_warren`, `agent_dock_clara`, `agent_dock_feedback`, `agent_dock_alerts`, `agent_dock_support` (GA via `useTrack`; see [agent-dock](agent-dock.md)).
+- `onboarding_clara_step_viewed`, `onboarding_clara_activate_clicked` (client allow-list; see [onboarding](onboarding.md)).
+- `onboarding_clara_linked`, `onboarding_clara_skipped` (server; see [onboarding](onboarding.md)).
 - `analytics_events_ingested_total`.
 
 ## 13. Edge cases & gotchas

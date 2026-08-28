@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeProvider } from "@/lib/theme-context";
@@ -12,8 +13,26 @@ import { skipOnboardingHomePath } from "@/lib/warren-first-stock";
 import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
 import { COUNTRIES } from "@/lib/countries";
 import { getBrokersForCountry } from "@/lib/country-brokers";
+import { getClaraLoginUrl } from "@/lib/clara-public-url";
+import {
+  CLARA_ONBOARDING_POLL_INTERVAL_MS,
+  CLARA_WIZARD_STEP_INDEX,
+  TRIAL_WIZARD_STEP_INDEX,
+  WIZARD_STEP_COUNT,
+  parseClaraOnboardingLinked,
+  shouldAutoAdvancePastHiddenTrial,
+  skipSetupTargetStep,
+  wizardBackFromClara,
+  type ClaraOnboardingActivation,
+} from "@/lib/onboarding-clara-step";
 
-const TOTAL_STEPS = 4;
+function trackOnboardingEvent(event: string, metadata?: Record<string, string>) {
+  void fetch("/api/analytics/track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ event, metadata }),
+  }).catch(() => {});
+}
 
 type ExperienceOption = "beginner" | "intermediate" | "experienced" | "professional";
 type UseCaseOption = "track_portfolio" | "dividend_income" | "tax_reporting" | "research_stocks";
@@ -23,7 +42,7 @@ function StepIndicator({ current }: { current: number }) {
   const { t } = useI18n();
   return (
     <div className="flex items-center justify-center gap-2 mb-6">
-      {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+      {Array.from({ length: WIZARD_STEP_COUNT }, (_, i) => (
         <div
           key={i}
           className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -36,7 +55,7 @@ function StepIndicator({ current }: { current: number }) {
         />
       ))}
       <span className="sr-only">
-        {t("onboardingStepOf").replace("{current}", String(current + 1)).replace("{total}", String(TOTAL_STEPS))}
+        {t("onboardingStepOf").replace("{current}", String(current + 1)).replace("{total}", String(WIZARD_STEP_COUNT))}
       </span>
     </div>
   );
@@ -399,11 +418,9 @@ function StepReferralSource({
 function StepTrial({
   onActivate,
   onSkip,
-  saving,
 }: {
   onActivate: () => void;
   onSkip: () => void;
-  saving: boolean;
 }) {
   const { t } = useI18n();
   const shownRef = useRef(false);
@@ -439,20 +456,166 @@ function StepTrial({
         <button
           type="button"
           onClick={onActivate}
-          disabled={saving}
-          className="btn-primary w-full disabled:opacity-60"
+          className="btn-primary min-h-11 w-full"
         >
-          {saving ? t("onboardingTrialActivating") : t("onboardingTrialActivate")}
+          {t("onboardingTrialActivate")}
         </button>
         <button
           type="button"
           onClick={onSkip}
-          disabled={saving}
-          className="btn-secondary w-full disabled:opacity-60"
+          className="btn-secondary min-h-11 w-full"
         >
           {t("onboardingTrialSkip")}
         </button>
       </div>
+    </div>
+  );
+}
+
+/* ── Step 4: Clara activate (optional SSO) ── */
+
+function StepClaraActivate({
+  onLinked,
+  onSkip,
+  saving,
+}: {
+  onLinked: () => void;
+  onSkip: () => void;
+  saving: boolean;
+}) {
+  const { t } = useI18n();
+  const [linked, setLinked] = useState(false);
+  const [waiting, setWaiting] = useState(false);
+  const viewedRef = useRef(false);
+  const onLinkedRef = useRef(onLinked);
+  onLinkedRef.current = onLinked;
+
+  useEffect(() => {
+    if (viewedRef.current) return;
+    viewedRef.current = true;
+    trackOnboardingEvent("onboarding_clara_step_viewed");
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/clara/status", { cache: "no-store" });
+        if (!res.ok || cancelled) return;
+        const data: unknown = await res.json();
+        if (!cancelled && parseClaraOnboardingLinked(data)) {
+          setLinked(true);
+        }
+      } catch {
+        // Keep polling; skip remains available.
+      }
+    };
+
+    void poll();
+    const id = window.setInterval(poll, CLARA_ONBOARDING_POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!linked) return;
+    if (saving) return;
+    const timeout = window.setTimeout(() => {
+      onLinkedRef.current();
+    }, 600);
+    return () => window.clearTimeout(timeout);
+  }, [linked, saving]);
+
+  const handleActivate = () => {
+    setWaiting(true);
+    trackOnboardingEvent("onboarding_clara_activate_clicked");
+    window.open(getClaraLoginUrl(), "_blank", "noopener,noreferrer");
+  };
+
+  const handleSkip = () => {
+    if (linked || saving) return;
+    onSkip();
+  };
+
+  const bullets = [
+    t("onboardingClaraBullet1"),
+    t("onboardingClaraBullet2"),
+    t("onboardingClaraBullet3"),
+  ];
+
+  let statusMessage: string | null = null;
+  if (linked) statusMessage = t("onboardingClaraLinked");
+  else if (waiting) statusMessage = t("onboardingClaraWaiting");
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-3">
+        <span
+          className="inline-block shrink-0 overflow-hidden rounded-full ring-2 ring-sky-500/30"
+          style={{ width: 48, height: 48 }}
+          aria-hidden="true"
+        >
+          <Image
+            src="/avatars/clara-512.png"
+            alt=""
+            width={48}
+            height={48}
+            className="h-full w-full object-cover"
+          />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">{t("claraName")}</p>
+          <p className="text-xs text-gray-500 dark:text-slate-400">{t("claraModalRole")}</p>
+        </div>
+      </div>
+
+      <p className="text-sm text-gray-500 dark:text-slate-400">{t("onboardingClaraSubtitle")}</p>
+
+      <ul className="space-y-3">
+        {bullets.map((bullet) => (
+          <li key={bullet} className="flex gap-3 text-sm text-gray-700 dark:text-slate-300">
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400" aria-hidden>
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            </span>
+            <span>{bullet}</span>
+          </li>
+        ))}
+      </ul>
+
+      <p className="text-xs text-gray-400 dark:text-slate-500">{t("onboardingClaraFreeNote")}</p>
+
+      {statusMessage && (
+        <p className="text-sm text-sky-700 dark:text-sky-300" role="status" aria-live="polite">
+          {statusMessage}
+        </p>
+      )}
+
+      <div className="flex flex-col gap-3 pt-1">
+        <button
+          type="button"
+          onClick={handleActivate}
+          disabled={saving || linked}
+          className="btn-primary min-h-11 w-full disabled:opacity-60"
+        >
+          {t("onboardingClaraActivate")}
+        </button>
+        <button
+          type="button"
+          onClick={handleSkip}
+          disabled={saving || linked}
+          className="btn-secondary min-h-11 w-full disabled:opacity-60"
+        >
+          {t("onboardingClaraSkip")}
+        </button>
+      </div>
+
+      <p className="text-xs text-gray-400 dark:text-slate-500">{t("onboardingClaraSisterNote")}</p>
+      <p className="text-xs text-gray-400 dark:text-slate-500">{t("onboardingClaraDisclaimer")}</p>
     </div>
   );
 }
@@ -546,8 +709,9 @@ function OnboardingContent() {
   const [useCase, setUseCase] = useState<UseCaseOption[]>([]);
   const [referralSource, setReferralSource] = useState<ReferralSourceOption | "">("");
   const [saving, setSaving] = useState(false);
-  const autoCompleteRef = useRef(false);
+  const trialChoiceRef = useRef<boolean | undefined>(undefined);
   const stayingForImportRef = useRef(false);
+  const completingRef = useRef(false);
 
   const showTrialStep = flagsLoaded && trialEnabled && commerceEnabled && !user?.trialActivatedAt;
 
@@ -567,9 +731,15 @@ function OnboardingContent() {
     }
   }, [user?.onboardingCompleted, phase, router]);
 
-  const completeOnboarding = useCallback(async (activateTrial?: boolean) => {
+  const completeOnboarding = useCallback(async (opts?: {
+    activateTrial?: boolean;
+    claraActivation?: ClaraOnboardingActivation;
+  }) => {
+    if (completingRef.current) return;
+    completingRef.current = true;
     setSaving(true);
     try {
+      const activateTrial = opts?.activateTrial ?? trialChoiceRef.current;
       const body: Record<string, unknown> = {
         displayName,
         defaultCurrency: currency,
@@ -580,6 +750,7 @@ function OnboardingContent() {
       };
       if (activateTrial === true) body.activateTrial = true;
       if (activateTrial === false) body.activateTrial = false;
+      if (opts?.claraActivation) body.claraActivation = opts.claraActivation;
 
       const res = await fetch("/api/auth/onboarding", {
         method: "POST",
@@ -590,27 +761,28 @@ function OnboardingContent() {
         stayingForImportRef.current = true;
         setPhase("importProposal");
         await refreshUser();
+      } else {
+        completingRef.current = false;
       }
     } catch {
-      // Allow retry
+      completingRef.current = false;
     }
     setSaving(false);
   }, [displayName, currency, taxResidency, experienceLevel, useCase, referralSource, refreshUser]);
 
   useEffect(() => {
     if (
-      phase !== "wizard" ||
-      step !== 3 ||
-      !flagsLoaded ||
-      showTrialStep ||
-      autoCompleteRef.current ||
-      saving
+      !shouldAutoAdvancePastHiddenTrial({
+        phase,
+        step,
+        flagsLoaded,
+        showTrial: showTrialStep,
+      })
     ) {
       return;
     }
-    autoCompleteRef.current = true;
-    void completeOnboarding();
-  }, [phase, step, flagsLoaded, showTrialStep, saving, completeOnboarding]);
+    setStep(CLARA_WIZARD_STEP_INDEX);
+  }, [phase, step, flagsLoaded, showTrialStep]);
 
   const handleImportChoice = useCallback(async (importMethod: ImportChoice) => {
     stayingForImportRef.current = false;
@@ -630,6 +802,7 @@ function OnboardingContent() {
     t("onboardingStepUseCaseTitle"),
     t("onboardingStepReferralSourceTitle"),
     t("onboardingStepTrialTitle"),
+    t("onboardingStepClaraTitle"),
   ];
 
   const cardTitle =
@@ -708,16 +881,28 @@ function OnboardingContent() {
           )}
           {phase === "wizard" && step === 3 && showTrialStep && (
             <StepTrial
-              onActivate={() => completeOnboarding(true)}
-              onSkip={() => completeOnboarding(false)}
-              saving={saving}
+              onActivate={() => {
+                trialChoiceRef.current = true;
+                setStep(CLARA_WIZARD_STEP_INDEX);
+              }}
+              onSkip={() => {
+                trialChoiceRef.current = false;
+                setStep(CLARA_WIZARD_STEP_INDEX);
+              }}
             />
           )}
-          {phase === "wizard" && step === 3 && flagsLoaded && !showTrialStep && saving && (
+          {phase === "wizard" && step === TRIAL_WIZARD_STEP_INDEX && flagsLoaded && !showTrialStep && (
             <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">{t("onboardingSaving")}</p>
           )}
-          {phase === "wizard" && step === 3 && !flagsLoaded && (
+          {phase === "wizard" && step === TRIAL_WIZARD_STEP_INDEX && !flagsLoaded && (
             <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">{t("onboardingSaving")}</p>
+          )}
+          {phase === "wizard" && step === CLARA_WIZARD_STEP_INDEX && (
+            <StepClaraActivate
+              onLinked={() => completeOnboarding({ claraActivation: "linked" })}
+              onSkip={() => completeOnboarding({ claraActivation: "skipped" })}
+              saving={saving}
+            />
           )}
         </div>
 
@@ -725,7 +910,10 @@ function OnboardingContent() {
           <div className="flex items-center justify-between mt-4">
             {step > 0 ? (
               <button
-                onClick={() => setStep((s) => s - 1)}
+                type="button"
+                onClick={() =>
+                  setStep((s) => (s === CLARA_WIZARD_STEP_INDEX ? wizardBackFromClara(showTrialStep) : s - 1))
+                }
                 className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors"
               >
                 &larr; Back
@@ -733,9 +921,10 @@ function OnboardingContent() {
             ) : (
               <span />
             )}
-            {step < 3 ? (
+            {step < CLARA_WIZARD_STEP_INDEX ? (
               <button
-                onClick={() => setStep(3)}
+                type="button"
+                onClick={() => setStep(skipSetupTargetStep())}
                 disabled={saving}
                 className="text-sm text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
               >

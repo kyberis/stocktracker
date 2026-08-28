@@ -28,6 +28,7 @@ export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest)
     useCase,
     referralSource,
     activateTrial,
+    claraActivation,
   } = result.data;
 
   let trialActivated = false;
@@ -78,6 +79,11 @@ export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest)
   }
   if (referralSource) {
     trackEvent(session.userId, "onboarding_referral_source", { source: referralSource });
+  }
+  if (claraActivation === "linked") {
+    trackEvent(session.userId, "onboarding_clara_linked", { source: "onboarding" });
+  } else if (claraActivation === "skipped") {
+    trackEvent(session.userId, "onboarding_clara_skipped", { source: "onboarding" });
   }
 
   const newSessionToken = await createSessionToken({
