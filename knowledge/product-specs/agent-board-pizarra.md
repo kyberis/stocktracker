@@ -20,6 +20,7 @@ The **Pizarra** (agent board) is an opt-in Home rail widget. When enabled, a cro
 | UI | `src/components/agent-board/PizarraWidget.tsx` | Home v2 rail + mobile footer |
 | Hook | `src/hooks/useAgentBoard.ts` | Fetch/toggle/dismiss |
 | Cron | `/api/cron/agent-board` | Manual/admin; production runs piggyback on `check-alerts` every 15 min |
+| Scriptable | `/widget/setup` + `public/widget/trefolio-scriptable-pizarra.js` | Home-screen widget via widget token |
 | API | `/api/agent-board/*` | messages, settings, refresh |
 | Lib | `src/lib/agent-board/*` | collect-signals, compose-messages |
 
@@ -32,7 +33,7 @@ The **Pizarra** (agent board) is an opt-in Home rail widget. When enabled, a cro
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
-| GET | `/api/agent-board/messages` | session | Active messages |
+| GET | `/api/agent-board/messages` | session or widget token | Active messages (Scriptable uses Bearer widget token) |
 | POST | `/api/agent-board/messages/[id]/read` | session | Mark read |
 | POST | `/api/agent-board/messages/[id]/dismiss` | session | Dismiss |
 | GET/PUT | `/api/agent-board/settings` | session | Opt-in toggle |

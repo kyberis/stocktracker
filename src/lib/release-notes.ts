@@ -38,6 +38,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "El cron de Pizarra se ejecuta junto a check-alerts (cada 15 minutos) en lugar de un cron Vercel aparte; la ruta independiente sigue disponible para ejecuciones manuales.",
         },
       },
+      {
+        type: "improvement",
+        text: "Pizarra is now a Scriptable home-screen widget on /widget/setup (Small, Medium, or Large). Uses your existing widget token; enable the board in Home first. Not financial advice.",
+        translations: {
+          es: "La Pizarra ahora es un widget de pantalla de inicio Scriptable en /widget/setup (pequeño, mediano o grande). Usa tu token de widget existente; activa la pizarra en Home primero. No es asesoramiento financiero.",
+        },
+      },
     ],
   },
   {

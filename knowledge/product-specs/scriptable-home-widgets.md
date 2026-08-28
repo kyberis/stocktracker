@@ -4,7 +4,7 @@
 
 ## 1. Summary
 
-Authenticated users copy a ready-made Scriptable script from `/widget/setup`, paste it into the free Scriptable iOS app, and pin a live portfolio widget. Three script versions ship: portfolio summary (value + day change), top movers (two gainers + one loser by day %), and by asset type (value + day change per Stocks / ETFs / Crypto / Funds / Fixed return sleeve).
+Authenticated users copy a ready-made Scriptable script from `/widget/setup`, paste it into the free Scriptable iOS app, and pin a live portfolio widget. Three script versions ship: portfolio summary (value + day change), top movers (two gainers + one loser by day %), by asset type (value + day change per Stocks / ETFs / Crypto / Funds / Fixed return sleeve), and **Pizarra** (Warren/Clara agent-board notes).
 
 ## 2. Status
 
@@ -24,6 +24,7 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 | Static | [`public/widget/trefolio-scriptable.js`](../../public/widget/trefolio-scriptable.js) | Portfolio summary Scriptable script |
 | Static | [`public/widget/trefolio-scriptable-movers.js`](../../public/widget/trefolio-scriptable-movers.js) | Top movers Scriptable script |
 | Static | [`public/widget/trefolio-scriptable-by-type.js`](../../public/widget/trefolio-scriptable-by-type.js) | By asset type Scriptable script |
+| Static | [`public/widget/trefolio-scriptable-pizarra.js`](../../public/widget/trefolio-scriptable-pizarra.js) | Pizarra / agent board Scriptable script |
 | API | [`src/app/api/portfolio/summary/route.ts`](../../src/app/api/portfolio/summary/route.ts) | Bearer widget token; `?full=true` for prices |
 | API | [`src/app/api/widget-token/route.ts`](../../src/app/api/widget-token/route.ts) | Issue / revoke widget token |
 | Profile | [`src/components/ProfilePage.tsx`](../../src/components/ProfilePage.tsx) | **Widget & devices** tab (always visible) → primary “Set up widget” CTA |
@@ -40,12 +41,12 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 | Method | Route | Auth | Tier | Description |
 |--------|-------|------|------|-------------|
 | GET | `/api/portfolio/summary` | session / widget token / device passkey | Free | Portfolio totals + top holdings + `byAssetType[]` |
-| GET | `/api/portfolio/summary?full=true` | same | Free | Up to 30 holdings including price (movers script) |
+| GET | `/api/agent-board/messages` | session / widget token | Free | Active Pizarra messages (widget token for Scriptable) |
 | GET/POST/DELETE | `/api/widget-token` | session | Free | Token status / issue / revoke |
 
 ## 6. UI surface
 
-- Setup page: platform tabs (iOS / Android), token controls, **script version** radiogroup (Portfolio summary | Top movers | By asset type), copy-ready preview.
+- Setup page: platform tabs (iOS / Android), token controls, **script version** radiogroup (Portfolio summary | Top movers | By asset type | Pizarra), copy-ready preview.
 - Scripts are loaded from `/widget/*.js` so the public files remain the single source of truth.
 - By asset type script reads `config.widgetFamily` and adapts: **Small** (total + top 2 types), **Medium** (total + up to 4 types), **Large** (total + up to 5 types with allocation % and day €).
 - Movers Scriptable script reads `config.widgetFamily` and adapts: **Small** (compact, no company name, tiny spark), **Medium** (3 rows + names), **Large** (7 rows: prefer 4 gainers + 3 losers).
@@ -93,6 +94,8 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 ## 14. Tests
 
 - Unit: [`src/lib/widget/pick-top-movers.test.ts`](../../src/lib/widget/pick-top-movers.test.ts), [`src/lib/widget/build-by-asset-type.test.ts`](../../src/lib/widget/build-by-asset-type.test.ts)
+- API: [`src/app/api/agent-board/messages/route.test.ts`](../../src/app/api/agent-board/messages/route.test.ts) (widget token)
+- E2E: [`e2e/widget-setup.spec.ts`](../../e2e/widget-setup.spec.ts)
 - E2E: [`e2e/widget-setup.spec.ts`](../../e2e/widget-setup.spec.ts)
 - Manual: copy movers script into Scriptable, pin Medium widget, confirm two green + one red when the book has both sides.
 
@@ -100,7 +103,7 @@ Authenticated users copy a ready-made Scriptable script from `/widget/setup`, pa
 
 - Skills: engineer-mobile, legal-advisor (financial disclaimer on setup page)
 - Rules: `.cursor/rules/legal-compliance.mdc`, `.cursor/rules/release-notes.mdc`
-- Related: [pwa](pwa.md), [trefolio-leaf-device](trefolio-leaf-device.md)
+- Related: [pwa](pwa.md), [trefolio-leaf-device](trefolio-leaf-device.md), [agent-board-pizarra](agent-board-pizarra.md)
 
 ## 16. Open questions / planned work
 
