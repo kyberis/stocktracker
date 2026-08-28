@@ -6,6 +6,7 @@
 
 Flags from `ALL_PLATFORM_FEATURES` in [`src/lib/db/settings.ts`](../../src/lib/db/settings.ts).
 
+- `agent_board_enabled`
 - `ai_report_enabled`
 - `aid_beta`
 - `alerts_enabled`

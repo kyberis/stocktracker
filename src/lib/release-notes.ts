@@ -31,6 +31,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Nueva Pizarra opt-in en Home: Warren y Clara publican avisos elegidos por IA a partir de noticias de tu cartera, movimientos, catalizadores, alertas, FinPulse, recomendaciones, resúmenes de mercado y ahorros en Clara — con historial para no repetir mensajes. Solo corre en cron si la pizarra está activada. No es asesoramiento financiero.",
         },
       },
+      {
+        type: "improvement",
+        text: "Pizarra cron piggybacks on check-alerts (every 15 minutes) instead of a separate Vercel cron; the standalone route remains for manual runs.",
+        translations: {
+          es: "El cron de Pizarra se ejecuta junto a check-alerts (cada 15 minutos) en lugar de un cron Vercel aparte; la ruta independiente sigue disponible para ejecuciones manuales.",
+        },
+      },
     ],
   },
   {

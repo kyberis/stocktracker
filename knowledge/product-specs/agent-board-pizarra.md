@@ -19,7 +19,7 @@ The **Pizarra** (agent board) is an opt-in Home rail widget. When enabled, a cro
 |------|------|-------|
 | UI | `src/components/agent-board/PizarraWidget.tsx` | Home v2 rail + mobile footer |
 | Hook | `src/hooks/useAgentBoard.ts` | Fetch/toggle/dismiss |
-| Cron | `/api/cron/agent-board` | Every 15 min |
+| Cron | `/api/cron/agent-board` | Manual/admin; production runs piggyback on `check-alerts` every 15 min |
 | API | `/api/agent-board/*` | messages, settings, refresh |
 | Lib | `src/lib/agent-board/*` | collect-signals, compose-messages |
 

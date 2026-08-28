@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-336 routes.
+342 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -97,6 +97,11 @@
 | `/api/admin/x-posts` | GET, POST, PUT, DELETE | [`src/app/api/admin/x-posts/route.ts`](../../src/app/api/admin/x-posts/route.ts) |
 | `/api/admin/x-posts/post` | POST | [`src/app/api/admin/x-posts/post/route.ts`](../../src/app/api/admin/x-posts/post/route.ts) |
 | `/api/admin/x-posts/seed` | POST | [`src/app/api/admin/x-posts/seed/route.ts`](../../src/app/api/admin/x-posts/seed/route.ts) |
+| `/api/agent-board/messages` | GET | [`src/app/api/agent-board/messages/route.ts`](../../src/app/api/agent-board/messages/route.ts) |
+| `/api/agent-board/messages/[id]/dismiss` | POST | [`src/app/api/agent-board/messages/[id]/dismiss/route.ts`](../../src/app/api/agent-board/messages/[id]/dismiss/route.ts) |
+| `/api/agent-board/messages/[id]/read` | POST | [`src/app/api/agent-board/messages/[id]/read/route.ts`](../../src/app/api/agent-board/messages/[id]/read/route.ts) |
+| `/api/agent-board/refresh` | POST | [`src/app/api/agent-board/refresh/route.ts`](../../src/app/api/agent-board/refresh/route.ts) |
+| `/api/agent-board/settings` | GET, PUT | [`src/app/api/agent-board/settings/route.ts`](../../src/app/api/agent-board/settings/route.ts) |
 | `/api/ai-analysis` | POST | [`src/app/api/ai-analysis/route.ts`](../../src/app/api/ai-analysis/route.ts) |
 | `/api/aid/digest` | GET | [`src/app/api/aid/digest/route.ts`](../../src/app/api/aid/digest/route.ts) |
 | `/api/aid/earnings-recap` | GET | [`src/app/api/aid/earnings-recap/route.ts`](../../src/app/api/aid/earnings-recap/route.ts) |
@@ -161,6 +166,7 @@
 | `/api/company-analysis` | GET | [`src/app/api/company-analysis/route.ts`](../../src/app/api/company-analysis/route.ts) |
 | `/api/company-analysis/narrative` | POST | [`src/app/api/company-analysis/narrative/route.ts`](../../src/app/api/company-analysis/narrative/route.ts) |
 | `/api/contact` | POST | [`src/app/api/contact/route.ts`](../../src/app/api/contact/route.ts) |
+| `/api/cron/agent-board` | GET, POST | [`src/app/api/cron/agent-board/route.ts`](../../src/app/api/cron/agent-board/route.ts) |
 | `/api/cron/aid-digest` | GET, POST | [`src/app/api/cron/aid-digest/route.ts`](../../src/app/api/cron/aid-digest/route.ts) |
 | `/api/cron/aid-finpulse` | GET, POST | [`src/app/api/cron/aid-finpulse/route.ts`](../../src/app/api/cron/aid-finpulse/route.ts) |
 | `/api/cron/check-alerts` | GET | [`src/app/api/cron/check-alerts/route.ts`](../../src/app/api/cron/check-alerts/route.ts) |

@@ -206,7 +206,8 @@ export const CRON_REGISTRY: CronJob[] = [
     path: "/api/cron/agent-board",
     schedule: "*/15 * * * *",
     description:
-      "Compose proactive Warren/Clara Pizarra messages from portfolio news, movers, catalysts, alerts, and Clara savings",
+      "Compose proactive Warren/Clara Pizarra messages from portfolio news, movers, catalysts, alerts, and Clara savings; piggybacks on check-alerts (Vercel cron cap)",
+    paused: true,
   },
 ];
 
