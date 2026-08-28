@@ -77,6 +77,35 @@ export function yahooSymbolAliases(symbol: string): string[] {
 }
 
 /**
+ * US dual-class listings: Yahoo uses a dash (`BRK-B`), FMP/news often use a dot (`BRK.B`).
+ * Only single-letter share classes (no venue suffix like `.DE`).
+ * Dash → dot is limited to known US dual-class bases so European names like `NOVO-B` stay intact.
+ */
+const US_SHARE_CLASS_BASES = new Set([
+  "BRK",
+  "BF",
+  "LEN",
+  "HEI",
+  "MOG",
+  "CWEN",
+  "GEF",
+  "UHAL",
+]);
+
+export function usShareClassSymbolAliases(symbol: string): string[] {
+  const key = symbol.trim().toUpperCase();
+  const dotted = key.match(/^([A-Z]{1,5})\.([A-Z])$/);
+  if (dotted) {
+    return [`${dotted[1]}-${dotted[2]}`];
+  }
+  const dashed = key.match(/^([A-Z]{1,5})-([A-Z])$/);
+  if (dashed && US_SHARE_CLASS_BASES.has(dashed[1]!)) {
+    return [`${dashed[1]}.${dashed[2]}`];
+  }
+  return [];
+}
+
+/**
  * Yahoo Finance requires Hong Kong tickers zero-padded to 4 digits.
  * `215.HK` → `0215.HK`. Non-numeric or already-padded symbols pass through.
  */

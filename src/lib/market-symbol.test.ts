@@ -4,6 +4,7 @@ import {
   marketDataSymbolForHolding,
   normalizeHkYahooSymbol,
   toYahooFinanceQuoteUrl,
+  usShareClassSymbolAliases,
   yahooSymbolAliases,
   yahooSymbolFromTickerExchange,
   disambiguateListing,
@@ -34,6 +35,24 @@ describe("yahooSymbolAliases", () => {
     expect(yahooSymbolAliases("NOVO-B")).toEqual(["NOVO-B.CO", "NVO"]);
     expect(yahooSymbolAliases("NA9")).toEqual(["NA9.DE", "NA9.F"]);
     expect(yahooSymbolAliases("215")).toEqual(["0215.HK"]);
+  });
+});
+
+describe("usShareClassSymbolAliases", () => {
+  it("maps FMP-style dotted share class to Yahoo dash form", () => {
+    expect(usShareClassSymbolAliases("BRK.B")).toEqual(["BRK-B"]);
+    expect(usShareClassSymbolAliases("BF.A")).toEqual(["BF-A"]);
+  });
+
+  it("maps Yahoo dash form to FMP-style dotted share class", () => {
+    expect(usShareClassSymbolAliases("BRK-B")).toEqual(["BRK.B"]);
+    expect(usShareClassSymbolAliases("BRK-A")).toEqual(["BRK.A"]);
+  });
+
+  it("does not rewrite venue suffixes or multi-letter classes", () => {
+    expect(usShareClassSymbolAliases("SAP.DE")).toEqual([]);
+    expect(usShareClassSymbolAliases("NOVO-B")).toEqual([]);
+    expect(usShareClassSymbolAliases("AAPL")).toEqual([]);
   });
 });
 

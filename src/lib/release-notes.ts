@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.256",
+    date: "2026-08-28",
+    title: "Warren Berkshire valuation",
+    titleTranslations: {
+      es: "Valoración Berkshire en Warren",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren can value Berkshire again when the ticker is BRK.B (FMP) vs BRK-B (Yahoo), and searches the web for insider / Form 4 / buyback questions instead of saying he has no data.",
+        translations: {
+          es: "Warren vuelve a poder valorar Berkshire con BRK.B (FMP) o BRK-B (Yahoo), y busca en la web preguntas de insider / Form 4 / recompras en lugar de decir que no tiene datos.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.255",
     date: "2026-08-28",
     title: "Clover talks to Clara",

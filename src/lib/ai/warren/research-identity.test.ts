@@ -29,4 +29,14 @@ describe("resolveWarrenResearchIdentity", () => {
   it("rejects junk tickers", () => {
     expect(resolveWarrenResearchIdentity("FLR; drop")).toBeNull();
   });
+
+  it("resolves Berkshire BRK.B to issuer name and dash alias", () => {
+    const id = resolveWarrenResearchIdentity("BRK.B");
+    expect(id).toMatchObject({
+      ticker: "BRK.B",
+      companyName: "Berkshire Hathaway",
+    });
+    expect(id?.aliases).toContain("BRK-B");
+    expect(warrenResearchSearchPrefix(id!)).toContain("Berkshire Hathaway");
+  });
 });
