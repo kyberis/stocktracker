@@ -22,7 +22,7 @@ Own the **daily check-in homepage** experience that merges Classic portfolio dep
 | Page UI | `src/components/homepage/HomeV2Dashboard.tsx` |
 | Classic gate | `src/app/(app)/classic/page.tsx` |
 | Classic banner | `src/components/homepage/ClassicHomeBanner.tsx` |
-| Sections | `src/components/homepage/Home*.tsx` |
+| Sections | `src/components/homepage/Home*.tsx` (`HomeMoneyDesk` = Warren × Clara) |
 | Scorer | `src/lib/homepage/score-day-highlights.ts` |
 | API | `src/app/api/home-v2/day-highlights/route.ts` |
 | Spec | `knowledge/product-specs/unified-homepage.md` |
@@ -39,9 +39,9 @@ Own the **daily check-in homepage** experience that merges Classic portfolio dep
 6. Holdings table/cards
 7. FinPulse / priority teaser (compact)
 8. Portfolio News (compact feed)
-9. Rail: Allocation · Warren nudge · Claude MCP CTA · digests
+9. Rail: Allocation · **Money desk (Warren × Clara)** · Warren nudge · Claude MCP CTA · digests
 
-Empty (no holdings): reuse Classic `EmptyPortfolio` (import + add). Mobile: Allocation above holdings; WarrenTrigger + MCP after holdings.
+Empty (no holdings): reuse Classic `EmptyPortfolio` (import + add). **Money desk first** (mobile and empty). Mobile: Allocation above holdings; MCP after holdings.
 
 Related: [home-portfolio-recommendations](../../knowledge/product-specs/home-portfolio-recommendations.md), `HomeRecommendationCard`, `/api/home-v2/recommendations`, `/recommendations/diversify`.
 

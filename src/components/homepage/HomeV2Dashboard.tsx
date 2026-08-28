@@ -10,6 +10,7 @@ import { usePortfolioCommand } from "@/contexts/portfolio-command-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { useAidStatus } from "@/hooks/useAidStatus";
+import { useClaraDeskStatus } from "@/hooks/useClaraDeskStatus";
 import { useHomeBootstrap } from "@/hooks/useHomeBootstrap";
 import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
 import { usePortfolioHomeData } from "@/components/dashboard-v2/use-portfolio-home-data";
@@ -77,8 +78,7 @@ const DailyDigestsTeaserCard = dynamic(() => import("@/components/dashboard-v2/D
 const WeeklyDigestCard = dynamic(() => import("@/components/dashboard-v2/WeeklyDigestCard"), {
   ssr: false,
 });
-const WarrenTrigger = dynamic(() => import("@/components/warren/WarrenTrigger"), { ssr: false });
-const ClaraCta = dynamic(() => import("@/components/clara/ClaraCta"), { ssr: false });
+const HomeMoneyDesk = dynamic(() => import("./HomeMoneyDesk"), { ssr: false });
 const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
 const StatsGrid = dynamic(() => import("@/components/dashboard-v2/StatsGrid"), { ssr: false });
 const PortfolioNewsFeed = dynamic(() => import("@/components/PortfolioNewsFeed"), { ssr: false });
@@ -92,7 +92,7 @@ export default function HomeV2Dashboard({
   const { t } = useI18n();
   const track = useTrack();
   const isMobile = useIsMobileViewport();
-  const { holdings, cashEntries, quotes, isInitializing, demoMode, hydrateMarketData, hydratePortfolioBook, hydrateAnalystTargets, activePortfolioId } =
+  const { holdings, cashEntries, quotes, isInitializing, demoMode, hydrateMarketData, hydratePortfolioBook, hydrateAnalystTargets, activePortfolioId, activePortfolioCurrency } =
     usePortfolio();
   const { gatedAdd } = usePortfolioCommand();
   // Bootstrap must start immediately (not wait for quote init) so it can win the
@@ -108,6 +108,7 @@ export default function HomeV2Dashboard({
     // Wait for bootstrap; on failure fall back to a direct status fetch.
     autoFetch: bootstrapSettled && (!!bootstrap.data || bootstrap.error),
   });
+  const claraDesk = useClaraDeskStatus(!demoMode);
   const investmentCash = useMemo(() => investmentCashEntries(cashEntries), [cashEntries]);
   const home = usePortfolioHomeData({ holdings, cashEntries: investmentCash });
   const [aiOpen, setAiOpen] = useState(false);
@@ -273,6 +274,21 @@ export default function HomeV2Dashboard({
   } = home;
 
   const openAdd = () => gatedAdd("stock");
+  const hasHoldings = holdings.length > 0 || cashEntries.length > 0;
+  const moneyDesk = !isInitializing ? (
+    <HomeMoneyDesk
+      dayGainLoss={dayGainLoss}
+      displayCurrency={activePortfolioCurrency}
+      hasHoldings={hasHoldings}
+      demoMode={demoMode}
+      clara={claraDesk.status}
+      claraLoading={claraDesk.loading}
+      onOpenWarren={() => {
+        recordPostIntroAction("warren");
+        setAiOpen(true);
+      }}
+    />
+  ) : null;
 
   const main = (
     <div className="flex min-w-0 flex-col gap-4">
@@ -292,6 +308,8 @@ export default function HomeV2Dashboard({
           </Link>
         )}
       </div>
+
+      {(isMobile || isEmpty) && moneyDesk}
 
       {!isEmpty && (
         <AidBriefingStrip
@@ -456,14 +474,6 @@ export default function HomeV2Dashboard({
 
           {isMobile && (
             <>
-              <WarrenTrigger
-                onOpen={() => {
-                  recordPostIntroAction("warren");
-                  setAiOpen(true);
-                }}
-                href={demoMode ? "/signup" : undefined}
-              />
-              <ClaraCta href={demoMode ? "/signup" : undefined} />
               {aidStatus.data?.warrenNudge && (
                 <AidWarrenNudge
                   nudge={aidStatus.data.warrenNudge}
@@ -485,14 +495,7 @@ export default function HomeV2Dashboard({
   const rail = (
     <aside className="flex flex-col gap-3">
       <AllocationTabs holdings={holdings} cashEntries={cashEntries} />
-      <WarrenTrigger
-        onOpen={() => {
-          recordPostIntroAction("warren");
-          setAiOpen(true);
-        }}
-        href={demoMode ? "/signup" : undefined}
-      />
-      <ClaraCta href={demoMode ? "/signup" : undefined} />
+      {moneyDesk}
       {aidStatus.data?.warrenNudge && (
         <AidWarrenNudge
           nudge={aidStatus.data.warrenNudge}
