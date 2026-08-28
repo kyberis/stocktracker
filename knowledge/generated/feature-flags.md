@@ -17,6 +17,7 @@ Flags from `ALL_PLATFORM_FEATURES` in [`src/lib/db/settings.ts`](../../src/lib/d
 - `daily_digests_enabled`
 - `device_enabled`
 - `display_invariants`
+- `home_money_desk`
 - `home_v2`
 - `import_broker_picker_enabled`
 - `investment_screening_enabled`

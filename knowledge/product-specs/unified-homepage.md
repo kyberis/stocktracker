@@ -115,6 +115,7 @@ type HomeDayHighlight = {
 - Default UI at `/` is ungated for authenticated users.
 - Day-highlights API: `home_v2` (default on).
 - Classic UI at `/classic`: `classic_home` (default off).
+- Money desk (Warren × Clara): `home_money_desk` (default off). When off, separate Warren + Clara cards remain.
 - Holding limits and AI quotas unchanged.
 - AID data endpoints: either `aid_beta` or `home_v2`.
 

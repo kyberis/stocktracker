@@ -4,14 +4,14 @@
 
 ## 1. Summary
 
-**Home v2 (`/`):** signed-in users see a **money desk** (`HomeMoneyDesk`) that pairs Warren (markets / portfolio) with Clara (everyday spending). Dual pulse (day P&L × month surplus), agent tiles, Clara onboarding, and a deterministic handoff when both sides have data. On **mobile and empty portfolio**, the desk is the first block after the Home title.
+**Home v2 (`/`):** when `home_money_desk` is on, signed-in users see a **money desk** (`HomeMoneyDesk`) that pairs Warren (markets / portfolio) with Clara (everyday spending). Dual pulse (day P&L × month surplus), agent tiles, Clara onboarding, and a deterministic handoff when both sides have data. On **mobile and empty portfolio**, the desk is the first block after the Home title. When the flag is **off**, Home keeps the separate Warren + Clara cards (same as Classic / mobile dashboard).
 
 **Classic dashboard and `MobileDashboard`:** still show a **Clara** card beside **Warren**. Clicking opens a modal that explains Clara (personal finance sister app). The CTA either opens Clara chat (`/app`) when the IdP identity is already linked, or starts Clara login (`/login`) so the shared IdP account lazy-creates the Clara local user — then the user lands in Clara chat in a **new tab**.
 
 ## 2. Status
 
 - **Tier:** Free (all authenticated users)
-- **Feature flag:** _none_
+- **Feature flag:** `home_money_desk` (default **off** — admin / per-user override first)
 - **Health:** green
 - **Owning skill:** [`.cursor/skills/engineer-homepage/SKILL.md`](../../.cursor/skills/engineer-homepage/SKILL.md)
 
@@ -43,7 +43,7 @@ No new tables. Link status inferred from Clara `GET /api/internal/office/savings
 
 ## 6. UI surface
 
-**Money desk (Home v2):**
+**Money desk (Home v2, `home_money_desk` on):**
 
 - Header “Your money desk” + dual pulse + Warren / Clara tiles + optional handoff + “Not financial advice”.
 - **Mobile / empty:** first in the main column (above `EmptyPortfolio` / brief). `EmptyPortfolio` stays below for import/add.
@@ -53,6 +53,8 @@ No new tables. Link status inferred from Clara `GET /api/internal/office/savings
 - Linked Clara tile: modal → open chat.
 - Demo: both tiles → `/signup`.
 - Touch targets ≥44px. Day P&L uses +/− not color alone.
+
+**When `home_money_desk` is off:** Home rail / mobile footer use `WarrenTrigger` + `ClaraCta` (same cards as Classic).
 
 **Classic / mobile dashboard card:**
 
@@ -83,7 +85,7 @@ Keys `claraName`, `claraTriggerSub`, `claraModal*`, `homeMoneyDesk*` in `en.ts` 
 
 ## 11. Permissions / tier gating / rate limits
 
-Authenticated only (dashboard). No Pro gate for the CTA itself; Clara message limits apply on Clara.
+Authenticated only (dashboard). Money desk requires `home_money_desk`. No Pro gate for the CTA itself; Clara message limits apply on Clara.
 
 ## 12. Telemetry
 
