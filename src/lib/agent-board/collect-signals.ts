@@ -59,7 +59,8 @@ function collectMarketOpenSignals(
     kind: "market_open" as const,
     contextKey: `market_open:${ex}:${day}`,
     priority: 2,
-    payload: { exchange: ex, label }
+    payload: { exchange: ex, label },
+  }));
 }
 
 function collectMoverSignals(
@@ -81,7 +82,8 @@ function collectMoverSignals(
     kind: "mover" as const,
     contextKey: `mover:${m.ticker}:${day}`,
     priority: m.pct! >= 5 || m.pct! <= -5 ? 1 : 2,
-    payload: { ticker: m.ticker, movePct: m.pct! }
+    payload: { ticker: m.ticker, movePct: m.pct! },
+  }));
 }
 
 function collectNear52wSignals(
@@ -165,7 +167,8 @@ function collectRecommendationSignals(
       ticker: r.ticker ?? "",
       pct: r.pct ?? 0,
       sectors: (r.sectors ?? []).join(", "),
-    }
+    },
+  }));
 }
 
 function collectNewsSignals(
@@ -225,7 +228,8 @@ function collectFinPulseSignals(
         handle: p.handle,
         headline: p.headline,
         tickers: p.tickersJson,
-      }
+      },
+    }));
 }
 
 function collectAlertSignals(
@@ -245,7 +249,8 @@ function collectAlertSignals(
         name: a.name,
         condition: a.condition,
         threshold: a.threshold,
-      }
+      },
+    }));
 }
 
 function collectConcentrationSignal(
@@ -265,7 +270,8 @@ function collectConcentrationSignal(
     payload: {
       topTicker: c.topTickers[0],
       topThreePercent: c.topThreePercent,
-    }
+    },
+  };
 }
 
 async function collectMarketDigestSignals(
@@ -310,7 +316,8 @@ async function collectWeeklyDigestSignal(
     payload: {
       summary: digest.summaryText.slice(0, 240),
       weekEnd: digest.weekEnd,
-    }
+    },
+  };
 }
 
 async function collectClaraSignals(
@@ -333,7 +340,8 @@ async function collectClaraSignals(
       kind: "clara_surplus",
       contextKey: `clara_surplus:${day}`,
       priority: 3,
-      payload: { surplusEur: surplus, currency: clara.currency ?? "EUR" }
+      payload: { surplusEur: surplus, currency: clara.currency ?? "EUR" },
+    });
   }
 
   if (
@@ -349,7 +357,8 @@ async function collectClaraSignals(
       payload: {
         balance: clara.emergencyBalanceEur,
         target: clara.emergencyTargetEur,
-      }
+      },
+    });
   }
 
   if (typeof monthBalance === "number" && monthBalance < 0) {
@@ -358,7 +367,8 @@ async function collectClaraSignals(
       kind: "clara_month",
       contextKey: `clara_month_negative:${day}`,
       priority: 2,
-      payload: { monthBalance, currency: clara.currency ?? "EUR" }
+      payload: { monthBalance, currency: clara.currency ?? "EUR" },
+    });
   }
 
   if (
@@ -393,7 +403,9 @@ async function collectWillSignals(userId: string, day: string): Promise<AgentBoa
       payload: {
         tags: will.tags.slice(0, 5).map((t) => t.label).join(", "),
         excerpt: will.excerpt?.slice(0, 160) ?? "",
-      }
+      },
+    },
+  ];
 }
 
 async function collectOfficeMissionSignals(userId: string, day: string): Promise<AgentBoardSignal[]> {
@@ -412,7 +424,8 @@ async function collectOfficeMissionSignals(userId: string, day: string): Promise
       missionTitle: mission.title,
       stepAction: step.action,
       stepKind: step.kind,
-    }
+    },
+  }));
 }
 
 export async function collectAgentBoardSignals(args: {
