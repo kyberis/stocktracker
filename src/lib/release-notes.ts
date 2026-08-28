@@ -17,6 +17,47 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.260",
+    date: "2026-08-28",
+    title: "Pizarra is Scriptable-only",
+    titleTranslations: {
+      es: "Pizarra solo en Scriptable",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Pizarra no longer appears on Home — it is only the Scriptable home-screen widget on /widget/setup. Enable it under Profile → Notifications. Not financial advice.",
+        translations: {
+          es: "La Pizarra ya no aparece en Home: solo es el widget Scriptable de pantalla de inicio en /widget/setup. Actívala en Perfil → Notificaciones. No es asesoramiento financiero.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Slimmed Pizarra code: dropped unused read/dismiss APIs, Home chips/i18n, and chip prompts; batched context-key dedupe; shared cron/refresh compose path.",
+        translations: {
+          es: "Se redujo el código de Pizarra: sin APIs read/dismiss, chips/i18n de Home ni chip prompts; dedupe de context-key en un query; compose compartido entre cron y refresh.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.259",
+    date: "2026-08-28",
+    title: "Pizarra on the home screen",
+    titleTranslations: {
+      es: "Pizarra en la pantalla de inicio",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Pizarra is now a Scriptable home-screen widget on /widget/setup (Small, Medium, or Large). Uses your existing widget token; enable the board in Home first. Not financial advice.",
+        translations: {
+          es: "La Pizarra ahora es un widget de pantalla de inicio Scriptable en /widget/setup (pequeño, mediano o grande). Usa tu token de widget existente; activa la pizarra en Home primero. No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.258",
     date: "2026-08-28",
     title: "Agent board (Pizarra)",

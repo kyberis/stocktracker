@@ -13,8 +13,6 @@ interface ComposeOutput {
     kind: string;
     contextKey: string;
     body: string;
-    chipLabel: string;
-    chipPrompt: string;
     priority: number;
   }>;
 }
@@ -29,61 +27,51 @@ function parseComposeJson(raw: string): ComposeOutput | null {
   }
 }
 
+/** Deterministic fallback when the AI gateway is unavailable. */
 export function fallbackCompose(
   signals: AgentBoardSignal[],
   language: string,
 ): AgentBoardComposeResult[] {
+  const es = language.startsWith("es");
   return signals.slice(0, MAX_MESSAGES_PER_COMPOSE).map((s) => {
     const ticker = String(s.payload.ticker ?? "");
     const movePct = s.payload.movePct;
-    let body = "";
-    let chipLabel = language.startsWith("es") ? "Preguntar" : "Ask";
-    const chipPrompt = s.suggestedChipPrompt ?? "";
-
+    let body: string;
     switch (s.kind) {
       case "market_open":
-        body = language.startsWith("es")
+        body = es
           ? `${s.payload.label} abrió. Revisa tus posiciones locales.`
           : `${s.payload.label} is open. Review your local holdings.`;
-        chipLabel = language.startsWith("es") ? "Ver mercado" : "Check market";
         break;
       case "mover":
-        body =
-          language.startsWith("es")
-            ? `${ticker} se movió ${movePct}% hoy.`
-            : `${ticker} moved ${movePct}% today.`;
-        chipLabel = ticker;
+        body = es
+          ? `${ticker} se movió ${movePct}% hoy.`
+          : `${ticker} moved ${movePct}% today.`;
         break;
       case "news":
       case "earnings":
         body = String(s.payload.headline ?? ticker);
-        chipLabel = ticker || chipLabel;
         break;
       case "alert":
-        body = language.startsWith("es")
+        body = es
           ? `Alerta activada en ${ticker}.`
           : `Alert triggered on ${ticker}.`;
-        chipLabel = ticker;
         break;
       case "clara_surplus":
-        body = language.startsWith("es")
+        body = es
           ? "Tienes superávit este mes en Clara."
           : "You have monthly surplus in Clara.";
-        chipLabel = language.startsWith("es") ? "Ver Clara" : "Open Clara";
         break;
       default:
-        body = language.startsWith("es")
+        body = es
           ? "Hay novedades en tu cartera."
           : "There are updates for your portfolio.";
     }
-
     return {
       agent: s.agent,
       kind: s.kind,
       contextKey: s.contextKey,
       body: body.slice(0, MAX_BODY_LEN),
-      chipLabel: chipLabel.slice(0, 80),
-      chipPrompt: chipPrompt.slice(0, 400),
       priority: s.priority,
       signalsJson: JSON.stringify(s.payload),
     };
@@ -123,15 +111,14 @@ export async function composeAgentBoardMessages(args: {
   }
 
   const model = await getAiModelForFlow("agent_board");
-  const system = `You write short proactive messages for Warren (portfolio/markets) and Clara (personal finance) on a user's Home "Pizarra" widget.
+  const system = `You write short proactive messages for Warren (portfolio/markets) and Clara (personal finance) on a Scriptable "Pizarra" widget.
 Write in ${lang}.
-Return ONLY valid JSON: { "messages": [ { "agent": "warren"|"clara", "kind": string, "contextKey": string, "body": string, "chipLabel": string, "chipPrompt": string, "priority": number } ] }
+Return ONLY valid JSON: { "messages": [ { "agent": "warren"|"clara", "kind": string, "contextKey": string, "body": string, "priority": number } ] }
 Rules:
 - Pick up to ${MAX_MESSAGES_PER_COMPOSE} most important signals; skip redundant or low-value items.
 - Do NOT repeat themes from recent history (same ticker + same kind within 7 days unless materially new).
 - Neutral tone; no buy/sell advice; no invented numbers — use only provided signal data.
 - body: 1-2 sentences, max 280 chars, conversational first person addressing the user.
-- chipLabel: 2-4 words; chipPrompt: question to open Warren/Clara chat.
 - Warren covers markets, news, movers, catalysts, recommendations, alerts.
 - Clara covers savings, budget, surplus, emergency fund.`;
 
@@ -146,7 +133,7 @@ ${signalsBlock(args.signals)}`;
     const res = await fetchGatewayChatCompletions({
       model,
       stream: false,
-      max_tokens: 700,
+      max_tokens: 500,
       temperature: 0.35,
       messages: [
         { role: "system", content: system },
@@ -196,8 +183,6 @@ ${signalsBlock(args.signals)}`;
           kind: src.kind,
           contextKey: m.contextKey,
           body: String(m.body).slice(0, MAX_BODY_LEN),
-          chipLabel: String(m.chipLabel).slice(0, 80),
-          chipPrompt: String(m.chipPrompt || src.suggestedChipPrompt || "").slice(0, 400),
           priority: Number(m.priority) || src.priority,
           signalsJson: JSON.stringify(src.payload),
         };
@@ -235,8 +220,6 @@ export async function persistComposedMessages(
       kind: msg.kind,
       contextKey: msg.contextKey,
       body: msg.body,
-      chipLabel: msg.chipLabel,
-      chipPrompt: msg.chipPrompt,
       priority: msg.priority,
       expiresAt,
       signalsJson: msg.signalsJson,

@@ -45,8 +45,6 @@ import {
   useAgentIntroEngagementReady,
   useAgentIntroPostAction,
 } from "@/hooks/useAgentIntroPostAction";
-import { useAgentBoard, type AgentBoardMessageView } from "@/hooks/useAgentBoard";
-import demoAgentBoard from "../../../data/demo-agent-board.json";
 import { HeroSkeleton, TableSkeleton } from "@/components/Skeleton";
 
 type HeroMode = "simple" | "advanced";
@@ -81,8 +79,6 @@ const WeeklyDigestCard = dynamic(() => import("@/components/dashboard-v2/WeeklyD
   ssr: false,
 });
 const HomeMoneyDesk = dynamic(() => import("./HomeMoneyDesk"), { ssr: false });
-const PizarraWidget = dynamic(() => import("@/components/agent-board/PizarraWidget"), { ssr: false });
-const ClaraLandingModal = dynamic(() => import("@/components/clara/ClaraLandingModal"), { ssr: false });
 const WarrenTrigger = dynamic(() => import("@/components/warren/WarrenTrigger"), { ssr: false });
 const ClaraCta = dynamic(() => import("@/components/clara/ClaraCta"), { ssr: false });
 const WarrenDrawer = dynamic(() => import("@/components/warren/WarrenDrawer"), { ssr: false });
@@ -109,9 +105,6 @@ export default function HomeV2Dashboard({
   // AID shell/briefing still needs a real session; demo has none.
   const aidEnabled = !demoMode;
   const moneyDeskEnabled = isLoaded && !!flags.home_money_desk;
-  const agentBoardPlatform = isLoaded && !!flags.agent_board_enabled;
-  const agentBoard = useAgentBoard(agentBoardPlatform && !demoMode);
-  const [claraModalOpen, setClaraModalOpen] = useState(false);
   const aidStatus = useAidStatus(aidEnabled, {
     includeBriefing: false,
     seed: bootstrap.data?.aidStatus ?? null,
@@ -301,33 +294,7 @@ export default function HomeV2Dashboard({
       />
     ) : null;
 
-  const demoPizarraMessages = demoAgentBoard as AgentBoardMessageView[];
-
-  const pizarraBlock =
-    agentBoardPlatform || demoMode ? (
-      <PizarraWidget
-        messages={demoMode ? demoPizarraMessages : agentBoard.messages}
-        boardEnabled={demoMode ? true : agentBoard.boardEnabled}
-        loading={!demoMode && agentBoard.loading}
-        demoMode={demoMode}
-        onToggleEnabled={async (enabled) => {
-          await agentBoard.setEnabled(enabled);
-        }}
-        onAskWarren={(prompt) => {
-          recordPostIntroAction("warren");
-          setWarrenPrompt(prompt);
-          setAiOpen(true);
-        }}
-        onOpenClara={() => setClaraModalOpen(true)}
-        onDismiss={agentBoard.dismiss}
-        onRead={agentBoard.markRead}
-      />
-    ) : null;
-
-  const showWarrenNudge =
-    aidStatus.data?.warrenNudge &&
-    !demoMode &&
-    !(agentBoardPlatform && agentBoard.boardEnabled);
+  const showWarrenNudge = Boolean(aidStatus.data?.warrenNudge && !demoMode);
 
   const warrenClaraCards = !moneyDeskEnabled ? (
     <>
@@ -362,7 +329,6 @@ export default function HomeV2Dashboard({
       </div>
 
       {(isMobile || isEmpty) && moneyDesk}
-      {(isMobile || isEmpty) && pizarraBlock}
 
       {!isEmpty && (
         <AidBriefingStrip
@@ -528,7 +494,6 @@ export default function HomeV2Dashboard({
           {isMobile && (
             <>
               {warrenClaraCards}
-              {pizarraBlock}
               {showWarrenNudge && (
                 <AidWarrenNudge
                   nudge={aidStatus.data!.warrenNudge!}
@@ -552,7 +517,6 @@ export default function HomeV2Dashboard({
       <AllocationTabs holdings={holdings} cashEntries={cashEntries} />
       {moneyDesk}
       {warrenClaraCards}
-      {pizarraBlock}
       {showWarrenNudge && (
         <AidWarrenNudge
           nudge={aidStatus.data!.warrenNudge!}
@@ -622,7 +586,6 @@ export default function HomeV2Dashboard({
         triggerPrompt={warrenPrompt}
         onTriggerPromptConsumed={() => setWarrenPrompt(undefined)}
       />
-      <ClaraLandingModal open={claraModalOpen} onClose={() => setClaraModalOpen(false)} />
     </main>
     </>
   );

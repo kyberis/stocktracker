@@ -721,10 +721,8 @@ export {
   listAgentBoardMessages,
   listAgentBoardMessagesForComposer,
   countAgentBoardMessagesToday,
-  hasAgentBoardContextKey,
+  existingAgentBoardContextKeys,
   insertAgentBoardMessage,
-  markAgentBoardMessageRead,
-  dismissAgentBoardMessage,
   purgeExpiredAgentBoardMessages,
   listAgentBoardCronCandidates,
 } from "./agent-board";

@@ -11,11 +11,7 @@ function rowToMessage(row: Record<string, unknown>): AgentBoardMessage {
     kind: str(row.kind) as AgentBoardKind,
     contextKey: str(row.context_key),
     body: str(row.body),
-    chipLabel: str(row.chip_label),
-    chipPrompt: str(row.chip_prompt),
     priority: Number(row.priority) || 3,
-    readAt: str(row.read_at) || null,
-    dismissedAt: str(row.dismissed_at) || null,
     createdAt: str(row.created_at),
     expiresAt: str(row.expires_at) || null,
   };
@@ -65,13 +61,19 @@ export async function countAgentBoardMessagesToday(userId: string): Promise<numb
   return Number(result.rows[0]?.c ?? 0);
 }
 
-export async function hasAgentBoardContextKey(userId: string, contextKey: string): Promise<boolean> {
+export async function existingAgentBoardContextKeys(
+  userId: string,
+  contextKeys: string[],
+): Promise<Set<string>> {
+  if (contextKeys.length === 0) return new Set();
   const client = await ensureInitialized();
+  const placeholders = contextKeys.map(() => "?").join(",");
   const result = await client.execute({
-    sql: "SELECT 1 FROM agent_board_messages WHERE user_id = ? AND context_key = ? LIMIT 1",
-    args: [userId, contextKey],
+    sql: `SELECT context_key FROM agent_board_messages
+          WHERE user_id = ? AND context_key IN (${placeholders})`,
+    args: [userId, ...contextKeys],
   });
-  return result.rows.length > 0;
+  return new Set(result.rows.map((r) => str(r.context_key)));
 }
 
 export async function insertAgentBoardMessage(args: {
@@ -80,8 +82,6 @@ export async function insertAgentBoardMessage(args: {
   kind: AgentBoardKind;
   contextKey: string;
   body: string;
-  chipLabel?: string;
-  chipPrompt?: string;
   priority?: number;
   expiresAt?: string;
   signalsJson?: string;
@@ -93,7 +93,7 @@ export async function insertAgentBoardMessage(args: {
       sql: `INSERT INTO agent_board_messages (
               id, user_id, agent, kind, context_key, body, chip_label, chip_prompt,
               priority, expires_at, signals_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, '', '', ?, ?, ?)`,
       args: [
         id,
         args.userId,
@@ -101,8 +101,6 @@ export async function insertAgentBoardMessage(args: {
         args.kind,
         args.contextKey,
         args.body.slice(0, 600),
-        args.chipLabel?.slice(0, 120) ?? "",
-        args.chipPrompt?.slice(0, 500) ?? "",
         args.priority ?? 3,
         args.expiresAt ?? "",
         args.signalsJson ?? "{}",
@@ -117,28 +115,6 @@ export async function insertAgentBoardMessage(args: {
   });
   const row = result.rows[0] as Record<string, unknown> | undefined;
   return row ? rowToMessage(row) : null;
-}
-
-export async function markAgentBoardMessageRead(userId: string, messageId: string): Promise<boolean> {
-  const client = await ensureInitialized();
-  const now = new Date().toISOString();
-  const result = await client.execute({
-    sql: `UPDATE agent_board_messages SET read_at = ?
-          WHERE id = ? AND user_id = ? AND read_at = ''`,
-    args: [now, messageId, userId],
-  });
-  return (result.rowsAffected ?? 0) > 0;
-}
-
-export async function dismissAgentBoardMessage(userId: string, messageId: string): Promise<boolean> {
-  const client = await ensureInitialized();
-  const now = new Date().toISOString();
-  const result = await client.execute({
-    sql: `UPDATE agent_board_messages SET dismissed_at = ?
-          WHERE id = ? AND user_id = ? AND dismissed_at = ''`,
-    args: [now, messageId, userId],
-  });
-  return (result.rowsAffected ?? 0) > 0;
 }
 
 export async function purgeExpiredAgentBoardMessages(): Promise<number> {

@@ -18,7 +18,7 @@ import Link from "next/link";
 import { useWidgetTokens } from "@/hooks/use-widget-tokens";
 import { WidgetTokenList } from "@/components/WidgetTokenList";
 
-type ScriptVariant = "portfolio" | "movers" | "byType";
+type ScriptVariant = "portfolio" | "movers" | "byType" | "pizarra";
 
 const SCRIPT_VARIANTS: Record<
   ScriptVariant,
@@ -41,6 +41,12 @@ const SCRIPT_VARIANTS: Record<
     filename: "trefolio-scriptable-by-type.js",
     label: "By asset type",
     description: "Value and day change per sleeve — Stocks, ETFs, Crypto, Funds, Fixed return.",
+  },
+  pizarra: {
+    file: "/widget/trefolio-scriptable-pizarra.js",
+    filename: "trefolio-scriptable-pizarra.js",
+    label: "Pizarra (agent board)",
+    description: "Warren and Clara notes on your home screen. Enable Pizarra in Profile → Notifications first. Not financial advice.",
   },
 };
 
@@ -283,7 +289,7 @@ function WidgetSetupContent() {
                 <div
                   role="radiogroup"
                   aria-label="Scriptable widget version"
-                  className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
+                  className="grid gap-2 sm:grid-cols-2"
                 >
                   {(Object.keys(SCRIPT_VARIANTS) as ScriptVariant[]).map((key) => {
                     const meta = SCRIPT_VARIANTS[key];
@@ -328,7 +334,7 @@ function WidgetSetupContent() {
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">4</span>
                   <span>
                     Long-press your home screen &rarr; tap <strong>+</strong> &rarr; search <strong>Scriptable</strong> &rarr; choose{" "}
-                    {scriptVariant === "movers" || scriptVariant === "byType" ? "Small, Medium, or Large" : "Small or Medium"} &rarr; select the script
+                    {scriptVariant === "portfolio" ? "Small or Medium" : "Small, Medium, or Large"} &rarr; select the script
                   </span>
                 </li>
               </ol>

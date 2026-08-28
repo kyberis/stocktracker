@@ -64,6 +64,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/webhooks/linear",
   "/api/webhooks/telegram",
   "/api/portfolio/summary",
+  "/api/agent-board/messages",
   "/api/device/ai-summary",
   "/api/device/firmware",
   "/api/device/config",
