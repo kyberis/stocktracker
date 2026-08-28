@@ -69,6 +69,8 @@ describe("GET /api/clara/status", () => {
       dayOfMonth: 16,
       daysInMonth: 28,
       monthBalance: 50,
+      hasMonthRecord: true,
+      remainingExpenses: 200,
     });
     const res = await GET(req());
     expect(res.status).toBe(200);
@@ -79,6 +81,8 @@ describe("GET /api/clara/status", () => {
       dayOfMonth: 16,
       daysInMonth: 28,
       monthBalance: 50,
+      hasMonthRecord: true,
+      remainingExpenses: 200,
     });
   });
 

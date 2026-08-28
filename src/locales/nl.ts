@@ -3569,8 +3569,11 @@ const nl: TranslationStrings = {
   homeMoneyDeskTitle: "Your money desk",
   homeMoneyDeskSubtitle: "Warren watches markets · Clara watches everyday spending · together, your real capacity",
   homeMoneyDeskDuo: "Duo",
-  homeMoneyDeskPulseLabel: "Markets today and month surplus",
+  homeMoneyDeskPulseLabel: "Markets today and month balance",
   homeMoneyDeskMarketsToday: "Markets today",
+  homeMoneyDeskMonthBalance: "Month balance",
+  homeMoneyDeskClaraSetupMonth: "Set up this month in Clara",
+  homeMoneyDeskMonthOnTrack: "On track",
   homeMoneyDeskSurplusMonth: "Month surplus",
   homeMoneyDeskNoPortfolio: "No portfolio yet",
   homeMoneyDeskWarrenRole: "Portfolio & markets",
@@ -3586,7 +3589,7 @@ const nl: TranslationStrings = {
   homeMoneyDeskClaraCreateCta: "Create Clara account",
   homeMoneyDeskHandoffLabel: "Handoff:",
   homeMoneyDeskHandoffSurplus:
-    "Warren used Clara's summary — with this month's surplus ({amount}) you could add to the portfolio without touching the emergency cushion. Not financial advice.",
+    "Warren used Clara's summary — with this safe surplus ({amount}) you could add to the portfolio without touching the emergency cushion. Not financial advice.",
   homeMoneyDeskHandoffAddFirst:
     "Clara is ready. Add your first stock so Warren can relate markets to your everyday surplus.",
   homeMoneyDeskDisclaimer: "AI-generated help. Not financial advice.",
