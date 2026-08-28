@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.261",
+    date: "2026-08-28",
+    title: "Pizarra is not a notification",
+    titleTranslations: {
+      es: "La Pizarra no es una notificación",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Pizarra no longer lives under Profile → Notifications. Set it up on /widget/setup; the widget auto-arms when you select Pizarra or refresh with your token. If Warren has nothing new, it shows the last note or “Nothing new in the market for your holdings.” Not financial advice.",
+        translations: {
+          es: "La Pizarra ya no está en Perfil → Notificaciones. Configúrala en /widget/setup; el widget se activa al elegir Pizarra o al refrescar con tu token. Si Warren no tiene nada nuevo, muestra la última nota o “Nothing new in the market for your holdings.” No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.260",
     date: "2026-08-28",
     title: "Pizarra is Scriptable-only",

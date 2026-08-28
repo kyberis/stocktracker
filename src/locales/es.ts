@@ -3262,8 +3262,6 @@ const es: TranslationStrings = {
   homeMoneyDeskWarrenRole: "Cartera y mercados",
   homeMoneyDeskClaraRole: "Gastos y ahorro",
   homeMoneyDeskWarrenNudge: "Pregunta por el movimiento de hoy, un rebalanceo o una posición.",
-  pizarraSettingsLabel: "Pizarra de agentes",
-  pizarraSettingsDesc: "Widget Scriptable en la pantalla de inicio: Warren y Clara publican avisos cuando cambia algo importante. Configúralo en Widget Setup.",
   homeMoneyDeskWarrenEmptyNudge: "Añade tu primera acción o pide a Warren que importe un bróker.",
   homeMoneyDeskClaraNudge: "Gastos cotidianos, presupuestos y ahorro — junto a tu cartera.",
   homeMoneyDeskClaraOnboardNudge: "Sigue el gasto cotidiano junto a tu cartera. El mismo inicio de sesión de trefolio.",

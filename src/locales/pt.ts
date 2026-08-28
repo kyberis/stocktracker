@@ -3607,8 +3607,6 @@ const pt: TranslationStrings = {
   cloverProposeClaraTitle: "Create your Clara space",
   cloverProposeClaraBody: "Clover can check savings and cashflow once Clara is linked with the same login.",
   cloverProposeClaraCta: "Create Clara",
-  pizarraSettingsLabel: "Agent board (Pizarra)",
-  pizarraSettingsDesc: "Scriptable home-screen widget: Warren and Clara post proactive updates when something important changes. Set up at Widget Setup.",
 };
 
 export default pt;

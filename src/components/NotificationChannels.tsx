@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
-import { useFeatureFlagContext } from "@/lib/feature-flag-context";
 import type { NotificationChannel } from "@/lib/types";
 import TierFeatureBadge from "./TierFeatureBadge";
 
@@ -29,8 +27,6 @@ export default function NotificationChannels() {
   const { t } = useI18n();
   const { user } = useAuth();
   const { telegramEnabled } = useSettings();
-  const { flags, isLoaded: flagsLoaded } = useFeatureFlagContext();
-  const agentBoardPlatform = flagsLoaded && !!flags.agent_board_enabled;
   const plan = user?.plan || "free";
   const isPaid = plan === "pro";
   const isPro = plan === "pro";
@@ -41,8 +37,6 @@ export default function NotificationChannels() {
   const [linking, setLinking] = useState(false);
   const [linkError, setLinkError] = useState("");
   const [linkPending, setLinkPending] = useState(false);
-  const [agentBoardEnabled, setAgentBoardEnabled] = useState(false);
-  const [agentBoardLoading, setAgentBoardLoading] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchPrefs = useCallback(async () => {
@@ -74,22 +68,6 @@ export default function NotificationChannels() {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [fetchPrefs]);
-
-  useEffect(() => {
-    if (!agentBoardPlatform) return;
-    let cancelled = false;
-    fetch("/api/agent-board/settings", { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled && data && typeof data.enabled === "boolean") {
-          setAgentBoardEnabled(data.enabled);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [agentBoardPlatform]);
 
   const [pushSupported] = useState(() => typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator);
   const [pushSubscribed, setPushSubscribed] = useState(false);
@@ -274,53 +252,6 @@ export default function NotificationChannels() {
           <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500" />
         </label>
       </div>
-
-      {agentBoardPlatform && (
-        <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-slate-700">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
-              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">W·C</span>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{t("pizarraSettingsLabel")}</p>
-              <p className="text-[10px] text-gray-400 dark:text-slate-500">
-                {t("pizarraSettingsDesc")}{" "}
-                <Link href="/widget/setup" className="text-emerald-600 dark:text-emerald-400 underline">
-                  /widget/setup
-                </Link>
-              </p>
-            </div>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={agentBoardEnabled}
-              disabled={agentBoardLoading}
-              onChange={async (e) => {
-                const enabled = e.target.checked;
-                setAgentBoardLoading(true);
-                try {
-                  const res = await fetch("/api/agent-board/settings", {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ enabled }),
-                  });
-                  if (res.ok) {
-                    const data = await res.json();
-                    setAgentBoardEnabled(!!data.enabled);
-                    if (data.enabled) {
-                      void fetch("/api/agent-board/refresh", { method: "POST" });
-                    }
-                  }
-                } catch { /* ignore */ }
-                setAgentBoardLoading(false);
-              }}
-              className="sr-only peer"
-            />
-            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 peer-disabled:opacity-40" />
-          </label>
-        </div>
-      )}
 
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-3">

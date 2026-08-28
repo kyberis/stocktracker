@@ -3270,8 +3270,6 @@ const en: TranslationStrings = {
   homeMoneyDeskWarrenRole: "Portfolio & markets",
   homeMoneyDeskClaraRole: "Spending & savings",
   homeMoneyDeskWarrenNudge: "Ask about today's move, rebalancing, or a holding.",
-  pizarraSettingsLabel: "Agent board (Pizarra)",
-  pizarraSettingsDesc: "Scriptable home-screen widget: Warren and Clara post proactive updates when something important changes. Set up at Widget Setup.",
   homeMoneyDeskWarrenEmptyNudge: "Add your first stock or ask Warren to import a broker.",
   homeMoneyDeskClaraNudge: "Everyday spending, budgets, and savings — next to your portfolio.",
   homeMoneyDeskClaraOnboardNudge: "Track everyday spending next to your portfolio. Same trefolio login.",

@@ -46,7 +46,7 @@ const SCRIPT_VARIANTS: Record<
     file: "/widget/trefolio-scriptable-pizarra.js",
     filename: "trefolio-scriptable-pizarra.js",
     label: "Pizarra (agent board)",
-    description: "Warren and Clara notes on your home screen. Enable Pizarra in Profile → Notifications first. Not financial advice.",
+    description: "Warren notes when something matters for your holdings. Shows the latest note if nothing is new. Not financial advice.",
   },
 };
 
@@ -101,6 +101,29 @@ function WidgetSetupContent() {
       .finally(() => {
         if (!cancelled) setScriptLoading(false);
       });
+    return () => {
+      cancelled = true;
+    };
+  }, [scriptVariant]);
+
+  // Selecting Pizarra on Widget Setup arms the board (not Profile → Notifications).
+  useEffect(() => {
+    if (scriptVariant !== "pizarra") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/agent-board/settings", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ enabled: true }),
+        });
+        if (!cancelled && res.ok) {
+          void fetch("/api/agent-board/refresh", { method: "POST" });
+        }
+      } catch {
+        /* ignore — widget token fetch also auto-enables */
+      }
+    })();
     return () => {
       cancelled = true;
     };
