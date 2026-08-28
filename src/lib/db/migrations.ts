@@ -4719,6 +4719,38 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       });
     },
   },
+  {
+    version: 154,
+    description: "Agent board (Pizarra) messages + user opt-in",
+    up: async (client: Client) => {
+      await client.execute(`
+        ALTER TABLE user_settings ADD COLUMN agent_board_enabled INTEGER NOT NULL DEFAULT 0;
+      `);
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS agent_board_messages (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          agent TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          context_key TEXT NOT NULL,
+          body TEXT NOT NULL,
+          chip_label TEXT NOT NULL DEFAULT '',
+          chip_prompt TEXT NOT NULL DEFAULT '',
+          priority INTEGER NOT NULL DEFAULT 3,
+          read_at TEXT NOT NULL DEFAULT '',
+          dismissed_at TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          expires_at TEXT NOT NULL DEFAULT '',
+          signals_json TEXT NOT NULL DEFAULT '{}',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_agent_board_user_created
+          ON agent_board_messages(user_id, created_at DESC);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_board_dedupe
+          ON agent_board_messages(user_id, context_key);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.258",
+    date: "2026-08-28",
+    title: "Agent board (Pizarra)",
+    titleTranslations: {
+      es: "Pizarra de agentes",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "New opt-in Home Pizarra widget: Warren and Clara post AI-picked updates from your portfolio news, movers, catalysts, alerts, FinPulse, recommendations, market digests, and Clara savings — with history so messages do not repeat. Runs on a cron only when the board is enabled. Not financial advice.",
+        translations: {
+          es: "Nueva Pizarra opt-in en Home: Warren y Clara publican avisos elegidos por IA a partir de noticias de tu cartera, movimientos, catalizadores, alertas, FinPulse, recomendaciones, resúmenes de mercado y ahorros en Clara — con historial para no repetir mensajes. Solo corre en cron si la pizarra está activada. No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.257",
     date: "2026-08-28",
     title: "Clara month balance on Home",

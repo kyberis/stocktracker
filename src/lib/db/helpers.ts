@@ -162,6 +162,8 @@ export interface UserSettings {
   emailNotificationsEnabled: boolean;
   /** Tool hub favorites; persisted in `user_settings.favorite_tool_ids` as JSON. */
   favoriteToolIds: ToolTabId[];
+  /** Warren/Clara Pizarra widget — proactive AI messages on Home. */
+  agentBoardEnabled: boolean;
 }
 
 export const ADMIN_DEFAULT_USERNAME = "admin";

@@ -27,6 +27,7 @@ export const AI_FLOW_KEYS = [
   "support_chat",
   "weekly_digest",
   "weekly_digest_admin",
+  "agent_board",
   "engagement_report",
   "digest_email",
   "digest_x_post",
@@ -114,6 +115,13 @@ export const AI_FLOW_META: Record<AiFlowKey, AiFlowMeta> = {
     description: "Weekly digest triggered from admin panel",
     maxTokens: 300,
     temperature: 0.4,
+  },
+  agent_board: {
+    label: "Agent Board (Pizarra)",
+    description: "Proactive Warren/Clara messages for the Home Pizarra widget",
+    maxTokens: 700,
+    temperature: 0.35,
+    responseFormat: "json_object",
   },
   engagement_report: {
     label: "Engagement Report (Admin)",
