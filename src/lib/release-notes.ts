@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.254",
+    date: "2026-08-28",
+    title: "Home money desk",
+    titleTranslations: {
+      es: "Mesa de dinero en Home",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Home now opens with a Warren × Clara money desk: markets today next to month surplus, Clara account onboarding, and empty-portfolio states. On mobile the desk is first. Not financial advice.",
+        translations: {
+          es: "Home abre con una mesa de dinero Warren × Clara: mercados de hoy junto al superávit del mes, alta de Clara y estados sin cartera. En móvil la mesa va primero. No es asesoramiento financiero.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.253",
     date: "2026-08-28",
     title: "Clover — one assistant",

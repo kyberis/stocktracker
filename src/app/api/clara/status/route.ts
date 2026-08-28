@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { fetchClaraSavingsSummary } from "@/lib/ai/office/clara-client";
 import { resolveOfficeIdentity } from "@/lib/ai/office/office-identity";
+import { mapClaraSavingsToDeskStatus } from "@/lib/clara-desk-status";
 import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Lightweight probe: whether this IdP identity already has a Clara local account.
- * Uses the existing savings-summary call (404 → unlinked).
+ * Clara link probe plus aggregated savings fields for Home money desk.
+ * Uses the existing savings-summary call (404 → unlinked). No line items.
  */
 export const GET = withMetrics("/api/clara/status", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -22,7 +23,5 @@ export const GET = withMetrics("/api/clara/status", async (req: NextRequest) => 
   }
 
   const clara = await fetchClaraSavingsSummary(identity);
-  const linked = Boolean(clara.available);
-
-  return NextResponse.json({ linked });
+  return NextResponse.json(mapClaraSavingsToDeskStatus(clara));
 });

@@ -26,7 +26,7 @@
 | API | `GET /api/home-v2/day-highlights` | Scored per-ticker chips (`home_v2`) |
 | API | `GET /api/home-v2/bootstrap` | Holdings+quotes (`phase=core`); sections add highlights, AID status, recommendation, **analyst targets** (`phase=sections`) |
 | AID reuse | `/api/aid/{status,feed,digest,earnings-recap}` | Guard: `aid_beta \|\| home_v2`; briefing via `?includeBriefing=1` |
-| Components | `src/components/homepage/*` | Composition layer |
+| Components | `src/components/homepage/*` | Composition layer (`HomeMoneyDesk`) |
 | Lib | `src/lib/homepage/score-day-highlights.ts` | Pure scoring |
 
 ## 4. Data model
@@ -47,6 +47,7 @@ No new tables in MVP.
 | GET | `/api/aid/digest` | same | News bullets for highlight enrichment |
 | GET | `/api/aid/earnings-recap` | same | Post-earnings context |
 | GET | `/api/events` | user (existing) | Catalysts (earnings / ex-div) |
+| GET | `/api/clara/status` | user | Clara link + aggregated surplus for money desk (see [clara-home-cta](clara-home-cta.md)) |
 
 ### `HomeDayHighlight` shape
 
@@ -74,13 +75,13 @@ type HomeDayHighlight = {
 
 **Portfolio recommendation card:** Deterministic tip queue (diversify / concentration / cash / FX). Hide when empty or demo. Diversify CTA → `/recommendations/diversify`. Spec: [home-portfolio-recommendations.md](home-portfolio-recommendations.md).
 
-**Rail (~320px):** Allocation (CTA → `/tools/taxonomy` to fix unclassified) → Warren → **Clara CTA** (mini-landing modal → clara.trefolio.com) → Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats. Hidden when empty (no holdings). On mobile, Allocation stays in the main column above holdings.
+**Rail (~320px):** Allocation (CTA → `/tools/taxonomy` to fix unclassified) → **Money desk** (Warren × Clara pulse, tiles, optional handoff — [clara-home-cta](clara-home-cta.md)) → Warren daily nudge → Claude MCP CTA → Daily/weekly digests teaser → quick stats. Hidden when empty (no holdings). On mobile, Allocation stays in the main column above holdings.
 
-**Empty (no holdings):** Control `EmptyPortfolio` (import + add stock). Cash-only still counts as empty for this gate. When `onAskWarren` is wired (Home v2), Warren is **add-stock only** with a 10-consult / 15-minute cooldown — see [warren-empty-add-stock.md](warren-empty-add-stock.md). Experiment `warren_first_stock` (draft until Launch): treatment opens right Warren with a prefilled example after onboarding skip — see [warren-first-stock.md](warren-first-stock.md). Legacy `empty_activation` A/B/C is paused.
+**Empty (no holdings):** **Money desk first**, then Control `EmptyPortfolio` (import + add stock). Cash-only still counts as empty for this gate. When `onAskWarren` is wired (Home v2), Warren is **add-stock only** with a 10-consult / 15-minute cooldown — see [warren-empty-add-stock.md](warren-empty-add-stock.md). Experiment `warren_first_stock` (draft until Launch): treatment opens right Warren with a prefilled example after onboarding skip — see [warren-first-stock.md](warren-first-stock.md). Legacy `empty_activation` A/B/C is paused.
 
 **Agent intro (`agent_intro`):** Treatment variants play a full-screen Warren + Clara splash **once per local calendar day** on Home. Returning to `/` the same day (client navigation or refresh) must not replay it. Persistence is module memory + `localStorage` (`trefolio:agent_intro_shown_day`) + essential cookie `trefolio_agent_intro_day` (date only, no user id). Admin experiment preview (`forceVariant`) always plays. First-stock visits still suppress the splash.
 
-**Mobile:** Same order stacked; MCP CTA after holdings; touch targets ≥44px.
+**Mobile:** Money desk first (after the Home title), then the same stacked order; MCP CTA after holdings; touch targets ≥44px.
 
 **Chrome:** Existing `AppNav` + `AppPortfolioCommandStrip` / toolbar. No left icon rail.
 
@@ -126,7 +127,8 @@ type HomeDayHighlight = {
 | `home_v2_section_viewed` | Scroll into section |
 | `home_v2_highlight_clicked` | Chip click (`kind`, `ticker`) |
 | `home_v2_mcp_cta_clicked` | MCP card CTA |
-| `clara_cta_opened` / `clara_modal_cta_clicked` | Clara sister-app CTA beside Warren (see [clara-home-cta](clara-home-cta.md)) |
+| `clara_cta_opened` / `clara_modal_cta_clicked` | Clara sister-app CTA (see [clara-home-cta](clara-home-cta.md)) |
+| `home_money_desk_viewed` / `_warren_clicked` / `_clara_clicked` | Money desk (holdings × Clara linked) |
 | `home_v2_holdings_explorer_cta_clicked` | Holdings-list CTA → `/tools/holdings-explorer` |
 | `home_rec_viewed` / `home_rec_next` / `home_rec_acted` | Recommendation card lifecycle |
 | `home_rec_diversify_opened` / `home_rec_candidate_clicked` | Diversify research funnel |
@@ -141,7 +143,7 @@ type HomeDayHighlight = {
 
 ## 13. Testing
 
-- Unit: `src/lib/homepage/score-day-highlights.test.ts`, `src/lib/homepage/build-portfolio-recommendations.test.ts`, `src/lib/agent-intro.test.ts` (once-per-day splash)
+- Unit: `src/lib/homepage/score-day-highlights.test.ts`, `src/lib/homepage/build-portfolio-recommendations.test.ts`, `src/lib/agent-intro.test.ts` (once-per-day splash), `src/lib/clara-desk-status.test.ts`
 - Theme + responsive gates per `engineer-homepage` / `engineer-dashboard`
 - E2E: `e2e/home-v2.spec.ts` (empty/demo hide explorer CTA; holdings CTA → `/tools/holdings-explorer`)
 
@@ -164,4 +166,5 @@ type HomeDayHighlight = {
 - [`trefolio-mcp-user.md`](trefolio-mcp-user.md)
 - [`dashboard-shell.md`](dashboard-shell.md)
 - [`event-calendar.md`](event-calendar.md)
+- [`clara-home-cta.md`](clara-home-cta.md) — Home money desk (Warren × Clara)
 - [`../design-docs/home-cold-path-latency.md`](../design-docs/home-cold-path-latency.md) — cold-path inventory and latency mitigations

@@ -41,7 +41,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 
 - [advanced-investor-dashboard](advanced-investor-dashboard.md) — AID beta control panel (`/aid`), home CTA, Warren/Will/Clara column.
 - [agent-dock](agent-dock.md) — Global Warren/Clara dock (desktop expanded, mobile FAB → sheet).
-- [clara-home-cta](clara-home-cta.md) — Clara card beside Warren: mini-landing modal → SSO / open Clara chat.
+- [clara-home-cta](clara-home-cta.md) — Home money desk (Warren × Clara): pulse, onboarding, empty states; Classic/mobile still use the Clara card + modal.
 - [unified-homepage](unified-homepage.md) — Default daily home at `/` (`home_v2` on by default); Classic at `/classic` (`classic_home`).
 - [home-portfolio-recommendations](home-portfolio-recommendations.md) — Home tip card queue + diversify sector research.
 - [accounts-manager](accounts-manager.md) — user-visible accounts/brokers.

@@ -3248,6 +3248,32 @@ const es: TranslationStrings = {
   claraModalDisclaimer:
     "Clara es una app hermana. La ayuda generada por IA no es asesoramiento financiero.",
 
+  // ── Mesa de dinero (Warren × Clara) ──
+  homeMoneyDeskTitle: "Tu mesa de dinero",
+  homeMoneyDeskSubtitle: "Warren mira mercados · Clara mira el día a día · juntos, tu capacidad real",
+  homeMoneyDeskDuo: "Dúo",
+  homeMoneyDeskPulseLabel: "Mercados de hoy y superávit del mes",
+  homeMoneyDeskMarketsToday: "Mercados hoy",
+  homeMoneyDeskSurplusMonth: "Superávit mes",
+  homeMoneyDeskNoPortfolio: "Sin cartera aún",
+  homeMoneyDeskWarrenRole: "Cartera y mercados",
+  homeMoneyDeskClaraRole: "Gastos y ahorro",
+  homeMoneyDeskWarrenNudge: "Pregunta por el movimiento de hoy, un rebalanceo o una posición.",
+  homeMoneyDeskWarrenEmptyNudge: "Añade tu primera acción o pide a Warren que importe un bróker.",
+  homeMoneyDeskClaraNudge: "Gastos cotidianos, presupuestos y ahorro — junto a tu cartera.",
+  homeMoneyDeskClaraOnboardNudge: "Sigue el gasto cotidiano junto a tu cartera. El mismo inicio de sesión de trefolio.",
+  homeMoneyDeskClaraDaysNudge: "Quedan {days} días de mes.",
+  homeMoneyDeskWarrenCta: "Preguntar a Warren",
+  homeMoneyDeskWarrenEmptyCta: "Añadir con Warren",
+  homeMoneyDeskClaraOpenCta: "Abrir Clara",
+  homeMoneyDeskClaraCreateCta: "Crear cuenta en Clara",
+  homeMoneyDeskHandoffLabel: "Handoff:",
+  homeMoneyDeskHandoffSurplus:
+    "Warren usó el resumen de Clara — con este superávit del mes ({amount}) podrías aportar a la cartera sin tocar el colchón. No es asesoramiento financiero.",
+  homeMoneyDeskHandoffAddFirst:
+    "Clara está lista. Añade tu primera acción para que Warren relacione mercados con tu superávit cotidiano.",
+  homeMoneyDeskDisclaimer: "Ayuda generada por IA. No es asesoramiento financiero.",
+
   // ── Home v2 (preview homepage diaria) ──
   homeV2BetaBadge: "Home",
   homeV2Title: "Home",
