@@ -37,7 +37,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "The Home Warren × Clara money desk is gated by feature flag home_money_desk (off by default). When off, separate Warren and Clara cards stay on Home.",
         translations: {
           es: "La mesa de dinero Warren × Clara en Home queda detrás del feature flag home_money_desk (apagado por defecto). Si está off, Home sigue con las tarjetas separadas de Warren y Clara.",
