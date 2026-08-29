@@ -4807,7 +4807,13 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
         .join(", ");
 
       const colNames = colDefs.map((c) => c.name).join(", ");
+      // Normalize legacy plan values before the new CHECK constraint applies.
+      await client.execute(
+        "UPDATE users SET plan = 'free' WHERE plan NOT IN ('free', 'basic', 'pro', 'wealth')",
+      );
+      // Child tables reference users(id); disable FKs for the table rebuild.
       await client.executeMultiple(`
+        PRAGMA foreign_keys = OFF;
         CREATE TABLE users_new (${columnDefs});
         INSERT INTO users_new (${colNames}) SELECT ${colNames} FROM users;
         DROP TABLE users;
@@ -4818,6 +4824,7 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
         CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_users_profile_slug ON users(profile_slug) WHERE profile_slug != '';
         CREATE INDEX IF NOT EXISTS idx_users_idp_sub ON users(idp_sub) WHERE idp_sub != '';
+        PRAGMA foreign_keys = ON;
       `);
     },
   },
