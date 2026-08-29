@@ -11,6 +11,7 @@ const confirmSchema = z.object({
   kind: z.enum([
     "addHolding",
     "removeHolding",
+    "recordTransaction",
     "addCash",
     "createAlert",
     "addWatchlist",

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.266",
+    date: "2026-08-29",
+    title: "Warren can record sales",
+    titleTranslations: {
+      es: "Warren puede registrar ventas",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Warren can record a sale (or buy/dividend/fee) you already made — Confirm saves a normal ledger transaction instead of a destructive “Yes, delete” that failed with “Holding not found.”",
+        translations: {
+          es: "Warren puede registrar una venta (o compra/dividendo/comisión) que ya hiciste: Confirmar guarda una transacción normal en el libro, en lugar de la tarjeta destructiva “Sí, borrar” que fallaba con “Holding not found.”",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.265",
     date: "2026-08-28",
     title: "Clover on the landing page",

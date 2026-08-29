@@ -12,6 +12,7 @@ interface Props {
 const KIND_LABEL: Record<Exclude<WarrenProposal["kind"], "importTransactions">, string> = {
   addHolding: "Add holding",
   removeHolding: "Remove holding",
+  recordTransaction: "Record transaction",
   addCash: "Add cash",
   createAlert: "Create alert",
   addWatchlist: "Add to watchlist",
