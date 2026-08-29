@@ -15,6 +15,7 @@ import type { Holding, CashEntry, ManualAssetType, HoldingAssetType } from "@/li
 import PortfolioReviewCard from "./PortfolioReviewCard";
 import { useTheme } from "@/lib/theme-context";
 import { useTrack } from "@/lib/use-track";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 const CATEGORY_META: Record<string, { label: string; icon: string; color: string }> = {
   stock: { label: "investments", icon: "📈", color: "#6366f1" },
@@ -196,7 +197,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
     : String(holdingsCount);
 
   const isAdmin = user?.role === "admin";
-  const isPro = user?.plan === "pro" || isAdmin;
+  const isPro = isPaidPlan(planOf(user)) || isAdmin;
   const aiReportEnabled = useFeatureFlag("ai_report_enabled");
   const reviewQuota = user?.quotas?.ai_portfolio_review;
   const limit = reviewQuota?.limit ?? FEATURE_QUOTAS.ai_portfolio_review[isPro ? "pro" : "free"];

@@ -14,6 +14,7 @@
     { "path": "/api/cron/portfolio-snapshots", "schedule": "*/5 * * * *" },
     { "path": "/api/cron/lifecycle-emails", "schedule": "0 10 * * *" },
     { "path": "/api/cron/trial-expiration", "schedule": "0 9 * * *" },
+    { "path": "/api/cron/local-pro-sunset", "schedule": "0 10 * * *" },
     { "path": "/api/cron/commerce-complimentary-renewal", "schedule": "0 2 * * *" },
     { "path": "/api/cron/weekly-digest", "schedule": "0 8 * * 1" },
     { "path": "/api/cron/portfolio-recommendations", "schedule": "0 7 * * 1" },

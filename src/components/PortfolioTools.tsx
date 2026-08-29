@@ -25,6 +25,7 @@ import {
   sortTabsByHubCategory,
 } from "@/lib/tools-registry";
 import { catalogOrderIndex, useFavoriteTools } from "@/lib/favorite-tools";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 const TransactionHistory = dynamic(() => import("./TransactionHistory"), { ssr: false });
 const DividendSummary = dynamic(() => import("./DividendSummary"), { ssr: false });
@@ -92,7 +93,7 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
   const router = useRouter();
   const activeTab: ToolTabId | null = initialTab ?? null;
   const isMenuMode = !activeTab;
-  const isPaid = user?.plan === "pro";
+  const isPaid = isPaidPlan(planOf(user));
 
   const setActiveTab = (tab: ToolTabId) => {
     router.push(getToolPath(tab));

@@ -22,6 +22,7 @@ import { createAiStream } from "@/lib/ai-stream";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 import type { SubscriptionPlan } from "@/lib/types";
+import { isPaidPlan } from "@/lib/plan-rank";
 import { buildPortfolioSnapshot } from "@/lib/ai/warren/build-snapshot";
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import { portfolioTelemetryInjectionGuard } from "@/lib/ai/prompt-safety";
@@ -45,7 +46,7 @@ export const POST = withMetrics("/api/portfolio/ai-chat", async (request: NextRe
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session?.plan || "free") as SubscriptionPlan;
-  if (plan === "pro") {
+  if (isPaidPlan(plan)) {
     const rl = await checkAiRateLimit(session.userId, plan, session.role);
     if (!rl.allowed) {
       rateLimitHitsTotal.inc({ provider: "openai" });

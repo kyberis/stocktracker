@@ -63,7 +63,11 @@ export default function TierIcon({ plan, size = 20, className }: TierIconProps) 
   switch (plan) {
     case "free":
       return <OneLeaf size={size} className={className} />;
+    case "basic":
+      return <OneLeaf size={size} className={className} />;
     case "pro":
+      return <ThreeLeaves size={size} className={className} />;
+    case "wealth":
       return <ThreeLeaves size={size} className={className} />;
   }
 }

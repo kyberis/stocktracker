@@ -3,12 +3,9 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { getAllStripePriceConfig, setStripePriceConfig } from "@/lib/db";
 import type { StripePriceKey } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
+import { STRIPE_PRICE_ADMIN_FIELDS } from "@/lib/stripe-plan-prices";
 
-const VALID_KEYS = new Set<StripePriceKey>([
-  "stripe_price_pro_monthly",
-  "stripe_price_pro_annual",
-  "stripe_coupon_device_free_year",
-]);
+const VALID_KEYS = new Set<StripePriceKey>(STRIPE_PRICE_ADMIN_FIELDS.map((f) => f.key));
 
 export const GET = withMetrics("/api/admin/stripe-prices", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);

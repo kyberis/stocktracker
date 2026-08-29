@@ -8,7 +8,7 @@ export interface AdminUser {
   id: string;
   username: string;
   role: "admin" | "user";
-  plan: "free" | "pro";
+  plan: "free" | "basic" | "pro" | "wealth";
   email: string;
   displayName: string;
   authProvider: "credentials" | "google" | "apple";

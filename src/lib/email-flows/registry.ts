@@ -14,6 +14,7 @@ export const HARDCODED_EMAIL_SENDERS = [
   "sendTrefolioUpgradeEmail",
   "sendTrialInvitationEmail",
   "sendTrialExpiredEmail",
+  "sendLocalProSunsetEmail",
   "sendMembershipGrantInvitationEmail",
   "sendSatisfactionTrustpilotEmail",
   "sendFeedbackAutoAckEmail",

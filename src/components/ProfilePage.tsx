@@ -23,6 +23,7 @@ import { resolveBillingPortalHref } from "@/lib/idp/config";
 import { useCommerceEnabled } from "@/lib/commerce";
 import { useWidgetTokens } from "@/hooks/use-widget-tokens";
 import { WidgetTokenList } from "@/components/WidgetTokenList";
+import { isPaidPlan, planDisplayName, planOf } from "@/lib/plan-rank";
 
 const PROFILE_TABS = ["account", "mcp", "subscription", "notifications", "portfolios", "referrals", "social", "devices"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
@@ -1012,7 +1013,7 @@ export default function ProfilePage() {
       try {
         const res = await fetch("/api/billing/sync", { method: "POST" });
         const data = await res.json().catch(() => null);
-        if (!cancelled && data?.plan === "pro") {
+        if (!cancelled && isPaidPlan(planOf({ plan: data?.plan }))) {
           await refreshUser();
           setBillingSync("done");
           return;
@@ -1031,7 +1032,7 @@ export default function ProfilePage() {
         await refreshUser();
         const fresh = await fetch("/api/auth/me", { cache: "no-store" });
         const me = await fresh.json().catch(() => null);
-        if (me?.user?.plan === "pro") {
+        if (isPaidPlan(planOf(me?.user))) {
           if (!cancelled) setBillingSync("done");
           return;
         }
@@ -1355,7 +1356,7 @@ export default function ProfilePage() {
     .join("")
     .toUpperCase()
     .slice(0, 2);
-  const isPro = user?.plan === "pro";
+  const isPro = isPaidPlan(planOf(user));
   const isPaid = isPro;
   const deviceProEligible = user?.deviceProEligible ?? false;
 
@@ -1975,15 +1976,15 @@ export default function ProfilePage() {
           <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-4 bg-gray-50 dark:bg-slate-800/40">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1.5">
-                <TierIcon plan={isPro ? "pro" : "free"} size={16} />
-                {isPro ? t("planPro") : t("planFree")}
+                <TierIcon plan={planOf(user)} size={16} />
+                {planDisplayName(planOf(user))}
               </p>
               <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
                 isPro
                   ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
                   : "bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-slate-200"
               }`}>
-                {isPro ? t("proBadge") : t("freeBadge")}
+                {planDisplayName(planOf(user))}
               </span>
             </div>
           </div>
@@ -2004,7 +2005,7 @@ export default function ProfilePage() {
               </div>
             );
           })()}
-          {isPaid ? (
+          {isPaid && (
             <a
               href={resolveBillingPortalHref()}
               target="_blank"
@@ -2016,13 +2017,12 @@ export default function ProfilePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
               </svg>
             </a>
-          ) : (
-            <ProCompareCard
-              surface="profile_always_on"
-              reason="upgrade_required"
-              aiUsage={{ used: user?.aiTokensThisMonth ?? 0, limit: aiLimit }}
-            />
           )}
+          <ProCompareCard
+            surface="profile_always_on"
+            reason="upgrade_required"
+            aiUsage={{ used: user?.aiTokensThisMonth ?? 0, limit: aiLimit }}
+          />
         </div>
 
         {isPaid && (

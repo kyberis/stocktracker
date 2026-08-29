@@ -16,6 +16,7 @@ import {
   type HoldingSeriesEntry,
 } from "@/lib/performance";
 import type { HistoricalDataPoint, Holding } from "@/lib/types";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 type HistoricalApiResponse = {
   data?: HistoricalDataPoint[];
@@ -47,7 +48,7 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
   const { t } = useI18n();
   const { user } = useAuth();
   const track = useTrack();
-  const isPaid = user?.plan === "pro";
+  const isPaid = isPaidPlan(planOf(user));
   const tracked = useRef(false);
 
   const [showHelp, setShowHelp] = useState(false);

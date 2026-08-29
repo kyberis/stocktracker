@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import type { TransactionType } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
 import { canUseBrokerSync } from "@/lib/subscription";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 interface ParsedTx {
   date: string;
@@ -77,7 +78,7 @@ function mapTx(tx: Record<string, unknown>): ParsedTx {
 export default function BrokerImport() {
   const { t } = useI18n();
   const { user } = useAuth();
-  const isPro = user?.plan === "pro";
+  const isPro = isPaidPlan(planOf(user));
   const brokerSyncAllowed = canUseBrokerSync(
     user?.plan ?? "free",
     user?.planExpiresAt ?? "",

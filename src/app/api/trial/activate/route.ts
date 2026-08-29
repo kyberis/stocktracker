@@ -16,15 +16,14 @@ export const POST = withMetrics("/api/trial/activate", async (req: NextRequest) 
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  let token: unknown;
+  let token: string | undefined;
   try {
-    ({ token } = await req.json());
+    const body = await req.json();
+    if (typeof body?.token === "string" && body.token.trim()) {
+      token = body.token.trim();
+    }
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-
-  if (typeof token !== "string" || token.trim() === "") {
-    return NextResponse.json({ error: "Invalid or missing token" }, { status: 400 });
+    token = undefined;
   }
 
   const user = await findUserById(session.userId);
@@ -32,7 +31,7 @@ export const POST = withMetrics("/api/trial/activate", async (req: NextRequest) 
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const eligibilityError = getTrialEligibilityError(user, { token });
+  const eligibilityError = getTrialEligibilityError(user, token ? { token } : undefined);
   if (eligibilityError) {
     return NextResponse.json({ error: ERROR_MESSAGES[eligibilityError] }, { status: 400 });
   }

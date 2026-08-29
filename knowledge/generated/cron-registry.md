@@ -20,6 +20,7 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `portfolio-snapshots` | `*/5 * * * *` | `/api/cron/portfolio-snapshots` | Compute and store portfolio value snapshots for all users (every 5 min for dense intraday charts) |
 | `lifecycle-emails` | `0 10 * * *` | `/api/cron/lifecycle-emails` | Daily: trial invitations, welcome-no-stocks activation, and 14-day winback (legacy /api/cron/trial-invitations|lifecycle-activation|lifecycle-winback aliases remain) |
 | `trial-expiration` | `0 9 * * *` | `/api/cron/trial-expiration` | Daily backup: downgrade expired trial users and send expiration email (primary path is check-on-login) |
+| `local-pro-sunset` | `0 10 * * *` | `/api/cron/local-pro-sunset` | Persist Free/Basic restore for expired local (non-Stripe) Pro windows after complimentary sunset |
 | `commerce-complimentary-renewal` | `0 2 * * *` | `/api/cron/commerce-complimentary-renewal` | Renew 30-day complimentary Trefolio Pro while commerce_enabled is off |
 | `weekly-digest` | `0 8 * * 1` | `/api/cron/weekly-digest` | Generate and send AI-powered weekly portfolio digest to Pro users every Monday |
 | `portfolio-recommendations` | `0 7 * * 1` | `/api/cron/portfolio-recommendations` | Weekly prefetch of Home tip queues for users active in the last 7 days; Home computes the rest on cache miss |

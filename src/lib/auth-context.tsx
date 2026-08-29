@@ -51,6 +51,8 @@ interface AuthUser {
   taxResidency: string;
   onboardingCompleted: boolean;
   trialActivatedAt: string;
+  planBeforeTrial?: string;
+  stripeManaged?: boolean;
   impersonation: { impersonatorId: string; impersonatorUsername: string } | null;
   quotas?: AuthQuotas;
   /** Absolute URL to unified IdP account hub when legacy auth is off and user linked to IdP. */

@@ -216,8 +216,10 @@ export const DEFAULT_AI_MODEL: AllowedAiModel = "gpt-4o-mini";
 /** Flows where a weak model hurts trust or corrupts user data — always use platform config (IdP / admin). */
 export const AI_FLOWS_ALWAYS_PREMIUM_MODEL = new Set<AiFlowKey>(["portfolio_score", "import_portfolio"]);
 
-/** Folio-tier conversational model (cheap); quality-critical flows ignore this. */
+/** Free-tier conversational model (cheap); quality-critical flows ignore this. */
 export const FREE_TIER_CONVERSATIONAL_MODEL: AllowedAiModel = "gpt-4.1-nano";
+export const BASIC_TIER_CONVERSATIONAL_MODEL: AllowedAiModel = "gpt-4.1-mini";
+export const WEALTH_TIER_REASONING_MODEL: AllowedAiModel = "o4-mini";
 
 /** Flows where screening quality matters most — default to a strong model. */
 const SCREENING_PREMIUM_DEFAULTS: Partial<Record<AiFlowKey, AllowedAiModel>> = {
@@ -263,8 +265,20 @@ export function resolveAiModelForPlan(
   if (AI_FLOWS_ALWAYS_PREMIUM_MODEL.has(flow)) {
     return platformConfig[flow] || DEFAULT_AI_MODEL;
   }
+  if (plan === "wealth") {
+    if (flow.startsWith("screening_")) {
+      return platformConfig[flow] || "gpt-4.1";
+    }
+    if (flow === "portfolio_review" || flow === "screening_qa") {
+      return WEALTH_TIER_REASONING_MODEL;
+    }
+    return platformConfig[flow] || "gpt-4.1";
+  }
   if (plan === "pro") {
     return platformConfig[flow] || DEFAULT_AI_MODEL;
+  }
+  if (plan === "basic") {
+    return BASIC_TIER_CONVERSATIONAL_MODEL;
   }
   return FREE_TIER_CONVERSATIONAL_MODEL;
 }

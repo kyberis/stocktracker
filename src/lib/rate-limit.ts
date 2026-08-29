@@ -1,4 +1,5 @@
-import { PLATFORM_LIMITS, type RateLimitProvider } from "@/lib/platform-config";
+import { FEATURE_QUOTAS, PLATFORM_LIMITS, type RateLimitProvider } from "@/lib/platform-config";
+import { parseSubscriptionPlan } from "@/lib/plan-rank";
 import {
   checkAndIncrementRateLimit,
   checkAndIncrementBurstCooldown,
@@ -213,9 +214,7 @@ export async function checkSupportChatRateLimit(
   }
   const limit =
     configuredLimit ??
-    (plan === "pro"
-      ? PLATFORM_LIMITS.SUPPORT_CHAT_PRO_DAILY_DEFAULT
-      : PLATFORM_LIMITS.SUPPORT_CHAT_FREE_DAILY_DEFAULT);
+    FEATURE_QUOTAS.support_chat[parseSubscriptionPlan(plan)];
   const windowKey = dayWindowKey();
   const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(
     userId,

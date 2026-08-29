@@ -20,8 +20,10 @@ function AuthBadge({ provider }: { provider: string }) {
 }
 
 function PlanBadge({ plan }: { plan: string }) {
-  if (plan === "pro") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500">Trefolio</span>;
-  return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">Folio</span>;
+  if (plan === "wealth") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600">Wealth</span>;
+  if (plan === "pro") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500">Pro</span>;
+  if (plan === "basic") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/10 text-sky-600">Basic</span>;
+  return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">Free</span>;
 }
 
 function BrokerBadges({ accounts, imports }: { accounts: string; imports: string }) {

@@ -23,6 +23,7 @@ import {
   normalizeSectorLabel,
 } from "@/lib/classification-normalize";
 import { driftTone, driftToneDotClass, driftToneTextClass } from "@/lib/portfolio/drift-tone";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 const PIE_COLORS = [
   "#10b981", "#6366f1", "#f59e0b", "#ef4444", "#8b5cf6",
@@ -77,7 +78,7 @@ export default function RebalancingView() {
   const { holdings, quotes, exchangeRates, activePortfolioCurrency, refreshHoldings } = usePortfolio();
   const baseCurrency = activePortfolioCurrency;
   const isAdmin = user?.role === "admin";
-  const isPro = user?.plan === "pro" || isAdmin;
+  const isPro = isPaidPlan(planOf(user)) || isAdmin;
 
   const [targets, setTargets] = useState<RebalanceTarget[]>([]);
   const [category, setCategory] = useState<Category>("sector");

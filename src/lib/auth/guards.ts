@@ -4,6 +4,7 @@ import { logUnauthorizedApi } from "@/lib/log-unauthorized";
 import { getSessionFromRequest, TREEFOLIO_SESSION_COOKIE } from "./session";
 import { findUserById, trackEvent, updateLastActive } from "@/lib/db";
 import { effectivePlan } from "@/lib/subscription";
+import { planAtLeast } from "@/lib/plan-rank";
 import type { SubscriptionFeature } from "@/lib/types";
 import { paywallHitsTotal, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAvRateLimit, checkFmpRateLimit, checkAiRateLimit, checkAiImportRateLimit } from "@/lib/rate-limit";
@@ -70,7 +71,51 @@ export async function requirePro(req: NextRequest) {
   return { session, error: null };
 }
 
-/** Agent Office and other Trefolio Pro-only surfaces (plan === "pro", admins bypass). */
+/** Require an effective plan at or above `minimum` (admins bypass). */
+export async function requirePlanAtLeast(req: NextRequest, minimum: import("@/lib/types").SubscriptionPlan) {
+  const { session, error } = await requireSession(req);
+  if (error || !session) return { session: null, error: error! };
+
+  if (session.role === "admin") {
+    return { session, error: null };
+  }
+
+  const user = await findUserById(session.userId);
+  if (!user) {
+    logUnauthorizedApi(req, {
+      source: "requirePlanAtLeast",
+      reason: "session_user_not_found",
+    });
+    return {
+      session: null,
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
+  }
+
+  const plan = effectivePlan(user.plan, user.plan_expires_at);
+  if (!planAtLeast(plan, minimum)) {
+    paywallHitsTotal.inc({ feature: minimum, reason: "plan_required" });
+    trackEvent(session.userId, "paywall_shown", { feature: minimum, reason: "plan_required" });
+    const commerceEnabled = await isCommerceEnabled();
+    return {
+      session: null,
+      error: NextResponse.json(
+        {
+          error: `${minimum} required`,
+          paywall: true,
+          reason: "plan_required",
+          feature: minimum,
+          ...(commerceEnabled ? { upgradeUrl: "/upgrade" } : {}),
+        },
+        { status: 403 },
+      ),
+    };
+  }
+
+  return { session, error: null };
+}
+
+/** Agent Office and other Pro+ surfaces (admins bypass). */
 export async function requireTrefolioPro(req: NextRequest) {
   const { session, error } = await requireSession(req);
   if (error || !session) return { session: null, error: error! };
@@ -92,7 +137,7 @@ export async function requireTrefolioPro(req: NextRequest) {
   }
 
   const plan = effectivePlan(user.plan, user.plan_expires_at);
-  if (plan !== "pro") {
+  if (!planAtLeast(plan, "pro")) {
     paywallHitsTotal.inc({ feature: "office", reason: "plan_required" });
     trackEvent(session.userId, "paywall_shown", { feature: "office", reason: "plan_required" });
     const commerceEnabled = await isCommerceEnabled();
@@ -100,7 +145,7 @@ export async function requireTrefolioPro(req: NextRequest) {
       session: null,
       error: NextResponse.json(
         {
-          error: "Trefolio Pro required",
+          error: "Pro plan required",
           paywall: true,
           reason: "plan_required",
           feature: "office",
@@ -122,7 +167,7 @@ export async function requireTrefolioProByUserId(userId: string): Promise<
   if (!user) return { allowed: false, reason: "user_not_found" };
   if (user.role === "admin") return { allowed: true };
   const plan = effectivePlan(user.plan, user.plan_expires_at);
-  if (plan !== "pro") return { allowed: false, reason: "plan_required" };
+  if (!planAtLeast(plan, "pro")) return { allowed: false, reason: "plan_required" };
   return { allowed: true };
 }
 

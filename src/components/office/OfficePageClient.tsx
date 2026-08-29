@@ -3,13 +3,14 @@
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { resolveIdpUpgradeHref } from "@/lib/idp/config";
+import { planAtLeast, planOf } from "@/lib/plan-rank";
 import OfficeExperience from "./OfficeExperience";
 import styles from "./office.module.css";
 
 export default function OfficePageClient() {
   const { user } = useAuth();
   const { t } = useI18n();
-  const isPro = user?.plan === "pro";
+  const isPro = planAtLeast(planOf(user), "pro");
 
   if (!isPro) {
     return (

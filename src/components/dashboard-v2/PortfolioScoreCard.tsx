@@ -9,6 +9,7 @@ import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { FEATURE_QUOTAS } from "@/lib/platform-config";
 import { buildScorePayload, type PortfolioScoreResponse, type CategoryScore } from "@/lib/portfolio-score";
 import type { Holding, CashEntry } from "@/lib/types";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 type ScoreStatus = "idle" | "loading" | "done" | "error" | "limit-reached";
 
@@ -137,7 +138,7 @@ export default function PortfolioScoreCard({ holdings, cashEntries }: Props) {
   const fetchedRef = useRef(false);
 
   const isAdmin = user?.role === "admin";
-  const isPro = user?.plan === "pro" || isAdmin;
+  const isPro = isPaidPlan(planOf(user)) || isAdmin;
   const scoreQuota = user?.quotas?.portfolio_score;
   const limit = scoreQuota?.limit ?? FEATURE_QUOTAS.portfolio_score[isPro ? "pro" : "free"];
   const used = scoreQuota?.used ?? 0;

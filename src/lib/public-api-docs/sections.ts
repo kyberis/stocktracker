@@ -202,8 +202,8 @@ export function getPublicDocSection(id: string): PublicDocSection | null {
             },
           ],
           tiers: {
-            free: "Folio plan — limited AI and MOAT quotas.",
-            pro: "Trefolio plan — higher quotas; MOAT evaluation and Warren AI narrative require Pro for fresh runs.",
+            free: "Free plan — limited AI and MOAT quotas.",
+            pro: "Pro and Wealth — higher quotas; MOAT evaluation and Warren AI narrative need a paid plan for fresh runs.",
           },
         },
       };

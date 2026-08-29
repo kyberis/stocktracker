@@ -27,6 +27,7 @@ export function getTrialBannerVisibility(input: {
   planExpiresAt: string;
   nowMs: number;
 }): TrialBannerVisibility {
+  if (!input.trialActivatedAt.trim()) return { show: false };
   const trialActivatedAt = input.trialActivatedAt.trim();
   if (!trialActivatedAt) return { show: false };
 

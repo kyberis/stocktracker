@@ -13,6 +13,7 @@ interface QuotaCompareTableProps {
 const DEFAULT_FEATURES: FeatureQuotaKey[] = [
   "ai_consult",
   "ai_portfolio_review",
+  "investment_screening",
   "ai_import",
   "fundamentals",
   "intelligence",
@@ -60,10 +61,16 @@ export default function QuotaCompareTable({
               {t("quotaTableFeature")}
             </th>
             <th className="text-right font-semibold text-gray-500 dark:text-slate-400 py-1.5 px-2">
-              {t("quotaTableFree")}
+              Free
             </th>
-            <th className="text-right font-semibold text-emerald-600 dark:text-emerald-400 py-1.5 pl-2">
-              {t("quotaTablePro")}
+            <th className="text-right font-semibold text-gray-500 dark:text-slate-400 py-1.5 px-2">
+              Basic
+            </th>
+            <th className="text-right font-semibold text-emerald-600 dark:text-emerald-400 py-1.5 px-2">
+              Pro
+            </th>
+            <th className="text-right font-semibold text-amber-700 dark:text-amber-400 py-1.5 pl-2">
+              Wealth
             </th>
           </tr>
         </thead>
@@ -80,8 +87,14 @@ export default function QuotaCompareTable({
                 <td className="py-1.5 px-2 text-right tabular-nums text-gray-500 dark:text-slate-400">
                   {formatLimit(cfg.free, cfg.window, t)}
                 </td>
-                <td className="py-1.5 pl-2 text-right tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">
+                <td className="py-1.5 px-2 text-right tabular-nums text-gray-500 dark:text-slate-400">
+                  {formatLimit(cfg.basic, cfg.window, t)}
+                </td>
+                <td className="py-1.5 px-2 text-right tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">
                   {formatLimit(cfg.pro, cfg.window, t)}
+                </td>
+                <td className="py-1.5 pl-2 text-right tabular-nums font-semibold text-amber-700 dark:text-amber-400">
+                  {formatLimit(cfg.wealth, cfg.window, t)}
                 </td>
               </tr>
             );

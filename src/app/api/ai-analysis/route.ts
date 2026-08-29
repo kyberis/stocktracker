@@ -12,6 +12,7 @@ import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
 import type { SubscriptionPlan } from "@/lib/types";
+import { isPaidPlan } from "@/lib/plan-rank";
 
 export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "ai_consult");
@@ -20,7 +21,7 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session?.plan || "free") as SubscriptionPlan;
-  if (plan === "pro") {
+  if (isPaidPlan(plan)) {
     const rl = await checkAiRateLimit(session.userId, plan, session.role);
     if (!rl.allowed) {
       rateLimitHitsTotal.inc({ provider: "openai" });

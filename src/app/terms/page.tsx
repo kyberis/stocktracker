@@ -36,7 +36,7 @@ export default function TermsOfServicePage() {
             Terms of Service
           </h1>
           <p className="text-slate-500">
-            Last updated: May 9, 2026
+            Last updated: August 29, 2026
           </p>
         </header>
 
@@ -67,8 +67,8 @@ export default function TermsOfServicePage() {
               <li>View portfolio performance, historical charts, and benchmark comparisons.</li>
               <li>Access AI-powered stock analysis, portfolio review, and tax optimization insights (subject to tier limits).</li>
               <li>Import portfolio data from 14 broker CSV formats, connect brokerage accounts via SnapTrade auto-sync, or use AI-powered import.</li>
-              <li>Generate country-specific European tax reports (Germany, France, Spain, Netherlands, Italy) with AI Tax Assistant (Trefolio).</li>
-              <li>Filter and discover stocks using the stock screener with fundamental filters (Trefolio).</li>
+              <li>Generate country-specific European tax reports (Germany, France, Spain, Netherlands, Italy) with AI Tax Assistant (paid plans, subject to quota).</li>
+              <li>Filter and discover stocks using the stock screener with fundamental filters (subject to quota).</li>
               <li>Track net worth with manual entries for real estate, savings, and pension assets.</li>
               <li>Track cash balances, dividend projections, and event calendars (earnings, economic events, IPOs).</li>
             </ul>
@@ -93,43 +93,38 @@ export default function TermsOfServicePage() {
 
             <h3>Universal Access with Quotas</h3>
             <p>
-              From version 2.0.0 onwards (April 2026), every feature in the
-              Service is available on both the Folio (Free) and Trefolio (Paid)
-              tiers. Tiers differ in the <strong>per-feature monthly, daily, or
+              The Service is offered on four plans: Free, Basic, Pro, and Wealth · Ultra.
+              Plans differ in the <strong>per-feature monthly, daily, or
               yearly quota</strong> applied to cost-bearing endpoints (AI
               consultations, premium market-data lookups, AI-assisted imports,
-              tax reports, exports, and support chat). The current quotas for
-              each tier are published in the in-app pricing page and may be
+              tax reports, exports, multi-agent screenings, and support chat),
+              and in the AI model layer used (Lite / Standard / Standard+ / Advanced).
+              Quotas and model layers describe capacity, not guaranteed quality or investment outcomes.
+              The current quotas for each plan are published on the pricing page and may be
               adjusted from time to time at our discretion.
             </p>
 
-            <h3>Folio (Free Tier)</h3>
+            <h3>Free</h3>
             <p>
-              The Folio tier provides full access to every feature of the
-              Service, subject to the published Free-tier quotas and to soft
-              storage caps (e.g. number of holdings, portfolios, alerts, share
+              Free provides access to the Service subject to published Free-tier quotas and
+              soft storage caps (e.g. number of holdings, portfolios, alerts, share
               links, manual assets, and brokerage connections). The free tier
               is ad-supported: Google AdSense advertisements may be displayed
-              if you have consented to advertising cookies. The paid Trefolio
-              tier is completely ad-free.
+              if you have consented to advertising cookies. Paid plans are ad-free.
             </p>
 
-            <h3>Trefolio (Paid Tier)</h3>
+            <h3>Basic, Pro, and Wealth · Ultra</h3>
             <p>
-              The Trefolio tier is available for a subscription fee (currently
-              from €7.99/month for new subscribers during promotional periods,
-              or €9.99/month at the regular rate, inclusive of applicable VAT;
-              annual plans may be offered at a discount). Trefolio includes
-              every feature in the Service with substantially higher quotas than
-              Folio (typically ~20× the Free-tier monthly limits for AI and
-              premium-data features, and significantly higher soft caps for
-              storage entities). Trefolio is also ad-free.
+              Paid plans are billed through Stripe (currently about €4.99 / €9.99 / €24.99
+              per month inclusive of applicable VAT; annual plans may be offered at a discount).
+              Higher plans include higher quotas. Multi-agent investment screenings are
+              available on Pro and Wealth only, at the published monthly limits.
+              Exact limits at the time of purchase prevail for your account.
             </p>
             <p>
-              Exact limits per feature and per tier may change; the in-app
-              subscription and pricing pages at the time of purchase prevail for
-              your account. Existing Trefolio subscribers retain their plan and
-              are not affected by the v2.0 model change in any negative way.
+              Complimentary (non-paid) Pro access is not a Stripe subscription. We may end
+              complimentary access with notice; your data remains available on Free
+              (or on Basic if that was your plan before a promotional trial).
             </p>
 
             <h3>Price Changes</h3>
@@ -141,13 +136,14 @@ export default function TermsOfServicePage() {
 
             <h3>Promotional Trials</h3>
             <p>
-              From time to time, we may offer promotional trials of paid tiers (e.g., a 7-day Trefolio Pro trial).
+              From time to time, we may offer promotional trials of paid tiers (e.g., a 7-day Pro trial).
               Promotional trials are subject to the following terms:
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Trials do not require payment information. No charge is made during the trial period.</li>
               <li>Each account is eligible for one promotional trial only.</li>
-              <li>At the end of the trial period, your account automatically reverts to the Folio (Free) tier. All your data is preserved.</li>
+              <li>At the end of the trial period, your account automatically reverts to the plan you had before the trial (Free or Basic). All your data is preserved.</li>
+              <li>Complimentary (non-Stripe) Pro access may be ended with notice; you keep your data on Free.</li>
               <li>Trial eligibility is determined at our sole discretion and may be withdrawn at any time.</li>
               <li>Promotional trials may not be combined with other offers, referral rewards, or promotional codes.</li>
             </ul>
@@ -169,7 +165,7 @@ export default function TermsOfServicePage() {
                 . We do not store your credit card details.
               </li>
               <li>
-                Paid Trefolio subscriptions renew automatically each billing cycle unless
+                Paid subscriptions renew automatically each billing cycle unless
                 cancelled.
               </li>
               <li>
@@ -180,6 +176,16 @@ export default function TermsOfServicePage() {
                 You can manage your subscription (update payment method, view
                 invoices, cancel) through the billing portal accessible from your
                 profile settings.
+              </li>
+              <li>
+                If you upgrade from one paid plan to a higher paid plan (for example
+                Basic to Pro or Wealth · Ultra), we update your existing Stripe
+                subscription. You are charged the new plan price for the remaining
+                time in the current billing period, and unused time on the previous
+                plan is credited on the same invoice. This is a proration, not a
+                separate cash refund, unless a refund is required by law (including
+                the 14-day EU right of withdrawal). Downgrades are managed in the
+                billing portal.
               </li>
             </ul>
           </section>
@@ -198,8 +204,8 @@ export default function TermsOfServicePage() {
                 current billing period.
               </li>
               <li>
-                After your subscription expires, your account reverts to the Folio
-                tier. All your data (holdings, transactions, settings) is
+                After your subscription expires, your account reverts to Free.
+                All your data (holdings, transactions, settings) is
                 preserved — you do not lose any data.
               </li>
             </ul>

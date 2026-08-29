@@ -5,6 +5,7 @@ import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { isBlockedEmailDomain } from "@/lib/schemas";
 import { trackEvent } from "./analytics";
 import { updateUserSubscription } from "./users";
+import { planAtLeast } from "@/lib/plan-rank";
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
 const CODE_LENGTH = 8;
@@ -180,7 +181,8 @@ export async function syncReferralRewardToIdp(
   try {
     const imported = await importUser({
       email: email.trim(),
-      plan: "pro",
+      plan: "free",
+      trefolioPlan: "basic",
       proUntil: planExpiresAt,
     });
     if (imported.sub) {
@@ -210,26 +212,26 @@ export async function grantReferralReward(referrerId: string, referralId: string
   // the credit-banking branch below leaves entitlements untouched.
   let grantedPlanExpiresAt: string | null = null;
 
-  if (hasActiveStripeSub && user.plan === "pro") {
+  if (hasActiveStripeSub && planAtLeast(user.plan, "basic")) {
     // Store credit days — they'll be consumed when the Stripe sub ends.
     await client.execute({
       sql: "UPDATE users SET referral_reward_days = referral_reward_days + ? WHERE id = ?",
       args: [rewardDays, referrerId],
     });
-  } else if (user.plan === "pro" && currentExpiry && currentExpiry > now) {
-    // Already on referral/gifted Pro — extend.
+  } else if (planAtLeast(user.plan, "basic") && currentExpiry && currentExpiry > now) {
+    // Already on a gifted paid plan — extend the same tier.
     const newExpiry = new Date(currentExpiry.getTime() + rewardDays * 86400000);
     grantedPlanExpiresAt = newExpiry.toISOString();
-    await updateUserSubscription(referrerId, { plan: "pro", planExpiresAt: grantedPlanExpiresAt });
+    await updateUserSubscription(referrerId, { plan: user.plan, planExpiresAt: grantedPlanExpiresAt });
     await client.execute({
       sql: "UPDATE users SET referral_reward_days = referral_reward_days + ? WHERE id = ?",
       args: [rewardDays, referrerId],
     });
   } else {
-    // Free or Starter — grant Pro now.
+    // Free — grant Basic (not eternal Pro).
     const newExpiry = new Date(now.getTime() + rewardDays * 86400000);
     grantedPlanExpiresAt = newExpiry.toISOString();
-    await updateUserSubscription(referrerId, { plan: "pro", planExpiresAt: grantedPlanExpiresAt });
+    await updateUserSubscription(referrerId, { plan: "basic", planExpiresAt: grantedPlanExpiresAt });
     await client.execute({
       sql: "UPDATE users SET referral_reward_days = referral_reward_days + ? WHERE id = ?",
       args: [rewardDays, referrerId],

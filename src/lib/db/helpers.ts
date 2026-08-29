@@ -11,9 +11,14 @@ import type {
   TransactionType,
 } from "@/lib/types";
 import type { ToolTabId } from "@/lib/tools-registry";
+import { parseSubscriptionPlan } from "@/lib/plan-rank";
 
 export type UserRole = "admin" | "user";
-export type UserPlan = "free" | "pro";
+export type UserPlan = "free" | "basic" | "pro" | "wealth";
+
+export function parseUserPlan(value: unknown): UserPlan {
+  return parseSubscriptionPlan(value);
+}
 
 export type AuthProvider = "credentials" | "google" | "apple";
 
@@ -62,6 +67,10 @@ export interface DbUser {
   trial_activated_at: string;
   trial_token: string;
   trial_expired_notified: number;
+  /** Plan to restore when a Pro trial or sunset window ends. */
+  plan_before_trial: string;
+  /** ISO timestamp when the local-Pro sunset email was sent. */
+  plan_sunset_notified_at: string;
   membership_grant_token: string;
   membership_grant_plan: string;
   membership_grant_days: number;
@@ -431,7 +440,7 @@ export function rowToDbUser(row: Row): DbUser {
     email: str(row.email),
     display_name: str(row.display_name),
     avatar_url: str(row.avatar_url),
-    plan: row.plan === "pro" || row.plan === "starter" ? "pro" : "free",
+    plan: parseUserPlan(row.plan),
     stripe_customer_id: str(row.stripe_customer_id),
     stripe_subscription_id: str(row.stripe_subscription_id),
     plan_expires_at: str(row.plan_expires_at),
@@ -467,6 +476,8 @@ export function rowToDbUser(row: Row): DbUser {
     trial_activated_at: str(row.trial_activated_at),
     trial_token: str(row.trial_token),
     trial_expired_notified: num(row.trial_expired_notified),
+    plan_before_trial: str(row.plan_before_trial),
+    plan_sunset_notified_at: str(row.plan_sunset_notified_at),
     membership_grant_token: str(row.membership_grant_token),
     membership_grant_plan: str(row.membership_grant_plan),
     membership_grant_days: num(row.membership_grant_days),

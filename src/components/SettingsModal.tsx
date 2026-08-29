@@ -12,6 +12,7 @@ import ThemeSelector from "@/components/ThemeSelector";
 import { useCommerceEnabled } from "@/lib/commerce";
 import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
 import type { SubscriptionPlan } from "@/lib/types";
+import { planDisplayName, planOf } from "@/lib/plan-rank";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -36,7 +37,6 @@ export default function SettingsModal({ isOpen, onClose, onResetPortfolio }: Set
   }, [isOpen, track]);
 
   const plan: SubscriptionPlan = user?.plan ?? "free";
-  const isPro = plan === "pro";
 
   const focusTrapRef = useFocusTrap(isOpen, onClose);
 
@@ -55,12 +55,12 @@ export default function SettingsModal({ isOpen, onClose, onResetPortfolio }: Set
               {t("currentPlan")}:{" "}
               <span className="inline-flex items-center gap-1 font-semibold">
                 <TierIcon plan={plan} size={14} />
-                {isPro ? t("planPro") : t("planFree")}
+                {planDisplayName(planOf(user))}
               </span>
             </p>
-            {!isPro && (
+            {plan !== "wealth" && (
               <Link
-                href="/profile"
+                href="/billing"
                 onClick={onClose}
                 className="shrink-0 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
               >

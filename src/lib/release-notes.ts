@@ -17,6 +17,37 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.273",
+    date: "2026-08-29",
+    title: "Free, Basic, Pro, Wealth",
+    titleTranslations: {
+      es: "Free, Basic, Pro, Wealth",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Plans are now Free, Basic (€4.99), Pro (€9.99), and Wealth · Ultra (€24.99). Free AI is a short Clara×Warren burst; Wealth includes 12 multi-agent screenings with Advanced models. Complimentary local Pro (not Stripe) gets a 7-day countdown to Free plus email. Optional 7-day Pro trial can start at signup or later; when it ends you return to Free or Basic.",
+        translations: {
+          es: "Los planes son Free, Basic (4,99 €), Pro (9,99 €) y Wealth · Ultra (24,99 €). En Free la IA Clara×Warren es un burst corto; Wealth incluye 12 screenings multiagente con modelos Advanced. El Pro complimentary local (no Stripe) tiene cuenta atrás de 7 días a Free y un email. El trial Pro de 7 días se puede activar al registrarte o más tarde; al vencer vuelves a Free o Basic.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Hitting a quota or tapping Upgrade now opens Free / Basic / Pro / Wealth with subscribe buttons — including /billing and the mobile paywall.",
+        translations: {
+          es: "Al llegar a un límite o pulsar Mejorar se muestran Free / Basic / Pro / Wealth con botones para suscribirse — también en /billing y el paywall móvil.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Upgrading from Basic to Pro or Wealth updates the existing Stripe subscription: the new price is charged for the rest of the period and unused time on the previous plan is credited on the same invoice.",
+        translations: {
+          es: "Al subir de Basic a Pro o Wealth se actualiza la suscripción de Stripe existente: se cobra el precio nuevo por el resto del periodo y el tiempo no usado del plan anterior se acredita en la misma factura.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.272",
     date: "2026-08-29",
     title: "Activate Clara without leaving trefolio",

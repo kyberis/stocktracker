@@ -40,6 +40,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/cron/lifecycle-emails",
   "/api/cron/trial-invitations",
   "/api/cron/trial-expiration",
+  "/api/cron/local-pro-sunset",
   "/api/cron/lifecycle-activation",
   "/api/cron/lifecycle-winback",
   "/api/cron/weekly-digest",

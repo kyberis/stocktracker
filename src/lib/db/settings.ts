@@ -691,14 +691,26 @@ export async function setXKey(name: XKeyName, value: string): Promise<void> {
 }
 
 export type StripePriceKey =
+  | "stripe_price_basic_monthly"
+  | "stripe_price_basic_annual"
   | "stripe_price_pro_monthly"
   | "stripe_price_pro_annual"
-  | "stripe_coupon_device_free_year";
+  | "stripe_price_wealth_monthly"
+  | "stripe_price_wealth_annual"
+  | "stripe_coupon_device_free_year"
+  | "stripe_price_screening_pack_1"
+  | "stripe_price_screening_pack_5";
 
 const STRIPE_ENV_MAP: Record<StripePriceKey, string> = {
+  stripe_price_basic_monthly: "STRIPE_PRICE_BASIC_MONTHLY",
+  stripe_price_basic_annual: "STRIPE_PRICE_BASIC_ANNUAL",
   stripe_price_pro_monthly: "STRIPE_PRICE_PRO_MONTHLY",
   stripe_price_pro_annual: "STRIPE_PRICE_PRO_ANNUAL",
+  stripe_price_wealth_monthly: "STRIPE_PRICE_WEALTH_MONTHLY",
+  stripe_price_wealth_annual: "STRIPE_PRICE_WEALTH_ANNUAL",
   stripe_coupon_device_free_year: "STRIPE_COUPON_DEVICE_FREE_YEAR",
+  stripe_price_screening_pack_1: "STRIPE_PRICE_SCREENING_PACK_1",
+  stripe_price_screening_pack_5: "STRIPE_PRICE_SCREENING_PACK_5",
 };
 
 export async function getStripePriceConfig(key: StripePriceKey): Promise<string> {

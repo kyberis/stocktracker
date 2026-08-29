@@ -5,10 +5,13 @@ import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import TierIcon from "@/components/TierIcon";
+import { planAtLeast, planDisplayName, planOf } from "@/lib/plan-rank";
+import { useCommerceEnabled } from "@/lib/commerce";
 
 export default function UserDropdown() {
   const { user, logout } = useAuth();
   const { t } = useI18n();
+  const commerceEnabled = useCommerceEnabled();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -56,17 +59,30 @@ export default function UserDropdown() {
               {user.displayName || user.username}
             </p>
             <div className="mt-1">
-              {user.plan === "pro" ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/12 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                  <TierIcon plan="pro" size={12} />{t("proBadge")}
-                </span>
-              ) : (
+              {user.plan === "free" ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--muted)]">
                   <TierIcon plan="free" size={12} />{t("freeBadge")}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/12 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                  <TierIcon plan={planOf(user)} size={12} />{planDisplayName(planOf(user))}
                 </span>
               )}
             </div>
           </div>
+
+          {commerceEnabled && !planAtLeast(planOf(user), "wealth") && (
+            <a
+              href="/billing"
+              onClick={() => setOpen(false)}
+              className="flex min-h-11 items-center gap-2.5 px-3 py-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-[color:var(--surface-soft)]"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+              {t("upgradeToPro")}
+            </a>
+          )}
 
           <a
             href="/profile"

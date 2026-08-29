@@ -4,12 +4,12 @@ import { JsonLd } from "@/components/JsonLd";
 import { isCommerceEnabled } from "@/lib/commerce-server";
 
 const DESCRIPTION_COMMERCE =
-  "trefolio is the portfolio tracker for European investors with Clover, the default AI assistant that unifies investments (Warren) and personal-finance cashflow (Clara). EU tax reports (DE/FR/ES/NL/IT), stock screener, broker sync, AI analysis in 35 languages, and dividend projections. Free to start, Trefolio for €7.99/month.";
+  "trefolio is the portfolio tracker for European investors with Clover, the default AI assistant that unifies investments (Warren) and personal-finance cashflow (Clara). EU tax reports (DE/FR/ES/NL/IT), stock screener, broker sync, AI analysis in 35 languages, and dividend projections. Free to start. Paid plans: Basic €4.99, Pro €9.99, Wealth · Ultra €24.99 per month.";
 const DESCRIPTION_NO_COMMERCE =
   "trefolio is the portfolio tracker for European investors with Clover, the default AI assistant that unifies investments (Warren) and personal-finance cashflow (Clara). EU tax reports (DE/FR/ES/NL/IT), stock screener, broker sync, AI analysis in 35 languages, and dividend projections. Free to start.";
 
 const OG_DESCRIPTION_COMMERCE =
-  "The European investor's portfolio tracker with Clover AI — Warren for holdings, Clara for cashflow. EU tax reports, stock screener, and dividend projections. Free to start, Trefolio for €7.99/month.";
+  "The European investor's portfolio tracker with Clover AI — Warren for holdings, Clara for cashflow. EU tax reports, stock screener, and dividend projections. Free to start. Basic €4.99, Pro €9.99, Wealth €24.99 per month.";
 const OG_DESCRIPTION_NO_COMMERCE =
   "The European investor's portfolio tracker with Clover AI — Warren for holdings, Clara for cashflow. EU tax reports, stock screener, and dividend projections.";
 
@@ -191,24 +191,54 @@ export const SOFTWARE_APP_SCHEMA = {
       "@type": "Offer",
       price: "0",
       priceCurrency: "EUR",
-      name: "Folio",
+      name: "Free",
       description:
-        "Every feature included — holdings, real-time quotes, charts, growth projection, broker import, EU tax reports, AI analysis, and more — with conservative monthly quotas for casual investors.",
+        "Load your portfolio and try Clara × Warren a few times with the Lite model. Tight monthly AI quotas. No multi-agent screenings. Informational only — not investment advice.",
     },
     {
       "@type": "Offer",
-      price: "7.99",
+      price: "4.99",
       priceCurrency: "EUR",
       priceSpecification: {
         "@type": "UnitPriceSpecification",
-        price: "7.99",
+        price: "4.99",
         priceCurrency: "EUR",
         billingDuration: 1,
         unitCode: "MON",
       },
-      name: "Trefolio",
+      name: "Basic",
       description:
-        "Every feature Folio has, with monthly quotas multiplied roughly 20x for power users. €7.99/month, or €59.99/year billed annually.",
+        "Daily Clara × Warren habit with the Standard model. About 150 AI consultations per month. No multi-agent screenings. €4.99/month or €49/year.",
+    },
+    {
+      "@type": "Offer",
+      price: "9.99",
+      priceCurrency: "EUR",
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: "9.99",
+        priceCurrency: "EUR",
+        billingDuration: 1,
+        unitCode: "MON",
+      },
+      name: "Pro",
+      description:
+        "Higher quotas, Will at volume, 8 reviews, and 2 multi-agent screenings per month. Standard+ model. €9.99/month or €89/year. Informational only — not investment advice.",
+    },
+    {
+      "@type": "Offer",
+      price: "24.99",
+      priceCurrency: "EUR",
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: "24.99",
+        priceCurrency: "EUR",
+        billingDuration: 1,
+        unitCode: "MON",
+      },
+      name: "Wealth · Ultra",
+      description:
+        "12 Advanced multi-agent screenings per month, extra verification, and the highest AI limits. €24.99/month or €199/year. Informational only — not investment advice.",
     },
   ],
 };
@@ -222,7 +252,7 @@ export const FAQ_SCHEMA = {
       name: "How do I import my portfolio?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Go to the /import page to access all import methods: 14 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, and more), AI Import for screenshots or unsupported formats, and manual entry. Each method has a built-in step-by-step guide. Trefolio subscribers can use Broker Sync to connect their brokerage directly and import automatically — privacy-first, read-only access via SnapTrade.",
+        text: "Go to the /import page to access all import methods: 14 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, and more), AI Import for screenshots or unsupported formats, and manual entry. Each method has a built-in step-by-step guide. Paid plans can use Broker Sync to connect a brokerage and import automatically — privacy-first, read-only access via SnapTrade.",
       },
     },
     {
@@ -230,7 +260,7 @@ export const FAQ_SCHEMA = {
       name: "What CSV formats are supported?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "14 broker CSV formats: DEGIRO, Interactive Brokers, Trading 212, Revolut, Charles Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, plus a Simple CSV format. For any other format, use AI Import — upload a screenshot or paste your file and AI will parse it. Trefolio subscribers can also use Broker Sync for automatic one-click import from 20+ brokerages.",
+        text: "14 broker CSV formats: DEGIRO, Interactive Brokers, Trading 212, Revolut, Charles Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, plus a Simple CSV format. For any other format, use AI Import — upload a screenshot or paste your file and AI will parse it. Paid plans can also use Broker Sync for automatic import from 20+ brokerages (connection count depends on plan).",
       },
     },
     {
@@ -262,7 +292,7 @@ export const FAQ_SCHEMA = {
       name: "What's the difference between the plans?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Both plans get every feature — fundamentals, intelligence, screener, moat reports, EU tax reports, AI analysis, exports, share links, and more. Folio (Free) has conservative monthly quotas designed for casual investors: 100 holdings, 15 AI consultations, 30 stock-intelligence lookups, etc. Trefolio (from €7.99/month with launch discount) keeps all the same features but multiplies the quotas roughly 20× so power users never hit a wall. Try Trefolio free for 7 days — no credit card required.",
+        text: "Four plans. Free (€0): load your portfolio and a short Clara × Warren try — Lite model, 6 consultations/month, no screenings. Basic (€4.99/month or €49/year): the daily habit — Standard model, ~150 consultations/month, still no screenings. Pro (€9.99/month or €89/year): higher limits, Will at volume, and 2 multi-agent screenings/month. Wealth · Ultra (€24.99/month or €199/year): 12 Advanced screenings plus extra verification. Optional 7-day Pro trial for Free or Basic — no card required. AI is informational and may contain errors — not financial advice.",
       },
     },
     {
@@ -270,7 +300,7 @@ export const FAQ_SCHEMA = {
       name: "Can I cancel anytime?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. Trefolio can be billed monthly or annually — switch to annual billing using the toggle above to save up to 37%. Cancel anytime from the billing portal; your paid features remain active until the end of the billing period.",
+        text: "Yes. Basic, Pro, and Wealth can be billed monthly or annually — annual billing saves up to 34%. Cancel anytime from the billing portal; your paid features remain active until the end of the billing period.",
       },
     },
     {

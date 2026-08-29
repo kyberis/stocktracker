@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { trackCanonicalConversion } from "@/lib/ad-tracking";
 import { getUpsellConfig, getUpsellReasonKey } from "@/lib/upsell";
+import { isPaidPlan, parseSubscriptionPlan, PLAN_RANK } from "@/lib/plan-rank";
+import type { SubscriptionPlan } from "@/lib/types";
 import type { UpsellReason, UpsellSurface } from "@/lib/upsell";
 import type { TranslationKey } from "@/lib/i18n";
 import TierIcon from "@/components/TierIcon";
@@ -22,16 +24,13 @@ const CAPACITY_CACHE_MS = 60_000;
 
 type BillingPeriod = "monthly" | "annual";
 
-/** Matches landing Trefolio list: 1–22 and 24 (23 omitted). */
-const TREFOLIO_COMPARE_FEATURE_KEYS = [
-  ...Array.from({ length: 22 }, (_, i) => `landingPricingTrefolioFeature${i + 1}` as TranslationKey),
-  "landingPricingTrefolioFeature24" as TranslationKey,
-  "landingPricingTrefolioFeature27" as TranslationKey,
-];
+function landingFeatureKeys(prefix: "Free" | "Basic" | "Pro" | "Wealth"): TranslationKey[] {
+  return Array.from({ length: 8 }, (_, i) => `landingPricing${prefix}Feature${i + 1}` as TranslationKey);
+}
 
 interface TierInfo {
   name: string;
-  plan: "free" | "pro";
+  plan: SubscriptionPlan;
   regularMonthly: string;
   monthlyPrice: string;
   regularAnnualMonthly: string;
@@ -48,25 +47,45 @@ interface TierInfo {
 
 const TIERS: TierInfo[] = [
   {
-    name: "Folio",
+    name: "Free",
     plan: "free",
     regularMonthly: "€0", monthlyPrice: "€0",
     regularAnnualMonthly: "€0", annualMonthly: "€0",
     regularAnnual: "€0", annualPrice: "€0",
     annualSavePct: 0, launchDiscountPct: 0, isFree: true,
-    descriptionKey: "landingPricingFolioDesc",
-    featureKeys: Array.from({ length: 15 }, (_, i) => `landingPricingFolioFeature${i + 1}` as TranslationKey),
+    descriptionKey: "landingPricingFreeDesc" as TranslationKey,
+    featureKeys: landingFeatureKeys("Free"),
   },
   {
-    name: "Trefolio",
+    name: "Basic",
+    plan: "basic",
+    regularMonthly: "€4.99", monthlyPrice: "€4.99",
+    regularAnnualMonthly: "€4.08", annualMonthly: "€4.08",
+    regularAnnual: "€49", annualPrice: "€49",
+    annualSavePct: 18, launchDiscountPct: 0,
+    descriptionKey: "landingPricingBasicDesc" as TranslationKey,
+    featureKeys: landingFeatureKeys("Basic"),
+  },
+  {
+    name: "Pro",
     plan: "pro",
-    regularMonthly: "€9.99", monthlyPrice: "€7.99",
-    regularAnnualMonthly: "€6.67", annualMonthly: "€5.00",
-    regularAnnual: "€79.99", annualPrice: "€59.99",
-    annualSavePct: 37, launchDiscountPct: 20,
-    descriptionKey: "landingPricingTrefolioDesc",
-    featureKeys: TREFOLIO_COMPARE_FEATURE_KEYS,
+    regularMonthly: "€9.99", monthlyPrice: "€9.99",
+    regularAnnualMonthly: "€7.42", annualMonthly: "€7.42",
+    regularAnnual: "€89", annualPrice: "€89",
+    annualSavePct: 26, launchDiscountPct: 0,
+    descriptionKey: "landingPricingProDesc" as TranslationKey,
+    featureKeys: landingFeatureKeys("Pro"),
     highlighted: true,
+  },
+  {
+    name: "Wealth · Ultra",
+    plan: "wealth",
+    regularMonthly: "€24.99", monthlyPrice: "€24.99",
+    regularAnnualMonthly: "€16.58", annualMonthly: "€16.58",
+    regularAnnual: "€199", annualPrice: "€199",
+    annualSavePct: 34, launchDiscountPct: 0,
+    descriptionKey: "landingPricingWealthDesc" as TranslationKey,
+    featureKeys: landingFeatureKeys("Wealth"),
   },
 ];
 
@@ -98,8 +117,8 @@ export default function ProCompareCard({
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
   const hasTrackedShown = useRef(false);
 
-  const isPro = user?.plan === "pro";
-  const isFree = !isPro;
+  const currentPlan = parseSubscriptionPlan(user?.plan);
+  const paid = isPaidPlan(currentPlan);
   const config = getUpsellConfig(surface);
   const reasonLabel = t(getUpsellReasonKey(reason));
   const isAnnual = billingPeriod === "annual";
@@ -122,8 +141,8 @@ export default function ProCompareCard({
   }, []);
 
   useEffect(() => {
-    if (!isPro) fetchCapacity();
-  }, [isPro, fetchCapacity]);
+    if (!paid) fetchCapacity();
+  }, [paid, fetchCapacity]);
 
   useEffect(() => {
     if (hasTrackedShown.current) return;
@@ -135,22 +154,27 @@ export default function ProCompareCard({
     });
   }, [track, surface, config.feature, reason]);
 
-  const startCheckout = async (interval: BillingPeriod) => {
+  const startCheckout = async (interval: BillingPeriod, targetPlan: SubscriptionPlan) => {
+    if (targetPlan === "free") return;
     setBillingError("");
-    setBillingLoading(`pro_${interval}`);
+    setBillingLoading(`${targetPlan}_${interval}`);
     track("upgrade_compare_clicked", {
       surface,
-      plan: "pro",
+      plan: targetPlan,
       planInterval: interval,
       reason: reason || "upgrade_required",
     });
-    track("billing_checkout_started", { interval, source: "compare_card", plan: "pro" });
+    track("billing_checkout_started", { interval, source: "compare_card", plan: targetPlan });
     await trackCanonicalConversion("checkout_started", {
-      plan: "pro",
+      plan: targetPlan,
       interval,
       source: "compare_card",
     });
-    window.location.href = resolveIdpUpgradeHref({ interval });
+    window.location.href = resolveIdpUpgradeHref({
+      interval,
+      plan: targetPlan === "basic" || targetPlan === "wealth" ? targetPlan : "pro",
+      skipLanding: true,
+    });
     setBillingLoading("");
   };
 
@@ -166,17 +190,16 @@ export default function ProCompareCard({
   };
 
   const atCapacity = capacity !== null && !capacity.available;
-  const currentPlan = isPro ? "pro" : "free";
-
-  const currentTier = TIERS.find((x) => x.plan === currentPlan)!;
-  const upgradeTiers = TIERS.filter((x) => x.plan === "pro" && currentPlan === "free");
+  const currentTier = TIERS.find((x) => x.plan === currentPlan) ?? TIERS[0];
+  const upgradeTiers = TIERS.filter((x) => PLAN_RANK[x.plan] > PLAN_RANK[currentPlan]);
+  const canUpgrade = upgradeTiers.length > 0;
 
   const maxFeatures = compact ? 5 : Infinity;
 
   const renderTierCard = (tier: TierInfo, options: { isCurrent: boolean; mobilePill?: string }) => {
     const { isCurrent } = options;
     const isHighlighted = tier.highlighted && !isCurrent;
-    const canUpgradeTo = !isCurrent && isFree && tier.plan === "pro";
+    const canUpgradeTo = !isCurrent && PLAN_RANK[tier.plan] > PLAN_RANK[currentPlan];
     const displayPrice = tier.isFree ? "€0" : isAnnual ? tier.annualMonthly : tier.monthlyPrice;
     const regularPrice = isAnnual ? tier.regularAnnualMonthly : tier.regularMonthly;
     const visibleFeatures = tier.featureKeys.slice(0, maxFeatures);
@@ -213,7 +236,9 @@ export default function ProCompareCard({
             plan={tier.plan}
             size={18}
             className={
+              tier.plan === "wealth" ? "text-amber-600 dark:text-amber-400" :
               tier.plan === "pro" ? "text-emerald-500" :
+              tier.plan === "basic" ? "text-sky-600 dark:text-sky-400" :
               "text-gray-500 dark:text-slate-400"
             }
           />
@@ -225,7 +250,7 @@ export default function ProCompareCard({
           )}
         </div>
         <div className="flex items-baseline gap-1.5 mb-1">
-          {!tier.isFree && (
+          {!tier.isFree && regularPrice !== displayPrice && (
             <span className="text-sm text-gray-400 dark:text-slate-500 line-through">{regularPrice}</span>
           )}
           <span className="text-2xl font-extrabold text-gray-900 dark:text-white">{displayPrice}</span>
@@ -235,7 +260,9 @@ export default function ProCompareCard({
         </div>
         {!tier.isFree && isAnnual && (
           <div className="flex items-center gap-1.5 mb-2">
-            <span className="text-[11px] text-gray-400 dark:text-slate-500 line-through">{tier.regularAnnual}/yr</span>
+            {tier.regularAnnual !== tier.annualPrice && (
+              <span className="text-[11px] text-gray-400 dark:text-slate-500 line-through">{tier.regularAnnual}/yr</span>
+            )}
             <span className="text-[11px] text-gray-600 dark:text-slate-400">{tier.annualPrice}/yr</span>
             <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
               Save {tier.annualSavePct}%
@@ -261,7 +288,7 @@ export default function ProCompareCard({
           )}
         </ul>
         {isCurrent ? (
-          isPro ? (
+          paid ? (
             <button
               onClick={openPortal}
               disabled={billingLoading !== ""}
@@ -276,7 +303,7 @@ export default function ProCompareCard({
           )
         ) : canUpgradeTo && !atCapacity ? (
           <button
-            onClick={() => startCheckout(billingPeriod)}
+            onClick={() => startCheckout(billingPeriod, tier.plan)}
             disabled={billingLoading !== ""}
             className={`w-full text-xs font-semibold py-2.5 rounded-lg transition-all disabled:opacity-60 ${
               tier.highlighted
@@ -284,12 +311,11 @@ export default function ProCompareCard({
                 : "bg-gray-800 dark:bg-slate-600 hover:bg-gray-700 dark:hover:bg-slate-500 text-white"
             }`}
           >
-            {billingLoading === `pro_${billingPeriod}`
+            {billingLoading === `${tier.plan}_${billingPeriod}`
               ? t("billingRedirecting")
               : isAnnual
                 ? `${tier.name} — ${tier.annualPrice}/yr`
-                : `${tier.name} — ${tier.monthlyPrice}/mo`
-            }
+                : `${tier.name} — ${tier.monthlyPrice}/mo`}
           </button>
         ) : null}
       </div>
@@ -299,7 +325,10 @@ export default function ProCompareCard({
   if (!commerceEnabled) return null;
 
   return (
-    <div className={`rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/80 p-5 sm:p-6 ${className}`}>
+    <div
+      data-testid="pro-compare-card"
+      className={`rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/80 p-5 sm:p-6 ${className}`}
+    >
       {/* Header */}
       <div className="text-center mb-5">
         <div className="flex items-center justify-center gap-2 mb-2">
@@ -313,6 +342,14 @@ export default function ProCompareCard({
         <p className="text-sm text-gray-500 dark:text-slate-400">
           {t(config.subtitleKey)}
         </p>
+        {paid && canUpgrade ? (
+          <p
+            data-testid="billing-proration-note"
+            className="text-xs text-gray-600 dark:text-slate-300 max-w-2xl mx-auto mt-2 leading-relaxed"
+          >
+            {t("billingUpgradeProrationNote")}
+          </p>
+        ) : null}
         <p className="text-xs text-gray-600 dark:text-slate-300 max-w-2xl mx-auto mt-3 leading-relaxed">
           {t("tierDifferentiatorsSummary")}
         </p>
@@ -347,7 +384,7 @@ export default function ProCompareCard({
       </div>
 
       {/* Billing toggle */}
-      {!isPro && (
+      {canUpgrade && (
         <div className="flex items-center justify-center gap-3 mb-5">
           <span
             className={`text-xs font-medium cursor-pointer transition-colors ${
@@ -424,7 +461,7 @@ export default function ProCompareCard({
 
       {/* Desktop: 2-column grid */}
       {!compact && (
-        <div className="hidden sm:grid gap-3 sm:grid-cols-2">
+        <div className="hidden sm:grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {TIERS.map((tier) =>
             renderTierCard(tier, { isCurrent: tier.plan === currentPlan })
           )}

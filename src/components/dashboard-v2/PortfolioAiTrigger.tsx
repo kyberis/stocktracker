@@ -2,6 +2,7 @@
 
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 interface Props {
   onOpen: () => void;
@@ -13,7 +14,7 @@ export default function PortfolioAiTrigger({ onOpen }: Props) {
   const { t } = useI18n();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
-  const isPro = user?.plan === "pro" || isAdmin;
+  const isPro = isPaidPlan(planOf(user)) || isAdmin;
   const tokensUsed = user?.aiTokensThisMonth ?? 0;
   const tokenLimit = user?.aiTokenLimit ?? 25_000;
   const pct = isAdmin ? 0 : (tokenLimit > 0 ? Math.min((tokensUsed / tokenLimit) * 100, 100) : 0);

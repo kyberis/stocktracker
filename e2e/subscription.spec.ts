@@ -21,9 +21,22 @@ test.describe("Subscription tiering", () => {
     await dismissOverlays(page);
     await page.goto("/profile");
     await page.getByRole("tab", { name: /Subscription/i }).click();
-    await expect(page.getByText(/Free vs Pro|Compare Plans/i).first()).toBeVisible({ timeout: 15000 });
-    await expect(page.getByRole("button", { name: /Bifolio|Upgrade/i }).first()).toBeVisible({ timeout: 5000 });
-    await expect(page.getByRole("button", { name: /Trefolio|Upgrade/i }).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("pro-compare-card")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: /Basic/i }).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("button", { name: /Pro/i }).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("button", { name: /Wealth/i }).first()).toBeVisible({ timeout: 5000 });
+  });
+
+  test("billing page shows all paid plans to subscribe", async ({ page, request }) => {
+    const creds = await createTestUser(request);
+    await loginViaUI(page, creds.email, creds.password);
+    await dismissOverlays(page);
+    await page.goto("/billing");
+    await expect(page.getByTestId("pro-compare-card")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: /Basic/i }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Pro/i }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Wealth/i }).first()).toBeVisible();
+    await expect(page.getByTestId("billing-proration-note")).toHaveCount(0);
   });
 
   test("economic indicators shows contextual compare for free users", async ({ page, request }) => {
@@ -31,7 +44,7 @@ test.describe("Subscription tiering", () => {
     await loginViaUI(page, creds.email, creds.password);
     await dismissOverlays(page);
     await page.goto("/economic-indicators");
-    await expect(page.getByText(/Free vs Pro|Compare Plans/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("pro-compare-card")).toBeVisible({ timeout: 15000 });
     await expect(page.getByText(/Explore premium economic indicators/)).toBeVisible({ timeout: 5000 });
   });
 });

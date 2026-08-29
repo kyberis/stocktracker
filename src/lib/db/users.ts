@@ -597,7 +597,7 @@ export function computeMembershipGrantExpiry(user: DbUser, grantPlan: UserPlan, 
 
 export async function setPendingMembershipGrant(
   userId: string,
-  grantPlan: "pro",
+  grantPlan: "basic" | "pro" | "wealth",
   days: number,
 ): Promise<{ token: string }> {
   const token = randomBytes(32).toString("hex");
@@ -639,7 +639,7 @@ export async function applyPendingMembershipGrant(
     return { ok: false, error: "Invalid or expired activation link" };
   }
   const rawPlan = user.membership_grant_plan;
-  if (rawPlan !== "pro") {
+  if (rawPlan !== "pro" && rawPlan !== "basic" && rawPlan !== "wealth") {
     return { ok: false, error: "No pending membership grant" };
   }
   const days = user.membership_grant_days;

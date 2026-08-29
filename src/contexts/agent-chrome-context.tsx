@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { planAtLeast, planOf } from "@/lib/plan-rank";
 
 export type AgentChromeContextValue = {
   demoMode: boolean;
@@ -186,7 +187,7 @@ export function AgentChromeProvider({ children }: { children: ReactNode }) {
     setAlertsExpanded((v) => !v);
   }, []);
 
-  const showSupportChip = !demoMode && user?.plan === "pro" && supportChatEnabled;
+  const showSupportChip = !demoMode && planAtLeast(planOf(user), "pro") && supportChatEnabled;
   const showFeedbackChip = !demoMode;
 
   const value = useMemo<AgentChromeContextValue>(

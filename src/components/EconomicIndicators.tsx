@@ -19,6 +19,7 @@ import ProCompareCard from "@/components/ProCompareCard";
 import type { UpsellReason } from "@/lib/upsell";
 import TierFeatureBadge from "./TierFeatureBadge";
 import AiMarkdown from "@/components/AiMarkdown";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 type AiStatus = "idle" | "loading" | "done" | "error" | "no-key" | "ai-limit" | "upgrade";
 
@@ -135,7 +136,7 @@ export default function EconomicIndicators() {
 
   const config = INDICATORS[activeIdx];
   const isFree = user?.plan !== "pro";
-  const isPro = user?.plan === "pro";
+  const isPro = isPaidPlan(planOf(user));
   const canAccessEcon = isPro && hasPremiumMarketData;
 
   const fetchIndicator = useCallback(async () => {

@@ -9,11 +9,12 @@ import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { calculateTTWROR, calculateXIRR, buildXIRRCashFlows } from "@/lib/performance";
 import DataUpgradeNudge from "./DataUpgradeNudge";
 import type { Transaction, Holding, CashEntry } from "@/lib/types";
+import TierFeatureBadge from "./TierFeatureBadge";
+import { useTrack } from "@/lib/use-track";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
 const PerformanceExplainerModal = dynamic(() => import("./PerformanceExplainerModal"), { ssr: false });
-import TierFeatureBadge from "./TierFeatureBadge";
-import { useTrack } from "@/lib/use-track";
 
 interface Props {
   holdings?: Holding[];
@@ -27,7 +28,7 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const baseCurrency = activePortfolioCurrency;
-  const isPaid = user?.plan === "pro";
+  const isPaid = isPaidPlan(planOf(user));
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [showHelp, setShowHelp] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);

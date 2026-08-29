@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useTrack } from "@/lib/use-track";
 import type { Holding, CashEntry, ManualAssetType } from "@/lib/types";
 import { fixedReturnProgress, isFixedReturnMatured, maturityDateFor } from "@/lib/fixed-return";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 const AddManualAssetModal = dynamic(() => import("./AddManualAssetModal"), { ssr: false });
 
@@ -131,7 +132,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
   const [movingCashId, setMovingCashId] = useState<string | null>(null);
   const [moveCashLoading, setMoveCashLoading] = useState(false);
 
-  const isPro = user?.plan === "pro";
+  const isPro = isPaidPlan(planOf(user));
   const otherPortfolios = activePortfolioId
     ? portfolios.filter((p) => p.id !== activePortfolioId)
     : [];

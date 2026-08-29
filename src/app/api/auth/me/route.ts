@@ -26,9 +26,9 @@ import { renewCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro"
  * Fire-and-forget: when a plan's grace period has expired, persist the
  * downgrade and reconcile downstream resources.
  */
-function lazyDowngrade(userId: string): void {
+function lazyDowngrade(userId: string, restorePlan: "free" | "basic" = "free"): void {
   const run = async () => {
-    await updateUserSubscription(userId, { plan: "free", planExpiresAt: "" });
+    await updateUserSubscription(userId, { plan: restorePlan, planExpiresAt: "" });
     const settings = await getUserSettings(userId);
     if (!canAccessTheme(settings.dashboardTheme, "free")) {
       await updateUserSettings(userId, { dashboardTheme: "default" });
@@ -89,7 +89,12 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
   const resolvedPlan = effectivePlan(storedPlan, planExpiry);
 
   if (resolvedPlan !== storedPlan && user) {
-    lazyDowngrade(user.id);
+    if (user.stripe_subscription_id.trim()) {
+      /* Stripe-managed: do not persist a local wipe */
+    } else {
+      const restore = user.plan_before_trial === "basic" ? "basic" : "free";
+      lazyDowngrade(user.id, restore);
+    }
   }
 
   // Pull fresh entitlements + profile from the IdP in one REST round-trip (no-op if not configured / user not linked).
@@ -141,6 +146,8 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       taxResidency: user?.tax_residency || "",
       onboardingCompleted: user?.onboarding_completed === 1,
       trialActivatedAt: user?.trial_activated_at || "",
+      planBeforeTrial: user?.plan_before_trial || "",
+      stripeManaged: Boolean(user?.stripe_subscription_id?.trim()),
       impersonation:
         impersonatorId && impersonator
           ? { impersonatorId, impersonatorUsername: impersonator.username }
@@ -165,7 +172,7 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       email: user.email || "",
       role: "admin",
       mustChangePassword: user.must_change_password === 1,
-      plan: user.plan === "pro" ? "pro" : "free",
+      plan: user.plan,
       emailVerified: user.email_verified === 1,
       onboardingCompleted: user.onboarding_completed === 1,
       impersonatorUserId: session.impersonatorUserId,

@@ -21,6 +21,7 @@ import {
 
 const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
 import TierFeatureBadge from "./TierFeatureBadge";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 type Range = "1m" | "3m" | "6m" | "1y" | "all";
 type ChartMode = "value" | "performance";
@@ -58,7 +59,7 @@ export default function GrowthTab() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
 
-  const isPaid = user?.plan === "pro";
+  const isPaid = isPaidPlan(planOf(user));
 
   useEffect(() => {
     const isFreeRange = range === FREE_RANGE;

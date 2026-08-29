@@ -13,6 +13,7 @@ import {
 } from "@/lib/ai-models";
 import { CRON_REGISTRY } from "@/lib/cron-registry";
 import type { ProdOpsConfig } from "@/lib/types";
+import { STRIPE_PRICE_ADMIN_FIELDS, STRIPE_PRICE_ADMIN_GROUPS } from "@/lib/stripe-plan-prices";
 
 /* ── Batch Settings Context ───────────────────────────────── */
 
@@ -1119,11 +1120,7 @@ function SupportChatConfigCard() {
 }
 
 function StripePricesCard() {
-  const FIELDS: { key: string; label: string; placeholder: string; hint?: string }[] = [
-    { key: "stripe_price_pro_monthly", label: "Pro Monthly", placeholder: "price_...", hint: "€7.99/mo (launch) · €9.99 regular" },
-    { key: "stripe_price_pro_annual", label: "Pro Annual", placeholder: "price_...", hint: "€59.99/yr (launch) · €79.99 regular" },
-    { key: "stripe_coupon_device_free_year", label: "Device Free Year Coupon", placeholder: "coupon ID" },
-  ];
+  const FIELDS = STRIPE_PRICE_ADMIN_FIELDS;
 
   const batch = useBatchSettings();
   const loadedRef = useRef(false);
@@ -1171,27 +1168,41 @@ function StripePricesCard() {
     <div className="card p-6">
       <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Stripe Price IDs</h3>
       <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
-        Configure Stripe price IDs and coupon for checkout. Values stored here override environment variables.
+        Paste Stripe Dashboard <span className="font-mono">price_…</span> IDs (or the device coupon).
+        Values here override the matching env var. Create products in Stripe first, then save.
       </p>
-      <div className="space-y-3">
-        {FIELDS.map((f) => (
-          <div key={f.key}>
-            <div className="flex items-center gap-3">
-              <label className="text-xs text-gray-600 dark:text-slate-300 w-44 shrink-0">{f.label}</label>
-              <input
-                type="text"
-                value={draft[f.key] ?? ""}
-                onChange={(e) => setDraft((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                placeholder={f.placeholder}
-                className="text-sm flex-1 font-mono"
-              />
-              {(draft[f.key] ?? "") !== (values[f.key] ?? "") && (
-                <span className="text-[10px] text-amber-500 shrink-0">unsaved</span>
-              )}
+      <div className="space-y-6">
+        {STRIPE_PRICE_ADMIN_GROUPS.map((group) => (
+          <div key={group.title} className="rounded-lg border border-gray-200 dark:border-slate-700 p-4 space-y-3">
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-slate-200">{group.title}</h4>
+              <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">{group.description}</p>
             </div>
-            {f.hint && (
-              <p className="text-[10px] text-gray-400 dark:text-slate-500 ml-[11.75rem] mt-0.5">{f.hint}</p>
-            )}
+            {group.fields.map((f) => (
+              <div key={f.key}>
+                <div className="flex items-center gap-3">
+                  <label className="text-xs text-gray-600 dark:text-slate-300 w-28 shrink-0" htmlFor={`stripe-${f.key}`}>
+                    {f.label}
+                  </label>
+                  <input
+                    id={`stripe-${f.key}`}
+                    type="text"
+                    value={draft[f.key] ?? ""}
+                    onChange={(e) => setDraft((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                    placeholder={f.placeholder}
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="text-sm flex-1 font-mono"
+                  />
+                  {(draft[f.key] ?? "") !== (values[f.key] ?? "") && (
+                    <span className="text-[10px] text-amber-500 shrink-0">unsaved</span>
+                  )}
+                </div>
+                <p className="text-[10px] text-gray-400 dark:text-slate-500 ml-[7.5rem] mt-0.5">
+                  {f.hint} · key <span className="font-mono">{f.key}</span> · env <span className="font-mono">{f.env}</span>
+                </p>
+              </div>
+            ))}
           </div>
         ))}
       </div>

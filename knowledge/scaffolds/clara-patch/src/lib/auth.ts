@@ -28,6 +28,7 @@ interface IdpProfile {
   pro_until?: string;
   entitlements?: {
     trefolio_pro: boolean;
+    trefolio_plan?: "free" | "basic" | "pro" | "wealth";
     clara_daily_limit: number;
     will_daily_limit: number;
   };

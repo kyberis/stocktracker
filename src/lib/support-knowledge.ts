@@ -11,27 +11,31 @@ trefolio is a portfolio tracker for European investors. It tracks stocks, ETFs, 
 
 ## Subscription Tiers
 
-There are two tiers: **Folio (free)** and **Trefolio (paid)**. One paid subscription includes all premium features.
+Four plans: **Free**, **Basic** (€4.99/mo or €49/yr), **Pro** (€9.99/mo or €89/yr), and **Wealth · Ultra** (€24.99/mo or €199/yr). One Stripe subscription. Upgrading a paid plan updates the existing subscription and credits unused time on the same invoice.
 
-### Folio (Free)
-- Limited holdings (see app for current limit)
-- Limited AI usage per month (token-based)
-- Limited price alerts
+### Free
+- Load data and a short monthly AI burst (Lite model)
+- Tight quotas (see in-app table)
 - One portfolio
 - Yahoo-backed quotes, charts, benchmarks, crypto overview, earnings calendar for your holdings
+- No multi-agent screenings
 
-### Trefolio (Paid)
-- Unlimited holdings (fair use)
-- Higher AI limits than Folio
-- Unlimited or high alert limits with email, push, WhatsApp, and device notifications (subject to fair use)
-- Multiple portfolios (see app for limit)
-+ One portfolio (same as Folio)
-- Portfolio sharing, CSV export, performance metrics, full history, economic calendar, net worth tracking
-- AI Support chat (when enabled)
-- Broker Sync via SnapTrade (multiple brokerages, subject to plan limits)
-- Premium data (e.g. Alpha Vantage / FMP where configured), fundamentals, intelligence, economic indicators
-- Tools: screener, tax reports, simulator, planning, stock evaluation, full crypto portfolio, IPO/splits calendars, premium dashboard themes (Canvas, Terminal, Studio)
-- Typical launch pricing is shown on the landing page (e.g. €7.99/mo promotional / €9.99/mo regular); confirm current prices in-app
+### Basic
+- Daily Clara × Warren habit (Standard model)
+- Higher monthly consultations than Free
+- Still no multi-agent screenings
+
+### Pro
+- Scale: higher quotas, Will at volume, Standard+ models
+- 2 multi-agent screenings / month
+- Broker Sync and premium market-data headroom (see in-app limits)
+
+### Wealth · Ultra
+- Lab tier: Advanced models
+- 12 multi-agent screenings / month plus packs
+- Highest published quotas
+
+Confirm current prices and quotas on the pricing page or in-app billing. AI is informational and may contain errors — not financial advice.
 
 ## Common Tasks
 

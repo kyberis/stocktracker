@@ -32,8 +32,8 @@ export default function QuotaUsageBadge({
   const config = FEATURE_QUOTAS[feature];
   if (!config) return null;
 
-  const plan = (user?.plan as "free" | "pro" | undefined) ?? "free";
-  const fallbackLimit = plan === "pro" ? config.pro : config.free;
+  const plan = user?.plan ?? "free";
+  const fallbackLimit = config[plan] ?? config.free;
   const usage = user?.quotas?.[feature];
   const used = usage?.used ?? 0;
   const limit = usage?.limit ?? fallbackLimit;

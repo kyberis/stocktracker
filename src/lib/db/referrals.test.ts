@@ -54,7 +54,7 @@ function referrerRow(overrides: Partial<Record<string, unknown>> = {}) {
 }
 
 describe("grantReferralReward", () => {
-  it("grants Pro to a free referrer, updates via updateUserSubscription, and pushes the grant to the IdP", async () => {
+  it("grants Basic to a free referrer, updates via updateUserSubscription, and pushes the grant to the IdP", async () => {
     mockExecute
       .mockResolvedValueOnce({ rows: [referrerRow()] }) // SELECT referrer
       .mockResolvedValueOnce({ rows: [], rowsAffected: 1 }) // referral_reward_days increment
@@ -65,10 +65,10 @@ describe("grantReferralReward", () => {
     expect(mockUpdateUserSubscription).toHaveBeenCalledTimes(1);
     expect(mockUpdateUserSubscription).toHaveBeenCalledWith(
       "referrer-1",
-      expect.objectContaining({ plan: "pro" }),
+      expect.objectContaining({ plan: "basic" }),
     );
     expect(mockImportUser).toHaveBeenCalledWith(
-      expect.objectContaining({ email: "referrer@example.com", plan: "pro" }),
+      expect.objectContaining({ email: "referrer@example.com", trefolioPlan: "basic" }),
     );
     expect(mockLinkLocalUserToIdpSub).toHaveBeenCalledWith({
       localUserId: "referrer-1",

@@ -9,6 +9,7 @@ import ProCompareCard from "@/components/ProCompareCard";
 import { mergeHoldingsIntoTransactions } from "@/lib/merge-ai-import-rows";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
 import { canUseBrokerSync } from "@/lib/subscription";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "myinvestor" | "trade_republic" | "simple" | "ai_import";
 
@@ -59,7 +60,7 @@ const TX_TYPE_COLORS: Record<string, string> = {
 export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete }: ImportPortfolioModalProps) {
   const { t } = useI18n();
   const { user } = useAuth();
-  const isPro = user?.plan === "pro";
+  const isPro = isPaidPlan(planOf(user));
   const brokerSyncAllowed = canUseBrokerSync(
     user?.plan ?? "free",
     user?.planExpiresAt ?? "",

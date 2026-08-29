@@ -37,6 +37,7 @@ import {
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { sanitizeTtwror } from "@/lib/portfolio/sanity";
 import type { Transaction, Holding, CashEntry, HistoricalDataPoint } from "@/lib/types";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 import TierFeatureBadge from "./TierFeatureBadge";
 import DataUpgradeNudge from "./DataUpgradeNudge";
 
@@ -198,7 +199,7 @@ export default function PerformancePage({ holdings: holdingsProp, cashEntries: c
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const baseCurrency = activePortfolioCurrency;
-  const isPaid = user?.plan === "pro";
+  const isPaid = isPaidPlan(planOf(user));
 
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [snapshots, setSnapshots] = useState<SnapshotPoint[]>([]);

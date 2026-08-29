@@ -17,6 +17,7 @@ import type { HoldingSeriesEntry } from "@/lib/performance";
 import type { HistoricalDataPoint, Holding, CashEntry, Transaction } from "@/lib/types";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import demoMatrix from "../../data/demo-performance-matrix.json";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 type HistoricalApiResponse = { data?: HistoricalDataPoint[] };
 
@@ -41,7 +42,7 @@ export function usePortfolioPerformanceMatrix({
 }: UsePortfolioPerformanceMatrixArgs) {
   const { exchangeRates, quotes, activePortfolioCurrency, activePortfolioId, demoMode } = usePortfolio();
   const { user } = useAuth();
-  const isPro = user?.plan === "pro" || user?.role === "admin";
+  const isPro = isPaidPlan(planOf(user)) || user?.role === "admin";
   const baseCurrency = activePortfolioCurrency;
 
   const [loading, setLoading] = useState(!demoMode);

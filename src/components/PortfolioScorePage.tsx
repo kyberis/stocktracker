@@ -8,6 +8,7 @@ import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { FEATURE_QUOTAS } from "@/lib/platform-config";
 import ProCompareCard from "@/components/ProCompareCard";
 import BlurredProSection from "@/components/BlurredProSection";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 import {
   buildScorePayload,
   type PortfolioScoreResponse,
@@ -410,7 +411,7 @@ export default function PortfolioScorePage() {
   const fetchedRef = useRef(false);
 
   const isAdmin = user?.role === "admin";
-  const isPro = user?.plan === "pro" || isAdmin;
+  const isPro = isPaidPlan(planOf(user)) || isAdmin;
   const scoreQuota = user?.quotas?.portfolio_score;
   const limit = scoreQuota?.limit ?? FEATURE_QUOTAS.portfolio_score[isPro ? "pro" : "free"];
   const used = scoreQuota?.used ?? 0;

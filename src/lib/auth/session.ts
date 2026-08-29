@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from "jose";
 import type { NextRequest } from "next/server";
 import type { UserRole } from "@/lib/db";
 import type { SubscriptionPlan } from "@/lib/types";
+import { parseSubscriptionPlan } from "@/lib/plan-rank";
 
 const SESSION_COOKIE = "trefolio_session";
 /** Cookie name for `trefolio_session` (avoid duplicating in logging / guards). */
@@ -66,7 +67,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       email: String(payload.email || ""),
       role: payload.role === "admin" ? "admin" : "user",
       mustChangePassword: Boolean(payload.mustChangePassword),
-      plan: (payload.plan === "pro" || payload.plan === "starter" ? "pro" : "free") as SubscriptionPlan,
+      plan: parseSubscriptionPlan(payload.plan),
       emailVerified: Boolean(payload.emailVerified),
       onboardingCompleted: Boolean(payload.onboardingCompleted),
       impersonatorUserId,
