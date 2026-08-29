@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.271",
+    date: "2026-08-29",
+    title: "No phantom SnapTrade closed lots",
+    titleTranslations: {
+      es: "Sin posiciones fantasma de SnapTrade cerradas",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Broker-synced tickers that are fully closed at the broker no longer reappear from incomplete SnapTrade activity history after rebuild or sync (e.g. EPR).",
+        translations: {
+          es: "Los tickers sincronizados con el bróker que ya están cerrados allí ya no reaparecen por un historial incompleto de SnapTrade tras rebuild o sync (p. ej. EPR).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.270",
     date: "2026-08-29",
     title: "Warren: record sale vs delete history",
