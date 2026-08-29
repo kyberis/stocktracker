@@ -64,6 +64,7 @@ export interface StockSnapshotData {
 export type WarrenProposalKind =
   | "addHolding"
   | "removeHolding"
+  | "recordTransaction"
   | "addCash"
   | "createAlert"
   | "addWatchlist"
@@ -90,6 +91,22 @@ export interface AddHoldingProposalData {
 
 export interface RemoveHoldingProposalData {
   holdingId: string;
+  /** Optional ticker used to re-resolve the holding if the id is stale. */
+  ticker?: string;
+  portfolioId?: string;
+}
+
+export interface RecordTransactionProposalData {
+  type: "buy" | "sell" | "dividend" | "fee";
+  ticker: string;
+  name?: string;
+  shares: number;
+  pricePerShare: number;
+  fees?: number;
+  taxes?: number;
+  currency: string;
+  date?: string;
+  holdingId?: string;
   portfolioId?: string;
 }
 
@@ -165,6 +182,7 @@ export interface ImportTransactionsProposalData {
 export type WarrenProposal =
   | (WarrenProposalBase & { kind: "addHolding"; data: AddHoldingProposalData })
   | (WarrenProposalBase & { kind: "removeHolding"; data: RemoveHoldingProposalData })
+  | (WarrenProposalBase & { kind: "recordTransaction"; data: RecordTransactionProposalData })
   | (WarrenProposalBase & { kind: "addCash"; data: AddCashProposalData })
   | (WarrenProposalBase & { kind: "createAlert"; data: CreateAlertProposalData })
   | (WarrenProposalBase & { kind: "addWatchlist"; data: AddWatchlistProposalData })

@@ -83,6 +83,8 @@ describe("buildConversationProgressAppendix", () => {
     expect(appendix).toContain("Do NOT repeat the expensive/fair/cheap");
     expect(appendix).toContain("renderTradeGuidanceCard");
     expect(appendix).toContain("NEVER `proposeAddCash`");
+    expect(appendix).toContain("proposeRecordTransaction");
+    expect(appendix).toContain("NEVER `proposeRemoveHolding`");
   });
 
   it("returns null on a first-turn valuation question", () => {

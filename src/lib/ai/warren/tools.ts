@@ -22,7 +22,7 @@ import {
 } from "@/lib/services/warren-valuation";
 import { createProvider } from "@/lib/api-providers";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
-import { resolveTickerAgainstHoldings } from "./price-move-intent";
+import { resolveTickerAgainstHoldings, matchHoldingsToQuery } from "./price-move-intent";
 import type { WarrenPart, WarrenProposal, StockSnapshotData } from "./types";
 import type {
   HoldingCardData,
@@ -557,7 +557,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
 
     renderTradeGuidanceCard: tool({
       description:
-        "Display an informational buy/sell/trim/hold guidance card grounded in price and fundamentals. Use when the user asks whether or how to buy, sell, trim, or reduce a position — trefolio does NOT execute trades. Call analyzeValuation + getQuote + listHoldings first so currentPrice, valuationLabel, upsideToTargetPct, and suggestedShares/amount are real numbers. Never use proposeAddCash or proposeRemoveHolding for this.",
+        "Display an informational buy/sell/trim/hold guidance card grounded in price and fundamentals. Use when the user asks whether or how to buy, sell, trim, or reduce a position — trefolio does NOT execute broker trades. Call analyzeValuation + getQuote + listHoldings first so currentPrice, valuationLabel, upsideToTargetPct, and suggestedShares/amount are real numbers. Never use proposeAddCash, proposeRemoveHolding, or proposeRecordTransaction for this analysis-only card.",
       inputSchema: z.object({
         ticker: z.string().min(1).max(20),
         name: z.string().optional(),
@@ -968,33 +968,204 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
 
     proposeRemoveHolding: tool({
       description:
-        "Propose removing a holding by id. Destructive: deletes the position and its transactions in this portfolio. The user must confirm.",
+        "Propose deleting an entire position from the user's portfolio records (all transactions for that ticker). Destructive and irreversible. ONLY when the user explicitly asks to remove/delete/borrar a holding from their records — NEVER for recording a sale they already made (use proposeRecordTransaction with type=sell).",
       inputSchema: z.object({
-        holdingId: z.string().min(1),
-        ticker: z.string().min(1).optional(),
+        holdingId: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Holding id from listHoldings. Prefer this when available."),
+        ticker: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Ticker or company name if holdingId is unknown. Call listHoldings first."),
       }),
       execute: async (input) => {
         if (ctx.isDemo) return demoBlocked("remove holdings");
+        if (!input.holdingId && !input.ticker) {
+          return {
+            error: "missing_target",
+            message: "Provide holdingId or ticker. Call listHoldings first.",
+          };
+        }
+        const holdings = await dbListHoldings(ctx.userId, ctx.activePortfolioId);
+        let target = input.holdingId
+          ? holdings.find((h) => h.id === input.holdingId)
+          : undefined;
+        if (!target && input.ticker) {
+          const resolved = resolveTickerAgainstHoldings(
+            input.ticker,
+            holdings.map((h) => ({ ticker: h.ticker })),
+          );
+          target = holdings.find((h) => h.ticker.toUpperCase() === resolved.toUpperCase());
+          if (!target) {
+            const matched = matchHoldingsToQuery(
+              holdings.map((h) => ({ ticker: h.ticker, name: h.name })),
+              input.ticker,
+            );
+            if (matched[0]) {
+              target = holdings.find(
+                (h) => h.ticker.toUpperCase() === matched[0]!.ticker.toUpperCase(),
+              );
+            }
+          }
+        }
+        if (!target) {
+          return {
+            error: "holding_not_found",
+            message: `No holding found for ${input.ticker || input.holdingId}. Call listHoldings and use an exact id/ticker.`,
+          };
+        }
         const id = randomUUID();
         ctx.emitProposal({
           id,
           kind: "removeHolding",
           destructive: true,
-          title: `Remove ${input.ticker || "holding"}`,
-          summary: "This will delete the position and its transactions in this portfolio.",
+          title: `Remove ${target.ticker}`,
+          summary: `This will permanently delete ${target.ticker} and all its transactions from this portfolio.`,
           rows: [
-            { label: "Holding id", value: input.holdingId.slice(0, 8) + "…" },
+            { label: "Ticker", value: target.ticker },
+            { label: "Shares", value: String(target.shares) },
             { label: "Reversible", value: "No" },
           ],
-          data: { holdingId: input.holdingId, portfolioId: ctx.activePortfolioId },
+          data: {
+            holdingId: target.id,
+            ticker: target.ticker,
+            portfolioId: ctx.activePortfolioId,
+          },
         });
         return { proposalId: id, status: "awaiting_user_confirmation" };
       },
     }),
 
+    proposeRecordTransaction: tool({
+      description:
+        "Propose recording a ledger transaction the user already made: sell, buy, dividend, or fee. Use this when they say 'registra la venta/compra', 'record this sale', 'log the trade', etc. For sells: call listHoldings first; never invent a holding. Do NOT use proposeRemoveHolding for sales. For buy/sell/trim advice (not recording), use renderTradeGuidanceCard instead.",
+      inputSchema: z.object({
+        type: z.enum(["buy", "sell", "dividend", "fee"]),
+        ticker: z.string().min(1).max(20),
+        name: z.string().optional(),
+        shares: z.number().positive(),
+        pricePerShare: z.number().nonnegative(),
+        fees: z.number().optional().default(0),
+        taxes: z.number().optional().default(0),
+        currency: z.string().min(3).max(4).default("EUR"),
+        date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe("ISO date YYYY-MM-DD if the user stated one; otherwise omit (today)."),
+        holdingId: z.string().optional().describe("From listHoldings when recording a sell."),
+      }),
+      execute: async (input) => {
+        if (ctx.isDemo) return demoBlocked("record transactions");
+        const tickerUpper = input.ticker.toUpperCase();
+        let holdingId = input.holdingId;
+        let displayTicker = tickerUpper;
+        let displayName = input.name;
+
+        if (input.type === "sell") {
+          const holdings = await dbListHoldings(ctx.userId, ctx.activePortfolioId);
+          let target = holdingId
+            ? holdings.find((h) => h.id === holdingId)
+            : undefined;
+          if (!target) {
+            const resolved = resolveTickerAgainstHoldings(
+              input.ticker,
+              holdings.map((h) => ({ ticker: h.ticker })),
+            );
+            target = holdings.find((h) => h.ticker.toUpperCase() === resolved.toUpperCase());
+          }
+          if (!target) {
+            const matched = matchHoldingsToQuery(
+              holdings.map((h) => ({ ticker: h.ticker, name: h.name })),
+              input.ticker,
+            );
+            if (matched[0]) {
+              target = holdings.find(
+                (h) => h.ticker.toUpperCase() === matched[0]!.ticker.toUpperCase(),
+              );
+            }
+          }
+          if (!target) {
+            return {
+              error: "holding_not_found",
+              message: `No holding found for ${tickerUpper}. Call listHoldings first. Do not use proposeRemoveHolding to record a sale.`,
+            };
+          }
+          if (input.shares > target.shares + 1e-9) {
+            return {
+              error: "insufficient_shares",
+              message: `Cannot sell ${input.shares} — position has only ${target.shares} shares of ${target.ticker}.`,
+            };
+          }
+          holdingId = target.id;
+          displayTicker = target.ticker.toUpperCase();
+          displayName = target.name || displayName;
+        }
+
+        const fees = input.fees ?? 0;
+        const taxes = input.taxes ?? 0;
+        const total = input.shares * input.pricePerShare;
+        const typeLabel =
+          input.type === "sell"
+            ? "Sale"
+            : input.type === "buy"
+              ? "Purchase"
+              : input.type === "dividend"
+                ? "Dividend"
+                : "Fee";
+        const id = randomUUID();
+        const rows: { label: string; value: string }[] = [
+          { label: "Type", value: typeLabel },
+          { label: "Ticker", value: displayTicker },
+          { label: "Shares", value: String(input.shares) },
+          {
+            label: input.type === "sell" ? "Sale price" : "Price",
+            value: `${input.pricePerShare.toFixed(2)} ${input.currency}`,
+          },
+          { label: "Total", value: `${total.toFixed(2)} ${input.currency}` },
+        ];
+        if (fees !== 0) {
+          rows.push({ label: "Fees", value: `${fees.toFixed(2)} ${input.currency}` });
+        }
+        if (taxes !== 0) {
+          rows.push({ label: "Taxes", value: `${taxes.toFixed(2)} ${input.currency}` });
+        }
+        rows.push({ label: "Date", value: input.date || "Today" });
+
+        ctx.emitProposal({
+          id,
+          kind: "recordTransaction",
+          title: `Record ${typeLabel.toLowerCase()}: ${input.shares} × ${displayTicker}`,
+          summary: `Record a ${typeLabel.toLowerCase()} of ${input.shares} ${displayTicker} at ${input.pricePerShare.toFixed(2)} ${input.currency}.`,
+          rows,
+          data: {
+            type: input.type,
+            ticker: displayTicker,
+            name: displayName,
+            shares: input.shares,
+            pricePerShare: input.pricePerShare,
+            fees,
+            taxes,
+            currency: input.currency,
+            date: input.date,
+            holdingId,
+            portfolioId: ctx.activePortfolioId,
+          },
+        });
+        return {
+          proposalId: id,
+          status: "awaiting_user_confirmation",
+          tip: "I prepared the proposal. Tell the user to confirm it on the card (Confirm / Cancel — not delete).",
+        };
+      },
+    }),
+
     proposeAddCash: tool({
       description:
-        "Propose adding a cash entry the user already holds (savings, pension, real estate, or manual cash). ONLY when the user explicitly asks to record cash in their portfolio. NEVER for simulated sale proceeds, trade ideas, or buy/sell guidance — use renderTradeGuidanceCard for that.",
+        "Propose adding a cash entry the user already holds (savings, pension, real estate, or manual cash). ONLY when the user explicitly asks to record cash in their portfolio. NEVER for simulated sale proceeds, trade ideas, or buy/sell guidance — use renderTradeGuidanceCard for that. NEVER for recording a stock sale — use proposeRecordTransaction with type=sell.",
       inputSchema: z.object({
         name: z.string().min(1).max(100),
         amountEUR: z.number().positive(),
@@ -1008,7 +1179,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
           return {
             error: "wrong_tool",
             message:
-              "Do not use proposeAddCash for sales. Call renderTradeGuidanceCard with analyzeValuation + getQuote + listHoldings for buy/sell/trim analysis.",
+              "Do not use proposeAddCash for sales. Call proposeRecordTransaction with type=sell (after listHoldings) to record a sale, or renderTradeGuidanceCard for buy/sell/trim analysis.",
           };
         }
         const id = randomUUID();

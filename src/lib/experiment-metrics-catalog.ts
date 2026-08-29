@@ -139,7 +139,7 @@ export const EXPERIMENT_METRICS_CATALOG: ExperimentMetricDefinition[] = [
     key: "warren_action",
     title: "Warren action",
     description:
-      "Warren executed a tool action (addHolding, removeHolding, addCash, createAlert, addWatchlist).",
+      "Warren executed a tool action (addHolding, removeHolding, recordTransaction, addCash, createAlert, addWatchlist).",
     where: "src/lib/ai/warren/dispatch.ts",
     source: "server",
     category: "ai",

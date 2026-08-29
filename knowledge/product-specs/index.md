@@ -127,6 +127,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [warren-empty-add-stock](warren-empty-add-stock.md) — empty-portfolio Warren: add-stock + import picker (same `/import` wizard) + 10-chat / 15-min cooldown.
 - [warren-first-stock](warren-first-stock.md) — A/B post-onboarding skip: control empty home vs right Warren with a prefilled first-stock example.
 - [warren-import](warren-import.md) — import CSV / SnapTrade / AI through Warren using the same `/import` pipelines.
+- [warren-record-transaction](warren-record-transaction.md) — confirm-gated buy/sell/dividend/fee ledger writes (fixes sale → removeHolding misfires).
 - [warren-telegram-bot](warren-telegram-bot.md) — Warren accessible via Telegram (text + voice).
 - [clover-assistant](clover-assistant.md) — Clover default orchestrator (Warren + Clara behind the scenes; Telegram @cloveraiassistant_bot).
 - [agent-office](agent-office.md) — Pro workspace where Warren, Clara, and Will coordinate missions (`/office`).

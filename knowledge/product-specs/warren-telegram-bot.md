@@ -10,7 +10,7 @@ plain language — by typing OR by sending a voice note — from their phone or
 desktop Telegram client. The bot has the same capabilities as the in-app
 Warren drawer: read holdings, allocation, performance, dividends, news,
 alerts, watchlist, plus write actions (`addHolding`, `removeHolding`,
-`addCash`, `createAlert`, `addWatchlist`) gated behind a Telegram inline-
+`recordTransaction`, `addCash`, `createAlert`, `addWatchlist`) gated behind a Telegram inline-
 keyboard Confirm/Cancel. Voice notes are transcribed by OpenAI Whisper and
 the reply is also spoken back via OpenAI TTS (text always sent first).
 

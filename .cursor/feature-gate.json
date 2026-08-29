@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.263: optional Clara SSO step is post-signup onboarding, not a landing-page capability"
+  "notes": "2.5.266: Bugfix for Warren sale recording — not a new landing capability"
 }

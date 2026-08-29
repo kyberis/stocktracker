@@ -42,6 +42,7 @@ const bubbleSchema = z.discriminatedUnion("kind", [
         kind: z.enum([
           "addHolding",
           "removeHolding",
+          "recordTransaction",
           "addCash",
           "createAlert",
           "addWatchlist",

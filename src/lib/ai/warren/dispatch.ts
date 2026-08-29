@@ -6,6 +6,7 @@ import {
   addWatchlistItem,
   countActiveAlerts,
   createAlert,
+  deleteTransactionsForPosition,
   findUserById,
   isFeatureEnabled,
   listHoldings,
@@ -23,6 +24,7 @@ import { deferTask } from "@/lib/task-runner";
 import { runBackfillForUser } from "@/lib/backfill-snapshots";
 import { materializeCurrentSnapshotsForUser } from "@/lib/cron-portfolio-snapshots";
 import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
+import { resolveTickerAgainstHoldings, matchHoldingsToQuery } from "./price-move-intent";
 
 export const addHoldingDataSchema = z.object({
   ticker: z.string().min(1).max(20),
@@ -36,6 +38,24 @@ export const addHoldingDataSchema = z.object({
 
 export const removeHoldingDataSchema = z.object({
   holdingId: z.string().min(1),
+  ticker: z.string().min(1).optional(),
+  portfolioId: z.string().optional(),
+});
+
+export const recordTransactionDataSchema = z.object({
+  type: z.enum(["buy", "sell", "dividend", "fee"]),
+  ticker: z.string().min(1).max(20),
+  name: z.string().optional(),
+  shares: z.number().positive(),
+  pricePerShare: z.number().nonnegative(),
+  fees: z.number().optional().default(0),
+  taxes: z.number().optional().default(0),
+  currency: z.string().min(3).max(4).default("EUR"),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  holdingId: z.string().optional(),
   portfolioId: z.string().optional(),
 });
 
@@ -125,6 +145,8 @@ export async function dispatchProposal(
         return await runAddHolding(userId, rawData);
       case "removeHolding":
         return await runRemoveHolding(userId, rawData);
+      case "recordTransaction":
+        return await runRecordTransaction(userId, rawData);
       case "addCash":
         return await runAddCash(userId, rawData);
       case "createAlert":
@@ -210,13 +232,149 @@ async function runAddHolding(userId: string, raw: unknown): Promise<DispatchResu
   };
 }
 
+async function findHoldingForWarren(
+  userId: string,
+  opts: { holdingId?: string; ticker?: string; portfolioId?: string },
+) {
+  const holdings = await listHoldings(userId, opts.portfolioId);
+  if (opts.holdingId) {
+    const byId = holdings.find((h) => h.id === opts.holdingId);
+    if (byId) return byId;
+  }
+  const query = opts.ticker?.trim();
+  if (!query) return undefined;
+
+  const resolved = resolveTickerAgainstHoldings(
+    query,
+    holdings.map((h) => ({ ticker: h.ticker })),
+  );
+  const byTicker = holdings.find((h) => h.ticker.toUpperCase() === resolved.toUpperCase());
+  if (byTicker) return byTicker;
+
+  const matched = matchHoldingsToQuery(
+    holdings.map((h) => ({ ticker: h.ticker, name: h.name })),
+    query,
+  );
+  if (matched[0]) {
+    return holdings.find((h) => h.ticker.toUpperCase() === matched[0]!.ticker.toUpperCase());
+  }
+  return undefined;
+}
+
 async function runRemoveHolding(userId: string, raw: unknown): Promise<DispatchResult> {
   const parsed = removeHoldingDataSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, status: 400, error: "Invalid removeHolding payload" };
-  const ok = await removeHolding(userId, parsed.data.holdingId);
+  const { holdingId, ticker, portfolioId } = parsed.data;
+
+  const target = await findHoldingForWarren(userId, { holdingId, ticker, portfolioId });
+  if (!target) {
+    return { ok: false, status: 404, error: "Holding not found." };
+  }
+
+  await deleteTransactionsForPosition(userId, target.ticker, target.exchange, portfolioId);
+  const ok = await removeHolding(userId, target.id);
   if (!ok) return { ok: false, status: 404, error: "Holding not found." };
-  trackEvent(userId, "warren_action", { action: "removeHolding", holdingId: parsed.data.holdingId });
-  return { ok: true, message: "Holding removed." };
+  trackEvent(userId, "warren_action", { action: "removeHolding", holdingId: target.id });
+  return { ok: true, message: `Removed ${target.ticker} from your portfolio records.` };
+}
+
+async function runRecordTransaction(userId: string, raw: unknown): Promise<DispatchResult> {
+  const parsed = recordTransactionDataSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, status: 400, error: "Invalid recordTransaction payload" };
+  const data = parsed.data;
+  const portfolioId = data.portfolioId;
+  let ticker = data.ticker.toUpperCase();
+  let holdingId = data.holdingId || "";
+
+  if (data.type === "sell") {
+    const holding = await findHoldingForWarren(userId, {
+      holdingId: data.holdingId,
+      ticker: data.ticker,
+      portfolioId,
+    });
+    if (!holding) {
+      return {
+        ok: false,
+        status: 404,
+        error: `No holding found for ${ticker}. Record the purchase first, or check the ticker.`,
+      };
+    }
+    if (data.shares > holding.shares + 1e-9) {
+      return {
+        ok: false,
+        status: 400,
+        error: `Cannot sell ${data.shares} shares — you only hold ${holding.shares} of ${holding.ticker}.`,
+      };
+    }
+    ticker = holding.ticker.toUpperCase();
+    holdingId = holding.id;
+  }
+
+  if (data.type === "buy") {
+    const user = await findUserById(userId);
+    const plan = user?.plan || "free";
+    const limit = getHoldingsLimit(plan);
+    if (limit < Infinity) {
+      const current = await listHoldings(userId, portfolioId);
+      const alreadyOwned = current.some((h) => h.ticker.toUpperCase() === ticker);
+      if (!alreadyOwned && current.length >= limit) {
+        return {
+          ok: false,
+          status: 403,
+          error: `You have reached your plan limit of ${limit} holdings.`,
+          reason: "holdings_limit_reached",
+        };
+      }
+    }
+  }
+
+  const fees = data.fees ?? 0;
+  const taxes = data.taxes ?? 0;
+  const tx = await addTransaction(
+    userId,
+    {
+      holdingId,
+      ticker,
+      name: data.name || "",
+      exchange: "",
+      isin: "",
+      assetType: "stock",
+      accountId: "",
+      type: data.type,
+      date: data.date || new Date().toISOString().slice(0, 10),
+      shares: data.shares,
+      pricePerShare: data.pricePerShare,
+      totalAmount: data.shares * data.pricePerShare,
+      fees,
+      taxes,
+      currency: data.currency,
+      displayCurrency: data.currency,
+      notes: "Recorded by Warren",
+    },
+    portfolioId,
+  );
+  if (!tx) {
+    return { ok: false, status: 409, error: "Duplicate transaction." };
+  }
+
+  trackEvent(userId, "warren_action", {
+    action: "recordTransaction",
+    type: data.type,
+    ticker,
+  });
+  const verb =
+    data.type === "sell"
+      ? "Recorded sale"
+      : data.type === "buy"
+        ? "Recorded purchase"
+        : data.type === "dividend"
+          ? "Recorded dividend"
+          : "Recorded fee";
+  return {
+    ok: true,
+    entityId: tx.id,
+    message: `${verb} of ${data.shares} ${ticker} at ${data.pricePerShare.toFixed(2)} ${data.currency}.`,
+  };
 }
 
 async function runAddCash(userId: string, raw: unknown): Promise<DispatchResult> {

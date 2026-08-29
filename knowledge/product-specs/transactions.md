@@ -53,6 +53,7 @@ Transactions are the primary source of truth for portfolio history. Holdings are
 - Idempotency: `source_ref` unique per `source` ensures re-imports don't duplicate.
 - FX rate attached at write time from [`exchange-rates`](exchange-rates.md) (falls back to historical rate table).
 - On edit/delete: `derive-holdings` re-runs for the affected ticker.
+- Warren can propose a single ledger row (`proposeRecordTransaction` → Confirm) on web/Telegram; see [warren-record-transaction](warren-record-transaction.md).
 
 ## 8. External dependencies
 

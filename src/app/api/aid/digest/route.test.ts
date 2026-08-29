@@ -10,41 +10,62 @@ vi.mock("@/lib/auth/guards", () => ({
 }));
 
 vi.mock("@/lib/db", () => ({
-  isFeatureEnabledForUser: vi.fn(),
   getUserSettings: vi.fn(),
   listHoldings: vi.fn(),
+}));
+
+vi.mock("@/lib/aid/can-access-aid-data", () => ({
+  canAccessAidData: vi.fn(),
 }));
 
 vi.mock("@/lib/aid/build-digest", () => ({
   buildAidDigest: vi.fn(),
 }));
 
-vi.mock("@/lib/quote-cache", () => ({
-  getQuotesWithCache: vi.fn(),
+vi.mock("@/lib/db/aid-user-state", () => ({
+  getLastAidVisitAt: vi.fn(),
+}));
+
+vi.mock("@/lib/holding-quotes", () => ({
+  fetchQuoteMapForHoldings: vi.fn(),
 }));
 
 import { requireSession } from "@/lib/auth/guards";
-import { isFeatureEnabledForUser, getUserSettings, listHoldings } from "@/lib/db";
+import { getUserSettings, listHoldings } from "@/lib/db";
+import { canAccessAidData } from "@/lib/aid/can-access-aid-data";
 import { buildAidDigest } from "@/lib/aid/build-digest";
-import { getQuotesWithCache } from "@/lib/quote-cache";
+import { getLastAidVisitAt } from "@/lib/db/aid-user-state";
+import { fetchQuoteMapForHoldings } from "@/lib/holding-quotes";
+import { GET } from "./route";
 
 const mockedSession = vi.mocked(requireSession);
-const mockedFlag = vi.mocked(isFeatureEnabledForUser);
+const mockedAccess = vi.mocked(canAccessAidData);
 const mockedSettings = vi.mocked(getUserSettings);
 const mockedHoldings = vi.mocked(listHoldings);
 const mockedBuild = vi.mocked(buildAidDigest);
-const mockedQuotes = vi.mocked(getQuotesWithCache);
+const mockedQuotes = vi.mocked(fetchQuoteMapForHoldings);
+const mockedVisit = vi.mocked(getLastAidVisitAt);
 
 beforeEach(() => {
   vi.clearAllMocks();
   mockedSession.mockResolvedValue({
-    session: { userId: "u1", username: "u", email: "u@test.dev", role: "user", mustChangePassword: false, plan: "free", emailVerified: true, onboardingCompleted: true },
+    session: {
+      userId: "u1",
+      username: "u",
+      email: "u@test.dev",
+      role: "user",
+      mustChangePassword: false,
+      plan: "free",
+      emailVerified: true,
+      onboardingCompleted: true,
+    },
     error: null,
   } as never);
-  mockedFlag.mockResolvedValue(true);
+  mockedAccess.mockResolvedValue(true);
   mockedSettings.mockResolvedValue({ language: "en" } as never);
   mockedHoldings.mockResolvedValue([{ ticker: "AAPL", shares: 1 }] as never);
   mockedQuotes.mockResolvedValue({ AAPL: { regularMarketPrice: 100 } } as never);
+  mockedVisit.mockResolvedValue(null);
   mockedBuild.mockResolvedValue({
     items: [{ id: "1", ticker: "AAPL" }],
     earningsTodayCount: 0,
@@ -59,24 +80,20 @@ describe("GET /api/aid/digest", () => {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     } as never);
 
-    const { GET } = await import("./route");
     const res = await GET(new NextRequest("http://localhost/api/aid/digest"));
 
     expect(res.status).toBe(401);
   });
 
-  it("returns 403 when aid_beta is disabled", async () => {
-    // canAccessAidData checks aid_beta and home_v2 — both must be off
-    mockedFlag.mockResolvedValue(false);
+  it("returns 403 when aid data access is disabled", async () => {
+    mockedAccess.mockResolvedValue(false);
 
-    const { GET } = await import("./route");
     const res = await GET(new NextRequest("http://localhost/api/aid/digest"));
 
     expect(res.status).toBe(403);
   });
 
   it("returns digest items when authorized", async () => {
-    const { GET } = await import("./route");
     const res = await GET(new NextRequest("http://localhost/api/aid/digest"));
 
     expect(res.status).toBe(200);
@@ -84,5 +101,7 @@ describe("GET /api/aid/digest", () => {
     expect(body.items).toHaveLength(1);
     expect(body.earningsTodayCount).toBe(0);
     expect(mockedBuild).toHaveBeenCalledOnce();
+    expect(mockedQuotes).toHaveBeenCalledOnce();
+    expect(mockedVisit).toHaveBeenCalledWith("u1");
   });
 });

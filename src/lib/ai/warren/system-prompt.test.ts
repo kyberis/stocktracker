@@ -30,10 +30,10 @@ describe("buildWarrenSystemPrompt — clover channel", () => {
 });
 
 describe("buildWarrenSystemPrompt — research tools", () => {
-  it("requires search for insider / buyback / Buffett-buy questions", () => {
+  it("mentions proposeRecordTransaction for recording sales", () => {
     const prompt = buildWarrenSystemPrompt({ baseCurrency: "EUR" });
-    expect(prompt).toContain("insider / Form 4 / buybacks");
-    expect(prompt).toContain("searchPublicWeb");
-    expect(prompt).toContain("Do not answer \"I don't have that information\" without searching");
+    expect(prompt).toContain("proposeRecordTransaction");
+    expect(prompt).toContain("registra la venta");
+    expect(prompt).toMatch(/Never.*proposeRemoveHolding.*recording a sale/i);
   });
 });

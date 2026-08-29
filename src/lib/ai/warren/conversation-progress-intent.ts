@@ -55,7 +55,8 @@ export function buildConversationProgressAppendix(
     "- Use valuation numbers already stated in this thread.",
     "- Deliver the requested next step NOW (rank by upside, compare candidates, decision framework, or trade guidance card).",
     "- Call `getQuote` for current prices if `currentPrice` / `upsideToTargetPct` are missing; compute upside vs analystTargetPrice when available.",
-    "- For buy/sell/trim proposals: call `listHoldings` for position size, then `renderTradeGuidanceCard` with real suggestedShares/suggestedAmount — NEVER `proposeAddCash` for sale proceeds.",
+    "- For buy/sell/trim *analysis*: call `listHoldings` for position size, then `renderTradeGuidanceCard` with real suggestedShares/suggestedAmount — NEVER `proposeAddCash` for sale proceeds.",
+    "- For recording a sale/purchase the user already made: call `proposeRecordTransaction` (after `listHoldings` for sells) — NEVER `proposeRemoveHolding`.",
     "- Do NOT repeat the expensive/fair/cheap grouping from the previous turn.",
     "- Do NOT repeat the same follow-up question you already asked.",
   ].join("\n");
