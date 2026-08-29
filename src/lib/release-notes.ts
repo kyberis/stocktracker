@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "fix",
+        type: "feature",
         text: "“Registra la venta…” now forces Warren to propose a sell ledger entry (Confirm/Cancel). It can no longer delete the whole holding via “Yes, delete,” which removed the position without adding a sale transaction.",
         translations: {
           es: "“Registra la venta…” ahora obliga a Warren a proponer un asiento de venta (Confirmar/Cancelar). Ya no puede borrar toda la posición con “Sí, borrar”, que eliminaba el holding sin crear la transacción de venta.",
