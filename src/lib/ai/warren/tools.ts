@@ -1035,11 +1035,12 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
           kind: "removeHolding",
           destructive: true,
           title: `Delete entire position: ${target.ticker}`,
-          summary: `This permanently deletes ${target.ticker} and ALL its buy/sell/dividend transactions. It does NOT record a sale. Use proposeRecordTransaction for sales.`,
+          summary: `Erases ${target.ticker} and ALL its buy/sell/dividend history from trefolio. This is NOT recording a broker sale — use "Record sale" for that.`,
           rows: [
             { label: "Ticker", value: target.ticker },
             { label: "Shares removed", value: String(target.shares) },
-            { label: "Creates sell tx?", value: "No — deletes history" },
+            { label: "Effect", value: "Deletes history — no sell tx added" },
+            { label: "Use instead for sales", value: "Record sale (keeps buys)" },
             { label: "Reversible", value: "No" },
           ],
           data: {
@@ -1156,12 +1157,21 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
           rows.push({ label: "Taxes", value: `${taxes.toFixed(2)} ${input.currency}` });
         }
         rows.push({ label: "Date", value: input.date || "Today" });
+        if (input.type === "sell") {
+          rows.push({
+            label: "Effect",
+            value: "Adds sell tx · keeps buy history · reduces shares",
+          });
+        }
 
         ctx.emitProposal({
           id,
           kind: "recordTransaction",
           title: `Record ${typeLabel.toLowerCase()}: ${input.shares} × ${displayTicker}`,
-          summary: `Record a ${typeLabel.toLowerCase()} of ${input.shares} ${displayTicker} at ${input.pricePerShare.toFixed(2)} ${input.currency}.`,
+          summary:
+            input.type === "sell"
+              ? `Log a sale of ${input.shares} ${displayTicker} at ${input.pricePerShare.toFixed(2)} ${input.currency}. Keeps prior buys; does not wipe history.`
+              : `Record a ${typeLabel.toLowerCase()} of ${input.shares} ${displayTicker} at ${input.pricePerShare.toFixed(2)} ${input.currency}.`,
           rows,
           data: {
             type: input.type,

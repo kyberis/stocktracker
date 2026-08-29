@@ -45,7 +45,7 @@ export function buildRecordTransactionPrefetchAppendix(message: string): string 
     isSale
       ? '- Then call `proposeRecordTransaction` with `type: "sell"` and real shares/price/currency/fees from the user (or from listHoldings + getQuote when they omitted price).'
       : '- Then call `proposeRecordTransaction` with `type: "buy"` | `"sell"` | `"dividend"` | `"fee"` as appropriate.',
-    "- The user will tap Confirm / Cancel (NOT \"Yes, delete\").",
+    "- The user will tap Confirm sale / Confirm record / Cancel (NOT \"Yes, delete history\").",
     "- NEVER call `proposeRemoveHolding` — that deletes the whole position and all its transactions.",
     "- NEVER call `proposeAddCash` for sale proceeds.",
     "- NEVER use `renderTradeGuidanceCard` for this — they are not asking for advice.",

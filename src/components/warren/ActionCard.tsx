@@ -11,12 +11,24 @@ interface Props {
 
 const KIND_LABEL: Record<Exclude<WarrenProposal["kind"], "importTransactions">, string> = {
   addHolding: "Add holding",
-  removeHolding: "Remove holding",
+  removeHolding: "Delete history",
   recordTransaction: "Record transaction",
   addCash: "Add cash",
   createAlert: "Create alert",
   addWatchlist: "Add to watchlist",
 };
+
+function confirmLabel(proposal: Exclude<WarrenProposal, { kind: "importTransactions" }>): string {
+  if (proposal.kind === "removeHolding") return "Yes, delete history";
+  if (proposal.kind === "recordTransaction") {
+    const type = "type" in proposal.data ? proposal.data.type : undefined;
+    if (type === "sell") return "Confirm sale";
+    if (type === "buy") return "Confirm purchase";
+    return "Confirm record";
+  }
+  if (proposal.destructive) return "Yes, do it";
+  return "Confirm";
+}
 
 export default function ActionCard({ proposal, onConfirmed }: Props) {
   if (proposal.kind === "importTransactions") {
@@ -132,11 +144,7 @@ export default function ActionCard({ proposal, onConfirmed }: Props) {
               : "bg-amber-500 hover:bg-amber-600 border border-amber-500 text-amber-950"
           }`}
         >
-          {status === "submitting"
-            ? "Working…"
-            : destructive
-              ? "Yes, do it"
-              : "Confirm"}
+          {status === "submitting" ? "Working…" : confirmLabel(proposal)}
         </button>
       </div>
       {status === "error" && message && (

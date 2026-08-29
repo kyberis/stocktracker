@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.270",
+    version: "2.5.272",
     date: "2026-08-29",
     title: "Activate Clara without leaving trefolio",
     titleTranslations: {
@@ -29,6 +29,40 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Onboarding and the Clara home CTA create your Clara space in place (same login) instead of opening clara.trefolio.com in another tab. Chat still opens on Clara when you are ready; Clara terms apply on first visit there.",
         translations: {
           es: "El onboarding y el CTA de Clara en Home crean tu espacio Clara en esta pantalla (mismo inicio de sesión) en lugar de abrir clara.trefolio.com en otra pestaña. El chat sigue abriéndose en Clara cuando quieras; los términos de Clara aplican en la primera visita allí.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.271",
+    date: "2026-08-29",
+    title: "No phantom SnapTrade closed lots",
+    titleTranslations: {
+      es: "Sin posiciones fantasma de SnapTrade cerradas",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Broker-synced tickers that are fully closed at the broker no longer reappear from incomplete SnapTrade activity history after rebuild or sync (e.g. EPR).",
+        translations: {
+          es: "Los tickers sincronizados con el bróker que ya están cerrados allí ya no reaparecen por un historial incompleto de SnapTrade tras rebuild o sync (p. ej. EPR).",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.270",
+    date: "2026-08-29",
+    title: "Warren: record sale vs delete history",
+    titleTranslations: {
+      es: "Warren: registrar venta vs borrar historial",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Warren now treats recording a sale and deleting position history as separate actions: vague “quita/elimina” prompts ask which you mean, confirmation cards say Confirm sale vs Yes, delete history, and recorded sells keep the holding’s exchange.",
+        translations: {
+          es: "Warren distingue registrar una venta y borrar el historial de la posición: si dices “quita/elimina” sin aclarar, pregunta cuál quieres; las tarjetas dicen Confirm sale vs Yes, delete history; y las ventas registradas conservan el exchange del holding.",
         },
       },
     ],

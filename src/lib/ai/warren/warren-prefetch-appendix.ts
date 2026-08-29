@@ -5,6 +5,10 @@ import {
 import { buildMoatScreenerPrefetchAppendix } from "./moat-screener-intent";
 import { buildPortfolioHoldingPrefetchAppendix } from "./portfolio-holding-intent";
 import { buildPriceMovePrefetchAppendix } from "./price-move-intent";
+import {
+  buildAmbiguousPositionWriteAppendix,
+  buildExplicitDeleteHistoryAppendix,
+} from "./position-write-intent";
 import { buildRecordTransactionPrefetchAppendix } from "./record-transaction-intent";
 import { buildValuationPrefetchAppendix } from "./valuation-intent";
 import type { PortfolioSnapshot } from "./tools";
@@ -21,16 +25,22 @@ export async function buildWarrenPrefetchAppendix(
   const thread: WarrenThreadMessage[] =
     opts.recentMessages ?? [{ role: "user", content: message }];
   const progress = buildConversationProgressAppendix(thread);
-  // Record-sale / record-buy must win over valuation / progress — otherwise
-  // Warren may delete a holding via proposeRemoveHolding instead of logging a sell.
+  // Portfolio writes must win over valuation / progress — otherwise Warren may
+  // delete a holding when the user meant to log a sale (or the reverse).
   const recordTx = buildRecordTransactionPrefetchAppendix(message);
+  const deleteHistory = recordTx ? null : buildExplicitDeleteHistoryAppendix(message);
+  const ambiguousWrite =
+    recordTx || deleteHistory ? null : buildAmbiguousPositionWriteAppendix(message);
+  const writeOverride = recordTx || deleteHistory || ambiguousWrite;
 
   const [valuation, moat, holding, priceMove] = await Promise.all([
-    recordTx || progress ? Promise.resolve(null) : buildValuationPrefetchAppendix(message, opts),
+    writeOverride || progress ? Promise.resolve(null) : buildValuationPrefetchAppendix(message, opts),
     buildMoatScreenerPrefetchAppendix(message),
-    recordTx ? Promise.resolve(null) : buildPortfolioHoldingPrefetchAppendix(message, opts),
-    recordTx || progress ? Promise.resolve(null) : buildPriceMovePrefetchAppendix(message, opts),
+    writeOverride ? Promise.resolve(null) : buildPortfolioHoldingPrefetchAppendix(message, opts),
+    writeOverride || progress ? Promise.resolve(null) : buildPriceMovePrefetchAppendix(message, opts),
   ]);
-  const parts = [recordTx, valuation, moat, holding, priceMove, progress].filter(Boolean);
+  const parts = [recordTx, deleteHistory, ambiguousWrite, valuation, moat, holding, priceMove, progress].filter(
+    Boolean,
+  );
   return parts.length > 0 ? parts.join("\n\n") : null;
 }
