@@ -874,10 +874,25 @@ async function runWarrenForText(
       summary: proposal.title,
     });
     const proposalForRender: WarrenProposal = { ...proposal, id: persisted.id };
+    const confirm =
+      proposal.kind === "removeHolding"
+        ? i.confirmDeleteHistory
+        : proposal.kind === "recordTransaction"
+          ? proposal.data.type === "sell"
+            ? i.confirmSale
+            : proposal.data.type === "buy"
+              ? i.confirmPurchase
+              : i.confirmRecord
+          : i.confirm;
     const { text, keyboard } = renderWarrenProposal(proposalForRender, {
-      confirm: i.confirm,
+      confirm,
       cancel: i.cancel,
-      destructive: proposal.destructive ? i.confirmDestructive : undefined,
+      destructive:
+        proposal.kind === "removeHolding"
+          ? i.confirmDeleteHistory
+          : proposal.destructive
+            ? i.confirmDestructive
+            : undefined,
     });
     await bot.sendMessage(chatId, text, {
       parseMode: "MarkdownV2",

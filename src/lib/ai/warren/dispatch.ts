@@ -285,6 +285,10 @@ async function runRecordTransaction(userId: string, raw: unknown): Promise<Dispa
   const portfolioId = data.portfolioId;
   let ticker = data.ticker.toUpperCase();
   let holdingId = data.holdingId || "";
+  let exchange = "";
+  let isin = "";
+  let assetType: "stock" | "etf" | "fund" | "crypto" = "stock";
+  let name = data.name || "";
 
   if (data.type === "sell") {
     const holding = await findHoldingForWarren(userId, {
@@ -308,6 +312,13 @@ async function runRecordTransaction(userId: string, raw: unknown): Promise<Dispa
     }
     ticker = holding.ticker.toUpperCase();
     holdingId = holding.id;
+    exchange = holding.exchange || "";
+    isin = holding.isin || "";
+    assetType =
+      holding.assetType === "etf" || holding.assetType === "fund" || holding.assetType === "crypto"
+        ? holding.assetType
+        : "stock";
+    name = data.name || holding.name || "";
   }
 
   if (data.type === "buy") {
@@ -335,10 +346,10 @@ async function runRecordTransaction(userId: string, raw: unknown): Promise<Dispa
     {
       holdingId,
       ticker,
-      name: data.name || "",
-      exchange: "",
-      isin: "",
-      assetType: "stock",
+      name,
+      exchange,
+      isin,
+      assetType,
       accountId: "",
       type: data.type,
       date: data.date || new Date().toISOString().slice(0, 10),

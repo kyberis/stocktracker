@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.270",
+    date: "2026-08-29",
+    title: "Warren: record sale vs delete history",
+    titleTranslations: {
+      es: "Warren: registrar venta vs borrar historial",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Warren now treats recording a sale and deleting position history as separate actions: vague “quita/elimina” prompts ask which you mean, confirmation cards say Confirm sale vs Yes, delete history, and recorded sells keep the holding’s exchange.",
+        translations: {
+          es: "Warren distingue registrar una venta y borrar el historial de la posición: si dices “quita/elimina” sin aclarar, pregunta cuál quieres; las tarjetas dicen Confirm sale vs Yes, delete history; y las ventas registradas conservan el exchange del holding.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.269",
     date: "2026-08-29",
     title: "Closed positions stay closed",
