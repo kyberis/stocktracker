@@ -718,6 +718,7 @@ const es: TranslationStrings = {
   importCashWillBeAdded: "se añadirá a Efectivo",
   importDuplicatesRemoved: "{count} transacciones duplicadas que ya estaban en tu cartera fueron eliminadas.",
   importHoldingsCapped: "{count} posición(es) omitida(s) — El plan Folio permite hasta 20 posiciones.",
+  importPartialFailure: "{count} transacción(es) no se pudieron importar. Vuelve a sincronizar o contacta con soporte si persiste.",
   importLimitWarningTitle: "Tu archivo tiene {count} tickers nuevos — {skip} exceden tu límite",
   importLimitWarningDesc: "Tu plan permite {limit} posiciones. Las primeras se importarán; {skip} serán omitidas: {tickers}.",
   importAllDuplicates: "Las {count} transacciones de este archivo ya están en tu cartera.",

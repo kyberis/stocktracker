@@ -3686,6 +3686,7 @@ const fr: TranslationStrings = {
   cloverProposeClaraTitle: "Create your Clara space",
   cloverProposeClaraBody: "Clover can check savings and cashflow once Clara is linked with the same login.",
   cloverProposeClaraCta: "Create Clara",
+  importPartialFailure: "{count} transaction(s) n'ont pas pu être importées. Réessayez de synchroniser ou contactez le support si le problème persiste.",
 };
 
 export default fr;

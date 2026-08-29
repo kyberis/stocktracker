@@ -952,7 +952,7 @@ export default function ImportPageContent() {
             <DoneCard txCount={aiImport.importedTxCount} holdingsCapped={aiImport.holdingsCapped} onReset={resetAll} t={t} importMethod="ai_import" />
           )}
           {method === "snaptrade_api" && snapTradeApi.step === "done" && (
-            <DoneCard txCount={snapTradeApi.importedCount} holdingsCapped={snapTradeApi.holdingsCapped} onReset={resetAll} t={t} importMethod="snaptrade_api" />
+            <DoneCard txCount={snapTradeApi.importedCount} holdingsCapped={snapTradeApi.holdingsCapped} failedCount={snapTradeApi.importFailedCount} onReset={resetAll} t={t} importMethod="snaptrade_api" />
           )}
         </div>
       )}
@@ -1274,7 +1274,7 @@ function SnapTradeContent({
   if (snapTradeApi.step === "importing") return <ImportingProgress progress={snapTradeApi.importProgress} t={t} />;
 
   if (snapTradeApi.step === "done") {
-    return <DoneCard txCount={snapTradeApi.importedCount} holdingsCapped={snapTradeApi.holdingsCapped} onReset={snapTradeApi.reset} t={t} />;
+    return <DoneCard txCount={snapTradeApi.importedCount} holdingsCapped={snapTradeApi.holdingsCapped} failedCount={snapTradeApi.importFailedCount} onReset={snapTradeApi.reset} t={t} importMethod="snaptrade_api" />;
   }
 
   // idle state — show connection UI
@@ -1836,16 +1836,30 @@ function ImportingProgress({ progress, t }: { progress: { current: number; total
   );
 }
 
-function DoneCard({ txCount, holdingsCapped, skippedUnresolvedCount, onReset, t, importMethod }: { txCount: number; holdingsCapped: number; skippedUnresolvedCount?: number; onReset: () => void; t: (key: string) => string; importMethod?: string }) {
+function DoneCard({ txCount, holdingsCapped, skippedUnresolvedCount, failedCount = 0, onReset, t, importMethod }: { txCount: number; holdingsCapped: number; skippedUnresolvedCount?: number; failedCount?: number; onReset: () => void; t: (key: string) => string; importMethod?: string }) {
   const showUpgradeNudge = importMethod && importMethod !== "broker_csv" && importMethod !== "snaptrade_api";
+  const hasPartialFailure = failedCount > 0 && txCount > 0;
   return (
     <div className="py-8 text-center space-y-4">
-      <div className="w-14 h-14 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center animate-slide-up">
-        <svg className="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+      <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center animate-slide-up ${hasPartialFailure ? "bg-amber-100 dark:bg-amber-500/15" : "bg-emerald-100 dark:bg-emerald-500/15"}`}>
+        {hasPartialFailure ? (
+          <svg className="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+        ) : (
+          <svg className="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+        )}
       </div>
       <p className="text-lg font-bold text-gray-900 dark:text-white">
         {(t("importTxSuccess") || "{count} transactions imported successfully.").replace("{count}", String(txCount))}
       </p>
+      {hasPartialFailure && (
+        <div className="max-w-md mx-auto rounded-xl border border-amber-200/70 dark:border-amber-500/25 bg-amber-50 dark:bg-amber-500/[0.06] px-4 py-3 text-left">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+            {(t("importPartialFailure") || "{count} transaction(s) could not be imported. Try syncing again or contact support if this persists.").replace("{count}", String(failedCount))}
+          </p>
+        </div>
+      )}
       {showUpgradeNudge && (
         <div className="max-w-md mx-auto text-left">
           <DataUpgradeNudge
