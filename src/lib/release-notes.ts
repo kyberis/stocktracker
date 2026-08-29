@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.268",
+    date: "2026-08-29",
+    title: "Tools breadcrumb mobile layout",
+    titleTranslations: {
+      es: "Diseño móvil del breadcrumb de Tools",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Tools breadcrumb no longer overlaps the tool icon or “Back to menu” on narrow screens (e.g. Transaction History / Add Transaction).",
+        translations: {
+          es: "El breadcrumb de Tools ya no pisa el icono de la herramienta ni “Volver al menú” en pantallas estrechas (p. ej. Historial de transacciones / Añadir transacción).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.267",
     date: "2026-08-29",
     title: "Warren sale recording guard",
