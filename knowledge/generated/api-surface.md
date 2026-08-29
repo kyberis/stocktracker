@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-341 routes.
+342 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
