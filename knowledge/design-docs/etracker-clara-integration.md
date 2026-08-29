@@ -62,7 +62,7 @@ const res = await fetch(`${base}/api/agents/...`, { method: "POST", body: JSON.s
 
 Server-side only. Never leak `CLARA_BASE_URL` to the client.
 
-**In-app Clara activate (onboarding / home CTA):** `POST {CLARA_BASE_URL}/api/internal/office/ensure-user` with `Authorization: Bearer ${IDP_SERVICE_TOKEN}` and body `{ sub, email, name?, trefolioUserId? }`. Idempotent upsert of Clara `User` by IdP `sub`. Does not stamp Clara terms or Clara onboarding — those still gate first `/app` visit. Trefolio wraps this as `POST /api/clara/activate`.
+**In-app Clara activate (onboarding / home CTA):** `POST {CLARA_BASE_URL}/api/internal/office/ensure-user` with `Authorization: Bearer ${IDP_SERVICE_TOKEN}` and body `{ sub, email, name?, trefolioUserId? }`. Idempotent upsert of Clara `User` by IdP `sub`. Does not stamp Clara terms or Clara onboarding — those still gate first `/app` visit. Trefolio wraps this as `POST /api/clara/activate`. Shipped on Clara `main` (etracker `a68ff9c`); soft HTML 404s from a missing route are mapped to `clara_route_missing` in `ensureClaraUser` rather than a generic unreachable error.
 
 ### Reading Clara as context (for agents)
 

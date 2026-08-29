@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.275",
+    date: "2026-08-29",
+    title: "Clara activate from onboarding",
+    titleTranslations: {
+      es: "Activar Clara desde el onboarding",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Creating a Clara account during onboarding no longer fails when Clara’s ensure-user API was missing — the route is live on Clara, and trefolio maps soft HTML 404s instead of a generic unreachable error.",
+        translations: {
+          es: "Crear una cuenta de Clara durante el onboarding ya no falla cuando faltaba la API ensure-user de Clara — la ruta está activa en Clara, y trefolio distingue un 404 HTML suave en lugar de un error genérico de inalcanzable.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.274",
     date: "2026-08-29",
     title: "ISIN ticker remaps",
