@@ -26,6 +26,7 @@ import {
   summarizeImportQuality,
 } from "@/lib/import-quality";
 import { updateHolding } from "@/lib/db/holdings";
+import { KNOWN_ISINS } from "@/lib/known-isins";
 
 async function runParseQualityPass(
   parsed: ParsedTransaction[],
@@ -166,52 +167,6 @@ async function resolveCsvFromFormData(formData: FormData): Promise<string> {
   }
   return csv;
 }
-
-const KNOWN_ISINS: Record<string, string> = {
-  "US0378331005": "AAPL",
-  "CA0641491075": "BNS",
-  "CA1363851017": "CNQ",
-  "VGG273581030": "DESP",
-  "NL0013654783": "PRX.AS",
-  "IE00B02KXH56": "IJPA.L",
-  "IE0031442068": "IUSA.L",
-  "IE00B4X9L533": "HMWO.L",
-  "IE00B3VVMM84": "VFEM.L",
-  "IE00B1TXK627": "IH2O.L",
-  "IE00BQT3WG13": "ICGA.DE",
-  "IE00BGSF1X88": "IB01.L",
-  "US1462805086": "SILA",
-  "US00724F1012": "ADBE",
-  "US6701002056": "NVO",
-  "US8740391003": "TSM",
-  "US02079K3059": "GOOGL",
-  "US0231351067": "AMZN",
-  "US0846707026": "BRK-B",
-  "US1667641005": "CVX",
-  "US29670G1022": "WTRG",
-  "US5007541064": "KHC",
-  "US56035L1044": "MAIN",
-  "US6374171063": "NNN",
-  "US6745991058": "OXY",
-  "US7170811035": "PFE",
-  "US7561091049": "O",
-  "US8299331004": "SIRI",
-  "US92343V1044": "VZ",
-  "CA21037X1006": "W9C.F",
-  "DE000A3H2200": "NA9.DE",
-  "DK0062498333": "NOVO-B.CO",
-  "ES0148396007": "ITX.MC",
-  "GB00BG5NDX91": "SRB.L",
-  "IE00B6R52036": "IS0E.DE",
-  "IE00BJ5JPG56": "ICGA.DE",
-  "IE00B53HP851": "ISF.L",
-  "IE00B5BMR087": "SXR8.DE",
-  "IE0032077012": "EQQQ.L",
-  "IE00B3XXRP09": "VUSA.L",
-  "IE00B8GKDB10": "VHYL.L",
-  "IE000ZIJ5B20": "WCOS.L",
-  "KYG4672G1064": "0215.HK",
-};
 
 const ISIN_LOOKUP_TIMEOUT_MS = 5_000;
 const ISIN_BATCH_TIMEOUT_MS = 15_000;

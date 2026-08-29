@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.274",
+    date: "2026-08-29",
+    title: "ISIN ticker remaps",
+    titleTranslations: {
+      es: "Remapeo de tickers ISIN",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Broker import shares an expanded ISIN→Yahoo symbol map so imported holdings land on quotable tickers more often (European ETFs, Belgian listings, and common US names).",
+        translations: {
+          es: "La importación de brokers comparte un mapa ISIN→Yahoo ampliado para que las posiciones importadas usen tickers cotizables con más frecuencia (ETFs europeos, cotizaciones belgas y nombres US habituales).",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.273",
     date: "2026-08-29",
     title: "Free, Basic, Pro, Wealth",
