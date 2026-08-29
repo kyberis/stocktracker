@@ -53,6 +53,8 @@ Telegram confirm uses stored `telegram_proposals` + `dispatchProposal` (no new r
 - **Buy:** same holdings-limit check as `addHolding`.
 - **Remove holding:** still available, but must resolve a real holding before emitting; on confirm deletes position transactions then the holding row. Must not be used for "record a sale".
 - System prompt: distinguish advice (`renderTradeGuidanceCard`) vs record (`proposeRecordTransaction`) vs delete (`proposeRemoveHolding`).
+- Prefetch: [`record-transaction-intent.ts`](../../src/lib/ai/warren/record-transaction-intent.ts) injects a TASK OVERRIDE for "registra la venta…" so Warren cannot choose `proposeRemoveHolding`.
+- Tool schemas require `userIntent: "record_completed_trade"` / `"delete_entire_position"` so the model must acknowledge which write it is proposing.
 
 ## 8. External dependencies
 
@@ -87,6 +89,8 @@ Proposal card rows are English labels from the tool (same pattern as other Warre
 ## 14. Tests
 
 - [`src/lib/ai/warren/dispatch.record-transaction.test.ts`](../../src/lib/ai/warren/dispatch.record-transaction.test.ts)
+- [`src/lib/ai/warren/record-transaction-intent.test.ts`](../../src/lib/ai/warren/record-transaction-intent.test.ts)
+- [`src/lib/ai/warren/warren-prefetch-appendix.test.ts`](../../src/lib/ai/warren/warren-prefetch-appendix.test.ts)
 - [`src/lib/ai/warren/system-prompt.test.ts`](../../src/lib/ai/warren/system-prompt.test.ts)
 - [`src/lib/ai/warren/conversation-progress-intent.test.ts`](../../src/lib/ai/warren/conversation-progress-intent.test.ts)
 

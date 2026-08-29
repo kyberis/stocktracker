@@ -53,4 +53,13 @@ describe("buildWarrenPrefetchAppendix", () => {
     });
     expect(appendix).toContain("getMarketCatalysts");
   });
+
+  it("forces recordTransaction override for registra la venta and skips valuation", async () => {
+    const appendix = await buildWarrenPrefetchAppendix("Registra la transacción venta de NOW", {
+      userId: "u1",
+    });
+    expect(appendix).toContain("proposeRecordTransaction");
+    expect(appendix).toContain("NEVER call `proposeRemoveHolding`");
+    expect(appendix).not.toContain("Call `analyzeValuation` ONCE");
+  });
 });

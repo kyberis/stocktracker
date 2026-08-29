@@ -970,6 +970,11 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
       description:
         "Propose deleting an entire position from the user's portfolio records (all transactions for that ticker). Destructive and irreversible. ONLY when the user explicitly asks to remove/delete/borrar a holding from their records — NEVER for recording a sale they already made (use proposeRecordTransaction with type=sell).",
       inputSchema: z.object({
+        userIntent: z
+          .literal("delete_entire_position")
+          .describe(
+            'Must be exactly "delete_entire_position". If the user asked to register/record a sale, abort and call proposeRecordTransaction instead.',
+          ),
         holdingId: z
           .string()
           .min(1)
@@ -983,6 +988,13 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
       }),
       execute: async (input) => {
         if (ctx.isDemo) return demoBlocked("remove holdings");
+        if (input.userIntent !== "delete_entire_position") {
+          return {
+            error: "wrong_tool",
+            message:
+              "proposeRemoveHolding only deletes an entire position. To record a sale, call proposeRecordTransaction with type=sell after listHoldings.",
+          };
+        }
         if (!input.holdingId && !input.ticker) {
           return {
             error: "missing_target",
@@ -1022,11 +1034,12 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
           id,
           kind: "removeHolding",
           destructive: true,
-          title: `Remove ${target.ticker}`,
-          summary: `This will permanently delete ${target.ticker} and all its transactions from this portfolio.`,
+          title: `Delete entire position: ${target.ticker}`,
+          summary: `This permanently deletes ${target.ticker} and ALL its buy/sell/dividend transactions. It does NOT record a sale. Use proposeRecordTransaction for sales.`,
           rows: [
             { label: "Ticker", value: target.ticker },
-            { label: "Shares", value: String(target.shares) },
+            { label: "Shares removed", value: String(target.shares) },
+            { label: "Creates sell tx?", value: "No — deletes history" },
             { label: "Reversible", value: "No" },
           ],
           data: {
@@ -1043,6 +1056,9 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
       description:
         "Propose recording a ledger transaction the user already made: sell, buy, dividend, or fee. Use this when they say 'registra la venta/compra', 'record this sale', 'log the trade', etc. For sells: call listHoldings first; never invent a holding. Do NOT use proposeRemoveHolding for sales. For buy/sell/trim advice (not recording), use renderTradeGuidanceCard instead.",
       inputSchema: z.object({
+        userIntent: z
+          .literal("record_completed_trade")
+          .describe('Must be exactly "record_completed_trade".'),
         type: z.enum(["buy", "sell", "dividend", "fee"]),
         ticker: z.string().min(1).max(20),
         name: z.string().optional(),
@@ -1060,6 +1076,12 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
       }),
       execute: async (input) => {
         if (ctx.isDemo) return demoBlocked("record transactions");
+        if (input.userIntent !== "record_completed_trade") {
+          return {
+            error: "wrong_tool",
+            message: 'userIntent must be "record_completed_trade".',
+          };
+        }
         const tickerUpper = input.ticker.toUpperCase();
         let holdingId = input.holdingId;
         let displayTicker = tickerUpper;
