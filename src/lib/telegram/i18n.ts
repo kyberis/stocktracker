@@ -13,11 +13,19 @@
 export type TelegramLocale = "en" | "es";
 
 export interface TelegramStrings {
-  /** Confirm button label. */
+  /** Default confirm for non-destructive proposals. */
   confirm: string;
   cancel: string;
-  /** Confirm label for destructive proposals (e.g. "Yes, delete"). */
+  /** Confirm label for destructive proposals (generic). */
   confirmDestructive: string;
+  /** Confirm erase-position-history (removeHolding). */
+  confirmDeleteHistory: string;
+  /** Confirm recording a sell ledger entry. */
+  confirmSale: string;
+  /** Confirm recording a buy ledger entry. */
+  confirmPurchase: string;
+  /** Confirm recording other ledger entries (dividend/fee). */
+  confirmRecord: string;
   /** Toast/text shown after a successful confirmation. */
   confirmed: string;
   cancelled: string;
@@ -100,7 +108,11 @@ export interface TelegramStrings {
 const EN: TelegramStrings = {
   confirm: "Confirm",
   cancel: "Cancel",
-  confirmDestructive: "Yes, delete",
+  confirmDestructive: "Yes, do it",
+  confirmDeleteHistory: "Yes, delete history",
+  confirmSale: "Confirm sale",
+  confirmPurchase: "Confirm purchase",
+  confirmRecord: "Confirm record",
   confirmed: "Done",
   cancelled: "Cancelled",
   actionFailed: "Action failed",
@@ -181,7 +193,11 @@ const EN: TelegramStrings = {
 const ES: TelegramStrings = {
   confirm: "Confirmar",
   cancel: "Cancelar",
-  confirmDestructive: "Sí, borrar",
+  confirmDestructive: "Sí, hazlo",
+  confirmDeleteHistory: "Sí, borrar historial",
+  confirmSale: "Confirmar venta",
+  confirmPurchase: "Confirmar compra",
+  confirmRecord: "Confirmar registro",
   confirmed: "Hecho",
   cancelled: "Cancelado",
   actionFailed: "Acción fallida",

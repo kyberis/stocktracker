@@ -300,7 +300,7 @@ describe("telegram/format · renderWarrenProposal", () => {
     expect(Buffer.byteLength(keyboard.inline_keyboard[0][0].callback_data!, "utf8")).toBeLessThanOrEqual(64);
   });
 
-  it("uses destructive label for destructive proposals", () => {
+  it("uses delete-history label for removeHolding proposals", () => {
     const proposal: WarrenProposal = {
       id: "x",
       kind: "removeHolding",
@@ -313,9 +313,31 @@ describe("telegram/format · renderWarrenProposal", () => {
     const { keyboard } = renderWarrenProposal(proposal, {
       confirm: "Confirm",
       cancel: "Cancel",
-      destructive: "Yes, delete",
+      destructive: "Yes, delete history",
     });
-    expect(keyboard.inline_keyboard[0][0].text).toBe("Yes, delete");
+    expect(keyboard.inline_keyboard[0][0].text).toBe("Yes, delete history");
+  });
+
+  it("uses Confirm sale for recordTransaction sell proposals", () => {
+    const proposal: WarrenProposal = {
+      id: "y",
+      kind: "recordTransaction",
+      title: "Record sale: 15 × NOW",
+      summary: "Log a sale.",
+      rows: [],
+      data: {
+        type: "sell",
+        ticker: "NOW",
+        shares: 15,
+        pricePerShare: 100,
+        currency: "USD",
+      },
+    };
+    const { keyboard } = renderWarrenProposal(proposal, {
+      confirm: "Confirm sale",
+      cancel: "Cancel",
+    });
+    expect(keyboard.inline_keyboard[0][0].text).toBe("Confirm sale");
   });
 });
 

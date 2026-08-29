@@ -30,10 +30,13 @@ describe("buildWarrenSystemPrompt — clover channel", () => {
 });
 
 describe("buildWarrenSystemPrompt — research tools", () => {
-  it("mentions proposeRecordTransaction for recording sales", () => {
+  it("distinguishes record-sale from delete-history", () => {
     const prompt = buildWarrenSystemPrompt({ baseCurrency: "EUR" });
     expect(prompt).toContain("proposeRecordTransaction");
     expect(prompt).toContain("registra la venta");
-    expect(prompt).toMatch(/Never.*proposeRemoveHolding.*recording a sale/i);
+    expect(prompt).toContain("proposeRemoveHolding");
+    expect(prompt).toContain("borra la posición");
+    expect(prompt).toContain("ambiguous");
+    expect(prompt).toMatch(/Two different write actions/i);
   });
 });
