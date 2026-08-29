@@ -433,19 +433,23 @@ describe("transactions", () => {
   });
 
   describe("deleteTransactionsForPosition", () => {
-    it("deletes by ticker and exchange", async () => {
+    it("deletes by ticker and exchange aliases including blank venue", async () => {
       mockExecute.mockResolvedValueOnce({ rowsAffected: 5 });
 
       const result = await transactions.deleteTransactionsForPosition(
         "user-1",
         "AAPL",
-        ""
+        "NASDAQ"
       );
 
       expect(mockExecute).toHaveBeenCalledWith({
         sql: expect.stringContaining("DELETE FROM transactions"),
-        args: ["user-1", "AAPL", ""],
+        args: expect.arrayContaining(["user-1", "AAPL"]),
       });
+      const args = mockExecute.mock.calls[0][0].args as string[];
+      expect(args).toContain("NASDAQ");
+      expect(args).toContain("NAS");
+      expect(args).toContain("");
       expect(result).toBe(5);
     });
 
