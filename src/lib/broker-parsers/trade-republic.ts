@@ -125,7 +125,7 @@ function parseTradeRepublic(csv: string, isinToTicker: Record<string, string>): 
     if (!date) continue;
 
     const isin = cell(row, isinIdx);
-    const ticker = (cell(row, tickerIdx) || isinToTicker[isin] || isin).toUpperCase();
+    const ticker = (cell(row, tickerIdx) || isinToTicker[isin] || "").toUpperCase();
     if (!ticker) continue;
 
     const shares = Math.abs(parseNum(cell(row, sharesIdx)));

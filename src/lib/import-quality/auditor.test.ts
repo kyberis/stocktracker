@@ -135,6 +135,25 @@ describe("auditImportBatch", () => {
     expect(after.some((f) => f.fixed)).toBe(true);
   });
 
+  it("does not flag display-EUR vs USD quote when purchase is not in quote units", () => {
+    const findings = auditImportBatch({
+      transactions: [],
+      holdings: [
+        {
+          id: "h-eur",
+          ticker: "AAPL",
+          shares: 2,
+          purchasePrice: 180,
+          displayCurrency: "EUR",
+          valueInEUR: 500,
+        },
+      ],
+      quotes: { AAPL: { price: 250, currency: "USD" } },
+      exchangeRates: { EURUSD: 1.1 },
+    });
+    expect(findings.find((f) => f.code === "currency_mismatch")).toBeUndefined();
+  });
+
   it("auto-fixes crypto pair currency when ticker encodes quote ccy (BTC-EUR)", () => {
     const findings = auditImportBatch({
       transactions: [],

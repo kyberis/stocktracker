@@ -7,9 +7,17 @@ const isinCache = new Map<string, string>();
 
 export const EUROPEAN_YAHOO_SUFFIX = /\.(DE|SG|F|AS|PA|MI|SW|L|CO|HE|ST|OL|VI|BR|LS)$/i;
 
+function isIsinPrefixedSymbol(symbol: string, isin: string): boolean {
+  const s = symbol.trim().toUpperCase();
+  const i = isin.trim().toUpperCase();
+  return s === i || s.startsWith(`${i}.`);
+}
+
 /**
- * Pick a Yahoo listing for an ISIN. Prefer a symbol that *is* the ISIN plus a
- * venue suffix (e.g. GB00BLD4ZL17.SG) so we don't land on a same-ticker US ETF.
+ * Pick a Yahoo listing for an ISIN.
+ * Prefer a real equity/ETF ticker (European suffix over bare US) and never
+ * return `ISIN` / `ISIN.VENUE` — those are not reliable quote symbols and must
+ * not be persisted as holdings tickers.
  */
 export function pickYahooSymbolForIsin(
   isin: string,
@@ -17,11 +25,11 @@ export function pickYahooSymbolForIsin(
 ): string | null {
   if (results.length === 0) return null;
   const upper = isin.trim().toUpperCase();
-  const exact = results.find((r) => r.symbol.toUpperCase().startsWith(`${upper}.`));
-  if (exact) return exact.symbol;
-  const european = results.find((r) => EUROPEAN_YAHOO_SUFFIX.test(r.symbol));
+  const usable = results.filter((r) => r.symbol && !isIsinPrefixedSymbol(r.symbol, upper));
+  if (usable.length === 0) return null;
+  const european = usable.find((r) => EUROPEAN_YAHOO_SUFFIX.test(r.symbol));
   if (european) return european.symbol;
-  return results[0].symbol;
+  return usable[0].symbol;
 }
 
 /**
