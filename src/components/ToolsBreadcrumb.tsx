@@ -54,7 +54,7 @@ export default function ToolsBreadcrumb({ toolLabel, toolIcon, toolGradient }: T
               </svg>
             </span>
           )}
-          <span data-testid="tools-breadcrumb-label" className="truncate">
+          <span data-testid="tools-breadcrumb-label" className="truncate" title={toolLabel}>
             {toolLabel}
           </span>
         </span>
