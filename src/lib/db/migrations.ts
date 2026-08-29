@@ -4762,6 +4762,18 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
     version: 155,
     description: "Four-tier plans (free/basic/pro/wealth) + trial restore and sunset columns",
     up: async (client: Client) => {
+      // Recover a half-finished users rebuild left by a previous failed deploy.
+      await client.execute("PRAGMA foreign_keys = OFF");
+      const tables = await client.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('users', 'users_new')",
+      );
+      const tableNames = new Set(tables.rows.map((r) => str(r.name)));
+      if (!tableNames.has("users") && tableNames.has("users_new")) {
+        await client.execute("ALTER TABLE users_new RENAME TO users");
+      } else if (tableNames.has("users_new")) {
+        await client.execute("DROP TABLE users_new");
+      }
+
       for (const col of ["plan_before_trial", "plan_sunset_notified_at"] as const) {
         try {
           await client.execute(
@@ -4783,7 +4795,10 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
         dflt: r.dflt_value,
         pk: Number(r.pk),
       }));
-      if (!colDefs.find((c) => c.name === "plan")) return;
+      if (!colDefs.find((c) => c.name === "plan")) {
+        await client.execute("PRAGMA foreign_keys = ON");
+        return;
+      }
 
       const columnDefs = colDefs
         .map((c) => {
@@ -4811,9 +4826,9 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       await client.execute(
         "UPDATE users SET plan = 'free' WHERE plan NOT IN ('free', 'basic', 'pro', 'wealth')",
       );
-      // Child tables reference users(id); disable FKs for the table rebuild.
+      // Child tables reference users(id); keep FKs off for the table rebuild.
       await client.executeMultiple(`
-        PRAGMA foreign_keys = OFF;
+        DROP TABLE IF EXISTS users_new;
         CREATE TABLE users_new (${columnDefs});
         INSERT INTO users_new (${colNames}) SELECT ${colNames} FROM users;
         DROP TABLE users;
