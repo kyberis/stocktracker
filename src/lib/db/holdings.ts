@@ -13,6 +13,7 @@ import {
 } from "./helpers";
 import type { Holding, HoldingAssetType, ExchangeRates } from "@/lib/types";
 import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
+import { filterClosedSnaptradeLedgerHoldings, isSnaptradeOnlyTradeLedger } from "@/lib/snaptrade-closed-ledger";
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
 import { listTransactions } from "./transactions";
 import { findOrCreateBrokerAccount } from "./accounts";
@@ -672,6 +673,19 @@ export async function upsertHoldingsFromPositions(
         });
       }
     }
+
+    // Also drop transaction-sourced phantoms for SnapTrade-only ledgers that
+    // the broker no longer reports (e.g. EPR buy 5 / sell 3 while positions=0).
+    const transactions = await listTransactions(userId, undefined, resolved);
+    for (const [key, meta] of existingByKey) {
+      if (meta.source === "snaptrade") continue;
+      if (touchedKeys.has(key)) continue;
+      if (!isSnaptradeOnlyTradeLedger(transactions, meta.ticker, meta.exchange)) continue;
+      await client.execute({
+        sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
+        args: [meta.id, userId],
+      });
+    }
   }
 
   await enrichValueInEUR(upserted).catch((err) =>
@@ -873,12 +887,17 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
 
   const allDerived = deriveHoldingsFromTransactions(transactions, metadataByKey);
 
-  // Skip transaction-derived holdings when a snaptrade position already covers
-  // that exact ticker+exchange — snaptrade positions are the source of truth
-  // and including both would double the shares/value in listHoldings.
-  const derived = snapTradeTickers.size > 0
-    ? allDerived.filter((h) => !snapTradeTickers.has(`${h.ticker.toUpperCase()}|${canonicalExchangeCode(h.exchange)}`))
-    : allDerived;
+  // SnapTrade positions are source of truth when present:
+  // 1) skip transaction-derived lots that duplicate an open snaptrade row
+  // 2) skip snaptrade-only ledger lots that the live snapshot no longer lists
+  //    (incomplete activity history must not resurrect closed broker positions)
+  const withoutOpenDupes =
+    snapTradeTickers.size > 0
+      ? allDerived.filter(
+          (h) => !snapTradeTickers.has(`${h.ticker.toUpperCase()}|${canonicalExchangeCode(h.exchange)}`),
+        )
+      : allDerived;
+  const derived = filterClosedSnaptradeLedgerHoldings(withoutOpenDupes, transactions, snapTradeTickers);
 
   await enrichValueInEUR(derived).catch((err) =>
     console.warn("[rebuildHoldings] quote enrichment failed, using valueInEUR=0:", err)

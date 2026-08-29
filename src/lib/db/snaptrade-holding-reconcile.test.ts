@@ -86,6 +86,9 @@ describe("upsertHoldingsFromPositions stale cleanup", () => {
   });
 
   it("removes stale snaptrade tickers when a non-empty snapshot omits them", async () => {
+    const { listTransactions } = await import("./transactions");
+    vi.mocked(listTransactions).mockResolvedValueOnce([]);
+
     mockExecute
       .mockResolvedValueOnce({
         rows: [
@@ -146,6 +149,120 @@ describe("upsertHoldingsFromPositions stale cleanup", () => {
     expect(mockExecute).toHaveBeenCalledWith({
       sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
       args: ["h-stale", "user-1"],
+    });
+  });
+
+  it("removes transaction-sourced snaptrade-only phantoms omitted from positions", async () => {
+    const { listTransactions } = await import("./transactions");
+    vi.mocked(listTransactions).mockResolvedValueOnce([
+      {
+        id: "tx-buy",
+        ticker: "EPR",
+        exchange: "NYSE",
+        type: "buy",
+        shares: 5,
+        totalAmount: 228,
+        fees: 0,
+        taxes: 0,
+        date: "2021-12-03",
+        createdAt: "2026-03-20T00:00:00.000Z",
+        name: "EPR",
+        pricePerShare: 45.62,
+        currency: "USD",
+        displayCurrency: "USD",
+        isin: "",
+        assetType: "stock",
+        accountId: "",
+        holdingId: "",
+        notes: "",
+        sourceRef: "snaptrade-activity:buy",
+      },
+      {
+        id: "tx-sell",
+        ticker: "EPR",
+        exchange: "NYSE",
+        type: "sell",
+        shares: 3,
+        totalAmount: 144,
+        fees: 0,
+        taxes: 0,
+        date: "2023-12-21",
+        createdAt: "2026-03-20T00:00:00.000Z",
+        name: "EPR",
+        pricePerShare: 48,
+        currency: "USD",
+        displayCurrency: "USD",
+        isin: "",
+        assetType: "stock",
+        accountId: "",
+        holdingId: "",
+        notes: "",
+        sourceRef: "snaptrade-activity:sell",
+      },
+    ]);
+
+    mockExecute
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: "h-open",
+            ticker: "O",
+            exchange: "NYSE",
+            name: "Realty Income",
+            isin: "",
+            asset_type: "stock",
+            sector: "",
+            region: "",
+            asset_class: "",
+            account_id: "",
+            source: "snaptrade",
+            value_in_eur: 2000,
+            figi_share_class: "",
+            tags: "[]",
+            purchase_price: 50,
+          },
+          {
+            id: "h-epr-phantom",
+            ticker: "EPR",
+            exchange: "NYSE",
+            name: "EPR Properties",
+            isin: "",
+            asset_type: "stock",
+            sector: "",
+            region: "",
+            asset_class: "",
+            account_id: "",
+            source: "transaction",
+            value_in_eur: 90,
+            figi_share_class: "",
+            tags: "[]",
+            purchase_price: 45,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({ rowsAffected: 1 }) // UPDATE open
+      .mockResolvedValueOnce({ rowsAffected: 1 }) // DELETE phantom
+      .mockResolvedValueOnce({ rowsAffected: 1 }); // value update
+
+    await upsertHoldingsFromPositions(
+      "user-1",
+      [
+        {
+          name: "Realty Income",
+          ticker: "O",
+          shares: 49,
+          purchasePrice: 50,
+          displayCurrency: "USD",
+          exchange: "NYSE",
+          assetType: "stock",
+        },
+      ],
+      "portfolio-1",
+    );
+
+    expect(mockExecute).toHaveBeenCalledWith({
+      sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
+      args: ["h-epr-phantom", "user-1"],
     });
   });
 });
