@@ -74,17 +74,23 @@ export function getIdpBillingPortalUrl(): string | null {
 export function resolveIdpUpgradeHref(opts?: {
   interval?: "monthly" | "annual";
   feature?: string;
+  plan?: "basic" | "pro" | "wealth";
+  skipLanding?: boolean;
 }): string {
   const issuer = getIdpIssuer();
   if (!issuer) {
     const local = new URL("/upgrade", "http://local");
     if (opts?.feature) local.searchParams.set("feature", opts.feature);
+    if (opts?.plan) local.searchParams.set("plan", opts.plan);
+    if (opts?.skipLanding) local.searchParams.set("skipLanding", "1");
     return `${local.pathname}${local.search}`;
   }
   const u = new URL(`${issuer.replace(/\/+$/, "")}/upgrade`);
   u.searchParams.set("from", "trefolio");
   if (opts?.interval) u.searchParams.set("interval", opts.interval);
   if (opts?.feature) u.searchParams.set("feature", opts.feature);
+  if (opts?.plan) u.searchParams.set("plan", opts.plan);
+  if (opts?.skipLanding) u.searchParams.set("skipLanding", "1");
   return u.toString();
 }
 

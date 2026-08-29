@@ -59,15 +59,21 @@ describe("POST /api/trial/activate", () => {
     expect(res.status).toBe(401);
   });
 
-  it("returns 400 for missing token", async () => {
+  it("activates without token when the session user is eligible", async () => {
     mockedRequireSession.mockResolvedValue({
       session: { userId: "u1" },
       error: null,
     } as never);
+    mockedFindUser.mockResolvedValue({
+      id: "u1",
+      plan: "free",
+    } as never);
+    mockedActivate.mockResolvedValue({ planExpiresAt: "2026-09-08T00:00:00.000Z" });
 
     const { POST } = await import("./route");
     const res = await (POST as (req: NextRequest) => Promise<NextResponse>)(makeRequest({}));
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(200);
+    expect(mockedActivate).toHaveBeenCalledWith("u1");
   });
 
   it("returns 400 for invalid token", async () => {

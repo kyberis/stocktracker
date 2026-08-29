@@ -105,7 +105,6 @@ function getHeroFeatures(t: T): HeroFeature[] {
     },
     {
       tag: t("landingFeatureAiTag"),
-      tagBadge: "Trefolio",
       title: t("landingFeatureAiTitle"),
       description: t("landingFeatureAiDesc"),
       screenshot: "/screenshots/holdings-table.png",
@@ -118,6 +117,7 @@ function getHeroFeatures(t: T): HeroFeature[] {
     },
     {
       tag: t("landingFeatureScreeningTag"),
+      tagBadge: "Pro",
       title: t("landingFeatureScreeningTitle"),
       description: t("landingFeatureScreeningDesc"),
       screenshot: "/screenshots/investment-screening.png",
@@ -187,7 +187,7 @@ function getFeatureCards(t: T) {
     { icon: "wallet", title: t("landingCardNetWorthTitle"), desc: t("landingCardNetWorthDesc") },
     { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc") },
     { icon: "bot", title: t("landingCardMcpTitle"), desc: t("landingCardMcpDesc"), href: "/landing/mcp" },
-    { icon: "office", title: t("landingCardOfficeTitle"), desc: t("landingCardOfficeDesc"), badge: "Trefolio" },
+    { icon: "office", title: t("landingCardOfficeTitle"), desc: t("landingCardOfficeDesc"), badge: "Beta" },
     { icon: "upload", title: t("landingCardImportTitle"), desc: t("landingCardImportDesc") },
     { icon: "chart", title: t("landingCardPerfTitle"), desc: t("landingCardPerfDesc") },
     { icon: "beaker", title: t("landingCardCompanyAnalysisTitle"), desc: t("landingCardCompanyAnalysisDesc") },
@@ -213,42 +213,62 @@ interface PricingTier {
   launchDiscountPct: number;
   isFree?: boolean;
   description: string;
+  job: string;
   features: string[];
   cta: string;
   highlighted?: boolean;
 }
 
-const LAUNCH_DISCOUNT_PCT = 25;
-
-/** Trefolio tier bullets: 1–22, 24, 25, 26 (23 unused). */
-const TREFOLIO_PRICING_FEATURE_NUMS = [...Array.from({ length: 22 }, (_, i) => i + 1), 24, 25, 26, 27] as const;
-
 function getPricing(t: T): PricingTier[] {
   return [
     {
-      name: "Folio",
+      name: "Free",
       plan: "free" as SubscriptionPlan,
       regularMonthly: "€0", monthlyPrice: "€0",
       regularAnnualMonthly: "€0", annualMonthly: "€0",
       regularAnnual: "€0", annualPrice: "€0",
       annualSavePct: 0, launchDiscountPct: 0, isFree: true,
-      description: t("landingPricingFolioDesc"),
-      features: Array.from({ length: 16 }, (_, i) => t(`landingPricingFolioFeature${i + 1}` as TranslationKey)),
-      cta: t("landingPricingFolioCta"),
+      description: t("landingPricingFreeDesc"),
+      job: t("landingPricingFreeJob"),
+      features: Array.from({ length: 8 }, (_, i) => t(`landingPricingFreeFeature${i + 1}` as TranslationKey)),
+      cta: t("landingPricingFreeCta"),
     },
     {
-      name: "Trefolio",
+      name: "Basic",
+      plan: "basic" as SubscriptionPlan,
+      regularMonthly: "€4.99", monthlyPrice: "€4.99",
+      regularAnnualMonthly: "€4.08", annualMonthly: "€4.08",
+      regularAnnual: "€49", annualPrice: "€49",
+      annualSavePct: 18, launchDiscountPct: 0,
+      description: t("landingPricingBasicDesc"),
+      job: t("landingPricingBasicJob"),
+      features: Array.from({ length: 8 }, (_, i) => t(`landingPricingBasicFeature${i + 1}` as TranslationKey)),
+      cta: t("landingPricingBasicCta"),
+    },
+    {
+      name: "Pro",
       plan: "pro" as SubscriptionPlan,
-      regularMonthly: "€9.99", monthlyPrice: "€7.99",
-      regularAnnualMonthly: "€6.67", annualMonthly: "€5.00",
-      regularAnnual: "€79.99", annualPrice: "€59.99",
-      annualSavePct: 37, launchDiscountPct: 20,
-      description: t("landingPricingTrefolioDesc"),
-      features: TREFOLIO_PRICING_FEATURE_NUMS.map((n) =>
-        t(`landingPricingTrefolioFeature${n}` as TranslationKey),
-      ),
-      cta: t("landingPricingTrefolioCta"),
+      regularMonthly: "€9.99", monthlyPrice: "€9.99",
+      regularAnnualMonthly: "€7.42", annualMonthly: "€7.42",
+      regularAnnual: "€89", annualPrice: "€89",
+      annualSavePct: 26, launchDiscountPct: 0,
+      description: t("landingPricingProDesc"),
+      job: t("landingPricingProJob"),
+      features: Array.from({ length: 8 }, (_, i) => t(`landingPricingProFeature${i + 1}` as TranslationKey)),
+      cta: t("landingPricingProCta"),
       highlighted: true,
+    },
+    {
+      name: "Wealth · Ultra",
+      plan: "wealth" as SubscriptionPlan,
+      regularMonthly: "€24.99", monthlyPrice: "€24.99",
+      regularAnnualMonthly: "€16.58", annualMonthly: "€16.58",
+      regularAnnual: "€199", annualPrice: "€199",
+      annualSavePct: 34, launchDiscountPct: 0,
+      description: t("landingPricingWealthDesc"),
+      job: t("landingPricingWealthJob"),
+      features: Array.from({ length: 8 }, (_, i) => t(`landingPricingWealthFeature${i + 1}` as TranslationKey)),
+      cta: t("landingPricingWealthCta"),
     },
   ];
 }
@@ -2257,18 +2277,12 @@ function PricingSection() {
             {t("landingPricingHeading")}{" "}
             <span className="text-emerald-500">{t("landingPricingHeadingAccent")}</span>
           </h2>
-          <p className="text-lg text-slate-500 max-w-xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
             {t("landingPricingSubtitle")}
           </p>
-          <p className="text-base font-medium text-slate-700 max-w-lg mx-auto mt-3">
+          <p className="text-base font-medium text-slate-700 max-w-2xl mx-auto mt-3">
             {t("landingPricingTagline")}
           </p>
-          <div className="inline-flex items-center gap-2 mt-4 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-1.5">
-            <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-            <span className="text-sm font-semibold text-amber-400">{t("landingPricingLaunchBadge")} &mdash; {t("landingPricingLaunchBadgeUpTo")} {LAUNCH_DISCOUNT_PCT}% {t("landingPricingLaunchBadgeDetail")}</span>
-          </div>
         </div>
 
         <div className="mb-8">
@@ -2281,7 +2295,7 @@ function PricingSection() {
           {t("landingPricingTierExplainer")}
         </p>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 max-w-7xl mx-auto">
           {pricing.map((tier) => {
             const displayPrice = tier.isFree
               ? "€0"
@@ -2298,7 +2312,7 @@ function PricingSection() {
             return (
               <div
                 key={tier.name}
-                className={`relative rounded-2xl p-8 ${
+                className={`relative rounded-2xl p-6 sm:p-7 ${
                   tier.highlighted
                     ? "bg-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/10"
                     : "border border-slate-200 bg-white"
@@ -2315,7 +2329,12 @@ function PricingSection() {
                     <TierIcon
                       plan={tier.plan}
                       size={22}
-                      className={tier.plan === "pro" ? "text-emerald-600" : "text-slate-500"}
+                      className={
+                        tier.plan === "wealth" ? "text-amber-600" :
+                        tier.plan === "pro" ? "text-emerald-600" :
+                        tier.plan === "basic" ? "text-sky-600" :
+                        "text-slate-500"
+                      }
                     />
                     {tier.name}
                     {!tier.isFree && tier.launchDiscountPct > 0 && (
@@ -2324,8 +2343,9 @@ function PricingSection() {
                       </span>
                     )}
                   </h3>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-3">{tier.job}</p>
                   <div className="flex items-baseline gap-2">
-                    {!tier.isFree && (
+                    {!tier.isFree && regularPrice !== displayPrice && (
                       <span className="text-lg text-slate-400 line-through">{regularPrice}</span>
                     )}
                     <span className="text-4xl font-extrabold text-slate-900">{displayPrice}</span>
@@ -2333,7 +2353,9 @@ function PricingSection() {
                   </div>
                   {!tier.isFree && isAnnual && (
                     <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-sm text-slate-400 line-through">{tier.regularAnnual}/yr</span>
+                      {tier.regularAnnual !== tier.annualPrice && (
+                        <span className="text-sm text-slate-400 line-through">{tier.regularAnnual}/yr</span>
+                      )}
                       <span className="text-sm text-slate-500">
                         {tier.annualPrice}/year
                       </span>

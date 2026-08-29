@@ -39,6 +39,7 @@ import type {
   SpikeTypeBreakdown,
 } from "./portfolio-chart-types";
 import { fetchWithAuthRedirect } from "@/lib/auth/client-redirect";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 interface SnapshotPoint {
   date: string;
@@ -185,7 +186,7 @@ export default function PortfolioEvolutionChart({
   const { user } = useAuth();
   const { stealthMode } = useStealthMode();
   const { t } = useI18n();
-  const isPaid = user?.plan === "pro";
+  const isPaid = isPaidPlan(planOf(user));
 
   const isAdmin = user?.role === "admin";
 

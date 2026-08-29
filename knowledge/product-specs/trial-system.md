@@ -31,7 +31,8 @@ New users and invitees can run a time-limited Pro trial. Admins issue trial invi
 
 ## 7. Business logic
 - Merges into tier resolver with higher precedence than free.
-- Expires → automatic downgrade + notification via daily `trial-expiration` cron and check-on-login (`maybeExpireTrialOnLogin`). Entitlement reads already treat a past `plan_expires_at` as free.
+- Eligible: Free or Basic, never activated, no Stripe. Activation stores `plan_before_trial`.
+- Expires → restore `plan_before_trial` (Free or Basic) + notification via daily `trial-expiration` cron and check-on-login (`maybeExpireTrialOnLogin`). Entitlement reads already treat a past `plan_expires_at` as the restored plan.
 
 ## 8. External dependencies
 - None.

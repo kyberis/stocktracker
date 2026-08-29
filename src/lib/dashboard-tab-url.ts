@@ -1,4 +1,6 @@
 import type { ReadonlyURLSearchParams } from "next/navigation";
+import type { SubscriptionPlan } from "@/lib/types";
+import { isPaidPlan } from "@/lib/plan-rank";
 
 export const DASHBOARD_TAB_VALUES = [
   "portfolio",
@@ -36,14 +38,13 @@ export interface ClampDashboardTabContext {
   holdingsCount: number;
   /** When true, free users cannot land on metrics/growth via URL (mobile paywall flow). */
   tierGate: boolean;
-  userPlan: "free" | "pro";
+  userPlan: SubscriptionPlan;
 }
 
 export function clampDashboardTab(tab: DashboardTab, ctx: ClampDashboardTabContext): DashboardTab {
   if (tab === "diversification" && ctx.holdingsCount === 0) return "portfolio";
   if (ctx.tierGate) {
-    const rank = { free: 0, pro: 1 };
-    if ((tab === "metrics" || tab === "growth") && rank[ctx.userPlan] < rank.pro) {
+    if ((tab === "metrics" || tab === "growth") && !isPaidPlan(ctx.userPlan)) {
       return "portfolio";
     }
   }

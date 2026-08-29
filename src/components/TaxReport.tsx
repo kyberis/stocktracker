@@ -9,6 +9,7 @@ import TierFeatureBadge from "./TierFeatureBadge";
 import DataUpgradeNudge from "./DataUpgradeNudge";
 import ProCompareCard from "./ProCompareCard";
 import AiMarkdown from "./AiMarkdown";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 import type {
   TaxReport as TaxReportType,
   TaxCountry,
@@ -120,7 +121,7 @@ export default function TaxReport() {
 
   // Auto-fetch once country is resolved from profile (avoids the DE-default race)
   useEffect(() => {
-    if ((user?.plan === "pro" || user?.role === "admin") && countryResolved) {
+    if ((isPaidPlan(planOf(user)) || user?.role === "admin") && countryResolved) {
       fetchReport();
     }
   }, [fetchReport, user?.plan, user?.role, countryResolved]);
@@ -206,7 +207,7 @@ export default function TaxReport() {
 
   /* ── Paywall ───────────────────────────────────────────── */
 
-  const hasTaxAccess = user?.plan === "pro" || user?.role === "admin";
+  const hasTaxAccess = isPaidPlan(planOf(user)) || user?.role === "admin";
 
   if (!hasTaxAccess) {
     return (

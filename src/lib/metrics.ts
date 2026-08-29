@@ -382,7 +382,9 @@ export async function collectDbGauges(): Promise<void> {
     const snap = await getMetricsSnapshot();
 
     usersTotal.set({ plan: "free" }, snap.freeUsers);
+    usersTotal.set({ plan: "basic" }, snap.basicUsers);
     usersTotal.set({ plan: "pro" }, snap.proUsers);
+    usersTotal.set({ plan: "wealth" }, snap.wealthUsers);
     proSubscribersCurrent.set(snap.proUsers);
     usersActive.set({ window: "7d" }, snap.activeUsers7d);
     usersActive.set({ window: "30d" }, snap.activeUsers30d);

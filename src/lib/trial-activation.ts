@@ -22,7 +22,8 @@ export function getTrialEligibilityError(
   opts?: { token?: string },
 ): TrialActivationError | null {
   if (user.trial_activated_at !== "") return "already_activated";
-  if (user.plan !== "free") return "not_free_plan";
+  if (user.stripe_subscription_id?.trim()) return "not_free_plan";
+  if (user.plan !== "free" && user.plan !== "basic") return "not_free_plan";
   if (opts?.token !== undefined && user.trial_token !== opts.token) return "invalid_token";
   return null;
 }
@@ -137,15 +138,17 @@ export async function activateProTrial(userId: string): Promise<{ planExpiresAt:
   if (eligibilityError) throw new Error(eligibilityError);
 
   const planExpiresAt = getTrialPlanExpiresAt();
+  const planBeforeTrial = user.plan === "basic" ? "basic" : "free";
   await updateUserSubscription(userId, { plan: "pro", planExpiresAt });
 
   const client = await ensureInitialized();
   await client.execute({
     sql: `UPDATE users
           SET trial_activated_at = datetime('now'),
+              plan_before_trial = ?,
               trial_invited_at = CASE WHEN trial_invited_at = '' THEN datetime('now') ELSE trial_invited_at END
           WHERE id = ?`,
-    args: [userId],
+    args: [planBeforeTrial, userId],
   });
 
   return { planExpiresAt };

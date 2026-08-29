@@ -64,9 +64,9 @@ export const POST = withMetrics("/api/admin/users", async (req: NextRequest) => 
   }
 
   if (data.action === "setPlan") {
-    const planExpiresAt = data.plan === "pro"
-      ? new Date(Date.now() + 365 * 86400000).toISOString()
-      : "";
+    const planExpiresAt = data.plan === "free"
+      ? ""
+      : new Date(Date.now() + 365 * 86400000).toISOString();
     await updateUserSubscription(user.id, { plan: data.plan, planExpiresAt });
     if (user.email) {
       await syncLocalPlanToIdp(user.id, user.email, data.plan, planExpiresAt);

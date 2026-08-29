@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import type { NotificationChannel } from "@/lib/types";
+import { isPaidPlan, parseSubscriptionPlan } from "@/lib/plan-rank";
 import TierFeatureBadge from "./TierFeatureBadge";
 
 interface TelegramQuotaInfo {
@@ -27,9 +28,9 @@ export default function NotificationChannels() {
   const { t } = useI18n();
   const { user } = useAuth();
   const { telegramEnabled } = useSettings();
-  const plan = user?.plan || "free";
-  const isPaid = plan === "pro";
-  const isPro = plan === "pro";
+  const plan = parseSubscriptionPlan(user?.plan);
+  const isPaid = isPaidPlan(plan);
+  const isPro = isPaid;
   const hasDevice = !!user?.devicePortfolioId || !!user?.deviceProEligible;
 
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);

@@ -1,5 +1,6 @@
 import type { SubscriptionFeature, SubscriptionPlan, LayoutTheme } from "@/lib/types";
 import { PLATFORM_LIMITS, SOFT_CAPS } from "@/lib/platform-config";
+import { pickTierValue, planDisplayName as displayName } from "@/lib/plan-rank";
 
 /**
  * In the universal-access model every feature is reachable from every plan.
@@ -37,7 +38,7 @@ export const PRO_AI_MONTHLY_TOKEN_LIMIT = PLATFORM_LIMITS.AI_PRO_MONTHLY_TOKEN_L
 
 /** @deprecated Returns the legacy informational token budget for the plan. */
 export function getAiTokenLimit(plan: SubscriptionPlan): number {
-  if (plan === "pro") return PRO_AI_MONTHLY_TOKEN_LIMIT;
+  if (plan === "pro" || plan === "wealth") return PRO_AI_MONTHLY_TOKEN_LIMIT;
   return FREE_AI_MONTHLY_TOKEN_LIMIT;
 }
 
@@ -55,27 +56,27 @@ export function canAccessFeature(
 /* ── Soft caps (storage anti-abuse, not API quotas) ─────────────── */
 
 export function getHoldingsLimit(plan: SubscriptionPlan): number {
-  return plan === "pro" ? SOFT_CAPS.holdings.pro : SOFT_CAPS.holdings.free;
+  return pickTierValue(SOFT_CAPS.holdings, plan);
 }
 
 export function getAlertLimit(plan: SubscriptionPlan): number {
-  return plan === "pro" ? SOFT_CAPS.alerts.pro : SOFT_CAPS.alerts.free;
+  return pickTierValue(SOFT_CAPS.alerts, plan);
 }
 
 export function getPortfolioLimit(plan: SubscriptionPlan): number {
-  return plan === "pro" ? SOFT_CAPS.portfolios.pro : SOFT_CAPS.portfolios.free;
+  return pickTierValue(SOFT_CAPS.portfolios, plan);
 }
 
 export function getManualAssetLimit(plan: SubscriptionPlan): number {
-  return plan === "pro" ? SOFT_CAPS.manualAssets.pro : SOFT_CAPS.manualAssets.free;
+  return pickTierValue(SOFT_CAPS.manualAssets, plan);
 }
 
 export function getSnapTradeConnectionLimit(plan: SubscriptionPlan): number {
-  return plan === "pro" ? SOFT_CAPS.snaptradeConnections.pro : SOFT_CAPS.snaptradeConnections.free;
+  return pickTierValue(SOFT_CAPS.snaptradeConnections, plan);
 }
 
 export function getShareLinkLimit(plan: SubscriptionPlan): number {
-  return plan === "pro" ? SOFT_CAPS.shareLinks.pro : SOFT_CAPS.shareLinks.free;
+  return pickTierValue(SOFT_CAPS.shareLinks, plan);
 }
 
 /** Free and Pro plans can connect brokers via SnapTrade. */
@@ -115,10 +116,5 @@ export function effectivePlan(plan: SubscriptionPlan, planExpiresAt: string): Su
 
 /** Maps internal plan identifiers to user-facing tier names. */
 export function planDisplayName(plan: SubscriptionPlan): string {
-  switch (plan) {
-    case "free":
-      return "Folio";
-    case "pro":
-      return "Trefolio";
-  }
+  return displayName(plan);
 }

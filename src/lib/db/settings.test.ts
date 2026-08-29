@@ -612,7 +612,9 @@ describe("settings", () => {
       expect(mockExecute).toHaveBeenCalled();
       expect(result).toHaveProperty("stripe_price_pro_monthly");
       expect(result).toHaveProperty("stripe_price_pro_annual");
-      expect(Object.keys(result)).toHaveLength(3);
+      expect(result).toHaveProperty("stripe_price_basic_monthly");
+      expect(result).toHaveProperty("stripe_price_wealth_monthly");
+      expect(Object.keys(result)).toHaveLength(9);
     });
   });
 

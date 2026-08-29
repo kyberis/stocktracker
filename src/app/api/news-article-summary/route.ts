@@ -20,6 +20,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import { json401 } from "@/lib/log-unauthorized";
 import { fetchGatewayChatCompletions, resolveGatewayApiKey } from "@/lib/ai/gateway";
 import type { SubscriptionPlan } from "@/lib/types";
+import { isPaidPlan } from "@/lib/plan-rank";
 
 export const POST = withMetrics("/api/news-article-summary", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "news_ai_summary");
@@ -36,7 +37,7 @@ export const POST = withMetrics("/api/news-article-summary", async (request: Nex
 
   const newsUser = await findUserById(session.userId);
   const plan = (newsUser?.plan || session.plan || "free") as SubscriptionPlan;
-  if (plan === "pro") {
+  if (isPaidPlan(plan)) {
     const rl = await checkAiRateLimit(session.userId, plan, session.role);
     if (!rl.allowed) {
       rateLimitHitsTotal.inc({ provider: "openai" });

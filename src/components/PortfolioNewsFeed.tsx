@@ -19,6 +19,7 @@ import {
 } from "@/lib/format-news-date";
 import { diversifyPortfolioNews } from "@/lib/portfolio-news-rank";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 type FeedStatus = "idle" | "loading" | "done" | "error" | "quota";
 
@@ -497,7 +498,7 @@ function NewsSummarizeControl({
   const { t } = useI18n();
   const { user } = useAuth();
   const commerceEnabled = useCommerceEnabled();
-  const isPro = user?.plan === "pro" || user?.role === "admin";
+  const isPro = isPaidPlan(planOf(user)) || user?.role === "admin";
 
   const listClass =
     "inline-flex min-h-9 items-center justify-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--muted)] transition-colors hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500";

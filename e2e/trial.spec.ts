@@ -29,7 +29,7 @@ test.describe("7-Day Pro Trial", () => {
     // Verify comparison table is visible
     await expect(page.getByText("Your Pro Trial Awaits")).toBeVisible({ timeout: 10000 });
     await expect(page.getByText("Unlimited").first()).toBeVisible();
-    await expect(page.getByRole("button", { name: /Activate Trefolio Pro/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Activate Pro trial/i })).toBeVisible();
     await expect(page.getByText(/No credit card required/i)).toBeVisible();
   });
 
@@ -42,7 +42,7 @@ test.describe("7-Day Pro Trial", () => {
     await expect(page.getByText("Your Pro Trial Awaits")).toBeVisible({ timeout: 10000 });
 
     // Click activate with bad token
-    await page.getByRole("button", { name: /Activate Trefolio Pro/i }).click();
+    await page.getByRole("button", { name: /Activate Pro trial/i }).click();
     await expect(page.getByText(/Invalid or expired trial token/i)).toBeVisible({ timeout: 10000 });
   });
 
@@ -63,14 +63,14 @@ test.describe("7-Day Pro Trial", () => {
     await dismissOverlays(page);
 
     await page.goto("/trial/activate?token=e2e-flow-token-def456");
-    await expect(page.getByRole("button", { name: /Activate Trefolio Pro/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("button", { name: /Activate Pro trial/i })).toBeVisible({ timeout: 10000 });
 
     // Click activate
-    await page.getByRole("button", { name: /Activate Trefolio Pro/i }).click();
+    await page.getByRole("button", { name: /Activate Pro trial/i }).click();
 
     // Should redirect to welcome page
     await page.waitForURL("**/trial/welcome", { timeout: 15000 });
-    await expect(page.getByText("Welcome to Trefolio Pro!")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Welcome to your Pro trial")).toBeVisible({ timeout: 10000 });
 
     // Welcome page should show progress steps
     await expect(page.getByText(/Setting up your portfolio history/i)).toBeVisible();
@@ -96,7 +96,7 @@ test.describe("7-Day Pro Trial", () => {
     await dismissOverlays(page);
 
     await page.goto("/trial/activate?token=e2e-dup-token");
-    await page.getByRole("button", { name: /Activate Trefolio Pro/i }).click();
+    await page.getByRole("button", { name: /Activate Pro trial/i }).click();
     await expect(page.getByText(/Trial already activated/i)).toBeVisible({ timeout: 10000 });
   });
 
@@ -145,6 +145,6 @@ test.describe("7-Day Pro Trial", () => {
     // The expired banner should be visible
     await expect(page.getByText("Trial Ended")).toBeVisible({ timeout: 10000 });
     await expect(page.getByText(/trial has ended/i)).toBeVisible();
-    await expect(page.getByText(/Subscribe to Trefolio Pro/i).first()).toBeVisible();
+    await expect(page.getByText(/View plans/i).first()).toBeVisible();
   });
 });

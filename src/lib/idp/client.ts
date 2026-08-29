@@ -72,7 +72,7 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export interface IdpEntitlementResponse {
   sub: string;
-  plan: "free" | "pro";
+  plan: "free" | "basic" | "pro" | "wealth";
   proUntil: string | null;
   source: "stripe" | "grant" | "trial" | null;
   profile?: {
@@ -83,6 +83,7 @@ export interface IdpEntitlementResponse {
   };
   entitlements: {
     trefolio_pro: boolean;
+    trefolio_plan?: "free" | "basic" | "pro" | "wealth";
     clara_daily_limit: number;
     will_daily_limit: number;
   };
@@ -133,7 +134,9 @@ export interface ImportUserPayload {
   googleId?: string;
   appleId?: string;
   emailVerified?: boolean;
-  plan?: "free" | "pro";
+  plan?: "free" | "basic" | "pro" | "wealth";
+  /** Additive 4-tier claim; IdP may ignore until it ships trefolio_plan. */
+  trefolioPlan?: "free" | "basic" | "pro" | "wealth";
   proUntil?: string;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;

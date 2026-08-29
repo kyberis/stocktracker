@@ -9,11 +9,15 @@ export const COMMERCE_COMPLIMENTARY_DAYS = 30;
 
 export type CommerceComplimentarySkipReason =
   | "commerce_enabled"
+  | "local_pro_sunset"
   | "user_not_found"
   | "stripe_managed"
   | "permanent_pro"
   | "not_expired"
   | "not_candidate";
+
+/** Complimentary Pro is retired; paid access is Stripe-only. */
+export const LOCAL_PRO_SUNSET_ACTIVE = true;
 
 export function isCommerceComplimentaryCandidate(
   user: Pick<DbUser, "commerce_complimentary_at" | "stripe_subscription_id">,
@@ -70,6 +74,9 @@ export async function syncCommerceComplimentaryToIdp(
 export async function grantCommerceComplimentaryPro(
   userId: string,
 ): Promise<{ granted: true; planExpiresAt: string } | { granted: false; reason: CommerceComplimentarySkipReason }> {
+  if (LOCAL_PRO_SUNSET_ACTIVE) {
+    return { granted: false, reason: "local_pro_sunset" };
+  }
   if (await isCommerceEnabled()) {
     return { granted: false, reason: "commerce_enabled" };
   }
@@ -97,6 +104,9 @@ export async function grantCommerceComplimentaryPro(
 export async function renewCommerceComplimentaryPro(
   userId: string,
 ): Promise<{ renewed: true; planExpiresAt: string } | { renewed: false; reason: CommerceComplimentarySkipReason }> {
+  if (LOCAL_PRO_SUNSET_ACTIVE) {
+    return { renewed: false, reason: "local_pro_sunset" };
+  }
   if (await isCommerceEnabled()) {
     return { renewed: false, reason: "commerce_enabled" };
   }

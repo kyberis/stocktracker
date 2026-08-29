@@ -2,6 +2,8 @@ import { isIdpEnabled } from "@/lib/idp/config";
 import { importUser } from "@/lib/idp/client";
 import type { DbUser } from "@/lib/db/helpers";
 import { effectivePlan } from "@/lib/subscription";
+import { idpLegacyPlan, planAtLeast } from "@/lib/plan-rank";
+import type { SubscriptionPlan } from "@/lib/types";
 
 /**
  * Push the local Warren plan cache to the IdP so session refresh does not
@@ -10,16 +12,18 @@ import { effectivePlan } from "@/lib/subscription";
 export async function syncLocalPlanToIdp(
   userId: string,
   email: string,
-  plan: "free" | "pro",
+  plan: SubscriptionPlan,
   planExpiresAt: string,
 ): Promise<void> {
   if (!isIdpEnabled() || !email.trim()) return;
 
   try {
+    const legacy = idpLegacyPlan(plan);
     const imported = await importUser({
       email: email.trim(),
-      plan,
-      proUntil: plan === "pro" ? planExpiresAt || undefined : undefined,
+      plan: legacy,
+      trefolioPlan: plan,
+      proUntil: planAtLeast(plan, "basic") ? planExpiresAt || undefined : undefined,
     });
     if (imported.sub) {
       const { linkLocalUserToIdpSub } = await import("./entitlements");
@@ -40,5 +44,5 @@ export function shouldPushLocalPlanToIdp(
 ): boolean {
   if (idpHasPro) return false;
   if (user.stripe_subscription_id.trim()) return false;
-  return effectivePlan(user.plan, user.plan_expires_at) === "pro";
+  return planAtLeast(effectivePlan(user.plan, user.plan_expires_at), "pro");
 }

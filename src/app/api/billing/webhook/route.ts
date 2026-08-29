@@ -22,6 +22,9 @@ import {
 } from "@/lib/notification-templates";
 import { isIdpEnabled } from "@/lib/idp/config";
 import { enqueueProdOpsMembershipPaidEvent } from "@/lib/prodops";
+import { getAllStripePriceConfig } from "@/lib/db/settings";
+import { planFromStripePriceId } from "@/lib/stripe-plan-prices";
+import type { SubscriptionPlan } from "@/lib/types";
 
 function stripeCustomerId(value: string | Stripe.Customer | Stripe.DeletedCustomer | null): string {
   if (!value) return "";
@@ -47,9 +50,13 @@ function periodEndIso(subscription: Stripe.Subscription): string {
   return new Date(end * 1000).toISOString();
 }
 
-/** Legacy Bifolio (starter) Stripe prices map to pro entitlements. */
-async function planFromSubscription(_subscription: Stripe.Subscription, _metadataPlan?: string): Promise<"pro"> {
-  return "pro";
+async function planFromSubscription(
+  subscription: Stripe.Subscription,
+  metadataPlan?: string,
+): Promise<SubscriptionPlan> {
+  const priceId = subscription.items?.data?.[0]?.price?.id;
+  const priceConfig = await getAllStripePriceConfig();
+  return planFromStripePriceId(priceId, priceConfig, metadataPlan);
 }
 
 /**
@@ -162,7 +169,11 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
         const customerId = stripeCustomerId(session.customer as string | Stripe.Customer | null);
         const subscriptionId =
           typeof session.subscription === "string" ? session.subscription : session.subscription?.id || "";
-        const checkoutPlan = "pro" as const;
+        const checkoutPlan = planFromStripePriceId(
+          undefined,
+          await getAllStripePriceConfig(),
+          session.metadata?.plan,
+        );
         if (userId) {
           const user = await findUserById(userId);
           if (user) {

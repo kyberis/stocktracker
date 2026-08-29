@@ -29,6 +29,7 @@ import type { ImportQualityReport } from "@/lib/import-quality";
 import type { BrokerFormat } from "@/hooks/import-types";
 import { consumeSnapTradeOAuthPending } from "@/lib/snaptrade-oauth-client";
 import { parseImportEntrySearch } from "@/lib/import-entry";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 type ImportMethod = "broker_csv" | "snaptrade_api" | "ai_import" | "manual";
 
@@ -144,7 +145,7 @@ export default function ImportPageContent() {
   const activePortfolioName = activePortfolioId
     ? portfolios.find((p) => p.id === activePortfolioId)?.name
     : undefined;
-  const isPro = user?.plan === "pro";
+  const isPro = isPaidPlan(planOf(user));
   const brokerSyncAllowed = canUseBrokerSync(
     user?.plan ?? "free",
     user?.planExpiresAt ?? "",
@@ -1111,7 +1112,7 @@ function SnapTradeGate({ t }: { t: (key: string) => string }) {
           href="/billing"
           className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors shadow-sm min-h-[44px]"
         >
-          {t("brokerSyncGateCta") || "Upgrade to Trefolio — from €7.99/mo"}
+          {t("brokerSyncGateCta")}
         </a>
         <p className="text-xs text-gray-400 dark:text-slate-500 mt-3">
           {t("brokerSyncGateAlt") || "or"}{" "}

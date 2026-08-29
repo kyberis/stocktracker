@@ -15,6 +15,7 @@ import { parseBody } from "@/lib/api-response";
 import { chartChatRequestSchema } from "@/lib/schemas";
 import { json401 } from "@/lib/log-unauthorized";
 import type { SubscriptionPlan } from "@/lib/types";
+import { isPaidPlan } from "@/lib/plan-rank";
 
 export const POST = withMetrics("/api/portfolio/chart-chat", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "ai_consult");
@@ -23,7 +24,7 @@ export const POST = withMetrics("/api/portfolio/chart-chat", async (request: Nex
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session?.plan || "free") as SubscriptionPlan;
-  if (plan === "pro") {
+  if (isPaidPlan(plan)) {
     const rl = await checkAiRateLimit(session.userId, plan, session.role);
     if (!rl.allowed) {
       rateLimitHitsTotal.inc({ provider: "openai" });

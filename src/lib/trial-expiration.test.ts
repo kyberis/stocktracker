@@ -47,6 +47,7 @@ function trialUser(overrides: Record<string, unknown> = {}) {
     plan: "pro" as const,
     plan_expires_at: "2020-01-01T00:00:00.000Z",
     trial_expired_notified: 0,
+    plan_before_trial: "free",
     ...overrides,
   };
 }

@@ -1121,7 +1121,7 @@ export async function sendTrialInvitationEmail(
 function membershipGrantInvitationHtml(
   displayName: string,
   locale: EmailLocale,
-  plan: "pro",
+  plan: "basic" | "pro" | "wealth",
   days: number,
   activateUrl: string,
 ): string {
@@ -1148,7 +1148,7 @@ ${emailFooter(fill(c.footer), utm("/profile", campaign), c.managePreferences, "{
 function membershipGrantPlainText(
   displayName: string,
   locale: EmailLocale,
-  plan: "pro",
+  plan: "basic" | "pro" | "wealth",
   days: number,
   activateUrl: string,
 ): string {
@@ -1183,7 +1183,7 @@ export async function sendMembershipGrantInvitationEmail(opts: {
   displayName: string;
   userId: string;
   locale: EmailLocale;
-  plan: "pro";
+  plan: "basic" | "pro" | "wealth";
   days: number;
   token: string;
   baseUrl?: string;
@@ -1314,6 +1314,45 @@ export async function sendTrialExpiredEmail(
     }
   }
 
+  return result;
+}
+
+function localProSunsetHtml(displayName: string, locale: "en" | "es", endsOn: string): string {
+  const name = displayName.trim() || (locale === "es" ? "hola" : "there");
+  if (locale === "es") {
+    return `<p>Hola ${name},</p>
+<p>Tu acceso Pro complimentary en trefolio termina el <strong>${endsOn}</strong>. Pasarás a Free. Tus datos se conservan.</p>
+<p>Esto no es una suscripción de pago: no se cobra nada. Si quieres seguir con cuotas más altas, puedes pasar a Basic o Pro cuando el comercio esté activo.</p>
+<p>Informativo, no es asesoramiento financiero. La IA puede contener errores.</p>`;
+  }
+  return `<p>Hi ${name},</p>
+<p>Your complimentary Pro access on trefolio ends on <strong>${endsOn}</strong>. You will move to Free. Your data stays.</p>
+<p>This is not a paid subscription — you will not be charged. When you want higher AI quotas, you can subscribe to Basic or Pro.</p>
+<p>Informational only — not financial advice. AI output may contain errors.</p>`;
+}
+
+export async function sendLocalProSunsetEmail(
+  email: string,
+  displayName: string,
+  endsOn: string,
+  locale: EmailLocale = "en",
+  userId?: string,
+): Promise<SendEmailResult> {
+  if (isTestEmail(email)) return { success: true };
+  const loc = locale === "es" ? "es" : "en";
+  const html = localProSunsetHtml(displayName, loc, endsOn);
+  const subject = loc === "es" ? "Tu Pro complimentary termina en 7 días" : "Your complimentary Pro ends in 7 days";
+  const result = await sendEmail({
+    to: email,
+    subject,
+    html,
+    from: TRIAL_FROM,
+    replyTo: "communications@trefolio.com",
+    userId,
+    transactional: true,
+    automationKey: "local-pro-sunset",
+  });
+  if (!result.success) console.error("Failed to send local Pro sunset email:", result.error);
   return result;
 }
 
@@ -1715,6 +1754,12 @@ export function getCodeOwnedEmailPreview(
       return {
         subject: "Your trefolio trial has ended",
         html: trialExpiredHtml("Alex", locale, 4.2),
+      };
+    }
+    case "sendLocalProSunsetEmail": {
+      return {
+        subject: "Your complimentary Pro ends in 7 days",
+        html: localProSunsetHtml("Alex", locale === "es" ? "es" : "en", "2026-09-05"),
       };
     }
     case "sendMembershipGrantInvitationEmail": {

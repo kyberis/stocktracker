@@ -18,11 +18,10 @@ const ALL_TABS: Tab[] = [
   "screener", "tax", "simulator", "planning", "score",
 ];
 
-const TIER_RANK = { free: 0, pro: 1 } as const;
+const TIER_RANK = { free: 0, basic: 1, pro: 2, wealth: 3 } as const;
 
 function computeUserRank(plan: string, role: string): number {
-  if (role === "admin") return 1;
-  if (plan === "pro") return 1;
+  if (role === "admin") return TIER_RANK.wealth;
   return TIER_RANK[plan as keyof typeof TIER_RANK] ?? 0;
 }
 

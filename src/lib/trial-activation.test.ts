@@ -36,6 +36,7 @@ const freeUser = {
   trial_token: "tok",
   trial_activated_at: "",
   trial_invited_at: "",
+  stripe_subscription_id: "",
 };
 
 beforeEach(() => {
@@ -56,6 +57,16 @@ describe("getTrialEligibilityError", () => {
 
   it("returns not_free_plan for paid users", () => {
     expect(getTrialEligibilityError({ ...freeUser, plan: "pro" } as never)).toBe("not_free_plan");
+  });
+
+  it("allows Basic users who never activated", () => {
+    expect(getTrialEligibilityError({ ...freeUser, plan: "basic" } as never)).toBeNull();
+  });
+
+  it("blocks Stripe subscribers", () => {
+    expect(
+      getTrialEligibilityError({ ...freeUser, stripe_subscription_id: "sub_1" } as never),
+    ).toBe("not_free_plan");
   });
 
   it("returns invalid_token when token mismatches", () => {
@@ -83,7 +94,7 @@ describe("activateProTrial", () => {
     });
     expect(mockClient.execute).toHaveBeenCalledWith({
       sql: expect.stringContaining("trial_activated_at"),
-      args: ["u1"],
+      args: ["free", "u1"],
     });
   });
 

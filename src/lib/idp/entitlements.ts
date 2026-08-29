@@ -7,6 +7,7 @@ import { isLocalTrialActive } from "@/lib/trial-activation";
 import { isCommerceComplimentaryActive } from "@/lib/commerce-complimentary-pro";
 import { effectivePlan } from "@/lib/subscription";
 import { shouldPushLocalPlanToIdp, syncLocalPlanToIdp } from "@/lib/idp/sync-plan";
+import { isPaidPlan, parseSubscriptionPlan } from "@/lib/plan-rank";
 
 /**
  * Bridge between the IdP entitlement payload and trefolio's local
@@ -50,7 +51,7 @@ export async function ensureLocalUserLinkedToIdp(userId: string): Promise<string
       googleId: user.google_id || undefined,
       appleId: user.apple_id || undefined,
       passwordHash: user.password_hash || undefined,
-      plan: plan === "pro" ? "pro" : "free",
+      plan: plan,
       proUntil: user.plan_expires_at || undefined,
       stripeCustomerId: user.stripe_customer_id || undefined,
       stripeSubscriptionId: user.stripe_subscription_id || undefined,
@@ -82,7 +83,11 @@ export async function syncEntitlementsForUser(userId: string): Promise<UserPlan 
     return null;
   }
 
-  const nextPlan: UserPlan = payload.entitlements.trefolio_pro ? "pro" : "free";
+  const nextPlan: UserPlan = payload.entitlements.trefolio_plan
+    ? parseSubscriptionPlan(payload.entitlements.trefolio_plan)
+    : payload.entitlements.trefolio_pro
+      ? "pro"
+      : "free";
   const nextExpiresAt = payload.proUntil ?? "";
 
   if (
@@ -97,6 +102,16 @@ export async function syncEntitlementsForUser(userId: string): Promise<UserPlan 
       await syncLocalPlanToIdp(userId, user.email, "pro", user.plan_expires_at);
     }
     return "pro";
+  }
+
+  // IdP still binary: do not collapse local Basic/Wealth grants without Stripe.
+  if (
+    !payload.entitlements.trefolio_plan &&
+    isPaidPlan(user.plan) &&
+    !user.stripe_subscription_id.trim() &&
+    nextPlan === "free"
+  ) {
+    return user.plan;
   }
 
   if (user.plan !== nextPlan || user.plan_expires_at !== nextExpiresAt) {

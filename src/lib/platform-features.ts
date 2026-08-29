@@ -1,4 +1,5 @@
 import type { SubscriptionPlan } from "@/lib/types";
+import { PLAN_RANK as SHARED_PLAN_RANK } from "@/lib/plan-rank";
 
 export type ClientPlatform = "desktop" | "mobile";
 
@@ -78,7 +79,7 @@ const FEATURES: Record<FeatureKey, FeatureConfig> = {
   "page.economic-indicators":  { platforms: DESKTOP_ONLY,  requiredPlan: "pro" },
 };
 
-const PLAN_RANK: Record<SubscriptionPlan, number> = { free: 0, pro: 1 };
+const PLAN_RANK = SHARED_PLAN_RANK;
 
 /**
  * Whether a feature is available on the given platform, regardless of subscription tier.

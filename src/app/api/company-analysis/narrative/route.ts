@@ -49,6 +49,7 @@ import {
 import { sanitizeHttpUrl } from "@/lib/company-analysis/urls";
 import { aiCallsTotal, rateLimitHitsTotal } from "@/lib/metrics";
 import type { SubscriptionPlan } from "@/lib/types";
+import { isPaidPlan } from "@/lib/plan-rank";
 
 const BodySchema = z.object({
   language: z.string().optional(),
@@ -283,7 +284,7 @@ export const POST = withMetrics("/api/company-analysis/narrative", async (reques
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session.plan || "free") as SubscriptionPlan;
-  if (plan === "pro") {
+  if (isPaidPlan(plan)) {
     const rl = await checkAiRateLimit(session.userId, plan, session.role);
     if (!rl.allowed) {
       rateLimitHitsTotal.inc({ provider: "openai" });

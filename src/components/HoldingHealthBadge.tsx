@@ -12,6 +12,7 @@ import {
   type HealthScore,
 } from "@/lib/health-score";
 import type { Holding } from "@/lib/types";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 interface Props {
   holding: Holding;
@@ -136,7 +137,7 @@ function PortalTooltip({ score, anchorRef }: { score: HealthScore; anchorRef: Re
 function HoldingHealthBadge({ holding, size = 32 }: Props) {
   const { quotes } = usePortfolio();
   const { user } = useAuth();
-  const isPro = user?.plan === "pro";
+  const isPro = isPaidPlan(planOf(user));
   const [hovering, setHovering] = useState(false);
   const badgeRef = useRef<HTMLDivElement>(null!);
 

@@ -474,7 +474,7 @@ export const adminUserActionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("setPlan"),
     userId: z.string().min(1),
-    plan: z.enum(["free", "pro"]),
+    plan: z.enum(["free", "basic", "pro", "wealth"]),
   }),
   z.object({
     action: z.literal("setPassword").optional().default("setPassword"),
@@ -488,7 +488,7 @@ export const adminUserActionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("grantMembership"),
     userId: z.string().min(1),
-    plan: z.literal("pro"),
+    plan: z.enum(["basic", "pro", "wealth"]),
     days: z.number().int().min(1).max(730),
   }),
 ]);
@@ -578,7 +578,7 @@ export const apiKeySchema = z.object({
 
 /** @deprecated Legacy checkout body — Pro checkout moved to user.trefolio.com */
 export const checkoutSchema = z.object({
-  plan: z.literal("pro").optional().default("pro"),
+  plan: z.enum(["basic", "pro", "wealth"]).optional().default("pro"),
   interval: z.enum(["monthly", "annual"]).optional().default("monthly"),
   deviceGrant: z.boolean().optional(),
 });

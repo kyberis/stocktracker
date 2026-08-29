@@ -178,6 +178,7 @@
 | `/api/cron/lifecycle-activation` | GET, POST | [`src/app/api/cron/lifecycle-activation/route.ts`](../../src/app/api/cron/lifecycle-activation/route.ts) |
 | `/api/cron/lifecycle-emails` | GET, POST | [`src/app/api/cron/lifecycle-emails/route.ts`](../../src/app/api/cron/lifecycle-emails/route.ts) |
 | `/api/cron/lifecycle-winback` | GET, POST | [`src/app/api/cron/lifecycle-winback/route.ts`](../../src/app/api/cron/lifecycle-winback/route.ts) |
+| `/api/cron/local-pro-sunset` | GET, POST | [`src/app/api/cron/local-pro-sunset/route.ts`](../../src/app/api/cron/local-pro-sunset/route.ts) |
 | `/api/cron/moat-sync` | GET, POST | [`src/app/api/cron/moat-sync/route.ts`](../../src/app/api/cron/moat-sync/route.ts) |
 | `/api/cron/portfolio-anomaly-scan` | GET, POST | [`src/app/api/cron/portfolio-anomaly-scan/route.ts`](../../src/app/api/cron/portfolio-anomaly-scan/route.ts) |
 | `/api/cron/portfolio-recommendations` | GET, POST | [`src/app/api/cron/portfolio-recommendations/route.ts`](../../src/app/api/cron/portfolio-recommendations/route.ts) |

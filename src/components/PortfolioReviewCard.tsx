@@ -6,6 +6,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { useI18n } from "@/lib/i18n";
 import { FEATURE_QUOTAS } from "@/lib/platform-config";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 type ReviewStatus = "idle" | "loading" | "streaming" | "done" | "error" | "limit-reached";
 
@@ -22,8 +23,8 @@ export default function PortfolioReviewCard() {
   const abortRef = useRef<AbortController | null>(null);
 
   const isAdmin = user?.role === "admin";
-  const plan = user?.plan === "pro" || isAdmin ? "pro" : "free";
-  const isPro = user?.plan === "pro" || isAdmin;
+  const plan = isAdmin ? "pro" : planOf(user);
+  const isPro = isPaidPlan(planOf(user)) || isAdmin;
   const reviewQuota = user?.quotas?.ai_portfolio_review;
   const limit = reviewQuota?.limit ?? FEATURE_QUOTAS.ai_portfolio_review[plan];
   const used = reviewQuota?.used ?? 0;

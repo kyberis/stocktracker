@@ -174,12 +174,12 @@ The plan shipped incrementally. **Gating** is derived from env: when `IDP_BASE_U
 - Any new auth code in trefolio after the cutover MUST go through `src/lib/idp/`. Direct password / Google / Apple routes are deprecated.
 - **Pro subscription billing** (checkout, portal, Stripe Customer Portal, subscription webhooks) lives **only** on the IdP. When `IDP_BASE_URL` / `IDP_ISSUER` are set, `resolveIdpUpgradeHref()` and `resolveBillingPortalHref()` already send users to `user.trefolio.com`; no separate feature flag is required.
 - Trefolio's [billing webhook route](../../src/app/api/billing/webhook/route.ts): when the IdP OAuth client is **not** fully configured, legacy Stripe subscription mirroring may still apply for older deployments. When **`isIdpEnabled()`** is true in production, it handles **only** `checkout.session.completed` where `metadata.deviceGrant === "true"` (Leaf hardware free-year); Pro entitlement updates come from the IdP webhook + lazy `syncEntitlementsForUser` on `/api/auth/me`.
-- The local `users.plan` column stays as a **read-through cache** of `entitlements.trefolio_pro`. The source of truth lives in the IdP.
+- The local `users.plan` column stays as a **read-through cache** of IdP entitlements (`trefolio_plan`, with `trefolio_pro` = Pro or Wealth). The source of truth lives in the IdP.
 
 ### Cross-product
 
 - Telegram linking from Clara or Will MUST call `POST /v1/telegram/link` on the IdP. Local `User.telegramUserId` columns are deprecated; an unlinked Telegram account in any app cannot bypass the unified linkage.
-- All upgrade CTAs across the three apps MUST point to `https://user.trefolio.com/upgrade?from={trefolio|clara|will}`. The IdP `/upgrade` page tailors headings and benefit order to the originating app while keeping one price and one Stripe checkout.
+- All upgrade CTAs across the three apps MUST point to `https://user.trefolio.com/upgrade?from={trefolio|clara|will}` (optional `plan` + `interval`). New subscribers use Stripe Checkout. If the user already has an active Stripe subscription, `POST /api/billing/checkout` updates that subscription (`proration_behavior: always_invoice`) instead of opening a second Checkout — unused time on the previous plan is credited on the same invoice. Downgrades go through the billing portal.
 - **Clara and Will** pull `clara_daily_limit` / `will_daily_limit` from `GET /api/v1/entitlements/:sub` (service token) on a **throttled** schedule while the user has a session, so a Stripe cancel on the IdP downgrades daily agent quotas **without** forcing a new OAuth login.
 
 ### MCP (personal access tokens)

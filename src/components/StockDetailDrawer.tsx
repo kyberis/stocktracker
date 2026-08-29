@@ -18,6 +18,7 @@ import {
 } from "@/lib/utils";
 import { getMarketStatus } from "@/lib/market-hours";
 import type { Holding, HoldingAssetType, QuoteData, CompanyOverview } from "@/lib/types";
+import { planAtLeast, planOf } from "@/lib/plan-rank";
 import { holdingDetailHref } from "@/lib/asset-detail-href";
 import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
 import OverviewSection from "./stock-row/OverviewSection";
@@ -62,7 +63,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
   const { t } = useI18n();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const canAccessPremium = user?.plan === "pro" && hasPremiumMarketData;
+  const canAccessPremium = planAtLeast(planOf(user), "pro") && hasPremiumMarketData;
   const [now, setNow] = useState(() => new Date());
   const [visible, setVisible] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

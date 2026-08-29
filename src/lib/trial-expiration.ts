@@ -8,6 +8,7 @@ import {
   isFeatureEnabled,
 } from "@/lib/db";
 import { canAccessTheme, effectivePlan } from "@/lib/subscription";
+import { parseSubscriptionPlan } from "@/lib/plan-rank";
 import { planExpiredNotification } from "@/lib/notification-templates";
 import { sendTrialExpiredEmail, getEmailLocale } from "@/lib/email";
 import { computeTrialGrowth } from "@/lib/trial-growth";
@@ -21,6 +22,7 @@ export type TrialExpirationUser = Pick<
   | "plan"
   | "plan_expires_at"
   | "trial_expired_notified"
+  | "plan_before_trial"
 >;
 
 export type ExpireTrialResult = {
@@ -48,7 +50,9 @@ export function isDueTrialExpirationCandidate(user: TrialExpirationUser): boolea
 
 export async function expireDueTrialUser(user: TrialExpirationUser): Promise<ExpireTrialResult> {
   const userId = user.id;
-  await updateUserSubscription(userId, { plan: "free", planExpiresAt: "" });
+  const restored = parseSubscriptionPlan(user.plan_before_trial);
+  const restorePlan = restored === "basic" ? "basic" : "free";
+  await updateUserSubscription(userId, { plan: restorePlan, planExpiresAt: "" });
   const settings = await getUserSettings(userId);
   if (!canAccessTheme(settings.dashboardTheme, "free")) {
     await updateUserSettings(userId, { dashboardTheme: "default" });
@@ -77,7 +81,7 @@ export async function expireDueTrialUser(user: TrialExpirationUser): Promise<Exp
 
   const locale = getEmailLocale(settings.language || "en");
   await sendTrialExpiredEmail(str(user.email), str(user.display_name), locale, userId, growthPct);
-  return { expired: true, plan: "free" };
+  return { expired: true, plan: restorePlan };
 }
 
 export async function runTrialExpirationJob(): Promise<Record<string, unknown>> {
@@ -86,7 +90,7 @@ export async function runTrialExpirationJob(): Promise<Record<string, unknown>> 
   }
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: `SELECT u.id, u.email, u.display_name, u.trial_activated_at, u.plan_expires_at
+    sql: `SELECT u.id, u.email, u.display_name, u.trial_activated_at, u.plan_expires_at, u.plan_before_trial
 FROM users u
 WHERE u.trial_activated_at != ''
   AND u.plan = 'pro'
@@ -111,6 +115,7 @@ LIMIT 50`,
         plan: "pro",
         plan_expires_at: str(row.plan_expires_at),
         trial_expired_notified: 0,
+        plan_before_trial: str(row.plan_before_trial),
       });
       expired++;
     } catch (err) {

@@ -13,6 +13,7 @@ import {
 import { withMetrics } from "@/lib/with-metrics";
 import { deviceApiCalls } from "@/lib/metrics";
 import { SOFT_CAPS } from "@/lib/platform-config";
+import { parseSubscriptionPlan, planAtLeast, isPaidPlan, pickTierValue } from "@/lib/plan-rank";
 import { json401 } from "@/lib/log-unauthorized";
 
 const AVAILABLE_TEMPLATES = [
@@ -58,24 +59,26 @@ export const GET = withMetrics("/api/device/config", async (req: NextRequest) =>
     if (portfolio) portfolioName = portfolio.name;
   }
 
-  const isPro = user.plan === "pro";
+  const plan = parseSubscriptionPlan(user.plan);
+  const proPlus = planAtLeast(plan, "pro");
+  const paid = isPaidPlan(plan);
   const templateId = user.device_template_id || "classic-dark";
 
   const freeTemplates = AVAILABLE_TEMPLATES.filter((t) => t.id === "classic-dark");
-  const proTemplates = AVAILABLE_TEMPLATES;
+  const paidTemplates = AVAILABLE_TEMPLATES;
 
   return Response.json({
-    plan: user.plan,
+    plan,
     portfolioName,
     features: {
-      aiSummary: isPro,
-      topHoldingsCount: isPro ? 10 : 5,
-      refreshIntervalSec: isPro ? 60 : 120,
-      templates: isPro ? proTemplates.map((t) => t.id) : freeTemplates.map((t) => t.id),
-      holdingsLimit: isPro ? SOFT_CAPS.holdings.pro : SOFT_CAPS.holdings.free,
+      aiSummary: proPlus,
+      topHoldingsCount: paid ? 10 : 5,
+      refreshIntervalSec: paid ? 60 : 120,
+      templates: paid ? paidTemplates.map((t) => t.id) : freeTemplates.map((t) => t.id),
+      holdingsLimit: pickTierValue(SOFT_CAPS.holdings, plan),
     },
     templateId,
-    availableTemplates: isPro ? proTemplates : freeTemplates,
+    availableTemplates: paid ? paidTemplates : freeTemplates,
     firmwareVersion: "1.0.0",
   }, {
     headers: { "Cache-Control": "private, max-age=300" },

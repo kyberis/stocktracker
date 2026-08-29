@@ -85,7 +85,7 @@ export async function getDigestEligibleUsers(
               (SELECT p.id FROM portfolios p WHERE p.user_id = u.id ORDER BY p.created_at ASC LIMIT 1)
             ) as default_portfolio_id
           FROM users u
-          WHERE (u.plan = 'pro' OR (? = 1 AND u.plan = 'free'))
+          WHERE (u.plan IN ('basic', 'pro', 'wealth') OR (? = 1 AND u.plan = 'free'))
             AND u.weekly_digest_enabled = 1
             AND u.email != ''
             AND u.email_verified = 1

@@ -11,6 +11,8 @@ import TierFeatureBadge from "./TierFeatureBadge";
 import NotificationBell from "./NotificationBell";
 import GlobalPortfolioSelector from "./GlobalPortfolioSelector";
 import { APP_NAV_SIDEBAR_ICON, getDesktopNavItems, type AppNavSidebarIconId } from "@/lib/app-nav";
+import { planAtLeast, planDisplayName, planOf } from "@/lib/plan-rank";
+import { useCommerceEnabled } from "@/lib/commerce";
 
 const ACCOUNT_LINKS = [
   { href: "/profile", labelKey: "profile" as const, icon: "settings" },
@@ -109,6 +111,7 @@ export default function SidebarNav() {
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
   const { user, logout } = useAuth();
+  const commerceEnabled = useCommerceEnabled();
   const flags = useFeatureFlags();
   const { openSettings } = usePortfolioCommand();
 
@@ -224,7 +227,13 @@ export default function SidebarNav() {
               {stealthMode ? "••••" : (user?.displayName || user?.email || "User")}
             </div>
             <div className="truncate text-xs text-[color:var(--muted)]">
-              {user?.plan === "pro" ? "Trefolio (Pro)" : "Folio (Free)"}
+              {commerceEnabled && !planAtLeast(planOf(user), "wealth") ? (
+                <Link href="/billing" className="hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline">
+                  {planDisplayName(planOf(user))} · {t("upgradeToPro")}
+                </Link>
+              ) : (
+                planDisplayName(planOf(user))
+              )}
             </div>
           </div>
           <NotificationBell />

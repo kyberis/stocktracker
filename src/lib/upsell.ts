@@ -1,5 +1,6 @@
 import type { TranslationKey } from "@/lib/i18n";
 import type { SubscriptionPlan } from "@/lib/types";
+import { nextUpgradeTarget } from "@/lib/plan-rank";
 
 export type UpsellReason = "ai_limit_reached" | "upgrade_required" | "holdings_limit_reached";
 
@@ -344,9 +345,8 @@ export function getUpsellConfig(surface: UpsellSurface): UpsellConfig {
   return UPSELL_BY_SURFACE[surface];
 }
 
-/** Paid tier is always Trefolio (pro). */
-export function getUpgradeTarget(_plan: SubscriptionPlan): "pro" {
-  return "pro";
+export function getUpgradeTarget(plan: SubscriptionPlan): SubscriptionPlan {
+  return nextUpgradeTarget(plan);
 }
 
 export function getUpsellReasonKey(reason?: UpsellReason): TranslationKey {

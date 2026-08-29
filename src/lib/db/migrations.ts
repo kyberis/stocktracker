@@ -4758,6 +4758,69 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 155,
+    description: "Four-tier plans (free/basic/pro/wealth) + trial restore and sunset columns",
+    up: async (client: Client) => {
+      for (const col of ["plan_before_trial", "plan_sunset_notified_at"] as const) {
+        try {
+          await client.execute(
+            `ALTER TABLE users ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`,
+          );
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column") && !msg.includes("already exists")) {
+            throw e;
+          }
+        }
+      }
+
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colDefs = cols.rows.map((r) => ({
+        name: str(r.name),
+        type: str(r.type),
+        notnull: Number(r.notnull),
+        dflt: r.dflt_value,
+        pk: Number(r.pk),
+      }));
+      if (!colDefs.find((c) => c.name === "plan")) return;
+
+      const columnDefs = colDefs
+        .map((c) => {
+          let def = `${c.name} ${c.type}`;
+          if (c.pk) def += " PRIMARY KEY";
+          if (c.notnull && !c.pk) def += " NOT NULL";
+          if (c.dflt != null) {
+            const d = String(c.dflt);
+            if (d.startsWith("(") || d.startsWith("'") || /^-?\d/.test(d)) {
+              def += ` DEFAULT ${d}`;
+            } else if (/\(/.test(d)) {
+              def += ` DEFAULT (${d})`;
+            } else {
+              def += ` DEFAULT '${d}'`;
+            }
+          }
+          if (c.name === "plan") def += " CHECK(plan IN ('free', 'basic', 'pro', 'wealth'))";
+          if (c.name === "role") def += " CHECK(role IN ('admin', 'user'))";
+          return def;
+        })
+        .join(", ");
+
+      const colNames = colDefs.map((c) => c.name).join(", ");
+      await client.executeMultiple(`
+        CREATE TABLE users_new (${columnDefs});
+        INSERT INTO users_new (${colNames}) SELECT ${colNames} FROM users;
+        DROP TABLE users;
+        ALTER TABLE users_new RENAME TO users;
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON users(email) WHERE email != '';
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id_unique ON users(google_id) WHERE google_id != '';
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_apple_id_unique ON users(apple_id) WHERE apple_id != '';
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_profile_slug ON users(profile_slug) WHERE profile_slug != '';
+        CREATE INDEX IF NOT EXISTS idx_users_idp_sub ON users(idp_sub) WHERE idp_sub != '';
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

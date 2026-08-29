@@ -11,7 +11,7 @@ interface UserInfo {
   id: string;
   username: string;
   role: "admin" | "user";
-  plan: "free" | "pro";
+  plan: "free" | "basic" | "pro" | "wealth";
   email: string;
   displayName: string;
   authProvider: "credentials" | "google" | "apple";
@@ -79,8 +79,10 @@ function AuthBadge({ provider }: { provider: string }) {
 }
 
 function PlanBadge({ plan }: { plan: string }) {
-  if (plan === "pro") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500">Trefolio</span>;
-  return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">Folio</span>;
+  if (plan === "wealth") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600">Wealth</span>;
+  if (plan === "pro") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500">Pro</span>;
+  if (plan === "basic") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/10 text-sky-600">Basic</span>;
+  return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">Free</span>;
 }
 
 /* ── Data table sub-components ──────────────────────────────── */
@@ -699,7 +701,7 @@ export default function AdminUserDetailPage() {
     if (res.ok && data) setData({ ...data, user: { ...data.user, role: newRole } });
   };
 
-  const handlePlanChange = async (newPlan: "free" | "pro") => {
+  const handlePlanChange = async (newPlan: "free" | "basic" | "pro" | "wealth") => {
     const res = await fetch("/api/admin/users", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, action: "setPlan", plan: newPlan }),
@@ -833,7 +835,7 @@ export default function AdminUserDetailPage() {
               ["Email", user.email || "—"],
               ["Display Name", user.displayName || "—"],
               ["Email Verified", user.emailVerified ? <span key="v" className="text-emerald-500">Yes</span> : <span key="v" className="text-gray-400">No</span>],
-              ["Plan", `${user.plan === "pro" ? "Trefolio" : "Folio"} (${user.plan})`],
+              ["Plan", user.plan],
               ["Plan Expires", user.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString() : "—"],
               ["Stripe Customer", user.stripeCustomerId ? <span key="sc" className="font-mono text-[11px]">{user.stripeCustomerId}</span> : "—"],
               ["Tax Residency", user.taxResidency || "—"],
@@ -940,9 +942,11 @@ export default function AdminUserDetailPage() {
                     <option value="admin">Role: admin</option>
                   </select>
                 )}
-                <select value={user.plan} onChange={(e) => handlePlanChange(e.target.value as "free" | "pro")} className="text-xs px-2 py-1 rounded-lg">
-                  <option value="free">Folio (free)</option>
-                  <option value="pro">Trefolio (pro)</option>
+                <select value={user.plan} onChange={(e) => handlePlanChange(e.target.value as "free" | "basic" | "pro" | "wealth")} className="text-xs px-2 py-1 rounded-lg">
+                  <option value="free">Free</option>
+                  <option value="basic">Basic</option>
+                  <option value="pro">Pro</option>
+                  <option value="wealth">Wealth · Ultra</option>
                 </select>
               </div>
               <form onSubmit={handleGrantMembership} className="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-3 space-y-2 bg-slate-50/50 dark:bg-slate-800/30">

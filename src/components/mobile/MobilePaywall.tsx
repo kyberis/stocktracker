@@ -6,6 +6,8 @@ import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import TierIcon from "@/components/TierIcon";
 import { resolveIdpUpgradeHref } from "@/lib/idp/config";
+import { PLAN_RANK, planOf } from "@/lib/plan-rank";
+import type { SubscriptionPlan } from "@/lib/types";
 import { useCommerceEnabled } from "@/lib/commerce";
 
 interface MobilePaywallProps {
@@ -13,43 +15,35 @@ interface MobilePaywallProps {
   surface?: string;
 }
 
-const BENEFITS = [
-  { icon: "📊", key: "paywallBenefit1" },
-  { icon: "🔔", key: "paywallBenefit2" },
-  { icon: "📈", key: "paywallBenefit3" },
-  { icon: "🏦", key: "paywallBenefit4" },
-  { icon: "🤖", key: "paywallBenefit5" },
-];
+type BillingPeriod = "monthly" | "annual";
 
-const BENEFIT_FALLBACK: Record<string, { en: string; es: string }> = {
-  paywallBenefit1: { en: "Unlimited holdings & portfolios", es: "Holdings y portafolios ilimitados" },
-  paywallBenefit2: { en: "Price alerts via push, email & Telegram", es: "Alertas de precio por push, email y Telegram" },
-  paywallBenefit3: { en: "Advanced metrics, growth charts & screener", es: "Métricas avanzadas, gráficos de crecimiento y screener" },
-  paywallBenefit4: { en: "Broker sync with 80+ brokerages", es: "Sincronización con 80+ brokers" },
-  paywallBenefit5: { en: "AI-powered analysis & tax reports", es: "Análisis con IA e informes fiscales" },
-};
+const PAID_PLANS: {
+  plan: Exclude<SubscriptionPlan, "free">;
+  monthly: string;
+  annual: string;
+  annualMonthly: string;
+  highlighted?: boolean;
+}[] = [
+  { plan: "basic", monthly: "€4.99", annual: "€49", annualMonthly: "€4.08" },
+  { plan: "pro", monthly: "€9.99", annual: "€89", annualMonthly: "€7.42", highlighted: true },
+  { plan: "wealth", monthly: "€24.99", annual: "€199", annualMonthly: "€16.58" },
+];
 
 export default function MobilePaywall({ onDismiss, surface }: MobilePaywallProps) {
   const commerceEnabled = useCommerceEnabled();
   const { user } = useAuth();
   const { t } = useI18n();
   const track = useTrack();
-  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkingOut, setCheckingOut] = useState("");
+  const [period, setPeriod] = useState<BillingPeriod>("monthly");
+  const currentPlan = planOf(user);
+  const isAnnual = period === "annual";
 
-  const startCheckout = useCallback(async () => {
-    setCheckingOut(true);
-    track("mobile_paywall_checkout", { plan: "pro", surface: surface ?? "unknown" });
-    window.location.href = resolveIdpUpgradeHref({ interval: "monthly" });
-  }, [track, surface]);
-
-  const getBenefitText = (key: string) => {
-    const translated = t(key as Parameters<typeof t>[0]);
-    if (translated !== key) return translated;
-    const fb = BENEFIT_FALLBACK[key];
-    return fb?.en ?? key;
-  };
-
-  void user;
+  const startCheckout = useCallback(async (plan: "basic" | "pro" | "wealth") => {
+    setCheckingOut(plan);
+    track("mobile_paywall_checkout", { plan, interval: period, surface: surface ?? "unknown" });
+    window.location.href = resolveIdpUpgradeHref({ interval: period, plan, skipLanding: true });
+  }, [track, surface, period]);
 
   if (!commerceEnabled) {
     return null;
@@ -57,7 +51,6 @@ export default function MobilePaywall({ onDismiss, surface }: MobilePaywallProps
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-emerald-950 safe-area-top">
-      {/* Close button */}
       <div className="flex justify-end px-4 pt-3">
         <button
           onClick={() => {
@@ -74,63 +67,103 @@ export default function MobilePaywall({ onDismiss, surface }: MobilePaywallProps
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-8">
-        {/* Logo + headline */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-xl shadow-emerald-500/30">
-            <svg className="w-8 h-8 text-white" viewBox="0 0 32 32">
-              <g transform="translate(16,16) rotate(45)">
-                <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="rgba(255,255,255,0.9)"/>
-                <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="rgba(255,255,255,0.7)" transform="rotate(90)"/>
-                <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="rgba(255,255,255,0.5)" transform="rotate(180)"/>
-                <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="rgba(255,255,255,0.6)" transform="rotate(270)"/>
-              </g>
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Unlock Full Power</h1>
-          <p className="text-sm text-emerald-200/70">One subscription — everything included</p>
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-white mb-2">{t("billingPageHeading")}</h1>
+          <p className="text-sm text-emerald-200/70">{t("billingPageSubtitle")}</p>
           <p className="text-xs text-emerald-100/80 mt-3 leading-relaxed max-w-sm mx-auto">
             {t("tierDifferentiatorsSummaryShort")}
           </p>
+          {PLAN_RANK[currentPlan] > PLAN_RANK.free && PLAN_RANK[currentPlan] < PLAN_RANK.wealth ? (
+            <p className="text-[11px] text-emerald-100/70 mt-2 leading-relaxed max-w-sm mx-auto">
+              {t("billingUpgradeProrationNote")}
+            </p>
+          ) : null}
         </div>
 
-        {/* Benefits */}
-        <div className="space-y-3 mb-8">
-          {BENEFITS.map((b) => (
-            <div key={b.key} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10">
-              <span className="text-lg">{b.icon}</span>
-              <span className="text-sm text-white/90">{getBenefitText(b.key)}</span>
-            </div>
-          ))}
+        <div className="flex items-center justify-center gap-3 mb-5">
+          <button
+            type="button"
+            onClick={() => setPeriod("monthly")}
+            className={`text-xs font-medium ${!isAnnual ? "text-white" : "text-white/40"}`}
+          >
+            {t("landingPricingToggleMonthly")}
+          </button>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isAnnual}
+            onClick={() => setPeriod(isAnnual ? "monthly" : "annual")}
+            className={`relative inline-flex h-6 w-10 shrink-0 items-center rounded-full ${
+              isAnnual ? "bg-emerald-500" : "bg-white/20"
+            }`}
+          >
+            <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+              isAnnual ? "translate-x-5" : "translate-x-1"
+            }`} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setPeriod("annual")}
+            className={`text-xs font-medium ${isAnnual ? "text-white" : "text-white/40"}`}
+          >
+            {t("landingPricingToggleAnnually")}
+          </button>
         </div>
 
-        {/* Trefolio */}
-        <button
-          onClick={() => startCheckout()}
-          disabled={checkingOut}
-          className="w-full p-4 rounded-2xl border-2 border-emerald-400/50 bg-emerald-500/15 text-left relative active:scale-[0.98] transition-transform disabled:opacity-60"
-        >
-          <div className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-emerald-500 text-[10px] font-bold text-white uppercase tracking-wide">
-            Most Popular
-          </div>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <TierIcon plan="pro" size={20} />
-              <span className="text-base font-bold text-white">Trefolio</span>
-            </div>
-            <div className="text-right">
-              <span className="text-lg font-bold text-white">€7.99</span>
-              <span className="text-xs text-emerald-300">/mo</span>
-            </div>
-          </div>
-          <p className="text-xs text-emerald-200/80">Unlimited everything — premium data, AI, tax reports, screener</p>
-          {checkingOut && (
-            <p className="text-xs text-emerald-300 mt-2 animate-pulse">Redirecting to checkout...</p>
-          )}
-        </button>
+        <div className="space-y-3">
+          {PAID_PLANS.filter((p) => PLAN_RANK[p.plan] > PLAN_RANK[currentPlan]).map((p) => {
+            const name = p.plan === "wealth" ? "Wealth · Ultra" : p.plan === "pro" ? "Pro" : "Basic";
+            const descKey =
+              p.plan === "wealth" ? "landingPricingWealthDesc" :
+              p.plan === "pro" ? "landingPricingProDesc" :
+              "landingPricingBasicDesc";
+            const price = isAnnual ? p.annualMonthly : p.monthly;
+            const ctaPrice = isAnnual ? `${p.annual}/yr` : `${p.monthly}/mo`;
+            return (
+              <button
+                key={p.plan}
+                onClick={() => startCheckout(p.plan)}
+                disabled={checkingOut !== ""}
+                className={`w-full p-4 rounded-2xl text-left relative active:scale-[0.98] transition-transform disabled:opacity-60 ${
+                  p.highlighted
+                    ? "border-2 border-emerald-400/50 bg-emerald-500/15"
+                    : "border border-white/15 bg-white/5"
+                }`}
+              >
+                {p.highlighted && (
+                  <div className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-emerald-500 text-[10px] font-bold text-white uppercase tracking-wide">
+                    {t("landingPricingMostPopular")}
+                  </div>
+                )}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <TierIcon
+                      plan={p.plan}
+                      size={20}
+                      className={
+                        p.plan === "wealth" ? "text-amber-300" :
+                        p.plan === "pro" ? "text-emerald-300" :
+                        "text-sky-300"
+                      }
+                    />
+                    <span className="text-base font-bold text-white">{name}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-white">{price}</span>
+                    <span className="text-xs text-emerald-300">/mo</span>
+                  </div>
+                </div>
+                <p className="text-xs text-emerald-200/80">{t(descKey)}</p>
+                <p className="text-xs font-semibold text-white mt-2">
+                  {checkingOut === p.plan ? t("billingRedirecting") : ctaPrice}
+                </p>
+              </button>
+            );
+          })}
+        </div>
 
-        {/* Trial info */}
         <p className="text-center text-xs text-white/40 mt-4">
-          7-day free trial • Cancel anytime
+          {t("landingPricingFooter")}
         </p>
       </div>
     </div>

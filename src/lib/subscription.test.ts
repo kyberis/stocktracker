@@ -154,12 +154,12 @@ describe("effectivePlan", () => {
 });
 
 describe("planDisplayName", () => {
-  it("returns Folio for free plan", () => {
-    expect(planDisplayName("free")).toBe("Folio");
+  it("returns Free for free plan", () => {
+    expect(planDisplayName("free")).toBe("Free");
   });
 
-  it("returns Trefolio for pro plan", () => {
-    expect(planDisplayName("pro")).toBe("Trefolio");
+  it("returns Pro for pro plan", () => {
+    expect(planDisplayName("pro")).toBe("Pro");
   });
 });
 

@@ -159,13 +159,11 @@ export type FeatureQuotaKey =
   | "csv_export";
 
 export interface FeatureQuotaConfig {
-  /** Free-tier monthly (or daily/yearly) cap. */
   free: number;
-  /** Pro-tier monthly (or daily/yearly) cap. */
+  basic: number;
   pro: number;
-  /** Reset window. */
+  wealth: number;
   window: QuotaWindow;
-  /** Human-readable label for UI / paywall messages. */
   label: string;
 }
 
@@ -177,47 +175,51 @@ export interface FeatureQuotaConfig {
  */
 export const FEATURE_QUOTAS: Record<FeatureQuotaKey, FeatureQuotaConfig> = {
   // ── AI features ───────────────────────────────────────────
-  ai_consult: { free: 15, pro: 500, window: "month", label: "AI consultations" },
-  ai_portfolio_review: { free: 1, pro: 15, window: "month", label: "AI portfolio reviews" },
-  ai_import: { free: 3, pro: 20, window: "day", label: "AI imports" },
-  support_chat: { free: 5, pro: 50, window: "day", label: "Support chat messages" },
-  news_ai_summary: { free: 0, pro: 200, window: "month", label: "AI news summaries" },
+  ai_consult: { free: 6, basic: 150, pro: 750, wealth: 3_000, window: "month", label: "AI consultations" },
+  ai_portfolio_review: { free: 1, basic: 2, pro: 8, wealth: 20, window: "month", label: "AI portfolio reviews" },
+  ai_import: { free: 1, basic: 5, pro: 20, wealth: 40, window: "day", label: "AI imports" },
+  support_chat: { free: 5, basic: 20, pro: 50, wealth: 100, window: "day", label: "Support chat messages" },
+  news_ai_summary: { free: 0, basic: 30, pro: 200, wealth: 400, window: "month", label: "AI news summaries" },
 
   // ── Premium market-data features ──────────────────────────
-  fundamentals: { free: 20, pro: 500, window: "month", label: "Fundamentals lookups" },
-  etf_holdings: { free: 10, pro: 200, window: "month", label: "ETF holdings lookups" },
-  intelligence: { free: 30, pro: 1_000, window: "month", label: "Stock intelligence lookups" },
-  economic_indicators: { free: 20, pro: 500, window: "month", label: "Economic indicator lookups" },
-  screener: { free: 10, pro: 200, window: "month", label: "Screener queries" },
+  fundamentals: { free: 20, basic: 80, pro: 500, wealth: 1_000, window: "month", label: "Fundamentals lookups" },
+  etf_holdings: { free: 10, basic: 40, pro: 200, wealth: 400, window: "month", label: "ETF holdings lookups" },
+  intelligence: { free: 30, basic: 100, pro: 1_000, wealth: 2_000, window: "month", label: "Stock intelligence lookups" },
+  economic_indicators: { free: 20, basic: 80, pro: 500, wealth: 1_000, window: "month", label: "Economic indicator lookups" },
+  screener: { free: 10, basic: 40, pro: 200, wealth: 400, window: "month", label: "Screener queries" },
   investment_screening: {
-    free: 3,
-    pro: 3,
-    window: "week",
+    free: 0,
+    basic: 0,
+    pro: 2,
+    wealth: 12,
+    window: "month",
     label: "Investment screenings",
   },
   real_estate_screening: {
-    free: 2,
-    pro: 10,
+    free: 0,
+    basic: 2,
+    pro: 8,
+    wealth: 16,
     window: "week",
     label: "Real-estate zone screenings",
   },
-  stock_evaluation: { free: 15, pro: 300, window: "month", label: "Stock evaluations" },
-  company_analysis: { free: 5, pro: 200, window: "month", label: "Company analysis reports" },
-  crypto_pro: { free: 50, pro: 1_000, window: "month", label: "Crypto premium lookups" },
-  tax_report: { free: 1, pro: 12, window: "year", label: "Tax reports" },
-  portfolio_score: { free: 2, pro: 20, window: "month", label: "Portfolio scores" },
-  csv_export: { free: 3, pro: 100, window: "month", label: "Portfolio exports" },
+  stock_evaluation: { free: 15, basic: 60, pro: 300, wealth: 600, window: "month", label: "Stock evaluations" },
+  company_analysis: { free: 5, basic: 20, pro: 200, wealth: 400, window: "month", label: "Company analysis reports" },
+  crypto_pro: { free: 50, basic: 200, pro: 1_000, wealth: 2_000, window: "month", label: "Crypto premium lookups" },
+  tax_report: { free: 1, basic: 4, pro: 12, wealth: 24, window: "year", label: "Tax reports" },
+  portfolio_score: { free: 2, basic: 8, pro: 20, wealth: 40, window: "month", label: "Portfolio scores" },
+  csv_export: { free: 3, basic: 20, pro: 100, wealth: 200, window: "month", label: "Portfolio exports" },
 };
 
 /**
  * Soft caps for storage-heavy entities. These are NOT cost-bearing API quotas;
- * they prevent storage abuse on the Free tier. Free is intentionally generous.
+ * they prevent storage abuse on the Free tier.
  */
 export const SOFT_CAPS = {
-  holdings: { free: 100, pro: 5_000 },
-  portfolios: { free: 1, pro: 1 },
-  alerts: { free: 25, pro: 500 },
-  manualAssets: { free: 10, pro: 500 },
-  snaptradeConnections: { free: 1, pro: 20 },
-  shareLinks: { free: 1, pro: 50 },
+  holdings: { free: 100, basic: 500, pro: 5_000, wealth: 5_000 },
+  portfolios: { free: 1, basic: 1, pro: 1, wealth: 3 },
+  alerts: { free: 25, basic: 100, pro: 500, wealth: 500 },
+  manualAssets: { free: 10, basic: 50, pro: 500, wealth: 500 },
+  snaptradeConnections: { free: 1, basic: 3, pro: 20, wealth: 20 },
+  shareLinks: { free: 1, basic: 5, pro: 50, wealth: 50 },
 } as const;

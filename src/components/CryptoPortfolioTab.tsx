@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { useStealthMode } from "@/lib/stealth-context";
 import { formatCurrency, formatPercent, formatStealthCurrency, convertToEUR, convertCurrency } from "@/lib/utils";
 import type { Holding, QuoteData, ExchangeRates } from "@/lib/types";
+import { isPaidPlan, planOf } from "@/lib/plan-rank";
 
 const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
@@ -64,7 +65,7 @@ export default function CryptoPortfolioTab({ holdings: allHoldings }: Props) {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const isPro = user?.plan === "pro";
+  const isPro = isPaidPlan(planOf(user));
   const cryptoHoldings = useMemo(
     () => allHoldings.filter((h) => h.assetType === "crypto"),
     [allHoldings]

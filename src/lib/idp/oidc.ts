@@ -194,6 +194,7 @@ export interface VerifiedIdToken {
   pro_until?: string;
   entitlements: {
     trefolio_pro: boolean;
+    trefolio_plan?: "free" | "basic" | "pro" | "wealth";
     clara_daily_limit: number;
     will_daily_limit: number;
   };
@@ -232,6 +233,7 @@ export async function verifyIdToken(token: string, expectedNonce?: string): Prom
     pro_until: raw.pro_until as string | undefined,
     entitlements: {
       trefolio_pro: Boolean(ents.trefolio_pro),
+      trefolio_plan: ents.trefolio_plan,
       clara_daily_limit: Number(ents.clara_daily_limit) || 30,
       will_daily_limit: Number(ents.will_daily_limit) || 30,
     },

@@ -23,6 +23,7 @@ import { explainMatrixCellBreakdown, MATRIX_CELL_EXPLAIN_DISCLAIMER } from "@/li
 import { buildDeterministicMatrixCellNarrative } from "@/lib/matrix-cell-breakdown";
 import type { MatrixCellBreakdown } from "@/lib/matrix-cell-breakdown";
 import type { SubscriptionPlan } from "@/lib/types";
+import { isPaidPlan } from "@/lib/plan-rank";
 
 export const POST = withMetrics("/api/portfolio/matrix-cell-explain", async (request: NextRequest) => {
   const { session, error } = await requireFeatureQuota(request, "ai_consult");
@@ -31,7 +32,7 @@ export const POST = withMetrics("/api/portfolio/matrix-cell-explain", async (req
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session?.plan || "free") as SubscriptionPlan;
-  if (plan === "pro") {
+  if (isPaidPlan(plan)) {
     const rl = await checkAiRateLimit(session.userId, plan, session.role);
     if (!rl.allowed) {
       rateLimitHitsTotal.inc({ provider: "openai" });

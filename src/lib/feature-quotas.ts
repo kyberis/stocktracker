@@ -73,7 +73,7 @@ export function nextResetAt(window: QuotaWindow, now: Date = new Date()): string
 
 export function getQuotaLimit(feature: FeatureQuotaKey, plan: SubscriptionPlan): number {
   const cfg = FEATURE_QUOTAS[feature];
-  return plan === "pro" ? cfg.pro : cfg.free;
+  return cfg[plan] ?? cfg.free;
 }
 
 export function getQuotaConfig(feature: FeatureQuotaKey): FeatureQuotaConfig {

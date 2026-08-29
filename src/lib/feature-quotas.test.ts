@@ -41,10 +41,10 @@ describe("feature-quotas", () => {
       expect(reset).toBe("2026-08-10T00:00:00.000Z");
     });
 
-    it("enforces investment_screening weekly limit of 3", async () => {
-      const windowKey = currentWindowKey("week");
+    it("blocks Free investment_screening (quota 0)", async () => {
+      const windowKey = currentWindowKey("month");
       mockExecute.mockResolvedValueOnce({
-        rows: [{ call_count: 3, window_start: windowKey }],
+        rows: [{ call_count: 0, window_start: windowKey }],
       });
 
       const result = await checkAndIncrementFeatureQuota(
@@ -54,9 +54,9 @@ describe("feature-quotas", () => {
       );
 
       expect(result.allowed).toBe(false);
-      expect(result.limit).toBe(3);
-      expect(FEATURE_QUOTAS.investment_screening.window).toBe("week");
-      expect(FEATURE_QUOTAS.investment_screening.pro).toBe(3);
+      expect(result.limit).toBe(0);
+      expect(FEATURE_QUOTAS.investment_screening.window).toBe("month");
+      expect(FEATURE_QUOTAS.investment_screening.wealth).toBe(12);
     });
   });
 

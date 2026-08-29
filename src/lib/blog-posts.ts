@@ -23,7 +23,7 @@ registerPost({
 <h2>The Contenders</h2>
 
 <h3>1. trefolio</h3>
-<p><strong>Price:</strong> Folio (free, 100 holdings) / Trefolio at €7.99/month</p>
+<p><strong>Price:</strong> Free / Basic (€4.99) / Pro (€9.99) / Wealth · Ultra (€24.99) per month</p>
 <p><strong>Best for:</strong> European investors who want one-click broker imports and AI analysis</p>
 <p>trefolio is a web-based tracker built specifically for European investors. It supports direct CSV imports from DEGIRO, Interactive Brokers, Trading 212, and Revolut — the four most popular brokers in Europe. The Folio tier includes real-time quotes, charts, and basic AI analysis. Trefolio unlocks unlimited holdings, company fundamentals, news sentiment, and unlimited AI calls.</p>
 <p>Strengths: native European broker imports, 35 languages, multi-currency (EUR, USD, GBP, DKK, CAD), clean UI, AI-powered portfolio review. Available as a PWA with an iOS home screen widget.</p>

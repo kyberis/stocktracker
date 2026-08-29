@@ -3,7 +3,7 @@
 > Pricing section on landing + `/pricing` standalone page.
 
 ## 1. Summary
-Visual pricing cards, two tiers (Free "Folio" / Trefolio Pro), including monthly/annual toggle. Hidden entirely when the `commerce_enabled` flag is off.
+Visual pricing cards for Free / Basic / Pro / Wealth · Ultra, including monthly/annual toggle. Hidden entirely when the `commerce_enabled` flag is off. See [subscription-tiers-v3](subscription-tiers-v3.md).
 
 ## 2. Status
 - **Tier:** public

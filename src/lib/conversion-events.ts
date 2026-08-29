@@ -7,7 +7,7 @@ export const CANONICAL_CONVERSION_EVENTS = [
 export type CanonicalConversionEvent = (typeof CANONICAL_CONVERSION_EVENTS)[number];
 
 export type CanonicalConversionPayload = Partial<{
-  plan: "pro";
+  plan: "free" | "basic" | "pro" | "wealth";
   interval: "monthly" | "annual";
   method: "credentials" | "google" | "apple";
   source: string;

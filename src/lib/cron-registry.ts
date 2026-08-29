@@ -93,6 +93,13 @@ export const CRON_REGISTRY: CronJob[] = [
       "Daily backup: downgrade expired trial users and send expiration email (primary path is check-on-login)",
   },
   {
+    name: "local-pro-sunset",
+    path: "/api/cron/local-pro-sunset",
+    schedule: "0 10 * * *",
+    description:
+      "Persist Free/Basic restore for expired local (non-Stripe) Pro windows after complimentary sunset",
+  },
+  {
     name: "commerce-complimentary-renewal",
     path: "/api/cron/commerce-complimentary-renewal",
     schedule: "0 2 * * *",
