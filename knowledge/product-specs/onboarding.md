@@ -4,7 +4,7 @@
 
 ## 1. Summary
 
-Collects name, preferred currency, experience level, tax residency, use case, and referral source. Optionally offers a 7-day Pro trial, then an optional Clara SSO activation (same IdP account). Completing the wizard marks onboarding done and shows the import chooser.
+Collects name, preferred currency, experience level, tax residency, use case, and referral source. Optionally offers a 7-day Pro trial, then an optional Clara activation (same IdP account, provisioned in-place). Completing the wizard marks onboarding done and shows the import chooser.
 
 ## 2. Status
 
@@ -20,8 +20,9 @@ Collects name, preferred currency, experience level, tax residency, use case, an
 | Page | [`src/app/onboarding/page.tsx`](../../src/app/onboarding/page.tsx) | Wizard + import chooser. |
 | API | [`POST /api/auth/onboarding`](../../src/app/api/auth/onboarding/route.ts) | Persist profile, optional trial, Clara outcome. |
 | API | [`POST /api/auth/onboarding/trial-shown`](../../src/app/api/auth/onboarding/trial-shown/route.ts) | Trial offer impression. |
-| API | [`GET /api/clara/status`](../../src/app/api/clara/status/route.ts) | Poll Clara link while the Clara step is visible. |
-| Lib | [`src/lib/onboarding-clara-step.ts`](../../src/lib/onboarding-clara-step.ts) | Step indices + poll helpers. |
+| API | [`GET /api/clara/status`](../../src/app/api/clara/status/route.ts) | One-shot link check when the Clara step mounts. |
+| API | [`POST /api/clara/activate`](../../src/app/api/clara/activate/route.ts) | In-place Clara provision via Clara `ensure-user`. |
+| Lib | [`src/lib/onboarding-clara-step.ts`](../../src/lib/onboarding-clara-step.ts) | Step indices + activate helpers. |
 | DB | [`src/lib/db/users.ts`](../../src/lib/db/users.ts) | `completeOnboarding`. |
 
 ## 4. Data model
@@ -37,7 +38,8 @@ Collects name, preferred currency, experience level, tax residency, use case, an
 |--------|-------|------|------|-------------|
 | POST | `/api/auth/onboarding` | session | Free | Completes wizard. Optional `activateTrial`, `claraActivation` (`linked` \| `skipped`). |
 | POST | `/api/auth/onboarding/trial-shown` | session | Free | Marks trial offer shown. |
-| GET | `/api/clara/status` | session | Free | `{ linked }` used for Clara-step polling. |
+| GET | `/api/clara/status` | session | Free | `{ linked }` — one-shot check if already linked. |
+| POST | `/api/clara/activate` | session | Free | Provisions Clara via S2S `ensure-user`; `{ linked, created? }`. |
 | POST | `/api/analytics/track` | session | Free | `onboarding_clara_step_viewed`, `onboarding_clara_activate_clicked`. |
 
 Input: [`onboardingSchema`](../../src/lib/schemas.ts).
@@ -46,12 +48,12 @@ Input: [`onboardingSchema`](../../src/lib/schemas.ts).
 
 - Page: `/onboarding` (5 wizard steps + import phase).
 - Steps: profile → use case → referral → Pro trial (if flags) → **Clara activate (optional)**.
-- Clara step: avatar, value bullets, Activate (opens `getClaraLoginUrl()` in a new tab), Not now. Polls `/api/clara/status` every 2s; on `linked` shows success and auto-advances.
+- Clara step: avatar, value bullets, Activate (`POST /api/clara/activate` in-place — no new tab), Not now. One-shot `/api/clara/status` on mount if already linked; on success shows linked and auto-advances.
 - Import chooser after POST succeeds (unchanged).
 
 ## 7. Business logic
 
-- Clara account creation remains **lazy SSO** (Clara upserts local `User` on first OIDC sign-in). Trefolio does **not** provision Clara at IdP signup or in the OIDC callback.
+- Clara account creation is **S2S ensure-user** on Activate (same IdP `sub` / email). Trefolio does **not** auto-provision Clara at IdP signup. Clara terms and Clara’s own onboarding still gate the first visit to Clara `/app`.
 - Skip Clara still completes onboarding. Home money desk keeps the create-account CTA.
 - Hidden trial (flags off or already activated) auto-advances from step 3 to the Clara step.
 - Trial choice is remembered until the Clara step POSTs `/api/auth/onboarding`.
@@ -61,8 +63,8 @@ Pure helpers: [`src/lib/onboarding-clara-step.ts`](../../src/lib/onboarding-clar
 
 ## 8. External dependencies
 
-- Clara public origin: `NEXT_PUBLIC_CLARA_URL` (browser) / `CLARA_BASE_URL` (server status probe).
-- IdP SSO on clara.trefolio.com — same `sub` as trefolio.
+- Clara public origin: `NEXT_PUBLIC_CLARA_URL` (browser chat later) / `CLARA_BASE_URL` (server ensure-user + status).
+- Shared IdP `sub` with Clara.
 
 ## 9. Currency / FX / tax implications
 
@@ -75,7 +77,7 @@ Pure helpers: [`src/lib/onboarding-clara-step.ts`](../../src/lib/onboarding-clar
 ## 11. Permissions / tier gating / rate limits
 
 - Authenticated users with `onboarding_completed = 0`. Middleware redirects them to `/onboarding`.
-- Clara step is Free (same as [clara-home-cta](clara-home-cta.md)). Clara message quotas apply on Clara after SSO.
+- Clara step is Free (same as [clara-home-cta](clara-home-cta.md)). Clara message quotas apply on Clara after the account exists.
 
 ## 12. Telemetry
 
@@ -100,7 +102,7 @@ Admin funnel stages include the four Clara events.
 
 ## 14. Tests
 
-- Unit: [`src/lib/onboarding-clara-step.test.ts`](../../src/lib/onboarding-clara-step.test.ts), [`src/lib/onboarding-import-phase.test.ts`](../../src/lib/onboarding-import-phase.test.ts).
+- Unit: [`src/lib/onboarding-clara-step.test.ts`](../../src/lib/onboarding-clara-step.test.ts), [`src/lib/onboarding-import-phase.test.ts`](../../src/lib/onboarding-import-phase.test.ts), [`src/app/api/clara/activate/route.test.ts`](../../src/app/api/clara/activate/route.test.ts).
 - E2E: existing signup flows complete onboarding via `POST /api/auth/onboarding` (Clara field optional).
 - Manual: activate + linked → money desk linked; skip → Home create-account CTA; demo `/demo` unchanged.
 

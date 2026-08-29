@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.267: Guard against Warren deleting holdings when user asked to record a sale — not landing-worthy"
+  "notes": "2.5.270: Clara in-app activate is onboarding/home CTA UX only — not a top-level landing capability"
 }

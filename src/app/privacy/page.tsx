@@ -447,8 +447,8 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Clara (clara.trefolio.com)</td>
-                    <td className="py-3 pr-6">Optional savings snapshot and in-chat Clara replies when Clover or Warren consults your linked Clara account (same trefolio login)</td>
-                    <td className="py-3 pr-6">Server-to-server request with your IdP subject identifier and the question you asked Clover/Warren; returns aggregated savings amounts or Clara’s text reply. No new account data is stored on trefolio beyond the chat you already see</td>
+                    <td className="py-3 pr-6">Optional Clara account activation from onboarding or the home Clara CTA; savings snapshot and in-chat Clara replies when Clover or Warren consults your linked Clara account (same trefolio login)</td>
+                    <td className="py-3 pr-6">On Activate: server-to-server provision of a Clara user with your IdP subject, email, and optional display name (Clara terms and onboarding still apply on first visit to Clara). On consult: IdP subject and the question you asked Clover/Warren; returns aggregated savings amounts or Clara’s text reply. No new account data is stored on trefolio beyond the chat you already see</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Will (will.trefolio.com)</td>

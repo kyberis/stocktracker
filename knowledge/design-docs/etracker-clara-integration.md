@@ -62,6 +62,8 @@ const res = await fetch(`${base}/api/agents/...`, { method: "POST", body: JSON.s
 
 Server-side only. Never leak `CLARA_BASE_URL` to the client.
 
+**In-app Clara activate (onboarding / home CTA):** `POST {CLARA_BASE_URL}/api/internal/office/ensure-user` with `Authorization: Bearer ${IDP_SERVICE_TOKEN}` and body `{ sub, email, name?, trefolioUserId? }`. Idempotent upsert of Clara `User` by IdP `sub`. Does not stamp Clara terms or Clara onboarding — those still gate first `/app` visit. Trefolio wraps this as `POST /api/clara/activate`.
+
 ### Reading Clara as context (for agents)
 
 - Free to read `external/etracker/**`.
