@@ -94,9 +94,10 @@ export function applyTransactionAutoFixes(
       for (const i of indices) {
         const before = { currency: txs[i].currency, pricePerShare: txs[i].pricePerShare };
         const cur = normalizeCurrency(txs[i].currency);
-        if (cur === "GBP" || cur === "EUR") {
+        // Only GBP/GBX family — never rewrite EUR/USD costs against pence quotes.
+        if (cur === "GBP" || cur === "GBX" || cur === "GBp") {
           txs[i].currency = "GBX";
-          if (txs[i].pricePerShare < 50) {
+          if (txs[i].pricePerShare > 0 && txs[i].pricePerShare < 50) {
             txs[i].pricePerShare = txs[i].pricePerShare * 100;
             txs[i].totalAmount = txs[i].shares * txs[i].pricePerShare;
           }
@@ -189,7 +190,13 @@ export function planHoldingAutoFixes(
       before.displayCurrency = h.displayCurrency;
       before.purchasePrice = h.purchasePrice;
       updates.displayCurrency = "GBX";
-      if (normalizeCurrency(h.displayCurrency) === "GBP" && h.purchasePrice < 50) {
+      const cur = normalizeCurrency(h.displayCurrency);
+      // Pounds stored as GBP, or pounds mislabeled as GBX (price still in £ range).
+      if (
+        (cur === "GBP" || cur === "GBX" || cur === "GBp") &&
+        h.purchasePrice > 0 &&
+        h.purchasePrice < 50
+      ) {
         updates.purchasePrice = h.purchasePrice * 100;
       }
       f.fixed = true;

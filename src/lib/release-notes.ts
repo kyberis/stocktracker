@@ -45,6 +45,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Al subir de Basic a Pro o Wealth se actualiza la suscripción de Stripe existente: se cobra el precio nuevo por el resto del periodo y el tiempo no usado del plan anterior se acredita en la misma factura.",
         },
       },
+      {
+        type: "fix",
+        text: "LSE GBX/GBP unit detection no longer flags EUR (or other non-sterling) cost bases against pence quotes, and normalize_gbx only rewrites GBP/GBX prices.",
+        translations: {
+          es: "La detección de unidades GBX/GBP en LSE ya no marca costes en EUR (u otras divisas) frente a cotizaciones en peniques, y normalize_gbx solo reescribe precios GBP/GBX.",
+        },
+      },
     ],
   },
   {

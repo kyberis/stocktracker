@@ -169,13 +169,14 @@ export function auditImportBatch(args: {
       });
     }
 
-    // GBX / GBP 100× unit errors on LSE-style names
+    // GBX / GBP 100× unit errors on LSE-style names (never EUR/USD vs pence)
     const ratio = priceRatio(tx.pricePerShare, quote.price);
     if (
       ratio != null &&
       ratio >= MAGNITUDE_RATIO_MIN &&
       ratio <= MAGNITUDE_RATIO_MAX &&
-      (txCur === "GBP" || quoteCur === "GBX" || /\.L$/i.test(tx.ticker))
+      (txCur === "GBP" || txCur === "GBX") &&
+      (quoteCur === "GBX" || quoteCur === "GBP" || /\.L$/i.test(tx.ticker))
     ) {
       push({
         id: findingId("unit_magnitude", tx.ticker),
@@ -365,12 +366,19 @@ export function auditHolding(
     }
   }
 
+  // Only compare raw prices for GBX/GBP unit bugs — never EUR/USD vs pence quotes
+  // (that produces false ~100× hits like Unilever €54 vs 4776 GBX).
   const ratio = priceRatio(h.purchasePrice, quote.price);
+  const gbxFamily =
+    cur === "GBP" ||
+    cur === "GBX" ||
+    (isLse && (cur === "" || cur === "GBp"));
   if (
     ratio != null &&
     ratio >= MAGNITUDE_RATIO_MIN &&
     ratio <= MAGNITUDE_RATIO_MAX &&
-    (cur === "GBP" || quoteCur === "GBX" || isLse)
+    gbxFamily &&
+    (quoteCur === "GBX" || quoteCur === "GBP" || isLse)
   ) {
     findings.push({
       id: findingId("unit_magnitude", h.ticker),
@@ -382,6 +390,7 @@ export function auditHolding(
         purchasePrice: h.purchasePrice,
         quotePrice: quote.price,
         ratio,
+        displayCurrency: cur,
       },
       autoFixable: true,
       fixAction: "normalize_gbx",

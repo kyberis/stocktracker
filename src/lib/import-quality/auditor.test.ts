@@ -156,6 +156,27 @@ describe("auditImportBatch", () => {
     expect(mismatch?.fixAction).toBe("align_display_currency");
   });
 
+  it("does not flag EUR LSE cost vs GBX quote as unit_magnitude", () => {
+    const findings = auditImportBatch({
+      transactions: [],
+      holdings: [
+        {
+          id: "h-ulvr",
+          ticker: "ULVR.L",
+          shares: 4,
+          purchasePrice: 54.59,
+          displayCurrency: "EUR",
+          exchange: "LSE",
+          valueInEUR: 223,
+        },
+      ],
+      quotes: { "ULVR.L": { price: 4776, currency: "GBX" } },
+      exchangeRates: { EURGBP: 0.86 },
+    });
+    const unit = findings.find((f) => f.code === "unit_magnitude" && f.severity === "error");
+    expect(unit).toBeUndefined();
+  });
+
   it("does not rewrite cost basis without confirm (recent trade stays unfixed)", () => {
     const findings = auditImportBatch({
       transactions: [
