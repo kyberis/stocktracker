@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.266: Bugfix for Warren sale recording — not a new landing capability"
+  "notes": "2.5.267: Guard against Warren deleting holdings when user asked to record a sale — not landing-worthy"
 }
