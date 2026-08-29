@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "Onboarding and the Clara home CTA create your Clara space in place (same login) instead of opening clara.trefolio.com in another tab. Chat still opens on Clara when you are ready; Clara terms apply on first visit there.",
         translations: {
           es: "El onboarding y el CTA de Clara en Home crean tu espacio Clara en esta pantalla (mismo inicio de sesión) en lugar de abrir clara.trefolio.com en otra pestaña. El chat sigue abriéndose en Clara cuando quieras; los términos de Clara aplican en la primera visita allí.",
