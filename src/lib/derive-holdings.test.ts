@@ -8,7 +8,7 @@ function tx(partial: Partial<Transaction>): Transaction {
     holdingId: partial.holdingId || "",
     ticker: partial.ticker || "AAPL",
     name: partial.name || "Apple",
-    exchange: partial.exchange || "NASDAQ",
+    exchange: partial.exchange ?? "NASDAQ",
     isin: partial.isin || "",
     assetType: partial.assetType || "stock",
     accountId: partial.accountId || "",
@@ -95,5 +95,97 @@ describe("deriveHoldingsFromTransactions", () => {
     expect(holdings).toHaveLength(1);
     expect(holdings[0].shares).toBe(102);
     expect(holdings[0].exchange).toBe("OMK");
+  });
+
+  it("merges NAS and NASDAQ sells into the same lot (SnapTrade venue alias)", () => {
+    const holdings = deriveHoldingsFromTransactions(
+      [
+        tx({
+          id: "1",
+          ticker: "HOOD",
+          exchange: "NASDAQ",
+          shares: 55,
+          totalAmount: 2314.4,
+          pricePerShare: 42.08,
+          date: "2025-03-20",
+        }),
+        tx({
+          id: "2",
+          ticker: "HOOD",
+          type: "sell",
+          exchange: "NAS",
+          shares: 25,
+          totalAmount: 2700,
+          pricePerShare: 108,
+          date: "2025-11-21",
+          createdAt: "2026-08-24T19:26:57.000Z",
+        }),
+        tx({
+          id: "3",
+          ticker: "HOOD",
+          type: "sell",
+          exchange: "NASDAQ",
+          shares: 30,
+          totalAmount: 3240,
+          pricePerShare: 108,
+          date: "2025-11-21",
+          createdAt: "2026-08-24T19:26:59.000Z",
+        }),
+      ],
+      new Map()
+    );
+    expect(holdings).toHaveLength(0);
+  });
+
+  it("folds blank-exchange sells into an existing venue lot", () => {
+    const holdings = deriveHoldingsFromTransactions(
+      [
+        tx({
+          id: "1",
+          ticker: "NOW",
+          exchange: "NYSE",
+          shares: 15,
+          totalAmount: 1500,
+          date: "2025-01-15",
+        }),
+        tx({
+          id: "2",
+          ticker: "NOW",
+          type: "sell",
+          exchange: "",
+          shares: 15,
+          totalAmount: 2000,
+          date: "2026-08-28",
+        }),
+      ],
+      new Map()
+    );
+    expect(holdings).toHaveLength(0);
+  });
+
+  it("nets to zero when a backdated sell precedes later buys", () => {
+    const holdings = deriveHoldingsFromTransactions(
+      [
+        tx({
+          id: "warren-sell",
+          ticker: "NOW",
+          type: "sell",
+          exchange: "",
+          shares: 15,
+          totalAmount: 2000,
+          date: "2023-10-05",
+        }),
+        tx({
+          id: "buy",
+          ticker: "NOW",
+          exchange: "NYSE",
+          shares: 15,
+          totalAmount: 1500,
+          date: "2026-07-20",
+        }),
+      ],
+      new Map()
+    );
+    expect(holdings).toHaveLength(0);
   });
 });

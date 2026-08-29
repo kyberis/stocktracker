@@ -291,6 +291,14 @@ describe("normalizeTickerForExchange", () => {
     expect(canonicalExchangeCode("")).toBe("");
   });
 
+  it("canonicalExchangeCode collapses NAS / XNAS / NMS onto NASDAQ", () => {
+    expect(canonicalExchangeCode("NAS")).toBe("NASDAQ");
+    expect(canonicalExchangeCode("XNAS")).toBe("NASDAQ");
+    expect(canonicalExchangeCode("NMS")).toBe("NASDAQ");
+    expect(canonicalExchangeCode("NDQ")).toBe("NASDAQ");
+    expect(exchangesEquivalent("NAS", "NASDAQ")).toBe(true);
+  });
+
   it("exchangesEquivalent treats CPH and OMK as the same venue", () => {
     expect(exchangesEquivalent("CPH", "OMK")).toBe(true);
     expect(exchangesEquivalent("CPH", "")).toBe(true);

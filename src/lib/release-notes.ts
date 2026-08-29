@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.269",
+    date: "2026-08-29",
+    title: "Closed positions stay closed",
+    titleTranslations: {
+      es: "Las posiciones cerradas se quedan cerradas",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Closed positions no longer reappear after broker sync: NAS/NASDAQ (and blank-exchange) trades now net as one lot, and Warren remove-holding also deletes the ledger rows.",
+        translations: {
+          es: "Las posiciones cerradas ya no reaparecen tras sincronizar el broker: las operaciones NAS/NASDAQ (y sin exchange) se netean en un solo lote, y al quitar un holding con Warren también se borran las transacciones.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.268",
     date: "2026-08-29",
     title: "Tools breadcrumb mobile layout",

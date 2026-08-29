@@ -495,24 +495,31 @@ export async function deleteTransactionsForPosition(
   portfolioId?: string,
 ): Promise<number> {
   const client = await ensureInitialized();
-  const normalizedTicker = normalizeTickerForExchange(ticker, exchange);
+  const normalizedTicker = normalizeHkYahooSymbol(normalizeTickerForExchange(ticker, exchange));
+  const aliases = exchangeCodeAliases(exchange).map((a) => a.toUpperCase());
+  // Include blank exchange so Warren/manual sells without a venue still clear
+  // with the position (they share the same ticker lot after rebuild).
+  const venueSet = new Set<string>([...aliases, ""]);
+  const venues = [...venueSet];
+  const venuePlaceholders = venues.map(() => "?").join(",");
 
   if (portfolioId) {
     // Remove mapping entries for this portfolio + ticker
     await client.execute({
       sql: `DELETE FROM transaction_portfolio_map WHERE user_id = ? AND portfolio_id = ?
             AND transaction_id IN (
-              SELECT id FROM transactions WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)
+              SELECT id FROM transactions WHERE user_id = ? AND UPPER(ticker) = UPPER(?)
+              AND UPPER(COALESCE(exchange, '')) IN (${venuePlaceholders})
             )`,
-      args: [userId, portfolioId, userId, normalizedTicker, exchange],
+      args: [userId, portfolioId, userId, normalizedTicker, ...venues],
     });
 
     // Only delete the actual rows if they belong to this portfolio and aren't mapped elsewhere
     const result = await client.execute({
       sql: `DELETE FROM transactions WHERE user_id = ? AND portfolio_id = ?
-            AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)
+            AND UPPER(ticker) = UPPER(?) AND UPPER(COALESCE(exchange, '')) IN (${venuePlaceholders})
             AND id NOT IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
-      args: [userId, portfolioId, normalizedTicker, exchange, userId],
+      args: [userId, portfolioId, normalizedTicker, ...venues, userId],
     });
 
     // Re-assign surviving transactions whose portfolio_id still points here
@@ -523,17 +530,18 @@ export async function deleteTransactionsForPosition(
               LIMIT 1
             )
             WHERE user_id = ? AND portfolio_id = ?
-            AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)
+            AND UPPER(ticker) = UPPER(?) AND UPPER(COALESCE(exchange, '')) IN (${venuePlaceholders})
             AND id IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
-      args: [userId, userId, portfolioId, normalizedTicker, exchange, userId],
+      args: [userId, userId, portfolioId, normalizedTicker, ...venues, userId],
     });
 
     return Number(result.rowsAffected ?? 0);
   }
 
   const result = await client.execute({
-    sql: `DELETE FROM transactions WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)`,
-    args: [userId, normalizedTicker, exchange],
+    sql: `DELETE FROM transactions WHERE user_id = ? AND UPPER(ticker) = UPPER(?)
+          AND UPPER(COALESCE(exchange, '')) IN (${venuePlaceholders})`,
+    args: [userId, normalizedTicker, ...venues],
   });
   return Number(result.rowsAffected ?? 0);
 }

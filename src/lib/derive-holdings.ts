@@ -31,6 +31,31 @@ function holdingKey(ticker: string, exchange: string): string {
   return `${ticker.toUpperCase()}|${canonicalExchangeCode(exchange)}`;
 }
 
+/**
+ * Resolve the aggregate map key for a trade. Blank exchange (common on manual /
+ * Warren sells) must fold into an existing ticker lot when one already exists,
+ * otherwise buys on NYSE and a sell with exchange="" diverge into two keys and
+ * rebuildHoldings resurrects the position after a full close.
+ */
+function resolveAggregateKey(
+  ticker: string,
+  exchange: string,
+  aggregates: Map<string, AggregateState>,
+): string {
+  const canon = canonicalExchangeCode(exchange);
+  if (canon) return holdingKey(ticker, canon);
+
+  for (const [key, state] of aggregates) {
+    if (state.ticker.toUpperCase() === ticker.toUpperCase() && state.shares > 0) {
+      return key;
+    }
+  }
+  for (const [key, state] of aggregates) {
+    if (state.ticker.toUpperCase() === ticker.toUpperCase()) return key;
+  }
+  return holdingKey(ticker, "");
+}
+
 function lookupMeta(
   metadataByKey: Map<string, HoldingMetadata>,
   ticker: string,
@@ -44,7 +69,7 @@ function lookupMeta(
     if (pipe < 0) continue;
     const t = k.slice(0, pipe);
     const ex = k.slice(pipe + 1);
-    if (t === ticker.toUpperCase() && canonicalExchangeCode(ex) === canonicalExchangeCode(exchange)) {
+    if (t === ticker.toUpperCase() && (!exchange || canonicalExchangeCode(ex) === canonicalExchangeCode(exchange))) {
       return meta;
     }
   }
@@ -66,11 +91,12 @@ export function deriveHoldingsFromTransactions(
     const ticker = normalizeHkYahooSymbol((tx.ticker || "").toUpperCase().trim());
     if (!ticker) continue;
     const exchange = canonicalExchangeCode(tx.exchange);
-    const key = holdingKey(ticker, exchange);
+    const key = resolveAggregateKey(ticker, exchange, aggregates);
 
     const meta = lookupMeta(metadataByKey, ticker, exchange);
     const isTradeType = tx.type === "buy" || tx.type === "sell";
-    const current = aggregates.get(key) || {
+    const existing = aggregates.get(key);
+    const current = existing || {
       ticker,
       exchange,
       shares: 0,
@@ -81,15 +107,38 @@ export function deriveHoldingsFromTransactions(
       assetType: tx.assetType || meta?.assetType || "stock",
       accountId: tx.accountId || meta?.accountId || "",
     };
+    // Prefer a concrete venue when a blank-exchange trade folds into a keyed lot.
+    if (exchange && !current.exchange) current.exchange = exchange;
 
     if (tx.type === "buy" && tx.shares > 0) {
+      // Absorb a prior blank-exchange lot for this ticker once a concrete venue appears.
+      if (exchange) {
+        const blankKey = holdingKey(ticker, "");
+        if (blankKey !== key) {
+          const blank = aggregates.get(blankKey);
+          if (blank) {
+            current.shares += blank.shares;
+            current.costAmount += blank.costAmount;
+            aggregates.delete(blankKey);
+          }
+        }
+      }
       current.shares += tx.shares;
       current.costAmount += tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0);
-    } else if (tx.type === "sell" && tx.shares > 0 && current.shares > 0) {
-      const soldShares = Math.min(tx.shares, current.shares);
-      const avgCost = current.shares > 0 ? current.costAmount / current.shares : 0;
-      current.shares -= soldShares;
-      current.costAmount = Math.max(0, current.costAmount - soldShares * avgCost);
+    } else if (tx.type === "sell" && tx.shares > 0) {
+      // Apply the full sell even when the lot is empty so backdated / out-of-order
+      // sells (e.g. Warren "Recorded by Warren" with a past date) still net to
+      // zero once later buys arrive — otherwise rebuild resurrects phantoms.
+      if (current.shares > 0) {
+        const soldShares = Math.min(tx.shares, current.shares);
+        const avgCost = current.costAmount / current.shares;
+        current.costAmount = Math.max(0, current.costAmount - soldShares * avgCost);
+      }
+      current.shares -= tx.shares;
+      if (current.shares <= 0) {
+        current.shares = Math.min(0, current.shares);
+        current.costAmount = 0;
+      }
     }
 
     if (tx.name) current.name = tx.name;

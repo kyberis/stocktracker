@@ -205,6 +205,12 @@ const EXCHANGE_CANONICAL: Record<string, string> = {
   NYSEARCA: "NYSE",
   ARCX: "NYSE",
   NYQ: "NYSE",
+  // SnapTrade / DEGIRO often emit NAS (or MIC XNAS) instead of NASDAQ.
+  // Without this, buys on NASDAQ and sells on NAS become separate lots and
+  // rebuildHoldings resurrects phantom positions (e.g. HOOD fully closed).
+  NAS: "NASDAQ",
+  XNAS: "NASDAQ",
+  NDQ: "NASDAQ",
   NMS: "NASDAQ",
   NGM: "NASDAQ",
   NCM: "NASDAQ",
