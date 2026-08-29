@@ -13,12 +13,11 @@ import { skipOnboardingHomePath } from "@/lib/warren-first-stock";
 import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
 import { COUNTRIES } from "@/lib/countries";
 import { getBrokersForCountry } from "@/lib/country-brokers";
-import { getClaraLoginUrl } from "@/lib/clara-public-url";
 import {
-  CLARA_ONBOARDING_POLL_INTERVAL_MS,
   CLARA_WIZARD_STEP_INDEX,
   TRIAL_WIZARD_STEP_INDEX,
   WIZARD_STEP_COUNT,
+  parseClaraActivateLinked,
   parseClaraOnboardingLinked,
   shouldAutoAdvancePastHiddenTrial,
   skipSetupTargetStep,
@@ -472,7 +471,7 @@ function StepTrial({
   );
 }
 
-/* ── Step 4: Clara activate (optional SSO) ── */
+/* ── Step 4: Clara activate (optional, in-place S2S) ── */
 
 function StepClaraActivate({
   onLinked,
@@ -485,7 +484,8 @@ function StepClaraActivate({
 }) {
   const { t } = useI18n();
   const [linked, setLinked] = useState(false);
-  const [waiting, setWaiting] = useState(false);
+  const [activating, setActivating] = useState(false);
+  const [activateError, setActivateError] = useState(false);
   const viewedRef = useRef(false);
   const onLinkedRef = useRef(onLinked);
   onLinkedRef.current = onLinked;
@@ -498,8 +498,7 @@ function StepClaraActivate({
 
   useEffect(() => {
     let cancelled = false;
-
-    const poll = async () => {
+    void (async () => {
       try {
         const res = await fetch("/api/clara/status", { cache: "no-store" });
         if (!res.ok || cancelled) return;
@@ -508,15 +507,11 @@ function StepClaraActivate({
           setLinked(true);
         }
       } catch {
-        // Keep polling; skip remains available.
+        // Skip remains available.
       }
-    };
-
-    void poll();
-    const id = window.setInterval(poll, CLARA_ONBOARDING_POLL_INTERVAL_MS);
+    })();
     return () => {
       cancelled = true;
-      window.clearInterval(id);
     };
   }, []);
 
@@ -529,14 +524,31 @@ function StepClaraActivate({
     return () => window.clearTimeout(timeout);
   }, [linked, saving]);
 
-  const handleActivate = () => {
-    setWaiting(true);
+  const handleActivate = async () => {
+    if (activating || linked || saving) return;
+    setActivating(true);
+    setActivateError(false);
     trackOnboardingEvent("onboarding_clara_activate_clicked");
-    window.open(getClaraLoginUrl(), "_blank", "noopener,noreferrer");
+    try {
+      const res = await fetch("/api/clara/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data: unknown = await res.json().catch(() => null);
+      if (res.ok && parseClaraActivateLinked(data)) {
+        setLinked(true);
+        return;
+      }
+      setActivateError(true);
+    } catch {
+      setActivateError(true);
+    } finally {
+      setActivating(false);
+    }
   };
 
   const handleSkip = () => {
-    if (linked || saving) return;
+    if (linked || saving || activating) return;
     onSkip();
   };
 
@@ -548,7 +560,8 @@ function StepClaraActivate({
 
   let statusMessage: string | null = null;
   if (linked) statusMessage = t("onboardingClaraLinked");
-  else if (waiting) statusMessage = t("onboardingClaraWaiting");
+  else if (activating) statusMessage = t("onboardingClaraCreating");
+  else if (activateError) statusMessage = t("onboardingClaraActivateError");
 
   return (
     <div className="space-y-5">
@@ -590,7 +603,11 @@ function StepClaraActivate({
       <p className="text-xs text-gray-400 dark:text-slate-500">{t("onboardingClaraFreeNote")}</p>
 
       {statusMessage && (
-        <p className="text-sm text-sky-700 dark:text-sky-300" role="status" aria-live="polite">
+        <p
+          className={`text-sm ${activateError && !linked ? "text-red-600 dark:text-red-400" : "text-sky-700 dark:text-sky-300"}`}
+          role="status"
+          aria-live="polite"
+        >
           {statusMessage}
         </p>
       )}
@@ -598,16 +615,16 @@ function StepClaraActivate({
       <div className="flex flex-col gap-3 pt-1">
         <button
           type="button"
-          onClick={handleActivate}
-          disabled={saving || linked}
+          onClick={() => void handleActivate()}
+          disabled={saving || linked || activating}
           className="btn-primary min-h-11 w-full disabled:opacity-60"
         >
-          {t("onboardingClaraActivate")}
+          {activating ? t("onboardingClaraCreating") : t("onboardingClaraActivate")}
         </button>
         <button
           type="button"
           onClick={handleSkip}
-          disabled={saving || linked}
+          disabled={saving || linked || activating}
           className="btn-secondary min-h-11 w-full disabled:opacity-60"
         >
           {t("onboardingClaraSkip")}

@@ -70,3 +70,12 @@ describe("wizard navigation around Clara", () => {
     expect(CLARA_WIZARD_STEP_INDEX).toBe(4);
   });
 });
+
+describe("parseClaraActivateLinked", () => {
+  it("reads linked from activate responses", async () => {
+    const { parseClaraActivateLinked } = await import("./onboarding-clara-step");
+    expect(parseClaraActivateLinked({ linked: true })).toBe(true);
+    expect(parseClaraActivateLinked({ linked: false })).toBe(false);
+    expect(parseClaraActivateLinked(null)).toBe(false);
+  });
+});

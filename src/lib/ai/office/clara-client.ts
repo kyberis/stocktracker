@@ -114,6 +114,92 @@ export async function fetchClaraSavingsSummary(identity: OfficeIdentity): Promis
   }
 }
 
+export type EnsureClaraUserResult =
+  | { ok: true; created: boolean; id: string; idpSub: string | null }
+  | { ok: false; error: string; status?: number };
+
+/**
+ * Server-side provision of a Clara local User for the shared IdP identity.
+ * Calls Clara `POST /api/internal/office/ensure-user`.
+ */
+export async function ensureClaraUser(
+  identity: OfficeIdentity,
+  opts?: { name?: string | null },
+): Promise<EnsureClaraUserResult> {
+  const base = getClaraBaseUrl();
+  const token = getIdpServiceToken();
+
+  if (!identity.idpSub.trim()) {
+    return { ok: false, error: "missing_idp_sub", status: 400 };
+  }
+  if (!identity.email.trim()) {
+    return { ok: false, error: "missing_email", status: 400 };
+  }
+
+  if (!base || !token) {
+    if (process.env.NODE_ENV === "development") {
+      return {
+        ok: true,
+        created: true,
+        id: "dev-clara-stub",
+        idpSub: identity.idpSub.trim(),
+      };
+    }
+    return { ok: false, error: "clara_not_configured", status: 503 };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const res = await fetch(`${base}/api/internal/office/ensure-user`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-Trefolio-User-Id": identity.trefolioUserId,
+      },
+      body: JSON.stringify({
+        ...identityPayload(identity),
+        ...(opts?.name ? { name: opts.name } : {}),
+      }),
+      signal: controller.signal,
+      cache: "no-store",
+    });
+    trackExternalProvider("clara");
+
+    if (!res.ok) {
+      const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+      return {
+        ok: false,
+        error: errBody.error || `Clara HTTP ${res.status}`,
+        status: res.status,
+      };
+    }
+
+    const data = (await res.json()) as {
+      ok?: boolean;
+      created?: boolean;
+      id?: string;
+      idpSub?: string | null;
+    };
+    if (!data.ok || !data.id) {
+      return { ok: false, error: "invalid_response", status: 502 };
+    }
+    return {
+      ok: true,
+      created: Boolean(data.created),
+      id: data.id,
+      idpSub: data.idpSub ?? identity.idpSub.trim(),
+    };
+  } catch {
+    return { ok: false, error: "clara_unreachable", status: 503 };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function proposeClaraSavingsRelease(
   identity: OfficeIdentity,
   amountEur: number,

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import AidModalShell from "@/components/aid/AidModalShell";
-import { getClaraAppUrl, getClaraLoginUrl } from "@/lib/clara-public-url";
+import { getClaraAppUrl } from "@/lib/clara-public-url";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 
@@ -18,11 +18,15 @@ export default function ClaraLandingModal({ open, onClose }: Props) {
   const { t } = useI18n();
   const track = useTrack();
   const [status, setStatus] = useState<LinkStatus>("loading");
+  const [activating, setActivating] = useState(false);
+  const [activateError, setActivateError] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     setStatus("loading");
+    setActivateError(false);
+    setActivating(false);
     track("clara_cta_opened");
 
     void (async () => {
@@ -46,18 +50,43 @@ export default function ClaraLandingModal({ open, onClose }: Props) {
 
   const linked = status === "linked";
   const ctaLabel =
-    status === "loading"
-      ? t("loading")
+    status === "loading" || activating
+      ? activating
+        ? t("claraModalCreating")
+        : t("loading")
       : linked
         ? t("claraModalOpenChat")
         : t("claraModalCreateAccount");
 
-  const handleCta = () => {
-    const kind = linked ? "linked" : "create";
-    track("clara_modal_cta_clicked", { kind });
-    const url = linked ? getClaraAppUrl() : getClaraLoginUrl();
-    window.open(url, "_blank", "noopener,noreferrer");
-    onClose();
+  const handleCta = async () => {
+    if (status === "loading" || activating) return;
+
+    if (linked) {
+      track("clara_modal_cta_clicked", { kind: "linked" });
+      window.open(getClaraAppUrl(), "_blank", "noopener,noreferrer");
+      onClose();
+      return;
+    }
+
+    track("clara_modal_cta_clicked", { kind: "create" });
+    setActivating(true);
+    setActivateError(false);
+    try {
+      const res = await fetch("/api/clara/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = (await res.json().catch(() => null)) as { linked?: boolean } | null;
+      if (res.ok && data?.linked) {
+        setStatus("linked");
+        return;
+      }
+      setActivateError(true);
+    } catch {
+      setActivateError(true);
+    } finally {
+      setActivating(false);
+    }
   };
 
   const bullets = [
@@ -112,10 +141,16 @@ export default function ClaraLandingModal({ open, onClose }: Props) {
 
         <p className="text-xs text-[color:var(--muted)]">{t("claraModalFreeNote")}</p>
 
+        {activateError && !linked ? (
+          <p className="text-sm text-red-600 dark:text-red-400" role="status" aria-live="polite">
+            {t("claraModalActivateError")}
+          </p>
+        ) : null}
+
         <button
           type="button"
-          onClick={handleCta}
-          disabled={status === "loading"}
+          onClick={() => void handleCta()}
+          disabled={status === "loading" || activating}
           className="btn-primary flex min-h-11 w-full items-center justify-center rounded-[14px] bg-sky-600 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60"
         >
           {ctaLabel}
