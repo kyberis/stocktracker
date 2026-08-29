@@ -14,6 +14,7 @@ interface SyncResult {
   variant: "manual" | "auto" | "nothing";
   positions: number;
   newTx: number;
+  failedCount?: number;
   brokerNames: string[];
   ts: string;
 }
@@ -282,6 +283,12 @@ export default function SyncConfidenceBanner() {
                 {timeAgo}
               </span>
             </div>
+
+            {(result.failedCount ?? 0) > 0 && (
+              <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+                {(t("importPartialFailure") || "{count} transaction(s) could not be imported. Try syncing again or contact support if this persists.").replace("{count}", String(result.failedCount))}
+              </p>
+            )}
           </div>
         </div>
 

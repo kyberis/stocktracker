@@ -738,6 +738,7 @@ const en: TranslationStrings = {
   importCashWillBeAdded: "will be added to Cash",
   importDuplicatesRemoved: "{count} duplicate transactions already in your portfolio were removed.",
   importHoldingsCapped: "{count} holding(s) skipped — Folio plan allows up to 20 holdings.",
+  importPartialFailure: "{count} transaction(s) could not be imported. Try syncing again or contact support if this persists.",
   importLimitWarningTitle: "Your file has {count} new tickers — {skip} exceed your limit",
   importLimitWarningDesc: "Your plan allows {limit} holdings. The first imports will proceed; {skip} will be skipped: {tickers}.",
   importAllDuplicates: "All {count} transactions in this file are already in your portfolio.",

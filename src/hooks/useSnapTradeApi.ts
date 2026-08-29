@@ -48,6 +48,8 @@ export interface UseSnapTradeApiReturn {
   transactions: ExtractedTransaction[];
   step: "idle" | "connecting" | "reconnecting" | "fetching" | "preview" | "importing" | "backfilling" | "done" | "error";
   importedCount: number;
+  /** Bulk-chunk HTTP/network failures (not duplicate skips). */
+  importFailedCount: number;
   errorMsg: string;
   needsReconnect: boolean;
   disabledConnections: DisabledBrokerageConnection[];
@@ -147,12 +149,18 @@ function normalizeTransaction(tx: Record<string, unknown>): ExtractedTransaction
   };
 }
 
-function persistSyncConfidence(positions: number, newTx: number, brokerNames: string[]) {
+function persistSyncConfidence(
+  positions: number,
+  newTx: number,
+  brokerNames: string[],
+  failedCount = 0,
+) {
   try {
     sessionStorage.setItem("syncConfidenceResult", JSON.stringify({
       variant: "manual",
       positions,
       newTx,
+      failedCount,
       brokerNames,
       ts: new Date().toISOString(),
     }));
@@ -176,6 +184,7 @@ export function useSnapTradeApi(options: UseSnapTradeApiOptions = {}): UseSnapTr
   const [transactions, setTransactions] = useState<ExtractedTransaction[]>([]);
   const [step, setStep] = useState<UseSnapTradeApiReturn["step"]>("idle");
   const [importedCount, setImportedCount] = useState(0);
+  const [importFailedCount, setImportFailedCount] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [needsReconnect, setNeedsReconnect] = useState(false);
   const [disabledConnections, setDisabledConnections] = useState<DisabledBrokerageConnection[]>([]);
@@ -485,6 +494,7 @@ export function useSnapTradeApi(options: UseSnapTradeApiOptions = {}): UseSnapTr
     setStep("idle");
     setTransactions([]);
     setImportedCount(0);
+    setImportFailedCount(0);
     setErrorMsg("");
     setImportProgress({ current: 0, total: 0, errors: 0 });
     setHoldingsCapped(0);
@@ -501,7 +511,7 @@ export function useSnapTradeApi(options: UseSnapTradeApiOptions = {}): UseSnapTr
     setStep("importing");
 
     let txCount = 0;
-    let errorCount = 0;
+    let failedCount = 0;
     const importSource = "SnapTrade import";
 
     const CHUNK_SIZE = 50;
@@ -546,23 +556,28 @@ export function useSnapTradeApi(options: UseSnapTradeApiOptions = {}): UseSnapTr
         if (res.ok) {
           const data = await res.json();
           txCount += data.inserted || 0;
-          errorCount += data.skipped || 0;
+          // Duplicate skips are expected — do not treat them as import failures.
           if (data.holdingsCapped > 0) {
             totalHoldingsCapped = data.holdingsCapped;
             limitReached = true;
           }
         } else {
-          errorCount += chunk.length;
+          failedCount += chunk.length;
         }
       } catch {
-        errorCount += chunk.length;
+        failedCount += chunk.length;
       }
-      setImportProgress({ current: txCount + errorCount, total, errors: errorCount });
+      setImportProgress({
+        current: Math.min(i + chunk.length, total),
+        total,
+        errors: failedCount,
+      });
       if (limitReached) break;
     }
 
     setHoldingsCapped(totalHoldingsCapped);
     setImportedCount(txCount);
+    setImportFailedCount(failedCount);
 
     if (txCount > 0 && effectivePortfolioId) {
       const sourceRefs = validTransactions
@@ -579,7 +594,7 @@ export function useSnapTradeApi(options: UseSnapTradeApiOptions = {}): UseSnapTr
       }
     }
 
-    if (errorCount > 0 && txCount === 0) {
+    if (failedCount > 0 && txCount === 0) {
       trackImportError("broker_sync", "bulk_all_failed");
       setErrorMsg("Import failed.");
       setStep("error");
@@ -593,7 +608,7 @@ export function useSnapTradeApi(options: UseSnapTradeApiOptions = {}): UseSnapTr
           transactions.filter((tx) => tx.type === "buy" || tx.type === "sell").map((tx) => tx.ticker)
         )].length,
       );
-      persistSyncConfidence(positionCount, txCount, brokerNames);
+      persistSyncConfidence(positionCount, txCount, brokerNames, failedCount);
       setStep("backfilling");
       fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
         .catch(() => {})
@@ -611,6 +626,7 @@ export function useSnapTradeApi(options: UseSnapTradeApiOptions = {}): UseSnapTr
     transactions,
     step,
     importedCount,
+    importFailedCount,
     errorMsg,
     needsReconnect,
     disabledConnections,

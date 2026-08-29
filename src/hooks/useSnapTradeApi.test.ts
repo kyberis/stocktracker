@@ -263,6 +263,118 @@ describe("useSnapTradeApi importAll", () => {
     expect(result.current.errorMsg).toBe("Import failed.");
   });
 
+  it("importAll reports partial failure when some chunks succeed and others fail", async () => {
+    const txs = Array.from({ length: 51 }, (_, i) => ({
+      date: "2024-01-15",
+      type: "buy" as const,
+      ticker: `T${i}`,
+      name: `T${i}`,
+      shares: 1,
+      pricePerShare: 1,
+      totalAmount: 1,
+      fees: 0,
+      currency: "EUR",
+    }));
+
+    fetchSpy
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            registered: true,
+            brokerageConnections: [],
+            disabledConnections: [],
+            brokerSyncs: [],
+          }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ transactions: txs }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ inserted: 50, skipped: 0 }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+      });
+
+    const { result } = renderHook(() => useSnapTradeApi());
+    await act(async () => {
+      await result.current.loadConnection();
+    });
+    await act(async () => {
+      await result.current.fetchPortfolio();
+    });
+    await act(async () => {
+      await result.current.importAll();
+    });
+
+    expect(result.current.step).toBe("done");
+    expect(result.current.importedCount).toBe(50);
+    expect(result.current.importFailedCount).toBe(1);
+  });
+
+  it("importAll treats duplicate skips as success when nothing failed", async () => {
+    fetchSpy
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            registered: true,
+            brokerageConnections: [],
+            disabledConnections: [],
+            brokerSyncs: [],
+          }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            transactions: [
+              {
+                date: "2024-01-15",
+                type: "buy",
+                ticker: "X",
+                name: "X",
+                shares: 1,
+                pricePerShare: 1,
+                totalAmount: 1,
+                fees: 0,
+                currency: "EUR",
+              },
+            ],
+          }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ inserted: 0, skipped: 1 }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+      });
+
+    const { result } = renderHook(() => useSnapTradeApi());
+    await act(async () => {
+      await result.current.loadConnection();
+    });
+    await act(async () => {
+      await result.current.fetchPortfolio();
+    });
+    await act(async () => {
+      await result.current.importAll();
+    });
+
+    expect(result.current.step).toBe("done");
+    expect(result.current.importedCount).toBe(0);
+    expect(result.current.importFailedCount).toBe(0);
+    expect(result.current.importProgress.errors).toBe(0);
+  });
+
   it("importAll when bulk API fetch throws increments errorCount", async () => {
     fetchSpy
       .mockResolvedValueOnce({

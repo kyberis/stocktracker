@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.270",
+    date: "2026-08-29",
+    title: "SnapTrade partial import warnings",
+    titleTranslations: {
+      es: "Avisos de importación parcial de SnapTrade",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "When a SnapTrade sync imports some transactions but fails on others, the done screen and sync banner show an amber warning with the failed count instead of a silent success.",
+        translations: {
+          es: "Si una sincronización de SnapTrade importa algunas transacciones y falla en otras, la pantalla final y el banner de sync muestran un aviso ámbar con el número fallido en lugar de un éxito silencioso.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.269",
     date: "2026-08-29",
     title: "Closed positions stay closed",
