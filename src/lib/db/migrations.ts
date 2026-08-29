@@ -4826,21 +4826,20 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       await client.execute(
         "UPDATE users SET plan = 'free' WHERE plan NOT IN ('free', 'basic', 'pro', 'wealth')",
       );
-      // Child tables reference users(id); keep FKs off for the table rebuild.
-      await client.executeMultiple(`
-        DROP TABLE IF EXISTS users_new;
-        CREATE TABLE users_new (${columnDefs});
-        INSERT INTO users_new (${colNames}) SELECT ${colNames} FROM users;
-        DROP TABLE users;
-        ALTER TABLE users_new RENAME TO users;
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON users(email) WHERE email != '';
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id_unique ON users(google_id) WHERE google_id != '';
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_apple_id_unique ON users(apple_id) WHERE apple_id != '';
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_profile_slug ON users(profile_slug) WHERE profile_slug != '';
-        CREATE INDEX IF NOT EXISTS idx_users_idp_sub ON users(idp_sub) WHERE idp_sub != '';
-        PRAGMA foreign_keys = ON;
-      `);
+      // client.migrate() turns foreign_keys OFF before BEGIN (executeMultiple cannot).
+      await client.migrate([
+        "DROP TABLE IF EXISTS users_new",
+        `CREATE TABLE users_new (${columnDefs})`,
+        `INSERT INTO users_new (${colNames}) SELECT ${colNames} FROM users`,
+        "DROP TABLE users",
+        "ALTER TABLE users_new RENAME TO users",
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON users(email) WHERE email != ''",
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id_unique ON users(google_id) WHERE google_id != ''",
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_apple_id_unique ON users(apple_id) WHERE apple_id != ''",
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_profile_slug ON users(profile_slug) WHERE profile_slug != ''",
+        "CREATE INDEX IF NOT EXISTS idx_users_idp_sub ON users(idp_sub) WHERE idp_sub != ''",
+      ]);
     },
   },
 ];
