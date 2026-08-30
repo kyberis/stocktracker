@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.276",
+    date: "2026-08-30",
+    title: "Clearer screening quota messages",
+    titleTranslations: {
+      es: "Mensajes de cuota de cribado más claros",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Investment screening no longer says you used 3 screens this week when Free/Basic plans include zero multi-agent screens. The UI separates “not on your plan” from a real monthly quota (Pro 2 / Wealth 12) and links to Compare plans.",
+        translations: {
+          es: "El cribado de inversión ya no dice que usaste 3 cribados esta semana cuando Free/Basic no incluyen cribados multiagente. La UI separa “no está en tu plan” de una cuota mensual real (Pro 2 / Wealth 12) y enlaza a Comparar planes.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.275",
     date: "2026-08-30",
     title: "Cleaner currency checks & ISIN guards",

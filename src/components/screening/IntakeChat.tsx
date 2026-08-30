@@ -9,6 +9,11 @@ import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { fill } from "@/lib/screening/copy";
 import {
+  isScreeningQuotaBlocked,
+  resolveScreeningQuotaMessage,
+  type ScreeningQuotaSlice,
+} from "@/lib/screening/quota-message";
+import {
   parseScreeningPipelineKind,
   type ScreeningPipelineKind,
 } from "@/lib/screening/pipeline-kind";
@@ -37,6 +42,7 @@ import { BriefList, BriefTable } from "./BriefTable";
 import { ExplainHelpList } from "./MetricHelpTip";
 import { ScreeningDisclaimer } from "./ScreeningNotices";
 import { ScreeningPipelineToggle } from "./ScreeningPipelineToggle";
+import { ScreeningQuotaBanner } from "./ScreeningQuotaBanner";
 import { useScreeningCopy } from "./use-screening-copy";
 
 type Bubble = {
@@ -71,15 +77,11 @@ export function IntakeChat() {
 
   const screeningQuota = user?.quotas?.investment_screening;
   const isAdmin = user?.role === "admin";
-  const quotaLine =
-    !isAdmin && screeningQuota
-      ? screeningQuota.remaining <= 0
-        ? copy.quota.exhausted
-        : fill(copy.quota.remaining, {
-            remaining: String(screeningQuota.remaining),
-            limit: String(screeningQuota.limit),
-          })
-      : null;
+  const quotaMessage = resolveScreeningQuotaMessage(copy, screeningQuota, {
+    language,
+    isAdmin,
+  });
+  const quotaBlocked = isScreeningQuotaBlocked(screeningQuota, Boolean(isAdmin));
 
   const intent: ScreeningIntent = useMemo(() => {
     const raw = searchParams.get("intent");
@@ -553,7 +555,31 @@ export function IntakeChat() {
       });
       if (!res.ok) {
         if (res.status === 429) {
-          setSubmitError(copy.quota.exhausted);
+          let detail: {
+            limit?: number;
+            used?: number;
+            resetAt?: string;
+            window?: ScreeningQuotaSlice["window"];
+          } | null = null;
+          try {
+            detail = (await res.json()) as typeof detail;
+          } catch {
+            detail = null;
+          }
+          const fromApi = resolveScreeningQuotaMessage(
+            copy,
+            detail && typeof detail.limit === "number"
+              ? {
+                  used: detail.used ?? 0,
+                  limit: detail.limit,
+                  remaining: 0,
+                  resetAt: detail.resetAt ?? "",
+                  window: detail.window ?? "month",
+                }
+              : screeningQuota,
+            { language, isAdmin: false },
+          );
+          setSubmitError(fromApi?.text ?? copy.quota.exhausted);
           return;
         }
         if (res.status === 503) {
@@ -625,6 +651,38 @@ export function IntakeChat() {
             {copy.common.backHome}
           </Link>
         </div>
+      </main>
+    );
+  }
+
+  if (quotaBlocked) {
+    return (
+      <main className="mx-auto flex min-h-[40vh] w-full max-w-xl flex-col items-center justify-center px-3 py-10 text-center sm:px-4">
+        <h1 className="text-xl font-bold text-[color:var(--foreground)]">
+          {copy.intake.title}
+        </h1>
+        {quotaMessage ? (
+          <div className="mt-3 flex flex-col items-center">
+            <ScreeningQuotaBanner message={quotaMessage} />
+          </div>
+        ) : null}
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          {quotaMessage?.showUpgrade ? (
+            <Link
+              href="/billing"
+              className="btn-primary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+            >
+              {copy.quota.upgradeCta}
+            </Link>
+          ) : null}
+          <Link
+            href="/screening"
+            className="btn-secondary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+          >
+            {copy.common.back}
+          </Link>
+        </div>
+        <ScreeningDisclaimer className="mt-8 text-center" />
       </main>
     );
   }
@@ -888,17 +946,8 @@ export function IntakeChat() {
           <p className="mt-4 text-[13px] text-[color:var(--muted)]">
             {isAnalyze ? copy.brief.costBodyAnalyze : copy.brief.costBody}
           </p>
-          {quotaLine ? (
-            <p
-              className={`mt-2 text-xs ${
-                screeningQuota && screeningQuota.remaining <= 0
-                  ? "text-amber-700 dark:text-amber-300"
-                  : "text-[color:var(--muted)]"
-              }`}
-              role="status"
-            >
-              {quotaLine}
-            </p>
+          {quotaMessage ? (
+            <ScreeningQuotaBanner message={quotaMessage} className="mt-2 text-left" />
           ) : null}
 
           {submitError && (
@@ -911,7 +960,7 @@ export function IntakeChat() {
             <button
               type="button"
               onClick={() => void launchRun()}
-              disabled={submitting || !canLaunch || pilotActive}
+              disabled={submitting || !canLaunch || pilotActive || quotaBlocked}
               className="btn-primary inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold disabled:opacity-60"
             >
               {isAnalyze ? copy.brief.runCtaAnalyze : copy.brief.runCta}
