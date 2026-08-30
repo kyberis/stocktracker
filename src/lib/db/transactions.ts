@@ -15,6 +15,7 @@ import type { Transaction } from "@/lib/types";
 import { resolvePortfolioId } from "./portfolios";
 import { normalizeHkYahooSymbol } from "@/lib/market-symbol";
 import { transactionContentFingerprint } from "@/lib/transaction-fingerprint";
+import { sanitizeStorageTicker } from "@/lib/sanitize-storage-ticker";
 
 export async function listTransactions(userId: string, holdingId?: string, portfolioId?: string): Promise<Transaction[]> {
   const client = await ensureInitialized();
@@ -214,7 +215,11 @@ async function syncHoldingForTransaction(
   if (tx.type !== "buy" && tx.type !== "sell") return undefined;
 
   const client = await ensureInitialized();
-  const ticker = normalizeHkYahooSymbol(tx.ticker.toUpperCase());
+  const sanitized = sanitizeStorageTicker(tx.ticker, tx.isin);
+  const ticker = normalizeHkYahooSymbol((sanitized.ticker || "").toUpperCase());
+  // Never create/update holdings from an unresolved ISIN-as-ticker.
+  if (!ticker) return undefined;
+  const isin = sanitized.isin || tx.isin || "";
   const exchange = canonicalExchangeCode(tx.exchange) || (tx.exchange || "").toUpperCase();
   const existing = await findHoldingForTicker(client, userId, ticker, exchange, portfolioId);
 
@@ -225,17 +230,18 @@ async function syncHoldingForTransaction(
       const newCost = oldCost + tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0);
       const newPrice = newShares > 0 ? newCost / newShares : 0;
       await client.execute({
-        sql: "UPDATE holdings SET shares = ?, purchase_price = ? WHERE id = ? AND user_id = ?",
-        args: [newShares, newPrice, existing.id, userId],
+        sql: "UPDATE holdings SET shares = ?, purchase_price = ?, isin = CASE WHEN TRIM(COALESCE(isin,'')) = '' THEN ? ELSE isin END WHERE id = ? AND user_id = ?",
+        args: [newShares, newPrice, isin, existing.id, userId],
       });
       return existing.id;
     } else {
+      if (!ticker) return undefined;
       const id = randomUUID();
       const price = tx.shares > 0 ? (tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0)) / tx.shares : 0;
       await client.execute({
         sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, account_id, portfolio_id)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
-        args: [id, userId, tx.name || ticker, ticker, tx.isin || "", tx.assetType || "stock", tx.shares, price, tx.displayCurrency || tx.currency || "EUR", exchange, tx.accountId || "", portfolioId || ""],
+        args: [id, userId, tx.name || ticker, ticker, isin, tx.assetType || "stock", tx.shares, price, tx.displayCurrency || tx.currency || "EUR", exchange, tx.accountId || "", portfolioId || ""],
       });
       return id;
     }
@@ -270,7 +276,16 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
   const id = randomUUID();
   const total = tx.totalAmount || tx.shares * tx.pricePerShare;
   const exchange = canonicalExchangeCode(tx.exchange) || (tx.exchange || "").toUpperCase();
-  const ticker = normalizeHkYahooSymbol(normalizeTickerForExchange(tx.ticker, exchange));
+  const sanitized = sanitizeStorageTicker(
+    normalizeHkYahooSymbol(normalizeTickerForExchange(tx.ticker, exchange)),
+    tx.isin || "",
+  );
+  const ticker = sanitized.ticker;
+  const isin = sanitized.isin || tx.isin || "";
+  if (!ticker) {
+    // Refuse to persist unresolved ISIN-as-ticker rows.
+    return null;
+  }
   const sourceRef = tx.sourceRef || "";
   const contentFingerprint = transactionContentFingerprint({
     date: tx.date,
@@ -290,7 +305,7 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         id, userId, tx.holdingId || "", ticker, tx.name || "", exchange,
-        tx.isin || "", tx.assetType || "stock", tx.accountId || "",
+        isin, tx.assetType || "stock", tx.accountId || "",
         tx.type, tx.date, tx.shares, tx.pricePerShare, total,
         tx.fees || 0, tx.taxes || 0, tx.currency || "EUR",
         tx.displayCurrency || tx.currency || "EUR", tx.exchangeRateEur ?? null,
@@ -324,7 +339,7 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
     ticker,
     exchange,
     name: tx.name || "",
-    isin: tx.isin || "",
+    isin,
     assetType: tx.assetType || "stock",
     type: tx.type,
     shares: tx.shares,
@@ -366,7 +381,15 @@ export async function addTransactionsBulk(
       const id = randomUUID();
       const total = tx.totalAmount || tx.shares * tx.pricePerShare;
       const exchange = canonicalExchangeCode(tx.exchange) || (tx.exchange || "").toUpperCase();
-      const ticker = normalizeHkYahooSymbol(normalizeTickerForExchange(tx.ticker, exchange));
+      const sanitized = sanitizeStorageTicker(
+        normalizeHkYahooSymbol(normalizeTickerForExchange(tx.ticker, exchange)),
+        tx.isin || "",
+      );
+      const ticker = sanitized.ticker;
+      const isin = sanitized.isin || tx.isin || "";
+      if (!ticker) {
+        return null;
+      }
       const sourceRef = tx.sourceRef || "";
       const contentFingerprint = transactionContentFingerprint({
         date: tx.date,
@@ -385,7 +408,7 @@ export async function addTransactionsBulk(
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           id, userId, tx.holdingId || "", ticker, tx.name || "", exchange,
-          tx.isin || "", tx.assetType || "stock", tx.accountId || "",
+          isin, tx.assetType || "stock", tx.accountId || "",
           tx.type, tx.date, tx.shares, tx.pricePerShare, total,
           tx.fees || 0, tx.taxes || 0, tx.currency || "EUR",
           tx.displayCurrency || tx.currency || "EUR", tx.exchangeRateEur ?? null,
@@ -394,8 +417,13 @@ export async function addTransactionsBulk(
           contentFingerprint,
         ] as InValue[],
       };
-    });
+    }).filter((s): s is NonNullable<typeof s> => s != null);
 
+    if (stmts.length === 0) {
+      skipped += batch.length;
+      continue;
+    }
+    skipped += batch.length - stmts.length;
     const results = await client.batch(stmts, "write");
     for (const r of results) {
       if ((r.rowsAffected ?? 0) > 0) inserted++;

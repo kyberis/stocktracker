@@ -28,6 +28,7 @@ import {
 } from "@/lib/market-symbol";
 import { buildNeededFxPairs } from "@/lib/fx-pairs";
 import { convertToEUR, hasExchangeRate, resolveQuoteCurrency } from "@/lib/utils";
+import { sanitizeStorageTicker } from "@/lib/sanitize-storage-ticker";
 
 async function fetchExchangeRatesForPairs(
   yahoo: YahooProvider,
@@ -297,7 +298,15 @@ export async function addHolding(
   const client = await ensureInitialized();
   const resolved = await resolvePortfolioId(userId, portfolioId);
   const exchange = canonicalExchangeCode(holding.exchange) || (holding.exchange || "").toUpperCase();
-  const ticker = normalizeHkYahooSymbol(normalizeTickerForExchange(holding.ticker, exchange));
+  const sanitized = sanitizeStorageTicker(
+    normalizeHkYahooSymbol(normalizeTickerForExchange(holding.ticker, exchange)),
+    holding.isin || "",
+  );
+  const ticker = sanitized.ticker;
+  const isin = sanitized.isin || holding.isin || "";
+  if (!ticker) {
+    throw new Error("Cannot add holding: ticker unresolved (ISIN must map to a Yahoo symbol)");
+  }
   const aliases = exchangeCodeAliases(exchange).map((a) => a.toUpperCase()).filter(Boolean);
   const aliasPlaceholders = aliases.length > 0 ? aliases.map(() => "?").join(",") : "?";
   const aliasArgs = aliases.length > 0 ? aliases : [""];
@@ -324,10 +333,10 @@ export async function addHolding(
     const finalShares = Math.max(totalShares, 0);
     const existingId = str(row.id);
     await client.execute({
-      sql: `UPDATE holdings SET shares = ?, purchase_price = ?, exchange = ?, ticker = ? WHERE id = ? AND user_id = ?`,
-      args: [finalShares, avgPrice, exchange, ticker, existingId, userId],
+      sql: `UPDATE holdings SET shares = ?, purchase_price = ?, exchange = ?, ticker = ?, isin = CASE WHEN TRIM(COALESCE(isin,'')) = '' THEN ? ELSE isin END WHERE id = ? AND user_id = ?`,
+      args: [finalShares, avgPrice, exchange, ticker, isin, existingId, userId],
     });
-    return { ...holding, id: existingId, ticker, exchange, shares: finalShares, purchasePrice: avgPrice };
+    return { ...holding, id: existingId, ticker, isin, exchange, shares: finalShares, purchasePrice: avgPrice };
   }
 
   const id = randomUUID();
@@ -336,7 +345,7 @@ export async function addHolding(
             id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, portfolio_id, tags
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
-      id, userId, holding.name, ticker, holding.isin,
+      id, userId, holding.name, ticker, isin,
       holding.assetType ?? "stock",
       holding.shares, holding.purchasePrice, holding.displayCurrency,
       exchange, holding.valueInEUR,
@@ -344,7 +353,7 @@ export async function addHolding(
       serializeHoldingTags(holding.tags),
     ],
   });
-  return { ...holding, id, ticker, exchange };
+  return { ...holding, id, ticker, isin, exchange };
 }
 
 export async function updateHolding(
@@ -906,6 +915,10 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
   await client.execute({ sql: `DELETE FROM holdings WHERE user_id = ? AND source != 'snaptrade'${portfolioFilter}`, args: [userId, ...portfolioArgs] });
 
   for (const h of derived) {
+    const sanitized = sanitizeStorageTicker(h.ticker, h.isin || "");
+    if (!sanitized.ticker) continue;
+    h.ticker = sanitized.ticker;
+    h.isin = sanitized.isin || h.isin || "";
     const key = `${h.ticker.toUpperCase()}|${canonicalExchangeCode(h.exchange)}`;
     const existingId = metadataByKey.get(key)?.id;
     const id = existingId || randomUUID();
@@ -919,7 +932,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     await client.execute({
       sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, portfolio_id, source, tags)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'transaction', ?)
-            ON CONFLICT(id) DO UPDATE SET shares = excluded.shares, purchase_price = excluded.purchase_price, value_in_eur = excluded.value_in_eur, tags = excluded.tags, exchange = excluded.exchange, ticker = excluded.ticker`,
+            ON CONFLICT(id) DO UPDATE SET shares = excluded.shares, purchase_price = excluded.purchase_price, value_in_eur = excluded.value_in_eur, tags = excluded.tags, exchange = excluded.exchange, ticker = excluded.ticker, isin = excluded.isin`,
       args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, exchange, valueEUR, h.sector || "", h.region || "", h.assetClass || "", h.accountId || "", resolved, serializeHoldingTags(h.tags)],
     });
   }
