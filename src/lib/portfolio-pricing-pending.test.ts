@@ -7,6 +7,7 @@ function holding(overrides: Partial<Holding> = {}): Holding {
     id: "h1",
     name: "Apple",
     ticker: "AAPL",
+    isin: "",
     shares: 10,
     purchasePrice: 100,
     displayCurrency: "USD",
@@ -18,10 +19,17 @@ function holding(overrides: Partial<Holding> = {}): Holding {
 
 function quote(overrides: Partial<QuoteData> = {}): QuoteData {
   return {
+    symbol: "AAPL",
+    shortName: "Apple Inc.",
     regularMarketPrice: 190,
+    regularMarketChange: 1,
+    regularMarketChangePercent: 0.5,
     currency: "USD",
+    regularMarketPreviousClose: 189,
+    fiftyTwoWeekHigh: 200,
+    fiftyTwoWeekLow: 150,
     ...overrides,
-  } as QuoteData;
+  };
 }
 
 describe("isPortfolioPricingPending", () => {
