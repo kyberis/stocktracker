@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.278",
+    version: "2.5.279",
     date: "2026-08-30",
     title: "Clearer screening quota messages",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Investment screening quota copy now separates “not on your plan” (Free/Basic: 0 screens) from a real monthly quota (Pro 2 / Wealth 12), with Compare plans — no more false “used 3 screens this week” message.",
         translations: {
           es: "El copy de cuota del cribado separa “no está en tu plan” (Free/Basic: 0 cribados) de una cuota mensual real (Pro 2 / Wealth 12), con Comparar planes — ya no dice por error que usaste 3 cribados esta semana.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.278",
+    date: "2026-08-30",
+    title: "Admin anomaly triage filters",
+    titleTranslations: {
+      es: "Filtros de triage de anomalías en admin",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Admin → Anomalies can filter Active (open+acked) vs Resolved (fixed+dismissed), plus severity and finding code, with live counts. Status badges make fixed rows easy to spot.",
+        translations: {
+          es: "Admin → Anomalías permite filtrar Activas (open+acked) frente a Resueltas (fixed+dismissed), además de severidad y código, con contadores. Las badges de estado hacen fáciles de ver las filas fixed.",
         },
       },
     ],

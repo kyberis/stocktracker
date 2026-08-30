@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth/guards";
 import {
   getPortfolioAnomalyById,
   listPortfolioAnomalies,
+  countPortfolioAnomaliesByStatus,
   setPortfolioAnomalyStatus,
 } from "@/lib/db";
 import { findUserById } from "@/lib/db/users";
@@ -12,8 +13,11 @@ import { applySafeAnomalyFixes, runPortfolioAnomalyScan, scanUserPortfolioAnomal
 import { withMetrics } from "@/lib/with-metrics";
 
 const listSchema = z.object({
-  status: z.enum(["open", "acked", "fixed", "dismissed", "all"]).optional(),
+  status: z
+    .enum(["open", "acked", "fixed", "dismissed", "all", "active", "resolved"])
+    .optional(),
   severity: z.enum(["error", "warn", "info", "all"]).optional(),
+  code: z.string().min(1).max(64).optional(),
   userId: z.string().optional(),
   page: z.coerce.number().int().min(0).optional(),
   pageSize: z.coerce.number().int().min(1).max(100).optional(),
@@ -45,6 +49,7 @@ export const GET = withMetrics("/api/admin/anomalies", async (req: NextRequest) 
   const parsed = listSchema.safeParse({
     status: url.searchParams.get("status") || undefined,
     severity: url.searchParams.get("severity") || undefined,
+    code: url.searchParams.get("code") || undefined,
     userId: url.searchParams.get("userId") || undefined,
     page: url.searchParams.get("page") || undefined,
     pageSize: url.searchParams.get("pageSize") || undefined,
@@ -55,13 +60,17 @@ export const GET = withMetrics("/api/admin/anomalies", async (req: NextRequest) 
 
   const page = parsed.data.page ?? 0;
   const pageSize = parsed.data.pageSize ?? 25;
-  const { items, total } = await listPortfolioAnomalies({
-    status: parsed.data.status ?? "open",
-    severity: parsed.data.severity ?? "all",
-    userId: parsed.data.userId,
-    limit: pageSize,
-    offset: page * pageSize,
-  });
+  const [{ items, total }, counts] = await Promise.all([
+    listPortfolioAnomalies({
+      status: parsed.data.status ?? "active",
+      severity: parsed.data.severity ?? "all",
+      code: parsed.data.code,
+      userId: parsed.data.userId,
+      limit: pageSize,
+      offset: page * pageSize,
+    }),
+    countPortfolioAnomaliesByStatus(),
+  ]);
 
   const users = await Promise.all(items.map((a) => findUserById(a.userId)));
   const enriched = items.map((anomaly, i) => {
@@ -74,7 +83,7 @@ export const GET = withMetrics("/api/admin/anomalies", async (req: NextRequest) 
     };
   });
 
-  return NextResponse.json({ items: enriched, total, page, pageSize });
+  return NextResponse.json({ items: enriched, total, page, pageSize, counts });
 });
 
 const actionSchema = z.object({
