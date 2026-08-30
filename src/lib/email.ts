@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import { SignJWT, jwtVerify } from "jose";
 import {
   findUserByEmail,
+  findUserById,
   getGlobalResendApiKey,
   countHoldings,
   generateUnsubscribeToken,
@@ -9,6 +10,8 @@ import {
   getUserSettings,
   logEmailSend,
   checkAndIncrementRateLimit,
+  isUserDeleted,
+  isDeletedTombstoneEmail,
 } from "@/lib/db";
 import { isEmailNodeEnabled } from "@/lib/email-flows/toggles";
 import { trackExternalProvider } from "@/lib/traffic/provider-track";
@@ -129,12 +132,26 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
     }
   }
 
+  // Never email deleted-account tombstones (blank / synthetic addresses).
+  if (typeof opts.to === "string" && isDeletedTombstoneEmail(opts.to)) {
+    return { success: true, suppressed: true };
+  }
+
   // Marketing/template opt-out (user_settings.email_notifications_enabled) applies to every
   // subscription tier (free, starter, pro). Plan does not bypass unsubscribe.
   let recipientUserId = opts.userId;
   if (!opts.internal && !opts.transactional && !recipientUserId && typeof opts.to === "string") {
     const u = await findUserByEmail(opts.to.trim());
     recipientUserId = u?.id;
+  }
+
+  // Deleted users must not receive any mail (transactional included).
+  if (recipientUserId || opts.userId) {
+    const uid = recipientUserId || opts.userId!;
+    const user = await findUserById(uid);
+    if (!user || isUserDeleted(user)) {
+      return { success: true, suppressed: true };
+    }
   }
 
   // Must run before the Resend check so missing API keys do not skip unsubscribe.

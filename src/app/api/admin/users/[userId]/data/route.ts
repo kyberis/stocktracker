@@ -68,6 +68,7 @@ export const GET = withMetrics("/api/admin/users/[userId]/data", async (
     membershipGrantPlan: dbUser.membership_grant_plan || null,
     membershipGrantDays: dbUser.membership_grant_days > 0 ? dbUser.membership_grant_days : null,
     membershipGrantCreatedAt: dbUser.membership_grant_created_at || null,
+    deletedAt: dbUser.deleted_at || undefined,
   };
 
   return NextResponse.json({

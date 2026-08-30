@@ -1,7 +1,7 @@
 // Barrel re-export — all consumers import from "@/lib/db" unchanged.
 
 export type { UserRole, UserPlan, AuthProvider, DbUser, PublicUser, UserSettings, Portfolio, PortfolioCurrency } from "./helpers";
-export { SUPPORTED_PORTFOLIO_CURRENCIES } from "./helpers";
+export { SUPPORTED_PORTFOLIO_CURRENCIES, isUserDeleted } from "./helpers";
 
 export {
   listPortfolios,
@@ -47,6 +47,7 @@ export {
   incrementDailyAiTokenUsage,
   countProSubscribers,
   deleteUser,
+  isDeletedTombstoneEmail,
   toPublicUser,
   setEmailVerified,
   getPortfolioReviewUsage,

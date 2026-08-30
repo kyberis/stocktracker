@@ -504,6 +504,7 @@ describe("rowToDbUser", () => {
       share_portfolio_value: 0,
       share_holdings: 0,
       allow_comments: 1,
+      deleted_at: "",
     });
   });
 
@@ -722,6 +723,7 @@ describe("mapUser", () => {
     share_portfolio_value: 0,
     share_holdings: 0,
     allow_comments: 1,
+    deleted_at: "",
   };
 
   it("maps DbUser to PublicUser with correct field mapping", () => {

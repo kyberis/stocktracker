@@ -63,6 +63,7 @@ function mockUser(partial: Partial<DbUser>): DbUser {
     share_portfolio_value: 0,
     share_holdings: 0,
     allow_comments: 1,
+    deleted_at: "",
     ...partial,
   };
 }

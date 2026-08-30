@@ -82,6 +82,7 @@ export default function UsersTab() {
   const [filterPlan, setFilterPlan] = useState<string>("all");
   const [filterAuth, setFilterAuth] = useState<string>("all");
   const [filterImport, setFilterImport] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterTest, setFilterTest] = useState<TestFilter>("all");
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -112,6 +113,7 @@ export default function UsersTab() {
       if (filterPlan !== "all") params.set("filterPlan", filterPlan);
       if (filterAuth !== "all") params.set("filterAuth", filterAuth);
       if (filterImport !== "all") params.set("filterImport", filterImport);
+      if (filterStatus !== "all") params.set("filterStatus", filterStatus);
       if (filterTest !== "all") params.set("filterTest", filterTest);
 
       const usersRes = await fetch(`/api/admin/users/detail?${params}`, { cache: "no-store" });
@@ -124,7 +126,7 @@ export default function UsersTab() {
     } finally {
       setLoading(false);
     }
-  }, [router, page, debouncedSearch, sortKey, sortDir, filterPlan, filterAuth, filterImport, filterTest]);
+  }, [router, page, debouncedSearch, sortKey, sortDir, filterPlan, filterAuth, filterImport, filterStatus, filterTest]);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
 
@@ -174,6 +176,11 @@ export default function UsersTab() {
           <option value="imported">Has Imported</option>
           <option value="not-imported">Not Imported</option>
         </select>
+        <select value={filterStatus} onChange={handleFilterChange(setFilterStatus)} className="text-xs px-3 py-2 rounded-lg">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="deleted">Deleted</option>
+        </select>
         <select
           value={filterTest}
           onChange={handleFilterChange((v) => setFilterTest(v as TestFilter))}
@@ -212,12 +219,13 @@ export default function UsersTab() {
             <tbody>
               {users.map((user) => {
                 const hasImported = !!(user.brokerAccounts || user.brokerImports);
-                const isInactive = user.lastActiveAt && (Date.now() - new Date(user.lastActiveAt).getTime() > 30 * 86400000);
+                const isDeleted = Boolean(user.deletedAt);
+                const isInactive = !isDeleted && user.lastActiveAt && (Date.now() - new Date(user.lastActiveAt).getTime() > 30 * 86400000);
                 const isTest = isTestAccountEmail(user.email);
                 return (
                   <tr
                     key={user.id}
-                    className="border-t border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 align-middle cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/20"
+                    className={`border-t border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 align-middle cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/20 ${isDeleted ? "opacity-60" : ""}`}
                     onClick={() => router.push(`/admin/users/${encodeURIComponent(user.id)}`)}
                   >
                     <td className="p-3">
@@ -225,11 +233,23 @@ export default function UsersTab() {
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-gray-900 dark:text-white">{user.username}</span>
-                        {isTest && <TestBadge />}
+                        <span className={`font-medium ${isDeleted ? "text-gray-500 dark:text-slate-400 line-through" : "text-gray-900 dark:text-white"}`}>
+                          {user.username}
+                        </span>
+                        {isDeleted && (
+                          <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/10 text-red-500">
+                            Deleted
+                          </span>
+                        )}
+                        {isTest && !isDeleted && <TestBadge />}
                       </div>
                       {user.displayName && <div className="text-[11px] text-gray-500 dark:text-slate-400">{user.displayName}</div>}
-                      {user.email && <div className="text-[11px] text-gray-400 dark:text-slate-500">{user.email}</div>}
+                      {user.email && !isDeleted && <div className="text-[11px] text-gray-400 dark:text-slate-500">{user.email}</div>}
+                      {isDeleted && user.deletedAt && (
+                        <div className="text-[11px] text-red-400/80">
+                          Deleted {new Date(user.deletedAt).toLocaleDateString()}
+                        </div>
+                      )}
                     </td>
                     <td className="p-3"><AuthBadge provider={user.authProvider} /></td>
                     <td className="p-3"><PlanBadge plan={user.plan} /></td>
@@ -247,7 +267,7 @@ export default function UsersTab() {
                         : <span className="text-[11px] text-gray-400 dark:text-slate-600">Not imported</span>}
                     </td>
                     <td className={`p-3 text-xs whitespace-nowrap ${isInactive ? "text-amber-500" : "text-gray-500 dark:text-slate-400"}`}>
-                      {relativeTime(user.lastActiveAt)}
+                      {isDeleted ? "—" : relativeTime(user.lastActiveAt)}
                     </td>
                     <td className="p-3 text-gray-500 dark:text-slate-400 text-xs whitespace-nowrap">
                       {new Date(user.createdAt).toLocaleDateString()}

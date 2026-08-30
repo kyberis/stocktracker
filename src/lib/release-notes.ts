@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.282",
+    date: "2026-08-30",
+    title: "Deleted users stay visible in admin",
+    titleTranslations: {
+      es: "Usuarios eliminados visibles en admin",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Admin Users keeps deleted accounts listed as anonymized tombstones marked Deleted (blank email, no notifications/emails/digests/alerts), with an Active/Deleted status filter. Personal data is still purged on deletion.",
+        translations: {
+          es: "Admin → Users mantiene las cuentas eliminadas listadas como registros anonimizados marcados como Eliminado (email en blanco, sin notificaciones/emails/digests/alertas), con filtro Active/Deleted. Los datos personales se siguen purgando al borrar.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.281",
     date: "2026-08-30",
     title: "Exclude test accounts from stats",

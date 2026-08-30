@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.281: admin-only test-account filtering for stats; not a marketed landing capability"
+  "notes": "2.5.282: Admin-only soft-delete tombstones; not a customer-facing landing feature"
 }

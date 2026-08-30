@@ -33,8 +33,19 @@ export interface CreateNotificationInput {
 export async function createNotification(
   userId: string,
   input: CreateNotificationInput,
-): Promise<AppNotification> {
+): Promise<AppNotification | null> {
   const client = await ensureInitialized();
+
+  // Never notify soft-deleted tombstones (no in-app, email, or push fan-out).
+  const deletedCheck = await client.execute({
+    sql: "SELECT deleted_at FROM users WHERE id = ?",
+    args: [userId],
+  });
+  const deletedAt = String(deletedCheck.rows[0]?.deleted_at ?? "");
+  if (deletedCheck.rows.length === 0 || deletedAt) {
+    return null;
+  }
+
   const id = randomUUID();
   await client.execute({
     sql: `INSERT INTO notifications (id, user_id, type, title, title_es, message, message_es, link, link_label, link_label_es)
@@ -73,8 +84,11 @@ export async function broadcastNotification(
   const client = await ensureInitialized();
   const planFilter = input.targetPlan;
   const usersResult = planFilter
-    ? await client.execute({ sql: "SELECT id FROM users WHERE plan = ?", args: [planFilter] })
-    : await client.execute("SELECT id FROM users");
+    ? await client.execute({
+        sql: "SELECT id FROM users WHERE plan = ? AND deleted_at = ''",
+        args: [planFilter],
+      })
+    : await client.execute("SELECT id FROM users WHERE deleted_at = ''");
 
   if (usersResult.rows.length === 0) return 0;
 

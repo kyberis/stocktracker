@@ -86,6 +86,8 @@ export interface DbUser {
   share_portfolio_value: number;
   share_holdings: number;
   allow_comments: number;
+  /** ISO timestamp when the account was soft-deleted; empty = active. */
+  deleted_at: string;
 }
 
 export type PortfolioCurrency =
@@ -155,6 +157,8 @@ export interface PublicUser {
   sharePortfolioValue: boolean;
   shareHoldings: boolean;
   allowComments: boolean;
+  /** Present when the account is a soft-deleted tombstone. */
+  deletedAt?: string;
 }
 
 export interface UserSettings {
@@ -492,6 +496,7 @@ export function rowToDbUser(row: Row): DbUser {
     share_portfolio_value: num(row.share_portfolio_value),
     share_holdings: num(row.share_holdings),
     allow_comments: num(row.allow_comments ?? 1),
+    deleted_at: str(row.deleted_at),
   };
 }
 
@@ -546,7 +551,13 @@ export function mapUser(user: DbUser): PublicUser {
     sharePortfolioValue: user.share_portfolio_value === 1,
     shareHoldings: user.share_holdings === 1,
     allowComments: user.allow_comments === 1,
+    deletedAt: user.deleted_at || undefined,
   };
+}
+
+/** True when the account has been soft-deleted (GDPR tombstone). */
+export function isUserDeleted(user: Pick<DbUser, "deleted_at">): boolean {
+  return Boolean(user.deleted_at);
 }
 
 export function monthWindowKey(date: Date): string {

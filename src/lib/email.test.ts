@@ -59,6 +59,7 @@ import {
   sendTrefolioUpgradeEmail,
   getCodeOwnedEmailPreview,
   TEST_VERIFICATION_TOKEN,
+  sendEmail,
 } from "./email";
 
 describe("email", () => {
@@ -77,6 +78,28 @@ describe("email", () => {
     mockGetUserSettings.mockResolvedValue({ emailNotificationsEnabled: true });
     vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  describe("sendEmail deleted-user suppression", () => {
+    it("suppresses mail to blank or tombstone addresses", async () => {
+      const blank = await sendEmail({
+        to: "",
+        subject: "Hi",
+        html: "<p>x</p>",
+        transactional: true,
+      });
+      expect(blank).toEqual({ success: true, suppressed: true });
+      expect(mockSend).not.toHaveBeenCalled();
+
+      const tombstone = await sendEmail({
+        to: "deleted-abc@deleted.invalid",
+        subject: "Hi",
+        html: "<p>x</p>",
+        transactional: true,
+      });
+      expect(tombstone).toEqual({ success: true, suppressed: true });
+      expect(mockSend).not.toHaveBeenCalled();
+    });
   });
 
   describe("isTreefolioTestEmail", () => {
