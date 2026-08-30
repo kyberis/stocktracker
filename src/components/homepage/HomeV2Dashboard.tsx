@@ -9,6 +9,9 @@ import { investmentCashEntries } from "@/lib/portfolio-summary-cash";
 import { usePortfolioCommand } from "@/contexts/portfolio-command-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
+import { useAuth } from "@/lib/auth-context";
+import { useCommerceEnabled } from "@/lib/commerce";
+import { planOf } from "@/lib/plan-rank";
 import { useAidStatus } from "@/hooks/useAidStatus";
 import { useClaraDeskStatus } from "@/hooks/useClaraDeskStatus";
 import { useHomeBootstrap } from "@/hooks/useHomeBootstrap";
@@ -93,6 +96,8 @@ export default function HomeV2Dashboard({
   const { flags, isLoaded } = useFeatureFlagContext();
   const { t } = useI18n();
   const track = useTrack();
+  const { user } = useAuth();
+  const commerceEnabled = useCommerceEnabled();
   const isMobile = useIsMobileViewport();
   const { holdings, cashEntries, quotes, isInitializing, demoMode, hydrateMarketData, hydratePortfolioBook, hydrateAnalystTargets, activePortfolioId, activePortfolioCurrency } =
     usePortfolio();
@@ -129,6 +134,8 @@ export default function HomeV2Dashboard({
   const hydratedQuotesKey = useRef<string | null>(null);
   const hydratedAnalystTargetsKey = useRef<string | null>(null);
   const showClassicLink = isLoaded && !!flags.classic_home;
+  const showFreeUpgradeCta =
+    !demoMode && commerceEnabled && planOf(user) === "free";
 
   const holdingsTickerSig = useMemo(
     () => holdings.map((h) => h.ticker.trim().toUpperCase()).sort().join(","),
@@ -318,14 +325,26 @@ export default function HomeV2Dashboard({
           </p>
           <p className="text-xs text-[color:var(--muted)]">{t("homeV2CheckInHint")}</p>
         </div>
-        {showClassicLink && (
-          <Link
-            href="/classic"
-            className="min-h-9 rounded-full border border-[color:var(--border)] px-3 text-xs font-semibold text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-          >
-            {t("homeV2BackClassic")}
-          </Link>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {showFreeUpgradeCta && (
+            <Link
+              href="/billing"
+              data-testid="home-free-upgrade-cta"
+              onClick={() => track("home_free_upgrade_cta_click")}
+              className="inline-flex min-h-9 items-center rounded-full border border-emerald-500/30 bg-emerald-500/12 px-3 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-emerald-400"
+            >
+              {t("upgradeToPro")}
+            </Link>
+          )}
+          {showClassicLink && (
+            <Link
+              href="/classic"
+              className="min-h-9 rounded-full border border-[color:var(--border)] px-3 text-xs font-semibold text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
+            >
+              {t("homeV2BackClassic")}
+            </Link>
+          )}
+        </div>
       </div>
 
       {(isMobile || isEmpty) && moneyDesk}

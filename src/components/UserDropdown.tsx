@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import TierIcon from "@/components/TierIcon";
+import NavPlanChip from "@/components/NavPlanChip";
 import { planAtLeast, planDisplayName, planOf } from "@/lib/plan-rank";
 import { useCommerceEnabled } from "@/lib/commerce";
 
@@ -28,9 +29,10 @@ export default function UserDropdown() {
   if (!user) return null;
 
   const initials = (user.displayName || user.username || "U")[0].toUpperCase();
+  const plan = planOf(user);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative flex items-center gap-1.5">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
@@ -52,26 +54,28 @@ export default function UserDropdown() {
         </svg>
       </button>
 
+      <NavPlanChip variant="nav" />
+
       {open && (
-        <div className="glass-overlay absolute right-0 z-50 mt-2 w-52 animate-in slide-in-from-top-2 rounded-[18px] border border-[color:var(--border)] py-1 shadow-xl duration-150">
+        <div className="glass-overlay absolute right-0 top-full z-50 mt-2 w-52 animate-in slide-in-from-top-2 rounded-[18px] border border-[color:var(--border)] py-1 shadow-xl duration-150">
           <div className="border-b border-[color:var(--border)] px-3 py-2">
             <p className="truncate text-sm font-medium text-[color:var(--foreground)]">
               {user.displayName || user.username}
             </p>
             <div className="mt-1">
-              {user.plan === "free" ? (
+              {plan === "free" ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--muted)]">
                   <TierIcon plan="free" size={12} />{t("freeBadge")}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/12 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                  <TierIcon plan={planOf(user)} size={12} />{planDisplayName(planOf(user))}
+                  <TierIcon plan={plan} size={12} />{planDisplayName(plan)}
                 </span>
               )}
             </div>
           </div>
 
-          {commerceEnabled && !planAtLeast(planOf(user), "wealth") && (
+          {commerceEnabled && !planAtLeast(plan, "wealth") && (
             <a
               href="/billing"
               onClick={() => setOpen(false)}

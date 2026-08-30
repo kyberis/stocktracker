@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.275",
+    date: "2026-08-29",
+    title: "Plan badge on home",
+    titleTranslations: {
+      es: "Badge de plan en Home",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "On Free, Home shows a View plans button. On Basic and Pro, your plan appears next to your name and opens billing; Wealth shows the plan badge only.",
+        translations: {
+          es: "En Free, Home muestra el botón Ver planes. En Basic y Pro, el plan aparece junto a tu nombre y abre facturación; Wealth solo muestra el badge del plan.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.274",
     date: "2026-08-29",
     title: "ISIN ticker remaps",

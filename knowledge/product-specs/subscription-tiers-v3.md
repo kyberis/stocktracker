@@ -47,6 +47,9 @@ Retail users get Free (aha + tight AI), Basic (daily Clara×Warren habit), Pro (
 
 - Landing pricing: Free / Basic / Pro / Wealth
 - Dashboard + mobile: expiry banner and deferred trial CTA
+- Home (Free): upgrade CTA (`home-free-upgrade-cta`) → `/billing`
+- Account chrome (Basic/Pro): plan badge next to the name (`nav-plan-badge`) → `/billing`; Wealth badge is display-only
+- Studio sidebar: Free shows “View plans” under the name; paid plans match the badge behavior above
 - Quota table: four columns
 - Admin user plan select: four plans
 
