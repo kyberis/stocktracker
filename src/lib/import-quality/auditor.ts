@@ -157,16 +157,20 @@ export function auditImportBatch(args: {
         tx.pricePerShare > 0 &&
         quote.price > 0 &&
         Math.abs(tx.pricePerShare - quote.price) / quote.price < 0.25;
-      push({
-        id: findingId("currency_mismatch", tx.ticker),
-        severity: "warn",
-        code: "currency_mismatch",
-        ticker: tx.ticker,
-        message: `${tx.ticker}: import currency ${txCur} differs from market quote currency ${quoteCur}.`,
-        evidence: { importCurrency: txCur, quoteCurrency: quoteCur, quotePrice: quote.price },
-        autoFixable: magnitudeOk,
-        fixAction: magnitudeOk ? "align_display_currency" : "none",
-      });
+      // P3: only raise currency_mismatch when we can safely align units.
+      // Display-EUR vs native quote without matching magnitude is expected noise.
+      if (magnitudeOk) {
+        push({
+          id: findingId("currency_mismatch", tx.ticker),
+          severity: "warn",
+          code: "currency_mismatch",
+          ticker: tx.ticker,
+          message: `${tx.ticker}: import currency ${txCur} differs from market quote currency ${quoteCur}.`,
+          evidence: { importCurrency: txCur, quoteCurrency: quoteCur, quotePrice: quote.price },
+          autoFixable: true,
+          fixAction: "align_display_currency",
+        });
+      }
     }
 
     // GBX / GBP 100× unit errors on LSE-style names (never EUR/USD vs pence)
@@ -309,28 +313,30 @@ export function auditHolding(
       !!cryptoPairCcy &&
       cryptoPairCcy === quoteCur &&
       cur !== cryptoPairCcy;
-    // Only auto-align equities when purchase price is already in quote units.
+    // Only flag equities when purchase price is already in quote units (safe align).
+    // Otherwise display EUR vs USD/GBP quote is intentional portfolio FX — not an error.
     const magnitudeOk =
       h.purchasePrice > 0 &&
       quote.price > 0 &&
       Math.abs(h.purchasePrice - quote.price) / quote.price < 0.25;
-    const auto = cryptoPairFix || magnitudeOk;
-    findings.push({
-      id: findingId("currency_mismatch", h.ticker),
-      severity: "warn",
-      code: "currency_mismatch",
-      ticker: h.ticker,
-      message: `${h.ticker}: holding currency ${cur} differs from quote ${quoteCur}.`,
-      evidence: {
-        displayCurrency: cur,
-        quoteCurrency: quoteCur,
-        purchasePrice: h.purchasePrice,
-        quotePrice: quote.price,
-        cryptoPairCcy: cryptoPairCcy || undefined,
-      },
-      autoFixable: auto,
-      fixAction: auto ? "align_display_currency" : "none",
-    });
+    if (cryptoPairFix || magnitudeOk) {
+      findings.push({
+        id: findingId("currency_mismatch", h.ticker),
+        severity: "warn",
+        code: "currency_mismatch",
+        ticker: h.ticker,
+        message: `${h.ticker}: holding currency ${cur} differs from quote ${quoteCur}.`,
+        evidence: {
+          displayCurrency: cur,
+          quoteCurrency: quoteCur,
+          purchasePrice: h.purchasePrice,
+          quotePrice: quote.price,
+          cryptoPairCcy: cryptoPairCcy || undefined,
+        },
+        autoFixable: true,
+        fixAction: "align_display_currency",
+      });
+    }
   }
 
   const isLse =

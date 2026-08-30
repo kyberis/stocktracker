@@ -9,6 +9,7 @@ import { getHoldingsLimit } from "@/lib/subscription";
 import type { SubscriptionPlan } from "@/lib/types";
 import { canonicalExchangeCode } from "@/lib/db/helpers";
 import { normalizeHkYahooSymbol } from "@/lib/market-symbol";
+import { sanitizeStorageTicker } from "@/lib/sanitize-storage-ticker";
 
 const EXTRACTION_PROMPT = `You are a portfolio data extractor. Analyze the provided data and extract two things:
 1. Current stock/ETF/mutual fund **holdings** (net positions).
@@ -238,35 +239,51 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
     const holdings = rawHoldings
-      .map((h: Record<string, unknown>) => ({
-        name: String(h.name || "Unknown"),
-        ticker: normalizeHkYahooSymbol(String(h.ticker || h.isin || "").toUpperCase()),
-        shares: Number(h.shares) || 0,
-        purchasePrice: Number(h.purchasePrice) || 0,
-        displayCurrency: String(h.displayCurrency || "USD").toUpperCase(),
-        exchange: (() => {
-          const raw = String(h.exchange || "").toUpperCase();
-          return canonicalExchangeCode(raw) || raw;
-        })(),
-        assetType: h.assetType === "etf" ? "etf" : "stock",
-      }))
+      .map((h: Record<string, unknown>) => {
+        const sanitized = sanitizeStorageTicker(
+          String(h.ticker || ""),
+          String(h.isin || ""),
+        );
+        // Never fall back to ISIN as the ticker.
+        const ticker = normalizeHkYahooSymbol(sanitized.ticker);
+        return {
+          name: String(h.name || "Unknown"),
+          ticker,
+          isin: sanitized.isin,
+          shares: Number(h.shares) || 0,
+          purchasePrice: Number(h.purchasePrice) || 0,
+          displayCurrency: String(h.displayCurrency || "USD").toUpperCase(),
+          exchange: (() => {
+            const raw = String(h.exchange || "").toUpperCase();
+            return canonicalExchangeCode(raw) || raw;
+          })(),
+          assetType: h.assetType === "etf" ? "etf" : "stock",
+        };
+      })
       .filter((h) => h.ticker && TICKER_RE.test(h.ticker));
 
     const validTypes = new Set(["buy", "sell", "dividend", "fee"]);
     const transactions = rawTxs
       .filter((t: Record<string, unknown>) => (t.ticker || t.isin) && t.date)
-      .map((t: Record<string, unknown>) => ({
-        date: String(t.date || ""),
-        type: validTypes.has(String(t.type)) ? String(t.type) : "buy",
-        ticker: String(t.ticker || t.isin || "").toUpperCase(),
-        name: String(t.name || ""),
-        shares: Math.abs(Number(t.shares) || 0),
-        pricePerShare: Math.abs(Number(t.pricePerShare) || 0),
-        totalAmount: Math.abs(Number(t.totalAmount) || 0),
-        fees: Math.abs(Number(t.fees) || 0),
-        currency: String(t.currency || "USD").toUpperCase(),
-      }))
-      .filter((t) => TICKER_RE.test(t.ticker) && DATE_RE.test(t.date));
+      .map((t: Record<string, unknown>) => {
+        const sanitized = sanitizeStorageTicker(
+          String(t.ticker || ""),
+          String(t.isin || ""),
+        );
+        return {
+          date: String(t.date || ""),
+          type: validTypes.has(String(t.type)) ? String(t.type) : "buy",
+          ticker: sanitized.ticker,
+          isin: sanitized.isin,
+          name: String(t.name || ""),
+          shares: Math.abs(Number(t.shares) || 0),
+          pricePerShare: Math.abs(Number(t.pricePerShare) || 0),
+          totalAmount: Math.abs(Number(t.totalAmount) || 0),
+          fees: Math.abs(Number(t.fees) || 0),
+          currency: String(t.currency || "USD").toUpperCase(),
+        };
+      })
+      .filter((t) => t.ticker && TICKER_RE.test(t.ticker) && DATE_RE.test(t.date));
 
     const hadInput = rawHoldings.length > 0 || rawTxs.length > 0;
     const droppedHoldings = rawHoldings.length - holdings.length;

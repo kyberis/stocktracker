@@ -17,8 +17,8 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.275",
-    date: "2026-08-29",
+    version: "2.5.276",
+    date: "2026-08-30",
     title: "Plan badge on home",
     titleTranslations: {
       es: "Badge de plan en Home",
@@ -29,6 +29,30 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "On Free, Home shows a View plans button. On Basic and Pro, your plan appears next to your name and opens billing; Wealth shows the plan badge only.",
         translations: {
           es: "En Free, Home muestra el botón Ver planes. En Basic y Pro, el plan aparece junto a tu nombre y abre facturación; Wealth solo muestra el badge del plan.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.275",
+    date: "2026-08-30",
+    title: "Cleaner currency checks & ISIN guards",
+    titleTranslations: {
+      es: "Controles de divisa más limpios y guardas ISIN",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Currency mismatch warnings only appear when cost is already in quote units (safe to auto-align). Displaying EUR against a USD/GBP market quote is no longer treated as an error.",
+        translations: {
+          es: "Los avisos de divisa solo aparecen cuando el coste ya está en unidades de la cotización (alineación segura). Mostrar EUR frente a una cotización USD/GBP ya no se trata como error.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Imports and holding writes no longer persist an ISIN (or ISIN.venue) as the ticker — known ISINs map to Yahoo symbols, and unresolved ones stay unmapped instead of blocking quotes.",
+        translations: {
+          es: "Las importaciones y altas de posiciones ya no guardan un ISIN (o ISIN.venue) como ticker: los ISIN conocidos se mapean a símbolos Yahoo, y los no resueltos quedan sin mapear en lugar de bloquear cotizaciones.",
         },
       },
     ],

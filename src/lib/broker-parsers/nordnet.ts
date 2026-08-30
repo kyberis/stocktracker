@@ -135,7 +135,7 @@ function parseNordnet(csv: string, isinToTicker: Record<string, string>): Parsed
 
     const security = cell(row, securityIdx);
     const isin = cell(row, isinIdx);
-    const ticker = (isin && isinToTicker[isin]) || security || isin;
+    const ticker = (isin && isinToTicker[isin]) || security || "";
     const shares = Math.abs(parseNordnetNumber(cell(row, qtyIdx)));
     const price = Math.abs(parseNordnetNumber(cell(row, priceIdx)));
     const rawTotal = parseNordnetNumber(cell(row, totalIdx));
