@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.277",
+    version: "2.5.278",
     date: "2026-08-30",
     title: "Clearer screening quota messages",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Investment screening quota copy now separates “not on your plan” (Free/Basic: 0 screens) from a real monthly quota (Pro 2 / Wealth 12), with Compare plans — no more false “used 3 screens this week” message.",
         translations: {
           es: "El copy de cuota del cribado separa “no está en tu plan” (Free/Basic: 0 cribados) de una cuota mensual real (Pro 2 / Wealth 12), con Comparar planes — ya no dice por error que usaste 3 cribados esta semana.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.277",
+    date: "2026-08-30",
+    title: "First holding totals auto-update",
+    titleTranslations: {
+      es: "Totales de la primera acción se actualizan solos",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "After you add your first stock, invested totals and cost stay on “Calculating…” until live prices and FX load — no manual refresh needed to leave €0.",
+        translations: {
+          es: "Al añadir tu primera acción, el invertido y el coste se quedan en “Calculando…” hasta que cargan precios y tipos de cambio — ya no hace falta pulsar actualizar para salir de 0 €.",
         },
       },
     ],
