@@ -405,6 +405,7 @@ export default function HomeV2Dashboard({
                 costBasis={totals.totalCostEUR}
                 totalReturnPct={totals.totalGainLossPercent}
                 holdingsCount={holdings.length}
+                holdings={holdings}
                 onAdvanced={() => {
                   recordPostIntroAction("hero_advanced");
                   setAndPersistHeroMode("advanced");

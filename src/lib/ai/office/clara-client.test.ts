@@ -1,8 +1,79 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { fetchClaraReply } from "./clara-client";
+import { ensureClaraUser, fetchClaraReply } from "./clara-client";
 
 const identity = { idpSub: "sub-1", email: "a@test.com", trefolioUserId: "u1" };
+
+describe("ensureClaraUser", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it("returns created user on JSON success", async () => {
+    vi.stubEnv("CLARA_BASE_URL", "https://clara.trefolio.com");
+    vi.stubEnv("IDP_SERVICE_TOKEN", "svc");
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({ ok: true, created: true, id: "clara-1", idpSub: "sub-1" }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
+    );
+
+    await expect(ensureClaraUser(identity, { name: "Ada" })).resolves.toEqual({
+      ok: true,
+      created: true,
+      id: "clara-1",
+      idpSub: "sub-1",
+    });
+  });
+
+  it("maps HTML soft-404 (HTTP 200) to clara_route_missing", async () => {
+    vi.stubEnv("CLARA_BASE_URL", "https://clara.trefolio.com");
+    vi.stubEnv("IDP_SERVICE_TOKEN", "svc");
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response("<!DOCTYPE html><html>Página no encontrada</html>", {
+          status: 200,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        }),
+      ),
+    );
+
+    await expect(ensureClaraUser(identity)).resolves.toEqual({
+      ok: false,
+      error: "clara_route_missing",
+      status: 502,
+    });
+  });
+
+  it("surfaces Clara JSON error bodies", async () => {
+    vi.stubEnv("CLARA_BASE_URL", "https://clara.trefolio.com");
+    vi.stubEnv("IDP_SERVICE_TOKEN", "svc");
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ error: "email_conflict" }), {
+          status: 409,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+
+    await expect(ensureClaraUser(identity)).resolves.toEqual({
+      ok: false,
+      error: "email_conflict",
+      status: 409,
+    });
+  });
+});
 
 describe("fetchClaraReply", () => {
   afterEach(() => {

@@ -23,6 +23,8 @@ type AnomalyItem = {
   remediationPrompt: string;
   fingerprint: string;
   notifiedAt: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
   createdAt: string;
   updatedAt: string;
   username?: string;
@@ -30,7 +32,40 @@ type AnomalyItem = {
   displayName?: string;
 };
 
+type StatusCounts = {
+  active: number;
+  open: number;
+  acked: number;
+  fixed: number;
+  dismissed: number;
+  resolved: number;
+  all: number;
+};
+
 const PAGE_SIZE = 25;
+
+const STATUS_OPTIONS: Array<{ value: string; label: string; countKey: keyof StatusCounts }> = [
+  { value: "active", label: "Active (open + acked)", countKey: "active" },
+  { value: "open", label: "Open", countKey: "open" },
+  { value: "acked", label: "Acked", countKey: "acked" },
+  { value: "resolved", label: "Resolved (fixed + dismissed)", countKey: "resolved" },
+  { value: "fixed", label: "Fixed", countKey: "fixed" },
+  { value: "dismissed", label: "Dismissed", countKey: "dismissed" },
+  { value: "all", label: "All", countKey: "all" },
+];
+
+function statusBadgeClass(status: string): string {
+  if (status === "fixed") {
+    return "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300";
+  }
+  if (status === "dismissed") {
+    return "bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300";
+  }
+  if (status === "acked") {
+    return "bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300";
+  }
+  return "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300";
+}
 
 export default function AnomaliesTab() {
   const searchParams = useSearchParams();
@@ -38,9 +73,11 @@ export default function AnomaliesTab() {
 
   const [items, setItems] = useState<AnomalyItem[]>([]);
   const [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState<StatusCounts | null>(null);
   const [page, setPage] = useState(0);
-  const [status, setStatus] = useState("open");
-  const [severity, setSeverity] = useState("all");
+  const [status, setStatus] = useState(searchParams.get("status") || "active");
+  const [severity, setSeverity] = useState(searchParams.get("severity") || "all");
+  const [code, setCode] = useState(searchParams.get("code") || "all");
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<AnomalyItem | null>(null);
   const [busy, setBusy] = useState(false);
@@ -55,18 +92,20 @@ export default function AnomaliesTab() {
         page: String(page),
         pageSize: String(PAGE_SIZE),
       });
+      if (code && code !== "all") qs.set("code", code);
       const res = await fetch(`/api/admin/anomalies?${qs}`, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to load");
       const data = await res.json();
       setItems(data.items || []);
       setTotal(data.total ?? 0);
+      setCounts(data.counts || null);
     } catch {
       setItems([]);
       setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, [status, severity, page]);
+  }, [status, severity, code, page]);
 
   const loadOne = useCallback(async (id: string) => {
     const res = await fetch(`/api/admin/anomalies?id=${encodeURIComponent(id)}`, {
@@ -93,6 +132,14 @@ export default function AnomaliesTab() {
   }, [focusId, loadOne]);
 
   const pageCount = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total]);
+
+  const codeOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const item of items) {
+      for (const c of item.codes) set.add(c);
+    }
+    return ["all", ...[...set].sort()];
+  }, [items]);
 
   async function runAction(
     action: "ack" | "dismiss" | "apply_safe_fix" | "rescan" | "rebuild_holdings",
@@ -137,7 +184,8 @@ export default function AnomaliesTab() {
             Portfolio anomalies
           </h1>
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            Staff triage for calculation / holdings data issues. AI explanations are staff-only and may be inaccurate.
+            Staff triage for calculation / holdings data issues. Use Active vs Resolved to separate
+            work still open from items already fixed or dismissed.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -152,11 +200,12 @@ export default function AnomaliesTab() {
                 setStatus(e.target.value);
               }}
             >
-              <option value="open">open</option>
-              <option value="acked">acked</option>
-              <option value="fixed">fixed</option>
-              <option value="dismissed">dismissed</option>
-              <option value="all">all</option>
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                  {counts ? ` (${counts[opt.countKey]})` : ""}
+                </option>
+              ))}
             </select>
           </label>
           <label className="text-xs text-gray-500 dark:text-slate-400" htmlFor="anomaly-severity-filter">
@@ -174,6 +223,24 @@ export default function AnomaliesTab() {
               <option value="error">error</option>
               <option value="warn">warn</option>
               <option value="info">info</option>
+            </select>
+          </label>
+          <label className="text-xs text-gray-500 dark:text-slate-400" htmlFor="anomaly-code-filter">
+            Code
+            <select
+              id="anomaly-code-filter"
+              className="ml-1 rounded border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm"
+              value={code}
+              onChange={(e) => {
+                setPage(0);
+                setCode(e.target.value);
+              }}
+            >
+              {codeOptions.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -206,18 +273,26 @@ export default function AnomaliesTab() {
                       <span className="text-sm font-medium text-gray-900 dark:text-slate-100 truncate">
                         {item.displayName || item.username || item.email || item.userId}
                       </span>
-                      <span
-                        className={`text-[11px] uppercase font-semibold px-1.5 py-0.5 rounded ${
-                          item.severity === "error"
-                            ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
-                            : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
-                        }`}
-                      >
-                        {item.severity}
-                      </span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span
+                          className={`text-[11px] uppercase font-semibold px-1.5 py-0.5 rounded ${statusBadgeClass(item.status)}`}
+                        >
+                          {item.status}
+                        </span>
+                        <span
+                          className={`text-[11px] uppercase font-semibold px-1.5 py-0.5 rounded ${
+                            item.severity === "error"
+                              ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
+                              : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+                          }`}
+                        >
+                          {item.severity}
+                        </span>
+                      </div>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 truncate">
-                      {item.codes.join(", ")} · {item.status}
+                      {item.codes.join(", ") || "—"}
+                      {item.resolvedBy ? ` · by ${item.resolvedBy}` : ""}
                     </p>
                   </button>
                 </li>
@@ -260,7 +335,12 @@ export default function AnomaliesTab() {
                     {selected.displayName || selected.username || selected.userId}
                   </h2>
                   <p className="text-xs text-gray-500 dark:text-slate-400">
-                    {selected.email} · {selected.status} · {selected.severity}
+                    {selected.email} ·{" "}
+                    <span className={`inline-block px-1 rounded ${statusBadgeClass(selected.status)}`}>
+                      {selected.status}
+                    </span>{" "}
+                    · {selected.severity}
+                    {selected.resolvedBy ? ` · resolved by ${selected.resolvedBy}` : ""}
                   </p>
                 </div>
                 <Link

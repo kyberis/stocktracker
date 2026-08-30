@@ -65,8 +65,9 @@ export async function findOpenPortfolioAnomalyByFingerprint(
 }
 
 export async function listPortfolioAnomalies(opts: {
-  status?: PortfolioAnomalyStatus | "all";
+  status?: PortfolioAnomalyStatus | "all" | "active" | "resolved";
   severity?: PortfolioAnomalySeverity | "all";
+  code?: string;
   userId?: string;
   limit?: number;
   offset?: number;
@@ -75,13 +76,21 @@ export async function listPortfolioAnomalies(opts: {
   const where: string[] = [];
   const args: Array<string | number> = [];
 
-  if (opts.status && opts.status !== "all") {
+  if (opts.status === "active") {
+    where.push("status IN ('open', 'acked')");
+  } else if (opts.status === "resolved") {
+    where.push("status IN ('fixed', 'dismissed')");
+  } else if (opts.status && opts.status !== "all") {
     where.push("status = ?");
     args.push(opts.status);
   }
   if (opts.severity && opts.severity !== "all") {
     where.push("severity = ?");
     args.push(opts.severity);
+  }
+  if (opts.code) {
+    where.push("codes_json LIKE ?");
+    args.push(`%${opts.code}%`);
   }
   if (opts.userId) {
     where.push("user_id = ?");
@@ -101,6 +110,7 @@ export async function listPortfolioAnomalies(opts: {
   const result = await client.execute({
     sql: `SELECT * FROM portfolio_anomalies ${whereSql}
           ORDER BY
+            CASE status WHEN 'open' THEN 0 WHEN 'acked' THEN 1 WHEN 'fixed' THEN 2 ELSE 3 END,
             CASE severity WHEN 'error' THEN 0 WHEN 'warn' THEN 1 ELSE 2 END,
             updated_at DESC
           LIMIT ? OFFSET ?`,
@@ -108,6 +118,44 @@ export async function listPortfolioAnomalies(opts: {
   });
 
   return { items: result.rows.map(mapRow), total };
+}
+
+/** Counts by triage bucket for admin filters. */
+export async function countPortfolioAnomaliesByStatus(): Promise<{
+  active: number;
+  open: number;
+  acked: number;
+  fixed: number;
+  dismissed: number;
+  resolved: number;
+  all: number;
+}> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT status, COUNT(*) as c FROM portfolio_anomalies GROUP BY status`,
+    args: [],
+  });
+  const counts = {
+    active: 0,
+    open: 0,
+    acked: 0,
+    fixed: 0,
+    dismissed: 0,
+    resolved: 0,
+    all: 0,
+  };
+  for (const row of result.rows) {
+    const status = str(row.status);
+    const c = Number(row.c || 0);
+    counts.all += c;
+    if (status === "open") counts.open = c;
+    else if (status === "acked") counts.acked = c;
+    else if (status === "fixed") counts.fixed = c;
+    else if (status === "dismissed") counts.dismissed = c;
+  }
+  counts.active = counts.open + counts.acked;
+  counts.resolved = counts.fixed + counts.dismissed;
+  return counts;
 }
 
 export async function countOpenPortfolioAnomaliesForUser(userId: string): Promise<number> {

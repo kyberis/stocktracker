@@ -18,13 +18,20 @@ const en = {
   homeBeta: {
     badge: "Beta",
     title: "Investment screening",
-    body: "Turn sector mix into a short researched shortlist — up to 3 screens per week while in beta.",
+    body: "Turn sector mix into a researched shortlist. Pro includes 2 screens per month; Wealth includes 12.",
     cta: "Try screening",
   },
   quota: {
-    remaining: "{remaining} of {limit} screens left this week",
+    remaining: "{remaining} of {limit} screens left this {window}",
+    windowMonth: "month",
+    windowWeek: "week",
+    windowDay: "day",
+    windowYear: "year",
     exhausted:
-      "You have used your 3 screens for this week. Try again when the weekly limit resets.",
+      "You've used {used} of {limit} screens this {window}. Resets on {resetDate}.",
+    notIncluded:
+      "Your plan doesn't include multi-agent screens. Pro includes 2 per month; Wealth includes 12.",
+    upgradeCta: "Compare plans",
     providerPausedTitle: "New screens are paused",
     providerPaused:
       "New screens are temporarily unavailable. You can still open reports you already ran.",
@@ -961,13 +968,20 @@ const es: ScreeningCopy = {
   homeBeta: {
     badge: "Beta",
     title: "Cribado de inversión",
-    body: "Convierte tu mezcla por sectores en una lista corta investigada — hasta 3 cribados por semana en beta.",
+    body: "Convierte tu mezcla por sectores en una lista corta investigada. Pro incluye 2 cribados al mes; Wealth, 12.",
     cta: "Probar cribado",
   },
   quota: {
-    remaining: "Te quedan {remaining} de {limit} cribados esta semana",
+    remaining: "Te quedan {remaining} de {limit} cribados este {window}",
+    windowMonth: "mes",
+    windowWeek: "semana",
+    windowDay: "día",
+    windowYear: "año",
     exhausted:
-      "Has usado tus 3 cribados de esta semana. Vuelve a intentarlo cuando se reinicie el límite semanal.",
+      "Has usado {used} de {limit} cribados este {window}. Se reinicia el {resetDate}.",
+    notIncluded:
+      "Tu plan no incluye cribados multiagente. Pro tiene 2 al mes; Wealth, 12.",
+    upgradeCta: "Comparar planes",
     providerPausedTitle: "Los cribados nuevos están en pausa",
     providerPaused:
       "Los cribados nuevos no están disponibles por ahora. Puedes seguir abriendo los informes que ya hayas hecho.",
