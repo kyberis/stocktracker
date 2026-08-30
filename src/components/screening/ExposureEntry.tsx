@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
+import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import {
   REC_THRESHOLDS,
@@ -14,6 +15,10 @@ import { SCREENING_MAX_SCORE } from "@/lib/screening/criteria";
 import { fill, type ScreeningCopy } from "@/lib/screening/copy";
 import { buildIntakeHref } from "@/lib/screening/intake-href";
 import type { ScreeningPipelineKind } from "@/lib/screening/pipeline-kind";
+import {
+  isScreeningQuotaBlocked,
+  resolveScreeningQuotaMessage,
+} from "@/lib/screening/quota-message";
 import type { ScreeningEntryVariant } from "@/lib/screening/schemas";
 import {
   buildEntryBackHomeMetadata,
@@ -25,6 +30,7 @@ import { useTrack } from "@/lib/use-track";
 import { RecentScreensList } from "./RecentScreensList";
 import { ScreeningDisclaimer } from "./ScreeningNotices";
 import { ScreeningPipelineToggle } from "./ScreeningPipelineToggle";
+import { ScreeningQuotaBanner } from "./ScreeningQuotaBanner";
 import { useScreeningCopy } from "./use-screening-copy";
 
 const OVEREXPOSURE_PCT = REC_THRESHOLDS.topSectorPct;
@@ -251,6 +257,7 @@ function RebalanceOptionCard({
 /** Entry point of the screening flow. Sector weights come from the live portfolio. */
 export function ExposureEntry() {
   const { copy } = useScreeningCopy();
+  const { language } = useI18n();
   const track = useTrack();
   const { user } = useAuth();
   const newRunsEnabled = useFeatureFlag("screening_new_runs_enabled");
@@ -288,15 +295,11 @@ export function ExposureEntry() {
 
   const screeningQuota = user?.quotas?.investment_screening;
   const isAdmin = user?.role === "admin";
-  const quotaLine =
-    !isAdmin && screeningQuota
-      ? screeningQuota.remaining <= 0
-        ? copy.quota.exhausted
-        : fill(copy.quota.remaining, {
-            remaining: String(screeningQuota.remaining),
-            limit: String(screeningQuota.limit),
-          })
-      : null;
+  const quotaMessage = resolveScreeningQuotaMessage(copy, screeningQuota, {
+    language,
+    isAdmin,
+  });
+  const quotaBlocked = isScreeningQuotaBlocked(screeningQuota, Boolean(isAdmin));
 
   useEffect(() => {
     if (waitingOnLive) return;
@@ -342,17 +345,8 @@ export function ExposureEntry() {
           {title}
         </h1>
         <p className="mt-2 text-sm text-[color:var(--muted)]">{body}</p>
-        {quotaLine ? (
-          <p
-            className={`mt-2 text-xs ${
-              screeningQuota && screeningQuota.remaining <= 0
-                ? "text-amber-700 dark:text-amber-300"
-                : "text-[color:var(--muted)]"
-            }`}
-            role="status"
-          >
-            {quotaLine}
-          </p>
+        {quotaMessage ? (
+          <ScreeningQuotaBanner message={quotaMessage} className="mt-2" />
         ) : null}
       </header>
 
@@ -418,6 +412,7 @@ export function ExposureEntry() {
       )}
 
       {newRunsEnabled ? (
+        quotaBlocked ? null : (
         <>
           {thesisEnabled ? (
             <ScreeningPipelineToggle value={pipeline} onChange={setPipeline} />
@@ -486,6 +481,7 @@ export function ExposureEntry() {
             />
           </div>
         </>
+        )
       ) : (
         <section
           className="card mt-6 rounded-[20px] border border-amber-500/30 bg-amber-500/[0.06] p-4 sm:p-5"

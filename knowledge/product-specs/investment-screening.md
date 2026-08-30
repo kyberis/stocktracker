@@ -296,10 +296,14 @@ surfaces mock badges or entry-state preview switchers.
 ## 11. Permissions / tier gating / rate limits
 
 - Feature flag `investment_screening_enabled` still gates UI/API access.
-- Per-user quota key `investment_screening` in `FEATURE_QUOTAS`: **3 runs per ISO week**
-  (UTC) for Free and Pro. Consumed on `POST /api/screening/runs`.
+- Per-user quota key `investment_screening` in `FEATURE_QUOTAS` (window: **month**):
+  - Free / Basic: **0** (not included — UI says so and links to `/billing`; does **not** claim the user “used” screens)
+  - Pro: **2** / month
+  - Wealth: **12** / month
+  Consumed on `POST /api/screening/runs`.
+- Copy helper: [`src/lib/screening/quota-message.ts`](../../src/lib/screening/quota-message.ts) — `not_included` vs `exhausted` vs remaining, with dynamic `{used}` / `{limit}` / `{window}` / `{resetDate}`.
 - **Admins** bypass the quota (`requireFeatureQuota` / `session.role === "admin"`).
-- Exhausted quota returns HTTP 429 with `reason: "quota_exceeded"`.
+- Exhausted (or plan limit 0) returns HTTP 429 with `reason: "quota_exceeded"` plus `used`, `limit`, `resetAt`, `window`.
 
 ## 12. Telemetry
 

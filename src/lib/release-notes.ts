@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.279",
+    date: "2026-08-30",
+    title: "Clearer screening quota messages",
+    titleTranslations: {
+      es: "Mensajes de cuota de cribado más claros",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Investment screening quota copy now separates “not on your plan” (Free/Basic: 0 screens) from a real monthly quota (Pro 2 / Wealth 12), with Compare plans — no more false “used 3 screens this week” message.",
+        translations: {
+          es: "El copy de cuota del cribado separa “no está en tu plan” (Free/Basic: 0 cribados) de una cuota mensual real (Pro 2 / Wealth 12), con Comparar planes — ya no dice por error que usaste 3 cribados esta semana.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.278",
     date: "2026-08-30",
     title: "Admin anomaly triage filters",
