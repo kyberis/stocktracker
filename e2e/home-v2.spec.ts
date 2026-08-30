@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { dismissOverlays } from "./helpers";
+import { dismissOverlays, createTestUser, ensureLoggedOut, loginAsAdmin, adoptApiSessionInBrowser } from "./helpers";
 
 test.describe("Home v2 recommendations", () => {
   test("empty portfolio does not show recommendation card", async ({ page }) => {
@@ -40,6 +40,30 @@ test.describe("Home v2 recommendations", () => {
     await dismissOverlays(page);
     await expect(page.getByTestId("home-recommendation-card")).toHaveCount(0);
     await expect(page.getByTestId("home-holdings-explorer-cta")).toHaveCount(0);
+  });
+
+  test("free users see upgrade CTA on home that links to billing", async ({ page, request, context }) => {
+    await ensureLoggedOut(request);
+    await loginAsAdmin(request);
+    const flagRes = await request.put("/api/admin/feature-flags", {
+      data: { flag: "commerce_enabled", enabled: true },
+    });
+    if (!flagRes.ok()) {
+      test.skip(true, "Could not enable commerce_enabled (admin flag API unavailable).");
+      return;
+    }
+    await ensureLoggedOut(request);
+
+    await createTestUser(request);
+    await adoptApiSessionInBrowser(request, context);
+    await page.goto("/");
+    await dismissOverlays(page);
+
+    const cta = page.getByTestId("home-free-upgrade-cta");
+    await expect(cta).toBeVisible({ timeout: 15_000 });
+    await expect(cta).toHaveAttribute("href", "/billing");
+    await cta.click();
+    await page.waitForURL(/\/billing/);
   });
 
   test("seeded user can load recommendations API", async ({ page }) => {

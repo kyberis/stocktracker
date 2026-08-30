@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.280",
+    date: "2026-08-30",
+    title: "Plan badge on home",
+    titleTranslations: {
+      es: "Badge de plan en Home",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "On Free, Home shows a View plans button. On Basic and Pro, your plan appears next to your name and opens billing; Wealth shows the plan badge only.",
+        translations: {
+          es: "En Free, Home muestra el botón Ver planes. En Basic y Pro, el plan aparece junto a tu nombre y abre facturación; Wealth solo muestra el badge del plan.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.279",
     date: "2026-08-30",
     title: "Clearer screening quota messages",

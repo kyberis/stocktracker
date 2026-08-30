@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.279: in-app screening quota messaging only — Free/Basic still have no multi-agent screens on landing; no landing copy change"
+  "notes": "2.5.280: home Free upgrade CTA and plan badge are authenticated chrome, not a marketed landing capability"
 }
