@@ -555,14 +555,15 @@ export function IntakeChat() {
       });
       if (!res.ok) {
         if (res.status === 429) {
-          let detail: {
+          type Quota429Body = {
             limit?: number;
             used?: number;
             resetAt?: string;
             window?: ScreeningQuotaSlice["window"];
-          } | null = null;
+          };
+          let detail: Quota429Body | null = null;
           try {
-            detail = (await res.json()) as typeof detail;
+            detail = (await res.json()) as Quota429Body;
           } catch {
             detail = null;
           }
