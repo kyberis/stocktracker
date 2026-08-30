@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "Any @trefolio.com email is treated as a test account. Admin analytics, engagement, channel, referral, and ops metrics exclude them; Users shows a Test badge and Real/Test filter.",
         translations: {
           es: "Cualquier email @trefolio.com se trata como cuenta test. Las métricas de admin (analytics, engagement, canales, referrals, ops) las excluyen; en Usuarios aparece el badge Test y un filtro Real/Test.",
