@@ -4,7 +4,9 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent } from "@/lib/utils";
+import { isPortfolioPricingPending } from "@/lib/portfolio-pricing-pending";
 import DayMoveAsOf from "@/components/DayMoveAsOf";
+import type { Holding } from "@/lib/types";
 
 interface Props {
   totalValue: number;
@@ -15,6 +17,7 @@ interface Props {
   costBasis: number;
   totalReturnPct: number;
   holdingsCount: number;
+  holdings?: Holding[];
   onAdvanced: () => void;
 }
 
@@ -27,18 +30,40 @@ export default function HomePortfolioTotalCard({
   costBasis,
   totalReturnPct,
   holdingsCount,
+  holdings: holdingsProp,
   onAdvanced,
 }: Props) {
-  const { activePortfolioCurrency } = usePortfolio();
+  const {
+    activePortfolioCurrency,
+    holdings: ctxHoldings,
+    quotes,
+    exchangeRates,
+    refreshingTickers,
+    isRefreshing,
+  } = usePortfolio();
   const { stealthMode } = useStealthMode();
   const { t } = useI18n();
 
+  const holdings = holdingsProp ?? ctxHoldings;
   const invested = investedValue ?? totalValue;
   const liquid = cashValue ?? 0;
   const showSplit = investedValue != null;
   const isPositiveDay = dayGainLoss >= 0;
   const isFlatDay = Math.abs(dayGainLoss) < 0.005 && Math.abs(dayGainLossPercent) < 0.005;
   const isPositiveReturn = totalReturnPct >= 0;
+
+  const investedEmpty = showSplit && invested <= 0;
+  const totalsEmpty = totalValue <= 0 && costBasis <= 0;
+  const isCalculatingValue =
+    (investedEmpty || totalsEmpty) &&
+    isPortfolioPricingPending({
+      holdings,
+      quotes,
+      exchangeRates,
+      baseCurrency: activePortfolioCurrency,
+      refreshingTickers,
+      isRefreshing,
+    });
 
   const dayChangeColor = isFlatDay
     ? "text-[color:var(--muted)]"
@@ -51,14 +76,22 @@ export default function HomePortfolioTotalCard({
     ? "text-emerald-600 dark:text-emerald-400"
     : "text-red-500 dark:text-red-400";
 
+  const moneyOrCalculating = (value: number) =>
+    stealthMode
+      ? "•••••"
+      : isCalculatingValue
+        ? t("calculatingPortfolioValue")
+        : formatCurrency(value, activePortfolioCurrency);
+
   return (
     <section
       className="card relative overflow-hidden rounded-[var(--radius-card)] shadow-[0_16px_32px_rgba(1,6,16,0.18)]"
       aria-labelledby="home-portfolio-total-label"
+      aria-busy={isCalculatingValue || undefined}
     >
       <div
         className={`absolute left-0 top-4 bottom-4 w-[3px] rounded-full ${
-          isFlatDay
+          isFlatDay || isCalculatingValue
             ? "bg-[color:var(--muted)]"
             : isPositiveDay
               ? "bg-emerald-500"
@@ -75,37 +108,50 @@ export default function HomePortfolioTotalCard({
           >
             {t("homeV2PortfolioTotal")} · {activePortfolioCurrency}
           </div>
-          <h2 className="text-[34px] font-semibold leading-none tracking-tight tabular-nums text-[color:var(--foreground)] sm:text-[40px]">
-            {stealthMode ? "•••••" : formatCurrency(totalValue, activePortfolioCurrency)}
-          </h2>
-          <div
-            className={`mt-3 inline-flex flex-wrap items-baseline gap-2 text-sm font-medium tabular-nums ${dayChangeColor}`}
+          <h2
+            className={`text-[34px] font-semibold leading-none tracking-tight tabular-nums sm:text-[40px] ${
+              isCalculatingValue
+                ? "text-[color:var(--muted)]"
+                : "text-[color:var(--foreground)]"
+            }`}
           >
-            <span className="text-[11px] leading-none" aria-hidden="true">
-              {dayArrow}
-            </span>
-            <span>
-              {stealthMode
-                ? "•••"
-                : `${isPositiveDay && !isFlatDay ? "+" : ""}${formatCurrency(dayGainLoss, activePortfolioCurrency)}`}
-            </span>
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs ${
-                isFlatDay
-                  ? "bg-[color:var(--surface-soft)]"
-                  : isPositiveDay
-                    ? "bg-emerald-500/10"
-                    : "bg-red-500/10"
-              }`}
+            {moneyOrCalculating(totalValue)}
+          </h2>
+          {!isCalculatingValue && (
+            <div
+              className={`mt-3 inline-flex flex-wrap items-baseline gap-2 text-sm font-medium tabular-nums ${dayChangeColor}`}
             >
-              {stealthMode
-                ? ""
-                : `${formatPercent(dayGainLossPercent)}`}
-            </span>
-            <span className="font-normal text-[color:var(--muted)]">
-              <DayMoveAsOf />
-            </span>
-          </div>
+              <span className="text-[11px] leading-none" aria-hidden="true">
+                {dayArrow}
+              </span>
+              <span>
+                {stealthMode
+                  ? "•••"
+                  : `${isPositiveDay && !isFlatDay ? "+" : ""}${formatCurrency(dayGainLoss, activePortfolioCurrency)}`}
+              </span>
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs ${
+                  isFlatDay
+                    ? "bg-[color:var(--surface-soft)]"
+                    : isPositiveDay
+                      ? "bg-emerald-500/10"
+                      : "bg-red-500/10"
+                }`}
+              >
+                {stealthMode
+                  ? ""
+                  : `${formatPercent(dayGainLossPercent)}`}
+              </span>
+              <span className="font-normal text-[color:var(--muted)]">
+                <DayMoveAsOf />
+              </span>
+            </div>
+          )}
+          {isCalculatingValue && (
+            <p className="mt-3 text-xs text-[color:var(--muted)]">
+              {t("calculatingPortfolioValueHint")}
+            </p>
+          )}
           {showSplit && (
             <dl className="mt-4 grid grid-cols-2 gap-3 sm:max-w-md">
               <div>
@@ -114,9 +160,13 @@ export default function HomePortfolioTotalCard({
                 </dt>
                 <dd
                   data-testid="home-invested-value"
-                  className="mt-0.5 text-sm font-semibold tabular-nums text-[color:var(--foreground)]"
+                  className={`mt-0.5 text-sm font-semibold tabular-nums ${
+                    isCalculatingValue
+                      ? "text-[color:var(--muted)]"
+                      : "text-[color:var(--foreground)]"
+                  }`}
                 >
-                  {stealthMode ? "•••••" : formatCurrency(invested, activePortfolioCurrency)}
+                  {moneyOrCalculating(invested)}
                 </dd>
               </div>
               <div>
@@ -149,18 +199,31 @@ export default function HomePortfolioTotalCard({
           <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--muted)]">
             {t("totalCost")}
           </div>
-          <div className="mt-0.5 text-sm font-medium tabular-nums text-[color:var(--foreground)]">
-            {stealthMode ? "•••••" : formatCurrency(costBasis, activePortfolioCurrency)}
+          <div
+            data-testid="home-total-cost"
+            className={`mt-0.5 text-sm font-medium tabular-nums ${
+              isCalculatingValue
+                ? "text-[color:var(--muted)]"
+                : "text-[color:var(--foreground)]"
+            }`}
+          >
+            {moneyOrCalculating(costBasis)}
           </div>
         </div>
         <div>
           <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--muted)]">
             {t("homeV2TotalReturn")}
           </div>
-          <div className={`mt-0.5 text-sm font-medium tabular-nums ${returnColor}`}>
+          <div
+            className={`mt-0.5 text-sm font-medium tabular-nums ${
+              isCalculatingValue ? "text-[color:var(--muted)]" : returnColor
+            }`}
+          >
             {stealthMode
               ? "•••••"
-              : `${formatPercent(totalReturnPct)}`}
+              : isCalculatingValue
+                ? t("calculatingPortfolioValue")
+                : `${formatPercent(totalReturnPct)}`}
           </div>
         </div>
         <div>

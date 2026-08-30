@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.277",
+    date: "2026-08-30",
+    title: "First holding totals auto-update",
+    titleTranslations: {
+      es: "Totales de la primera acción se actualizan solos",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "After you add your first stock, invested totals and cost stay on “Calculating…” until live prices and FX load — no manual refresh needed to leave €0.",
+        translations: {
+          es: "Al añadir tu primera acción, el invertido y el coste se quedan en “Calculando…” hasta que cargan precios y tipos de cambio — ya no hace falta pulsar actualizar para salir de 0 €.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.276",
     date: "2026-08-30",
     title: "Clara activate from onboarding",
