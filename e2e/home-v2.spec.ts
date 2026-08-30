@@ -54,8 +54,7 @@ test.describe("Home v2 recommendations", () => {
     }
     await ensureLoggedOut(request);
 
-    const creds = await createTestUser(request);
-    void creds;
+    await createTestUser(request);
     await adoptApiSessionInBrowser(request, context);
     await page.goto("/");
     await dismissOverlays(page);
