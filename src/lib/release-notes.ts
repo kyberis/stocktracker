@@ -17,30 +17,35 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.276",
+    version: "2.5.277",
     date: "2026-08-30",
-<<<<<<< HEAD
-    title: "Clara activate from onboarding",
-    titleTranslations: {
-      es: "Activar Clara desde el onboarding",
-=======
     title: "First holding totals auto-update",
     titleTranslations: {
       es: "Totales de la primera acción se actualizan solos",
->>>>>>> d2f176d3 (Bump release notes to 2.5.276 after rebase onto main.)
     },
     changes: [
       {
         type: "fix",
-<<<<<<< HEAD
-        text: "Creating a Clara account during onboarding no longer fails when Clara’s ensure-user API was missing — the route is live on Clara, and trefolio maps soft HTML 404s instead of a generic unreachable error.",
-        translations: {
-          es: "Crear una cuenta de Clara durante el onboarding ya no falla cuando faltaba la API ensure-user de Clara — la ruta está activa en Clara, y trefolio distingue un 404 HTML suave en lugar de un error genérico de inalcanzable.",
-=======
         text: "After you add your first stock, invested totals and cost stay on “Calculating…” until live prices and FX load — no manual refresh needed to leave €0.",
         translations: {
           es: "Al añadir tu primera acción, el invertido y el coste se quedan en “Calculando…” hasta que cargan precios y tipos de cambio — ya no hace falta pulsar actualizar para salir de 0 €.",
->>>>>>> d2f176d3 (Bump release notes to 2.5.276 after rebase onto main.)
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.276",
+    date: "2026-08-30",
+    title: "Clara activate from onboarding",
+    titleTranslations: {
+      es: "Activar Clara desde el onboarding",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Creating a Clara account during onboarding no longer fails when Clara’s ensure-user API was missing — the route is live on Clara, and trefolio maps soft HTML 404s instead of a generic unreachable error.",
+        translations: {
+          es: "Crear una cuenta de Clara durante el onboarding ya no falla cuando faltaba la API ensure-user de Clara — la ruta está activa en Clara, y trefolio distingue un 404 HTML suave en lugar de un error genérico de inalcanzable.",
         },
       },
     ],
