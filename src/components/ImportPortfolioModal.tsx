@@ -339,7 +339,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
       const isLastChunk = i + CHUNK_SIZE >= validTransactions.length || limitReached;
       const payload = chunk.map((tx) => ({
         holdingId: "",
-        ticker: tx.ticker || tx.isin || (tx.type === "fee" ? "FEE" : "UNKNOWN"),
+        ticker: tx.ticker || (tx.type === "fee" ? "FEE" : "UNKNOWN"),
         name: tx.name,
         exchange: holdings.find((h) => h.ticker === tx.ticker)?.exchange || "",
         isin: tx.isin || "",

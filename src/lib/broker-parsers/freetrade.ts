@@ -80,7 +80,7 @@ function parseFreetrade(csv: string, isinToTicker: Record<string, string>): Pars
     transactions.push({
       date,
       type,
-      ticker: isinToTicker[isin] || isin,
+      ticker: isinToTicker[isin] || "",
       name: title,
       isin,
       shares: type === "dividend" ? 0 : shares,
