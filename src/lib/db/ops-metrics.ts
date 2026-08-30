@@ -1,4 +1,5 @@
 import { ensureInitialized } from "./client";
+import { sqlExcludeTestAccountEmail } from "@/lib/test-accounts";
 
 export type WarrenOpsMetricsTotals = {
   users_total: number;
@@ -11,8 +12,12 @@ export type WarrenOpsMetricsTotals = {
   analytics_events_24h: number;
 };
 
+const EXCLUDE_TEST_EMAIL = sqlExcludeTestAccountEmail("email");
+const EXCLUDE_TEST_USERS = sqlExcludeTestAccountEmail("u.email");
+
 /**
  * Aggregates only — for IdP ops digest (Bearer IDP_SERVICE_TOKEN).
+ * Excludes @trefolio.com / example.com test accounts from user and event counts.
  */
 export async function getWarrenOpsMetrics(): Promise<WarrenOpsMetricsTotals> {
   const client = await ensureInitialized();
@@ -27,31 +32,41 @@ export async function getWarrenOpsMetrics(): Promise<WarrenOpsMetricsTotals> {
     fbLinear,
     ev24,
   ] = await Promise.all([
-    client.execute(`SELECT COUNT(*) as cnt FROM users`),
-    client.execute(`SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro'`),
-    client.execute(`SELECT COUNT(*) as cnt FROM users WHERE role = 'admin'`),
+    client.execute(`SELECT COUNT(*) as cnt FROM users WHERE ${EXCLUDE_TEST_EMAIL}`),
+    client.execute(`SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro' AND ${EXCLUDE_TEST_EMAIL}`),
+    client.execute(`SELECT COUNT(*) as cnt FROM users WHERE role = 'admin' AND ${EXCLUDE_TEST_EMAIL}`),
     client.execute({
-      sql: `SELECT COUNT(*) as cnt FROM users WHERE created_at >= datetime('now', '-7 days')`,
+      sql: `SELECT COUNT(*) as cnt FROM users WHERE created_at >= datetime('now', '-7 days') AND ${EXCLUDE_TEST_EMAIL}`,
       args: [],
     }),
     client.execute({
-      sql: `SELECT COUNT(*) as cnt FROM feedback
-            WHERE created_at >= datetime('now', '-30 days')
-              AND status = 'open'`,
+      sql: `SELECT COUNT(*) as cnt FROM feedback f
+            INNER JOIN users u ON u.id = f.user_id
+            WHERE f.created_at >= datetime('now', '-30 days')
+              AND f.status = 'open'
+              AND ${EXCLUDE_TEST_USERS}`,
       args: [],
     }),
     client.execute({
-      sql: `SELECT COUNT(*) as cnt FROM feedback WHERE created_at >= datetime('now', '-30 days')`,
+      sql: `SELECT COUNT(*) as cnt FROM feedback f
+            INNER JOIN users u ON u.id = f.user_id
+            WHERE f.created_at >= datetime('now', '-30 days')
+              AND ${EXCLUDE_TEST_USERS}`,
       args: [],
     }),
     client.execute({
-      sql: `SELECT COUNT(*) as cnt FROM feedback
-            WHERE created_at >= datetime('now', '-30 days')
-              AND linear_issue_id IS NOT NULL AND linear_issue_id != ''`,
+      sql: `SELECT COUNT(*) as cnt FROM feedback f
+            INNER JOIN users u ON u.id = f.user_id
+            WHERE f.created_at >= datetime('now', '-30 days')
+              AND f.linear_issue_id IS NOT NULL AND f.linear_issue_id != ''
+              AND ${EXCLUDE_TEST_USERS}`,
       args: [],
     }),
     client.execute({
-      sql: `SELECT COUNT(*) as cnt FROM analytics_events WHERE created_at >= datetime('now', '-1 day')`,
+      sql: `SELECT COUNT(*) as cnt FROM analytics_events ae
+            INNER JOIN users u ON u.id = ae.user_id
+            WHERE ae.created_at >= datetime('now', '-1 day')
+              AND ${EXCLUDE_TEST_USERS}`,
       args: [],
     }),
   ]);

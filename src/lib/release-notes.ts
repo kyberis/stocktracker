@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.281",
+    date: "2026-08-30",
+    title: "Exclude test accounts from stats",
+    titleTranslations: {
+      es: "Excluir cuentas test de las estadísticas",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Any @trefolio.com email is treated as a test account. Admin analytics, engagement, channel, referral, and ops metrics exclude them; Users shows a Test badge and Real/Test filter.",
+        translations: {
+          es: "Cualquier email @trefolio.com se trata como cuenta test. Las métricas de admin (analytics, engagement, canales, referrals, ops) las excluyen; en Usuarios aparece el badge Test y un filtro Real/Test.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.280",
     date: "2026-08-30",
     title: "Plan badge on home",

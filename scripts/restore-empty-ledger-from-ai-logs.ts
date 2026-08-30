@@ -10,10 +10,12 @@ import { randomUUID } from "node:crypto";
 import { ensureInitialized } from "../src/lib/db/client";
 import { holdingAssetType } from "../src/lib/db/helpers";
 import { deriveHoldingsFromTransactions } from "../src/lib/derive-holdings";
+import { sqlExcludeTestAccountEmail } from "../src/lib/test-accounts";
 import type { Transaction } from "../src/lib/types";
 
 const USD_EUR = 0.92;
 const MIN_SNAP_EUR = 100;
+const EXCLUDE_TEST_USERS = sqlExcludeTestAccountEmail("u.email");
 
 type HoldingRow = Record<string, unknown>;
 type TxRow = Record<string, unknown>;
@@ -201,10 +203,8 @@ async function listCandidates(emailFilter?: string) {
           JOIN portfolio_snapshots s ON s.user_id = u.id
           WHERE NOT EXISTS (SELECT 1 FROM holdings h WHERE h.user_id = u.id AND h.shares > 0)
             AND NOT EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id)
-            AND lower(u.email) NOT LIKE 'test+%@trefolio.com'
+            AND ${EXCLUDE_TEST_USERS}
             AND lower(u.email) NOT LIKE 'suarez84+%'
-            AND lower(u.email) NOT LIKE '%@test.example.com'
-            AND lower(u.email) NOT LIKE '%@example.com'
             AND (? IS NULL OR lower(u.email) = lower(?) OR lower(u.username) = lower(?))
           GROUP BY u.id
           HAVING max_snap >= ?

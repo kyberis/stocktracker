@@ -1,8 +1,12 @@
 import { randomUUID } from "crypto";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { sqlExcludeTestAccountEmail } from "@/lib/test-accounts";
 import { ensureInitialized } from "./client";
 import { str, num } from "./helpers";
 import { incrementInteractionCount } from "./satisfaction";
+
+const EXCLUDE_TEST_USERS = sqlExcludeTestAccountEmail("u.email");
+const EXCLUDE_TEST_EMAIL = sqlExcludeTestAccountEmail("email");
 
 const SATISFACTION_QUALIFYING_EVENTS = new Set([
   "holding_add",
@@ -157,7 +161,8 @@ export async function getLatestAnalyticsInteraction(): Promise<ProdOpsLatestAnal
   const result = await client.execute({
     sql: `SELECT ae.user_id, ae.event, ae.metadata, ae.created_at, u.username
           FROM analytics_events ae
-          LEFT JOIN users u ON u.id = ae.user_id
+          INNER JOIN users u ON u.id = ae.user_id
+          WHERE ${EXCLUDE_TEST_USERS}
           ORDER BY ae.created_at DESC
           LIMIT 1`,
   });
@@ -190,37 +195,48 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
     funnelResult, attributionBySource, attributionByMedium, internalConversions, adDispatchedConversions,
     screeningEntryByPreview, screeningEntryVariantsLive,
   ] = await Promise.all([
-      client.execute("SELECT COUNT(*) as cnt FROM users"),
+      client.execute(`SELECT COUNT(*) as cnt FROM users WHERE ${EXCLUDE_TEST_EMAIL}`),
       client.execute({
         sql: `SELECT
-                COUNT(DISTINCT CASE WHEN created_at >= datetime('now', '-7 days') THEN user_id END) as active_7d,
-                COUNT(DISTINCT CASE WHEN created_at >= datetime('now', '-30 days') THEN user_id END) as active_30d
-              FROM analytics_events
-              WHERE created_at >= datetime('now', '-30 days')`,
+                COUNT(DISTINCT CASE WHEN ae.created_at >= datetime('now', '-7 days') THEN ae.user_id END) as active_7d,
+                COUNT(DISTINCT CASE WHEN ae.created_at >= datetime('now', '-30 days') THEN ae.user_id END) as active_30d
+              FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.created_at >= datetime('now', '-30 days')
+                AND ${EXCLUDE_TEST_USERS}`,
       }),
       client.execute({
-        sql: "SELECT COUNT(*) as cnt FROM analytics_events WHERE created_at >= datetime('now', ?)",
+        sql: `SELECT COUNT(*) as cnt FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_USERS}`,
         args: [daysArg],
       }),
       client.execute({
-        sql: `SELECT event, COUNT(*) as cnt FROM analytics_events
-              WHERE created_at >= datetime('now', ?)
-              GROUP BY event ORDER BY cnt DESC`,
+        sql: `SELECT ae.event, COUNT(*) as cnt FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_USERS}
+              GROUP BY ae.event ORDER BY cnt DESC`,
         args: [daysArg],
       }),
       client.execute({
-        sql: `SELECT json_extract(metadata, '$.ticker') as ticker, COUNT(*) as cnt
-              FROM analytics_events
-              WHERE event = 'stock_view' AND created_at >= datetime('now', ?)
+        sql: `SELECT json_extract(ae.metadata, '$.ticker') as ticker, COUNT(*) as cnt
+              FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.event = 'stock_view' AND ae.created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_USERS}
               GROUP BY ticker ORDER BY cnt DESC LIMIT 10`,
         args: [daysArg],
       }),
       client.execute({
-        sql: `SELECT date(created_at) as day,
-                     COUNT(DISTINCT user_id) as users,
+        sql: `SELECT date(ae.created_at) as day,
+                     COUNT(DISTINCT ae.user_id) as users,
                      COUNT(*) as events
-              FROM analytics_events
-              WHERE created_at >= datetime('now', ?)
+              FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_USERS}
               GROUP BY day ORDER BY day ASC`,
         args: [daysArg],
       }),
@@ -228,6 +244,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
         sql: `SELECT date(created_at) as day, COUNT(*) as cnt
               FROM users
               WHERE created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_EMAIL}
               GROUP BY day ORDER BY day ASC`,
         args: [daysArg],
       }),
@@ -260,11 +277,13 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
         args: [daysArg],
       }),
       client.execute({
-        sql: `SELECT event, COUNT(DISTINCT user_id) as cnt
-              FROM analytics_events
-              WHERE event IN ('signup', 'paywall_shown', 'upgrade_compare_shown', 'upgrade_compare_clicked', 'billing_checkout_started', 'billing_checkout_completed', 'onboarding_trial_shown', 'onboarding_trial_activated', 'onboarding_trial_skipped', 'onboarding_clara_step_viewed', 'onboarding_clara_activate_clicked', 'onboarding_clara_linked', 'onboarding_clara_skipped', 'account_delete_started', 'account_deleted', 'onboarding_import_method', 'first_stock_activation_shown', 'empty_activation_cta', 'holding_add', 'portfolio_import')
-                AND created_at >= datetime('now', ?)
-              GROUP BY event`,
+        sql: `SELECT ae.event, COUNT(DISTINCT ae.user_id) as cnt
+              FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.event IN ('signup', 'paywall_shown', 'upgrade_compare_shown', 'upgrade_compare_clicked', 'billing_checkout_started', 'billing_checkout_completed', 'onboarding_trial_shown', 'onboarding_trial_activated', 'onboarding_trial_skipped', 'onboarding_clara_step_viewed', 'onboarding_clara_activate_clicked', 'onboarding_clara_linked', 'onboarding_clara_skipped', 'account_delete_started', 'account_deleted', 'onboarding_import_method', 'first_stock_activation_shown', 'empty_activation_cta', 'holding_add', 'portfolio_import')
+                AND ae.created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_USERS}
+              GROUP BY ae.event`,
         args: [daysArg],
       }),
       client.execute({
@@ -286,6 +305,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
                AND ae.event = 'billing_checkout_completed'
                AND ae.created_at >= datetime('now', ?)
               WHERE u.created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_USERS}
               GROUP BY source
               ORDER BY signups DESC, paid_conversions DESC`,
         args: [daysArg, daysArg, daysArg],
@@ -309,45 +329,54 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
                AND ae.event = 'billing_checkout_completed'
                AND ae.created_at >= datetime('now', ?)
               WHERE u.created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_USERS}
               GROUP BY medium
               ORDER BY signups DESC, paid_conversions DESC`,
         args: [daysArg, daysArg, daysArg],
       }),
       client.execute({
-        sql: `SELECT event, COUNT(*) AS cnt
-              FROM analytics_events
-              WHERE event IN ('signup_completed', 'checkout_started', 'checkout_completed')
-                AND created_at >= datetime('now', ?)
-              GROUP BY event`,
+        sql: `SELECT ae.event, COUNT(*) AS cnt
+              FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.event IN ('signup_completed', 'checkout_started', 'checkout_completed')
+                AND ae.created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_USERS}
+              GROUP BY ae.event`,
         args: [daysArg],
       }),
       client.execute({
-        sql: `SELECT json_extract(metadata, '$.event') AS event, COUNT(*) AS cnt
-              FROM analytics_events
-              WHERE event = 'ad_conversion_dispatched'
-                AND created_at >= datetime('now', ?)
-              GROUP BY json_extract(metadata, '$.event')`,
+        sql: `SELECT json_extract(ae.metadata, '$.event') AS event, COUNT(*) AS cnt
+              FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.event = 'ad_conversion_dispatched'
+                AND ae.created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_USERS}
+              GROUP BY json_extract(ae.metadata, '$.event')`,
         args: [daysArg],
       }),
       client.execute({
         sql: `SELECT
-                event,
-                COALESCE(json_extract(metadata, '$.preview'), 'live') AS preview,
+                ae.event,
+                COALESCE(json_extract(ae.metadata, '$.preview'), 'live') AS preview,
                 COUNT(*) AS cnt
-              FROM analytics_events
-              WHERE event IN (${screeningEntryEvents.map(() => "?").join(", ")})
-                AND created_at >= datetime('now', ?)
-              GROUP BY event, preview`,
+              FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.event IN (${screeningEntryEvents.map(() => "?").join(", ")})
+                AND ae.created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_USERS}
+              GROUP BY ae.event, preview`,
         args: [...screeningEntryEvents, daysArg],
       }),
       client.execute({
         sql: `SELECT
-                COALESCE(json_extract(metadata, '$.variant'), 'unknown') AS variant,
+                COALESCE(json_extract(ae.metadata, '$.variant'), 'unknown') AS variant,
                 COUNT(*) AS cnt
-              FROM analytics_events
-              WHERE event = 'screening_entry_viewed'
-                AND COALESCE(json_extract(metadata, '$.preview'), 'live') = 'live'
-                AND created_at >= datetime('now', ?)
+              FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.event = 'screening_entry_viewed'
+                AND COALESCE(json_extract(ae.metadata, '$.preview'), 'live') = 'live'
+                AND ae.created_at >= datetime('now', ?)
+                AND ${EXCLUDE_TEST_USERS}
               GROUP BY variant
               ORDER BY cnt DESC`,
         args: [daysArg],
@@ -369,6 +398,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
           JOIN users u ON u.id = ae.user_id
           WHERE ae.event IN ('alert_email_sent', 'alert_telegram_sent', 'alert_push_sent', 'alert_device_sent')
             AND ae.created_at >= datetime('now', ?)
+            AND ${EXCLUDE_TEST_USERS}
           GROUP BY ae.user_id
           ORDER BY total DESC`,
     args: [`-${days} days`],
