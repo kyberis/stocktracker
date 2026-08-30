@@ -225,7 +225,7 @@ export async function listActiveAlertsForCron(): Promise<CronAlert[]> {
      FROM price_alerts pa
      JOIN users u ON u.id = pa.user_id
      LEFT JOIN user_settings us ON us.user_id = pa.user_id
-     WHERE pa.active = 1`
+     WHERE pa.active = 1 AND u.deleted_at = ''`
   );
   return result.rows.map((r) => ({
     ...rowToAlert(r as unknown as Record<string, unknown>),

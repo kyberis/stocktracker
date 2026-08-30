@@ -47,10 +47,16 @@ const notificationRow = (overrides: Partial<Record<string, unknown>> = {}) => ({
 describe("notifications", () => {
   describe("createNotification", () => {
     it("inserts and returns AppNotification", async () => {
-      mockExecute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
+      mockExecute
+        .mockResolvedValueOnce({ rows: [{ deleted_at: "" }] })
+        .mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
 
       const result = await notifications.createNotification("user-1", notificationInput);
 
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "SELECT deleted_at FROM users WHERE id = ?",
+        args: ["user-1"],
+      });
       expect(mockExecute).toHaveBeenCalledWith({
         sql: expect.stringContaining("INSERT INTO notifications"),
         args: expect.arrayContaining(["user-1", "admin", "Test Title", "Test message"]),
@@ -62,11 +68,20 @@ describe("notifications", () => {
         message: "Test message",
         read: false,
       });
-      expect(result.createdAt).toBeDefined();
+      expect(result?.createdAt).toBeDefined();
+    });
+
+    it("returns null for deleted users without inserting", async () => {
+      mockExecute.mockResolvedValueOnce({ rows: [{ deleted_at: "2026-01-01T00:00:00Z" }] });
+      const result = await notifications.createNotification("user-1", notificationInput);
+      expect(result).toBeNull();
+      expect(mockExecute).toHaveBeenCalledTimes(1);
     });
 
     it("includes optional titleEs, messageEs, link, linkLabel, linkLabelEs", async () => {
-      mockExecute.mockResolvedValueOnce({ rows: [] });
+      mockExecute
+        .mockResolvedValueOnce({ rows: [{ deleted_at: "" }] })
+        .mockResolvedValueOnce({ rows: [] });
       const input = {
         ...notificationInput,
         titleEs: "Título",
@@ -80,8 +95,8 @@ describe("notifications", () => {
         sql: expect.any(String),
         args: expect.arrayContaining(["Título", "Mensaje", "/settings", "View", "Ver"]),
       });
-      expect(result.titleEs).toBe("Título");
-      expect(result.link).toBe("/settings");
+      expect(result?.titleEs).toBe("Título");
+      expect(result?.link).toBe("/settings");
     });
   });
 
@@ -94,7 +109,7 @@ describe("notifications", () => {
 
       const count = await notifications.broadcastNotification(notificationInput);
 
-      expect(mockExecute).toHaveBeenCalledWith("SELECT id FROM users");
+      expect(mockExecute).toHaveBeenCalledWith("SELECT id FROM users WHERE deleted_at = ''");
       expect(mockBatch).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
@@ -119,7 +134,7 @@ describe("notifications", () => {
       });
 
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT id FROM users WHERE plan = ?",
+        sql: "SELECT id FROM users WHERE plan = ? AND deleted_at = ''",
         args: ["pro"],
       });
       expect(count).toBe(1);

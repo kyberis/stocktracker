@@ -623,7 +623,9 @@ export default function PrivacyPolicyPage() {
               <li>
                 <strong className="text-slate-800">After account deletion</strong>{" "}
                 — all personal data is permanently deleted within 30 days. Backups
-                containing your data are purged within 90 days.
+                containing your data are purged within 90 days. An anonymized
+                non-identifying account record may be retained for internal
+                administration (for example, to show that an account was deleted).
               </li>
             </ul>
           </section>

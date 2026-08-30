@@ -20,15 +20,19 @@ Admin tool to search and manage users: grant membership, reset data, impersonate
 
 ## 4. Data model
 - All user tables.
+- Soft-deleted accounts retain a row in `users` with `deleted_at` set and PII scrubbed (blank email, anonymized username) so admins can still list them. Deleted users are excluded from notifications, emails, digests, alerts, and broadcasts.
 
 ## 5. API surface
 - Varies per sub-route.
+- `GET /api/admin/users/detail` accepts `filterStatus=active|deleted|all` and returns `deletedAt` on each user.
 
 ## 6. UI surface
 - Searchable table + user drawer with actions.
+- Deleted users show a **Deleted** badge (and optional status filter). Detail view is read-only for tombstones.
 
 ## 7. Business logic
 - Impersonation triggers a banner + audit log.
+- Account deletion (self-serve, admin, or IdP webhook) purges personal data via CASCADE + non-CASCADE cleanup, then reinserts an anonymized tombstone with the same user id.
 
 ## 8. External dependencies
 - None.

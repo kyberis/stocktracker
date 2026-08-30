@@ -54,6 +54,9 @@ export const POST = withMetrics("/api/admin/users", async (req: NextRequest) => 
   if (!user) {
     return NextResponse.json({ error: "User not found." }, { status: 404 });
   }
+  if (user.deleted_at) {
+    return NextResponse.json({ error: "Cannot modify a deleted user." }, { status: 400 });
+  }
 
   if (data.action === "setRole") {
     if (user.username === "admin" && data.role !== "admin") {
@@ -143,6 +146,9 @@ export const DELETE = withMetrics("/api/admin/users", async (req: NextRequest) =
   const user = await findUserById(userId);
   if (!user) {
     return NextResponse.json({ error: "User not found." }, { status: 404 });
+  }
+  if (user.deleted_at) {
+    return NextResponse.json({ error: "User is already deleted." }, { status: 400 });
   }
   if (user.username === "admin") {
     return NextResponse.json({ error: "admin user cannot be deleted." }, { status: 400 });

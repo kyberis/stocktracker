@@ -18,6 +18,29 @@ test.describe("Admin Panel", () => {
     expect(body.users.some((u: { role: string }) => u.role === "admin")).toBe(true);
   });
 
+  test("deleted users remain listed and marked deleted", async ({ request }) => {
+    await ensureLoggedOut(request);
+    const { userId, password } = await createTestUser(request);
+
+    const del = await request.post("/api/auth/delete-account", { data: { password } });
+    expect(del.status()).toBe(200);
+
+    await ensureLoggedOut(request);
+    const ok = await loginAsAdmin(request);
+    if (!ok) test.skip();
+
+    const res = await request.get(
+      "/api/admin/users/detail?page=0&pageSize=100&filterStatus=deleted&sortKey=createdAt&sortDir=desc",
+    );
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body.users)).toBe(true);
+    const tombstone = body.users.find((u: { id: string }) => u.id === userId);
+    expect(tombstone).toBeTruthy();
+    expect(tombstone.deletedAt).toBeTruthy();
+    expect(String(tombstone.username)).toMatch(/^deleted-/);
+  });
+
   test("non-admin cannot access admin endpoints", async ({ request }) => {
     await ensureLoggedOut(request);
     const { password } = await createTestUser(request);

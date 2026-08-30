@@ -30,6 +30,7 @@ export interface AdminUser {
   transactionCount: number;
   brokerAccounts: string;
   brokerImports: string;
+  deletedAt?: string;
 }
 
 export interface UserPortfolio {

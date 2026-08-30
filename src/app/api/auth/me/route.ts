@@ -10,6 +10,7 @@ import {
   getSnapTradeConnection,
   scheduleSnapTradeDeletion,
   createNotification,
+  isUserDeleted,
 } from "@/lib/db";
 import { effectivePlan, canAccessTheme, getAiTokenLimit } from "@/lib/subscription";
 import { getAllFeatureQuotas } from "@/lib/feature-quotas";
@@ -18,9 +19,11 @@ import { withMetrics } from "@/lib/with-metrics";
 import { ensureLocalUserLinkedToIdp, syncEntitlementsForUser } from "@/lib/idp/entitlements";
 import { isIdpEnabled, legacyAuthEnabled, resolveIdpAccountHref, resolveIdpDeveloperHref } from "@/lib/idp/config";
 import { getMcpUserEndpointUrl } from "@/lib/mcp/public-config";
-import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
+import { createSessionToken, getSessionCookieConfig, getExpiredSessionCookieConfig } from "@/lib/auth/session";
 import { ensureTrefolioAdminRoleForUser } from "@/lib/auth/admin-allowlist";
 import { renewCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
+import { getExpiredLayoutThemeCookieConfig } from "@/lib/theme-preferences";
+import { json401 } from "@/lib/log-unauthorized";
 
 /**
  * Fire-and-forget: when a plan's grace period has expired, persist the
@@ -66,6 +69,18 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
 
   const impersonatorId = session.impersonatorUserId;
   let user = await findUserById(session.userId);
+
+  if (user && isUserDeleted(user)) {
+    const response = json401(
+      req,
+      { source: "api/auth/me", reason: "account_deleted" },
+      { error: "Account deleted." },
+    );
+    response.cookies.set(getExpiredSessionCookieConfig());
+    response.cookies.set(getExpiredLayoutThemeCookieConfig());
+    return response;
+  }
+
   if (user) {
     await ensureTrefolioAdminRoleForUser(user.id, user.email);
     user = await findUserById(session.userId);

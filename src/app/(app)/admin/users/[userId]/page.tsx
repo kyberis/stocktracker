@@ -35,6 +35,7 @@ interface UserInfo {
   membershipGrantPlan?: string | null;
   membershipGrantDays?: number | null;
   membershipGrantCreatedAt?: string | null;
+  deletedAt?: string;
 }
 
 interface AllPortfolio {
@@ -772,6 +773,7 @@ export default function AdminUserDetailPage() {
 
   if (!data) return null;
   const { user } = data;
+  const isDeleted = Boolean(user.deletedAt);
 
   const dataTabs: { key: DataTab; label: string; count: number }[] = [
     { key: "holdings", label: "Holdings", count: data.holdings.length },
@@ -789,11 +791,24 @@ export default function AdminUserDetailPage() {
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="m15 19-7-7 7-7" /></svg>
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">{user.username}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className={`text-xl font-bold truncate ${isDeleted ? "text-gray-500 dark:text-slate-400 line-through" : "text-gray-900 dark:text-white"}`}>
+                {user.username}
+              </h1>
+              {isDeleted && (
+                <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/10 text-red-500">
+                  Deleted
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2 mt-0.5">
               <AuthBadge provider={user.authProvider} />
               <PlanBadge plan={user.plan} />
-              {user.onboardingCompleted ? (
+              {isDeleted && user.deletedAt ? (
+                <span className="text-[11px] text-red-400 font-medium">
+                  Deleted {new Date(user.deletedAt).toLocaleString()}
+                </span>
+              ) : user.onboardingCompleted ? (
                 <span className="text-[11px] text-emerald-500 font-medium">Onboarded</span>
               ) : (
                 <span className="text-[11px] text-amber-400 font-medium">Onboarding pending</span>
@@ -809,9 +824,9 @@ export default function AdminUserDetailPage() {
           <div className="flex flex-col items-end gap-2 shrink-0">
             <div className="text-right text-xs text-gray-400 dark:text-slate-500">
               <div>Created {new Date(user.createdAt).toLocaleDateString()}</div>
-              <div>Last active {relativeTime(user.lastActiveAt)}</div>
+              <div>{isDeleted ? "Account deleted" : `Last active ${relativeTime(user.lastActiveAt)}`}</div>
             </div>
-            {user.role !== "admin" && user.username !== "admin" && (
+            {!isDeleted && user.role !== "admin" && user.username !== "admin" && (
               <button
                 type="button"
                 onClick={handleImpersonate}
@@ -832,8 +847,8 @@ export default function AdminUserDetailPage() {
             <h3 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-2">User Information</h3>
             {([
               ["User ID", <span key="id" className="font-mono text-[11px] select-all">{user.id}</span>],
-              ["Email", user.email || "—"],
-              ["Display Name", user.displayName || "—"],
+              ["Email", isDeleted ? "—" : (user.email || "—")],
+              ["Display Name", isDeleted ? "—" : (user.displayName || "—")],
               ["Email Verified", user.emailVerified ? <span key="v" className="text-emerald-500">Yes</span> : <span key="v" className="text-gray-400">No</span>],
               ["Plan", user.plan],
               ["Plan Expires", user.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString() : "—"],
@@ -933,6 +948,12 @@ export default function AdminUserDetailPage() {
 
             {/* Actions */}
             <div className="pt-2 border-t border-gray-200 dark:border-slate-700 space-y-2">
+              {isDeleted ? (
+                <p className="text-xs text-red-400">
+                  This account was deleted. Personal data has been purged; only an anonymized tombstone remains for admin records.
+                </p>
+              ) : (
+              <>
               <div className="flex flex-wrap gap-2 items-center">
                 {user.username === "admin" ? (
                   <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400">admin (protected)</span>
@@ -1014,6 +1035,8 @@ export default function AdminUserDetailPage() {
                 )}
                 {actionMsg && <span className="text-xs text-emerald-500 self-center">{actionMsg}</span>}
               </div>
+              </>
+              )}
             </div>
 
             {/* Digest result preview */}

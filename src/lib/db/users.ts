@@ -22,7 +22,7 @@ import { effectivePlan } from "@/lib/subscription";
 export async function findUserByUsername(username: string): Promise<DbUser | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT * FROM users WHERE username = ?",
+    sql: "SELECT * FROM users WHERE username = ? AND deleted_at = ''",
     args: [username],
   });
   if (result.rows.length === 0) return null;
@@ -32,7 +32,7 @@ export async function findUserByUsername(username: string): Promise<DbUser | nul
 export async function findUserByEmail(email: string): Promise<DbUser | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT * FROM users WHERE LOWER(email) = LOWER(?)",
+    sql: "SELECT * FROM users WHERE LOWER(email) = LOWER(?) AND deleted_at = ''",
     args: [email],
   });
   if (result.rows.length === 0) return null;
@@ -42,7 +42,7 @@ export async function findUserByEmail(email: string): Promise<DbUser | null> {
 export async function findUserByGoogleId(googleId: string): Promise<DbUser | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT * FROM users WHERE google_id = ?",
+    sql: "SELECT * FROM users WHERE google_id = ? AND deleted_at = ''",
     args: [googleId],
   });
   if (result.rows.length === 0) return null;
@@ -52,7 +52,7 @@ export async function findUserByGoogleId(googleId: string): Promise<DbUser | nul
 export async function findUserByAppleId(appleId: string): Promise<DbUser | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT * FROM users WHERE apple_id = ?",
+    sql: "SELECT * FROM users WHERE apple_id = ? AND deleted_at = ''",
     args: [appleId],
   });
   if (result.rows.length === 0) return null;
@@ -75,7 +75,7 @@ export async function findUserIdByIdpSub(idpSub: string): Promise<string | null>
   if (!sub) return null;
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT id FROM users WHERE idp_sub = ? LIMIT 1",
+    sql: "SELECT id FROM users WHERE idp_sub = ? AND deleted_at = '' LIMIT 1",
     args: [sub],
   });
   if (result.rows.length === 0) return null;
@@ -103,6 +103,7 @@ export async function getLatestCreatedUser(): Promise<ProdOpsLatestCreatedUser |
   const result = await client.execute({
     sql: `SELECT id, username, email, display_name, auth_provider, plan, created_at
           FROM users
+          WHERE deleted_at = ''
           ORDER BY created_at DESC
           LIMIT 1`,
   });
@@ -285,7 +286,7 @@ export async function updateUserSubscription(
 export async function findUserByStripeCustomerId(customerId: string): Promise<DbUser | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT * FROM users WHERE stripe_customer_id = ?",
+    sql: "SELECT * FROM users WHERE stripe_customer_id = ? AND deleted_at = ''",
     args: [customerId],
   });
   if (result.rows.length === 0) return null;
@@ -295,7 +296,7 @@ export async function findUserByStripeCustomerId(customerId: string): Promise<Db
 export async function findUserByStripeSubscriptionId(subscriptionId: string): Promise<DbUser | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT * FROM users WHERE stripe_subscription_id = ?",
+    sql: "SELECT * FROM users WHERE stripe_subscription_id = ? AND deleted_at = ''",
     args: [subscriptionId],
   });
   if (result.rows.length === 0) return null;
@@ -428,14 +429,85 @@ export async function incrementDailyAiTokenUsage(userId: string, tokens: number)
 
 export async function countProSubscribers(): Promise<number> {
   const client = await ensureInitialized();
-  const result = await client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro'");
+  const result = await client.execute(
+    "SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro' AND deleted_at = ''",
+  );
   return num(result.rows[0]?.cnt);
 }
 
+/**
+ * Soft-delete a user for GDPR erasure while retaining an anonymized tombstone
+ * so admins can still see the account as deleted in the users list.
+ *
+ * Personal data is purged from related tables (CASCADE where possible, plus
+ * explicit deletes for non-CASCADE FKs). The users row is kept with scrubbed
+ * PII and deleted_at set.
+ */
 export async function deleteUser(userId: string) {
+  const existing = await findUserById(userId);
+  if (!existing) return;
+  if (existing.deleted_at) return;
+
   const client = await ensureInitialized();
-  await client.execute({ sql: "DELETE FROM unsubscribe_tokens WHERE user_id = ?", args: [userId] });
+  const tag = `deleted-${userId.replace(/-/g, "").slice(0, 12)}`;
+  const createdAt = existing.created_at;
+  const plan = existing.plan;
+  const authProvider = existing.auth_provider;
+
+  // Non-CASCADE refs that would block a hard DELETE (and hold PII).
+  const nonCascadePurge: { sql: string; args: (string)[] }[] = [
+    { sql: "DELETE FROM unsubscribe_tokens WHERE user_id = ?", args: [userId] },
+    { sql: "DELETE FROM email_sends WHERE user_id = ?", args: [userId] },
+    { sql: "DELETE FROM private_chat_reactions WHERE user_id = ?", args: [userId] },
+    { sql: "DELETE FROM private_chat_messages WHERE sender_id = ?", args: [userId] },
+    { sql: "DELETE FROM private_chat_participants WHERE user_id = ?", args: [userId] },
+    { sql: "DELETE FROM private_chat_rooms WHERE created_by = ?", args: [userId] },
+    { sql: "DELETE FROM social_post_comments WHERE user_id = ?", args: [userId] },
+    { sql: "DELETE FROM social_posts WHERE user_id = ?", args: [userId] },
+    {
+      sql: "DELETE FROM user_connections WHERE requester_id = ? OR receiver_id = ?",
+      args: [userId, userId],
+    },
+  ];
+  for (const stmt of nonCascadePurge) {
+    try {
+      await client.execute(stmt);
+    } catch {
+      // Table may not exist in older/local DBs; continue erasure.
+    }
+  }
+
+  // Hard-delete so ON DELETE CASCADE purges holdings, settings, etc.
   await client.execute({ sql: "DELETE FROM users WHERE id = ?", args: [userId] });
+
+  // Re-insert anonymized tombstone for admin listing (same id for continuity).
+  // Email is intentionally blank — no outbound mail address remains.
+  await client.execute({
+    sql: `INSERT INTO users (
+      id, username, password_hash, role, must_change_password,
+      created_at, email, display_name, plan, auth_provider, deleted_at, referral_code,
+      email_verified
+    ) VALUES (?, ?, '', 'user', 0, ?, '', '', ?, ?, datetime('now'), ?, 0)`,
+    args: [
+      userId,
+      tag,
+      createdAt,
+      plan,
+      authProvider,
+      `del-${tag}`,
+    ],
+  });
+}
+
+/** True when an email address belongs to a deleted-account tombstone (or is empty). */
+export function isDeletedTombstoneEmail(email: string | null | undefined): boolean {
+  const value = (email ?? "").trim().toLowerCase();
+  if (!value) return true;
+  return (
+    value.endsWith("@deleted.invalid") ||
+    value.endsWith("@deleted.local") ||
+    /^deleted-[a-z0-9]+@/.test(value)
+  );
 }
 
 export function toPublicUser(user: DbUser): PublicUser {
@@ -555,7 +627,7 @@ export async function findUserByDevicePasskey(passkey: string): Promise<DbUser |
   const client = await ensureInitialized();
   const hash = hashToken(normalized);
   const result = await client.execute({
-    sql: "SELECT * FROM users WHERE device_passkey_hash = ?",
+    sql: "SELECT * FROM users WHERE device_passkey_hash = ? AND deleted_at = ''",
     args: [hash],
   });
   if (result.rows.length === 0) return null;
@@ -720,6 +792,7 @@ export interface AdminUserWithStats {
   transactionCount: number;
   brokerAccounts: string;
   brokerImports: string;
+  deletedAt: string;
 }
 
 function mapUserRow(r: import("@libsql/client").Row): AdminUserWithStats {
@@ -751,6 +824,7 @@ function mapUserRow(r: import("@libsql/client").Row): AdminUserWithStats {
     transactionCount: num(r.transaction_count),
     brokerAccounts: str(r.broker_accounts),
     brokerImports: str(r.broker_imports),
+    deletedAt: str(r.deleted_at),
   };
 }
 
@@ -761,7 +835,7 @@ const USER_STATS_SELECT = `
     u.created_at, u.last_active_at, u.plan_expires_at,
     u.stripe_customer_id, u.stripe_subscription_id,
     u.tax_residency, u.onboarding_completed, u.ai_calls_this_month,
-    u.experience_level,
+    u.experience_level, u.deleted_at,
     COALESCE((SELECT us.language FROM user_settings us WHERE us.user_id = u.id), 'en') AS language,
     (SELECT COUNT(*) FROM portfolios WHERE user_id = u.id) AS portfolio_count,
     (SELECT COUNT(*) FROM holdings WHERE user_id = u.id) AS holding_count,
@@ -800,6 +874,7 @@ export async function listUsersWithStatsPaginated(opts: {
   filterPlan?: string;
   filterAuth?: string;
   filterImport?: string;
+  filterStatus?: string;
   filterTest?: "all" | "real" | "test";
 }): Promise<{ users: AdminUserWithStats[]; total: number }> {
   const client = await ensureInitialized();
@@ -812,6 +887,7 @@ export async function listUsersWithStatsPaginated(opts: {
     filterPlan,
     filterAuth,
     filterImport,
+    filterStatus,
     filterTest = "all",
   } = opts;
 
@@ -830,6 +906,11 @@ export async function listUsersWithStatsPaginated(opts: {
   if (filterAuth && filterAuth !== "all") {
     whereClauses.push("u.auth_provider = ?");
     args.push(filterAuth);
+  }
+  if (filterStatus === "deleted") {
+    whereClauses.push("u.deleted_at != ''");
+  } else if (filterStatus === "active") {
+    whereClauses.push("u.deleted_at = ''");
   }
   if (filterTest === "real") {
     whereClauses.push(sqlExcludeTestAccountEmail("u.email"));
@@ -946,7 +1027,7 @@ export async function getUserDetailData(userId: string): Promise<{
 export async function updateLastActive(userId: string): Promise<void> {
   const client = await ensureInitialized();
   await client.execute({
-    sql: "UPDATE users SET last_active_at = datetime('now') WHERE id = ?",
+    sql: "UPDATE users SET last_active_at = datetime('now') WHERE id = ? AND deleted_at = ''",
     args: [userId],
   });
   // Fire-and-forget: alert ProdOps if this user is on a support return-watch.

@@ -103,7 +103,8 @@ export async function runLifecycleActivationJob(): Promise<LifecycleJobResult> {
   const result = await client.execute({
     sql: `SELECT u.id, u.email, u.display_name
 FROM users u
-WHERE u.email != ''
+WHERE u.deleted_at = ''
+  AND u.email != ''
   AND u.email_verified = 1
   AND u.created_at <= datetime('now', '-48 hours')
   AND u.created_at > datetime('now', '-72 hours')
@@ -169,7 +170,8 @@ export async function runLifecycleWinbackJob(): Promise<LifecycleJobResult> {
   const result = await client.execute({
     sql: `SELECT u.id, u.email, u.display_name
 FROM users u
-WHERE u.email != ''
+WHERE u.deleted_at = ''
+  AND u.email != ''
   AND u.email_verified = 1
   AND (
     (u.last_active_at != '' AND u.last_active_at <= datetime('now', '-14 days'))
