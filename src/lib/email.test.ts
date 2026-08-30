@@ -92,8 +92,9 @@ describe("email", () => {
       expect(isTreefolioTestEmail("test+bar@TREFOLIO.COM")).toBe(true);
     });
 
-    it("user@trefolio.com without test+ prefix returns false", () => {
-      expect(isTreefolioTestEmail("user@trefolio.com")).toBe(false);
+    it("any @trefolio.com address is a test account", () => {
+      expect(isTreefolioTestEmail("user@trefolio.com")).toBe(true);
+      expect(isTreefolioTestEmail("staff@TREFOLIO.COM")).toBe(true);
     });
   });
 

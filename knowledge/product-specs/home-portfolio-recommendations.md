@@ -52,7 +52,7 @@ Authenticated Home (`/`) shows one portfolio recommendation at a time (diversifi
 
 ## 7. Business logic
 
-**Cadence:** A Monday 07:00 UTC cron analyzes users with ≥1 open holding who were **active in the last 30 days** (`users.last_active_at`) and are **not test accounts** (`test+*@trefolio.com`, `@example.com`, `@test.example.com`). It writes `portfolio_recommendation_cache` for the ISO week and clears prior `skipped` states (`acted` is kept). Home prefers this week's **non-empty** cache; if missing or empty (e.g. after rule changes), falls back to live compute without burning the manual cooldown. Users can also tap **Run analysis** on Home (`POST … action: refresh`) at most **once every 7 days**, enforced via `last_manual_at` (API returns **429** while on cooldown). Manual refresh clears all tip states (skipped + acted). The weekly cron does not reset that manual cooldown.
+**Cadence:** A Monday 07:00 UTC cron analyzes users with ≥1 open holding who were **active in the last 30 days** (`users.last_active_at`) and are **not test accounts** (any `*@trefolio.com`, plus `@example.com` / `@test.example.com`). It writes `portfolio_recommendation_cache` for the ISO week and clears prior `skipped` states (`acted` is kept). Home prefers this week's **non-empty** cache; if missing or empty (e.g. after rule changes), falls back to live compute without burning the manual cooldown. Users can also tap **Run analysis** on Home (`POST … action: refresh`) at most **once every 7 days**, enforced via `last_manual_at` (API returns **429** while on cooldown). Manual refresh clears all tip states (skipped + acted). The weekly cron does not reset that manual cooldown.
 
 Queue order: diversify → concentration → cash_idle → fx.
 

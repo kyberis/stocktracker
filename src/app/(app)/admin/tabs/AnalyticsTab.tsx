@@ -330,6 +330,9 @@ export default function AnalyticsTab() {
         <StatCard label="Active (30d)" value={data.activeUsers30d} />
         <StatCard label="Events" value={data.totalEvents} />
       </div>
+      <p className="text-[11px] text-gray-400 dark:text-slate-500 -mt-2">
+        Excludes test accounts (@trefolio.com and example.com fixtures).
+      </p>
 
       {/* Conversion parity */}
       {data.conversionParity && (

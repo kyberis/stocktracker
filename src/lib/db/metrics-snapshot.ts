@@ -1,5 +1,6 @@
 import { ensureInitialized } from "./client";
 import { str, num } from "./helpers";
+import { sqlExcludeTestAccountEmail } from "@/lib/test-accounts";
 
 export interface MetricsSnapshot {
   freeUsers: number;
@@ -13,27 +14,42 @@ export interface MetricsSnapshot {
   eventsLast24h: { event: string; count: number }[];
 }
 
+const EXCLUDE_TEST_EMAIL = sqlExcludeTestAccountEmail("email");
+const EXCLUDE_TEST_USERS = sqlExcludeTestAccountEmail("u.email");
+
 export async function getMetricsSnapshot(): Promise<MetricsSnapshot> {
   const client = await ensureInitialized();
 
   const [freeUsers, basicUsers, proUsers, wealthUsers, active7d, active30d, holdings, transactions, events24h] =
     await Promise.all([
-      client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan = 'free'"),
-      client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan = 'basic'"),
-      client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro'"),
-      client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan = 'wealth'"),
+      client.execute(`SELECT COUNT(*) as cnt FROM users WHERE plan = 'free' AND ${EXCLUDE_TEST_EMAIL}`),
+      client.execute(`SELECT COUNT(*) as cnt FROM users WHERE plan = 'basic' AND ${EXCLUDE_TEST_EMAIL}`),
+      client.execute(`SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro' AND ${EXCLUDE_TEST_EMAIL}`),
+      client.execute(`SELECT COUNT(*) as cnt FROM users WHERE plan = 'wealth' AND ${EXCLUDE_TEST_EMAIL}`),
       client.execute({
-        sql: "SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events WHERE created_at >= datetime('now', '-7 days')",
+        sql: `SELECT COUNT(DISTINCT ae.user_id) as cnt FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.created_at >= datetime('now', '-7 days')
+                AND ${EXCLUDE_TEST_USERS}`,
       }),
       client.execute({
-        sql: "SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events WHERE created_at >= datetime('now', '-30 days')",
+        sql: `SELECT COUNT(DISTINCT ae.user_id) as cnt FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.created_at >= datetime('now', '-30 days')
+                AND ${EXCLUDE_TEST_USERS}`,
       }),
-      client.execute("SELECT COUNT(*) as cnt FROM holdings"),
-      client.execute("SELECT COUNT(*) as cnt FROM transactions"),
+      client.execute(`SELECT COUNT(*) as cnt FROM holdings h
+                     INNER JOIN users u ON u.id = h.user_id
+                     WHERE ${EXCLUDE_TEST_USERS}`),
+      client.execute(`SELECT COUNT(*) as cnt FROM transactions t
+                     INNER JOIN users u ON u.id = t.user_id
+                     WHERE ${EXCLUDE_TEST_USERS}`),
       client.execute({
-        sql: `SELECT event, COUNT(*) as cnt FROM analytics_events
-              WHERE created_at >= datetime('now', '-1 day')
-              GROUP BY event ORDER BY cnt DESC`,
+        sql: `SELECT ae.event, COUNT(*) as cnt FROM analytics_events ae
+              INNER JOIN users u ON u.id = ae.user_id
+              WHERE ae.created_at >= datetime('now', '-1 day')
+                AND ${EXCLUDE_TEST_USERS}
+              GROUP BY ae.event ORDER BY cnt DESC`,
       }),
     ]);
 

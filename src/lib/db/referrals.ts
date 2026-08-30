@@ -3,9 +3,14 @@ import { ensureInitialized } from "./client";
 import { str, num, type DbUser, rowToDbUser, mapUser } from "./helpers";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { isBlockedEmailDomain } from "@/lib/schemas";
+import { sqlExcludeTestAccountEmail } from "@/lib/test-accounts";
 import { trackEvent } from "./analytics";
 import { updateUserSubscription } from "./users";
 import { planAtLeast } from "@/lib/plan-rank";
+
+const EXCLUDE_TEST_USERS = sqlExcludeTestAccountEmail("u.email");
+const EXCLUDE_TEST_REFEREE = sqlExcludeTestAccountEmail("ref.email");
+const EXCLUDE_TEST_REFERRER = sqlExcludeTestAccountEmail("u.email");
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
 const CODE_LENGTH = 8;
@@ -283,33 +288,45 @@ export async function getReferralFunnelStats(days: number): Promise<ReferralFunn
 
   const [linkViews, linkActions, referralsByStatus, topReferrers, rejections] = await Promise.all([
     client.execute({
-      sql: `SELECT COUNT(*) as cnt FROM analytics_events
-            WHERE event = 'referral_link_viewed' AND created_at >= datetime('now', ?)`,
+      sql: `SELECT COUNT(*) as cnt FROM analytics_events ae
+            INNER JOIN users u ON u.id = ae.user_id
+            WHERE ae.event = 'referral_link_viewed' AND ae.created_at >= datetime('now', ?)
+              AND ${EXCLUDE_TEST_USERS}`,
       args: [daysArg],
     }),
     client.execute({
-      sql: `SELECT COUNT(*) as cnt FROM analytics_events
-            WHERE event IN ('referral_link_copied', 'referral_link_shared')
-            AND created_at >= datetime('now', ?)`,
+      sql: `SELECT COUNT(*) as cnt FROM analytics_events ae
+            INNER JOIN users u ON u.id = ae.user_id
+            WHERE ae.event IN ('referral_link_copied', 'referral_link_shared')
+              AND ae.created_at >= datetime('now', ?)
+              AND ${EXCLUDE_TEST_USERS}`,
       args: [daysArg],
     }),
     client.execute({
-      sql: `SELECT status, COUNT(*) as cnt FROM referrals
-            WHERE created_at >= datetime('now', ?) GROUP BY status`,
+      sql: `SELECT r.status, COUNT(*) as cnt FROM referrals r
+            INNER JOIN users ref ON ref.id = r.referee_id
+            WHERE r.created_at >= datetime('now', ?)
+              AND ${EXCLUDE_TEST_REFEREE}
+            GROUP BY r.status`,
       args: [daysArg],
     }),
     client.execute({
       sql: `SELECT r.referrer_id, u.display_name, u.email, COUNT(*) as cnt, u.referral_reward_days
             FROM referrals r
             JOIN users u ON u.id = r.referrer_id
+            JOIN users ref ON ref.id = r.referee_id
             WHERE r.status IN ('accepted', 'rewarded') AND r.created_at >= datetime('now', ?)
+              AND ${EXCLUDE_TEST_REFERRER}
+              AND ${EXCLUDE_TEST_REFEREE}
             GROUP BY r.referrer_id ORDER BY cnt DESC LIMIT 10`,
       args: [daysArg],
     }),
     client.execute({
-      sql: `SELECT reject_reason, COUNT(*) as cnt FROM referrals
-            WHERE status = 'rejected' AND created_at >= datetime('now', ?)
-            GROUP BY reject_reason ORDER BY cnt DESC`,
+      sql: `SELECT r.reject_reason, COUNT(*) as cnt FROM referrals r
+            INNER JOIN users ref ON ref.id = r.referee_id
+            WHERE r.status = 'rejected' AND r.created_at >= datetime('now', ?)
+              AND ${EXCLUDE_TEST_REFEREE}
+            GROUP BY r.reject_reason ORDER BY cnt DESC`,
       args: [daysArg],
     }),
   ]);

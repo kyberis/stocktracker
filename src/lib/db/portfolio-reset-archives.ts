@@ -2,6 +2,9 @@ import { randomUUID } from "crypto";
 
 import { ensureInitialized } from "./client";
 import { str, num } from "./helpers";
+import { sqlExcludeTestAccountEmail } from "@/lib/test-accounts";
+
+const EXCLUDE_TEST_USERS = sqlExcludeTestAccountEmail("u.email");
 
 export type PortfolioResetArchive = {
   id: string;
@@ -116,10 +119,8 @@ export async function listUserIdsWithEmptyLedgerSnapshotHistory(
           AND NOT EXISTS (
             SELECT 1 FROM transactions t WHERE t.user_id = u.id
           )
-          AND lower(u.email) NOT LIKE 'test+%@trefolio.com'
-          AND lower(u.email) NOT LIKE 'suarez84+%'
-          AND lower(u.email) NOT LIKE '%@test.example.com'
-          AND lower(u.email) NOT LIKE '%@example.com'`,
+          AND ${EXCLUDE_TEST_USERS}
+          AND lower(u.email) NOT LIKE 'suarez84+%'`,
     args: [minSnapshotEur],
   });
   return result.rows.map((r) => str(r.user_id));

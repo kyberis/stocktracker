@@ -13,6 +13,7 @@ import {
   shouldResetDailyAiWindow,
   num,
 } from "./helpers";
+import { sqlExcludeTestAccountEmail, sqlIsTestAccountEmail } from "@/lib/test-accounts";
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
 import { resolvePortfolioId } from "./portfolios";
 import { normalizeAttribution, type FirstTouchAttribution } from "@/lib/attribution";
@@ -799,9 +800,20 @@ export async function listUsersWithStatsPaginated(opts: {
   filterPlan?: string;
   filterAuth?: string;
   filterImport?: string;
+  filterTest?: "all" | "real" | "test";
 }): Promise<{ users: AdminUserWithStats[]; total: number }> {
   const client = await ensureInitialized();
-  const { page, pageSize, search, sortKey = "createdAt", sortDir = "desc", filterPlan, filterAuth, filterImport } = opts;
+  const {
+    page,
+    pageSize,
+    search,
+    sortKey = "createdAt",
+    sortDir = "desc",
+    filterPlan,
+    filterAuth,
+    filterImport,
+    filterTest = "all",
+  } = opts;
 
   const whereClauses: string[] = [];
   const args: (string | number)[] = [];
@@ -818,6 +830,11 @@ export async function listUsersWithStatsPaginated(opts: {
   if (filterAuth && filterAuth !== "all") {
     whereClauses.push("u.auth_provider = ?");
     args.push(filterAuth);
+  }
+  if (filterTest === "real") {
+    whereClauses.push(sqlExcludeTestAccountEmail("u.email"));
+  } else if (filterTest === "test") {
+    whereClauses.push(sqlIsTestAccountEmail("u.email"));
   }
 
   const whereStr = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(" AND ")}` : "";
