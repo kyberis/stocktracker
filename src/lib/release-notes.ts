@@ -19,6 +19,7 @@ export const releaseNotes: ReleaseEntry[] = [
   {
     version: "2.5.276",
     date: "2026-08-30",
+<<<<<<< HEAD
     title: "Clearer screening quota messages",
     titleTranslations: {
       es: "Mensajes de cuota de cribado más claros",
@@ -29,6 +30,18 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Investment screening quota copy now separates “not on your plan” (Free/Basic: 0 screens) from a real monthly quota (Pro 2 / Wealth 12), with Compare plans — no more false “used 3 screens this week” message.",
         translations: {
           es: "El copy de cuota del cribado separa “no está en tu plan” (Free/Basic: 0 cribados) de una cuota mensual real (Pro 2 / Wealth 12), con Comparar planes — ya no dice por error que usaste 3 cribados esta semana.",
+=======
+    title: "Clara activate from onboarding",
+    titleTranslations: {
+      es: "Activar Clara desde el onboarding",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Creating a Clara account during onboarding no longer fails when Clara’s ensure-user API was missing — the route is live on Clara, and trefolio maps soft HTML 404s instead of a generic unreachable error.",
+        translations: {
+          es: "Crear una cuenta de Clara durante el onboarding ya no falla cuando faltaba la API ensure-user de Clara — la ruta está activa en Clara, y trefolio distingue un 404 HTML suave en lugar de un error genérico de inalcanzable.",
+>>>>>>> origin/main
         },
       },
     ],

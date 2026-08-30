@@ -169,8 +169,18 @@ export async function ensureClaraUser(
     });
     trackExternalProvider("clara");
 
+    const contentType = res.headers.get("content-type") || "";
+    const looksJson = contentType.includes("application/json");
+
     if (!res.ok) {
-      const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+      const errBody = looksJson
+        ? ((await res.json().catch(() => ({}))) as { error?: string })
+        : {};
+      console.warn("[clara/ensure-user] HTTP error", {
+        status: res.status,
+        contentType,
+        error: errBody.error || null,
+      });
       return {
         ok: false,
         error: errBody.error || `Clara HTTP ${res.status}`,
@@ -178,13 +188,28 @@ export async function ensureClaraUser(
       };
     }
 
-    const data = (await res.json()) as {
+    // Soft 404s (Next.js HTML "not found" with HTTP 200) used to surface as
+    // clara_unreachable when JSON parse threw — map them explicitly.
+    if (!looksJson) {
+      console.warn("[clara/ensure-user] non-JSON success response", {
+        status: res.status,
+        contentType,
+      });
+      return { ok: false, error: "clara_route_missing", status: 502 };
+    }
+
+    const data = (await res.json().catch(() => null)) as {
       ok?: boolean;
       created?: boolean;
       id?: string;
       idpSub?: string | null;
-    };
-    if (!data.ok || !data.id) {
+    } | null;
+    if (!data?.ok || !data.id) {
+      console.warn("[clara/ensure-user] invalid JSON body", {
+        status: res.status,
+        hasOk: Boolean(data?.ok),
+        hasId: Boolean(data?.id),
+      });
       return { ok: false, error: "invalid_response", status: 502 };
     }
     return {
@@ -193,7 +218,10 @@ export async function ensureClaraUser(
       id: data.id,
       idpSub: data.idpSub ?? identity.idpSub.trim(),
     };
-  } catch {
+  } catch (err) {
+    console.warn("[clara/ensure-user] unreachable", {
+      message: err instanceof Error ? err.message : String(err),
+    });
     return { ok: false, error: "clara_unreachable", status: 503 };
   } finally {
     clearTimeout(timer);
