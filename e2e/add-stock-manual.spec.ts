@@ -193,6 +193,31 @@ test.describe("Manual stock add — holding persisted & quotes fetched", () => {
 
       await expect(page.locator("text=SPY")).toBeVisible({ timeout: 10_000 });
 
+      // First-add totals must leave €0 / Calculating without clicking refresh.
+      await expect(async () => {
+        const invested = page.getByTestId("home-invested-value");
+        let text = "";
+        if ((await invested.count()) > 0) {
+          text = ((await invested.textContent()) ?? "").trim();
+        } else {
+          const cost = page.getByTestId("home-total-cost");
+          if ((await cost.count()) > 0) {
+            text = ((await cost.textContent()) ?? "").trim();
+          } else {
+            const hero = page
+              .locator("h2")
+              .filter({ hasText: /€|\$|£|Calculating|Calculando/i })
+              .first();
+            if ((await hero.count()) > 0) {
+              text = ((await hero.textContent()) ?? "").trim();
+            }
+          }
+        }
+        expect(text.length).toBeGreaterThan(0);
+        expect(text).not.toMatch(/Calculating|Calculando/i);
+        expect(text).not.toMatch(/^[€$£]\s*0([.,]00)?$/);
+      }).toPass({ timeout: 30_000 });
+
       const quoteRes = await request.get("/api/quote?symbols=SPY");
       const quotes = await quoteRes.json();
       expect(quotes.SPY.regularMarketPrice).toBeGreaterThan(0);

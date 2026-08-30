@@ -36,6 +36,7 @@ export const releaseNotes: ReleaseEntry[] = [
   {
     version: "2.5.275",
     date: "2026-08-30",
+<<<<<<< HEAD
     title: "Cleaner currency checks & ISIN guards",
     titleTranslations: {
       es: "Controles de divisa más limpios y guardas ISIN",
@@ -53,6 +54,18 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Imports and holding writes no longer persist an ISIN (or ISIN.venue) as the ticker — known ISINs map to Yahoo symbols, and unresolved ones stay unmapped instead of blocking quotes.",
         translations: {
           es: "Las importaciones y altas de posiciones ya no guardan un ISIN (o ISIN.venue) como ticker: los ISIN conocidos se mapean a símbolos Yahoo, y los no resueltos quedan sin mapear en lugar de bloquear cotizaciones.",
+=======
+    title: "First holding totals auto-update",
+    titleTranslations: {
+      es: "Totales de la primera acción se actualizan solos",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "After you add your first stock, invested totals and cost stay on “Calculating…” until live prices and FX load — no manual refresh needed to leave €0.",
+        translations: {
+          es: "Al añadir tu primera acción, el invertido y el coste se quedan en “Calculando…” hasta que cargan precios y tipos de cambio — ya no hace falta pulsar actualizar para salir de 0 €.",
+>>>>>>> ed4451ee (Fix first-holding totals stuck at €0 until manual refresh.)
         },
       },
     ],

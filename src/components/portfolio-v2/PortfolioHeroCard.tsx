@@ -5,6 +5,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent } from "@/lib/utils";
+import { isPortfolioPricingPending } from "@/lib/portfolio-pricing-pending";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { Holding } from "@/lib/types";
 import PortfolioPerformanceMatrix from "./PortfolioPerformanceMatrix";
@@ -58,7 +59,13 @@ export default function PortfolioHeroCard({
   cashEntries = [],
   allowPerTickerHistorical = true,
 }: Props) {
-  const { activePortfolioCurrency, quotes, refreshingTickers, isRefreshing } = usePortfolio();
+  const {
+    activePortfolioCurrency,
+    quotes,
+    exchangeRates,
+    refreshingTickers,
+    isRefreshing,
+  } = usePortfolio();
   const { stealthMode } = useStealthMode();
   const { t } = useI18n();
 
@@ -68,16 +75,17 @@ export default function PortfolioHeroCard({
   const netWorthValue =
     hasInvestedSplit && cashValue != null ? (headlineValue ?? 0) + cashValue : totalValue;
   const investedEmpty = hasInvestedSplit && (headlineValue ?? 0) <= 0;
-  const awaitingQuotes =
-    holdings.length > 0 &&
-    holdings.some(
-      (h) => refreshingTickers.has(h.ticker) || !quotes[h.ticker]?.regularMarketPrice,
-    );
-  // First stock (or any holdings) with no priced quotes yet — show calculating, not €0.
+  // First stock with quote/FX still loading — show calculating, not €0.
   const isCalculatingValue =
     investedEmpty &&
-    awaitingQuotes &&
-    (refreshingTickers.size > 0 || isRefreshing || holdings.some((h) => !quotes[h.ticker]));
+    isPortfolioPricingPending({
+      holdings,
+      quotes,
+      exchangeRates,
+      baseCurrency: activePortfolioCurrency,
+      refreshingTickers,
+      isRefreshing,
+    });
 
   const dayDelta = dayGainLoss ?? 0;
   const dayPct = dayGainLossPercent ?? 0;

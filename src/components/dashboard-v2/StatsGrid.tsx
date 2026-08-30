@@ -13,6 +13,7 @@ import {
 } from "@/lib/portfolio/metrics";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { getHoldingsLimit } from "@/lib/subscription";
+import { isPortfolioPricingPending } from "@/lib/portfolio-pricing-pending";
 import type { Holding, CashEntry } from "@/lib/types";
 
 interface Props {
@@ -37,7 +38,7 @@ export default function StatsGrid({
 }: Props) {
   const { t } = useI18n();
   const { user } = useAuth();
-  const { quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const { quotes, exchangeRates, activePortfolioCurrency, refreshingTickers, isRefreshing } = usePortfolio();
   const { stealthMode } = useStealthMode();
   const holdingsLimit = getHoldingsLimit(user?.plan ?? "free");
 
@@ -62,6 +63,15 @@ export default function StatsGrid({
   const dayPct = dayHeadline.pct;
 
   const cur = activePortfolioCurrency;
+  const pricingPending = isPortfolioPricingPending({
+    holdings,
+    quotes,
+    exchangeRates,
+    baseCurrency: cur,
+    refreshingTickers,
+    isRefreshing,
+  });
+  const showCalculating = pricingPending && investedCost <= 0 && computedTotals.totalCurrentEUR <= 0;
 
   const { divYield, annualDivIncome } = useMemo(() => {
     // No investedTotal override here (TRF-004-B): totals.totalCurrentEUR is
@@ -80,21 +90,36 @@ export default function StatsGrid({
   const isGain = gainLoss >= 0;
 
   const cells: { label: string; value: string; accent?: boolean; positive?: boolean; highlight?: boolean }[] = [
-    { label: t("v2Cost"), value: stealthMode ? "•••••" : formatCurrency(investedCost, cur) },
+    {
+      label: t("v2Cost"),
+      value: stealthMode
+        ? "•••••"
+        : showCalculating
+          ? t("calculatingPortfolioValue")
+          : formatCurrency(investedCost, cur),
+    },
     {
       label: t("v2GainLoss"),
-      value: stealthMode ? "•••••" : `${isGain ? "+" : ""}${formatCurrency(gainLoss, cur)}`,
+      value: stealthMode
+        ? "•••••"
+        : showCalculating
+          ? t("calculatingPortfolioValue")
+          : `${isGain ? "+" : ""}${formatCurrency(gainLoss, cur)}`,
       accent: true,
       positive: isGain,
     },
     {
       label: t("dayChange"),
-      value: stealthMode ? "•••••" : `${dayIsPositive ? "+" : ""}${formatCurrency(dayChange, cur)} ${dayIsPositive ? "▲" : "▼"} ${formatPercent(Math.abs(dayPct))}`,
+      value: stealthMode
+        ? "•••••"
+        : showCalculating
+          ? t("calculatingPortfolioValue")
+          : `${dayIsPositive ? "+" : ""}${formatCurrency(dayChange, cur)} ${dayIsPositive ? "▲" : "▼"} ${formatPercent(Math.abs(dayPct))}`,
       accent: true,
       positive: dayIsPositive,
       highlight: true,
     },
-    { label: t("v2DivYield"), value: divYield == null ? "—" : `${divYield.toFixed(2)}%` },
+    { label: t("v2DivYield"), value: showCalculating ? t("calculatingPortfolioValue") : divYield == null ? "—" : `${divYield.toFixed(2)}%` },
     {
       label: t("v2Holdings"),
       value: holdingsLimit < Infinity ? `${holdings.length}/${holdingsLimit}` : String(holdings.length),
@@ -103,12 +128,19 @@ export default function StatsGrid({
     },
     {
       label: t("estAnnualIncome"),
-      value: stealthMode ? "•••••" : `${formatCurrency(annualDivIncome, cur)}/yr`,
+      value: stealthMode
+        ? "•••••"
+        : showCalculating
+          ? t("calculatingPortfolioValue")
+          : `${formatCurrency(annualDivIncome, cur)}/yr`,
     },
   ];
 
   const gridContent = (
-    <div className={`grid gap-1.5 ${inline ? "grid-cols-3 sm:grid-cols-6" : "grid-cols-2"}`}>
+    <div
+      className={`grid gap-1.5 ${inline ? "grid-cols-3 sm:grid-cols-6" : "grid-cols-2"}`}
+      aria-busy={showCalculating || undefined}
+    >
       {cells.map((c) => (
         <div
           key={c.label}

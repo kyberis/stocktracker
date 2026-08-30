@@ -478,7 +478,9 @@ export function PortfolioProvider({
 
   const quoteRequestSymbol = useCallback(
     (ticker: string) => {
-      const holding = holdings.find((h) => h.ticker === ticker);
+      const holding =
+        holdingsRef.current.find((h) => h.ticker === ticker) ??
+        holdings.find((h) => h.ticker === ticker);
       return holding ? marketDataSymbolForHolding(holding) : ticker;
     },
     [holdings],
@@ -692,17 +694,20 @@ export function PortfolioProvider({
       const allQuotes = (await res.json()) as Record<string, QuoteData>;
       const now = Date.now();
       const nextQuote = allQuotes[requestSymbol] ?? allQuotes[ticker];
+      let quotesForFx: Record<string, QuoteData> | undefined;
       if (nextQuote) {
         const withTimestamp = { ...nextQuote, fetchedAt: now };
         setQuotes((prev) => {
           const merged = { ...prev, [ticker]: withTimestamp };
+          quotesForFx = merged;
           saveToStorage(QUOTES_CACHE_KEY, merged);
           return merged;
         });
         setQuoteUpdatedAt((prev) => ({ ...prev, [ticker]: now }));
       }
 
-      const rates = await fetchExchangeRates();
+      // Pass holdingsRef + quotes so first-add FX is not empty (stale closure).
+      const rates = await fetchExchangeRates(holdingsRef.current, quotesForFx);
       setExchangeRates((prev) => {
         const merged = { ...prev, ...rates };
         saveToStorage(RATES_CACHE_KEY, merged);
@@ -727,16 +732,26 @@ export function PortfolioProvider({
       const requestSymbol = quoteRequestSymbol(ticker);
       const url = buildFetchUrl("/api/quote", { symbols: requestSymbol });
       const res = await fetchWithAuthRedirect(url, { headers });
-      if (!res.ok) return;
-      const data = (await res.json()) as Record<string, QuoteData>;
-      const q = data[requestSymbol] ?? data[ticker];
-      if (q) {
-        const now = Date.now();
-        const stamped = { ...q, fetchedAt: now };
-        setQuotes((prev) => { const m = { ...prev, [ticker]: stamped }; saveToStorage(QUOTES_CACHE_KEY, m); return m; });
-        setQuoteUpdatedAt((prev) => ({ ...prev, [ticker]: now }));
+      let quotesForFx: Record<string, QuoteData> | undefined;
+      if (res.ok) {
+        const data = (await res.json()) as Record<string, QuoteData>;
+        const q = data[requestSymbol] ?? data[ticker];
+        if (q) {
+          const now = Date.now();
+          const stamped = { ...q, fetchedAt: now };
+          setQuotes((prev) => {
+            const m = { ...prev, [ticker]: stamped };
+            quotesForFx = m;
+            saveToStorage(QUOTES_CACHE_KEY, m);
+            return m;
+          });
+          setQuoteUpdatedAt((prev) => ({ ...prev, [ticker]: now }));
+        }
       }
-      const rates = await fetchExchangeRates();
+      // Always refresh FX from holdingsRef — cost basis needs displayCurrency
+      // rates even when the quote request fails, and first-add must not use a
+      // stale empty holdings closure.
+      const rates = await fetchExchangeRates(holdingsRef.current, quotesForFx);
       setExchangeRates((prev) => { const m = { ...prev, ...rates }; saveToStorage(RATES_CACHE_KEY, m); return m; });
       setLastUpdated(new Date());
     } catch { /* non-critical */ } finally {
@@ -747,8 +762,13 @@ export function PortfolioProvider({
   const addHolding = useCallback(async (holding: Omit<Holding, "id"> & { purchaseDate?: string }) => {
     const tempId = generateId();
     const optimistic = { ...holding, id: tempId };
-    setHoldings((prev) => [...prev, optimistic]);
-    // Start quote fetch immediately so the hero can show "Calculating…" instead of €0
+    setHoldings((prev) => {
+      const next = [...prev, optimistic];
+      // Sync ref before kicking off quote/FX so first-add does not see [].
+      holdingsRef.current = next;
+      return next;
+    });
+    // Start quote+FX fetch immediately so the hero shows "Calculating…" not €0
     void fetchQuoteForTicker(holding.ticker);
 
     try {
@@ -767,12 +787,16 @@ export function PortfolioProvider({
         const merged = prev.some(
           (h) => h.id !== tempId && h.id === created.id
         );
+        let next: Holding[];
         if (merged) {
-          return prev
+          next = prev
             .filter((h) => h.id !== tempId)
             .map((h) => (h.id === created.id ? created : h));
+        } else {
+          next = prev.map((h) => (h.id === tempId ? created : h));
         }
-        return prev.map((h) => (h.id === tempId ? created : h));
+        holdingsRef.current = next;
+        return next;
       });
       setMutationVersion((v) => v + 1);
       // Refresh quote if the earlier request finished before the holding was saved
@@ -780,7 +804,11 @@ export function PortfolioProvider({
         void fetchQuoteForTicker(created.ticker);
       }
     } catch (err) {
-      setHoldings((prev) => prev.filter((h) => h.id !== tempId));
+      setHoldings((prev) => {
+        const next = prev.filter((h) => h.id !== tempId);
+        holdingsRef.current = next;
+        return next;
+      });
       setError(err instanceof Error ? err.message : "Failed to add holding");
     }
   }, [activePortfolioId, fetchQuoteForTicker, quotes]);
