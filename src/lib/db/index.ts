@@ -118,6 +118,7 @@ export {
   getPortfolioAnomalyById,
   findOpenPortfolioAnomalyByFingerprint,
   listPortfolioAnomalies,
+  countPortfolioAnomaliesByStatus,
   countOpenPortfolioAnomaliesForUser,
   createPortfolioAnomaly,
   updatePortfolioAnomalyFindings,

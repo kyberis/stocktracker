@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.278",
+    date: "2026-08-30",
+    title: "Admin anomaly triage filters",
+    titleTranslations: {
+      es: "Filtros de triage de anomalías en admin",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Admin → Anomalies can filter Active (open+acked) vs Resolved (fixed+dismissed), plus severity and finding code, with live counts. Status badges make fixed rows easy to spot.",
+        translations: {
+          es: "Admin → Anomalías permite filtrar Activas (open+acked) frente a Resueltas (fixed+dismissed), además de severidad y código, con contadores. Las badges de estado hacen fáciles de ver las filas fixed.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.277",
     date: "2026-08-30",
     title: "First holding totals auto-update",
