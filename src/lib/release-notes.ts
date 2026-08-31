@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "Analyze a company now asks only for the name/ticker, then runs a shorter thesis pipeline (facts → research → report). The report walks eight cheapness checks—each with the data, what it means, how to read it—and a conclusion. Informational only, not investment advice.",
         translations: {
           es: "Analizar una empresa ahora solo pide el nombre/ticker y usa un pipeline de tesis más corto (hechos → research → informe). El informe recorre ocho checks de baratura—cada uno con el dato, qué significa y cómo interpretarlo—y una conclusión. Solo informativo, no asesoramiento de inversión.",
