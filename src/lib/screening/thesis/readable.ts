@@ -36,6 +36,16 @@ export interface ReadableThesis {
   whatHappened: string | null;
   strengths: ThesisSnapshotLine[];
   weaknesses: ThesisSnapshotLine[];
+  /** One block per attractiveness check: data / meaning / interpretation. */
+  checks: Array<{
+    id: string;
+    title: string;
+    data: string;
+    meaning: string;
+    interpretation: string;
+    status: "pass" | "fail" | "unknown" | "skipped";
+  }>;
+  conclusion: string;
   outlook: string;
   invalidation: string | null;
   openQuestions: string | null;
@@ -101,8 +111,14 @@ export function buildReadableThesis(opts: {
   const metrics = rowsToMetrics(opts.metrics);
   const a1 = gate(opts.assessment, "EQ:A1");
   const d1 = gate(opts.assessment, "EQ:D1");
-  const e1 = gate(opts.assessment, "EQ:E1");
-  const d7 = gate(opts.assessment, "EQ:D7");
+  const e1 =
+    gate(opts.assessment, "balance_sheet").passed != null
+      ? gate(opts.assessment, "balance_sheet")
+      : gate(opts.assessment, "EQ:E1");
+  const d7 =
+    gate(opts.assessment, "capital_allocation").passed != null
+      ? gate(opts.assessment, "capital_allocation")
+      : gate(opts.assessment, "EQ:D7");
 
   const coverageM = metricById(metrics, "interestCoverage");
   const fcfM = metricById(metrics, "fcfToNetIncome");
@@ -312,12 +328,142 @@ export function buildReadableThesis(opts: {
         })
       : null;
 
+  const checkMeta: Record<
+    string,
+    { titleEn: string; titleEs: string; meaningEn: string; meaningEs: string }
+  > = {
+    pe_vs_history: {
+      titleEn: "P/E vs history & market",
+      titleEs: "PER vs historia y mercado",
+      meaningEn:
+        "Compares the current earnings multiple with the company’s own 5-year average and peers. A discount while quality holds can signal cheapness.",
+      meaningEs:
+        "Compara el múltiplo actual de beneficios con la media histórica a 5 años y con el mercado. Un descuento manteniendo calidad puede indicar baratura.",
+    },
+    eps_growth: {
+      titleEn: "EPS growth",
+      titleEs: "Crecimiento del BPA",
+      meaningEn:
+        "Sustained earnings-per-share growth correlates more with long-term price than revenue growth alone.",
+      meaningEs:
+        "El crecimiento sostenido del beneficio por acción correlaciona más con el precio a largo plazo que el de las ventas.",
+    },
+    margin_trend: {
+      titleEn: "Margin trend",
+      titleEs: "Tendencia de márgenes",
+      meaningEn:
+        "Stable or expanding operating/net margins suggest pricing power; recurring margin decline is a warning.",
+      meaningEs:
+        "Márgenes operativos/netos estables o en expansión sugieren poder de precios; la caída recurrente es una alerta.",
+    },
+    graham_rule: {
+      titleEn: "Graham fair multiple",
+      titleEs: "Múltiplo justo (Graham)",
+      meaningEn:
+        "Fair P/E ≈ 8.5 + 2× expected growth %. High multiples need matching growth.",
+      meaningEs:
+        "PER justo ≈ 8,5 + 2× crecimiento esperado %. Los múltiplos exigentes requieren ese crecimiento.",
+    },
+    balance_sheet: {
+      titleEn: "Balance sheet",
+      titleEs: "Balance",
+      meaningEn:
+        "Low leverage or net cash lets the firm absorb rate, cost or demand shocks.",
+      meaningEs:
+        "Baja deuda o caja neta permite absorber shocks de tipos, costes o demanda.",
+    },
+    moat: {
+      titleEn: "Competitive advantage",
+      titleEs: "Ventaja competitiva",
+      meaningEn:
+        "Moat / pricing power protects against inflation and competition.",
+      meaningEs:
+        "El foso / poder de precios protege frente a inflación y competencia.",
+    },
+    capital_allocation: {
+      titleEn: "Capital allocation",
+      titleEs: "Asignación de capital",
+      meaningEn:
+        "Buybacks when cheap and disciplined dividends raise per-share value; severe dilution does the opposite.",
+      meaningEs:
+        "Recompras baratas y dividendos disciplinados elevan el valor por acción; la dilución severa hace lo contrario.",
+    },
+    price_to_book: {
+      titleEn: "Price-to-book",
+      titleEs: "Precio / valor contable",
+      meaningEn:
+        "For financials, conglomerates and asset businesses, P/B vs a reasonable band matters.",
+      meaningEs:
+        "En financieras, conglomerados y negocios patrimoniales, el P/B frente a un múltiplo razonable importa.",
+    },
+  };
+
+  const es = loc === "es";
+  const checks = opts.assessment.gates.map((g) => {
+    const meta = checkMeta[g.field_id];
+    const status: "pass" | "fail" | "unknown" | "skipped" =
+      g.passed === true
+        ? "pass"
+        : g.passed === false
+          ? "fail"
+          : g.note?.toLowerCase().includes("not primary") ||
+              g.note?.toLowerCase().includes("p/b")
+            ? "skipped"
+            : "unknown";
+    const data =
+      g.value != null
+        ? `${g.field_id}: ${String(g.value)}${g.threshold != null ? ` (threshold ${String(g.threshold)})` : ""}`
+        : es
+          ? "n/d"
+          : "n/a";
+    const interpretation =
+      status === "pass"
+        ? es
+          ? "Encaja con el umbral de atractivo."
+          : "Meets the attractiveness threshold."
+        : status === "fail"
+          ? es
+            ? "No encaja: señal de alerta o caro relativo."
+            : "Does not meet the bar — warning or relatively expensive."
+          : status === "skipped"
+            ? es
+              ? "No aplica a este tipo de negocio."
+              : "Not applicable for this business type."
+            : es
+              ? "Datos insuficientes para puntuar."
+              : "Not enough data to score.";
+    return {
+      id: g.field_id,
+      title: meta
+        ? es
+          ? meta.titleEs
+          : meta.titleEn
+        : g.field_id,
+      data,
+      meaning: meta
+        ? es
+          ? meta.meaningEs
+          : meta.meaningEn
+        : g.note ?? "",
+      interpretation,
+      status,
+    };
+  });
+
+  const conclusion =
+    opts.draft?.statement?.trim() ||
+    (es
+      ? `Lectura: ${t.verdicts[opts.assessment.verdict]}. Informativo, no es asesoramiento.`
+      : `Reading: ${t.verdicts[opts.assessment.verdict]}. Informational, not advice.`);
+
   return {
     headline,
     business,
     whatHappened,
     strengths,
     weaknesses,
+    checks,
+    conclusion,
     outlook,
     invalidation,
     openQuestions,
@@ -338,7 +484,24 @@ export function joinReadableThesis(article: ReadableThesis, locale: string): str
   if (article.whatHappened) {
     lines.push("", t.sectionWhatHappened, article.whatHappened);
   }
+  if (article.checks.length > 0) {
+    lines.push("", locale.startsWith("es") ? "Checks de atractivo" : "Attractiveness checks");
+    for (const c of article.checks) {
+      lines.push(
+        "",
+        `${c.title} [${c.status}]`,
+        locale.startsWith("es") ? `Dato: ${c.data}` : `Data: ${c.data}`,
+        locale.startsWith("es") ? `Significado: ${c.meaning}` : `Meaning: ${c.meaning}`,
+        locale.startsWith("es")
+          ? `Interpretación: ${c.interpretation}`
+          : `Interpretation: ${c.interpretation}`,
+      );
+    }
+  }
   lines.push(
+    "",
+    locale.startsWith("es") ? "Conclusión" : "Conclusion",
+    article.conclusion,
     "",
     t.sectionStrengths,
     ...article.strengths.map((s) => `• ${s.text}`),

@@ -25,20 +25,24 @@ function fact(
 }
 
 describe("scoreThesisAssessment", () => {
-  it("fails a gate and caps conviction when leverage is high", () => {
+  it("fails balance_sheet and caps conviction when leverage is high", () => {
     const assessment = scoreThesisAssessment({
       facts: [
-        fact("EQ:D1", 1.1),
+        fact("calc:pe_current", 18),
+        fact("calc:hist_pe_avg", 20),
+        fact("calc:eps_cagr", 0.1),
         fact("EQ:E1", 5.2),
-        fact("EQ:E2", 8),
-        fact("EQ:D7", false),
-        fact("EQ:B1", 20),
+        fact("EQ:E2", 1.5),
+        fact("EQ:D7", 0),
+        fact("calc:moat_score_pct", 60),
       ],
       soft: [],
+      sector: "Technology",
+      industry: "Software",
     });
-    expect(assessment.gates.find((g) => g.field_id === "EQ:E1")?.passed).toBe(
-      false,
-    );
+    expect(
+      assessment.gates.find((g) => g.field_id === "balance_sheet")?.passed,
+    ).toBe(false);
     expect(assessment.verdict).toBe("watchlist_gate_failed");
     expect(maxConvictionForAssessment(assessment)).toBe(2);
   });

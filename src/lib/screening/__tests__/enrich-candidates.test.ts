@@ -89,8 +89,8 @@ describe("enrichHardDataCandidates", () => {
     expect(row.valuationNote).toMatch(/P\/E/);
     expect(row.growthNote).toMatch(/YoY/);
     expect(row.analysisSummary).toMatch(/Apple/);
-    // Earnings resilience: 5y history with no year below −10% and positive mean.
-    expect(row.earningsResilient).toBe(true);
-    expect(row.stepsPassed).toContain(4);
+    // Attractiveness: cheap vs hist PE (id 1) should pass with fwd 12 vs hist 16.5.
+    expect(row.stepsPassed).toContain(1);
+    expect(row.checklistScore).toBeGreaterThanOrEqual(1);
   });
 });

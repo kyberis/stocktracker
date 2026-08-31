@@ -38,9 +38,9 @@ const ratiosTtmSchema = z
     interestCoverageRatioTTM: num,
     interestCoverageTTM: num,
     currentRatioTTM: num,
+    priceToBookRatioTTM: num,
   })
   .passthrough();
-
 const incomeStatementSchema = z
   .object({
     symbol: z.string().optional(),
@@ -106,9 +106,11 @@ const keyMetricsTtmSchema = z
     interestCoverageTTM: num,
     evToEBITTTM: num,
     enterpriseValueOverEBITTTM: num,
+    priceToBookRatioTTM: num,
+    pbRatioTTM: num,
+    priceToBookTTM: num,
   })
   .passthrough();
-
 const keyMetricsAnnualSchema = z
   .object({
     symbol: z.string().optional(),
@@ -309,6 +311,8 @@ export interface FmpFundamentalsBundle {
   thinLiquidity: boolean | null;
   /** Peer / industry median P/E — reserved; null until a reliable source exists. */
   peerPe: number | null;
+  /** Price-to-book TTM when FMP exposes it. */
+  priceToBook: number | null;
   /** Latest ROIC % points from TTM or latest annual. */
   roicPct: number | null;
   errors: string[];
@@ -778,6 +782,13 @@ export async function fetchFmpFundamentals(
   const thinLiquidity =
     avgVolume == null ? null : avgVolume > 0 && avgVolume < 50_000;
 
+  const priceToBook =
+    toNum(m?.priceToBookRatioTTM) ??
+    toNum(m?.pbRatioTTM) ??
+    toNum(m?.priceToBookTTM) ??
+    toNum(r?.priceToBookRatioTTM) ??
+    null;
+
   return {
     ticker: symbol,
     currency: p?.currency ? String(p.currency).slice(0, 8) : null,
@@ -810,6 +821,7 @@ export async function fetchFmpFundamentals(
     avgVolume,
     thinLiquidity,
     peerPe: null,
+    priceToBook,
     roicPct,
     errors,
   };

@@ -14,6 +14,7 @@ import {
   THESIS_HARD_DATA_KIND,
   THESIS_IR_KIND,
   THESIS_QA_KIND,
+  THESIS_RESEARCH_KIND,
   THESIS_WEB_KIND,
 } from "@/lib/screening/thesis/kinds";
 import {
@@ -105,9 +106,10 @@ const runThesisQaStep: StepHandler = async (
   ctx: HandlerContext,
 ): Promise<HandlerResult> => {
   const started = Date.now();
-  const [evRow, hdRow, irRows, webRows] = await Promise.all([
+  const [evRow, hdRow, researchRows, irRows, webRows] = await Promise.all([
     getLatestScreeningAgentOutputUnscoped(ctx.runId, THESIS_EVALUATE_KIND),
     getLatestScreeningAgentOutputUnscoped(ctx.runId, THESIS_HARD_DATA_KIND),
+    listScreeningAgentOutputsByRunAndKind(ctx.runId, THESIS_RESEARCH_KIND),
     listScreeningAgentOutputsByRunAndKind(ctx.runId, THESIS_IR_KIND),
     listScreeningAgentOutputsByRunAndKind(ctx.runId, THESIS_WEB_KIND),
   ]);
@@ -118,7 +120,7 @@ const runThesisQaStep: StepHandler = async (
     ? thesisHardDataOutputSchema.safeParse(JSON.parse(hdRow.outputJson))
     : null;
   const soft: ThesisSoftAssessment[] = [];
-  for (const row of irRows) {
+  for (const row of [...researchRows, ...irRows]) {
     const parsed = thesisIrOutputSchema.safeParse(JSON.parse(row.outputJson));
     if (parsed.success) soft.push(...parsed.data.soft_assessments);
   }

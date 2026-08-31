@@ -39,16 +39,19 @@ export function composeThesisReport(opts: {
     ? thesisQaOutputSchema.safeParse(JSON.parse(qaRaw.outputJson))
     : null;
 
-  const irSoft: ThesisSoftAssessment[] = [];
-  const webSoft: ThesisSoftAssessment[] = [];
+  const soft: ThesisSoftAssessment[] = [];
   for (const o of opts.outputs) {
-    if (o.agentKind === "thesis_ir") {
+    if (
+      o.agentKind === "thesis_research" ||
+      o.agentKind === "thesis_ir" ||
+      o.agentKind === "thesis_web"
+    ) {
       const parsed = thesisIrOutputSchema.safeParse(JSON.parse(o.outputJson));
-      if (parsed.success) irSoft.push(...parsed.data.soft_assessments);
-    }
-    if (o.agentKind === "thesis_web") {
-      const parsed = thesisWebOutputSchema.safeParse(JSON.parse(o.outputJson));
-      if (parsed.success) webSoft.push(...parsed.data.soft_assessments);
+      if (parsed.success) soft.push(...parsed.data.soft_assessments);
+      else if (o.agentKind === "thesis_web") {
+        const web = thesisWebOutputSchema.safeParse(JSON.parse(o.outputJson));
+        if (web.success) soft.push(...web.data.soft_assessments);
+      }
     }
   }
 
@@ -70,7 +73,7 @@ export function composeThesisReport(opts: {
         facts: hd.data.facts
           .filter((f) => f.asset_id.toUpperCase() === e.ticker.toUpperCase())
           .slice(0, 80),
-        soft_assessments: [...irSoft, ...webSoft].filter(
+        soft_assessments: soft.filter(
           (s) => s.asset_id.toUpperCase() === e.ticker.toUpperCase(),
         ),
         gaps: e.thesis_draft?.gaps ?? [],

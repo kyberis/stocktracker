@@ -7,6 +7,11 @@ import {
   metricById,
 } from "@/lib/screening/thesis/metrics";
 import type { Metric } from "@/lib/screening/thesis/metrics";
+import {
+  epsCagrPctFromSeries,
+  grahamFairPe,
+  marginDeltaFromSeries,
+} from "@/lib/screening/attractiveness";
 
 const FMP_SOURCE = (ref: string, asOf: string): ThesisSource => ({
   type: "fmp",
@@ -188,6 +193,134 @@ export function deriveFactsFromCandidate(
       ref: "moat_cache",
     }),
   );
+  facts.push(
+    fact({
+      ticker,
+      field_id: "calc:peer_pe",
+      value: num(candidate.peerPe),
+      unit: "x",
+      asOf,
+      method: "raw",
+      ref: "peer",
+      periodKind: "TTM",
+      fiscalLabel: "TTM",
+    }),
+  );
+  facts.push(
+    fact({
+      ticker,
+      field_id: "calc:price_to_book",
+      value: num(candidate.priceToBook),
+      unit: "x",
+      asOf,
+      method: "raw",
+      ref: "key-metrics-ttm",
+      periodKind: "TTM",
+      fiscalLabel: "TTM",
+    }),
+  );
+  facts.push(
+    fact({
+      ticker,
+      field_id: "calc:net_cash",
+      value: candidate.netCash === true,
+      unit: "flag",
+      asOf,
+      method: "derived",
+      ref: "ratios-ttm",
+    }),
+  );
+  facts.push(
+    fact({
+      ticker,
+      field_id: "calc:buyback",
+      value: candidate.buyback === true,
+      unit: "flag",
+      asOf,
+      method: "derived",
+      ref: "income-statement",
+    }),
+  );
+  facts.push(
+    fact({
+      ticker,
+      field_id: "calc:severe_dilution",
+      value: candidate.severeDilution === true,
+      unit: "flag",
+      asOf,
+      method: "derived",
+      ref: "income-statement",
+    }),
+  );
+
+  // Attractiveness: EPS CAGR + margin deltas from annual series
+  {
+    const epsCagr = epsCagrPctFromSeries(candidate.annualSeries ?? []);
+    const margins = marginDeltaFromSeries(candidate.annualSeries ?? []);
+    const fair = grahamFairPe(epsCagr);
+    facts.push(
+      fact({
+        ticker,
+        field_id: "calc:eps_cagr",
+        value: epsCagr != null ? epsCagr / 100 : null,
+        unit: "pct",
+        asOf,
+        method: "derived",
+        ref: "income-statement",
+        periodKind: "RANGE",
+        fiscalLabel: "EPS CAGR",
+        estimation_method: "trailing_consecutive_eps_cagr",
+      }),
+    );
+    facts.push(
+      fact({
+        ticker,
+        field_id: "calc:op_margin_delta_pp",
+        value: margins.opMarginDeltaPp,
+        unit: "pp",
+        asOf,
+        method: "derived",
+        ref: "income-statement",
+        periodKind: "RANGE",
+      }),
+    );
+    facts.push(
+      fact({
+        ticker,
+        field_id: "calc:net_margin_delta_pp",
+        value: margins.netMarginDeltaPp,
+        unit: "pp",
+        asOf,
+        method: "derived",
+        ref: "income-statement",
+        periodKind: "RANGE",
+      }),
+    );
+    facts.push(
+      fact({
+        ticker,
+        field_id: "calc:margin_years",
+        value: margins.marginYears,
+        unit: "count",
+        asOf,
+        method: "derived",
+        ref: "income-statement",
+      }),
+    );
+    facts.push(
+      fact({
+        ticker,
+        field_id: "calc:graham_fair_pe",
+        value: fair,
+        unit: "x",
+        asOf,
+        method: "derived",
+        ref: "graham",
+        estimation_method: "8.5 + 2*epsCagrPct",
+      }),
+    );
+  }
+
   facts.push(
     fact({
       ticker,

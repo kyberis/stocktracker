@@ -1,56 +1,48 @@
 import { SCREENING_MAX_SCORE } from "@/lib/screening/criteria";
+import {
+  epsCagrPctFromSeries,
+  marginDeltaFromSeries,
+  scoreAttractiveness,
+  type AttractivenessInputs,
+} from "@/lib/screening/attractiveness";
 
 /**
- * Deterministic scoring for the 8-point screening methodology checklist.
- *
- * The compose layer calls this with everything it can gather at read time:
- *   - Hard Data enrichment (FMP fundamentals, MOAT cache)
- *   - IR agent output (catalysts) — powers criterion 3
- *   - Web/Sentiment output (insider bias) — powers criterion 6
- *   - Technicals output (MA200, distance-from-high, 1y return) — refines 9
- *
- * All rules must be evidence-based. When a signal is missing the criterion
- * stays `unknown` in the UI — never guess a pass or fail.
+ * Deterministic scoring for the 8-point attractiveness checklist.
+ * When a signal is missing the criterion stays unknown — never guess.
  */
 
 export interface ChecklistScoringInputs {
-  /** LLM ranking confidence (0-100). Fallback for criterion 9. */
-  rankScore: number;
-  /** Forward P/E from FMP (preferred for criterion 1). */
+  /** @deprecated Unused — kept for call-site compatibility. */
+  rankScore?: number;
   fwdPe: number | null;
-  /** TTM P/E from FMP (fallback for criterion 1). */
   ownHistPe: number | null;
-  /**
-   * P/E on latest FY diluted EPS (preferred when TTM earnings quality is
-   * suspect).
-   */
   normalizedPe?: number | null;
-  /** True when TTM earnings look inflated vs FY (one-offs). */
   earningsQualitySuspect?: boolean | null;
-  /** Net debt / EBITDA (criterion 5). */
+  histPeAvg?: number | null;
+  peerPe?: number | null;
   ndEbitda: number | null;
-  /** Net cash flag (criterion 5). */
   netCash: boolean | null;
-  /** trefolio MOAT score (criterion 7). */
+  interestCoverage?: number | null;
   moatScorePct: number | null;
-  /** Upside vs consensus target (criterion 2). */
-  upsidePct: number | null;
-
-  /* ── Phase 1 additions ── */
-
-  /** IR agent — number of dated catalysts with evidence. */
+  upsidePct?: number | null;
   datedCatalystCount?: number | null;
-  /** Web/Sentiment agent — insider net bias. */
   insiderBias?: "buying" | "selling" | "mixed" | "none" | null;
-  /** Last 5y annual revenue growth (percent points, newest first). */
   revenueGrowthHistoryPct?: readonly number[] | null;
-
-  /* ── Phase 2 additions (technicals) ── */
-
-  /** True when price is at/above the 200d SMA. */
   aboveMa200?: boolean | null;
-  /** 1y trailing return (percent points). */
   return1yPct?: number | null;
+  annualSeries?: ReadonlyArray<{
+    year?: number | null;
+    eps?: number | null;
+    operatingMarginPct?: number | null;
+    netMarginPct?: number | null;
+  }> | null;
+  buyback?: boolean | null;
+  severeDilution?: boolean | null;
+  shareCountCagrPct?: number | null;
+  priceToBook?: number | null;
+  sector?: string | null;
+  industry?: string | null;
+  epsCagrPct?: number | null;
 }
 
 export interface ChecklistScoringResult {
@@ -58,158 +50,80 @@ export interface ChecklistScoringResult {
   stepsPassed: number[];
   stepsFailed: number[];
   verdict: "fuerte" | "watch" | null;
-  /** Deterministic verdict for criterion 4 — surfaced on the card. */
+  /** @deprecated Prefer margin / EPS checks; kept for card field. */
   earningsResilient: boolean | null;
 }
 
-/** Pass balance sheet when ND/EBITDA is below this (aligned with intake preset). */
 export const ND_EBITDA_PASS_LT = 2.5;
-/** Fail balance sheet when ND/EBITDA is at/above this. */
-export const ND_EBITDA_FAIL_GTE = 2.5;
-
-/** Strong candidate requires this many passed scored criteria. */
+export const ND_EBITDA_FAIL_GTE = 3.5;
 export const FUERTE_MIN_SCORE = 6;
 
-/**
- * Evaluate the deterministic checklist. Always returns a fresh score.
- * Callers should overwrite any existing `stepsPassed/stepsFailed/score` fields
- * with the result so re-scoring at compose time is authoritative.
- */
 export function scoreChecklist(
   input: ChecklistScoringInputs,
 ): ChecklistScoringResult {
-  const passed: number[] = [];
-  const failed: number[] = [];
+  const peCurrent =
+    input.fwdPe ?? input.normalizedPe ?? input.ownHistPe ?? null;
+  const margins = marginDeltaFromSeries(input.annualSeries ?? []);
+  const epsCagr =
+    input.epsCagrPct ?? epsCagrPctFromSeries(input.annualSeries ?? []);
 
-  // 1 relativeValuation — usable PE only (normalised when TTM quality is bad)
-  const valuation = evaluateRelativeValuation(input);
-  if (valuation === "pass") passed.push(1);
-  else if (valuation === "fail") failed.push(1);
+  const attrs: AttractivenessInputs = {
+    peCurrent,
+    histPeAvg: input.histPeAvg ?? input.ownHistPe ?? null,
+    peerPe: input.peerPe ?? null,
+    epsCagrPct: epsCagr,
+    opMarginDeltaPp: margins.opMarginDeltaPp,
+    netMarginDeltaPp: margins.netMarginDeltaPp,
+    marginYears: margins.marginYears,
+    ndEbitda: input.ndEbitda,
+    netCash: input.netCash,
+    interestCoverage: input.interestCoverage ?? null,
+    moatScorePct: input.moatScorePct,
+    shareCountCagrPct: input.shareCountCagrPct ?? null,
+    buyback: input.buyback ?? null,
+    severeDilution: input.severeDilution ?? null,
+    priceToBook: input.priceToBook ?? null,
+    sector: input.sector ?? null,
+    industry: input.industry ?? null,
+  };
 
-  // 2 priceFundamentalsDivergence — upside + weak price + improving fundamentals
-  const divergence = evaluatePriceFundamentalsDivergence(input);
-  if (divergence === "pass") passed.push(2);
-  else if (divergence === "fail") failed.push(2);
-
-  // 3 datedCatalyst — from IR agent (>=1 catalyst with evidence)
-  if (input.datedCatalystCount != null) {
-    if (input.datedCatalystCount >= 1) passed.push(3);
-    else failed.push(3);
-  }
-
-  // 4 earningsResilience — no severe revenue decline in the last cycle
-  const earningsResilient = evaluateEarningsResilience(
-    input.revenueGrowthHistoryPct ?? null,
-  );
-  if (earningsResilient === true) passed.push(4);
-  else if (earningsResilient === false) failed.push(4);
-
-  // 5 balanceSheetQuality — net cash or ND/EBITDA < 2.5; present leverage ≥2.5 fails
-  const balance = evaluateBalanceSheet(input);
-  if (balance === "pass") passed.push(5);
-  else if (balance === "fail") failed.push(5);
-
-  // 6 insiderAlignment — Web/Sentiment insider net bias
-  if (input.insiderBias === "buying") passed.push(6);
-  else if (input.insiderBias === "selling") failed.push(6);
-
-  // 7 competitiveStructure — trefolio MOAT
-  if (input.moatScorePct != null) {
-    if (input.moatScorePct >= 55) passed.push(7);
-    else if (input.moatScorePct < 40) failed.push(7);
-  }
-
-  // 9 marketSignal — prefer deterministic technicals; fall back to LLM rank
-  const marketSignal = evaluateMarketSignal(input);
-  if (marketSignal === "pass") passed.push(9);
-  else if (marketSignal === "fail") failed.push(9);
-
-  const score = Math.min(SCREENING_MAX_SCORE, passed.length);
+  const scored = scoreAttractiveness(attrs);
+  const score = Math.min(SCREENING_MAX_SCORE, scored.passedIds.length);
   const verdict = deriveVerdict(score, input.moatScorePct ?? null);
 
   return {
     score,
-    stepsPassed: passed,
-    stepsFailed: failed,
+    stepsPassed: scored.passedIds,
+    stepsFailed: scored.failedIds,
     verdict,
-    earningsResilient,
+    earningsResilient:
+      scored.checks.find((c) => c.id === "eps_growth")?.status === "pass"
+        ? true
+        : scored.checks.find((c) => c.id === "eps_growth")?.status === "fail"
+          ? false
+          : null,
   };
 }
 
-/**
- * Pick the PE used for criterion 1 and decide pass/fail/unknown.
- *
- * - Prefer forward PE when present and earnings quality is fine.
- * - When TTM quality is suspect, score on normalised (FY) PE; if that is
- *   missing, fail rather than pass on a depressed TTM multiple.
- * - Absolute band remains 0 < PE < 18.
- */
+/** @deprecated Absolute PE band — attractiveness now uses hist/peer + Graham. */
 export function evaluateRelativeValuation(
   input: ChecklistScoringInputs,
 ): "pass" | "fail" | "unknown" {
-  const suspect = input.earningsQualitySuspect === true;
-  let pe: number | null = null;
-
-  if (suspect) {
-    pe = input.normalizedPe ?? input.fwdPe ?? null;
-    if (pe == null) {
-      // Unusable TTM-only cheapness — do not award the valuation point.
-      if (input.ownHistPe != null && input.ownHistPe > 0 && input.ownHistPe < 18) {
-        return "fail";
-      }
-      if (input.ownHistPe != null) return "fail";
-      return "unknown";
-    }
-  } else {
-    pe = input.fwdPe ?? input.ownHistPe ?? input.normalizedPe ?? null;
-  }
-
-  if (pe == null) return "unknown";
-  if (pe > 0 && pe < 18) return "pass";
-  return "fail";
+  const r = scoreChecklist(input);
+  if (r.stepsPassed.includes(1)) return "pass";
+  if (r.stepsFailed.includes(1)) return "fail";
+  return "unknown";
 }
 
-/**
- * Price–fundamentals divergence (criterion 2).
- *
- * Pass only when consensus upside is material (≥10%), the share has been weak
- * over 1y, and recent revenue growth is clearly improving — not flat.
- * Fail when upside is deeply negative, or when a "cheap vs target" story
- * coincides with a weak price and flat/deteriorating fundamentals.
- */
+/** @deprecated Replaced by EPS growth + margins. */
 export function evaluatePriceFundamentalsDivergence(
-  input: ChecklistScoringInputs,
+  _input: ChecklistScoringInputs,
 ): "pass" | "fail" | "unknown" {
-  const upside = input.upsidePct;
-  if (upside == null) return "unknown";
-  if (upside < -5) return "fail";
-  if (upside < 10) return "unknown";
-
-  const return1y = input.return1yPct;
-  const fundamentals = classifyFundamentalsTrend(
-    input.revenueGrowthHistoryPct ?? null,
-  );
-
-  // Material upside but we cannot check price/fundamentals → unknown.
-  if (return1y == null || fundamentals === "unknown") return "unknown";
-
-  const priceWeak = return1y <= -10;
-  if (priceWeak && fundamentals === "improving") return "pass";
-  if (priceWeak && (fundamentals === "flat" || fundamentals === "worse")) {
-    return "fail";
-  }
-  // Upside without price weakness is not a divergence signal.
   return "unknown";
 }
 
 export type FundamentalsTrend = "improving" | "flat" | "worse" | "unknown";
 
-/**
- * Latest-year revenue growth (percent points) → coarse trend.
- * Improving requires the *latest* year ≥ 3% (older years alone cannot pass).
- * Worse: latest < −5% or mean < −2%.
- * Flat: otherwise (including ~0–2% stagnation with a soft history).
- */
 export function classifyFundamentalsTrend(
   history: readonly number[] | null,
 ): FundamentalsTrend {
@@ -233,12 +147,6 @@ export function evaluateBalanceSheet(
   return "unknown";
 }
 
-/**
- * Deterministic earnings-resilience verdict from ≥3y of revenue growth.
- * Pass when no year in the window fell below −10% AND the mean is non-negative.
- * Fail when any year fell below −15% (real cyclical drawdown).
- * Unknown when we have less than 3 years of data.
- */
 export function evaluateEarningsResilience(
   history: readonly number[] | null,
 ): boolean | null {
@@ -250,21 +158,6 @@ export function evaluateEarningsResilience(
   const mean = finite.reduce((a, b) => a + b, 0) / finite.length;
   if (min >= -10 && mean >= 0) return true;
   return false;
-}
-
-function evaluateMarketSignal(
-  input: ChecklistScoringInputs,
-): "pass" | "fail" | "unknown" {
-  const { aboveMa200, return1yPct } = input;
-  const hasTechnicals = aboveMa200 != null && return1yPct != null;
-  if (hasTechnicals) {
-    if (aboveMa200 === true && (return1yPct as number) >= 0) return "pass";
-    if (aboveMa200 === false && (return1yPct as number) <= -20) return "fail";
-    // Otherwise fall through to LLM rank for a softer signal.
-  }
-  if (input.rankScore >= 70) return "pass";
-  if (input.rankScore < 45) return "fail";
-  return "unknown";
 }
 
 export function deriveVerdict(

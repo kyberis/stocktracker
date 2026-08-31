@@ -71,10 +71,10 @@ const en = {
     analyzeEyebrow: "Option C · analyze",
     analyzeTitle: "Deep-dive one company",
     analyzeBody:
-      "Type a ticker or company name. We resolve the listing (and exchange) first, then run the research agents on that name alone.",
+      "Type a ticker or company name. Confirm the listing and launch — no other questions.",
     analyzeCta: "Analyze a company",
     analyzeChipSearch: "Ticker or name",
-    analyzeChipExchange: "Exchange confirmed",
+    analyzeChipExchange: "Then launch",
     discoveryEyebrow: "Investment screening",
     discoveryTitle: "Screen candidates for your portfolio",
     discoveryBody:
@@ -144,41 +144,37 @@ const en = {
     unknownNote: "Not enough data",
     notScoredPrefix: "Not scored",
     labels: {
-      relativeValuation: {
-        name: "Relative valuation",
-        hint: "Cheap against its own history and against peers",
+      peVsHistory: {
+        name: "P/E vs history & market",
+        hint: "Trades below its own 5y average and/or peers while quality holds",
       },
-      priceFundamentalsDivergence: {
-        name: "Price–fundamentals divergence",
-        hint: "The price falls while the business improves",
+      epsGrowth: {
+        name: "EPS growth",
+        hint: "Sustained earnings-per-share growth — not revenue alone",
       },
-      datedCatalyst: {
-        name: "Dated catalyst",
-        hint: "An event with a date that could close the gap",
+      marginTrend: {
+        name: "Margin trend",
+        hint: "Operating or net margins stable or expanding over years",
       },
-      earningsResilience: {
-        name: "Resilience in a downturn",
-        hint: "Earnings held up through earlier cycles",
+      grahamRule: {
+        name: "Graham fair multiple",
+        hint: "P/E ≤ 8.5 + 2× expected growth %",
       },
       balanceSheetQuality: {
-        name: "Balance sheet quality",
-        hint: "Debt, liquidity and cash under control",
+        name: "Balance sheet",
+        hint: "Low debt or net cash; coverage that can absorb shocks",
       },
-      insiderAlignment: {
-        name: "Insider alignment",
-        hint: "Documented discretionary buying or a founder with real weight",
+      moat: {
+        name: "Competitive advantage",
+        hint: "Pricing power / moat that protects against inflation and rivals",
       },
-      competitiveStructure: {
-        name: "Competitive structure",
-        hint: "A defensible advantage or a niche that is hard to replicate",
+      capitalAllocation: {
+        name: "Capital allocation",
+        hint: "Buybacks when cheap, dividends, no severe dilution",
       },
-      macroContext: {
-        name: "Macro context",
-        hint: "Sector context — informative",
-      },
-      marketSignal: {
-        name: "Market signal",
-        hint: "Verifiable sentiment or superinvestor activity",
+      priceToBook: {
+        name: "Price-to-book",
+        hint: "For financials, conglomerates, asset businesses — P/B vs reasonable",
       },
     },
   },
@@ -608,7 +604,9 @@ const en = {
         "Applying the trefolio checklist to each shortlisted company.",
       qa: "Verifying numbers, citations and cross-agent consistency.",
       thesis_hard_data:
-        "Pulling listed facts (cash conversion, leverage, dilution) with source and as-of.",
+        "Pulling listed facts for the attractiveness checklist with source and as-of.",
+      thesis_research:
+        "Gathering IR and profile evidence for moat and capital allocation.",
       thesis_ir:
         "Reading filings for cited soft assessments — or marking insufficient evidence.",
       thesis_web:
@@ -618,7 +616,7 @@ const en = {
       thesis_risk: "Key risks for the draft — informational, not advice.",
       thesis_compiler: "Selecting the shortlist that will get a thesis draft.",
       thesis_evaluate:
-        "Scoring gates in code, then drafting a falsifiable statement and kill criteria.",
+        "Scoring the eight checks in code, then writing data → meaning → interpretation + conclusion.",
       thesis_qa: "Checking provenance, citations, and that the copy is not advice.",
     },
     steps: {
@@ -633,14 +631,15 @@ const en = {
       shortlist_research: "Shortlist research",
       compiler_evaluate: "trefolio evaluation",
       qa: "Verification",
-      thesis_hard_data: "Thesis facts",
+      thesis_hard_data: "Facts & ratios",
+      thesis_research: "Research",
       thesis_ir: "Thesis filings",
       thesis_web: "Thesis web",
       thesis_technicals: "Thesis technicals",
       thesis_portfolio: "Thesis overlap",
       thesis_risk: "Thesis risks",
       thesis_compiler: "Thesis shortlist",
-      thesis_evaluate: "Thesis draft",
+      thesis_evaluate: "Attractiveness report",
       thesis_qa: "Thesis verification",
     },
   },
@@ -1014,10 +1013,10 @@ const es: ScreeningCopy = {
     analyzeEyebrow: "Opción C · analizar",
     analyzeTitle: "Profundizar en una empresa",
     analyzeBody:
-      "Escribe un ticker o el nombre. Primero resolvemos la cotización (y el exchange) y luego los agentes investigan solo ese nombre.",
+      "Escribe un ticker o el nombre. Confirma la cotización y lanza el análisis — sin más preguntas.",
     analyzeCta: "Analizar una empresa",
     analyzeChipSearch: "Ticker o nombre",
-    analyzeChipExchange: "Exchange confirmado",
+    analyzeChipExchange: "Luego lanza",
     discoveryEyebrow: "Cribado de inversión",
     discoveryTitle: "Criba candidatos para tu cartera",
     discoveryBody:
@@ -1087,41 +1086,37 @@ const es: ScreeningCopy = {
     unknownNote: "Sin datos suficientes",
     notScoredPrefix: "No puntúa",
     labels: {
-      relativeValuation: {
-        name: "Valoración relativa",
-        hint: "Barata frente a su propia historia y a comparables",
+      peVsHistory: {
+        name: "PER vs historia y mercado",
+        hint: "Cotiza por debajo de su media 5y y/o peers sin perder calidad",
       },
-      priceFundamentalsDivergence: {
-        name: "Divergencia precio–fundamentales",
-        hint: "El precio cae mientras el negocio mejora",
+      epsGrowth: {
+        name: "Crecimiento del BPA",
+        hint: "Crecimiento sostenido del beneficio por acción — no solo ventas",
       },
-      datedCatalyst: {
-        name: "Catalizador fechado",
-        hint: "Evento con fecha que puede cerrar la brecha",
+      marginTrend: {
+        name: "Tendencia de márgenes",
+        hint: "Márgenes operativos o netos estables o en expansión",
       },
-      earningsResilience: {
-        name: "Resiliencia en crisis",
-        hint: "El beneficio aguantó ciclos anteriores",
+      grahamRule: {
+        name: "Múltiplo justo (Graham)",
+        hint: "PER ≤ 8,5 + 2× crecimiento esperado %",
       },
       balanceSheetQuality: {
-        name: "Calidad de balance",
-        hint: "Deuda, liquidez y caja bajo control",
+        name: "Balance",
+        hint: "Baja deuda o caja neta; cobertura ante shocks",
       },
-      insiderAlignment: {
-        name: "Alineación de insiders",
-        hint: "Compra discrecional documentada o fundador con peso",
+      moat: {
+        name: "Ventaja competitiva",
+        hint: "Poder de precios / foso frente a inflación y rivalidad",
       },
-      competitiveStructure: {
-        name: "Estructura competitiva",
-        hint: "Ventaja defendible o nicho difícil de replicar",
+      capitalAllocation: {
+        name: "Asignación de capital",
+        hint: "Recompras baratas, dividendos, sin dilución severa",
       },
-      macroContext: {
-        name: "Contexto macro",
-        hint: "Contexto del sector — informativo",
-      },
-      marketSignal: {
-        name: "Señal de mercado",
-        hint: "Sentimiento o superinversores verificables",
+      priceToBook: {
+        name: "Precio / valor contable",
+        hint: "En financieras, conglomerados o patrimoniales — P/B razonable",
       },
     },
   },
@@ -1548,7 +1543,9 @@ const es: ScreeningCopy = {
         "Aplicando el checklist de trefolio a cada empresa de la shortlist.",
       qa: "Verificando números, citas y coherencia entre agentes.",
       thesis_hard_data:
-        "Reuniendo hechos publicados (conversión de caja, apalancamiento, dilución) con fuente y fecha.",
+        "Reuniendo hechos publicados para el checklist de atractivo, con fuente y fecha.",
+      thesis_research:
+        "Reuniendo IR y perfil para foso y asignación de capital.",
       thesis_ir:
         "Leyendo filings para evaluaciones blandas citadas — o marcando evidencia insuficiente.",
       thesis_web:
@@ -1558,7 +1555,7 @@ const es: ScreeningCopy = {
       thesis_risk: "Riesgos clave del borrador — informativo, no consejo.",
       thesis_compiler: "Eligiendo la shortlist que recibirá un borrador de tesis.",
       thesis_evaluate:
-        "Puntuando puertas en código y redactando una afirmación falsable y criterios de muerte.",
+        "Puntuando los ocho checks en código y redactando dato → significado → interpretación + conclusión.",
       thesis_qa: "Comprobando procedencia, citas y que el texto no sea asesoramiento.",
     },
     steps: {
@@ -1573,14 +1570,15 @@ const es: ScreeningCopy = {
       shortlist_research: "Research de shortlist",
       compiler_evaluate: "Evaluación trefolio",
       qa: "Verificación",
-      thesis_hard_data: "Hechos de tesis",
+      thesis_hard_data: "Hechos y ratios",
+      thesis_research: "Research",
       thesis_ir: "Filings de tesis",
       thesis_web: "Web de tesis",
       thesis_technicals: "Técnico de tesis",
       thesis_portfolio: "Solapamiento de tesis",
       thesis_risk: "Riesgos de tesis",
       thesis_compiler: "Shortlist de tesis",
-      thesis_evaluate: "Borrador de tesis",
+      thesis_evaluate: "Informe de atractivo",
       thesis_qa: "Verificación de tesis",
     },
   },

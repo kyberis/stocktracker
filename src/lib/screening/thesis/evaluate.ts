@@ -25,22 +25,18 @@ import {
   scoreThesisAssessment,
 } from "@/lib/screening/thesis/score-assessment";
 import {
-  THESIS_COMPILER_KIND,
   THESIS_EVALUATE_KIND,
   THESIS_HARD_DATA_KIND,
-  THESIS_IR_KIND,
-  THESIS_WEB_KIND,
+  THESIS_RESEARCH_KIND,
 } from "@/lib/screening/thesis/kinds";
 import {
   ADVICE_LANGUAGE,
   THESIS_RULESET_VERSION,
-  thesisCompilerOutputSchema,
   thesisDraftSchema,
   thesisEvaluateOutputSchema,
   thesisHardDataOutputSchema,
   thesisIrOutputSchema,
   thesisSoftAssessmentSchema,
-  thesisWebOutputSchema,
   type ThesisEvaluateTicker,
   type ThesisSoftAssessment,
 } from "@/lib/screening/thesis/schemas";
@@ -54,12 +50,11 @@ const DISCLAIMER_ES =
 
 function parseSoftFromRows(
   rows: Array<{ outputJson: string }>,
-  schema: typeof thesisIrOutputSchema | typeof thesisWebOutputSchema,
 ): ThesisSoftAssessment[] {
   const out: ThesisSoftAssessment[] = [];
   for (const row of rows) {
     try {
-      const parsed = schema.safeParse(JSON.parse(row.outputJson));
+      const parsed = thesisIrOutputSchema.safeParse(JSON.parse(row.outputJson));
       if (!parsed.success) continue;
       for (const s of parsed.data.soft_assessments) {
         const ok = thesisSoftAssessmentSchema.safeParse(s);
@@ -82,27 +77,15 @@ const runThesisEvaluateStep: StepHandler = async (
   } catch {
     // keep
   }
-  const [hdRow, compilerRow, irRows, webRows] = await Promise.all([
+  const [hdRow, researchRows] = await Promise.all([
     getLatestScreeningAgentOutputUnscoped(ctx.runId, THESIS_HARD_DATA_KIND),
-    getLatestScreeningAgentOutputUnscoped(ctx.runId, THESIS_COMPILER_KIND),
-    listScreeningAgentOutputsByRunAndKind(ctx.runId, THESIS_IR_KIND),
-    listScreeningAgentOutputsByRunAndKind(ctx.runId, THESIS_WEB_KIND),
+    listScreeningAgentOutputsByRunAndKind(ctx.runId, THESIS_RESEARCH_KIND),
   ]);
   const hd = hdRow
     ? thesisHardDataOutputSchema.safeParse(JSON.parse(hdRow.outputJson))
     : null;
-  const compiler = compilerRow
-    ? thesisCompilerOutputSchema.safeParse(JSON.parse(compilerRow.outputJson))
-    : null;
-  const shortlist = compiler?.success
-    ? compiler.data.tickers
-    : hd?.success
-      ? hd.data.tickers.slice(0, 5)
-      : [];
-  const allSoft = [
-    ...parseSoftFromRows(irRows, thesisIrOutputSchema),
-    ...parseSoftFromRows(webRows, thesisWebOutputSchema),
-  ];
+  const shortlist = hd?.success ? hd.data.tickers.slice(0, 5) : [];
+  const allSoft = parseSoftFromRows(researchRows);
 
   const evaluations: ThesisEvaluateTicker[] = [];
   for (const ticker of shortlist) {
@@ -117,7 +100,12 @@ const runThesisEvaluateStep: StepHandler = async (
           (c) => c.ticker.toUpperCase() === ticker.toUpperCase(),
         )
       : undefined;
-    const assessment = scoreThesisAssessment({ facts, soft });
+    const assessment = scoreThesisAssessment({
+      facts,
+      soft,
+      sector: candidate?.sector,
+      industry: candidate?.industry,
+    });
     const cap = maxConvictionForAssessment(assessment);
     let draft =
       fallbackThesisDraft(ticker, locale, assessment, facts, { candidate }) ??
@@ -131,15 +119,20 @@ const runThesisEvaluateStep: StepHandler = async (
         const res = await fetchGatewayChatCompletions({
           model,
           stream: false,
-          max_tokens: 1600,
+          max_tokens: 2200,
           temperature: 0.3,
           messages: [
             {
               role: "system",
-              content: `Write a falsifiable investment thesis draft for ${ticker}. Language: ${locale}.
-Write for a retail investor: the business in plain words, what looks solid, what to watch, and a 36-month outlook. No internal codes (EQ:A1, EQ:D7). Use FACTS from FMP filings and SOFT quotes from IR / news / company profile.
-Never use buy/sell/hold or Spanish equivalents (comprar, vender, mantener). Kill criteria MUST use metric_field_id from FACTS (e.g. EQ:D1, EQ:E1). Premortem min 50 chars. Scenarios bull/base/bear probabilities sum to 1. Conviction 1-${cap}. If a gate failed, status=watchlist and conviction <=2.
-Street target / forward P/E is consensus, not company guidance. Call submit_draft.`,
+              content: `You write an attractiveness research note for ${ticker}. Language: ${locale}.
+Structure: for EACH assessment gate (pe_vs_history, eps_growth, margin_trend, graham_rule, balance_sheet, moat, capital_allocation, price_to_book) explain in the writeup:
+1) the DATA (numbers with units/periods from FACTS),
+2) WHAT IT MEANS (plain definition),
+3) HOW TO INTERPRET it for this company (pass/fail/unknown/skipped from assessment.gates).
+End with a CONCLUSION synthesizing the eight checks — what fits, what worries, data gaps.
+Never use buy/sell/hold or Spanish comprar/vender/mantener. Use only FACTS and SOFT quotes.
+Conviction 1-${cap}. If a gate failed, status=watchlist and conviction <=2.
+Call submit_draft with statement (2–4 sentences), writeup (full note), premortem, scenarios, gaps, disclaimer.`,
             },
             {
               role: "user",
@@ -156,12 +149,16 @@ Street target / forward P/E is consensus, not company guidance. Call submit_draf
                       upsidePct: candidate.upsidePct,
                       fwdPe: candidate.fwdPe,
                       histPeAvg: candidate.histPeAvg,
+                      peerPe: candidate.peerPe,
+                      priceToBook: candidate.priceToBook,
                     }
                   : null,
                 assessment,
                 facts: facts.map((f) => ({
                   field_id: f.field_id,
                   value: f.value,
+                  unit: f.unit,
+                  period: f.period,
                   method: f.method,
                 })),
                 soft: soft.map((s) => ({
@@ -172,7 +169,7 @@ Street target / forward P/E is consensus, not company guidance. Call submit_draf
                   evidence: s.evidence,
                 })),
                 gaps: candidate ? [] : ["candidate_row_missing"],
-              }).slice(0, 12000),
+              }).slice(0, 14000),
             },
           ],
           tools: [
@@ -180,7 +177,7 @@ Street target / forward P/E is consensus, not company guidance. Call submit_draf
               type: "function",
               function: {
                 name: "submit_draft",
-                description: "Thesis draft",
+                description: "Attractiveness thesis draft",
                 parameters: { type: "object", additionalProperties: true },
               },
             },
@@ -232,16 +229,16 @@ Street target / forward P/E is consensus, not company guidance. Call submit_draf
     }
     if (draft && draft.kill_criteria.length > 0) {
       const ids = new Set(facts.map((f) => f.field_id));
+      // Also allow attractiveness gate ids as kill metric aliases via calc: fields
       draft = {
         ...draft,
-        kill_criteria: draft.kill_criteria.filter((k) => ids.has(k.metric_field_id)),
+        kill_criteria: draft.kill_criteria.filter(
+          (k) =>
+            ids.has(k.metric_field_id) ||
+            k.metric_field_id.startsWith("calc:") ||
+            k.metric_field_id.startsWith("EQ:"),
+        ),
       };
-      if (draft.kill_criteria.length === 0) {
-        draft = {
-          ...draft,
-          gaps: [...draft.gaps, "Kill criteria dropped — field_id not in facts."],
-        };
-      }
     }
     const metrics = (hd?.success ? hd.data.metrics ?? [] : []).filter(
       (m) => m.ticker.toUpperCase() === ticker.toUpperCase(),

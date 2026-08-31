@@ -5,6 +5,11 @@ import type {
   ThesisSoftAssessment,
   ThesisVerdict,
 } from "@/lib/screening/thesis/schemas";
+import {
+  grahamFairPe,
+  scoreAttractiveness,
+  type AttractivenessInputs,
+} from "@/lib/screening/attractiveness";
 
 function factValue(facts: ThesisFact[], fieldId: string): unknown {
   const row = facts.find((f) => f.field_id === fieldId);
@@ -15,165 +20,211 @@ function asNumber(v: unknown): number | null {
   return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
-function clamp(n: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, n));
-}
-
-function scoreRatioPass(
-  value: number | null,
-  good: number,
-  bad: number,
-  invert = false,
-): number | null {
-  if (value == null) return null;
-  if (!invert) {
-    if (value >= good) return 100;
-    if (value <= bad) return 0;
-    return clamp(((value - bad) / (good - bad)) * 100, 0, 100);
-  }
-  if (value <= good) return 100;
-  if (value >= bad) return 0;
-  return clamp(((bad - value) / (bad - good)) * 100, 0, 100);
+function asBool(v: unknown): boolean | null {
+  return typeof v === "boolean" ? v : null;
 }
 
 export interface ScoreThesisAssessmentInput {
   facts: ThesisFact[];
   soft: ThesisSoftAssessment[];
   now?: string;
+  sector?: string | null;
+  industry?: string | null;
+}
+
+function inputsFromFacts(
+  facts: ThesisFact[],
+  opts: { sector?: string | null; industry?: string | null },
+): AttractivenessInputs {
+  const peCurrent =
+    asNumber(factValue(facts, "calc:pe_current")) ??
+    asNumber(factValue(facts, "calc:fwd_pe"));
+  const histPe = asNumber(factValue(facts, "calc:hist_pe_avg"));
+  const peerPe = asNumber(factValue(facts, "calc:peer_pe"));
+  const epsCagr =
+    asNumber(factValue(facts, "calc:eps_cagr")) != null
+      ? (asNumber(factValue(facts, "calc:eps_cagr"))! <= 2
+          ? asNumber(factValue(facts, "calc:eps_cagr"))! * 100
+          : asNumber(factValue(facts, "calc:eps_cagr")))
+      : null;
+  const shareCagrRaw = asNumber(factValue(facts, "EQ:D7"));
+  const shareCagrPct =
+    shareCagrRaw == null
+      ? null
+      : Math.abs(shareCagrRaw) <= 2
+        ? shareCagrRaw * 100
+        : shareCagrRaw;
+
+  return {
+    peCurrent,
+    histPeAvg: histPe,
+    peerPe,
+    epsCagrPct: epsCagr,
+    opMarginDeltaPp: asNumber(factValue(facts, "calc:op_margin_delta_pp")),
+    netMarginDeltaPp: asNumber(factValue(facts, "calc:net_margin_delta_pp")),
+    marginYears: asNumber(factValue(facts, "calc:margin_years")),
+    ndEbitda: asNumber(factValue(facts, "EQ:E1")),
+    netCash: asBool(factValue(facts, "calc:net_cash")),
+    interestCoverage: asNumber(factValue(facts, "EQ:E2")),
+    moatScorePct: asNumber(factValue(facts, "calc:moat_score_pct")),
+    shareCountCagrPct: shareCagrPct,
+    buyback: asBool(factValue(facts, "calc:buyback")),
+    severeDilution: (() => {
+      const d7 = factValue(facts, "EQ:D7");
+      if (d7 === true) return true;
+      if (typeof d7 === "number" && d7 > 0.03 && Math.abs(d7) <= 2) return true;
+      if (typeof d7 === "number" && d7 > 3) return true;
+      return asBool(factValue(facts, "calc:severe_dilution"));
+    })(),
+    priceToBook: asNumber(factValue(facts, "calc:price_to_book")),
+    sector: opts.sector ?? null,
+    industry: opts.industry ?? null,
+  };
 }
 
 /**
- * Pure assessment: gates + pillars + penalties from Facts / SoftAssessments.
- * The LLM must not compute this.
+ * Pure assessment from the attractiveness checklist.
+ * Gates map 1:1 to the eight checks. LLM must not compute this.
  */
 export function scoreThesisAssessment(
   input: ScoreThesisAssessmentInput,
 ): ThesisAssessment {
   const computed_at = input.now ?? new Date().toISOString();
-  const fcfNi = asNumber(factValue(input.facts, "EQ:D1"));
-  const ndEbitda = asNumber(factValue(input.facts, "EQ:E1"));
-  const coverage = asNumber(factValue(input.facts, "EQ:E2"));
-  const d7 = factValue(input.facts, "EQ:D7");
-  const roic = asNumber(factValue(input.facts, "EQ:B1"));
-  const cagr = asNumber(factValue(input.facts, "EQ:C1"));
-  const moat = asNumber(factValue(input.facts, "calc:moat_score_pct"));
-  const fwdPe = asNumber(factValue(input.facts, "calc:fwd_pe"));
-  const histPe = asNumber(factValue(input.facts, "calc:hist_pe_avg"));
-  const fcfYield = asNumber(factValue(input.facts, "calc:fcf_yield"));
-
-  const a1 = input.soft.find((s) => s.field_id === "EQ:A1");
-  const a1Passed =
-    a1 == null || a1.confidence === "insufficient_evidence"
-      ? null
-      : a1.score != null && a1.score >= 3;
-
-  const dilutionFail =
-    d7 === true || (typeof d7 === "number" && d7 > 0.03);
-
-  const gates: ThesisAssessment["gates"] = [
-    {
-      field_id: "EQ:A1",
-      passed: a1Passed,
-      value: a1?.score ?? null,
-      note: a1Passed === false ? "Business not explainable from evidence" : undefined,
-    },
-    {
-      field_id: "EQ:D1",
-      passed: fcfNi == null ? null : fcfNi >= 0.8 ? true : fcfNi < 0.6 ? false : true,
-      value: fcfNi,
-      threshold: 0.8,
-    },
-    {
-      field_id: "EQ:E1",
-      passed: ndEbitda == null ? null : ndEbitda < 3,
-      value: ndEbitda,
-      threshold: 3,
-    },
-    {
-      field_id: "EQ:E2",
-      passed: coverage == null ? null : coverage > 4,
-      value: coverage,
-      threshold: 4,
-    },
-    {
-      field_id: "EQ:D7",
-      passed: d7 == null ? null : !dilutionFail,
-      value: typeof d7 === "number" || typeof d7 === "boolean" ? d7 : null,
-    },
-  ];
-
-  const gateFailed = gates.some((g) => g.passed === false);
-  const known = gates.filter((g) => g.passed != null);
-  const coveragePct = (known.length / gates.length) * 100;
-
-  const penalties: ThesisAssessment["penalties"] = [];
-  if (fcfNi != null && fcfNi < 0.6) {
-    penalties.push({ flag: "fcf_ni_below_0_6", points: -10 });
-  }
-  if (dilutionFail) {
-    penalties.push({ flag: "dilution_gt_3pct", points: -8 });
+  const attrs = inputsFromFacts(input.facts, {
+    sector: input.sector,
+    industry: input.industry,
+  });
+  // Soft moat fallback when FMP moat missing
+  if (attrs.moatScorePct == null) {
+    const b7 = input.soft.find((s) => s.field_id === "EQ:B7");
+    if (b7?.score != null) {
+      attrs.moatScorePct = b7.score * 20;
+    }
   }
 
-  // Prefer computed ROIC (EQ:B1). MOAT cache is a fallback pillar input, not a verdict.
-  const business_quality = scoreRatioPass(roic, 15, 5) ?? moat;
-  const growth = scoreRatioPass(cagr != null ? cagr * 100 : null, 12, 0);
-  const earnings_quality = scoreRatioPass(fcfNi, 1, 0.4);
-  const balance_sheet = scoreRatioPass(ndEbitda, 1, 4, true);
-  const capital_allocation =
-    d7 == null ? null : dilutionFail ? 30 : 70;
-  const valuation =
-    fwdPe != null && histPe != null && histPe > 0
-      ? scoreRatioPass(fwdPe / histPe, 0.85, 1.25, true)
-      : scoreRatioPass(fcfYield != null ? fcfYield * 100 : null, 6, 1);
+  const scored = scoreAttractiveness(attrs);
+  const fair = grahamFairPe(attrs.epsCagrPct);
 
-  const pillarVals = [
-    business_quality,
-    growth,
-    earnings_quality,
-    balance_sheet,
-    capital_allocation,
-    valuation,
-  ].filter((v): v is number => v != null);
-  const penaltySum = penalties.reduce((a, p) => a + p.points, 0);
-  const rawTotal =
-    pillarVals.length === 0
-      ? null
-      : clamp(
-          pillarVals.reduce((a, b) => a + b, 0) / pillarVals.length + penaltySum,
-          0,
-          100,
-        );
+  const gates: ThesisAssessment["gates"] = scored.checks.map((c) => ({
+    field_id: c.id,
+    passed:
+      c.status === "skipped"
+        ? null
+        : c.status === "pass"
+          ? true
+          : c.status === "fail"
+            ? false
+            : null,
+    value:
+      c.id === "graham_rule"
+        ? fair
+        : c.id === "pe_vs_history"
+          ? attrs.peCurrent
+          : c.id === "eps_growth"
+            ? attrs.epsCagrPct
+            : c.id === "balance_sheet"
+              ? attrs.ndEbitda
+              : c.id === "moat"
+                ? attrs.moatScorePct
+                : c.id === "capital_allocation"
+                  ? attrs.shareCountCagrPct
+                  : c.id === "price_to_book"
+                    ? attrs.priceToBook
+                    : c.id === "margin_trend"
+                      ? attrs.opMarginDeltaPp ?? attrs.netMarginDeltaPp
+                      : null,
+    threshold:
+      c.id === "graham_rule"
+        ? fair ?? undefined
+        : c.id === "balance_sheet"
+          ? 2.5
+          : undefined,
+    note: c.note,
+  }));
+
+  const gateFailed = scored.failedIds.length > 0;
+  const passCount = scored.passedIds.length;
+  const failCount = scored.failedIds.length;
+
+  // Map pillar_scores for backward-compatible schema consumers
+  const pillar_scores = {
+    business_quality: scoreFromStatus(
+      scored.checks.find((c) => c.id === "moat")?.status,
+    ),
+    growth: scoreFromStatus(
+      scored.checks.find((c) => c.id === "eps_growth")?.status,
+    ),
+    earnings_quality: scoreFromStatus(
+      scored.checks.find((c) => c.id === "margin_trend")?.status,
+    ),
+    balance_sheet: scoreFromStatus(
+      scored.checks.find((c) => c.id === "balance_sheet")?.status,
+    ),
+    capital_allocation: scoreFromStatus(
+      scored.checks.find((c) => c.id === "capital_allocation")?.status,
+    ),
+    valuation: avgNullable([
+      scoreFromStatus(
+        scored.checks.find((c) => c.id === "pe_vs_history")?.status,
+      ),
+      scoreFromStatus(
+        scored.checks.find((c) => c.id === "graham_rule")?.status,
+      ),
+    ]),
+  };
 
   let verdict: ThesisVerdict;
-  if (gateFailed) verdict = "watchlist_gate_failed";
-  else if (coveragePct < 40 || rawTotal == null) verdict = "insufficient_data";
-  else if (rawTotal >= 70 && (valuation ?? 50) >= 60) {
+  if (scored.coveragePct < 40 || scored.total == null) {
+    verdict = "insufficient_data";
+  } else if (gateFailed && failCount >= 3) {
+    verdict = "deteriorating";
+  } else if (gateFailed) {
+    verdict = "watchlist_gate_failed";
+  } else if (
+    scored.total >= 70 &&
+    (pillar_scores.valuation ?? 0) >= 60
+  ) {
     verdict = "high_quality_attractively_priced";
-  } else if (rawTotal >= 70) verdict = "high_quality_richly_priced";
-  else if ((growth ?? 0) >= 60 && (business_quality ?? 0) >= 50) {
+  } else if (scored.total >= 70) {
+    verdict = "high_quality_richly_priced";
+  } else if ((pillar_scores.growth ?? 0) >= 60) {
     verdict = "improving_fundamentals";
-  } else if ((valuation ?? 0) >= 65) verdict = "value_with_open_questions";
-  else if (rawTotal < 40) verdict = "deteriorating";
-  else verdict = "value_with_open_questions";
+  } else if ((pillar_scores.valuation ?? 0) >= 65) {
+    verdict = "value_with_open_questions";
+  } else if (scored.total < 40) {
+    verdict = "deteriorating";
+  } else {
+    verdict = "value_with_open_questions";
+  }
+
+  void passCount;
 
   return {
     ruleset_version: THESIS_RULESET_VERSION,
     gates,
-    pillar_scores: {
-      business_quality,
-      growth,
-      earnings_quality,
-      balance_sheet,
-      capital_allocation,
-      valuation,
-    },
-    penalties,
-    total: rawTotal,
+    pillar_scores,
+    penalties: [],
+    total: scored.total,
     verdict,
     stale: false,
-    coverage_pct: coveragePct,
+    coverage_pct: scored.coveragePct,
     computed_at,
   };
+}
+
+function scoreFromStatus(
+  status: "pass" | "fail" | "unknown" | "skipped" | undefined,
+): number | null {
+  if (status === "pass") return 100;
+  if (status === "fail") return 0;
+  if (status === "unknown" || status === "skipped" || status == null) return null;
+  return null;
+}
+
+function avgNullable(vals: Array<number | null>): number | null {
+  const n = vals.filter((v): v is number => v != null);
+  if (n.length === 0) return null;
+  return n.reduce((a, b) => a + b, 0) / n.length;
 }
 
 export function maxConvictionForAssessment(assessment: ThesisAssessment): number {
