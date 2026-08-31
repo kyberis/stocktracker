@@ -4842,6 +4842,23 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       ]);
     },
   },
+  {
+    version: 156,
+    description: "Soft-delete tombstone: users.deleted_at for admin listing",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("deleted_at")) {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN deleted_at TEXT NOT NULL DEFAULT ''",
+          args: [],
+        });
+      }
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users(deleted_at)",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

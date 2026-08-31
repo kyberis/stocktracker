@@ -27,6 +27,10 @@ export const GET = withMetrics("/api/admin/users/detail", async (req: NextReques
       filterPlan: req.nextUrl.searchParams.get("filterPlan") || undefined,
       filterAuth: req.nextUrl.searchParams.get("filterAuth") || undefined,
       filterImport: req.nextUrl.searchParams.get("filterImport") || undefined,
+      filterStatus: req.nextUrl.searchParams.get("filterStatus") || undefined,
+      filterTest: (["all", "real", "test"].includes(req.nextUrl.searchParams.get("filterTest") || "")
+        ? (req.nextUrl.searchParams.get("filterTest") as "all" | "real" | "test")
+        : undefined),
     });
     return NextResponse.json(result);
   }

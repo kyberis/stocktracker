@@ -74,6 +74,7 @@ const dbUserRow = {
   onboarding_completed: 0,
   ai_tokens_this_month: 0,
   ai_tokens_today: 0,
+  deleted_at: "",
 };
 
 describe("users", () => {
@@ -82,7 +83,7 @@ describe("users", () => {
       mockExecute.mockResolvedValue({ rows: [dbUserRow] });
       const result = await users.findUserByUsername("test");
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT * FROM users WHERE username = ?",
+        sql: "SELECT * FROM users WHERE username = ? AND deleted_at = ''",
         args: ["test"],
       });
       expect(result).not.toBeNull();
@@ -102,7 +103,7 @@ describe("users", () => {
       mockExecute.mockResolvedValue({ rows: [dbUserRow] });
       const result = await users.findUserByEmail("t@t.com");
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT * FROM users WHERE LOWER(email) = LOWER(?)",
+        sql: "SELECT * FROM users WHERE LOWER(email) = LOWER(?) AND deleted_at = ''",
         args: ["t@t.com"],
       });
       expect(result).not.toBeNull();
@@ -236,13 +237,53 @@ describe("users", () => {
   });
 
   describe("deleteUser", () => {
-    it("deletes user by id", async () => {
-      mockExecute.mockResolvedValue({ rowsAffected: 1 });
+    it("hard-deletes then reinserts an anonymized tombstone", async () => {
+      mockExecute
+        .mockResolvedValueOnce({ rows: [dbUserRow] }) // findUserById
+        .mockResolvedValue({ rowsAffected: 1 });
       await users.deleteUser("u1");
-      expect(mockExecute).toHaveBeenCalledWith({
-        sql: "DELETE FROM users WHERE id = ?",
-        args: ["u1"],
+      const deleteCall = mockExecute.mock.calls.find(
+        (c: unknown[]) =>
+          typeof c[0] === "object" &&
+          c[0] !== null &&
+          "sql" in (c[0] as object) &&
+          String((c[0] as { sql: string }).sql).includes("DELETE FROM users WHERE id"),
+      );
+      expect(deleteCall).toBeTruthy();
+      const insertCall = mockExecute.mock.calls.find(
+        (c: unknown[]) =>
+          typeof c[0] === "object" &&
+          c[0] !== null &&
+          "sql" in (c[0] as object) &&
+          String((c[0] as { sql: string }).sql).includes("INSERT INTO users"),
+      );
+      expect(insertCall).toBeTruthy();
+      const insertArgs = (insertCall![0] as { args: string[] }).args;
+      const insertSql = String((insertCall![0] as { sql: string }).sql);
+      expect(insertArgs[0]).toBe("u1");
+      expect(insertArgs[1]).toMatch(/^deleted-/);
+      // Email must be anonymized (blank) — never the original address.
+      expect(insertSql).toMatch(/email[\s\S]*VALUES/);
+      expect(insertArgs.every((a) => typeof a !== "string" || !a.includes("@"))).toBe(true);
+      expect(insertSql).toContain("email_verified");
+    });
+
+    it("is a no-op when user is already deleted", async () => {
+      mockExecute.mockResolvedValueOnce({
+        rows: [{ ...dbUserRow, deleted_at: "2026-01-01T00:00:00.000Z" }],
       });
+      await users.deleteUser("u1");
+      expect(mockExecute).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("isDeletedTombstoneEmail", () => {
+    it("treats blank and deleted.* domains as tombstones", () => {
+      expect(users.isDeletedTombstoneEmail("")).toBe(true);
+      expect(users.isDeletedTombstoneEmail("   ")).toBe(true);
+      expect(users.isDeletedTombstoneEmail("deleted-abc@deleted.invalid")).toBe(true);
+      expect(users.isDeletedTombstoneEmail("x@deleted.local")).toBe(true);
+      expect(users.isDeletedTombstoneEmail("user@example.com")).toBe(false);
     });
   });
 
@@ -251,7 +292,7 @@ describe("users", () => {
       mockExecute.mockResolvedValue({ rows: [{ ...dbUserRow, stripe_customer_id: "cus_123" }] });
       const result = await users.findUserByStripeCustomerId("cus_123");
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT * FROM users WHERE stripe_customer_id = ?",
+        sql: "SELECT * FROM users WHERE stripe_customer_id = ? AND deleted_at = ''",
         args: ["cus_123"],
       });
       expect(result).not.toBeNull();
@@ -386,7 +427,7 @@ describe("users", () => {
       mockExecute.mockResolvedValue({ rows: [{ cnt: 42 }] });
       const result = await users.countProSubscribers();
       expect(mockExecute).toHaveBeenCalledWith(
-        "SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro'"
+        "SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro' AND deleted_at = ''",
       );
       expect(result).toBe(42);
     });
@@ -397,7 +438,7 @@ describe("users", () => {
       mockExecute.mockResolvedValue({ rows: [] });
       await users.updateLastActive("u1");
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "UPDATE users SET last_active_at = datetime('now') WHERE id = ?",
+        sql: "UPDATE users SET last_active_at = datetime('now') WHERE id = ? AND deleted_at = ''",
         args: ["u1"],
       });
     });
@@ -408,7 +449,7 @@ describe("users", () => {
       mockExecute.mockResolvedValue({ rows: [{ ...dbUserRow, google_id: "google-123" }] });
       const result = await users.findUserByGoogleId("google-123");
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT * FROM users WHERE google_id = ?",
+        sql: "SELECT * FROM users WHERE google_id = ? AND deleted_at = ''",
         args: ["google-123"],
       });
       expect(result).not.toBeNull();
@@ -427,7 +468,7 @@ describe("users", () => {
       mockExecute.mockResolvedValue({ rows: [{ ...dbUserRow, apple_id: "apple-123" }] });
       const result = await users.findUserByAppleId("apple-123");
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT * FROM users WHERE apple_id = ?",
+        sql: "SELECT * FROM users WHERE apple_id = ? AND deleted_at = ''",
         args: ["apple-123"],
       });
       expect(result).not.toBeNull();
@@ -446,7 +487,7 @@ describe("users", () => {
       mockExecute.mockResolvedValue({ rows: [{ ...dbUserRow, stripe_subscription_id: "sub_123" }] });
       const result = await users.findUserByStripeSubscriptionId("sub_123");
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT * FROM users WHERE stripe_subscription_id = ?",
+        sql: "SELECT * FROM users WHERE stripe_subscription_id = ? AND deleted_at = ''",
         args: ["sub_123"],
       });
       expect(result).not.toBeNull();
@@ -778,7 +819,7 @@ describe("users", () => {
       mockExecute.mockResolvedValue({ rows: [dbUserRow] });
       const result = await users.findUserByDevicePasskey("1234-5678");
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT * FROM users WHERE device_passkey_hash = ?",
+        sql: "SELECT * FROM users WHERE device_passkey_hash = ? AND deleted_at = ''",
         args: ["hashed"],
       });
       expect(result).not.toBeNull();
@@ -789,7 +830,7 @@ describe("users", () => {
       mockExecute.mockResolvedValue({ rows: [dbUserRow] });
       const result = await users.findUserByDevicePasskey("1234-5678-9012");
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT * FROM users WHERE device_passkey_hash = ?",
+        sql: "SELECT * FROM users WHERE device_passkey_hash = ? AND deleted_at = ''",
         args: ["hashed"],
       });
       expect(result).not.toBeNull();

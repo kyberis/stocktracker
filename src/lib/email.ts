@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import { SignJWT, jwtVerify } from "jose";
 import {
   findUserByEmail,
+  findUserById,
   getGlobalResendApiKey,
   countHoldings,
   generateUnsubscribeToken,
@@ -9,36 +10,28 @@ import {
   getUserSettings,
   logEmailSend,
   checkAndIncrementRateLimit,
+  isUserDeleted,
+  isDeletedTombstoneEmail,
 } from "@/lib/db";
 import { isEmailNodeEnabled } from "@/lib/email-flows/toggles";
 import { trackExternalProvider } from "@/lib/traffic/provider-track";
+import {
+  isTestAccountEmail,
+  isTreefolioTestEmail,
+} from "@/lib/test-accounts";
+
+export { isTestAccountEmail, isTreefolioTestEmail };
 
 const VERIFICATION_TOKEN_TTL = 60 * 60 * 24; // 24 hours
 const ACCOUNT_DELETION_TOKEN_TTL = 60 * 15; // 15 minutes — short-lived, destructive action
 const ACCOUNT_DELETION_EMAIL_COOLDOWN_SECONDS = 60 * 5; // 5 minutes between resends per user
 
-const TEST_EMAIL_DOMAINS = ["test.example.com", "example.com"];
-
+/** @deprecated Prefer isTestAccountEmail — kept for call sites inside this module. */
 function isTestEmail(email: string): boolean {
-  const domain = email.split("@")[1]?.toLowerCase();
-  if (TEST_EMAIL_DOMAINS.includes(domain)) return true;
-  return isTreefolioTestEmail(email);
+  return isTestAccountEmail(email);
 }
 
-/** True for synthetic/E2E accounts that should not receive cron work or outbound mail. */
-export function isTestAccountEmail(email: string): boolean {
-  return isTestEmail(email);
-}
-
-const TREFOLIO_TEST_PREFIX = "test+";
-const TREFOLIO_TEST_DOMAIN = "trefolio.com";
 export const TEST_VERIFICATION_TOKEN = "trefolio-test-verify-000";
-
-export function isTreefolioTestEmail(email: string): boolean {
-  const lower = email.toLowerCase();
-  const [local, domain] = lower.split("@");
-  return domain === TREFOLIO_TEST_DOMAIN && local.startsWith(TREFOLIO_TEST_PREFIX);
-}
 
 async function getResendClient(): Promise<Resend | null> {
   const dbKey = await getGlobalResendApiKey();
@@ -139,12 +132,26 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
     }
   }
 
+  // Never email deleted-account tombstones (blank / synthetic addresses).
+  if (typeof opts.to === "string" && isDeletedTombstoneEmail(opts.to)) {
+    return { success: true, suppressed: true };
+  }
+
   // Marketing/template opt-out (user_settings.email_notifications_enabled) applies to every
   // subscription tier (free, starter, pro). Plan does not bypass unsubscribe.
   let recipientUserId = opts.userId;
   if (!opts.internal && !opts.transactional && !recipientUserId && typeof opts.to === "string") {
     const u = await findUserByEmail(opts.to.trim());
     recipientUserId = u?.id;
+  }
+
+  // Deleted users must not receive any mail (transactional included).
+  if (recipientUserId || opts.userId) {
+    const uid = recipientUserId || opts.userId!;
+    const user = await findUserById(uid);
+    if (!user || isUserDeleted(user)) {
+      return { success: true, suppressed: true };
+    }
   }
 
   // Must run before the Resend check so missing API keys do not skip unsubscribe.

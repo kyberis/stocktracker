@@ -78,4 +78,19 @@ describe("getAnalyticsSummary — paywall_shown funnel/attribution", () => {
     expect(summary.attributionBySource[0].paywallShown).toBe(4);
     expect(summary.attributionByMedium[0].paywallShown).toBe(4);
   });
+
+  it("excludes @trefolio.com test accounts from user and event aggregates", async () => {
+    await getAnalyticsSummary(30);
+    const sqls = mockExecute.mock.calls.map((c) => sqlOf(c[0]));
+    const userCountSql = sqls.find((s) => s.includes("SELECT COUNT(*) as cnt FROM users"));
+    expect(userCountSql).toBeDefined();
+    expect(userCountSql!).toContain("trefolio.com");
+    expect(userCountSql!).toMatch(/NOT /);
+
+    const eventSql = sqls.find(
+      (s) => s.includes("FROM analytics_events") && s.includes("INNER JOIN users"),
+    );
+    expect(eventSql).toBeDefined();
+    expect(eventSql!).toContain("trefolio.com");
+  });
 });

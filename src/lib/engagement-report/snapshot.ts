@@ -1,5 +1,6 @@
 import { ensureInitialized } from "@/lib/db/client";
 import { num, str } from "@/lib/db/helpers";
+import { sqlExcludeTestAccountEmail } from "@/lib/test-accounts";
 import {
   classifySegment,
   isPowerUser,
@@ -8,6 +9,9 @@ import {
 } from "./segments";
 import { aggregateToolsByBucket } from "./tool-taxonomy";
 import { SURVEY_TEMPLATES, type SurveyTemplateId } from "./templates";
+
+const EXCLUDE_TEST_USERS = sqlExcludeTestAccountEmail("u.email");
+const EXCLUDE_TEST_EMAIL = sqlExcludeTestAccountEmail("email");
 
 export interface NamedUserRef {
   userId: string;
@@ -77,22 +81,31 @@ export async function buildEngagementSnapshot(periodDays: number): Promise<Engag
     feedbackRecentRes,
     mcpToolsRes,
   ] = await Promise.all([
-    client.execute("SELECT COUNT(*) as cnt FROM users"),
+    client.execute(`SELECT COUNT(*) as cnt FROM users WHERE ${EXCLUDE_TEST_EMAIL}`),
     client.execute({
-      sql: `SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events
-            WHERE created_at >= datetime('now', '-7 days') AND user_id IS NOT NULL AND user_id != ''`,
+      sql: `SELECT COUNT(DISTINCT ae.user_id) as cnt FROM analytics_events ae
+            INNER JOIN users u ON u.id = ae.user_id
+            WHERE ae.created_at >= datetime('now', '-7 days') AND ae.user_id IS NOT NULL AND ae.user_id != ''
+              AND ${EXCLUDE_TEST_USERS}`,
     }),
     client.execute({
-      sql: `SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events
-            WHERE created_at >= datetime('now', '-30 days') AND user_id IS NOT NULL AND user_id != ''`,
+      sql: `SELECT COUNT(DISTINCT ae.user_id) as cnt FROM analytics_events ae
+            INNER JOIN users u ON u.id = ae.user_id
+            WHERE ae.created_at >= datetime('now', '-30 days') AND ae.user_id IS NOT NULL AND ae.user_id != ''
+              AND ${EXCLUDE_TEST_USERS}`,
     }),
     client.execute({
-      sql: `SELECT COUNT(*) as cnt FROM analytics_events WHERE created_at >= ${windowSql}`,
+      sql: `SELECT COUNT(*) as cnt FROM analytics_events ae
+            INNER JOIN users u ON u.id = ae.user_id
+            WHERE ae.created_at >= ${windowSql}
+              AND ${EXCLUDE_TEST_USERS}`,
     }),
     client.execute({
-      sql: `SELECT event, COUNT(*) as cnt FROM analytics_events
-            WHERE created_at >= ${windowSql}
-            GROUP BY event ORDER BY cnt DESC LIMIT 80`,
+      sql: `SELECT ae.event, COUNT(*) as cnt FROM analytics_events ae
+            INNER JOIN users u ON u.id = ae.user_id
+            WHERE ae.created_at >= ${windowSql}
+              AND ${EXCLUDE_TEST_USERS}
+            GROUP BY ae.event ORDER BY cnt DESC LIMIT 80`,
     }),
     client.execute({
       sql: `SELECT u.id as user_id, u.username, u.email, u.plan, u.created_at,
@@ -101,17 +114,22 @@ export async function buildEngagementSnapshot(periodDays: number): Promise<Engag
                    COUNT(DISTINCT CASE WHEN ae.created_at >= ${windowSql} THEN ae.event END) as distinct_types
             FROM users u
             LEFT JOIN analytics_events ae ON ae.user_id = u.id
+            WHERE ${EXCLUDE_TEST_USERS}
             GROUP BY u.id
             ORDER BY event_count DESC`,
     }),
     client.execute({
       sql: `SELECT COUNT(*) as submitted,
-                   AVG(CASE WHEN status = 'submitted' THEN rating END) as avg_rating
-            FROM satisfaction_surveys WHERE status = 'submitted'`,
+                   AVG(CASE WHEN s.status = 'submitted' THEN s.rating END) as avg_rating
+            FROM satisfaction_surveys s
+            INNER JOIN users u ON u.id = s.user_id
+            WHERE s.status = 'submitted' AND ${EXCLUDE_TEST_USERS}`,
     }),
     client.execute({
-      sql: `SELECT rating, COUNT(*) as cnt FROM satisfaction_surveys
-            WHERE status = 'submitted' GROUP BY rating`,
+      sql: `SELECT s.rating, COUNT(*) as cnt FROM satisfaction_surveys s
+            INNER JOIN users u ON u.id = s.user_id
+            WHERE s.status = 'submitted' AND ${EXCLUDE_TEST_USERS}
+            GROUP BY s.rating`,
     }),
     client.execute({
       sql: `SELECT s.user_id, u.username, u.email, u.plan, s.rating, s.comment, s.submitted_at,
@@ -121,6 +139,7 @@ export async function buildEngagementSnapshot(periodDays: number): Promise<Engag
             JOIN users u ON u.id = s.user_id
             LEFT JOIN analytics_events ae ON ae.user_id = s.user_id
             WHERE s.status = 'submitted' AND s.rating <= 3
+              AND ${EXCLUDE_TEST_USERS}
             GROUP BY s.id
             ORDER BY s.submitted_at DESC
             LIMIT 25`,
@@ -130,22 +149,29 @@ export async function buildEngagementSnapshot(periodDays: number): Promise<Engag
             FROM satisfaction_surveys s
             JOIN users u ON u.id = s.user_id
             WHERE s.status = 'submitted' AND TRIM(COALESCE(s.comment, '')) != ''
+              AND ${EXCLUDE_TEST_USERS}
             ORDER BY s.submitted_at DESC LIMIT 15`,
     }),
     client.execute({
-      sql: `SELECT status, COUNT(*) as cnt FROM feedback GROUP BY status`,
+      sql: `SELECT f.status, COUNT(*) as cnt FROM feedback f
+            INNER JOIN users u ON u.id = f.user_id
+            WHERE ${EXCLUDE_TEST_USERS}
+            GROUP BY f.status`,
     }),
     client.execute({
       sql: `SELECT u.username, f.type, f.subject, f.status, f.created_at
             FROM feedback f JOIN users u ON u.id = f.user_id
+            WHERE ${EXCLUDE_TEST_USERS}
             ORDER BY f.created_at DESC LIMIT 20`,
     }),
     client.execute({
-      sql: `SELECT tool_name as tool, COUNT(*) as cnt, COUNT(DISTINCT user_id) as users
-            FROM mcp_analytics_events
-            WHERE event_type = 'tool_call' AND created_at >= ${windowSql}
-              AND tool_name IS NOT NULL AND tool_name != ''
-            GROUP BY tool_name ORDER BY cnt DESC LIMIT 20`,
+      sql: `SELECT m.tool_name as tool, COUNT(*) as cnt, COUNT(DISTINCT m.user_id) as users
+            FROM mcp_analytics_events m
+            INNER JOIN users u ON u.id = m.user_id
+            WHERE m.event_type = 'tool_call' AND m.created_at >= ${windowSql}
+              AND m.tool_name IS NOT NULL AND m.tool_name != ''
+              AND ${EXCLUDE_TEST_USERS}
+            GROUP BY m.tool_name ORDER BY cnt DESC LIMIT 20`,
     }).catch(() => ({ rows: [] as import("@libsql/client").Row[] })),
   ]);
 
@@ -344,7 +370,8 @@ async function loadEmailEligibleUserIds(
           FROM users u
           LEFT JOIN user_settings us ON us.user_id = u.id
           WHERE u.email IS NOT NULL AND TRIM(u.email) != ''
-            AND COALESCE(us.email_notifications_enabled, 1) = 1`,
+            AND COALESCE(us.email_notifications_enabled, 1) = 1
+            AND ${EXCLUDE_TEST_USERS}`,
   });
   return new Set(result.rows.map((r) => str(r.id)));
 }

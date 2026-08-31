@@ -1,6 +1,10 @@
 import { randomUUID } from "crypto";
 import { ensureInitialized } from "./client";
 import { str, num } from "./helpers";
+import { sqlExcludeTestAccountEmail } from "@/lib/test-accounts";
+
+const EXCLUDE_TEST_USERS = sqlExcludeTestAccountEmail("u.email");
+const EXCLUDE_TEST_EMAIL = sqlExcludeTestAccountEmail("email");
 
 export interface ChannelSpendCap {
   id: string;
@@ -178,6 +182,7 @@ export async function getChannelPerformance(days: number): Promise<ChannelPerfor
             LEFT JOIN analytics_events ae
               ON ae.user_id = u.id AND ae.event = 'billing_checkout_completed' AND ae.created_at >= datetime('now', ?)
             WHERE u.created_at >= datetime('now', ?)
+              AND ${EXCLUDE_TEST_USERS}
             GROUP BY channel`,
       args: [daysArg, daysArg, daysArg],
     }),
@@ -193,6 +198,7 @@ export async function getChannelPerformance(days: number): Promise<ChannelPerfor
              AND ae.created_at <  datetime(u.created_at, '+14 days')
             WHERE u.created_at >= datetime('now', ?)
               AND u.created_at <= datetime('now', '-14 days')
+              AND ${EXCLUDE_TEST_USERS}
             GROUP BY channel`,
       args: [daysArg],
     }),
@@ -207,6 +213,7 @@ export async function getChannelPerformance(days: number): Promise<ChannelPerfor
              AND ae.created_at <  datetime(u.created_at, '+21 days')
             WHERE u.created_at >= datetime('now', ?)
               AND u.created_at <= datetime('now', '-21 days')
+              AND ${EXCLUDE_TEST_USERS}
             GROUP BY channel`,
       args: [daysArg],
     }),
@@ -218,6 +225,7 @@ export async function getChannelPerformance(days: number): Promise<ChannelPerfor
             COUNT(*) AS cnt
           FROM users
           WHERE created_at >= datetime('now', ?) AND created_at <= datetime('now', '-14 days')
+            AND ${EXCLUDE_TEST_EMAIL}
           GROUP BY channel`,
     args: [daysArg],
   });
@@ -227,6 +235,7 @@ export async function getChannelPerformance(days: number): Promise<ChannelPerfor
             COUNT(*) AS cnt
           FROM users
           WHERE created_at >= datetime('now', ?) AND created_at <= datetime('now', '-21 days')
+            AND ${EXCLUDE_TEST_EMAIL}
           GROUP BY channel`,
     args: [daysArg],
   });

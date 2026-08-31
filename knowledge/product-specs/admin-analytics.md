@@ -28,6 +28,7 @@ Internal dashboards built on `analytics_events`. Shows counts and trends; comple
 
 ## 7. Business logic
 - Aggregations computed on demand (no materialized views).
+- **Test accounts excluded:** any user whose email domain is `trefolio.com`, `example.com`, or `test.example.com` is omitted from product stats (user counts, DAU, funnels, attribution, engagement report, channel performance, ops metrics). Shared helpers live in [`src/lib/test-accounts.ts`](../../src/lib/test-accounts.ts).
 
 ## 8. External dependencies
 - None.
@@ -46,6 +47,8 @@ Internal dashboards built on `analytics_events`. Shows counts and trends; comple
 
 ## 13. Edge cases & gotchas
 - Large ranges paginated.
+- Admin Users list still shows test accounts (with a Test badge + Real/Test filter); only aggregations omit them.
+- Landing-page anonymous events (`landing_events`) are unchanged — they are not user-scoped.
 
 ## 14. Tests
 - Unit on aggregators.

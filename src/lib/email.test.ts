@@ -59,6 +59,7 @@ import {
   sendTrefolioUpgradeEmail,
   getCodeOwnedEmailPreview,
   TEST_VERIFICATION_TOKEN,
+  sendEmail,
 } from "./email";
 
 describe("email", () => {
@@ -79,6 +80,28 @@ describe("email", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
+  describe("sendEmail deleted-user suppression", () => {
+    it("suppresses mail to blank or tombstone addresses", async () => {
+      const blank = await sendEmail({
+        to: "",
+        subject: "Hi",
+        html: "<p>x</p>",
+        transactional: true,
+      });
+      expect(blank).toEqual({ success: true, suppressed: true });
+      expect(mockSend).not.toHaveBeenCalled();
+
+      const tombstone = await sendEmail({
+        to: "deleted-abc@deleted.invalid",
+        subject: "Hi",
+        html: "<p>x</p>",
+        transactional: true,
+      });
+      expect(tombstone).toEqual({ success: true, suppressed: true });
+      expect(mockSend).not.toHaveBeenCalled();
+    });
+  });
+
   describe("isTreefolioTestEmail", () => {
     it("test+foo@trefolio.com returns true", () => {
       expect(isTreefolioTestEmail("test+foo@trefolio.com")).toBe(true);
@@ -92,8 +115,9 @@ describe("email", () => {
       expect(isTreefolioTestEmail("test+bar@TREFOLIO.COM")).toBe(true);
     });
 
-    it("user@trefolio.com without test+ prefix returns false", () => {
-      expect(isTreefolioTestEmail("user@trefolio.com")).toBe(false);
+    it("any @trefolio.com address is a test account", () => {
+      expect(isTreefolioTestEmail("user@trefolio.com")).toBe(true);
+      expect(isTreefolioTestEmail("staff@TREFOLIO.COM")).toBe(true);
     });
   });
 

@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.279",
+    version: "2.5.283",
     date: "2026-09-01",
     title: "Company attractiveness thesis checklist",
     titleTranslations: {
@@ -29,6 +29,74 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Analyze a company now asks only for the name/ticker, then runs a shorter thesis pipeline (facts → research → report). The report walks eight cheapness checks—each with the data, what it means, how to read it—and a conclusion. Informational only, not investment advice.",
         translations: {
           es: "Analizar una empresa ahora solo pide el nombre/ticker y usa un pipeline de tesis más corto (hechos → research → informe). El informe recorre ocho checks de baratura—cada uno con el dato, qué significa y cómo interpretarlo—y una conclusión. Solo informativo, no asesoramiento de inversión.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.282",
+    date: "2026-08-30",
+    title: "Deleted users stay visible in admin",
+    titleTranslations: {
+      es: "Usuarios eliminados visibles en admin",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Admin Users keeps deleted accounts listed as anonymized tombstones marked Deleted (blank email, no notifications/emails/digests/alerts), with an Active/Deleted status filter. Personal data is still purged on deletion.",
+        translations: {
+          es: "Admin → Users mantiene las cuentas eliminadas listadas como registros anonimizados marcados como Eliminado (email en blanco, sin notificaciones/emails/digests/alertas), con filtro Active/Deleted. Los datos personales se siguen purgando al borrar.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.281",
+    date: "2026-08-30",
+    title: "Exclude test accounts from stats",
+    titleTranslations: {
+      es: "Excluir cuentas test de las estadísticas",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Any @trefolio.com email is treated as a test account. Admin analytics, engagement, channel, referral, and ops metrics exclude them; Users shows a Test badge and Real/Test filter.",
+        translations: {
+          es: "Cualquier email @trefolio.com se trata como cuenta test. Las métricas de admin (analytics, engagement, canales, referrals, ops) las excluyen; en Usuarios aparece el badge Test y un filtro Real/Test.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.280",
+    date: "2026-08-30",
+    title: "Plan badge on home",
+    titleTranslations: {
+      es: "Badge de plan en Home",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "On Free, Home shows a View plans button. On Basic and Pro, your plan appears next to your name and opens billing; Wealth shows the plan badge only.",
+        translations: {
+          es: "En Free, Home muestra el botón Ver planes. En Basic y Pro, el plan aparece junto a tu nombre y abre facturación; Wealth solo muestra el badge del plan.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.279",
+    date: "2026-08-30",
+    title: "Clearer screening quota messages",
+    titleTranslations: {
+      es: "Mensajes de cuota de cribado más claros",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Investment screening quota copy now separates “not on your plan” (Free/Basic: 0 screens) from a real monthly quota (Pro 2 / Wealth 12), with Compare plans — no more false “used 3 screens this week” message.",
+        translations: {
+          es: "El copy de cuota del cribado separa “no está en tu plan” (Free/Basic: 0 cribados) de una cuota mensual real (Pro 2 / Wealth 12), con Comparar planes — ya no dice por error que usaste 3 cribados esta semana.",
         },
       },
     ],
