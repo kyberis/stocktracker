@@ -36,13 +36,16 @@ export default function ImportOptionsCard({
       </p>
       <p className="mb-3 text-[15px] font-bold leading-snug">{t("brokerPickerTitle")}</p>
       <fieldset disabled={disabled} className="m-0 min-w-0 border-0 p-0">
-        <BrokerPickerGrid
-          t={t}
-          onSelectSync={onSelectSync}
-          onSelectTradeRepublic={onSelectTradeRepublic}
-          onCsvFallback={onCsvFallback}
-          onRequestBroker={onRequestBroker}
-        />
+        {/* Cap height so the full SnapTrade list cannot blow past the drawer and shove the composer. */}
+        <div className="max-h-[min(320px,42vh)] overflow-y-auto overscroll-contain pr-0.5">
+          <BrokerPickerGrid
+            t={t}
+            onSelectSync={onSelectSync}
+            onSelectTradeRepublic={onSelectTradeRepublic}
+            onCsvFallback={onCsvFallback}
+            onRequestBroker={onRequestBroker}
+          />
+        </div>
         <button
           type="button"
           onClick={onManualAdd}

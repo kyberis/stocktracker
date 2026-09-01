@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
 import AiMarkdown from "@/components/AiMarkdown";
 import WarrenAvatar from "./WarrenAvatar";
 import CloverAvatar from "@/components/clover/CloverAvatar";
@@ -197,7 +197,7 @@ export default function WarrenDrawer({
   const [streaming, setStreaming] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const streamEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const sendMessageRef = useRef<(text: string) => Promise<void>>(async () => {});
   const [expanded, setExpanded] = useState(false);
@@ -254,9 +254,12 @@ export default function WarrenDrawer({
     return () => window.removeEventListener("keydown", onKey, true);
   }, [isOpen, expanded]);
 
-  useEffect(() => {
-    streamEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [bubbles.length]);
+  /** Pin transcript to bottom without scrollIntoView (that scrolled the page and lifted the composer when tall import cards mounted). */
+  useLayoutEffect(() => {
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [bubbles.length, streaming]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -600,7 +603,7 @@ export default function WarrenDrawer({
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        <div ref={messagesScrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-3">
           {bubbles.length === 0 && chatHydrated && (
             <div className="flex gap-2 items-start">
               <AgentFace size={28} />
@@ -684,7 +687,6 @@ export default function WarrenDrawer({
               </div>
             );
           })}
-          <div ref={streamEndRef} />
         </div>
 
         {!streaming && bubbles.length === 0 && chatHydrated && (
