@@ -214,3 +214,52 @@ describe("buildRunResponse QA gating", () => {
     expect(qa?.status).toBe("skipped");
   });
 });
+
+describe("buildRunResponse thesis attractiveness pipeline", () => {
+  const thesisRow = () =>
+    runRow({ pipelineKind: "thesis" as const });
+
+  it("marks reportReady when hard_data → research → evaluate → qa finish (no compiler)", () => {
+    const steps = [
+      step({ id: "hd", agentKind: "thesis_hard_data", status: "done" }),
+      step({
+        id: "rs",
+        agentKind: "thesis_research",
+        ticker: "AAPL",
+        status: "done",
+      }),
+      step({ id: "ev", agentKind: "thesis_evaluate", status: "done" }),
+      step({ id: "qa", agentKind: "thesis_qa", status: "done" }),
+    ];
+    const run = buildRunResponse(thesisRow(), steps);
+    expect(run.reportReady).toBe(true);
+    expect(run.status).toBe("completed");
+  });
+
+  it("blocks reportReady until thesis_qa completes", () => {
+    const steps = [
+      step({ id: "hd", agentKind: "thesis_hard_data", status: "done" }),
+      step({
+        id: "rs",
+        agentKind: "thesis_research",
+        ticker: "AAPL",
+        status: "done",
+      }),
+      step({ id: "ev", agentKind: "thesis_evaluate", status: "done" }),
+      step({ id: "qa", agentKind: "thesis_qa", status: "running" }),
+    ];
+    const run = buildRunResponse(thesisRow(), steps);
+    expect(run.reportReady).toBe(false);
+  });
+
+  it("still supports legacy thesis runs with thesis_compiler", () => {
+    const steps = [
+      step({ id: "hd", agentKind: "thesis_hard_data", status: "done" }),
+      step({ id: "cmp", agentKind: "thesis_compiler", status: "done" }),
+      step({ id: "ev", agentKind: "thesis_evaluate", status: "done" }),
+      step({ id: "qa", agentKind: "thesis_qa", status: "done" }),
+    ];
+    const run = buildRunResponse(thesisRow(), steps);
+    expect(run.reportReady).toBe(true);
+  });
+});
