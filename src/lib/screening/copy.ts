@@ -78,10 +78,11 @@ const en = {
     analyzeEyebrow: "Option C · analyze",
     analyzeTitle: "Deep-dive one company",
     analyzeBody:
-      "Type a ticker or company name. Confirm the listing and launch — no other questions.",
+      "Type a ticker or company name. We run the attractiveness thesis checklist for that single listing — informational, not advice.",
     analyzeCta: "Analyze a company",
     analyzeChipSearch: "Ticker or name",
     analyzeChipExchange: "Then launch",
+    analyzeChipThesis: "Thesis report",
     discoveryEyebrow: "Investment screening",
     discoveryTitle: "Screen candidates for your portfolio",
     discoveryBody:
@@ -89,11 +90,11 @@ const en = {
     discoveryCta: "Open screening",
     pipeline: {
       legend: "Report mode",
-      help: "Same brief and research agents; the report shape changes. Informational only — not a recommendation.",
+      help: "Thesis is only available for Deep-dive one company. Explore and rebalance always use the checklist shortlist. Informational only — not a recommendation.",
       checklistLabel: "Checklist",
       checklistHelp: "Shortlist of candidates with cheap / fit / solidity cards.",
       thesisLabel: "Thesis",
-      thesisHelp: "Falsifiable draft with gates, variant perception, and kill criteria.",
+      thesisHelp: "Single-company attractiveness checklist with data → meaning → interpretation.",
     },
     recentScreens: {
       title: "Your recent screens",
@@ -269,6 +270,8 @@ const en = {
       confirmSelectedNoExchange: "Got it: {name} · {ticker}.",
       changeCompany: "Change company",
       needCompany: "Choose a company and exchange before running the analysis.",
+      thesisModeNote:
+        "This run uses the attractiveness thesis report for one company (not the multi-name checklist screener).",
     },
     /** Short tips for brief rows — what the metric is and how higher/lower reads when choosing. */
     rowHelp: {
@@ -558,6 +561,8 @@ const en = {
       "The thesis pipeline is not available. Run a checklist screen instead.",
     thesisNeedsReal:
       "Thesis screens need the live research pipeline. Run a checklist screen, or ask an admin to enable it.",
+    thesisNeedsAnalyze:
+      "Thesis is only available for Deep-dive one company — not for explore or rebalance screens.",
   },
   progress: {
     eyebrow: "Screening",
@@ -1034,10 +1039,11 @@ const es: ScreeningCopy = {
     analyzeEyebrow: "Opción C · analizar",
     analyzeTitle: "Profundizar en una empresa",
     analyzeBody:
-      "Escribe un ticker o el nombre. Confirma la cotización y lanza el análisis — sin más preguntas.",
+      "Escribe un ticker o el nombre. Lanzamos el checklist de atractivo (tesis) para esa cotización — informativo, no es consejo.",
     analyzeCta: "Analizar una empresa",
     analyzeChipSearch: "Ticker o nombre",
     analyzeChipExchange: "Luego lanza",
+    analyzeChipThesis: "Informe de tesis",
     discoveryEyebrow: "Cribado de inversión",
     discoveryTitle: "Criba candidatos para tu cartera",
     discoveryBody:
@@ -1045,11 +1051,11 @@ const es: ScreeningCopy = {
     discoveryCta: "Abrir cribado",
     pipeline: {
       legend: "Modo del informe",
-      help: "Mismo brief y mismos agentes; cambia la forma del informe. Solo informativo — no es una recomendación.",
+      help: "La tesis solo está disponible en Profundizar en una empresa. Explorar y rebalancear usan siempre el cribado checklist. Solo informativo — no es una recomendación.",
       checklistLabel: "Cribado",
       checklistHelp: "Lista corta de candidatos con fichas de barato / encaje / solidez.",
       thesisLabel: "Tesis",
-      thesisHelp: "Borrador falsable con puertas, percepción variante y criterios de muerte.",
+      thesisHelp: "Checklist de atractivo para una sola empresa: dato → significado → interpretación.",
     },
     recentScreens: {
       title: "Tus cribados recientes",
@@ -1226,6 +1232,8 @@ const es: ScreeningCopy = {
       confirmSelectedNoExchange: "Perfecto: {name} · {ticker}.",
       changeCompany: "Cambiar empresa",
       needCompany: "Elige empresa y exchange antes de lanzar el análisis.",
+      thesisModeNote:
+        "Este run usa el informe de tesis de atractivo para una sola empresa (no el cribado checklist de varios nombres).",
     },
     rowHelp: {
       includeSectors: {
@@ -1511,6 +1519,8 @@ const es: ScreeningCopy = {
       "El pipeline de tesis no está disponible. Ejecuta un cribado de checklist.",
     thesisNeedsReal:
       "Las tesis necesitan el pipeline de investigación en vivo. Ejecuta un cribado de checklist, o pide a un admin que lo active.",
+    thesisNeedsAnalyze:
+      "La tesis solo está disponible en Profundizar en una empresa — no en explorar ni rebalancear.",
   },
   progress: {
     eyebrow: "Cribado",

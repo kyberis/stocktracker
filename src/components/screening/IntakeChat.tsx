@@ -9,14 +9,13 @@ import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { fill } from "@/lib/screening/copy";
 import {
+  pipelineKindForIntent,
+} from "@/lib/screening/pipeline-kind";
+import {
   isScreeningQuotaBlocked,
   resolveScreeningQuotaMessage,
   type ScreeningQuotaSlice,
 } from "@/lib/screening/quota-message";
-import {
-  parseScreeningPipelineKind,
-  type ScreeningPipelineKind,
-} from "@/lib/screening/pipeline-kind";
 import {
   applyPatch,
   buildBriefRows,
@@ -41,7 +40,6 @@ import { AnalyzeCompanyPicker, type FocusListing } from "./AnalyzeCompanyPicker"
 import { BriefList, BriefTable } from "./BriefTable";
 import { ExplainHelpList } from "./MetricHelpTip";
 import { ScreeningDisclaimer } from "./ScreeningNotices";
-import { ScreeningPipelineToggle } from "./ScreeningPipelineToggle";
 import { ScreeningQuotaBanner } from "./ScreeningQuotaBanner";
 import { useScreeningCopy } from "./use-screening-copy";
 
@@ -90,15 +88,14 @@ export function IntakeChat() {
 
   const suggestedInclude = useMemo(() => parseSectors(searchParams.get("include")), [searchParams]);
   const suggestedExclude = useMemo(() => parseSectors(searchParams.get("exclude")), [searchParams]);
-  const pipelineFromUrl = useMemo(
-    () => parseScreeningPipelineKind(searchParams.get("pipeline")),
-    [searchParams],
+  const pipelineKind = useMemo(
+    () =>
+      pipelineKindForIntent({
+        intent,
+        thesisEnabled,
+      }),
+    [intent, thesisEnabled],
   );
-  const [pipelineKind, setPipelineKind] = useState<ScreeningPipelineKind>(pipelineFromUrl);
-
-  useEffect(() => {
-    setPipelineKind(thesisEnabled ? pipelineFromUrl : "checklist");
-  }, [pipelineFromUrl, thesisEnabled]);
 
   const intakeReturnHref = useMemo(
     () =>
@@ -106,9 +103,9 @@ export function IntakeChat() {
         intent,
         includeSectors: suggestedInclude,
         excludeSectors: suggestedExclude,
-        pipeline: thesisEnabled ? pipelineKind : "checklist",
+        pipeline: pipelineKind,
       }),
-    [intent, suggestedInclude, suggestedExclude, pipelineKind, thesisEnabled],
+    [intent, suggestedInclude, suggestedExclude, pipelineKind],
   );
 
   const script = useMemo(
@@ -538,7 +535,7 @@ export function IntakeChat() {
     try {
       const payload = {
         ...toScreeningBrief(briefRef.current, language || "en"),
-        pipelineKind: thesisEnabled ? pipelineKind : "checklist",
+        pipelineKind,
       };
       const res = await fetch("/api/screening/runs", {
         method: "POST",
@@ -587,6 +584,10 @@ export function IntakeChat() {
         }
         if (detail?.error === "thesis_pipeline_disabled") {
           setSubmitError(copy.brief.thesisDisabled);
+          return;
+        }
+        if (detail?.error === "thesis_requires_analyze") {
+          setSubmitError(copy.brief.thesisNeedsAnalyze);
           return;
         }
         if (detail?.error === "thesis_requires_real_pipeline") {
@@ -924,14 +925,10 @@ export function IntakeChat() {
       {showLaunchPanel && (
         <section className="mx-auto mt-4 w-full max-w-xl shrink-0 text-center">
           <p className="text-sm text-[color:var(--muted)]">{copy.intake.readyToLaunch}</p>
-          {thesisEnabled ? (
-            <div className="mt-4 text-left">
-              <ScreeningPipelineToggle
-                value={pipelineKind}
-                onChange={setPipelineKind}
-                disabled={submitting}
-              />
-            </div>
+          {pipelineKind === "thesis" ? (
+            <p className="mt-3 text-[13px] text-[color:var(--muted)]">
+              {copy.intake.analyze.thesisModeNote}
+            </p>
           ) : null}
           <div className="mt-4 text-left">
             <BriefTable rows={rows} onEditRow={editBriefRow} />

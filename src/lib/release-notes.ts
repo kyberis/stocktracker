@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.288",
+    date: "2026-09-01",
+    title: "Thesis Analyze only + Warren",
+    titleTranslations: {
+      es: "Tesis solo en Profundizar + Warren",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Attractiveness thesis runs only for Deep-dive one company (Analyze), not explore/rebalance. Warren can start the same report with startCompanyThesis and share the run link.",
+        translations: {
+          es: "La tesis de atractivo solo corre en Profundizar en una empresa (Analyze), no en explorar/rebalancear. Warren puede lanzar el mismo informe con startCompanyThesis y compartir el enlace del run.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.287",
+    date: "2026-09-01",
+    title: "Warren import composer stays put",
+    titleTranslations: {
+      es: "El compositor de Warren no salta al importar",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Asking Warren to import (e.g. Degiro) no longer scrolls the page and lifts the message box — the drawer scrolls its own transcript, and the broker picker is height-capped inside the card.",
+        translations: {
+          es: "Pedirle a Warren importar (p. ej. Degiro) ya no desplaza la página ni sube el cuadro de mensaje — el drawer hace scroll de su propia conversación y el selector de brókers queda limitado en altura dentro de la tarjeta.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.286",
     date: "2026-09-01",
     title: "Warren valuation earnings quality",

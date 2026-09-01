@@ -10,14 +10,17 @@ export function parseScreeningPipelineKind(
 }
 
 /**
- * Server-side resolution: thesis only when the user asked for it AND the
- * feature flag is on. Otherwise always checklist.
+ * Server-side resolution: thesis only when the user asked for it, the feature
+ * flag is on, **and** the intent is Analyze (“Profundizar en una empresa”).
+ * Explore / rebalance always stay on checklist.
  */
 export function resolveScreeningPipelineKind(opts: {
   requested: unknown;
   thesisEnabled: boolean;
+  intent?: string | null;
 }): ScreeningPipelineKind {
   if (!opts.thesisEnabled) return "checklist";
+  if (opts.intent != null && opts.intent !== "analyze") return "checklist";
   return parseScreeningPipelineKind(opts.requested);
 }
 
@@ -25,4 +28,13 @@ export function isThesisPipelineKind(
   kind: ScreeningPipelineKind | string | null | undefined,
 ): boolean {
   return kind === "thesis";
+}
+
+/** Analyze + thesis flag → thesis; everything else → checklist. */
+export function pipelineKindForIntent(opts: {
+  intent: string | null | undefined;
+  thesisEnabled: boolean;
+}): ScreeningPipelineKind {
+  if (opts.thesisEnabled && opts.intent === "analyze") return "thesis";
+  return "checklist";
 }

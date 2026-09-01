@@ -113,9 +113,17 @@ export const POST = withMetrics("/api/screening/runs", async (req: NextRequest) 
       { status: 400 },
     );
   }
+  if (parsed.data.pipelineKind === "thesis" && parsed.data.intent !== "analyze") {
+    if (consumedQuota) await refundFeatureQuota(session.userId, "investment_screening");
+    return NextResponse.json(
+      { error: "thesis_requires_analyze" },
+      { status: 400 },
+    );
+  }
   const pipelineKind = resolveScreeningPipelineKind({
     requested: parsed.data.pipelineKind,
     thesisEnabled,
+    intent: parsed.data.intent,
   });
   if (pipelineKind === "thesis" && !realPipeline) {
     if (consumedQuota) await refundFeatureQuota(session.userId, "investment_screening");
