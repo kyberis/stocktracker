@@ -88,6 +88,10 @@ describe("buildReadableThesis", () => {
     expect(article.headline).not.toMatch(/EQ:|puerta|75/i);
     expect(article.business).toMatch(/mobility/i);
     expect(article.checks.length).toBeGreaterThanOrEqual(6);
+    expect(article.checks.every((c) => !/^[a-z_]+:\s*[\d.]+$/.test(c.data))).toBe(true);
+    expect(article.checks.some((c) => c.data.includes("/100") || c.data.includes("PER"))).toBe(
+      true,
+    );
     expect(article.conclusion.length).toBeGreaterThan(10);
     expect(article.openQuestions).toMatch(/ventaja competitiva/i);
     expect(article.openQuestions).not.toMatch(/EQ:/);

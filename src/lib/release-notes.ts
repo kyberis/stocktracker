@@ -17,7 +17,7 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
-    version: "2.5.285",
+    version: "2.5.286",
     date: "2026-09-01",
     title: "Warren valuation earnings quality",
     titleTranslations: {
@@ -29,6 +29,23 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Warren valuation no longer labels stocks cheap on distorted trailing P/E — compares TTM net income vs operating income and FY EPS, then prefers forward or FY-normalized multiples (e.g. GOOGL/UBER fair, not cheap). Quotes and analyst targets now include the trading currency (GBX, DKK, USD). Names with <5% analyst upside are downgraded from cheap to fair.",
         translations: {
           es: "La valoración de Warren ya no marca acciones como baratas por un PER trailing distorsionado — compara beneficio neto TTM vs ingreso operativo y EPS del ejercicio, y prioriza múltiplos forward o normalizados (p. ej. GOOGL/UBER justas, no baratas). Las cotizaciones y objetivos de analistas incluyen la moneda de negociación (GBX, DKK, USD). Nombres con <5% de upside al consenso pasan de barata a justa.",
+        },
+      },
+    ],
+  },
+  {
+    version: "2.5.285",
+    date: "2026-09-01",
+    title: "Readable thesis attractiveness checks",
+    titleTranslations: {
+      es: "Checks de atractivo legibles en tesis",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Analyze thesis reports explain each attractiveness check in plain language — what was measured, how to read it, and what is good or bad (e.g. moat score /100, dilution %, margin change in pp) instead of raw internal field ids.",
+        translations: {
+          es: "Los informes de tesis en Analyze explican cada check de atractivo en lenguaje claro — qué se midió, cómo leerlo y qué es bueno o malo (p. ej. foso /100, dilución %, cambio de margen en pp) en lugar de ids internos.",
         },
       },
     ],
