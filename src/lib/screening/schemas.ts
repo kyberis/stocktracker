@@ -653,6 +653,7 @@ export const hardDataCandidateSchema = z.object({
   avgVolume: z.number().finite().nullable().optional(),
   thinLiquidity: z.boolean().nullable().optional(),
   peerPe: z.number().finite().nullable().optional(),
+  priceToBook: z.number().finite().nullable().optional(),
   roicPct: z.number().finite().nullable().optional(),
   epsTtm: z.number().finite().nullable().optional(),
   yearHigh: z.number().finite().nullable().optional(),

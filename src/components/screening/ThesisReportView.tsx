@@ -119,6 +119,59 @@ export function ThesisReportView({ report }: { report: ThesisReport }) {
               {article.business}
             </p>
 
+            {article.checks.length > 0 ? (
+              <>
+                <h3 className="mt-5 text-[13px] font-semibold text-[color:var(--foreground)]">
+                  {report.locale.startsWith("es")
+                    ? "Checks de atractivo"
+                    : "Attractiveness checks"}
+                </h3>
+                <div className="mt-2 space-y-3">
+                  {article.checks.map((c) => (
+                    <div
+                      key={c.id}
+                      className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)]/40 p-3"
+                    >
+                      <p className="text-[13px] font-semibold text-[color:var(--foreground)]">
+                        {c.title}{" "}
+                        <span className="font-normal text-[color:var(--muted)]">
+                          ({c.status})
+                        </span>
+                      </p>
+                      <p className="mt-1 text-[12px] text-[color:var(--foreground)]">
+                        <span className="text-[color:var(--muted)]">
+                          {report.locale.startsWith("es") ? "Dato: " : "Data: "}
+                        </span>
+                        {c.data}
+                      </p>
+                      <p className="mt-1 text-[12px] text-[color:var(--foreground)]">
+                        <span className="text-[color:var(--muted)]">
+                          {report.locale.startsWith("es")
+                            ? "Significado: "
+                            : "Meaning: "}
+                        </span>
+                        {c.meaning}
+                      </p>
+                      <p className="mt-1 text-[12px] text-[color:var(--foreground)]">
+                        <span className="text-[color:var(--muted)]">
+                          {report.locale.startsWith("es")
+                            ? "Interpretación: "
+                            : "Interpretation: "}
+                        </span>
+                        {c.interpretation}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <h3 className="mt-5 text-[13px] font-semibold text-[color:var(--foreground)]">
+                  {report.locale.startsWith("es") ? "Conclusión" : "Conclusion"}
+                </h3>
+                <p className="mt-1 text-[14px] leading-relaxed text-[color:var(--foreground)]">
+                  {article.conclusion}
+                </p>
+              </>
+            ) : null}
+
             {article.whatHappened ? (
               <>
                 <h3 className="mt-5 text-[13px] font-semibold text-[color:var(--foreground)]">

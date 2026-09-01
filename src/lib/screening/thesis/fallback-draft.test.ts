@@ -47,8 +47,26 @@ describe("fallbackThesisDraft", () => {
   });
 
   it("returns a valid Spanish draft and binds EQ:D1 even when dilution fails the watchlist gate", () => {
-    const facts = [fact("EQ:D1", 0.98), fact("EQ:D7", true)];
-    const assessment = scoreThesisAssessment({ facts, soft: [] });
+    const facts = [
+      fact("EQ:D1", 0.98),
+      fact("EQ:D7", true),
+      fact("calc:severe_dilution", true),
+      fact("calc:pe_current", 20),
+      fact("calc:hist_pe_avg", 18),
+      fact("calc:eps_cagr", 0.1),
+      fact("calc:op_margin_delta_pp", 1),
+      fact("calc:margin_years", 5),
+      fact("EQ:E1", 1),
+      fact("EQ:E2", 8),
+      fact("calc:moat_score_pct", 60),
+    ];
+    const assessment = scoreThesisAssessment({
+      facts,
+      soft: [],
+      sector: "Technology",
+      industry: "Software",
+    });
+    expect(assessment.verdict).toBe("watchlist_gate_failed");
     const draft = fallbackThesisDraft("UBER", "es", assessment, facts);
     expect(draft).not.toBeNull();
     expect(thesisDraftSchema.safeParse(draft).success).toBe(true);

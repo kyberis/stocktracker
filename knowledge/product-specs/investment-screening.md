@@ -12,8 +12,9 @@ selects the final ≤5 with full evidence. Cards that miss the majority of brief
 list the unmet expectations.
 
 Alternatively, **Analyze** resolves a single ticker/company (+ exchange when
-ambiguous) via search, then runs the same research agents on that one listing
-(`candidateCount = 1`, Hard Data skips the FMP screener).
+ambiguous) via search. The user confirms the listing and launches — **no other
+intake questions**. Research runs on that one listing (`candidateCount = 1`,
+Hard Data skips the FMP screener).
 
 ## 2. Status
 
@@ -104,26 +105,19 @@ When v2 is off but `screening_ir_agent_enabled` is on (E4):
 
 `hard_data` → `ir_business×N` → `aggregate_ir_business` → `compiler`.
 
-### Thesis pipeline (bake-off)
+### Thesis pipeline (attractiveness)
 
-Temporary parallel DAG. The checklist agents above are **not** modified.
-User chooses mode in the UI (same mode for Explore / Rebalance / Analyze).
-Staff uses the same `/screening` toggle — there is no admin-only path.
+Simplified DAG for falsifiable / attractiveness reports. Checklist agents above
+are unchanged for Explore/Rebalance cribado mode.
 
-`thesis_hard_data` → fan-out `thesis_ir` / `thesis_web` / `thesis_technicals`
-→ aggregates → `thesis_portfolio` → `thesis_risk` → `thesis_compiler` →
-`thesis_evaluate` → `thesis_qa`.
+`thesis_hard_data` → `thesis_research` (per ticker) → `thesis_evaluate` (Writer) →
+`thesis_qa`.
 
 Code lives in [`src/lib/screening/thesis/`](../../src/lib/screening/thesis/).
-Shared: orchestrator, `data/` clients, cost ledger, intake chat, `screening_runs`.
-Contracts: Fact / SoftAssessment / KillCriterion / Assessment / Thesis draft
-(subset of the investment-thesis spec). `GET /api/screening/reports/[id]`
-composes `ThesisReport` when `pipeline_kind=thesis`. Verdicts are informational
-(never buy/sell/hold). Persistent Thesis objects + kill-criteria monitoring
-(spec phases 4–5) are **out of scope**.
-
-Compare by launching the same ticker twice (two `runId`s). Optional wipe:
-`npx tsx scripts/wipe-screening-old-reports.ts --dry-run`.
+Eight scored checks (P/E vs history, EPS growth, margins, Graham fair PE, balance
+sheet, moat, capital allocation, P/B when applicable). The report shows **data →
+meaning → interpretation** per check plus a **conclusion**. Verdicts are
+informational (never buy/sell/hold).
 
 ## 5. API surface
 

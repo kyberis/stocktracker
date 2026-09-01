@@ -217,11 +217,17 @@ export function IntakeChat() {
       candidateCount: 1,
       includeSectors: [],
       excludeSectors: [],
+      riskProfile: "balanced",
+      endedEarly: true,
     };
     const next = applyPatch(briefRef.current, patch);
     briefRef.current = next;
     setBrief(next);
     setCompanyResolved(true);
+    setAgentStatus("ok");
+    setAgentSuggestions([]);
+    setShowLaunchPanel(true);
+    setQuestionIndex(0);
 
     const confirmText = listing.exchange
       ? fill(copy.intake.analyze.confirmSelected, {
@@ -238,27 +244,13 @@ export function IntakeChat() {
       text: `${listing.companyName} (${listing.ticker})`,
     });
     pushBubble({ role: "agent", text: confirmText });
-
-    const riskQ = script[0];
-    if (riskQ) {
-      pushBubble({
-        role: "agent",
-        text: riskQ.ask,
-        explain: riskQ.explain,
-      });
-      setQuestionIndex(0);
-      setAgentSuggestions(
-        riskQ.options.slice(0, 4).map((o) => ({ label: o.label, say: o.say })),
-      );
-      const withRisk: Turn[] = [
-        ...transcriptRef.current,
-        { role: "user", content: `${listing.companyName} (${listing.ticker})` },
-        { role: "assistant", content: confirmText },
-        { role: "assistant", content: riskQ.ask },
-      ];
-      transcriptRef.current = withRisk;
-      setTranscript(withRisk);
-    }
+    const withTurns: Turn[] = [
+      ...transcriptRef.current,
+      { role: "user", content: `${listing.companyName} (${listing.ticker})` },
+      { role: "assistant", content: confirmText },
+    ];
+    transcriptRef.current = withTurns;
+    setTranscript(withTurns);
     track("screening_intake_focus_selected", {
       intent,
       ticker: listing.ticker,

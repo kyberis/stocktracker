@@ -21,6 +21,8 @@ import "@/lib/screening/agents/shortlist-research";
 import "@/lib/screening/agents/compiler-evaluate";
 import "@/lib/screening/agents/qa";
 import "@/lib/screening/thesis/hard-data";
+import "@/lib/screening/thesis/research";
+/** Legacy kinds still registered so in-flight / old runs can finish. */
 import "@/lib/screening/thesis/ir";
 import "@/lib/screening/thesis/web";
 import "@/lib/screening/thesis/technicals";

@@ -25,8 +25,21 @@ describe("buildReadableThesis", () => {
       fact("EQ:E1", 1.2306252339947585),
       fact("EQ:E2", 14.909090909090908),
       fact("EQ:D7", true),
+      fact("calc:pe_current", 22),
+      fact("calc:hist_pe_avg", 20),
+      fact("calc:eps_cagr", 0.12),
+      fact("calc:op_margin_delta_pp", 1),
+      fact("calc:net_margin_delta_pp", 0.5),
+      fact("calc:margin_years", 5),
+      fact("calc:moat_score_pct", 60),
+      fact("calc:severe_dilution", true),
     ];
-    const assessment = scoreThesisAssessment({ facts, soft: [] });
+    const assessment = scoreThesisAssessment({
+      facts,
+      soft: [],
+      sector: "Technology",
+      industry: "Software - Application",
+    });
     const article = buildReadableThesis({
       locale: "es",
       companyName: "Uber Technologies, Inc.",
@@ -70,13 +83,12 @@ describe("buildReadableThesis", () => {
       ],
       draft: null,
     });
-    expect(article.headline).toMatch(/acciones ha subido/i);
+    expect(assessment.verdict).toBe("watchlist_gate_failed");
+    expect(article.headline).toMatch(/acciones ha subido|lista de seguimiento|diluci/i);
     expect(article.headline).not.toMatch(/EQ:|puerta|75/i);
     expect(article.business).toMatch(/mobility/i);
-    expect(article.strengths.some((s) => /caja libre/i.test(s.text))).toBe(true);
-    expect(article.weaknesses.some((s) => /acciones ha subido/i.test(s.text))).toBe(
-      true,
-    );
+    expect(article.checks.length).toBeGreaterThanOrEqual(6);
+    expect(article.conclusion.length).toBeGreaterThan(10);
     expect(article.openQuestions).toMatch(/ventaja competitiva/i);
     expect(article.openQuestions).not.toMatch(/EQ:/);
   });

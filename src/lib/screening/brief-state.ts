@@ -63,6 +63,8 @@ export function applyPatch(state: BriefState, patch: BriefPatch): BriefState {
     regions: patch.regions ?? state.regions,
     candidateCount: patch.candidateCount ?? state.candidateCount,
     riskProfile: patch.riskProfile ?? state.riskProfile,
+    endedEarly:
+      patch.endedEarly !== undefined ? patch.endedEarly : state.endedEarly,
     focusTicker:
       patch.focusTicker !== undefined ? patch.focusTicker : state.focusTicker,
     focusExchange:

@@ -407,4 +407,4 @@ export const thesisReportSchema = z.object({
 });
 export type ThesisReport = z.infer<typeof thesisReportSchema>;
 
-export const THESIS_RULESET_VERSION = "thesis-screening-v1";
+export const THESIS_RULESET_VERSION = "thesis-attractiveness-v2";

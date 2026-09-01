@@ -23,12 +23,13 @@ describe("engagement segments", () => {
   });
 
   it("marks top engaged users as power", () => {
+    const recent = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
     const peers: UserActivityRow[] = Array.from({ length: 10 }, (_, i) => ({
       userId: `u${i}`,
       username: `user${i}`,
       email: `u${i}@ex.com`,
       plan: "free",
-      lastEventAt: "2026-08-24T00:00:00Z",
+      lastEventAt: recent,
       eventCountInWindow: i === 0 ? 100 : 5,
       distinctEventTypes: 3,
       createdAt: "2026-01-01T00:00:00Z",
