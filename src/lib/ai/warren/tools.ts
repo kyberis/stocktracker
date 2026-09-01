@@ -133,18 +133,21 @@ async function attachLiveQuoteUpside(
 ): Promise<WarrenValuationItem[]> {
   emitStep(`Fetching quotes for ${symbols.join(", ")}…`);
   const provider = createProvider("yahoo");
-  const pricesBySymbol: Record<string, number | null> = {};
+  const quotesBySymbol: Record<string, { price: number | null; currency: string | null }> = {};
   await Promise.all(
     symbols.map(async (symbol) => {
       try {
         const quote = await provider.getQuote(symbol);
-        pricesBySymbol[symbol] = quote.regularMarketPrice ?? null;
+        quotesBySymbol[symbol] = {
+          price: quote.regularMarketPrice ?? null,
+          currency: quote.currency ?? null,
+        };
       } catch {
-        pricesBySymbol[symbol] = null;
+        quotesBySymbol[symbol] = { price: null, currency: null };
       }
     }),
   );
-  return enrichValuationItemsWithQuotes(items, pricesBySymbol);
+  return enrichValuationItemsWithQuotes(items, quotesBySymbol);
 }
 
 export function buildWarrenTools(ctx: WarrenToolContext) {
@@ -741,7 +744,7 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
             results,
             errors: result.errors,
             replyHint:
-              "Ground the answer in valuationLabel, metrics (peRatio trailing, forwardPE, histPeAvg), currentPrice, upsideToTargetPct, fetchedAt, and provider. valuationLabel is from multiples; upsideToTargetPct is analyst target vs price — cite both and note when they diverge. If the user asked to rank, decide, or sell, sort by upsideToTargetPct (lowest first for limited upside) and explain the bottom names — do not regroup expensive/fair/cheap. Mention dataGaps when present. Not investment advice.",
+              "Ground the answer in valuationLabel, metrics (peRatio trailing, forwardPE, histPeAvg), currentPrice, currency, upsideToTargetPct, fetchedAt, and provider. Always state prices and analyst targets in the tool's currency field (e.g. GBX for LSE pence, DKK for Copenhagen) — never assume USD. valuationLabel is from multiples; upsideToTargetPct is analyst target vs price — cite both and note when they diverge. If the user asked to rank, decide, or sell, sort by upsideToTargetPct (lowest first for limited upside) and explain the bottom names — do not regroup expensive/fair/cheap. Mention dataGaps when present (especially trailing earnings quality flags). Not investment advice.",
           };
         } catch (err) {
           console.error("[warren/analyzeValuation]", err instanceof Error ? err.message : err);

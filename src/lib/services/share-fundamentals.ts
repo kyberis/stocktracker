@@ -177,7 +177,8 @@ async function persistType(
 }
 
 function typesForScope(scope: ShareFundamentalsScope): readonly ShareFundamentalsType[] {
-  return scope === "valuation" ? ["overview"] : SHARE_FUNDAMENTALS_TYPES;
+  // Income statements power earnings-quality checks in Warren valuation.
+  return scope === "valuation" ? ["overview", "income"] : SHARE_FUNDAMENTALS_TYPES;
 }
 
 export async function ensureShareFundamentals(

@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.284",
+    date: "2026-09-01",
+    title: "Warren valuation earnings quality",
+    titleTranslations: {
+      es: "Calidad de beneficios en valoración de Warren",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Warren valuation no longer labels stocks cheap on distorted trailing P/E — compares TTM net income vs operating income and FY EPS, then prefers forward or FY-normalized multiples (e.g. GOOGL/UBER fair, not cheap). Quotes and analyst targets now include the trading currency (GBX, DKK, USD). Names with <5% analyst upside are downgraded from cheap to fair.",
+        translations: {
+          es: "La valoración de Warren ya no marca acciones como baratas por un PER trailing distorsionado — compara beneficio neto TTM vs ingreso operativo y EPS del ejercicio, y prioriza múltiplos forward o normalizados (p. ej. GOOGL/UBER justas, no baratas). Las cotizaciones y objetivos de analistas incluyen la moneda de negociación (GBX, DKK, USD). Nombres con <5% de upside al consenso pasan de barata a justa.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.283",
     date: "2026-09-01",
     title: "Company attractiveness thesis checklist",
