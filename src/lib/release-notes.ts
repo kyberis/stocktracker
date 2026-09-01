@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.285",
+    date: "2026-09-01",
+    title: "Readable thesis attractiveness checks",
+    titleTranslations: {
+      es: "Checks de atractivo legibles en tesis",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Analyze thesis reports explain each attractiveness check in plain language — what was measured, how to read it, and what is good or bad (e.g. moat score /100, dilution %, margin change in pp) instead of raw internal field ids.",
+        translations: {
+          es: "Los informes de tesis en Analyze explican cada check de atractivo en lenguaje claro — qué se midió, cómo leerlo y qué es bueno o malo (p. ej. foso /100, dilución %, cambio de margen en pp) en lugar de ids internos.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.284",
     date: "2026-09-01",
     title: "Analyze thesis report ready",

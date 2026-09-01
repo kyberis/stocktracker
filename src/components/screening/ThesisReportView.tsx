@@ -56,6 +56,35 @@ function formatFactValue(
   return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
 }
 
+function checkStatusLabel(
+  status: "pass" | "fail" | "unknown" | "skipped",
+  t: ReturnType<typeof useScreeningCopy>["copy"]["thesisReport"],
+): string {
+  switch (status) {
+    case "pass":
+      return t.checkStatusPass;
+    case "fail":
+      return t.checkStatusFail;
+    case "skipped":
+      return t.checkStatusSkipped;
+    default:
+      return t.checkStatusUnknown;
+  }
+}
+
+function checkStatusClass(status: "pass" | "fail" | "unknown" | "skipped"): string {
+  switch (status) {
+    case "pass":
+      return "bg-teal-500/15 text-teal-800 dark:text-teal-200";
+    case "fail":
+      return "bg-red-500/15 text-red-800 dark:text-red-300";
+    case "skipped":
+      return "bg-[color:var(--surface-soft)] text-[color:var(--muted)]";
+    default:
+      return "bg-amber-500/15 text-amber-900 dark:text-amber-200";
+  }
+}
+
 export function ThesisReportView({ report }: { report: ThesisReport }) {
   const { copy } = useScreeningCopy();
   const t = copy.thesisReport;
@@ -126,37 +155,42 @@ export function ThesisReportView({ report }: { report: ThesisReport }) {
                     ? "Checks de atractivo"
                     : "Attractiveness checks"}
                 </h3>
+                <p className="mt-1 text-[12px] leading-relaxed text-[color:var(--muted)]">
+                  {report.locale.startsWith("es")
+                    ? "Cada bloque muestra el dato, cómo interpretarlo y qué es bueno o malo para este nombre."
+                    : "Each block shows the figure, how to read it, and what is good or bad for this name."}
+                </p>
                 <div className="mt-2 space-y-3">
                   {article.checks.map((c) => (
                     <div
                       key={c.id}
                       className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)]/40 p-3"
                     >
-                      <p className="text-[13px] font-semibold text-[color:var(--foreground)]">
-                        {c.title}{" "}
-                        <span className="font-normal text-[color:var(--muted)]">
-                          ({c.status})
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-[13px] font-semibold text-[color:var(--foreground)]">
+                          {c.title}
+                        </p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${checkStatusClass(c.status)}`}
+                        >
+                          {checkStatusLabel(c.status, t)}
                         </span>
-                      </p>
-                      <p className="mt-1 text-[12px] text-[color:var(--foreground)]">
-                        <span className="text-[color:var(--muted)]">
-                          {report.locale.startsWith("es") ? "Dato: " : "Data: "}
+                      </div>
+                      <p className="mt-2 text-[12px] text-[color:var(--foreground)]">
+                        <span className="font-medium text-[color:var(--muted)]">
+                          {t.checkDataLabel}:{" "}
                         </span>
                         {c.data}
                       </p>
-                      <p className="mt-1 text-[12px] text-[color:var(--foreground)]">
-                        <span className="text-[color:var(--muted)]">
-                          {report.locale.startsWith("es")
-                            ? "Significado: "
-                            : "Meaning: "}
+                      <p className="mt-1.5 text-[12px] text-[color:var(--foreground)]">
+                        <span className="font-medium text-[color:var(--muted)]">
+                          {t.checkMeaningLabel}:{" "}
                         </span>
                         {c.meaning}
                       </p>
-                      <p className="mt-1 text-[12px] text-[color:var(--foreground)]">
-                        <span className="text-[color:var(--muted)]">
-                          {report.locale.startsWith("es")
-                            ? "Interpretación: "
-                            : "Interpretation: "}
+                      <p className="mt-1.5 text-[12px] text-[color:var(--foreground)]">
+                        <span className="font-medium text-[color:var(--muted)]">
+                          {t.checkInterpretationLabel}:{" "}
                         </span>
                         {c.interpretation}
                       </p>
