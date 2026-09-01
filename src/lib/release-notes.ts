@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "Attractiveness thesis runs only for Deep-dive one company (Analyze), not explore/rebalance. Warren can start the same report with startCompanyThesis and share the run link.",
         translations: {
           es: "La tesis de atractivo solo corre en Profundizar en una empresa (Analyze), no en explorar/rebalancear. Warren puede lanzar el mismo informe con startCompanyThesis y compartir el enlace del run.",
