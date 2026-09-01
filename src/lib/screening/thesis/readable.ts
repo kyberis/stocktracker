@@ -22,6 +22,7 @@ import {
 } from "@/lib/screening/thesis/metrics/format";
 import { publishedMetricValue } from "@/lib/screening/thesis/metrics/validate";
 import type { Metric } from "@/lib/screening/thesis/metrics/types";
+import { formatAttractivenessCheck } from "@/lib/screening/attractiveness-readable";
 
 export type SnapshotTone = "ok" | "watch" | "unknown";
 
@@ -410,28 +411,12 @@ export function buildReadableThesis(opts: {
               g.note?.toLowerCase().includes("p/b")
             ? "skipped"
             : "unknown";
-    const data =
-      g.value != null
-        ? `${g.field_id}: ${String(g.value)}${g.threshold != null ? ` (threshold ${String(g.threshold)})` : ""}`
-        : es
-          ? "n/d"
-          : "n/a";
-    const interpretation =
-      status === "pass"
-        ? es
-          ? "Encaja con el umbral de atractivo."
-          : "Meets the attractiveness threshold."
-        : status === "fail"
-          ? es
-            ? "No encaja: señal de alerta o caro relativo."
-            : "Does not meet the bar — warning or relatively expensive."
-          : status === "skipped"
-            ? es
-              ? "No aplica a este tipo de negocio."
-              : "Not applicable for this business type."
-            : es
-              ? "Datos insuficientes para puntuar."
-              : "Not enough data to score.";
+    const formatted = formatAttractivenessCheck({
+      checkId: g.field_id,
+      locale: opts.locale,
+      facts: opts.facts,
+      status,
+    });
     return {
       id: g.field_id,
       title: meta
@@ -439,13 +424,9 @@ export function buildReadableThesis(opts: {
           ? meta.titleEs
           : meta.titleEn
         : g.field_id,
-      data,
-      meaning: meta
-        ? es
-          ? meta.meaningEs
-          : meta.meaningEn
-        : g.note ?? "",
-      interpretation,
+      data: formatted.data,
+      meaning: formatted.meaning,
+      interpretation: formatted.interpretation,
       status,
     };
   });
