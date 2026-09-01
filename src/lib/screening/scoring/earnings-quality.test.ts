@@ -26,6 +26,19 @@ describe("evaluateEarningsQuality", () => {
     });
     expect(r.suspect).toBe(false);
   });
+
+  it("flags GOOGL-like net income far above tax-adjusted operating TTM", () => {
+    const r = evaluateEarningsQuality({
+      epsTtm: 19.91,
+      epsFy: 8.04,
+      netMarginTtmPct: 28,
+      netMarginFyPct: 24,
+      netIncomeTtm: 240e9,
+      operatingIncomeTtm: 147.6e9,
+    });
+    expect(r.suspect).toBe(true);
+    expect(r.reasons.some((reason) => reason.startsWith("net_vs_operating_ttm"))).toBe(true);
+  });
 });
 
 describe("computeNormalizedPe", () => {

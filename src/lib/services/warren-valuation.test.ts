@@ -13,6 +13,7 @@ import {
   LIMITED_UPSIDE_THRESHOLD_PCT,
   scoreValuation,
   type ValuationMetrics,
+  type WarrenValuationItem,
   WARREN_VALUATION_MAX_SYMBOLS,
 } from "@/lib/services/warren-valuation";
 
@@ -41,6 +42,23 @@ const baseOverview: CompanyOverview = {
   sharesOutstanding: 4300000000,
 };
 
+const baseMetrics = (): ValuationMetrics => ({
+  peRatio: null,
+  forwardPE: null,
+  pegRatio: null,
+  returnOnEquity: null,
+  profitMargin: null,
+  revenueTTM: null,
+  beta: null,
+  analystTargetPrice: null,
+  dividendYield: null,
+  histPeAvg: null,
+  histPeYears: null,
+  earningsQualitySuspect: false,
+  normalizedPe: null,
+  epsFy: null,
+});
+
 describe("buildValuationSnapshot", () => {
   it("maps overview fields into valuation metrics", () => {
     const metrics = buildValuationSnapshot(baseOverview);
@@ -49,6 +67,7 @@ describe("buildValuationSnapshot", () => {
     expect(metrics.returnOnEquity).toBe(0.4);
     expect(metrics.histPeAvg).toBeNull();
     expect(metrics.histPeYears).toBeNull();
+    expect(metrics.earningsQualitySuspect).toBe(false);
   });
 });
 
@@ -88,6 +107,31 @@ describe("scoreValuation", () => {
     expect(scored.summary).toContain("22.5");
   });
 
+  it("does not label GOOGL-like names cheap when trailing PE is inflated by one-offs", () => {
+    const metrics: ValuationMetrics = {
+      ...baseMetrics(),
+      peRatio: 17.4,
+      forwardPE: 23.4,
+      earningsQualitySuspect: true,
+      epsFy: 8.04,
+    };
+    const scored = scoreValuation(metrics, {
+      earningsQualityReasons: ["net_vs_operating_ttm:2.01x"],
+    });
+    expect(scored.label).toBe("fair");
+    expect(scored.dataGaps.some((g) => g.includes("trailing earnings quality suspect"))).toBe(true);
+  });
+
+  it("does not label UBER-like names cheap on tax-benefit trailing PE", () => {
+    const metrics: ValuationMetrics = {
+      ...baseMetrics(),
+      peRatio: 17.29,
+      forwardPE: 17.97,
+      earningsQualitySuspect: true,
+    };
+    expect(scoreValuation(metrics).label).toBe("fair");
+  });
+
   it("labels Serabi-like names cheap when forward P/E is provider garbage", () => {
     const metrics: ValuationMetrics = {
       ...buildValuationSnapshot({
@@ -119,19 +163,7 @@ describe("scoreValuation", () => {
   });
 
   it("returns unknown when no multiples exist", () => {
-    const scored = scoreValuation({
-      peRatio: null,
-      forwardPE: null,
-      pegRatio: null,
-      returnOnEquity: null,
-      profitMargin: null,
-      revenueTTM: null,
-      beta: null,
-      analystTargetPrice: null,
-      dividendYield: null,
-      histPeAvg: null,
-      histPeYears: null,
-    });
+    const scored = scoreValuation(baseMetrics());
     expect(scored.label).toBe("unknown");
     expect(scored.dataGaps.length).toBeGreaterThan(0);
   });
@@ -217,18 +249,45 @@ describe("computeUpsideToTarget", () => {
 });
 
 describe("enrichValuationItemsWithQuotes", () => {
-  it("attaches quote upside onto valuation items", () => {
+  it("attaches quote upside and currency onto valuation items", () => {
     const [demo] = demoValuationItems(["KO"]);
     const withTarget = attachValuationQuoteUpside(
       { ...demo!, metrics: { ...demo!.metrics, analystTargetPrice: 70 } },
       65,
+      "USD",
     );
     expect(withTarget.currentPrice).toBe(65);
+    expect(withTarget.currency).toBe("USD");
     expect(withTarget.upsideToTargetPct).toBeCloseTo(7.7, 1);
     expect(withTarget.hasLimitedUpside).toBe(false);
 
-    const [enriched] = enrichValuationItemsWithQuotes([demo!], { KO: 50 });
+    const [enriched] = enrichValuationItemsWithQuotes([demo!], {
+      KO: { price: 50, currency: "USD" },
+    });
     expect(enriched?.currentPrice).toBe(50);
+    expect(enriched?.currency).toBe("USD");
+  });
+
+  it("downgrades cheap label when analyst upside is below threshold", () => {
+    const [demo] = demoValuationItems(["NVO"]);
+    const cheapMetrics: ValuationMetrics = {
+      ...baseMetrics(),
+      peRatio: 11.26,
+      forwardPE: 13.52,
+      analystTargetPrice: 305,
+    };
+    const item: WarrenValuationItem = {
+      ...demo!,
+      symbol: "NOVO-B.CO",
+      metrics: cheapMetrics,
+      valuationLabel: "cheap",
+      valuationSummary: "demo",
+      dataGaps: [],
+    };
+    const enriched = attachValuationQuoteUpside(item, 292.4, "DKK");
+    expect(enriched.valuationLabel).toBe("fair");
+    expect(enriched.hasLimitedUpside).toBe(true);
+    expect(enriched.currency).toBe("DKK");
   });
 });
 

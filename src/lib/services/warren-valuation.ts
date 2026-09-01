@@ -1,17 +1,20 @@
 import type { CompanyOverview } from "@/lib/api-providers/types";
 import type { HoldingAssetType } from "@/lib/types";
 import { isCryptoAssetRoute } from "@/lib/asset-detail-href";
+import { deriveEarningsQualityFromIncome } from "@/lib/fundamentals/earnings-quality-from-income";
 import { fetchFmpHistoricalPeAverage } from "@/lib/fundamentals/hist-pe-from-fmp";
 import {
   forwardPeWasRejected,
   sanitizePeMultiples,
 } from "@/lib/fundamentals/normalize-overview-pe";
 import { holdingNeedsFundamentals } from "@/lib/holdings-research";
+import { computeNormalizedPe } from "@/lib/screening/scoring/earnings-quality";
 import { scoreCheap, type CheapLabel } from "@/lib/screening/scoring/categories";
 import {
   ensureShareFundamentalsBatch,
   type ShareFundamentalsBundle,
 } from "@/lib/services/share-fundamentals";
+import { normalizeCurrency } from "@/lib/utils";
 
 /** Cap portfolio valuation batch size so Warren tool steps finish before the chat stream idles out. */
 export const WARREN_VALUATION_MAX_SYMBOLS = 6;
@@ -55,6 +58,10 @@ export interface ValuationMetrics {
   dividendYield: number | null;
   histPeAvg: number | null;
   histPeYears: number | null;
+  earningsQualitySuspect: boolean;
+  normalizedPe: number | null;
+  /** Latest FY diluted EPS — used to refresh normalized P/E when a live quote arrives. */
+  epsFy: number | null;
 }
 
 /** Analyst-target upside below this percent is treated as limited. */
@@ -69,6 +76,8 @@ export interface QuoteUpsideFields {
 export interface WarrenValuationItem extends QuoteUpsideFields {
   symbol: string;
   companyName: string;
+  /** Quote/trading currency for currentPrice and analystTargetPrice (e.g. GBX, DKK, USD). */
+  currency: string | null;
   provider: string;
   cached: boolean;
   fetchedAt: string;
@@ -88,7 +97,13 @@ export type WarrenValuationBatchResult =
   | { ok: true; results: WarrenValuationItem[]; errors: Array<{ symbol: string; error: string }> }
   | { ok: false; error: string; code: WarrenValuationErrorCode };
 
-export function buildValuationSnapshot(overview: CompanyOverview): ValuationMetrics {
+export function buildValuationSnapshot(
+  overview: CompanyOverview,
+  earningsQuality?: Pick<
+    ReturnType<typeof deriveEarningsQualityFromIncome>,
+    "earningsQualitySuspect" | "normalizedPe" | "epsFy" | "reasons"
+  >,
+): ValuationMetrics {
   const { peRatio, forwardPE } = sanitizePeMultiples(overview.peRatio, overview.forwardPE);
 
   return {
@@ -103,6 +118,9 @@ export function buildValuationSnapshot(overview: CompanyOverview): ValuationMetr
     dividendYield: overview.dividendYield,
     histPeAvg: null,
     histPeYears: null,
+    earningsQualitySuspect: earningsQuality?.earningsQualitySuspect ?? false,
+    normalizedPe: earningsQuality?.normalizedPe ?? null,
+    epsFy: earningsQuality?.epsFy ?? null,
   };
 }
 
@@ -131,24 +149,54 @@ export async function enrichValuationWithHistoricalPe(
   if (hist.histPeAvg == null || hist.histPeYears < 3) return item;
 
   const metrics = applyHistoricalPeMetrics(item.metrics, hist);
-  const scored = scoreValuation(metrics);
-  const forwardGap = item.dataGaps.find((g) => g.includes("forward P/E omitted"));
-  const dataGaps =
-    forwardGap && !scored.dataGaps.includes(forwardGap)
-      ? [...scored.dataGaps, forwardGap]
-      : scored.dataGaps;
+  const scored = scoreValuation(metrics, {
+    earningsQualityReasons: metrics.earningsQualitySuspect
+      ? item.dataGaps
+          .filter((g) => g.includes("trailing earnings quality suspect"))
+          .map((g) =>
+            g
+              .replace(/^trailing earnings quality suspect \(/, "")
+              .replace(/ — label uses forward.*$/, "")
+              .replace(/\)$/, ""),
+          )
+      : undefined,
+  });
   return {
     ...item,
     metrics,
     valuationLabel: scored.label,
     valuationSummary: scored.summary,
-    dataGaps,
+    dataGaps: scored.dataGaps,
   };
+}
+
+function applyLimitedUpsideToLabel(
+  label: CheapLabel,
+  upside: QuoteUpsideFields,
+  dataGaps: string[],
+): { label: CheapLabel; dataGaps: string[] } {
+  if (
+    label === "cheap" &&
+    upside.hasLimitedUpside &&
+    upside.upsideToTargetPct != null
+  ) {
+    return {
+      label: "fair",
+      dataGaps: [
+        ...dataGaps,
+        `analyst upside only ${upside.upsideToTargetPct}% — limited room vs consensus target`,
+      ],
+    };
+  }
+  return { label, dataGaps };
 }
 
 export function scoreValuation(
   metrics: ValuationMetrics,
-  opts?: { rawForwardPE?: number | null },
+  opts?: {
+    rawForwardPE?: number | null;
+    earningsQualityReasons?: string[];
+  },
 ): { label: CheapLabel; summary: string; dataGaps: string[] } {
   const dataGaps: string[] = [];
   if (metrics.peRatio == null && metrics.forwardPE == null) {
@@ -162,15 +210,27 @@ export function scoreValuation(
   if (!hasMultiYearHistPe(metrics)) {
     dataGaps.push("no multi-year historical P/E average");
   }
+  if (metrics.earningsQualitySuspect) {
+    const reasons = opts?.earningsQualityReasons?.length
+      ? opts.earningsQualityReasons.join("; ")
+      : "one-off gains or non-operating items";
+    dataGaps.push(
+      `trailing earnings quality suspect (${reasons}) — label uses forward or FY-normalized P/E when available`,
+    );
+  }
 
   const multiYearHist = hasMultiYearHistPe(metrics);
+  const suspect = metrics.earningsQualitySuspect;
 
   const cheap = scoreCheap({
-    // Forward vs multi-year history only when that history exists — never forward vs trailing TTM.
-    fwdPe: multiYearHist ? metrics.forwardPE : null,
-    ownHistPe: metrics.peRatio,
+    // Forward vs multi-year history when available; when earnings are suspect,
+    // always prefer forward / normalized over depressed trailing TTM.
+    fwdPe: suspect || multiYearHist ? metrics.forwardPE : null,
+    ownHistPe: suspect ? null : metrics.peRatio,
+    normalizedPe: metrics.normalizedPe,
     histPeAvg: metrics.histPeAvg,
     histPeYears: metrics.histPeYears,
+    earningsQualitySuspect: suspect,
     moatScorePct: null,
   });
 
@@ -180,6 +240,7 @@ export function scoreValuation(
     cheap.histPe,
     metrics,
     multiYearHist,
+    suspect,
   );
   return { label: cheap.label, summary, dataGaps };
 }
@@ -190,6 +251,7 @@ function valuationSummaryForLabel(
   histPe: number | null,
   metrics: ValuationMetrics,
   comparedForwardToHist: boolean,
+  earningsQualitySuspect: boolean,
 ): string {
   const parts: string[] = [];
   if (comparedForwardToHist && currentPe != null && histPe != null) {
@@ -200,12 +262,21 @@ function valuationSummaryForLabel(
       parts.push(`trailing ${metrics.peRatio.toFixed(1)}x`);
     }
   } else if (currentPe != null) {
-    parts.push(`Trailing P/E ${currentPe.toFixed(1)}x`);
+    const peKind =
+      earningsQualitySuspect && metrics.forwardPE != null && currentPe === metrics.forwardPE
+        ? "Forward P/E"
+        : earningsQualitySuspect && metrics.normalizedPe != null && currentPe === metrics.normalizedPe
+          ? "FY-normalized P/E"
+          : "Trailing P/E";
+    parts.push(`${peKind} ${currentPe.toFixed(1)}x`);
     if (histPe != null && Math.abs(histPe - currentPe) > 0.05) {
       parts.push(`vs ~${histPe.toFixed(1)}x`);
     }
-    if (metrics.forwardPE != null) {
+    if (metrics.forwardPE != null && currentPe !== metrics.forwardPE) {
       parts.push(`forward ${metrics.forwardPE.toFixed(1)}x (separate from label)`);
+    }
+    if (earningsQualitySuspect && metrics.peRatio != null && currentPe !== metrics.peRatio) {
+      parts.push(`trailing ${metrics.peRatio.toFixed(1)}x (distorted by one-offs)`);
     }
   }
   const peText = parts.length > 0 ? `${parts.join("; ")}.` : "";
@@ -248,28 +319,66 @@ export function computeUpsideToTarget(
 export function attachValuationQuoteUpside(
   item: WarrenValuationItem,
   currentPrice: number | null | undefined,
+  currency?: string | null,
+  opts?: { rawForwardPE?: number | null },
 ): WarrenValuationItem {
-  return { ...item, ...computeUpsideToTarget(currentPrice, item.metrics.analystTargetPrice) };
+  const metrics = { ...item.metrics };
+  if (metrics.earningsQualitySuspect && metrics.epsFy != null && currentPrice != null) {
+    metrics.normalizedPe = computeNormalizedPe(currentPrice, metrics.epsFy);
+  }
+
+  const upside = computeUpsideToTarget(currentPrice, metrics.analystTargetPrice);
+  const scored = scoreValuation(metrics, {
+    rawForwardPE: opts?.rawForwardPE,
+    earningsQualityReasons: item.dataGaps
+      .filter((g) => g.startsWith("trailing earnings quality suspect"))
+      .map((g) => g.replace(/^trailing earnings quality suspect \(/, "").replace(/\)$/, "")),
+  });
+  const adjusted = applyLimitedUpsideToLabel(scored.label, upside, scored.dataGaps);
+
+  return {
+    ...item,
+    currency: currency != null ? normalizeCurrency(currency) : item.currency,
+    metrics,
+    ...upside,
+    valuationLabel: adjusted.label,
+    valuationSummary: scored.summary,
+    dataGaps: adjusted.dataGaps,
+  };
+}
+
+export interface ValuationQuoteSnapshot {
+  price: number | null;
+  currency: string | null;
 }
 
 export function enrichValuationItemsWithQuotes(
   items: WarrenValuationItem[],
-  pricesBySymbol: Record<string, number | null | undefined>,
+  quotesBySymbol: Record<string, ValuationQuoteSnapshot | null | undefined>,
 ): WarrenValuationItem[] {
   return items.map((item) => {
-    const price = pricesBySymbol[item.symbol] ?? pricesBySymbol[item.symbol.toUpperCase()];
-    return attachValuationQuoteUpside(item, price);
+    const quote =
+      quotesBySymbol[item.symbol] ?? quotesBySymbol[item.symbol.toUpperCase()];
+    return attachValuationQuoteUpside(item, quote?.price ?? null, quote?.currency ?? null);
   });
 }
 
 export function mapShareFundamentalsToValuation(bundle: ShareFundamentalsBundle): WarrenValuationItem {
   const overview = bundle.overview!;
-  const metrics = buildValuationSnapshot(overview);
-  const scored = scoreValuation(metrics, { rawForwardPE: overview.forwardPE });
+  const earningsQuality = deriveEarningsQualityFromIncome(bundle.income, {
+    sharesOutstanding: overview.sharesOutstanding,
+    profitMargin: overview.profitMargin,
+  });
+  const metrics = buildValuationSnapshot(overview, earningsQuality);
+  const scored = scoreValuation(metrics, {
+    rawForwardPE: overview.forwardPE,
+    earningsQualityReasons: earningsQuality.reasons,
+  });
 
   return {
     symbol: bundle.symbol,
     companyName: bundle.overview?.name || bundle.symbol,
+    currency: normalizeCurrency(overview.currency),
     provider: bundle.provider,
     cached: bundle.cached,
     fetchedAt: bundle.fetchedAt,
@@ -356,11 +465,15 @@ export function demoValuationItems(tickers: string[]): WarrenValuationItem[] {
       dividendYield: 0.012,
       histPeAvg: 21.5,
       histPeYears: 5,
+      earningsQualitySuspect: false,
+      normalizedPe: null,
+      epsFy: null,
     };
     const scored = scoreValuation(metrics);
     return {
       symbol,
       companyName: symbol,
+      currency: "USD",
       provider: "demo",
       cached: true,
       fetchedAt: "demo",
