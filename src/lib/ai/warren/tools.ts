@@ -47,6 +47,8 @@ import type { SubscriptionPlan } from "@/lib/types";
 import type { WarrenClientAction } from "./types";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { ensureTickerNews } from "@/lib/services/ensure-ticker-news";
+import { startThesisAnalyzeRun } from "@/lib/screening/start-thesis-run";
+import { parseTicker } from "@/lib/company-analysis/ticker";
 
 export interface PortfolioSnapshot {
   baseCurrency: string;
@@ -751,6 +753,75 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
           return {
             found: false,
             note: "Could not load fundamentals right now. Try again in a moment or name one ticker.",
+          };
+        }
+      },
+    }),
+
+    startCompanyThesis: tool({
+      description:
+        "Start a single-company attractiveness thesis report (Deep-dive / Analyze). Use when the user asks for a full thesis, deep-dive, cribado de tesis, or “profundizar” on one listed company. Do NOT use for portfolio valuation (analyzeValuation) or multi-name moat screens (screenMoatStocks). Returns a run URL the user should open.",
+      inputSchema: z.object({
+        ticker: z
+          .string()
+          .min(1)
+          .max(20)
+          .describe("Yahoo/FMP listing symbol, e.g. AAPL, SAP.DE, NOVO-B.CO"),
+        companyName: z
+          .string()
+          .max(120)
+          .optional()
+          .describe("Optional display name when known"),
+        exchange: z
+          .string()
+          .max(40)
+          .optional()
+          .describe("Optional exchange label, e.g. XETRA, NASDAQ"),
+      }),
+      execute: async ({ ticker, companyName, exchange }) => {
+        const parsed = parseTicker(ticker) ?? ticker.trim().toUpperCase();
+        if (!parsed) {
+          return {
+            started: false,
+            note: "Need a valid equity ticker (e.g. AAPL or SAP.DE).",
+          };
+        }
+        if (ctx.isDemo) {
+          return {
+            started: false,
+            note: "Demo mode cannot start thesis runs. Ask the user to sign in and open Screening → Deep-dive one company.",
+          };
+        }
+        ctx.emitStep(`Starting thesis for ${parsed}…`);
+        try {
+          const result = await startThesisAnalyzeRun({
+            userId: ctx.userId,
+            ticker: parsed,
+            companyName: companyName ?? null,
+            exchange: exchange ?? null,
+            locale: ctx.language?.startsWith("es") ? "es" : "en",
+          });
+          if (!result.ok) {
+            return {
+              started: false,
+              code: result.code,
+              note: result.note,
+            };
+          }
+          return {
+            started: true,
+            runId: result.runId,
+            href: result.href,
+            ticker: result.ticker,
+            companyName: result.companyName,
+            replyHint:
+              "Tell the user the thesis run started and give them the markdown link to href (relative path is fine). Remind them it takes a few minutes and is informational, not investment advice. Do not invent report findings before they open it.",
+          };
+        } catch (err) {
+          console.error("[warren/startCompanyThesis]", err instanceof Error ? err.message : err);
+          return {
+            started: false,
+            note: "Could not start the thesis run. Try Screening → Deep-dive one company, or retry in a moment.",
           };
         }
       },

@@ -30,7 +30,7 @@ Hard Data skips the FMP screener).
   - `screening_ir_serper_jina_enabled` — prototype IR discovery/extract via Serper Search + Jina EU Reader (HTML/PDF), Tavily Search/Extract fallback; requires `SERPER_API_KEY` + `JINA_API_KEY`; off by default
   - `screening_analyze_force_serper_jina_enabled` — Analyze IR uses Serper + Jina only (no Tavily fallback); off by default
   - `screening_estebaranz_eval_enabled` — post-shortlist `compiler_evaluate` step applies the trefolio value-investing checklist to ≤5 shortlist names; on by default (and in prod). Flag key is historical; product copy always says trefolio.
-  - `screening_thesis_pipeline_enabled` — bake-off: shows a **Cribado / Checklist vs Tesis** toggle on `/screening` and intake. On by default. Off → all runs are checklist. On → the user chooses per run (`pipeline_kind` on `screening_runs`). Thesis requires `screening_pipeline_real_enabled`. Not an A/B experiment (no sticky assignment). Informational only — not investment advice.
+  - `screening_thesis_pipeline_enabled` — enables the **thesis** pipeline for **Analyze / Deep-dive one company** only (also startable from Warren via `startCompanyThesis`). Explore and rebalance always use checklist. On by default. Off → Analyze falls back to checklist. Thesis requires `screening_pipeline_real_enabled`. Informational only — not investment advice.
   - `screening_dev_lab_enabled` — Dev agent-log button for non-admins
 - **Health:** green — Intake (+ sample-conversation pilot) + Hard Data + IR/Web/PC/Risk/Technicals (v2) + optional shortlist Research + Compiler + QA (flag on in prod) + per-run variable cost ledger
 - **Owning skill:** [`.cursor/skills/engineer-tools/SKILL.md`](../../.cursor/skills/engineer-tools/SKILL.md)
@@ -125,7 +125,7 @@ informational (never buy/sell/hold).
 |--------|-------|------|------|-------------|
 | POST | `/api/screening/intake/chat` | user + flag | — | One Intake agent turn; returns `{ assistantText, agent, brief }` |
 | GET | `/api/screening/runs` | user + flag | — | Recent runs for the entry-page history list |
-| POST | `/api/screening/runs` | user + flag | — | Validates + persists the brief; mock or real pipeline. `pipelineKind: thesis` with the thesis flag off → **400** `thesis_pipeline_disabled`. |
+| POST | `/api/screening/runs` | user + flag | — | Validates + persists the brief; mock or real pipeline. `pipelineKind: thesis` with the thesis flag off → **400** `thesis_pipeline_disabled`. `pipelineKind: thesis` with intent ≠ `analyze` → **400** `thesis_requires_analyze`. |
 | GET | `/api/screening/runs/[runId]` | user + flag | — | Status, steps (IR fan-out synthesised), `progressPct`, `reportReady` |
 | GET | `/api/screening/reports/[reportId]?candidates=N` | user + flag | — | Report JSON; 409 while the run is not finished |
 | POST | `/api/screening/entry-events` | user + flag | — | Dual-write analytics for the entry funnel |
@@ -352,7 +352,8 @@ API routes wrapped in `withMetrics`. Prometheus adds
   scores stay within the ceiling, run progress advances and completes, brief preset
   fill and row ordering, intake script has no unresolved placeholders in either language.
 - [`src/lib/screening/__tests__/pipeline-kind.test.ts`](../../src/lib/screening/__tests__/pipeline-kind.test.ts)
-  — thesis flag off forces checklist; POST `pipelineKind: thesis` with flag off is 400.
+  — thesis flag off forces checklist; POST `pipelineKind: thesis` with flag off is 400;
+  POST thesis with intent ≠ analyze is 400 `thesis_requires_analyze`.
 - [`src/lib/screening/thesis/`](../../src/lib/screening/thesis/) unit tests — facts provenance,
   gate fail → `watchlist_gate_failed`, kill_criteria field ids, no buy/sell, compose, QA
   (soft score without quote is blocking).
@@ -396,7 +397,9 @@ Helpers: [`src/lib/screening/provider-circuit.ts`](../../src/lib/screening/provi
   through the real Intake agent; the user still confirms and presses Run.
 - Discoverability beyond `/recommendations/diversify` (tools hub entry needs locale
   keys in all 35 files).
-- **Thesis vs checklist bake-off** — flag `screening_thesis_pipeline_enabled` (on).
+- **Thesis pipeline (Analyze only)** — flag `screening_thesis_pipeline_enabled` (on).
+  Thesis is limited to intent `analyze` (“Profundizar en una empresa”) and can also
+  be started from Warren (`startCompanyThesis`). Explore / rebalance stay on checklist.
   User picks Cribado vs Tesis on `/screening`; one pipeline will be turned off
   after a sample (AAPL, KO, NVDA, small-cap) shows a falsifiable statement,
   ≥1 kill criterion bound to a Fact (or an explicit gap), 0 soft scores without

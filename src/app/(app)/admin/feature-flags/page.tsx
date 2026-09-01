@@ -177,9 +177,9 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
     group: "Features",
   },
   screening_thesis_pipeline_enabled: {
-    label: "Screening: thesis pipeline (bake-off)",
+    label: "Screening: thesis pipeline (Analyze)",
     description:
-      "Shows a Cribado vs Tesis toggle on /screening. Tesis runs a parallel agent DAG that emits falsifiable thesis drafts (facts, gates, kill criteria). On by default. Requires screening_pipeline_real_enabled. Informational only — not investment advice.",
+      "Enables the attractiveness thesis pipeline for Deep-dive one company (Analyze) and Warren startCompanyThesis. Explore/rebalance stay on checklist. On by default. Requires screening_pipeline_real_enabled. Informational only — not investment advice.",
     group: "Features",
   },
   portfolio_anomaly_agent: {

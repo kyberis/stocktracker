@@ -273,7 +273,16 @@ describe("POST /api/screening/runs", () => {
     const res = await POST(
       new NextRequest("http://localhost/api/screening/runs", {
         method: "POST",
-        body: JSON.stringify({ ...validBrief, pipelineKind: "thesis" }),
+        body: JSON.stringify({
+          ...validBrief,
+          intent: "analyze",
+          candidateCount: 1,
+          criteria: [],
+          includeSectors: [],
+          focusTicker: "AAPL",
+          focusCompanyName: "Apple",
+          pipelineKind: "thesis",
+        }),
         headers: { "content-type": "application/json" },
       }),
     );
@@ -284,14 +293,41 @@ describe("POST /api/screening/runs", () => {
     expect(refundFeatureQuota).toHaveBeenCalled();
   });
 
-  it("queues thesis_hard_data when the thesis flag is on", async () => {
+  it("returns 400 when thesis is requested for explore (not analyze)", async () => {
     vi.mocked(isFeatureEnabledForUser).mockResolvedValue(true);
+    const { POST } = await import("./route");
+    const res = await POST(
+      new NextRequest("http://localhost/api/screening/runs", {
+        method: "POST",
+        body: JSON.stringify({ ...validBrief, pipelineKind: "thesis" }),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toBe("thesis_requires_analyze");
+    expect(createScreeningRun).not.toHaveBeenCalled();
+    expect(refundFeatureQuota).toHaveBeenCalled();
+  });
+
+  it("queues thesis_hard_data when the thesis flag is on for analyze", async () => {
+    vi.mocked(isFeatureEnabledForUser).mockResolvedValue(true);
+    const analyzeBrief = {
+      ...validBrief,
+      intent: "analyze" as const,
+      candidateCount: 1,
+      criteria: [],
+      includeSectors: [],
+      focusTicker: "AAPL",
+      focusCompanyName: "Apple Inc.",
+      pipelineKind: "thesis" as const,
+    };
     vi.mocked(createScreeningRun).mockResolvedValue({
       id: "thesis-run-1",
       userId: "user-1",
       status: "authorized",
-      intent: "explore",
-      briefJson: JSON.stringify({ ...validBrief, pipelineKind: "thesis" }),
+      intent: "analyze",
+      briefJson: JSON.stringify(analyzeBrief),
       mockedPipeline: false,
       pipelineKind: "thesis",
       costUsd: 0,
@@ -318,7 +354,7 @@ describe("POST /api/screening/runs", () => {
     const res = await POST(
       new NextRequest("http://localhost/api/screening/runs", {
         method: "POST",
-        body: JSON.stringify({ ...validBrief, pipelineKind: "thesis" }),
+        body: JSON.stringify(analyzeBrief),
         headers: { "content-type": "application/json" },
       }),
     );
