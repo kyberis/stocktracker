@@ -14,6 +14,7 @@ import {
   THESIS_FANOUT_KINDS,
   THESIS_HARD_DATA_KIND,
   THESIS_QA_KIND,
+  THESIS_RESEARCH_KIND,
   THESIS_UI_STEP_ORDER,
 } from "@/lib/screening/thesis/kinds";
 import { isThesisPipelineKind } from "@/lib/screening/pipeline-kind";
@@ -360,7 +361,27 @@ export function buildRunResponse(
     const qaStep = active.find((s) => s.agentKind === qaKind);
     const qaDone =
       qaStep?.status === "done" || qaStep?.status === "failed";
-    reportReady = Boolean(compilerDone && evaluateDone && qaDone);
+    const hasLegacyCompiler = active.some(
+      (s) => s.agentKind === THESIS_COMPILER_KIND,
+    );
+    if (hasLegacyCompiler) {
+      // Pre-attractiveness thesis runs still had a compiler shortlist step.
+      reportReady = Boolean(compilerDone && evaluateDone && qaDone);
+    } else {
+      const hardDataDone =
+        active.find((s) => s.agentKind === THESIS_HARD_DATA_KIND)?.status ===
+        "done";
+      const thesisResearchStep = active.find(
+        (s) => s.agentKind === THESIS_RESEARCH_KIND,
+      );
+      const thesisResearchDone =
+        !thesisResearchStep ||
+        thesisResearchStep.status === "done" ||
+        thesisResearchStep.status === "failed";
+      reportReady = Boolean(
+        hardDataDone && thesisResearchDone && evaluateDone && qaDone,
+      );
+    }
   } else if (options.qaGating) {
     // QA-gated: report is ready only when the latest verdict passes (or
     // pass_with_degradation after the round cap). null verdict means still

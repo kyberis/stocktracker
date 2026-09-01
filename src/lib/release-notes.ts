@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.284",
+    date: "2026-09-01",
+    title: "Analyze thesis report ready",
+    titleTranslations: {
+      es: "Reporte de tesis Analyze listo",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Analyze thesis runs now show “View report” when the attractiveness pipeline finishes — readiness no longer waits for the removed thesis_compiler step.",
+        translations: {
+          es: "Los análisis de tesis en Analyze muestran «Ver informe» al terminar el pipeline de atractivo — ya no esperan el paso thesis_compiler eliminado.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.283",
     date: "2026-09-01",
     title: "Company attractiveness thesis checklist",
