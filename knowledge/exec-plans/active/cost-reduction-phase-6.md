@@ -13,7 +13,8 @@ After Fase 5 (active≤30d quotes/snapshots + SnapTrade idle pause), cut remaini
 
 - [ ] `screening-recover` + `re-screening-recover` do not pay meaningful Vercel time when queues are empty (stretch schedule and/or early-exit before heavy work; kick-on-write remains primary)
 - [ ] `aid-digest` does not burn ~200s avg when the 24h cache is already fresh (skip earlier / cheaper probe)
-- [ ] Complimentary Pro grants: confirm no auto-renew of idle grants; let sep expiry wave land; optional admin purge of e2e/test Pro rows
+- [x] Complimentary Pro grants: confirm no auto-renew of idle grants; let sep expiry wave land; optional admin purge of e2e/test Pro rows
+- [x] One-shot: disconnect SnapTrade seats for users idle >30d (2026-09-17); daily cleanup Path 3 keeps this from regenerating
 - [ ] FMP + Alpha Vantage: **audit** which features need which paid tier; downgrade or feature-flag unused paid paths — **do not** migrate FMP→AV
 - [ ] Optional: exclude known seed/mailinator-style emails from market-data universe if still appearing after test-domain filter
 - [ ] Document measured before/after: `cron_executions` hours/week + vendor invoices

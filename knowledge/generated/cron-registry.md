@@ -10,7 +10,7 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 |------|----------|------|-------------|
 | `push-gauges` | `0 0 * * *` | `/api/cron/push-gauges` | Sync rate-limit counters, purge old analytics/chat, push metrics to Grafana |
 | `check-alerts` | `*/15 * * * *` | `/api/cron/check-alerts` | Evaluate active price alerts and dispatch notifications when thresholds are hit |
-| `snaptrade-cleanup` | `30 23 * * *` | `/api/cron/snaptrade-cleanup` | Delete pending/inactive SnapTrade connections and prune old logs |
+| `snaptrade-cleanup` | `30 23 * * *` | `/api/cron/snaptrade-cleanup` | Delete pending/disabled/idle (>30d) SnapTrade connections and prune old logs |
 | `snaptrade-sync` | `0 * * * *` | `/api/cron/snaptrade-sync` | Sync SnapTrade brokers for users active in the last 30 days (idle sync on UI open) |
 | `event-sync` | `0 6 * * *` | `/api/cron/event-sync` | Fetch earnings (AV and/or FMP per flags), economic events, IPO, and splits from FMP |
 | `screener-sync` | `0 3 * * *` | `/api/cron/screener-sync` | Refresh screener cache for holdings ∪ hot mega-caps (UI fills missing/stale symbols on demand) |

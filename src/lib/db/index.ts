@@ -458,6 +458,7 @@ export {
   getSnapTradeNeedsAttention,
   SNAPTRADE_CRON_ACTIVE_DAYS,
   listActiveSnapTradeConnections,
+  listIdleSnapTradeConnections,
   setAllDisabledSince,
   clearAllDisabledSince,
   claimFirstSyncNotification,

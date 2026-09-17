@@ -14,6 +14,7 @@ import {
   clearSnapTradeMarkReconciliation,
   getSnapTradeMarkReconciliation,
   listActiveSnapTradeConnections,
+  listIdleSnapTradeConnections,
   saveSnapTradeMarkReconciliation,
 } from "./snaptrade-connections";
 
@@ -122,6 +123,34 @@ describe("listActiveSnapTradeConnections", () => {
     expect(mockExecute).toHaveBeenCalledWith({
       sql: expect.not.stringContaining("last_active_at"),
       args: [],
+    });
+  });
+});
+
+describe("listIdleSnapTradeConnections", () => {
+  it("selects users idle longer than the default window", async () => {
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          user_id: "u1",
+          snaptrade_user_id: "st1",
+          email: "a@b.com",
+          last_active_at: "2026-01-01",
+        },
+      ],
+    });
+
+    await expect(listIdleSnapTradeConnections()).resolves.toEqual([
+      {
+        userId: "u1",
+        snapTradeUserId: "st1",
+        email: "a@b.com",
+        lastActiveAt: "2026-01-01",
+      },
+    ]);
+    expect(mockExecute).toHaveBeenCalledWith({
+      sql: expect.stringContaining("datetime(u.last_active_at) < datetime('now', ?)"),
+      args: ["-30 days"],
     });
   });
 });

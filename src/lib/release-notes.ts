@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.288",
+    date: "2026-09-17",
+    title: "Drop idle SnapTrade seats",
+    titleTranslations: {
+      es: "Eliminar seats SnapTrade inactivos",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Daily SnapTrade cleanup now disconnects users idle for more than 30 days (deregisters the SnapTrade user and removes the local connection) so unused seats stop billing.",
+        translations: {
+          es: "La limpieza diaria de SnapTrade desconecta usuarios inactivos más de 30 días (da de baja el usuario en SnapTrade y borra la conexión local) para dejar de pagar seats sin uso.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.287",
     date: "2026-09-17",
     title: "Cheaper market-data crons for active users",
