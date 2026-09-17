@@ -118,6 +118,9 @@ export interface PendingSnapTradeDeletion {
   snapTradeUserId: string;
 }
 
+/** Idle longer than this → daily cleanup disconnects; hourly sync also skips these users. */
+export const SNAPTRADE_CRON_ACTIVE_DAYS = 30;
+
 export async function getSnapTradeConnectionsPendingDeletion(): Promise<PendingSnapTradeDeletion[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
@@ -237,6 +240,30 @@ export async function getConnectionsAllDisabledOver24h(): Promise<PendingSnapTra
   }));
 }
 
+/**
+ * SnapTrade connections whose user has been idle longer than `idleDays`
+ * (or never active). Used by daily cleanup to drop seats that no longer sync.
+ */
+export async function listIdleSnapTradeConnections(
+  idleDays = SNAPTRADE_CRON_ACTIVE_DAYS,
+): Promise<Array<PendingSnapTradeDeletion & { email: string; lastActiveAt: string }>> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT c.user_id, c.snaptrade_user_id, u.email, u.last_active_at
+          FROM snaptrade_connections c
+          INNER JOIN users u ON u.id = c.user_id
+          WHERE (u.deleted_at IS NULL OR u.deleted_at = '')
+            AND (u.last_active_at = '' OR datetime(u.last_active_at) < datetime('now', ?))`,
+    args: [`-${idleDays} days`],
+  });
+  return result.rows.map((r) => ({
+    userId: str(r.user_id),
+    snapTradeUserId: str(r.snaptrade_user_id),
+    email: str(r.email),
+    lastActiveAt: str(r.last_active_at),
+  }));
+}
+
 /* ── Needs-attention flag for surfacing credential issues on dashboard ── */
 
 export async function setSnapTradeNeedsAttention(userId: string, needsAttention: boolean): Promise<void> {
@@ -263,8 +290,6 @@ export interface ActiveSnapTradeUser {
 }
 
 /** Idle connections older than this are skipped by the hourly cron; UI fetch still syncs on open. */
-export const SNAPTRADE_CRON_ACTIVE_DAYS = 30;
-
 export type SnapTradeCronScopeOptions = {
   /**
    * Only connections whose user was active within this many days.

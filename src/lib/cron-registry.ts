@@ -33,7 +33,8 @@ export const CRON_REGISTRY: CronJob[] = [
     name: "snaptrade-cleanup",
     path: "/api/cron/snaptrade-cleanup",
     schedule: "30 23 * * *",
-    description: "Delete pending/inactive SnapTrade connections and prune old logs",
+    description:
+      "Delete pending/disabled/idle (>30d) SnapTrade connections and prune old logs",
   },
   {
     name: "snaptrade-sync",
