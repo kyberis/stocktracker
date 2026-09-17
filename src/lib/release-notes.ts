@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "Quote refresh, portfolio snapshots, and SnapTrade hourly sync now focus on users active in the last 30 days (test accounts excluded). Snapshots run every 15 minutes instead of 5; returning users still get fresh data on login or broker sync.",
         translations: {
           es: "La actualización de cotizaciones, los snapshots de cartera y el sync horario de SnapTrade se centran en usuarios activos en los últimos 30 días (sin cuentas de test). Los snapshots pasan de cada 5 a cada 15 minutos; al volver, el login o el sync del bróker refrescan los datos.",
