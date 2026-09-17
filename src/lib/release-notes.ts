@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.289",
+    date: "2026-09-17",
+    title: "Leaner recover crons and AID digest warm",
+    titleTranslations: {
+      es: "Crons de recover y warm de AID más livianos",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Screening recover backups run every 15 minutes instead of 5. AID digest warm skips rebuilds within 26 hours and only targets users active in the last 30 days; mailinator addresses are excluded from market-data cron scope.",
+        translations: {
+          es: "Los backups de screening recover pasan de cada 5 a cada 15 minutos. El warm de AID digest no reconstruye si el cache tiene menos de 26 horas y solo apunta a usuarios activos en 30 días; mailinator queda fuera del universo de cotizaciones del cron.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.288",
     date: "2026-09-17",
     title: "Drop idle SnapTrade seats",

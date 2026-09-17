@@ -1,42 +1,59 @@
 # Cost reduction phase 6 (post activity-scope)
 
-- **Status:** active
+- **Status:** active (impl sprint shipping)
 - **Owner:** agent / Marcos
 - **Started:** 2026-09-17
-- **Target:** 2026-10-01
+- **Target:** 2026-09-18 (impl) / 2026-10-01 (remeasure)
 
 ## Goal
 
-After Fase 5 (active≤30d quotes/snapshots + SnapTrade idle pause), cut remaining fixed and idle-queue spend **without** replacing FMP with Alpha Vantage.
+Cut remaining idle/cron spend after Fase 5 **without** replacing FMP with Alpha Vantage, and without a paid-vendor audit in this sprint.
+
+## In scope (this sprint)
+
+| # | Item | Approach | Done |
+|---|------|----------|------|
+| A | Empty-queue recover crons | `screening-recover` + `re-screening-recover` `*/5` → `*/15` | [x] |
+| B | `aid-digest` daily warm | Fresh window 20h → **26h**; warm only users active ≤30d (non-test) | [x] |
+| C | Grants | Confirmed `commerce_enabled=true` in prod → complimentary renewal no-ops | [x] |
+| D | Seed / disposable emails | `mailinator.com` in `TEST_ACCOUNT_EMAIL_DOMAINS` | [x] |
+| E | Measure | Baseline logged below; remeasure 7d after deploy | [ ] post-deploy |
+
+## Explicitly out of scope (this sprint)
+
+- **FMP + Alpha Vantage audit / downgrade** — deferred. Note: `market_data_alpha_vantage=false` already; FMP feature flags mostly `true`. **Do not** migrate FMP→AV.
+- OpenAI `cost_usd=0` observability on Warren/Clover.
+- Turso/Vercel plan right-size.
 
 ## Acceptance criteria
 
-- [ ] `screening-recover` + `re-screening-recover` do not pay meaningful Vercel time when queues are empty (stretch schedule and/or early-exit before heavy work; kick-on-write remains primary)
-- [ ] `aid-digest` does not burn ~200s avg when the 24h cache is already fresh (skip earlier / cheaper probe)
-- [x] Complimentary Pro grants: confirm no auto-renew of idle grants; let sep expiry wave land; optional admin purge of e2e/test Pro rows
-- [x] One-shot: disconnect SnapTrade seats for users idle >30d (2026-09-17); daily cleanup Path 3 keeps this from regenerating
-- [ ] FMP + Alpha Vantage: **audit** which features need which paid tier; downgrade or feature-flag unused paid paths — **do not** migrate FMP→AV
-- [ ] Optional: exclude known seed/mailinator-style emails from market-data universe if still appearing after test-domain filter
-- [ ] Document measured before/after: `cron_executions` hours/week + vendor invoices
+- [x] Recover crons scheduled `*/15` in `vercel.json` + `cron-registry` (+ test).
+- [x] `aid-digest` skips rebuild when cache age &lt; 26h; warm list respects `last_active` ≤30d.
+- [x] `mailinator.com` treated as test domain in holdings cron scope.
+- [x] Baseline 7d cron hours recorded (2026-09-17).
+- [ ] Release note + deploy.
 
-## Plan
+Already done earlier:
 
-1. **Empty-queue recover crons** — inspect `screening-recover` / `re-screening-recover`; if always no-op in ~100–150ms but 4k invocations/week, move to `*/15` or `*/30` and rely on enqueue kick (mirror ProdOps pattern).
-2. **aid-digest warm** — read job path; ensure cache-fresh path returns before network/LLM warm; keep daily schedule.
-3. **Grants** — verify `commerce-complimentary-renewal` stays skip-by-default for marketing grants; list Pro with `stripe_subscription_id = ''` and `last_active` >30d; no mass email required for cost cut.
-4. **Vendor audit (no swap)** — map FMP vs AV call sites (`event-sync`, fundamentals, AID). Decide per-feature: keep paid, downgrade plan, or gate behind Pro/flag. Explicit non-goal: replace FMP with AV.
-5. **Measure** — after deploy of Fase 5, sample 7d `SUM(duration_ms)` for `portfolio-snapshots`, `refresh-holdings`, `snaptrade-sync` vs pre-change baseline (~14.5h/week top-3).
+- [x] SnapTrade idle disconnect + daily Path 3
+- [x] Activity-scoped quotes/snapshots + snapshots `*/15` (Fase 5)
 
 ## Decisions log
 
-- 2026-09-17: Marcos — implement 1–3 (activity scope, snapshots */15, SnapTrade idle) first; plan remainder; **do not** replace FMP with Alpha Vantage for now.
+- 2026-09-17: Marcos — Fase 5 first; do not replace FMP with AV.
+- 2026-09-17: SnapTrade idle one-shot (16 deleted, 13 kept) + cleanup Path 3.
+- 2026-09-17: Phase-6 impl = A–E; **FMP/AV audit deferred**.
+- 2026-09-17 baseline (`cron_executions` 7d): total **15.53h**, top3 **14.48h**, recover pair **0.14h**, aid-digest **0.43h**. Root cause for AID cost: 20h fresh window &lt; 24h cron → ~19 rebuilds/day.
+- 2026-09-17: `commerce_enabled=true` → grant renewal cron already skips.
 
 ## Risks
 
-- Stretching recover crons delays stuck screening leases if kick fails — keep a slow backup schedule, do not delete the job.
-- Downgrading FMP/AV tiers can break event calendar / AID silently — feature-flag and watch coverage gaps.
+- Stretching recover delays stuck leases if kick fails — 15m backup still OK.
+- 26h AID window: on-read warm still fills misses.
 
-## Follow-ups
+## Follow-ups (later)
 
-- Revisit OpenAI `cost_usd=0` on Warren/Clover logs (observability, not spend).
-- Turso/Vercel plan right-size after cron hours drop.
+- FMP + AV paid-tier audit (no provider swap).
+- OpenAI cost logging for Warren/Clover.
+- Remeasure cron hours 7d after this deploy.
+- Vercel/Turso right-size after metrics drop.

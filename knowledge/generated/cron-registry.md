@@ -30,11 +30,11 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `feedback-pipeline` | `0 * * * *` | `/api/cron/feedback-pipeline` | Hourly backup: process queued user feedback into Linear issues (kick-on-write from /api/feedback) |
 | `prodops-dispatch` | `0 * * * *` | `/api/cron/prodops-dispatch` | Hourly backup: dispatch queued ProdOps Telegram events (kick-on-enqueue from product routes) |
 | `support-return-watch` | `0 * * * *` | `/api/cron/support-return-watch` | Hourly backup: alert ProdOps when a holdings-restore email recipient returns (primary path is last-active event) |
-| `aid-digest` | `0 8 * * *` | `/api/cron/aid-digest` | Daily pre-warm of AID news digest for aid_beta users; skips users whose 24h cache is still fresh |
+| `aid-digest` | `0 8 * * *` | `/api/cron/aid-digest` | Daily pre-warm of AID news digest for recently active aid_beta users; skips rebuilds when cache is fresher than 26h |
 | `aid-finpulse` | `0 */6 * * *` | `/api/cron/aid-finpulse` | Ingest FinPulse X posts via Tavily every 6h (24h TTL; on-read if cache empty/stale) |
 | `coverage-reconcile` | `15 2 * * 0` | `/api/cron/coverage-reconcile` | Weekly backup: flag holdings without Yahoo/FIGI quote coverage (primary heal is refresh-holdings) |
 | `portfolio-anomaly-scan` | `15 3 * * *` | `/api/cron/portfolio-anomaly-scan` | Scan portfolios with ≥1 holding for data anomalies; persist findings, LLM explain, enqueue ProdOps alerts |
-| `screening-recover` | `*/5 * * * *` | `/api/cron/screening-recover` | Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain |
+| `screening-recover` | `*/15 * * * *` | `/api/cron/screening-recover` | Investment screening backup: recover expired leases / orphan pending steps (kick-on-write is primary) |
 | `re-zona-sync` | `0 4 1 1,4,7,10 *` | `/api/cron/re-zona-sync` | Sync Portugal INE geography catalogue (sale/rent coverage flags) for real-estate zone screening |
-| `re-screening-recover` | `*/5 * * * *` | `/api/cron/re-screening-recover` | Real-estate zone screening: recover expired step leases and drain pending phases |
+| `re-screening-recover` | `*/15 * * * *` | `/api/cron/re-screening-recover` | Real-estate screening backup: recover expired leases and drain pending phases |
 | `agent-board` | **paused** (was `*/15 * * * *`) | `/api/cron/agent-board` | Compose proactive Warren/Clara Pizarra messages from portfolio news, movers, catalysts, alerts, and Clara savings; piggybacks on check-alerts (Vercel cron cap) |
