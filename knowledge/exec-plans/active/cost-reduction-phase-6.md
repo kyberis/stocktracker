@@ -1,6 +1,6 @@
 # Cost reduction phase 6 (post activity-scope)
 
-- **Status:** active (impl sprint shipping)
+- **Status:** active (impl shipped; remeasure pending)
 - **Owner:** agent / Marcos
 - **Started:** 2026-09-17
 - **Target:** 2026-09-18 (impl) / 2026-10-01 (remeasure)
@@ -31,7 +31,7 @@ Cut remaining idle/cron spend after Fase 5 **without** replacing FMP with Alpha 
 - [x] `aid-digest` skips rebuild when cache age &lt; 26h; warm list respects `last_active` ≤30d.
 - [x] `mailinator.com` treated as test domain in holdings cron scope.
 - [x] Baseline 7d cron hours recorded (2026-09-17).
-- [ ] Release note + deploy.
+- [x] Release note + deploy (PR #202 → production Ready).
 
 Already done earlier:
 
