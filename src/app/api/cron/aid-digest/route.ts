@@ -13,8 +13,8 @@ import { getQuotesWithCache } from "@/lib/quote-cache";
 import { derivePortfolioNewsTickersFromHoldings } from "@/lib/portfolio-news-tickers";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
-/** Skip Tavily/LLM warm when the 24h digest cache is still fresh. */
-const FRESH_WITHIN_MS = 20 * 3600 * 1000;
+/** Skip Tavily/LLM warm when the digest cache is still fresh enough for a daily cron. */
+const FRESH_WITHIN_MS = 26 * 3600 * 1000;
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;

@@ -12,6 +12,7 @@ export const TEST_ACCOUNT_EMAIL_DOMAINS = [
   TREFOLIO_TEST_DOMAIN,
   "example.com",
   "test.example.com",
+  "mailinator.com",
 ] as const;
 
 export function emailDomain(email: string): string {

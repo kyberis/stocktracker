@@ -22,11 +22,12 @@ describe("CRON_REGISTRY", () => {
     }
   });
 
-  it("uses hourly backups for kick-on-write queues and */5 for screening-recover", () => {
+  it("uses hourly backups for kick-on-write queues and */15 for screening-recover", () => {
     expect(CRON_REGISTRY.find((j) => j.name === "prodops-dispatch")?.schedule).toBe("0 * * * *");
     expect(CRON_REGISTRY.find((j) => j.name === "feedback-pipeline")?.schedule).toBe("0 * * * *");
     expect(CRON_REGISTRY.find((j) => j.name === "support-return-watch")?.schedule).toBe("0 * * * *");
-    expect(CRON_REGISTRY.find((j) => j.name === "screening-recover")?.schedule).toBe("*/5 * * * *");
+    expect(CRON_REGISTRY.find((j) => j.name === "screening-recover")?.schedule).toBe("*/15 * * * *");
+    expect(CRON_REGISTRY.find((j) => j.name === "re-screening-recover")?.schedule).toBe("*/15 * * * *");
   });
 
   it("uses lazy/less-frequent schedules for warmer crons", () => {

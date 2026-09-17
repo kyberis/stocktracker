@@ -169,7 +169,7 @@ export const CRON_REGISTRY: CronJob[] = [
     path: "/api/cron/aid-digest",
     schedule: "0 8 * * *",
     description:
-      "Daily pre-warm of AID news digest for aid_beta users; skips users whose 24h cache is still fresh",
+      "Daily pre-warm of AID news digest for recently active aid_beta users; skips rebuilds when cache is fresher than 26h",
   },
   {
     name: "aid-finpulse",
@@ -195,9 +195,9 @@ export const CRON_REGISTRY: CronJob[] = [
   {
     name: "screening-recover",
     path: "/api/cron/screening-recover",
-    schedule: "*/5 * * * *",
+    schedule: "*/15 * * * *",
     description:
-      "Investment screening: recover expired step leases, retry or fail exhausted attempts, kick the worker if pending steps remain",
+      "Investment screening backup: recover expired leases / orphan pending steps (kick-on-write is primary)",
   },
   {
     name: "re-zona-sync",
@@ -209,8 +209,9 @@ export const CRON_REGISTRY: CronJob[] = [
   {
     name: "re-screening-recover",
     path: "/api/cron/re-screening-recover",
-    schedule: "*/5 * * * *",
-    description: "Real-estate zone screening: recover expired step leases and drain pending phases",
+    schedule: "*/15 * * * *",
+    description:
+      "Real-estate screening backup: recover expired leases and drain pending phases",
   },
   {
     name: "agent-board",
