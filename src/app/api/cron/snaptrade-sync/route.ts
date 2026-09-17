@@ -40,9 +40,13 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const runSync = withCronLogging("snaptrade-sync", async () => {
-  const connections = await listActiveSnapTradeConnections();
+  const [connections, allConnections] = await Promise.all([
+    listActiveSnapTradeConnections(),
+    listActiveSnapTradeConnections({ activeWithinDays: null }),
+  ]);
+  const skippedIdle = Math.max(0, allConnections.length - connections.length);
   if (connections.length === 0) {
-    return { synced: 0, errors: 0 };
+    return { synced: 0, errors: 0, skippedIdle, candidates: 0 };
   }
 
   let synced = 0;
@@ -341,13 +345,13 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
     }
   }
 
-  return { synced, errors, total: connections.length };
+  return { synced, errors, total: connections.length, skippedIdle, candidates: connections.length };
 });
 
 /**
- * Cron: auto-sync all active SnapTrade connections every 1 hour.
- * For each user with an active connection, fetches new activities
- * since their last sync, imports transactions, updates cash balances,
+ * Cron: auto-sync SnapTrade for users active in the last 30 days (hourly).
+ * Idle users sync on demand via `/api/snaptrade` fetch. For each candidate,
+ * fetches new activities since last sync, imports transactions, updates cash,
  * and flags connections that need attention (expired credentials).
  */
 export async function GET(req: NextRequest) {

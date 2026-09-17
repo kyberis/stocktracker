@@ -577,4 +577,60 @@ describe("holdings", () => {
       expect(mockExecute).not.toHaveBeenCalled();
     });
   });
+
+  describe("listDistinctHoldingTickers", () => {
+    it("scopes to active users and excludes test emails by default", async () => {
+      mockExecute.mockResolvedValueOnce({
+        rows: [
+          {
+            ticker: "AAPL",
+            display_currency: "USD",
+            exchange: "NMS",
+            figi_share_class: "",
+            asset_type: "stock",
+          },
+        ],
+      });
+
+      const rows = await holdings.listDistinctHoldingTickers();
+
+      expect(rows).toEqual([
+        {
+          ticker: "AAPL",
+          displayCurrency: "USD",
+          exchange: "NMS",
+          figiShareClass: "",
+          assetType: "stock",
+        },
+      ]);
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("datetime(u.last_active_at) >= datetime('now', ?)"),
+        args: ["-30 days"],
+      });
+      expect(mockExecute.mock.calls[0][0].sql).toContain("trefolio.com");
+    });
+
+    it("can scan all users when activeWithinDays is null", async () => {
+      mockExecute.mockResolvedValueOnce({ rows: [] });
+      await holdings.listDistinctHoldingTickers({
+        activeWithinDays: null,
+        excludeTestAccounts: false,
+      });
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.not.stringContaining("last_active_at"),
+        args: [],
+      });
+    });
+  });
+
+  describe("listUserIdsWithHoldings", () => {
+    it("scopes to active non-test users by default", async () => {
+      mockExecute.mockResolvedValueOnce({ rows: [{ user_id: "u1" }] });
+      await expect(holdings.listUserIdsWithHoldings()).resolves.toEqual(["u1"]);
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("datetime(u.last_active_at) >= datetime('now', ?)"),
+        args: ["-30 days"],
+      });
+    });
+  });
 });

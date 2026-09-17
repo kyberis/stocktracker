@@ -156,8 +156,10 @@ export async function materializeCurrentSnapshotsForUser(userId: string): Promis
 }
 
 /**
- * Scheduled job: write portfolio_snapshots for all users with holdings (aggregate + per-portfolio),
- * using live Yahoo quotes so history charts populate even when clients are offline.
+ * Scheduled job: write portfolio_snapshots for recently active users with holdings
+ * (aggregate + per-portfolio), using live Yahoo quotes so charts stay dense while
+ * they are around. Idle users get a point via materializeCurrentSnapshotsForUser
+ * on login/import.
  */
 export async function runPortfolioSnapshotsJob(): Promise<Record<string, unknown>> {
   const distinctTickers = await listDistinctHoldingTickers();

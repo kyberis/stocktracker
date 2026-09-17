@@ -11,13 +11,13 @@ Source: [`src/lib/cron-registry.ts`](../../src/lib/cron-registry.ts). Active sch
 | `push-gauges` | `0 0 * * *` | `/api/cron/push-gauges` | Sync rate-limit counters, purge old analytics/chat, push metrics to Grafana |
 | `check-alerts` | `*/15 * * * *` | `/api/cron/check-alerts` | Evaluate active price alerts and dispatch notifications when thresholds are hit |
 | `snaptrade-cleanup` | `30 23 * * *` | `/api/cron/snaptrade-cleanup` | Delete pending/inactive SnapTrade connections and prune old logs |
-| `snaptrade-sync` | `0 * * * *` | `/api/cron/snaptrade-sync` | Sync all active SnapTrade broker connections — transactions, holdings, cash |
+| `snaptrade-sync` | `0 * * * *` | `/api/cron/snaptrade-sync` | Sync SnapTrade brokers for users active in the last 30 days (idle sync on UI open) |
 | `event-sync` | `0 6 * * *` | `/api/cron/event-sync` | Fetch earnings (AV and/or FMP per flags), economic events, IPO, and splits from FMP |
 | `screener-sync` | `0 3 * * *` | `/api/cron/screener-sync` | Refresh screener cache for holdings ∪ hot mega-caps (UI fills missing/stale symbols on demand) |
 | `tax-rules-review` | `0 9 2 1 *` | `/api/cron/tax-rules-review` | Check NL/DE tax rules are current for the year, notify if review needed |
 | `x-post` | `*/15 * * * *` | `/api/cron/x-post` | Publish scheduled X/Twitter posts via the X API (includes auto-generated market digest posts) |
-| `refresh-holdings` | `*/15 * * * *` | `/api/cron/refresh-holdings` | Update holding valuations and FX rates from Yahoo Finance |
-| `portfolio-snapshots` | `*/5 * * * *` | `/api/cron/portfolio-snapshots` | Compute and store portfolio value snapshots for all users (every 5 min for dense intraday charts) |
+| `refresh-holdings` | `*/15 * * * *` | `/api/cron/refresh-holdings` | Update valuations/FX from Yahoo for tickers held by users active in the last 30 days |
+| `portfolio-snapshots` | `*/15 * * * *` | `/api/cron/portfolio-snapshots` | Store portfolio value snapshots for users active in the last 30 days (every 15 min; on-demand on login/import) |
 | `lifecycle-emails` | `0 10 * * *` | `/api/cron/lifecycle-emails` | Daily: trial invitations, welcome-no-stocks activation, and 14-day winback (legacy /api/cron/trial-invitations|lifecycle-activation|lifecycle-winback aliases remain) |
 | `trial-expiration` | `0 9 * * *` | `/api/cron/trial-expiration` | Daily backup: downgrade expired trial users and send expiration email (primary path is check-on-login) |
 | `local-pro-sunset` | `0 10 * * *` | `/api/cron/local-pro-sunset` | Persist Free/Basic restore for expired local (non-Stripe) Pro windows after complimentary sunset |

@@ -39,7 +39,8 @@ export const CRON_REGISTRY: CronJob[] = [
     name: "snaptrade-sync",
     path: "/api/cron/snaptrade-sync",
     schedule: "0 * * * *",
-    description: "Sync all active SnapTrade broker connections — transactions, holdings, cash",
+    description:
+      "Sync SnapTrade brokers for users active in the last 30 days (idle sync on UI open)",
   },
   {
     name: "event-sync",
@@ -70,13 +71,15 @@ export const CRON_REGISTRY: CronJob[] = [
     name: "refresh-holdings",
     path: "/api/cron/refresh-holdings",
     schedule: "*/15 * * * *",
-    description: "Update holding valuations and FX rates from Yahoo Finance",
+    description:
+      "Update valuations/FX from Yahoo for tickers held by users active in the last 30 days",
   },
   {
     name: "portfolio-snapshots",
     path: "/api/cron/portfolio-snapshots",
-    schedule: "*/5 * * * *",
-    description: "Compute and store portfolio value snapshots for all users (every 5 min for dense intraday charts)",
+    schedule: "*/15 * * * *",
+    description:
+      "Store portfolio value snapshots for users active in the last 30 days (every 15 min; on-demand on login/import)",
   },
   {
     name: "lifecycle-emails",

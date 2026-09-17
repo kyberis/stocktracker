@@ -29,7 +29,7 @@ must match `vercel.json`. Current set:
 | `tax-rules-review` | `0 9 2 1 *` | Annual check that NL/DE tax rules are current. |
 | `x-post` | `*/15 * * * *` | Publish scheduled X/Twitter posts. |
 | `refresh-holdings` | `*/15 * * * *` | Update holding valuations and FX. |
-| `portfolio-snapshots` | `10 * * * *` | Compute and store portfolio value snapshots. |
+| `portfolio-snapshots` | `*/15 * * * *` | Compute and store portfolio value snapshots for recently active users. |
 | `lifecycle-emails` | `0 10 * * *` | Trial invites + activation + winback in one daily job. |
 | `trial-expiration` | `0 9 * * *` | Daily backup: downgrade expired trials (primary path is check-on-login). |
 | `weekly-digest` | `0 8 * * 1` | AI-powered weekly portfolio digest (Mondays). |

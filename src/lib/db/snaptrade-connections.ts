@@ -262,11 +262,50 @@ export interface ActiveSnapTradeUser {
   snapTradeUserId: string;
 }
 
-export async function listActiveSnapTradeConnections(): Promise<ActiveSnapTradeUser[]> {
+/** Idle connections older than this are skipped by the hourly cron; UI fetch still syncs on open. */
+export const SNAPTRADE_CRON_ACTIVE_DAYS = 30;
+
+export type SnapTradeCronScopeOptions = {
+  /**
+   * Only connections whose user was active within this many days.
+   * Pass `null` to sync every non-pending connection (legacy).
+   * Default: {@link SNAPTRADE_CRON_ACTIVE_DAYS}.
+   */
+  activeWithinDays?: number | null;
+};
+
+/**
+ * SnapTrade connections eligible for the hourly cron.
+ * Default: user `last_active_at` within {@link SNAPTRADE_CRON_ACTIVE_DAYS}.
+ * Manual `/api/snaptrade` fetch still runs for idle users on demand.
+ */
+export async function listActiveSnapTradeConnections(
+  options?: SnapTradeCronScopeOptions,
+): Promise<ActiveSnapTradeUser[]> {
   const client = await ensureInitialized();
+  const activeWithinDays =
+    options?.activeWithinDays === undefined
+      ? SNAPTRADE_CRON_ACTIVE_DAYS
+      : options.activeWithinDays;
+
+  const clauses = [
+    "(c.pending_delete_at = '' OR c.pending_delete_at > datetime('now'))",
+    "(u.deleted_at IS NULL OR u.deleted_at = '')",
+  ];
+  const args: string[] = [];
+
+  if (activeWithinDays != null) {
+    clauses.push("u.last_active_at != ''");
+    clauses.push("datetime(u.last_active_at) >= datetime('now', ?)");
+    args.push(`-${activeWithinDays} days`);
+  }
+
   const result = await client.execute({
-    sql: "SELECT user_id, snaptrade_user_id FROM snaptrade_connections WHERE pending_delete_at = '' OR pending_delete_at > datetime('now')",
-    args: [],
+    sql: `SELECT c.user_id, c.snaptrade_user_id
+          FROM snaptrade_connections c
+          INNER JOIN users u ON u.id = c.user_id
+          WHERE ${clauses.join(" AND ")}`,
+    args,
   });
   return result.rows.map((r) => ({
     userId: str(r.user_id),

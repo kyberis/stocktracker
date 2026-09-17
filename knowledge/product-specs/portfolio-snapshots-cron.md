@@ -1,10 +1,10 @@
 # portfolio-snapshots-cron
 
-> 5-minute cron that stores a value snapshot per user/portfolio.
+> 15-minute cron that stores a value snapshot per active user/portfolio.
 
 ## 1. Summary
 
-`/api/cron/portfolio-snapshots` runs at `*/5 * * * *`. For each user/portfolio, it computes current total value using live quotes + FX + holdings + cash, and upserts a row in `portfolio_snapshots`. This is the source of historical series on the chart (including the denser 1D intraday view).
+`/api/cron/portfolio-snapshots` runs at `*/15 * * * *`. For each **recently active** user/portfolio (default: `last_active_at` within 30 days, excluding test/synthetic emails), it computes current total value using live quotes + FX + holdings + cash, and upserts a row in `portfolio_snapshots`. Idle users get a point via on-demand materialize on login/import. This is the source of historical series on the chart (including the denser 1D intraday view while the user is active).
 
 ## 2. Status
 
@@ -17,8 +17,9 @@
 
 | Type | Path | Notes |
 |------|------|-------|
-| Cron | [`src/app/api/cron/portfolio-snapshots/route.ts`](../../src/app/api/cron/portfolio-snapshots/route.ts) | Every 5 minutes. |
+| Cron | [`src/app/api/cron/portfolio-snapshots/route.ts`](../../src/app/api/cron/portfolio-snapshots/route.ts) | Every 15 minutes. |
 | Library | [`src/lib/cron-portfolio-snapshots.ts`](../../src/lib/cron-portfolio-snapshots.ts) | Work function. |
+| Scope | [`listDistinctHoldingTickers` / `listUserIdsWithHoldings`](../../src/lib/db/holdings.ts) | Default active ≤30d + exclude test accounts. |
 
 ## 4. Data model
 
@@ -37,8 +38,9 @@ None; consumers are charts and summaries.
 ## 7. Business logic
 
 - Upserts on `(user_id, portfolio_id, timestamp)` to avoid duplicates on re-run.
-- Uses `refresh-holdings` output (latest quotes) when both crons overlap.
+- Shares Yahoo/FX fetch with `refresh-holdings` via Redis-backed `fetchSharedQuotesAndRates` when schedules overlap.
 - Wrapped in `withCronLogging()`.
+- Skips live Yahoo when no relevant market is open (`skippedMarketsClosed`).
 
 ## 8. External dependencies
 
@@ -60,22 +62,24 @@ N/A.
 
 ## 12. Telemetry
 
-- `cron_executions` row.
-- Gauges: `snapshots_written_total`, `snapshots_failed_total`.
+- `cron_executions` row (`uniqueTickers`, `users`, `skippedMarketsClosed`).
 
 ## 13. Edge cases & gotchas
 
-- Very large users batched to avoid function timeout.
-- Holidays/weekends still record snapshots (last-known price).
+- Very large users batched to avoid function timeout (`PORTFOLIO_SNAPSHOT_CRON_MAX_USERS`).
+- Returning idle users may see chart gaps until on-demand materialize runs.
+- Holidays/weekends: market gate may skip; last-known price remains.
 
 ## 14. Tests
 
-- Unit for math in `src/lib/*.test.ts`.
+- Unit for job gating in `src/lib/cron-portfolio-snapshots.test.ts`.
+- Scope SQL in `src/lib/db/holdings.test.ts`.
 
 ## 15. Related skills and rules
 
 - [`.cursor/rules/cron-jobs.mdc`](../../.cursor/rules/cron-jobs.mdc)
 - Related specs: [portfolio-value-chart](portfolio-value-chart.md), [materialize-portfolio-snapshots](materialize-portfolio-snapshots.md).
+- Cost plan: [`knowledge/exec-plans/active/cron-cost-reduction.md`](../exec-plans/active/cron-cost-reduction.md).
 
 ## 16. Open questions / planned work
 
