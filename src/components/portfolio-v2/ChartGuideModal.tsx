@@ -23,7 +23,7 @@ export default function ChartGuideModal({
     {
       icon: "📅",
       title: "Time ranges",
-      text: "1D shows intraday snapshots (every 5 min). 1W\u20131Y show daily closing values. Longer ranges are available on the Pro plan.",
+      text: "1D shows intraday snapshots (about every 15 min when you're away; denser while the app is open). 1W\u20131Y show daily closing values. Longer ranges are available on the Pro plan.",
     },
     {
       icon: "🟦",

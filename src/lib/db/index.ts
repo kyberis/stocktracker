@@ -90,7 +90,7 @@ export {
 export type { AdminUserWithStats, ProdOpsLatestCreatedUser } from "./users";
 export type { MembershipGrantTokenStatus } from "./users";
 
-export type { DistinctHoldingTicker } from "./holdings";
+export type { DistinctHoldingTicker, HoldingCronScopeOptions } from "./holdings";
 export {
   listHoldings,
   addHolding,
@@ -104,6 +104,7 @@ export {
   listSnapTradeTickersForBroker,
   deleteAllHoldings,
   countHoldings,
+  MARKET_DATA_CRON_ACTIVE_DAYS,
   listDistinctHoldingTickers,
   listUserIdsWithHoldings,
   listRecommendationCronCandidates,
@@ -439,7 +440,7 @@ export {
 export type { MetricsSnapshot } from "./metrics-snapshot";
 export { getMetricsSnapshot } from "./metrics-snapshot";
 
-export type { SnapTradeConnection, SnapTradeBrokerSync, PendingSnapTradeDeletion, ActiveSnapTradeUser } from "./snaptrade-connections";
+export type { SnapTradeConnection, SnapTradeBrokerSync, PendingSnapTradeDeletion, ActiveSnapTradeUser, SnapTradeCronScopeOptions } from "./snaptrade-connections";
 export {
   getSnapTradeConnection,
   getSnapTradeConnectionSecret,
@@ -455,6 +456,7 @@ export {
   deleteSnapTradeBrokerSync,
   setSnapTradeNeedsAttention,
   getSnapTradeNeedsAttention,
+  SNAPTRADE_CRON_ACTIVE_DAYS,
   listActiveSnapTradeConnections,
   setAllDisabledSince,
   clearAllDisabledSince,

@@ -13,6 +13,7 @@ import {
   claimFirstSyncNotification,
   clearSnapTradeMarkReconciliation,
   getSnapTradeMarkReconciliation,
+  listActiveSnapTradeConnections,
   saveSnapTradeMarkReconciliation,
 } from "./snaptrade-connections";
 
@@ -97,5 +98,30 @@ describe("SnapTrade mark reconciliation persistence", () => {
         args: ["user-1"],
       }),
     );
+  });
+});
+
+describe("listActiveSnapTradeConnections", () => {
+  it("defaults to users active within 30 days", async () => {
+    mockExecute.mockResolvedValueOnce({
+      rows: [{ user_id: "u1", snaptrade_user_id: "st1" }],
+    });
+
+    await expect(listActiveSnapTradeConnections()).resolves.toEqual([
+      { userId: "u1", snapTradeUserId: "st1" },
+    ]);
+    expect(mockExecute).toHaveBeenCalledWith({
+      sql: expect.stringContaining("datetime(u.last_active_at) >= datetime('now', ?)"),
+      args: ["-30 days"],
+    });
+  });
+
+  it("lists every connection when activeWithinDays is null", async () => {
+    mockExecute.mockResolvedValueOnce({ rows: [] });
+    await listActiveSnapTradeConnections({ activeWithinDays: null });
+    expect(mockExecute).toHaveBeenCalledWith({
+      sql: expect.not.stringContaining("last_active_at"),
+      args: [],
+    });
   });
 });

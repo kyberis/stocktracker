@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.287",
+    date: "2026-09-17",
+    title: "Cheaper market-data crons for active users",
+    titleTranslations: {
+      es: "Crons de mercado más baratos para usuarios activos",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Quote refresh, portfolio snapshots, and SnapTrade hourly sync now focus on users active in the last 30 days (test accounts excluded). Snapshots run every 15 minutes instead of 5; returning users still get fresh data on login or broker sync.",
+        translations: {
+          es: "La actualización de cotizaciones, los snapshots de cartera y el sync horario de SnapTrade se centran en usuarios activos en los últimos 30 días (sin cuentas de test). Los snapshots pasan de cada 5 a cada 15 minutos; al volver, el login o el sync del bróker refrescan los datos.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.286",
     date: "2026-09-01",
     title: "Warren valuation earnings quality",

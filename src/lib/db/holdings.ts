@@ -18,6 +18,34 @@ import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from ".
 import { listTransactions } from "./transactions";
 import { findOrCreateBrokerAccount } from "./accounts";
 import { resolvePortfolioId, healEmptyPortfolioIds, getDefaultPortfolio } from "./portfolios";
+import { sqlExcludeTestAccountEmail } from "@/lib/test-accounts";
+
+/** Default window for quote refresh / snapshot / screener cron universe. */
+export const MARKET_DATA_CRON_ACTIVE_DAYS = 30;
+
+export type HoldingCronScopeOptions = {
+  /**
+   * Only include users with `last_active_at` within this many days.
+   * Pass `null` for every user with holdings (legacy full scan).
+   * Default: {@link MARKET_DATA_CRON_ACTIVE_DAYS}.
+   */
+  activeWithinDays?: number | null;
+  /** Drop @trefolio.com / example.com fixtures. Default true. */
+  excludeTestAccounts?: boolean;
+};
+
+function resolveHoldingCronScope(options?: HoldingCronScopeOptions): {
+  activeWithinDays: number | null;
+  excludeTestAccounts: boolean;
+} {
+  return {
+    activeWithinDays:
+      options?.activeWithinDays === undefined
+        ? MARKET_DATA_CRON_ACTIVE_DAYS
+        : options.activeWithinDays,
+    excludeTestAccounts: options?.excludeTestAccounts ?? true,
+  };
+}
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
 import {
@@ -1010,15 +1038,37 @@ export interface DistinctHoldingTicker {
 }
 
 /**
- * Returns all distinct (ticker, display_currency) pairs across all users' holdings.
- * Used by the refresh-holdings cron to batch-fetch quotes per ticker instead of per user.
- * Includes exchange, asset type, and figi_share_class for market-hours gating and OpenFIGI heal.
+ * Distinct (ticker, display_currency) pairs for cron quote refresh / snapshots / screener.
+ * Default scope: users active in the last {@link MARKET_DATA_CRON_ACTIVE_DAYS} days,
+ * excluding test/synthetic emails. Pass `{ activeWithinDays: null }` for a full scan.
  */
-export async function listDistinctHoldingTickers(): Promise<DistinctHoldingTicker[]> {
+export async function listDistinctHoldingTickers(
+  options?: HoldingCronScopeOptions,
+): Promise<DistinctHoldingTicker[]> {
   const client = await ensureInitialized();
+  const { activeWithinDays, excludeTestAccounts } = resolveHoldingCronScope(options);
+  const args: string[] = [];
+  const clauses = [
+    "h.shares > 0",
+    "h.ticker != ''",
+    "(u.deleted_at IS NULL OR u.deleted_at = '')",
+  ];
+
+  if (activeWithinDays != null) {
+    clauses.push("u.last_active_at != ''");
+    clauses.push("datetime(u.last_active_at) >= datetime('now', ?)");
+    args.push(`-${activeWithinDays} days`);
+  }
+  if (excludeTestAccounts) {
+    clauses.push(sqlExcludeTestAccountEmail("u.email"));
+  }
+
   const result = await client.execute({
-    sql: `SELECT DISTINCT ticker, display_currency, exchange, figi_share_class, asset_type FROM holdings WHERE shares > 0 AND ticker != ''`,
-    args: [],
+    sql: `SELECT DISTINCT h.ticker, h.display_currency, h.exchange, h.figi_share_class, h.asset_type
+          FROM holdings h
+          INNER JOIN users u ON u.id = h.user_id
+          WHERE ${clauses.join(" AND ")}`,
+    args,
   });
   return result.rows.map((r) => ({
     ticker: str(r.ticker),
@@ -1029,12 +1079,37 @@ export async function listDistinctHoldingTickers(): Promise<DistinctHoldingTicke
   }));
 }
 
-/** Distinct users that have at least one open holding (for portfolio snapshot cron). */
-export async function listUserIdsWithHoldings(): Promise<string[]> {
+/**
+ * Distinct users with ≥1 open holding (portfolio snapshot / anomaly crons).
+ * Same default activity + test-account scope as {@link listDistinctHoldingTickers}.
+ */
+export async function listUserIdsWithHoldings(
+  options?: HoldingCronScopeOptions,
+): Promise<string[]> {
   const client = await ensureInitialized();
+  const { activeWithinDays, excludeTestAccounts } = resolveHoldingCronScope(options);
+  const args: string[] = [];
+  const clauses = [
+    "h.shares > 0",
+    "h.ticker != ''",
+    "(u.deleted_at IS NULL OR u.deleted_at = '')",
+  ];
+
+  if (activeWithinDays != null) {
+    clauses.push("u.last_active_at != ''");
+    clauses.push("datetime(u.last_active_at) >= datetime('now', ?)");
+    args.push(`-${activeWithinDays} days`);
+  }
+  if (excludeTestAccounts) {
+    clauses.push(sqlExcludeTestAccountEmail("u.email"));
+  }
+
   const result = await client.execute({
-    sql: `SELECT DISTINCT user_id FROM holdings WHERE shares > 0 AND ticker != ''`,
-    args: [],
+    sql: `SELECT DISTINCT h.user_id
+          FROM holdings h
+          INNER JOIN users u ON u.id = h.user_id
+          WHERE ${clauses.join(" AND ")}`,
+    args,
   });
   return result.rows.map((r) => str(r.user_id));
 }
