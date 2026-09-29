@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-342 routes.
+343 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -117,6 +117,7 @@
 | `/api/auth/apple` | GET | [`src/app/api/auth/apple/route.ts`](../../src/app/api/auth/apple/route.ts) |
 | `/api/auth/apple/callback` | POST | [`src/app/api/auth/apple/callback/route.ts`](../../src/app/api/auth/apple/callback/route.ts) |
 | `/api/auth/apple/unlink` | POST | [`src/app/api/auth/apple/unlink/route.ts`](../../src/app/api/auth/apple/unlink/route.ts) |
+| `/api/auth/approve-registration` | GET | [`src/app/api/auth/approve-registration/route.ts`](../../src/app/api/auth/approve-registration/route.ts) |
 | `/api/auth/change-password` | POST | [`src/app/api/auth/change-password/route.ts`](../../src/app/api/auth/change-password/route.ts) |
 | `/api/auth/checklist` | GET, POST | [`src/app/api/auth/checklist/route.ts`](../../src/app/api/auth/checklist/route.ts) |
 | `/api/auth/delete-account` | POST | [`src/app/api/auth/delete-account/route.ts`](../../src/app/api/auth/delete-account/route.ts) |
