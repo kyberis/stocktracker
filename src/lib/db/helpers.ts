@@ -88,6 +88,8 @@ export interface DbUser {
   allow_comments: number;
   /** ISO timestamp when the account was soft-deleted; empty = active. */
   deleted_at: string;
+  /** ISO timestamp when an operator approved signup; empty = pending. */
+  registration_approved_at?: string;
 }
 
 export type PortfolioCurrency =
@@ -497,6 +499,7 @@ export function rowToDbUser(row: Row): DbUser {
     share_holdings: num(row.share_holdings),
     allow_comments: num(row.allow_comments ?? 1),
     deleted_at: str(row.deleted_at),
+    registration_approved_at: str(row.registration_approved_at),
   };
 }
 

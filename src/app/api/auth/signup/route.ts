@@ -20,6 +20,10 @@ import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
 import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
 import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
 import { grantCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
+import {
+  isRegistrationApproved,
+  registrationApprovedAtForLegacyCreate,
+} from "@/lib/registration-approval";
 
 function deriveUsername(email: string): string {
   const prefix = email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "");
@@ -94,6 +98,7 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
 
     const passwordHash = await hashPassword(password);
     const username = deriveUsername(normalizedEmail);
+    const approvedAt = registrationApprovedAtForLegacyCreate();
     const user = await createUser({
       username,
       passwordHash,
@@ -102,6 +107,7 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
       authProvider: "credentials",
       seedWithData,
       attribution,
+      registrationApprovedAt: approvedAt,
     });
 
     await ensureDefaultPortfolio(user.id);
@@ -121,16 +127,19 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
       }
     }
 
-    const token = await createSessionToken({
-      userId: provisionedUser.id,
-      username: provisionedUser.username,
-      email: provisionedUser.email,
-      role: provisionedUser.role,
-      mustChangePassword: provisionedUser.mustChangePassword,
-      plan: provisionedUser.plan,
-      emailVerified: false,
-      onboardingCompleted: false,
-    });
+    const pending = !isRegistrationApproved({ registration_approved_at: approvedAt });
+    const token = pending
+      ? null
+      : await createSessionToken({
+          userId: provisionedUser.id,
+          username: provisionedUser.username,
+          email: provisionedUser.email,
+          role: provisionedUser.role,
+          mustChangePassword: provisionedUser.mustChangePassword,
+          plan: provisionedUser.plan,
+          emailVerified: false,
+          onboardingCompleted: false,
+        });
 
     trackEvent(user.id, "signup", {
       source: attribution.source,
@@ -163,13 +172,19 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
     );
     // Legacy signup only (IdP disabled). Unified signups are notified from the IdP, not Warren.
     if (!isIdpEnabled()) {
-      sendAdminNewCustomerNotification(normalizedEmail, displayName || "", "credentials").catch((err) =>
-        console.error("Admin new customer notification failed:", err),
-      );
+      sendAdminNewCustomerNotification(normalizedEmail, displayName || "", "credentials", {
+          userId: user.id,
+          needsApproval: pending,
+        }).catch((err) =>
+          console.error("Admin new customer notification failed:", err),
+        );
     }
 
-    const response = NextResponse.json({ user: provisionedUser }, { status: 201 });
-    response.cookies.set(getSessionCookieConfig(token));
+    const response = NextResponse.json(
+      { user: provisionedUser, needsApproval: pending },
+      { status: 201 },
+    );
+    if (token) response.cookies.set(getSessionCookieConfig(token));
     return response;
   } catch (error) {
     console.error("Signup failed:", error);

@@ -16,6 +16,7 @@ import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
 import { isIdpEnabled } from "@/lib/idp/config";
 import { json401 } from "@/lib/log-unauthorized";
 import { maybeExpireTrialOnLogin } from "@/lib/trial-expiration";
+import { isRegistrationApproved } from "@/lib/registration-approval";
 
 export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
   ensureSessionSecret();
@@ -75,6 +76,13 @@ export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
       return NextResponse.json(
         { error: "This account uses Apple sign-in. Please use the Apple button." },
         { status: 400 },
+      );
+    }
+
+    if (!isRegistrationApproved(user)) {
+      return NextResponse.json(
+        { error: "This account is waiting for administrator approval.", needsApproval: true },
+        { status: 403 },
       );
     }
 

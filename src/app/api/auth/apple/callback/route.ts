@@ -26,6 +26,10 @@ import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
 import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
 import { grantCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
 import { maybeExpireTrialOnLogin } from "@/lib/trial-expiration";
+import {
+  isRegistrationApproved,
+  registrationApprovedAtForLegacyCreate,
+} from "@/lib/registration-approval";
 
 export const dynamic = "force-dynamic";
 
@@ -174,6 +178,7 @@ export async function POST(req: NextRequest) {
     }
 
     let isNewSignup = false;
+    let createdApprovedAt = "";
     if (!dbUser) {
       if (freezeLocalUserWrites()) {
         return errorRedirect(
@@ -184,6 +189,7 @@ export async function POST(req: NextRequest) {
       isNewSignup = true;
       const emailBase = appleEmail ? appleEmail.split("@")[0] : "user";
       const username = emailBase.replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 30) || "user";
+      createdApprovedAt = registrationApprovedAtForLegacyCreate();
       const publicUser = await createUser({
         username,
         passwordHash: "",
@@ -195,6 +201,7 @@ export async function POST(req: NextRequest) {
         emailVerified,
         seedWithData: false,
         attribution,
+        registrationApprovedAt: createdApprovedAt,
       });
       await ensureDefaultPortfolio(publicUser.id);
       const complimentaryGrant = await grantCommerceComplimentaryPro(publicUser.id);
@@ -271,6 +278,7 @@ export async function POST(req: NextRequest) {
         share_holdings: 0,
         allow_comments: 1,
         deleted_at: "",
+        registration_approved_at: createdApprovedAt,
       };
       trackEvent(publicUser.id, "signup", {
         source: attribution.source,
@@ -297,10 +305,17 @@ export async function POST(req: NextRequest) {
         console.error("Welcome notification failed:", err),
       );
       if (!isIdpEnabled()) {
-        sendAdminNewCustomerNotification(appleEmail?.toLowerCase() || "", appleUserName || "", "apple").catch((err) =>
+        sendAdminNewCustomerNotification(appleEmail?.toLowerCase() || "", appleUserName || "", "apple", {
+          userId: publicUser.id,
+          needsApproval: !isRegistrationApproved({ registration_approved_at: createdApprovedAt }),
+        }).catch((err) =>
           console.error("Admin new customer notification failed:", err),
         );
       }
+    }
+
+    if (!isRegistrationApproved(dbUser)) {
+      return NextResponse.redirect(new URL("/pending-approval", req.nextUrl.origin));
     }
 
     const trial = isNewSignup ? { plan: dbUser.plan } : await maybeExpireTrialOnLogin(dbUser);

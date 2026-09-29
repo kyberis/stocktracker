@@ -27,6 +27,10 @@ import { freezeLocalUserWrites, isIdpEnabled } from "@/lib/idp/config";
 import { enqueueProdOpsUserRegisteredEvent } from "@/lib/prodops";
 import { grantCommerceComplimentaryPro } from "@/lib/commerce-complimentary-pro";
 import { maybeExpireTrialOnLogin } from "@/lib/trial-expiration";
+import {
+  isRegistrationApproved,
+  registrationApprovedAtForLegacyCreate,
+} from "@/lib/registration-approval";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -241,6 +245,7 @@ async function handleLoginFlow(
     }
 
     let isNewSignup = false;
+    let createdApprovedAt = "";
     if (!dbUser) {
       if (freezeLocalUserWrites()) {
         return errorRedirect(
@@ -250,6 +255,7 @@ async function handleLoginFlow(
       }
       isNewSignup = true;
       const username = googleUser.email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 30) || "user";
+      createdApprovedAt = registrationApprovedAtForLegacyCreate();
       const publicUser = await createUser({
         username,
         passwordHash: "",
@@ -261,6 +267,7 @@ async function handleLoginFlow(
         emailVerified: googleUser.email_verified,
         seedWithData: false,
         attribution,
+        registrationApprovedAt: createdApprovedAt,
       });
       await ensureDefaultPortfolio(publicUser.id);
       const complimentaryGrant = await grantCommerceComplimentaryPro(publicUser.id);
@@ -337,6 +344,7 @@ async function handleLoginFlow(
         share_holdings: 0,
         allow_comments: 1,
         deleted_at: "",
+        registration_approved_at: createdApprovedAt,
       };
       trackEvent(publicUser.id, "signup", {
         source: attribution.source,
@@ -362,7 +370,10 @@ async function handleLoginFlow(
       );
       // Legacy Google signup only. With unified IdP, new-account email goes from user.trefolio.com once.
       if (!isIdpEnabled()) {
-        sendAdminNewCustomerNotification(googleUser.email.toLowerCase(), googleUser.name || "", "google").catch((err) =>
+        sendAdminNewCustomerNotification(googleUser.email.toLowerCase(), googleUser.name || "", "google", {
+          userId: publicUser.id,
+          needsApproval: !isRegistrationApproved({ registration_approved_at: createdApprovedAt }),
+        }).catch((err) =>
           console.error("Admin new customer notification failed:", err),
         );
       }
@@ -370,6 +381,10 @@ async function handleLoginFlow(
 
     if (!dbUser) {
       return errorRedirect(req, "Google authentication failed.");
+    }
+
+    if (!isRegistrationApproved(dbUser)) {
+      return NextResponse.redirect(new URL("/pending-approval", req.nextUrl.origin));
     }
 
     const trial = isNewSignup ? { plan: dbUser.plan } : await maybeExpireTrialOnLogin(dbUser);

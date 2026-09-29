@@ -1,4 +1,4 @@
 {
   "landingPageReviewed": true,
-  "notes": "2.5.287: Cron activity-scope cost cut — existing backend behavior, not landing-worthy"
+  "notes": "2.5.290: Registration approval is an IdP/auth gate, not a landing-page customer capability"
 }

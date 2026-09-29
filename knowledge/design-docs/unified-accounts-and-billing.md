@@ -103,6 +103,7 @@ Free vs Pro mapping:
 
 - **Browser UI** on the IdP at `https://user.trefolio.com/account` (optional `?from=trefolio|clara|will` for “back” copy). Users edit display name, **avatar URL**, **tax residency** (ISO country), connected Google/Apple accounts, passkeys, and password there — not in product apps when unified OIDC is enabled.
 - **OIDC**: ID token and userinfo include standard claim **`picture`** (maps to stored `avatar_url`) and custom **`tax_residency`** (two-letter country) alongside `name`, `email`.
+- **Registration approval:** new IdP users stay pending (`users.registration_approved_at` null) until an operator clicks the signed approve link (or toggles it in IdP admin). Unapproved users do not receive OIDC auth codes. One approval unlocks trefolio, Clara, and Will. Opt out with `REGISTRATION_REQUIRES_APPROVAL=false`. Legal: this is operator-gated access after the user already consented at signup; the admin mail and the “account enabled” mail are transactional (Resend), not marketing.
 - **Service API**: `GET /api/v1/entitlements/:sub` returns entitlements plus a **`profile`** object (`name`, `picture`, `taxResidency`) so product servers can lazy-sync local `User` rows with `Authorization: Bearer IDP_SERVICE_TOKEN`.
 - **Migration**: `POST /api/v1/admin/users/profile-import` (same service token) merges legacy profile fields into IdP users by `sub` using `mode: fill_empty` or `overwrite`. Wrap operational batching in your own scripts (see `scripts/idp-profile-import-one.mjs` in trefolio for a single-user example).
 
