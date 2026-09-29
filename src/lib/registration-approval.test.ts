@@ -27,6 +27,11 @@ describe("trefolio registration approval", () => {
     );
   });
 
+  it("treats the seeded admin role as approved even without a stamp", () => {
+    process.env.REGISTRATION_REQUIRES_APPROVAL = "true";
+    expect(isRegistrationApproved({ registration_approved_at: "", role: "admin" })).toBe(true);
+  });
+
   it("leaves legacy creates pending when IdP is off", () => {
     process.env.REGISTRATION_REQUIRES_APPROVAL = "true";
     delete process.env.IDP_BASE_URL;

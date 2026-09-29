@@ -14,8 +14,10 @@ export function requiresRegistrationApproval(): boolean {
 
 export function isRegistrationApproved(user: {
   registration_approved_at?: string | null;
+  role?: string;
 }): boolean {
   if (!requiresRegistrationApproval()) return true;
+  if (user.role === "admin") return true;
   const at = user.registration_approved_at;
   return typeof at === "string" && at.trim().length > 0;
 }
