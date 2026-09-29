@@ -30,6 +30,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [ops-telegram-agent](ops-telegram-agent.md) — staff ops Telegram bot + IdP digest + internal metrics fan-out.
 - [portfolio-anomaly-agent](portfolio-anomaly-agent.md) — hybrid portfolio data-anomaly scan + admin/Telegram triage.
 - [referral](referral.md) — referral codes + reward tracking.
+- [registration-approval](registration-approval.md) — new IdP accounts stay pending until an operator approves; one click unlocks trefolio, Clara, and Will.
 - [lifecycle-emails](lifecycle-emails.md) — daily merged trial-invite + activation + winback cron.
 - [trial-invitations](trial-invitations.md) — eligibility cron + email invite.
 - [trial-system](trial-system.md) — Pro trial invitations + expiration.
