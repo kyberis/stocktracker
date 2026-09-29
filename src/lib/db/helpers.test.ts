@@ -435,6 +435,7 @@ function mockRow(overrides: Record<string, unknown> = {}): Row {
     plan_sunset_notified_at: "",
     checklist_dismissed_at: "",
     weekly_digest_enabled: 1,
+    registration_approved_at: "",
     ...overrides,
   } as unknown as Row;
 }
@@ -497,6 +498,7 @@ describe("rowToDbUser", () => {
       plan_sunset_notified_at: "",
       checklist_dismissed_at: "",
       weekly_digest_enabled: 1,
+      registration_approved_at: "",
       profile_slug: "",
       bio: "",
       social_visibility: "private",
@@ -716,6 +718,7 @@ describe("mapUser", () => {
     commerce_complimentary_at: "",
     plan_before_trial: "",
     plan_sunset_notified_at: "",
+    registration_approved_at: "",
     profile_slug: "",
     bio: "",
     social_visibility: "private" as const,
