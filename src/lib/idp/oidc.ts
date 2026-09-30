@@ -199,6 +199,8 @@ export interface VerifiedIdToken {
     will_daily_limit: number;
   };
   nonce?: string;
+  /** Absent on older IdP tokens — treat as approved. */
+  registration_approved?: boolean;
 }
 
 export async function verifyIdToken(token: string, expectedNonce?: string): Promise<VerifiedIdToken> {
@@ -238,5 +240,7 @@ export async function verifyIdToken(token: string, expectedNonce?: string): Prom
       will_daily_limit: Number(ents.will_daily_limit) || 30,
     },
     nonce: payload.nonce as string | undefined,
+    registration_approved:
+      raw.registration_approved === false ? false : true,
   };
 }

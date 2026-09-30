@@ -953,24 +953,51 @@ export async function sendAdminNewCustomerNotification(
   userEmail: string,
   displayName: string,
   authProvider: string,
+  opts?: { userId?: string; needsApproval?: boolean },
 ): Promise<void> {
-  if (process.env.NODE_ENV !== "production") return;
-
   const providerLabel = authProvider.charAt(0).toUpperCase() + authProvider.slice(1);
+  const to = process.env.SIGNUP_NOTIFY_EMAIL?.trim() || ADMIN_NOTIFICATION_EMAIL;
+  let approveUrl = "";
+  if (opts?.needsApproval && opts.userId) {
+    try {
+      const { createRegistrationApprovalJwt } = await import("@/lib/registration-approval");
+      const token = await createRegistrationApprovalJwt({
+        userId: opts.userId,
+        email: userEmail,
+      });
+      const base = (process.env.APP_BASE_URL || "https://trefolio.com").replace(/\/+$/, "");
+      approveUrl = `${base}/api/auth/approve-registration?token=${encodeURIComponent(token)}`;
+      console.info("[admin-new-customer] approve_url", { email: userEmail, approveUrl });
+    } catch (err) {
+      console.error("Approve token failed:", err);
+    }
+  }
+
+  const approveHtml = approveUrl
+    ? `<p style="margin:20px 0 0;"><a href="${approveUrl}" style="display:inline-block;background:#10b981;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">Approve account</a></p>
+       <p style="margin:12px 0 0;font-size:12px;color:#64748b;word-break:break-all;">${approveUrl}</p>`
+    : "";
+  const subject = opts?.needsApproval
+    ? `[trefolio] Approve signup: ${userEmail}`
+    : `[trefolio] New Customer: ${displayName || userEmail}`;
+  const heading = opts?.needsApproval ? "trefolio — Approve signup" : "trefolio — New Customer";
 
   const html = `
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 0;">
-      <h2 style="color:#10b981;margin:0 0 16px;">trefolio — New Customer</h2>
+      <h2 style="color:#10b981;margin:0 0 16px;">${heading}</h2>
       <table style="width:100%;border-collapse:collapse;font-size:15px;">
         <tr><td style="padding:8px 0;color:#64748b;">Name</td><td style="padding:8px 0;font-weight:600;">${displayName || "—"}</td></tr>
         <tr><td style="padding:8px 0;color:#64748b;">Email</td><td style="padding:8px 0;">${userEmail}</td></tr>
         <tr><td style="padding:8px 0;color:#64748b;">Auth Provider</td><td style="padding:8px 0;">${providerLabel}</td></tr>
       </table>
+      ${approveHtml}
     </div>`;
 
+  if (process.env.NODE_ENV !== "production") return;
+
   const result = await sendEmail({
-    to: ADMIN_NOTIFICATION_EMAIL,
-    subject: `[trefolio] New Customer: ${displayName || userEmail}`,
+    to,
+    subject,
     html,
     internal: true,
   });

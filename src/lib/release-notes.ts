@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.5.290",
+    date: "2026-09-26",
+    title: "Registration approval",
+    titleTranslations: {
+      es: "Aprobación de registro",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "New unified accounts stay pending until an operator approves them via an email link. One approval unlocks trefolio, Clara, and Will.",
+        translations: {
+          es: "Las cuentas unificadas nuevas quedan en espera hasta que un operador las apruebe con el link del email. Una aprobación habilita trefolio, Clara y Will.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.5.289",
     date: "2026-09-17",
     title: "Leaner recover crons and AID digest warm",

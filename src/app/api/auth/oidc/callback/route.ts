@@ -32,7 +32,7 @@ import {
   linkLocalUserToIdpSub,
   syncEntitlementsForUser,
 } from "@/lib/idp/entitlements";
-import { isIdpEnabled } from "@/lib/idp/config";
+import { getIdpIssuer, isIdpEnabled } from "@/lib/idp/config";
 import { sendWelcomeEmail, getEmailLocale } from "@/lib/email";
 import {
   getRequestPublicOrigin,
@@ -217,6 +217,13 @@ export async function GET(req: NextRequest) {
     },
     inbound,
   );
+
+  if (claims.registration_approved === false) {
+    const idp = getIdpIssuer()?.replace(/\/+$/, "") || "https://user.trefolio.com";
+    const res = NextResponse.redirect(`${idp}/pending-approval`);
+    clearFlowCookies(req, res);
+    return res;
+  }
 
   // Resolve local user.
   let resolvePath: "by_sub" | "linked_email" | "created" = "by_sub";

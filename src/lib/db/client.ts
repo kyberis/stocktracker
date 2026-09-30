@@ -71,14 +71,20 @@ async function ensureAdminUser(client: Client) {
 
   const stmts = [
     {
-      sql: `INSERT OR IGNORE INTO users (id, username, password_hash, role, must_change_password, ai_calls_reset_at)
-            VALUES (?, ?, ?, 'admin', 1, datetime('now'))`,
+      sql: `INSERT OR IGNORE INTO users (id, username, password_hash, role, must_change_password, ai_calls_reset_at, registration_approved_at)
+            VALUES (?, ?, ?, 'admin', 1, datetime('now'), datetime('now'))`,
       args: [adminId, ADMIN_DEFAULT_USERNAME, passwordHash],
     },
     {
       sql: `INSERT OR IGNORE INTO user_settings (user_id, provider, alpha_vantage_api_key, language)
             VALUES (?, 'yahoo', '', 'en')`,
       args: [adminId],
+    },
+    {
+      // Admin is seeded after migrations, so v157's backfill never sees this row.
+      sql: `UPDATE users SET registration_approved_at = datetime('now')
+            WHERE username = ? AND (registration_approved_at IS NULL OR trim(registration_approved_at) = '')`,
+      args: [ADMIN_DEFAULT_USERNAME],
     },
   ];
 

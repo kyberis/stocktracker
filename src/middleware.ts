@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
 import { logUnauthorizedApi } from "@/lib/log-unauthorized";
 
-const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email", "/blog", "/contact", "/demo", "/releasenotes", "/leaf", "/unsubscribe", "/about", "/docs", "/studio", "/delete-account/confirm"]);
+const PUBLIC_ROUTES = new Set(["/login", "/signup", "/pending-approval", "/landing", "/privacy", "/terms", "/verify-email", "/blog", "/contact", "/demo", "/releasenotes", "/leaf", "/unsubscribe", "/about", "/docs", "/studio", "/delete-account/confirm"]);
 const PUBLIC_API_ROUTES = new Set([
   "/api/auth/login",
   "/api/auth/signup",
+  "/api/auth/approve-registration",
   "/api/auth/logout",
   "/api/auth/idp-logout",
   "/api/auth/google",

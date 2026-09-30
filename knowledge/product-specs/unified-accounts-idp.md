@@ -22,7 +22,9 @@ OIDC client that reads entitlements via JWT claims and a small REST API.
 | Type | Path | Notes |
 |------|------|-------|
 | API | [`src/app/api/auth/oidc/start/route.ts`](../../src/app/api/auth/oidc/start/route.ts) | Begins the OIDC Authorization Code + PKCE flow. |
-| API | [`src/app/api/auth/oidc/callback/route.ts`](../../src/app/api/auth/oidc/callback/route.ts) | Receives the IdP redirect, mints `trefolio_session`. |
+| API | [`src/app/api/auth/oidc/callback/route.ts`](../../src/app/api/auth/oidc/callback/route.ts) | Receives the IdP redirect, mints `trefolio_session`. Refuses an unlocked session if `registration_approved === false`. |
+| API | [`src/app/api/auth/approve-registration/route.ts`](../../src/app/api/auth/approve-registration/route.ts) | Legacy local approve link when IdP OAuth is off. |
+| Page | [`src/app/pending-approval/page.tsx`](../../src/app/pending-approval/page.tsx) | Waiting copy for unapproved local signups. |
 | API | [`src/app/api/auth/me/route.ts`](../../src/app/api/auth/me/route.ts) | Fires `syncEntitlementsForUser` on every refresh. |
 | Lib | [`src/lib/idp/`](../../src/lib/idp) | OIDC helpers, REST client, entitlements bridge. |
 | Script | [`scripts/migrate-users-to-idp.ts`](../../scripts/migrate-users-to-idp.ts) | One-shot user migration. |

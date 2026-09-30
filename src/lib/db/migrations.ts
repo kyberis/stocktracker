@@ -4859,6 +4859,23 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 157,
+    description: "Registration approval timestamp on users",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("registration_approved_at")) {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN registration_approved_at TEXT NOT NULL DEFAULT ''",
+          args: [],
+        });
+      }
+      await client.execute(
+        "UPDATE users SET registration_approved_at = created_at WHERE registration_approved_at = '' AND deleted_at = ''",
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

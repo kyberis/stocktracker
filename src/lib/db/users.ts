@@ -132,18 +132,25 @@ export async function createUser(params: {
   emailVerified?: boolean;
   seedWithData: boolean;
   attribution?: FirstTouchAttribution;
+  /** Empty string = pending. Omit to stamp now (tests, OIDC, existing callers). */
+  registrationApprovedAt?: string;
 }): Promise<PublicUser> {
   const client = await ensureInitialized();
   const id = randomUUID();
   const attribution = normalizeAttribution(params.attribution);
+  const approvedAt =
+    params.registrationApprovedAt !== undefined
+      ? params.registrationApprovedAt
+      : new Date().toISOString();
 
   await client.batch(
     [
       {
         sql: `INSERT INTO users (id, username, password_hash, role, must_change_password,
               ai_calls_reset_at, email, display_name, avatar_url, auth_provider, google_id, apple_id, email_verified,
-              utm_source, utm_medium, utm_campaign, utm_term, utm_content, attribution_landing_path, attribution_referrer, attribution_captured_at)
-              VALUES (?, ?, ?, 'user', 0, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              utm_source, utm_medium, utm_campaign, utm_term, utm_content, attribution_landing_path, attribution_referrer, attribution_captured_at,
+              registration_approved_at)
+              VALUES (?, ?, ?, 'user', 0, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           id, params.username, params.passwordHash,
           params.email || "", params.displayName || "", params.avatarUrl || "",
@@ -157,6 +164,7 @@ export async function createUser(params: {
           attribution.landingPath,
           attribution.referrer,
           attribution.capturedAt,
+          approvedAt,
         ],
       },
       {
@@ -178,6 +186,24 @@ export async function createUser(params: {
   const created = await findUserById(id);
   if (!created) throw new Error("Failed to create user");
   return mapUser(created);
+}
+
+export async function approveRegistration(userId: string): Promise<{
+  alreadyApproved: boolean;
+  user: DbUser | null;
+}> {
+  const user = await findUserById(userId);
+  if (!user) return { alreadyApproved: false, user: null };
+  if (user.registration_approved_at && user.registration_approved_at.trim()) {
+    return { alreadyApproved: true, user };
+  }
+  const client = await ensureInitialized();
+  const now = new Date().toISOString();
+  await client.execute({
+    sql: "UPDATE users SET registration_approved_at = ? WHERE id = ?",
+    args: [now, userId],
+  });
+  return { alreadyApproved: false, user: await findUserById(userId) };
 }
 
 export async function updateUserPassword(

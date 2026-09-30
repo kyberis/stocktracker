@@ -31,6 +31,7 @@ export {
   findUserIdByIdpSub,
   listUsers,
   createUser,
+  approveRegistration,
   updateUserPassword,
   updateUserProfile,
   updateUserRole,

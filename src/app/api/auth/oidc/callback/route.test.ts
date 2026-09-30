@@ -45,6 +45,7 @@ vi.mock("@/lib/idp/entitlements", () => ({
 
 vi.mock("@/lib/idp/config", () => ({
   isIdpEnabled: vi.fn().mockReturnValue(true),
+  getIdpIssuer: vi.fn().mockReturnValue("https://user.trefolio.com"),
 }));
 
 vi.mock("@/lib/email", () => ({
@@ -205,5 +206,19 @@ describe("GET /api/auth/oidc/callback — referral capture on new signup", () =>
     await GET(req);
 
     expect(mockedCreateReferral).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/auth/oidc/callback — registration approval", () => {
+  it("redirects to the IdP pending page and does not mint a session", async () => {
+    mockNewSignupClaims({ registration_approved: false });
+    const { createSessionToken } = await import("@/lib/auth/session");
+    const { GET } = await import("./route");
+    const req = makeCallbackRequest({ ...BASE_COOKIES });
+    const res = await GET(req);
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toBe("https://user.trefolio.com/pending-approval");
+    expect(createSessionToken).not.toHaveBeenCalled();
+    expect(mockedCreateUser).not.toHaveBeenCalled();
   });
 });
