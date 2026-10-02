@@ -3,6 +3,14 @@ import { ensureInitialized } from "./client";
 import { str, normalizeTickerForExchange } from "./helpers";
 import type { WatchlistItem } from "@/lib/types";
 
+export async function listDistinctWatchlistTickers(): Promise<string[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute(
+    "SELECT DISTINCT ticker FROM watchlist WHERE ticker != ''",
+  );
+  return result.rows.map((r) => str(r.ticker)).filter(Boolean);
+}
+
 export async function listWatchlist(userId: string): Promise<WatchlistItem[]> {
   const client = await ensureInitialized();
   const result = await client.execute({ sql: "SELECT * FROM watchlist WHERE user_id = ? ORDER BY added_at DESC", args: [userId] });

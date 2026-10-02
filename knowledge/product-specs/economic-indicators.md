@@ -42,7 +42,7 @@ Pro feature. Shows key European + US macro indicators with trend sparklines. Use
 
 ## 8. External dependencies
 
-- FMP or AV for macro series; ECB data when available.
+- FMP when `market_data_fmp_economic_indicators` is on. Otherwise FRED (`FRED_API_KEY`) for the same US series. No user identifiers are sent to FRED.
 
 ## 9. Currency / FX / tax implications
 

@@ -58,7 +58,7 @@ Ticker must match `^[A-Z0-9.\-]{1,10}$` (validated server-side).
 - Report + narrative serve from day cache when present; UI shows `generatedAt`. Cache hits overlay a live quote (price/change/marketCap) without rewriting durable storage. Unavailable sections (Congress/news/insiders/EPS/etc.) are refetched and merged without wiping good fields; full rebuild only on miss (expired after 1 day or never cached) or `?fresh=1` / UI **Regenerate** (clears Turso + L1 for that ticker, then rebuilds; charges quota).
 - SEO: `/analisis` allow-listed in `robots.ts`; hub + cached tickers in `sitemap.ts`; SSR summary omits live price (quote is live via API).
 - Insider tags: RSU/tax/options → neutral; open-market buy/sell → buy/sell.
-- Congress: FMP `senate-trades` + `house-trades`; empty state when none in 12 months.
+- Congress: FMP `senate-trades` + `house-trades` only when `fmp_congress_trades` is on. Off (free FMP plan): the section is not rendered. Peers use FMP `stock-peers` only when `fmp_stock_peers` is on; otherwise same-sector names from `screener_cache`.
 - Sector alternative: peer with better distance-to-52w-high than subject; editorial disclaimer required.
 - Outbound URLs sanitized to `http:`/`https:` only.
 - **ETF/ETP branch:** when Yahoo `quoteType` is a fund (or name heuristics match), the same URL renders a fund profile — see [etf-analysis](etf-analysis.md). Cache keys are `report:etf:TICKER`. Equity EPS/insider/Congress/moat chrome is omitted.

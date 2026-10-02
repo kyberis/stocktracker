@@ -283,6 +283,7 @@ export {
 
 export {
   listWatchlist,
+  listDistinctWatchlistTickers,
   addWatchlistItem,
   removeWatchlistItem,
 } from "./watchlist";
@@ -570,6 +571,7 @@ export {
   upsertScreenerCache,
   getScreenerCacheBySymbols,
   getScreenerCacheCount,
+  listSectorPeers,
   listHotScreenerSymbols,
   listStaleOrMissingScreenerSymbols,
   getScreenerDistinctSectors,

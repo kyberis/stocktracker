@@ -1828,7 +1828,7 @@ const en: TranslationStrings = {
   landingCardStealthTitle: "Stealth Mode",
   landingCardStealthDesc: "Hide all monetary values with one click — perfect for screen-sharing or public spaces",
   landingCardEventsTitle: "Event Calendar",
-  landingCardEventsDesc: "Earnings reports, economic events, and IPO calendar with portfolio-aware highlights",
+  landingCardEventsDesc: "Earnings dates for the holdings and watchlist you follow, with portfolio-aware highlights",
   landingCardCompanyAnalysisTitle: "Company analysis",
   landingCardCompanyAnalysisDesc: "Stocks get fundamentals and insider flow; ETFs get fund facts, holdings, and weights — same /analisis URL",
   landingCardTaxTitle: "EU Tax Reports",

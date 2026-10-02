@@ -1807,7 +1807,7 @@ const es: TranslationStrings = {
   landingCardStealthTitle: "Modo sigilo",
   landingCardStealthDesc: "Oculta todos los valores monetarios con un clic — ideal para compartir pantalla o espacios públicos",
   landingCardEventsTitle: "Calendario de Eventos",
-  landingCardEventsDesc: "Resultados, eventos económicos y calendario de OPVs con alertas de tu cartera",
+  landingCardEventsDesc: "Fechas de resultados de tus posiciones y lista de seguimiento, con alertas de tu cartera",
   landingCardCompanyAnalysisTitle: "Análisis de empresa",
   landingCardCompanyAnalysisDesc: "Las acciones muestran fundamentales e insiders; los ETF, datos del fondo, participaciones y pesos — misma URL /analisis",
   landingCardTaxTitle: "Informes fiscales UE",

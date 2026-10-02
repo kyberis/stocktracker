@@ -2,6 +2,7 @@ import type { CompanyOverview } from "@/lib/api-providers/types";
 import type { HoldingAssetType } from "@/lib/types";
 import { isCryptoAssetRoute } from "@/lib/asset-detail-href";
 import { deriveEarningsQualityFromIncome } from "@/lib/fundamentals/earnings-quality-from-income";
+import { isFeatureEnabled } from "@/lib/db/settings";
 import { fetchFmpHistoricalPeAverage } from "@/lib/fundamentals/hist-pe-from-fmp";
 import {
   forwardPeWasRejected,
@@ -145,6 +146,7 @@ export async function enrichValuationWithHistoricalPe(
 ): Promise<WarrenValuationItem> {
   if (hasMultiYearHistPe(item.metrics)) return item;
 
+  if (!(await isFeatureEnabled("market_data_fmp_fundamentals"))) return item;
   const hist = await fetchFmpHistoricalPeAverage(item.symbol);
   if (hist.histPeAvg == null || hist.histPeYears < 3) return item;
 

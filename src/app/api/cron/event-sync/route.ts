@@ -3,6 +3,7 @@ import { upsertCalendarEventsBatch, deleteStaleEvents } from "@/lib/db";
 import { getGlobalAlphaVantageApiKey, isFeatureEnabled } from "@/lib/db";
 import type { FmpEarningsEvent } from "@/lib/api-providers/fmp";
 import { syncFmpCalendarEventTypes } from "@/lib/market-data/fmp-calendar-sync";
+import { fetchYahooHoldingsEarnings } from "@/lib/market-data/yahoo-earnings-sync";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
@@ -109,8 +110,8 @@ const runEventSync = withCronLogging("event-sync", async () => {
     }
   }
 
-  // --- Earnings from FMP (supplement with time-of-day data) ---
-  if (process.env.FMP_API_KEY) {
+  // --- Earnings from FMP (paid calendar; flag is the only gate) ---
+  if (fmpEarningsOnly && process.env.FMP_API_KEY) {
     try {
       const fmpEarnings = await fetchFmpEarnings(syncFrom, syncTo);
       const mapped = fmpEarnings
@@ -141,8 +142,22 @@ const runEventSync = withCronLogging("event-sync", async () => {
     }
   }
 
-  // --- Economic events, IPO, stock splits from FMP ---
-  if (process.env.FMP_API_KEY) {
+  if (!fmpEarningsOnly && stats.earnings === 0) {
+    try {
+      const yahooRows = await fetchYahooHoldingsEarnings(syncFromStr, syncToStr);
+      const BATCH = 50;
+      for (let i = 0; i < yahooRows.length; i += BATCH) {
+        await upsertCalendarEventsBatch(yahooRows.slice(i, i + BATCH));
+      }
+      stats.earnings = yahooRows.length;
+    } catch (e) {
+      stats.errors.push(`yahoo-earnings: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  // --- Economic events, IPO, stock splits from FMP (paid calendars) ---
+  const premiumCalendars = await isFeatureEnabled("fmp_premium_calendars");
+  if (premiumCalendars && process.env.FMP_API_KEY) {
     for (const kind of ["economic", "ipo", "splits"] as const) {
       try {
         const s = await syncFmpCalendarEventTypes(syncFrom, syncTo, [kind]);

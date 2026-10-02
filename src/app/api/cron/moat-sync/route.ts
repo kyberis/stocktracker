@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
-import { hasPremiumMarketDataConfigured } from "@/lib/db";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
 import { evaluateMoat } from "@/lib/moat-evaluator";
 import { upsertMoatCache, getStaleMoatSymbols } from "@/lib/db/moat-cache";
@@ -14,18 +14,8 @@ const BATCH_SIZE = 30;
 const MAX_AGE_DAYS = 7;
 
 const runMoatSync = withCronLogging("moat-sync", async () => {
-  if (!(await hasPremiumMarketDataConfigured())) {
-    return {
-      ok: false,
-      error: "No market data API key configured (FMP_API_KEY, or Alpha Vantage when market_data_alpha_vantage is enabled)",
-    };
-  }
-
   const resolved = await resolvePremiumStockDataProvider(null, "moat_sync");
-  if (!resolved) {
-    return { ok: false, error: "Could not initialize market data provider" };
-  }
-  const { provider } = resolved;
+  const provider = resolved?.provider ?? new YahooProvider();
 
   const autoTickers = await listMoatAutoTickers();
   const autoSymbols = autoTickers.map((t) => t.symbol);

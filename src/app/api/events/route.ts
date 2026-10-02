@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listCalendarEvents, listHoldings, findUserById } from "@/lib/db";
+import { listCalendarEvents, listHoldings, findUserById, isFeatureEnabled } from "@/lib/db";
 import { canAccessFeature } from "@/lib/subscription";
 import { withMetrics } from "@/lib/with-metrics";
 import type { CalendarEvent } from "@/lib/db";
@@ -132,7 +132,8 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
       const missingFmpTypes = fmpSyncable.filter(
         (t) => otherTypes.includes(t) && !otherEvents.some((e) => e.event_type === t)
       );
-      if (missingFmpTypes.length > 0 && process.env.FMP_API_KEY) {
+      const premiumCalendars = await isFeatureEnabled("fmp_premium_calendars");
+      if (missingFmpTypes.length > 0 && premiumCalendars && process.env.FMP_API_KEY) {
         const hydrateKey = fmpHydrateCacheKey(missingFmpTypes, from, to);
         if (!shouldSkipFmpHydrate(hydrateKey)) {
           try {

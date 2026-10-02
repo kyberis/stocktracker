@@ -1766,7 +1766,7 @@ const de: TranslationStrings = {
   landingCardStealthTitle: "Stealth-Modus",
   landingCardStealthDesc: "Verstecken Sie alle Geldwerte mit einem Klick – perfekt für Bildschirmfreigabe oder öffentliche Räume",
   landingCardEventsTitle: "Ereigniskalender",
-  landingCardEventsDesc: "Gewinnberichte, wirtschaftliche Ereignisse und IPO-Kalender mit portfolio-bewussten Highlights",
+  landingCardEventsDesc: "Ergebnisdaten für deine Positionen und Watchlist, mit portfolio-bewussten Highlights",
   landingCardTaxTitle: "EU-Steuerberichte",
   landingCardTaxDesc: "Länderspezifische Steuerzusammenfassungen für Deutschland, Frankreich, Spanien, die Niederlande und Italien mit KI-Steuerassistent",
   landingCardScreenerTitle: "Aktien-Screener",

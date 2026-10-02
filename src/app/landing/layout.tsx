@@ -175,7 +175,7 @@ export const SOFTWARE_APP_SCHEMA = {
     "Multi-currency support with 21 currencies and FX impact tracking",
     "35 European languages with AI insights in your native language",
     "4 dashboard themes (Default, Canvas, Terminal, Studio)",
-    "Event calendars for earnings, economic events, and IPOs",
+    "Earnings calendar for the holdings and watchlist you follow",
     "Price alerts via email, push, Telegram, and trefolio Leaf device",
     "Guided onboarding wizard with country-aware broker suggestions",
     "In-app notification center for updates and alerts",

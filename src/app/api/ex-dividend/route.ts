@@ -7,8 +7,29 @@ import { looksLikeIsin } from "@/lib/api-providers/isin-resolver";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
 import { parseTickersParam } from "./parse-tickers";
+import { amountFromDividendHistory, type DividendHistoryPoint } from "@/lib/market-data/dividend-amount";
 
 const yahooFinance = new YahooFinance();
+
+async function chartDividendHistory(ticker: string): Promise<DividendHistoryPoint[]> {
+  const period1 = new Date();
+  period1.setFullYear(period1.getFullYear() - 3);
+  try {
+    const chart = await yahooFinance.chart(ticker, {
+      period1,
+      interval: "1d",
+      events: "div",
+    });
+    const dividends = chart.events?.dividends;
+    if (!dividends) return [];
+    return Object.values(dividends).map((row) => ({
+      date: new Date(row.date).toISOString().slice(0, 10),
+      amount: typeof row.amount === "number" ? row.amount : 0,
+    }));
+  } catch {
+    return [];
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +53,9 @@ async function fetchDividendsFromYahoo(tickers: string[]): Promise<DividendEvent
       const exParsed = new Date(exStr);
       if (exParsed < today || exParsed > cutoff) return null;
 
+      const history = await chartDividendHistory(ticker);
+      const amount = amountFromDividendHistory(exStr, history) ?? 0;
+
       return {
         symbol: ticker,
         exDividendDate: exStr,
@@ -39,8 +63,8 @@ async function fetchDividendsFromYahoo(tickers: string[]): Promise<DividendEvent
         recordDate: "",
         paymentDate: cal?.dividendDate ? new Date(cal.dividendDate).toISOString().slice(0, 10) : "",
         // Never use summaryDetail.dividendRate — that is the trailing/forward ANNUAL rate,
-        // not the upcoming payment. Amount is filled from premium schedule below.
-        amount: 0,
+        // not the upcoming payment. Amount comes from a matching historical cadence, or FMP when that flag is on.
+        amount,
         currency: detail?.currency ?? "USD",
       } satisfies DividendEvent;
     })

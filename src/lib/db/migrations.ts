@@ -4876,6 +4876,34 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 158,
+    description: "Turn off paid FMP surfaces on the free plan",
+    up: async (client: Client) => {
+      const flags = [
+        "market_data_fmp_search",
+        "market_data_fmp_fundamentals",
+        "market_data_fmp_intelligence",
+        "market_data_fmp_portfolio_news",
+        "market_data_fmp_economic_indicators",
+        "market_data_fmp_crypto",
+        "market_data_fmp_dividends",
+        "market_data_fmp_event_sync",
+        "fmp_congress_trades",
+        "fmp_earnings_transcripts",
+        "fmp_stock_peers",
+        "fmp_premium_calendars",
+        "fmp_company_screener",
+      ];
+      for (const key of flags) {
+        await client.execute({
+          sql: `INSERT INTO platform_settings (key, value) VALUES (?, 'false')
+                ON CONFLICT(key) DO UPDATE SET value = 'false'`,
+          args: [key],
+        });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

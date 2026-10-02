@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { fetchFinnhubCompanyNews } from "@/lib/api-providers/finnhub-news";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { isFeatureEnabled } from "@/lib/db/settings";
 import { recordFmpIrRequest } from "@/lib/screening/metrics";
 import { noteScreeningProviderQuota } from "@/lib/screening/provider-circuit";
 
@@ -300,6 +303,38 @@ async function fetchInsiders(
   return { insiders, requests: 1, errors: [] };
 }
 
+async function finnhubNews(ticker: string): Promise<FmpIrNewsItem[]> {
+  try {
+    const apiKey = process.env.FINNHUB_API_KEY?.trim();
+    if (!apiKey) return [];
+    const articles = await fetchFinnhubCompanyNews(ticker, apiKey);
+    return articles.slice(0, 12).map((a) => ({
+      title: a.title,
+      publishedDate: a.publishedAt,
+      url: a.url,
+      site: a.source || null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function yahooInsiders(ticker: string): Promise<FmpIrInsiderItem[]> {
+  try {
+    const rows = await new YahooProvider().getInsiderTransactions(ticker);
+    return rows.slice(0, 10).map((row) => ({
+      name: row.fullName,
+      title: row.title,
+      transactionDate: row.transactionDate || null,
+      transactionType: row.transactionType,
+      shares: row.shares,
+      price: row.sharePrice,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export interface FetchFmpIrBundleOptions {
   ticker: string;
   fetchImpl?: typeof fetch;
@@ -314,6 +349,27 @@ export async function fetchFmpIrBundle(
   const errors: string[] = [];
   let requestCount = 0;
 
+  const [transcriptsOn, fmpIntelOn] = await Promise.all([
+    isFeatureEnabled("fmp_earnings_transcripts"),
+    isFeatureEnabled("market_data_fmp_intelligence"),
+  ]);
+  const canCallFmp = Boolean(process.env.FMP_API_KEY) && fmpIntelOn;
+
+  if (!canCallFmp && !transcriptsOn) {
+    const [news, insiders] = await Promise.all([
+      finnhubNews(ticker),
+      yahooInsiders(ticker),
+    ]);
+    return {
+      ticker,
+      transcript: null,
+      news,
+      insiders,
+      requestCount: 0,
+      errors: [],
+    };
+  }
+
   if (!process.env.FMP_API_KEY) {
     return {
       ticker,
@@ -326,9 +382,15 @@ export async function fetchFmpIrBundle(
   }
 
   const [transcriptRes, newsRes, insiderRes] = await Promise.all([
-    fetchLatestTranscript(ticker, fetchImpl),
-    fetchNews(ticker, fetchImpl),
-    fetchInsiders(ticker, fetchImpl),
+    transcriptsOn
+      ? fetchLatestTranscript(ticker, fetchImpl)
+      : Promise.resolve({ transcript: null, requests: 0, errors: [] as string[] }),
+    fmpIntelOn
+      ? fetchNews(ticker, fetchImpl)
+      : finnhubNews(ticker).then((news) => ({ news, requests: 0, errors: [] as string[] })),
+    fmpIntelOn
+      ? fetchInsiders(ticker, fetchImpl)
+      : yahooInsiders(ticker).then((insiders) => ({ insiders, requests: 0, errors: [] as string[] })),
   ]);
 
   requestCount +=
