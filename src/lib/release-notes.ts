@@ -25,7 +25,7 @@ export const releaseNotes: ReleaseEntry[] = [
     },
     changes: [
       {
-        type: "improvement",
+        type: "feature",
         text: "Paid FMP datasets (Congress trades, transcripts, official peers, IPO, macro, and splits calendars, and the global company screener) are off by default. Quotes, fundamentals, holdings earnings dates, dividends, and macro series keep working from Yahoo, Finnhub, and FRED.",
         translations: {
           es: "Los datasets de pago de FMP (operaciones del Congreso, transcripciones, peers oficiales, calendarios de IPO, macro y splits, y el screener global) quedan apagados por defecto. Cotizaciones, fundamentales, fechas de resultados de tus posiciones, dividendos y series macro siguen funcionando con Yahoo, Finnhub y FRED.",

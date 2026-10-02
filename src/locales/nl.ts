@@ -1765,7 +1765,7 @@ const nl: TranslationStrings = {
   landingCardStealthTitle: "Stealth Modus",
   landingCardStealthDesc: "Verberg alle monetaire waarden met één klik — perfect voor schermdeling of openbare ruimtes",
   landingCardEventsTitle: "Evenementen Kalender",
-  landingCardEventsDesc: "Winstrapporten, economische evenementen, en IPO-kalender met portefeuille-bewuste hoogtepunten",
+  landingCardEventsDesc: "Resultaatdata voor je posities en volglijst, met portefeuille-bewuste hoogtepunten",
   landingCardTaxTitle: "EU Belastingrapporten",
   landingCardTaxDesc: "Landspecifieke belastingoverzichten voor Duitsland, Frankrijk, Spanje, Nederland en Italië met AI Belastingassistent",
   landingCardScreenerTitle: "Aandelen Screener",
