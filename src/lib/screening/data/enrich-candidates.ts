@@ -1,5 +1,7 @@
+import { isFeatureEnabled } from "@/lib/db/settings";
 import { ensureMoatForTickers } from "@/lib/screening/data/ensure-moat";
 import { fetchFmpFundamentals } from "@/lib/screening/data/fmp-fundamentals";
+import { fetchYahooFundamentalsBundle } from "@/lib/screening/data/yahoo-fundamentals";
 import {
   loadTrefolioSignalsForTickers,
   type TrefolioTickerSignals,
@@ -91,6 +93,7 @@ export async function enrichHardDataCandidates(
   const signals = await loadTrefolioSignalsForTickers(
     candidates.map((c) => fmpSymbolForCandidate(c)),
   );
+  const useFmpFundamentals = await isFeatureEnabled("market_data_fmp_fundamentals");
 
   const CONCURRENCY = 3;
   const enriched: HardDataCandidate[] = [];
@@ -99,7 +102,9 @@ export async function enrichHardDataCandidates(
     const rows = await Promise.all(
       chunk.map(async (c) => {
         const lookup = fmpSymbolForCandidate(c);
-        const fund = await fetchFmpFundamentals(lookup);
+        const fund = useFmpFundamentals
+          ? await fetchFmpFundamentals(lookup)
+          : await fetchYahooFundamentalsBundle(lookup);
         const sig =
           signals.get(lookup) ?? signals.get(c.ticker.toUpperCase());
         return mergeCandidate(c, fund, sig);

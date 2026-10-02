@@ -36,7 +36,8 @@ import {
 } from "@/lib/company-analysis/earnings-merge";
 import type { ReportGap } from "@/lib/company-analysis/gaps";
 import type { CompanyAnalysisPeer, CompanyAnalysisReport } from "@/lib/company-analysis/types";
-import { getGlobalFmpApiKey } from "@/lib/db";
+import { getGlobalFmpApiKey, getScreenerCacheBySymbols, listSectorPeers } from "@/lib/db";
+import { isFeatureEnabled } from "@/lib/db/settings";
 import { disambiguateListing, yahooSymbolAliases } from "@/lib/market-symbol";
 
 export function hasFmpKey(): boolean {
@@ -93,6 +94,7 @@ async function fetchQuoteAndOverview(
 }
 
 export async function loadCongress(symbol: string): Promise<FmpCongressTrade[] | null> {
+  if (!(await isFeatureEnabled("fmp_congress_trades"))) return null;
   if (!hasFmpKey()) return null;
   try {
     const [senate, house] = await Promise.all([
@@ -106,36 +108,60 @@ export async function loadCongress(symbol: string): Promise<FmpCongressTrade[] |
   }
 }
 
-export async function loadPeers(symbol: string): Promise<CompanyAnalysisPeer[]> {
-  if (!hasFmpKey()) return [];
+async function peersFromQuotes(
+  peerTickers: string[],
+): Promise<CompanyAnalysisPeer[]> {
+  if (!peerTickers.length) return [];
+  const yahoo = new YahooProvider();
+  const quotes = await Promise.all(
+    peerTickers.map(async (t) => {
+      const q = await settled(yahoo.getQuote(t));
+      return { ticker: t, q };
+    }),
+  );
+  return quotes.map(({ ticker, q }) => ({
+    ticker,
+    name: q?.shortName ?? null,
+    price: q?.regularMarketPrice ?? null,
+    distanceTo52wHighPct: peerDistanceTo52wHigh(
+      q?.regularMarketPrice ?? null,
+      q?.fiftyTwoWeekHigh ?? null,
+    ),
+    ma50: null,
+    ma200: null,
+  }));
+}
+
+export async function loadPeers(
+  symbol: string,
+  sector?: string | null,
+): Promise<CompanyAnalysisPeer[]> {
+  if ((await isFeatureEnabled("fmp_stock_peers")) && hasFmpKey()) {
+    try {
+      const peerTickers = (await fetchStockPeers(symbol)).filter((t) => t !== symbol).slice(0, 6);
+      return peersFromQuotes(peerTickers);
+    } catch (err) {
+      console.warn("[company-analysis] peers failed:", err instanceof Error ? err.message : err);
+      return [];
+    }
+  }
+
   try {
-    const peerTickers = (await fetchStockPeers(symbol)).filter((t) => t !== symbol).slice(0, 6);
-    if (!peerTickers.length) return [];
-    const yahoo = new YahooProvider();
-    const quotes = await Promise.all(
-      peerTickers.map(async (t) => {
-        const q = await settled(yahoo.getQuote(t));
-        return { ticker: t, q };
-      }),
-    );
-    return quotes.map(({ ticker, q }) => ({
-      ticker,
-      name: q?.shortName ?? null,
-      price: q?.regularMarketPrice ?? null,
-      distanceTo52wHighPct: peerDistanceTo52wHigh(
-        q?.regularMarketPrice ?? null,
-        q?.fiftyTwoWeekHigh ?? null,
-      ),
-      ma50: null,
-      ma200: null,
-    }));
+    let resolved = sector?.trim() || "";
+    if (!resolved) {
+      const self = await getScreenerCacheBySymbols([symbol]);
+      resolved = self.get(symbol.toUpperCase())?.sector ?? "";
+    }
+    const rows = await listSectorPeers(resolved, symbol, 6);
+    return peersFromQuotes(rows.map((r) => r.symbol));
   } catch (err) {
-    console.warn("[company-analysis] peers failed:", err instanceof Error ? err.message : err);
+    console.warn("[company-analysis] cache peers failed:", err instanceof Error ? err.message : err);
     return [];
   }
 }
 
 export async function loadFmpEarnings(symbol: string): Promise<FmpEarningsEvent[] | null> {
+  if (!(await isFeatureEnabled("market_data_fmp_fundamentals"))) return null;
   if (!hasFmpKey()) return null;
   try {
     return await fetchEarningsBySymbol(symbol);
@@ -243,7 +269,7 @@ export async function buildFullReport(
     ? fmpEarningsToFundamentalData(fmpEarningsRows)
     : null;
   const earnings = mergeEarningsData(earningsRes, fmpEarningsData);
-  const peers = await loadPeers(dataSymbol);
+  const peers = await loadPeers(dataSymbol, overviewRes?.sector);
 
   const fmpNext = fmpEarningsRows
     ? pickNextQuarterFromEarningsRows(

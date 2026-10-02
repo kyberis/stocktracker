@@ -492,6 +492,14 @@ export default function PrivacyPolicyPage() {
                     </td>
                   </tr>
                   <tr>
+                    <td className="py-3 pr-6">FRED (Federal Reserve Bank of St. Louis)</td>
+                    <td className="py-3 pr-6">US macro indicator series on the economic indicators page when FMP macro data is off</td>
+                    <td className="py-3">
+                      Public series identifiers only (for example GDP or unemployment). No account
+                      email, name, or portfolio holdings are sent. FRED is in the United States.
+                    </td>
+                  </tr>
+                  <tr>
                     <td className="py-3 pr-6">CoinLore</td>
                     <td className="py-3 pr-6">Cryptocurrency market data</td>
                     <td className="py-3">No user data sent — only public market data retrieved</td>

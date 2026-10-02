@@ -14,7 +14,7 @@ list the unmet expectations.
 Alternatively, **Analyze** resolves a single ticker/company (+ exchange when
 ambiguous) via search. The user confirms the listing and launches — **no other
 intake questions**. Research runs on that one listing (`candidateCount = 1`,
-Hard Data skips the FMP screener).
+Hard Data skips the FMP screener). Discovery uses FMP `company-screener` only when `fmp_company_screener` is on. Off (free FMP plan): the universe is `screener_cache`.
 
 ## 2. Status
 

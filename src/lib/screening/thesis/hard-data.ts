@@ -2,13 +2,14 @@ import {
   insertAiLog,
   insertScreeningAgentOutput,
 } from "@/lib/db";
-import { isFeatureEnabledForUser } from "@/lib/db/settings";
+import { isFeatureEnabled, isFeatureEnabledForUser } from "@/lib/db/settings";
 import {
   registerHandler,
   type HandlerContext,
   type HandlerResult,
   type StepHandler,
 } from "@/lib/screening/orchestrator/handlers";
+import { fetchCachedScreenerUniverse } from "@/lib/screening/data/cached-universe";
 import {
   fetchFmpScreener,
   marketCapRangeFromCondition,
@@ -101,14 +102,17 @@ const runThesisHardDataStep: StepHandler = async (
     const range = mcapCriterion
       ? marketCapRangeFromCondition(mcapCriterion.condition)
       : { min: null, max: null };
-    const screenerResult = await fetchFmpScreener({
+    const screenerOpts = {
       marketCapMin: range.min,
       marketCapMax: range.max,
       includeSectors: brief.includeSectors,
       excludeSectors: brief.excludeSectors,
       regions: brief.regions,
       limit: HARD_DATA_FMP_FETCH_LIMIT,
-    });
+    };
+    const screenerResult = (await isFeatureEnabled("fmp_company_screener"))
+      ? await fetchFmpScreener(screenerOpts)
+      : await fetchCachedScreenerUniverse(screenerOpts);
     const rankUniverse = selectRankUniverse(
       screenerResult.candidates,
       HARD_DATA_RANK_UNIVERSE,
@@ -135,14 +139,16 @@ const runThesisHardDataStep: StepHandler = async (
   }
 
   const derived = candidates.map((c) => deriveFactsFromCandidate(c, asOf));
-  const consensus = await Promise.all(
-    candidates.map((c) =>
-      fetchAnalystEstimateFacts({
-        ticker: c.researchTicker || c.ticker,
-        asOf,
-      }),
-    ),
-  );
+  const consensus = (await isFeatureEnabled("market_data_fmp_fundamentals"))
+    ? await Promise.all(
+        candidates.map((c) =>
+          fetchAnalystEstimateFacts({
+            ticker: c.researchTicker || c.ticker,
+            asOf,
+          }),
+        ),
+      )
+    : candidates.map(() => ({ facts: [], errors: [] as string[] }));
   const facts = [
     ...derived.flatMap((d) => d.facts),
     ...consensus.flatMap((row, i) =>

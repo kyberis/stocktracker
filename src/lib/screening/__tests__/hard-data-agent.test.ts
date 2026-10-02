@@ -40,6 +40,7 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/lib/db/settings", () => ({
   isFeatureEnabledForUser: mockIsFeatureEnabled,
+  isFeatureEnabled: vi.fn(async () => true),
 }));
 
 vi.mock("@/lib/screening/data/fmp-screening", async () => {

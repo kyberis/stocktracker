@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@/lib/db/settings", () => ({
+  isFeatureEnabled: vi.fn(async () => true),
+}));
+
 vi.mock("@/lib/screening/data/fmp-fundamentals", () => ({
   fetchFmpFundamentals: vi.fn(async (ticker: string) => ({
     ticker,

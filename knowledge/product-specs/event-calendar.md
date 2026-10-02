@@ -44,7 +44,7 @@ Aggregates market events (earnings, econ, IPO, stock splits) into one calendar s
 
 ## 8. External dependencies
 
-- Alpha Vantage, FMP.
+- Alpha Vantage earnings CSV when `market_data_alpha_vantage` is on. FMP earnings calendar only when `market_data_fmp_event_sync` is on. IPO, macro, and splits calendars only when `fmp_premium_calendars` is on (off on the free FMP plan). Holdings and watchlist earnings dates come from Yahoo when the FMP earnings calendar flag is off.
 
 ## 9. Currency / FX / tax implications
 

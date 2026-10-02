@@ -7,13 +7,14 @@ import {
   insertSteps,
   updateStepDependsOn,
 } from "@/lib/db";
-import { isFeatureEnabledForUser } from "@/lib/db/settings";
+import { isFeatureEnabled, isFeatureEnabledForUser } from "@/lib/db/settings";
 import {
   registerHandler,
   type HandlerContext,
   type HandlerResult,
   type StepHandler,
 } from "@/lib/screening/orchestrator/handlers";
+import { fetchCachedScreenerUniverse } from "@/lib/screening/data/cached-universe";
 import {
   fetchFmpScreener,
   marketCapRangeFromCondition,
@@ -569,14 +570,17 @@ export const runHardDataStep: StepHandler = async (
       ? marketCapRangeFromCondition(mcapCriterion.condition)
       : { min: null, max: null };
 
-    const screenerResult = await fetchFmpScreener({
+    const screenerOpts = {
       marketCapMin: range.min,
       marketCapMax: range.max,
       includeSectors: brief.includeSectors,
       excludeSectors: brief.excludeSectors,
       regions: brief.regions,
       limit: HARD_DATA_FMP_FETCH_LIMIT,
-    });
+    };
+    const screenerResult = (await isFeatureEnabled("fmp_company_screener"))
+      ? await fetchFmpScreener(screenerOpts)
+      : await fetchCachedScreenerUniverse(screenerOpts);
 
     // Compact ranking universe: prefer mid-cap names inside the band, drop funds/ETFs.
     const rankUniverse = selectRankUniverse(

@@ -18,6 +18,11 @@ Flags from `ALL_PLATFORM_FEATURES` in [`src/lib/db/settings.ts`](../../src/lib/d
 - `daily_digests_enabled`
 - `device_enabled`
 - `display_invariants`
+- `fmp_company_screener`
+- `fmp_congress_trades`
+- `fmp_earnings_transcripts`
+- `fmp_premium_calendars`
+- `fmp_stock_peers`
 - `home_money_desk`
 - `home_v2`
 - `import_broker_picker_enabled`

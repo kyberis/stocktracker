@@ -258,6 +258,26 @@ export async function getScreenerCacheBySymbols(
   return out;
 }
 
+/** Same-sector names from the local cache, largest market cap first. */
+export async function listSectorPeers(
+  sector: string,
+  excludeSymbol: string,
+  limit = 6,
+): Promise<ScreenerCacheRow[]> {
+  const cleaned = sector.trim();
+  if (!cleaned) return [];
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT * FROM screener_cache
+          WHERE sector != '' AND lower(sector) = lower(?)
+            AND upper(symbol) != upper(?)
+          ORDER BY market_cap DESC NULLS LAST
+          LIMIT ?`,
+    args: [cleaned, excludeSymbol, Math.max(1, Math.min(limit, 20))],
+  });
+  return result.rows.map((row) => mapRow(row as unknown as Record<string, unknown>));
+}
+
 export async function getScreenerCacheCount(): Promise<number> {
   const client = await ensureInitialized();
   const result = await client.execute("SELECT COUNT(*) as cnt FROM screener_cache");

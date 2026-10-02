@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useTrack } from "@/lib/use-track";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { canAccessFeature } from "@/lib/subscription";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierFeatureBadge from "./TierFeatureBadge";
 import EmptyState from "./EmptyState";
@@ -86,10 +87,11 @@ export default function EventCalendar() {
   const plan = user?.plan ?? "free";
   const entitlementInput = { plan, aiCallsThisMonth: 0 };
 
+  const premiumCalendars = useFeatureFlag("fmp_premium_calendars");
   const canEarnings = canAccessFeature("event-calendar-earnings", entitlementInput).allowed;
-  const canEconomic = canAccessFeature("event-calendar-economic", entitlementInput).allowed;
-  const canIpo = canAccessFeature("event-calendar-ipo", entitlementInput).allowed;
-  const canSplits = canAccessFeature("event-calendar-splits", entitlementInput).allowed;
+  const canEconomic = premiumCalendars && canAccessFeature("event-calendar-economic", entitlementInput).allowed;
+  const canIpo = premiumCalendars && canAccessFeature("event-calendar-ipo", entitlementInput).allowed;
+  const canSplits = premiumCalendars && canAccessFeature("event-calendar-splits", entitlementInput).allowed;
 
   const isDemo = !user;
 
@@ -104,7 +106,9 @@ export default function EventCalendar() {
       } else {
         const from = new Date(calYear, calMonth, 1);
         const to = new Date(calYear, calMonth + 1, 0);
-        const types = Array.from(filters).join(",");
+        const types = Array.from(filters)
+          .filter((t) => premiumCalendars || t === "earnings")
+          .join(",");
         const res = await fetch(
           `/api/events?type=${types}&from=${toISODate(from)}&to=${toISODate(to)}${activePortfolioId ? `&portfolioId=${encodeURIComponent(activePortfolioId)}` : ""}`
         );
@@ -119,7 +123,7 @@ export default function EventCalendar() {
     } finally {
       setLoading(false);
     }
-  }, [calYear, calMonth, filters, isDemo, activePortfolioId]);
+  }, [calYear, calMonth, filters, isDemo, activePortfolioId, premiumCalendars]);
 
   useEffect(() => {
     fetchEvents();
@@ -162,8 +166,11 @@ export default function EventCalendar() {
   });
 
   const filteredEvents = useMemo(
-    () => events.filter((e) => filters.has(e.type)),
-    [events, filters]
+    () => events.filter((e) => {
+      if (!premiumCalendars && e.type !== "earnings") return false;
+      return filters.has(e.type);
+    }),
+    [events, filters, premiumCalendars]
   );
 
   const eventsByDate = useMemo(() => {
@@ -408,6 +415,7 @@ export default function EventCalendar() {
           <span className={`w-2 h-2 rounded-full ${filters.has("earnings") ? "bg-white" : "bg-emerald-500"}`} />
           {t("earnings")} ({earningsCount})
         </button>
+        {premiumCalendars && <>
         <button
           onClick={() => canEconomic && toggleFilter("economic")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
@@ -447,6 +455,7 @@ export default function EventCalendar() {
           {!canSplits && <TierFeatureBadge requiredPlan="pro" size="xs" className="ml-1" />}
           {canSplits && <span className="opacity-70">({splitsCount})</span>}
         </button>
+        </>}
       </div>
 
       {/* Stats row */}

@@ -42,6 +42,11 @@ export type PlatformFeature =
   | "market_data_fmp_crypto"
   | "market_data_fmp_dividends"
   | "market_data_fmp_event_sync"
+  | "fmp_congress_trades"
+  | "fmp_earnings_transcripts"
+  | "fmp_stock_peers"
+  | "fmp_premium_calendars"
+  | "fmp_company_screener"
   | "market_data_alpha_vantage"
   | "mcp_fmp_proxy"
   | "weekly_digest_enabled"
@@ -524,6 +529,11 @@ export const ALL_PLATFORM_FEATURES = [
   "market_data_fmp_crypto",
   "market_data_fmp_dividends",
   "market_data_fmp_event_sync",
+  "fmp_congress_trades",
+  "fmp_earnings_transcripts",
+  "fmp_stock_peers",
+  "fmp_premium_calendars",
+  "fmp_company_screener",
   "market_data_alpha_vantage",
   "mcp_fmp_proxy",
   "weekly_digest_enabled",

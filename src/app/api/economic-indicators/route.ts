@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { requireFeatureQuota, requireRateLimit } from "@/lib/auth/guards";
 import { getSessionFromRequest } from "@/lib/auth/session";
+import { fetchFredIndicator, getFredApiKey } from "@/lib/api-providers/fred";
 import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
 import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import { withMetrics } from "@/lib/with-metrics";
@@ -32,10 +33,29 @@ export const GET = withMetrics("/api/economic-indicators", async (request: NextR
   const session = await getSessionFromRequest(request);
   const resolved = await resolvePremiumStockDataProvider(session?.userId ?? null, "economic_indicators");
   if (!resolved) {
-    return Response.json(
-      { error: "No market data API key configured. Ask your administrator to add FMP_API_KEY or Alpha Vantage." },
-      { status: 503 }
-    );
+    if (!getFredApiKey()) {
+      return Response.json(
+        { error: "No market data API key configured. Ask your administrator to add FRED_API_KEY." },
+        { status: 503 }
+      );
+    }
+    const rl = await requireRateLimit(request, "fmp");
+    if (rl.error) return rl.error;
+    try {
+      const result = await fetchFredIndicator(func, searchParams.get("maturity") || undefined);
+      if (!result || result.data.length === 0) {
+        return Response.json({ error: "No data available" }, { status: 404 });
+      }
+      return Response.json(result, {
+        headers: { "Cache-Control": "public, max-age=3600, stale-while-revalidate=7200" },
+      });
+    } catch (err) {
+      console.error(
+        `Failed to fetch FRED indicator ${func}:`,
+        err instanceof Error ? err.message : err,
+      );
+      return Response.json({ error: "Failed to fetch data" }, { status: 500 });
+    }
   }
 
   const { provider, backend } = resolved;

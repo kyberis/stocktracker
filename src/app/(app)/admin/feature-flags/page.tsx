@@ -225,7 +225,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
   market_data_fmp_economic_indicators: { label: "FMP: economic indicators", description: "US macro series via FMP", group: "Market data (FMP)" },
   market_data_fmp_crypto: { label: "FMP: Pro crypto history & FX", description: "Crypto OHLC and cross-rates via FMP", group: "Market data (FMP)" },
   market_data_fmp_dividends: { label: "FMP: ex-dividend fallback", description: "When Yahoo has no dividend dates, use FMP dividend calendar", group: "Market data (FMP)" },
-  market_data_fmp_event_sync: { label: "FMP: earnings calendar cron", description: "Event-sync cron uses FMP-only for earnings (skip AV CSV)", group: "Market data (FMP)" },
+  market_data_fmp_event_sync: { label: "FMP: earnings calendar cron", description: "Event-sync cron uses FMP-only for earnings (skip AV CSV). Off on the free FMP plan.", group: "Market data (FMP)" },
+  fmp_congress_trades: { label: "FMP: US Congress trades", description: "Senate and House disclosures on company analysis. Paid FMP dataset. Off on the free plan.", group: "Market data (FMP)" },
+  fmp_earnings_transcripts: { label: "FMP: earnings transcripts", description: "Earnings-call transcripts in intelligence and screening IR. Paid FMP dataset. Off on the free plan.", group: "Market data (FMP)" },
+  fmp_stock_peers: { label: "FMP: stock peers", description: "Official peer list from FMP. Paid endpoint. Off uses same-sector names from the screener cache.", group: "Market data (FMP)" },
+  fmp_premium_calendars: { label: "FMP: IPO, macro, and splits calendars", description: "Ingest and show economic, IPO, and split calendars. Paid FMP endpoints. Off hides those filters.", group: "Market data (FMP)" },
+  fmp_company_screener: { label: "FMP: company screener", description: "Investment screening discovery universe from FMP. Off uses the local screener cache.", group: "Market data (FMP)" },
   mcp_fmp_proxy: {
     label: "FMP: MCP proxy",
     description:

@@ -15,6 +15,8 @@ import type {
   CashFlowReport,
   EarningsReport,
   ETFHoldingsData,
+  InsiderTransaction,
+  InstitutionalHolder,
 } from "./types";
 import { providerRequestDuration } from "@/lib/metrics";
 import { recordProviderRequest } from "@/lib/traffic/provider-track";
@@ -739,6 +741,54 @@ export class YahooProvider implements StockDataProvider {
     } finally {
       end();
       recordProviderRequest("yahoo", "etf_holdings", ok ? "success" : "error");
+    }
+  }
+
+  async getInsiderTransactions(symbol: string): Promise<InsiderTransaction[]> {
+    try {
+      const result = await yahooFinance.quoteSummary(symbol, {
+        modules: ["insiderTransactions"],
+      });
+      const rows = result.insiderTransactions?.transactions ?? [];
+      return rows.slice(0, 20).map((row) => {
+        const shares = Math.abs(numOrNull(row.shares) ?? 0);
+        const price = numOrNull(row.value) != null && shares > 0
+          ? Math.abs((numOrNull(row.value) ?? 0) / shares)
+          : 0;
+        const start = row.startDate ? new Date(row.startDate as string | Date) : null;
+        return {
+          fullName: String(row.filerName ?? ""),
+          title: String(row.filerRelation ?? ""),
+          transactionDate: start && !Number.isNaN(start.getTime()) ? start.toISOString().slice(0, 10) : "",
+          transactionType: String(row.transactionText ?? ""),
+          shares,
+          sharePrice: Number.isFinite(price) ? price : 0,
+          totalValue: Math.abs(numOrNull(row.value) ?? 0),
+          sharesOwned: numOrNull(row.ownership),
+        };
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  async getInstitutionalHoldings(symbol: string): Promise<InstitutionalHolder[]> {
+    try {
+      const result = await yahooFinance.quoteSummary(symbol, {
+        modules: ["institutionOwnership"],
+      });
+      const rows = result.institutionOwnership?.ownershipList ?? [];
+      return rows.slice(0, 20).map((row) => ({
+        investor: String(row.organization ?? ""),
+        shares: numOrNull(row.position) ?? 0,
+        value: numOrNull(row.value) ?? 0,
+        weight: (numOrNull(row.pctHeld) ?? 0) * 100,
+        quarterEndDate: row.reportDate
+          ? new Date(row.reportDate as string | Date).toISOString().slice(0, 10)
+          : "",
+      }));
+    } catch {
+      return [];
     }
   }
 }
